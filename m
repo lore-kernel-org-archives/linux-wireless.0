@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:45158 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762579AbYAKWkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 17:40:13 -0500
-Message-ID: <4787F03E.6080605@hauke-m.de> (sfid-20080111_224021_639371_DFEC3AF2)
-Date: Fri, 11 Jan 2008 23:39:58 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-CC: Michael Wu <flamingice@sourmilk.net>, linux-kernel@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187 rate control doesn't work
-References: <477F9890.5050107@hauke-m.de>	 <43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>	 <47824D25.5090005@hauke-m.de> <43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
-In-Reply-To: <43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mfe1.polimi.it ([131.175.12.23]:45465 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753912AbYA0Mnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jan 2008 07:43:47 -0500
+Date: Sun, 27 Jan 2008 13:42:52 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Lars <Lars_Ericsson@telia.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] rc80211-pid: add sanity check
+Message-ID: <20080127134252.776cebd6@morte> (sfid-20080127_124352_040226_7D7383C1)
+In-Reply-To: <loom.20080126T193518-105@post.gmane.org>
+References: <20080126040534.005e6736@morte>
+	<200801261219.34805.mb@bu3sch.de>
+	<loom.20080126T193518-105@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Jan 7, 2008 11:02 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Sat, 26 Jan 2008 19:40:14 +0000 (UTC)
+Lars <Lars_Ericsson@telia.com> wrote:
+
+> Hi,
 > 
-> Thanks for reporting this, how'd it go with simple rate control
-> algorithm instead?
+> I have spent some time debugging this problem from a different angle.
+> 
+> If you use a 'b/g' STA connecting to a 'b' AP you will run into this loop in a
+> few seconds. What also happens is that the STA will try using 'g' speeds. That
+> was the way I located the problem.
 
-How do I change from pid to simple rate control algorithm? I have tried
-to set the CONFIG_MAC80211_RC_DEFAULT variable but it doesn't change the
- dmesg output. On kernel 2.6.22 simple rate control algorithm is used as
-default but on 2.6.24 pid is the default on.
+Thank you. I couldn't really figure out how to reproduce the bug.
 
-Can you please send me a config.mk
+> In other words, I do not think a WARN_ON is good solution.
 
-On kernel 2.4.24 with pid the rate shown by iwconfig stays at the
-starting on, also if I change it with "sudo iwconfig wlan0 rate 11M", on
-kernel 2.6.22 with simple rate control algorithm it shows the right rate.
+Please could you try my 1/2 patch? In the meanwhile, I'll try to use your
+information for more debugging.
 
-If I change the rate to something smaller than 11M I am able to ping the
-Access Point and if it is bigger that 11M I can't ping it. If no fixed
-rate is entered it stays at 54MBit/s and I can't ping the AP. The
-network speed is at ~1MBit/s and "Link Quality=53/64  Signal level=25/65"
 
-I have a AMD64 System and I am using the compat-wireless-2.6 of today.
-
-Hauke Mehrtens
+--
+Ciao
+Stefano
