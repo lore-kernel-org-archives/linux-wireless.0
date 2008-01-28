@@ -1,31 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:42052 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750932AbYA2TCP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2008 14:02:15 -0500
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rfkill: add the WiMAX radio type
-Date: Tue, 29 Jan 2008 10:54:35 -0800
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-References: <200801231324.39483.inaky@linux.intel.com> <20080128085422.ZZRA012@mailhub.coreip.homeip.net> <20080128151238.GD5835@tuxdriver.com>
-In-Reply-To: <20080128151238.GD5835@tuxdriver.com>
-MIME-Version: 1.0
-Message-Id: <200801291054.36663.inaky@linux.intel.com> (sfid-20080129_190221_313686_BFD8E102)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from mga11.intel.com ([192.55.52.93]:22822 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754869AbYA1MHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 07:07:37 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 06/12 v2] mac80211: A-MPDU add debugfs support
+Date: Mon, 28 Jan 2008 14:07:20 +0200
+Message-Id: <12015220543379-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120745_053686_D9EE1B03)
+In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 January 2008, John W. Linville wrote:
-> On Mon, Jan 28, 2008 at 08:56:03AM -0500, Dmitry Torokhov wrote:
-> 
-> > Yes, that should work, thank you. This will go through the network
-> > tree, right?
-> 
-> Yes, I've got it.
+This patch adds A-MPDU status report per STA to the debugfs.
+The option to de/activate A-MPDU through debugfs is also present.
 
-Thank you all :)
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/debugfs_sta.c |  116 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h    |    1 +
+ 2 files changed, 117 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 8f5944c..df25abf 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -55,6 +55,13 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.open = mac80211_open_file_generic,				\
+ }
+ 
++#define STA_OPS_WR(name)						\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.write = sta_##name##_write,					\
++	.open = mac80211_open_file_generic,				\
++}
++
+ #define STA_FILE(name, field, format)					\
+ 		STA_READ_##format(name, field)				\
+ 		STA_OPS(name)
+@@ -191,6 +198,113 @@ static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
+ STA_OPS(wme_tx_queue);
+ #endif
+ 
++static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	char buf[768], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	p += scnprintf(p, sizeof(buf)+buf-p, "Agg state for STA is:\n");
++	p += scnprintf(p, sizeof(buf)+buf-p, " STA next dialog_token is %d \n "
++			"TIDs info is: \n TID :",
++			(sta->ampdu_mlme.dialog_token_allocator + 1));
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d", i);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n RX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++	sta->ampdu_mlme.tid_rx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_rx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n TX  :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].state);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n DTKN:");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].dialog_token);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n SSN :");
++	for (i = 0; i < STA_TID_NUM; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%5d",
++			sta->ampdu_mlme.tid_tx[i].ssn);
++
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++
++static ssize_t sta_agg_status_write(struct file *file,
++		const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct net_device *dev = sta->dev;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw *hw = &local->hw;
++	u8 *da = sta->addr;
++	static int tid_static_tx[16] = {0, 0, 0, 0, 0, 0, 0, 0,
++					0, 0, 0, 0, 0, 0, 0, 0};
++	static int tid_static_rx[16] = {1, 1, 1, 1, 1, 1, 1, 1,
++					1, 1, 1, 1, 1, 1, 1, 1};
++	char *endp;
++	char buf[32];
++	int buf_size, rs;
++	unsigned int tid_num;
++	char state[4];
++
++	memset(buf, 0x00, sizeof(buf));
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tid_num = simple_strtoul(buf, &endp, 0);
++	if (endp == buf)
++		return -EINVAL;
++
++	if ((tid_num >= 100) && (tid_num <= 115)) {
++		/* toggle Rx aggregation command */
++		tid_num = tid_num - 100;
++		if (tid_static_rx[tid_num] == 1) {
++			strcpy(state, "off ");
++			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
++					WLAN_REASON_QSTA_REQUIRE_SETUP);
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
++			tid_static_rx[tid_num] = 0;
++		} else {
++			strcpy(state, "on ");
++			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
++			tid_static_rx[tid_num] = 1;
++		}
++		printk(KERN_DEBUG "debugfs - try switching tid %u %s\n",
++				tid_num, state);
++	} else if ((tid_num >= 0) && (tid_num <= 15)) {
++		/* toggle Tx aggregation command */
++		if (tid_static_tx[tid_num] == 0) {
++			strcpy(state, "on ");
++			rs =  ieee80211_start_tx_ba_session(hw, da, tid_num);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 1;
++		} else {
++			strcpy(state, "off");
++			rs =  ieee80211_stop_tx_ba_session(hw, da, tid_num, 1);
++			if (rs == 0)
++				tid_static_tx[tid_num] = 0;
++		}
++		printk(KERN_DEBUG "debugfs - switching tid %u %s, return=%d\n",
++				tid_num, state, rs);
++	}
++
++	return count;
++}
++STA_OPS_WR(agg_status);
++
+ #define DEBUGFS_ADD(name) \
+ 	sta->debugfs.name = debugfs_create_file(#name, 0444, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -224,6 +338,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(wme_rx_queue);
+ 	DEBUGFS_ADD(wme_tx_queue);
+ #endif
++	DEBUGFS_ADD(agg_status);
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -238,6 +353,7 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ 	DEBUGFS_DEL(wme_rx_queue);
+ 	DEBUGFS_DEL(wme_tx_queue);
+ #endif
++	DEBUGFS_DEL(agg_status);
+ 
+ 	debugfs_remove(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 48a620a..75573dc 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -192,6 +192,7 @@ struct sta_info {
+ 		struct dentry *wme_rx_queue;
+ 		struct dentry *wme_tx_queue;
+ #endif
++		struct dentry *agg_status;
+ 	} debugfs;
+ #endif
+ };
+-- 
+1.5.3.3
 
