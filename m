@@ -1,203 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:58240 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755152AbYAYWCE (ORCPT
+Received: from smtp105.sbc.mail.mud.yahoo.com ([68.142.198.204]:45947 "HELO
+	smtp105.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751116AbYA1Gtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:02:04 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so790155fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2008 14:02:02 -0800 (PST)
-Message-ID: <247d6d340801251402o2b16f3f6l70b5552c3a348c65@mail.gmail.com> (sfid-20080125_220217_627226_A16F5D41)
-Date: Sat, 26 Jan 2008 00:02:01 +0200
-From: "Guy Cohen" <guy@cguy.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Linux 2.6.24-rc7
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
-	"Michael Buesch" <mb@bu3sch.de>, "Dan Williams" <dcbw@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080125211815.GF14687@tuxdriver.com>
+	Mon, 28 Jan 2008 01:49:46 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH 12/14 v2] [rndis_host] Add RNDIS physical medium checking into generic_rndis_bind()
+Date: Sun, 27 Jan 2008 22:49:42 -0800
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bjd@jooz.net
+References: <20080127213358.7278.32005.stgit@fate.lan>
+In-Reply-To: <20080127213358.7278.32005.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
-	 <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
-	 <alpine.LFD.1.00.0801251011590.14161@hp.linux-foundation.org>
-	 <200801251930.27022.mb@bu3sch.de>
-	 <alpine.LFD.1.00.0801251045430.2979@hp.linux-foundation.org>
-	 <20080125194807.GD14687@tuxdriver.com>
-	 <20080125195037.GE14687@tuxdriver.com>
-	 <20080125211815.GF14687@tuxdriver.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200801272249.43094.david-b@pacbell.net> (sfid-20080128_064953_795412_4ABC9879)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NACK
+On Sunday 27 January 2008, Jussi Kivilinna wrote:
+> Add RNDIS physical medium checking into generic_rndis_bind() and also make
+> rndis_host to be only bind on every medium except wireless.
+> 
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-memmove will cause redundant high CPU utilization in 11n High Throughput.
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
-Such changes, if done, should be wrapped with some
-#ifdef CANT_HANDLE_UNALIGNED_....
+I think that means the whole series is fair to merge into
+the network drivers queue, assuming nobody has any issues
+with the last patch (adding the actual rndis_wlan support).
 
-And better be done in mac80211 and not at driver level. iwlwifi skb is
-802.11 and 802.3 frame.
+Thanks for doing this ... it's nice to see folk successfully
+building on top of this rndis_host code, since it started
+without any "real" RNDIS devices to test against!  (Just the
+Linux-USB "g_ether" peripheral code.)
 
-On 1/25/08, John W. Linville <linville@tuxdriver.com> wrote:
+- Dave
 
-> Alright, here is my whack at it...  The iwl_handle_data_packet_monitor
-> bits are untested, as I appear to be too daft to figure-out how to
-> exercise those paths.
->
-> Anyway, this is mostly just so we can scope the driver change required
-> in absence of a firmware change.  Persumably the changes required if
-> we were to put such code in mac80211 would be similar.
->
-> John
->
-> -----
->
-> From: John W. Linville <linville@tuxdriver.com>
-> Subject: [PATCH] iwlwifi: move data at CPU to ensure 4-byte alignment for payload
->
-> Ugly, but if the firmware won't cooperate...
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
 > ---
->  drivers/net/wireless/iwlwifi/iwl-3945.c     |   13 ++++++++++---
->  drivers/net/wireless/iwlwifi/iwl-4965.c     |   10 +++++++++-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 +++++++++-
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 +++++++++-
->  4 files changed, 37 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> index 3a45fe9..06cd28e 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> @@ -252,6 +252,7 @@ static void iwl3945_handle_data_packet(struct iwl_priv *priv, int is_data,
->        struct iwl_rx_frame_hdr *rx_hdr = IWL_RX_HDR(pkt);
->        struct iwl_rx_frame_end *rx_end = IWL_RX_END(pkt);
->        short len = le16_to_cpu(rx_hdr->len);
-> +       int hdrlen, align;
->
->        /* We received data from the HW, so stop the watchdog */
->        if (unlikely((len + IWL_RX_FRAME_SIZE) > skb_tailroom(rxb->skb))) {
-> @@ -275,11 +276,17 @@ static void iwl3945_handle_data_packet(struct iwl_priv *priv, int is_data,
->                return;
->        }
->
-> -       skb_reserve(rxb->skb, (void *)rx_hdr->payload - (void *)pkt);
-> +       hdr = (void *)rx_hdr->payload;
-> +       hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
-> +       align = hdrlen & 3;
-> +
-> +       skb_reserve(rxb->skb, (void *)rx_hdr->payload - (void *)pkt - align);
->        /* Set the size of the skb to the size of the frame */
-> -       skb_put(rxb->skb, le16_to_cpu(rx_hdr->len));
-> +       skb_put(rxb->skb, len);
->
-> -       hdr = (void *)rxb->skb->data;
-> +        /* align payload on 4-byte boundary if necessary */
-> +       if (align)
-> +               memmove((void *)hdr - align, hdr, len);
->
->        if (iwl_param_hwcrypto)
->                iwl_set_decrypted_flag(priv, rxb->skb,
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 891f90d..11eb75b 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -3496,6 +3496,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
->        __le32 *rx_end;
->        unsigned int skblen;
->        u32 ampdu_status;
-> +       int hdrlen, align;
->
->        if (!include_phy && priv->last_phy_res[0])
->                rx_start = (struct iwl4965_rx_phy_res *)&priv->last_phy_res[1];
-> @@ -3533,10 +3534,17 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
->        ampdu_status = le32_to_cpu(*rx_end);
->        skblen = ((u8 *) rx_end - (u8 *) & pkt->u.raw[0]) + sizeof(u32);
->
-> +       hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
-> +       align = hdrlen & 3;
-> +
->        /* start from MAC */
-> -       skb_reserve(rxb->skb, (void *)hdr - (void *)pkt);
-> +       skb_reserve(rxb->skb, (void *)hdr - (void *)pkt - align);
->        skb_put(rxb->skb, len); /* end where data ends */
->
-> +       /* align payload on 4-byte boundary if necessary */
-> +       if (align)
-> +               memmove(rxb->skb->data, hdr, len);
-> +
->        /* We only process data packets if the interface is open */
->        if (unlikely(!priv->is_open)) {
->                IWL_DEBUG_DROP_LIMIT
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 1a6b0e0..d6018bd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -3056,7 +3056,9 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
->                                    struct ieee80211_rx_status *stats,
->                                    u16 phy_flags)
+> 
+>  drivers/net/usb/rndis_host.c |   36 +++++++++++++++++++++++++++++++++---
+>  drivers/net/usb/rndis_host.h |   19 ++++++++++++++++++-
+>  2 files changed, 51 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
+> index 800c9d0..0606e11 100644
+> --- a/drivers/net/usb/rndis_host.c
+> +++ b/drivers/net/usb/rndis_host.c
+> @@ -271,7 +271,8 @@ response_error:
+>  	return -EDOM;
+>  }
+>  
+> -int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+> +int
+> +generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags)
 >  {
-> +       struct ieee80211_hdr *hdr;
->        struct iwl_rt_rx_hdr *iwl_rt;
-> +       int hdrlen, align;
->
->        /* First cache any information we need before we overwrite
->         * the information provided in the skb from the hardware */
-> @@ -3072,8 +3074,14 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
->                return;
->        }
->
-> +       /* determine payload alignment adjustment */
-> +       hdr = data;
-> +       hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control))
-> +               + sizeof(*iwl_rt);
-> +       align = 4 - (hdrlen & 3); /* invert align since already at skb head */
+>  	int			retval;
+>  	struct net_device	*net = dev->net;
+> @@ -287,7 +288,7 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+>  		struct rndis_set_c	*set_c;
+>  		struct rndis_halt	*halt;
+>  	} u;
+> -	u32			tmp;
+> +	u32			tmp, *phym;
+>  	int			reply_len;
+>  	unsigned char		*bp;
+>  
+> @@ -358,6 +359,30 @@ int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+>  			dev->driver_info->early_init(dev) != 0)
+>  		goto halt_fail_and_release;
+>  
+> +	/* Check physical medium */
+> +	reply_len = sizeof *phym;
+> +	retval = rndis_query(dev, intf, u.buf, OID_GEN_PHYSICAL_MEDIUM,
+> +			0, (void **) &phym, &reply_len);
+> +	if (retval != 0)
+> +		/* OID is optional so don't fail here. */
+> +		*phym = RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED;
+> +	if ((flags & FLAG_RNDIS_PHYM_WIRELESS) &&
+> +			*phym != RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
+> +		if (netif_msg_probe(dev))
+> +			dev_dbg(&intf->dev, "driver requires wireless "
+> +				"physical medium, but device is not.\n");
+> +		retval = -ENODEV;
+> +		goto halt_fail_and_release;
+> +	}
+> +	if ((flags & FLAG_RNDIS_PHYM_NOT_WIRELESS) &&
+> +			*phym == RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN) {
+> +		if (netif_msg_probe(dev))
+> +			dev_dbg(&intf->dev, "driver requires non-wireless "
+> +				"physical medium, but device is wireless.\n");
+> +		retval = -ENODEV;
+> +		goto halt_fail_and_release;
+> +	}
 > +
->        /* copy the frame data to write after where the radiotap header goes */
-> -       iwl_rt = (void *)rxb->skb->data;
-> +       iwl_rt = (void *)rxb->skb->data + align;
->        memmove(iwl_rt->payload, data, len);
->
->        iwl_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> index 6cd57c2..9ef9d14 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> @@ -3144,7 +3144,9 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
->                                    struct ieee80211_rx_status *stats,
->                                    u16 phy_flags)
+>  	/* Get designated host ethernet address */
+>  	reply_len = ETH_ALEN;
+>  	retval = rndis_query(dev, intf, u.buf, OID_802_3_PERMANENT_ADDRESS,
+> @@ -403,6 +428,11 @@ fail:
+>  }
+>  EXPORT_SYMBOL_GPL(generic_rndis_bind);
+>  
+> +static int rndis_bind(struct usbnet *dev, struct usb_interface *intf)
+> +{
+> +	return generic_rndis_bind(dev, intf, FLAG_RNDIS_PHYM_NOT_WIRELESS);
+> +}
+> +
+>  void rndis_unbind(struct usbnet *dev, struct usb_interface *intf)
 >  {
-> +       struct ieee80211_hdr *hdr;
->        struct iwl_rt_rx_hdr *iwl_rt;
-> +       int hdrlen, align;
->
->        /* First cache any information we need before we overwrite
->         * the information provided in the skb from the hardware */
-> @@ -3160,8 +3162,14 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
->                return;
->        }
->
-> +       /* determine payload alignment adjustment */
-> +       hdr = data;
-> +       hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control))
-> +               + sizeof(*iwl_rt);
-> +       align = 4 - (hdrlen & 3); /* invert align since already at skb head */
+>  	struct rndis_halt	*halt;
+> @@ -518,7 +548,7 @@ EXPORT_SYMBOL_GPL(rndis_tx_fixup);
+>  static const struct driver_info	rndis_info = {
+>  	.description =	"RNDIS device",
+>  	.flags =	FLAG_ETHER | FLAG_FRAMING_RN | FLAG_NO_SETINT,
+> -	.bind =		generic_rndis_bind,
+> +	.bind =		rndis_bind,
+>  	.unbind =	rndis_unbind,
+>  	.status =	rndis_status,
+>  	.rx_fixup =	rndis_rx_fixup,
+> diff --git a/drivers/net/usb/rndis_host.h b/drivers/net/usb/rndis_host.h
+> index 61f1fd8..edc1d4a 100644
+> --- a/drivers/net/usb/rndis_host.h
+> +++ b/drivers/net/usb/rndis_host.h
+> @@ -82,6 +82,17 @@ struct rndis_msg_hdr {
+>  #define	RNDIS_STATUS_MEDIA_CONNECT	ccpu2(0x4001000b)
+>  #define	RNDIS_STATUS_MEDIA_DISCONNECT	ccpu2(0x4001000c)
+>  
+> +/* codes for OID_GEN_PHYSICAL_MEDIUM */
+> +#define	RNDIS_PHYSICAL_MEDIUM_UNSPECIFIED	ccpu2(0x00000000)
+> +#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_LAN	ccpu2(0x00000001)
+> +#define	RNDIS_PHYSICAL_MEDIUM_CABLE_MODEM	ccpu2(0x00000002)
+> +#define	RNDIS_PHYSICAL_MEDIUM_PHONE_LINE	ccpu2(0x00000003)
+> +#define	RNDIS_PHYSICAL_MEDIUM_POWER_LINE	ccpu2(0x00000004)
+> +#define	RNDIS_PHYSICAL_MEDIUM_DSL		ccpu2(0x00000005)
+> +#define	RNDIS_PHYSICAL_MEDIUM_FIBRE_CHANNEL	ccpu2(0x00000006)
+> +#define	RNDIS_PHYSICAL_MEDIUM_1394		ccpu2(0x00000007)
+> +#define	RNDIS_PHYSICAL_MEDIUM_WIRELESS_WAN	ccpu2(0x00000008)
+> +#define	RNDIS_PHYSICAL_MEDIUM_MAX		ccpu2(0x00000009)
+>  
+>  struct rndis_data_hdr {
+>  	__le32	msg_type;		/* RNDIS_MSG_PACKET */
+> @@ -222,6 +233,7 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+>  #define OID_802_3_PERMANENT_ADDRESS	ccpu2(0x01010101)
+>  #define OID_GEN_MAXIMUM_FRAME_SIZE	ccpu2(0x00010106)
+>  #define OID_GEN_CURRENT_PACKET_FILTER	ccpu2(0x0001010e)
+> +#define OID_GEN_PHYSICAL_MEDIUM		ccpu2(0x00010202)
+>  
+>  /* packet filter bits used by OID_GEN_CURRENT_PACKET_FILTER */
+>  #define RNDIS_PACKET_TYPE_DIRECTED		ccpu2(0x00000001)
+> @@ -244,10 +256,15 @@ struct rndis_keepalive_c {	/* IN (optionally OUT) */
+>  	RNDIS_PACKET_TYPE_ALL_MULTICAST | \
+>  	RNDIS_PACKET_TYPE_PROMISCUOUS)
+>  
+> +/* Flags to require specific physical medium type for generic_rndis_bind() */
+> +#define FLAG_RNDIS_PHYM_NOT_WIRELESS	0x0001
+> +#define FLAG_RNDIS_PHYM_WIRELESS	0x0002
 > +
->        /* copy the frame data to write after where the radiotap header goes */
-> -       iwl_rt = (void *)rxb->skb->data;
-> +       iwl_rt = (void *)rxb->skb->data + align;
->        memmove(iwl_rt->payload, data, len);
->
->        iwl_rt->rt_hdr.it_version = PKTHDR_RADIOTAP_VERSION;
-> --
-> 1.5.3.3
->
-> --
-> John W. Linville
-> linville@tuxdriver.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>  
+>  extern void rndis_status(struct usbnet *dev, struct urb *urb);
+>  extern int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf);
+> -extern int generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf);
+> +extern int
+> +generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags);
+>  extern void rndis_unbind(struct usbnet *dev, struct usb_interface *intf);
+>  extern int rndis_rx_fixup(struct usbnet *dev, struct sk_buff *skb);
+>  extern struct sk_buff *
+> 
+
+
