@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:33097 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072AbYAVUMW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 15:12:22 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2029837fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:12:20 -0800 (PST)
-Message-ID: <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com> (sfid-20080122_201225_225825_FDC40C15)
-Date: Tue, 22 Jan 2008 21:12:20 +0100
-From: drago01 <drago01@gmail.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
+Received: from mga11.intel.com ([192.55.52.93]:42420 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755157AbYA1MHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 07:07:40 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 05/12 v2] mac80211: A-MPDU Tx MLME data initialization
+Date: Mon, 28 Jan 2008 14:07:19 +0200
+Message-Id: <12015220542293-git-send-email-ron.rindjunsky@intel.com> (sfid-20080128_120750_433593_156FCFD4)
+In-Reply-To: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
+References: <12015220461052-git-send-email-ron.rindjunsky@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
->
-> I believe it's delaying uCode load to mac_start - still need to be
-> polished.
+This patch initialize A-MPDU MLME data for Tx sessions.
 
-ok, thx for the quick reply.
-If you have any potential fixes I would be happy to test them ;)
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ net/mac80211/sta_info.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index c964082..7c65849 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -117,8 +117,10 @@ static void sta_info_release(struct kref *kref)
+ 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
+ 		dev_kfree_skb_any(skb);
+ 	}
+-	for (i = 0; i <  STA_TID_NUM; i++)
++	for (i = 0; i <  STA_TID_NUM; i++) {
+ 		del_timer_sync(&sta->ampdu_mlme.tid_rx[i].session_timer);
++		del_timer_sync(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
++	}
+ 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
+ 	rate_control_put(sta->rate_ctrl);
+ 	kfree(sta);
+@@ -157,17 +159,26 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
+ 	sta->local = local;
+ 	sta->dev = dev;
+ 	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
++	spin_lock_init(&sta->ampdu_mlme.ampdu_tx);
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+ 		/* timer_to_tid must be initialized with identity mapping to
+ 		 * enable session_timer's data differentiation. refer to
+ 		 * sta_rx_agg_session_timer_expired for useage */
+ 		sta->timer_to_tid[i] = i;
++		/* tid to tx queue: initialize according to HW (0 is valid) */
++		sta->tid_to_tx_q[i] = local->hw.queues;
+ 		/* rx timers */
+ 		sta->ampdu_mlme.tid_rx[i].session_timer.function =
+ 			sta_rx_agg_session_timer_expired;
+ 		sta->ampdu_mlme.tid_rx[i].session_timer.data =
+ 			(unsigned long)&sta->timer_to_tid[i];
+ 		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
++		/* tx timers */
++		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.function =
++			sta_addba_resp_timer_expired;
++		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.data =
++			(unsigned long)&sta->timer_to_tid[i];
++		init_timer(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
+ 	}
+ 	skb_queue_head_init(&sta->ps_tx_buf);
+ 	skb_queue_head_init(&sta->tx_filtered);
+-- 
+1.5.3.3
+
