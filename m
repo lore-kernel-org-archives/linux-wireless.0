@@ -1,27 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47952
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751053AbYAIHgu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 02:36:50 -0500
-Date: Tue, 08 Jan 2008 23:36:49 -0800 (PST)
-Message-Id: <20080108.233649.262364979.davem@davemloft.net> (sfid-20080109_073654_402319_E95C9E16)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080108192914.GA3086@tuxdriver.com>
-References: <20080108192914.GA3086@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([70.61.120.52]:4277 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751316AbYA1PcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 10:32:17 -0500
+Date: Mon, 28 Jan 2008 10:12:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rfkill: add the WiMAX radio type
+Message-ID: <20080128151238.GD5835@tuxdriver.com> (sfid-20080128_153221_657870_168DC5E6)
+References: <200801231324.39483.inaky@linux.intel.com> <200801232230.39590.IvDoorn@gmail.com> <200801231338.53501.inaky@linux.intel.com> <20080128085422.ZZRA012@mailhub.coreip.homeip.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080128085422.ZZRA012@mailhub.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 8 Jan 2008 14:29:14 -0500
+On Mon, Jan 28, 2008 at 08:56:03AM -0500, Dmitry Torokhov wrote:
 
-> Here are a few more for 2.6.25.  The are mostly clean-ups for the new
-> PID rate control algorithm, and some A-MPDU bits related to supporting
-> 802.11n.
+> Yes, that should work, thank you. This will go through the network
+> tree, right?
 
-Pulled and pushed back out to net-2.6.25, thanks John.
+Yes, I've got it.
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
