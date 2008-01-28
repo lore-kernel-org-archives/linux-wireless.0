@@ -1,28 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:42272 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbYAQPcb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2008 10:32:31 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so584341rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2008 07:32:30 -0800 (PST)
-Message-ID: <c85cb4470801170732y4e0c1921n6e66836f7ebf495d@mail.gmail.com> (sfid-20080117_153252_991354_BDA3D8C0)
-Date: Thu, 17 Jan 2008 17:32:30 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix RCU locking in __ieee80211_rx_handle_packet
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1200516460.8007.2.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4285 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751970AbYA1Pf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 10:35:28 -0500
+Date: Mon, 28 Jan 2008 10:12:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: stefano.brivio@polimi.it, Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 crash in ieee80211_sta_scan_work
+Message-ID: <20080128151200.GC5835@tuxdriver.com> (sfid-20080128_153551_402206_1FD08A4D)
+References: <479D9B5F.5000304@lwfinger.net> <1ba2fa240801280129g5c9c7b73pdfdb2eb80944ce32@mail.gmail.com> <20080128103739.oi3iwmmzlwo8w4gw@webmail.polimi.it> <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1200516460.8007.2.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> sparse actually detected this.... oh well
->
+On Mon, Jan 28, 2008 at 11:48:51AM +0200, Tomas Winkler wrote:
+> On Jan 28, 2008 11:37 AM,  <stefano.brivio@polimi.it> wrote:
+> > Quoting Tomas Winkler <tomasw@gmail.com>:
+> >
+> > > There are too many issues with API change patch. I think it is a good
+> > > direction but it's really unstable I think we need to give another
+> > > round before it can be applied.
+> >
+> > That has already been applied. I suggest that you point out the
+> > iwl4965 bugs you generically reported so that they can be fixed as well.
+> >
+> We've seen already patches to be un-applied, reverted.
+> I'll fix the bugs that's not problem but it takes time. I'm just
+> worried about the other users that find driver unusable.
 
-Arrrr... i did the re-structuring of Rx flow and forgot to sparse.
-I'll issue a patch to clean up the warnings.
+I'm going to hold it back from 2.6.25.  We can work on it for 2.6.26.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
