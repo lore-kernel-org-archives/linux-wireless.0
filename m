@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:18329 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755296AbYANJZr (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:22669 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbYA1QXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2008 04:25:47 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2990180pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2008 01:25:46 -0800 (PST)
-Message-ID: <c85cb4470801140125x169067e2v456a4511bee437fb@mail.gmail.com> (sfid-20080114_092601_833374_F3ACEDD1)
-Date: Mon, 14 Jan 2008 11:25:40 +0200
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 01/10] mac80211: A-MPDU Tx add session's and low level driver's API
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <1200261492.5887.25.camel@johannes.berg>
+	Mon, 28 Jan 2008 11:23:54 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3075458wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2008 08:23:53 -0800 (PST)
+Message-ID: <1ba2fa240801280823t7a591564pa9129d4799690caf@mail.gmail.com> (sfid-20080128_162358_403983_13890F39)
+Date: Mon, 28 Jan 2008 18:23:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] cfg80211 API for channels/bitrates, mac80211 and driver conversion
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080128151032.GB5835@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-	 <11999857491583-git-send-email-ron.rindjunsky@intel.com>
-	 <1200068953.3861.180.camel@johannes.berg>
-	 <c85cb4470801130717l7b455ea7pa4de50b5be2c0502@mail.gmail.com>
-	 <1200261492.5887.25.camel@johannes.berg>
+References: <20080124183837.577631000@sipsolutions.net>
+	 <20080124184357.839387000@sipsolutions.net>
+	 <1ba2fa240801271649j3b337b1aq182c8fd8303d7606@mail.gmail.com>
+	 <20080128151032.GB5835@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > It seems to me that this should be per-virtual interface instead of
-> > > per-hardware? I guess ultimately it won't make a difference because the
-> > > RA will be unique but I think we should still keep it per-vif where it
-> > > makes sense.
-> > >
-> > I can pass only vif in all the API i give, and that's something that i
-> > am not sure about since you introduced vif - generally all functions
-> > can get hw just from having the vif, but still there are plenty of
-> > places in the code that i see hw being passed back and forth. is it
-> > just because API compatibility or because something else i need to
-> > consider?
+On Jan 28, 2008 5:10 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Jan 28, 2008 at 02:49:06AM +0200, Tomas Winkler wrote:
+> > On Jan 24, 2008 8:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > This patch creates new cfg80211 wiphy API for channel and bitrate
+> > > registration and converts mac80211 and drivers to the new API. The
 >
-> Basically I'm thinking that everything that could in theory be
-> per-interface should be getting a vif. Say you have a multi-BSS AP. I
-> don't think it's really legal for a STA to associate to multiple APs at
-> the same time but want to avoid the code falling over when a STA
-> actually does associate to multiple of our virtual BSSes... Maybe that's
-> just unnecessary.
+> <snip>
+>
+> > > I do expect there to be bugs in this, especially wrt. transmit
+> > > power handling where I'm basically clueless about how it should work.
+> >
+> > True, total havoc
+> >
+> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > > ---
+> > > Changes:
+> > > v1..v3: <untracked>
+> > > v4:     fix bugs in iwl4965
+> >
+> > Also inserting few, actually drawing it unusable. You are lucky we
+> > like you here :)
+> > The question is how we handle this?. Do you want  to resubmit this
+> > huge patch or we fix it somehow over it...
+>
+> I think I'm going to hold this back from Dave for 2.6.25.  It might
+> be better if we can fix any known problems with this patch before
+> re-merging it for pre-2.6.26 development.
 >
 
-I am not sure about the necessity of it myself, as once A-MPDU is
-active all traffic for the RA/TID (no matter what interface usese it)
-should be aggregated.
-I will currently leave it this way, and if you see any problem  please
-describe it specifically and i will change it either on this patch or
-on top of it.
+So will you branch it publicly in wireless-2.6 or  we do it on mailing
+list?  I have some patches for iwl4965 to make HT compile again but
+after Pandora's box has opened so I stopped to try? I will send them
+out.
+What is the window left for 2.6.25? I'm just worried about cfg80211
+general progress.
+Thanks
+Tomas
+
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
