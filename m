@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37652 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbYAXOsS (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51354 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbYA1RJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:48:18 -0500
-Subject: Re: [PATCH 01/12] mac80211: A-MPDU Tx add session's and low level
-	driver's API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12009163391152-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115237_868897_926DBC00)
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163391152-git-send-email-ron.rindjunsky@intel.com>
-	 (sfid-20080121_115237_868897_926DBC00)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Woz1WVjL4ejSfO4toI13"
-Date: Thu, 24 Jan 2008 10:23:51 +0100
-Message-Id: <1201166631.3454.57.camel@johannes.berg> (sfid-20080124_144849_986100_A70EB2B1)
-Mime-Version: 1.0
+	Mon, 28 Jan 2008 12:09:23 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211 crash in ieee80211_sta_scan_work
+Date: Mon, 28 Jan 2008 18:07:25 +0100
+Cc: Tomas Winkler <tomasw@gmail.com>, stefano.brivio@polimi.it,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <479D9B5F.5000304@lwfinger.net> <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com> <20080128151200.GC5835@tuxdriver.com>
+In-Reply-To: <20080128151200.GC5835@tuxdriver.com>
+MIME-Version: 1.0
+Message-Id: <200801281807.26267.mb@bu3sch.de> (sfid-20080128_170927_441504_6399BAFB)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 28 January 2008 16:12:00 John W. Linville wrote:
+> On Mon, Jan 28, 2008 at 11:48:51AM +0200, Tomas Winkler wrote:
+> > On Jan 28, 2008 11:37 AM,  <stefano.brivio@polimi.it> wrote:
+> > > Quoting Tomas Winkler <tomasw@gmail.com>:
+> > >
+> > > > There are too many issues with API change patch. I think it is a good
+> > > > direction but it's really unstable I think we need to give another
+> > > > round before it can be applied.
+> > >
+> > > That has already been applied. I suggest that you point out the
+> > > iwl4965 bugs you generically reported so that they can be fixed as well.
+> > >
+> > We've seen already patches to be un-applied, reverted.
+> > I'll fix the bugs that's not problem but it takes time. I'm just
+> > worried about the other users that find driver unusable.
+> 
+> I'm going to hold it back from 2.6.25.  We can work on it for 2.6.26.
 
---=-Woz1WVjL4ejSfO4toI13
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The new band API is really really needed. I already have dozens of FIXMEs
+in b43 that will automatically go away once the mac80211 API is changed.
+Lots of FIXMEs will be added if this is not merged.
 
+Please apply this patch and apply fixes inside of the 2.6.25 development
+cycle. We are in a _development_ kernel. Kernels _do_ break in development
+stages. That is the whole reason why development kernels exist.
 
->  	int (*ampdu_action)(struct ieee80211_hw *hw,
->  			    enum ieee80211_ampdu_mlme_action action,
-> -			    const u8 *ra, u16 tid, u16 ssn);
-> +			    u8 *addr, u16 tid, u16 *ssn);
+So if we push this patch to 2.6.26 another bug appears. Should we push
+it to 2.6.27 then instead of simply fixing it in the development cycle?
 
-Any reason you're removing the "const"?
- =20
-> +int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 t=
-id);
+Besides that, _nobody_ will test the patch, if it's not applied to your
+tree. So the situation will not be better when you apply it in the
+next development cycle.
 
-Maybe the other functions should instead use a const u8 *ra?
+And for users complaining about a development kernel being unusable, well,
+what to say about them? I'd say the right answer would be: Go and use
+a stable kernel!
 
-I don't have much to say about this patch really :)
+Please realize that delaying this patch means increasing the pain for
+driver developers that need this patch for another 80-100 days.
 
-johannes
-
---=-Woz1WVjL4ejSfO4toI13
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5hZJqVg1VMiehFYAQLapQ/+JWOgu1ULLnWiYzMzRxNDUQIowjtoGpfn
-j4BaV3eYcU1kGpjdmEsg6loeu3ILZcU3GZB3uYf6Jxhzcw7s+qnf/Sc0/XSd143u
-dC2eePwsFnrry8uSgVF5DUWENebtYpETa+mp8V+8L/RTAHXx9+G3L3e1mQyD7x/x
-d4vJC/uQ9xI7oncD3TWjXr6KY6JX5t+G4oyDCNiRWT99LfEFwapsDj2JOSIeBeog
-jhuP+NXNbpFNtQA9tBswa1yebb6JtGUH/Z2IFcLZXowXOBNldbWJVzVEhqxYmjtr
-DUkUnhCb8SqQPxYabn5vUDXXBHyN+HLGiHSgqJsjZhhg1WtGj6bPJIKA/pORJcbx
-KQ68L2FAkQ+l2XBG9PROk79Xr5TvJAYTK1fzWpIstZmcJj5oSrtVxQfkweX13wmn
-XAj8AxcJt3ZZGzNOCLZfv2laWEqdacun7Zo0Ptv9HJzwe57CYr9fUHhHe9tgm4+5
-NPoXtXDtb3gVfl7b6gDUmdMLU2eYhlaAu4XdzJbOItuw7G5Lm5IOHIRPM12kATz6
-4sgreBGFLGYkCRiOJLaSN+4O1U8DAe/ZJCg2IRwQeGg17Cjhwvvo/LOPqBYmecR1
-gdUZ20lh1CmAj7Mux/mbHH8qq5zcz32fYodyNDYsEYTnzAWAfzDgBs3s3sg7wOTC
-zVsEal4ZG1M=
-=54ou
------END PGP SIGNATURE-----
-
---=-Woz1WVjL4ejSfO4toI13--
-
+-- 
+Greetings Michael.
