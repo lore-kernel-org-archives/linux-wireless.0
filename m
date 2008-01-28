@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3204 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751AbYAVPCC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 10:02:02 -0500
-Date: Tue, 22 Jan 2008 09:51:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-	(2008-01-21)
-Message-ID: <20080122145126.GA3206@tuxdriver.com> (sfid-20080122_150206_555999_1674E8C1)
-References: <20080121202835.GA3065@tuxdriver.com> <200801220856.55024.hs4233@mail.mn-solutions.de> <20080122125400.596ccbeb@morte>
+Received: from vs166246.vserver.de ([62.75.166.246]:56028 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbYA1PUn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 10:20:43 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: mac80211 crash in ieee80211_sta_scan_work
+Date: Mon, 28 Jan 2008 16:18:56 +0100
+Cc: stefano.brivio@polimi.it,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <479D9B5F.5000304@lwfinger.net> <20080128103739.oi3iwmmzlwo8w4gw@webmail.polimi.it> <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com>
+In-Reply-To: <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080122125400.596ccbeb@morte>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801281618.56891.mb@bu3sch.de> (sfid-20080128_152047_302014_0DDAE6D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 22, 2008 at 12:54:00PM +0100, Stefano Brivio wrote:
-> On Tue, 22 Jan 2008 08:56:54 +0100
-> Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-> 
-> > > Holger Schurig (5):
-> > >       libertas cs/sdio: fix 'NOHZ: local_softirq_pending 08'
-> > 
-> > This patch was originally from Marc Pignat <marc.pignat@hevs.ch>. 
-> > Should I have made an "Author: " line into the patch then I 
-> > re-wrote the patch for wireless-2.6/everything ?
-> 
-> In that case, you should add a "From:" line.
+On Monday 28 January 2008 10:48:51 Tomas Winkler wrote:
+> On Jan 28, 2008 11:37 AM,  <stefano.brivio@polimi.it> wrote:
+> > Quoting Tomas Winkler <tomasw@gmail.com>:
+> >
+> > > There are too many issues with API change patch. I think it is a good
+> > > direction but it's really unstable I think we need to give another
+> > > round before it can be applied.
+> >
+> > That has already been applied. I suggest that you point out the
+> > iwl4965 bugs you generically reported so that they can be fixed as well.
+> >
+> We've seen already patches to be un-applied, reverted.
+> I'll fix the bugs that's not problem but it takes time. I'm just
+> worried about the other users that find driver unusable.
 
-Yes, sorry for any mixup.  If forwarding a patch authored by someone
-else then please add:
+We are inside of a development kernel cycle. So where's the actual problem?
+People should get kicked ass for assuming a dev kernel was stable. ;)
 
-From: Patch Author <patch.author@email.net>
-
-...as the first line of the message.  Or state that someone else is
-the author clearly in the email.
-
-Thanks!
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
