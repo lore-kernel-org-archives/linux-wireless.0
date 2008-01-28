@@ -1,109 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:36446 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753507AbYAGUcH (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:32868 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166AbYA1Jsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:32:07 -0500
-Date: Mon, 7 Jan 2008 15:31:01 -0500
-From: Forest Bond <forest@alittletooquiet.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: VT6656 driver source available from VIA
-Message-ID: <20080107203101.GA4599@storm.local.network> (sfid-20080107_203211_108871_803B1EDD)
-References: <20070919193743.GA14127@storm.local.network> <20071101185900.GD14943@tuxdriver.com> <20071101190711.GB17825@storm.local.network> <20071101191250.GE14943@tuxdriver.com> <20071105020730.GA4414@storm.local.network> <20071114170051.GD23778@storm.local.network> <20071114170634.GC6226@tuxdriver.com> <20080107184949.GI18550@storm.local.network> <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com>
+	Mon, 28 Jan 2008 04:48:51 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2882622wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2008 01:48:51 -0800 (PST)
+Message-ID: <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com> (sfid-20080128_094856_085401_17D0CAF2)
+Date: Mon, 28 Jan 2008 11:48:51 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: stefano.brivio@polimi.it
+Subject: Re: mac80211 crash in ieee80211_sta_scan_work
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080128103739.oi3iwmmzlwo8w4gw@webmail.polimi.it>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
-In-Reply-To: <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <479D9B5F.5000304@lwfinger.net>
+	 <1ba2fa240801280129g5c9c7b73pdfdb2eb80944ce32@mail.gmail.com>
+	 <20080128103739.oi3iwmmzlwo8w4gw@webmail.polimi.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Jan 28, 2008 11:37 AM,  <stefano.brivio@polimi.it> wrote:
+> Quoting Tomas Winkler <tomasw@gmail.com>:
+>
+> > There are too many issues with API change patch. I think it is a good
+> > direction but it's really unstable I think we need to give another
+> > round before it can be applied.
+>
+> That has already been applied. I suggest that you point out the
+> iwl4965 bugs you generically reported so that they can be fixed as well.
+>
+We've seen already patches to be un-applied, reverted.
+I'll fix the bugs that's not problem but it takes time. I'm just
+worried about the other users that find driver unusable.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks
+Tomas
 
-On Mon, Jan 07, 2008 at 03:20:02PM -0500, Luis R. Rodriguez wrote:
-> On Jan 7, 2008 1:49 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> > Hi,
-> >
-> > On Wed, Nov 14, 2007 at 12:06:34PM -0500, John W. Linville wrote:
-> > > On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
-> > >> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
-> > >>> The post is here:
-> > >>>
-> > >>> http://forums.viaarena.com/messageview.aspx?catid=3D28&threadid=3D7=
-8745
-> > >>>
-> > >>> Any noise that can be contributed is welcome and appreciated.  You'=
-ll need
-> > >>> to create an account to post, though.
-> > >
-> > >> I also added these.  Perhaps having plenty of content/links regardin=
-g this
-> > >> issue will help to increase visibility:
-> > >>
-> > >> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-lin=
-ux-driver/
-> > >> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/1=
-62671
-> > >
-> > > Excellent...I appreciate your efforts as an agitator! :-)
-> >
-> > At this point I am not anticipating positive results WRT this endeavor,=
- and am
-> > unable to pursue further assistance from VIA.  Further, I've seen that =
-the
-> > driver in question likely exhibits some interesting quirks that makes it
-> > difficult to use.  It is also bit-rotting out of relevance.
->=20
-> This is unfortunate to hear...
->=20
-> > Can the driver be used as a reference for a fresh implementation?  I've=
- not
-> > written a driver before, but would be open to the possibility.
->=20
-> IANAL but I believe It basically depends on the license the vendor
-> issued the driver under and its sources under. If no license was used
-> then I believe the standard copyright license terms should be assumed.
-> What license was used throughout the driver files?
->=20
-> > What are the legal ramifications of a driver author having access to
-> > proprietary source code?
->=20
-> Again, I believe it depends on the license/NDA/terms under which the
-> driver author obtained access to such proprietary source code. The
-> more details you provide the better.
-
-The license was omitted.  This was presumably an oversight, but intentions =
-are
-always hard to know when the other party isn't saying anything :)
-
-There's little doubt in my mind that we get nothing more than fair use out =
-of
-this package, though.  The question is "is that enough?".  Code copying is
-obviously not allowed, but is a new (and sufficiently different) implementa=
-tion
-allowed?
-
--Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHgowFRO4fQQdv5AwRAjRHAJ9hreuHeRAFXLBbmW5n0DITdJ7XiwCgqcDC
-GyCmICF8c1betjppbqgEAEU=
-=K51i
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
+> --
+> Ciao
+> Stefano
+>
+>
+>
+>
