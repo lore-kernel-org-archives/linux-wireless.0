@@ -1,47 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn1.fre.skanova.net ([81.228.11.168]:45476 "EHLO
-	pne-smtpout4-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754081AbYAYNbu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 08:31:50 -0500
-Subject: Re: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080124185321.GB3200@tuxdriver.com>
-References: <20080120001342.25718.83669.stgit@fate.lan>
-	 <1201094475.7733.1.camel@localhost> <20080123145243.GA3129@tuxdriver.com>
-	 <1201110286.8696.10.camel@localhost>  <20080124185321.GB3200@tuxdriver.com>
+Received: from mx1.redhat.com ([66.187.233.31]:51639 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752409AbYA1QnX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 11:43:23 -0500
+Subject: Re: [PATCH] libertas: trim overly long debug statement
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200801281725.13076.hs4233@mail.mn-solutions.de>
+References: <200801281725.13076.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Fri, 25 Jan 2008 15:25:40 +0200
-Message-Id: <1201267540.7266.12.camel@localhost> (sfid-20080125_133154_560673_2ED0813D)
+Date: Mon, 28 Jan 2008 11:38:17 -0500
+Message-Id: <1201538297.14441.3.camel@localhost.localdomain> (sfid-20080128_164326_090745_3F62F94E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-01-24 at 13:53 -0500, John W. Linville wrote:
-> Overall this looks fine to me for initial merge.  I have a couple
-> of comments:
+        On Mon, 2008-01-28 at 17:25 +0100, Holger Schurig wrote:
+> see subject
 > 
-> 	-- I'm not too excited about the "Ndis_802_*" naming scheme for
-> 	data structures, although I know you copied it from elsewhere.
-> 	I'd like to see it changed, but I don't consider that a
-> 	merge blocker.
-To be honest I'm not either, but I'll prioritise this for later.
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> 
+> Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2008-01-22 12:47:50.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2008-01-22 16:36:02.000000000 +0100
+> @@ -1182,9 +1182,9 @@ static void lbs_submit_command(struct lb
+>  	    command == CMD_802_11_AUTHENTICATE)
+>  		timeo = 10 * HZ;
+>  
+> -	lbs_deb_host("DNLD_CMD: command 0x%04x, seq %d, size %d, jiffies %lu\n",
+> +	lbs_deb_cmd("DNLD_CMD: command 0x%04x, seq %d, size %d, jiffies %lu\n",
+>  		     command, le16_to_cpu(cmd->seqnum), cmdsize, jiffies);
+> -	lbs_deb_hex(LBS_DEB_HOST, "DNLD_CMD", (void *) cmdnode->cmdbuf, cmdsize);
+> +	lbs_deb_hex(LBS_DEB_CMD, "DNLD_CMD", (void *) cmdnode->cmdbuf, cmdsize);
+>  
+>  	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) cmd, cmdsize);
+>  
+> @@ -1193,9 +1193,7 @@ static void lbs_submit_command(struct lb
+>  		/* Let the timer kick in and retry, and potentially reset
+>  		   the whole thing if the condition persists */
+>  		timeo = HZ;
+> -	} else
+> -		lbs_deb_cmd("DNLD_CMD: sent command 0x%04x, jiffies %lu\n",
+> -			    command, jiffies);
+> +	}
+>  
+>  	/* Setup the timer after transmit command */
+>  	mod_timer(&priv->command_timer, jiffies + timeo);
+> @@ -1214,7 +1212,7 @@ static int lbs_cmd_mac_control(struct lb
+>  	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_mac_control) + S_DS_GEN);
+>  	mac->action = cpu_to_le16(priv->currentpacketfilter);
+>  
+> -	lbs_deb_cmd("MAC_CONTROL: action 0x%x, size %d\n",
+> +	lbs_deb_cmd("MAC_CONTROL: action 0x%04x, size %d\n",
+>  		    le16_to_cpu(mac->action), le16_to_cpu(cmd->size));
+>  
+>  	lbs_deb_leave(LBS_DEB_CMD);
+> @@ -2068,15 +2066,15 @@ int lbs_cmd_copyback(struct lbs_private 
+>  	struct cmd_header *buf = (void *)extra;
+>  	uint16_t copy_len;
+>  
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> +	//lbs_deb_enter(LBS_DEB_CMD);
+>  
+>  	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
+> -	lbs_deb_cmd("Copying back %u bytes; command response was %u bytes, "
+> -		    "copy back buffer was %u bytes\n", copy_len,
+> -		    le16_to_cpu(resp->size), le16_to_cpu(buf->size));
+> +	//lbs_deb_cmd("copying %u bytes; respsize %u, "
+> +	//	    "bufsize %u\n", copy_len,
+> +	//	    le16_to_cpu(resp->size), le16_to_cpu(buf->size));
+>  	memcpy(buf, resp, copy_len);
+>  
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> +	//lbs_deb_leave(LBS_DEB_CMD);
+>  	return 0;
+>  }
 
-> 	-- I foresee this driver surviving a conversion to use the
-> 	new cfg80211 configuraiton API.  So the "rndis_wext" name may
-> 	not be the best long-term choice.  I might suggest something
-> 	like "rndis_wlan".  I don't see why we couldn't change that
-> 	post-merge, although I would prefer to do that before the
-> 	final 2.6.25 release.
-Sure.
+If you want to kill them, let's remove them.  // also doesn't conform to
+the kernel style.  I'd say just take the debug bits out for now.
 
-> So, I intend to push this upstream for 2.6.25.  Please consider making
-> the changes cited above, especially the name change.
-Ok, I'll make new patchset with name change and changes David Brownell
-wants on usbnet patches.
+Dan
 
- - Jussi
-
+>  EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
+> Index: wireless-2.6/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/cmdresp.c	2008-01-22 14:38:34.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/cmdresp.c	2008-01-22 16:43:54.000000000 +0100
+> @@ -509,9 +509,9 @@ int lbs_process_rx_command(struct lbs_pr
+>  	respcmd = le16_to_cpu(resp->command);
+>  	result = le16_to_cpu(resp->result);
+>  
+> -	lbs_deb_host("CMD_RESP: response 0x%04x, seq %d, size %d, jiffies %lu\n",
+> +	lbs_deb_cmd("CMD_RESP: response 0x%04x, seq %d, size %d, jiffies %lu\n",
+>  		     respcmd, le16_to_cpu(resp->seqnum), priv->upld_len, jiffies);
+> -	lbs_deb_hex(LBS_DEB_HOST, "CMD_RESP", (void *) resp, priv->upld_len);
+> +	lbs_deb_hex(LBS_DEB_CMD, "CMD_RESP", (void *) resp, priv->upld_len);
+>  
+>  	if (resp->seqnum != resp->seqnum) {
+>  		lbs_pr_info("Received CMD_RESP with invalid sequence %d (expected %d)\n",
 
