@@ -1,58 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:39181 "EHLO ciao.gmane.org"
+Received: from mx1.redhat.com ([66.187.233.31]:57764 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752469AbYAFHzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2008 02:55:38 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JBQLW-0007aU-Vf
-	for linux-wireless@vger.kernel.org; Sun, 06 Jan 2008 07:55:02 +0000
-Received: from cpc3-cwma2-0-0-cust15.swan.cable.ntl.com ([81.96.204.16])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 07:55:02 +0000
-Received: from andy by cpc3-cwma2-0-0-cust15.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2008 07:55:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Andrew Price <andy@andrewprice.me.uk>
-Subject: Re: Warning emited by 2.6.24-rc6-git5
-Date: Sun, 06 Jan 2008 07:49:08 +0000
-Message-ID: <478087F4.7090500@andrewprice.me.uk> (sfid-20080106_075542_574197_8E26FB37)
-References: <200712290942.37396.chris2553@googlemail.com> <200801020632.31361.chris2553@googlemail.com> <200801022002.29262.IvDoorn@gmail.com> <200801041709.12043.chris2553@googlemail.com>
+	id S1753734AbYA1QqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2008 11:46:12 -0500
+Subject: Re: [PATCH] libertas: rename/document scan_channel
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200801281728.05763.hs4233@mail.mn-solutions.de>
+References: <200801281728.05763.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 28 Jan 2008 11:41:07 -0500
+Message-Id: <1201538467.14441.11.camel@localhost.localdomain> (sfid-20080128_164632_166819_D67917E5)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Cc: public-chris2553-gM/Ye1E23mwN+BqQ9rBEUg@ciao.gmane.org
-In-Reply-To: <200801041709.12043.chris2553@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/01/08 17:09, Chris Clayton wrote:
-> On Wednesday 02 January 2008, Ivo van Doorn wrote:
->> On Wednesday 02 January 2008, Chris Clayton wrote:
->>> Ah, does the patch I have applied and am running need enhancement,
->>> please?
->> ---
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
->> b/drivers/net/wireless/rt2x00/rt2x00dev.c index ff399f8..3c10a68 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
->> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+On Mon, 2008-01-28 at 17:28 +0100, Holger Schurig wrote:
+> Rename last_scanned_channel to scan_channel, just so that a
+> grep for struct bss_descriptor's last_scanned element doesn't
+> show up so many positives.
 > 
-> <snip>
+> Also documented the variable and moved it to other scan related
+> entries in lbs_private.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I was seeing the same warning so I've applied the patch to the latest
-mainline git tree. It's cured the warning and everything seems to be ok
-so far. I'll let you know if I see any side effects. In case you're
-interested I've got one of these:
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-02:00.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
-	Subsystem: Belkin F5D7010 Wireless G Notebook Network Card
-	Flags: bus master, slow devsel, latency 64, IRQ 16
-	Memory at 54000000 (32-bit, non-prefetchable) [size=8K]
-	Capabilities: [40] Power Management version 2
-
-Regards,
-
---
-Andy Price
+> Index: wireless-2.6/drivers/net/wireless/libertas/debugfs.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/debugfs.c	2008-01-28 17:44:57.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/debugfs.c	2008-01-28 17:46:05.000000000 +0100
+> @@ -314,7 +314,7 @@ static ssize_t lbs_setuserscan(struct fi
+>  
+>  	lbs_scan_networks(priv, scan_cfg, 1);
+>  	wait_event_interruptible(priv->cmd_pending,
+> -				 priv->surpriseremoved || !priv->last_scanned_channel);
+> +				 priv->surpriseremoved || !priv->scan_channel);
+>  
+>  	if (priv->surpriseremoved)
+>  		goto out_scan_cfg;
+> Index: wireless-2.6/drivers/net/wireless/libertas/dev.h
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/dev.h	2008-01-28 17:45:29.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/dev.h	2008-01-28 17:46:05.000000000 +0100
+> @@ -143,9 +143,12 @@ struct lbs_private {
+>  	wait_queue_head_t waitq;
+>  	struct workqueue_struct *work_thread;
+>  
+> +	/** Scanning */
+>  	struct delayed_work scan_work;
+>  	struct delayed_work assoc_work;
+>  	struct work_struct sync_channel;
+> +	/* remember which channel was scanned last, != 0 if currently scanning */
+> +	int scan_channel;
+>  
+>  	/** Hardware access */
+>  	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
+> @@ -321,7 +324,6 @@ struct lbs_private {
+>  	struct cmd_ds_802_11_get_log logmsg;
+>  
+>  	u32 monitormode;
+> -	int last_scanned_channel;
+>  	u8 fw_ready;
+>  };
+>  
+> Index: wireless-2.6/drivers/net/wireless/libertas/scan.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/libertas/scan.c	2008-01-28 17:45:29.000000000 +0100
+> +++ wireless-2.6/drivers/net/wireless/libertas/scan.c	2008-01-28 17:46:05.000000000 +0100
+> @@ -612,13 +612,13 @@ int lbs_scan_networks(struct lbs_private
+>  	}
+>  
+>  	/* Prepare to continue an interrupted scan */
+> -	lbs_deb_scan("chan_count %d, last_scanned_channel %d\n",
+> -		     chan_count, priv->last_scanned_channel);
+> +	lbs_deb_scan("chan_count %d, scan_channel %d\n",
+> +		     chan_count, priv->scan_channel);
+>  	curr_chans = chan_list;
+>  	/* advance channel list by already-scanned-channels */
+> -	if (priv->last_scanned_channel > 0) {
+> -		curr_chans += priv->last_scanned_channel;
+> -		chan_count -= priv->last_scanned_channel;
+> +	if (priv->scan_channel > 0) {
+> +		curr_chans += priv->scan_channel;
+> +		chan_count -= priv->scan_channel;
+>  	}
+>  
+>  	/* Send scan command(s)
+> @@ -644,10 +644,10 @@ int lbs_scan_networks(struct lbs_private
+>  		    !full_scan &&
+>  		    !priv->surpriseremoved) {
+>  			/* -1 marks just that we're currently scanning */
+> -			if (priv->last_scanned_channel < 0)
+> -				priv->last_scanned_channel = to_scan;
+> +			if (priv->scan_channel < 0)
+> +				priv->scan_channel = to_scan;
+>  			else
+> -				priv->last_scanned_channel += to_scan;
+> +				priv->scan_channel += to_scan;
+>  			cancel_delayed_work(&priv->scan_work);
+>  			queue_delayed_work(priv->work_thread, &priv->scan_work,
+>  				msecs_to_jiffies(300));
+> @@ -671,7 +671,7 @@ int lbs_scan_networks(struct lbs_private
+>  #endif
+>  
+>  out2:
+> -	priv->last_scanned_channel = 0;
+> +	priv->scan_channel = 0;
+>  
+>  out:
+>  	if (priv->connect_status == LBS_CONNECTED) {
+> @@ -1393,7 +1393,7 @@ int lbs_set_scan(struct net_device *dev,
+>  		queue_delayed_work(priv->work_thread, &priv->scan_work,
+>  			msecs_to_jiffies(50));
+>  	/* set marker that currently a scan is taking place */
+> -	priv->last_scanned_channel = -1;
+> +	priv->scan_channel = -1;
+>  
+>  	if (priv->surpriseremoved)
+>  		return -EIO;
+> @@ -1427,7 +1427,7 @@ int lbs_get_scan(struct net_device *dev,
+>  	lbs_deb_enter(LBS_DEB_SCAN);
+>  
+>  	/* iwlist should wait until the current scan is finished */
+> -	if (priv->last_scanned_channel)
+> +	if (priv->scan_channel)
+>  		return -EAGAIN;
+>  
+>  	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
 
