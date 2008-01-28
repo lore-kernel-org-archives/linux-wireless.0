@@ -1,235 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59305 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759947AbYAKV2M (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51958 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753348AbYA1RsC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 16:28:12 -0500
-Subject: Re: [RFC PATCH 03/10] mac80211: A-MPDU Tx adding basic
-	functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <11999857493027-git-send-email-ron.rindjunsky@intel.com>
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-	 <11999857493027-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3EJaGHzy+gm1wZSdg2YB"
-Date: Fri, 11 Jan 2008 17:51:48 +0100
-Message-Id: <1200070308.3861.203.camel@johannes.berg> (sfid-20080111_212814_551469_17C698C1)
-Mime-Version: 1.0
+	Mon, 28 Jan 2008 12:48:02 -0500
+Message-ID: <479E14FA.2010206@lwfinger.net> (sfid-20080128_174807_735990_3D2F41F5)
+Date: Mon, 28 Jan 2008 10:46:34 -0700
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Michael Buesch <mb@bu3sch.de>, Tomas Winkler <tomasw@gmail.com>,
+	stefano.brivio@polimi.it,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 crash in ieee80211_sta_scan_work
+References: <479D9B5F.5000304@lwfinger.net> <1ba2fa240801280148r27fac26ep5403bc8ccfc6d37a@mail.gmail.com> <20080128151200.GC5835@tuxdriver.com> <200801281807.26267.mb@bu3sch.de>
+In-Reply-To: <200801281807.26267.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> On Monday 28 January 2008 16:12:00 John W. Linville wrote:
+>> I'm going to hold it back from 2.6.25.  We can work on it for 2.6.26.
+> 
+> The new band API is really really needed. I already have dozens of FIXMEs
+> in b43 that will automatically go away once the mac80211 API is changed.
+> Lots of FIXMEs will be added if this is not merged.
+> 
+> Please apply this patch and apply fixes inside of the 2.6.25 development
+> cycle. We are in a _development_ kernel. Kernels _do_ break in development
+> stages. That is the whole reason why development kernels exist.
+> 
+> So if we push this patch to 2.6.26 another bug appears. Should we push
+> it to 2.6.27 then instead of simply fixing it in the development cycle?
+> 
+> Besides that, _nobody_ will test the patch, if it's not applied to your
+> tree. So the situation will not be better when you apply it in the
+> next development cycle.
+> 
+> And for users complaining about a development kernel being unusable, well,
+> what to say about them? I'd say the right answer would be: Go and use
+> a stable kernel!
+> 
+> Please realize that delaying this patch means increasing the pain for
+> driver developers that need this patch for another 80-100 days.
+> 
 
---=-3EJaGHzy+gm1wZSdg2YB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+John,
 
+I agree with Michael on this issue. Due to the uncertainty of the quality of my Internet connection 
+this winter, I no longer subscribe to linux-wireless, and I'm not sure of all the discussion that 
+went into the API change. I have, however, seen the FIXME's in b43. In addition, getting the code 
+into 2.6.25-rc1 will get a lot more testers.
 
-> +	sta =3D sta_info_get(local, ra);
-> +	if (!sta) {
-> +		printk(KERN_ERR "Could not find the station\n");
-> +		return -ENOENT;
-> +	}
-> +
-> +	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-> +
-> +	/* we have tried too many times, reciever does not want A-MPDU */
+One little anecdote about the bug in the subject may help convince you. I discovered this bug 
+shortly after the API change was committed to wireless-2.6, but I did not try to fix it until I 
+found that I could not apply Stefano's patch for rc80211_pid_algo() unless the API change was also 
+in the code. For me, laziness rules and I only worked on this bug when it was less work to fix it 
+than to modify Stefano's patch. With these two patches in place, the current development tree is 
+working fine with b43.
 
-typo: "receiver"
+Larry
 
-> +	if (sta->ampdu_mlme.tid_tx[tid].addba_req_num >	HT_AGG_MAX_RETRIES) {
-> +		ret =3D -EBUSY;
-> +		goto start_ba_exit;
-
-Can this counter reset somehow? Or do we only implicitly reset it when
-the station disassociates and associates again?
-
-> +	/* FIXME: need a better way to ensure that TX flow won't interrupt us*/
-> +	/* until the end of the call to requeue function */
-> +	spin_lock_bh(&local->mdev->queue_lock);
-
-Hm. I think the queue lock here is pretty much the only way. On the
-other hand, maybe here's the point where we should talk about
-multi-queue ethernet devices?
-
-> +	if (local->ops->ampdu_action)
-> +		ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
-> +						ra, tid, &start_seq_num);
-> +
-> +	if (ret) {
-> +		/* No need to requeue the packets in the agg queue, since we
-> +		 * held the tx lock: no packet could be enqueued to the newly
-> +		 * allocated queue */
-> +		ieee80211_ht_agg_queue_remove(local, sta, tid, 0);
-> +#ifdef CONFIG_MAC80211_HT_DEBUG
-> +		printk(KERN_DEBUG "BA request denied - HW or queue unavailable"
-> +				" for tid %d\n", tid);
-> +#endif /* CONFIG_MAC80211_HT_DEBUG */
-> +		spin_unlock_bh(&local->mdev->queue_lock);
-> +		*state =3D HT_AGG_STATE_IDLE;
-> +		goto start_ba_exit;
-> +	}
-> +
-> +	/* Will put all the packets in the new SW queue */
-> +	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
-> +	spin_unlock_bh(&local->mdev->queue_lock);
-> +
-> +	/* We have most probably almost emptied the legacy queue */
-> +	ieee80211_wake_queue(local_to_hw(local), ieee802_1d_to_ac[tid]);
-> +
-> +	/* send an addBA request */
-> +	sta->ampdu_mlme.dialog_token_allocator++;
-> +	sta->ampdu_mlme.tid_tx[tid].dialog_token =3D
-> +			sta->ampdu_mlme.dialog_token_allocator;
-> +	sta->ampdu_mlme.tid_tx[tid].ssn =3D start_seq_num;
-> +
-> +	ieee80211_send_addba_request(sta->dev, ra, tid,
-> +			 sta->ampdu_mlme.tid_tx[tid].dialog_token,
-> +			 sta->ampdu_mlme.tid_tx[tid].ssn,
-> +			 0x40, 5000);
-> +
-> +	/* activate the timer for the recipient's addBA response */
-> +	sta->ampdu_mlme.tid_tx[tid].addba_resp_timer.expires =3D
-> +				jiffies + ADDBA_RESP_INTERVAL;
-> +	add_timer(&sta->ampdu_mlme.tid_tx[tid].addba_resp_timer);
-> +	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
-> +
-> +start_ba_exit:
-> +	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-> +	sta_info_put(sta);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
-
-Why is this exported? I thought this is the first step of enabling
-aggregation?
-
-
-> +	/* check if the TID is in aggregation */
-> +	state =3D &sta->ampdu_mlme.tid_tx[tid].state;
-> +	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-> +
-> +	if (*state !=3D HT_AGG_STATE_OPERATIONAL) {
-> +		printk(KERN_ERR "Call to %s, whith AGG non operational\n",
-> +								__func__);
-> +		ret =3D -ENOENT;
-> +		goto stop_BA_exit;
-
-I dislike the __func__ usage here, why not just say "tried to disable TX
-aggregation while not operational" or something? Typo: "with".
-
-> +	/* Tell the driver to stop its HW queue */
-> +	if (local->ops->ampdu_action)
-> +		ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
-> +						ra, tid, NULL);
-
-Does it really stop the hw queue? Isn't that more like "stop
-aggregation"? Does the hardware actually have queues for each of these?
-Hm. I'm familiar enough with this I think.
-
-> +	/* case HW denied going back to legacy */
-> +	if (ret) {
-> +		printk(KERN_ERR "Driver could not stop aggregations\n");
-> +		*state =3D HT_AGG_STATE_OPERATIONAL;
-> +		ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
-> +		goto stop_BA_exit;
-
-Is there really a use case for a driver denying this? IOW, can you think
-of a good reason why a driver would deny it?
-
-> +EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
-
-Again, why export this?
-
-> +	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-> +		printk(KERN_ERR "%s, state not HT_ADDBA_REQUESTED_MSK: %d\n",
-> +			__func__, *state);
-
-Please just write the message w/o the function name.
-
-> +	if (*state & HT_ADDBA_DRV_READY_MSK)
-> +		printk(KERN_ERR "driver already prepared for aggregation\n");
-
-That's a bit odd. Shouldn't it rather be a WARN_ON() because the driver
-did something weird?
-
-> +	*state |=3D HT_ADDBA_DRV_READY_MSK;
-> +
-> +	if (*state =3D=3D HT_AGG_STATE_OPERATIONAL) {
-> +		printk(KERN_ERR "%s. OPERATIONNAL\n", __func__);
-
-typo, weird message :)
-
-> +	/* avoid ordering issues: we are the only one that can modify
-> +	 * the content of the qdiscs */
-> +	spin_lock_bh(&local->mdev->queue_lock);
-> +	/* remove the queue for this aggregation */
-> +	ieee80211_ht_agg_queue_remove(local, sta, tid, 1);
-> +	spin_unlock_bh(&local->mdev->queue_lock);
-> +
-> +	/* Not scheduling the device leads to a stall in the TX when qdisc */
-> +	/* contains more than ~220 packets... */
-> +	netif_schedule(local->mdev);
-
-This seems a bit weird, can you explain a bit more?
-
-> +	hdr =3D (struct ieee80211_hdr *) skb_put(skb,
-> +					sizeof(struct ieee80211_hdr));
-> +	memcpy(&hdr->addr1, ra, ETH_ALEN);
-> +	hdr->frame_control =3D tid;
-
-Hrm. This is just strange and hard to understand imho. Can't we just use
-some other structure instead of and ieee80211_hdr and push that onto the
-queue? Then we shouldn't be using an skb queue any more I guess if we're
-going to use it like this. For the skbs we can use skb->cb for our own
-list structure, and here we just use another structure that embeds our
-list structure...
-
-> +	/* not an elegant detour, but there is no choice as the timer passes
-> +	 * only one argument, and verious sta_info are needed here, so init
-
-typo: various, but I think it should read something like "both the
-sta_info and the TID are needed here"?
-
-> +	/* check if the TID waits for addBA response */
-> +	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-> +	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-> +		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-> +		*state =3D HT_AGG_STATE_IDLE;
-> +		printk(KERN_DEBUG "timer expired on tid %d but we are not "
-> +				"expecting addBA response there", tid);
-> +		goto timer_expired_exit;
-> +	}
-
-Couldn't this also happen when the response was just received while the
-timer expires but the response grabs the ampdu_tx spinlock before the
-timer does? Seems that should be in a comment and not worry about a
-printk.
-
-johannes
-
---=-3EJaGHzy+gm1wZSdg2YB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR4eeo6Vg1VMiehFYAQIPZBAArvCefk+V9cnxE9uaC4R1fB86h0L0/ldO
-Z4jzwhbwMAct9S+tkFgR1dHwRp1S2aM7OfYdhKwnwjxG0hElmi59kC50s8Q142UD
-EwT0HjmO05vwQVE4pi3SIWaD6t8wA3lGpCan1FwseGEq1H93FR4NylZ1tLsJ1Al5
-WIz7/NgFQ1d9z2Jcdml/cnvccVo4eEoYyYzUHVYwSM2i/sDxENGYkOydSIMlbLx5
-PkTh1Sq9YUsLPBmieMfpDfGAGbRP5F6LPZyQOMguqLRu+k1v4fLv28SAHtEeOyMi
-h+ac5xWAd2mPUXCxAHzQxM+2qDJe5oFSOCu5ucvTZEQqDmWbt7R6HPr1nvjIUo5p
-0AT2DZ/+ABS6TrmfgPEfTozF752QjysljZgfnjDYJmVVu2BqvqXMHlWOyNnuOHIn
-uC5v2dz01MYlji//GrLyMIyMptfnMquQlpbE06d0m+SfGLCJT8KuFtpOTzjA1W1J
-6sCKN1xZ6yx1SOqEY1MmcOc3UK1FXjgJ8uBP+ZPJ7Yzv6CYjx4a/s7GiZvH54C8T
-khUuz49ZtAd7ZY93ldxdpLgbnXvxT649RBJl6OoKMSWLRSHgEB0+m6Hmixti9jhz
-jV3JHf99zJYl0FcyoORXurDAGtA0WqWLD1hQG/hSJDk8KCaitUrztCJYvwkd0WQF
-bUEbrmEhlOw=
-=mFBh
------END PGP SIGNATURE-----
-
---=-3EJaGHzy+gm1wZSdg2YB--
 
