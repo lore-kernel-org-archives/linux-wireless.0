@@ -1,143 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61297 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754557AbYAWSPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 13:15:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] iwlwifi: cleanup usage of inline functions
-Date: Wed, 23 Jan 2008 10:15:19 -0800
-Message-Id: <1201112121-22340-5-git-send-email-reinette.chatre@intel.com> (sfid-20080123_181531_742600_C11DC337)
-In-Reply-To: <1201112121-22340-4-git-send-email-reinette.chatre@intel.com>
-References: <1201112121-22340-1-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-2-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-3-git-send-email-reinette.chatre@intel.com>
- <1201112121-22340-4-git-send-email-reinette.chatre@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754180AbYA2L3D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jan 2008 06:29:03 -0500
+Subject: [PATCH] mac80211: allow sending multicast frames through virtual
+	ports
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 28 Jan 2008 17:11:43 +0100
+Message-Id: <1201536703.9397.14.camel@johannes.berg> (sfid-20080129_112907_141584_667BAFA4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Be consistent when using inline functions. If the function only used
-once we move it to where it is used - no need for externs.
+When reworking the port access control code, I forgot multicast frames
+and those are now always rejected because the destination station is
+not known. This changes the code to allow through multicast frames and
+also avoid the sta hash lookup (which is bound to fail) for them.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   14 --------------
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    7 -------
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   14 ++++++++++++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 ++++++
- 6 files changed, 20 insertions(+), 23 deletions(-)
+Even though this is a fix, there's no need to apply this patch to
+non-development kernels, the problem cannot trigger unless you're
+in master mode which isn't supported yet.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 76c4ed1..4fdeb53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2369,18 +2369,4 @@ struct pci_device_id iwl3945_hw_card_ids[] = {
- 	{0}
- };
+ net/mac80211/tx.c |   21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+--- everything.orig/net/mac80211/tx.c	2008-01-25 13:39:39.446496582 +0100
++++ everything/net/mac80211/tx.c	2008-01-25 13:43:11.856498535 +0100
+@@ -1449,10 +1449,17 @@ int ieee80211_subif_start_xmit(struct sk
+ 		goto fail;
+ 	}
  
--/*
-- * Clear the OWNER_MSK, to establish driver (instead of uCode running on
-- * embedded controller) as EEPROM reader; each read is a series of pulses
-- * to/from the EEPROM chip, not a single event, so even reads could conflict
-- * if they weren't arbitrated by some ownership mechanism.  Here, the driver
-- * simply claims ownership, which should be safe when this function is called
-- * (i.e. before loading uCode!).
-- */
--inline int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv)
--{
--	_iwl3945_clear_bit(priv, CSR_EEPROM_GP, CSR_EEPROM_GP_IF_OWNER_MSK);
--	return 0;
--}
--
- MODULE_DEVICE_TABLE(pci, iwl3945_hw_card_ids);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 20b925f..4b07db9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -671,7 +671,6 @@ extern int iwl3945_hw_channel_switch(struct iwl3945_priv *priv, u16 channel);
- /*
-  * Forward declare iwl-3945.c functions for iwl-base.c
-  */
--extern int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv);
- extern __le32 iwl3945_get_antenna_flags(const struct iwl3945_priv *priv);
- extern int iwl3945_init_hw_rate_table(struct iwl3945_priv *priv);
- extern void iwl3945_reg_txpower_periodic(struct iwl3945_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 04db34b..569347f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4961,11 +4961,4 @@ int iwl4965_eeprom_acquire_semaphore(struct iwl4965_priv *priv)
- 	return rc;
- }
+-	sta = sta_info_get(local, hdr.addr1);
+-	if (sta) {
+-		sta_flags = sta->flags;
+-		sta_info_put(sta);
++	/*
++	 * There's no need to try to look up the destination
++	 * if it is a multicast address (which can only happen
++	 * in AP mode)
++	 */
++	if (!is_multicast_ether_addr(hdr.addr1)) {
++		sta = sta_info_get(local, hdr.addr1);
++		if (sta) {
++			sta_flags = sta->flags;
++			sta_info_put(sta);
++		}
+ 	}
  
--inline void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv)
--{
--	iwl4965_clear_bit(priv, CSR_HW_IF_CONFIG_REG,
--		CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
--}
--
--
- MODULE_DEVICE_TABLE(pci, iwl4965_hw_card_ids);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 78bc148..9cb82be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -750,7 +750,6 @@ struct iwl4965_priv;
-  * Forward declare iwl-4965.c functions for iwl-base.c
-  */
- extern int iwl4965_eeprom_acquire_semaphore(struct iwl4965_priv *priv);
--extern void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv);
+ 	/* receiver is QoS enabled, use a QoS type frame */
+@@ -1462,10 +1469,12 @@ int ieee80211_subif_start_xmit(struct sk
+ 	}
  
- extern int iwl4965_tx_queue_update_wr_ptr(struct iwl4965_priv *priv,
- 					  struct iwl4965_tx_queue *txq,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 5afc578..1e9e953 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1557,6 +1557,20 @@ static void get_eeprom_mac(struct iwl3945_priv *priv, u8 *mac)
- 	memcpy(mac, priv->eeprom.mac_address, 6);
- }
- 
-+/*
-+ * Clear the OWNER_MSK, to establish driver (instead of uCode running on
-+ * embedded controller) as EEPROM reader; each read is a series of pulses
-+ * to/from the EEPROM chip, not a single event, so even reads could conflict
-+ * if they weren't arbitrated by some ownership mechanism.  Here, the driver
-+ * simply claims ownership, which should be safe when this function is called
-+ * (i.e. before loading uCode!).
-+ */
-+static inline int iwl3945_eeprom_acquire_semaphore(struct iwl3945_priv *priv)
-+{
-+	_iwl3945_clear_bit(priv, CSR_EEPROM_GP, CSR_EEPROM_GP_IF_OWNER_MSK);
-+	return 0;
-+}
-+
- /**
-  * iwl3945_eeprom_init - read EEPROM contents
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index bb2d4f5..9f23c3f 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1639,6 +1639,12 @@ static void get_eeprom_mac(struct iwl4965_priv *priv, u8 *mac)
- 	memcpy(mac, priv->eeprom.mac_address, 6);
- }
- 
-+static inline void iwl4965_eeprom_release_semaphore(struct iwl4965_priv *priv)
-+{
-+	iwl4965_clear_bit(priv, CSR_HW_IF_CONFIG_REG,
-+		CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
-+}
-+
- /**
-  * iwl4965_eeprom_init - read EEPROM contents
-  *
--- 
-1.5.3.4
+ 	/*
+-	 * If port access control is enabled, drop frames to unauthorised
+-	 * stations unless they are EAPOL frames from the local station.
++	 * If port access control is enabled, drop unicast frames to
++	 * unauthorised stations unless they are EAPOL frames from the
++	 * local station.
+ 	 */
+ 	if (unlikely(sdata->ieee802_1x_pac &&
++		     !is_multicast_ether_addr(hdr.addr1) &&
+ 		     !(sta_flags & WLAN_STA_AUTHORIZED) &&
+ 		     !(ethertype == ETH_P_PAE &&
+ 		       compare_ether_addr(dev->dev_addr,
+
 
