@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57903 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbYABPY1 (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:57838 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895AbYA1OAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2008 10:24:27 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: better rate control algorithm selection
-Date: Wed, 2 Jan 2008 16:23:35 +0100
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-References: <1198253375.16241.76.camel@johannes.berg> <20080102084532.GA17960@infradead.org> <1199263934.4172.69.camel@johannes.berg>
-In-Reply-To: <1199263934.4172.69.camel@johannes.berg>
+	Mon, 28 Jan 2008 09:00:24 -0500
+Message-ID: <479DDC44.4050600@trash.net> (sfid-20080128_140028_923008_8BB1D31C)
+Date: Mon, 28 Jan 2008 14:44:36 +0100
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200801021623.36089.mb@bu3sch.de> (sfid-20080102_152431_358644_DF834551)
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, yi.zhu@intel.com
+Subject: Re: [RFC PATCH 06/10] mac80211: A-MPDU Tx adding qdisc support
+References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>	 <11999857503421-git-send-email-ron.rindjunsky@intel.com>	 <479CC590.7090406@trash.net> <1ba2fa240801271119m29a316eeib815facfbf2051e0@mail.gmail.com>
+In-Reply-To: <1ba2fa240801271119m29a316eeib815facfbf2051e0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 January 2008 09:52:14 Johannes Berg wrote:
-> 
-> > Building an algorithm optionally into mac80211 seems rather odd.  In
-> > case mac80211 the algorithms should be their own modules and you should
-> > use request_module to make sure at least one is loaded.
-> 
-> We actually do that but people still manage to mess it up because they
-> don't install the modules properly or whatever.
-> 
-> > Or if you
-> > really want to make sure one is alway avaiabable always build the
-> > simplest one directly and unconditionally into mac80211.ko.
-> 
-> That'd be an alternative too, I think we have something like that now. I
-> don't really like it that much though because for 99% of people it's
-> just dead code. Anyway, I'll look into Sam's mail and do a new patch
-> depending on that.
+Tomas Winkler wrote:
+> On Jan 27, 2008 7:55 PM, Patrick McHardy <kaber@trash.net> wrote:
+>
+>> Is there a reason to add new features to this instead of using
+>> the generic multiqueue support, moving classification to a
+>> classifier and killing wme?
+>>
+> Multiqueue is where we are heading to. We have developed this solution
+> before multiqueue was accepted and it worked well for few months
+> already so it can provide enough usability for 11n users for now.
+> We still have too many opens to close so we prefer to stage them
+> rather then choke on them. It will take few more weeks till we start
+> to work on it unless someone else take the lead of course.
 
-What about simply _not_ failing the initialization of mac80211, if no
-rc algo is available? I mean, we can just use a fixed rate we get through
-WEXT and stuff. Simply start at 1M on init in that case and stay at a fixed
-1M until the user sets a different fixed rate through WEXT.
 
--- 
-Greetings Michael.
+Thanks for the explanation.
