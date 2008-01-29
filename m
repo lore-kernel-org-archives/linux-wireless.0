@@ -1,655 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26324 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182AbYAPSlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 13:41:09 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 03/12 v2] mac80211: A-MPDU Tx adding basic functionality
-Date: Wed, 16 Jan 2008 20:40:51 +0200
-Message-Id: <1200508864774-git-send-email-ron.rindjunsky@intel.com> (sfid-20080116_184117_512994_4A068A1F)
-In-Reply-To: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
-References: <1200508860699-git-send-email-ron.rindjunsky@intel.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:59861 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750969AbYA2TcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jan 2008 14:32:09 -0500
+Date: Tue, 29 Jan 2008 20:29:16 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] rc80211-pid: fix rate adjustment
+Message-ID: <20080129202916.750ae353@morte> (sfid-20080129_193214_590902_E184AD81)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the following abilities to mac80211:
- - start A-MPDU Tx session
- - stop A-MPDU Tx session
- - call backs to start/stop A-MPDU Tx session
- - sending addBA request
- - processing addBA response
+Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
+in order to make the learning algorithm aware of constraints on rates. Also
+add some comments and rename variables.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+This fixes a bug which prevented 802.11b/g non-AP STAs from working with
+802.11b only AP STAs.
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- net/mac80211/ieee80211.c     |  336 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h   |   14 ++
- net/mac80211/ieee80211_sta.c |  178 ++++++++++++++++++++++
- 3 files changed, 528 insertions(+), 0 deletions(-)
+John, this is for 2.6.25.
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 5093a1a..4140489 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -406,6 +406,329 @@ static int ieee80211_stop(struct net_device *dev)
- 	return 0;
- }
+Index: wireless-2.6/net/mac80211/rc80211_pid_algo.c
+===================================================================
+--- wireless-2.6.orig/net/mac80211/rc80211_pid_algo.c
++++ wireless-2.6/net/mac80211/rc80211_pid_algo.c
+@@ -2,7 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
+- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
++ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -64,71 +64,66 @@
+  */
  
-+int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct sta_info *sta;
-+	struct ieee80211_sub_if_data *sdata;
-+	u16 start_seq_num = 0;
-+	u8 *state;
-+	int ret;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (tid >= STA_TID_NUM)
-+		return -EINVAL;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	printk(KERN_DEBUG "Open BA session requested for %s tid %u\n",
-+				print_mac(mac, ra), tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta) {
-+		printk(KERN_DEBUG "Could not find the station\n");
-+		return -ENOENT;
-+	}
-+
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+
-+	/* we have tried too many times, receiver does not want A-MPDU */
-+	if (sta->ampdu_mlme.tid_tx[tid].addba_req_num >	HT_AGG_MAX_RETRIES) {
-+		ret = -EBUSY;
-+		goto start_ba_exit;
-+	}
-+
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+	/* check if the TID is not in aggregation flow already */
-+	if (*state != HT_AGG_STATE_IDLE) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "BA request denied - session is not "
-+				 "idle on tid %u\n", tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		ret = -EAGAIN;
-+		goto start_ba_exit;
-+	}
-+
-+	/* FIXME: need a better way to ensure that TX flow won't interrupt us*/
-+	/* until the end of the call to requeue function */
-+	spin_lock_bh(&local->mdev->queue_lock);
-+
-+	/* create a new queue for this aggregation */
-+	ret = ieee80211_ht_agg_queue_add(local, sta, tid);
-+
-+	/* case no queue is available to aggregation */
-+	/* don't switch to aggregation */
-+	if (ret) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "BA request denied - no queue available for"
-+					" tid %d\n", tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		spin_unlock_bh(&local->mdev->queue_lock);
-+		goto start_ba_exit;
-+	}
-+	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
-+
-+	/* Ok, the Addba frame hasn't been sent yet, but if the driver calls the
-+	 * call back right away, it must see that the flow has begun */
-+	*state |= HT_ADDBA_REQUESTED_MSK;
-+
-+	if (local->ops->ampdu_action)
-+		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
-+						ra, tid, &start_seq_num);
-+
-+	if (ret) {
-+		/* No need to requeue the packets in the agg queue, since we
-+		 * held the tx lock: no packet could be enqueued to the newly
-+		 * allocated queue */
-+		ieee80211_ht_agg_queue_remove(local, sta, tid, 0);
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "BA request denied - HW or queue unavailable"
-+				" for tid %d\n", tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		spin_unlock_bh(&local->mdev->queue_lock);
-+		*state = HT_AGG_STATE_IDLE;
-+		goto start_ba_exit;
-+	}
-+
-+	/* Will put all the packets in the new SW queue */
-+	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
-+	spin_unlock_bh(&local->mdev->queue_lock);
-+
-+	/* We have most probably almost emptied the legacy queue */
-+	ieee80211_wake_queue(local_to_hw(local), ieee802_1d_to_ac[tid]);
-+
-+	/* send an addBA request */
-+	sta->ampdu_mlme.dialog_token_allocator++;
-+	sta->ampdu_mlme.tid_tx[tid].dialog_token =
-+			sta->ampdu_mlme.dialog_token_allocator;
-+	sta->ampdu_mlme.tid_tx[tid].ssn = start_seq_num;
-+
-+	ieee80211_send_addba_request(sta->dev, ra, tid,
-+			 sta->ampdu_mlme.tid_tx[tid].dialog_token,
-+			 sta->ampdu_mlme.tid_tx[tid].ssn,
-+			 0x40, 5000);
-+
-+	/* activate the timer for the recipient's addBA response */
-+	sta->ampdu_mlme.tid_tx[tid].addba_resp_timer.expires =
-+				jiffies + ADDBA_RESP_INTERVAL;
-+	add_timer(&sta->ampdu_mlme.tid_tx[tid].addba_resp_timer);
-+	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
-+
-+start_ba_exit:
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	sta_info_put(sta);
-+	return ret;
-+}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
-+
-+int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
-+				 u8 *ra, u16 tid,
-+				 enum ieee80211_back_parties initiator)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct sta_info *sta;
-+	u8 *state;
-+	int ret = 0;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (tid >= STA_TID_NUM)
-+		return -EINVAL;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	printk(KERN_DEBUG "Stop a BA session requested for %s tid %u\n",
-+				print_mac(mac, ra), tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	/* check if the TID is in aggregation */
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+
-+	if (*state != HT_AGG_STATE_OPERATIONAL) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "Try to stop Tx aggregation on"
-+				" non active TID\n");
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		ret = -ENOENT;
-+		goto stop_BA_exit;
-+	}
-+
-+	ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
-+
-+	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
-+		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-+
-+	if (local->ops->ampdu_action)
-+		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
-+						ra, tid, NULL);
-+
-+	/* case HW denied going back to legacy */
-+	if (ret) {
-+		WARN_ON(ret != -EBUSY);
-+		*state = HT_AGG_STATE_OPERATIONAL;
-+		ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
-+		goto stop_BA_exit;
-+	}
-+
-+stop_BA_exit:
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	sta_info_put(sta);
-+	return ret;
-+}
-+EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
-+
-+void ieee80211_start_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u16 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct sta_info *sta;
-+	u8 *state;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (tid >= STA_TID_NUM) {
-+		printk(KERN_DEBUG "Bad TID value: tid = %d (>= %d)\n",
-+				tid, STA_TID_NUM);
-+		return;
-+	}
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta) {
-+		printk(KERN_DEBUG "Could not find station: %s\n",
-+				print_mac(mac, ra));
-+		return;
-+	}
-+
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+
-+	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-+		printk(KERN_DEBUG "addBA was not requested yet, state is %d\n",
-+				*state);
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		sta_info_put(sta);
-+		return;
-+	}
-+
-+	WARN_ON_ONCE(*state & HT_ADDBA_DRV_READY_MSK);
-+
-+	*state |= HT_ADDBA_DRV_READY_MSK;
-+
-+	if (*state == HT_AGG_STATE_OPERATIONAL) {
-+		printk(KERN_DEBUG "Aggregation is on for tid %d \n", tid);
-+		ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
-+	}
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	sta_info_put(sta);
-+}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
-+
-+void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct sta_info *sta;
-+	u8 *state;
-+	int agg_queue;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (tid >= STA_TID_NUM) {
-+		printk(KERN_DEBUG "Bad TID value: tid = %d (>= %d)\n",
-+				tid, STA_TID_NUM);
-+		return;
-+	}
-+
-+	printk(KERN_DEBUG "Stop a BA session requested on DA %s tid %d\n",
-+				print_mac(mac, ra), tid);
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta) {
-+		printk(KERN_DEBUG "Could not find station: %s\n",
-+				print_mac(mac, ra));
-+		return;
-+	}
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	if ((*state & HT_AGG_STATE_REQ_STOP_BA_MSK) == 0) {
-+		printk(KERN_DEBUG "unexpected callback to A-MPDU stop\n");
-+		sta_info_put(sta);
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		return;
-+	}
-+
-+	if (*state & HT_AGG_STATE_INITIATOR_MSK)
-+		ieee80211_send_delba(sta->dev, ra, tid,
-+			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
-+
-+	agg_queue = sta->tid_to_tx_q[tid];
-+
-+	/* avoid ordering issues: we are the only one that can modify
-+	 * the content of the qdiscs */
-+	spin_lock_bh(&local->mdev->queue_lock);
-+	/* remove the queue for this aggregation */
-+	ieee80211_ht_agg_queue_remove(local, sta, tid, 1);
-+	spin_unlock_bh(&local->mdev->queue_lock);
-+
-+	/* we just requeued the all the frames that were in the removed
-+	 * queue, and since we might miss a softirq we do netif_schedule.
-+	 * ieee80211_wake_queue is not used here as this queue is not
-+	 * necessarily stopped */
-+	netif_schedule(local->mdev);
-+	*state = HT_AGG_STATE_IDLE;
-+	sta->ampdu_mlme.tid_tx[tid].addba_req_num = 0;
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+
-+	sta_info_put(sta);
-+}
-+EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
-+
-+void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
-+				      u8 *ra, u16 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_ra_tid *ra_tid;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb)) {
-+		if (net_ratelimit())
-+			printk(KERN_WARNING "%s: Not enough memory, "
-+			       "dropping start BA session", skb->dev->name);
-+		return;
-+	}
-+	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+	memcpy(&ra_tid->ra, ra, ETH_ALEN);
-+	ra_tid->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_ADDBA_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
-+}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
-+
-+void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
-+				     u8 *ra, u16 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_ra_tid *ra_tid;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb)) {
-+		if (net_ratelimit())
-+			printk(KERN_WARNING "%s: Not enough memory, "
-+			       "dropping stop BA session", skb->dev->name);
-+		return;
-+	}
-+	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+	memcpy(&ra_tid->ra, ra, ETH_ALEN);
-+	ra_tid->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_DELBA_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
-+}
-+EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
-+
- static void ieee80211_set_multicast_list(struct net_device *dev)
+ 
+-/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
+- * a worse failed frames behaviour and we'll choose the highest rate whose
+- * failed frames behaviour is not worse than the one of the original rate
+- * target. While at it, check that the adjustment is within the ranges. Then,
+- * provide the new rate index. */
+-static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
+-					 int adj, int cur, int l)
+-{
+-	int i, j, k, tmp;
+-
+-	j = r[cur].rev_index;
+-	i = j + adj;
+-
+-	if (i < 0)
+-		return r[0].index;
+-	if (i >= l - 1)
+-		return r[l - 1].index;
+-
+-	tmp = i;
+-
+-	if (adj < 0) {
+-		for (k = j; k >= i; k--)
+-			if (r[k].diff <= r[j].diff)
+-				tmp = k;
+-	} else {
+-		for (k = i + 1; k + i < l; k++)
+-			if (r[k].diff <= r[i].diff)
+-				tmp = k;
+-	}
+-
+-	return r[tmp].index;
+-}
+-
++/* Adjust the rate while ensuring that we won't switch to a lower rate if it
++ * exhibited a worse failed frames behaviour and we'll choose the highest rate
++ * whose failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the new rate is valid. */
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+ 					 struct sta_info *sta, int adj,
+ 					 struct rc_pid_rateinfo *rinfo)
  {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-@@ -700,6 +1023,7 @@ static void ieee80211_tasklet_handler(unsigned long data)
- 	struct sk_buff *skb;
- 	struct ieee80211_rx_status rx_status;
- 	struct ieee80211_tx_status *tx_status;
-+	struct ieee80211_ra_tid *ra_tid;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_supported_band *sband;
+-	int newidx;
+-	int maxrate;
+-	int back = (adj > 0) ? 1 : -1;
++	int cur_sorted, new_sorted, probe, tmp, n_bitrates, band;
++	int cur = sta->txrate_idx;
  
- 	while ((skb = skb_dequeue(&local->skb_queue)) ||
- 	       (skb = skb_dequeue(&local->skb_queue_unreliable))) {
-@@ -720,6 +1044,18 @@ static void ieee80211_tasklet_handler(unsigned long data)
- 					    skb, tx_status);
- 			kfree(tx_status);
- 			break;
-+		case IEEE80211_DELBA_MSG:
-+			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+			ieee80211_stop_tx_ba_cb(local_to_hw(local),
-+						ra_tid->ra, ra_tid->tid);
-+			dev_kfree_skb(skb);
-+			break;
-+		case IEEE80211_ADDBA_MSG:
-+			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+			ieee80211_start_tx_ba_cb(local_to_hw(local),
-+						 ra_tid->ra, ra_tid->tid);
-+			dev_kfree_skb(skb);
-+			break ;
- 		default: /* should never get here! */
- 			printk(KERN_ERR "%s: Unknown message type (%d)\n",
- 			       wiphy_name(local->hw.wiphy), skb->pkt_type);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 383d8d0..9b478f8 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -403,6 +403,8 @@ struct ieee80211_sub_if_data *vif_to_sdata(struct ieee80211_vif *p)
- enum {
- 	IEEE80211_RX_MSG	= 1,
- 	IEEE80211_TX_STATUS_MSG	= 2,
-+	IEEE80211_DELBA_MSG	= 3,
-+	IEEE80211_ADDBA_MSG	= 4,
- };
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+-
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
++	band = sband->band;
++	n_bitrates = sband->n_bitrates;
  
- struct ieee80211_local {
-@@ -622,6 +624,12 @@ struct ieee80211_local {
- #endif
- };
+-	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate_idx,
+-					       sband->n_bitrates);
++	/* Map passed arguments to sorted values. */
++	cur_sorted = rinfo[cur].rev_index;
++	new_sorted = cur_sorted + adj;
++
++	/* Check limits. */
++	if (new_sorted < 0)
++		new_sorted = rinfo[0].rev_index;
++	else if (new_sorted >= n_bitrates)
++		new_sorted = rinfo[n_bitrates - 1].rev_index;
  
-+/* this struct represents 802.11n's RA/TID combination */
-+struct ieee80211_ra_tid {
-+	u8 ra[ETH_ALEN];
-+	u16 tid;
-+};
-+
- static inline struct ieee80211_local *hw_to_local(
- 	struct ieee80211_hw *hw)
- {
-@@ -776,9 +784,15 @@ int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
- int ieee80211_ht_addt_info_ie_to_ht_bss_info(
- 			struct ieee80211_ht_addt_info *ht_add_info_ie,
- 			struct ieee80211_ht_bss_info *bss_info);
-+void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
-+				  u16 tid, u8 dialog_token, u16 start_seq_num,
-+				  u16 agg_size, u16 timeout);
-+void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
-+				u16 initiator, u16 reason_code);
- void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *da,
- 				u16 tid, u16 initiator, u16 reason);
- void sta_rx_agg_session_timer_expired(unsigned long data);
-+void sta_addba_resp_timer_expired(unsigned long data);
- /* ieee80211_iface.c */
- int ieee80211_if_add(struct net_device *dev, const char *name,
- 		     struct net_device **new_dev, int type);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index ec62938..ab548f1 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1050,6 +1050,58 @@ static void ieee80211_send_addba_resp(struct net_device *dev, u8 *da, u16 tid,
- 	return;
- }
+-	while (newidx != sta->txrate_idx) {
+-		if (rate_supported(sta, sband->band, newidx) &&
+-		    (maxrate < 0 || newidx <= maxrate)) {
+-			sta->txrate_idx = newidx;
+-			break;
+-		}
++	tmp = new_sorted;
  
-+void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
-+				u16 tid, u8 dialog_token, u16 start_seq_num,
-+				u16 agg_size, u16 timeout)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *mgmt;
-+	u16 capab;
-+
-+	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
-+				sizeof(mgmt->u.action.u.addba_req));
-+
-+
-+	if (!skb) {
-+		printk(KERN_ERR "%s: failed to allocate buffer "
-+				"for addba request frame\n", dev->name);
-+		return;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
-+	memset(mgmt, 0, 24);
-+	memcpy(mgmt->da, da, ETH_ALEN);
-+	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_AP)
-+		memcpy(mgmt->bssid, dev->dev_addr, ETH_ALEN);
-+	else
-+		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
-+
-+	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
-+					IEEE80211_STYPE_ACTION);
-+
-+	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_req));
-+
-+	mgmt->u.action.category = WLAN_CATEGORY_BACK;
-+	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
-+
-+	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
-+	capab = (u16)(1 << 1);		/* bit 1 aggregation policy */
-+	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
-+	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
-+
-+	mgmt->u.action.u.addba_req.capab = cpu_to_le16(capab);
-+
-+	mgmt->u.action.u.addba_req.timeout = cpu_to_le16(timeout);
-+	mgmt->u.action.u.addba_req.start_seq_num =
-+					cpu_to_le16(start_seq_num << 4);
-+
-+	ieee80211_sta_tx(dev, skb, 0);
-+}
-+
- static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 						struct ieee80211_mgmt *mgmt,
- 						size_t len)
-@@ -1160,6 +1212,78 @@ end_no_lock:
- 	sta_info_put(sta);
- }
- 
-+static void ieee80211_sta_process_addba_resp(struct net_device *dev,
-+					     struct ieee80211_mgmt *mgmt,
-+					     size_t len)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct sta_info *sta;
-+	u16 capab;
-+	u16 tid;
-+	u8 *state;
-+
-+	sta = sta_info_get(local, mgmt->sa);
-+	if (!sta)
-+		return;
-+
-+	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
-+	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-+
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+
-+	if (mgmt->u.action.u.addba_resp.dialog_token !=
-+		sta->ampdu_mlme.tid_tx[tid].dialog_token) {
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		sta_info_put(sta);
-+		return;
-+	}
-+
-+	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid].addba_resp_timer);
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	printk(KERN_DEBUG "switched off addBA timer for tid %d \n", tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+	if (le16_to_cpu(mgmt->u.action.u.addba_resp.status)
-+			== WLAN_STATUS_SUCCESS) {
-+		if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-+			spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+			printk(KERN_DEBUG "state not HT_ADDBA_REQUESTED_MSK:"
-+				"%d\n", *state);
-+			sta_info_put(sta);
-+			return;
-+		}
-+
-+		if (*state & HT_ADDBA_RECEIVED_MSK)
-+			printk(KERN_DEBUG "double addBA response\n");
-+
-+		*state |= HT_ADDBA_RECEIVED_MSK;
-+		sta->ampdu_mlme.tid_tx[tid].addba_req_num = 0;
-+
-+		if (*state == HT_AGG_STATE_OPERATIONAL) {
-+			printk(KERN_DEBUG "Aggregation on for tid %d \n", tid);
-+			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
-+		}
-+
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		printk(KERN_DEBUG "recipient accepted agg: tid %d \n", tid);
+-		newidx += back;
++	if (adj < 0) {
++		/* Ensure that the rate decrease isn't disadvantageous. */
++		for (probe = cur_sorted; probe >= new_sorted; probe--)
++			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
++			    rate_supported(sta, band, rinfo[probe].index))
++				tmp = probe;
 +	} else {
-+		printk(KERN_DEBUG "recipient rejected agg: tid %d \n", tid);
-+
-+		sta->ampdu_mlme.tid_tx[tid].addba_req_num++;
-+		/* this will allow the state check in stop_BA_session */
-+		*state = HT_AGG_STATE_OPERATIONAL;
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		ieee80211_stop_tx_ba_session(hw, sta->addr, tid,
-+					     WLAN_BACK_INITIATOR);
-+	}
-+	sta_info_put(sta);
-+}
-+
- void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 				u16 initiator, u16 reason_code)
- {
-@@ -1266,6 +1390,7 @@ void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *ra, u16 tid,
- 	sta_info_put(sta);
- }
++		/* Look for rate increase with zero (or below) cost. */
++		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
++			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
++			    rate_supported(sta, band, rinfo[probe].index))
++				tmp = probe;
+ 	}
  
-+
- static void ieee80211_sta_process_delba(struct net_device *dev,
- 			struct ieee80211_mgmt *mgmt, size_t len)
- {
-@@ -1297,6 +1422,53 @@ static void ieee80211_sta_process_delba(struct net_device *dev,
- }
- 
- /*
-+ * After sending add Block Ack request we activated a timer until
-+ * add Block Ack response will arrive from the recipient.
-+ * If this timer expires sta_addba_resp_timer_expired will be executed.
-+ */
-+void sta_addba_resp_timer_expired(unsigned long data)
-+{
-+	/* not an elegant detour, but there is no choice as the timer passes
-+	 * only one argument, and both sta_info and TID are needed, so init
-+	 * flow in sta_info_add gives the TID as data, while the timer_to_id
-+	 * array gives the sta through container_of */
-+	u16 tid = *(int *)data;
-+	struct sta_info *temp_sta = container_of((void *)data,
-+		struct sta_info, timer_to_tid[tid]);
-+
-+	struct ieee80211_local *local = temp_sta->local;
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct sta_info *sta;
-+	u8 *state;
-+
-+	sta = sta_info_get(local, temp_sta->addr);
-+	if (!sta)
-+		return;
-+
-+	state = &sta->ampdu_mlme.tid_tx[tid].state;
-+	/* check if the TID waits for addBA response */
-+	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-+		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+		*state = HT_AGG_STATE_IDLE;
-+		printk(KERN_DEBUG "timer expired on tid %d but we are not "
-+				"expecting addBA response there", tid);
-+		goto timer_expired_exit;
-+	}
-+
-+	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
-+
-+	/* go through the state check in stop_BA_session */
-+	*state = HT_AGG_STATE_OPERATIONAL;
-+	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
-+	ieee80211_stop_tx_ba_session(hw, temp_sta->addr, tid,
-+				     WLAN_BACK_INITIATOR);
-+
-+timer_expired_exit:
-+	sta_info_put(sta);
-+}
-+
-+/*
-  * After receiving Block Ack Request (BAR) we activated a
-  * timer after each frame arrives from the originator.
-  * if this timer expires ieee80211_sta_stop_rx_ba_session will be executed.
-@@ -2236,6 +2408,12 @@ static void ieee80211_rx_mgmt_action(struct net_device *dev,
- 				break;
- 			ieee80211_sta_process_addba_request(dev, mgmt, len);
- 			break;
-+		case WLAN_ACTION_ADDBA_RESP:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.addba_resp)))
-+				break;
-+			ieee80211_sta_process_addba_resp(dev, mgmt, len);
++	/* Fit the rate found to the nearest supported rate. */
++	do {
++		if (rate_supported(sta, band, rinfo[tmp].index)) {
++			sta->txrate_idx = rinfo[tmp].index;
 +			break;
- 		case WLAN_ACTION_DELBA:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.delba)))
--- 
-1.5.3.3
++		}
++		if (adj < 0)
++			tmp--;
++		else
++			tmp++;
++	} while (tmp < n_bitrates && tmp >= 0);
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	rate_control_pid_event_rate_change(
+ 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
+-		newidx, sband->bitrates[newidx].bitrate);
++		sta->txrate_idx, sband->bitrates[sta->txrate_idx].bitrate);
+ #endif
+ }
+ 
 
+
+--
+Ciao
+Stefano
