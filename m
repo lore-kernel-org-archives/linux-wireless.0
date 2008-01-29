@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout3-sn2.hy.skanova.net ([81.228.8.111]:45268 "EHLO
-	pne-smtpout3-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754796AbYATAOt (ORCPT
+Received: from mga07.intel.com ([143.182.124.22]:17062 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752335AbYA2TMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 19:14:49 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 11/14] [rndis_host] Add rndis_link_change function pointer to
-	'struct rndis_data'.
-To: linux-wireless@vger.kernel.org
-Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
-	netdev@vger.kernel.org
-Date: Sun, 20 Jan 2008 02:14:43 +0200
-Message-ID: <20080120001443.25718.2173.stgit@fate.lan> (sfid-20080120_001452_395668_ACDFC381)
+	Tue, 29 Jan 2008 14:12:21 -0500
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: Linux 2.6.24-rc7
+Date: Tue, 29 Jan 2008 11:07:10 -0800
+Cc: mb@bu3sch.de, torvalds@linux-foundation.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <200801251311.45392.inaky@linux.intel.com> <200801251328.35985.inaky@linux.intel.com> <20080126.054223.118097210.davem@davemloft.net>
+In-Reply-To: <20080126.054223.118097210.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-Id: <200801291107.11221.inaky@linux.intel.com> (sfid-20080129_191229_484106_5C273CF7)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Callback to signal link state changes to rndis_wext.
+On Saturday 26 January 2008, David Miller wrote:
+> From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+> Date: Fri, 25 Jan 2008 13:28:35 -0800
+> 
+> > For example: want to ship new firmware, drivers *and* full validation and
+> > certification for a product that is already completed just to satisfy a 
+> > fraction of a market which is not part of the designed target?
+> > 
+> > Do you know how much money that costs?
+> 
+> I'm glad you guys are the only one's with access to the firmware
+> source, thus enduring that you can constantly come up with reasons
+> like this in order to not have to fix the problem.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+At the risk of falling into your game, let me reiterate what I said 
+above, as you don't seem to have  taken it into acount:
 
- drivers/net/usb/rndis_host.c |   24 ++++++++++++++++++++----
- drivers/net/usb/usbnet.h     |    3 +++
- 2 files changed, 23 insertions(+), 4 deletions(-)
+   want to ship new firmware, drivers *and* full validation and
+   certification for a product that is already completed just to satisfy a 
+   fraction of a market which is not part of the designed target?
 
-diff --git a/drivers/net/usb/rndis_host.c b/drivers/net/usb/rndis_host.c
-index 22e5ca1..c295fa1 100644
---- a/drivers/net/usb/rndis_host.c
-+++ b/drivers/net/usb/rndis_host.c
-@@ -148,10 +148,26 @@ int rndis_command(struct usbnet *dev, struct rndis_msg_hdr *buf)
- 					request_id, xid);
- 				/* then likely retry */
- 			} else switch (buf->msg_type) {
--			case RNDIS_MSG_INDICATE: {	/* fault */
--				// struct rndis_indicate *msg = (void *)buf;
--				dev_info(&info->control->dev,
--					"rndis fault indication\n");
-+			case RNDIS_MSG_INDICATE: {	/* fault/event */
-+				struct rndis_indicate *msg = (void *)buf;
-+				int state = 0;
-+
-+				switch (msg->status) {
-+				case RNDIS_STATUS_MEDIA_CONNECT:
-+					state = 1;
-+				case RNDIS_STATUS_MEDIA_DISCONNECT:
-+					dev_info(&info->control->dev,
-+						"rndis media %sconnect\n",
-+						!state?"dis":"");
-+					if (dev->driver_info->rndis_link_change)
-+						dev->driver_info->rndis_link_change(
-+							dev, state);
-+					break;
-+				default:
-+					dev_info(&info->control->dev,
-+						"rndis indication: 0x%08x\n",
-+						le32_to_cpu(msg->status));
-+				}
- 				}
- 				break;
- 			case RNDIS_MSG_KEEPALIVE: {	/* ping */
-diff --git a/drivers/net/usb/usbnet.h b/drivers/net/usb/usbnet.h
-index 2bc5f76..5f5b309 100644
---- a/drivers/net/usb/usbnet.h
-+++ b/drivers/net/usb/usbnet.h
-@@ -119,6 +119,9 @@ struct driver_info {
- 	/* rndis minidriver early initialization code, can sleep */
- 	int	(*rndis_early_init)(struct usbnet *dev);
- 
-+	/* called when link state changes, state: 0=disconnect, 1=connect */
-+	void	(*rndis_link_change)(struct usbnet *dev, int state);
-+
- 	/* for new devices, use the descriptor-reading code instead */
- 	int		in;		/* rx endpoint */
- 	int		out;		/* tx endpoint */
+   Do you know how much money that costs?
 
+Maybe there is somewhere someone willing to pony up all the the money 
+needed to get all that started and done, but we are not in that position,
+so in those cases, we need to do some kind of software arrangement.
+
+But even still, cref to some of Linus's message in this thread: that doesn't 
+mean  people would use it. Workaround broken stuff because it is there already
+and ask for the vendor to fix things.
+
+We listen, participate, release code and we try hard to get the stuff right 
+in current releases when doable, in future as much as possible. It doesn't 
+help anyone when you just go about ripping us senseless.
+
+> You know that if the source were available, the community would have
+> fixed the bug ages ago.
+>
+> But the situation is entirely in Intel's control which is surely
+> exactly the way they like it.
+
+Do you have the (open) source to any wireless card firmware? I'd be 
+curious to know, because I (personally) don't know how can you do an 
+open source firmware for a software defined radio without the FCC 
+denying you a license. No license, no product. No product, no need to
+even have this discussion... :)
