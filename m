@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:40497 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760713AbYAaPuR (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:45855 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754355AbYA2WnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 10:50:17 -0500
-Received: by rn-out-0910.google.com with SMTP id i24so681485rng.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 07:50:16 -0800 (PST)
-Message-ID: <43e72e890801310750o38faf05ckb9977e4e5d6341fa@mail.gmail.com> (sfid-20080131_155024_292675_A6C3BD52)
-Date: Thu, 31 Jan 2008 10:50:11 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Port to new bitrate/channel API
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	johannes@sipsolutions.net
-In-Reply-To: <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com>
+	Tue, 29 Jan 2008 17:43:05 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3894121wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2008 14:43:04 -0800 (PST)
+Message-ID: <1ba2fa240801291443r6a71a1d6tcf78e9197f8abfed@mail.gmail.com> (sfid-20080129_224318_588033_5806BA7B)
+Date: Wed, 30 Jan 2008 00:43:04 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] iwlwifi: enable 802.11n in Kconfig
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1201623341.4394.39.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080130183824.GA7676@makis.domain.invalid>
-	 <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com>
-	 <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12014391833639-git-send-email-tomas.winkler@intel.com>
+	 <1201623341.4394.39.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 31, 2008 10:32 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2008/1/31, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
-> > On Jan 30, 2008 1:38 PM, Nick Kossifidis <mick@madwifi.org> wrote:
-> > > Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
-> > >
-> > > Also i figured out a way to process rate vallue found on status descriptors,
-> > > it's still buggy but we are getting closer (i think it improved stability a little).
-> > >
-> > > Changes-licensed-under: 3-clause-BSD
-> > > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> >
-> > My approach was little more extreme removing ath5k_rate struct and led
-> > stuff completely but well, its not done. Also we definitely still do
-> > dependent on mode stuff a lot and the whole capaibilty stuff is used
-> > inconsistantly. If anything I can base patches on this work.
-> >
+On Jan 29, 2008 6:15 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> I also wanted to make a bigger cleanup (i added some TODOs there about
-> removing led stuff -i want to port them to mac80211 leds, not just
-> remove- and most of rate tables -we still need rate code mapping-,
-> other things can be ripped out also) but until i'm done with the exams
-> i don't have much time. Also some cosmetic changes like Jiri noticed
-> would be usefull and i intend to do more cleanups on that way also. I
-> hope i can come back with more stuff quickly ;-)
+> On Sun, 2008-01-27 at 15:06 +0200, Tomas Winkler wrote:
+> > This patch removes 'IWL4965_HT: depends on n'  from iwlwifi's Kconfig
+> > 1. 11n is functional so no need to make it invisible in the configuration
+> > 2. Latest Johannes patch 'cfg80211 API for channels/bitrates, mac80211 and
+> > driver conversion' broke compilation because this config option was
+> > invisible - patch fixing it will be provided later
 >
-> > Nick, just please review the license and files you've changed. Other
-> > than that it looks OK.
+> Hah, and I actually had found code that I knew was going to break but
+> since I couldn't enable it I ignored it. I didn't know it was already
+> functional, I would have enabled it if I'd known.
 >
-> Ouch you are right !
->
-> for base.c/base.h
-> Changes-licensed-under: 3-clause-BSD
->
-> for hw.c/initvals.c/phy.c/ath5k.h
-> Changes-licensed-under: ISC
+Understood,
+The whole mandatory part of 11n, meaning RX is already in so we can
+safely enabled it.Even in 2.6.25
 
-Thanks. Nick as Jiri pointed out, can you also re-send after checking
-the patch with checkpatch.pl?
+Hope the TX part will follow.
+Thanks
 
-  Luis
+> johannes
+>
