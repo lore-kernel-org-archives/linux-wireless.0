@@ -1,86 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57820 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42015 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbYAPQl6 (ORCPT
+	with ESMTP id S1753830AbYA2RoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2008 11:41:58 -0500
-Subject: Re: [RFC] mac80211: proper short-slot handling
+	Tue, 29 Jan 2008 12:44:23 -0500
+Subject: [PATCH] mac80211: dissolve pre-rx handlers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	bruno randolf <br1@einfach.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Yanbo Li <dreamfly281@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <200801161737.00682.IvDoorn@gmail.com> (sfid-20080116_163722_467037_B4D8FD78)
-References: <1199974496.3861.80.camel@johannes.berg>
-	 <200801102000.44722.IvDoorn@gmail.com>
-	 <1200490221.5887.170.camel@johannes.berg>
-	 <200801161737.00682.IvDoorn@gmail.com>
-	 (sfid-20080116_163722_467037_B4D8FD78)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AySxdagS3MvXDT2eKdDy"
-Date: Wed, 16 Jan 2008 17:41:39 +0100
-Message-Id: <1200501699.8708.9.camel@johannes.berg> (sfid-20080116_164201_880931_B2541023)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 29 Jan 2008 17:07:43 +0100
+Message-Id: <1201622863.4394.31.camel@johannes.berg> (sfid-20080129_174432_568085_93BF40E5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These handlers do not really return a status and the compiler
+can do a much better job when they're simply static functions
+that it can inline if appropriate. Also makes the code shorter.
 
---=-AySxdagS3MvXDT2eKdDy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211.c   |    1 
+ net/mac80211/ieee80211_i.h |    2 
+ net/mac80211/rx.c          |   96 +++++++++++++++++----------------------------
+ 3 files changed, 37 insertions(+), 62 deletions(-)
 
+--- everything.orig/net/mac80211/rx.c	2008-01-29 16:58:08.255592231 +0100
++++ everything/net/mac80211/rx.c	2008-01-29 17:05:37.005588976 +0100
+@@ -246,15 +246,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ }
+ 
+ 
+-/* pre-rx handlers
+- *
+- * these don't have dev/sdata fields in the rx data
+- * The sta value should also not be used because it may
+- * be NULL even though a STA (in IBSS mode) will be added.
+- */
+-
+-static ieee80211_txrx_result
+-ieee80211_rx_h_parse_qos(struct ieee80211_txrx_data *rx)
++static void ieee80211_parse_qos(struct ieee80211_txrx_data *rx)
+ {
+ 	u8 *data = rx->skb->data;
+ 	int tid;
+@@ -287,8 +279,40 @@ ieee80211_rx_h_parse_qos(struct ieee8021
+ 	/* Set skb->priority to 1d tag if highest order bit of TID is not set.
+ 	 * For now, set skb->priority to 0 for other cases. */
+ 	rx->skb->priority = (tid > 7) ? 0 : tid;
++}
+ 
+-	return TXRX_CONTINUE;
++static void ieee80211_verify_ip_alignment(struct ieee80211_txrx_data *rx)
++{
++#ifdef CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT
++	int hdrlen;
++
++	if (!WLAN_FC_DATA_PRESENT(rx->fc))
++		return;
++
++	/*
++	 * Drivers are required to align the payload data in a way that
++	 * guarantees that the contained IP header is aligned to a four-
++	 * byte boundary. In the case of regular frames, this simply means
++	 * aligning the payload to a four-byte boundary (because either
++	 * the IP header is directly contained, or IV/RFC1042 headers that
++	 * have a length divisible by four are in front of it.
++	 *
++	 * With A-MSDU frames, however, the payload data address must
++	 * yield two modulo four because there are 14-byte 802.3 headers
++	 * within the A-MSDU frames that push the IP header further back
++	 * to a multiple of four again. Thankfully, the specs were sane
++	 * enough this time around to require padding each A-MSDU subframe
++	 * to a length that is a multiple of four.
++	 *
++	 * Padding like atheros hardware adds which is inbetween the 802.11
++	 * header and the payload is not supported, the driver is required
++	 * to move the 802.11 header further back in that case.
++	 */
++	hdrlen = ieee80211_get_hdrlen(rx->fc);
++	if (rx->flags & IEEE80211_TXRXD_RX_AMSDU)
++		hdrlen += ETH_HLEN;
++	WARN_ON_ONCE(((unsigned long)(rx->skb->data + hdrlen)) & 3);
++#endif
+ }
+ 
+ 
+@@ -325,52 +349,6 @@ static u32 ieee80211_rx_load_stats(struc
+ 	return load;
+ }
+ 
+-#ifdef CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT
+-static ieee80211_txrx_result
+-ieee80211_rx_h_verify_ip_alignment(struct ieee80211_txrx_data *rx)
+-{
+-	int hdrlen;
+-
+-	if (!WLAN_FC_DATA_PRESENT(rx->fc))
+-		return TXRX_CONTINUE;
+-
+-	/*
+-	 * Drivers are required to align the payload data in a way that
+-	 * guarantees that the contained IP header is aligned to a four-
+-	 * byte boundary. In the case of regular frames, this simply means
+-	 * aligning the payload to a four-byte boundary (because either
+-	 * the IP header is directly contained, or IV/RFC1042 headers that
+-	 * have a length divisible by four are in front of it.
+-	 *
+-	 * With A-MSDU frames, however, the payload data address must
+-	 * yield two modulo four because there are 14-byte 802.3 headers
+-	 * within the A-MSDU frames that push the IP header further back
+-	 * to a multiple of four again. Thankfully, the specs were sane
+-	 * enough this time around to require padding each A-MSDU subframe
+-	 * to a length that is a multiple of four.
+-	 *
+-	 * Padding like atheros hardware adds which is inbetween the 802.11
+-	 * header and the payload is not supported, the driver is required
+-	 * to move the 802.11 header further back in that case.
+-	 */
+-	hdrlen = ieee80211_get_hdrlen(rx->fc);
+-	if (rx->flags & IEEE80211_TXRXD_RX_AMSDU)
+-		hdrlen += ETH_HLEN;
+-	WARN_ON_ONCE(((unsigned long)(rx->skb->data + hdrlen)) & 3);
+-
+-	return TXRX_CONTINUE;
+-}
+-#endif
+-
+-ieee80211_rx_handler ieee80211_rx_pre_handlers[] =
+-{
+-	ieee80211_rx_h_parse_qos,
+-#ifdef CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT
+-	ieee80211_rx_h_verify_ip_alignment,
+-#endif
+-	NULL
+-};
+-
+ /* rx handlers */
+ 
+ static ieee80211_txrx_result
+@@ -1734,9 +1712,9 @@ static void __ieee80211_rx_handle_packet
+ 	if (unlikely(local->sta_sw_scanning || local->sta_hw_scanning))
+ 		rx.flags |= IEEE80211_TXRXD_RXIN_SCAN;
+ 
+-	if (__ieee80211_invoke_rx_handlers(local, local->rx_pre_handlers, &rx,
+-					   sta) != TXRX_CONTINUE)
+-		goto end;
++	ieee80211_parse_qos(&rx);
++	ieee80211_verify_ip_alignment(&rx);
++
+ 	skb = rx.skb;
+ 
+ 	if (sta && !(sta->flags & (WLAN_STA_WDS | WLAN_STA_ASSOC_AP)) &&
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-01-29 17:02:07.365594944 +0100
++++ everything/net/mac80211/ieee80211_i.h	2008-01-29 17:02:36.195591146 +0100
+@@ -463,7 +463,6 @@ struct ieee80211_local {
+ 			     * deliver multicast frames both back to wireless
+ 			     * media and to the local net stack */
+ 
+-	ieee80211_rx_handler *rx_pre_handlers;
+ 	ieee80211_rx_handler *rx_handlers;
+ 	ieee80211_tx_handler *tx_handlers;
+ 
+@@ -755,7 +754,6 @@ void ieee80211_if_free(struct net_device
+ void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata);
+ 
+ /* rx handling */
+-extern ieee80211_rx_handler ieee80211_rx_pre_handlers[];
+ extern ieee80211_rx_handler ieee80211_rx_handlers[];
+ 
+ /* tx handling */
+--- everything.orig/net/mac80211/ieee80211.c	2008-01-29 17:02:23.715592611 +0100
++++ everything/net/mac80211/ieee80211.c	2008-01-29 17:02:28.645589627 +0100
+@@ -1064,7 +1064,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	local->hw.queues = 1; /* default */
+ 
+ 	local->mdev = mdev;
+-	local->rx_pre_handlers = ieee80211_rx_pre_handlers;
+ 	local->rx_handlers = ieee80211_rx_handlers;
+ 	local->tx_handlers = ieee80211_tx_handlers;
+ 
 
-> John already merged the 2.0.14 release into the everything branch,
-> so no need to wait on that. The remaining patches which have been send
-> but not yet merged are bugfixes which won't cause a collision with the
-> short-slot patch.
->=20
-> Not sure where I diffed it against, I probably have to rebase it anyway
-> since I currently have a few major patches pending for the 2.1.0 release
-> which will drastically change the entire interface handling in rt2x00.
-
-Ok.
-
-> When do you plan to send the patch for inclusion? I can rebase the patch
-> and make it part of the 2.1.0 release of this weekend or release 2.1.0
-> and rebase the patch against that.
-
-I don't know. I haven't seen anybody but You and Tomas agree with this
-patch. I can try to convert the other drivers but I'm not sure when I'll
-manage to do that.
-
-johannes
-
---=-AySxdagS3MvXDT2eKdDy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR44zwaVg1VMiehFYAQIIaBAAko0DFE0xdPdz4fdR7qb5TUiEN6dB25eG
-X18BC2KZkC1p9+1u7mIczCJXFIr9UvGBaTjCDh3S2OVUUwRFNmnwdB0oO3VSEW07
-IdAiQ66wk2nuqKy8nRoLWL8fSvhq9+/I5gKuZwOrmjnWZzaXVlc3YlmZkOMyRn1i
-z+6VmVxaDSPUrdTGLuUoQBQ+D99Oywa4DZzlAga4u5aqIqbIQ+9o/Q6olt34vZGz
-plpBzUGRz1Q4ArmAuj2ctS74NbTfy6H7z0JWKqQvBPuKfOFNnPADMoKbaPRqefkW
-BPEfkCDkNt4sL9AQssTi9+vGUUwalDcyEgZSE1zLEI13rdPVX7+chQDkdnuNd7EE
-JI9Q00yzcEb6ejZfCXjipCHWbAXQ7rvv6UW/30/GIoJKlyCZQ8yu8FVjVYuP3lth
-p3DK5SEf2oC2+nzsbvB88MBT89M+nYODdcwpSmQWG1b2i2zVaDrCKlydeyOb4sev
-w2Od4R0BNe/9M5p+ODnkYcNy4qtuKD+ARdG8YlGMo5uQgeYAKePWXnUqYhJd7Oa4
-dBnbMNylDMfINRmsrrnTdRTFa0Ucpo9H8s9BlDOW8b6HeS3mshc2GfOEZdkOXqG+
-tWAre80BVIbRHCfcNqz19LKbWfG1rX55+WhuhEcwennq3RZ9r4X/VTsY345z2nzB
-oWK+sBArDOM=
-=/SVw
------END PGP SIGNATURE-----
-
---=-AySxdagS3MvXDT2eKdDy--
 
