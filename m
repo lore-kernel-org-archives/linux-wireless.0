@@ -1,156 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64897 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759529AbYAJRDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:03:07 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 01/11] mac80211: A-MPDU Tx add session's and low level driver's API
-Date: Thu, 10 Jan 2008 19:02:16 +0200
-Message-Id: <11999845533893-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_170322_841620_B5A717BD)
-In-Reply-To: <1199984547375-git-send-email-ron.rindjunsky@intel.com>
-References: <1199984547375-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.rutgers.edu ([128.6.72.243]:46008 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752594AbYA3Eus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jan 2008 23:50:48 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Roel Kluin <12o3l@tiscali.nl>
+Subject: Re: [PATCH] [wireless/adm8211.h] logical/bitor typo
+Date: Tue, 29 Jan 2008 23:50:45 -0500
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <479FC29C.103@tiscali.nl>
+In-Reply-To: <479FC29C.103@tiscali.nl>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3117195.aTpOpkjBAR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200801292350.51444.flamingice@sourmilk.net> (sfid-20080130_045058_884539_9AA5F4C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the API for 3 stages in A-MPDU Tx session flow:
-- request mac80211 to start/stop A-MPDU Tx session for specific TID. such a
-  request should be issued by a load aware element, either mac80211 itself
-  or external element.
-- requests by mac80211 to low-level driver to start/stop Tx aggregation.
-  notice that low level driver responds now with Starting Sequence Number.
-- async feedback by low-level to mac80211 to inform that HW is ready for
-  next A-MPDU Tx state.
+--nextPart3117195.aTpOpkjBAR
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- include/net/mac80211.h       |   62 +++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_sta.c |    4 +-
- 2 files changed, 63 insertions(+), 3 deletions(-)
+On Tuesday 29 January 2008 19:19:40 Roel Kluin wrote:
+> logical/bitor typo
+>
+> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+Acked-by: Michael Wu <flamingice@sourmilk.net>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3b7bfc6..3151fcf 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -943,10 +943,14 @@ enum ieee80211_erp_change_flags {
-  * &struct ieee80211_ops to indicate which action is needed.
-  * @IEEE80211_AMPDU_RX_START: start Rx aggregation
-  * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
-+ * @IEEE80211_AMPDU_TX_START: start Tx aggregation
-+ * @IEEE80211_AMPDU_TX_STOP: stop Tx aggregation
-  */
- enum ieee80211_ampdu_mlme_action {
- 	IEEE80211_AMPDU_RX_START,
- 	IEEE80211_AMPDU_RX_STOP,
-+	IEEE80211_AMPDU_TX_START,
-+	IEEE80211_AMPDU_TX_STOP,
- };
- 
- /**
-@@ -1130,7 +1134,7 @@ struct ieee80211_ops {
- 	int (*conf_ht)(struct ieee80211_hw *hw, struct ieee80211_conf *conf);
- 	int (*ampdu_action)(struct ieee80211_hw *hw,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    const u8 *ra, u16 tid, u16 ssn);
-+			    u8 *addr, u16 tid, u16 *ssn);
- };
- 
- /**
-@@ -1513,4 +1517,60 @@ void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
- 						struct ieee80211_vif *vif),
- 					 void *data);
- 
-+/**
-+ * ieee80211_start_tx_ba_session - Start a tx Block Ack session.
-+ * @hw: pointer as obtained from ieee80211_alloc_hw().
-+ * @ra: destination address of the BA session recipient
-+ * @tid: the TID to BA on.
-+ * @return: success if addBA request was sent, failure otherwise
-+ *
-+ * Although mac80211/low level driver/user space application can estimate
-+ * the need to start aggregation on a certain RA/TID, the session level
-+ * will be managed by the mac80211.
-+ */
-+int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid);
-+
-+/**
-+ * ieee80211_start_tx_ba_cb/_irqsafe - low level driver is ready to aggregate.
-+ * @hw: pointer as obtained from ieee80211_alloc_hw().
-+ * @ra: destination address of the BA session recipient.
-+ * @tid: the TID to BA on.
-+ *
-+ * This function must be called by low level driver once it has
-+ * finished with preparations for the BA session.
-+ * Two versions of the function are provided for low-deriver's convinience,
-+ * a regular and irqsafe version.
-+ */
-+void ieee80211_start_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u16 tid);
-+void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, u8 *ra,
-+				      u16 tid);
-+/**
-+ * ieee80211_stop_tx_ba_session - Stop a Block Ack session.
-+ * @hw: pointer as obtained from ieee80211_alloc_hw().
-+ * @ra: destination address of the BA session recipient
-+ * @tid: the TID to stop BA.
-+ * @initiator: if indicates initiator DELBA frame will be sent.
-+ * @return: error if no sta with matching da found, success otherwise
-+ *
-+ * Although mac80211/low level driver/user space application can estimate
-+ * the need to stop aggregation on a certain RA/TID, the session level
-+ * will be managed by the mac80211.
-+ */
-+int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw, u8 *ra,
-+				 u16 tid, u8 initiator);
-+
-+/**
-+ * ieee80211_stop_BA_cb - low level driver is ready to stop aggregation.
-+ * @hw: pointer as obtained from ieee80211_alloc_hw().
-+ * @ra: destination address of the BA session recipient.
-+ * @tid: the desired TID to BA on.
-+ *
-+ * This function must be called by low level driver once it has
-+ * finished with preparations for the BA session tear down.
-+ * Two versions of the function are provided for low-deriver's convinience,
-+ * a regular and an irqsafe version.
-+ */
-+void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid);
-+void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, u8 *ra, u16 tid);
-+
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index b1e7d17..ec62938 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1132,7 +1132,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
--					       sta->addr, tid, start_seq_num);
-+					       sta->addr, tid, &start_seq_num);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "Rx A-MPDU on tid %d result %d", tid, ret);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
-@@ -1237,7 +1237,7 @@ void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *ra, u16 tid,
- 	BUG_ON(!local->ops->ampdu_action);
- 
- 	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
--					ra, tid, EINVAL);
-+					ra, tid, NULL);
- 	if (ret)
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggergation for tid %d\n", tid);
--- 
-1.5.3.3
+Fortunately, this define is never actually used.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Thanks,
+-Michael Wu
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+--nextPart3117195.aTpOpkjBAR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBHoAIrT3Oqt9AH4aERAjLzAJ9VOjwyhj4z/2seCNc9QfrGgxKMRQCgnWhb
+pc+kOhKnr/ZNjYNSFNTVBBg=
+=U9vG
+-----END PGP SIGNATURE-----
+
+--nextPart3117195.aTpOpkjBAR--
