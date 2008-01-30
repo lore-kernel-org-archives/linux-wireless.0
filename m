@@ -1,123 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32557 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753585AbYAWSuL convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47990 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753792AbYA3Mnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2008 13:50:11 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] [PATCH 1/5] iwlwifi: iwl3945 flush interrupt mask
-Date: Wed, 23 Jan 2008 10:50:05 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003780156@orsmsx416.amr.corp.intel.com> (sfid-20080123_185019_485640_60AA1105)
-In-Reply-To: <11998765342443-git-send-email-joonwpark81@gmail.com>
-References: <11998765342443-git-send-email-joonwpark81@gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Joonwoo Park" <joonwpark81@gmail.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>, <netdev@vger.kernel.org>
-Cc: <linux-wireless@vger.kernel.org>,
-	"lkml" <linux-kernel@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+	Wed, 30 Jan 2008 07:43:33 -0500
+Subject: Re: [PATCH] mac80211: remove port control enable switch, clean up
+	sta flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080130020811.GD5015@jm.kir.nu>
+References: <1201537178.9397.16.camel@johannes.berg>
+	 <20080130020811.GD5015@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/ry4L8rFiGlVdky/Gs0V"
+Date: Wed, 30 Jan 2008 13:35:09 +0100
+Message-Id: <1201696509.4014.10.camel@johannes.berg> (sfid-20080130_124356_549542_3DE0A274)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joonwoo Park <joonwpark81@gmail.com> wrote:
 
-> interrupt mask
-> 
-> After enabling/disabling interrupts flushing is required
-> 
+--=-/ry4L8rFiGlVdky/Gs0V
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have been looking at this patch and I would like to get some more
-feedback from the experts in the group.
+On Tue, 2008-01-29 at 18:08 -0800, Jouni Malinen wrote:
 
-First off, the register used for the read in order to flush has to be
-safe. We have to make sure that the register has no side effects. To do
-this we could use CSR_INT_MASK, as in "#define iwl_flush32(iwl)
-iwl_read32(iwl, CSR_INT_MASK)" This also enables us to flush at the end
-of a sequence of writes instead of after every write.
+> > Also, since I was working in that area, this documents station
+> > flags and removes the unused "permanent" one.
+>=20
+> And changes the flags.. These used to be shared with hostapd. Has that
+> been abstracted so that there is some kind of mapping taking care of the
+> differences between hostapd and mac80211? If not, this change does not
+> look safe..
 
-Digging deeper it is not 100% clear to me when we should do flushing to
-handle write posting. I understand that it should be done in time
-sensitive code, but that could on a high level mean any write operation
-in the driver. How should it be decided which writes to the device need
-to be flushed? 
+That flag sharing is long gone, they're translated in net/mac80211/cfg.c
+when stations are added/changed via cfg80211/nl80211.
 
-Patch is kept below fyi.
+johannes
 
-Reinette
+--=-/ry4L8rFiGlVdky/Gs0V
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com> ---
-> drivers/net/wireless/iwlwifi/iwl-io.h       |    2 ++
-> drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++++++
-> 2 files changed, 8 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h
-> b/drivers/net/wireless/iwlwifi/iwl-io.h
-> index 8a8b96f..f2bc30e 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-io.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-> @@ -87,6 +87,8 @@ static inline u32 __iwl_read32(char *f, u32
-> l, struct iwl_priv *iwl, u32 ofs)
-> #define iwl_read32(p, o) _iwl_read32(p, o)
-> #endif
-> 
-> +#define iwl_flush32(iwl, ofs) iwl_read32(iwl, ofs) +
-> static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
-> 				u32 bits, u32 mask, int timeout)
-> {
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 8ed898d..85f1112 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -4410,6 +4410,7 @@ static void iwl_enable_interrupts(struct
-> 	iwl_priv *priv) IWL_DEBUG_ISR("Enabling interrupts\n");
-> 	set_bit(STATUS_INT_ENABLED, &priv->status);
-> 	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
-> +	iwl_flush32(priv, CSR_INT_MASK);
-> }
-> 
-> static inline void iwl_disable_interrupts(struct iwl_priv *priv)
-> @@ -4418,11 +4419,15 @@ static inline void
-> iwl_disable_interrupts(struct iwl_priv *priv)
-> 
-> 	/* disable interrupts from uCode/NIC to host */
-> 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
-> +	iwl_flush32(priv, CSR_INT_MASK);
-> 
-> 	/* acknowledge/clear/reset any interrupts still pending
-> 	 * from uCode or flow handler (Rx/Tx DMA) */
-> 	iwl_write32(priv, CSR_INT, 0xffffffff);
-> +	iwl_flush32(priv, CSR_INT);
-> 	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
-> +	iwl_flush32(priv, CSR_FH_INT_STATUS);
-> +
-> 	IWL_DEBUG_ISR("Disabled interrupts\n");
-> }
-> 
-> @@ -4840,6 +4845,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
-> 	 * If we *don't* have something, we'll re-enable before
-> leaving here. */
-> 	inta_mask = iwl_read32(priv, CSR_INT_MASK);  /* just
-> for debug */
-> 	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
-> +	iwl_flush32(priv, CSR_INT_MASK);
-> 
-> 	/* Discover which interrupts are active/pending */
-> 	inta = iwl_read32(priv, CSR_INT);
-> --
-> 1.5.3.rc5
-> 
-> 
-> ---------------------------------------------------------------
-> ----------
-> Check out the new SourceForge.net Marketplace.
-> It's the best place to buy or sell services for
-> just about anything Open Source.
-> http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.ne
-> t/marketplace _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6Bu/KVg1VMiehFYAQKR0g/+OWl2XCyfbrLEFgxRjJNXEixawx2BkZdt
+Q61P+Euj2FduwesmbRWNM8pEdjgmPkvJIwpv9MNMHAlexOp5TbbPdKWzBQtogKQt
+nVMnGSKk/XZxdCoHNkWFNV9538CnFZIaA2RPhu0r7TPiWK8MERG19bfw+S/9DnGr
+1QBcpKKA1xoTXj4MyoeOC+jpM/TreRz1Rzq+2Wxuabcdd2yNnH22IfmljTC7egya
+bhrVglsNmOoj5fVTMo5/Lf+qOWdUat+wJWbWUuta0lJIbQ3el36R7L2NW5UCHPrj
+LmBG4UBBQO5nbky+FCFuEdI3zeSAoTMsu0tIFD5Ll9FqkAzH4Zo2UUmvkgzJjLTt
+E0GXHEygSCQd0Ss3jsFhJPAN4c3+XjJE69RNzsyHGeJqTyTq96DHWdJmm9nXO68G
+ECeeTDqmMY+/JRPS4F87b6poJzcX+rcPOcQvZB6enmshMi86FCjkbTDFzL9pDwPM
+uFdy/QS5PxtQsoMn81RPqyxVbmbhorg9V1ozX/3ownRqbowZ3os02S6gkfG2yqBV
+HfRgZoZwXfjOCDlqtbWKHkZAqYG9jH3na4aIGC5lsr9grgEsKNHyb6lj8Kke9BBF
+hzlJ0SlBBuvQjrWAqGtG2QoA3+jTQ79QpLPYYhWE7YPa6N/hkcTEIV3l2uKxnOuN
+uuuZZhS8NTg=
+=u9du
+-----END PGP SIGNATURE-----
+
+--=-/ry4L8rFiGlVdky/Gs0V--
 
