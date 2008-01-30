@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g19.free.fr ([212.27.42.27]:55216 "EHLO smtp1-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751134AbYAQMMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2008 07:12:44 -0500
-Date: Thu, 17 Jan 2008 13:12:41 +0100 (CET)
-From: Marc.Herbert@gmail.com
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-cc: linux-wireless@vger.kernel.org
-Subject: no attachment [PATCH] compat-2.6: fix "make unload" / ieee80211_crypt_tkip
-Message-ID: <Pine.LNX.4.64.0801171306110.22400@maradi> (sfid-20080117_121249_927232_5FCCB8F8)
+Received: from vs166246.vserver.de ([62.75.166.246]:33707 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758919AbYA3Ueq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 15:34:46 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [2.6 patch] make b43_mac_{enable,suspend}() static
+Date: Wed, 30 Jan 2008 21:31:18 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20080130200247.GA29368@does.not.exist>
+In-Reply-To: <20080130200247.GA29368@does.not.exist>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200801302131.19330.mb@bu3sch.de> (sfid-20080130_203520_335209_B1E7E52C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Re-sent without an "octet-stream" attachment, sorry. (gmail sucks)
+On Wednesday 30 January 2008 21:02:47 Adrian Bunk wrote:
+> b43_mac_{enable,suspend}() can now become static.
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-     -----------
+Acked-by: Michael Buesch <mb@bu3sch.de>
 
-Hi there,
+> ---
+> 
+>  drivers/net/wireless/b43/main.c |    4 ++--
+>  drivers/net/wireless/b43/main.h |    3 ---
+>  2 files changed, 2 insertions(+), 5 deletions(-)
+> 
+> e2a91b00d125ed4b60bdf9e37f550aed23d84747 
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index 88d2c15..360515c 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2042,7 +2042,7 @@ static void b43_gpio_cleanup(struct b43_wldev *dev)
+>  }
+>  
+>  /* http://bcm-specs.sipsolutions.net/EnableMac */
+> -void b43_mac_enable(struct b43_wldev *dev)
+> +static void b43_mac_enable(struct b43_wldev *dev)
+>  {
+>  	dev->mac_suspended--;
+>  	B43_WARN_ON(dev->mac_suspended < 0);
+> @@ -2066,7 +2066,7 @@ void b43_mac_enable(struct b43_wldev *dev)
+>  }
+>  
+>  /* http://bcm-specs.sipsolutions.net/SuspendMAC */
+> -void b43_mac_suspend(struct b43_wldev *dev)
+> +static void b43_mac_suspend(struct b43_wldev *dev)
+>  {
+>  	int i;
+>  	u32 tmp;
+> diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+> index 2d52d9d..4397f49 100644
+> --- a/drivers/net/wireless/b43/main.h
+> +++ b/drivers/net/wireless/b43/main.h
+> @@ -102,9 +102,6 @@ void b43_dummy_transmission(struct b43_wldev *dev);
+>  
+>  void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
+>  
+> -void b43_mac_suspend(struct b43_wldev *dev);
+> -void b43_mac_enable(struct b43_wldev *dev);
+> -
+>  void b43_controller_restart(struct b43_wldev *dev, const char *reason);
+>  
+>  #define B43_PS_ENABLED	(1 << 0)	/* Force enable hardware power saving */
+> 
+> 
+> 
 
-I need this one-line patch for "make unload" to work on my Ubuntu 
-gutsy.
-
-The actual reason is beyond me, but I'm sure one of you will figure it
-out and fix my fix in case it's not "the right thing".
-
-Cheers,
-
-Marc.
 
 
---- scripts/unload.sh	2008/01/17 09:59:28	1.1
-+++ scripts/unload.sh	2008/01/17 10:00:24
-@@ -6,6 +6,7 @@
-  MODULES="$OLD_MODULES"
-  MODULES="$MODULES ipw2100 ipw2200"
-  MODULES="$MODULES libertas_cs usb8xxx libertas"
-+MODULES="$MODULES ieee80211_crypt_tkip ieee80211_crypt_ccmp"
-  MODULES="$MODULES ieee80211softmac ieee80211_crypt ieee80211"
-  MODULES="$MODULES adm8211"
-  MODULES="$MODULES b43 b43legacy"
+-- 
+Greetings Michael.
