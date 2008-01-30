@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:1359 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856AbYAVUcN (ORCPT
+Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:13860 "EHLO
+	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbYA3JXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2008 15:32:13 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so2032932fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2008 12:32:12 -0800 (PST)
-Message-ID: <f6ca9fed0801221232r1a823f05wa28466eceeee6af3@mail.gmail.com> (sfid-20080122_203219_052449_20312EB2)
-Date: Tue, 22 Jan 2008 21:32:12 +0100
-From: drago01 <drago01@gmail.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <C07C4589BE74A34981C3C3525EE1F8010338CB51@hasmsx412.ger.corp.intel.com>
+	Wed, 30 Jan 2008 04:23:25 -0500
+Date: Wed, 30 Jan 2008 10:07:03 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
+Subject: ath5k Kconfig / lspci / pci_device_id consistency
+Message-ID: <20080130090703.GA9218@basil.nowhere.org> (sfid-20080130_092331_116838_618C207A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB51@hasmsx412.ger.corp.intel.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 22, 2008 9:29 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
->
->
-> >-----Original Message-----
-> >From: drago01 [mailto:drago01@gmail.com]
->
-> >Sent: Tuesday, January 22, 2008 10:24 PM
-> >To: Winkler, Tomas
-> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
-> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-> >
-> >On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com>
-> wrote:
-> >>
-> >>
-> >> >-----Original Message-----
-> >> >From: drago01 [mailto:drago01@gmail.com]
-> >> >Sent: Tuesday, January 22, 2008 10:12 PM
-> >> >To: Winkler, Tomas
-> >>
-> >> >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
-> >> >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-> >> >
-> >> >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
-> >> wrote:
-> >> >>
-> >> >> I believe it's delaying uCode load to mac_start - still need to be
-> >> >> polished.
-> >> >
-> >> >ok, thx for the quick reply.
-> >> >If you have any potential fixes I would be happy to test them ;)
-> >>
-> >> Can you get me the sequence it is happening? RF kill switch is off
-> >> before you power up the laptop or after, during association or in
-> >> unassociated state..etc
-> >> Thanks
-> >
-> >I boot with rf kill off = device on
-> >acciotate using NM
-> >kill the card by pressing the rfkill (ie. setting it to on)
-> >card is dead (like described in my first mail), until I relaod the
-> module
-> >the rfkill switch  does not have any effect at this time.
->
-> Okay thanks, I'll try to look at it tomorrow
-> Tomas
 
-OK, thx
+Hallo,
+
+I was pleasantly surprised at first that ath5k has finally made it into mainline.
+That is because my laptop has an atheros chipset and in tree support makes
+things much easier for me.
+
+Then I noticed that the chips it claims to support in Kconfig
+
+   Currently the following chip versions are supported:
+
+          MAC: AR5211 AR5212
+          PHY: RF5111/2111 RF5112/2112 RF5413/2413
+
+did not include the chip on my laptop; an AR5006X according to lspci.
+
+But when I actually look at the driver's pci_device_id table it seems
+to be supported. I have
+
+08:0a.0 Class 0200: 168c:001b (rev 01)
+
+which seems to match ath5k/base.c
+
+        { PCI_VDEVICE(ATHEROS, 0x001b), .driver_data = AR5K_AR5212 }, /* 5413 Eagle */
+
+But the name in the comment does not agree with what lspci reports:
+
+08:0a.0 Ethernet controller: Atheros Communications, Inc. AR5006X 802.11abg NIC (rev 01)
+
+So who has the correct name? The comments in the driver or lspci? Or are there
+valid aliases?  And can Kconfig be fixed up to include all chips supported by
+the driver, preferably with the same names as lspci reports please?
+
+I have not actually tested yet if it really works.
+
+Thanks,
+-Andi
+
