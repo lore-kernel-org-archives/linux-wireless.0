@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35456 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752720AbYA3LJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2008 06:09:16 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/1] mac80211: adjustable number of bits for qdisc pool
-Date: Wed, 30 Jan 2008 13:07:51 +0200
-Message-Id: <12016912713994-git-send-email-tomas.winkler@intel.com> (sfid-20080130_110919_528126_43357051)
+Received: from fg-out-1718.google.com ([72.14.220.159]:40895 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991AbYA3T2r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 14:28:47 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so326405fga.17
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2008 11:28:46 -0800 (PST)
+Message-ID: <47A0CFEB.2080702@gmail.com> (sfid-20080130_192907_145433_CD81D510)
+Date: Wed, 30 Jan 2008 20:28:43 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com, johannes@sipsolutions.net
+Subject: Re: [PATCH] ath5k: Port to new bitrate/channel API
+References: <20080130183824.GA7676@makis.domain.invalid>
+In-Reply-To: <20080130183824.GA7676@makis.domain.invalid>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On 01/30/2008 07:38 PM, Nick Kossifidis wrote:
+> Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
+> 
+> Also i figured out a way to process rate vallue found on status descriptors,
+> it's still buggy but we are getting closer (i think it improved stability a little).
+> 
+> Changes-licensed-under: 3-clause-BSD
+> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> 
+> ---
+> @@ -898,25 +879,26 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+>  	}
+>  
+>  	for (i = 0, count = 0; i < size && max > 0; i++) {
+> -		ch = all ? i + 1 : chans[i].chan;
+> -		f = ath5k_ieee2mhz(ch);
+> -		/* Check if channel is supported by the chipset */
+> -		if (!ath5k_channel_ok(ah, f, chfreq))
+> -			continue;
+> +		ch = i + 1 ;
+> +		freq = ath5k_ieee2mhz(ch);
+[...]
+> -		if (!all && (chans[i].mode & map[mode].mask) != map[mode].mode)
+> -			continue;
+> +		/* Write channel info and increment counter */
+> +		channels[count].center_freq = freq;
+> +
+> +		if((mode == AR5K_MODE_11A) ||
+> +		(mode == AR5K_MODE_11G)){
+> +			channels[count].hw_value = chfreq|CHANNEL_OFDM;
+> +		} else if((mode == AR5K_MODE_11A_TURBO) ||
+> +		(mode == AR5K_MODE_11G_TURBO)){
+> +			channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
+> +		}if(mode == AR5K_MODE_11B) {
+> +			channels[count].hw_value = CHANNEL_B;
+> +		}
 
-This fix allows to control the number of bits that qdiscs book keeping can be done
-for with respect to the qdisc pool
+Please run with this patch through Lindent (use checkpatch), some parts are not 
+much readable.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/wme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 7bbc793..f12e044 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -25,7 +25,7 @@ const int ieee802_1d_to_ac[8] = { 2, 3, 3, 2, 1, 1, 0, 0 };
- 
- struct ieee80211_sched_data
- {
--	unsigned long qdisc_pool;
-+	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
- 	struct tcf_proto *filter_list;
- 	struct Qdisc *queues[TC_80211_MAX_QUEUES];
- 	struct sk_buff_head requeued[TC_80211_MAX_QUEUES];
--- 
-1.5.2.2
-
+Otherwise seems pretty well.
