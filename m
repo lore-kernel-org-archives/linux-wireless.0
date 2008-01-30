@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-01.arnet.com.ar ([200.45.191.24]:53513 "HELO
-	smtp-01.arnet.com.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760149AbYAKQu2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 11:50:28 -0500
-Message-ID: <47879CBD.8080403@marquesminen.com.ar> (sfid-20080111_165030_420994_43D52E69)
-Date: Fri, 11 Jan 2008 14:43:41 -0200
-From: Martin Marques <martin@marquesminen.com.ar>
-MIME-Version: 1.0
-To: Larry Finger <larry.finger@lwfinger.net>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RFT] b43: Add support for new firmware
-References: <200801102046.56979.mb@bu3sch.de> <47879BE4.7040108@lwfinger.net>
-In-Reply-To: <47879BE4.7040108@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:35456 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752720AbYA3LJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 06:09:16 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: adjustable number of bits for qdisc pool
+Date: Wed, 30 Jan 2008 13:07:51 +0200
+Message-Id: <12016912713994-git-send-email-tomas.winkler@intel.com> (sfid-20080130_110919_528126_43357051)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger escribi=F3:
-> Michael Buesch wrote:
->> This patch adds support for new firmware.
->> Please test this on old and new firmware.
->=20
-> I have tested this patch with old firmware. It seems to work; however=
- my testing is not complete as
-> my computer has started hanging with the "Caps Lock" light flashing. =
-The crash is not caused by this
-> patch as it happened with 2.6.24-rc5, which has run for many days. I =
-do have a suggestion for
-> changing the patch (see below).
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Sorry if it's a change of subject, but what does the flashing caps hang=
-=20
-mean? It has happend to me a lot when trying to run 3D apps.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This fix allows to control the number of bits that qdiscs book keeping can be done
+for with respect to the qdisc pool
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/wme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 7bbc793..f12e044 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -25,7 +25,7 @@ const int ieee802_1d_to_ac[8] = { 2, 3, 3, 2, 1, 1, 0, 0 };
+ 
+ struct ieee80211_sched_data
+ {
+-	unsigned long qdisc_pool;
++	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
+ 	struct tcf_proto *filter_list;
+ 	struct Qdisc *queues[TC_80211_MAX_QUEUES];
+ 	struct sk_buff_head requeued[TC_80211_MAX_QUEUES];
+-- 
+1.5.2.2
+
