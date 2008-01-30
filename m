@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48016 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756255AbYALSYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2008 13:24:09 -0500
-Message-ID: <478905B9.3080004@hauke-m.de> (sfid-20080112_182431_151424_5CA8C021)
-Date: Sat, 12 Jan 2008 19:23:53 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187 rate control doesn't work
-References: <477F9890.5050107@hauke-m.de>	<43e72e890801051354v280c0ceeo78790bb5f1f45314@mail.gmail.com>	<47824D25.5090005@hauke-m.de>	<43e72e890801070942y5abcc8acs31ac446d67414483@mail.gmail.com>	<4787F03E.6080605@hauke-m.de>	<4788D24E.30805@hauke-m.de> <20080112162121.2fc2f507@morte>
-In-Reply-To: <20080112162121.2fc2f507@morte>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751044AbYA3Mlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 07:41:32 -0500
+Subject: Re: [PATCH 1/1] mac80211: adjustable number of bits for qdisc pool
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, tomas.winkler@intel.com
+In-Reply-To: <12016907253540-git-send-email-ron.rindjunsky@intel.com>
+References: <12016907253540-git-send-email-ron.rindjunsky@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WuDbRQcOiJ9fcM5dihZv"
+Date: Wed, 30 Jan 2008 13:29:06 +0100
+Message-Id: <1201696146.4014.7.camel@johannes.berg> (sfid-20080130_124145_471160_1A8DD450)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have tried wireless-2.6 and I have the same problem. If the rate goes
-over 11M no TCP/IP traffic goes through the wireless connecting. If rate
-is set to auto and the rate control algorithm changes it to something
-less than 11M TCP/IP traffic goes through, but if it is more than 11M no
-TCP/IP traffic goes through the wireless link.
 
-with "iwconfig wlan0 rate 11M" everything works.
+--=-WuDbRQcOiJ9fcM5dihZv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---
-Hauke Mehrtens
 
-Stefano Brivio wrote:
-> On Sat, 12 Jan 2008 15:44:30 +0100
-> Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> 
->> I have tested kernel 2.6.24-rc7-git4 with the build in rtl8187 module
->> and I have the same problem.
-> 
-> Could you please try the wireless-2.6 kernel tree? I think it's fixed
-> there. Details on how to download that can be found here:
-> http://linuxwireless.org/en/developers/Documentation/git-guide
-> 
-> 
-> --
-> Ciao
-> Stefano
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, 2008-01-30 at 12:58 +0200, Ron Rindjunsky wrote:
+> This fix allows to control the number of bits that qdiscs book keeping ca=
+n be done
+> for with respect to the qdisc pool
+
+Yeah this is what I was thinking.
+
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/wme.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+> index 7bbc793..f12e044 100644
+> --- a/net/mac80211/wme.c
+> +++ b/net/mac80211/wme.c
+> @@ -25,7 +25,7 @@ const int ieee802_1d_to_ac[8] =3D { 2, 3, 3, 2, 1, 1, 0=
+, 0 };
+> =20
+>  struct ieee80211_sched_data
+>  {
+> -	unsigned long qdisc_pool;
+> +	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
+>  	struct tcf_proto *filter_list;
+>  	struct Qdisc *queues[TC_80211_MAX_QUEUES];
+>  	struct sk_buff_head requeued[TC_80211_MAX_QUEUES];
+
+--=-WuDbRQcOiJ9fcM5dihZv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6BtkaVg1VMiehFYAQKg3xAAsWvY4PF+vk6sWpcB/8w4XWf2wMAJ5FNS
++2o+nekGPWILf8s5Cdvmhvmm2ivpbExzsUN/Z/rg/sJet1gl4zUQdOIzuqonCH4Q
+uL8wKWarFnhX/dG9q1aPPRddNbSslWbzfIP/FAB8TkjXv3PCjtdzWeOMK42kMz1k
+NvmMaTnKkDUytGz3KjsG0quV914Tsz3ijWdP5hTHq5Z9nr9iFwVgO3qC1FS919TM
+KQluBmp+ecGuWO2EKFHFcUCY6sQaTUgPFxuY2gU1LfGsEAT0ns2cUi8PLB1t+jad
+W7LnvFPsPz6bX+H1fkaGxmsSTXFeK3ynJUR6wFuBDjxahAxAuPGXHY7gZVxE2rr3
+KpJjjaZ4GimdaTgL6m4eKBxU9DGBthluNpp9o3V2YCWBqPBf64BXP0MOCx1WaiRN
+Qy3KxxD+2A91ek659G1pjp4C7G4eAYgj17NZFtYdz0pScoGekJjtc8yEFYPwAEk4
+JBp+N9J1vwbUQBdH9HH6y1JzJJXcY043+H+FuvFn1zHyKehlknUk5DSps0mvp493
+JJnVqrGP0BoC87mh77fsH9xzNvsWbASLktAh/dHUU5TsOkZ9qCAaKx8Z7EEyggec
+0mCgP2hakIDWK4by8IJ7t6/vKExELhcXJFUGz86y/A3UWrux9rL08dviJyoPvQiP
+sqIOFLX6LbU=
+=rMjU
+-----END PGP SIGNATURE-----
+
+--=-WuDbRQcOiJ9fcM5dihZv--
+
