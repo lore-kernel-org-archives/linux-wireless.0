@@ -1,93 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:50875 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756117AbYAGUyx (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:2323 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942AbYA3QTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:54:53 -0500
-Received: by py-out-1112.google.com with SMTP id u52so12808504pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2008 12:54:51 -0800 (PST)
-Message-ID: <43e72e890801071254o49f16885ubce452e5687f915c@mail.gmail.com> (sfid-20080107_205456_343448_B22E651D)
-Date: Mon, 7 Jan 2008 15:54:49 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Forest Bond" <forest@alittletooquiet.net>
-Subject: Re: VT6656 driver source available from VIA
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com>
+	Wed, 30 Jan 2008 11:19:18 -0500
+Received: by an-out-0708.google.com with SMTP id d31so68416and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2008 08:19:14 -0800 (PST)
+Message-ID: <47A0A2F9.3020400@gmail.com> (sfid-20080130_161921_506832_0EE50DF3)
+Date: Wed, 30 Jan 2008 10:16:57 -0600
+From: "Jory A. Pratt" <geekypenguin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20070919193743.GA14127@storm.local.network>
-	 <20071101190711.GB17825@storm.local.network>
-	 <20071101191250.GE14943@tuxdriver.com>
-	 <20071105020730.GA4414@storm.local.network>
-	 <20071114170051.GD23778@storm.local.network>
-	 <20071114170634.GC6226@tuxdriver.com>
-	 <20080107184949.GI18550@storm.local.network>
-	 <43e72e890801071220r33401a6cg30a0bf4fc391b452@mail.gmail.com>
-	 <20080107203101.GA4599@storm.local.network>
-	 <43e72e890801071247w4f25de53v1b5f09828fcb840c@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: should we revert the cfg80211 API patches?
+References: <1201708352.4149.21.camel@johannes.berg>
+In-Reply-To: <1201708352.4149.21.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 7, 2008 3:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+Johannes Berg wrote:
+> John,
 >
-> On Jan 7, 2008 3:31 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> >
-> > On Mon, Jan 07, 2008 at 03:20:02PM -0500, Luis R. Rodriguez wrote:
-> > > On Jan 7, 2008 1:49 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> > > > Hi,
-> > > >
-> > > > On Wed, Nov 14, 2007 at 12:06:34PM -0500, John W. Linville wrote:
-> > > > > On Wed, Nov 14, 2007 at 12:00:51PM -0500, Forest Bond wrote:
-> > > > >> On Sun, Nov 04, 2007 at 09:07:31PM -0500, Forest Bond wrote:
-> > > > >>> The post is here:
-> > > > >>>
-> > > > >>> http://forums.viaarena.com/messageview.aspx?catid=28&threadid=78745
-> > > > >>>
-> > > > >>> Any noise that can be contributed is welcome and appreciated.  You'll need
-> > > > >>> to create an account to post, though.
-> > > > >
-> > > > >> I also added these.  Perhaps having plenty of content/links regarding this
-> > > > >> issue will help to increase visibility:
-> > > > >>
-> > > > >> http://www.alittletooquiet.net/text/a-license-for-the-via-vt6656-linux-driver/
-> > > > >> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
-> > > > >
-> > > > > Excellent...I appreciate your efforts as an agitator! :-)
-> > > >
-> > > > At this point I am not anticipating positive results WRT this endeavor, and am
-> > > > unable to pursue further assistance from VIA.  Further, I've seen that the
-> > > > driver in question likely exhibits some interesting quirks that makes it
-> > > > difficult to use.  It is also bit-rotting out of relevance.
-> > >
-> > > This is unfortunate to hear...
-> > >
-> > > > Can the driver be used as a reference for a fresh implementation?  I've not
-> > > > written a driver before, but would be open to the possibility.
-> > >
-> > > IANAL but I believe It basically depends on the license the vendor
-> > > issued the driver under and its sources under. If no license was used
-> > > then I believe the standard copyright license terms should be assumed.
-> > > What license was used throughout the driver files?
-> > >
-> > > > What are the legal ramifications of a driver author having access to
-> > > > proprietary source code?
-> > >
-> > > Again, I believe it depends on the license/NDA/terms under which the
-> > > driver author obtained access to such proprietary source code. The
-> > > more details you provide the better.
-> >
-> > The license was omitted.  This was presumably an oversight, but intentions are
-> > always hard to know when the other party isn't saying anything :)
+> It appears that there's more trouble caused by my cfg80211 band API
+> patch than people are willing to put up with. Tomas has already asked
+> for it to be reverted, and neither Michael (Buesch) nor Stefano want to
+> maintain two driver branches (one "stable" 2.6.25 branch and one
+> "development" "for the future" branch).
 >
-> I'm calling their offices now, we should be able to just talk to
-> someone from their dev team...
+> FWIW, I support your decision to not push this particular patch for
+> 2.6.25, it really doesn't fall into the "tested well enough to merge
+> during merge window" category.
+>
+> Additionally, since Michael Wu has (privately) announced to stop working
+> on wireless, a number of drivers are effectively unmaintained now and
+> I'm not sure I can quickly fix the breakage that my patch probably
+> caused in those drivers, especially since Michael Wu is the only
+> developer with access to all that hardware.
+>
+> To ease the short term pain, we can remove/revert the commits in
+> question (those being 51c4c94e89a2042e8b20d640b49b6b605d71420d,
+> 6854a5291cce341751a7e2e195cc3e97d95afeec and
+> d0776155b288c20cc936bfd87d9a76255f244ed8).
+>
+> Maybe I should have waited longer or posted the patches earlier. I
+> didn't post them earlier because I had not wanted to disrupt Intel's
+> iwlwifi work too much knowing that there were patches, and then those
+> patches caused bad breakage with my patch so I had to wait for another
+> Intel patchset fixing a number of bugs they introduced... I'll admit
+> that timing was horrible.
+>
+> But, I'll be frank, if the patches are removed/revert I probably won't
+> continue maintaining them. I can't do much with these patches but
+> continually forward port them on top of new driver changes which is
+> boring and useless work. Experience has shown that hardly anybody but me
+> [1] actually tests my patches until I push them into your tree, so
+> continuing to forward port these patches won't actually help them become
+> better but can only make sure they don't completely bitrot into
+> oblivion.
+>
+> The only way forward I see if these patches are reverted is that we
+> announce with the reversion that we'll merge them again in N weeks (with
+> N being a reasonably small number, say 4-6) and until then people can
+> test the patches and send me driver updates that I'll incorporate. But I
+> don't see how useful that is vs. just leaving the patches in place and
+> you managing the required driver updates.
+>
+> johannes
+>
+> [1] the only other people who test it seem to be mostly clueless people
+> who want to get AP mode working and then ask me stupid questions in
+> private... there are exceptions of course
+>   
+Reverting the patch is not the answer. Everyone just needs to step up 
+and fix what they can. If maintainers are needed a call needs to be put 
+out to find one.
+The work is in the direction that moves wireless in linux toward that of 
+a windows machine that the users want and need.
 
-Well this sucks... just FYI,
-
-http://forums.viaarena.com/messageview.aspx?catid=28&threadid=78745
-
-this is the page you started on viaarena for this. It is no longer up.
-I now get a "Page not found"
-
-  Luis
+-Jory
