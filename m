@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbYAXOuS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2008 09:50:18 -0500
-Subject: Re: [PATCH 03/12] mac80211: A-MPDU Tx adding basic functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com
-In-Reply-To: <12009163393182-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_115439_500829_54AD44A6)
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-	 <12009163393182-git-send-email-ron.rindjunsky@intel.com>
-	 (sfid-20080121_115439_500829_54AD44A6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wl3Y94glc0nfpzWsrI9L"
-Date: Thu, 24 Jan 2008 10:30:39 +0100
-Message-Id: <1201167039.3454.61.camel@johannes.berg> (sfid-20080124_145048_524649_7E984AB9)
-Mime-Version: 1.0
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:51760 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759584AbYA3UCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 15:02:13 -0500
+Date: Wed, 30 Jan 2008 22:02:47 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	stefano.brivio@polimi.it
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] make b43_mac_{enable,suspend}() static
+Message-ID: <20080130200247.GA29368@does.not.exist> (sfid-20080130_200235_570200_68B23396)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+b43_mac_{enable,suspend}() can now become static.
 
---=-wl3Y94glc0nfpzWsrI9L
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
+---
 
-> +	/* FIXME: need a better way to ensure that TX flow won't interrupt us*/
-> +	/* until the end of the call to requeue function */
-> +	spin_lock_bh(&local->mdev->queue_lock);
+ drivers/net/wireless/b43/main.c |    4 ++--
+ drivers/net/wireless/b43/main.h |    3 ---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-What sort of better way could we have?
-
-johannes
-
---=-wl3Y94glc0nfpzWsrI9L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR5havqVg1VMiehFYAQKyUA/7BwWluUf/oDeAT7v9S+nOG7enbersfF0E
-Ki06TyZbnNm2MPdY4Ouf6MOmyzxEgoJyA34vTRLBcHahkLXjQpFt+339TGtkYWrl
-0KrqTmbPklne2Qx7VcBs3nPT6cdM206rkS+0s9RnoV7Kv41NM88ODJlmoDPmq8KK
-/n+HMxjWIvzKqPF64Gz+n7zOfXyMPc3yKiq+i/VcC2zRqXuCbZkXuxNYiOomlr5f
-uhsrwUQ3fmS3oiIbOnuW6hKwR/BCHrLGPPPg5ZY4hg8K2aWcNBWoMtslOtFrARrj
-gKR1uQ62tTb/srLT/NoWxqOGpJ5nMtK86LQL52ET0XI7rzZBtO7YfJzBTrH9ynD6
-BDI6lfzDlzViId0ATz20hvlSKOYJyleefYbfXbiUuaaLgGsSRHpXUghkY3sQJD3S
-/XsxD0KEzmBMs4RarVvU7eEArAF1czMqexY396N7tdh/7WA7QRQ3gRMQ12Jlz4jS
-2Ulj4xXzR3DrsnBycAxOEhA1tQEbYnP31ophC+4aKJxe8SXXuFPDvGp8TLgMrZrv
-8XF+KCRShR53h9KKO/+XPfWbYSYhuWWjXG0DN5Bl2bJJG/4VpuFjZmhLwxVk+OI8
-ViZoIQ2yDxGa1Sz9bGdM1xQFiD3QRgLysZSO43CsnZ+61xungEkxG1d4i4/JFSnD
-yYIJRi9c4uk=
-=HnVW
------END PGP SIGNATURE-----
-
---=-wl3Y94glc0nfpzWsrI9L--
+e2a91b00d125ed4b60bdf9e37f550aed23d84747 
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 88d2c15..360515c 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2042,7 +2042,7 @@ static void b43_gpio_cleanup(struct b43_wldev *dev)
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/EnableMac */
+-void b43_mac_enable(struct b43_wldev *dev)
++static void b43_mac_enable(struct b43_wldev *dev)
+ {
+ 	dev->mac_suspended--;
+ 	B43_WARN_ON(dev->mac_suspended < 0);
+@@ -2066,7 +2066,7 @@ void b43_mac_enable(struct b43_wldev *dev)
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/SuspendMAC */
+-void b43_mac_suspend(struct b43_wldev *dev)
++static void b43_mac_suspend(struct b43_wldev *dev)
+ {
+ 	int i;
+ 	u32 tmp;
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index 2d52d9d..4397f49 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -102,9 +102,6 @@ void b43_dummy_transmission(struct b43_wldev *dev);
+ 
+ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
+ 
+-void b43_mac_suspend(struct b43_wldev *dev);
+-void b43_mac_enable(struct b43_wldev *dev);
+-
+ void b43_controller_restart(struct b43_wldev *dev, const char *reason);
+ 
+ #define B43_PS_ENABLED	(1 << 0)	/* Force enable hardware power saving */
 
