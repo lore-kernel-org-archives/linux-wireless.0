@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn2.hy.skanova.net ([81.228.8.154]:49048 "EHLO
-	pne-smtpout4-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751785AbYATANt (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:43296 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761362AbYA3W5k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2008 19:13:49 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 00/14] RFC: Driver for Wireless RNDIS USB devices.
-To: linux-wireless@vger.kernel.org
-Cc: bjd@jooz.net, dbrownell@users.sourceforge.net,
-	netdev@vger.kernel.org
-Date: Sun, 20 Jan 2008 02:13:42 +0200
-Message-ID: <20080120001342.25718.83669.stgit@fate.lan> (sfid-20080120_001354_538929_461DEBE3)
+	Wed, 30 Jan 2008 17:57:40 -0500
+Date: Wed, 30 Jan 2008 23:57:38 +0100
+From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+Subject: Re: ipw2200 stalls on high load
+Message-ID: <20080130225738.GB2648@Chamillionaire.breakpoint.cc> (sfid-20080130_225745_380211_26BD5C17)
+References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc> <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+* Chatre, Reinette | 2008-01-28 10:40:16 [-0800]:
 
-This is second try on wireless RNDIS patchset started by Bjorge Dijkstra. Since
-Bjorge has disappeared, I claim maintainership of rndis_wext and this patchset
-until he returns.
+>On ,Sebastian Siewior wrote:
+>
+>> Hello,
+>> 
+>> my wireless connection stalls after like 5 seconds once the
+>> downloading performance passes around 600 KiB/sec. I noticed in dmesg
+>> the following:
+>>> ipw2200: Firmware error detected.  Restarting.
+>
+>Could you please submit a bug at http://www.bughost.org to enable us to
+>track this problem? 
+Sure. #1487 looks very close. The firmware version seems to be different
+as well as the "the driver messsage". Do you want me to open a new one or
+should I follow-up?
 
-This patchset adds support for various 802.11 USB devices based on Broadcom
-4320 chip. Chip uses RNDIS to communicate with the host, so module depend
-heavily on rndis_host/cdc_ether/usbnet and needs some changes on these 
-modules in order to work.
-
-Patches 1-6 are from first patchset:
- 1. Fix sparse warning: returning void valued expression
- 2. [cdc_ether] Hardwire CDC descriptors when missing
- 3. [rndis_host] Use 1KB buffer in rndis_unbind
- 4. [rndis_host] Halt device if rndis_bind fails
- 5. [rndis_host] Fix rndis packet filter flags
- 6. [usbnet] Use wlan device name for RNDIS wireless devices
-
-Of these 1, 3 and 4 are not required for this version of rndis_wext to work.
-
-Actual wireless part is changed from extension on rndis_host to separate 
-driver. Different devices are detected by device specific USB vendor/product 
-IDs as the way done with Windows drivers instead of detecting RNDIS media type 
-like in first patchset.
-
-New patches 7-14:
- 7. [rndis_host] Split up rndis_host.c
- 8. [rndis_host] export functions
- 9. [usbnet] add driver_priv pointer to 'struct usbnet'
-10. [rndis_host] Add rndis_early_init function pointer to 'struct rndis_data'.
-11. [rndis_host] Add rndis_link_change function pointer to 'struct rndis_data'.
-12. Move usbnet.h and rndis_host.h to include/linux/usb
-13. [rndis_host] blacklist known wireless RNDIS devices
-14. Add new driver 'rndis_wext' for wireless RNDIS devices.
-
-Patches should be applied in order, series apply cleanly to 2.6.24-rc8.
-
- - Jussi Kivilinna
-
+>Thank you 
+>
+>Reinette
+>
+Regards,
+Sebastian
