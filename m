@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:1173 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758542AbYAKXBK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2008 18:01:10 -0500
-Date: Sat, 12 Jan 2008 10:01:05 +1100
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, ron.rindjunsky@intel.com,
+Received: from ra.tuxdriver.com ([70.61.120.52]:3468 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756471AbYA3QcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2008 11:32:16 -0500
+Date: Wed, 30 Jan 2008 11:11:13 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jan Engelhardt <jengelh@computergmbh.de>, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: handing cloned frames to netif_rx()?
-Message-ID: <20080111230105.GA32656@gondor.apana.org.au> (sfid-20080111_230116_150714_1DF3C21F)
-References: <E1JDSPG-0008Of-00@gondolin.me.apana.org.au> <1200092285.3528.5.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: Re: [PATCH] NET: constify data and function pointer tables
+Message-ID: <20080130161113.GB3317@tuxdriver.com> (sfid-20080130_163220_283761_0928A2BC)
+References: <54038cd4f87a03884e4f59f8f3697889dfb63c54.1201030614.git.jengelh@computergmbh.de> <Pine.LNX.4.64.0801222046170.5722@fbirervta.pbzchgretzou.qr> <47A0427D.7040301@garzik.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1200092285.3528.5.camel@johannes.berg>
+In-Reply-To: <47A0427D.7040301@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 11, 2008 at 11:58:05PM +0100, Johannes Berg wrote:
+On Wed, Jan 30, 2008 at 04:25:17AM -0500, Jeff Garzik wrote:
+> Jan Engelhardt wrote:
+>> Signed-off-by: Jan Engelhardt <jengelh@computergmbh.de>
+>> ---
+>>  drivers/net/bonding/bond_main.c         |    2 +-
+>>  drivers/net/hamradio/bpqether.c         |    2 +-
+>>  drivers/net/hamradio/scc.c              |    2 +-
+>>  drivers/net/hamradio/yam.c              |    2 +-
+>>  drivers/net/ibmveth.c                   |    2 +-
+>>  drivers/net/pppoe.c                     |    2 +-
+>>  drivers/net/pppol2tp.c                  |    4 ++--
+>>  drivers/net/wireless/libertas/debugfs.c |   14 +++++++-------
+>>  drivers/net/wireless/strip.c            |    2 +-
+>>  9 files changed, 16 insertions(+), 16 deletions(-)
 >
-> Ok. Yes, we will of course adhere to that, but I was wondering whether
-> maybe the net stack assumes somewhere that a packet it got from the
-> driver can be written to w/o copying.
+> ACK -- but you should collect linville's ack of the wireless stuff too 
+> (even though the patch is simple and obvious)
 
-All parts of the rx stack support clone handling because they can always
-run after another handler (e.g., AF_PACKET) which may have cloned the
-packet.
+Looks fine to me...ACK
 
-Cheers,
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+John W. Linville
+linville@tuxdriver.com
