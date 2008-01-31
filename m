@@ -1,92 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51715 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36971 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751770AbYA1Qo5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2008 11:44:57 -0500
-Subject: Re: [PATCH] libertas: make lbs_sync_channel() static
+	id S1756001AbYAaRwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 12:52:41 -0500
+Subject: Re: wireless mini-summit agenda proposals?
 From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200801281726.28434.hs4233@mail.mn-solutions.de>
-References: <200801281726.28434.hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080131162514.GC6413@tuxdriver.com>
+References: <20080131162514.GC6413@tuxdriver.com>
 Content-Type: text/plain
-Date: Mon, 28 Jan 2008 11:39:43 -0500
-Message-Id: <1201538383.14441.7.camel@localhost.localdomain> (sfid-20080128_164459_666768_6AE2C3D1)
+Date: Thu, 31 Jan 2008 12:52:03 -0500
+Message-Id: <1201801923.3000.13.camel@localhost.localdomain> (sfid-20080131_175252_912444_0BC17431)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-01-28 at 17:26 +0100, Holger Schurig wrote:
-> ... by moving it into the file where it's sole user resides
+On Thu, 2008-01-31 at 11:25 -0500, John W. Linville wrote:
+> Greetings,
 > 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> It looks as if we have a few venue options for a third wireless summit.
+> While this may seem like a luxury, none of the options are perfect
+> for everyone and each has it's own potential drawbacks.  So rather
+> than move blindly forward with any given venue, I think it would be
+> good to discuss some potential agenda points.
+> 
+> This will serve both to determine who is most interested in attending
+> a summit and who might most need to be there.  This will also serve
+> to justify the trouble of having a summit at all.  So, I'd like to
+> open the 'floor' to discussion proposals.
+> 
+> What discussions pertinent to Linux wireless development do
+> you want to see?  What can you contribute to those discussions?
+> How would a face-to-face discussion of that issue be better than an
+> online discussion?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
+because email isn't optimal for this.  I haven't had enough time to jump
+into it yet, but the fact that Johannes is the vast majority of the
+effort here is worrisome.  Having a reference implementation (airo,
+atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
+probably be very useful, even just to get a sense of how the API works.
 
-> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.c	2008-01-18 10:42:26.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.c	2008-01-18 10:43:48.000000000 +0100
-> @@ -179,17 +179,6 @@ int lbs_update_channel(struct lbs_privat
->  	return ret;
->  }
->  
-> -void lbs_sync_channel(struct work_struct *work)
-> -{
-> -	struct lbs_private *priv = container_of(work, struct lbs_private,
-> -		sync_channel);
-> -
-> -	lbs_deb_enter(LBS_DEB_ASSOC);
-> -	if (lbs_update_channel(priv))
-> -		lbs_pr_info("Channel synchronization failed.");
-> -	lbs_deb_leave(LBS_DEB_ASSOC);
-> -}
-> -
->  static int assoc_helper_channel(struct lbs_private *priv,
->                                  struct assoc_request * assoc_req)
->  {
-> Index: wireless-2.6/drivers/net/wireless/libertas/assoc.h
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/assoc.h	2008-01-18 10:42:26.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/assoc.h	2008-01-18 10:43:49.000000000 +0100
-> @@ -7,6 +7,5 @@
->  
->  void lbs_association_worker(struct work_struct *work);
->  struct assoc_request *lbs_get_association_request(struct lbs_private *priv);
-> -void lbs_sync_channel(struct work_struct *work);
->  
->  #endif /* _LBS_ASSOC_H */
-> Index: wireless-2.6/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- wireless-2.6.orig/drivers/net/wireless/libertas/main.c	2008-01-18 10:42:26.000000000 +0100
-> +++ wireless-2.6/drivers/net/wireless/libertas/main.c	2008-01-18 10:43:48.000000000 +0100
-> @@ -985,6 +985,18 @@ out:
->  	lbs_deb_leave(LBS_DEB_CMD);
->  }
->  
-> +static void lbs_sync_channel_worker(struct work_struct *work)
-> +{
-> +	struct lbs_private *priv = container_of(work, struct lbs_private,
-> +		sync_channel);
-> +
-> +	lbs_deb_enter(LBS_DEB_MAIN);
-> +	if (lbs_update_channel(priv))
-> +		lbs_pr_info("Channel synchronization failed.");
-> +	lbs_deb_leave(LBS_DEB_MAIN);
-> +}
-> +
-> +
->  static int lbs_init_adapter(struct lbs_private *priv)
->  {
->  	size_t bufsize;
-> @@ -1128,7 +1140,7 @@ struct lbs_private *lbs_add_card(void *c
->  	priv->work_thread = create_singlethread_workqueue("lbs_worker");
->  	INIT_DELAYED_WORK(&priv->assoc_work, lbs_association_worker);
->  	INIT_DELAYED_WORK(&priv->scan_work, lbs_scan_worker);
-> -	INIT_WORK(&priv->sync_channel, lbs_sync_channel);
-> +	INIT_WORK(&priv->sync_channel, lbs_sync_channel_worker);
->  
->  	sprintf(priv->mesh_ssid, "mesh");
->  	priv->mesh_ssid_len = 4;
+rfkill - how to clean up the mess, including how it's all supposed to
+work from userspace with kernel bits, ACPI bits, vendor modules like
+asus_acpi and dellWirelessCtl, input-only buttons, etc
+
+WiMAX - what hardware is coming, what the APIs should look like (OMA-DM
+is likely to be part of Sprint's stack for XOHM), what the driver
+situation is, and how to fend off a repeat of the 802.11 regulatory
+situation for WiMAX (most parts are apparently fullmac right now, but
+softmac will surely come).
+
+802.11s - nail down issues that Javier/Luis/others might have and try to
+push the 802.11s mesh stack forward (driver issues, API issues, etc)
+
+802.11n - do we need any discussion here or is it just a question of
+executing on the current plan?
+
+Userspace MLME - what's going on here?  Noise around this seems to be
+quieter these days.  Is stuff going according to plan/schedule or are
+there roadblocks?
+
+lib80211/fullmac - maybe this just needs to be picked up and done by
+somebody and doesn't need any discussion or whatever
+
+Dan
+
 
