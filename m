@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:7084 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbYADFFi (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.190]:40497 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760713AbYAaPuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2008 00:05:38 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so10212172wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2008 21:05:37 -0800 (PST)
-Message-ID: <cb0375e10801032105q5a6e6991t70e2d55743013662@mail.gmail.com> (sfid-20080104_050540_711641_79021C26)
-Date: Thu, 3 Jan 2008 21:05:37 -0800
-From: "Andrew Lutomirski" <luto@myrealbox.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] Respect fixed rates in rc80211_pid
+	Thu, 31 Jan 2008 10:50:17 -0500
+Received: by rn-out-0910.google.com with SMTP id i24so681485rng.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 07:50:16 -0800 (PST)
+Message-ID: <43e72e890801310750o38faf05ckb9977e4e5d6341fa@mail.gmail.com> (sfid-20080131_155024_292675_A6C3BD52)
+Date: Thu, 31 Jan 2008 10:50:11 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Port to new bitrate/channel API
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	johannes@sipsolutions.net
+In-Reply-To: <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_4164_30876726.1199423137404"
+Content-Type: text/plain; charset=UTF-8
+References: <20080130183824.GA7676@makis.domain.invalid>
+	 <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com>
+	 <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_4164_30876726.1199423137404
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Jan 31, 2008 10:32 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2008/1/31, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
+> > On Jan 30, 2008 1:38 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+> > > Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
+> > >
+> > > Also i figured out a way to process rate vallue found on status descriptors,
+> > > it's still buggy but we are getting closer (i think it improved stability a little).
+> > >
+> > > Changes-licensed-under: 3-clause-BSD
+> > > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> >
+> > My approach was little more extreme removing ath5k_rate struct and led
+> > stuff completely but well, its not done. Also we definitely still do
+> > dependent on mode stuff a lot and the whole capaibilty stuff is used
+> > inconsistantly. If anything I can base patches on this work.
+> >
+>
+> I also wanted to make a bigger cleanup (i added some TODOs there about
+> removing led stuff -i want to port them to mac80211 leds, not just
+> remove- and most of rate tables -we still need rate code mapping-,
+> other things can be ripped out also) but until i'm done with the exams
+> i don't have much time. Also some cosmetic changes like Jiri noticed
+> would be usefull and i intend to do more cleanups on that way also. I
+> hope i can come back with more stuff quickly ;-)
+>
+> > Nick, just please review the license and files you've changed. Other
+> > than that it looks OK.
+>
+> Ouch you are right !
+>
+> for base.c/base.h
+> Changes-licensed-under: 3-clause-BSD
+>
+> for hw.c/initvals.c/phy.c/ath5k.h
+> Changes-licensed-under: ISC
 
-[Attached b/c my mailer will screw it up]
+Thanks. Nick as Jiri pointed out, can you also re-send after checking
+the patch with checkpatch.pl?
 
-rc80211_pid should respect fixed rates.
-
-I would argue that mac80211 should handle fixed rates outside the rate
-control code, which would also allow them to take effect immediately
-instead of during the rate control callback, but this is pretty close
-to correct.
-
-Signed-Off-By: Andy Lutomirski <luto@myrealbox.com>
-
-------=_Part_4164_30876726.1199423137404
-Content-Type: text/x-patch; name=mac80211_rate_2.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fb09k64n0
-Content-Disposition: attachment; filename=mac80211_rate_2.patch
-
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9yYzgwMjExX3BpZF9hbGdvLmMgYi9uZXQvbWFjODAy
-MTEvcmM4MDIxMV9waWRfYWxnby5jCmluZGV4IDYzMWU0NjguLmIyZDdkMTAgMTAwNjQ0Ci0tLSBh
-L25ldC9tYWM4MDIxMS9yYzgwMjExX3BpZF9hbGdvLmMKKysrIGIvbmV0L21hYzgwMjExL3JjODAy
-MTFfcGlkX2FsZ28uYwpAQCAtMTEwLDEwICsxMTAsNiBAQCBzdGF0aWMgdm9pZCByYXRlX2NvbnRy
-b2xfcGlkX2FkanVzdF9yYXRlKHN0cnVjdCBpZWVlODAyMTFfbG9jYWwgKmxvY2FsLAogCWludCBi
-YWNrID0gKGFkaiA+IDApID8gMSA6IC0xOwogCiAJc2RhdGEgPSBJRUVFODAyMTFfREVWX1RPX1NV
-Ql9JRihzdGEtPmRldik7Ci0JaWYgKHNkYXRhLT5ic3MgJiYgc2RhdGEtPmJzcy0+Zm9yY2VfdW5p
-Y2FzdF9yYXRlaWR4ID4gLTEpIHsKLQkJLyogZm9yY2VkIHVuaWNhc3QgcmF0ZSAtIGRvIG5vdCBj
-aGFuZ2UgU1RBIHJhdGUgKi8KLQkJcmV0dXJuOwotCX0KIAogCW1vZGUgPSBsb2NhbC0+b3Blcl9o
-d19tb2RlOwogCW1heHJhdGUgPSBzZGF0YS0+YnNzID8gc2RhdGEtPmJzcy0+bWF4X3JhdGVjdHJs
-X3JhdGVpZHggOiAtMTsKQEAgLTI0Myw2ICsyMzksNyBAQCBzdGF0aWMgdm9pZCByYXRlX2NvbnRy
-b2xfcGlkX3R4X3N0YXR1cyh2b2lkICpwcml2LCBzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LAogewog
-CXN0cnVjdCBpZWVlODAyMTFfbG9jYWwgKmxvY2FsID0gd2Rldl9wcml2KGRldi0+aWVlZTgwMjEx
-X3B0cik7CiAJc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkciA9IChzdHJ1Y3QgaWVlZTgwMjExX2hk
-ciAqKSBza2ItPmRhdGE7CisJc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGE7CiAJ
-c3RydWN0IHJjX3BpZF9pbmZvICpwaW5mbyA9IHByaXY7CiAJc3RydWN0IHN0YV9pbmZvICpzdGE7
-CiAJc3RydWN0IHJjX3BpZF9zdGFfaW5mbyAqc3BpbmZvOwpAQCAtMjUzLDYgKzI1MCwxMyBAQCBz
-dGF0aWMgdm9pZCByYXRlX2NvbnRyb2xfcGlkX3R4X3N0YXR1cyh2b2lkICpwcml2LCBzdHJ1Y3Qg
-bmV0X2RldmljZSAqZGV2LAogCWlmICghc3RhKQogCQlyZXR1cm47CiAKKwkvKiBEb24ndCB1cGRh
-dGUgdGhlIHN0YXRlIGlmIHdlJ3JlIG5vdCBjb250cm9sbGluZyB0aGUgcmF0ZS4gKi8KKwlzZGF0
-YSA9IElFRUU4MDIxMV9ERVZfVE9fU1VCX0lGKHN0YS0+ZGV2KTsKKwlpZiAoc2RhdGEtPmJzcyAm
-JiBzZGF0YS0+YnNzLT5mb3JjZV91bmljYXN0X3JhdGVpZHggPiAtMSkgeworCQlzdGEtPnR4cmF0
-ZSA9IHNkYXRhLT5ic3MtPm1heF9yYXRlY3RybF9yYXRlaWR4OworCQlyZXR1cm47CisJfQorCiAJ
-LyogSWdub3JlIGFsbCBmcmFtZXMgdGhhdCB3ZXJlIHNlbnQgd2l0aCBhIGRpZmZlcmVudCByYXRl
-IHRoYW4gdGhlIHJhdGUKIAkgKiB3ZSBjdXJyZW50bHkgYWR2aXNlIG1hYzgwMjExIHRvIHVzZS4g
-Ki8KIAlpZiAoc3RhdHVzLT5jb250cm9sLnJhdGUgIT0gJmxvY2FsLT5vcGVyX2h3X21vZGUtPnJh
-dGVzW3N0YS0+dHhyYXRlXSkK
-------=_Part_4164_30876726.1199423137404--
+  Luis
