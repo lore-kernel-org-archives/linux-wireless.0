@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:29960 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934292AbYBBUkk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39067 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554AbYBAMJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 15:40:40 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1717030wah.23
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 12:40:37 -0800 (PST)
-Message-ID: <1ba2fa240802021240h56f5f9f7ueb7e0fa3e8524231@mail.gmail.com> (sfid-20080202_204103_701088_EE3801BA)
-Date: Sat, 2 Feb 2008 22:40:37 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Roel Kluin" <12o3l@tiscali.nl>
-Subject: Re: [PATCH] [wireless/iwlwifi/iwl-4965.c] add parentheses
-Cc: yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	lkml <linux-kernel@vger.kernel.org>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <47A4C920.4090202@tiscali.nl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <47A4C920.4090202@tiscali.nl>
+	Fri, 1 Feb 2008 07:09:10 -0500
+Subject: [PATCH] mac80211: fix initialisation error path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 31 Jan 2008 19:33:53 +0100
+Message-Id: <1201804433.4149.36.camel@johannes.berg> (sfid-20080201_120919_851407_D59A1879)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 2, 2008 9:48 PM, Roel Kluin <12o3l@tiscali.nl> wrote:
-> '!' has a higher priority than '&': bitanding has no effect.
->
-> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
-> ---
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 569347f..2439868 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -4589,7 +4589,7 @@ static u8 iwl4965_is_fat_tx_allowed(struct iwl4965_priv *priv,
->
->         if (sta_ht_inf) {
->                 if ((!sta_ht_inf->ht_supported) ||
-> -                  (!sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH))
-> +                  (!(sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH)))
->                         return 0;
->         }
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The error handling in ieee80211_init() is broken when any of
+the built-in rate control algorithms fail to initialise, fix
+it and rename the error labels.
 
-ACK
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+--- everything.orig/net/mac80211/ieee80211.c	2008-01-31 19:30:42.162269153 +0100
++++ everything/net/mac80211/ieee80211.c	2008-01-31 19:31:21.572266440 +0100
+@@ -1684,28 +1684,28 @@ static int __init ieee80211_init(void)
+ 
+ 	ret = rc80211_simple_init();
+ 	if (ret)
+-		goto fail;
++		goto out;
+ 
+ 	ret = rc80211_pid_init();
+ 	if (ret)
+-		goto fail_simple;
++		goto out_cleanup_simple;
+ 
+ 	ret = ieee80211_wme_register();
+ 	if (ret) {
+ 		printk(KERN_DEBUG "ieee80211_init: failed to "
+ 		       "initialize WME (err=%d)\n", ret);
+-		goto fail_pid;
++		goto out_cleanup_pid;
+ 	}
+ 
+ 	ieee80211_debugfs_netdev_init();
+ 
+ 	return 0;
+ 
+- fail_pid:
+-	rc80211_simple_exit();
+- fail_simple:
++ out_cleanup_pid:
+ 	rc80211_pid_exit();
+- fail:
++ out_cleanup_simple:
++	rc80211_simple_exit();
++ out:
+ 	return ret;
+ }
+ 
+
+
