@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57567 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41812 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753863AbYBELI0 (ORCPT
+	with ESMTP id S1755325AbYBAMH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 06:08:26 -0500
-Subject: Re: [PATCH 2/2] mac80211: enable IBSS merging
+	Fri, 1 Feb 2008 07:07:57 -0500
+Subject: [PATCH] mac80211 rate control: fix section mismatch
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <bruno@thinktube.com>
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-In-Reply-To: <20080205104949.9379.61874.stgit@one>
-References: <20080205104543.9379.47253.stgit@one>
-	 <20080205104949.9379.61874.stgit@one>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-33VfSrU8fKOfQXOEW75Z"
-Date: Tue, 05 Feb 2008 12:08:13 +0100
-Message-Id: <1202209693.4395.29.camel@johannes.berg> (sfid-20080205_110832_391556_1A2FD585)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Content-Type: text/plain
+Date: Thu, 31 Jan 2008 19:31:57 +0100
+Message-Id: <1201804317.4149.34.camel@johannes.berg> (sfid-20080201_120801_735547_E3C35D9F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the rate control algorithms are built-in, their exit
+functions can be called from mac80211's init function so
+they cannot be marked __exit.
 
---=-33VfSrU8fKOfQXOEW75Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/rc80211_pid_algo.c |    2 +-
+ net/mac80211/rc80211_simple.c   |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-01-31 19:20:14.932284778 +0100
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-01-31 19:20:37.912263836 +0100
+@@ -544,7 +544,7 @@ int __init rc80211_pid_init(void)
+ 	return ieee80211_rate_control_register(&mac80211_rcpid);
+ }
+ 
+-void __exit rc80211_pid_exit(void)
++void rc80211_pid_exit(void)
+ {
+ 	ieee80211_rate_control_unregister(&mac80211_rcpid);
+ }
+--- everything.orig/net/mac80211/rc80211_simple.c	2008-01-31 19:20:41.342267959 +0100
++++ everything/net/mac80211/rc80211_simple.c	2008-01-31 19:20:52.632267796 +0100
+@@ -381,7 +381,7 @@ int __init rc80211_simple_init(void)
+ 	return ieee80211_rate_control_register(&mac80211_rcsimple);
+ }
+ 
+-void __exit rc80211_simple_exit(void)
++void rc80211_simple_exit(void)
+ {
+ 	ieee80211_rate_control_unregister(&mac80211_rcsimple);
+ }
 
-> +	/* check if we need to merge IBSS */
-> +	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && beacon &&
-> +	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
-> +	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
-> +	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) =3D=3D=
- 0) {
-
-This needs to test whether elems.ssid_len =3D=3D sdata->u.sta.ssid_len
-(before doing the memcmp to not overrun the frame).
-
-> +		if (rx_status->flag & RX_FLAG_TSFT)
-> +			/* in order for correct IBSS merging we need mactime */
-> +			mactime =3D rx_status->mactime;
-
-This needs to be documented (with the RX flag I guess) and b43(legacy)
-should be changed to include the TSFT in beacon frames in IBSS mode...
-
-johannes
-
---=-33VfSrU8fKOfQXOEW75Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6hDnKVg1VMiehFYAQImCxAAjWo8EnNH/oIqVCPekYLPS41CX9Yah56x
-SSmJMu2fFL6fF1qSbq/nyGCSYcNiu01YJbqFRiqqgBLAaMm6Z/bOV42qT3UuKkFC
-WQcTJqBITI8Hkpr5VBr/8HxJJyj0vevN1X4CLVvKAJmn/Kywhq5ZZzSI1d2+NFx/
-sf/jtaOPJ5WOVHzcO/AM/oZmhKnLQYWO2P6MFvVu1I4FU0lbfcHJnYBIobyQcChV
-TJCr+9YvSHkfBqmPjpq/3v8m2Xjx/wA1T9vhjE6wQsTgnlzgX6Nn1GTRbe5GwzFD
-/Dfjmycz4fuZLmADU8hH1i3AecszHmPOkQdRFMmyQjcjNBVqnxpYdVOuVeUokAGF
-0lqRkDNVBrpQT2ICBjXNMsOHtAQyM9shX6MHQZ5gtELSB3JkH0wUBD6mhrtTvpNW
-V6iJXk6L3k39rtqAB6KIRELKjOb8SA1MST548mJmoiobWzpiTOMgSUa3LyBhbnqC
-g1BG29/HQhjlckq3DrPxr+uqoASOMbdzX5rVsaXGDv6XWyUQfHYxKnw6/nRVBXf9
-+UBf5nhR56MW6hikY8c8lNowHkya1/6MbRwIUURAvnhqVZtxkqzu7LxAAQbuA36R
-zw/1aZIooa/X4+WK6SSSUXnsIb1UC4MmBCf6N5D3d3xbzimgjeV+AbofpZMeQjRP
-f5iRdhywyRI=
-=Vk9P
------END PGP SIGNATURE-----
-
---=-33VfSrU8fKOfQXOEW75Z--
 
