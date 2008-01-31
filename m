@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:40204 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752538AbYAIJQL (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:38241 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760392AbYAaQdk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2008 04:16:11 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 4/6] ath5k: centrally define TSF to TU conversion macro
-Date: Wed,  9 Jan 2008 18:16:07 +0900
-Message-Id: <1199870169-10476-5-git-send-email-bruno@thinktube.com> (sfid-20080109_091627_599680_20E8AE51)
-In-Reply-To: <1199870169-10476-4-git-send-email-bruno@thinktube.com>
-References: <1199870169-10476-1-git-send-email-bruno@thinktube.com>
- <1199870169-10476-2-git-send-email-bruno@thinktube.com>
- <1199870169-10476-3-git-send-email-bruno@thinktube.com>
- <1199870169-10476-4-git-send-email-bruno@thinktube.com>
+	Thu, 31 Jan 2008 11:33:40 -0500
+Date: Thu, 31 Jan 2008 10:59:01 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: ath5k: reset for 5424-based card
+Message-ID: <20080131155901.GA7997@hash.localnet> (sfid-20080131_163344_023830_F9E7B80A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-centrally define TSF_TO_TO macro for TSF to TU conversion and use it in all
-instances. there will be more usage for this later.
+Hi all,
 
-ath5k.h: Changes-licensed-under: ISC
-all others: Changes-licensed-under: 3-clause-BSD
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
- drivers/net/wireless/ath5k/ath5k.h |    9 +++++++++
- drivers/net/wireless/ath5k/base.c  |    4 +---
- drivers/net/wireless/ath5k/debug.c |    2 +-
- 3 files changed, 11 insertions(+), 4 deletions(-)
+I have the following device (0x168c:001c) which comes with certain MacBooks:
 
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index 0b6694b..52787ea 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -482,6 +482,15 @@ struct ath5k_beacon_state {
- #endif
+02:00.0 Ethernet controller: Atheros Communications, Inc. AR5006EG 802.11 b/g
+Wireless PCI Express Adapter (rev 01)
+
+The current driver from merged-upstream of a few days ago doesn't seem to 
+work for this card.  In ath5k_hw_nic_wakeup, it dies after the nic reset
+and any MMIO accesses from then on return -1 (needs a hard reboot to fix).
+
+I dumped a trace of the working madwifi driver using mmio-trace and saw that
+it only sets the bottom two bits when doing AR5K_RESET_CTL.  So, the patch 
+below indeed makes probe work for the card.  
+
+It isn't perfect after that; it can associate with an AP but appears to reset
+constantly so it's not really usable.
+
+I'd love to get this working generally; if needed I can try out patches,
+supply traces, or, given enough direction, contribute some code...
+
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 3a4bf40..3fa0621 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -359,7 +359,7 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
  
- 
-+/*
-+ * TSF to TU conversion:
-+ *
-+ * TSF is a 64bit value in usec (microseconds).
-+ * TU is a 32bit value in roughly msec (milliseconds): usec / 1024
-+ * (1000ms equals 976 TU)
-+ */
-+#define TSF_TO_TU(_tsf) (u32)((_tsf) >> 10)
-+
- 
- 
- /********************\
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 8d5ffcd..30b16fd 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1989,7 +1989,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- static void
- ath5k_beacon_config(struct ath5k_softc *sc)
- {
--#define TSF_TO_TU(_h, _l)	(((_h) << 22) | ((_l) >> 10))
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 uninitialized_var(nexttbtt), intval, tsftu;
- 	u64 tsf;
-@@ -2000,7 +1999,7 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 
- 	/* current TSF converted to TU */
- 	tsf = ath5k_hw_get_tsf64(ah);
--	tsftu = TSF_TO_TU((u32)(tsf >> 32), (u32)tsf);
-+	tsftu = TSF_TO_TU(tsf);
- 
- 	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "intval %u hw tsftu %u\n",
- 		intval, tsftu);
-@@ -2051,7 +2050,6 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 				ath5k_hw_hasveol(ah))
- 			ath5k_beacon_send(sc);
+ 	/* ...reset chipset and PCI device */
+ 	if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
+-				AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
++				AR5K_RESET_CTL_BASEBAND | AR5K_RESET_CTL_PCU)) {
+ 		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
+ 		return -EIO;
  	}
--#undef TSF_TO_TU
- }
- 
- /********************\
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index fcdd36e..4ba649e 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -266,7 +266,7 @@ static ssize_t read_file_beacon(struct file *file, char __user *user_buf,
- 
- 	tsf = ath5k_hw_get_tsf64(sc->ah);
- 	len += snprintf(buf+len, sizeof(buf)-len,
--		"TSF\t\t0x%016llx\tTU: %08x\n", tsf, (u32)(tsf >> 10));
-+		"TSF\t\t0x%016llx\tTU: %08x\n", tsf, TSF_TO_TU(tsf));
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
+
 -- 
-1.5.3.4
+Bob Copeland %% www.bobcopeland.com 
 
