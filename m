@@ -1,205 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13138 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758808AbYAULwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2008 06:52:36 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 11/12] iwlwifi: A-MPDU Tx conform block Ack rate scaling to mac80211
-Date: Mon, 21 Jan 2008 13:52:11 +0200
-Message-Id: <1200916340844-git-send-email-ron.rindjunsky@intel.com> (sfid-20080121_122519_301903_F3F65C1B)
-In-Reply-To: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-References: <12009163321727-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from el-out-1112.google.com ([209.85.162.182]:29911 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757930AbYAaPHb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 10:07:31 -0500
+Received: by el-out-1112.google.com with SMTP id v27so239311ele.23
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 07:07:29 -0800 (PST)
+Message-ID: <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com> (sfid-20080131_150746_130331_1B4C4FBC)
+Date: Thu, 31 Jan 2008 10:07:28 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com, johannes@sipsolutions.net
+Subject: Re: [PATCH] ath5k: Port to new bitrate/channel API
+In-Reply-To: <20080130183824.GA7676@makis.domain.invalid>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080130183824.GA7676@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses the changes in ieee80211_tx_status to pass Block Ack data
-to rate scaling module, and uses this data in rate scaling calculations
+On Jan 30, 2008 1:38 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+> Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
+>
+> Also i figured out a way to process rate vallue found on status descriptors,
+> it's still buggy but we are getting closer (i think it improved stability a little).
+>
+> Changes-licensed-under: 3-clause-BSD
+> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   85 +++++++++++++++++++---------
- drivers/net/wireless/iwlwifi/iwl-4965.c    |    9 +--
- 2 files changed, 60 insertions(+), 34 deletions(-)
+My approach was little more extreme removing ath5k_rate struct and led
+stuff completely but well, its not done. Also we definitely still do
+dependent on mode stuff a lot and the whole capaibilty stuff is used
+inconsistantly. If anything I can base patches on this work.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index d064622..f4f2497 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -277,7 +277,8 @@ static void rs_rate_scale_clear_window(struct iwl4965_rate_scale_data *window)
-  * packets.
-  */
- static int rs_collect_tx_data(struct iwl4965_rate_scale_data *windows,
--			      int scale_index, s32 tpt, u32 status)
-+			      int scale_index, s32 tpt, int retries,
-+			      int successes)
- {
- 	struct iwl4965_rate_scale_data *window = NULL;
- 	u64 mask;
-@@ -298,26 +299,33 @@ static int rs_collect_tx_data(struct iwl4965_rate_scale_data *windows,
- 	 * subtract "1" from the success counter (this is the main reason
- 	 * we keep these bitmaps!).
- 	 */
--	if (window->counter >= win_size) {
--		window->counter = win_size - 1;
--		mask = 1;
--		mask = (mask << (win_size - 1));
--		if ((window->data & mask)) {
--			window->data &= ~mask;
--			window->success_counter = window->success_counter - 1;
-+	while (retries > 0) {
-+		if (window->counter >= win_size) {
-+			window->counter = win_size - 1;
-+			mask = 1;
-+			mask = (mask << (win_size - 1));
-+			if (window->data & mask) {
-+				window->data &= ~mask;
-+				window->success_counter =
-+					window->success_counter - 1;
-+			}
- 		}
--	}
- 
--	/* Increment frames-attempted counter */
--	window->counter = window->counter + 1;
-+		/* Increment frames-attempted counter */
-+		window->counter++;
-+
-+		/* Shift bitmap by one frame (throw away oldest history),
-+		 * OR in "1", and increment "success" if this
-+		 * frame was successful. */
-+		mask = window->data;
-+		window->data = (mask << 1);
-+		if (successes > 0) {
-+			window->success_counter = window->success_counter + 1;
-+			window->data |= 0x1;
-+			successes--;
-+		}
- 
--	/* Shift bitmap by one frame (throw away oldest history),
--	 * OR in "1", and increment "success" if this frame was successful. */
--	mask = window->data;
--	window->data = (mask << 1);
--	if (status != 0) {
--		window->success_counter = window->success_counter + 1;
--		window->data |= 0x1;
-+		retries--;
- 	}
- 
- 	/* Calculate current success ratio, avoid divide-by-0! */
-@@ -677,6 +685,11 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
- 		return;
- 
-+	/* This packet was aggregated but doesn't carry rate scale info */
-+	if ((tx_resp->control.flags & IEEE80211_TXCTL_AMPDU) &&
-+	    !(tx_resp->flags & IEEE80211_TX_STATUS_AMPDU))
-+		return;
-+
- 	retries = tx_resp->retry_count;
- 
- 	if (retries > 15)
-@@ -766,7 +779,7 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 				tpt = search_tbl->expected_tpt[rs_index];
- 			else
- 				tpt = 0;
--			rs_collect_tx_data(search_win, rs_index, tpt, 0);
-+			rs_collect_tx_data(search_win, rs_index, tpt, 1, 0);
- 
- 		/* Else if type matches "current/active" table,
- 		 * add failure to "current/active" history */
-@@ -777,7 +790,7 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 				tpt = curr_tbl->expected_tpt[rs_index];
- 			else
- 				tpt = 0;
--			rs_collect_tx_data(window, rs_index, tpt, 0);
-+			rs_collect_tx_data(window, rs_index, tpt, 1, 0);
- 		}
- 
- 		/* If not searching for a new mode, increment failed counter
-@@ -818,9 +831,13 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 			tpt = search_tbl->expected_tpt[rs_index];
- 		else
- 			tpt = 0;
--		rs_collect_tx_data(search_win,
--				    rs_index, tpt, status);
--
-+		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU)
-+			rs_collect_tx_data(search_win, rs_index, tpt,
-+					   tx_resp->ampdu_ack_len,
-+					   tx_resp->ampdu_ack_map);
-+		else
-+			rs_collect_tx_data(search_win, rs_index, tpt,
-+					   1, status);
- 	/* Else if type matches "current/active" table,
- 	 * add final tx status to "current/active" history */
- 	} else if ((tbl_type.lq_type == curr_tbl->lq_type) &&
-@@ -830,16 +847,28 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 			tpt = curr_tbl->expected_tpt[rs_index];
- 		else
- 			tpt = 0;
--		rs_collect_tx_data(window, rs_index, tpt, status);
-+		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU)
-+			rs_collect_tx_data(window, rs_index, tpt,
-+					   tx_resp->ampdu_ack_len,
-+					   tx_resp->ampdu_ack_map);
-+		else
-+			rs_collect_tx_data(window, rs_index, tpt,
-+					   1, status);
- 	}
- 
- 	/* If not searching for new mode, increment success/failed counter
- 	 * ... these help determine when to start searching again */
- 	if (lq_sta->stay_in_tbl) {
--		if (status)
--			lq_sta->total_success++;
--		else
--			lq_sta->total_failed++;
-+		if (tx_resp->control.flags & IEEE80211_TXCTL_AMPDU) {
-+			lq_sta->total_success += tx_resp->ampdu_ack_map;
-+			lq_sta->total_failed +=
-+			     (tx_resp->ampdu_ack_len - tx_resp->ampdu_ack_map);
-+		} else {
-+			if (status)
-+				lq_sta->total_success++;
-+			else
-+				lq_sta->total_failed++;
-+		}
- 	}
- 
- 	/* See if there's a better rate or modulation mode to try. */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index d626130..3fd4b44 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4286,12 +4286,9 @@ static int iwl4965_tx_status_reply_compressed_ba(struct iwl4965_priv *priv,
- 
- 	tx_status = &priv->txq[scd_flow].txb[agg->start_idx].status;
- 	tx_status->flags = IEEE80211_TX_STATUS_ACK;
--	tx_status->retry_count++;
--#ifdef CONFIG_IWL4965_HT_AGG
--	tx_status->flags |= IEEE80211_TX_STATUS_AGG_STATS;
--	tx_status->successes = successes;
--	tx_status->frame_count = agg->frame_count;
--#endif	/* CONFIG_IWL4965_HT_AGG */
-+	tx_status->flags |= IEEE80211_TX_STATUS_AMPDU;
-+	tx_status->ampdu_ack_map = successes;
-+	tx_status->ampdu_ack_len = agg->frame_count;
- 	tx_status->control.tx_rate = agg->rate_n_flags;
- 
- 	IWL_DEBUG_TX_REPLY("Bitmap %llx\n", bitmap);
--- 
-1.5.3.7
+Nick, just please review the license and files you've changed. Other
+than that it looks OK.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Acked-by:  Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+  Luis
