@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:27648 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753053AbYAYGHa (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:48096 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752790AbYAaPcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2008 01:07:30 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/3] ath5k: use SWBA to detect IBSS HW merges
-Date: Fri, 25 Jan 2008 15:07:17 +0900
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <20080119091759.31251.60264.stgit@one> <20080119091821.31251.5098.stgit@one> <1201166295.3454.52.camel@johannes.berg>
-In-Reply-To: <1201166295.3454.52.camel@johannes.berg>
+	Thu, 31 Jan 2008 10:32:01 -0500
+Received: by an-out-0708.google.com with SMTP id d31so168856and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 07:32:00 -0800 (PST)
+Message-ID: <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com> (sfid-20080131_153207_884302_4F2FA9D0)
+Date: Thu, 31 Jan 2008 17:32:00 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Port to new bitrate/channel API
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com, johannes@sipsolutions.net
+In-Reply-To: <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801251507.17814.bruno@thinktube.com> (sfid-20080125_060733_996398_0A446C44)
+Content-Type: text/plain; charset=UTF-8
+References: <20080130183824.GA7676@makis.domain.invalid>
+	 <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 24 January 2008 18:18:15 Johannes Berg wrote:
-> On Sat, 2008-01-19 at 18:18 +0900, Bruno Randolf wrote:
-> > time und check if a HW merge (automatic TSF update) has happened on every
-> > received beacon with the same BSSID.
+2008/1/31, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
+> On Jan 30, 2008 1:38 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+> > Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
+> >
+> > Also i figured out a way to process rate vallue found on status descriptors,
+> > it's still buggy but we are getting closer (i think it improved stability a little).
+> >
+> > Changes-licensed-under: 3-clause-BSD
+> > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 >
-> I don't know who is smoking what (I suspect Atheros folks...), but
-> calling a TSF adoption a "merge" is pretty out of line IMHO when you
-> also describe some non-standard BSSID changes as "merge".
+> My approach was little more extreme removing ath5k_rate struct and led
+> stuff completely but well, its not done. Also we definitely still do
+> dependent on mode stuff a lot and the whole capaibilty stuff is used
+> inconsistantly. If anything I can base patches on this work.
+>
 
-hmm, i agree, that calling that a "merge" is a bit over the top. i was using 
-this term as somebody mentioned it in 
-http://madwifi.org/wiki/DevDocs/AdhocMerge, but i agree that "TSF update" is 
-more to the point and clearer.
+I also wanted to make a bigger cleanup (i added some TODOs there about
+removing led stuff -i want to port them to mac80211 leds, not just
+remove- and most of rate tables -we still need rate code mapping-,
+other things can be ripped out also) but until i'm done with the exams
+i don't have much time. Also some cosmetic changes like Jiri noticed
+would be usefull and i intend to do more cleanups on that way also. I
+hope i can come back with more stuff quickly ;-)
 
-bruno
+> Nick, just please review the license and files you've changed. Other
+> than that it looks OK.
 
+Ouch you are right !
+
+for base.c/base.h
+Changes-licensed-under: 3-clause-BSD
+
+for hw.c/initvals.c/phy.c/ath5k.h
+Changes-licensed-under: ISC
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
