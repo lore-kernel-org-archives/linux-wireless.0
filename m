@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:49391 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbYAMNQ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 08:16:57 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1858188fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2008 05:16:55 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] mac80211: Initialize vif pointer
-Date: Sun, 13 Jan 2008 14:16:47 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sf.net
-References: <200801131402.26165.IvDoorn@gmail.com>
-In-Reply-To: <200801131402.26165.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200801131416.47515.IvDoorn@gmail.com> (sfid-20080113_131659_447500_2F73003D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:6441 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752043AbYAaGKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 01:10:31 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/5] iwlwifi: remove ieee80211 types from iwl-helpers.h
+Date: Wed, 30 Jan 2008 22:05:14 -0800
+Message-Id: <1201759516-28963-4-git-send-email-reinette.chatre@intel.com> (sfid-20080131_061035_297603_15DD6FA6)
+In-Reply-To: <1201759516-28963-3-git-send-email-reinette.chatre@intel.com>
+References: <1201759516-28963-1-git-send-email-reinette.chatre@intel.com>
+ <1201759516-28963-2-git-send-email-reinette.chatre@intel.com>
+ <1201759516-28963-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before calling update_beacon() mac80211 must
-initialize the control.vif pointer so it can
-be used by the driver to determine which
-interface is trying to send the beacon.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-v2: ieee80211_beacon_get() should also initialize the
-vif pointer since it can be called by mac80211 internally
-before calling config_interface().
+This patch removes IEEE80211_STYPE_BACK_REQ and
+IEEE80211_STYPE_BACK defines from iwl-helpers.h. These are already
+defined in include/linux/ieee80211.h
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 4f5d5c6..13046fb 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2542,6 +2542,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
- 			       "for IBSS beacon\n", dev->name);
- 			break;
- 		}
-+		control.vif = &sdata->vif;
- 		control.tx_rate =
- 			(sdata->bss_conf.use_short_preamble &&
- 			(ratesel.rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 382f24b..545ac30 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1753,6 +1753,7 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
- 			goto out;
- 		}
- 
-+		control->vif = vif;
- 		control->tx_rate =
- 			(sdata->bss_conf.use_short_preamble &&
- 			(rsel.rate->flags & IEEE80211_RATE_PREAMBLE2)) ?
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index cb009f4..8993cca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -147,9 +147,6 @@ static inline struct ieee80211_conf *ieee80211_get_hw_conf(
+ 
+ #define QOS_CONTROL_LEN 2
+ 
+-#define IEEE80211_STYPE_BACK_REQ	0x0080
+-#define IEEE80211_STYPE_BACK		0x0090
+-
+ 
+ static inline int ieee80211_is_management(u16 fc)
+ {
+-- 
+1.5.3.4
 
