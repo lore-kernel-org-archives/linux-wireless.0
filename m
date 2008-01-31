@@ -1,73 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:41919 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932613AbYAaUOM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2008 15:14:12 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so161997nfb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 12:14:10 -0800 (PST)
-From: Chris Clayton <chris2553@googlemail.com>
-Reply-To: chris2553@googlemail.com
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Silent crash witk 2-6.24-rc8-git4
-Date: Thu, 31 Jan 2008 20:13:31 +0000
-Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-References: <200801220603.02986.chris2553@googlemail.com> <200801231642.58782.chris2553@googlemail.com> <20080123190207.GB3129@tuxdriver.com>
-In-Reply-To: <20080123190207.GB3129@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801312013.31220.chris2553@googlemail.com> (sfid-20080131_201435_061839_CDB08DB1)
+Received: from mga03.intel.com ([143.182.124.21]:6441 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752319AbYAaGKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 01:10:33 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Guy Cohen <guy.cohen@intel.com>
+Subject: [PATCH 2/5] iwlwifi: Fix MIMO PS mode
+Date: Wed, 30 Jan 2008 22:05:13 -0800
+Message-Id: <1201759516-28963-3-git-send-email-reinette.chatre@intel.com> (sfid-20080131_061041_327724_6AAA16E5)
+In-Reply-To: <1201759516-28963-2-git-send-email-reinette.chatre@intel.com>
+References: <1201759516-28963-1-git-send-email-reinette.chatre@intel.com>
+ <1201759516-28963-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-On Wednesday 23 January 2008, John W. Linville wrote:
-> On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
-> > On Wednesday 23 January 2008, Chris Clayton wrote:
-> > > Hi again.
-> > > 
-> > > On Tuesday 22 January 2008, Chris Clayton wrote:
-> > > > Hi,
-> > 
-> > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
-> > (the none I sent earlier was from -git4, by the way)
-> > 
-> > Call Trace:
-> > [<c011440a>] __update_rq_clock+0x1a/0xf0
-> > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
-> > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
-> > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
-> 
-> I suspect this could relate to this commit:
-> 
-> commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
-> Author: Mattias Nissler <mattias.nissler@gmx.de>
-> Date:   Mon Nov 12 15:03:12 2007 +0100
-> 
->     rt2x00: Allow rt61 to catch up after a missing tx report
-> 
-> Could you revert that patch, rebuild, and try to recreate the problem?
+This patch setups correctly MIMO PS mode flags
 
-As you will have seen, Matthias doubted whether his patch would be at the root
-of the problem I am seeing. I noticed you posted some patches earlier this week.
-Would any combination of those be likely to fix the bug, please? The patch
-http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream/0001-rt61pci-fix-up-merge-damage.patch
-applies cleanly to 2.6.24 but the build fails :(
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   23 ++++++++++++++++++-----
+ include/linux/ieee80211.h               |    6 ++++++
+ 2 files changed, 24 insertions(+), 5 deletions(-)
 
-It seems that it may take a little while to get to the bottom of this bug. Should
-I raise an incident on bugzilla?
-
-Thanks
-
-Chris
-> 
-> Thanks!
-> 
-> John
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 5bcee0d..79545d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4317,17 +4317,30 @@ void iwl4965_set_ht_add_station(struct iwl4965_priv *priv, u8 index,
+ 				struct ieee80211_ht_info *sta_ht_inf)
+ {
+ 	__le32 sta_flags;
++	u8 mimo_ps_mode;
+ 
+ 	if (!sta_ht_inf || !sta_ht_inf->ht_supported)
+ 		goto done;
+ 
++	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2;
++
+ 	sta_flags = priv->stations[index].sta.station_flags;
+ 
+-	if (((sta_ht_inf->cap & IEEE80211_HT_CAP_MIMO_PS >> 2))
+-						== IWL_MIMO_PS_DYNAMIC)
++	sta_flags &= ~(STA_FLG_RTS_MIMO_PROT_MSK | STA_FLG_MIMO_DIS_MSK);
++
++	switch (mimo_ps_mode) {
++	case WLAN_HT_CAP_MIMO_PS_STATIC:
++		sta_flags |= STA_FLG_MIMO_DIS_MSK;
++		break;
++	case WLAN_HT_CAP_MIMO_PS_DYNAMIC:
+ 		sta_flags |= STA_FLG_RTS_MIMO_PROT_MSK;
+-	else
+-		sta_flags &= ~STA_FLG_RTS_MIMO_PROT_MSK;
++		break;
++	case WLAN_HT_CAP_MIMO_PS_DISABLED:
++		break;
++	default:
++		IWL_WARNING("Invalid MIMO PS mode %d", mimo_ps_mode);
++		break;
++	}
+ 
+ 	sta_flags |= cpu_to_le32(
+ 	      (u32)sta_ht_inf->ampdu_factor << STA_FLG_MAX_AGG_SIZE_POS);
+@@ -4338,7 +4351,7 @@ void iwl4965_set_ht_add_station(struct iwl4965_priv *priv, u8 index,
+ 	if (iwl4965_is_fat_tx_allowed(priv, sta_ht_inf))
+ 		sta_flags |= STA_FLG_FAT_EN_MSK;
+ 	else
+-		sta_flags &= (~STA_FLG_FAT_EN_MSK);
++		sta_flags &= ~STA_FLG_FAT_EN_MSK;
+ 
+ 	priv->stations[index].sta.station_flags = sta_flags;
+  done:
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 5de6d91..f577c8f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -287,6 +287,12 @@ struct ieee80211_ht_addt_info {
+ #define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
+ #define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
+ 
++/* MIMO Power Save Modes */
++#define WLAN_HT_CAP_MIMO_PS_STATIC         0
++#define WLAN_HT_CAP_MIMO_PS_DYNAMIC        1
++#define WLAN_HT_CAP_MIMO_PS_INVALID        2
++#define WLAN_HT_CAP_MIMO_PS_DISABLED       3
++
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+ #define WLAN_AUTH_SHARED_KEY 1
 -- 
-Beauty is in the eye of the beerholder.
+1.5.3.4
+
