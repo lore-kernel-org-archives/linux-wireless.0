@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:40796 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355AbYAMWND (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2008 17:13:03 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: remove unused variable
-Date: Sun, 13 Jan 2008 23:11:50 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20080113194834.677af663@morte> <20080113201653.2c36391e@morte> <200801132248.47860.IvDoorn@gmail.com>
-In-Reply-To: <200801132248.47860.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200801132311.50316.mb@bu3sch.de> (sfid-20080113_221315_714237_7981FBFE)
+Received: from mga03.intel.com ([143.182.124.21]:6474 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752062AbYAaGKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 01:10:31 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/5] iwlwifi: fix sparse warning in iwl 3945
+Date: Wed, 30 Jan 2008 22:05:12 -0800
+Message-Id: <1201759516-28963-2-git-send-email-reinette.chatre@intel.com> (sfid-20080131_061036_457494_70B7314D)
+In-Reply-To: <1201759516-28963-1-git-send-email-reinette.chatre@intel.com>
+References: <1201759516-28963-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 13 January 2008 22:48:47 Ivo van Doorn wrote:
-> Hi.
-> 
-> > > > Remove an unused variable that caused a warning while building. Please note
-> > > > that the pipe obtained there isn't used anywhere else.
-> > > 
-> > > This patch is in wireless-2.6 already...
-> > 
-> > Actually, I thought I already sent this patch, but couldn't find it
-> > anywhere, neither in my outbox nor in git-log. Could you tell me what's the
-> > related SHA commit? Thanks.
-> 
-> This is in my rt2x00.git log. It is signed off by John and not by me,
-> so that means it didn't go through rt2x00.git to get into the wireless tree.
-> I have merged the patch into rt2x00.git during my last clone from wireless...
-> 
-> commit 01b0258008a73648245dcbc628ff948878c428e0
-> Author: Stefano Brivio <stefano.brivio@polimi.it>
-> Date:   Wed Dec 19 01:43:33 2007 +0100
-> 
->     rt2x00: remove unused variable
-> 
->     Remove an unused variable. Note that the pipe obtained there isn't used as
->     well.
-> 
->     Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-I cannot find this commit in wireless-2.6
+This patch fixes a sparse warning over iwl3945_add_radiotap function by
+turning it static
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 1bc05c3..50d927b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -238,9 +238,10 @@ void iwl3945_hw_rx_statistics(struct iwl3945_priv *priv, struct iwl3945_rx_mem_b
+ 	priv->last_statistics_time = jiffies;
+ }
+ 
+-void iwl3945_add_radiotap(struct iwl3945_priv *priv, struct sk_buff *skb,
+-			  struct iwl3945_rx_frame_hdr *rx_hdr,
+-			  struct ieee80211_rx_status *stats)
++static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
++				 struct sk_buff *skb,
++				 struct iwl3945_rx_frame_hdr *rx_hdr,
++				 struct ieee80211_rx_status *stats)
+ {
+ 	/* First cache any information we need before we overwrite
+ 	 * the information provided in the skb from the hardware */
 -- 
-Greetings Michael.
+1.5.3.4
+
