@@ -1,71 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:46710 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbYAZTAw (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:64278 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754891AbYAaQQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2008 14:00:52 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1086930fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2008 11:00:47 -0800 (PST)
-Message-ID: <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com> (sfid-20080126_190104_996602_1CD0E4F2)
-Date: Sat, 26 Jan 2008 20:00:47 +0100
-From: drago01 <drago01@gmail.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
+	Thu, 31 Jan 2008 11:16:15 -0500
+Received: by an-out-0708.google.com with SMTP id d31so173457and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 08:16:14 -0800 (PST)
+Message-ID: <40f31dec0801310816p3592bea0od2a19e0b15312e61@mail.gmail.com> (sfid-20080131_161628_566519_F7D33F74)
+Date: Thu, 31 Jan 2008 18:16:14 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Port to new bitrate/channel API
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	johannes@sipsolutions.net
+In-Reply-To: <43e72e890801310750o38faf05ckb9977e4e5d6341fa@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20080130183824.GA7676@makis.domain.invalid>
+	 <43e72e890801310707u8e29468h3de981c0e3c72c52@mail.gmail.com>
+	 <40f31dec0801310732q3ac8fb84p875f31e16444c53e@mail.gmail.com>
+	 <43e72e890801310750o38faf05ckb9977e4e5d6341fa@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
-> On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
-> >
-> >
-> > >-----Original Message-----
-> > >From: drago01 [mailto:drago01@gmail.com]
-> > >Sent: Tuesday, January 22, 2008 10:12 PM
-> > >To: Winkler, Tomas
-> >
-> > >Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
-> > >Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+2008/1/31, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
+> On Jan 31, 2008 10:32 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > 2008/1/31, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
+> > > On Jan 30, 2008 1:38 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+> > > > Tested on 5211, 5213+5112, 5213A+2112A and it wors fine.
+> > > >
+> > > > Also i figured out a way to process rate vallue found on status descriptors,
+> > > > it's still buggy but we are getting closer (i think it improved stability a little).
+> > > >
+> > > > Changes-licensed-under: 3-clause-BSD
+> > > > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 > > >
-> > >On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
-> > wrote:
-> > >>
-> > >> I believe it's delaying uCode load to mac_start - still need to be
-> > >> polished.
+> > > My approach was little more extreme removing ath5k_rate struct and led
+> > > stuff completely but well, its not done. Also we definitely still do
+> > > dependent on mode stuff a lot and the whole capaibilty stuff is used
+> > > inconsistantly. If anything I can base patches on this work.
 > > >
-> > >ok, thx for the quick reply.
-> > >If you have any potential fixes I would be happy to test them ;)
 > >
-> > Can you get me the sequence it is happening? RF kill switch is off
-> > before you power up the laptop or after, during association or in
-> > unassociated state..etc
-> > Thanks
+> > I also wanted to make a bigger cleanup (i added some TODOs there about
+> > removing led stuff -i want to port them to mac80211 leds, not just
+> > remove- and most of rate tables -we still need rate code mapping-,
+> > other things can be ripped out also) but until i'm done with the exams
+> > i don't have much time. Also some cosmetic changes like Jiri noticed
+> > would be usefull and i intend to do more cleanups on that way also. I
+> > hope i can come back with more stuff quickly ;-)
+> >
+> > > Nick, just please review the license and files you've changed. Other
+> > > than that it looks OK.
+> >
+> > Ouch you are right !
+> >
+> > for base.c/base.h
+> > Changes-licensed-under: 3-clause-BSD
+> >
+> > for hw.c/initvals.c/phy.c/ath5k.h
+> > Changes-licensed-under: ISC
 >
-> I boot with rf kill off = device on
-> acciotate using NM
-> kill the card by pressing the rfkill (ie. setting it to on)
-> card is dead (like described in my first mail), until I relaod the module
-> the rfkill switch  does not have any effect at this time.
+> Thanks. Nick as Jiri pointed out, can you also re-send after checking
+> the patch with checkpatch.pl?
+>
+>   Luis
 >
 
-OK, I investigated a bit and it seems to be the "disable interrupt
-when device goes down" is the problem.
-In my case NetworkManager detected the rfkill and brought the device
-down, which caused the interrupt to be disabled. Now after pressing
-the rfkill again nothing happend. But if I bring the device back up
-the interrupt is enabled again and rfkill and the card is back to
-live.
-So in short disabling the interrupt in mac_stop breaks the hw rfkill
-while the interface is down.
+Checkpatch shows up 40 points, most of them because it's over 80 lines
+and some of them because there are some missing spaces etc. I'm sure
+code is full of those so i believe we should better cleanup the whole
+code (also doing some sparse checking btw) once and for all (i told
+you in my previous mail that's what i want to do when i'm done with
+exams). It's really more easy for me to clean up the whole code after
+i'm done with exams than try to locate 40 places in this monster that
+might be fixed manually. I just need some time, i thought porting to
+the new API was urgent so i gave it full priority, cleanup can wait i
+guess (and we have to do it right and cautious).
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
