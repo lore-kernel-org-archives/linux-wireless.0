@@ -1,80 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33616 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310AbYAJRY0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:24:26 -0500
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, tomas.winkler@intel.com, yi.zhu@intel.com,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC PATCH 04/10] mac80211: A-MPDU Tx MLME data initialization
-Date: Thu, 10 Jan 2008 19:22:16 +0200
-Message-Id: <11999857491071-git-send-email-ron.rindjunsky@intel.com> (sfid-20080110_172454_176510_642D21F3)
-In-Reply-To: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-References: <11999857423156-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from el-out-1112.google.com ([209.85.162.181]:50848 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbYAaW1h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 17:27:37 -0500
+Received: by el-out-1112.google.com with SMTP id v27so390620ele.23
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2008 14:27:35 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Silent crash witk 2-6.24-rc8-git4
+Date: Thu, 31 Jan 2008 22:26:57 +0000
+Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <200801220603.02986.chris2553@googlemail.com> <200801312013.31220.chris2553@googlemail.com> <20080131210338.GK6413@tuxdriver.com>
+In-Reply-To: <20080131210338.GK6413@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200801312226.57972.chris2553@googlemail.com> (sfid-20080131_222742_775461_D72A33F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch initialize A-MPDU MLME data for Tx sessions.
+On Thursday 31 January 2008, John W. Linville wrote:
+> On Thu, Jan 31, 2008 at 08:13:31PM +0000, Chris Clayton wrote:
+> > Hi John,
+> > 
+> > On Wednesday 23 January 2008, John W. Linville wrote:
+> > > On Wed, Jan 23, 2008 at 04:42:58PM +0000, Chris Clayton wrote:
+> > > > On Wednesday 23 January 2008, Chris Clayton wrote:
+> > > > > Hi again.
+> > > > > 
+> > > > > On Tuesday 22 January 2008, Chris Clayton wrote:
+> > > > > > Hi,
+> > > > 
+> > > > and here's another, slightly more complete, one, this time from 2.6.24-rc8-git6
+> > > > (the none I sent earlier was from -git4, by the way)
+> > > > 
+> > > > Call Trace:
+> > > > [<c011440a>] __update_rq_clock+0x1a/0xf0
+> > > > [<e08ff59d>] rt2x00lib_txdone+0x9d/0xd0 [rt2x00lib]
+> > > > [<e0909573>] rt61pci_txdone+0x153/0x1f0 [rt61pci]
+> > > > [<e09096ad>] rt61pci_interrupt+0x9d/0xb0 [rt61pci]
+> > > 
+> > > I suspect this could relate to this commit:
+> > > 
+> > > commit 62bc060b8ed5fcdafd87da5ab17bdd59a39ebcc9
+> > > Author: Mattias Nissler <mattias.nissler@gmx.de>
+> > > Date:   Mon Nov 12 15:03:12 2007 +0100
+> > > 
+> > >     rt2x00: Allow rt61 to catch up after a missing tx report
+> > > 
+> > > Could you revert that patch, rebuild, and try to recreate the problem?
+> > 
+> > As you will have seen, Matthias doubted whether his patch would be at the root
+> > of the problem I am seeing. I noticed you posted some patches earlier this week.
+> > Would any combination of those be likely to fix the bug, please? The patch
+> > http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream/0001-rt61pci-fix-up-merge-damage.patch
+> > applies cleanly to 2.6.24 but the build fails :(
+> 
+> This patch is not intended for 2.6.24, so that won't help. :-)
+> 
+> I saw Mattias's reply, but I didn't see him suggest any other
+> fixes... :-(  I'm wondering if maybe you tried reverting it anyway?
+> I only ask because the call trace references symbols that would seem
+> to relate to the patch.  So even if _why_ it might break things isn't
+> obvious, it still might be worth trying a revert "just in case". :-)
+> 
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- net/mac80211/sta_info.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+Yes, I did revert Matthias' patch- see http://marc.info/?l=linux-wireless&m=120116461507261&w=4
+which is what Matthias was replying to.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c964082..7c65849 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -117,8 +117,10 @@ static void sta_info_release(struct kref *kref)
- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
- 		dev_kfree_skb_any(skb);
- 	}
--	for (i = 0; i <  STA_TID_NUM; i++)
-+	for (i = 0; i <  STA_TID_NUM; i++) {
- 		del_timer_sync(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+		del_timer_sync(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
-+	}
- 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
- 	rate_control_put(sta->rate_ctrl);
- 	kfree(sta);
-@@ -157,17 +159,26 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
- 	sta->local = local;
- 	sta->dev = dev;
- 	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-+	spin_lock_init(&sta->ampdu_mlme.ampdu_tx);
- 	for (i = 0; i < STA_TID_NUM; i++) {
- 		/* timer_to_tid must be initialized with identity mapping to
- 		 * enable session_timer's data differentiation. refer to
- 		 * sta_rx_agg_session_timer_expired for useage */
- 		sta->timer_to_tid[i] = i;
-+		/* tid to tx queue: initialize according to HW (0 is valid) */
-+		sta->tid_to_tx_q[i] = local->hw.queues;
- 		/* rx timers */
- 		sta->ampdu_mlme.tid_rx[i].session_timer.function =
- 			sta_rx_agg_session_timer_expired;
- 		sta->ampdu_mlme.tid_rx[i].session_timer.data =
- 			(unsigned long)&sta->timer_to_tid[i];
- 		init_timer(&sta->ampdu_mlme.tid_rx[i].session_timer);
-+		/* tx timers */
-+		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.function =
-+			sta_addba_resp_timer_expired;
-+		sta->ampdu_mlme.tid_tx[i].addba_resp_timer.data =
-+			(unsigned long)&sta->timer_to_tid[i];
-+		init_timer(&sta->ampdu_mlme.tid_tx[i].addba_resp_timer);
- 	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
+> > It seems that it may take a little while to get to the bottom of this bug. Should
+> > I raise an incident on bugzilla?
+> 
+> I've seen other reports of rt61 working fine with 2.6.24.  So I
+> suppose you should open a bug.
+> 
+
+OK, I'll do that. 
+
+Incidentally, I've seen other posting to the linux-wireless list containing discussion
+about problems when using an 11g device to connect to an 11b AP. That's exactly
+what I am doing with a Belkin F5D7010 wireless adapter and a Draytek Vigor
+2600WE AP. 
+
+> Thanks!
+> 
+> John
+
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Beauty is in the eye of the beerholder.
