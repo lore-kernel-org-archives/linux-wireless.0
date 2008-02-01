@@ -1,105 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54674 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756871AbYBUJYQ (ORCPT
+Received: from 208.36.103.2.ptr.us.xo.net ([208.36.103.2]:56778 "EHLO
+	iris.cobite.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753359AbYBAPfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 04:24:16 -0500
-Subject: Re: [PATCH 00/13] o11s: mesh interface support for mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1203455604.31736.23.camel@localhost> (sfid-20080219_211155_468318_170E0D1C)
-References: <47a78212.15588c0a.27b2.61d2@mx.google.com>
-	 (sfid-20080204_212233_169667_739F231D)  <1202343188.9965.41.camel@johannes.berg>
-	 <1203455604.31736.23.camel@localhost>
-	 (sfid-20080219_211155_468318_170E0D1C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4JImivoEWWk/Tsm/7CEV"
-Date: Thu, 21 Feb 2008 00:42:46 +0100
-Message-Id: <1203550966.17534.115.camel@johannes.berg> (sfid-20080221_092525_634385_5B9A419C)
+	Fri, 1 Feb 2008 10:35:24 -0500
+Received: from localhost (iris.cobite.com [127.0.0.1])
+	by iris.cobite.com (Postfix) with ESMTP id BCADC53E6A
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Feb 2008 10:11:32 -0500 (EST)
+Received: from iris.cobite.com ([127.0.0.1])
+	by localhost (iris.cobite.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id mVsp-Fpm-JyV for <linux-wireless@vger.kernel.org>;
+	Fri,  1 Feb 2008 10:11:26 -0500 (EST)
+Received: from [208.222.80.105] (208.36.103.2.ptr.us.xo.net [208.36.103.2])
+	by iris.cobite.com (Postfix) with ESMTP id 0AEF053E6D
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Feb 2008 10:11:26 -0500 (EST)
+Subject: repeatable rmmod/ksofitirqd hang with rtl8187
+From: David Mansfield <david@cobite.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 01 Feb 2008 10:11:25 -0500
+Message-Id: <1201878685.18907.54.camel@gandalf.cobite.com> (sfid-20080201_153554_599048_343FE3C4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, 
 
---=-4JImivoEWWk/Tsm/7CEV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm trying to use the rtl8187 in the Fedora 8 kernel 2.6.23.14-107.fc8
+on x86_64 and I'm having a number of problems with reliability.
+However, the most obvious problem is that the module cannot be removed.
+
+Attempting to rmmod the rtl8187 causes rmmod and ksoftirqd to go to 100%
+every time.
+
+The nvidia driver is loaded, but I can reproduce without it, and will do
+so and repost logs if necessary (easily).  Also, I could switch to
+another kernel version (non-Fedora) if necessary (harder).
+
+The last message relevant to the removal in the log is:
+
+usbcore: deregistering interface driver rtl8187
+
+I have a sysrq-Tasks dump also, and I'll try to paste the 'relevant'
+portions, but if you want something else, let me know:
+
+Jan 30 07:22:08 localhost kernel: rtl8187       S 0000000000000000     0  3080      2
+Jan 30 07:22:08 localhost kernel:  ffff8100582d3ee0 0000000000000046 0000000000000000 ffffffff8101bdf7
+Jan 30 07:22:08 localhost kernel:  ffff8100622f8820 ffffffff81370660 ffff8100622f8a98 ffffffff81370660
+Jan 30 07:22:08 localhost kernel:  ffffffffffffffff ffff81006add7000 0000000000000000 0000000000000000
+Jan 30 07:22:08 localhost kernel: Call Trace:
+Jan 30 07:22:08 localhost kernel:  [<ffffffff8101bdf7>] lapic_next_event+0x0/0xa
+Jan 30 07:22:08 localhost kernel:  [<ffffffff810465f9>] worker_thread+0x0/0xe4
+Jan 30 07:22:08 localhost kernel:  [<ffffffff8104669a>] worker_thread+0xa1/0xe4
+Jan 30 07:22:08 localhost kernel:  [<ffffffff810493f5>] autoremove_wake_function+0x0/0x2e
+Jan 30 07:22:08 localhost kernel:  [<ffffffff810492a0>] kthread+0x47/0x73
+Jan 30 07:22:08 localhost kernel:  [<ffffffff8100c9e8>] child_rip+0xa/0x12
+Jan 30 07:22:08 localhost kernel:  [<ffffffff810f26fa>] dummy_d_instantiate+0x0/0x1
+Jan 30 07:22:08 localhost kernel:  [<ffffffff81049259>] kthread+0x0/0x73
+Jan 30 07:22:08 localhost kernel:  [<ffffffff8100c9de>] child_rip+0x0/0x12
+
+Jan 30 07:22:08 localhost kernel: rmmod         R  running task        0  5444   5331
+
+(yes, there is NO call stack listed for rmmod...)
+
+Jan 30 07:22:08 localhost kernel: cpu#0, 2800.262 MHz
+Jan 30 07:22:08 localhost kernel:   .nr_running                    : 1
+Jan 30 07:22:08 localhost kernel:   .load                          : 3121
+Jan 30 07:22:08 localhost kernel:   .ls.delta_fair                 : 2409554145852
+Jan 30 07:22:08 localhost kernel:   .ls.delta_exec                 : 1870680954585
+Jan 30 07:22:08 localhost kernel:   .nr_switches                   : 5248144
+Jan 30 07:22:08 localhost kernel:   .nr_load_updates               : 1871123
+Jan 30 07:22:08 localhost kernel:   .nr_uninterruptible            : 4593
+Jan 30 07:22:08 localhost kernel:   .jiffies                       : 4321958165
+Jan 30 07:22:08 localhost kernel:   .next_balance                  : 4321958387
+Jan 30 07:22:08 localhost kernel:   .curr->pid                     : 4
+Jan 30 07:22:08 localhost kernel:   .clock                         : 1870843827954
+Jan 30 07:22:08 localhost kernel:   .idle_clock                    : 0
+Jan 30 07:22:08 localhost kernel:   .prev_clock_raw                : 10156683955881
+Jan 30 07:22:08 localhost kernel:   .clock_warps                   : 0
+Jan 30 07:22:08 localhost kernel:   .clock_overflows               : 5843715
+Jan 30 07:22:08 localhost kernel:   .clock_deep_idle_events        : 0
+Jan 30 07:22:08 localhost kernel:   .clock_max_delta               : 999848
+Jan 30 07:22:08 localhost kernel:   .cpu_load[0]                   : 3121
+Jan 30 07:22:08 localhost kernel:   .cpu_load[1]                   : 3121
+Jan 30 07:22:08 localhost kernel:   .cpu_load[2]                   : 3121
+Jan 30 07:22:08 localhost kernel:   .cpu_load[3]                   : 3121
+Jan 30 07:22:08 localhost kernel:   .cpu_load[4]                   : 3121
+Jan 30 07:22:08 localhost kernel: cfs_rq
+Jan 30 07:22:08 localhost kernel:   .fair_clock                    : 730253466918
+Jan 30 07:22:08 localhost kernel:   .exec_clock                    : 449856607964
+Jan 30 07:22:08 localhost kernel:   .wait_runtime                  : -39097530
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_overruns         : 667096
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_underruns        : 116653
+Jan 30 07:22:08 localhost kernel:   .sleeper_bonus                 : 3819331
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_rq_sum           : -39097530
+Jan 30 07:22:08 localhost kernel: 
+Jan 30 07:22:08 localhost kernel: runnable tasks:
+Jan 30 07:22:08 localhost kernel:             task   PID        tree-key         delta       waiting  switches  prio        sum-exec        sum-wait       sum-sleep    wait-overrun   wait-underrun
+Jan 30 07:22:08 localhost kernel: ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Jan 30 07:22:08 localhost kernel: R    ksoftirqd/0     4    730266294816      12827898     -39097530    113821   115     94706931241    493479775956   1771180094381           81609             858
+Jan 30 07:22:08 localhost kernel: 
+Jan 30 07:22:08 localhost kernel: cpu#1, 2800.262 MHz
+Jan 30 07:22:08 localhost kernel:   .nr_running                    : 2
+Jan 30 07:22:08 localhost kernel:   .load                          : 2048
+Jan 30 07:22:08 localhost kernel:   .ls.delta_fair                 : 2449895038018
+Jan 30 07:22:08 localhost kernel:   .ls.delta_exec                 : 1815567039057
+Jan 30 07:22:08 localhost kernel:   .nr_switches                   : 8682134
+Jan 30 07:22:08 localhost kernel:   .nr_load_updates               : 1815833
+Jan 30 07:22:08 localhost kernel:   .nr_uninterruptible            : -4593
+Jan 30 07:22:08 localhost kernel:   .jiffies                       : 4321958165
+Jan 30 07:22:08 localhost kernel:   .next_balance                  : 4321958156
+Jan 30 07:22:08 localhost kernel:   .curr->pid                     : 5444
+Jan 30 07:22:08 localhost kernel:   .clock                         : 1815564248632
+Jan 30 07:22:08 localhost kernel:   .idle_clock                    : 0
+Jan 30 07:22:08 localhost kernel:   .prev_clock_raw                : 10156680908921
+Jan 30 07:22:08 localhost kernel:   .clock_warps                   : 0
+Jan 30 07:22:08 localhost kernel:   .clock_overflows               : 7745757
+Jan 30 07:22:08 localhost kernel:   .clock_deep_idle_events        : 0
+Jan 30 07:22:08 localhost kernel:   .clock_max_delta               : 999845
+Jan 30 07:22:08 localhost kernel:   .cpu_load[0]                   : 2048
+Jan 30 07:22:08 localhost kernel:   .cpu_load[1]                   : 1536
+Jan 30 07:22:08 localhost kernel:   .cpu_load[2]                   : 1280
+Jan 30 07:22:08 localhost kernel:   .cpu_load[3]                   : 1152
+Jan 30 07:22:08 localhost kernel:   .cpu_load[4]                   : 1088
+Jan 30 07:22:08 localhost kernel: 
+Jan 30 07:22:08 localhost kernel: cfs_rq
+Jan 30 07:22:08 localhost kernel:   .fair_clock                    : 1076180297717
+Jan 30 07:22:08 localhost kernel:   .exec_clock                    : 718056819036
+Jan 30 07:22:08 localhost kernel:   .wait_runtime                  : 0
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_overruns         : 681220
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_underruns        : 8611457
+Jan 30 07:22:08 localhost kernel:   .sleeper_bonus                 : 3936098
+Jan 30 07:22:08 localhost kernel:   .wait_runtime_rq_sum           : 0
+Jan 30 07:22:08 localhost kernel: 
+Jan 30 07:22:08 localhost kernel: runnable tasks:
+Jan 30 07:22:08 localhost kernel:             task   PID        tree-key         delta       waiting  switches  prio        sum-exec        sum-wait       sum-sleep    wait-overrun   wait-underrun
+Jan 30 07:22:08 localhost kernel: ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Jan 30 07:22:08 localhost kernel:           rklogd  2140   1076140201263     -40096454      40000000       306   120        16714625      1164181473   1800696827984              34               0
+Jan 30 07:22:08 localhost kernel: R          rmmod  5444   1076220297717      40000000     -40000000      6021   120     84558667512     -1817731300           37707               0         8536283
+Jan 30 07:22:08 localhost kernel: 
 
 
-> Currently, bss are sorted by ssid, bssid and frequency. In mesh beacons
-> and (not yet implemented) mesh probes, the bssid is left zeroed and
-> there is no ssid (actually there is a 0 length ssid IE), so all mesh
-> networks in a single channel would collapse to one scan entry. I can add
-> the mesh IE, but I also need a substitute for those.
-
-Ok. I think you'll have to rework the scanning code to not just use
-SSID, BSSID and frequency to distinguish between networks but also the
-mesh information (mesh ID/mesh IE).
-
-> One option would be to use mesh id as bssid and source address as bssid
-> (with this we would get a different entry for every mesh peer in rage,
-> not sure if that's what we want), maybe set the mode to IW_MODE_ADHOC
-> and add the extra mesh IE. This way we would not need changes in the
-> wireless extesions layer.
-
-Dan said:
-
-> Yes.  Ideally the driver will report mesh networks too, perhaps with
-> IW_MODE_MESH or whatever nl80211 would use.
-
-As unfortunate as it may be, we can't add it to wext cleanly because
-iwlist would probably simply segfault if we added a new type since it
-doesn't verify any input it gets from the kernel and just uses it for an
-array lookup (thank you Jean!). Or we add a new type and just let all
-userspace segfault until it's fixed. It's not a kernel bug, after all...
-
-We can always include the mesh information in the GENIE element and
-interested parties have to parse it... however, we can't set the type to
-anything useful. If we set it to ad-hoc, then tools like network manager
-might try to use that network for ad-hoc which won't work. It would
-probably be best to leave out the SIOCGIWMODE info completely and hope
-that tools that aren't prepared to handle it just ignore that...
-
-Ultimately, I guess we're at a point where wext reached the end of its
-usefulness and we seriously need to look at getting a replacement done.
-
-> I am also curious about the interfaces life cycle. Looks like interfaces
-> report any available network (infra or adhoc), regardless their type.
-
-Indeed.
-
-> Then a network-manager-like interface would have to bring up an
-> interface to be able to scan, and the if the user chooses a different
-> kind of network (if the interface where the scan is performed is infra
-> but the user chooses an ad-hoc network), change the type of the
-> interface and the proceed to connect. Am I right?
-
-Yeah, it'll even have to set the interface down to be able to change the
-type.
-
-johannes
-
---=-4JImivoEWWk/Tsm/7CEV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7y69aVg1VMiehFYAQI8chAAtBShHRJQwYTWuZFnLURWFgdCcIwOBYKR
-vH6vJHh3SH0pHLSMJjo+LOuQhTUNTagEFZzZ3heh51lOefLzIPbrHEhauMTWmlQg
-GBnnAWnlV5REOVpcdROe7NSMngBoZbP4dIjiJbMifjoM5VNcTzbYrJGeDhxWfffe
-+t2Cvl0N+olUIXseXOhIwVyFWiYJseGbrBYpVvv/1GbXne05XcjqZV5c1BkuyPse
-GeOmIn44MXQH4qT53whfP8p6nvE159WTaeqWS5g6o9mJZxzbWyfolYOqUzEC8utu
-XasmvAr1j02qD8sBeHwL+3ASNktSL2Aw7rpdOKwJZ5nB4YtRX7YPxjCo8f5Pnl6C
-O+LPUDbqEiCTWOYe5w7JmgsSnbUWGv5qdO+m25FIcLFPVVEfGOGgiZ6cup2XtZLm
-dbslocuLvwqg3no0w7Ojo4z9zfXcd7EJOdtA5KSQGSO3tBt54xCjxOBm2A5K6LgU
-4EwKAxyDO6HR3mo64DhDrfyMIwZmDy3dffz1Em99h18Jlq/UxJzBuOSac/2Zx4Y6
-mEd8V2IWqq8YGu2eA3nsJYfBElD4F0m5ulajxYKwT4Ce6NEE4roFLZ5Wu+3A48HR
-vijp9sIyFVYgkFpT/knaVdn+ZwQ7k0E+OyKMqWaI/vHbiE0TrfYTQq7tLV3MxOsT
-p5UHCPOiZ3E=
-=xLFt
------END PGP SIGNATURE-----
-
---=-4JImivoEWWk/Tsm/7CEV--
 
