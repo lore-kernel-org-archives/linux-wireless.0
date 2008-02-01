@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:36036 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbYBOVPx (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:50419 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755276AbYBAT5e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 16:15:53 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so595069fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 13:15:52 -0800 (PST)
-Message-ID: <efe7343f0802151315y568cf783obd3381142b2da7d3@mail.gmail.com> (sfid-20080215_211605_297834_7EA551CF)
-Date: Fri, 15 Feb 2008 21:15:51 +0000
-From: "Luis Correia" <luis.f.correia@gmail.com>
-To: "Adam Turk" <bofh1234@hotmail.com>
-Subject: Re: kernel 2.6.25-rc1 and no /dev/rt73usb
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <BAY101-W378CC14C633084DBF091A6C8260@phx.gbl>
+	Fri, 1 Feb 2008 14:57:34 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so871654wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 11:57:30 -0800 (PST)
+Message-ID: <1ba2fa240802011157g5fc538edm7b625c999603e16f@mail.gmail.com> (sfid-20080201_195738_298699_3BAE95F1)
+Date: Fri, 1 Feb 2008 21:57:30 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: Re: [PATCH 2/2] iwlwifi: set rate_idx correctly from plcp
+Cc: "Abbas, Mohamed" <mohamed.abbas@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <D936D925018D154694D8A362EEB08920038F3E76@orsmsx416.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <BAY101-W101FB386E1EF7402881964C8260@phx.gbl>
-	 <20080215050358.GA10363@gondor.apana.org.au>
-	 <BAY101-W21A064889BC2442893B63BC8260@phx.gbl>
-	 <200802152146.06364.IvDoorn@gmail.com>
-	 <BAY101-W378CC14C633084DBF091A6C8260@phx.gbl>
+References: <1201844801-7326-1-git-send-email-reinette.chatre@intel.com>
+	 <1201844801-7326-2-git-send-email-reinette.chatre@intel.com>
+	 <1ba2fa240802010343q519a1dap9d4af5ef5e0110f2@mail.gmail.com>
+	 <33E1C72C74DBE747B7B59C1740F7443702C96D93@orsmsx417.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB08920038F3E76@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 15, 2008 at 9:08 PM, Adam Turk <bofh1234@hotmail.com> wrote:
+On Feb 1, 2008 7:40 PM, Chatre, Reinette <reinette.chatre@intel.com> wrote:
+> On Friday, February 01, 2008 8:29 AM, Abbas, Mohamed  wrote:
 >
->  > You are completely missing the point of the concept "modules",
->  > the module rt73usb is intended to support devices with the rt73 chipset.
->  >
->  > The rt73usb driver registers the device and creates an network interface
->  > inside the kernel. This interface is visible to you as user. The name of this
->  > interface is wlan, depending on the number of wireless network cards in
->  > your system the interface number is attached to it so in your case wlan0.
+> > From: Tomas Winkler [mailto:tomasw@gmail.com]
+> > Sent: Friday, February 01, 2008 3:44 AM
+> > On Feb 1, 2008 7:46 AM, Reinette Chatre
+> > <reinette.chatre@intel.com> wrote:
+> >> From: Mohamed Abbas <mohamed.abbas@intel.com>
+> >>
+> >> rate_idx is derived from plcp information
+> >>
+> >> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+> >> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com> ---
+> >>  drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >>
 >
->  Yep, I could be missing the concept of modules entirely.
+> [..snip..]
 >
->  The driver I was using before had the interface name of rt73.  When I see
+> > NACK
+> > This should be
+> > rate_idx =
+> > iwl4965_rate_index_from_plcp(wl4965_hw_get_rate(rx_start->rate_
+> > n_flags));
+> >
+> > iwl4965_hw_get_rate - this one extract plcp from rate_n_flags - also
+> > takes care of endinaity Tomas
+> >
+> > Actually iwl4965_rate_index_from_plcp expect rate and flag
+> > data to get the rate index.
+> > Mohamed
 >
-> usbcore: registered new interface driver rt73usb
->  I think the interface name is rt73usb.  Maybe change the line to read
->  usbcore: registered new interface driver rt73usb using name wlan0
->  so there is no confusing us newbies.
+> John,
+>
+> Sorry about the confusing emails - please go ahead and apply this patch.
+>
+> Thank you
 
-You are mixing module name with whatever resource this module provides.
+Sorry it was my mistake.
 
-"usbcore: registered new interface driver rt73usb" simply means that
-an "interface driver" called rt73usb (the module name) has registered
-some device name (wlan0 in your case) with the "usbcore" subsystem.
-
-As simple as that!
-
-Luis Correia
-rt2x00 project admin
+> Reinette
+>
