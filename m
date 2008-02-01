@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:46918 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751081AbYBUTUE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 14:20:04 -0500
-Message-ID: <47BDCC24.1050604@warmcat.com> (sfid-20080221_192017_613173_2CC20F44)
-Date: Fri, 22 Feb 2008 03:08:20 +0800
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: allow specifying RTS/self-CTS protection when
- injecting packets
-References: <1203553034.17534.119.camel@johannes.berg>
-In-Reply-To: <1203553034.17534.119.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([66.187.233.31]:41561 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755075AbYBAUMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2008 15:12:38 -0500
+Subject: Re: wireless mini-summit agenda proposals?
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240802011147j4cd027e8gacf2d5a6de65443d@mail.gmail.com>
+References: <20080131162514.GC6413@tuxdriver.com>
+	 <1201801923.3000.13.camel@localhost.localdomain>
+	 <1201869751.4188.19.camel@johannes.berg>
+	 <1ba2fa240802011029h7cce3f77ge61bc11564c378a6@mail.gmail.com>
+	 <1201893322.20187.11.camel@localhost.localdomain>
+	 <1ba2fa240802011147j4cd027e8gacf2d5a6de65443d@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 01 Feb 2008 15:11:54 -0500
+Message-Id: <1201896714.20566.8.camel@localhost.localdomain> (sfid-20080201_201242_885092_4D4AFB8B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> I made this patch to test RTS/CTS operation in drivers, do you think
-> it's useful apart that and should be merged?
+On Fri, 2008-02-01 at 21:47 +0200, Tomas Winkler wrote:
+> On Feb 1, 2008 9:15 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Fri, 2008-02-01 at 20:29 +0200, Tomas Winkler wrote:
+> > > On Feb 1, 2008 2:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > >
+> > > > > cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
+> > > > > because email isn't optimal for this.  I haven't had enough time to jump
+> > > > > into it yet, but the fact that Johannes is the vast majority of the
+> > > > > effort here is worrisome.  Having a reference implementation (airo,
+> > > > > atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
+> > > > > probably be very useful, even just to get a sense of how the API works.
+> > > >
+> > > > cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
+> > > > work it got so far is for hostapd.
+> > > >
+> > > > I have a fairly decent plan how to add association/... support but it
+> > > > lacks execution because it's completely boring work that doesn't buy us
+> > > > any new features since we still have to support wext.
+> > > >
+> > > Security setting is a bit  broken. There is a missing separation
+> > > between static and dynamic./WPA wep keys.
+> >
+> > How do you mean?
+> 
+> In wext there is encoding setting for static keys only for wep and
+> extended encoding for dynamic keys including wep keys. In mac80211
+> both setting are funneled to the same point which is incorrect since
+> the usage is not the same. The major problem is in HW acceleration.
+> The static wep keys are passed as belonging to the station with
+> broadcast address and the driver cannot distinguish if the wep key is
+> dynamic key for the bcast address or it is a static wep key that has
+> to be used for all traffic. The problem is of course visible mostly in
+> AP mode.
 
-> + * IEEE80211_RADIOTAP_TX_FLAGS
-> +
-> +   IEEE80211_RADIOTAP_F_TX_RTS:	use RTS/CTS handshake
-> +   IEEE80211_RADIOTAP_F_TX_CTS:	use CTS-to-self protection
-> +
-> +
->  The injection code can also skip all other currently defined radiotap fields
->  facilitating replay of captured radiotap headers directly.
+Ah; right.  I don't think there really should be a difference in the API
+to differentiate static vs. dynamic WEP keys.  Instead each key sent to
+the driver (be it WEP, TKIP, or CCMP) should definitely have a BSSID to
+which it applies which the userspace caller must set, and if the key is
+to be used for _all_ traffic, then maybe have a flag for that or use
+00:00:00:00:00:00 as the BSSID.  If we use "magic" #s like 00:00... for
+the BSSID then we've got to be sure to document that magic # which is
+where we all fell down with WEXT.  Hence I prefer flags, but whatever.
 
-Hi Johannes -
+Dan
 
-Sure the footprint is nothing to speak of and it just exposes flags
-there already supported using radiotap flags already existing.
 
-I didn't think of a use for it but if the original flag has any use then
-no doubt it can be used by the injection path by some enterprising soul.
-
-(Sorry for late reply, travelling)
-
--Andy
