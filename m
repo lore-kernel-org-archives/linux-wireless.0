@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:62880 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761928AbYBAXbr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59186 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754107AbYBAVP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 18:31:47 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1107512fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 15:31:46 -0800 (PST)
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: mac80211 QoS/aggregation questions, thoughts
-Date: Sat, 2 Feb 2008 00:31:24 +0100
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <j@w1.fi>, "Patrick McHardy" <kaber@trash.net>
-References: <1201882512.4188.66.camel@johannes.berg> <1201902217.4188.82.camel@johannes.berg> <1ba2fa240802011524g38a9583fs7c4b792bda844327@mail.gmail.com>
-In-Reply-To: <1ba2fa240802011524g38a9583fs7c4b792bda844327@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802020031.24532.IvDoorn@gmail.com> (sfid-20080201_233153_155559_CD07EBE8)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 1 Feb 2008 16:15:26 -0500
+Subject: Re: [RFT] [PATCH] rc80211-pid: fix rate adjusting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Dyson <will.dyson@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	Lars Ericsson <Lars_Ericsson@telia.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <8e6f94720802011245i66a524c1j1d03a772f7477006@mail.gmail.com> (sfid-20080201_204542_412442_0D2BE232)
+References: <479E928C.5000709@lwfinger.net>
+	 <00f201c862b3$be1f00b0$0b3ca8c0@gotws1589> <20080129213746.790b68d2@morte>
+	 <8e6f94720802011245i66a524c1j1d03a772f7477006@mail.gmail.com>
+	 (sfid-20080201_204542_412442_0D2BE232)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UUIwpoVjDp/LWqgLXUXA"
+Date: Fri, 01 Feb 2008 22:15:14 +0100
+Message-Id: <1201900515.4188.77.camel@johannes.berg> (sfid-20080201_211530_362627_251BB0B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 February 2008, Tomas Winkler wrote:
-> On Feb 1, 2008 11:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > Any thoughts on this patch? The only thing it should really actually
-> > change is removing the IBSS beacon queue configuration, but as I've
-> > explained previously that really has to be done by the driver because we
-> > don't know whether the driver even uses queues for beaconing... Also we
-> > never reset that info.
-> >
-> > Also, I'm wondering, iwl4965 has 16 queues, can it use 4 for regular WMM
-> > and the other 12 for aggregation? And how does it configure the access
-> > parameters for aggregation? I don't see conf_tx() calls anywhere for
-> > that.
-> >
-> 
-> 4965 has 4 queues which are used for regular WMM.  Only 11 queues
-> might be used for aggregation, but in AP mode we might map one of the
-> queues to after beacon multicast traffic.
 
-Just out of interest, and I don't know about the iwl4965 driver specifics,
-but how will you make sure those frames are send after the beacon?
-Does the beacon trigger an interrupt after each interval which allows you to queue
-the frames or is some other approach used?
+--=-UUIwpoVjDp/LWqgLXUXA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I am asking because I am not sure how I should implement such a thing for
-the rt2x00 drivers that don't have a device ATIM queue (which automatically
-sends the frames after the beacon was send).
 
-> One queue is reserved for communicating with FW.  The number my differ
-> on further NICs.
-> 
-> All the traffic queues 4 WMM + 11 AGG are served according regular WMM
-> policy, 4 AC - these are configured by conf_tx.  The aggregation
-> queues are needed for handling ordering of frames correctly and not
-> for on media prioritizing
-> 
-> Sorry but I have to review your patch later
-> Thanks
-> Tomas
+> On my system, it is the "status->rate_idx < 0" condition.
+>=20
+> In rt2x00lib_rxdone() we set the rate_idx to -1 because we looped
+> through all the rates without finding a match. This does not happen on
+> every frame. I am still digging.
+
+We've already identified the problem and Ivo is working on a fix.
+
+johannes
+
+--=-UUIwpoVjDp/LWqgLXUXA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6OL4aVg1VMiehFYAQKKxw/+Ow6blN9nXpWtYSMkfMaIrTeKQolCRw/H
+WYn6VEQuJaPSctFxpThBY/G9IUj18EtyD9z4/ld2gQEEXEVAHEJuMkbfTLiwbwF1
+TeMWz/ipUICfKreGgpsuVGPlSy8jHv8F27lnhuJ1PGYXa9Rw/9lWqJ65hzp5ef0x
+z+YSHj/ZBBGJDHrEIWaHQ53xQrf/YB6twS8BNafDQ7ZjmZEy6/yAUbTRQG3mDDQe
+MmDPiGuyIujn2m12nr67fMgT+0LWea2cDU0jpIwa/mL09dQhiC1XsALoDG36OQi5
+MSLn+rm+Wxf3/DEuZNpUW6EWAQzbS3AUGk2cTbqJ8Bjay9GC1FNdZes7kCOqfLx3
+nvUAwapdj+Vbsd+Vm3iRMJtTFzr/5//u8sNkvvzT7UT3ZURbyUjLNZOABo69RbSh
+VZwj36ECW/CoDA9ltH9gFTdVTxUiy/J/F4wo/mgChHto6Kisz/GMVRHPAoBZZvId
+WvrOyfvrl62PCgsxYKDKU5yvNmc0Hfnts74ONZWTim+HBC17XKh9yk4+BwjitpZh
+DtTccqoJn4I2CjbGRxf4a+R7nMVEwOVzvqQiZ+23YVRQ27Otct83/wkevrjVGLlV
+oUZaQPjm0yakKouMM1FrbvS69BeI21H9hDLheIrDIsWrwi0vW8wFou6+tzeLfRbN
+08UJWCq03W8=
+=lfp5
+-----END PGP SIGNATURE-----
+
+--=-UUIwpoVjDp/LWqgLXUXA--
 
