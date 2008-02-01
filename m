@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbYBTSWH (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:50697 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754000AbYBAXAr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:22:07 -0500
-Subject: ath5k 64 bit warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <bruno@thinktube.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dbhj4jzxIuRMNI6eTDEo"
-Date: Tue, 19 Feb 2008 19:15:42 +0100
-Message-Id: <1203444942.12887.1.camel@johannes.berg> (sfid-20080220_182215_689152_EAAD1F7E)
-Mime-Version: 1.0
+	Fri, 1 Feb 2008 18:00:47 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so957761wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 15:00:46 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 QoS/aggregation questions, thoughts
+Date: Sat, 2 Feb 2008 00:00:24 +0100
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>, Tomas Winkler <tomasw@gmail.com>,
+	Patrick McHardy <kaber@trash.net>
+References: <1201882512.4188.66.camel@johannes.berg> <200802012325.26163.IvDoorn@gmail.com> <1201905133.4188.91.camel@johannes.berg>
+In-Reply-To: <1201905133.4188.91.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200802020000.24604.IvDoorn@gmail.com> (sfid-20080201_230104_213281_0967731F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 01 February 2008, Johannes Berg wrote:
+> 
+> > Like I mentioned earlier, ring/queue handling has received an overhaul,
+> > so not much of the rt2x00 part of this patch will apply after the update.
+> > However the change should be easier afterwards. ;)
+> 
+> :)
+> Keep the patches coming. No need to test them in rt2x00.git first,
+> wireless-2.6 git is pretty broken anyway right now. Due to me,
+> unfortunately.
 
---=-dbhj4jzxIuRMNI6eTDEo
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Ok. I'll try to implement LED classes this weekend. I already have the initial
+patches for that ready, but those were not really correct. Ones those are in
+I'll submit all patches as the 2.1.0 release.
+If I release them all this weekend they will be compile tested only, and I would
+like to have at least 1 run test to make sure no obvious NULL pointers or segmentation
+faults are there during init.
 
-drivers/net/wireless/ath5k/base.c: In function =E2=80=98ath5k_beacon_update=
-_timers=E2=80=99:
-drivers/net/wireless/ath5k/base.c:2186: warning: format =E2=80=98%llx=E2=80=
-=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argument 5 h=
-as type =E2=80=98u64=E2=80=99
-drivers/net/wireless/ath5k/base.c:2186: warning: format =E2=80=98%llx=E2=80=
-=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argument 6 h=
-as type =E2=80=98u64=E2=80=99
-drivers/net/wireless/ath5k/base.c: In function =E2=80=98ath5k_intr=E2=80=99=
-:
-drivers/net/wireless/ath5k/base.c:2446: warning: format =E2=80=98%llx=E2=80=
-=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argument 7 h=
-as type =E2=80=98u64=E2=80=99
-drivers/net/wireless/ath5k/debug.c: In function =E2=80=98read_file_tsf=E2=
-=80=99:
-drivers/net/wireless/ath5k/debug.c:203: warning: format =E2=80=98%016llx=E2=
-=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argument =
-4 has type =E2=80=98u64=E2=80=99
-drivers/net/wireless/ath5k/debug.c: In function =E2=80=98read_file_beacon=
-=E2=80=99:
-drivers/net/wireless/ath5k/debug.c:274: warning: format =E2=80=98%016llx=E2=
-=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, but argument =
-4 has type =E2=80=98u64=E2=80=99
+> > Personally I think these queue identifiers should be completely seperated from the ieee80211_queue
+> > enumeration, and not be used inside a variable mixed.
+> > But that will be implementation details for later, and something I should probably take care of. ;)
+> 
+> Yeah, but this seemed easiest for now. We never use the beacon queue in
+> mac80211 and I believe that we shouldn't because not all hardware uses a
+> queue for beacons.
 
-please fix by appropriate casts to unsigned long long.
+I understand the change, and my comment was more a first idea for teh rt2x00 implementation. ;)
+I think I'll try to remove the IEEE80211_TX_QUEUE_BEACON tomorrow already and setup the correct
+implementation. That value is set as identifier by rt2x00 manually anyways (it never relies on
+mac80211 passing that value, so moving it to a different identifier can easily be done seperately from
+your patch. Saves you some time updating the patch anyway. :)
 
-johannes
 
---=-dbhj4jzxIuRMNI6eTDEo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > Other then that, the patch is fine with me, but not this patch probably needs to be respinned after
+> > my rt2x00 queue and virtual interfaces overhaul.
+> 
+> Right, no worries, I'm not entirely sure about this patch anyway.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7sczaVg1VMiehFYAQLtgRAAp+ib0lFkDw4jI5GudzDwtPTLrwaUuTjv
-ODzv/3RYBhtw229ri+3EELLfcw+QAGl/chNODVQMvPhTMxPcdD6wk6IKiQAZZARU
-sdCrK9peKTm/ubz3dhJbjtbH6Q6N6ZF9BCFhwYszI5R2glPADBna00ON0V1UWilH
-JBwxMf9dK3AlDMhxJLzL1C30SX18OThJLJHxoItXi2a/cL18EiJZ+QtIZDzjkd2m
-l5zSw7Z9ALSwT9dhwPCVuVxa4vS1aZeDlmThYXzpgwYfOCaLGg6jk54v/jU589k4
-2UvELS21wQ6C/VdjxrLptFnOQopPRvEJIrywL1s/8nFXB0pDD9o4ZeEZ2k6PhDOu
-jranSUfv/EBk+2elpx2jbBUeTJlIOKgQdQqjTwSb6Jazh3qLBumQot+HLWQzt523
-KejKBV6am6hPw03mS/JEjVb8i1rQBZFFCFEes26KssE9o3h+1Wcp1l3zuMi/IP6e
-Zs+ds6ZFMUsBvRvRcWjwA0CoP1rKt0YUwhdDsWXxKPgublXoacPZMZkM/+krTd3H
-4NTgoCscfcJyp6ybeRyZVZjBqkN/kvat+M6UY4yu6KhEqDa2WXWB+Tbsagn9Qekq
-ovseT1og4jyjfGlW9hWuTCqv/y6XHKsHVNueou4W4KVlcs1YgsWEru0i331HQjzT
-hnLdJlI2BFw=
-=W9Iz
------END PGP SIGNATURE-----
-
---=-dbhj4jzxIuRMNI6eTDEo--
-
+Ivo
