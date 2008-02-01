@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:46200 "EHLO
-	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754691AbYBGD61 (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:48900 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932076AbYBANgJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 22:58:27 -0500
-Date: Wed, 6 Feb 2008 19:58:13 -0800
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	bruno randolf <bruno@thinktube.com>,
-	Johannes Berg <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Kishore Ramachandran <kishore@winlab.rutgers.edu>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Message-ID: <20080207035813.GX1261@jm.kir.nu> (sfid-20080207_035831_927677_BD17314C)
-References: <20080118125252.6455.41047.stgit@one> <200801241226.28394.bruno@thinktube.com> <1201193704.3454.137.camel@johannes.berg> <200801251701.59629.bruno@thinktube.com> <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com> <20080206043451.GT1261@jm.kir.nu> <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com> <20080206201035.GA3229@tuxdriver.com>
+	Fri, 1 Feb 2008 08:36:09 -0500
+Date: Fri, 1 Feb 2008 08:36:06 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	bruno@thinktube.com, jirislaby@gmail.com, mickflemm@gmail.com
+Subject: [PATCH 1/3] ath5k: Use our own Kconfig file, we'll be expanding this shortly
+Message-ID: <20080201133606.GF28995@ruslug.rutgers.edu> (sfid-20080201_133632_495198_3FD7D311)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080206201035.GA3229@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2008 at 03:10:35PM -0500, John W. Linville wrote:
+Use our own Kconfig file, we'll be expanding this shortly.
 
-> FWIW, that wouldn't be the first time we (i.e. Linux) chose to do
-> something that did not completely comply with a standard.  If it
-> interoperates with other equipment and is good for users, I don't
-> think picky standard compliance is worthwhile.
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/Kconfig        |   18 +-----------------
+ drivers/net/wireless/ath5k/Kconfig  |   17 +++++++++++++++++
+ drivers/net/wireless/ath5k/Makefile |    8 ++++++--
+ 3 files changed, 24 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/net/wireless/ath5k/Kconfig
 
-Sure, there are cases where this is reasonable.
-
-> Please note that I am not really taking a stand in favor of this ATM,
-> only asserting that blind standard compliance is not a good reason
-> to NAK it IMHO.
-
-In this case, standard compliance is certainly not the only concern I
-have. I'm worried about interoperability with non-mac80211
-implementations. If mac80211 were to hardcoded the BSSID for IBSS and
-refuse to change it no matter what (i.e., behave against the IEEE 802.11
-standard), IBSS would not interoperate with any other implementation if
-the other implementation happens to be the creator of the IBSS..
-
-Same issues shows up (but in somewhat less frequent form) in an IBSS
-splitting up and re-joining. In order to allow the STAs using other
-implementation (no BSSID hacks) to join the IBSS, mac80211 will need to
-be prepared to change the BSSID (or use some much more questionable
-hacks to make sure it is always the mac80211-STA that wins in the
-selection of which BSSID will survive.. ;-).
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 9b1e042..836d862 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -740,23 +740,7 @@ config P54_PCI
+ 
+ 	  If you choose to build a module, it'll be called p54pci.
+ 
+-config ATH5K
+-	tristate "Atheros 5xxx wireless cards support"
+-	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+-	---help---
+-	  This module adds support for wireless adapters based on
+-	  Atheros 5xxx chipset.
+-
+-	  Currently the following chip versions are supported:
+-
+-	  MAC: AR5211 AR5212
+-	  PHY: RF5111/2111 RF5112/2112 RF5413/2413
+-
+-	  This driver uses the kernel's mac80211 subsystem.
+-
+-	  If you choose to build a module, it'll be called ath5k. Say M if
+-	  unsure.
+-
++source "drivers/net/wireless/ath5k/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/bcm43xx/Kconfig"
+diff --git a/drivers/net/wireless/ath5k/Kconfig b/drivers/net/wireless/ath5k/Kconfig
+new file mode 100644
+index 0000000..55f0c09
+--- /dev/null
++++ b/drivers/net/wireless/ath5k/Kconfig
+@@ -0,0 +1,17 @@
++
++config ATH5K
++	tristate "Atheros 5xxx wireless cards support"
++	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	---help---
++	  This module adds support for wireless adapters based on
++	  Atheros 5xxx chipset.
++
++	  Currently the following chip versions are supported:
++
++	  MAC: AR5211 AR5212
++	  PHY: RF5111/2111 RF5112/2112 RF5413/2413
++
++	  This driver uses the kernel's mac80211 subsystem.
++
++	  If you choose to build a module, it'll be called ath5k. Say M if
++	  unsure.
+diff --git a/drivers/net/wireless/ath5k/Makefile b/drivers/net/wireless/ath5k/Makefile
+index ada1095..564ecd0 100644
+--- a/drivers/net/wireless/ath5k/Makefile
++++ b/drivers/net/wireless/ath5k/Makefile
+@@ -1,2 +1,6 @@
+-ath5k-objs		= base.o hw.o initvals.o phy.o debug.o
+-obj-$(CONFIG_ATH5K)	+= ath5k.o
++ath5k-y				+= base.o
++ath5k-y				+= hw.o
++ath5k-y				+= initvals.o
++ath5k-y				+= phy.o
++ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
++obj-$(CONFIG_ATH5K)		+= ath5k.o
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.3.7
+
