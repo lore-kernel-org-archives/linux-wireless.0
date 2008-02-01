@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:43096 "EHLO c60.cesmail.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2773 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935096AbYBNBM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 20:12:28 -0500
-Subject: Re: Suggestions for USB Wi-Fi device
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <47B37DEF.3080107@lwfinger.net>
-References: <47B37DEF.3080107@lwfinger.net>
-Content-Type: text/plain
-Date: Wed, 13 Feb 2008 20:12:25 -0500
-Message-Id: <1202951545.8941.53.camel@dv> (sfid-20080214_011245_312353_4E88B3F7)
-Mime-Version: 1.0
+	id S1751143AbYBAQCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2008 11:02:11 -0500
+Date: Fri, 1 Feb 2008 10:49:45 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Mansfield <david@cobite.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: repeatable rmmod/ksofitirqd hang with rtl8187
+Message-ID: <20080201154945.GA3050@tuxdriver.com> (sfid-20080201_160219_987888_E454B009)
+References: <1201878685.18907.54.camel@gandalf.cobite.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1201878685.18907.54.camel@gandalf.cobite.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-02-13 at 16:31 -0700, Larry Finger wrote:
-> The motherboard on my notebook has failed so that my BCM9311 can no longer be accessed. The machine 
-> is under warranty, but I will be moving around for the next two months and it will not be repaired 
-> until April. In the interim, I am thinking about acquiring a USB wi-fi device. If you are using such 
-> a device and it works out-of-the-box on Linux, please send me the make and model. If this model 
-> comes with different chips, please tell me what I need.
+On Fri, Feb 01, 2008 at 10:11:25AM -0500, David Mansfield wrote:
+> Hi, 
+> 
+> I'm trying to use the rtl8187 in the Fedora 8 kernel 2.6.23.14-107.fc8
+> on x86_64 and I'm having a number of problems with reliability.
+> However, the most obvious problem is that the module cannot be removed.
+> 
+> Attempting to rmmod the rtl8187 causes rmmod and ksoftirqd to go to 100%
+> every time.
 
-Look for Level One WNC-0301USB.  There are several revisions, but I
-checked the Windows drivers, and all appear to have corresponding Linux
-drivers: rt73usb, rt2500usb, rtl8187 and zd1211rw.
+I don't see anything in the posted information which clearly
+suggests an rtl8187 problem or even a mac80211 one.  Would you mind
+opening a bugat bugzilla.redhat.com for this issue?  Please add
+"linville@redhat.com" to the CC: field when you open it.
 
-My device is revision v3.  It's supported by rt73usb driver and works in
-Fedora 8 out-of-box (at least with their updated current kernel).
+Thanks!
 
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville
+linville@tuxdriver.com
