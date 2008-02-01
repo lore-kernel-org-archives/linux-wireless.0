@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:47589 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755629AbYBAV2B (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.240]:15335 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757966AbYBAMJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 16:28:01 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so912558wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 13:28:00 -0800 (PST)
-Message-ID: <1ba2fa240802011328n1430c819q1084b9c76a30b3e1@mail.gmail.com> (sfid-20080201_212809_941641_5CB2A89F)
-Date: Fri, 1 Feb 2008 23:28:00 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless mini-summit agenda proposals?
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1201896674.4188.74.camel@johannes.berg>
+	Fri, 1 Feb 2008 07:09:27 -0500
+Received: by an-out-0708.google.com with SMTP id d31so261593and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 04:09:26 -0800 (PST)
+Message-ID: <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> (sfid-20080201_120934_448863_13CB4E5D)
+Date: Fri, 1 Feb 2008 14:09:26 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: ath5k: reset for 5424-based card
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20080201040358.GA13428@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201882577.4188.68.camel@johannes.berg>
-	 <40f31dec0802011107n3389bbc5l2f43be0f6111d222@mail.gmail.com>
-	 <1201896674.4188.74.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20080131155901.GA7997@hash.localnet>
+	 <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com>
+	 <20080201040358.GA13428@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 1, 2008 10:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+2008/2/1, Bob Copeland <me@bobcopeland.com>:
+> On Thu, Jan 31, 2008 at 06:56:51PM +0200, Nick Kossifidis wrote:
+> > Can you plz run ath_info tool found on madwifi-trace branch and post
+> > the output (mac/phy revision) ?
 >
-> > Plzzz someone explain how WMM is implemented in mac80211 and suggest
-> > some tests so we can be sure we implement it correctly, we really want
-> > to add multiqueue support in ath5k ;-)
+> Sure -- full output is at http://bobcopeland.com/ath5k/ along with
+> EEPROM dump and a scan of my neighborhood.
 >
-> Well nobody knows ;)
-There is a certification plan for that under WiFi with tests.
-The implementation has some holes but it's passing tests. One glitch I
-know that the priority scheduler is definitely not working correctly
-in hight loads. and you better have 4 hardware queues to comply with
-specification. In that case it's better to have RR scheduler instead
-of what is there now.
+> MAC Version:  2424  (0xa0)
+> MAC Revision: 5424  (0xa3)
+> Warning: Invalid EEPROM Magic number!
+> Device type:  3
+> 5Ghz PHY Revision: SChip (0xa2)
+> 2Ghz PHY Revision: SChip (0xa2)
+>
+> > so i left it for the patch series i'm working on). If you got your
+> > card scanning then we are really close on fixing it !
+>
+> Excellent news!
+>
+> > Another important question, what band was the ap on ?
+>
+> Good question - it was a Starbucks hotspot so I'm guessing 802.11b?
+>
 
-> > Also it would be great if someone explained what's new in
-> > 802.11n/802.11s and what drivers are expected to do (i think on the
-> > previous summit there was a talk about encrypted management frames, do
-> > we have a plan for that ?).
->
-> There's no 11s support yet, the cozybit guys never came forward with a
-> second patchset after we commented on their first. 11w (encrypted
-> management frames) is pretty straight forward, we add the new
-> "encryption" algorithm and wpa_supplicant does the rest (in fact, it
-> already has code)
->
-> johannes
->
+Wow that's the first 5424 report we have ;-)
+
+Do you have an AP so you can run the testbed-trace as described here ?
+http://madwifi.org/wiki/DevDocs/MadwifiTrace
+
+b/g modes are ok for start (you can force mode from the sta using
+iwpriv ath0 mode X, x=1(a) 2(b) 3(g)) but if you can also provide
+dumps for a and turbo modes it would be really cool (you 'll need an
+atheros-based ap for the turbo mode to run testbed-trace, if you don't
+have such ap then you can try to setup your card as AP for a and
+turboa modes -static turbo-, dumps from ap operation will also do,
+just make sure you force the mode through iwpriv).
+
+If you provide me with the needed dumps i'll work on it and give you a
+tarball to test asap (asap > 10days due to exams ;-( ) !!!
+
+One more question: can you plz describe card's behaviour with ath5k ?
+What error message does it return on reset-failure ?
+
+Thanx a lot for the feedback ;-)
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
