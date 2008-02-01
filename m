@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vps.oszine.de ([87.230.33.146]:38361 "EHLO vps.oszine.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756538AbYBLVPu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:15:50 -0500
-From: Andreas Richter <ar@oszine.de>
-To: maximilian attems <max@stro.at>
-Date: Tue, 12 Feb 2008 21:49:57 +0100
-Cc: 464523@bugs.debian.org, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Michael Buesch <mb@bu3sch.de>
-References: <20080211220621.GC5198@stro.at> <200802122038.06426.ar@oszine.de> <20080212195252.GC22054@baikonur.stro.at>
-In-Reply-To: <20080212195252.GC22054@baikonur.stro.at>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1749691.IMfjioKM6L";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200802122150.01643.ar@oszine.de> (sfid-20080212_211604_007561_7CAD5AC0)
-Subject: Re: Bug#464523: linux-image-2.6.24-1-amd64: b43 needs patches for kernel 2.6.24
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59851 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759367AbYBAMO5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2008 07:14:57 -0500
+Subject: Re: [PATCH 2/2] ath5k: ath5k_copy_channels() was not setting the
+	channel band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, bruno@thinktube.com,
+	jirislaby@gmail.com, mickflemm@gmail.com
+In-Reply-To: <20080201012628.GE28995@ruslug.rutgers.edu> (sfid-20080201_022633_385916_137874C0)
+References: <20080201012628.GE28995@ruslug.rutgers.edu>
+	 (sfid-20080201_022633_385916_137874C0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0EBMvnTp7LNWz0111QS8"
+Date: Fri, 01 Feb 2008 13:13:38 +0100
+Message-Id: <1201868018.4188.2.camel@johannes.berg> (sfid-20080201_121502_401657_38A29759)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1749691.IMfjioKM6L
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-0EBMvnTp7LNWz0111QS8
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-Am Dienstag, 12. Februar 2008 20:52:52 schrieb maximilian attems:
-
-> quick edit in /etc/kerneloops.conf and reboot into faulty kernel.
-> so upstream will be notified on your oops.
-
-Done:
-http://www.kerneloops.org/raw.php?rawid=3D3645&msgid=3D
+Your CC lists are somehow messed up... some things are on twice.
 
 
-> i don't like the tainted flag, why does that come?
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath=
+5k/base.c
+> index bd9c9a8..1e7eeec 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -899,6 +899,8 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+> =20
+>  		/* Write channel info and increment counter */
+>  		channels[count].center_freq =3D freq;
+> +		channels[count].band =3D (chfreq =3D=3D CHANNEL_2GHZ) ?
+> +			IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
 
-No idea. Sorry.
+No need, cfg80211 will do that when you register the wiphy.
 
+johannes
 
-=2D-=20
-Andreas Richter=20
-URLs: http://ar.oszine.de | http://www.oszine.de
-GPG-KeyID: 0x7BA12DD9
-=46ingerprint: D2E9 202B F4F0 EB16 25DE 5FF7 0CF2 3C57 7BA1 2DD9
-
---nextPart1749691.IMfjioKM6L
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--=-0EBMvnTp7LNWz0111QS8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBHsgZ5DPI8V3uhLdkRAmatAJ9QVZm6aYeA994Jc2xC6qB/IQRqKwCcCaYo
-rVjiGJhL18eIwJOBZHNBfI8=
-=R2DP
+iQIVAwUAR6MM8aVg1VMiehFYAQI4UQ//cQSm+sHtPE/qWmmmP8zfnt/BQpgJ3I+y
+8dtY+Zt0yiaeNKHpEcs6ECfgjRwj57ckwgqG1PJvtKeMyJqyvFfwfO0ut601+t4o
+k/BF4dHZITs0suA+/hTKugqU9k6AlqXkr3+GaTJNQVBfEgHgbK1BEDaqitTibWvF
+5NDLbSQICozqfpKkKlIzuw8iogSVIGklsIm6NOufDVKcnWRpdTtGh9MmIfgvNqHF
+1H556WX7U1vB5NWCdXwNun4oc7WZ7epYODTp9TXJ3NLYzXJ9WxeQCVvJBuMeLXaG
+HceBz5pr7bXUhn3M89O7Y97d9dvEBVSNgYARxKQXPQd9ZYnupGzp7eEBUIzNT/Ie
+NSopKA5SPoZX2WwiRkmrkowpWSreX2HJIlDVK8+J288CFKjPltQr/ps2s9chIw79
+OP0qLKRa1HoztM/CJAAhbuMs8uRRreo299N2iCruRA/rXji3eTiBEuKMb33uFWe0
+pnZ8o9JXVO0gXcnoRQ+x+Gr/jo1oZNtMqIpzTCBEKLaWMYqgMJrlg9/8ZoZ9JDpC
+NQehUCtjahH6YBMKw3S+g1GSWxgZigj5SIXYB//72YTzLZ9I/Eh8Q5mBeIuf45jq
+jTXdSiKolgMQzpRDctL+Z7vFh27Cc03ek21iqDH+dr0GoqvDukNnVQaUd5NYqnYL
+ZROt6Mz2FxM=
+=0x5y
 -----END PGP SIGNATURE-----
 
---nextPart1749691.IMfjioKM6L--
+--=-0EBMvnTp7LNWz0111QS8--
+
