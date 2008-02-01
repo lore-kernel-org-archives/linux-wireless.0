@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:40992 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754511AbYBDSkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 13:40:31 -0500
-Message-ID: <47A75BF5.90101@openwrt.org> (sfid-20080204_184035_094159_BDAC431E)
-Date: Mon, 04 Feb 2008 19:39:49 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.deathmatch.net ([70.167.247.36]:52228 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755685AbYBAEFH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2008 23:05:07 -0500
+Date: Thu, 31 Jan 2008 23:03:58 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: reset for 5424-based card
+Message-ID: <20080201040358.GA13428@hash.localnet> (sfid-20080201_040510_765162_F688C93A)
+References: <20080131155901.GA7997@hash.localnet> <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>	 <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com>	 <5358276387473684738@unknownmsgid>	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>	 <-7767648866191425885@unknownmsgid>	 <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>	 <47A72E13.8070305@openwrt.org> <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
-In-Reply-To: <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> Will this work work you?
-> 
-> ieee80211_tx_ratectrl {
->   u32 bitrate ( or pointer to ieee80211_rate I prefer no)
->   u32 flags
->   u32 retry_count
-> }
-> 
-> ieee80211_tx_status {
->     ieee80211_tx_ratectrl  retry_count[ X]  / * X >= 4 */
-> }
-I guess that would work, but shouln't the array below be dynamic based on
-what the driver can do? Many drivers can only work with one or two rates, IMHO.
+On Thu, Jan 31, 2008 at 06:56:51PM +0200, Nick Kossifidis wrote:
+> Can you plz run ath_info tool found on madwifi-trace branch and post
+> the output (mac/phy revision) ?
 
-- Felix
+Sure -- full output is at http://bobcopeland.com/ath5k/ along with
+EEPROM dump and a scan of my neighborhood.
+
+MAC Version:  2424  (0xa0)
+MAC Revision: 5424  (0xa3)
+Warning: Invalid EEPROM Magic number!
+Device type:  3
+5Ghz PHY Revision: SChip (0xa2)
+2Ghz PHY Revision: SChip (0xa2)
+
+> so i left it for the patch series i'm working on). If you got your
+> card scanning then we are really close on fixing it !
+
+Excellent news!
+
+> Another important question, what band was the ap on ?
+
+Good question - it was a Starbucks hotspot so I'm guessing 802.11b?
+
+-- 
+Bob Copeland %% www.bobcopeland.com 
+
