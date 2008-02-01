@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40600
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756533AbYBRUys (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 15:54:48 -0500
-Date: Mon, 18 Feb 2008 12:55:25 -0800 (PST)
-Message-Id: <20080218.125525.192686382.davem@davemloft.net> (sfid-20080218_205510_306068_52A676B8)
-To: kaber@trash.net
-Cc: joe@perches.com, bruno@thinktube.com, netdev@vger.kernel.org,
-	jgarzik@pobox.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <47B9A20C.10304@trash.net>
-References: <20080215.025855.202184003.davem@davemloft.net>
-	<1203097370.21308.18.camel@localhost>
-	<47B9A20C.10304@trash.net>
+Received: from mfe1.polimi.it ([131.175.12.23]:50481 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755650AbYBAPDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2008 10:03:35 -0500
+Date: Fri, 1 Feb 2008 15:57:22 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211 rate control: fix section mismatch
+Message-ID: <20080201155722.7e6f0d9a@morte> (sfid-20080201_150344_163452_24BD7FB5)
+In-Reply-To: <1201804317.4149.34.camel@johannes.berg>
+References: <1201804317.4149.34.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Patrick McHardy <kaber@trash.net>
-Date: Mon, 18 Feb 2008 16:19:40 +0100
+On Thu, 31 Jan 2008 19:31:57 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> Joe Perches wrote:
-> > On Fri, 2008-02-15 at 02:58 -0800, David Miller wrote:
-> >> From: Bruno Randolf <bruno@thinktube.com>
-> >> Date: Fri, 15 Feb 2008 19:48:05 +0900
-> >>> is there any chance to include a macro like this for printing mac
-> >> addresses?
-> >>> its advantage is that it can be used without the need to declare
-> >> buffers for
-> >>> print_mac(), for example:
-> >> We specifically removed this sort of thing, please don't
-> >> add it back.
+> When the rate control algorithms are built-in, their exit
+> functions can be called from mac80211's init function so
+> they cannot be marked __exit.
 > 
-> Why?
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-We converted the entire tree over the print_mac(), and since
-the MAC_FMT stuff was therefore no longer used we could
-remove it.
+Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-Some references slipped back in somehow, and thus MAC_FMT
-did too.
 
-There is no reason to keep around a global interface for
-_one_ user when that user can use the recommended interface
-just as equally as the rest of the tree which we converted.
-
-This is a pr_debug() statement we're talking about here.
-:-)
+-- 
+Ciao
+Stefano
