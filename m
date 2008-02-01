@@ -1,129 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:6094 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbYBZD5Y (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52973 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbYBAQpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 22:57:24 -0500
-Received: by an-out-0708.google.com with SMTP id d31so449690and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 19:57:23 -0800 (PST)
-Message-ID: <40f31dec0802251957o3b5b542vb5bf591fa2e73599@mail.gmail.com> (sfid-20080226_035727_417172_6FEDEAC9)
-Date: Tue, 26 Feb 2008 05:57:22 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Cc: "Bob Copeland" <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	Fri, 1 Feb 2008 11:45:41 -0500
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes
+	patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
 	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-In-Reply-To: <200802261113.34604.bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <E1JTfTv-0002bm-Qp@hash.localnet>
-	 <200802261113.34604.bruno@thinktube.com>
+	bruno@thinktube.com
+In-Reply-To: <43e72e890802010452s510628ear49136748e06fc670@mail.gmail.com> (sfid-20080201_125231_199064_27B09740)
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+	 <1201869496.4188.15.camel@johannes.berg>
+	 <43e72e890802010441n4770fe0ag69899a537f551080@mail.gmail.com>
+	 <1201869970.4188.24.camel@johannes.berg>
+	 <43e72e890802010452s510628ear49136748e06fc670@mail.gmail.com>
+	 (sfid-20080201_125231_199064_27B09740)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/Olgf96Ig0V2fpL9LF6c"
+Date: Fri, 01 Feb 2008 16:20:58 +0100
+Message-Id: <1201879259.4188.31.camel@johannes.berg> (sfid-20080201_164549_573363_0D6C8082)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/26, bruno randolf <bruno@thinktube.com>:
-> On Tuesday 26 February 2008 00:43:07 Bob Copeland wrote:
->  > > > Hey, that's a good clue... I just switched over to b-only and it seems
->  > > > to be much more stable.
->  >
->  > ...or not.  I still got some calibration errors last night in b-mode.  Just
->  > so we're on the same page, I see things in the dmesg like:
->  >
->  > ath0: failed to restore operational channel after scan
->  > ath5k phy0: calibration timeout (2412 MHz)
->  > ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
->  > ath0: failed to set freq to 2412 MHz for scan
->  > ath5k phy0: calibration timeout (2417 MHz)
->  >
->  > > If i'm correct you should get 4-7Mbit/sec @ 11Mbit. Plz let me know if
->  > > you have some results, meanwhile i'll try to figure out the i/q
->  > > calibration algo (we are ok for noise floor calibration i believe).
->  >
->  > One thing I noticed from my traces is that the binary driver sets
->  > bits AR5K_PHY_AGCCTL_NF | AR5K_PHY_AGCCTL_CAL in AR5K_PHY_AGCCTL.
->  > Then it makes a whole lot of misc register writes, then re-reads
->  > AR5K_PHY_AGCCTL; in that time only the noise floor bit got cleared
->  > but _CAL is still high.  Dunno if that means anything to you or not.
->  >
->  > e.g:
->  >
->  > R: 0x9860 = 0x00009d18 - AR5K_PHY_AGCCTL
->  > W: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL  <-- set (_CAL | _NF)
->  > W: 0x1000 = 0x00000001 - AR5K_DCU_QCUMASK_BASE
->  > W: 0x1004 = 0x00000002 - unknown
->  > W: 0x1008 = 0x00000004 - unknown
->  > [... lots more writes to DCU & IMR regs ...]
->  > W: 0x00a0 = 0x00080965 - AR5K_PIMR
->  > R: 0x00ac = 0x00000000 - AR5K_SIMR2
->  > W: 0x00ac = 0x00070000 - AR5K_SIMR2
->  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
->  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
->  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
->  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
->  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
->  > R: 0x9860 = 0x00009d1a - AR5K_PHY_AGCCTL  <-- _NF cleared
->  >
->  > Maybe a red herring as obviously the current method of doing things
->  > works for me sometimes...
->
->
-> so when is AR5K_PHY_AGCCTL_CAL getting cleared?
->
->  i'm not sure if that is related because the error message you are seeing is
->  not due to noise floor calibration timeout but because AR5K_PHY_AGCCTL_CAL is
->  not cleared in the time that ath5k expects, but i want to mention it anyways:
->
->  the HAL enables noise floor calibration, and reads the result on then next
->  calibration interval, then enables calibration again and reads on the next...
->  i think that way it makes sure there is always enough time for the noise
->  floor calibration to take place in the mean time (the calibration can only
->  happen when the channel is otherwise silent).
->
->  if i understand correctly, ath5k currenty expects the noise floor calibration
->  to finish within 300ms (ath5k_hw_register_timeout) and then we give it
->  another 20ms for the noise floor value to settle ( for (i = 20; i > 0; i--)
->  mdelay(1); ) that worked well for older chipsets, but also for 5424 this
->  results in more noise floor calibration timeouts.
->
->
->  bruno
->
 
-There are 3 types of calibration, noise floor calibration (which gets
-us the noise floor value), I/Q calibration (which fixes QAM
-constellation on OFDM rates) and the _CAL bit which is another kind of
-calibration we don't know about (i'll check out Atheros patent docs
-again, they might give us a clue)... I know that NF and I/Q
-calibration must be done periodically (i also had an idea about
-forcing I/Q calibration on certain rate changes since QAM
-constellation changes) but i have no idea about _CAL stuff...
-
-Noise floor calibration is not the problem, I/Q calibration is where
-we are failing, that's why we have problems in OFDM rates. Even in
-madwifi we get weird noise floor values sometimes (and calibration
-function returns failure sometimes). We might have to add some extra
-time for noise floor calibration, HAL has one function (phy_calibrate)
-for both of them (I/Q + noise floor), i guess we can treat them in a
-different way in our implementation.
-
-Anyway we don't get a NF calibration timeout but we get timeout for
-_CAL stuff and since HAL doesn't seem to check for it (it only sets
-that bit during reset and during phy_calibrate but doesn't check for
-it) we can also skip the test i guess...
-
-Bob try removing this and see what happens (in terms of
-performance/stability)...
-
-	if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
-			AR5K_PHY_AGCCTL_CAL, 0, false)) {
-		ATH5K_ERR(ah->ah_sc, "calibration timeout (%uMHz)\n",
-			channel->center_freq);
-		return -EAGAIN;
-	}
+--=-/Olgf96Ig0V2fpL9LF6c
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> > I guess you could add a helper function that allocates a channels array
+> > based on a frequency range.
+>=20
+> This is true but also it would be nice as it is the end points which
+> drivers may want
+> to access every now and then. I think its worth the few bytes.
+
+I'm not really worried about the space that needs, but I don't see why
+the wiphy would need that information. Couldn't you keep it in your
+driver's per-hw structure as it is? Would cfg80211 be required to keep
+them updated according to regulatory rules when the allowed channels
+change? I'm much more worried about all the code that would result in :)
+But since you're not doing that right now anyway I'll just wait and see
+what you come up with ;)
+
+johannes
+
+--=-/Olgf96Ig0V2fpL9LF6c
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6M42aVg1VMiehFYAQJg5g//Rhrikppcd4JA/Aqh7cDA3gc+xfG3fWoJ
+lRVeTlMiyUJtoiQP9rkkIjPaZAwWV0wxRlnezIKv97WDQdyCs05PwDeVesAORsh7
+poWUe/kG9SCVqQOO1GAGr7JVqWL2s0rvLbZNMPYZgTym+H/+4ZBLmWKtuiW7JOJg
+G5zGL4Irb9uQXrwJeOz6uVtnlP1fQ9hsLpdn57s43HLYhGfwbia4wGh31q92wMWR
+rX0+qtl8ks3cd6K+80I9s+Yu5lDsTzejX/PF4mMZ+cCuQ93WbAuo1AYrDrP8oPDT
+WsFkqlCIl+/IgT21VpMdlBkChyIRgkeqpBYuQ0Rdw5pKLXDjZtKGcVkS45DTgaKv
+iaP8YAniNgqxtFwofESj22NxawzFHx5NYg+TBs2tvyfB+04J+JE29Xut4z0M5ZGp
+TIr/VgVzbBNr7rvsfs3GQUpeFJ3RrtAK5mxNa0OdTjSP/h/m9C0+KpDiBfWsoREd
+QZCJdY9KuClQiqLt1AsFMBY3m7JGo/Pn0fKNHe7SCiFQ2IwtNtwINj2jgmISTJL/
+LLSLHEcNWvyuXcsxk6X6JtjIwxfa3BrL5VK9DyjzZr/vVdJkO9d1ypKgGRMRA/qQ
+NitTEPWasZJQz6K6+sf3VZidkLHqZwNxgeg6YgSJ4wyeMdClFe1nfpJXEC3mU6kI
+TyKFGJenBDg=
+=AOGt
+-----END PGP SIGNATURE-----
+
+--=-/Olgf96Ig0V2fpL9LF6c--
+
