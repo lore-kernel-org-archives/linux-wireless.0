@@ -1,91 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbYBJVxy (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756676AbYBAMnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 16:53:54 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:53 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 11/14] rt2x00: Fix queue->qid initialization
-Date: Sun, 10 Feb 2008 22:51:41 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802102246.04515.IvDoorn@gmail.com>
-In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802102251.41440.IvDoorn@gmail.com> (sfid-20080210_215356_912616_890AA929)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 1 Feb 2008 07:43:05 -0500
+Subject: Re: wireless mini-summit agenda proposals?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1201801923.3000.13.camel@localhost.localdomain> (sfid-20080131_175252_912444_0BC17431)
+References: <20080131162514.GC6413@tuxdriver.com>
+	 <1201801923.3000.13.camel@localhost.localdomain>
+	 (sfid-20080131_175252_912444_0BC17431)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ywk4a+II6cI55LlDTXu/"
+Date: Fri, 01 Feb 2008 13:42:30 +0100
+Message-Id: <1201869751.4188.19.camel@johannes.berg> (sfid-20080201_124311_472957_E1BD484C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As Adam Baker reported the queue->qid was not initialized
-correctly. The QID_AC_BE was assigned to the RX ring.
 
-This will move the queue initialization into a seperate function
-and makes sure that all queues are initialized directly with the
-correct qids.
+--=-Ywk4a+II6cI55LlDTXu/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   33 +++++++++++++++-------------
- 1 files changed, 18 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 943afc9..9188323 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -228,6 +228,18 @@ void rt2x00queue_uninitialize(struct rt2x00_dev *rt2x00dev)
- 	}
- }
- 
-+static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
-+			     struct data_queue *queue, enum data_queue_qid qid)
-+{
-+	spin_lock_init(&queue->lock);
-+
-+	queue->rt2x00dev = rt2x00dev;
-+	queue->qid = qid;
-+	queue->aifs = 2;
-+	queue->cw_min = 5;
-+	queue->cw_max = 10;
-+}
-+
- int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
-@@ -265,24 +277,15 @@ int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
- 	 * TX: cw_max: 2^10 = 1024.
- 	 * BCN & Atim: qid = QID_MGMT
- 	 */
--	qid = QID_AC_BE;
--	queue_for_each(rt2x00dev, queue) {
--		spin_lock_init(&queue->lock);
-+	rt2x00queue_init(rt2x00dev, rt2x00dev->rx, QID_RX);
- 
--		queue->rt2x00dev = rt2x00dev;
--		queue->qid = qid++;
--		queue->aifs = 2;
--		queue->cw_min = 5;
--		queue->cw_max = 10;
--	}
-+	qid = QID_AC_BE;
-+	tx_queue_for_each(rt2x00dev, queue)
-+		rt2x00queue_init(rt2x00dev, queue, qid++);
- 
--	/*
--	 * Fix non-TX data qid's
--	 */
--	rt2x00dev->rx->qid = QID_RX;
--	rt2x00dev->bcn[0].qid = QID_MGMT;
-+	rt2x00queue_init(rt2x00dev, &rt2x00dev->bcn[0], QID_MGMT);
- 	if (req_atim)
--		rt2x00dev->bcn[1].qid = QID_MGMT;
-+		rt2x00queue_init(rt2x00dev, &rt2x00dev->bcn[1], QID_MGMT);
- 
- 	return 0;
- }
--- 
-1.5.4
+> cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
+> because email isn't optimal for this.  I haven't had enough time to jump
+> into it yet, but the fact that Johannes is the vast majority of the
+> effort here is worrisome.  Having a reference implementation (airo,
+> atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
+> probably be very useful, even just to get a sense of how the API works.
+
+cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
+work it got so far is for hostapd.
+
+I have a fairly decent plan how to add association/... support but it
+lacks execution because it's completely boring work that doesn't buy us
+any new features since we still have to support wext.
+
+> 802.11n - do we need any discussion here or is it just a question of
+> executing on the current plan?
+
+I think with the last patchset from Ron it's mostly done, cleanups still
+to do and probably QoS improvements (I'm thinking multiqueue netdevs
+here)
+
+> Userspace MLME - what's going on here?  Noise around this seems to be
+> quieter these days.  Is stuff going according to plan/schedule or are
+> there roadblocks?
+
+Nobody is working on this, but a good part is done since hostapd works
+and the userspace MLME needs many of the same features. Again, the
+biggest thing is cfg80211/nl80211 support, setting a device to userspace
+MLME mode and implementing the communication.
+
+johannes
+
+--=-Ywk4a+II6cI55LlDTXu/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6MTtaVg1VMiehFYAQI81hAAqTfm9fhzK23yQsQ2jIo5BWmRoib23x5d
+bLsKySgsgLhqL7kVA1vkTdZaS5bpNArQemTAiCB+i4OH3UV/T+VWBZag0kWx23tr
+/Icetd314fCXl8FwwSZaoyppA30zMUnnxiywg4uNfeaiyrzm5Zbsjqil5UJ516pg
+1u5bpfdTUdI3L0buQ+2y6zC9156VuYvtsYp8vVwctBBN491TNZvECAebaVkB3ZPO
+YVlCe8TIjbmYNxVAtGTorJGWDuOpWyX5UjRphqrJV6PIFIVeff8W+4qjwXq9xBlh
+09UrYZo8Ezcrw3jgsAOZFs436STM6/Pz/XHHd5SSQZUYAlI2FJVr9a3h+FGjb36c
+aciE4bbB9jEOgGP9VTAB5e0+dFZkOKdv/UHCKha/XwdfUcCg3czfxQmK/H5RgmZz
+ic2IjcmgpyJqxYuMTT2yGenbM5YBI0Wae9rPfCh3lsQ+wbvTLpasC6MBS5ABjJNX
+YuwZb2eWG6SPXLGFpPi+jAUEowRFIvQjHO3WPDtyewFP4yJN34J3q8t1INYvAeXv
+c4K+Ozbxxjnrm/s1j0eSLjVgiDee7drVyDkL1M7V5L3081FTbFPmdejn9eg57b08
+Eu2JvTn22wHbZ/CtNNEaUtfAvTU4TDgfM/PmzQuHR8OFNXk4D1Mn0c8OdKXLqPxx
+53TQ+yTfdxQ=
+=OzJy
+-----END PGP SIGNATURE-----
+
+--=-Ywk4a+II6cI55LlDTXu/--
 
