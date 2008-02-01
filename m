@@ -1,63 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42026 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264AbYBGKfr (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:34019 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497AbYBAVpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 05:35:47 -0500
-Subject: Re: [PATCH 03/13] o11s: (zd1211) support for mesh interface and
-	beaconing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a78266.24528c0a.29f3.ffffdde9@mx.google.com> (sfid-20080204_212411_276523_290FB136)
-References: <47a78266.24528c0a.29f3.ffffdde9@mx.google.com>
-	 (sfid-20080204_212411_276523_290FB136)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6c6LQ7OrRN0iG1SZTaWx"
-Date: Thu, 07 Feb 2008 01:19:50 +0100
-Message-Id: <1202343590.9965.50.camel@johannes.berg> (sfid-20080207_103600_127947_210625D3)
-Mime-Version: 1.0
+	Fri, 1 Feb 2008 16:45:40 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so902483rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 13:45:38 -0800 (PST)
+Message-ID: <43e72e890802011345l47dd4234t2515c5be4c5a8580@mail.gmail.com> (sfid-20080201_214555_185548_01740CCA)
+Date: Fri, 1 Feb 2008 16:45:38 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	bruno@thinktube.com, "Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <40f31dec0802011047r6f90b714x8626f9158b963e6d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+	 <1201869496.4188.15.camel@johannes.berg>
+	 <43e72e890802010441n4770fe0ag69899a537f551080@mail.gmail.com>
+	 <1201869970.4188.24.camel@johannes.berg>
+	 <43e72e890802010452s510628ear49136748e06fc670@mail.gmail.com>
+	 <40f31dec0802011047r6f90b714x8626f9158b963e6d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Feb 1, 2008 1:47 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2008/2/1, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>:
+>
+> > 2008/2/1 Johannes Berg <johannes@sipsolutions.net>:
+> > >
+> > > > > What is cap_range and why should it be in struct wiphy?
+> > > >
+> > > > Its the device's frequency capability range on the bands.
+> > >
+> > > Well since we always need channels I decided to not have such a thing
+> > > but rather require registering a channels array that is also used for
+> > > bookkeeping about enabled/disabled channels etc.
+> > >
+> > > I guess you could add a helper function that allocates a channels array
+> > > based on a frequency range.
+> >
+> > This is true but also it would be nice as it is the end points which
+> > drivers may want
+> > to access every now and then. I think its worth the few bytes.
+> >
+> >   Luis
+>
+> Why mac80211/cfg80211 has to know about phy's channel range ? I mean
+> driver knows it and that's all we need to create the big (unfiltered)
+> channel array.
 
---=-6c6LQ7OrRN0iG1SZTaWx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, you are right, from a driver's perspective this is all we need
+this for. But, for example, say user tries to change to a channel by
+freq, and we want to see if we support it, wouldn't it be easier to
+have mac80211 do the check for us against the wiphy's range on the
+band instead of having the driver do it? mac80211 would do it a lot
+quicker by just knowing the range for example.
 
-> +		if (hw->flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE) {
-> +			zd_mac_config_beacon(hw, conf->beacon);
-> +			kfree_skb(conf->beacon);
-> +			zd_set_beacon_interval(&mac->chip, BCN_MODE_IBSS |
-> +					hw->conf.beacon_int);
+> These caps are set for some chip revisions (eg. 5210
+> supports only part of 5GHz band while 5111/5112 support much wider
+> range) and only used by channel_ok during channel setup (attach), we
+> don't have any other use for those inside the driver.
 
-As I already mentioned, hw flags are never set by mac80211. So the
-driver should set this particular hw flag before hw registration and
-then the conditional here can go away once you reworked the mac80211
-code.
+Sure.
 
-johannes
+> Other drivers
+> don't even need such caps because channel ranges are standard for all
+> their chip revisions, or they get channels from firmware, or use fixed
+> range/channel table no matter what phy supports etc.
 
---=-6c6LQ7OrRN0iG1SZTaWx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I just want to make it available for drivers in central place for
+those who *could* use it and for mac80211 for a quick short cut.
+Additionally it seems it would be good to export this to userspace
+instead of having it iterate over the array to simply get the range.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> The only use i can imagine for frequency range information on
+> mac80211/cfg80211 is that the whole channel setup is being done during
+> wiphy setup (we provide frequency range and supported bands and
+> mac80211/cfg80211 does the rest) but we'll have (at least for ath5k)
+> to fill channel flags (hw_value) anyway.
 
-iQIVAwUAR6pOpaVg1VMiehFYAQJ0DQ//aXSmZggF0ATM+qIKAbz/dbZ4aHVLAImY
-Z+dquqaCuU+D2HsZbxljHxFtd4Wc0QRU7cQq0/K5Fify1i76FwWWLTBcwnfkWqYK
-ZyUtRdL+It862XCxoHldOE7BLZg3u9TJ4Y4BrfD1G0XGkFGVnX96k5zeFa9hY8Vk
-9FOuCDEUHbkDqeubSbvtkotT9fFEjB2IaTvizIYm7YIdKK9Mp2dvX2blqtP6xg0n
-EfiQIPfZ72OCmDCmUi9smSVlcGXBCD86WNi7xJIUO0hF0PpchXzcE1TLL99OkRbf
-MDrJOxGE+hZDO1bNbkueFxn2zNyPfP/TFLV1iijIdYTwXjHkqD1Als1JN8fVM+zy
-v5SylnByIieJyuhb/LpseOR75sIh6w1ZZOkQoEoHrvGICvlAG4UOz05LeB4WJ1SJ
-nwynT1S8FMJzFf+xKb5t4+Zz3f5WvddHhKg9cXDAZQox0FYly3BD3+csqpEv9d2R
-bOzSu1mAbeZhrgDU1aIquQ4T66G/mafuucKjSTKPB+bHwTsmkUJDABCcYLOnuAyQ
-hhNa9lxCA4vKrMCS8Z0owDcR2Qj+ZLOOiHrTGaumYDl8kyqGpm7Bj5q9pk9eKeqJ
-GgQThnhFc1heZiYhLtdIakx4RviH768xusY/+6/I2ymMa894bD2jlTx90c4mo8E4
-w5cs5Usz+vA=
-=18kU
------END PGP SIGNATURE-----
+You are right, we discussed this a while back on the list as well and
+came to the same conclusion. I am curious -- are there drivers which
+have the same hw_value as the freq? But disregard this -- this isn't
+the reason why  I brought up the cap. I've mentioned the reasons above
+and to johill in my last reply. Please let me know what you think.
 
---=-6c6LQ7OrRN0iG1SZTaWx--
+> About the patch: You are right that we should use channel_ok in
+> hw_channel but there is no need for that switch, channel_ok checks the
+> channel flags (hw_value) and determines the band already (and channel
+> flags are filled per band -CHANNEL_2GHZ/CHANNEL_5GHZ- during setup so
+> checking channel->band or channel->hw_vallue is the same).
 
+OK I think I see your point. I can send a follow up patch if you don't mind.
+
+  Luis
