@@ -1,90 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:27144 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758984AbYBBXWO (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:13260 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864AbYBAPsF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 18:22:14 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2413249pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 15:22:13 -0800 (PST)
-Message-ID: <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com> (sfid-20080202_232227_576995_47054CDC)
-Date: Sat, 2 Feb 2008 18:22:12 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Cc: "Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>
-In-Reply-To: <200801251701.59629.bruno@thinktube.com>
+	Fri, 1 Feb 2008 10:48:05 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so228399nfb.21
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 07:48:01 -0800 (PST)
+Message-ID: <47A33ECA.5030005@gmail.com> (sfid-20080201_154820_967056_FB1E3EB8)
+Date: Fri, 01 Feb 2008 16:46:18 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125252.6455.41047.stgit@one>
-	 <200801241226.28394.bruno@thinktube.com>
-	 <1201193704.3454.137.camel@johannes.berg>
-	 <200801251701.59629.bruno@thinktube.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, bruno@thinktube.com,
+	johannes@sipsolutions.net, mickflemm@gmail.com
+Subject: Re: [PATCH 1/1] ath5k: Cleanup after API changes patch
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+In-Reply-To: <20080201012544.GD28995@ruslug.rutgers.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 25, 2008 3:01 AM, bruno randolf <bruno@thinktube.com> wrote:
-> On Friday 25 January 2008 01:55:04 Johannes Berg wrote:
-> > > i can see now how you could interpret this as only applying to timers,
-> > > but i think that does just not make sense - why would you want to sync
-> > > timers and adapt beacon intervals if you don't share the same BSSID?
-> >
-> > Hmm. Well I thought that was pretty much just for optimising performance
-> > but now that I think about it again...
-> >
-> > > i agree that the standard is quite ambigious when it comes to IBSS, but
-> > > practically speaking, it is necessary to merge IBSS cells most of the
-> > > time if you want to have IBSS working as expected. therefore i tend to
-> > > interpret the ambigious parts of the standard in a way that will improve
-> > > functionality.
-> >
-> > I think "working as expected" is stretching it a bit ;) How do you
-> > expect IBSS to work?
->
-> i think it's a reasonable expectation from a users point of view that two or
-> more IBSS nodes using the same ESSID on the same channel can communicate with
-> each other, regardless of when and where they were configured.
->
-> > I'd expect only the simplest use case from it:
-> > start IBSS on one station and have another one in the vicinity find it
-> > while scanning and join it. That works regardless of merging or not.
->
-> this is probably a valid, but a most conservative interpretation of the
-> standard, which makes IBSS practically unusable in many (or most) occasions.
->
-> i guess you have never actually used IBSS much. otherwise you would know from
-> experience that your simplest use case practically rarely happens. usually
-> you have situations where you miss the others BSS while scanning and end up
-> with 2 different BSSIDs. or what happens if there is a third station within
-> station 2's reach but out of range for station 1? sta2 will adopt the BSSID
-> of sta3, but sta1 will not and start a new BSSID. so not even your simplest
-> use case of two newly started stations will just work (without ibss merge).
-> examples and scenarios are endless, do you want me to continue? ;)
->
-> also i am not inventing this "non-standard merge". it is *not* non-standard,
-> it's just not directly obvious from reading the standard.
->
-> IBSS merges are done like this by various cards and drivers: prism54 does the
-> same (in firmware), hostap driver did it like this (probably does but i
-> haven't used it in quite a while), the broadcom driver in openwrt acts like
-> this, madwifi merges like this (ups, maybe i shouldn't have said that ;)) and
-> so on...
->
-> aren't there any other serious IBSS users out there who can support this case
-> and confirm that we need IBSS merge functionality?
+On 02/01/2008 02:25 AM, Luis R. Rodriguez wrote:
+> Cleanup after API changes patch (checkpatch.pl stuff) and on
+> ath5k_hw_rf5112_channel() make use of the new channel->band and
+> existing ath5k_channel_ok() instead of re-implementing the checks
+> again. This was necessary to make the code cleaner and fit
+> the 80-chars wide limit so sending it within the same patch.
+> 
+> Finally make a note that we should eventually move cap_range stuff
+> to struct wiphy.
+> 
+> This patch applies ontop of Nick's API changes patch.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> 
+> drivers/net/wireless/ath5k/ath5k.h:	Changes-licensed-under: ISC
+> drivers/net/wireless/ath5k/base.c:	Changes-licensed-under: 3-Clause-BSD
+> drivers/net/wireless/ath5k/initvals.c:	Changes-licensed-under: ISC
+> drivers/net/wireless/ath5k/phy.c:	Changes-licensed-under: ISC
+> ---
+>  drivers/net/wireless/ath5k/ath5k.h    |    8 ++-
+>  drivers/net/wireless/ath5k/base.c     |  126 +++++++++++++++++++--------------
+>  drivers/net/wireless/ath5k/initvals.c |    6 +-
+>  drivers/net/wireless/ath5k/phy.c      |   48 +++++++++----
+>  4 files changed, 118 insertions(+), 70 deletions(-)
+> 
+[...]
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 8ddac36..bd9c9a8 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+[...]
+> @@ -889,13 +900,15 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+>  		/* Write channel info and increment counter */
+>  		channels[count].center_freq = freq;
+>  
+> -		if((mode == AR5K_MODE_11A) ||
+> -		(mode == AR5K_MODE_11G)){
+> -			channels[count].hw_value = chfreq|CHANNEL_OFDM;
+> -		} else if((mode == AR5K_MODE_11A_TURBO) ||
+> -		(mode == AR5K_MODE_11G_TURBO)){
+> -			channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
+> -		}if(mode == AR5K_MODE_11B) {
+> +		if ((mode == AR5K_MODE_11A) ||
+> +			(mode == AR5K_MODE_11G)) {
+> +			channels[count].hw_value =
+> +				chfreq | CHANNEL_OFDM;
+> +		} else if ((mode == AR5K_MODE_11A_TURBO) ||
+> +			(mode == AR5K_MODE_11G_TURBO)) {
+> +			channels[count].hw_value =
+> +				chfreq | CHANNEL_OFDM|CHANNEL_TURBO;
+> +		} if (mode == AR5K_MODE_11B) {
 
-Sure ACK. Also as was stated, even with IBSS merge functionality
-working you could up with nodes splitting up due to missing the
-"leader" beacon due to interference or even strange radio node
-problems. A solution to this we implemented at Orbit with MadWifi was
-that instead of generating "random" BSSIDs you'd create one based on
-the hash of the SSID [1]. This ensures that nodes with identical SSIDs
-end up with identical BSSIDs, regardless of any strange problems.
-Technically from what I have gathered this doesn't break the specs but
-would prevent this split-IBSS problem. I actually like to see this
-technique added into mac80211 too.
+'else' or '\n' before the if, please
 
-[1] http://www.orbit-lab.org/wiki/HowTo/bssidFix
+>  			channels[count].hw_value = CHANNEL_B;
+>  		}
+>  
 
-  Luis
