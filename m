@@ -1,148 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:28903 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbYBQQgA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 11:36:00 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1209783mue.5
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2008 08:35:58 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 05/11] rt2x00: Remove reset_tsf()
-Date: Sun, 17 Feb 2008 17:33:57 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802171730.44353.IvDoorn@gmail.com>
-In-Reply-To: <200802171730.44353.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802171733.58144.IvDoorn@gmail.com> (sfid-20080217_163614_330086_9D78E8A4)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:33607 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233AbYBAVcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2008 16:32:43 -0500
+Subject: Re: wireless mini-summit agenda proposals?
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240802011321r79297484m6381527457fdb919@mail.gmail.com>
+References: <20080131162514.GC6413@tuxdriver.com>
+	 <1201801923.3000.13.camel@localhost.localdomain>
+	 <1201869751.4188.19.camel@johannes.berg>
+	 <1ba2fa240802011029h7cce3f77ge61bc11564c378a6@mail.gmail.com>
+	 <1201893322.20187.11.camel@localhost.localdomain>
+	 <1ba2fa240802011147j4cd027e8gacf2d5a6de65443d@mail.gmail.com>
+	 <1201896714.20566.8.camel@localhost.localdomain>
+	 <1ba2fa240802011321r79297484m6381527457fdb919@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 01 Feb 2008 16:31:58 -0500
+Message-Id: <1201901519.25399.12.camel@localhost.localdomain> (sfid-20080201_213246_239274_796699AB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Specifications indicate the TSF registers are read-only,
-so there is no point in writing 0 to those registers.
+On Fri, 2008-02-01 at 23:21 +0200, Tomas Winkler wrote:
+> On Feb 1, 2008 10:11 PM, Dan Williams <dcbw@redhat.com> wrote:
+> >
+> > On Fri, 2008-02-01 at 21:47 +0200, Tomas Winkler wrote:
+> > > On Feb 1, 2008 9:15 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > > > On Fri, 2008-02-01 at 20:29 +0200, Tomas Winkler wrote:
+> > > > > On Feb 1, 2008 2:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > > > >
+> > > > > > > cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
+> > > > > > > because email isn't optimal for this.  I haven't had enough time to jump
+> > > > > > > into it yet, but the fact that Johannes is the vast majority of the
+> > > > > > > effort here is worrisome.  Having a reference implementation (airo,
+> > > > > > > atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
+> > > > > > > probably be very useful, even just to get a sense of how the API works.
+> > > > > >
+> > > > > > cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
+> > > > > > work it got so far is for hostapd.
+> > > > > >
+> > > > > > I have a fairly decent plan how to add association/... support but it
+> > > > > > lacks execution because it's completely boring work that doesn't buy us
+> > > > > > any new features since we still have to support wext.
+> > > > > >
+> > > > > Security setting is a bit  broken. There is a missing separation
+> > > > > between static and dynamic./WPA wep keys.
+> > > >
+> > > > How do you mean?
+> > >
+> > > In wext there is encoding setting for static keys only for wep and
+> > > extended encoding for dynamic keys including wep keys. In mac80211
+> > > both setting are funneled to the same point which is incorrect since
+> > > the usage is not the same. The major problem is in HW acceleration.
+> > > The static wep keys are passed as belonging to the station with
+> > > broadcast address and the driver cannot distinguish if the wep key is
+> > > dynamic key for the bcast address or it is a static wep key that has
+> > > to be used for all traffic. The problem is of course visible mostly in
+> > > AP mode.
+> >
+> > Ah; right.  I don't think there really should be a difference in the API
+> > to differentiate static vs. dynamic WEP keys.  Instead each key sent to
+> > the driver (be it WEP, TKIP, or CCMP) should definitely have a BSSID to
+> > which it applies which the userspace caller must set, and if the key is
+> > to be used for _all_ traffic, then maybe have a flag for that or use
+> > 00:00:00:00:00:00 as the BSSID.  If we use "magic" #s like 00:00... for
+> > the BSSID then we've got to be sure to document that magic # which is
+> > where we all fell down with WEXT.  Hence I prefer flags, but whatever.
+> >
+> 
+> Sure this is not good to make too many interfaces, but a flag must be
+> added, i prefer to not abusing BSSID address.
+> One other difference is that there might be 4 keys for static wep
+> while only one wep key in WPA.
 
-As far as I know there isn't another way to reset the
-TSF registers. So removing these callbacks will notify
-mac80211 about the lack of support.
+Definitely; there will certainly need to be flags or a 'wep_key_idx'
+field for WEP key indexes.  Should probably just have a 'u32 flags'
+somewhere that goes along with each key.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    9 ---------
- drivers/net/wireless/rt2x00/rt2500pci.c |    9 ---------
- drivers/net/wireless/rt2x00/rt61pci.c   |    9 ---------
- drivers/net/wireless/rt2x00/rt73usb.c   |    9 ---------
- 4 files changed, 0 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index a80385d..23b14b0 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1506,14 +1506,6 @@ static u64 rt2400pci_get_tsf(struct ieee80211_hw *hw)
- 	return tsf;
- }
- 
--static void rt2400pci_reset_tsf(struct ieee80211_hw *hw)
--{
--	struct rt2x00_dev *rt2x00dev = hw->priv;
--
--	rt2x00pci_register_write(rt2x00dev, CSR16, 0);
--	rt2x00pci_register_write(rt2x00dev, CSR17, 0);
--}
--
- static int rt2400pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 				   struct ieee80211_tx_control *control)
- {
-@@ -1582,7 +1574,6 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 	.conf_tx		= rt2400pci_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
- 	.get_tsf		= rt2400pci_get_tsf,
--	.reset_tsf		= rt2400pci_reset_tsf,
- 	.beacon_update		= rt2400pci_beacon_update,
- 	.tx_last_beacon		= rt2400pci_tx_last_beacon,
- };
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 4a6a60a..26e1fcc 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1817,14 +1817,6 @@ static u64 rt2500pci_get_tsf(struct ieee80211_hw *hw)
- 	return tsf;
- }
- 
--static void rt2500pci_reset_tsf(struct ieee80211_hw *hw)
--{
--	struct rt2x00_dev *rt2x00dev = hw->priv;
--
--	rt2x00pci_register_write(rt2x00dev, CSR16, 0);
--	rt2x00pci_register_write(rt2x00dev, CSR17, 0);
--}
--
- static int rt2500pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 				   struct ieee80211_tx_control *control)
- {
-@@ -1893,7 +1885,6 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
- 	.conf_tx		= rt2x00mac_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
- 	.get_tsf		= rt2500pci_get_tsf,
--	.reset_tsf		= rt2500pci_reset_tsf,
- 	.beacon_update		= rt2500pci_beacon_update,
- 	.tx_last_beacon		= rt2500pci_tx_last_beacon,
- };
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 722d734..3b10452 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2362,14 +2362,6 @@ static u64 rt61pci_get_tsf(struct ieee80211_hw *hw)
- 	return tsf;
- }
- 
--static void rt61pci_reset_tsf(struct ieee80211_hw *hw)
--{
--	struct rt2x00_dev *rt2x00dev = hw->priv;
--
--	rt2x00pci_register_write(rt2x00dev, TXRX_CSR12, 0);
--	rt2x00pci_register_write(rt2x00dev, TXRX_CSR13, 0);
--}
--
- static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 			  struct ieee80211_tx_control *control)
- {
-@@ -2446,7 +2438,6 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
- 	.conf_tx		= rt2x00mac_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
- 	.get_tsf		= rt61pci_get_tsf,
--	.reset_tsf		= rt61pci_reset_tsf,
- 	.beacon_update		= rt61pci_beacon_update,
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 615415a..43f5676 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1968,14 +1968,6 @@ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
- #define rt73usb_get_tsf	NULL
- #endif
- 
--static void rt73usb_reset_tsf(struct ieee80211_hw *hw)
--{
--	struct rt2x00_dev *rt2x00dev = hw->priv;
--
--	rt73usb_register_write(rt2x00dev, TXRX_CSR12, 0);
--	rt73usb_register_write(rt2x00dev, TXRX_CSR13, 0);
--}
--
- static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 				 struct ieee80211_tx_control *control)
- {
-@@ -2043,7 +2035,6 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
- 	.conf_tx		= rt2x00mac_conf_tx,
- 	.get_tx_stats		= rt2x00mac_get_tx_stats,
- 	.get_tsf		= rt73usb_get_tsf,
--	.reset_tsf		= rt73usb_reset_tsf,
- 	.beacon_update		= rt73usb_beacon_update,
- };
- 
--- 
-1.5.4
+Dan
 
