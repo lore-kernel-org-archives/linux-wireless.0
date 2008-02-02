@@ -1,36 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:44413 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755351AbYBYTkV (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:63752 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbYBBVj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:40:21 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1102559rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:40:18 -0800 (PST)
-Subject: Re: [PATCH 17/18] mac80211: mesh hwmp locking fixes
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203966581.13162.129.camel@johannes.berg>
-References: <20080223141703.194775000@sipsolutions.net>
-	 <20080223142017.846789000@sipsolutions.net>
-	 <1203966549.6929.4.camel@localhost>
-	 (sfid-20080225_190733_174041_A31E50BE)  <1203966581.13162.129.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 11:41:56 -0800
-Message-Id: <1203968516.6929.26.camel@localhost> (sfid-20080225_194027_977018_99BF45C6)
-Mime-Version: 1.0
+	Sat, 2 Feb 2008 16:39:29 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2369140pyb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 13:39:29 -0800 (PST)
+Message-ID: <43e72e890802021339x5b2a44eayad71e796ba48451b@mail.gmail.com> (sfid-20080202_213932_477707_AC49718F)
+Date: Sat, 2 Feb 2008 16:39:28 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com,
+	johannes@sipsolutions.net
+In-Reply-To: <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+	 <47A33ECA.5030005@gmail.com>
+	 <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-02-25 at 20:09 +0100, Johannes Berg wrote:
-> Ah, but sta_info_get will require rcu locking after a few more patches
-> so I now that I posted both sets this is easier (otherwise the sta info
-> rcu-ification would have to add all the code and revert this patch)
+On Feb 2, 2008 4:35 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
+>
+> On Feb 1, 2008 10:46 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> > On 02/01/2008 02:25 AM, Luis R. Rodriguez wrote:
+> > > Cleanup after API changes patch (checkpatch.pl stuff) and on
+> > > ath5k_hw_rf5112_channel() make use of the new channel->band and
+> > > existing ath5k_channel_ok() instead of re-implementing the checks
+> > > again. This was necessary to make the code cleaner and fit
+> > > the 80-chars wide limit so sending it within the same patch.
+> > >
+> > > Finally make a note that we should eventually move cap_range stuff
+> > > to struct wiphy.
+> > >
+> > > This patch applies ontop of Nick's API changes patch.
+> > >
+> > > Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> > >
+> > > drivers/net/wireless/ath5k/ath5k.h:   Changes-licensed-under: ISC
+> > > drivers/net/wireless/ath5k/base.c:    Changes-licensed-under: 3-Clause-BSD
+> > > drivers/net/wireless/ath5k/initvals.c:        Changes-licensed-under: ISC
+> > > drivers/net/wireless/ath5k/phy.c:     Changes-licensed-under: ISC
+> > > ---
+> > >  drivers/net/wireless/ath5k/ath5k.h    |    8 ++-
+> > >  drivers/net/wireless/ath5k/base.c     |  126 +++++++++++++++++++--------------
+> > >  drivers/net/wireless/ath5k/initvals.c |    6 +-
+> > >  drivers/net/wireless/ath5k/phy.c      |   48 +++++++++----
+> > >  4 files changed, 118 insertions(+), 70 deletions(-)
+> > >
+> > [...]
+> > > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> > > index 8ddac36..bd9c9a8 100644
+> > > --- a/drivers/net/wireless/ath5k/base.c
+> > > +++ b/drivers/net/wireless/ath5k/base.c
+> > [...]
+> > > @@ -889,13 +900,15 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+> > >               /* Write channel info and increment counter */
+> > >               channels[count].center_freq = freq;
+> > >
+> > > -             if((mode == AR5K_MODE_11A) ||
+> > > -             (mode == AR5K_MODE_11G)){
+> > > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM;
+> > > -             } else if((mode == AR5K_MODE_11A_TURBO) ||
+> > > -             (mode == AR5K_MODE_11G_TURBO)){
+> > > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
+> > > -             }if(mode == AR5K_MODE_11B) {
+> > > +             if ((mode == AR5K_MODE_11A) ||
+> > > +                     (mode == AR5K_MODE_11G)) {
+> > > +                     channels[count].hw_value =
+> > > +                             chfreq | CHANNEL_OFDM;
+> > > +             } else if ((mode == AR5K_MODE_11A_TURBO) ||
+> > > +                     (mode == AR5K_MODE_11G_TURBO)) {
+> > > +                     channels[count].hw_value =
+> > > +                             chfreq | CHANNEL_OFDM|CHANNEL_TURBO;
+> > > +             } if (mode == AR5K_MODE_11B) {
+> >
+> > 'else' or '\n' before the if, please
+>
+> Good catch, that should have been an "else if" there. Will repost all
+> pending patches in a series addressing all posted comments.
 
-You're right, just noticed the sta rcu-ification process.
+Going to move this to a switch, its much more legible.
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+  Luis
