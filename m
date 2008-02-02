@@ -1,70 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42337 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911AbYBVQBs (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:34087 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846AbYBBCkp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:01:48 -0500
-Subject: Re: [PATCH 03/13 v2] o11s: various definitions and support
-	functions for mesh interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47be772d.17bc720a.0288.ffffcbbc@mx.google.com> (sfid-20080222_071812_193400_EB1E9FF8)
-References: <47be772d.17bc720a.0288.ffffcbbc@mx.google.com>
-	 (sfid-20080222_071812_193400_EB1E9FF8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QwangNzYz0gWJZrGLoWu"
-Date: Fri, 22 Feb 2008 17:01:23 +0100
-Message-Id: <1203696083.7082.54.camel@johannes.berg> (sfid-20080222_160240_531562_3CDEA485)
-Mime-Version: 1.0
+	Fri, 1 Feb 2008 21:40:45 -0500
+Received: by an-out-0708.google.com with SMTP id d31so331310and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 18:40:44 -0800 (PST)
+Message-ID: <40f31dec0802011840r56817691j3e74d3566f53bc28@mail.gmail.com> (sfid-20080202_024049_639963_22E0147E)
+Date: Sat, 2 Feb 2008 04:40:44 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211 QoS/aggregation questions, thoughts
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jouni Malinen" <j@w1.fi>, "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Patrick McHardy" <kaber@trash.net>
+In-Reply-To: <1201882512.4188.66.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1201882512.4188.66.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>
+> To be honest, I'm totally unclear on how all this queue stuff is
+> supposed to work. Ivo pointed me to IEEE80211_TX_QUEUE_AFTER_BEACON
+> which is unused and duplicated with IEEE80211_TXCTL_SEND_AFTER_DTIM.
+>
+> It seems to me that this queue stuff is mostly designed after atheros
+> hardware and we should be getting rid of it...
+>
 
---=-QwangNzYz0gWJZrGLoWu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Atheros hw has 12 hw queues since 5211, one is used already for
+beacons inside ath5k (check out beacon_config/setup etc functions
+inside hw.c), one called CAB ("crap after beacon" i think), and 10
+data queues (newer hw might have more queues -madwifi btw only
+includes 10 out of 12 queues on HAL's headers). I guess they can go
+away since we have beacon_update callback from stack (we know what
+frames to put in that queue anyway and cwmin/max parameters for
+beacons are standard i guess).
+
+> Ultimately, we only need four data queues as required by WMM and then
+> A-MPDU queues. Right now, you can only use 12 of the 16 queues iwl4965
+> hw offers (well actually 13 but I think using the BEACON queue ID is
+> wrong so 12 if that mistake is corrected) as far as I can tell, because
+> the qdisc_pool is only searched starting with IEEE80211_TX_QUEUE_BEACON
+> (but see above).
+>
+> Here's a possible plan:
+>
+>      1. move queue configuration for data queues to bss-config
+>         structure, it really is part of the bss configuration since it
+>         is mandated by the AP
+
+ACK, btw why do we have a separate ht_bss_conf which is handled by
+bss_info_changed instead of bss_info_changed or conf_ht ?
+
+>      2. get rid of IEEE80211_TX_QUEUE_BEACON, it isn't used in mac80211
+>         and it's not hardware-independent, not all hardware actually
+>         uses a queue for beacons (b43 for example does beaconing
+>         differently), those drivers that do use a queue will have to do
+>         that internally. Also, the one place where it is used is the
+>         queue configuration for IBSS beacons, but that somewhat bogus
+>         anyway since we never reset that should we go back into AP mode
+>         after being in IBSS! Hence, I think the driver should handle
+>         that when an interface is brought up. Ivo, any comments?
+
+ACK
+
+>      3. get rid of IEEE80211_TX_QUEUE_AFTER_BEACON, we have
+>         IEEE80211_TXCTL_SEND_AFTER_DTIM now and that is
+>         hardware-independent
+
+ACK
+
+>      4. remove IEEE80211_TX_QUEUE_SVP, it's something strange and
+>         atheros specific
+
+ACK spectralink voice protocol, some voip related stuff i don't know
+anything about, i just found it's definition on some old d80211 header
+while porting openhal to dadwifi and wanted to make openhal's code
+more portable across stacks so i added the comment on ath5k.h to note
+the mapping.
+
+>      5. remove IEEE80211_TX_QUEUE_DATA4, only rt61pci uses that and that
+>         use is strange, Ivo? We never submit frames to that queue...
+>
+
+ACK and btw let's also rename them, DATA* is not very informative,
+something like IEEE80211_TX_QUEUE_BE would be better imho
 
 
-> +#ifdef CONFIG_MAC80211_MESH
-> +#include "mesh.h"
-> +#endif
 
-No need to protect includes, please don't.
-
-> +	case IEEE80211_IF_TYPE_MESH_POINT:
-> +		sta_info_flush(local, dev);
-> +		/* fall through */
-
-This is actually necessary generally, not just for mesh. If my recent
-sta info stuff goes in first then that will already be there, otherwise
-I'll rebase and remove this again.
-
-
-Rest looks fine.
-
-johannes
-
---=-QwangNzYz0gWJZrGLoWu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR77x0qVg1VMiehFYAQL1Ow/+Njqf9kXb/gIWP31OpxXS4GwIyATjP3dO
-8ZPHS+dLq//FRTZGHE3bbsnLgm87CMwEMk9K2l/pZaEHCW7a38eXLEDePSrH/r1/
-MQIDEA8/7r+Xw/ZhM6lPf7cMCejT/iL7zboIqPdIw5n9zkKKzbXwW6KQ3EKG0PzZ
-apkJ8ygfBtBTnPA4xyry4eSNnfwaTV/zmk1GHC8/rwUV3XaMjrO3HK7jBlHLtlKb
-0GZhYaUFQSetSGGsAXgfSp53qODflgEAq/tZI6I0/1zVo/Q5KUo9JK6Rox/HiylY
-igwReM3HHk1PyP6xwE5pCu5WZBjOazZlOG4i90JOXZ/qERKIJ47KxXRe6WQdyQ7R
-cz/aLm0VD/CAL2llIsvim4W/khLKYszCBqL4JjvcZaKEgyjkwamXftmTs6HN/32J
-hti3OzIZwpaN1D8ua7438ChOCJ/6GlNTcWtDrQ9Ajkh1hR3IQWgqLUxylvIvwK0l
-Lz9Mor4ovQeS6bDCumKReTA8pRnOVYcJbtjmDYsTrWE2Zu6vh5stfKHwbPUPwYU0
-1QcVim986If6EBGn9psY47jo+llz00sC26Yu2M24PeEEZU/1ko4cD1jsP6BuV967
-xPYwlgklEStGXlpSBAzkCwU93utEfblCytWuaf1JpBXT5cRsDThwaybYmTFAxxn0
-Xpqjy8ueEi0=
-=EWWD
------END PGP SIGNATURE-----
-
---=-QwangNzYz0gWJZrGLoWu--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
