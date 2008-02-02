@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:58794 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757322AbYBFVAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 16:00:14 -0500
-Date: Wed, 6 Feb 2008 22:00:26 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
-	kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: ipw3945: not only it periodically dies, it also BUG()s
-Message-ID: <20080206210026.GA32641@elf.ucw.cz> (sfid-20080206_210020_185340_84357575)
-References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com>
+Received: from py-out-1112.google.com ([64.233.166.182]:50384 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754576AbYBBOh2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Feb 2008 09:37:28 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2200581pyb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 06:37:27 -0800 (PST)
+To: Adam Turk <bofh1234@hotmail.com>
+Subject: Re: rt73 driver doesn't work in 2.6.24
+Date: Sat, 2 Feb 2008 15:36:50 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl>
+In-Reply-To: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802021536.50534.IvDoorn@gmail.com> (sfid-20080202_143741_728478_52F40637)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi,
 
-> >>> ...I've reported this before, with full debugging. Not sure if
-> >>> anything happened.
-> >> 
-> >> Could you please point me to where you have reported it before?
-> > 
-> > From pavel@ucw.cz Wed Oct 31 01:52:02 2007
-> > From: Pavel Machek <pavel@ucw.cz>
-> > To: linux-wireless@vger.kernel.org,
-> >        kernel list <linux-kernel@vger.kernel.org>,
-> >        ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
-> > Subject: iwl3945 in 2.6.24-rc1 dies under load
-> > X-Warning: Reading this can be dangerous to your mental health.
-> > 
-> > ...and thread that resulted.
+> I was rather pleased to see that my Edimax ew7318usg was supported by mainline.  I created a new config, compiled, (no errors), and rebooted with the wireless card plugged in and I get errors on module load. Here is the output from dmesg:
 > 
-> Could you please create a new bug in our bug tracking system
-> (www.bughost.org) to enable us to track this problem? Please include the
-> relevant information from the thread as well as the information you
-> doscovered recently.
+> rt73usb 1-1:1.0: usb_probe_interface
+> rt73usb 1-1:1.0: usb_probe_interface - got id
+> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
+> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x0000
+> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
+> phy0: Selected rate control algorithm 'simple'
+> phy0: Failed to initialize wep
 
-Hmmm... bugzilla says:
+This is a problem with mac80211 loading the wep encryption, did you load the arc4 module?
 
-    * Exact steps to reproduce
-    * Reproducability of bug (e.g. intermittent or 100% reproducable)
-    * Did this problem not exist in previous version of the driver?
-    * kernel version
-    * AP brand/model
-    * dmesg output at debug level 0x43fff
-      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		it would be nice to specify how to do this. It is
-insmod parameter, right?
-
-    * Type of security (if any) you are using (e.g. WEP64, WEP128, WPA, WPA2, 802.1x, etc)
-    * Version of firmware
-    * Version of the ieee80211 module
-    * Proximity to the AP
-
-    * Before reporting any firmware errors, please be sure to read Ben
-Cahill's mailing list post on how to most effectively report such
-bugs. 
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		unfortunately the link here does not work.
-
-BTW, why not use kernel.org bugzilla? Having to create another account
-is nasty...
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Ivo
