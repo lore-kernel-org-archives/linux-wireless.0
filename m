@@ -1,98 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:33396 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752601AbYBXR7s (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:57644 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbYBBVfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 12:59:48 -0500
-Date: Sun, 24 Feb 2008 12:59:33 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
+	Sat, 2 Feb 2008 16:35:42 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2367538pyb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 13:35:41 -0800 (PST)
+Message-ID: <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com> (sfid-20080202_213548_137844_B83D987C)
+Date: Sat, 2 Feb 2008 16:35:39 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
 Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Message-ID: <20080224175933.GA4360@hash.localnet> (sfid-20080224_182031_577736_569CC0B5)
-References: <20080224042851.GE4426@makis.domain.invalid> <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com>
+	linville@tuxdriver.com, bruno@thinktube.com,
+	johannes@sipsolutions.net
+In-Reply-To: <47A33ECA.5030005@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+	 <47A33ECA.5030005@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 24, 2008 at 06:45:33AM +0200, Nick Kossifidis wrote:
-> >  +       /* Identify PCI-E cards */
-> >  +       if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
-> >  +       srev >= AR5K_SREV_VER_AR5416) {
-> >  +               ah->ah_pcie = true;
-> >  +       } else {
-> >  +               ah->ah_pcie = false;
-> >  +       }
+On Feb 1, 2008 10:46 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 02/01/2008 02:25 AM, Luis R. Rodriguez wrote:
+> > Cleanup after API changes patch (checkpatch.pl stuff) and on
+> > ath5k_hw_rf5112_channel() make use of the new channel->band and
+> > existing ath5k_channel_ok() instead of re-implementing the checks
+> > again. This was necessary to make the code cleaner and fit
+> > the 80-chars wide limit so sending it within the same patch.
+> >
+> > Finally make a note that we should eventually move cap_range stuff
+> > to struct wiphy.
+> >
+> > This patch applies ontop of Nick's API changes patch.
+> >
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> >
+> > drivers/net/wireless/ath5k/ath5k.h:   Changes-licensed-under: ISC
+> > drivers/net/wireless/ath5k/base.c:    Changes-licensed-under: 3-Clause-BSD
+> > drivers/net/wireless/ath5k/initvals.c:        Changes-licensed-under: ISC
+> > drivers/net/wireless/ath5k/phy.c:     Changes-licensed-under: ISC
+> > ---
+> >  drivers/net/wireless/ath5k/ath5k.h    |    8 ++-
+> >  drivers/net/wireless/ath5k/base.c     |  126 +++++++++++++++++++--------------
+> >  drivers/net/wireless/ath5k/initvals.c |    6 +-
+> >  drivers/net/wireless/ath5k/phy.c      |   48 +++++++++----
+> >  4 files changed, 118 insertions(+), 70 deletions(-)
+> >
+> [...]
+> > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> > index 8ddac36..bd9c9a8 100644
+> > --- a/drivers/net/wireless/ath5k/base.c
+> > +++ b/drivers/net/wireless/ath5k/base.c
+> [...]
+> > @@ -889,13 +900,15 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+> >               /* Write channel info and increment counter */
+> >               channels[count].center_freq = freq;
+> >
+> > -             if((mode == AR5K_MODE_11A) ||
+> > -             (mode == AR5K_MODE_11G)){
+> > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM;
+> > -             } else if((mode == AR5K_MODE_11A_TURBO) ||
+> > -             (mode == AR5K_MODE_11G_TURBO)){
+> > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
+> > -             }if(mode == AR5K_MODE_11B) {
+> > +             if ((mode == AR5K_MODE_11A) ||
+> > +                     (mode == AR5K_MODE_11G)) {
+> > +                     channels[count].hw_value =
+> > +                             chfreq | CHANNEL_OFDM;
+> > +             } else if ((mode == AR5K_MODE_11A_TURBO) ||
+> > +                     (mode == AR5K_MODE_11G_TURBO)) {
+> > +                     channels[count].hw_value =
+> > +                             chfreq | CHANNEL_OFDM|CHANNEL_TURBO;
+> > +             } if (mode == AR5K_MODE_11B) {
+>
+> 'else' or '\n' before the if, please
 
-This won't work, because reset is called before we ever set ah_pcie.
-Moving the set before the first call to wakeup (patch below) does the
-trick.  Then it works at least as well as I had it working (still with
-random calibration failures, but I am again sending this mail using the
-driver).
+Good catch, that should have been an "else if" there. Will repost all
+pending patches in a series addressing all posted comments.
 
-Thanks!
-
->From f59b2bc93059e7f1bd504714ca22654f4242d78d Mon Sep 17 00:00:00 2001
-From: Bob Copeland <me@bobcopeland.com>
-Date: Sun, 24 Feb 2008 10:30:50 -0500
-Subject: [PATCH] Grab srev before resetting card.
-
-Setting ah_pcie variable must be done before the first call to
-ath5k_hw_nic_wakeup.
----
- drivers/net/wireless/ath5k/hw.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index adcce6f..71cdbd9 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -178,13 +178,21 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	else if (ah->ah_version <= AR5K_AR5211)
- 		ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
- 
-+	/* Get MAC, PHY and RADIO revisions */
-+	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	/* Identify PCI-E cards */
-+	if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
-+	srev >= AR5K_SREV_VER_AR5416) {
-+		ah->ah_pcie = true;
-+	} else {
-+		ah->ah_pcie = false;
-+	}
-+
- 	/* Bring device out of sleep and reset it's units */
- 	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
- 	if (ret)
- 		goto err_free;
- 
--	/* Get MAC, PHY and RADIO revisions */
--	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
- 	ah->ah_mac_srev = srev;
- 	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
- 	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
-@@ -214,14 +222,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		ah->ah_single_chip = false;
- 	}
- 
--	/* Identify PCI-E cards */
--	if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
--	srev >= AR5K_SREV_VER_AR5416) {
--		ah->ah_pcie = true;
--	} else {
--		ah->ah_pcie = false;
--	}
--
- 	/* Single chip radio */
- 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
- 		ah->ah_radio_2ghz_revision = 0;
--- 
-1.5.4.2.182.gb3092
-
--- 
-Bob Copeland %% www.bobcopeland.com 
-
+  Luis
