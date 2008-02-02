@@ -1,82 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757153AbYBAWcR (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:40910 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763705AbYBBXHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 17:32:17 -0500
-Subject: Re: mac80211 QoS/aggregation questions, thoughts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>, Tomas Winkler <tomasw@gmail.com>,
-	Patrick McHardy <kaber@trash.net>
-In-Reply-To: <200802012325.26163.IvDoorn@gmail.com> (sfid-20080201_222551_358338_76D19317)
-References: <1201882512.4188.66.camel@johannes.berg>
-	 <1201902217.4188.82.camel@johannes.berg>
-	 <200802012325.26163.IvDoorn@gmail.com>
-	 (sfid-20080201_222551_358338_76D19317)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n6pr1gD8tdQH/tomR3Dq"
-Date: Fri, 01 Feb 2008 23:32:13 +0100
-Message-Id: <1201905133.4188.91.camel@johannes.berg> (sfid-20080201_223239_754981_4CD6F54A)
-Mime-Version: 1.0
+	Sat, 2 Feb 2008 18:07:41 -0500
+Received: by an-out-0708.google.com with SMTP id d31so393227and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 15:07:40 -0800 (PST)
+Message-ID: <40f31dec0802021507n55c51867s977a1461839d6b9c@mail.gmail.com> (sfid-20080202_230746_230453_C6420A89)
+Date: Sun, 3 Feb 2008 01:07:40 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	bruno@thinktube.com, "Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <43e72e890802021419w2460ea3ay5ea74be45697d322@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080201012544.GD28995@ruslug.rutgers.edu>
+	 <1201869496.4188.15.camel@johannes.berg>
+	 <43e72e890802010441n4770fe0ag69899a537f551080@mail.gmail.com>
+	 <1201869970.4188.24.camel@johannes.berg>
+	 <43e72e890802010452s510628ear49136748e06fc670@mail.gmail.com>
+	 <40f31dec0802011047r6f90b714x8626f9158b963e6d@mail.gmail.com>
+	 <43e72e890802011345l47dd4234t2515c5be4c5a8580@mail.gmail.com>
+	 <43e72e890802021419w2460ea3ay5ea74be45697d322@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> I'm just going to resend all pending patches. For this stuff I've
+> shifted a bit like this:
+>
+>         /*
+>          * Check bounds supported by the PHY (we don't care about regultory
+>          * restrictions at this point). Note: hw_value already has the band
+>          * (CHANNEL_2GHZ, or CHANNEL_5GHZ) so we inform ath5k_channel_ok()
+>          * of the band by that */
+>         if (!ath5k_channel_ok(ah, channel->center_freq, channel->hw_value)) {
+>                 char bname[5];
+>                 switch (channel->band) {
+>                 case IEEE80211_BAND_2GHZ:
+>                         strcpy(bname, "2 GHz");
+>                         break;
+>                 case IEEE80211_BAND_5GHZ:
+>                         strcpy(bname, "5 GHz");
+>                         break;
+>                 default:
+>                         BUG_ON(1);
+>                         return -EINVAL;
+>                 }
+>                 ATH5K_ERR(ah->ah_sc,
+>                         "channel frequency (%u MHz) out of supported "
+>                         "%s band range (%u - %u MHz)\n",
+>                         channel->center_freq,
+>                         bname,
+>                         ah->ah_capabilities.cap_range.range_2ghz_min,
+>                         ah->ah_capabilities.cap_range.range_2ghz_max);
+>                         return -EINVAL;
+>         }
+>
 
---=-n6pr1gD8tdQH/tomR3Dq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We really don't need all this IMHO, ath5k_channel_ok is a simple
+working function that's supposed to do all needed checks and print any
+error msg, if you want to modify something modify ath5k_channel_ok,
+don't add more stuff on the caller. Also why use strings for the band
+??? You can have an int and set it 2 or 5 if you want (i realy think
+strcpy is baaad).
 
-
-> Like I mentioned earlier, ring/queue handling has received an overhaul,
-> so not much of the rt2x00 part of this patch will apply after the update.
-> However the change should be easier afterwards. ;)
-
-:)
-Keep the patches coming. No need to test them in rt2x00.git first,
-wireless-2.6 git is pretty broken anyway right now. Due to me,
-unfortunately.
-
-> Personally I think these queue identifiers should be completely seperated=
- from the ieee80211_queue
-> enumeration, and not be used inside a variable mixed.
-> But that will be implementation details for later, and something I should=
- probably take care of. ;)
-
-Yeah, but this seemed easiest for now. We never use the beacon queue in
-mac80211 and I believe that we shouldn't because not all hardware uses a
-queue for beacons.
-
-> Other then that, the patch is fine with me, but not this patch probably n=
-eeds to be respinned after
-> my rt2x00 queue and virtual interfaces overhaul.
-
-Right, no worries, I'm not entirely sure about this patch anyway.
-
-johannes
-
---=-n6pr1gD8tdQH/tomR3Dq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6Od66Vg1VMiehFYAQJHjxAAthmAebWkW4PJg9miULRr8PUM+royEodA
-wz3Z4UNHwJ5yf9fkuGMLNTMzZ9BFSeeSxqz48Qo+1cB8tRo3IInEkXqr+NmQ2KDa
-ys3giuZGjufX7NGW+17qETdcyj1roOyc63/1d+uQgSpPY8KAsmGPdNpj6o4FBycX
-rq47RH3q5SkB6vasJxfk2jfhUm2NCtQXAXIEyoZElBdHlVpD75wbMG+x9QkqW9J+
-hgqmjvLqC7FjERIn2VsSY6TGj0VOYT+x9jlPdLp/hFvuhFSSkOGekMqSOXtaznjS
-BS1qzd9sGBMDWuJZQm3jHLs7OLG1fjqb9SPXrGmytX3aFp6au0TnRvUD9LIVDljR
-4ZfrSkYV5lCttu+QgZ8pJiS3axuBDRmlFOltVs+MVnaGUrh6Vwd1YZkf0VbR4Xgo
-c0sbiMLqejC3BlACXMve07UGgx7rfScFRZh7YQ61OpofYLriWTEcoKw5ctZ06Xb6
-WEKYOIPidtxt7a7dQ6TJX5cd1NH0lvB63ltn4kmUc72D+QFZ1j7GKdV6cHKIN43x
-fqxPUJBK11JbGs2Vi3j1OGWqTm3B4Rv/9odYN6itbemMUbj9itJul7X9BH15mxnA
-KP6nGOzGbUdmLQ+HVbQkwSchA8ITEWyl1ZWSaruGgogYxE+vknSDoCAQoigxA/yf
-zgqF6zY3Brs=
-=JPxv
------END PGP SIGNATURE-----
-
---=-n6pr1gD8tdQH/tomR3Dq--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
