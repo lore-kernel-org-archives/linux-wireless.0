@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:19569 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755021AbYBOHBa (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:64175 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753233AbYBBDbg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 02:01:30 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 1/3] mac80211: better definition of mactime
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
-Date: Fri, 15 Feb 2008 16:01:16 +0900
-Message-ID: <20080215070116.32461.80795.stgit@one> (sfid-20080215_070134_026956_441F1D8B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 1 Feb 2008 22:31:36 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2006800pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 19:31:36 -0800 (PST)
+Subject: Re: wireless mini-summit agenda proposals?
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1201897773.7002.8.camel@localhost>
+References: <20080131162514.GC6413@tuxdriver.com>
+	 <1201882577.4188.68.camel@johannes.berg>
+	 <40f31dec0802011107n3389bbc5l2f43be0f6111d222@mail.gmail.com>
+	 (sfid-20080201_190744_758093_9B00D531)  <1201896674.4188.74.camel@johannes.berg>
+	 <1201897773.7002.8.camel@localhost>
+Content-Type: text/plain
+Date: Fri, 01 Feb 2008 19:32:32 -0800
+Message-Id: <1201923152.7002.23.camel@localhost> (sfid-20080202_033140_850389_8217C7E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-define mactime as the time when the first data symbol arrived at the HW. the
-old definition was questionable because 802.11 defines timestamp only for
-beacon and probe response frames, and there it means the timestamp field.
+On Fri, 2008-02-01 at 12:29 -0800, Luis Carlos Cobo wrote:
+> We've been a bit busy, with some luck we will send the second patchset
+> today.
 
-a stricter definition of mactime is necessary for correct merging of IBSS.
+We weren't that lucky after all :-)
 
-note that it is up to the driver to convert whatever its hardware returns to
-this definition. unfortunately we don't know for example when atheros hardware
-takes its rx timestamp exactly :(
+We have just released a fully functional mesh implementation [1], on top
+of current wireless-2.6/everything. However I did not have time to
+prepare the patches for the list, will do next Monday.
 
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
+[1]: http://o11s.org/trac/wiki/RELEASE_NOTES-0.2.0
 
- include/net/mac80211.h |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 460da54..1b807f4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -295,7 +295,8 @@ enum mac80211_rx_flags {
-  * The low-level driver should provide this information (the subset
-  * supported by hardware) to the 802.11 code with each received
-  * frame.
-- * @mactime: MAC timestamp as defined by 802.11
-+ * @mactime: value in microseconds of the 64-bit Time Synchronization Function
-+ * 	(TSF) timer when the first data symbol (MPDU) arrived at the hardware.
-  * @band: the active band when this frame was received
-  * @freq: frequency the radio was tuned to when receiving this frame, in MHz
-  * @ssi: signal strength when receiving this frame
 
