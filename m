@@ -1,87 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:45847 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755248AbYBGUxN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 15:53:13 -0500
-Date: Thu, 7 Feb 2008 12:48:02 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Michael@hera.kernel.org,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Buesch <mb@bu3sch.de>, Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 35/45] b43legacy: fix suspend/resume
-Message-ID: <20080207204802.GJ16389@suse.de> (sfid-20080207_205338_307126_48670967)
-References: <20080207204118.202098927@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207204549.GA16389@suse.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48652 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780AbYBBHV3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Feb 2008 02:21:29 -0500
+Subject: Re: mac80211 QoS/aggregation questions, thoughts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>, Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Patrick McHardy <kaber@trash.net>
+In-Reply-To: <40f31dec0802011840r56817691j3e74d3566f53bc28@mail.gmail.com> (sfid-20080202_024047_069925_BD0A9020)
+References: <1201882512.4188.66.camel@johannes.berg>
+	 <40f31dec0802011840r56817691j3e74d3566f53bc28@mail.gmail.com>
+	 (sfid-20080202_024047_069925_BD0A9020)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HsfRUSReCjzTwRVD7Bp4"
+Date: Sat, 02 Feb 2008 08:21:19 +0100
+Message-Id: <1201936879.4188.100.camel@johannes.berg> (sfid-20080202_072135_139221_6480F4DA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-------------------
-From: Stefano Brivio <stefano.brivio@polimi.it>
+--=-HsfRUSReCjzTwRVD7Bp4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-patch ada50731c0346bf900dc387edd3a6961297bf2d3 in mainline.
 
-This patch makes suspend/resume work with the b43legacy driver.
-We must not overwrite the MAC addresses in the init function, as this
-would also overwrite the MAC on resume. With an all-zero MAC the device
-firmware is not able to ACK any received packets anymore.
-Fix this by moving the initializion stuff that must be done on init but
-not on resume to the start function.
-Also zero out filter_flags to make sure we don't have some flags
-from a previous instance for a tiny timeframe until mac80211 reconfigures
-them.
+> ACK, btw why do we have a separate ht_bss_conf which is handled by
+> bss_info_changed instead of bss_info_changed or conf_ht ?
 
-This patch by Michael Buesch has been ported to b43legacy.
+Historic reasons, it'll be gone soon I expect.
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> ACK and btw let's also rename them, DATA* is not very informative,
+> something like IEEE80211_TX_QUEUE_BE would be better imho
 
----
- drivers/net/wireless/b43legacy/main.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+Well, I'm not entirely sure about that yet, hw with more queues might
+allow people to configure them in a non-WMM way.
 
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3215,8 +3215,6 @@ static int b43legacy_wireless_core_init(
- 	b43legacy_shm_write16(dev, B43legacy_SHM_SHARED, 0x0414, 0x01F4);
- 
- 	ssb_bus_powerup(bus, 1); /* Enable dynamic PCTL */
--	memset(wl->bssid, 0, ETH_ALEN);
--	memset(wl->mac_addr, 0, ETH_ALEN);
- 	b43legacy_upload_card_macaddress(dev);
- 	b43legacy_security_init(dev);
- 	b43legacy_rng_init(wl);
-@@ -3311,6 +3309,13 @@ static int b43legacy_start(struct ieee80
- 	int did_init = 0;
- 	int err = 0;
- 
-+	/* Kill all old instance specific information to make sure
-+	 * the card won't use it in the short timeframe between start
-+	 * and mac80211 reconfiguring it. */
-+	memset(wl->bssid, 0, ETH_ALEN);
-+	memset(wl->mac_addr, 0, ETH_ALEN);
-+	wl->filter_flags = 0;
-+
- 	mutex_lock(&wl->mutex);
- 
- 	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED) {
+johannes
 
--- 
+--=-HsfRUSReCjzTwRVD7Bp4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6QZ7qVg1VMiehFYAQLdzA/+Ljiw8JqZ8DXAijyFKrFkGOXiQp/DG7kD
+B0vqBpnpxBuE8s7bdiomIgJodmSRe58I7Tz9OoFDu2jO4ViAxvK/D9LzfgOG6Idv
+baOyMyO/8WaVzieT64AiQ00OZJSVwpR357vK97vCb2OD7eGmnbXF86qMNa9L66N8
+zpPBHlP6PxMgxuOWq9H9ipeSBWFfC5qS0wCsLOUmVLQpQNxTV/MdG9WVaqr8YsOR
+d9hHgrDsRt4G+2SsR8d5UgmmVhbM3lmN1dc7TWlhusr0EoP4ChDuAug4v5jsDRjH
+z4QL0Fw6OW68BM6T+2W9XSohYTdp5/H0qHMpDy3ZHdR6PKNk2sNoF2961GidtkSn
+3Y3pPHsHmqNWfL07ZQtrZoCn/zHpBNpTqC8AxvrBYMxmPgrbmIjkyn8YRJ2FtWBS
+7mjhBJkOv90MLQz86vbxtc29RmbaSUy+LKTxGx6OZqNorwPYiYxZ2Rq/MF3tthOR
+vqMXZhIReJQ4MimRuArU92hXz/AvpNjYXoPKOV2g58HT8N1NY9vnj2dgoByQuk2p
+WSLi3/HmUQQYDy4D6TaRvaaSM+mdNha0KZWwvc3ysFuPdcMHHPLtUHQQ5zA5q67c
+Tpf03TEzMai15IiWxVnnOI/QwOR+ztDwJz0wwtVFII/R1WNPaKYsenixt6W5BEjK
+Id5gFg8RVzc=
+=m7c0
+-----END PGP SIGNATURE-----
+
+--=-HsfRUSReCjzTwRVD7Bp4--
+
