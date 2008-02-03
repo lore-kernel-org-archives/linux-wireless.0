@@ -1,777 +1,717 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983AbYBWOVJ (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:28399 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbYBCO4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 09:21:09 -0500
-Message-Id: <20080223142011.981052000@sipsolutions.net> (sfid-20080223_142119_125584_080F3337)
-References: <20080223141703.194775000@sipsolutions.net>
-Date: Sat, 23 Feb 2008 15:17:11 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 08/18] mac80211: mesh data structures and first mesh changes
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 09:56:51 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2708585pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:56:50 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 15/19] rt2x00: Enable LED class support for rt2500usb/rt73usb
+Date: Sun, 3 Feb 2008 15:54:11 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802031541.52167.IvDoorn@gmail.com>
+In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802031554.11610.IvDoorn@gmail.com> (sfid-20080203_145658_047384_FB079D2C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis Carlos Cobo <luisca@cozybit.com>
+Add kerneldoc for vendor request functions in rt2x00usb.
+Add asynchroneous vendor request function in rt2x00usb.
 
-Includes integration in struct sta_info of mesh peer link elements, previously
-on their own mesh peer link table.
+With the availability of the asynchroneuous vendor request
+we can now enable LED class support for rt2500usb and rt73usb.
+Since LED handling is not important, it doesn't really matter
+if a register call fails (This solution is better then no
+LED class support at all).
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/cfg.c              |    2 
- net/mac80211/ieee80211.c        |    2 
- net/mac80211/ieee80211_i.h      |  170 +++++++++++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_iface.c  |   62 ++++++++++++++
- net/mac80211/ieee80211_ioctl.c  |    1 
- net/mac80211/ieee80211_sta.c    |   70 ++++++----------
- net/mac80211/rc80211_pid_algo.c |   14 +++
- net/mac80211/sta_info.c         |   42 +++++++++
- net/mac80211/sta_info.h         |   30 +++++++
- net/mac80211/util.c             |   51 ++++++++++++
- 10 files changed, 394 insertions(+), 50 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig      |   14 ++
+ drivers/net/wireless/rt2x00/rt2500usb.c  |   20 ++-
+ drivers/net/wireless/rt2x00/rt2x00leds.c |  217 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00leds.h |   63 +++++++++
+ drivers/net/wireless/rt2x00/rt2x00usb.c  |   52 +++++++
+ drivers/net/wireless/rt2x00/rt2x00usb.h  |  129 +++++++++++++-----
+ drivers/net/wireless/rt2x00/rt73usb.c    |   21 ++--
+ 7 files changed, 463 insertions(+), 53 deletions(-)
+ create mode 100644 drivers/net/wireless/rt2x00/rt2x00leds.c
+ create mode 100644 drivers/net/wireless/rt2x00/rt2x00leds.h
 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-02-23 14:58:05.000000000 +0100
-@@ -90,6 +90,12 @@ struct ieee80211_sta_bss {
- 	size_t wmm_ie_len;
- 	u8 *ht_ie;
- 	size_t ht_ie_len;
-+#ifdef CONFIG_MAC80211_MESH
-+	u8 *mesh_id;
-+	size_t mesh_id_len;
-+#endif
-+	/* mesh_cfg left out the ifdef to reduce clutter on bss handling */
-+	u8 *mesh_cfg;
- #define IEEE80211_MAX_SUPP_RATES 32
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 	size_t supp_rates_len;
-@@ -227,6 +233,43 @@ struct ieee80211_if_vlan {
- 	struct list_head list;
- };
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 88a6ef6..51adb2f 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -133,6 +133,13 @@ config RT2500USB
  
-+#ifdef CONFIG_MAC80211_MESH
-+struct mesh_stats {
-+	__u32 fwded_frames;		/* Mesh forwarded frames */
-+	__u32 dropped_frames_ttl;	/* Not transmitted since mesh_ttl == 0*/
-+	__u32 dropped_frames_no_route;	/* Not transmitted, no route found */
-+	atomic_t estab_plinks;
-+};
+ 	  When compiled as a module, this driver will be called "rt2500usb.ko".
+ 
++config RT2500USB_LEDS
++	bool "RT2500 leds support"
++	depends on RT2500USB
++	select RT2X00_LIB_LEDS
++	---help---
++	  This adds support for led triggers provided my mac80211.
 +
-+#define PREQ_Q_F_START		0x1
-+#define PREQ_Q_F_REFRESH	0x2
-+struct mesh_preq_queue {
-+	struct list_head list;
-+	u8 dst[ETH_ALEN];
-+	u8 flags;
-+};
+ config RT73USB
+ 	tristate "Ralink rt73 usb support"
+ 	depends on RT2X00 && USB
+@@ -143,6 +150,13 @@ config RT73USB
+ 
+ 	  When compiled as a module, this driver will be called "rt73usb.ko".
+ 
++config RT73USB_LEDS
++	bool "RT73 leds support"
++	depends on RT73USB
++	select RT2X00_LIB_LEDS
++	---help---
++	  This adds support for led triggers provided my mac80211.
 +
-+
-+struct mesh_config {
-+	/* Timeouts in ms */
-+	/* Mesh plink management parameters */
-+	u16 dot11MeshRetryTimeout;
-+	u16 dot11MeshConfirmTimeout;
-+	u16 dot11MeshHoldingTimeout;
-+	u16 dot11MeshMaxPeerLinks;
-+	u8  dot11MeshMaxRetries;
-+	u8  dot11MeshTTL;
-+	bool auto_open_plinks;
-+	/* HWMP parameters */
-+	u32 dot11MeshHWMPactivePathTimeout;
-+	u16 dot11MeshHWMPpreqMinInterval;
-+	u16 dot11MeshHWMPnetDiameterTraversalTime;
-+	u8  dot11MeshHWMPmaxPREQretries;
-+	u32 path_refresh_time;
-+	u16 min_discovery_timeout;
-+};
-+#endif
-+
- /* flags used in struct ieee80211_if_sta.flags */
- #define IEEE80211_STA_SSID_SET		BIT(0)
- #define IEEE80211_STA_BSSID_SET		BIT(1)
-@@ -245,7 +288,8 @@ struct ieee80211_if_sta {
- 	enum {
- 		IEEE80211_DISABLED, IEEE80211_AUTHENTICATE,
- 		IEEE80211_ASSOCIATE, IEEE80211_ASSOCIATED,
--		IEEE80211_IBSS_SEARCH, IEEE80211_IBSS_JOINED
-+		IEEE80211_IBSS_SEARCH, IEEE80211_IBSS_JOINED,
-+		IEEE80211_MESH_UP
- 	} state;
- 	struct timer_list timer;
- 	struct work_struct work;
-@@ -254,6 +298,34 @@ struct ieee80211_if_sta {
- 	size_t ssid_len;
- 	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
- 	size_t scan_ssid_len;
-+#ifdef CONFIG_MAC80211_MESH
-+	struct timer_list mesh_path_timer;
-+	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
-+	bool accepting_plinks;
-+	size_t mesh_id_len;
-+	/* Active Path Selection Protocol Identifier */
-+	u8 mesh_pp_id[4];
-+	/* Active Path Selection Metric Identifier */
-+	u8 mesh_pm_id[4];
-+	/* Congestion Control Mode Identifier */
-+	u8 mesh_cc_id[4];
-+	/* Local mesh Destination Sequence Number */
-+	u32 dsn;
-+	/* Last used PREQ ID */
-+	u32 preq_id;
-+	atomic_t mpaths;
-+	/* Timestamp of last DSN update */
-+	unsigned long last_dsn_update;
-+	/* Timestamp of last DSN sent */
-+	unsigned long last_preq;
-+	struct mesh_rmc *rmc;
-+	spinlock_t mesh_preq_queue_lock;
-+	struct mesh_preq_queue preq_queue;
-+	int preq_queue_len;
-+	struct mesh_stats mshstats;
-+	struct mesh_config mshcfg;
-+	u8 mesh_seqnum[3];
-+#endif
- 	u16 aid;
- 	u16 ap_capab, capab;
- 	u8 *extra_ie; /* to be added to the end of AssocReq */
-@@ -286,6 +358,7 @@ struct ieee80211_if_sta {
- 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
- 
- 	int wmm_last_param_set;
-+	int num_beacons; /* number of TXed beacon frames by this STA */
- };
- 
- 
-@@ -365,6 +438,7 @@ struct ieee80211_sub_if_data {
- 			struct dentry *auth_alg;
- 			struct dentry *auth_transaction;
- 			struct dentry *flags;
-+			struct dentry *num_beacons_sta;
- 		} sta;
- 		struct {
- 			struct dentry *channel_use;
-@@ -390,6 +464,35 @@ struct ieee80211_sub_if_data {
- 		} monitor;
- 		struct dentry *default_key;
- 	} debugfs;
-+
-+#ifdef CONFIG_MAC80211_MESH
-+	struct dentry *mesh_stats_dir;
-+	struct {
-+		struct dentry *fwded_frames;
-+		struct dentry *dropped_frames_ttl;
-+		struct dentry *dropped_frames_no_route;
-+		struct dentry *estab_plinks;
-+	struct timer_list mesh_path_timer;
-+	} mesh_stats;
-+
-+	struct dentry *mesh_config_dir;
-+	struct {
-+		struct dentry *dot11MeshRetryTimeout;
-+		struct dentry *dot11MeshConfirmTimeout;
-+		struct dentry *dot11MeshHoldingTimeout;
-+		struct dentry *dot11MeshMaxRetries;
-+		struct dentry *dot11MeshTTL;
-+		struct dentry *auto_open_plinks;
-+		struct dentry *dot11MeshMaxPeerLinks;
-+		struct dentry *dot11MeshHWMPactivePathTimeout;
-+		struct dentry *dot11MeshHWMPpreqMinInterval;
-+		struct dentry *dot11MeshHWMPnetDiameterTraversalTime;
-+		struct dentry *dot11MeshHWMPmaxPREQretries;
-+		struct dentry *path_refresh_time;
-+		struct dentry *min_discovery_timeout;
-+	} mesh_config;
-+#endif
-+
- #endif
- 	/* must be last, dynamically sized area in this! */
- 	struct ieee80211_vif vif;
-@@ -617,6 +720,57 @@ struct ieee80211_ra_tid {
- 	u16 tid;
- };
- 
-+/* Parsed Information Elements */
-+struct ieee802_11_elems {
-+	/* pointers to IEs */
-+	u8 *ssid;
-+	u8 *supp_rates;
-+	u8 *fh_params;
-+	u8 *ds_params;
-+	u8 *cf_params;
-+	u8 *tim;
-+	u8 *ibss_params;
-+	u8 *challenge;
-+	u8 *wpa;
-+	u8 *rsn;
-+	u8 *erp_info;
-+	u8 *ext_supp_rates;
-+	u8 *wmm_info;
-+	u8 *wmm_param;
-+	u8 *ht_cap_elem;
-+	u8 *ht_info_elem;
-+	u8 *mesh_config;
-+	u8 *mesh_id;
-+	u8 *peer_link;
-+	u8 *preq;
-+	u8 *prep;
-+	u8 *perr;
-+
-+	/* length of them, respectively */
-+	u8 ssid_len;
-+	u8 supp_rates_len;
-+	u8 fh_params_len;
-+	u8 ds_params_len;
-+	u8 cf_params_len;
-+	u8 tim_len;
-+	u8 ibss_params_len;
-+	u8 challenge_len;
-+	u8 wpa_len;
-+	u8 rsn_len;
-+	u8 erp_info_len;
-+	u8 ext_supp_rates_len;
-+	u8 wmm_info_len;
-+	u8 wmm_param_len;
-+	u8 ht_cap_elem_len;
-+	u8 ht_info_elem_len;
-+	u8 mesh_config_len;
-+	u8 mesh_id_len;
-+	u8 peer_link_len;
-+	u8 preq_len;
-+	u8 prep_len;
-+	u8 perr_len;
-+};
-+
- static inline struct ieee80211_local *hw_to_local(
- 	struct ieee80211_hw *hw)
- {
-@@ -686,6 +840,7 @@ int ieee80211_set_compression(struct iee
- 			      struct net_device *dev, struct sta_info *sta);
- int ieee80211_set_freq(struct ieee80211_local *local, int freq);
- /* ieee80211_sta.c */
-+#define IEEE80211_FC(type, stype) cpu_to_le16(type | stype)
- void ieee80211_sta_timer(unsigned long data);
- void ieee80211_sta_work(struct work_struct *work);
- void ieee80211_sta_scan_work(struct work_struct *work);
-@@ -726,9 +881,20 @@ void ieee80211_sta_stop_rx_ba_session(st
- 				u16 tid, u16 initiator, u16 reason);
- void sta_rx_agg_session_timer_expired(unsigned long data);
- void sta_addba_resp_timer_expired(unsigned long data);
-+u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
-+			    struct ieee802_11_elems *elems,
-+			    enum ieee80211_band band);
-+void ieee80211_start_mesh(struct net_device *dev);
-+void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
-+		int encrypt);
-+void ieee802_11_parse_elems(u8 *start, size_t len,
-+				   struct ieee802_11_elems *elems);
-+
-+
- /* ieee80211_iface.c */
- int ieee80211_if_add(struct net_device *dev, const char *name,
--		     struct net_device **new_dev, int type);
-+		     struct net_device **new_dev, int type,
-+		     struct vif_params *params);
- void ieee80211_if_set_type(struct net_device *dev, int type);
- void ieee80211_if_reinit(struct net_device *dev);
- void __ieee80211_if_del(struct ieee80211_local *local,
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-02-23 14:57:46.000000000 +0100
-@@ -15,6 +15,9 @@
- #include "ieee80211_i.h"
- #include "sta_info.h"
- #include "debugfs_netdev.h"
-+#ifdef CONFIG_MAC80211_MESH
-+#include "mesh.h"
-+#endif
- 
- void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata)
- {
-@@ -39,7 +42,8 @@ static void ieee80211_if_sdata_deinit(st
- 
- /* Must be called with rtnl lock held. */
- int ieee80211_if_add(struct net_device *dev, const char *name,
--		     struct net_device **new_dev, int type)
-+		     struct net_device **new_dev, int type,
-+		     struct vif_params *params)
- {
- 	struct net_device *ndev;
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-@@ -78,6 +82,15 @@ int ieee80211_if_add(struct net_device *
- 	ieee80211_debugfs_add_netdev(sdata);
- 	ieee80211_if_set_type(ndev, type);
- 
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT &&
-+	    params && params->mesh_id_len) {
-+		sdata->u.sta.mesh_id_len = params->mesh_id_len;
-+		memcpy(sdata->u.sta.mesh_id, params->mesh_id,
-+		       params->mesh_id_len);
-+	}
-+#endif
-+
- 	/* we're under RTNL so all this is fine */
- 	if (unlikely(local->reg_state == IEEE80211_DEV_UNREGISTERED)) {
- 		__ieee80211_if_del(local, sdata);
-@@ -134,6 +147,7 @@ void ieee80211_if_set_type(struct net_de
- 		sdata->bss = &sdata->u.ap;
- 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
- 		break;
-+	case IEEE80211_IF_TYPE_MESH_POINT:
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS: {
- 		struct ieee80211_sub_if_data *msdata;
-@@ -155,6 +169,48 @@ void ieee80211_if_set_type(struct net_de
- 
- 		msdata = IEEE80211_DEV_TO_SUB_IF(sdata->local->mdev);
- 		sdata->bss = &msdata->u.ap;
-+
-+#ifdef CONFIG_MAC80211_MESH
-+		if (type == IEEE80211_IF_TYPE_MESH_POINT) {
-+			ifsta->mshcfg.dot11MeshRetryTimeout = MESH_RET_T;
-+			ifsta->mshcfg.dot11MeshConfirmTimeout = MESH_CONF_T;
-+			ifsta->mshcfg.dot11MeshHoldingTimeout = MESH_HOLD_T;
-+			ifsta->mshcfg.dot11MeshMaxRetries = MESH_MAX_RETR;
-+			ifsta->mshcfg.dot11MeshTTL = MESH_TTL;
-+			ifsta->mshcfg.auto_open_plinks = true;
-+			ifsta->mshcfg.dot11MeshMaxPeerLinks =
-+				MESH_MAX_ESTAB_PLINKS;
-+			ifsta->mshcfg.dot11MeshHWMPactivePathTimeout =
-+				MESH_PATH_TIMEOUT;
-+			ifsta->mshcfg.dot11MeshHWMPpreqMinInterval =
-+				MESH_PREQ_MIN_INT;
-+			ifsta->mshcfg.dot11MeshHWMPnetDiameterTraversalTime =
-+				MESH_DIAM_TRAVERSAL_TIME;
-+			ifsta->mshcfg.dot11MeshHWMPmaxPREQretries =
-+				MESH_MAX_PREQ_RETRIES;
-+			ifsta->mshcfg.path_refresh_time =
-+				MESH_PATH_REFRESH_TIME;
-+			ifsta->mshcfg.min_discovery_timeout =
-+				MESH_MIN_DISCOVERY_TIMEOUT;
-+			ifsta->accepting_plinks = true;
-+			ifsta->preq_id = 0;
-+			ifsta->dsn = 0;
-+			atomic_set(&ifsta->mpaths, 0);
-+			mesh_rmc_init(dev);
-+			ifsta->last_preq = jiffies;
-+			/* Allocate all mesh structures when creating the first
-+			 * mesh interface.
-+			 */
-+			if (!mesh_allocated)
-+				ieee80211s_init();
-+			mesh_ids_set_default(ifsta);
-+			setup_timer(&ifsta->mesh_path_timer,
-+				    ieee80211_mesh_path_timer,
-+				    (unsigned long) sdata);
-+			INIT_LIST_HEAD(&ifsta->preq_queue.list);
-+			spin_lock_init(&ifsta->mesh_preq_queue_lock);
-+		}
-+#endif
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
-@@ -232,6 +288,10 @@ void ieee80211_if_reinit(struct net_devi
- 		}
- 		break;
- 	case IEEE80211_IF_TYPE_MESH_POINT:
-+#ifdef CONFIG_MAC80211_MESH
-+		mesh_rmc_free(dev);
-+#endif
-+		/* fall through */
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
- 		kfree(sdata->u.sta.extra_ie);
---- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/ieee80211_ioctl.c	2008-02-23 14:52:04.000000000 +0100
-@@ -519,6 +519,7 @@ static int ieee80211_ioctl_siwscan(struc
- 
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_STA &&
- 	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
-+	    sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT &&
- 	    sdata->vif.type != IEEE80211_IF_TYPE_AP)
- 		return -EOPNOTSUPP;
- 
---- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/rc80211_pid_algo.c	2008-02-23 14:57:45.000000000 +0100
-@@ -15,6 +15,9 @@
- #include <linux/debugfs.h>
- #include <net/mac80211.h>
- #include "ieee80211_rate.h"
-+#ifdef CONFIG_MAC80211_MESH
-+#include "mesh.h"
-+#endif
- 
- #include "rc80211_pid.h"
- 
-@@ -148,6 +151,9 @@ static void rate_control_pid_sample(stru
- 				    struct ieee80211_local *local,
- 				    struct sta_info *sta)
- {
-+#ifdef CONFIG_MAC80211_MESH
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
-+#endif
- 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
- 	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
- 	struct ieee80211_supported_band *sband;
-@@ -178,7 +184,14 @@ static void rate_control_pid_sample(stru
- 		pf = spinfo->last_pf;
- 	else {
- 		pf = spinfo->tx_num_failed * 100 / spinfo->tx_num_xmit;
-+#ifdef CONFIG_MAC80211_MESH
-+		if (pf == 100 &&
-+		    sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
-+			mesh_plink_broken(sta);
-+#endif
- 		pf <<= RC_PID_ARITH_SHIFT;
-+		sta->fail_avg = ((pf + (spinfo->last_pf << 3)) / 9)
-+					>> RC_PID_ARITH_SHIFT;
- 	}
- 
- 	spinfo->tx_num_xmit = 0;
-@@ -360,6 +373,7 @@ static void rate_control_pid_rate_init(v
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	sta->txrate_idx = rate_lowest_index(local, sband, sta);
-+	sta->fail_avg = 0;
- }
- 
- static void *rate_control_pid_alloc(struct ieee80211_local *local)
---- everything.orig/net/mac80211/sta_info.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-23 14:57:46.000000000 +0100
-@@ -21,6 +21,9 @@
- #include "ieee80211_rate.h"
- #include "sta_info.h"
- #include "debugfs_sta.h"
-+#ifdef CONFIG_MAC80211_MESH
-+#include "mesh.h"
-+#endif
- 
- /* Caller must hold local->sta_lock */
- static void sta_info_hash_add(struct ieee80211_local *local,
-@@ -84,6 +87,27 @@ struct sta_info *sta_info_get(struct iee
- }
- EXPORT_SYMBOL(sta_info_get);
- 
-+struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int idx,
-+				     struct net_device *dev)
-+{
-+	struct sta_info *sta;
-+	int i = 0;
-+
-+	read_lock_bh(&local->sta_lock);
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+		if (i < idx) {
-+			++i;
-+			continue;
-+		} else if (!dev || dev == sta->dev) {
-+			__sta_info_get(sta);
-+			read_unlock_bh(&local->sta_lock);
-+			return sta;
-+		}
-+	}
-+	read_unlock_bh(&local->sta_lock);
-+
-+	return NULL;
-+}
- 
- static void sta_info_release(struct kref *kref)
- {
-@@ -284,12 +308,19 @@ void sta_info_remove(struct sta_info *st
- 		__sta_info_clear_tim_bit(sdata->bss, sta);
- 	}
- 	local->num_sta--;
-+
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
-+		mesh_accept_plinks_update(sdata->dev);
-+#endif
- }
- 
- void sta_info_free(struct sta_info *sta)
- {
- 	struct sk_buff *skb;
- 	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
-+
- 	DECLARE_MAC_BUF(mac);
- 
- 	might_sleep();
-@@ -298,6 +329,14 @@ void sta_info_free(struct sta_info *sta)
- 	sta_info_remove(sta);
- 	write_unlock_bh(&local->sta_lock);
- 
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
-+		spin_lock_bh(&sta->plink_lock);
-+		mesh_plink_deactivate(sta);
-+		spin_unlock_bh(&sta->plink_lock);
-+	}
-+#endif
-+
- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
- 		local->total_ps_buffered--;
- 		dev_kfree_skb(skb);
-@@ -315,9 +354,6 @@ void sta_info_free(struct sta_info *sta)
- 	sta->key = NULL;
- 
- 	if (local->ops->sta_notify) {
--		struct ieee80211_sub_if_data *sdata;
+ config RT2X00_LIB_DEBUGFS
+ 	bool "Ralink debugfs support"
+ 	depends on RT2X00_LIB && MAC80211_DEBUGFS
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index f10b574..7c48c10 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -291,17 +291,16 @@ static void rt2500usb_led_brightness(struct led_classdev *led_cdev,
+ 	unsigned int enabled = brightness != LED_OFF;
+ 	unsigned int activity =
+ 	    led->rt2x00dev->led_flags & LED_SUPPORT_ACTIVITY;
+-	u16 reg;
 -
--		sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+-	rt2500usb_register_read(led->rt2x00dev, MAC_CSR20, &reg);
  
- 		if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
- 			sdata = sdata->u.vlan.ap;
---- everything.orig/net/mac80211/sta_info.h	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-23 14:57:45.000000000 +0100
-@@ -107,6 +107,18 @@ struct tid_ampdu_rx {
- 	struct timer_list session_timer;
- };
+ 	if (led->type == LED_TYPE_RADIO || led->type == LED_TYPE_ASSOC) {
+-		rt2x00_set_field16(&reg, MAC_CSR20_LINK, enabled);
+-		rt2x00_set_field16(&reg, MAC_CSR20_ACTIVITY,
+-				   enabled && activity);
++		rt2x00_set_field16(&led->rt2x00dev->led_mcu_reg,
++				   MAC_CSR20_LINK, enabled);
++		rt2x00_set_field16(&led->rt2x00dev->led_mcu_reg,
++				   MAC_CSR20_ACTIVITY, enabled && activity);
+ 	}
  
-+#ifdef CONFIG_MAC80211_MESH
-+enum plink_state {
-+	LISTEN,
-+	OPN_SNT,
-+	OPN_RCVD,
-+	CNF_RCVD,
-+	ESTAB,
-+	HOLDING,
-+	BLOCKED
-+};
-+#endif
-+
- /**
-  * struct sta_ampdu_mlme - STA aggregation information.
-  *
-@@ -144,6 +156,8 @@ struct sta_info {
- 	unsigned long rx_bytes, tx_bytes;
- 	unsigned long tx_retry_failed, tx_retry_count;
- 	unsigned long tx_filtered_count;
-+	/* moving percentage of failed MSDUs */
-+	unsigned int fail_avg;
- 
- 	unsigned int wep_weak_iv_count; /* number of RX frames with weak IV */
- 
-@@ -194,6 +208,20 @@ struct sta_info {
- 	struct sta_ampdu_mlme ampdu_mlme;
- 	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
- 	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
-+#ifdef CONFIG_MAC80211_MESH
-+	/* mesh peer link attributes */
-+	__le16 llid;		/* Local link ID */
-+	__le16 plid;		/* Peer link ID */
-+	__le16 reason;		/* Buffer for cancel reason on HOLDING state */
-+	enum plink_state plink_state;
-+	u32 plink_timeout;
-+	struct timer_list plink_timer;
-+	u8 plink_retries;	/* Retries in establishment */
-+	bool ignore_plink_timer;
-+	spinlock_t plink_lock;	/* For peer_state reads / updates and other
-+				   updates in the structure. Ensures robust
-+				   transitions for the peerlink FSM */
-+#endif
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
-@@ -238,6 +266,8 @@ static inline void __sta_info_get(struct
+-	rt2500usb_register_write(led->rt2x00dev, MAC_CSR20, reg);
++	rt2x00usb_vendor_request_async(led->rt2x00dev, USB_SINGLE_WRITE,
++				       MAC_CSR20, led->rt2x00dev->led_mcu_reg);
  }
- 
- struct sta_info * sta_info_get(struct ieee80211_local *local, u8 *addr);
-+struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int idx,
-+				      struct net_device *dev);
- void sta_info_put(struct sta_info *sta);
- struct sta_info *sta_info_add(struct ieee80211_local *local,
- 			      struct net_device *dev, u8 *addr, gfp_t gfp);
---- everything.orig/net/mac80211/util.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/util.c	2008-02-23 14:57:45.000000000 +0100
-@@ -26,6 +26,9 @@
- 
- #include "ieee80211_i.h"
- #include "ieee80211_rate.h"
-+#ifdef CONFIG_MAC80211_MESH
-+#include "mesh.h"
-+#endif
- #include "wme.h"
- 
- /* privid for wiphys to determine whether they belong to us or not */
-@@ -146,6 +149,26 @@ int ieee80211_get_hdrlen_from_skb(const 
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
-+#ifdef CONFIG_MAC80211_MESH
-+int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
-+{
-+	int ae = meshhdr->flags & IEEE80211S_FLAGS_AE;
-+	/* 7.1.3.5a.2 */
-+	switch (ae) {
-+	case 0:
-+		return 5;
-+	case 1:
-+		return 11;
-+	case 2:
-+		return 17;
-+	case 3:
-+		return 23;
-+	default:
-+		return 5;
-+	}
-+}
-+#endif
+ #else
+ #define rt2500usb_led_brightness	NULL
+@@ -1373,6 +1372,13 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00dev->led_flags = LED_SUPPORT_RADIO;
+ 		break;
+ 	}
 +
- void ieee80211_tx_set_iswep(struct ieee80211_txrx_data *tx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
-@@ -395,3 +418,31 @@ void ieee80211_iterate_active_interfaces
- 	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
++	/*
++	 * Store the current led register value, we need it later
++	 * in set_brightness but that is called in irq context which
++	 * means we can't use rt2500usb_register_read() at that time.
++	 */
++	rt2500usb_register_read(rt2x00dev, MAC_CSR20, &rt2x00dev->led_mcu_reg);
+ #endif /* CONFIG_RT2500USB_LEDS */
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
+new file mode 100644
+index 0000000..9c29d17
+--- /dev/null
++++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
+@@ -0,0 +1,217 @@
++/*
++	Copyright (C) 2004 - 2008 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
 +
-+#ifdef CONFIG_MAC80211_MESH
-+/**
-+ * ieee80211_new_mesh_header - create a new mesh header
-+ * @meshhdr:    uninitialized mesh header
-+ * @sdata:	mesh interface to be used
-+ *
-+ * Return the header length.
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 + */
-+int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
-+		struct ieee80211_sub_if_data *sdata)
++
++/*
++	Module: rt2x00lib
++	Abstract: rt2x00 led specific routines.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++
++#include "rt2x00.h"
++#include "rt2x00lib.h"
++
++void rt2x00leds_led_quality(struct rt2x00_dev *rt2x00dev, int rssi)
 +{
-+	meshhdr->flags = 0;
-+	meshhdr->ttl = sdata->u.sta.mshcfg.dot11MeshTTL;
++	if (!rt2x00dev->trigger_qual.registered)
++		return;
 +
-+	meshhdr->seqnum[0] = sdata->u.sta.mesh_seqnum[0]++;
-+	meshhdr->seqnum[1] = sdata->u.sta.mesh_seqnum[1];
-+	meshhdr->seqnum[2] = sdata->u.sta.mesh_seqnum[2];
++	/*
++	 * Led handling requires a positive value for the rssi,
++	 * to do that correctly we need to add the correction.
++	 */
++	rssi += rt2x00dev->rssi_offset;
 +
-+	if (sdata->u.sta.mesh_seqnum[0] == 0) {
-+		sdata->u.sta.mesh_seqnum[1]++;
-+		if (sdata->u.sta.mesh_seqnum[1] == 0)
-+			sdata->u.sta.mesh_seqnum[2]++;
++	/*
++	 * Get the rssi level, this is used to convert the rssi
++	 * to a LED value inside the range LED_OFF - LED_FULL.
++	 */
++	if (rssi <= 30)
++		rssi = 0;
++	else if (rssi <= 39)
++		rssi = 1;
++	else if (rssi <= 49)
++		rssi = 2;
++	else if (rssi <= 53)
++		rssi = 3;
++	else if (rssi <= 63)
++		rssi = 4;
++	else
++		rssi = 5;
++
++	/*
++	 * Note that we must _not_ send LED_OFF since the driver
++	 * is going to calculate the value and might use it in a
++	 * division.
++	 */
++	led_trigger_event(&rt2x00dev->trigger_qual.trigger,
++			  ((LED_FULL / 6) * rssi) + 1);
++}
++
++static int rt2x00leds_register_trigger(struct rt2x00_dev *rt2x00dev,
++				       struct rt2x00_trigger *trigger,
++				       const char *name)
++{
++	int retval;
++
++	trigger->trigger.name = name;
++	retval = led_trigger_register(&trigger->trigger);
++	if (retval) {
++		ERROR(rt2x00dev, "Failed to register led trigger.\n");
++		return retval;
 +	}
 +
-+	return 5;
++	trigger->registered = 1;
++
++	return 0;
 +}
-+#endif
---- everything.orig/net/mac80211/ieee80211.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-23 14:57:46.000000000 +0100
-@@ -1663,7 +1663,7 @@ int ieee80211_register_hw(struct ieee802
++
++static int rt2x00leds_register_led(struct rt2x00_dev *rt2x00dev,
++				   struct rt2x00_led *led,
++				   enum led_type type,
++				   const char *name, char *trigger)
++{
++	struct device *device = wiphy_dev(rt2x00dev->hw->wiphy);
++	int retval;
++
++	led->led_dev.name = name;
++	led->led_dev.brightness_set = rt2x00dev->ops->lib->led_brightness;
++	led->led_dev.default_trigger = trigger;
++
++	retval = led_classdev_register(device, &led->led_dev);
++	if (retval) {
++		ERROR(rt2x00dev, "Failed to register led handler.\n");
++		return retval;
++	}
++
++	led->rt2x00dev = rt2x00dev;
++	led->type = type;
++	led->registered = 1;
++
++	return 0;
++}
++
++int rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
++{
++	char *trigger;
++	char dev_name[16];
++	char name[32];
++	int retval;
++
++	if (!rt2x00dev->ops->lib->led_brightness)
++		return 0;
++
++	snprintf(dev_name, sizeof(dev_name), "%s-%s",
++		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
++
++	if (rt2x00dev->led_flags & LED_SUPPORT_RADIO) {
++		trigger = ieee80211_get_radio_led_name(rt2x00dev->hw);
++		snprintf(name, sizeof(name), "%s:radio", dev_name);
++
++		retval = rt2x00leds_register_led(rt2x00dev,
++						 &rt2x00dev->led_radio,
++						 LED_TYPE_RADIO,
++						 name, trigger);
++		if (retval)
++			goto exit_fail;
++	}
++
++	if (rt2x00dev->led_flags & LED_SUPPORT_ASSOC) {
++		trigger = ieee80211_get_assoc_led_name(rt2x00dev->hw);
++		snprintf(name, sizeof(name), "%s:assoc", dev_name);
++
++		retval = rt2x00leds_register_led(rt2x00dev,
++						 &rt2x00dev->led_assoc,
++						 LED_TYPE_ASSOC,
++						 name, trigger);
++		if (retval)
++			goto exit_fail;
++	}
++
++	if (rt2x00dev->led_flags & LED_SUPPORT_QUALITY) {
++		snprintf(name, sizeof(name), "%s:quality", dev_name);
++
++		retval = rt2x00leds_register_trigger(rt2x00dev,
++						     &rt2x00dev->trigger_qual,
++						     name);
++
++		retval = rt2x00leds_register_led(rt2x00dev,
++						 &rt2x00dev->led_qual,
++						 LED_TYPE_QUALITY,
++						 name, name);
++		if (retval)
++			goto exit_fail;
++	}
++
++	return 0;
++
++exit_fail:
++	rt2x00leds_unregister(rt2x00dev);
++	return retval;
++}
++
++static void rt2x00leds_unregister_trigger(struct rt2x00_trigger *trigger)
++{
++	if (!trigger->registered)
++		return;
++
++	led_trigger_unregister(&trigger->trigger);
++	trigger->registered = 0;
++}
++
++static void rt2x00leds_unregister_led(struct rt2x00_led *led)
++{
++	if (!led->registered)
++		return;
++
++	led_classdev_unregister(&led->led_dev);
++
++	led->led_dev.brightness_set(&led->led_dev, LED_OFF);
++	led->registered = 0;
++}
++
++void rt2x00leds_unregister(struct rt2x00_dev *rt2x00dev)
++{
++	rt2x00leds_unregister_trigger(&rt2x00dev->trigger_qual);
++	rt2x00leds_unregister_led(&rt2x00dev->led_qual);
++	rt2x00leds_unregister_led(&rt2x00dev->led_assoc);
++	rt2x00leds_unregister_led(&rt2x00dev->led_radio);
++}
++
++void rt2x00leds_suspend(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2x00dev->led_qual.registered)
++		led_classdev_suspend(&rt2x00dev->led_qual.led_dev);
++	if (rt2x00dev->led_assoc.registered)
++		led_classdev_suspend(&rt2x00dev->led_assoc.led_dev);
++	if (rt2x00dev->led_radio.registered)
++		led_classdev_suspend(&rt2x00dev->led_radio.led_dev);
++}
++
++void rt2x00leds_resume(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2x00dev->led_radio.registered)
++		led_classdev_resume(&rt2x00dev->led_radio.led_dev);
++	if (rt2x00dev->led_assoc.registered)
++		led_classdev_resume(&rt2x00dev->led_assoc.led_dev);
++	if (rt2x00dev->led_qual.registered)
++		led_classdev_resume(&rt2x00dev->led_qual.led_dev);
++}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.h b/drivers/net/wireless/rt2x00/rt2x00leds.h
+new file mode 100644
+index 0000000..11e71e9
+--- /dev/null
++++ b/drivers/net/wireless/rt2x00/rt2x00leds.h
+@@ -0,0 +1,63 @@
++/*
++	Copyright (C) 2004 - 2008 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: rt2x00lib
++	Abstract: rt2x00 led datastructures and routines
++ */
++
++#ifndef RT2X00LEDS_H
++#define RT2X00LEDS_H
++
++/*
++* Flags used by driver to indicate which
++ * which led types are supported.
++ */
++#define LED_SUPPORT_RADIO	0x000001
++#define LED_SUPPORT_ASSOC	0x000002
++#define LED_SUPPORT_ACTIVITY	0x000004
++#define LED_SUPPORT_QUALITY	0x000008
++
++enum led_type {
++	LED_TYPE_RADIO,
++	LED_TYPE_ASSOC,
++	LED_TYPE_QUALITY,
++};
++
++#ifdef CONFIG_RT2X00_LIB_LEDS
++
++struct rt2x00_led {
++	struct rt2x00_dev *rt2x00dev;
++	struct led_classdev led_dev;
++
++	enum led_type type;
++	unsigned int registered;
++};
++
++struct rt2x00_trigger {
++	struct led_trigger trigger;
++
++	enum led_type type;
++	unsigned int registered;
++};
++
++#endif /* CONFIG_RT2X00_LIB_LEDS */
++
++#endif /* RT2X00LEDS_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index fc60644..44ab216 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -122,6 +122,58 @@ int rt2x00usb_vendor_request_buff(struct rt2x00_dev *rt2x00dev,
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_vendor_request_buff);
  
- 	/* add one default STA interface */
- 	result = ieee80211_if_add(local->mdev, "wlan%d", NULL,
--				  IEEE80211_IF_TYPE_STA);
-+				  IEEE80211_IF_TYPE_STA, NULL);
- 	if (result)
- 		printk(KERN_WARNING "%s: Failed to add default virtual iface\n",
- 		       wiphy_name(local->hw.wiphy));
---- everything.orig/net/mac80211/cfg.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/cfg.c	2008-02-23 14:57:46.000000000 +0100
-@@ -50,7 +50,7 @@ static int ieee80211_add_iface(struct wi
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
++static void rt2x00usb_vendor_request_async_complete(struct urb *urb)
++{
++	/*
++	 * We're done with it, descrease usage count and let the
++	 * usb layer delete it as soon as it is done with it.
++	 */
++	usb_put_urb(urb);
++}
++
++int rt2x00usb_vendor_request_async(struct rt2x00_dev *rt2x00dev,
++				   const u8 request, const u16 offset,
++				   const u16 value)
++{
++	struct usb_device *usb_dev = rt2x00dev_usb_dev(rt2x00dev);
++	struct usb_ctrlrequest *ctrl;
++	struct urb *urb;
++	int status;
++
++	urb = usb_alloc_urb(0, GFP_NOIO);
++	if (!urb)
++		return -ENOMEM;
++
++	ctrl = kmalloc(sizeof(struct usb_ctrlrequest), GFP_NOIO);
++	if (!ctrl) {
++		status = -ENOMEM;
++		goto exit;
++	}
++
++	ctrl->bRequestType= USB_VENDOR_REQUEST_OUT;
++	ctrl->bRequest = request;
++	ctrl->wValue = cpu_to_le16p(&value);
++	ctrl->wIndex = cpu_to_le16p(&offset);
++	ctrl->wLength = 0;
++
++	usb_fill_control_urb(urb, usb_dev, usb_sndctrlpipe(usb_dev, 0),
++			     (unsigned char *)ctrl, NULL, 0,
++			     rt2x00usb_vendor_request_async_complete, NULL);
++
++	status = usb_submit_urb(urb, GFP_ATOMIC);
++	if (!status)
++		goto exit;
++
++	return 0;
++
++exit:
++	usb_put_urb(urb);
++	kfree(ctrl);
++
++	return status;
++}
++EXPORT_SYMBOL_GPL(rt2x00usb_vendor_request_async);
++
+ /*
+  * TX data handlers.
+  */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index af60663..275b089 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -60,34 +60,47 @@
+ #define USB_VENDOR_REQUEST_IN	( USB_DIR_IN | USB_VENDOR_REQUEST )
+ #define USB_VENDOR_REQUEST_OUT	( USB_DIR_OUT | USB_VENDOR_REQUEST )
  
--	err = ieee80211_if_add(local->mdev, name, &dev, itype);
-+	err = ieee80211_if_add(local->mdev, name, &dev, itype, params);
- 	if (err || itype != IEEE80211_IF_TYPE_MNTR || !flags)
- 		return err;
+-/*
+- * USB vendor commands.
+- */
+-#define USB_DEVICE_MODE		0x01
+-#define USB_SINGLE_WRITE	0x02
+-#define USB_SINGLE_READ		0x03
+-#define USB_MULTI_WRITE		0x06
+-#define USB_MULTI_READ		0x07
+-#define USB_EEPROM_WRITE	0x08
+-#define USB_EEPROM_READ		0x09
+-#define USB_LED_CONTROL		0x0a	/* RT73USB */
+-#define USB_RX_CONTROL		0x0c
++/**
++ * enum rt2x00usb_vendor_request: USB vendor commands.
++ */
++enum rt2x00usb_vendor_request {
++	USB_DEVICE_MODE = 1,
++	USB_SINGLE_WRITE = 2,
++	USB_SINGLE_READ = 3,
++	USB_MULTI_WRITE = 6,
++	USB_MULTI_READ = 7,
++	USB_EEPROM_WRITE = 8,
++	USB_EEPROM_READ = 9,
++	USB_LED_CONTROL = 10, /* RT73USB */
++	USB_RX_CONTROL = 12,
++};
  
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-23 14:51:27.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-02-23 14:57:47.000000000 +0100
-@@ -87,46 +87,8 @@ static int ieee80211_sta_config_auth(str
- 				     struct ieee80211_if_sta *ifsta);
+-/*
+- * Device modes offset
++/**
++ * enum rt2x00usb_mode_offset: Device modes offset.
+  */
+-#define USB_MODE_RESET		0x01
+-#define USB_MODE_UNPLUG		0x02
+-#define USB_MODE_FUNCTION	0x03
+-#define USB_MODE_TEST		0x04
+-#define USB_MODE_SLEEP		0x07	/* RT73USB */
+-#define USB_MODE_FIRMWARE	0x08	/* RT73USB */
+-#define USB_MODE_WAKEUP		0x09	/* RT73USB */
++enum rt2x00usb_mode_offset {
++	USB_MODE_RESET = 1,
++	USB_MODE_UNPLUG = 2,
++	USB_MODE_FUNCTION = 3,
++	USB_MODE_TEST = 4,
++	USB_MODE_SLEEP = 7,	/* RT73USB */
++	USB_MODE_FIRMWARE = 8,	/* RT73USB */
++	USB_MODE_WAKEUP = 9,	/* RT73USB */
++};
  
+-/*
+- * Used to read/write from/to the device.
++/**
++ * rt2x00usb_vendor_request - Send register command to device
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @request: USB vendor command (See &enum rt2x00usb_vendor_request)
++ * @requesttype: Request type &USB_VENDOR_REQUEST_*
++ * @offset: Register offset to perform action on
++ * @value: Value to write to device
++ * @buffer: Buffer where information will be read/written to by device
++ * @buffer_length: Size of &buffer
++ * @timeout: Operation timeout
++ *
+  * This is the main function to communicate with the device,
+- * the buffer argument _must_ either be NULL or point to
++ * the &buffer argument _must_ either be NULL or point to
+  * a buffer allocated by kmalloc. Failure to do so can lead
+  * to unexpected behavior depending on the architecture.
+  */
+@@ -97,13 +110,21 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 			     void *buffer, const u16 buffer_length,
+ 			     const int timeout);
  
--/* Parsed Information Elements */
--struct ieee802_11_elems {
--	/* pointers to IEs */
--	u8 *ssid;
--	u8 *supp_rates;
--	u8 *fh_params;
--	u8 *ds_params;
--	u8 *cf_params;
--	u8 *tim;
--	u8 *ibss_params;
--	u8 *challenge;
--	u8 *wpa;
--	u8 *rsn;
--	u8 *erp_info;
--	u8 *ext_supp_rates;
--	u8 *wmm_info;
--	u8 *wmm_param;
--	u8 *ht_cap_elem;
--	u8 *ht_info_elem;
--	/* length of them, respectively */
--	u8 ssid_len;
--	u8 supp_rates_len;
--	u8 fh_params_len;
--	u8 ds_params_len;
--	u8 cf_params_len;
--	u8 tim_len;
--	u8 ibss_params_len;
--	u8 challenge_len;
--	u8 wpa_len;
--	u8 rsn_len;
--	u8 erp_info_len;
--	u8 ext_supp_rates_len;
--	u8 wmm_info_len;
--	u8 wmm_param_len;
--	u8 ht_cap_elem_len;
--	u8 ht_info_elem_len;
--};
--
--static void ieee802_11_parse_elems(u8 *start, size_t len,
--				   struct ieee802_11_elems *elems)
-+void ieee802_11_parse_elems(u8 *start, size_t len,
-+			    struct ieee802_11_elems *elems)
- {
- 	size_t left = len;
- 	u8 *pos = start;
-@@ -215,6 +177,30 @@ static void ieee802_11_parse_elems(u8 *s
- 			elems->ht_info_elem = pos;
- 			elems->ht_info_elem_len = elen;
- 			break;
-+		case WLAN_EID_MESH_ID:
-+			elems->mesh_id = pos;
-+			elems->mesh_id_len = elen;
-+			break;
-+		case WLAN_EID_MESH_CONFIG:
-+			elems->mesh_config = pos;
-+			elems->mesh_config_len = elen;
-+			break;
-+		case WLAN_EID_PEER_LINK:
-+			elems->peer_link = pos;
-+			elems->peer_link_len = elen;
-+			break;
-+		case WLAN_EID_PREQ:
-+			elems->preq = pos;
-+			elems->preq_len = elen;
-+			break;
-+		case WLAN_EID_PREP:
-+			elems->prep = pos;
-+			elems->prep_len = elen;
-+			break;
-+		case WLAN_EID_PERR:
-+			elems->perr = pos;
-+			elems->perr_len = elen;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -501,8 +487,8 @@ static void ieee80211_set_disassoc(struc
- 	ieee80211_set_associated(dev, ifsta, 0);
+-/*
+- * Used to read/write from/to the device.
++/**
++ * rt2x00usb_vendor_request_buff - Send register command to device (buffered)
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @request: USB vendor command (See &enum rt2x00usb_vendor_request)
++ * @requesttype: Request type &USB_VENDOR_REQUEST_*
++ * @offset: Register offset to perform action on
++ * @buffer: Buffer where information will be read/written to by device
++ * @buffer_length: Size of &buffer
++ * @timeout: Operation timeout
++ *
+  * This function will use a previously with kmalloc allocated cache
+  * to communicate with the device. The contents of the buffer pointer
+  * will be copied to this cache when writing, or read from the cache
+  * when reading.
+- * Buffers send to rt2x00usb_vendor_request _must_ be allocated with
++ * Buffers send to &rt2x00usb_vendor_request _must_ be allocated with
+  * kmalloc. Hence the reason for using a previously allocated cache
+  * which has been allocated properly.
+  */
+@@ -112,15 +133,32 @@ int rt2x00usb_vendor_request_buff(struct rt2x00_dev *rt2x00dev,
+ 				  const u16 offset, void *buffer,
+ 				  const u16 buffer_length, const int timeout);
+ 
+-/*
+- * A version of rt2x00usb_vendor_request_buff which must be called
+- * if the usb_cache_mutex is already held. */
++/**
++ * rt2x00usb_vendor_request_buff - Send register command to device (buffered)
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @request: USB vendor command (See &enum rt2x00usb_vendor_request)
++ * @requesttype: Request type &USB_VENDOR_REQUEST_*
++ * @offset: Register offset to perform action on
++ * @buffer: Buffer where information will be read/written to by device
++ * @buffer_length: Size of &buffer
++ * @timeout: Operation timeout
++ *
++ * A version of &rt2x00usb_vendor_request_buff which must be called
++ * if the usb_cache_mutex is already held.
++ */
+ int rt2x00usb_vendor_req_buff_lock(struct rt2x00_dev *rt2x00dev,
+ 				   const u8 request, const u8 requesttype,
+ 				   const u16 offset, void *buffer,
+ 				   const u16 buffer_length, const int timeout);
+ 
+-/*
++/**
++ * rt2x00usb_vendor_request_sw - Send single register command to device
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @request: USB vendor command (See &enum rt2x00usb_vendor_request)
++ * @offset: Register offset to perform action on
++ * @value: Value to write to device
++ * @timeout: Operation timeout
++ *
+  * Simple wrapper around rt2x00usb_vendor_request to write a single
+  * command to the device. Since we don't use the buffer argument we
+  * don't have to worry about kmalloc here.
+@@ -136,7 +174,12 @@ static inline int rt2x00usb_vendor_request_sw(struct rt2x00_dev *rt2x00dev,
+ 					value, NULL, 0, timeout);
  }
  
--static void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
--			     int encrypt)
-+void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
-+		      int encrypt)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_tx_packet_data *pkt_data;
-
+-/*
++/**
++ * rt2x00usb_eeprom_read - Read eeprom from device
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @eeprom: Pointer to eeprom array to store the information in
++ * @length: Number of bytes to read from the eeprom
++ *
+  * Simple wrapper around rt2x00usb_vendor_request to read the eeprom
+  * from the device. Note that the eeprom argument _must_ be allocated using
+  * kmalloc for correct handling inside the kernel USB layer.
+@@ -147,10 +190,28 @@ static inline int rt2x00usb_eeprom_read(struct rt2x00_dev *rt2x00dev,
+ 	int timeout = REGISTER_TIMEOUT * (lenght / sizeof(u16));
+ 
+ 	return rt2x00usb_vendor_request(rt2x00dev, USB_EEPROM_READ,
+-					USB_VENDOR_REQUEST_IN, 0x0000,
+-					0x0000, eeprom, lenght, timeout);
++					USB_VENDOR_REQUEST_IN, 0, 0,
++					eeprom, lenght, timeout);
+ }
+ 
++/**
++ * rt2x00usb_vendor_request_async - Send register command to device (async)
++ * @rt2x00dev: Pointer to &struct rt2x00_dev
++ * @request: USB vendor command (See &enum rt2x00usb_vendor_request)
++ * @offset: Register offset to perform action on
++ * @value: Value to write to device
++ *
++ * Asynchroneous version of &rt2x00usb_vendor_request this is required
++ * for some routines where the driver cannot sleep because it is in
++ * irq context. Note that with this function the driver will not be
++ * notified on failure or timeout of the command. It will only be notified
++ * if the start of the command succeeded or not. This means it should not be
++ * used when the command must succeed.
++ */
++int rt2x00usb_vendor_request_async(struct rt2x00_dev *rt2x00dev,
++				   const u8 request, const u16 offset,
++				   const u16 value);
++
+ /*
+  * Radio handlers
+  */
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 43d21aa..e970e32 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -294,28 +294,25 @@ static void rt73usb_led_brightness(struct led_classdev *led_cdev,
+ 		rt2x00_set_field16(&led->rt2x00dev->led_mcu_reg,
+ 				   MCU_LEDCS_RADIO_STATUS, enabled);
+ 
+-		rt2x00usb_vendor_request_sw(led->rt2x00dev, USB_LED_CONTROL, 0,
+-					    led->rt2x00dev->led_mcu_reg,
+-					    REGISTER_TIMEOUT);
++		rt2x00usb_vendor_request_async(led->rt2x00dev, USB_LED_CONTROL,
++					       0, led->rt2x00dev->led_mcu_reg);
+ 	} else if (led->type == LED_TYPE_ASSOC) {
+ 		rt2x00_set_field16(&led->rt2x00dev->led_mcu_reg,
+ 				   MCU_LEDCS_LINK_BG_STATUS, bg_mode);
+ 		rt2x00_set_field16(&led->rt2x00dev->led_mcu_reg,
+ 				   MCU_LEDCS_LINK_A_STATUS, a_mode);
+ 
+-		rt2x00usb_vendor_request_sw(led->rt2x00dev, USB_LED_CONTROL, 0,
+-					    led->rt2x00dev->led_mcu_reg,
+-					    REGISTER_TIMEOUT);
++		rt2x00usb_vendor_request_async(led->rt2x00dev, USB_LED_CONTROL,
++					       0, led->rt2x00dev->led_mcu_reg);
+ 	} else if (led->type == LED_TYPE_QUALITY) {
+ 		/*
+ 		 * The brightness is divided into 6 levels (0 - 5),
+ 		 * this means we need to convert the brightness
+ 		 * argument into the matching level within that range.
+ 		 */
+-		rt2x00usb_vendor_request_sw(led->rt2x00dev, USB_LED_CONTROL,
+-					    brightness / (LED_FULL / 6),
+-					    led->rt2x00dev->led_mcu_reg,
+-					    REGISTER_TIMEOUT);
++		rt2x00usb_vendor_request_async(led->rt2x00dev, USB_LED_CONTROL,
++					       brightness / (LED_FULL / 6),
++					       led->rt2x00dev->led_mcu_reg);
+ 	}
+ }
+ #else
+@@ -871,7 +868,7 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
+ 
+ 		rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
+ 					 USB_VENDOR_REQUEST_OUT,
+-					 FIRMWARE_IMAGE_BASE + i, 0x0000,
++					 FIRMWARE_IMAGE_BASE + i, 0,
+ 					 cache, buflen, timeout);
+ 
+ 		ptr += buflen;
+@@ -884,7 +881,7 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
+ 	 * we need to specify a long timeout time.
+ 	 */
+ 	status = rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE,
+-					     0x0000, USB_MODE_FIRMWARE,
++					     0, USB_MODE_FIRMWARE,
+ 					     REGISTER_TIMEOUT_FIRMWARE);
+ 	if (status < 0) {
+ 		ERROR(rt2x00dev, "Failed to write Firmware to device.\n");
 -- 
+1.5.3.8
 
