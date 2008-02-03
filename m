@@ -1,95 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60485 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbYBTS0e (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:21894 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763558AbYBCOvv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:26:34 -0500
-Subject: [PATCH] mac80211: invoke set_tim() callback after setting own TIM
-	info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 01:36:16 +0100
-Message-Id: <1203467776.10983.1.camel@johannes.berg> (sfid-20080220_182640_458493_436B888E)
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 09:51:51 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2706102pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:51:50 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 07/19] rt2x00: Driver requiring firmware should select crc algo
+Date: Sun, 3 Feb 2008 15:48:38 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802031541.52167.IvDoorn@gmail.com>
+In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802031548.39121.IvDoorn@gmail.com> (sfid-20080203_145154_567241_097D6BD7)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers should be allowed to simply get a complete new beacon when
-set_tim() is invoked (and set_tim() is required for drivers that
-just want a beacon template!), so we need to update our own TIM
-bitmap before calling set_tim() so that getting the beacon will
-now get an already updated beacon.
+The driver should select what CRC algorithm is required
+when performing a checksum on the firmware.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+rt61pci & rt73usb require crc-itu-t
+rt2800pci & rt2800usb require crc-ccitt
+
+Legacy 2800pci/usb driver uses crc-itu-t + bit order reversion,
+but that is just inefficient especially since the end result is
+the same as a different algorithm which is also available as library. ;)
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/rx.c       |    8 ++++----
- net/mac80211/sta_info.c |    4 ++--
- net/mac80211/tx.c       |    4 ++--
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig          |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h         |    2 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c      |    8 ++---
+ drivers/net/wireless/rt2x00/rt2x00firmware.c |   41 ++++++++++++++++++++------
+ drivers/net/wireless/rt2x00/rt61pci.c        |    3 +-
+ drivers/net/wireless/rt2x00/rt73usb.c        |    3 +-
+ 6 files changed, 42 insertions(+), 16 deletions(-)
 
---- everything.orig/net/mac80211/rx.c	2008-02-20 01:21:39.000000000 +0100
-+++ everything/net/mac80211/rx.c	2008-02-20 01:22:00.000000000 +0100
-@@ -599,10 +599,10 @@ static int ap_sta_ps_end(struct net_devi
- 		atomic_dec(&sdata->bss->num_sta_ps);
- 	sta->flags &= ~(WLAN_STA_PS | WLAN_STA_TIM | WLAN_STA_PSPOLL);
- 	if (!skb_queue_empty(&sta->ps_tx_buf)) {
--		if (local->ops->set_tim)
--			local->ops->set_tim(local_to_hw(local), sta->aid, 0);
- 		if (sdata->bss)
- 			bss_tim_clear(local, sdata->bss, sta->aid);
-+		if (local->ops->set_tim)
-+			local->ops->set_tim(local_to_hw(local), sta->aid, 0);
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index da05b1f..28f3e5e 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -28,6 +28,7 @@ config RT2X00_LIB_USB
+ config RT2X00_LIB_FIRMWARE
+ 	boolean
+ 	depends on RT2X00_LIB
++	select CRC_CCITT
+ 	select CRC_ITU_T
+ 	select FW_LOADER
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 14668f0..d5b9a3c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -555,6 +555,8 @@ enum rt2x00_flags {
+ 	 * Driver features
+ 	 */
+ 	DRIVER_REQUIRE_FIRMWARE,
++	DRIVER_REQUIRE_FIRMWARE_CRC_ITU_T,
++	DRIVER_REQUIRE_FIRMWARE_CCITT,
+ 	DRIVER_REQUIRE_BEACON_GUARD,
+ 	DRIVER_REQUIRE_ATIM_QUEUE,
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 9c4ebb0..7089808 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -983,11 +983,9 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
+ 	 * If this is the first interface which is added,
+ 	 * we should load the firmware now.
+ 	 */
+-	if (test_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags)) {
+-		retval = rt2x00lib_load_firmware(rt2x00dev);
+-		if (retval)
+-			return retval;
+-	}
++	retval = rt2x00lib_load_firmware(rt2x00dev);
++	if (retval)
++		return retval;
+ 
+ 	/*
+ 	 * Initialize the device.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
+index 442ff80..4f9fe56 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
++++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
+@@ -23,6 +23,7 @@
+ 	Abstract: rt2x00 firmware loading routines.
+  */
+ 
++#include <linux/crc-ccitt.h>
+ #include <linux/crc-itu-t.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -37,7 +38,6 @@ static int rt2x00lib_request_firmware(struct rt2x00_dev *rt2x00dev)
+ 	char *fw_name;
+ 	int retval;
+ 	u16 crc;
+-	u16 tmp;
+ 
+ 	/*
+ 	 * Read correct firmware from harddisk.
+@@ -64,17 +64,37 @@ static int rt2x00lib_request_firmware(struct rt2x00_dev *rt2x00dev)
  	}
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %s aid %d exits power save mode\n",
-@@ -946,11 +946,11 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
- 		dev_queue_xmit(skb);
  
- 		if (no_pending_pkts) {
-+			if (rx->sdata->bss)
-+				bss_tim_clear(rx->local, rx->sdata->bss, rx->sta->aid);
- 			if (rx->local->ops->set_tim)
- 				rx->local->ops->set_tim(local_to_hw(rx->local),
- 						       rx->sta->aid, 0);
--			if (rx->sdata->bss)
--				bss_tim_clear(rx->local, rx->sdata->bss, rx->sta->aid);
- 		}
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	} else if (!rx->u.rx.sent_ps_buffered) {
---- everything.orig/net/mac80211/sta_info.c	2008-02-20 01:22:04.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-20 01:22:09.000000000 +0100
-@@ -396,11 +396,11 @@ void sta_info_remove_aid_ptr(struct sta_
+ 	/*
+-	 * Validate the firmware using 16 bit CRC.
+-	 * The last 2 bytes of the firmware are the CRC
+-	 * so substract those 2 bytes from the CRC checksum,
+-	 * and set those 2 bytes to 0 when calculating CRC.
++	 * Perform crc validation on the firmware.
++	 * The last 2 bytes in the firmware array are the crc checksum itself,
++	 * this means that we should never pass those 2 bytes to the crc
++	 * algorithm.
+ 	 */
+-	tmp = 0;
+-	crc = crc_itu_t(0, fw->data, fw->size - 2);
+-	crc = crc_itu_t(crc, (u8 *)&tmp, 2);
++	if (test_bit(DRIVER_REQUIRE_FIRMWARE_CRC_ITU_T, &rt2x00dev->flags)) {
++		/*
++		 * Use the crc itu-t algorithm.
++		 * Use 0 for the last 2 bytes to complete the checksum.
++		 */
++		crc = crc_itu_t(0, fw->data, fw->size - 2);
++		crc = crc_itu_t_byte(crc, 0);
++		crc = crc_itu_t_byte(crc, 0);
++	} else if (test_bit(DRIVER_REQUIRE_FIRMWARE_CCITT, &rt2x00dev->flags)) {
++		/*
++		 * Use the crc ccitt algorithm.
++		 * This will return the same value as the legacy driver which
++		 * used bit ordering reversion on the both the firmware bytes
++		 * before input input as well as on the final output.
++		 * Obviously using crc ccitt directly is much more efficient.
++		 */
++		crc = crc_ccitt(~0, fw->data, fw->size - 2);
++	} else {
++		ERROR(rt2x00dev, "No checksum algorithm selected "
++		      "for firmware validation.\n");
++		retval = -ENOENT;
++		goto exit;
++	}
  
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+ 	if (crc != (fw->data[fw->size - 2] << 8 | fw->data[fw->size - 1])) {
+-		ERROR(rt2x00dev, "Firmware CRC error.\n");
++		ERROR(rt2x00dev, "Firmware checksum error.\n");
+ 		retval = -ENOENT;
+ 		goto exit;
+ 	}
+@@ -96,6 +116,9 @@ int rt2x00lib_load_firmware(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
  
-+	if (sdata->bss)
-+		__bss_tim_clear(sdata->bss, sta->aid);
- 	if (sdata->local->ops->set_tim)
- 		sdata->local->ops->set_tim(local_to_hw(sdata->local),
- 					  sta->aid, 0);
--	if (sdata->bss)
--		__bss_tim_clear(sdata->bss, sta->aid);
- }
++	if (!test_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags))
++		return 0;
++
+ 	if (!rt2x00dev->fw) {
+ 		retval = rt2x00lib_request_firmware(rt2x00dev);
+ 		if (retval)
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index fc5acdf..6c97361 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2255,9 +2255,10 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	rt61pci_probe_hw_mode(rt2x00dev);
  
+ 	/*
+-	 * This device requires firmware
++	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
++	__set_bit(DRIVER_REQUIRE_FIRMWARE_CRC_ITU_T, &rt2x00dev->flags);
  
---- everything.orig/net/mac80211/tx.c	2008-02-20 01:22:12.000000000 +0100
-+++ everything/net/mac80211/tx.c	2008-02-20 01:22:18.000000000 +0100
-@@ -419,11 +419,11 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 			tx->local->total_ps_buffered++;
- 		/* Queue frame to be sent after STA sends an PS Poll frame */
- 		if (skb_queue_empty(&sta->ps_tx_buf)) {
-+			if (tx->sdata->bss)
-+				bss_tim_set(tx->local, tx->sdata->bss, sta->aid);
- 			if (tx->local->ops->set_tim)
- 				tx->local->ops->set_tim(local_to_hw(tx->local),
- 						       sta->aid, 1);
--			if (tx->sdata->bss)
--				bss_tim_set(tx->local, tx->sdata->bss, sta->aid);
- 		}
- 		pkt_data = (struct ieee80211_tx_packet_data *)tx->skb->cb;
- 		pkt_data->jiffies = jiffies;
-
+ 	/*
+ 	 * Set the rssi offset.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 2231557..01c020b 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1846,9 +1846,10 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	rt73usb_probe_hw_mode(rt2x00dev);
+ 
+ 	/*
+-	 * This device requires firmware
++	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
++	__set_bit(DRIVER_REQUIRE_FIRMWARE_CRC_ITU_T, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Set the rssi offset.
+-- 
+1.5.3.8
 
