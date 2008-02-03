@@ -1,212 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41911 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbYBYPcy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:32:54 -0500
-Message-Id: <20080225153008.370172000@sipsolutions.net> (sfid-20080225_153348_429835_BDEC6871)
-References: <20080225152740.360393000@sipsolutions.net>
-Date: Mon, 25 Feb 2008 16:27:48 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:48308 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751386AbYBCV5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Feb 2008 16:57:53 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 08/10] mac80211: clean up sta_info and document locking
-Mime-Version: 1.0
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: fix mis-match in {test,set}_bit qdisc_pool
+Date: Sun,  3 Feb 2008 23:54:38 +0200
+Message-Id: <12020756782190-git-send-email-tomas.winkler@intel.com> (sfid-20080203_215800_218330_0DDEF6F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleans up the sta_info struct and documents how
-each set of variables is locked. Notably, flags locking is
-completely missing. It also adds kernel-doc for some (but
-not all yet) members of the struct.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch fixes a mis-match in {test,set}_bit for qdisc_pool created by
+the move to an array of bits.
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/debugfs_sta.c |    2 
- net/mac80211/sta_info.h    |  135 +++++++++++++++++++++++++++------------------
- 2 files changed, 83 insertions(+), 54 deletions(-)
+ net/mac80211/wme.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
---- everything.orig/net/mac80211/sta_info.h	2008-02-24 12:29:22.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-24 12:42:49.000000000 +0100
-@@ -139,84 +139,113 @@ struct sta_ampdu_mlme {
- #define STA_INFO_PIN_STAT_PINNED	1
- #define STA_INFO_PIN_STAT_DESTROY	2
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index f12e044..4ecfb5e 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -158,7 +158,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 		if (sta) {
+ 			int ampdu_queue = sta->tid_to_tx_q[tid];
+ 			if ((ampdu_queue < local->hw.queues) &&
+-			    test_bit(ampdu_queue, &q->qdisc_pool)) {
++			    test_bit(ampdu_queue, q->qdisc_pool)) {
+ 				queue = ampdu_queue;
+ 				pkt_data->flags |= IEEE80211_TXPD_AMPDU;
+ 			} else {
+@@ -191,7 +191,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 		if (sta) {
+ 			int ampdu_queue = sta->tid_to_tx_q[tid];
+ 			if ((ampdu_queue < local->hw.queues) &&
+-				test_bit(ampdu_queue, &q->qdisc_pool)) {
++				test_bit(ampdu_queue, q->qdisc_pool)) {
+ 				queue = ampdu_queue;
+ 				pkt_data->flags |= IEEE80211_TXPD_AMPDU;
+ 			} else {
+@@ -272,7 +272,7 @@ static struct sk_buff *wme_qdiscop_dequeue(struct Qdisc* qd)
+ 				&local->state[queue])) ||
+ 		    (test_bit(IEEE80211_LINK_STATE_PENDING,
+ 				&local->state[queue])) ||
+-			 (!test_bit(queue, &q->qdisc_pool)))
++			 (!test_bit(queue, q->qdisc_pool)))
+ 			continue;
  
--
-+/**
-+ * struct sta_info - STA information
-+ *
-+ * This structure collects information about a station that
-+ * mac80211 is communicating with.
-+ *
-+ * @list: global linked list entry
-+ * @hnext: hash table linked list pointer
-+ * @local: pointer to the global information
-+ * @addr: MAC address of this STA
-+ * @aid: STA's unique AID (1..2007, 0 = not assigned yet),
-+ *	only used in AP (and IBSS?) mode
-+ * @flags: STA flags, see &enum ieee80211_sta_info_flags
-+ * @ps_tx_buf: buffer of frames to transmit to this station
-+ *	when it leaves power saving state
-+ * @tx_filtered: buffer of frames we already tried to transmit
-+ *	but were filtered by hardware due to STA having entered
-+ *	power saving state
-+ * @rx_packets: Number of MSDUs received from this STA
-+ * @rx_bytes: Number of bytes received from this STA
-+ * @supp_rates: Bitmap of supported rates (per band)
-+ * @ht_info: HT capabilities of this STA
-+ */
- struct sta_info {
-+	/* General information, mostly static */
- 	struct list_head list;
--	struct sta_info *hnext; /* next entry in hash table list */
--
-+	struct sta_info *hnext;
- 	struct ieee80211_local *local;
--
--	u8 addr[ETH_ALEN];
--	u16 aid; /* STA's unique AID (1..2007), 0 = not yet assigned */
--	u32 flags; /* WLAN_STA_ */
--
--	struct sk_buff_head ps_tx_buf; /* buffer of TX frames for station in
--					* power saving state */
--	struct sk_buff_head tx_filtered; /* buffer of TX frames that were
--					  * already given to low-level driver,
--					  * but were filtered */
--	unsigned long rx_packets, tx_packets; /* number of RX/TX MSDUs */
--	unsigned long rx_bytes, tx_bytes;
--	unsigned long tx_retry_failed, tx_retry_count;
--	unsigned long tx_filtered_count;
--	/* moving percentage of failed MSDUs */
--	unsigned int fail_avg;
--
--	unsigned int wep_weak_iv_count; /* number of RX frames with weak IV */
--
--	unsigned long last_rx;
--	/* bitmap of supported rates per band */
--	u64 supp_rates[IEEE80211_NUM_BANDS];
--	int txrate_idx;
--	/* last rates used to send a frame to this STA */
--	int last_txrate_idx, last_nonerp_txrate_idx;
--
--	/* sub_if_data this sta belongs to */
- 	struct ieee80211_sub_if_data *sdata;
--
- 	struct ieee80211_key *key;
--
--	u32 tx_num_consecutive_failures;
--	u32 tx_num_mpdu_ok;
--	u32 tx_num_mpdu_fail;
--
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
-+	struct ieee80211_ht_info ht_info;
-+	u64 supp_rates[IEEE80211_NUM_BANDS];
-+	u8 addr[ETH_ALEN];
-+	u16 aid;
-+	u16 listen_interval;
+ 		/* there is space - try and get a frame */
+@@ -396,7 +396,7 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
  
--	/* last received seq/frag number from this STA (per RX queue) */
--	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
-+	/*
-+	 * for use by the internal lifetime management,
-+	 * see __sta_info_unlink
-+	 */
-+	u8 pin_status;
-+
-+	/* frequently updated information, needs locking? */
-+	u32 flags;
-+
-+	/*
-+	 * STA powersave frame queues, no more than the internal
-+	 * locking required.
-+	 */
-+	struct sk_buff_head ps_tx_buf;
-+	struct sk_buff_head tx_filtered;
-+
-+	/* Updated from RX path only, no locking requirements */
-+	unsigned long rx_packets, rx_bytes;
-+	unsigned long wep_weak_iv_count;
-+	unsigned long last_rx;
- 	unsigned long num_duplicates; /* number of duplicate frames received
- 				       * from this STA */
--	unsigned long tx_fragments; /* number of transmitted MPDUs */
- 	unsigned long rx_fragments; /* number of received MPDUs */
- 	unsigned long rx_dropped; /* number of dropped MPDUs from this STA */
--
- 	int last_rssi; /* RSSI of last received frame from this STA */
- 	int last_signal; /* signal of last received frame from this STA */
- 	int last_noise; /* noise of last received frame from this STA */
--	int channel_use;
--	int channel_use_raw;
--
-+	/* last received seq/frag number from this STA (per RX queue) */
-+	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
- #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
- 	unsigned int wme_rx_queue[NUM_RX_DATA_QUEUES];
-+#endif
-+
-+	/* Updated from TX status path only, no locking requirements */
-+	unsigned long tx_filtered_count;
-+	unsigned long tx_retry_failed, tx_retry_count;
-+	/* TODO: update in generic code not rate control? */
-+	u32 tx_num_consecutive_failures;
-+	u32 tx_num_mpdu_ok;
-+	u32 tx_num_mpdu_fail;
-+	/* moving percentage of failed MSDUs */
-+	unsigned int fail_avg;
-+
-+	/* Updated from TX path only, no locking requirements */
-+	unsigned long tx_packets; /* number of RX/TX MSDUs */
-+	unsigned long tx_bytes;
-+	unsigned long tx_fragments; /* number of transmitted MPDUs */
-+	int txrate_idx;
-+	int last_txrate_idx;
-+#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
- 	unsigned int wme_tx_queue[NUM_RX_DATA_QUEUES];
--#endif /* CONFIG_MAC80211_DEBUG_COUNTERS */
-+#endif
+ 	/* reserve all legacy QoS queues */
+ 	for (i = 0; i < min(IEEE80211_TX_QUEUE_DATA4, queues); i++)
+-		set_bit(i, &q->qdisc_pool);
++		set_bit(i, q->qdisc_pool);
  
--	u16 listen_interval;
-+	/* Debug counters, no locking doesn't matter */
-+	int channel_use;
-+	int channel_use_raw;
+ 	return err;
+ }
+@@ -657,7 +657,7 @@ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
  
- 	/*
--	 * for use by the internal lifetime management,
--	 * see __sta_info_unlink
-+	 * Aggregation information, comes with own locking.
- 	 */
--	u8 pin_status;
--
--	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
--					     of this STA */
- 	struct sta_ampdu_mlme ampdu_mlme;
--	u8 timer_to_tid[STA_TID_NUM];	/* convert timer id to tid */
-+	u8 timer_to_tid[STA_TID_NUM];	/* identity mapping to ID timers */
- 	u8 tid_to_tx_q[STA_TID_NUM];	/* map tid to tx queue */
-+
- #ifdef CONFIG_MAC80211_MESH
--	/* mesh peer link attributes */
-+	/*
-+	 * Mesh peer link attributes
-+	 * TODO: move to a sub-structure that is referenced with pointer?
-+	 */
- 	__le16 llid;		/* Local link ID */
- 	__le16 plid;		/* Peer link ID */
- 	__le16 reason;		/* Buffer for cancel reason on HOLDING state */
---- everything.orig/net/mac80211/debugfs_sta.c	2008-02-24 12:22:26.000000000 +0100
-+++ everything/net/mac80211/debugfs_sta.c	2008-02-24 12:41:13.000000000 +0100
-@@ -67,7 +67,7 @@ STA_FILE(last_rssi, last_rssi, D);
- STA_FILE(last_signal, last_signal, D);
- STA_FILE(last_noise, last_noise, D);
- STA_FILE(channel_use, channel_use, D);
--STA_FILE(wep_weak_iv_count, wep_weak_iv_count, D);
-+STA_FILE(wep_weak_iv_count, wep_weak_iv_count, LU);
+ 	/* try to get a Qdisc from the pool */
+ 	for (i = IEEE80211_TX_QUEUE_BEACON; i < local->hw.queues; i++)
+-		if (!test_and_set_bit(i, &q->qdisc_pool)) {
++		if (!test_and_set_bit(i, q->qdisc_pool)) {
+ 			ieee80211_stop_queue(local_to_hw(local), i);
+ 			sta->tid_to_tx_q[tid] = i;
  
- static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
- 			      size_t count, loff_t *ppos)
-
+@@ -668,9 +668,9 @@ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 			if (net_ratelimit())
+ 				printk(KERN_DEBUG "allocated aggregation queue"
+-					" %d tid %d addr %s pool=0x%lX\n",
++					" %d tid %d addr %s pool=0x%lX",
+ 					i, tid, print_mac(mac, sta->addr),
+-					q->qdisc_pool);
++					q->qdisc_pool[0]);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 			return 0;
+ 		}
+@@ -690,7 +690,7 @@ void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
+ 	int agg_queue = sta->tid_to_tx_q[tid];
+ 
+ 	/* return the qdisc to the pool */
+-	clear_bit(agg_queue, &q->qdisc_pool);
++	clear_bit(agg_queue, q->qdisc_pool);
+ 	sta->tid_to_tx_q[tid] = local->hw.queues;
+ 
+ 	if (requeue)
 -- 
+1.5.2.2
 
