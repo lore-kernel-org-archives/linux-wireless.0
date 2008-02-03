@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:49079 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753425AbYBNEVQ (ORCPT
+Received: from hs-out-0708.google.com ([64.233.178.243]:17530 "EHLO
+	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750917AbYBCO4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 23:21:16 -0500
-Date: Wed, 13 Feb 2008 23:20:07 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: reset for 5424-based card
-Message-ID: <20080214042007.GA24186@hash.localnet> (sfid-20080214_042120_277883_2C8CA48F)
-References: <20080201040358.GA13428@hash.localnet> <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> <20080201225345.GA15922@hash.localnet> <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com> <20080203014559.GA20177@hash.localnet> <40f31dec0802050113w6f332a00ja7c9ad849f80e2e0@mail.gmail.com> <20080210162155.GA10894@hash.localnet> <40f31dec0802101105o61442683ia6b56c264a9af556@mail.gmail.com> <20080211150012.GA15956@hash.localnet> <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
+	Sun, 3 Feb 2008 09:56:45 -0500
+Received: by hs-out-2122.google.com with SMTP id 54so1608907hsz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:56:43 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/19] rt2x00: Use ieee80211_channel_to_frequency()
+Date: Sun, 3 Feb 2008 15:52:45 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802031541.52167.IvDoorn@gmail.com>
+In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802031552.45489.IvDoorn@gmail.com> (sfid-20080203_145652_827276_7118EF3D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 12, 2008 at 09:18:05AM +0200, Nick Kossifidis wrote:
-> > Not sure, I'll try them again.  Are the other traces for other cards
-> > online somewhere?
-> 
-> Nope i have them all gathered on my laptop, you 'll sure find some
-> posted on ath5k-devel list. I'll send you a b-only trace from one of
-> my cards (a 5413) to check it out ;-)
-> 
-> We are working on a way to have all dumps uploaded somewhere...
+No need to perform the calculation ourselves when
+wireless provides a helper function for it.
 
-Okay that would be good.  I was basically searching for differences by
-hooking ath_hw_reg_write with a printk, sorting that, and diffing it
-with a sorted file of "reg_address:value" extracted from the traces.
-Would be useful to run the same scripts over other cards' dumps...
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-> 
-> > -                               AR5K_DMASIZE_512B);
-> > +                               AR5K_DMASIZE_128B);
-> >         }
-> 
-> Have you tried 256 ? Also have you tried only setting lower dma size for rx ?
-
-I did a few times, but not enough to definitively say which works and 
-which doesn't.  I'll try to get it repeatedly starting up correctly when
-I get some free time, and from there I should be able to figure out 
-what's actually needed and what is noise.
-
-> > +               ath5k_hw_reg_write(ah, 0x001e1e1e, AR5K_TXPC);
-> 
-> Remove TXPC and see what happens...
-
-Sure, I'll give that a go as well.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 21d8514..9a6ede0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -824,10 +824,7 @@ static void rt2x00lib_channel(struct ieee80211_channel *entry,
+ 			      const int channel, const int tx_power,
+ 			      const int value)
+ {
+-	if (channel <= 14)
+-		entry->center_freq = 2407 + (5 * channel);
+-	else
+-		entry->center_freq = 5000 + (5 * channel);
++	entry->center_freq = ieee80211_channel_to_frequency(channel);
+ 	entry->hw_value = value;
+ 	entry->max_power = tx_power;
+ 	entry->max_antenna_gain = 0xff;
 -- 
-Bob Copeland %% www.bobcopeland.com 
+1.5.3.8
 
