@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37053 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936126AbYBVODW (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.189]:42008 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763434AbYBCOvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 09:03:22 -0500
-Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Sam Ravnborg <sam@ravnborg.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <20080221211610.GA27894@ZenIV.linux.org.uk> (sfid-20080221_211617_043502_ABA1CB03)
-References: <1203503909.17534.14.camel@johannes.berg>
-	 <20080220195913.GE21139@uranus.ravnborg.org>
-	 <1203597776.20331.5.camel@johannes.berg>
-	 <20080221211610.GA27894@ZenIV.linux.org.uk>
-	 (sfid-20080221_211617_043502_ABA1CB03)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yaRn8kKNA16UPSKDsKev"
-Date: Fri, 22 Feb 2008 15:02:37 +0100
-Message-Id: <1203688957.7082.24.camel@johannes.berg> (sfid-20080222_140339_006507_77907E9F)
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 09:51:43 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1586229fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:51:43 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/19] rt2x00: Fix tx parameter initialization
+Date: Sun, 3 Feb 2008 15:47:30 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802031541.52167.IvDoorn@gmail.com>
+In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802031547.30569.IvDoorn@gmail.com> (sfid-20080203_145146_577278_87A30D3B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Check if the aifs, cw_min and cw_max are above 0
+when determining if the default should be used.
+Tor aifs a negative number is used to determine
+if the default should be used or not.
 
---=-yaRn8kKNA16UPSKDsKev
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-
-> > In any case, I would love to have __CHECK_ENDIAN__ enabled by default a=
-t
-> > least on the wireless code (just caught another bug with it...)
->=20
-> So build with make C=3D2 -D__CHECK_ENDIAN__ net/ieee80211/, etc. - it's n=
-ot
-> that such a script would be tricky...
-
-It's not that I don't know how to do it... it's that I don't want to
-educate each person who gives me patches about sparse AND the check
-endian stuff etc.
-
-johannes
-
---=-yaRn8kKNA16UPSKDsKev
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR77V/KVg1VMiehFYAQKdAw//TqzVwtFbixikjqAa+UqaL2joT3vwo6FX
-Um9s4k3A9uAZONbb74B2FLA4GBlc7942ZiGb90yLI7nerNqP2tqS1X5sttGBVkeh
-c2iE0PP8sEgZSBKgYvW2jST1+TxaVy73e/mg6AVDod4TJcb392L5DsoH8sBNxLD5
-EibqqDCXCYgVzc9JpsxFIhU8kRbw0QM+zVPU5NVa5h1C/OkzmHRYxlcehQHX6Jho
-2/twhzWNIanOPUBcQcCay9AOvau4EHLUEQZnpfOAU+LFlvKPH2HJbpEpOQ1K4Gax
-woBX0Qhdx4QkI2pLzDdKgJpTTAwJWb4LpY3qRkKTiQ+4T0slE+tgGvof1XUwpwF4
-VfYFYs4Cc0kFboI6ifsbHbe//Ip3XZ2t+AcIE+YaXAhMjTOFxoNZlKnyA4PUeQ6e
-GELlZ4sQKbHHojmdJ0ZwCJQkMmO5AvAO/2la3ceGILWeVfmB5c6hCShOa7LYqp3a
-i0SY15Lkf4bIMnr8EaZLm8FcAXHNc4JgS37jO7B4p9lNbpzXbKts2yoGZa3kS9Ah
-LrnoB52hvV3uwyzUEhm49jVd7Wxcu8KVYT0VcY9AqZD3jo7lI3UxKsylcW7AMWWZ
-NhDlw+OWBlUwLc0Zy7i3FXckgCMFlJywm3FhqcrrLpRgxSddaTczs4+b7vuHVCNK
-My3u6f43xMI=
-=EmUW
------END PGP SIGNATURE-----
-
---=-yaRn8kKNA16UPSKDsKev--
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 411ed5d..380cc5b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -396,17 +396,17 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, int queue_idx,
+ 	 * The passed variables are stored as real value ((2^n)-1).
+ 	 * Ralink registers require to know the bit number 'n'.
+ 	 */
+-	if (params->cw_min)
++	if (params->cw_min > 0)
+ 		queue->cw_min = fls(params->cw_min);
+ 	else
+ 		queue->cw_min = 5; /* cw_min: 2^5 = 32. */
+ 
+-	if (params->cw_max)
++	if (params->cw_max > 0)
+ 		queue->cw_max = fls(params->cw_max);
+ 	else
+ 		queue->cw_max = 10; /* cw_min: 2^10 = 1024. */
+ 
+-	if (params->aifs)
++	if (params->aifs >= 0)
+ 		queue->aifs = params->aifs;
+ 	else
+ 		queue->aifs = 2;
+-- 
+1.5.3.8
 
