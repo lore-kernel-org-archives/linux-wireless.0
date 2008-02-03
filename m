@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57092 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705AbYB2Q0G (ORCPT
+Received: from mail1.sea5.speakeasy.net ([69.17.117.3]:43735 "EHLO
+	mail1.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755309AbYBCRmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 11:26:06 -0500
-Subject: Re: hostapd with mac80211 progress
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1204266154.3090.182.camel@debian.sh.intel.com>
-References: <1204190255.3090.165.camel@debian.sh.intel.com>
-	 <1204210453.6309.49.camel@johannes.berg>
-	 <1204266154.3090.182.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5Kc/D2oh+LqmbCn95kRO"
-Date: Fri, 29 Feb 2008 17:25:56 +0100
-Message-Id: <1204302356.3938.36.camel@johannes.berg> (sfid-20080229_162611_741965_A97D96DC)
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 12:42:54 -0500
+Date: Sun, 3 Feb 2008 09:42:44 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Patrick McHardy <kaber@trash.net>
+Subject: Re: mac80211 QoS/aggregation questions, thoughts
+Message-ID: <20080203174244.GA1261@jm.kir.nu> (sfid-20080203_174259_205993_F339A7FB)
+References: <1201882512.4188.66.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1201882512.4188.66.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 01, 2008 at 05:15:12PM +0100, Johannes Berg wrote:
 
---=-5Kc/D2oh+LqmbCn95kRO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> To be honest, I'm totally unclear on how all this queue stuff is
+> supposed to work. Ivo pointed me to IEEE80211_TX_QUEUE_AFTER_BEACON
+> which is unused and duplicated with IEEE80211_TXCTL_SEND_AFTER_DTIM.
 
+I don't think IEEE80211_TX_QUEUE_AFTER_BEACON was originally used for
+anything inside the d80211 code so it was just a queue identifier that
+was shared between the hardware driver and more generic 802.11 code. As
+such, it should be fine to do this inside the hardware drivers and
+remove this from mac80211.
 
-On Fri, 2008-02-29 at 14:22 +0800, Zhu Yi wrote:
-> On Thu, 2008-02-28 at 15:54 +0100, Johannes Berg wrote:
-> >=20
-> > Yes, you need at least the one hostapd patch I still have and also the
-> > trivial AP mode enable patch. I'll rebase my patches on the current
-> > wireless-testing tree in a minute so check for patch uploads later
-> > than this email.
->=20
-> OK, I've applied all these patches. The kernel doesn't compile unless I
-> enabled CONFIG_NETDEVICES_MULTIQUEUE && CONFIG_MAC80211_MESH and with
-> below patch.
+>      2. get rid of IEEE80211_TX_QUEUE_BEACON, it isn't used in mac80211
+>         and it's not hardware-independent, not all hardware actually
+>         uses a queue for beacons
 
-Ok, now that John merged more stuff you should only need the hostapd
-patch and the allow-ap-vlan-modes patch from my kernel series :)
+This was originally used only for setting up queue parameters for Beacon
+frames in IBSS and that can be done differently.
 
-johannes
+>      4. remove IEEE80211_TX_QUEUE_SVP, it's something strange and
+>         atheros specific
 
---=-5Kc/D2oh+LqmbCn95kRO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Sure, that should be removed.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8gyE6Vg1VMiehFYAQLSeBAAojU94QDLhBqees5G1CXvq6vBpLZRWUkJ
-RH4NyMMmx/MZaJO/vH/36YS2U9/66+iduh+CIFb9gG9kKKmbaJv1ZUMcSbqqCknn
-1NUMmG+gurFSxZIczWjGzxRb2+84DSm+ftFYvQy0llEyjPWJKpqlHdf//quvwQgn
-uYwxXFAEQJI65h2wfVuOICjrnDIXiUSPOWO1uPPfzODhoL/moBmVFg0DnHzNp9Au
-jZdHelE4DhVmf86L+mSXO4EER6irFJJiiLlz2idqP3MMMDLKZuzfc5IBmg6furQK
-LZ4u3NbTGJUt375JO2Y2GFIOrHZXk/m8LDFLnxliHamBv4PfAgDYfXBLzVS7UIfs
-LQ7t6huVMph305Pv+m7ynzCrh8qRGbGv8MLiGr6CHB0dvnRpP/ibmLCK6a1RjYio
-z95F8GvNn9HQXTuhCelxtjO4f2gHRAd3c0b+cKrmG0ZxvbJ2FRfTCu7LK+Sw9H3m
-DfSybPFH4lVqY61JTOuJ+u2WiNZdbPnz1C6wESCcRbXxvSfqn1CsD6zhH20qZAJU
-5uHFLvj/F7KlNmBavvFYq7qXFUAnOOowAIc/qVXwjyz5tKEMatJWA/ExlOO8Jwcq
-+GhZvpKzFKdOd/5A1+VZuXRPc2Ws5vUvRKhCnYOEnF5J2AsDX0zOJBUTuRyAK1TH
-XpvAvhiKFMc=
-=XwFX
------END PGP SIGNATURE-----
-
---=-5Kc/D2oh+LqmbCn95kRO--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
