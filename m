@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:41824 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576AbYBGVpj (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:50906 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932091AbYBCBj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 16:45:39 -0500
-Date: Thu, 7 Feb 2008 22:25:29 +0100
-From: Tino Keitel <tino.keitel@gmx.de>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFT 1/1] single_chip test
-Message-ID: <20080207212529.GA5975@dose.home.local> (sfid-20080207_214543_259267_8FA23CA7)
-References: <20080206014131.9d489a34.akpm@linux-foundation.org> <1202294560-7313-1-git-send-email-jirislaby@gmail.com> <20080206150043.GA6921@nineveh.local> <b6c5339f0802060746m3a5f87edj4465797564430292@mail.gmail.com>
+	Sat, 2 Feb 2008 20:39:58 -0500
+Received: by an-out-0708.google.com with SMTP id d31so401889and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 17:39:58 -0800 (PST)
+Message-ID: <40f31dec0802021739m2caf869av35a0750f9605c408@mail.gmail.com> (sfid-20080203_014011_022813_2B7319DD)
+Date: Sun, 3 Feb 2008 03:39:58 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH] wireless: Fix WARN_ON() with ieee802.11b
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <200802022353.10286.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0802060746m3a5f87edj4465797564430292@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <200802022353.10286.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2008 at 10:46:39 -0500, Bob Copeland wrote:
-> > > We failed to resume after a hardware reset here for a whole second. Is there any
-> > > version of ath5k which worked for you (is this a regression)?
-> >
-> > I cannot speak for Tino, but my ath5k never worked in MacBook -- it
-> > failed the same way, and I believe the hardware was the same.  My
-> > understanding was that it was a known bug with PCIE devices, but I got
-> > that out of reading list archives.
-> 
-> Nick Kossifidis and I are in the process of debugging this -- we
-> determined that AR5K_RESET_CTL_PCI hangs the card in hw_nic_wakeup.
-> It doesn't look like there is any general support for 5424 cards yet.
+2008/2/3, Ivo van Doorn <ivdoorn@gmail.com>:
+> When the driver registers a IEEE80211_BAND_2GHZ band,
+> it can either be 802.11b or 802.11g. But when 802.11b rates
+> are registered "want" will be 3 (since 4 rates are being registered,
+> and each of those 4 rates will decrease "want").
+> Since this is a correct situation, there is no need to trigger
+> a WARN_ON() for this.
+>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+>
+> ---
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index 0dcccbf..5304c62 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -80,7 +80,7 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband,
+>                                 sband->bitrates[i].flags |=
+>                                         IEEE80211_RATE_ERP_G;
+>                 }
+> -               WARN_ON(want != 0 && want != 6);
+> +               WARN_ON(want != 0 && want != 3 && want != 6);
+>                 break;
+>         case IEEE80211_NUM_BANDS:
+>                 WARN_ON(1);
 
-I tried the patch, and the card was detected. I was able to associate
-with an WPA2 AP and send/receive some traffic. But after a while the
-interface broke:
+Had the same problem when registering an AR5211 card (a/b only), this
+patch fixes it ;-)
 
-ath0: No ProbeResp from current AP 00:14:bf:16:25:87 - assume out of
-range
-ath5k_hw_get_isr: 0x00000020
-...
-ath0: failed to set channel 165 (5825 MHz) for scan
-ath0: failed to restore operational channel after scan
-printk: 19 messages suppressed.
-ath5k phy0: calibration timeout (2447MHz)
-printk: 1 messages suppressed.
-ath5k phy0: calibration timeout (2447MHz)
-ath5k phy0: unable to reset hardware: -11
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Regards,
-Tino
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
