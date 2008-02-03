@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41998 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755119AbYBGKfI (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:34103 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932294AbYBCBrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 05:35:08 -0500
-Subject: Re: [PATCH 01/13] o11s: (rtnetlink) add commands for mesh tables
-	manipulation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a7825b.06538c0a.3bce.5ec1@mx.google.com> (sfid-20080204_212408_298998_A7C8CED4)
-References: <47a7825b.06538c0a.3bce.5ec1@mx.google.com>
-	 (sfid-20080204_212408_298998_A7C8CED4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v4ukEUsWgYY5IAQaXNq7"
-Date: Thu, 07 Feb 2008 00:56:48 +0100
-Message-Id: <1202342208.9965.29.camel@johannes.berg> (sfid-20080207_103518_757679_24F70555)
-Mime-Version: 1.0
+	Sat, 2 Feb 2008 20:47:09 -0500
+Date: Sat, 2 Feb 2008 20:45:59 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: reset for 5424-based card
+Message-ID: <20080203014559.GA20177@hash.localnet> (sfid-20080203_014714_041647_E783DCEC)
+References: <20080131155901.GA7997@hash.localnet> <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com> <20080201040358.GA13428@hash.localnet> <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> <20080201225345.GA15922@hash.localnet> <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Feb 02, 2008 at 03:48:34AM +0200, Nick Kossifidis wrote:
+> > Yeah I have an AP but it's broadcom based.  I'll try to do the traces this
+> > weekend.
+> >
+> 
+> Thanx ;-)
 
---=-v4ukEUsWgYY5IAQaXNq7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok, so I did -b and -g traces.  That branch is a little out of date, so 
+I wound up downgrading to 2.6.22.
 
+I don't have an a-capable AP, so how might I get a/turboa/turbog traces?
+Do I use wlanconfig from the madwifi docs like so:
 
-On Mon, 2008-02-04 at 10:48 -0800, Luis Carlos Cobo wrote:
-> This patch adds the necessary commands for mesh peer link table and mesh =
-path
-> table manipulation.
+   $ iwpriv ath0 mode 1
+   $ wlanconfig ath0 create wlandev wifi0 wlanmode ap
 
-This needs to go via netdev too. Also, why should it be defined as
-"real" netlink rather than within nl80211? It is wireless specific, no?
+What mode # is used for turbo a/g?
 
-johannes
+I put the tarballs at http://bobcopeland.com/ath5k/
 
---=-v4ukEUsWgYY5IAQaXNq7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> Great info ! Your card sends the RXORN interrupt (Rx overrun), at
+> least we know what the problem is ;-)
+> 
+> How about your signal strength ?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Looks fine, I think:
+    Quality=89/100  Signal level=-39 dBm  Noise level=-96 dBm
 
-iQIVAwUAR6pJP6Vg1VMiehFYAQImTg/9Gzx7GYwfXK1BNjxrDwJgeQ2h7tMmPb0S
-PgFWSrt0lwdx2PoT6YX8/depuZgbfKVHAo7Mu/tHM8VzJ5I432fNCBfEvET9k4gk
-4Kbuhe4HkUt6epnBLjk+tlilXnsTGO2IkphAIwC5PvZaj3wfmdILlWopn4RtZbqi
-lMOKjAwRaGOAeoRGT7luQuSVp4RrIdqnOhTdv457+eK1n344coFXtUqNmrFkfbYl
-ud26P0XJGC0TB8T9nHfILnjvo2TEp0CD8VjUozt4mZ8uc5nokyE3M2MnhFYiQTob
-9tB95UH+sx5l5pWXiYK5L7EokUO2lUl7i9Gz4YeqqiaXLfICt7DPzbumVm6NUAz2
-kkCLNgiq4Lsk/94hrB7zYGcpXpKNl/HSfzl3Obey5iLT0PDYuwiASUburBN0op9a
-jrseYyb2QeziFUKAWuGeTsjUjfp4ubVlHPgzyRY+9M1wIjrnVP+oLZXu/JqyB3kj
-Cnr2sEGwel2o+RgUVo0t9vl7r5Z82sEPKLmqNMKzx/kMmWJGjY3Vy/FzUYhM3WU+
-L5LO9NtUFFVerhvewQxbi4CK5zhjNiR0ufkkBquzPP5tTzvys2o2CpXvagRUsr8e
-w3VSb3iem4ja/hL3NTzosFxXdDBvrVO5byja6cawlAJB56PkLAT9iKYcPdXbuAyE
-VuulRTRIWkw=
-=saYV
------END PGP SIGNATURE-----
+> That's ok since we haven't added initvals/rfbuffer tables for your
+> card so phy isn't initialized propertly (this is the first problem we
+> should fix so we can be sure that rx overrun is not phy-related).
 
---=-v4ukEUsWgYY5IAQaXNq7--
+OK, well I guess that info is in the tarballs.  I poked around in the
+code, and it looks like my tables are similar to 5413 with maybe a 
+couple of extra registers.  But I'll await your analysis. :)
+
+> 1472         if (ah->ah_version != AR5K_AR5210) {
+> 1473                 /*HIU = Host Interface Unit (PCI etc)*/
+> 1474                 if (unlikely(data & (AR5K_ISR_HIUERR)))
+> 1475                         *interrupt_mask |= AR5K_INT_FATAL;
+> 
+> 
+> Change AR5K_ISR_HIUERR with AR5K_ISR_RXORN
+
+It does get rid of the message, but other than not seeing the printk
+any more, it doesn't seem to help things much. 
+ 
+Good luck on the exams! 
+
+-- 
+Bob Copeland %% www.bobcopeland.com 
 
