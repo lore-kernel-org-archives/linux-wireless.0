@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33348 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35144 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbYBOMwe (ORCPT
+	with ESMTP id S1755481AbYBCOhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 07:52:34 -0500
-Subject: Re: [PATCH 1/3] mac80211: better definition of mactime
+	Sun, 3 Feb 2008 09:37:31 -0500
+Subject: Re: cfg80211 API changes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <bruno@thinktube.com>
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-In-Reply-To: <20080215070116.32461.80795.stgit@one>
-References: <20080215070116.32461.80795.stgit@one>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9QNgeKGW6reg+1MkD6Cz"
-Date: Fri, 15 Feb 2008 13:52:19 +0100
-Message-Id: <1203079939.8931.186.camel@johannes.berg> (sfid-20080215_125237_919690_18F0BC73)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240802030555v28873634wceff4ecea67d3530@mail.gmail.com> (sfid-20080203_135528_899836_950D59B4)
+References: <1ba2fa240802030539h132c7365g1bc1c20b1c560c0@mail.gmail.com>
+	 <1ba2fa240802030555v28873634wceff4ecea67d3530@mail.gmail.com>
+	 (sfid-20080203_135528_899836_950D59B4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2S/I2o3FqIkNZmDvW5Bc"
+Date: Sun, 03 Feb 2008 15:37:24 +0100
+Message-Id: <1202049444.4188.125.camel@johannes.berg> (sfid-20080203_143734_919608_0436F51D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9QNgeKGW6reg+1MkD6Cz
+--=-2S/I2o3FqIkNZmDvW5Bc
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Fri, 2008-02-15 at 16:01 +0900, Bruno Randolf wrote:
-> define mactime as the time when the first data symbol arrived at the HW. =
-the
-> old definition was questionable because 802.11 defines timestamp only for
-> beacon and probe response frames, and there it means the timestamp field.
+> I'm finding it a bit cumbersome,. now when tx_rate is pointer and
+> doesn't resides in the ieee80211_tx_control
+> I've seen in your patch you've just ripped this code off but our rate
+> scale algorithms doesn't work without it actually the code that read
+> this value in rate scale algorithm is there but it actually looking
+> into empty space...
 >=20
-> a stricter definition of mactime is necessary for correct merging of IBSS=
-.
+>  -       tx_status->control.tx_rate =3D
+>  -               iwl4965_hw_get_rate_n_flags(tx_resp->rate_n_flags);
 >=20
-> note that it is up to the driver to convert whatever its hardware returns=
- to
-> this definition. unfortunately we don't know for example when atheros har=
-dware
-> takes its rx timestamp exactly :(
->=20
-> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+>  I'm just asking if you had something in mind or it's just something you =
+forgot.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+TBH, that confused me completely since the rate scale algorithm tells
+the hardware what rate to use so why does the hw need to assign a
+different rate in the tx status?
 
-> ---
->=20
->  include/net/mac80211.h |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 460da54..1b807f4 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -295,7 +295,8 @@ enum mac80211_rx_flags {
->   * The low-level driver should provide this information (the subset
->   * supported by hardware) to the 802.11 code with each received
->   * frame.
-> - * @mactime: MAC timestamp as defined by 802.11
-> + * @mactime: value in microseconds of the 64-bit Time Synchronization Fu=
-nction
-> + * 	(TSF) timer when the first data symbol (MPDU) arrived at the hardwar=
-e.
->   * @band: the active band when this frame was received
->   * @freq: frequency the radio was tuned to when receiving this frame, in=
- MHz
->   * @ssi: signal strength when receiving this frame
->=20
->=20
+johannes
 
---=-9QNgeKGW6reg+1MkD6Cz
+--=-2S/I2o3FqIkNZmDvW5Bc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR7WLAqVg1VMiehFYAQLD6hAAiNQR/biV7Sgjk1PEPxlgxx73ecegD46W
-zyd1K9ehws/0k7nwkEqfDis9p55U4lMG1RjwVWo7wZOz1M788PtpnjGWOa3O+jDg
-guCbCR8EpP+9FU+lWkQc8/GoRRbFjg9xUanQoY9WA5QX3RmTbsBEgEAJJwSMC5ZY
-q8QEyBOdSaANNN1D41Yovz982KvQbAkdUu55KQbR6mqADh7qf3awoVvMwpNnzMZp
-UAsXxPSf/LwsIyFCL80GTph48zrEUTUHKq3CnW+8rDh9wAsRNnrJYCZjL6Xk+Jdy
-/9F0nSy7APInpTJZBTNGirJYpc8SVobMhVYH9ZHrAG2K0kg8ozWdrMGhp40dpgnq
-U4ihHS7sFjBtJp2rLfcS4FTvRaZc8ZP8AyDSJyGcxiz4YXr0sDHuyMwNU39R2dAu
-tHIqSmLb5zscsDhKPrgPxtIYP3yLtEYNdUEtcBsLhPkDI/ydk51k6VkYscEuh+lL
-uZJPycDNfpNh5WAgCl+Ru9k69iWZ2yP+wwdEQ/nxhpn/v9TnEWpDNXvDcmU14q1H
-K2UveZrGV3/f/PsULWW2l6jLbMr6WXkUWrtpGOs/cOH+8gCBw3F29ljtuudMTDWX
-OxAsfaHV2W4cqrrx+LWYabDoYsGeYpdabVzXot0daZjDSJzQTWlQtpvaRz4sPqRW
-Jm9d6wurHWo=
-=T13w
+iQIVAwUAR6XRo6Vg1VMiehFYAQJ0oBAAo7yWV6zF0lLrNxBFuE+zXrjmy8Kh59qs
+8oQK/L8jYSU97mbiFQkqgJAsh41bAkP61lVjYi35Wg9CJVuYrMqclxNMzEmcB3r/
+7VK1ya8aGMVT6qNF0FSzQLeJd3o7/2/Epe03XgNv+PiWVCgZvTQdC9tM+z6gM5G+
+mUptQ6yP3mfLiNDKkGRTdSHIOKS3FxqUVdF7ncpbLRTbvWwFxNlP8xeuGAnK3Frk
+rxaW6sLdR8TKKxno3PuNAOlyYaEvSVvGVZ494VrhJGMmU0dK14sFRrhJYq3xwfAF
+Nv1z5BbpOiw2Y+TfWuUppuGBYGWClYTPmP8iVxxqJ0cCil2Gb6sSX/P+fgXZwtzt
+Ky7hF9kORS3Z0W2/ufpowi3Le3jl2EHVni350US3I2oY0ajlr8Kr2oeR67KEPH6n
+fi/wCcJQDydapmMju8qyIt1PpnbRrtMMuEZWbfEmk2d9FOMeoGp8IvT+HdYK8EqD
+2iPDgafPGqy8Yxv82G7ozS3ZT1vxxZTEOVoYAs/Rz/lmLj52siBuVubW2I8YdqWc
+6LRaxykrf658r/N81KCxxp+zEeKthBERmu2xAcA8ADiZ6Kz9QbsRmBBcT4bls8b1
+lvI0s1/FtQ9ZMaM9h83siV5dK3QDkVi2CAEJ1mh0BYpYmuh2LPFLgcj7YA736krI
+84ifMGf3BAM=
+=sGtT
 -----END PGP SIGNATURE-----
 
---=-9QNgeKGW6reg+1MkD6Cz--
+--=-2S/I2o3FqIkNZmDvW5Bc--
 
