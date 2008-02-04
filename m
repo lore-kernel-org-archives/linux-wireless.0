@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:61693 "EHLO
-	viefep19-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756347AbYBRPTt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 10:19:49 -0500
-Message-ID: <47B9A20C.10304@trash.net> (sfid-20080218_152007_919367_B2512DC0)
-Date: Mon, 18 Feb 2008 16:19:40 +0100
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: David Miller <davem@davemloft.net>, bruno@thinktube.com,
-	netdev@vger.kernel.org, jgarzik@pobox.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
-References: <20080215104804.9870.15722.stgit@one>	 <20080215.025855.202184003.davem@davemloft.net> <1203097370.21308.18.camel@localhost>
-In-Reply-To: <1203097370.21308.18.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:44002 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751215AbYBDU4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 15:56:15 -0500
+Date: Mon, 4 Feb 2008 21:06:14 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Thomas Ilnseher <illth@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: b43 doesn't reset hardware when loaded/unloaded [severity:
+ minor]
+Message-ID: <20080204210614.760595db@morte> (sfid-20080204_205621_030335_23A09EF9)
+In-Reply-To: <1202153575.8270.7.camel@note.localnet>
+References: <1202153575.8270.7.camel@note.localnet>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches wrote:
-> On Fri, 2008-02-15 at 02:58 -0800, David Miller wrote:
->> From: Bruno Randolf <bruno@thinktube.com>
->> Date: Fri, 15 Feb 2008 19:48:05 +0900
->>> is there any chance to include a macro like this for printing mac
->> addresses?
->>> its advantage is that it can be used without the need to declare
->> buffers for
->>> print_mac(), for example:
->> We specifically removed this sort of thing, please don't
->> add it back.
+On Mon, 04 Feb 2008 20:32:55 +0100
+Thomas Ilnseher <illth@gmx.de> wrote:
 
-Why?
+> Hi!
+> 
+> I upgraded my kernel to 2.6.24, and
+> so I also upgraded from bcm43xx to b43.
+> 
+> There used to be a problem with bcm43xx that after 
+> resuming from Supend-To-Ram, wireless didn't work anymore.
 
-> @@ -404,11 +405,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
->  
->  	pr_debug("%s: about to send skb: %p to dev: %s\n",
->  		__FUNCTION__, skb, skb->dev->name);
-> -	pr_debug("  " MAC_FMT " " MAC_FMT " %4hx %4hx %4hx\n",
-> -		 veth->h_dest[0], veth->h_dest[1], veth->h_dest[2],
-> -		 veth->h_dest[3], veth->h_dest[4], veth->h_dest[5],
-> -		 veth->h_source[0], veth->h_source[1], veth->h_source[2],
-> -		 veth->h_source[3], veth->h_source[4], veth->h_source[5],
-> +	pr_debug("  %s %s %4hx %4hx %4hx\n",
-> +		 print_mac(mac, veth->h_dest), print_mac(mac2, veth->h_source),
+[...]
+ 
+> It doesn't work with b43. (of course replacing bcm43xx with b43).
+> I *assume* that the core isn't completely reseted on insmod'ing.
+
+This should be fixed in 2.6.24.1. A patch is available in the wireless-2.6
+tree.
 
 
-This results in print_mac getting called twice per packet even without
-debugging. Whats the problem with MAC_FMT?
+-- 
+Ciao
+Stefano
