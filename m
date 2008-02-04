@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbYBYPb6 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:8134 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787AbYBDNf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:31:58 -0500
-Message-Id: <20080225153004.876977000@sipsolutions.net> (sfid-20080225_153207_333055_05680667)
-References: <20080225152740.360393000@sipsolutions.net>
-Date: Mon, 25 Feb 2008 16:27:42 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 02/10] mac80211: safely free beacon in ieee80211_if_reinit
-Mime-Version: 1.0
+	Mon, 4 Feb 2008 08:35:57 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2948481wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 05:35:56 -0800 (PST)
+Message-ID: <1ba2fa240802040535x32c2470fw807932fd4120a2a9@mail.gmail.com> (sfid-20080204_133605_871974_4F022B08)
+Date: Mon, 4 Feb 2008 15:35:55 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Felix Fietkau" <nbd@openwrt.org>
+In-Reply-To: <5605009721259660313@unknownmsgid>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>
+	 <1ba2fa240802040305u611bb7edk3c757b73f40c1037@mail.gmail.com>
+	 <-4694429725714512287@unknownmsgid>
+	 <1ba2fa240802040321s515e61deld176d79eef2b444d@mail.gmail.com>
+	 <-2417195033053015320@unknownmsgid>
+	 <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>
+	 <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com>
+	 <5358276387473684738@unknownmsgid>
+	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>
+	 <5605009721259660313@unknownmsgid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If ieee80211_if_reinit() is called from ieee80211_unregister_hw()
-then it is possible that the driver will still request a beacon
-(it is allowed to until ieee80211_unregister_hw() has returned.)
-This means we need to use an RCU-protected write to the beacon
-information even in this function.
+On Feb 4, 2008 2:08 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Tomas Winkler wrote:
+>
+> >> Hmm? Not quite sure what you're asking. The tx_control has a pointer to
+> >> the bitrate right now so that contains what bitrate the rate control
+> >> algorithm selected (whether or not the hw downscales by itself).
+> >
+> > So we add rate flags and pointer to bit rate structure?
+> > Correct?
+>
+> I thought we just agreed not to because they're not bit rate but rather
+> rate control specific. Think of it this way: the rate control algorithm
+> selects a bitrate and those control flags you mentioned (SISO/MIMO/...),
+> right?
+>
+> So the rate control algorithm has to communicate the bitrate and the flags
+> to the hardware. It currently communicates the bitrate selection by giving
+> a bitrate structure pointer (it could simply give the bitrate in kbps or
+> whatever but that would mean the driver needs to look up its hw_value so
+> this is the reason for passing the pointer) and cannot currently
+> communicate the control flags selection.
+>
+> So the way I see it we'd add something like "u32 rate_control_flags" to
+> struct tx_control for the flags you wanted, and also add a similar field
+> (to be able to reuse the flag definitions) to the tx status & rx status
+> structs. It seems to me that makes most sense, no?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_iface.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I think we're talking about the same
 
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-23 14:59:28.000000000 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-02-24 10:07:16.000000000 +0100
-@@ -209,6 +209,7 @@ void ieee80211_if_reinit(struct net_devi
- 		/* Remove all virtual interfaces that use this BSS
- 		 * as their sdata->bss */
- 		struct ieee80211_sub_if_data *tsdata, *n;
-+		struct beacon_data *beacon;
- 
- 		list_for_each_entry_safe(tsdata, n, &local->interfaces, list) {
- 			if (tsdata != sdata && tsdata->bss == &sdata->u.ap) {
-@@ -226,7 +227,10 @@ void ieee80211_if_reinit(struct net_devi
- 			}
- 		}
- 
--		kfree(sdata->u.ap.beacon);
-+		beacon = sdata->u.ap.beacon;
-+		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
-+		synchronize_rcu();
-+		kfree(beacon);
- 
- 		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
- 			local->total_ps_buffered--;
-
--- 
-
+> johannes
+>
