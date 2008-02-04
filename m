@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2250 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756027AbYB0BEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 20:04:39 -0500
-Date: Tue, 26 Feb 2008 19:59:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from smtp.nokia.com ([192.100.105.134]:60634 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbYBDFxN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 00:53:13 -0500
 To: Tomas Winkler <tomasw@gmail.com>
-Cc: Julia Lawall <julia@diku.dk>, yi.zhu@intel.com,
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
-	use of ! and &
-Message-ID: <20080227005928.GA3066@tuxdriver.com> (sfid-20080227_010444_209073_FC9AB71F)
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> <1ba2fa240802261447udd3ff92t20aba416362d5e33@mail.gmail.com>
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: cfg80211 API changes
+References: <1ba2fa240802030539h132c7365g1bc1c20b1c560c0@mail.gmail.com>
+	<1ba2fa240802030555v28873634wceff4ecea67d3530@mail.gmail.com>
+	<1202049444.4188.125.camel@johannes.berg>
+	<1ba2fa240802030651x58ab6c63yd1b4d9ccaa2ecd42@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 04 Feb 2008 07:52:44 +0200
+In-Reply-To: <1ba2fa240802030651x58ab6c63yd1b4d9ccaa2ecd42@mail.gmail.com> (ext Tomas Winkler's message of "Sun\, 3 Feb 2008 16\:51\:27 +0200")
+Message-ID: <87ve55b74j.fsf@nokia.com> (sfid-20080204_055316_931325_EB4A85F5)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240802261447udd3ff92t20aba416362d5e33@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 12:47:56AM +0200, Tomas Winkler wrote:
+Tomas Winkler <tomasw@gmail.com> writes:
 
-> >  diff -u -p a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> >  --- a/drivers/net/wireless/iwlwifi/iwl-4965.c 2008-02-05 20:56:01.000000000 +0100
-> >  +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c 2008-02-26 08:09:12.000000000 +0100
-> >  @@ -4589,7 +4589,7 @@ static u8 iwl4965_is_fat_tx_allowed(stru
-> >
-> >         if (sta_ht_inf) {
-> >                 if ((!sta_ht_inf->ht_supported) ||
-> >  -                  (!sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH))
-> >  +                  (!(sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH)))
-> >                         return 0;
-> >         }
-> 
-> The patch was already submitted by Roel Kluin '[PATCH]
-> [wireless/iwlwifi/iwl-4965.c] add parentheses' I've acked it.
-> Didn't track it if it's actually committed into tree... John, Reinette ?
+>> TBH, that confused me completely since the rate scale algorithm tells
+>> the hardware what rate to use so why does the hw need to assign a
+>> different rate in the tx status?
+>
+> I see.  Rate scale algorithm only tels FW from what rate to start
+> transmission. FW is responsible to do downscaling.  Which is quite
+> reasonable as retransmission is real time process. Instead of
+> retransmitting on the same rate FW downscales. T X response provides
+> to the rate scaling algorithm the successful rate.
 
-Already merged and sent to davem...
+I just want to point out this is an important feature when the bus is
+very slow, for example SPI bus in embedded devices. Retransfering
+frames through SPI for every rate restransmit would make such a device
+extremely slow.
 
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Kalle Valo
