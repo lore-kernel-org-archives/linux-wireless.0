@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41279 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144AbYB0MjP (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:20959 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbYBDPNo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 07:39:15 -0500
-Subject: [PATCH] mac80211: fix key replacing, hw accel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 27 Feb 2008 13:39:00 +0100
-Message-Id: <1204115940.6309.2.camel@johannes.berg> (sfid-20080227_123925_567845_3A49F179)
-Mime-Version: 1.0
+	Mon, 4 Feb 2008 10:13:44 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2988527wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 07:13:44 -0800 (PST)
+Message-ID: <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com> (sfid-20080204_151351_488552_A4AA9B82)
+Date: Mon, 4 Feb 2008 17:13:40 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+Cc: "Felix Fietkau" <nbd@openwrt.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <-7767648866191425885@unknownmsgid>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>
+	 <-2417195033053015320@unknownmsgid>
+	 <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>
+	 <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com>
+	 <5358276387473684738@unknownmsgid>
+	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>
+	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>
+	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>
+	 <-7767648866191425885@unknownmsgid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even though I thought about it a lot and had also tested it, some
-of my recent changes in the key code broke replacing keys, making
-the kernel oops because a key is removed from a list while not on
-it.
+On Feb 4, 2008 4:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Tomas Winkler wrote:
+>
+> > I think we should also remove ieee80211_tx_control from
+> > ieee80211_tx_status.
+>
+> Not sure. Where is it used?
 
-This patch fixes that using the list as an indication whether or
-not the key is on it (an empty list means it's not on any list.)
+Let's try, if it's break we won't be in worst situation then now :)
 
-Also, this patch fixes hw accel enabling, the check for not doing
-hw accel when the interface is down was lost and is restored by
-this.
+>
+> > Maybe we should add blob to tx_status let say of skb->cb[] size and
+> > field for rate scale algorithm version/name.  Otherwise we will be
+> > inventing API for each rate scale algorithm...
+>
+> I disagree, we should have something generic enough to allow some sort of
+> "capability negotiation" between the driver and the rate control
+> algorithm, otherwise we could just remove rate control algorithms
+> completely and internalize them into drivers (with some "helper" functions
+> for those who don't want to write their own)... Which I'm sure you might
+> actually like but I don't ;)
 
-Additionally, move adding the key to the list into the function
-__ieee80211_key_replace() for more consistency.
+So Felix how many rates do you need for each packet?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/key.c |   27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
-
---- everything.orig/net/mac80211/key.c	2008-02-27 13:16:02.000000000 +0100
-+++ everything/net/mac80211/key.c	2008-02-27 13:31:23.000000000 +0100
-@@ -150,6 +150,7 @@ struct ieee80211_key *ieee80211_key_allo
- 	key->conf.keyidx = idx;
- 	key->conf.keylen = key_len;
- 	memcpy(key->conf.key, key_data, key_len);
-+	INIT_LIST_HEAD(&key->list);
- 
- 	if (alg == ALG_CCMP) {
- 		/*
-@@ -189,6 +190,8 @@ static void __ieee80211_key_replace(stru
- 			ieee80211_set_default_key(sdata, -1);
- 
- 		rcu_assign_pointer(sdata->keys[idx], new);
-+		if (new)
-+			list_add(&new->list, &sdata->key_list);
- 
- 		if (defkey && new)
- 			ieee80211_set_default_key(sdata, new->conf.keyidx);
-@@ -196,7 +199,11 @@ static void __ieee80211_key_replace(stru
- 
- 	if (key) {
- 		ieee80211_key_mark_hw_accel_off(key);
--		list_del(&key->list);
-+		/*
-+		 * We'll use an empty list to indicate that the key
-+		 * has already been removed.
-+		 */
-+		list_del_init(&key->list);
- 	}
- }
- 
-@@ -254,12 +261,13 @@ void ieee80211_key_link(struct ieee80211
- 
- 	__ieee80211_key_replace(sdata, sta, old_key, key);
- 
--	list_add(&key->list, &sdata->key_list);
--
--	synchronize_rcu();
-+	if (old_key) {
-+		synchronize_rcu();
-+		ieee80211_key_free(old_key);
-+	}
- 
--	ieee80211_key_free(old_key);
--	ieee80211_key_enable_hw_accel(key);
-+	if (netif_running(sdata->dev))
-+		ieee80211_key_enable_hw_accel(key);
- }
- 
- void ieee80211_key_free(struct ieee80211_key *key)
-@@ -277,8 +285,13 @@ void ieee80211_key_free(struct ieee80211
- 		 * Because other code may have key reference (RCU protected)
- 		 * right now, we then wait for a grace period before freeing
- 		 * it.
-+		 * An empty list indicates it was never added to the key list
-+		 * or has been removed already. It may, however, still be in
-+		 * hardware for acceleration.
- 		 */
--		__ieee80211_key_replace(key->sdata, key->sta, key, NULL);
-+		if (!list_empty(&key->list))
-+			__ieee80211_key_replace(key->sdata, key->sta,
-+						key, NULL);
- 
- 		/*
- 		 * Do NOT remove this without looking at sta_info_destroy()
+Thanks
+Tomas
 
 
+
+> johannes
+>
