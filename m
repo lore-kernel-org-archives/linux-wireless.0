@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7288 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750719AbYBVFAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 00:00:46 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 1/5] at76_usb: fix missing newlines in printk,
-	improve some messages
-To: linux-wireless@vger.kernel.org, at76c503a-develop@lists.berlios.de
-Date: Fri, 22 Feb 2008 00:00:44 -0500
-Message-ID: <20080222050044.11158.86655.stgit@dv.roinet.com> (sfid-20080222_050102_133539_9BF2A0C7)
+Received: from wr-out-0506.google.com ([64.233.184.225]:36502 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078AbYBDTDT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 14:03:19 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so1653458wra.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 11:03:16 -0800 (PST)
+Message-ID: <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com> (sfid-20080204_190326_439229_F96EF059)
+Date: Mon, 4 Feb 2008 21:03:14 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Felix Fietkau" <nbd@openwrt.org>
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <47A75BF5.90101@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>
+	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>
+	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>
+	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>
+	 <-7767648866191425885@unknownmsgid>
+	 <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
+	 <47A72E13.8070305@openwrt.org>
+	 <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
+	 <47A75BF5.90101@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's important to know which function failed.
+On Feb 4, 2008 8:39 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Tomas Winkler wrote:
+> > Will this work work you?
+> >
+> > ieee80211_tx_ratectrl {
+> >   u32 bitrate ( or pointer to ieee80211_rate I prefer no)
+> >   u32 flags
+> >   u32 retry_count
+> > }
+> >
+> > ieee80211_tx_status {
+> >     ieee80211_tx_ratectrl  retry_count[ X]  / * X >= 4 */
+> > }
+> I guess that would work, but shouln't the array below be dynamic based on
+> what the driver can do? Many drivers can only work with one or two rates, IMHO.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+The problem that this structure is passed with each packett I don't
+like the idea that anybody would even try to allocate and free this
+structure as packets goes. However what about the following?
 
- drivers/net/wireless/at76_usb.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ieee80211_tx_status {
+         size_t nrates;
+         ieee80211_tx_ratectrl  retry_count[0] ;
+}
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 8db15bd..cdc258e 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -1645,7 +1645,7 @@ static struct fwentry *at76_load_firmware(struct usb_device *udev,
- 			   fwe->fwname);
- 		dev_printk(KERN_ERR, &udev->dev,
- 			   "you may need to download the firmware from "
--			   "http://developer.berlios.de/projects/at76c503a/");
-+			   "http://developer.berlios.de/projects/at76c503a/\n");
- 		goto exit;
- 	}
- 
-@@ -1885,7 +1885,7 @@ static int at76_join(struct at76_priv *priv)
- 				    sizeof(struct at76_req_join));
- 
- 	if (ret < 0) {
--		printk(KERN_ERR "%s: CMD_JOIN failed: %d",
-+		printk(KERN_ERR "%s: at76_set_card_command failed: %d\n",
- 		       wiphy_name(priv->hw->wiphy), ret);
- 		return 0;
- 	}
-@@ -1893,7 +1893,7 @@ static int at76_join(struct at76_priv *priv)
- 	ret = at76_wait_completion(priv, CMD_JOIN);
- 	at76_dbg(DBG_MAC80211, "%s: CMD_JOIN returned: 0x%02x", __func__, ret);
- 	if (ret != CMD_STATUS_COMPLETE) {
--		printk(KERN_ERR "%s: CMD_JOIN failed: %d",
-+		printk(KERN_ERR "%s: at76_wait_completion failed: %d\n",
- 		       wiphy_name(priv->hw->wiphy), ret);
- 		return 0;
- 	}
+> - Felix
+>
