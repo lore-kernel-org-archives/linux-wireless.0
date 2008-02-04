@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:7067 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755828AbYBYTuI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:50:08 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2079110wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:50:08 -0800 (PST)
-Subject: Re: [PATCH 11/13 v2] o11s: support for on-demand Hybrid Wireless
-	Mesh Protocol
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203968312.13162.142.camel@johannes.berg>
-References: <47be77ee.02098c0a.5eba.ffff81ef@mx.google.com>
-	 (sfid-20080222_072128_730595_F951750B)  <1203697819.7082.75.camel@johannes.berg>
-	 <1203967829.6929.16.camel@localhost>
-	 (sfid-20080225_192854_280269_CEC357A7)  <1203967819.13162.136.camel@johannes.berg>
-	 <1203968210.6929.22.camel@localhost>
-	 (sfid-20080225_193515_727081_D7673A7D)  <1203968312.13162.142.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 11:51:47 -0800
-Message-Id: <1203969107.6929.37.camel@localhost> (sfid-20080225_195028_490827_FEB477BB)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4414 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755004AbYBDUCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 15:02:30 -0500
+Date: Mon, 4 Feb 2008 14:50:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Denis Cheng <crquan@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless/ath5k: renamed to ath5k_pci_driver to fix
+	Section mismatch warnings
+Message-ID: <20080204195024.GF3446@tuxdriver.com> (sfid-20080204_200235_839432_F2FF3121)
+References: <1201920910-6649-1-git-send-email-crquan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1201920910-6649-1-git-send-email-crquan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-02-25 at 20:38 +0100, Johannes Berg wrote:
-> Huh. The draft says something like
+On Sat, Feb 02, 2008 at 10:55:10AM +0800, Denis Cheng wrote:
+> the struct pci_driver refered ath5k_pci_id_table which in __devinit section,
+> the sparse tool suggest this renamed to "*driver", kills mismatch warnings.
 > 
-> "includes frame headers, training sequences, access protocol frames,
-> etc."
-> 
-> That doesn't seem to depend on the hardware but rather on the PHY type
-> used, i.e. whether you have short/long preamble or 5GHz etc. Am I
-> misunderstanding it?
+> Signed-off-by: Denis Cheng <crquan@gmail.com>
 
-You are right, I assumed some of those values may vary among different
-hardware but have not going very deep about how to compute them.
+Sorry, I beat you to it on Friday... :-)
 
+John
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+John W. Linville
+linville@tuxdriver.com
