@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42048 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755872AbYBGKg1 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:44352 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356AbYBDLa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 05:36:27 -0500
-Subject: Re: [PATCH 05/13] o11s: added mesh.h, mesh function and data
-	structures definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a78274.12025a0a.0fb8.67db@mx.google.com> (sfid-20080204_212415_776178_13DE2F2C)
-References: <47a78274.12025a0a.0fb8.67db@mx.google.com>
-	 (sfid-20080204_212415_776178_13DE2F2C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oMga4PKLtRjcDBtXrATd"
-Date: Thu, 07 Feb 2008 01:25:19 +0100
-Message-Id: <1202343919.9965.57.camel@johannes.berg> (sfid-20080207_103646_097893_8985CA16)
-Mime-Version: 1.0
+	Mon, 4 Feb 2008 06:30:27 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2897083wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 03:30:26 -0800 (PST)
+Message-ID: <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com> (sfid-20080204_113030_295223_FC00DF46)
+Date: Mon, 4 Feb 2008 13:30:26 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Felix Fietkau" <nbd@openwrt.org>
+In-Reply-To: <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>
+	 <1ba2fa240802040153g1d0c9902u6af2ddf3dead975d@mail.gmail.com>
+	 <6231174111099834440@unknownmsgid>
+	 <1ba2fa240802040227g23fe41adu446adc8f0de22712@mail.gmail.com>
+	 <-6799378017406559341@unknownmsgid>
+	 <1ba2fa240802040305u611bb7edk3c757b73f40c1037@mail.gmail.com>
+	 <-4694429725714512287@unknownmsgid>
+	 <1ba2fa240802040321s515e61deld176d79eef2b444d@mail.gmail.com>
+	 <-2417195033053015320@unknownmsgid>
+	 <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Feb 4, 2008 1:26 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>
+> On Feb 4, 2008 1:23 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > Tomas Winkler wrote:
+> > > No, they are rate specific the are not modulation specific, each of
+> > > them can change from packet to packet.
+> >
+> > Exactly. flags in the bitrate struct aren't meant to change from packet to
+> > packet but be specific to a bitrate. The way I see it these are TX control
+> > or rate control flags, not rate flags.
+>
+> I see, I got it.
+> Yes you are right. they should be part of the statuses.
+> Tomas
+Last question before I got another patch out?
+So what will  be use of ieee80211_rate in tx_control then?
 
---=-oMga4PKLtRjcDBtXrATd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-> +/* plink is short for peer link */
-> +struct mesh_plink {
-> +	u8 ha[ETH_ALEN];	/* Hardware address */
-> +	__le16 llid;		/* Local link ID */
-> +	__le16 plid;		/* Peer link ID */
-> +	__le16 reason;		/* Buffer for cancel reason on HOLDING state */
-> +	u8 retries;		/* Retries in establishment */
-> +	enum plink_state state;
-> +	u32 timeout;
-> +	struct timer_list timer;
-> +	bool ignore_timer;
-> +	spinlock_t state_lock;	/* For peer_state reads / updates and other
-> +				   updates in the structure. Ensures robust
-> +				   trasitions for the peerlink FSM */
-
-typo: transitions, what does FSM mean? Also, using kernel-doc instead of
-inline comments would be appreciated for when I get around to writing
-documentation again.
-
-> +#define MESH_PATH_ACTIVE	1
-> +#define MESH_PATH_RESOLVING	2
-> +#define MESH_PATH_DSN_VALID	4
-> +#define MESH_PATH_FIXED		8
-> +#define MESH_PATH_DELETE	16
-> +#define MESH_PATH_RESOLVED	32
-
-You could use an enum and kernel-doc to explain these, also the BIT()
-might make sense.
-
-> +struct mesh_path {
-
-> +struct mesh_table {
-
-> +struct rmc_entry {
-
-Similarly, kernel-doc would be nice.
-
-johannes
-
---=-oMga4PKLtRjcDBtXrATd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6pP7qVg1VMiehFYAQJ62A//ew5R/aXdsgot4NYo0Aj01wYtYnjcsN9Z
-Lf3SyCsJ8nrWKVzI65cfNRtrYKt+yw23913gGqKekeLiogIZYQYccLF7npngbsdX
-eF9Kb/L/JQFFVViuLvfoz00BnZmzI94ilokXsn7eyN4IOvv3x9ra50vFRGLrRXE8
-nyXx8hGWDNY1jd4cZZlkTt5oWvP+WSLmfu7FY3DLkbd+gJu6JYIyZXg5bYme/sMe
-lx38SrwneQfwigAd2W8JGSjxe/AqBmrwH21FlBQ2eKgaLbh22g9cXP4IzsDRBLRU
-xbGCyMZEDNfW4l8XtMgF+WPUy9V5jcjMkEajzIGtBaZuvL14GXhlmERXkv8KX3cN
-2XK/ELtFYYUDexbl7SJvdYbVgaUf5nff6FJRPh5Qk0s1n/Rfa8/oK3HGJidqvUOF
-2x2vPkFAa3a4BzDETkosasnhfsMbIhZY/VSAuW/2t8mMN3qkh3TIbOB1JCoBLJOd
-igiXCEDVmkYM1fdQi48Y6WxWi1+h5nlJcdxIXTJfNn4hmnjW1FaSie+JP23RsjE0
-US9cVwtw8y6OXzXpwpLtdRqZruWXK5dm38fldEnzR4nM3EXcAOJBrYLH/asyZ0ym
-qtZgUAud9asFQiLvJjqSShWuoV0YRvZ7kRgau+t22wCgD53y9Cx4lgVVG7edmJQL
-2ABQOcJ3Wkc=
-=Ry+r
------END PGP SIGNATURE-----
-
---=-oMga4PKLtRjcDBtXrATd--
-
+> > johannes
+> >
+>
