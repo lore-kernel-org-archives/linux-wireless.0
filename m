@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:30530 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbYBAMlk (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:51957 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753496AbYBDQJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:41:40 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1599825pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 04:41:40 -0800 (PST)
-Message-ID: <43e72e890802010441n4770fe0ag69899a537f551080@mail.gmail.com> (sfid-20080201_124144_344033_29A45FE6)
-Date: Fri, 1 Feb 2008 07:41:39 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] ath5k: Cleanup after API changes patch
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, bruno@thinktube.com,
-	jirislaby@gmail.com, mickflemm@gmail.com
-In-Reply-To: <1201869496.4188.15.camel@johannes.berg>
+	Mon, 4 Feb 2008 11:09:32 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so350506nfb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 08:09:31 -0800 (PST)
+To: Adam Turk <bofh1234@hotmail.com>
+Subject: Re: rt73 driver doesn't work in 2.6.24
+Date: Mon, 4 Feb 2008 17:09:00 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl> <200802021536.50534.IvDoorn@gmail.com> <BAY101-W312BC257905062044A782AC8330@phx.gbl>
+In-Reply-To: <BAY101-W312BC257905062044A782AC8330@phx.gbl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080201012544.GD28995@ruslug.rutgers.edu>
-	 <1201869496.4188.15.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200802041709.00950.IvDoorn@gmail.com> (sfid-20080204_160938_163553_4FB8AA41)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 1, 2008 7:38 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> > Finally make a note that we should eventually move cap_range stuff
-> > to struct wiphy.
->
-> What is cap_range and why should it be in struct wiphy?
+Hi,
 
-Its the device's frequency capability range on the bands.
+> phy0: Failed to initialize wep
+> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+> rt73usb: probe of 1-1:1.0 failed with error -12
+> usbcore: registered new interface driver rt73usb
+> 
+> Despite the statement about registering the new interface driver rt73usb, the interface is not created.  Can someone please tell me what is wrong and get a fix into 2.6.24.1?
 
-  Luis
+This is a mac80211 bug and not a rt73usb bug.
+Apparatently the crypto_alloc_blkcipher("ecb(arc4)") call is failing,
+more then that I have no idea what can cause this.
+Any mac80211 developer with more information?
+
+Ivo
