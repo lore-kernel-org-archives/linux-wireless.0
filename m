@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serenity.mcc.ac.uk ([130.88.200.93]:54583 "EHLO
-	serenity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758033AbYBTN7u (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:40836 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754016AbYBDTkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 08:59:50 -0500
-Message-ID: <47BC32D7.3040900@gentoo.org> (sfid-20080220_135953_075957_1DB8996E)
-Date: Wed, 20 Feb 2008 14:01:59 +0000
-From: Daniel Drake <dsd@gentoo.org>
+	Mon, 4 Feb 2008 14:40:00 -0500
+To: Sam Leffler <sam@errno.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: cfg80211 API changes
+References: <1ba2fa240802030539h132c7365g1bc1c20b1c560c0@mail.gmail.com>
+	<1ba2fa240802030555v28873634wceff4ecea67d3530@mail.gmail.com>
+	<1202049444.4188.125.camel@johannes.berg>
+	<1ba2fa240802030651x58ab6c63yd1b4d9ccaa2ecd42@mail.gmail.com>
+	<87ve55b74j.fsf@nokia.com> <47A74923.8040201@errno.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 04 Feb 2008 20:20:22 +0200
+In-Reply-To: <47A74923.8040201@errno.com> (ext Sam Leffler's message of "Mon\, 04 Feb 2008 09\:19\:31 -0800")
+Message-ID: <87zlug4m8p.fsf@nokia.com> (sfid-20080204_194016_996203_F74BED5F)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Patch for compat-wireless-2.6
-References: <47B6FD58.5010004@hauke-m.de> <43e72e890802191535i5bd89432rfed0f4cf3e375c29@mail.gmail.com>
-In-Reply-To: <43e72e890802191535i5bd89432rfed0f4cf3e375c29@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
->> +--- a/drivers/net/wireless/zd1211rw/zd_chip.h	2008-02-15 16:29:43.000000000 -0500
->> ++++ b/drivers/net/wireless/zd1211rw/zd_chip.h	2008-02-15 16:29:43.000000000 -0500
->> +@@ -890,7 +890,7 @@ int zd_chip_lock_phy_regs(struct zd_chip *chip);
->> + int zd_chip_unlock_phy_regs(struct zd_chip *chip);
->> +
->> + enum led_status {
->> +-	LED_OFF = 0,
->> ++	LED_OFF_ZD = 0,
->> + 	LED_SCANNING = 1,
->> + 	LED_ASSOCIATED = 2,
->> + };
-> 
-> This could possibly go upstream so we don't have to keep an extra
-> patch around. Up to zd guys though. If not we'll have to keep updating
-> this hunk as the driver changes. Not a big issue. This is just so we
-> can keep including from compat.h leds.h which has its own definition
-> of LEDS_OFF.
+Sam Leffler <sam@errno.com> writes:
 
-Feel free to submit a patch adding a ZD_ prefix to all the enum members.
+>>> I see.  Rate scale algorithm only tels FW from what rate to start
+>>> transmission. FW is responsible to do downscaling.  Which is quite
+>>> reasonable as retransmission is real time process. Instead of
+>>> retransmitting on the same rate FW downscales. T X response provides
+>>> to the rate scaling algorithm the successful rate.
+>>
+>> I just want to point out this is an important feature when the bus is
+>> very slow, for example SPI bus in embedded devices. Retransfering
+>> frames through SPI for every rate restransmit would make such a device
+>> extremely slow.
+>
+> I don't know of a part that does repeated DMA to implement retransmit;
+> do you have an example?
 
-Daniel
+Asking me? No, I have never heard of such a device.
+
+-- 
+Kalle Valo
