@@ -1,80 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbYBCMmi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 07:42:38 -0500
-Subject: Re: [PATCH] wireless: Fix WARN_ON() with ieee802.11b
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200802022353.10286.IvDoorn@gmail.com> (sfid-20080202_225341_324871_B982F579)
-References: <200802022353.10286.IvDoorn@gmail.com>
-	 (sfid-20080202_225341_324871_B982F579)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9vWQEAxP67zKYF8bFMQK"
-Date: Sun, 03 Feb 2008 13:42:33 +0100
-Message-Id: <1202042553.4188.122.camel@johannes.berg> (sfid-20080203_124241_130239_5D1A1136)
-Mime-Version: 1.0
+Received: from bay0-omc3-s26.bay0.hotmail.com ([65.54.246.226]:42288 "EHLO
+	bay0-omc3-s26.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751316AbYBDQJb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 11:09:31 -0500
+Message-ID: <BAY101-W4222A12F4019C98589AB3EC8330@phx.gbl> (sfid-20080204_160935_682904_5E192C54)
+From: Adam Turk <bofh1234@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: RE: rt73 driver doesn't work in 2.6.24
+Date: Mon, 4 Feb 2008 11:09:30 -0500
+Content-Type: text/plain; charset=iso-8859-1
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9vWQEAxP67zKYF8bFMQK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> This is a problem with mac80211 loading the wep encryption, did you l=
+oad the arc4 module?
+>
+> Ivo
 
+I just compiled a new 2.6.24 kernel with arc4 compiled into the kernel =
+and still the driver gives the following output:
 
-On Sat, 2008-02-02 at 23:53 +0100, Ivo van Doorn wrote:
-> When the driver registers a IEEE80211_BAND_2GHZ band,
-> it can either be 802.11b or 802.11g. But when 802.11b rates
-> are registered "want" will be 3 (since 4 rates are being registered,
-> and each of those 4 rates will decrease "want").
-> Since this is a correct situation, there is no need to trigger
-> a WARN_ON() for this.
->=20
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+rt73usb 1-1:1.0: usb_probe_interface
+rt73usb 1-1:1.0: usb_probe_interface - got id
+ACPI: PCI Interrupt 0000:00:12.0[A] -> GSI 18 (level, low) -> IRQ 19
+snd-ca0106: Model 1006 Rev 00000000 Serial 10061102
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x00=
+00
+phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, =
+rev: 0002 573a.
+phy0: Selected rate control algorithm 'simple'
+phy0: Failed to initialize wep
+phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+rt73usb: probe of 1-1:1.0 failed with error -12
+usbcore: registered new interface driver rt73usb
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Despite the statement about registering the new interface driver rt73us=
+b, the interface is not created. Can someone please tell me what is wro=
+ng and get a fix into 2.6.24.1?
 
-> ---
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index 0dcccbf..5304c62 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -80,7 +80,7 @@ static void set_mandatory_flags_band(struct ieee80211_s=
-upported_band *sband,
->  				sband->bitrates[i].flags |=3D
->  					IEEE80211_RATE_ERP_G;
->  		}
-> -		WARN_ON(want !=3D 0 && want !=3D 6);
-> +		WARN_ON(want !=3D 0 && want !=3D 3 && want !=3D 6);
->  		break;
->  	case IEEE80211_NUM_BANDS:
->  		WARN_ON(1);
->=20
+Thanks,
+Adam
 
---=-9vWQEAxP67zKYF8bFMQK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6W2uKVg1VMiehFYAQLO8A//e2an9Oj6Spy6KoMzsEcZZg2MyCTU8ic2
-wXvXl+3IH47BOQGWIeAMbyvPsBVJbCf+Wu5ajip6UtiUBewGk4oobrra5yJ2kDkJ
-Nv12MdDqezZlNoCGlS3ZG/y7CKbMCX1CUUZ0bILjN5gJEl4OYAxaUjXqPk/kh2Ti
-hsD/HfDstMGHOw6KcEaGUqksN2YdgI2Q1+oDvzX9ips/SE9fef/3o0Y1mx0nAGpV
-y4KFqQW41McAM8TqvPbilH3qIN3SXoBrFhqAPuhdnECifSixlCoWwH7NIwW9l7Ks
-uqvOqkJF4i/KZnBJkYq2Q/509hpbAFZA5I4ePaKVqAnSRkYNk4BdRpHAJwVSiIaP
-oqR4mkRixaBqYht9mvJZTM17VHJW+w9o+KPOn9p6O2skkCkkfshw0zqft2icndB2
-qxQFLaCDt5o+3b58w9kFmz1g27eB5UN2lmAURzVCIxzPI14ncNxqXQg1ym17LTFr
-s0Y3qwCaUxyOgbeqgU81hhsb9MKkIdol937ncS1AheF4w7dbUw3yzd/Odjl6KBvG
-T5ccfpUg9oYyDZFFkCDS4XQmZEmeFyznko8Fy/kVRBFbAIz5Rts3VQBq0L+xVQy0
-RwgtjEL54hBvWDpUEITtQNh+XVoIsglIrapHZSMWA7urguKkPktBT3XIij7wWoQv
-GpkRaQSXN4o=
-=LyLk
------END PGP SIGNATURE-----
-
---=-9vWQEAxP67zKYF8bFMQK--
-
+_________________________________________________________________
+Need to know the score, the latest news, or you need your Hotmail=AE-ge=
+t your "fix".
+http://www.msnmobilefix.com/Default.aspx-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
