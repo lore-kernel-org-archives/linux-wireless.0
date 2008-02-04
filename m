@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58815 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbYBRTHw (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:42768 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbYBDDGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 14:07:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [BUG?] b43: Wireless signal lowers when increasing sound
-Date: Mon, 18 Feb 2008 20:07:19 +0100
-Cc: Ronald <ronald645@gmail.com>, linux-wireless@vger.kernel.org
-References: <47B93277.5030304@gmail.com> <20080218153511.GB3098@tuxdriver.com>
-In-Reply-To: <20080218153511.GB3098@tuxdriver.com>
+	Sun, 3 Feb 2008 22:06:00 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3052392pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 19:05:59 -0800 (PST)
+Message-ID: <43e72e890802031905ydf3001cp21ad50703bb68b61@mail.gmail.com> (sfid-20080204_030605_109155_56ADC9A2)
+Date: Sun, 3 Feb 2008 22:05:58 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH 0/7] ath5k: pending patches for port to new band API
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, bruno@thinktube.com,
+	johannes@sipsolutions.net
+In-Reply-To: <43e72e890802031854o7ffb0498q321e5d52001cfa03@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802182007.19859.mb@bu3sch.de> (sfid-20080218_190756_995241_8E4B3BB1)
+Content-Type: text/plain; charset=UTF-8
+References: <20080204025014.GI28995@ruslug.rutgers.edu>
+	 <43e72e890802031854o7ffb0498q321e5d52001cfa03@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 18 February 2008 16:35:11 John W. Linville wrote:
-> On Mon, Feb 18, 2008 at 08:23:35AM +0100, Ronald wrote:
-> > hey,
+On Feb 3, 2008 9:54 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
+> On Feb 3, 2008 9:50 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
+> > We have had discussions over a few patches for ath5k for and after
+> > the new band API changes port. One patch also needed porting. In order to
+> > help with applying I've put together the pending patches into a series.
 > >
-> > I'm currently using the b43 driver for my BCM4311 chipset. The driver works 
-> > extremely well. It is the only option under Linux that supports WPA-AES 
-> > with wpa_supplicant :) (and it's more stable than wpa_supplicant). However, 
-> > I'm seeing some unexpected behaviour with the card and another chipset. 
-> > When I enable my soundcard (setting volume from 0 to > 0) the wireless 
-> > signal seems to drop completely (really funny to see my downloadspeeds go 
-> > up and down :) ). My question is, is this normal?
+> > You can also find these patches at:
 > >
-> > However, I'm not sure if this is related to the b43 driver so don't flame 
-> > me ;)
-> 
-> Very strange...my only guess would be EMI generated from your audio
-> chipset and/or the speakers in your laptop.
-> 
-> Is it really just the volume setting?  I.E. if you "play" the audio
-> but with the volume turned down does everything work fine?  Does the
-> performance continue to degrade as you increase the volume?
-> 
-> Wierd...I'm not sure what we can do about this...
+> > http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath5k/2008-02-04/
+> >
+> > Hope this helps,
+>
+> And go Giants!!!!
 
-Heh, yeah. I guess you should buy an FCC rules compliant soundcard instead. ;)
-This sounds like EMI.
-
--- 
-Greetings Michael.
+Way to go (New Jersey) Giants!!!
