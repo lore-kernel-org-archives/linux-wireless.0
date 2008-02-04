@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:46738 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbYBYUsG (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:51875 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754538AbYBDCwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 15:48:06 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so2700010wra.23
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 12:48:02 -0800 (PST)
-Subject: Re: [PATCH 07/13 v2] o11s: changes to ieee80211_sta
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1203697317.7082.68.camel@johannes.berg>
-References: <47be773d.22b38c0a.2fbf.ffffb131@mx.google.com>
-	 (sfid-20080222_074745_247391_EDD9C862)  <1203697317.7082.68.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 12:49:40 -0800
-Message-Id: <1203972580.6929.74.camel@localhost> (sfid-20080225_204809_197216_D9B98B8F)
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 21:52:15 -0500
+Date: Sun, 3 Feb 2008 21:52:10 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	johannes@sipsolutions.net
+Subject: [PATCH 3/7] ath5k: ath5k_copy_channels() was not setting the channel band
+Message-ID: <72cda55b47179991ac0765a1ddcea6be06de4a8b.1202092325.git.mcgrof@winlab.rutgers.edu> (sfid-20080204_025218_942316_4B986AD3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <67abed819770e9d38c69f0e015e153427b3522be.1202092325.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-22 at 17:21 +0100, Johannes Berg wrote:
-> > +	atomic_inc(&bss->users);
-> > +	atomic_inc(&bss->users);
-> 
-> ?
-> That was just allocated, shouldn't it just be atomic_set() then? And why
-> two anyway?
+ath5k_copy_channels() wasn't setting the channel's band so all
+driver channels had a 2GHz band set. Lets set this.
 
-I was following the behavior in ieee80211_rx_bss_add(), where the same
-thing is done. It is needed to to avoid the bss being freed on the next
-ieee80211_rx_bss_put(), works as a reference count. Agree that
-atomic_set() would be better.
+Changes-licensed-under: 3-Clause-BSD
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/ath5k/base.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> > +			memset(&iwe, 0, sizeof(iwe));
-> > +			iwe.cmd = IWEVCUSTOM;
-> > +			sprintf(buf, "Mesh network (version %d)\n"
-> > +			"\t\t\tPath Selection Protocol ID: 0x%02X%02X%02X%02X\n"
-> > +			"\t\t\tPath Selection Metric ID: 0x%02X%02X%02X%02X\n"
-> > +			"\t\t\tCongestion Control Mode ID: 0x%02X%02X%02X%02X\n"
-> > +			"\t\t\tChannel Precedence: 0x%02X%02X%02X%02X",
-> 
-> Maybe we should add separate items for this to make it easier to parse
-> them?
-
-Ok, will include that too.
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index d08fd65..f27554f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -899,6 +899,8 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+ 
+ 		/* Write channel info and increment counter */
+ 		channels[count].center_freq = freq;
++		channels[count].band = (chfreq == CHANNEL_2GHZ) ?
++			IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
+ 		switch (mode) {
+ 		case AR5K_MODE_11A:
+ 		case AR5K_MODE_11G:
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
+1.5.3.7
 
