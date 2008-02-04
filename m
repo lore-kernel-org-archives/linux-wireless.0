@@ -1,70 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ascomax.hasler.ascom.ch ([139.79.135.1]:33442 "EHLO
-	ascomax.hasler.ascom.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760036AbYBFKEc (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:51897 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494AbYBDCxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 05:04:32 -0500
-Received: from eiger.ma.tech.ascom.ch (eiger.ma.tech.ascom.ch [139.79.100.1])
-	by ascomax.hasler.ascom.ch (8.14.1/8.14.1) with ESMTP id m169x9dF012308
-	for <linux-wireless@vger.kernel.org>; Wed, 6 Feb 2008 10:59:10 +0100 (MET)
-Received: from [139.79.100.143] (helo=donkey.ma.tech.ascom.ch)
-	by eiger.ma.tech.ascom.ch with esmtp (Exim 3.16 #1)
-	id 1JMh3c-0003ea-00
-	for linux-wireless@vger.kernel.org; Wed, 06 Feb 2008 10:59:08 +0100
-Received: from lunn by donkey.ma.tech.ascom.ch with local (Exim 3.36 #1 (Debian))
-	id 1JMh3c-00055R-00
-	for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 10:59:08 +0100
-Date: Wed, 6 Feb 2008 10:59:08 +0100
-From: Andrew Lunn <andrew.lunn@ascom.ch>
-To: linux-wireless@vger.kernel.org
-Subject: B43 not seeing MadWifi AP
-Message-ID: <20080206095908.GU25912@donkey.ma.tech.ascom.ch> (sfid-20080206_100438_305302_EB2FFDB2)
+	Sun, 3 Feb 2008 21:53:04 -0500
+Date: Sun, 3 Feb 2008 21:52:58 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	johannes@sipsolutions.net
+Subject: [PATCH 5/7] ath5k: Port debug.c over to the new band API and enable as build option
+Message-ID: <48232833e8885012a94d1e4afeabfd1deca9f70f.1202092325.git.mcgrof@winlab.rutgers.edu> (sfid-20080204_025308_132461_3DA01332)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <67abed819770e9d38c69f0e015e153427b3522be.1202092325.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Folks
+This patch finishes the port and enables debug as an build option.
+This was tested on:
 
-I have a number of Linux laptops running kernel 2.6.23.9, and
-compat-wireless-2.6 with what git-describe says is
-v2.6.24-rc7-716-g62ec51e and i am using the b43 driver with a BCM4312
-device.
+Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+RF5112A multiband radio found (0x36)
 
-I also have some laptop with Atheros PCCard devices and the Madwifi
-driver from SVN, version r3318.
+Note:
 
-The Madwifi device is running as an AP. The problem i have is that the
-b43 does not see it. iwlist wlan0 scan does not see this madwifi
-AP. It does see other APs, but not my madwifi driver. Other madwifi
-devices see the AP. Also an ipw2200 device sees the AP. So i know the
-AP is running, sending beacons, etc. It just seems that the b43 does
-not like it. 
+For 2 GHz band on the above card I noticed we get negative channel
+numbers. Will look into this unless someone beats me to it.
 
-iwlist ath0 scan lists the "missing" AP as:
+Example out put when loading using:
 
-   Cell 04 - Address: 06:03:7F:03:42:0B
-             ESSID:"TOWN-SSID"
-             Mode:Master
-             Frequency:2.442 GHz (Channel 7)
-             Quality=49/70  Signal level=-46 dBm  Noise level=-95 dBm
-             Encryption key:off
-             Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
-                       11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
-                       48 Mb/s; 54 Mb/s
-             Extra:bcn_int=100
-             Extra:wme_ie=dd180050f2020101830002a4400027a4000042435e0062322f00
-             Extra:ath_ie=dd0900037f01010034ff7f
+sudo modprobe ath5k debug=0x00000400
 
-Is the b43 picky about Extra things in the beacon? 
+ Band 2 GHz: channels 26, rates 12
+  channels:
+     1 2412 00c0 0000
+     2 2417 00c0 0000
+     3 2422 00c0 0000
+     4 2427 00c0 0000
+     5 2432 00c0 0000
+     6 2437 00c0 0000
+     7 2442 00c0 0000
+     8 2447 00c0 0000
+     9 2452 00c0 0000
+    10 2457 00c0 0000
+    11 2462 00c0 0000
+    12 2467 00c0 0000
+    13 2472 00c0 0000
+    14 2484 00c0 0000
+   -498 2512 00c0 0000
+   -494 2532 00c0 0000
+   -490 2552 00c0 0000
+   -486 2572 00c0 0000
+   -482 2592 00c0 0000
+   -478 2612 00c0 0000
+   -474 2632 00c0 0000
+   -470 2652 00c0 0000
+   -466 2672 00c0 0000
+   -462 2692 00c0 0000
+   -458 2712 00c0 0000
+   -454 2732 00c0 0000
+ Band 5 GHz: channels 194, rates 8
+  channels:
+    27 5135 0140 0000
+    28 5140 0140 0000
+[... etc ]
+   219 6095 0140 0000
+   220 6100 0140 0000
+  rates:
+     60 000b 0000 0000
+     90 000f 0000 0000
+    120 000a 0000 0000
+    180 000e 0000 0000
+    240 0009 0000 0000
+    360 000d 0000 0000
+    480 0008 0000 0000
+    540 000c 0000 0000
 
-At the beginning of ieee80211_rx_bss_info() there is some commented
-out printk for all received beacons and probe responses. I enabled
-this and don't see anything for the missing device. So it looks like
-the problem is lower down the stack. However i don't see any obvious
-place were it would be discarding beacons.
+Changes to base.c, base.h
+Changes-licensed-under: 3-Clause-BSD
 
-Anybody got any ideas?
+Changes to debug.c, debug.h
+Changes-licensed-under: GPL
 
-        Thanks
-                Andrew
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/ath5k/base.c  |    2 +-
+ drivers/net/wireless/ath5k/base.h  |    4 +-
+ drivers/net/wireless/ath5k/debug.c |   55 +++++++++++++++++++++++------------
+ drivers/net/wireless/ath5k/debug.h |   19 ++++--------
+ 4 files changed, 45 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index f27554f..bfe6836 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -991,7 +991,7 @@ ath5k_getchannels(struct ieee80211_hw *hw)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] = sband;
+ 	}
+ 
+-/* FIXME:	ath5k_debug_dump_modes(sc, modes); */
++	ath5k_debug_dump_bands(sc);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index bbe7a54..3a97558 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -108,9 +108,9 @@ struct ath5k_softc {
+ 	u8			g_rates;
+ 	u8			xr_rates;
+ 
+-#if ATH5K_DEBUG
++#ifdef CONFIG_ATH5K_DEBUG
+ 	struct ath5k_dbg_info	debug;		/* debug info */
+-#endif
++#endif /* CONFIG_ATH5K_DEBUG */
+ 
+ 	struct ath5k_buf	*bufptr;	/* allocated buffer ptr */
+ 	struct ath5k_desc	*desc;		/* TX/RX descriptors */
+diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+index bb581ef..05bf4fb 100644
+--- a/drivers/net/wireless/ath5k/debug.c
++++ b/drivers/net/wireless/ath5k/debug.c
+@@ -65,7 +65,7 @@ static unsigned int ath5k_debug;
+ module_param_named(debug, ath5k_debug, uint, 0);
+ 
+ 
+-#if ATH5K_DEBUG
++#ifdef CONFIG_ATH5K_DEBUG
+ 
+ #include <linux/seq_file.h>
+ #include "reg.h"
+@@ -340,7 +340,7 @@ static struct {
+ 	{ ATH5K_DEBUG_LED,	"led",		"LED mamagement" },
+ 	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
+ 	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
+-	{ ATH5K_DEBUG_DUMPMODES, "dumpmodes",	"dump modes" },
++	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
+ 	{ ATH5K_DEBUG_TRACE,	"trace",	"trace function calls" },
+ 	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
+ };
+@@ -452,30 +452,47 @@ ath5k_debug_finish_device(struct ath5k_softc *sc)
+ /* functions used in other places */
+ 
+ void
+-ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
++ath5k_debug_dump_bands(struct ath5k_softc *sc)
+ {
+-	unsigned int m, i;
++	unsigned int b, i;
+ 
+-	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPMODES)))
++	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPBANDS)))
+ 		return;
+ 
+-	for (m = 0; m < NUM_DRIVER_MODES; m++) {
+-		printk(KERN_DEBUG "Mode %u: channels %d, rates %d\n", m,
+-				modes[m].num_channels, modes[m].num_rates);
++	BUG_ON(!sc->sbands);
++
++	for (b = 0; b < IEEE80211_NUM_BANDS; b++) {
++		struct ieee80211_supported_band *band = &sc->sbands[b];
++		char bname[5];
++		switch (band->band) {
++		case IEEE80211_BAND_2GHZ:
++			strcpy(bname, "2 GHz");
++			break;
++		case IEEE80211_BAND_5GHZ:
++			strcpy(bname, "5 GHz");
++			break;
++		default:
++			printk(KERN_DEBUG "Band not supported: %d\n",
++				band->band);
++			return;
++		}
++		printk(KERN_DEBUG "Band %s: channels %d, rates %d\n", bname,
++				band->n_channels, band->n_bitrates);
+ 		printk(KERN_DEBUG " channels:\n");
+-		for (i = 0; i < modes[m].num_channels; i++)
++		for (i = 0; i < band->n_channels; i++)
+ 			printk(KERN_DEBUG "  %3d %d %.4x %.4x\n",
+-					modes[m].channels[i].chan,
+-					modes[m].channels[i].freq,
+-					modes[m].channels[i].val,
+-					modes[m].channels[i].flag);
++					ieee80211_frequency_to_channel(
++						band->channels[i].center_freq),
++					band->channels[i].center_freq,
++					band->channels[i].hw_value,
++					band->channels[i].flags);
+ 		printk(KERN_DEBUG " rates:\n");
+-		for (i = 0; i < modes[m].num_rates; i++)
++		for (i = 0; i < band->n_bitrates; i++)
+ 			printk(KERN_DEBUG "  %4d %.4x %.4x %.4x\n",
+-					modes[m].rates[i].rate,
+-					modes[m].rates[i].val,
+-					modes[m].rates[i].flags,
+-					modes[m].rates[i].val2);
++					band->bitrates[i].bitrate,
++					band->bitrates[i].hw_value,
++					band->bitrates[i].flags,
++					band->bitrates[i].hw_value_short);
+ 	}
+ }
+ 
+@@ -548,4 +565,4 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc,
+ 		!done ? ' ' : (ds->ds_txstat.ts_status == 0) ? '*' : '!');
+ }
+ 
+-#endif /* if ATH5K_DEBUG */
++#endif /* ifdef CONFIG_ATH5K_DEBUG */
+diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
+index c4fd8c4..16fbb6f 100644
+--- a/drivers/net/wireless/ath5k/debug.h
++++ b/drivers/net/wireless/ath5k/debug.h
+@@ -61,11 +61,6 @@
+ #ifndef _ATH5K_DEBUG_H
+ #define _ATH5K_DEBUG_H
+ 
+-/* set this to 1 for debugging output */
+-#ifndef ATH5K_DEBUG
+-#define ATH5K_DEBUG	0
+-#endif
+-
+ struct ath5k_softc;
+ struct ath5k_hw;
+ struct ieee80211_hw_mode;
+@@ -96,7 +91,7 @@ struct ath5k_dbg_info {
+  * @ATH5K_DEBUG_LED: led management
+  * @ATH5K_DEBUG_DUMP_RX: print received skb content
+  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
+- * @ATH5K_DEBUG_DUMPMODES: dump modes
++ * @ATH5K_DEBUG_DUMPBANDS: dump bands
+  * @ATH5K_DEBUG_TRACE: trace function calls
+  * @ATH5K_DEBUG_ANY: show at any debug level
+  *
+@@ -118,12 +113,12 @@ enum ath5k_debug_level {
+ 	ATH5K_DEBUG_LED		= 0x00000080,
+ 	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
+ 	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
+-	ATH5K_DEBUG_DUMPMODES	= 0x00000400,
++	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
+ 	ATH5K_DEBUG_TRACE	= 0x00001000,
+ 	ATH5K_DEBUG_ANY		= 0xffffffff
+ };
+ 
+-#if ATH5K_DEBUG
++#ifdef CONFIG_ATH5K_DEBUG
+ 
+ #define ATH5K_TRACE(_sc) do { \
+ 	if (unlikely((_sc)->debug.level & ATH5K_DEBUG_TRACE)) \
+@@ -158,8 +153,7 @@ void
+ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah);
+ 
+ void
+-ath5k_debug_dump_modes(struct ath5k_softc *sc,
+-			struct ieee80211_hw_mode *modes);
++ath5k_debug_dump_bands(struct ath5k_softc *sc);
+ 
+ void
+ ath5k_debug_dump_skb(struct ath5k_softc *sc,
+@@ -196,8 +190,7 @@ static inline void
+ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah) {}
+ 
+ static inline void
+-ath5k_debug_dump_modes(struct ath5k_softc *sc,
+-			struct ieee80211_hw_mode *modes) {}
++ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
+ 
+ static inline void
+ ath5k_debug_dump_skb(struct ath5k_softc *sc,
+@@ -207,6 +200,6 @@ static inline void
+ ath5k_debug_printtxbuf(struct ath5k_softc *sc,
+ 			struct ath5k_buf *bf, int done) {}
+ 
+-#endif /* if ATH5K_DEBUG */
++#endif /* ifdef CONFIG_ATH5K_DEBUG */
+ 
+ #endif /* ifndef _ATH5K_DEBUG_H */
+-- 
+1.5.3.7
+
