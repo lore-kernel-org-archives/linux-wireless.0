@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38598 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754802AbYBMMIy (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:51910 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753552AbYBDCx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 07:08:54 -0500
-Subject: Re: [PATCH RFT/RFC] b43: Add QOS support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <200802122205.42799.mb@bu3sch.de>
-References: <200802122205.42799.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vvp0K2gpi0rhR9EhebhT"
-Date: Wed, 13 Feb 2008 13:07:53 +0100
-Message-Id: <1202904473.8931.31.camel@johannes.berg> (sfid-20080213_120856_547667_02AE4ABC)
-Mime-Version: 1.0
+	Sun, 3 Feb 2008 21:53:56 -0500
+Date: Sun, 3 Feb 2008 21:53:51 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	johannes@sipsolutions.net, bunk@kernel.org
+Subject: [PATCH 7/7] ath5k/phy.c: fix negative array index
+Message-ID: <5b486ef9da13204e3068cc4b3346a89b3c9911ac.1202092325.git.mcgrof@winlab.rutgers.edu> (sfid-20080204_025358_752294_8514590B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <67abed819770e9d38c69f0e015e153427b3522be.1202092325.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Author: Adrian Bunk <bunk@kernel.org>
 
---=-vvp0K2gpi0rhR9EhebhT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes a negative array index spotted by the Coverity checker.
 
+Changes-licensed-under: ISC
 
-> +	if (queue >=3D ARRAY_SIZE(wl->qos_params)) {
-> +		/* Queue not available or don't support setting
-> +		 * params on this queue. Return success to not
-> +		 * confuse mac80211. */
-> +		return 0;
-> +	}
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/ath5k/phy.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Is that really necessary? If so, I'll probably remove it when doing the
-QoS rework, it shouldn't be, imho you should return an error if mac80211
-tries to configure a queue >=3D hw.queues.
-
-johannes
-
---=-vvp0K2gpi0rhR9EhebhT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7LdmKVg1VMiehFYAQJ5eRAAwIKUcgyYEpQFeasiG6PqaTzsFDLsdrQn
-7+4eTKiuIME0wkzVGPby1FrF30aJVUa80F7bnQQesZ7hhn1Z7Depn5FwRAY//83H
-+RKHEMA4qb3v0MQsxadgloiaQO7+Iju2uho/g5XNa+1oby1Pyh8XDA/zgUpuDFVN
-cmAAsTzwpuJpK+umlZype+OxONimlbX1zlKqrJutIIHdKnR0QsjxbqKPH51ECWfs
-VNwKD23Xg4oJv65HTgfOadW7nRx9ZKb+VYjAHqRHOEQ/I6kJCNJc+gfNmWYtk0Vm
-+h/JrBMWUwPCDHaK58iNHZrx7s0l4kuwDWfltRWEdJ3EQEq+mtAKyMkflc8UvNnM
-2NOiR8KBQYTe9PVoAeDZwBkD5DG6HCPcuEvvrHaKBJQ6Af7lrfyQ41RPPf1Bhr4C
-a4DAVsDelxe7AnSUpaG28oZjefyFr7u0HptmfO1EbBRXgXOUD/WVbop+eHPz6YlX
-wcQNlNBm5GwORCCjNF9Xe0dOEJVjDzx+XTpVtmFS9s6G8QKKIbpO09VJ+XMmN2xt
-HWGZEBbWtUB3w0+C9LmGxMYGncEGqJnY4tfWEtuYLh0opOC9Ubb/XokGdylt9zqv
-LDSGpvRpl/p20+6O96gvSoF0YjXxr28Bcy0VSFwfBe6AfPS0P+uJ72N0Cx5mkBwP
-XiT36MrB5ms=
-=7G+o
------END PGP SIGNATURE-----
-
---=-vvp0K2gpi0rhR9EhebhT--
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 248c0f5..405195f 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1178,6 +1178,9 @@ static int ath5k_hw_rf5112_rfregs(struct ath5k_hw *ah,
+ 			(channel->center_freq >= 5260 ? 1 :
+ 			    (channel->center_freq > 4000 ? 0 : -1)));
+ 
++		if (obdb == -1)
++			return -EINVAL;
++
+ 		if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
+ 				ee->ee_ob[ee_mode][obdb], 3, 279, 0, true))
+ 			return -EINVAL;
+-- 
+1.5.3.7
 
