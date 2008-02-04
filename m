@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42494 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753248AbYBUJ2W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 04:28:22 -0500
-Subject: Re: when does ath5k filter frames?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: bruno randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Renzmann <mrenzmann@madwifi.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080220202518.GD3825@tuxdriver.com>
-References: <1203514108.17534.41.camel@johannes.berg>
-	 <20080220202518.GD3825@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nhKBf4OL2VOzEUzuGtvq"
-Date: Thu, 21 Feb 2008 10:28:11 +0100
-Message-Id: <1203586091.17534.123.camel@johannes.berg> (sfid-20080221_092827_520253_7E91F87E)
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:39279 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751077AbYBDPYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 10:24:36 -0500
+Message-ID: <47A72E13.8070305@openwrt.org> (sfid-20080204_152441_479078_2DFB741F)
+Date: Mon, 04 Feb 2008 16:24:03 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>	 <-2417195033053015320@unknownmsgid>	 <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>	 <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com>	 <5358276387473684738@unknownmsgid>	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>	 <-7767648866191425885@unknownmsgid> <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
+In-Reply-To: <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tomas Winkler wrote:
+>> > Maybe we should add blob to tx_status let say of skb->cb[] size and
+>> > field for rate scale algorithm version/name.  Otherwise we will be
+>> > inventing API for each rate scale algorithm...
+>>
+>> I disagree, we should have something generic enough to allow some sort of
+>> "capability negotiation" between the driver and the rate control
+>> algorithm, otherwise we could just remove rate control algorithms
+>> completely and internalize them into drivers (with some "helper" functions
+>> for those who don't want to write their own)... Which I'm sure you might
+>> actually like but I don't ;)
+> 
+> So Felix how many rates do you need for each packet?
+The algorithm is designed to work with 4 different rates with adjustable
+retry counts. A good description can be found here:
+http://madwifi.org/browser/madwifi/trunk/ath_rate/minstrel/minstrel.txt
 
---=-nhKBf4OL2VOzEUzuGtvq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> Do we understand either of these (i.e. Broadcom or Atheros) helpers
-> well enough to utilize them?  If so, it sounds like a nice feature
-> to support.  Hardware/firmware may be able to do nifty things to
-> save power.
-
-I'm talking about master mode. :)
-
-johannes
-
---=-nhKBf4OL2VOzEUzuGtvq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR71EKqVg1VMiehFYAQLsug/+M5cdmkBmVUkPU+01vLVa6Wa+c5Ar9zhv
-gfYqusto+WETxmSH5SkBeh6crReZK+XGD7SPm+YKHdbXzkDob7YvraJuyZfqu5l6
-+e0eUl7QkjphaiPLJ+TELkQc/ee6mOcyu0vzgAJMwxwc1BK01YWeLMNWm/5A8kV7
-OL/hqAUJsK9LU9CVDyL73LsyJBjMqgKrBjIlyoXoDbZD2m4cIybdyBvSbhRjEwvI
-HI6trqiJfcrnclmUje4xhzdNJbL2SfKcSgzqzmzcDnBfCtTqDgD277tNvlnpImVk
-EoJU735ZGsjdH3dZLtRaAsyo9H3jwQYvyBtlt+Evs0BYZsrX5wiph7sITqtKoXpN
-gglyobSL9FTXEUqOe6oNBv2Rio5kQTTWl3LWc2XnVGbvBgzFASpd0XLffzBDMfLg
-8Czulzui4QPzdi5oyi/5vN44ACGIwuEAidKV9sUnIS/k2+8Yq3tHKTOGOrNaWtHP
-qlYpFXfN1XZi0Y+C1wZD3/XWqs/0qak5Q3bDeeZMpaMbNoBCez1n0LM12tfJoA8r
-HpCGn0Ka1YUKxwomipE5e7tNO5/0ekpe2zUjyABMO+MQo4AVtRKck3Xt9WaYzXV2
-2K0LA6zU/1E428JRhv4BFnLZPhnpWMXssw2EX4lztJR9XGhYJhP7UTevLxW4sCVT
-mz53uy+X9c0=
-=/Iz3
------END PGP SIGNATURE-----
-
---=-nhKBf4OL2VOzEUzuGtvq--
-
+- Felix
