@@ -1,204 +1,322 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:30239 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754117AbYBEKBf (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:44294 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348AbYBDVYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 05:01:35 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] [PATCH 5/7] ath5k: Port debug.c over to the new band API and enable as build option
-Date: Tue, 5 Feb 2008 19:01:23 +0900
-Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	linville@tuxdriver.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <48232833e8885012a94d1e4afeabfd1deca9f70f.1202092325.git.mcgrof@winlab.rutgers.edu>
-In-Reply-To: <48232833e8885012a94d1e4afeabfd1deca9f70f.1202092325.git.mcgrof@winlab.rutgers.edu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802051901.23454.bruno@thinktube.com> (sfid-20080205_100138_823982_8E2666EC)
+	Mon, 4 Feb 2008 16:24:18 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1548589rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 13:24:18 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Mon, 4 Feb 2008 11:17:06 -0800
+Subject: [PATCH 07/13] o11s: support for mesh interfaces in mac80211 data path
+Message-ID: <47a78281.03b48c0a.7362.5d39@mx.google.com> (sfid-20080204_212421_865811_21908028)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 February 2008 00:03:54 Luis R. Rodriguez wrote:
-> diff --git a/drivers/net/wireless/ath5k/Kconfig
-> b/drivers/net/wireless/ath5k/Kconfig index af1b6b8..31d570e 100644
-> --- a/drivers/net/wireless/ath5k/Kconfig
-> +++ b/drivers/net/wireless/ath5k/Kconfig
-> @@ -14,3 +14,24 @@ config ATH5K
->
->  	  If you choose to build a module, it'll be called ath5k. Say M if
->  	  unsure.
-> +
-> +config ATH5K_DEBUG
-> +	bool "Atheros 5xxx debugging"
-> +	depends on ATH5K
-> +	---help---
-> +	  Atheros 5xxx debugging messages.
-> +
-> +	  Say Y, if and you will get debug options for ath5k.
-> +	  To use this, you need to mount debugfs:
-> +
-> +	  mkdir /debug/
-> +	  mount -t debugfs debug /debug/
-> +
-> +	  You will get access to files under:
-> +	  /debug/ath5k/phy0/
-> +
-> +	  To enable debug, pass the debug level to the debug module
-> +	  parameter. For example:
-> +
-> +	  modprobe ath5k debug=0x00000400
+Since mesh interfaces are not yet using the sta_info structure, a couple of
+changes in this patch are a bit ugly ("if mesh, ignore security"), but this will
+be resolved when mesh peer link table and sta integration is achieved.
 
-maybe worth to note too:
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/rx.c |  119 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/tx.c |   51 ++++++++++++++++++++--
+ 2 files changed, 160 insertions(+), 10 deletions(-)
 
-also you can echo the debug level into /debug/ath5k/phy0/debug to toggle its 
-state, e.g.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index beda1bf..40c8824 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -19,6 +19,7 @@
+ 
+ #include "ieee80211_i.h"
+ #include "ieee80211_led.h"
++#include "mesh.h"
+ #include "wep.h"
+ #include "wpa.h"
+ #include "tkip.h"
+@@ -390,6 +391,8 @@ static ieee80211_txrx_result
+ ieee80211_rx_h_check(struct ieee80211_txrx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
++	int hdrlen = ieee80211_get_hdrlen(rx->fc);
++
+ 	hdr = (struct ieee80211_hdr *) rx->skb->data;
+ 
+ 	/* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
+@@ -419,6 +422,54 @@ ieee80211_rx_h_check(struct ieee80211_txrx_data *rx)
+ 	 * deauth/disassoc frames when needed. In addition, hostapd is
+ 	 * responsible for filtering on both auth and assoc states.
+ 	 */
++
++	if (rx->sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
++		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) {
++			if (!((rx->fc & IEEE80211_FCTL_FROMDS) &&
++					(rx->fc & IEEE80211_FCTL_TODS)))
++				return TXRX_DROP;
++			if (memcmp(hdr->addr4,
++					rx->dev->dev_addr, ETH_ALEN) == 0)
++				return TXRX_DROP;
++		}
++
++		/* If there is not an established peer link and this is
++		 * not a peer link establisment frame, beacon or probe,
++		 * drop the frame.
++		 */
++		if (!is_estab_plink(hdr->addr2, rx->dev)) {
++			if ((rx->fc & IEEE80211_FCTL_FTYPE) !=
++				IEEE80211_FTYPE_MGMT)
++				return TXRX_DROP;
++			else {
++				struct ieee80211_mgmt *mgmt;
++				switch (rx->fc & IEEE80211_FCTL_STYPE) {
++				case IEEE80211_STYPE_ACTION:
++					mgmt = (struct ieee80211_mgmt *)hdr;
++					if (mgmt->u.action.category !=
++						PLINK_CATEGORY)
++						return TXRX_DROP;
++					/* fall through on else */
++				case IEEE80211_STYPE_PROBE_REQ:
++				case IEEE80211_STYPE_PROBE_RESP:
++				case IEEE80211_STYPE_BEACON:
++					return TXRX_CONTINUE;
++					break;
++				default:
++					return TXRX_DROP;
++				}
++			}
++		 } else if ((rx->fc & IEEE80211_FCTL_FTYPE)
++				 == IEEE80211_FTYPE_DATA &&
++				 (is_broadcast_ether_addr(hdr->addr1)) &&
++			 mesh_rmc_check(hdr->addr4, (struct ieee80211s_hdr *)
++				 (rx->skb->data + hdrlen), rx->dev))
++			return TXRX_DROP;
++
++		else
++			return TXRX_CONTINUE;
++	}
++
+ 	if (unlikely(((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA ||
+ 		      ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL &&
+ 		       (rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)) &&
+@@ -987,7 +1038,8 @@ ieee80211_rx_h_remove_qos_control(struct ieee80211_txrx_data *rx)
+ static int
+ ieee80211_802_1x_port_control(struct ieee80211_txrx_data *rx)
+ {
+-	if (unlikely(!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED))) {
++	if (rx->sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT &&
++	    (!rx->sta || !(rx->sta->flags & WLAN_STA_AUTHORIZED))) {
+ #ifdef CONFIG_MAC80211_DEBUG
+ 		if (net_ratelimit())
+ 			printk(KERN_DEBUG "%s: dropped frame "
+@@ -1045,6 +1097,21 @@ ieee80211_data_to_8023(struct ieee80211_txrx_data *rx)
+ 
+ 	hdrlen = ieee80211_get_hdrlen(fc);
+ 
++	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
++		int meshhdrlen = ieee80211_get_mesh_hdrlen(
++				(struct ieee80211s_hdr *) (skb->data + hdrlen));
++		/* Copy on cb:
++		 *  - mesh header: to be used for mesh forwarding
++		 * decision. It will also be used as mesh header template at
++		 * tx.c:ieee80211_subif_start_xmit() if interface
++		 * type is mesh and skb->pkt_type == PACKET_OTHERHOST
++		 *  - ta: to be used if a RERR needs to be sent.
++		 */
++		memcpy(skb->cb, skb->data + hdrlen, meshhdrlen);
++		memcpy(MESH_PREQ(skb), hdr->addr2, ETH_ALEN);
++		hdrlen += meshhdrlen;
++	}
++
+ 	/* convert IEEE 802.11 header + possible LLC headers into Ethernet
+ 	 * header
+ 	 * IEEE 802.11 address fields:
+@@ -1078,9 +1145,10 @@ ieee80211_data_to_8023(struct ieee80211_txrx_data *rx)
+ 		memcpy(dst, hdr->addr3, ETH_ALEN);
+ 		memcpy(src, hdr->addr4, ETH_ALEN);
+ 
+-		if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS)) {
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "%s: dropped FromDS&ToDS "
++		 if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS &&
++			     sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)) {
++			 if (net_ratelimit())
++				 printk(KERN_DEBUG "%s: dropped FromDS&ToDS "
+ 				       "frame (RA=%s TA=%s DA=%s SA=%s)\n",
+ 				       rx->dev->name,
+ 				       print_mac(mac, hdr->addr1),
+@@ -1222,6 +1290,36 @@ ieee80211_deliver_skb(struct ieee80211_txrx_data *rx)
+ 		}
+ 	}
+ 
++	/* Mesh forwarding */
++	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
++		u8 *mesh_ttl = &((struct ieee80211s_hdr *)skb->cb)->ttl;
++		(*mesh_ttl)--;
++		if (is_multicast_ether_addr(skb->data)) {
++			if (*mesh_ttl > 0) {
++				xmit_skb = skb_copy(skb, GFP_ATOMIC);
++				if (!xmit_skb && net_ratelimit())
++					printk(KERN_DEBUG "%s: failed to clone "
++					       "multicast frame\n", dev->name);
++				else
++					xmit_skb->pkt_type = PACKET_OTHERHOST;
++			} else
++				sdata->u.sta.mshstats.dropped_frames_ttl++;
++		} else if (skb->pkt_type != PACKET_OTHERHOST &&
++			compare_ether_addr(sdata->dev->dev_addr, skb->data)
++						!= 0) {
++			if (*mesh_ttl == 0) {
++				sdata->u.sta.mshstats.dropped_frames_ttl++;
++				dev_kfree_skb(skb);
++				skb = NULL;
++			} else {
++				xmit_skb = skb;
++				xmit_skb->pkt_type = PACKET_OTHERHOST;
++				if (!(sdata->dev->flags & IFF_PROMISC))
++					skb  = NULL;
++			}
++		}
++	}
++
+ 	if (skb) {
+ 		/* deliver to local stack */
+ 		skb->protocol = eth_type_trans(skb, dev);
+@@ -1439,7 +1537,8 @@ ieee80211_rx_h_mgmt(struct ieee80211_txrx_data *rx)
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 	if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+-	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS) &&
++	     sdata->vif.type == IEEE80211_IF_TYPE_IBSS ||
++	     sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) &&
+ 	    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
+ 		ieee80211_sta_rx_mgmt(rx->dev, rx->skb, rx->u.rx.status);
+ 	else
+@@ -1626,6 +1725,16 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+ 			rx->sta = ieee80211_ibss_add_sta(sdata->dev, rx->skb,
+ 							 bssid, hdr->addr2);
+ 		break;
++
++	case IEEE80211_IF_TYPE_MESH_POINT:
++		if (!multicast &&
++		   compare_ether_addr(sdata->dev->dev_addr,
++				      hdr->addr1) != 0) {
++			if (!(sdata->dev->flags & IFF_PROMISC))
++				return 0;
++			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
++		}
++		break;
+ 	case IEEE80211_IF_TYPE_VLAN:
+ 	case IEEE80211_IF_TYPE_AP:
+ 		if (!bssid) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2b47464..58b026a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -26,6 +26,7 @@
+ 
+ #include "ieee80211_i.h"
+ #include "ieee80211_led.h"
++#include "mesh.h"
+ #include "wep.h"
+ #include "wpa.h"
+ #include "wme.h"
+@@ -249,6 +250,9 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
+ 	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
+ 		return TXRX_DROP;
+ 
++	if (tx->sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
++		return TXRX_CONTINUE;
++
+ 	if (tx->flags & IEEE80211_TXRXD_TXPS_BUFFERED)
+ 		return TXRX_CONTINUE;
+ 
+@@ -1388,8 +1392,9 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	struct ieee80211_tx_packet_data *pkt_data;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret = 1, head_need;
+-	u16 ethertype, hdrlen, fc;
++	u16 ethertype, hdrlen,  meshhdrlen = 0, fc;
+ 	struct ieee80211_hdr hdr;
++	struct ieee80211s_hdr mesh_hdr;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+@@ -1431,6 +1436,35 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
+ 		hdrlen = 30;
+ 		break;
++	case IEEE80211_IF_TYPE_MESH_POINT:
++		fc |= IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS;
++		/* RA TA DA SA */
++		if (is_multicast_ether_addr(skb->data))
++			memcpy(hdr.addr1, skb->data, ETH_ALEN);
++		else if (mesh_lookup_nexthop(hdr.addr1, skb, dev))
++			return 0;
++		memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
++		memcpy(hdr.addr3, skb->data, ETH_ALEN);
++		memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
++		if (skb->pkt_type == PACKET_OTHERHOST) {
++			/* Forwarded frame, keep mesh ttl and seqnum */
++			struct ieee80211s_hdr *prev_meshhdr;
++			prev_meshhdr = ((struct ieee80211s_hdr *)skb->cb);
++			meshhdrlen = ieee80211_get_mesh_hdrlen(prev_meshhdr);
++			memcpy(&mesh_hdr, prev_meshhdr, meshhdrlen);
++			sdata->u.sta.mshstats.fwded_frames++;
++		} else {
++			if (!sdata->u.sta.mshcfg.dot11MeshTTL) {
++				/* Do not send frames with mesh_ttl == 0 */
++				sdata->u.sta.mshstats.dropped_frames_ttl++;
++				ret = 0;
++				goto fail;
++			}
++			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
++					sdata);
++		}
++		hdrlen = 30;
++		break;
+ 	case IEEE80211_IF_TYPE_STA:
+ 		fc |= IEEE80211_FCTL_TODS;
+ 		/* BSSID SA DA */
+@@ -1474,9 +1508,10 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * Drop unicast frames to unauthorised stations unless they are
+ 	 * EAPOL frames from the local station.
+ 	 */
+-	if (unlikely(!is_multicast_ether_addr(hdr.addr1) &&
+-		     !(sta_flags & WLAN_STA_AUTHORIZED) &&
+-		     !(ethertype == ETH_P_PAE &&
++	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT &&
++	    (!is_multicast_ether_addr(hdr.addr1) &&
++		      !(sta_flags & WLAN_STA_AUTHORIZED) &&
++		      !(ethertype == ETH_P_PAE &&
+ 		       compare_ether_addr(dev->dev_addr,
+ 					  skb->data + ETH_ALEN) == 0))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+@@ -1529,7 +1564,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * build in headroom in __dev_alloc_skb() (linux/skbuff.h) and
+ 	 * alloc_skb() (net/core/skbuff.c)
+ 	 */
+-	head_need = hdrlen + encaps_len + local->tx_headroom;
++	head_need = hdrlen + encaps_len + meshhdrlen + local->tx_headroom;
+ 	head_need -= skb_headroom(skb);
+ 
+ 	/* We are going to modify skb data, so make a copy of it if happens to
+@@ -1563,6 +1598,12 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		h_pos += encaps_len;
+ 	}
+ 
++	if (meshhdrlen > 0) {
++		memcpy(skb_push(skb, meshhdrlen), &mesh_hdr, meshhdrlen);
++		nh_pos += meshhdrlen;
++		h_pos += meshhdrlen;
++	}
++
+ 	if (fc & IEEE80211_STYPE_QOS_DATA) {
+ 		__le16 *qos_control;
+ 
+-- 
+1.5.2.5
 
-echo dumptx > /debug/ath5k/phy0/debug
-
-> -ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode
-> *modes) +ath5k_debug_dump_bands(struct ath5k_softc *sc)
->  {
-> -	unsigned int m, i;
-> +	unsigned int b, i;
->
-> -	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPMODES)))
-> +	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPBANDS)))
->  		return;
->
-> -	for (m = 0; m < NUM_DRIVER_MODES; m++) {
-> -		printk(KERN_DEBUG "Mode %u: channels %d, rates %d\n", m,
-> -				modes[m].num_channels, modes[m].num_rates);
-> +	BUG_ON(!sc->sbands);
-> +
-> +	for (b = 0; b < IEEE80211_NUM_BANDS; b++) {
-> +		struct ieee80211_supported_band *band = &sc->sbands[b];
-> +		char bname[5];
-> +		switch (band->band) {
-> +		case IEEE80211_BAND_2GHZ:
-> +			strcpy(bname, "2 GHz");
-> +			break;
-> +		case IEEE80211_BAND_5GHZ:
-> +			strcpy(bname, "5 GHz");
-> +			break;
-> +		default:
-> +			printk(KERN_DEBUG "Band not supported: %d\n",
-> +				band->band);
-> +			return;
-> +		}
-> +		printk(KERN_DEBUG "Band %s: channels %d, rates %d\n", bname,
-> +				band->n_channels, band->n_bitrates);
-
-that looks a bit unnecessary to me. wouldn't something like that:
-
-	printk(KERN_DEBUG "Band %d GHz: channels %d, rates %d\n", 
-		band->band == IEEE80211_BAND_2GHZ ? 2 : 5,
-		band->n_channels, band->n_bitrates);
-
-be easier? but whatever, it's just debug code.
-
->  		printk(KERN_DEBUG " channels:\n");
-> -		for (i = 0; i < modes[m].num_channels; i++)
-> +		for (i = 0; i < band->n_channels; i++)
->  			printk(KERN_DEBUG "  %3d %d %.4x %.4x\n",
-> -					modes[m].channels[i].chan,
-> -					modes[m].channels[i].freq,
-> -					modes[m].channels[i].val,
-> -					modes[m].channels[i].flag);
-> +					ieee80211_frequency_to_channel(
-> +						band->channels[i].center_freq),
-> +					band->channels[i].center_freq,
-> +					band->channels[i].hw_value,
-> +					band->channels[i].flags);
->  		printk(KERN_DEBUG " rates:\n");
-> -		for (i = 0; i < modes[m].num_rates; i++)
-> +		for (i = 0; i < band->n_bitrates; i++)
->  			printk(KERN_DEBUG "  %4d %.4x %.4x %.4x\n",
-> -					modes[m].rates[i].rate,
-> -					modes[m].rates[i].val,
-> -					modes[m].rates[i].flags,
-> -					modes[m].rates[i].val2);
-> +					band->bitrates[i].bitrate,
-> +					band->bitrates[i].hw_value,
-> +					band->bitrates[i].flags,
-> +					band->bitrates[i].hw_value_short);
->  	}
->  }
->
-> @@ -548,4 +565,4 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc,
->  		!done ? ' ' : (ds->ds_txstat.ts_status == 0) ? '*' : '!');
->  }
->
-> -#endif /* if ATH5K_DEBUG */
-> +#endif /* ifdef CONFIG_ATH5K_DEBUG */
-> diff --git a/drivers/net/wireless/ath5k/debug.h
-> b/drivers/net/wireless/ath5k/debug.h index c4fd8c4..16fbb6f 100644
-> --- a/drivers/net/wireless/ath5k/debug.h
-> +++ b/drivers/net/wireless/ath5k/debug.h
-> @@ -61,11 +61,6 @@
->  #ifndef _ATH5K_DEBUG_H
->  #define _ATH5K_DEBUG_H
->
-> -/* set this to 1 for debugging output */
-> -#ifndef ATH5K_DEBUG
-> -#define ATH5K_DEBUG	0
-> -#endif
-> -
->  struct ath5k_softc;
->  struct ath5k_hw;
->  struct ieee80211_hw_mode;
-> @@ -96,7 +91,7 @@ struct ath5k_dbg_info {
->   * @ATH5K_DEBUG_LED: led management
->   * @ATH5K_DEBUG_DUMP_RX: print received skb content
->   * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
-> - * @ATH5K_DEBUG_DUMPMODES: dump modes
-> + * @ATH5K_DEBUG_DUMPBANDS: dump bands
->   * @ATH5K_DEBUG_TRACE: trace function calls
->   * @ATH5K_DEBUG_ANY: show at any debug level
->   *
-> @@ -118,12 +113,12 @@ enum ath5k_debug_level {
->  	ATH5K_DEBUG_LED		= 0x00000080,
->  	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
->  	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
-> -	ATH5K_DEBUG_DUMPMODES	= 0x00000400,
-> +	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
->  	ATH5K_DEBUG_TRACE	= 0x00001000,
->  	ATH5K_DEBUG_ANY		= 0xffffffff
->  };
->
-> -#if ATH5K_DEBUG
-> +#ifdef CONFIG_ATH5K_DEBUG
->
->  #define ATH5K_TRACE(_sc) do { \
->  	if (unlikely((_sc)->debug.level & ATH5K_DEBUG_TRACE)) \
-> @@ -158,8 +153,7 @@ void
->  ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah);
->
->  void
-> -ath5k_debug_dump_modes(struct ath5k_softc *sc,
-> -			struct ieee80211_hw_mode *modes);
-> +ath5k_debug_dump_bands(struct ath5k_softc *sc);
->
->  void
->  ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> @@ -196,8 +190,7 @@ static inline void
->  ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah) {}
->
->  static inline void
-> -ath5k_debug_dump_modes(struct ath5k_softc *sc,
-> -			struct ieee80211_hw_mode *modes) {}
-> +ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
->
->  static inline void
->  ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> @@ -207,6 +200,6 @@ static inline void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc,
->  			struct ath5k_buf *bf, int done) {}
->
-> -#endif /* if ATH5K_DEBUG */
-> +#endif /* ifdef CONFIG_ATH5K_DEBUG */
->
->  #endif /* ifndef _ATH5K_DEBUG_H */
 
 
