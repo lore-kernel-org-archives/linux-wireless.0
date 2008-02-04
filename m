@@ -1,62 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:20727 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754386AbYBIAfm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 19:35:42 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so734034wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:35:41 -0800 (PST)
-Subject: Re: [PATCH 07/13] o11s: support for mesh interfaces in mac80211
-	data path
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202345620.9965.80.camel@johannes.berg>
-References: <47a78281.03b48c0a.7362.5d39@mx.google.com>
-	 (sfid-20080204_212421_865811_21908028)  <1202345620.9965.80.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:42877 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752073AbYBDMhs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 07:37:48 -0500
+Subject: RE: ipw2200 stalls on high load
+From: Dan Williams <dcbw@redhat.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+In-Reply-To: <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com>
+References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc>
+	 <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
+	 <20080130225738.GB2648@Chamillionaire.breakpoint.cc>
+	 <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com>
 Content-Type: text/plain
-Date: Fri, 08 Feb 2008 16:36:47 -0800
-Message-Id: <1202517407.7025.32.camel@localhost> (sfid-20080209_003557_235107_BEBE6BA8)
+Date: Mon, 04 Feb 2008 07:37:29 -0500
+Message-Id: <1202128649.10632.4.camel@localhost.localdomain> (sfid-20080204_123755_114009_84E1234B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-02-07 at 01:53 +0100, Johannes Berg wrote:
-> > +		if (!is_estab_plink(hdr->addr2, rx->dev)) {
+On Fri, 2008-02-01 at 14:29 -0800, Chatre, Reinette wrote:
+> On , Sebastian Siewior wrote:
 > 
-> This would get to be something like
+> > * Chatre, Reinette | 2008-01-28 10:40:16 [-0800]:
+> > 
+> >> On ,Sebastian Siewior wrote:
+> >> 
+> >>> Hello,
+> >>> 
+> >>> my wireless connection stalls after like 5 seconds once the
+> >>> downloading performance passes around 600 KiB/sec. I noticed in
+> >>> dmesg the following:
+> >>>> ipw2200: Firmware error detected.  Restarting.
+> >> 
+> >> Could you please submit a bug at http://www.bughost.org to enable us
+> >> to track this problem?
+> > Sure. #1487 looks very close. The firmware version seems to be
+> > different as well as the "the driver messsage". Do you want me to
+> > open a new one or should I follow-up?
 > 
-> 		if (sta->flags & STA_FLAG_MESH_LINK_ESTABLISHED)
-> 
-> right?
+> This bug may be similar to the bug that was fixed for the 3945 and 4965.
+> See the patch "iwlwifi: fix ucode assertion for RX queue overrun" for
+> these drivers. We need somebody to port this change to the ipw2200.
+> Recently there has also been talk about these issues on the
+> ipw3945-devel mailing list.
 
-I probably can use just the AUTHORIZED flag.
+Something like the following?  Turns out the rxq->processed isn't really
+used that much, and 3945/4965 don't use that field at all (but use
+->read exclusively instead).  And since it appears that the replenish
+function is simpler in the 2200, it doesn't need to be split like
+3945/4965.  I haven't been able to stress my 2200 enough to trigger the
+new codepath though.
 
-> I suppose you should be adding sta_info structs for each mesh peer and
-> set the AUTHORIZED flag on them. Is this what you were referring to in
-> the patch description?
 
-Right, and adding a pointer to a reduced mesh peer link structure with
-variables only needed for mesh (it would only be allocated for mesh
-interfaces).
-
-> type == ETH_P_PAE &&
-> > +	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT &&
-> > +	    (!is_multicast_ether_addr(hdr.addr1) &&
-> > +		      !(sta_flags & WLAN_STA_AUTHORIZED) &&
-> > +		      !(ethertype == ETH_P_PAE &&
-> >  		       compare_ether_addr(dev->dev_addr,
-> >  					  skb->data + ETH_ALEN) == 0))) {
-> 
-> That's also an artifact of not adding sta info structs, right?
-
-Indeed, will be gone in the next round.
-
-Btw, I will also fix all the issues I'm not commenting on in this patch
-and the others. Thanks for you patience with me!
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 3e6ad7b..8856eea 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -3365,7 +3365,6 @@ static void ipw_rx_queue_reset(struct ipw_priv *priv,
+ 	/* Set us so that we have processed and used all buffers, but have
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+-	rxq->processed = RX_QUEUE_SIZE - 1;
+ 	rxq->free_count = 0;
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
+ }
+@@ -3607,7 +3606,22 @@ static int ipw_load(struct ipw_priv *priv)
+  * Driver allocates buffers of this size for Rx
+  */
+ 
+-static inline int ipw_queue_space(const struct clx2_queue *q)
++/**
++ * ipw_rx_queue_space - Return number of free slots available in queue.
++ */
++static int ipw_rx_queue_space(const struct ipw_rx_queue *q)
++{
++	int s = q->read - q->write;
++	if (s <= 0)
++		s += RX_QUEUE_SIZE;
++	/* keep some buffer to not confuse full and empty queue */
++	s -= 2;
++	if (s < 0)
++		s = 0;
++	return s;
++}
++
++static inline int ipw_tx_queue_space(const struct clx2_queue *q)
+ {
+ 	int s = q->last_used - q->first_empty;
+ 	if (s <= 0)
+@@ -4947,7 +4961,7 @@ static int ipw_queue_tx_reclaim(struct ipw_priv *priv,
+ 		priv->tx_packets++;
+ 	}
+       done:
+-	if ((ipw_queue_space(q) > q->low_mark) &&
++	if ((ipw_tx_queue_space(q) > q->low_mark) &&
+ 	    (qindex >= 0) &&
+ 	    (priv->status & STATUS_ASSOCIATED) && netif_running(priv->net_dev))
+ 		netif_wake_queue(priv->net_dev);
+@@ -4965,7 +4979,7 @@ static int ipw_queue_tx_hcmd(struct ipw_priv *priv, int hcmd, void *buf,
+ 	struct clx2_queue *q = &txq->q;
+ 	struct tfd_frame *tfd;
+ 
+-	if (ipw_queue_space(q) < (sync ? 1 : 2)) {
++	if (ipw_tx_queue_space(q) < (sync ? 1 : 2)) {
+ 		IPW_ERROR("No space for Tx\n");
+ 		return -EBUSY;
+ 	}
+@@ -5070,7 +5084,7 @@ static void ipw_rx_queue_restock(struct ipw_priv *priv)
+ 
+ 	spin_lock_irqsave(&rxq->lock, flags);
+ 	write = rxq->write;
+-	while ((rxq->write != rxq->processed) && (rxq->free_count)) {
++	while ((ipw_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
+ 		element = rxq->rx_free.next;
+ 		rxb = list_entry(element, struct ipw_rx_mem_buffer, list);
+ 		list_del(element);
+@@ -5187,7 +5201,6 @@ static struct ipw_rx_queue *ipw_rx_queue_alloc(struct ipw_priv *priv)
+ 	/* Set us so that we have processed and used all buffers, but have
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+-	rxq->processed = RX_QUEUE_SIZE - 1;
+ 	rxq->free_count = 0;
+ 
+ 	return rxq;
+@@ -8223,13 +8236,18 @@ static void ipw_rx(struct ipw_priv *priv)
+ 	struct ieee80211_hdr_4addr *header;
+ 	u32 r, w, i;
+ 	u8 network_packet;
++	u8 fill_rx = 0;
++	u32 count = 0;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
+ 	DECLARE_MAC_BUF(mac3);
+ 
+ 	r = ipw_read32(priv, IPW_RX_READ_INDEX);
+ 	w = ipw_read32(priv, IPW_RX_WRITE_INDEX);
+-	i = (priv->rxq->processed + 1) % RX_QUEUE_SIZE;
++	i = priv->rxq->read;
++
++	if (ipw_rx_queue_space (priv->rxq) > (RX_QUEUE_SIZE / 2))
++		fill_rx = 1;
+ 
+ 	while (i != r) {
+ 		rxb = priv->rxq->queue[i];
+@@ -8404,11 +8422,21 @@ static void ipw_rx(struct ipw_priv *priv)
+ 		list_add_tail(&rxb->list, &priv->rxq->rx_used);
+ 
+ 		i = (i + 1) % RX_QUEUE_SIZE;
++
++		/* If there are a lot of unsued frames, restock the Rx queue
++		 * so the ucode won't assert */
++		if (fill_rx) {
++			count++;
++			if (count >= 8) {
++				priv->rxq->read = i;
++				ipw_rx_queue_replenish(priv);
++				count = 0;
++			}
++		}
+ 	}
+ 
+ 	/* Backtrack one entry */
+-	priv->rxq->processed = (i ? i : RX_QUEUE_SIZE) - 1;
+-
++	priv->rxq->read = i;
+ 	ipw_rx_queue_restock(priv);
+ }
+ 
+@@ -10336,7 +10364,7 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
+ 	q->first_empty = ipw_queue_inc_wrap(q->first_empty, q->n_bd);
+ 	ipw_write32(priv, q->reg_w, q->first_empty);
+ 
+-	if (ipw_queue_space(q) < q->high_mark)
++	if (ipw_tx_queue_space(q) < q->high_mark)
+ 		netif_stop_queue(priv->net_dev);
+ 
+ 	return NETDEV_TX_OK;
+@@ -10357,7 +10385,7 @@ static int ipw_net_is_queue_full(struct net_device *dev, int pri)
+ 	struct clx2_tx_queue *txq = &priv->txq[0];
+ #endif				/* CONFIG_IPW2200_QOS */
+ 
+-	if (ipw_queue_space(&txq->q) < txq->q.high_mark)
++	if (ipw_tx_queue_space(&txq->q) < txq->q.high_mark)
+ 		return 1;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ipw2200.h b/drivers/net/wireless/ipw2200.h
+index fdc187e..72884e2 100644
+--- a/drivers/net/wireless/ipw2200.h
++++ b/drivers/net/wireless/ipw2200.h
+@@ -719,7 +719,6 @@ struct ipw_rx_mem_buffer {
+ struct ipw_rx_queue {
+ 	struct ipw_rx_mem_buffer pool[RX_QUEUE_SIZE + RX_FREE_BUFFERS];
+ 	struct ipw_rx_mem_buffer *queue[RX_QUEUE_SIZE];
+-	u32 processed;		/* Internal index to last handled Rx packet */
+ 	u32 read;		/* Shared index to newest available Rx buffer */
+ 	u32 write;		/* Shared index to oldest written Rx packet */
+ 	u32 free_count;		/* Number of pre-allocated buffers in rx_free */
 
