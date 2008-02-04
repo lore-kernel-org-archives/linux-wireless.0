@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:36762 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755130AbYBDRM3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 12:12:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Is not EXPERIMENTAL anymore
-Date: Mon, 4 Feb 2008 18:11:41 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+Received: from c60.cesmail.net ([216.154.195.49]:46290 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750772AbYBDFFU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 00:05:20 -0500
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 78F68619055
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Feb 2008 00:05:19 -0500 (EST)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] at76_usb: Add ID for Uniden PCW100
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2008 00:05:19 -0500
+Message-ID: <20080204050518.2696.50289.stgit@dv.roinet.com> (sfid-20080204_050534_832644_B7C108A2)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802041811.41580.mb@bu3sch.de> (sfid-20080204_171233_903660_2D4F06FA)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the EXPERIMENTAL dependency, as the existing mac80211
-features are stable.
+Tested and reported by Lior Silberman.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Index: wireless-2.6/net/mac80211/Kconfig
-===================================================================
---- wireless-2.6.orig/net/mac80211/Kconfig	2008-01-16 11:33:56.000000000 +0100
-+++ wireless-2.6/net/mac80211/Kconfig	2008-02-04 18:10:01.000000000 +0100
-@@ -1,6 +1,5 @@
- config MAC80211
- 	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
--	depends on EXPERIMENTAL
- 	select CRYPTO
- 	select CRYPTO_ECB
- 	select CRYPTO_ARC4
+ drivers/net/wireless/at76_usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
--- 
-Greetings Michael.
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index d2e3c55..b95718a 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -191,6 +191,8 @@ static struct usb_device_id dev_table[] = {
+ 	{USB_DEVICE(0x07aa, 0x0011), USB_DEVICE_DATA(BOARD_503)},
+ 	/* Corega Wireless LAN USB-11 mini2 */
+ 	{USB_DEVICE(0x07aa, 0x0018), USB_DEVICE_DATA(BOARD_503)},
++	/* Uniden PCW100 */
++	{USB_DEVICE(0x05dd, 0xff35), USB_DEVICE_DATA(BOARD_503)},
+ 	/*
+ 	 * at76c503-rfmd-acc
+ 	 */
