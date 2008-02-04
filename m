@@ -1,320 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:48906 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760573AbYBANg6 (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:44294 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997AbYBDVXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 08:36:58 -0500
-Date: Fri, 1 Feb 2008 08:36:56 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	bruno@thinktube.com, jirislaby@gmail.com,
-	johannes@sipsolutions.net, mickflemm@gmail.com
-Subject: [PATCH 2/3] ath5k: Port debug.c over to the new band API and enable as build option
-Message-ID: <20080201133656.GG28995@ruslug.rutgers.edu> (sfid-20080201_133711_249031_7AECB5ED)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 4 Feb 2008 16:23:44 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1548589rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 13:23:44 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Mon, 4 Feb 2008 10:51:38 -0800
+Subject: [PATCH 02/13] o11s: (nl80211/cfg80211) support for mesh interfaces and set_mesh_cfg command
+Message-ID: <47a7825f.03b48c0a.7362.5cd9@mx.google.com> (sfid-20080204_212410_095702_D5CB4C0C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch finishes the port and enables debug as an build option.
-This was tested on:
+This command allows setting the mesh ID for a (pre) 802.11s mesh interface. If
+this command is not used, mesh interfaces will use the wildcard, zero-length
+mesh ID.
 
-Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-RF5112A multiband radio found (0x36)
-
-Note:
-
-For 2 GHz band on the above card I noticed we get negative channel
-numbers. Will look into this unless someone beats me to it.
-
-Example out put when loading using:
-
-sudo modprobe ath5k debug=0x00000400
-
- Band 2 GHz: channels 26, rates 12
-  channels:
-     1 2412 00c0 0000
-     2 2417 00c0 0000
-     3 2422 00c0 0000
-     4 2427 00c0 0000
-     5 2432 00c0 0000
-     6 2437 00c0 0000
-     7 2442 00c0 0000
-     8 2447 00c0 0000
-     9 2452 00c0 0000
-    10 2457 00c0 0000
-    11 2462 00c0 0000
-    12 2467 00c0 0000
-    13 2472 00c0 0000
-    14 2484 00c0 0000
-   -498 2512 00c0 0000
-   -494 2532 00c0 0000
-   -490 2552 00c0 0000
-   -486 2572 00c0 0000
-   -482 2592 00c0 0000
-   -478 2612 00c0 0000
-   -474 2632 00c0 0000
-   -470 2652 00c0 0000
-   -466 2672 00c0 0000
-   -462 2692 00c0 0000
-   -458 2712 00c0 0000
-   -454 2732 00c0 0000
- Band 5 GHz: channels 194, rates 8
-  channels:
-    27 5135 0140 0000
-    28 5140 0140 0000
-[... etc ]
-   219 6095 0140 0000
-   220 6100 0140 0000
-  rates:
-     60 000b 0000 0000
-     90 000f 0000 0000
-    120 000a 0000 0000
-    180 000e 0000 0000
-    240 0009 0000 0000
-    360 000d 0000 0000
-    480 0008 0000 0000
-    540 000c 0000 0000
-
-Changes to base.[ch]
-Changes-licensed-under: 3-clause-BSD
-
-Changes to debug.[ch]
-Changes-licensed-under: GPL
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
 ---
- drivers/net/wireless/ath5k/Kconfig |   22 +++++++++++++-
- drivers/net/wireless/ath5k/base.c  |    2 +-
- drivers/net/wireless/ath5k/base.h  |    4 +-
- drivers/net/wireless/ath5k/debug.c |   55 +++++++++++++++++++++++------------
- drivers/net/wireless/ath5k/debug.h |   19 ++++--------
- 5 files changed, 66 insertions(+), 36 deletions(-)
+ include/linux/nl80211.h |    8 ++++++++
+ include/net/cfg80211.h  |   13 +++++++++++++
+ net/mac80211/cfg.c      |   28 ++++++++++++++++++++++++++++
+ net/wireless/nl80211.c  |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 92 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/Kconfig b/drivers/net/wireless/ath5k/Kconfig
-index 55f0c09..31d570e 100644
---- a/drivers/net/wireless/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath5k/Kconfig
-@@ -1,4 +1,3 @@
--
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
-@@ -15,3 +14,24 @@ config ATH5K
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 6369506..71c6125 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -48,6 +48,7 @@
+  *	%NL80211_ATTR_IFINDEX and %NL80211_ATTR_WIPHY. Can also be sent from
+  *	userspace to request deletion of a virtual interface, then requires
+  *	attribute %NL80211_ATTR_IFINDEX.
++ * @NL80211_CMD_SET_MESH_CFG: start mesh operation
+  *
+  * @NL80211_CMD_GET_KEY: Get sequence counter information for a key specified
+  *	by %NL80211_ATTR_KEY_IDX and/or %NL80211_ATTR_MAC.
+@@ -112,6 +113,8 @@ enum nl80211_commands {
  
- 	  If you choose to build a module, it'll be called ath5k. Say M if
- 	  unsure.
+ 	/* add commands here */
+ 
++	NL80211_CMD_SET_MESH_CFG,
 +
-+config ATH5K_DEBUG
-+	bool "Atheros 5xxx debugging"
-+	depends on ATH5K
-+	---help---
-+	  Atheros 5xxx debugging messages.
+ 	/* used to define NL80211_CMD_MAX below */
+ 	__NL80211_CMD_AFTER_LAST,
+ 	NL80211_CMD_MAX = __NL80211_CMD_AFTER_LAST - 1
+@@ -163,6 +166,7 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_WIPHY_BANDS: Information about an operating bands,
+  *	consisting of a nested array.
++ * @NL80211_ATTR_MESH_ID: mesh id (1-32 bytes)
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -202,6 +206,8 @@ enum nl80211_attrs {
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
++	NL80211_ATTR_MESH_ID,
 +
-+	  Say Y, if and you will get debug options for ath5k.
-+	  To use this, you need to mount debugfs:
-+	  
-+	  mkdir /debug/
-+	  mount -t debugfs debug /debug/
-+	  
-+	  You will get access to files under:
-+	  /debug/ath5k/phy0/
-+	  
-+	  To enable debug, pass the debug level to the debug module
-+	  parameter. For example:
-+	  
-+	  modprobe ath5k debug=0x00000400
-+	  
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 1e7eeec..9f2c30b 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -990,7 +990,7 @@ ath5k_getchannels(struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] = sband;
+ 	__NL80211_ATTR_AFTER_LAST,
+ 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+ };
+@@ -218,6 +224,7 @@ enum nl80211_attrs {
+  * @NL80211_IFTYPE_AP_VLAN: VLAN interface for access points
+  * @NL80211_IFTYPE_WDS: wireless distribution interface
+  * @NL80211_IFTYPE_MONITOR: monitor interface receiving all frames
++ * @NL80211_IFTYPE_MESH_POINT: mesh point
+  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
+  * @__NL80211_IFTYPE_AFTER_LAST: internal use
+  *
+@@ -233,6 +240,7 @@ enum nl80211_iftype {
+ 	NL80211_IFTYPE_AP_VLAN,
+ 	NL80211_IFTYPE_WDS,
+ 	NL80211_IFTYPE_MONITOR,
++	NL80211_IFTYPE_MESH_POINT,
+ 
+ 	/* keep last */
+ 	__NL80211_IFTYPE_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bcc480b..b09e258 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -12,6 +12,16 @@
+  * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
+  */
+ 
++/*
++ * struct mesh_params - describes mesh parameters
++ * @mesh_id: mesh ID to use
++ * @mesh_id_len: length of the mesh ID
++ */
++struct mesh_params {
++       u8 *mesh_id;
++       int mesh_id_len;
++};
++
+ /* Radiotap header iteration
+  *   implemented in net/wireless/radiotap.c
+  *   docs in Documentation/networking/radiotap-headers.txt
+@@ -187,6 +197,7 @@ struct wiphy;
+  *
+  * @add_key: add a key with the given parameters. @mac_addr will be %NULL
+  *	when adding a group key.
++ * @set_mesh_cfg: set mesh parameters (by now, just mesh id)
+  *
+  * @get_key: get information about the key with the given parameters.
+  *	@mac_addr will be %NULL when requesting information for a group
+@@ -245,6 +256,8 @@ struct cfg80211_ops {
+ 				  u8 *mac, struct station_parameters *params);
+ 	int	(*get_station)(struct wiphy *wiphy, struct net_device *dev,
+ 			       u8 *mac, struct station_stats *stats);
++	int     (*set_mesh_cfg)(struct wiphy *wiphy, struct net_device *dev,
++				struct mesh_params *params);
+ };
+ 
+ #endif /* __NET_CFG80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 15b8cf9..416ce05 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -28,6 +28,8 @@ nl80211_type_to_mac80211_type(enum nl80211_iftype type)
+ 		return IEEE80211_IF_TYPE_STA;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		return IEEE80211_IF_TYPE_MNTR;
++	case NL80211_IFTYPE_MESH_POINT:
++		return IEEE80211_IF_TYPE_MESH_POINT;
+ 	default:
+ 		return IEEE80211_IF_TYPE_INVALID;
  	}
- 
--/* FIXME:	ath5k_debug_dump_modes(sc, modes); */
-+	ath5k_debug_dump_bands(sc);
- 
+@@ -637,6 +639,31 @@ static int ieee80211_change_station(struct wiphy *wiphy,
  	return 0;
  }
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index bbe7a54..3a97558 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -108,9 +108,9 @@ struct ath5k_softc {
- 	u8			g_rates;
- 	u8			xr_rates;
  
--#if ATH5K_DEBUG
-+#ifdef CONFIG_ATH5K_DEBUG
- 	struct ath5k_dbg_info	debug;		/* debug info */
--#endif
-+#endif /* CONFIG_ATH5K_DEBUG */
- 
- 	struct ath5k_buf	*bufptr;	/* allocated buffer ptr */
- 	struct ath5k_desc	*desc;		/* TX/RX descriptors */
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index bb581ef..05bf4fb 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -65,7 +65,7 @@ static unsigned int ath5k_debug;
- module_param_named(debug, ath5k_debug, uint, 0);
- 
- 
--#if ATH5K_DEBUG
-+#ifdef CONFIG_ATH5K_DEBUG
- 
- #include <linux/seq_file.h>
- #include "reg.h"
-@@ -340,7 +340,7 @@ static struct {
- 	{ ATH5K_DEBUG_LED,	"led",		"LED mamagement" },
- 	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
- 	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
--	{ ATH5K_DEBUG_DUMPMODES, "dumpmodes",	"dump modes" },
-+	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
- 	{ ATH5K_DEBUG_TRACE,	"trace",	"trace function calls" },
- 	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
- };
-@@ -452,30 +452,47 @@ ath5k_debug_finish_device(struct ath5k_softc *sc)
- /* functions used in other places */
- 
- void
--ath5k_debug_dump_modes(struct ath5k_softc *sc, struct ieee80211_hw_mode *modes)
-+ath5k_debug_dump_bands(struct ath5k_softc *sc)
- {
--	unsigned int m, i;
-+	unsigned int b, i;
- 
--	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPMODES)))
-+	if (likely(!(sc->debug.level & ATH5K_DEBUG_DUMPBANDS)))
- 		return;
- 
--	for (m = 0; m < NUM_DRIVER_MODES; m++) {
--		printk(KERN_DEBUG "Mode %u: channels %d, rates %d\n", m,
--				modes[m].num_channels, modes[m].num_rates);
-+	BUG_ON(!sc->sbands);
++static int ieee80211_if_set_mesh_cfg(struct wiphy *wiphy,
++		struct net_device *dev, struct mesh_params *params)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_if_sta *ifsta;
++	struct ieee80211_sub_if_data *sdata = NULL;
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
++		return -ENODEV;
 +
-+	for (b = 0; b < IEEE80211_NUM_BANDS; b++) {
-+		struct ieee80211_supported_band *band = &sc->sbands[b];
-+		char bname[5];
-+		switch (band->band) {
-+		case IEEE80211_BAND_2GHZ:
-+			strcpy(bname, "2 GHz");
-+			break;
-+		case IEEE80211_BAND_5GHZ:
-+			strcpy(bname, "5 GHz");
-+			break;
-+		default:
-+			printk(KERN_DEBUG "Band not supported: %d\n",
-+				band->band);
-+			return;
-+		}
-+		printk(KERN_DEBUG "Band %s: channels %d, rates %d\n", bname,
-+				band->n_channels, band->n_bitrates);
- 		printk(KERN_DEBUG " channels:\n");
--		for (i = 0; i < modes[m].num_channels; i++)
-+		for (i = 0; i < band->n_channels; i++)
- 			printk(KERN_DEBUG "  %3d %d %.4x %.4x\n",
--					modes[m].channels[i].chan,
--					modes[m].channels[i].freq,
--					modes[m].channels[i].val,
--					modes[m].channels[i].flag);
-+					ieee80211_frequency_to_channel(
-+						band->channels[i].center_freq),
-+					band->channels[i].center_freq,
-+					band->channels[i].hw_value,
-+					band->channels[i].flags);
- 		printk(KERN_DEBUG " rates:\n");
--		for (i = 0; i < modes[m].num_rates; i++)
-+		for (i = 0; i < band->n_bitrates; i++)
- 			printk(KERN_DEBUG "  %4d %.4x %.4x %.4x\n",
--					modes[m].rates[i].rate,
--					modes[m].rates[i].val,
--					modes[m].rates[i].flags,
--					modes[m].rates[i].val2);
-+					band->bitrates[i].bitrate,
-+					band->bitrates[i].hw_value,
-+					band->bitrates[i].flags,
-+					band->bitrates[i].hw_value_short);
- 	}
- }
- 
-@@ -548,4 +565,4 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc,
- 		!done ? ' ' : (ds->ds_txstat.ts_status == 0) ? '*' : '!');
- }
- 
--#endif /* if ATH5K_DEBUG */
-+#endif /* ifdef CONFIG_ATH5K_DEBUG */
-diff --git a/drivers/net/wireless/ath5k/debug.h b/drivers/net/wireless/ath5k/debug.h
-index c4fd8c4..16fbb6f 100644
---- a/drivers/net/wireless/ath5k/debug.h
-+++ b/drivers/net/wireless/ath5k/debug.h
-@@ -61,11 +61,6 @@
- #ifndef _ATH5K_DEBUG_H
- #define _ATH5K_DEBUG_H
- 
--/* set this to 1 for debugging output */
--#ifndef ATH5K_DEBUG
--#define ATH5K_DEBUG	0
--#endif
--
- struct ath5k_softc;
- struct ath5k_hw;
- struct ieee80211_hw_mode;
-@@ -96,7 +91,7 @@ struct ath5k_dbg_info {
-  * @ATH5K_DEBUG_LED: led management
-  * @ATH5K_DEBUG_DUMP_RX: print received skb content
-  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
-- * @ATH5K_DEBUG_DUMPMODES: dump modes
-+ * @ATH5K_DEBUG_DUMPBANDS: dump bands
-  * @ATH5K_DEBUG_TRACE: trace function calls
-  * @ATH5K_DEBUG_ANY: show at any debug level
-  *
-@@ -118,12 +113,12 @@ enum ath5k_debug_level {
- 	ATH5K_DEBUG_LED		= 0x00000080,
- 	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
- 	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
--	ATH5K_DEBUG_DUMPMODES	= 0x00000400,
-+	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
- 	ATH5K_DEBUG_TRACE	= 0x00001000,
- 	ATH5K_DEBUG_ANY		= 0xffffffff
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
++		return -EINVAL;
++
++	ifsta = &sdata->u.sta;
++	ifsta->mesh_id_len = params->mesh_id_len;
++	if (params->mesh_id_len)
++		memcpy(ifsta->mesh_id, params->mesh_id, params->mesh_id_len);
++
++	/* If the iface is down, it will be configure when it is opened */
++	if (netif_running(dev))
++		ieee80211_if_config(dev);
++	return 0;
++}
++
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -652,4 +679,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.del_station = ieee80211_del_station,
+ 	.change_station = ieee80211_change_station,
+ 	.get_station = ieee80211_get_station,
++	.set_mesh_cfg = ieee80211_if_set_mesh_cfg,
+ };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b123f58..d332683 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -82,6 +82,8 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
+ 	[NL80211_ATTR_STA_SUPPORTED_RATES] = { .type = NLA_BINARY,
+ 					       .len = NL80211_MAX_SUPP_RATES },
+ 	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
++	[NL80211_ATTR_MESH_ID] = { .type = NLA_NUL_STRING,
++				.len = IEEE80211_MAX_MESH_ID_LEN },
  };
  
--#if ATH5K_DEBUG
-+#ifdef CONFIG_ATH5K_DEBUG
+ /* message building helper */
+@@ -1079,6 +1081,41 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
  
- #define ATH5K_TRACE(_sc) do { \
- 	if (unlikely((_sc)->debug.level & ATH5K_DEBUG_TRACE)) \
-@@ -158,8 +153,7 @@ void
- ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah);
++static int nl80211_set_mesh_cfg(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *drv;
++	int err;
++	struct net_device *dev;
++	struct mesh_params params;
++
++	memset(&params, 0, sizeof(params));
++
++	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
++	if (err)
++		return err;
++
++	if (!drv->ops->set_mesh_cfg) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	if (!info->attrs[NL80211_ATTR_MESH_ID])
++		return -EINVAL;
++
++	params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
++	/* Cut null character */
++	params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]) - 1 ;
++
++	rtnl_lock();
++	err = drv->ops->set_mesh_cfg(&drv->wiphy, dev, &params);
++	rtnl_unlock();
++
++ out:
++	cfg80211_put_dev(drv);
++	dev_put(dev);
++	return err;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -1185,6 +1222,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_MESH_CFG,
++		.doit = nl80211_set_mesh_cfg,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
  
- void
--ath5k_debug_dump_modes(struct ath5k_softc *sc,
--			struct ieee80211_hw_mode *modes);
-+ath5k_debug_dump_bands(struct ath5k_softc *sc);
- 
- void
- ath5k_debug_dump_skb(struct ath5k_softc *sc,
-@@ -196,8 +190,7 @@ static inline void
- ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah) {}
- 
- static inline void
--ath5k_debug_dump_modes(struct ath5k_softc *sc,
--			struct ieee80211_hw_mode *modes) {}
-+ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
- 
- static inline void
- ath5k_debug_dump_skb(struct ath5k_softc *sc,
-@@ -207,6 +200,6 @@ static inline void
- ath5k_debug_printtxbuf(struct ath5k_softc *sc,
- 			struct ath5k_buf *bf, int done) {}
- 
--#endif /* if ATH5K_DEBUG */
-+#endif /* ifdef CONFIG_ATH5K_DEBUG */
- 
- #endif /* ifndef _ATH5K_DEBUG_H */
+ /* multicast groups */
 -- 
-1.5.3.7
+1.5.2.5
+
+
 
