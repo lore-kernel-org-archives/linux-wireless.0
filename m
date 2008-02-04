@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2184 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752868AbYBETEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 14:04:48 -0500
-Date: Tue, 5 Feb 2008 13:59:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH, take 3] libertas: clean up association debug messages
-Message-ID: <20080205185949.GH4252@tuxdriver.com> (sfid-20080205_190455_425993_0944B02A)
-References: <200710151255.56358.hs4233@mail.mn-solutions.de> <1201665912.28377.38.camel@shinybook.infradead.org> <200801300854.38715.hs4233@mail.mn-solutions.de> <200801301110.55581.hs4233@mail.mn-solutions.de> <20080131163940.GD6413@tuxdriver.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:32201 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbYBDL0K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2008 06:26:10 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2895181wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 03:26:10 -0800 (PST)
+Message-ID: <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com> (sfid-20080204_112617_095149_5409925E)
+Date: Mon, 4 Feb 2008 13:26:10 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Felix Fietkau" <nbd@openwrt.org>
+In-Reply-To: <-2417195033053015320@unknownmsgid>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080131163940.GD6413@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020697053277-git-send-email-tomas.winkler@intel.com>
+	 <1202114774.4188.127.camel@johannes.berg>
+	 <1ba2fa240802040153g1d0c9902u6af2ddf3dead975d@mail.gmail.com>
+	 <6231174111099834440@unknownmsgid>
+	 <1ba2fa240802040227g23fe41adu446adc8f0de22712@mail.gmail.com>
+	 <-6799378017406559341@unknownmsgid>
+	 <1ba2fa240802040305u611bb7edk3c757b73f40c1037@mail.gmail.com>
+	 <-4694429725714512287@unknownmsgid>
+	 <1ba2fa240802040321s515e61deld176d79eef2b444d@mail.gmail.com>
+	 <-2417195033053015320@unknownmsgid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 31, 2008 at 11:39:40AM -0500, John W. Linville wrote:
-> On Wed, Jan 30, 2008 at 11:10:55AM +0100, Holger Schurig wrote:
-> > > John, I saw that you pushed one bugfix patch upstream, but not
-> > > the others. Please don't apply them, I'll put all ACKed
-> > > patches into the libertas-2.6 tree instead.
-> > 
-> > Hmm, I see that he already applied them to 
-> > wireless-2.6/everything.
-> 
-> Only these were sent to davem:
-> 
-> Holger Schurig (1):
->       libertas: fix interrupt while removing driver
-> 
-> Ihar Hrachyshka (1):
->       libertas: fix memory alignment problems on the blackfin
-> 
-> The others haven't been sent anywhere yet.  If you would like I'll be happy
-> to revert them and wait for dwmw2's series.
+On Feb 4, 2008 1:23 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Tomas Winkler wrote:
+> > No, they are rate specific the are not modulation specific, each of
+> > them can change from packet to packet.
+>
+> Exactly. flags in the bitrate struct aren't meant to change from packet to
+> packet but be specific to a bitrate. The way I see it these are TX control
+> or rate control flags, not rate flags.
 
-I didn't get a reply here -- shall I revert them and wait for dwmw2?
+I see, I got it.
+Yes you are right. they should be part of the statuses.
+Tomas
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> johannes
+>
