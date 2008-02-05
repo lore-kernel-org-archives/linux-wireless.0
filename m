@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:42951 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757239AbYBKOVE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 09:21:04 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Eddy =?utf-8?q?Petri=C8=99or?= <eddy.petrisor@gmail.com>
-Subject: Re: weird issues with b43 - and an oops
-Date: Mon, 11 Feb 2008 15:20:35 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <47B02CBB.1060406@gmail.com>
-In-Reply-To: <47B02CBB.1060406@gmail.com>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:38893 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755780AbYBEWAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 17:00:35 -0500
+Date: Tue, 5 Feb 2008 22:44:41 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: ipw3945-devel@lists.sourceforge.net, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	kernel list <linux-kernel@vger.kernel.org>
+Subject: ipw3945: not only it periodically dies, it also BUG()s
+Message-ID: <20080205214441.GA1518@elf.ucw.cz> (sfid-20080205_220042_578688_33862EAE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200802111520.36105.mb@bu3sch.de> (sfid-20080211_142138_065457_3FEA4775)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 February 2008 12:08:43 Eddy Petri=C8=99or wrote:
-> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: Microcode not respondi=
-ng
-> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: You must go to=20
-> http://linuxwireless.org/en/users/Drivers/b43#devicefirmware and=20
-> download the correct firmware (version 4).
+Hi!
 
-Do this.
+Under not-even-high load, it periodically restarts:
 
-> Feb 11 03:32:12 bounty dhclient: wmaster0: unknown hardware address t=
-ype 801
-> Feb 11 03:32:12 bounty kernel: input: b43-phy0 as /class/input/input1=
-7
-> Feb 11 03:32:12 bounty kernel: WARNING: at drivers/ssb/main.c:883=20
-> ssb_tmslow_reject_bitmask()
+Feb  5 21:08:50 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Feb  5 21:08:52 amd kernel: iwl3945: Can't stop Rx DMA.
+Feb  5 21:12:51 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Feb  5 21:12:53 amd kernel: iwl3945: Can't stop Rx DMA.
+Feb  5 21:21:44 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Feb  5 21:21:46 amd kernel: iwl3945: Can't stop Rx DMA.
+Feb  5 21:27:32 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Feb  5 21:27:34 amd kernel: iwl3945: Can't stop Rx DMA.
+Feb  5 21:41:29 amd -- MARK --
+Feb  5 22:01:29 amd -- MARK --
+Feb  5 22:09:11 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000008.
+Feb  5 22:09:12 amd kernel: iwl3945: Can't stop Rx DMA.
 
-And use the b43 driver from wireless-2.6
+...I've reported this before, with full debugging. Not sure if
+anything happened.
 
+Now, I got BUG() in iwl3945-base.c: 3824
 
---=20
-Greetings Michael.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+static void iwl3945_tx_cmd_complete(struct iwl3945_priv *priv,
+                                struct iwl3945_rx_mem_buffer *rxb)
+{
+        struct iwl3945_rx_packet *pkt = (struct iwl3945_rx_packet
+*)rxb->skb->data;
+        u16 sequence = le16_to_cpu(pkt->hdr.sequence);
+        int txq_id = SEQ_TO_QUEUE(sequence);
+        int index = SEQ_TO_INDEX(sequence);
+        int huge = sequence & SEQ_HUGE_FRAME;
+        int cmd_index;
+        struct iwl3945_cmd *cmd;
+
+        /* If a Tx command is being handled and it isn't in the actual
+         * command queue then there a command routing bug has been
+introduced
+         * in the queue management code. */
+        if (txq_id != IWL_CMD_QUEUE_NUM)
+                IWL_ERROR("Error wrong command queue %d command id
+0x%X\n",
+                          txq_id, pkt->hdr.cmd);
+        BUG_ON(txq_id != IWL_CMD_QUEUE_NUM);
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here. Any ideas?
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
