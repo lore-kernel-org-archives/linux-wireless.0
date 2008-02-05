@@ -1,77 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aa012msr.fastwebnet.it ([85.18.95.72]:60819 "EHLO
-	aa012msr.fastwebnet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754609AbYBQKNS (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:21110 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932416AbYBEXgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 05:13:18 -0500
-Received: from localhost (23.249.105.73) by aa012msr.fastwebnet.it (8.0.013.5)
-        id 47AAE88C0174BF55 for linux-wireless@vger.kernel.org; Sun, 17 Feb 2008 11:13:02 +0100
-Date: Sun, 17 Feb 2008 11:12:00 +0100
-From: Fabio Venturi <f.venturi@tdnet.it>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem compiling ath5k
-Message-ID: <20080217101159.GA7234@silverstar> (sfid-20080217_101410_020712_44D8DA82)
-References: <20080216103846.GC9290@silverstar> <1c252d490802160400gd8a11a6y7e164d9b05f626c8@mail.gmail.com> <20080216172923.GA7439@silverstar> <1c252d490802161607t2bfa8545m1d48b17b272d2534@mail.gmail.com>
+	Tue, 5 Feb 2008 18:36:54 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so146771wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2008 15:36:53 -0800 (PST)
+Message-ID: <1ba2fa240802051536y2aac90f1g1e9d3495df9b8bb@mail.gmail.com> (sfid-20080205_233711_290076_42B66341)
+Date: Wed, 6 Feb 2008 01:36:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/1] mac80211: fix mis-match in {test,set}_bit qdisc_pool
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <20080205205453.GJ4252@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1c252d490802161607t2bfa8545m1d48b17b272d2534@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020756782190-git-send-email-tomas.winkler@intel.com>
+	 <20080205205453.GJ4252@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 17, 2008 at 01:07:25AM +0100, Joachim Frieben wrote:
-> 2008/2/16, Fabio Venturi <f.venturi@tdnet.it>:
+On Feb 5, 2008 10:54 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Sun, Feb 03, 2008 at 11:54:38PM +0200, Tomas Winkler wrote:
+> > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 > >
-> > On Sat, Feb 16, 2008 at 01:00:39PM +0100, Joachim Frieben wrote:
-> > OK,
-> > now the driver compile and load without any problem and
-> > the wlan0 and master0 devices are created.
-> > There are no error in dmesg, but I can't scan for stations,
-> > iwlist wlan0 scan
-> > says there are no active stations.
-> > Do I need extra modules for scanning?
-> > I'm using an Atheros AR2413, is this device supposed to work with
-> > the ath5k module?
-> 
-> 
-> That's exactly the situation that I do encounter myself because I'm using
-> the same chipset. I have tried a preview snapshot of the ath5k driver which
-> is not public yet, and for that one scanning works! 
-
-Where can I get that preview snapshot of ath5k? 
-I could test it.
-
-> However, data
-> transmission doesn't work yet. The main developer is about to resume work on
-> the driver after a break since late December, and he has some pending stuff
-> which needs to be merged with the development tree. Stay tuned, this should
-> be a matters of days. Any significant update will be announced on the
-> wireless list anyway. There are many people out there eagerly waiting for
-> this to happen ...
-> 
-> Cheers,
-> 
-> JF
-
-I'll stay tuned as you suggest.
-Best regards,
-Fabio
-
-
-
-
-> Luis R. Rodriguez wrote:
+> > This patch fixes a mis-match in {test,set}_bit for qdisc_pool created by
+> > the move to an array of bits.
+> >
+> > Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 >
-> You need to turn your interface up first:
+>   CC [M]  net/mac80211/wme.o
+> net/mac80211/wme.c: In function 'wme_qdiscop_enqueue':
+> net/mac80211/wme.c:161: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c:161: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c:194: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c:194: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c: In function 'wme_qdiscop_dequeue':
+> net/mac80211/wme.c:275: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c:275: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c: In function 'wme_qdiscop_init':
+> net/mac80211/wme.c:399: warning: passing argument 2 of 'set_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_add':
+> net/mac80211/wme.c:660: warning: passing argument 2 of 'test_and_set_bit' makes pointer from integer without a cast
+> net/mac80211/wme.c:673: error: subscripted value is neither array nor pointer
+> net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_remove':
+> net/mac80211/wme.c:693: warning: passing argument 2 of 'clear_bit' makes pointer from integer without a cast
+> make[1]: *** [net/mac80211/wme.o] Error 1
+> make: *** [net/mac80211/] Error 2
+>
+> Am I missing something?
 
-> ip link set wlan0 up
+This patch should fix warning that was caused Ron's patch
 
-> Or
+'adjustable number of bits for qdisc pool'
 
-> ifconfig wlan0 up
+Thanks
+Tomas
 
->   Luis
-
-The interface is up and running, but somehow it seems missing
-the beacon packets.
-Best regards,
-Fabio
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
