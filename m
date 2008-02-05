@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4234 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757632AbYB0Ueg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 15:34:36 -0500
-Date: Wed, 27 Feb 2008 15:04:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from onyx.spiritone.com ([216.99.193.114]:51464 "EHLO
+	onyx.spiritone.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbYBEVHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 16:07:15 -0500
 To: Dan Williams <dcbw@redhat.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	ipw2100-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] ipw2200: queue direct scans
-Message-ID: <20080227200446.GF3078@tuxdriver.com> (sfid-20080227_203446_632527_FF83A01B)
-References: <1204141038.3007.5.camel@localhost.localdomain>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.24-rc7
+References: <alpine.LFD.1.00.0801061410290.3148@woody.linux-foundation.org>
+        <1201264166.12870.16.camel@johannes.berg>
+        <alpine.LFD.1.00.0801250753240.14161@hp.linux-foundation.org>
+        <200801251723.58891.mb@bu3sch.de>
+        <alpine.LFD.1.00.0801250841080.14161@hp.linux-foundation.org>
+        <1201282027.3422.15.camel@localhost.localdomain>
+        <alpine.LFD.1.00.0801250934030.14161@hp.linux-foundation.org>
+        <1201282972.3422.19.camel@localhost.localdomain>
+From: seniorr@aracnet.com (Russell S. Senior)
+Date: 05 Feb 2008 12:55:00 -0800
+Message-ID: <s4mr6fr86or.fsf@onyx.spiritone.com> (sfid-20080205_210720_707447_58306DDF)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1204141038.3007.5.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 02:37:18PM -0500, Dan Williams wrote:
+>>>>> "Dan" == Dan Williams <dcbw@redhat.com> writes:
 
-> @@ -6292,7 +6302,7 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type)
->  	}
->  
->  	if (priv->status & STATUS_RF_KILL_MASK) {
-> -		IPW_DEBUG_HC("Aborting scan due to RF Kill activation\n");
-> +		IPW_DEBUG_HC("Queuing scan due to RF Kill activation\n");
->  		priv->status |= STATUS_SCAN_PENDING;
->  		goto done;
->  	}
+Linus> Is it even physically *possible* to use that Intel wireless
+Linus> chipset with anything but x86 CPU's (not just that, but
+Linus> actually _Intel_ x86 CPU's)?  And would it make any sense
+Linus> what-so-ever even if it was?
 
-Does this really make sense?  There is no telling how long RF Kill
-will be activated.
+Dan> Yeah, 3945 and 4965 cards are mini PCI-E these days.  And there
+Dan> are ipw2100, ipw2200, and ipw2915 mini PCI cards that you could
+Dan> stick in embedded systems and such.  Though of course everyone
+Dan> doing embedded stuff uses either Atheros or PrismII still,
+Dan> certainly not ipw/iwl.
+
+Fwiw, I would if I could.  I've got a couple mini-PCI Intel radios
+sitting here that I would like to be able to use in various single
+board computers (e.g. soekris and netgear wgt634u).  Right now, I am
+mostly constrained to using Atheros radios, which is a situation I'd
+rather not be in and have been looking forward to growing out of.
+
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Russell Senior         ``I have nine fingers; you have ten.''
+seniorr@aracnet.com
