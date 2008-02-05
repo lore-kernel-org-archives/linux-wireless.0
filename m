@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:6024 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309AbYB0RkI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 12:40:08 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3353556wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 09:40:07 -0800 (PST)
-Message-ID: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com> (sfid-20080227_174012_116503_4170BA8D)
-Date: Wed, 27 Feb 2008 19:40:07 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>, jt@hpl.hp.com
-Subject: linux/wireless.h - missing section
+Received: from ra.tuxdriver.com ([70.61.120.52]:3381 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750897AbYBEPcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 10:32:11 -0500
+Date: Tue, 5 Feb 2008 10:11:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ian Brown <ianbrn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Git cloning the latest, bleeding edge wireless drivers tree
+Message-ID: <20080205151119.GA4252@tuxdriver.com> (sfid-20080205_153215_950688_7C5B00DA)
+References: <d0383f90802050547h71a588edl3cf083a356cbdeed@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d0383f90802050547h71a588edl3cf083a356cbdeed@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does anybody knows why this section is missing from in kernel linux/wireless.h
+On Tue, Feb 05, 2008 at 03:47:02PM +0200, Ian Brown wrote:
+> Hello,
+> 
+> Which is the path by which I should git-clone the latest, bleeding edge
+> wireless drivers tree ? (development)
+> I assume it is somewhere under
+> http://www.kernel.org/pub/linux/kernel/people/linville/
+> ; but where exactly?
 
-struct iw_range {
+More like:
 
-......
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
 
+Don't forget to checkout the 'everything' branch.
 
-        /* More power management stuff */
-        __s32           min_pms;        /* Minimal PM saving */
-        __s32           max_pms;        /* Maximal PM saving */
-        __u16           pms_flags;      /* How to decode max/min PM saving */
+Hth!
 
-        /* All available modulations for driver (hw may support less) */
-        __s32           modul_capa;     /* IW_MODUL_* bit field */
-
-        /* More bitrate stuff */
-        __u32           bitrate_capa;   /* Types of bitrates supported */
-};
-
-Thanks
-Tomas
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
