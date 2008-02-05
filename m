@@ -1,189 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:44007 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752106AbYBFCqy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 21:46:54 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH] addressing johannes latest comments and adding a channel
-	check...
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
-Date: Wed, 06 Feb 2008 11:46:40 +0900
-Message-ID: <20080206024640.22750.72748.stgit@one> (sfid-20080206_024658_870521_2E38B3A7)
-In-Reply-To: <1202209693.4395.29.camel@johannes.berg>
-References: <1202209693.4395.29.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3093 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756068AbYBEVDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 16:03:30 -0500
+Date: Tue, 5 Feb 2008 15:54:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: [PATCH 1/1] mac80211: fix mis-match in {test,set}_bit
+	qdisc_pool
+Message-ID: <20080205205453.GJ4252@tuxdriver.com> (sfid-20080205_210336_667457_35059EC4)
+References: <12020756782190-git-send-email-tomas.winkler@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <12020756782190-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211: enable IBSS merging
+On Sun, Feb 03, 2008 at 11:54:38PM +0200, Tomas Winkler wrote:
+> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>=20
+> This patch fixes a mis-match in {test,set}_bit for qdisc_pool created=
+ by
+> the move to an array of bits.
+>=20
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-enable IBSS cell merging. if an IBSS beacon with the same channel, same ESSID
-and a TSF higher than the local TSF (mactime) is received, we have to join its
-BSSID.  while this might not be immediately apparent from reading the 802.11
-standard it is compliant and necessary to make IBSS mode functional in many
-cases. most drivers have a similar behaviour.
+  CC [M]  net/mac80211/wme.o
+net/mac80211/wme.c: In function =E2=80=98wme_qdiscop_enqueue=E2=80=99:
+net/mac80211/wme.c:161: warning: passing argument 2 of =E2=80=98constan=
+t_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c:161: warning: passing argument 2 of =E2=80=98variabl=
+e_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c:194: warning: passing argument 2 of =E2=80=98constan=
+t_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c:194: warning: passing argument 2 of =E2=80=98variabl=
+e_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c: In function =E2=80=98wme_qdiscop_dequeue=E2=80=99:
+net/mac80211/wme.c:275: warning: passing argument 2 of =E2=80=98constan=
+t_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c:275: warning: passing argument 2 of =E2=80=98variabl=
+e_test_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c: In function =E2=80=98wme_qdiscop_init=E2=80=99:
+net/mac80211/wme.c:399: warning: passing argument 2 of =E2=80=98set_bit=
+=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c: In function =E2=80=98ieee80211_ht_agg_queue_add=E2=80=
+=99:
+net/mac80211/wme.c:660: warning: passing argument 2 of =E2=80=98test_an=
+d_set_bit=E2=80=99 makes pointer from integer without a cast
+net/mac80211/wme.c:673: error: subscripted value is neither array nor p=
+ointer
+net/mac80211/wme.c: In function =E2=80=98ieee80211_ht_agg_queue_remove=E2=
+=80=99:
+net/mac80211/wme.c:693: warning: passing argument 2 of =E2=80=98clear_b=
+it=E2=80=99 makes pointer from integer without a cast
+make[1]: *** [net/mac80211/wme.o] Error 1
+make: *** [net/mac80211/] Error 2
 
-* move the relevant code section (previously only containing debug code) down
-to the end of the function, so we can reuse the bss structure.
+Am I missing something?
 
-* we have to compare the mactime (TSF at the time of packet receive) rather
-than the current TSF. since some drivers are not able to give a reliable
-mactime we fall back to use the current TSF, which will be enough to catch most
-(but not all) cases where an IBSS merge is necessary.
-
-* in IBSS mode we want to allow beacons to override probe response info so we
-can correctly do merges.
-
-* we don't only configure beacons based on scan results, so change that
-message.
-
-* to enable this we have to let all beacons thru in IBSS mode, even if they
-have a different BSSID.
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
-
- include/net/mac80211.h       |    3 +-
- net/mac80211/ieee80211_sta.c |   70 ++++++++++++++++++++++++++----------------
- net/mac80211/rx.c            |    5 ++-
- 3 files changed, 49 insertions(+), 29 deletions(-)
-
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 460da54..4ae3a12 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -276,7 +276,8 @@ struct ieee80211_tx_control {
-  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
-  *	the frame.
-  * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime field)
-- *	is valid.
-+ *	is valid. This is useful in monitor mode and necessary for beacon frames
-+ *	to enable IBSS merging.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR	= 1<<0,
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 08f89fa..4df18ae 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2202,7 +2202,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 	struct ieee80211_sta_bss *bss;
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	u64 timestamp;
-+	u64 timestamp, mactime;
- 	DECLARE_MAC_BUF(mac);
- 	DECLARE_MAC_BUF(mac2);
- 
-@@ -2220,30 +2220,6 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 		return;
- 
- 	timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
 -
--	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
--	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0) {
--#ifdef CONFIG_MAC80211_IBSS_DEBUG
--		static unsigned long last_tsf_debug = 0;
--		u64 tsf;
--		if (local->ops->get_tsf)
--			tsf = local->ops->get_tsf(local_to_hw(local));
--		else
--			tsf = -1LLU;
--		if (time_after(jiffies, last_tsf_debug + 5 * HZ)) {
--			printk(KERN_DEBUG "RX beacon SA=%s BSSID="
--			       "%s TSF=0x%llx BCN=0x%llx diff=%lld "
--			       "@%lu\n",
--			       print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->bssid),
--			       (unsigned long long)tsf,
--			       (unsigned long long)timestamp,
--			       (unsigned long long)(tsf - timestamp),
--			       jiffies);
--			last_tsf_debug = jiffies;
--		}
--#endif /* CONFIG_MAC80211_IBSS_DEBUG */
--	}
--
- 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
- 
- 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
-@@ -2329,8 +2305,10 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 
- 	bss->band = rx_status->band;
- 
--	if (bss->probe_resp && beacon) {
--		/* Do not allow beacon to override data from Probe Response. */
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
-+	    bss->probe_resp && beacon) {
-+		/* STA mode:
-+		 * Do not allow beacon to override data from Probe Response. */
- 		ieee80211_rx_bss_put(dev, bss);
- 		return;
- 	}
-@@ -2434,6 +2412,44 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 	bss->noise = rx_status->noise;
- 	if (!beacon)
- 		bss->probe_resp++;
-+
-+	/* check if we need to merge IBSS */
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
-+	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
-+	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
-+	    bss->freq == local->oper_channel->center_freq &&
-+	    elems.ssid_len == sdata->u.sta.ssid_len &&
-+	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0) {
-+		if (rx_status->flag & RX_FLAG_TSFT)
-+			/* in order for correct IBSS merging we need mactime */
-+			mactime = rx_status->mactime;
-+		else if (local && local->ops && local->ops->get_tsf)
-+			/* second best option: get current TSF */
-+			mactime = local->ops->get_tsf(local_to_hw(local));
-+		else
-+			/* can't merge without knowing the TSF */
-+			mactime = -1LLU;
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+		printk(KERN_DEBUG "RX beacon SA=%s BSSID="
-+		       "%s TSF=0x%llx BCN=0x%llx diff=%lld @%lu\n",
-+		       print_mac(mac, mgmt->sa),
-+		       print_mac(mac2, mgmt->bssid),
-+		       (unsigned long long)mactime,
-+		       (unsigned long long)timestamp,
-+		       (unsigned long long)(mactime - timestamp),
-+		       jiffies);
-+#endif /* CONFIG_MAC80211_IBSS_DEBUG */
-+		if (mactime <= timestamp) {
-+			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
-+				printk(KERN_DEBUG "%s: beacon TSF higher than "
-+				       "local TSF - IBSS merge with BSSID %s\n",
-+				       dev->name, print_mac(mac, mgmt->bssid));
-+			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
-+			ieee80211_ibss_add_sta(dev, NULL,
-+					       mgmt->bssid, mgmt->sa);
-+		}
-+	}
-+
- 	ieee80211_rx_bss_put(dev, bss);
- }
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index beda1bf..ed7cf37 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1612,7 +1612,10 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
- 	case IEEE80211_IF_TYPE_IBSS:
- 		if (!bssid)
- 			return 0;
--		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
-+		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT &&
-+		    (rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
-+			return 1;
-+		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
- 			if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
- 				return 0;
- 			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
