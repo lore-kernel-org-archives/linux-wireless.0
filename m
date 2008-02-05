@@ -1,106 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:5154 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825AbYBQQfq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 11:35:46 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1178110fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2008 08:35:45 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sun, 17 Feb 2008 17:30:44 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802171730.44353.IvDoorn@gmail.com> (sfid-20080217_163607_807783_2C80B9FC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:35448 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751017AbYBEPJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 10:09:36 -0500
+Subject: Re: ipw2200 stalls on high load
+From: Dan Williams <dcbw@redhat.com>
+To: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+In-Reply-To: <20080205083511.GA28623@Chamillionaire.breakpoint.cc>
+References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc>
+	 <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
+	 <20080130225738.GB2648@Chamillionaire.breakpoint.cc>
+	 <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com>
+	 <1202128649.10632.4.camel@localhost.localdomain>
+	 <D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com>
+	 <20080204224502.GA22717@Chamillionaire.breakpoint.cc>
+	 <1202167450.5190.2.camel@localhost.localdomain>
+	 <20080205083511.GA28623@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain
+Date: Tue, 05 Feb 2008 10:09:14 -0500
+Message-Id: <1202224154.1243.7.camel@localhost.localdomain> (sfid-20080205_150940_846428_02E3AB36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, 2008-02-05 at 09:35 +0100, Sebastian Siewior wrote:
+> * Dan Williams | 2008-02-04 18:24:10 [-0500]:
+> 
+> >Could you put some debugging information into ipw_rx() to print out the
+> >values of r and i right before the while (i != r) loop, and inside the
+> >if (fill_rx) block later down what count and i are?
+> Sure:
+> 
+> [ 1849.374846] Before while 0x0000001c != 0x0000001d
+> [ 1849.378151] Before while 0x0000001d != 0x0000001e
+> [ 1849.378970] Before while 0x0000001e != 0x0000001f
+> [ 1849.381220] Before while 0x0000001f != 0x00000000
+> [ 1849.383092] Before while 0x00000000 != 0x00000001
+> [ 1849.385513] Before while 0x00000001 != 0x00000002
+> [ 1849.387636] Before while 0x00000002 != 0x00000003
+> [ 1849.389580] Before while 0x00000003 != 0x00000004
+> [ 1849.391561] Before while 0x00000004 != 0x00000005
+> [ 1849.393720] Before while 0x00000005 != 0x00000006
+> [ 1849.395799] Before while 0x00000006 != 0x00000007
+> [ 1849.397941] Before while 0x00000007 != 0x00000008
+> [ 1849.399885] Before while 0x00000008 != 0x00000009
+> [ 1849.402127] Before while 0x00000009 != 0x0000000a
+> [ 1849.405144] Before while 0x0000000a != 0x0000000b
+> [ 1849.406376] Before while 0x0000000b != 0x0000000c
+> [ 1849.409953] Before while 0x0000000c != 0x0000000d
+> [ 1849.410070] fill_rx block, count: 0x00000000 i: 0x0000000d
+> [ 1849.410492] Before while 0x0000000d != 0x0000000e
+> [ 1849.410610] fill_rx block, count: 0x00000000 i: 0x0000000e
+> [ 1849.412598] Before while 0x0000000e != 0x0000000f
+> [ 1849.412716] fill_rx block, count: 0x00000000 i: 0x0000000f
+> [ 1849.414930] Before while 0x0000000f != 0x00000010
+> [ 1849.415048] fill_rx block, count: 0x00000000 i: 0x00000010
+> [ 1849.417127] Before while 0x00000010 != 0x00000011
+> [ 1849.417244] fill_rx block, count: 0x00000000 i: 0x00000011
+> [ 1849.419324] Before while 0x00000011 != 0x00000012
+> [ 1849.419441] fill_rx block, count: 0x00000000 i: 0x00000012
+> [ 1849.421367] Before while 0x00000012 != 0x00000013
+> [ 1849.421486] fill_rx block, count: 0x00000000 i: 0x00000013
+> [ 1849.423275] Before while 0x00000013 != 0x00000014
+> [ 1849.423392] fill_rx block, count: 0x00000000 i: 0x00000014
+> [ 1849.425472] Before while 0x00000014 != 0x00000015
+> [ 1849.425591] fill_rx block, count: 0x00000000 i: 0x00000015
+> [ 1849.427461] Before while 0x00000015 != 0x00000016
+> [ 1849.427579] fill_rx block, count: 0x00000000 i: 0x00000016
+> [ 1849.429440] Before while 0x00000016 != 0x00000017
+> [ 1849.429557] fill_rx block, count: 0x00000000 i: 0x00000017
+> [ 1849.431618] Before while 0x00000017 != 0x00000018
+> [ 1849.431736] fill_rx block, count: 0x00000000 i: 0x00000018
+> [ 1849.434472] Before while 0x00000018 != 0x00000019
+> [ 1849.434590] fill_rx block, count: 0x00000000 i: 0x00000019
+> [  854.288510] ipw2200: Firmware error detected.  Restarting.
+> [ 1109.987456] Before while 0x00000000 != 0x00000001
+> [  854.530339] Before while 0x00000001 != 0x00000002
+> [  854.566437] Before while 0x00000002 != 0x00000003
+> [  854.596029] Before while 0x00000003 != 0x00000004
+> [  854.620725] Before while 0x00000004 != 0x00000005
+> [  854.621141] Before while 0x00000005 != 0x00000006
+> [  854.621189] Before while 0x00000006 != 0x00000007
+> [  854.633339] Before while 0x00000007 != 0x00000008
+> [  854.634229] Before while 0x00000008 != 0x00000009
+> [  854.639772] Before while 0x00000009 != 0x0000000a
+> [  854.639812] Before while 0x0000000a != 0x0000000b
+> [  854.674365] Before while 0x0000000b != 0x0000000c
+> [  854.697891] Before while 0x0000000c != 0x0000000d
+> [  854.721436] Before while 0x0000000d != 0x0000000e
+> [  854.744974] Before while 0x0000000e != 0x0000000f
+> [  854.768516] Before while 0x0000000f != 0x00000010
+> [  854.792058] Before while 0x00000010 != 0x00000011
+> [  854.816046] Before while 0x00000011 != 0x00000012
+> [  854.816127] Before while 0x00000012 != 0x00000013
+> [  854.816172] Before while 0x00000013 != 0x00000014
+> [  854.816688] Before while 0x00000014 != 0x00000015
+> [  854.857375] Before while 0x00000015 != 0x00000016
+> [  855.047194] Before while 0x00000016 != 0x00000017
+> [  855.048013] Before while 0x00000017 != 0x00000018
+> 
+> I'm not sure why the timestamps aren't incrementing.
 
-Here is the 2.1.2 release of rt2x00. Several important bugfixes like a
-partial return of TX/RX activity in the PCI drivers.
+This seems to indicate that on your machine ipw_rx() is only ever called
+for one packet, i.e. the firmware never seems to write more than one
+packet into the ring buffer for the host to read, or maybe the host is
+fast enough that it can process each interrupt.
 
-Note that _none_ of the drivers (PCI or USB) are in a good shape since the
-2.1.0 release. With partial RX/TX activity we are at least now on a similar
-behavior as the 2.0.14 version inside kernel 2.6.25.
+That would mean that count never gets above 8, and that the RX queue is
+never restocked.  The (count >= 8) part might be specific to the
+3945/4965 drivers, since they apparently restock the RX queue in blocks
+of 8.  Can you try to change the:
 
-Speaking of the 2.6.25 kernel, it seems that rt2x00 is not in an all too good
-shape in there. If more reports about broken TX/RX come in I will consider
-reverting a lot of patches to make rt2x00 look a lot like the version in 2.6.24.
-That version wasn't good either, but at least people can't complain about
-regressions. ;)
+if (count >= 8)
 
-Also note that the git pull request below also contains the patches from
-previous pull request. But I noticed that you hadn't pulled in the 2.1.1 release yet.
-I won't resent those patches to the list, since there aren't any changes in them
-since last week. ;)
+to
 
-Ivo
+if (count)
 
----
-The following changes since commit 2b78397a79d3daa2ba6c633526a7e3b455f9fc73:
-  Stefano Brivio (1):
-        b43legacy: Add driver load messages
+and see what that does for you?  Also, can you log the value of
+"ipw_rx_queue_space (priv->rxq)" on the same line as your "fill_rx
+block" printk?
 
-are available in the git repository at:
+Thanks!
+Dan
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+> >Also, what's the procedure to reproduce this again?  I couldn't get that
+> >bit to trigger but I wasn't really sure what to do to stress the 2200
+> >that far, otherwise I could have tested the patch more before posting.
+> 
+> I did not get this when do something like:
+> | ssh box 'cat /dev/zero' >  /dev/null
+> 
+> but it works fine with a firefox download from the same machine. It was
+> triggered after a download of 22.9 MiB at rate of about 664 KiB (this is
+> what the download window says).
+> 
+> >Thanks,
+> >Dan
+> 
+> Sebastian
 
-Adam Baker (1):
-      rt2x00: correct address calc for queue private data
-
-Gertjan van Wingerde (1):
-      Fix hw mode registration with mac80211.
-
-Ivo van Doorn (23):
-      rt2x00: Fix invalid DMA free
-      rt2x00: Make rt2x00 less verbose
-      rt2x00: Remove MGMT ring initialization
-      rt2x00: Select CONFIG_NEW_LEDS
-      rt2x00: make csr_cache and csr_addr an union
-      rt2x00: Fix scheduling while atomic errors in usb drivers
-      rt2x00: Add queue statistics to debugfs
-      rt2x00: Fix typo in debug statement
-      rt2x00: Fix skbdesc->data_len initialization
-      rt2x00: Fix queue->qid initialization
-      rt2x00: Cleanup Makefile
-      rt2x00: Kill guardian urb during disable_radio
-      rt2x00: Release rt2x00 2.1.1
-      rt2x00: Send frames out with configured TX power
-      rt2x00: Don't report driver generated frames to tx_status()
-      rt2x00: Fix Descriptor DMA initialization
-      rt2x00: Filter ACK_CTS based on FIF_CONTROL
-      rt2x00: Remove reset_tsf()
-      rt2x00: Rename dscape -> mac80211
-      rt2x00: Cleanup mode registration
-      rt2x00: Remove async vendor request calls from rt2x00usb
-      rt2x00: Fix MAC address defines in rt61pci
-      rt2x00: Release rt2x00 2.1.2
-
- drivers/net/wireless/rt2x00/Kconfig       |    3 +-
- drivers/net/wireless/rt2x00/Makefile      |   41 ++++-------
- drivers/net/wireless/rt2x00/rt2400pci.c   |   39 ++++------
- drivers/net/wireless/rt2x00/rt2400pci.h   |    6 +-
- drivers/net/wireless/rt2x00/rt2500pci.c   |   38 ++++------
- drivers/net/wireless/rt2x00/rt2500pci.h   |    4 +-
- drivers/net/wireless/rt2x00/rt2500usb.c   |   23 ++++---
- drivers/net/wireless/rt2x00/rt2500usb.h   |    4 +-
- drivers/net/wireless/rt2x00/rt2x00.h      |   50 ++++++++-----
- drivers/net/wireless/rt2x00/rt2x00debug.c |   90 ++++++++++++++++++++----
- drivers/net/wireless/rt2x00/rt2x00dev.c   |  100 +++++++++++++++------------
- drivers/net/wireless/rt2x00/rt2x00lib.h   |    5 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c   |   24 ++++++-
- drivers/net/wireless/rt2x00/rt2x00pci.c   |  108 +++++++++++++++++++---------
- drivers/net/wireless/rt2x00/rt2x00pci.h   |   14 ++--
- drivers/net/wireless/rt2x00/rt2x00queue.c |   36 +++++----
- drivers/net/wireless/rt2x00/rt2x00queue.h |   12 +++-
- drivers/net/wireless/rt2x00/rt2x00usb.c   |   90 +++++++-----------------
- drivers/net/wireless/rt2x00/rt2x00usb.h   |   18 -----
- drivers/net/wireless/rt2x00/rt61pci.c     |   54 ++++++--------
- drivers/net/wireless/rt2x00/rt61pci.h     |   12 ++--
- drivers/net/wireless/rt2x00/rt73usb.c     |   56 +++++++--------
- drivers/net/wireless/rt2x00/rt73usb.h     |    4 +-
- 23 files changed, 453 insertions(+), 378 deletions(-)
