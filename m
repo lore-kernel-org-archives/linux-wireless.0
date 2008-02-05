@@ -1,67 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:34552 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbYBJVsf (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:48892 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755637AbYBEKuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 16:48:35 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so4237858fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:48:34 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 03/14] rt2x00: Remove MGMT ring initialization
-Date: Sun, 10 Feb 2008 22:47:46 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802102246.04515.IvDoorn@gmail.com>
-In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
+	Tue, 5 Feb 2008 05:50:04 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 2/2] mac80211: enable IBSS merging
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
+Date: Tue, 05 Feb 2008 19:49:49 +0900
+Message-ID: <20080205104949.9379.61874.stgit@one> (sfid-20080205_105009_544167_5EF568E1)
+In-Reply-To: <20080205104543.9379.47253.stgit@one>
+References: <20080205104543.9379.47253.stgit@one>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802102247.46548.IvDoorn@gmail.com> (sfid-20080210_214839_785987_563DA455)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the last remnants of the MGMT ring initialization
-from rt61pci.ko
+enable IBSS cell merging. if an IBSS beacon with the same ESSID and a TSF
+higher than the local TSF (mactime) is received, we have to join its BSSID.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+* move the relevant code section (previously only containing debug code) down
+to the end of the function, so we can reuse the bss structure.
+
+* we have to compare the mactime (TSF at the time of packet receive) rather
+than the current TSF.
+
+* in IBSS mode we want to allow beacons to override probe response info so we
+can correctly do merges.
+
+* we don't only configure beacons based on scan results, so change that
+message.
+
+* to enable all this we have to let all beacons thru in IBSS mode, even if they
+have a different BSSID.
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |    2 --
- drivers/net/wireless/rt2x00/rt61pci.h |    2 +-
- 2 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index da0491b..41ea0c4 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1070,7 +1070,6 @@ static int rt61pci_init_queues(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, TX_DMA_DST_CSR_DEST_AC1, 2);
- 	rt2x00_set_field32(&reg, TX_DMA_DST_CSR_DEST_AC2, 2);
- 	rt2x00_set_field32(&reg, TX_DMA_DST_CSR_DEST_AC3, 2);
--	rt2x00_set_field32(&reg, TX_DMA_DST_CSR_DEST_MGMT, 0);
- 	rt2x00pci_register_write(rt2x00dev, TX_DMA_DST_CSR, reg);
+ net/mac80211/ieee80211_sta.c |   68 +++++++++++++++++++++++++-----------------
+ net/mac80211/rx.c            |    5 ++-
+ 2 files changed, 45 insertions(+), 28 deletions(-)
+
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 08f89fa..7f72f32 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2202,7 +2202,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 	struct ieee80211_sta_bss *bss;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	u64 timestamp;
++	u64 timestamp, mactime;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
  
- 	rt2x00pci_register_read(rt2x00dev, LOAD_TX_RING_CSR, &reg);
-@@ -1078,7 +1077,6 @@ static int rt61pci_init_queues(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, LOAD_TX_RING_CSR_LOAD_TXD_AC1, 1);
- 	rt2x00_set_field32(&reg, LOAD_TX_RING_CSR_LOAD_TXD_AC2, 1);
- 	rt2x00_set_field32(&reg, LOAD_TX_RING_CSR_LOAD_TXD_AC3, 1);
--	rt2x00_set_field32(&reg, LOAD_TX_RING_CSR_LOAD_TXD_MGMT, 0);
- 	rt2x00pci_register_write(rt2x00dev, LOAD_TX_RING_CSR, reg);
+@@ -2220,30 +2220,6 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 		return;
  
- 	rt2x00pci_register_read(rt2x00dev, RX_CNTL_CSR, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index d291c0f..2f9a889 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -880,7 +880,7 @@ struct hw_pairwise_ta_entry {
- #define TX_CNTL_CSR_ABORT_TX_MGMT	FIELD32(0x00100000)
+ 	timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
+-
+-	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
+-	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0) {
+-#ifdef CONFIG_MAC80211_IBSS_DEBUG
+-		static unsigned long last_tsf_debug = 0;
+-		u64 tsf;
+-		if (local->ops->get_tsf)
+-			tsf = local->ops->get_tsf(local_to_hw(local));
+-		else
+-			tsf = -1LLU;
+-		if (time_after(jiffies, last_tsf_debug + 5 * HZ)) {
+-			printk(KERN_DEBUG "RX beacon SA=%s BSSID="
+-			       "%s TSF=0x%llx BCN=0x%llx diff=%lld "
+-			       "@%lu\n",
+-			       print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->bssid),
+-			       (unsigned long long)tsf,
+-			       (unsigned long long)timestamp,
+-			       (unsigned long long)(tsf - timestamp),
+-			       jiffies);
+-			last_tsf_debug = jiffies;
+-		}
+-#endif /* CONFIG_MAC80211_IBSS_DEBUG */
+-	}
+-
+ 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
  
- /*
-- * LOAD_TX_RING_CSR: Load RX de
-+ * LOAD_TX_RING_CSR: Load RX desriptor
-  */
- #define LOAD_TX_RING_CSR		0x3434
- #define LOAD_TX_RING_CSR_LOAD_TXD_AC0	FIELD32(0x00000001)
--- 
-1.5.4
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
+@@ -2329,8 +2305,10 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 
+ 	bss->band = rx_status->band;
+ 
+-	if (bss->probe_resp && beacon) {
+-		/* Do not allow beacon to override data from Probe Response. */
++	if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
++	    bss->probe_resp && beacon) {
++		/* STA mode:
++		 * Do not allow beacon to override data from Probe Response. */
+ 		ieee80211_rx_bss_put(dev, bss);
+ 		return;
+ 	}
+@@ -2434,6 +2412,42 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 	bss->noise = rx_status->noise;
+ 	if (!beacon)
+ 		bss->probe_resp++;
++
++	/* check if we need to merge IBSS */
++	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
++	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
++	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
++	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0) {
++		if (rx_status->flag & RX_FLAG_TSFT)
++			/* in order for correct IBSS merging we need mactime */
++			mactime = rx_status->mactime;
++		else if (local && local->ops && local->ops->get_tsf)
++			/* second best option: get current TSF */
++			mactime = local->ops->get_tsf(local_to_hw(local));
++		else
++			/* can't merge without knowing the TSF */
++			mactime = -1LLU;
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++		printk(KERN_DEBUG "RX beacon SA=%s BSSID="
++		       "%s TSF=0x%llx BCN=0x%llx diff=%lld @%lu\n",
++		       print_mac(mac, mgmt->sa),
++		       print_mac(mac2, mgmt->bssid),
++		       (unsigned long long)mactime,
++		       (unsigned long long)timestamp,
++		       (unsigned long long)(mactime - timestamp),
++		       jiffies);
++#endif /* CONFIG_MAC80211_IBSS_DEBUG */
++		if (mactime <= timestamp) {
++			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
++				printk(KERN_DEBUG "%s: beacon TSF higher than "
++				       "local TSF - IBSS merge with BSSID %s\n",
++				       dev->name, print_mac(mac, mgmt->bssid));
++			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
++			ieee80211_ibss_add_sta(dev, NULL,
++					       mgmt->bssid, mgmt->sa);
++		}
++	}
++
+ 	ieee80211_rx_bss_put(dev, bss);
+ }
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index beda1bf..ed7cf37 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1612,7 +1612,10 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		if (!bssid)
+ 			return 0;
+-		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
++		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT &&
++		    (rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
++			return 1;
++		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
+ 			if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
+ 				return 0;
+ 			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
 
