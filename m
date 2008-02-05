@@ -1,83 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3551 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754054AbYB2TeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 14:34:08 -0500
-Date: Fri, 29 Feb 2008 14:10:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>, David Miller <davem@davemloft.net>,
-	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Message-ID: <20080229191058.GD3234@tuxdriver.com> (sfid-20080229_193414_798840_9A303792)
-References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg>
+Received: from py-out-1112.google.com ([64.233.166.176]:51985 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399AbYBEPsr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 10:48:47 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3806157pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2008 07:48:43 -0800 (PST)
+Message-ID: <43e72e890802050748p276f891ekf26a7aa269d13d5f@mail.gmail.com> (sfid-20080205_154912_834126_FC453981)
+Date: Tue, 5 Feb 2008 10:48:42 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Git cloning the latest, bleeding edge wireless drivers tree
+Cc: "Ian Brown" <ianbrn@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080205151119.GA4252@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1204302853.3938.40.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <d0383f90802050547h71a588edl3cf083a356cbdeed@mail.gmail.com>
+	 <20080205151119.GA4252@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
-> 
-> On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
-> > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
-> > 
-> > > I'm wondering if we can't simply pass a commandline parameter to file2alias
-> > > that tells it whether we are crosscompiling. It should simply omit the sanity check
-> > 
-> > Sounds reasonable to me.
-> 
-> In fact, file2alias shouldn't need a command line argument ...
-> 
-> > > in that case. Is there any easy and reliable way to find out whether we
-> > > are crosscompiling from a makefile (I don't know the makefile core that much)?
-> > 
-> > Non-empty CROSS_COMPILE definition?
-> 
-> ... it can just check whether CROSS_COMPILE is set in its environment.
-> No?
+On Feb 5, 2008 10:11 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Tue, Feb 05, 2008 at 03:47:02PM +0200, Ian Brown wrote:
+> > Hello,
+> >
+> > Which is the path by which I should git-clone the latest, bleeding edge
+> > wireless drivers tree ? (development)
+> > I assume it is somewhere under
+> > http://www.kernel.org/pub/linux/kernel/people/linville/
+> > ; but where exactly?
+>
+> More like:
+>
+>         git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+>
+> Don't forget to checkout the 'everything' branch.
 
-Not a bad idea...something like this?
+In case it helps too:
 
----
+http://linuxwireless.org/en/developers/Documentation/git-guide
 
-modpost: avoid user/kernel struct size compat check if cross-compiling
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- scripts/mod/file2alias.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
-index 9ddf944..040721e 100644
---- a/scripts/mod/file2alias.c
-+++ b/scripts/mod/file2alias.c
-@@ -10,6 +10,7 @@
-  * of the GNU General Public License, incorporated herein by reference.
-  */
- 
-+#include <stdlib.h>
- #include "modpost.h"
- 
- /* We use the ELF typedefs for kernel_ulong_t but bite the bullet and
-@@ -63,6 +64,12 @@ static void device_id_check(const char *modname, const char *device_id,
- {
- 	int i;
- 
-+	if (getenv("CROSS_COMPILE")) {
-+		warn("%s: cross-compile can not verify userspace/kernel "
-+		     "structure size compatibility.\n", modname);
-+		return;
-+	}
-+
- 	if (size % id_size || size < id_size) {
- 		fatal("%s: sizeof(struct %s_device_id)=%lu is not a modulo "
- 		      "of the size of section __mod_%s_device_table=%lu.\n"
--- 
-1.5.3.3
-
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
