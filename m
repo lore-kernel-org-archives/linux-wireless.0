@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:36636 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754322AbYBYTav (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:30:51 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so928264ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:30:47 -0800 (PST)
-Subject: Re: [PATCH 08/13 v2] o11s: other changes in mac80211 for mesh
-	interface support
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203696983.7082.63.camel@johannes.berg>
-References: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com>
-	 (sfid-20080222_071830_924260_34482369)  <1203696983.7082.63.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 11:32:25 -0800
-Message-Id: <1203967945.6929.17.camel@localhost> (sfid-20080225_193053_260456_A8B137A8)
-Mime-Version: 1.0
+Received: from ns1.suse.de ([195.135.220.2]:39293 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751800AbYBFKsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 05:48:09 -0500
+From: Andreas Schwab <schwab@suse.de>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Tino Keitel <tino.keitel@gmx.de>, <linux-kernel@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFT 1/1] single_chip test
+References: <20080206014131.9d489a34.akpm@linux-foundation.org>
+	<1202294560-7313-1-git-send-email-jirislaby@gmail.com>
+Date: Wed, 06 Feb 2008 11:48:06 +0100
+In-Reply-To: <1202294560-7313-1-git-send-email-jirislaby@gmail.com> (Jiri
+	Slaby's message of "Wed\, 6 Feb 2008 11\:42\:40 +0100")
+Message-ID: <jezluetl7d.fsf@sykes.suse.de> (sfid-20080206_104812_669786_38897964)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-22 at 17:16 +0100, Johannes Berg wrote:
-> >  	if (sdata->vif.type != IEEE80211_IF_TYPE_STA &&
-> >  	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
-> > +	    sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT &&
-> >  	    sdata->vif.type != IEEE80211_IF_TYPE_AP)
-> >  		return -EOPNOTSUPP;
-> 
-> Why no scanning on mesh interfaces?
+Jiri Slaby <jirislaby@gmail.com> writes:
 
-? That's actually allowing mesh interfaces to scan.
+> @@ -210,12 +205,16 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_s=
+oftc *sc, u8 mac_version)
+>  	}
+> =20
+>  	/* Identify single chip solutions */
+> -	if((srev <=3D AR5K_SREV_VER_AR5414) &&
+> -	(srev >=3D AR5K_SREV_VER_AR2424)) {
+> -		ah->ah_single_chip =3D true;
+> -	} else {
+> -		ah->ah_single_chip =3D false;
+> -	}
+> +	ah->ah_single_chip =3D !!(srev >=3D AR5K_SREV_VER_AR2424 &&
+                             ^^
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+This is useless.
 
+Andreas.
 
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
