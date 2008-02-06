@@ -1,97 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.riseup.net ([204.13.164.18]:54876 "EHLO mx1.riseup.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761386AbYBOT4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 14:56:47 -0500
-Date: Fri, 15 Feb 2008 20:56:59 +0100
-From: matthias@kaehlcke.net
-To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	Matthias Kaehlcke <matthias@kaehlcke.net>
-Subject: [patch 2/3] Convert stats_sem in a mutex
-Message-ID: <20080215195659.GC22741@traven> (sfid-20080215_195653_392104_E159816A)
-References: <20080215195329.912560854@kaehlcke.net>
+Received: from mail.gmx.net ([213.165.64.20]:56512 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755251AbYBFUu2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 15:50:28 -0500
+From: Helge Deller <deller@gmx.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
+Date: Wed, 6 Feb 2008 21:50:23 +0100
+Cc: Jean Tourrilhes <jt@hpl.hp.com>, linux-wireless@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-arm-kernel@lists.arm.linux.org.uk,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org>
+In-Reply-To: <20080202224515.20a09553.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802062150.23930.deller@gmx.de> (sfid-20080206_205031_963476_3E91ECF9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore stats_sem is used as mutex, convert it to the mutex API
+On Sunday 03 February 2008, Andrew Morton wrote:
+> On Sun, 13 Jan 2008 15:16:34 +0100 Helge Deller <deller@gmx.de> wrote:
+> 
+> > Convert optional struct size checks to non-optional compile-time checks.
+> > Furthermore BUILD_BUG_ON() which will be optimized away by the compiler.
+> > 
+> > Signed-off-by: Helge Deller <deller@gmx.de>
+> > 
+> >  wavelan.c      |   34 +++++-----------------------------
+> >  wavelan.p.h    |    1 -
+> >  wavelan_cs.c   |   33 ++++-----------------------------
+> >  wavelan_cs.p.h |    1 -
+> >  4 files changed, 9 insertions(+), 60 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/wavelan.c b/drivers/net/wireless/wavelan.c
+> > index a1f8a16..ffe50e2 100644
+> > --- a/drivers/net/wireless/wavelan.c
+> > +++ b/drivers/net/wireless/wavelan.c
+> > @@ -49,27 +49,6 @@ static int __init wv_psa_to_irq(u8 irqval)
+> >  	return -1;
+> >  }
+> >  
+> > -#ifdef STRUCT_CHECK
+> > -/*------------------------------------------------------------------*/
+> > -/*
+> > - * Sanity routine to verify the sizes of the various WaveLAN interface
+> > - * structures.
+> > - */
+> > -static char *wv_struct_check(void)
+> > -{
+> > -#define	SC(t,s,n)	if (sizeof(t) != s) return(n);
+> > -
+> > -	SC(psa_t, PSA_SIZE, "psa_t");
+> > -	SC(mmw_t, MMW_SIZE, "mmw_t");
+> > -	SC(mmr_t, MMR_SIZE, "mmr_t");
+> > -	SC(ha_t, HA_SIZE, "ha_t");
+> > -
+> > -#undef	SC
+> > -
+> > -	return ((char *) NULL);
+> > -}				/* wv_struct_check */
+> > -#endif				/* STRUCT_CHECK */
+> > -
+> >  /********************* HOST ADAPTER SUBROUTINES *********************/
+> >  /*
+> >   * Useful subroutines to manage the WaveLAN ISA interface
+> > @@ -4215,14 +4194,11 @@ struct net_device * __init wavelan_probe(int unit)
+> >  	int i;
+> >  	int r = 0;
+> >  
+> > -#ifdef	STRUCT_CHECK
+> > -	if (wv_struct_check() != (char *) NULL) {
+> > -		printk(KERN_WARNING
+> > -		       "%s: wavelan_probe(): structure/compiler botch: \"%s\"\n",
+> > -		       dev->name, wv_struct_check());
+> > -		return -ENODEV;
+> > -	}
+> > -#endif				/* STRUCT_CHECK */
+> > +	/* compile-time check the sizes of structures */
+> > +	BUILD_BUG_ON(sizeof(psa_t) != PSA_SIZE);
+> > +	BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
+> 
+> This assertion is now triggering with arm allmodconfig.
+> 
+> Rafael, please track this as a post-2.6.24 regression.
 
-Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
+Hello Andrew,
 
-Index: linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:43:05.000000000 +0100
-+++ linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:44:03.000000000 +0100
-@@ -165,7 +165,7 @@
- 	struct obj_bss bss, *bss2;
- 	union oid_res_t r;
- 
--	down(&priv->stats_sem);
-+	mutex_lock(&priv->stats_lock);
- 
- /* Noise floor.
-  * I'm not sure if the unit is dBm.
-@@ -207,7 +207,7 @@
- 	mgt_get_request(priv, DOT11_OID_MPDUTXFAILED, 0, NULL, &r);
- 	priv->local_iwstatistics.discard.retries = r.u;
- 
--	up(&priv->stats_sem);
-+	mutex_unlock(&priv->stats_lock);
- 
- 	return;
- }
-@@ -218,12 +218,12 @@
- 	islpci_private *priv = netdev_priv(ndev);
- 
- 	/* If the stats are being updated return old data */
--	if (down_trylock(&priv->stats_sem) == 0) {
-+	if (mutex_trylock(&priv->stats_lock) == 0) {
- 		memcpy(&priv->iwstatistics, &priv->local_iwstatistics,
- 		       sizeof (struct iw_statistics));
- 		/* They won't be marked updated for the next time */
- 		priv->local_iwstatistics.qual.updated = 0;
--		up(&priv->stats_sem);
-+		mutex_unlock(&priv->stats_lock);
- 	} else
- 		priv->iwstatistics.qual.updated = 0;
- 
-Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.c	2008-02-15 20:42:15.000000000 +0100
-+++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.c	2008-02-15 20:44:03.000000000 +0100
-@@ -864,7 +864,7 @@
- 	mutex_init(&priv->mgmt_lock);
- 	priv->mgmt_received = NULL;
- 	init_waitqueue_head(&priv->mgmt_wqueue);
--	sema_init(&priv->stats_sem, 1);
-+	mutex_init(&priv->stats_lock);
- 	spin_lock_init(&priv->slock);
- 
- 	/* init state machine with off#1 state */
-Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:49.000000000 +0100
-+++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:44:03.000000000 +0100
-@@ -88,7 +88,7 @@
- 
- 	/* Take care of the wireless stats */
- 	struct work_struct stats_work;
--	struct semaphore stats_sem;
-+	struct mutex stats_lock;
- 	/* remember when we last updated the stats */
- 	unsigned long stats_timestamp;
- 	/* The first is accessed under semaphore locking.
+with which arm platform did you found this assertion to trigger ?
+I tried a few (e.g. ARM-poodle and CONFIG_ARCH_SA1100 w/ISA) but didn't saw it breaking.
+Maybe you could send me you .config file ?
 
--- 
-Matthias Kaehlcke
-Linux System Developer
-Barcelona
+Helge
 
-              We build too many walls and not enough bridges
-                             (Isaac Newton)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+PS: I tried Linus' current git tree which now includes my patch above as well.
