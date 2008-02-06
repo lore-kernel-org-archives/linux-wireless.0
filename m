@@ -1,99 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout1-sn1.fre.skanova.net ([81.228.11.98]:39009 "EHLO
-	pne-smtpout1-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754203AbYB0NpD (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33435 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbYBFO6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 08:45:03 -0500
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Roaming issues.
-Date: Wed, 27 Feb 2008 14:44:38 +0100
-Message-ID: <004501c87946$e5f1f490$0b3ca8c0@gotws1589> (sfid-20080227_134510_426616_D994B201)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+	Wed, 6 Feb 2008 09:58:20 -0500
+Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240802060644k3f0b5e7cgb48380a2b3181f41@mail.gmail.com> (sfid-20080206_144434_491529_7C2000BB)
+References: <12022263282085-git-send-email-tomas.winkler@intel.com>
+	 <1202307331.4395.41.camel@johannes.berg>
+	 <1ba2fa240802060644k3f0b5e7cgb48380a2b3181f41@mail.gmail.com>
+	 (sfid-20080206_144434_491529_7C2000BB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jaqwv2s65DY8aWsdLHQY"
+Date: Wed, 06 Feb 2008 15:58:05 +0100
+Message-Id: <1202309885.9965.3.camel@johannes.berg> (sfid-20080206_145825_314653_284FF518)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
 
-Back with som data regarding roaming.
+--=-jaqwv2s65DY8aWsdLHQY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+> In general the driver should know how many rates it wants to report so
+> in TX-response path it's allocates enough memory.
 
-Prerequisites
-=============
-Just for your knowledge I'm using the following equipment:
-- RT61, mini PCI
-- rt2x00.git / 1e0b4c51393308a98f2918db424c676cc99cf123
-- Managed mode
-- Wpa_supplicant 0.5.9
+Yeah, obviously.
 
-AP deauthentication.
-=====================
-When any of the ieee80211_rx_mgmt_deauth() or ieee80211_rx_mgmt_disassoc()
-are executed, the mac layer takes two actions.
-1) Tells wpa_supplicant what had happened.
-2) Start reestabliching the connaction again.
+> Since on the TX path tx_status resides on stack this has to be copied
+> by the driver for TX-response path use.
 
-The later action will stop or significantly delay the decisions/action taken
-by wpa_supplicant as a result of action 1. Normally the supplicant will
-start an AP scan. 
-But the mac layer is busy with reestablishing the link and will not start
-any scan action.
-  
-My patches simply put the mac layer in IEEE80211_DISABLED state and wait for
-the supplicant to decide.
+I don't think I understand? This is tx status, what are you referring to
+by "tx response"?
 
+> void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+> 				 struct sk_buff *skb,
+> 				 struct ieee80211_tx_status *status)
+> =09
+>=20
+> 	skb->dev =3D local->mdev;
+> 	saved =3D kmalloc(sizeof(struct ieee80211_tx_status), GFP_ATOMIC); ---
+> this has to be changed as well.
 
-Monitoring of a usable link to the AP.
-======================================
-The ieee80211_rx_h_sta_process() and  ieee80211_associated() are involved in
-monitors for dead AP connection. A last_rx value is set to indicate a
-working connection.
+Yeah that's what I was thinking of. Maybe we should change the
+ieee80211_tx_status_irqsafe() interface and require the driver to
+allocate it rather than giving a pointer to a structure on the stack?
+That way we the driver has to do the calculation, but we don't have to
+copy things around? Doing it on the stack isn't easy, you'd have to
+define something like this:
 
-The porblem is the following lines.
-	if (!is_multicast_ether_addr(hdr->addr1) ||
-	    rx->sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+struct status {
+	struct ieee80211_tx_status stat;
+	struct ieee80211_tx_rate_ctrl ratectrl[N];
+} status __attribute__((packed));
 
-Any package that arrives to an STA will update the last_rx value and
-prohibit a link lost action.
+so requiring the driver to allocate it when using the irqsafe interface
+would be better imho.
 
-I have noticed in my system that this function receives the following type
-of frames:
-1) Broad cast frames from my BSS (beacons).
-2) Data frames addressed to me ;)
-3) Data frames from other STA addressed to other MAC addresses but using the
-same BSS.
- 
-It is the case 3 that creates the problem. Another STA, closer to my BSS
-will update my last_rx value even I do not receive the BSS.
+johannes
 
-I have made the following change:
+--=-jaqwv2s65DY8aWsdLHQY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-	if ( compare_ether_addr(hdr->addr2, hdr->addr3) == 0 &&
-	    rx->sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-My last_rx will only be updated as long as I can receive frames from my BSS.
-I might have to add some frame type validation, but it solved my problems.
+iQIVAwUAR6nK/KVg1VMiehFYAQJpkRAAsud5WoE7iNTKKuWZbDk6cHJ8eeNwZfB7
+c7T345rnAqhOAFT0VtFkSn3VaFMPktzxoFVqCmh1B/XpCaUwvbcAirvmtCdVOUBa
+EESjwvKdRjUsh76AAPg7nxTCHoPALwJwCLK5N0p2nPY894804qHkA9rDcTJ3eqOZ
+eP9ziiZWz9ZkD7ckdstm868eur5PzCaKG1CsXqNz/bPMuwF1H/P+fVW84WMH3N5J
+9MnkYuGWDYKDAMzH+rnjXubn31OnWa219g/0A2umkrZW+WGtjWPq3bVqCagUtPzH
+0Xe17IixN6QTOBStQHIQz3R9b8mu9h2RRJCX4HPIRdwRr4vFf0P4Y84DGDva552e
+9HYxWO/eAzh1cG3nFWEMpl0AMKYi4v3jkAXE/gPkm0KMPyCKNbWX0BBYr87RJWVQ
+BusoRsTd4yZqjwfajOBM2ESLLWPlsz00uZHu16av9Ie3v8nZE4v00r4O70CE7HfN
+n4YymtJ8FFouVgNcwdxPC8CE3EGIwpMBJJfhmF6aZm5XMMnK/ebE7neBNWYsJ4nY
+UCWt6nuKwaB4IVyzQ7SLEOZvdGWLL9y7VyPEFs/twWFZSYMolSweQ5kK1wJNd/Vq
+7qyB75WYuEHn9oDln4PIaA0QNJ4Wz4NUEtbp9BGP/XftU+oS6QCP7lH72e70W7yL
++k3kvz04pe0=
+=W5CW
+-----END PGP SIGNATURE-----
 
-
-Timeout handling
-=================
-When any of the ieee80211_authenticate() or ieee80211_associate() function
-are executed. 
-The mac silently set its state to IEEE80211_DISABLED and waits for the
-wpa_supplicant to timeout its current action.
-
-I think it would be a good idea to signal to the supplicant that the
-operation has timeout, and no further action will be taken.
-To speed up the timeout response I had squeezed the supplicant timeout.
-
-I have patches for all modification but it might be a good start to verify
-that my suggestion is 'usabel'
-
-Regards
-Lars
-
+--=-jaqwv2s65DY8aWsdLHQY--
 
