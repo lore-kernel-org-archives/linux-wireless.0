@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:10342 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791AbYBGNvK (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47497 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752431AbYBFVyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 08:51:10 -0500
-Received: by an-out-0708.google.com with SMTP id d31so800099and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2008 05:51:09 -0800 (PST)
-Message-ID: <912ec82a0802070551t5bc39c34ud364fd7bfa96f26c@mail.gmail.com> (sfid-20080207_135115_293231_63B86350)
-Date: Thu, 7 Feb 2008 15:51:09 +0200
-From: "Neshama Parhoti" <pneshama@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Getting Started
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202391334.5718.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
-	 <1202390769.5718.6.camel@johannes.berg>
-	 <912ec82a0802070532p2c041a4fn7dedab1fa0913b15@mail.gmail.com>
-	 <1202391334.5718.14.camel@johannes.berg>
+	Wed, 6 Feb 2008 16:54:45 -0500
+Date: Wed, 6 Feb 2008 21:47:47 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Helge Deller <deller@gmx.de>, jt@hpl.hp.com, rjw@sisk.pl,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.arm.linux.org.uk, linville@tuxdriver.com
+Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
+Message-ID: <20080206214747.GG32245@flint.arm.linux.org.uk> (sfid-20080206_215449_680868_7F75C517)
+References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org> <200802062150.23930.deller@gmx.de> <20080206130448.564f18bb.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080206130448.564f18bb.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 7, 2008 3:35 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> > Any idea where I can find an updated, general, panoramic introduction for
-> > the wireless subject and terms (without having to delve into the specs
-> > themselves..) ?
->
-> Not really. Some stuff is on linuxwireless.org but you said you read
-> that already :) I'm sure there are books like "An introduction to
-> 802.11" or so but I never read any so I can't recommend anything.
+On Wed, Feb 06, 2008 at 01:04:48PM -0800, Andrew Morton wrote:
+> On Wed, 6 Feb 2008 21:50:23 +0100
+> Helge Deller <deller@gmx.de> wrote:
+> 
+> > > > +	/* compile-time check the sizes of structures */
+> > > > +	BUILD_BUG_ON(sizeof(psa_t) != PSA_SIZE);
+> > > > +	BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
+> > > 
+> > > This assertion is now triggering with arm allmodconfig.
+> > > 
+> > > Rafael, please track this as a post-2.6.24 regression.
+> > 
+> > Hello Andrew,
+> > 
+> > with which arm platform did you found this assertion to trigger ?
+> > I tried a few (e.g. ARM-poodle and CONFIG_ARCH_SA1100 w/ISA) but didn't saw it breaking.
+> > Maybe you could send me you .config file ?
+> > 
+> 
+> allmodconfig
+> 
+> > 
+> > PS: I tried Linus' current git tree which now includes my patch above as well.
+> 
+> The assertion triggers with current mainline.  I'm using gcc-3.4.5, from
+> http://userweb.kernel.org/~akpm/cross-compilers/
 
-No time either to order and read a book. I was really looking for whitepapars,
-HOWTOs, tutorials and such. But all I can find is very outdated stuff,
-from years back..
+I assume that it's the second BUILD_BUG_ON() which is triggering?
 
->
-> > I guess I ought to understand basic concepts before delving into the actual
-> > code and interfaces.
->
-> That is probably a good idea, yes.
->
-> johannes
->
+Given that:
+
+#define MMW_SIZE        37
+
+is not a multiple of sizeof(unsigned long) this is hardly surprising.
+
+If structures are used to define a layout of something and must not
+contain compiler padding, it must be packed.  Given these structures
+contain just unsigned char, there's no concerns about >8bit loads
+becoming less efficient.
