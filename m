@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14029 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763248AbYBOWf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 17:35:28 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: fix name of function in comment (_rx_card_state_notif)
-Date: Fri, 15 Feb 2008 14:34:37 -0800
-Message-Id: <1203114877-16101-1-git-send-email-reinette.chatre@intel.com> (sfid-20080215_223603_021722_B01E6853)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41592 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbYBFOPk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 09:15:40 -0500
+Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <12022263282085-git-send-email-tomas.winkler@intel.com>
+References: <12022263282085-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6l6t3c2VrB0LRviQTVOC"
+Date: Wed, 06 Feb 2008 15:15:31 +0100
+Message-Id: <1202307331.4395.41.camel@johannes.berg> (sfid-20080206_141543_627612_5184101E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl_rx_card_state_notif is named iwl3945_rx_card_state_notif and
-iwl4965_rx_card_state_notif in the two iwlwifi drivers.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-This change was originally in the "cleanup namespace" patch from Christoph
-Hellwig. The change was still in wireless-2.6#everything last week, but not
-in the recently created wireless-testing repo.
+--=-6l6t3c2VrB0LRviQTVOC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 4ad26f7..e9757a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4777,7 +4777,7 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
- 		/* Queue restart only if RF_KILL switch was set to "kill"
- 		 *   when we loaded driver, and is now set to "enable".
- 		 * After we're Alive, RF_KILL gets handled by
--		 *   iwl_rx_card_state_notif() */
-+		 *   iwl3945_rx_card_state_notif() */
- 		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
- 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
- 			queue_work(priv->workqueue, &priv->restart);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index f893199..5cf6cdd 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5149,7 +5149,7 @@ static void iwl4965_irq_tasklet(struct iwl4965_priv *priv)
- 		/* Queue restart only if RF_KILL switch was set to "kill"
- 		 *   when we loaded driver, and is now set to "enable".
- 		 * After we're Alive, RF_KILL gets handled by
--		 *   iwl_rx_card_state_notif() */
-+		 *   iwl4965_rx_card_state_notif() */
- 		if (!hw_rf_kill && !test_bit(STATUS_ALIVE, &priv->status)) {
- 			clear_bit(STATUS_RF_KILL_HW, &priv->status);
- 			queue_work(priv->workqueue, &priv->restart);
--- 
-1.5.3.4
+> + * @flags: Tx information (e.g. antenna selectd, guard interval,
+> etc.)
+
+typo: selected, also where are the flags defined?
+
+>  struct ieee80211_tx_status {
+>  	struct ieee80211_tx_control control;
+> @@ -364,6 +382,8 @@ struct ieee80211_tx_status {
+>  	int ack_signal;
+>  	int queue_length;
+>  	int queue_number;
+> +	size_t rate_ctrl_num;
+> +	struct ieee80211_tx_rate_ctrl rate_ctrl[0];
+
+I think this is going to blow up if any driver sets rate_ctrl_num > 0
+and uses the irq-safe tx status interface because we there copy the
+stuff into another buffer and you haven't changed that buffer to be
+resized accordingly.
+
+johannes
+
+--=-6l6t3c2VrB0LRviQTVOC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6nBAqVg1VMiehFYAQIQVg//WkQrcOgcygthkJ78jOq2sOzmOp8LFDCa
+tLriUDK8gUZ2Q1JfARIWSLNItjUWioe3aVap0vnQe0ck+C6DNzo2JbzTUWTyvHz7
+wRxr2EsayZpVWezOg9c27K39L+/uUbgihbH15OebCjyPP805E7eDxjImheGtmeOT
+AstBYDS7UvGckVVH32JFKV/OaMySMBYZ9ojTYykOU2QbTxzw4ue9+xfkMSDqu+kt
+YMq0UJNd+4nVnSWQvHT0/3fGG3B+atRA85Mrq0lB4cb9oFjGxgaoJeEa3iXb1cvi
+C2KjsdOkErIZzjKwq6C5seyfZiAncZrxL6Mmt2jX4O89oRKHCSwxrFfM26ZW343A
+wZTgh65K4ynZUp5CJnr1FjZg6RX15G56Jr6UZ1+3uPcB/9ZeZDo3wVJn/Ssgac22
+k8wHAIgtq3bYi4/AwLq7jPDO71K3Y5g1WMBLWfw9fgvGRrlcZAFWmHsrtgPWi1ki
+AZJ/OiomVGxCG3OCic47vpPgAd1RhaNSD4YlC3FFXcMcNfa58Ty3SZjRnAu+vW/0
+JeTcJDbM1zG5fkPKkTy4S2pyDfO4WWCkIlj3Ain7RbzbR1agJ67LN7XGn4rzim0r
+tiqA5uasV1aTeV+mSrj8Jv8BKWn4a/mYai+ijiYWOr5WZFp2sJmJrd2P3Mbs23Qt
+yxxkOVxo5Zg=
+=AH0L
+-----END PGP SIGNATURE-----
+
+--=-6l6t3c2VrB0LRviQTVOC--
 
