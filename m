@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:35012 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752149AbYBLCOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 21:14:35 -0500
-Date: Tue, 12 Feb 2008 03:09:00 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: b43legacy: add firmware information to modinfo
-Message-ID: <20080212030900.06f624f0@morte> (sfid-20080212_021452_013343_0D511250)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:44177 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760358AbYBFXJQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 18:09:16 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: ipw3945: not only it periodically dies, it also BUG()s
+Date: Wed, 6 Feb 2008 15:08:57 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003983522@orsmsx416.amr.corp.intel.com> (sfid-20080206_230924_690102_B5C6C5A9)
+In-Reply-To: <20080206210026.GA32641@elf.ucw.cz>
+References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com> <20080206210026.GA32641@elf.ucw.cz>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Pavel Machek" <pavel@ucw.cz>
+Cc: <ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
+	"kernel list" <linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the firmware ID to modinfo.
+On Wednesday, February 06, 2008 1:00 PM, Pavel Machek  wrote:
 
-The patch by Michael Buesch has been ported to b43legacy.
+>    * dmesg output at debug level 0x43fff
+>      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 		it would be nice to specify how to do this. It is
+> insmod parameter, right?
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
-@@ -60,6 +60,8 @@ MODULE_AUTHOR("Stefano Brivio");
- MODULE_AUTHOR("Michael Buesch");
- MODULE_LICENSE("GPL");
- 
-+MODULE_FIRMWARE(B43legacy_SUPPORTED_FIRMWARE_ID);
-+
- #if defined(CONFIG_B43LEGACY_DMA) && defined(CONFIG_B43LEGACY_PIO)
- static int modparam_pio;
- module_param_named(pio, modparam_pio, int, 0444);
+correct. you can do this as follows:
+$ insmod iwl3945 debug=0x43fff
+or
+$ modprobe iwl3945 debug=0x43fff
 
+>    * Before reporting any firmware errors, please be sure to read Ben
+> Cahill's mailing list post on how to most effectively report such
+>    bugs.
+>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> unfortunately the link here does not work. 
 
---
-Ciao
-Stefano
+We'll try to dig out the instructions from another location and update
+that link. Thanks for letting us know.
+
+> 
+> BTW, why not use kernel.org bugzilla? Having to create another
+> account is nasty... 
+
+Users can report iwlwifi bugs in many locations ... their OSV's bug
+tracker (which could end up being many) as well as the kernel.org
+bugzilla. We focus on bugs in the bughost.org system.
+
+Reinette
