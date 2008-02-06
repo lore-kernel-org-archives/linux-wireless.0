@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48432 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755304AbYBSWav convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2008 17:30:51 -0500
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:58794 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757322AbYBFVAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 16:00:14 -0500
+Date: Wed, 6 Feb 2008 22:00:26 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
+	kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: ipw3945: not only it periodically dies, it also BUG()s
+Message-ID: <20080206210026.GA32641@elf.ucw.cz> (sfid-20080206_210020_185340_84357575)
+References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Recent driver in linux kernel 2.6.25-rc2
-Date: Tue, 19 Feb 2008 14:28:58 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003AF3199@orsmsx416.amr.corp.intel.com> (sfid-20080219_223056_756483_A0AFD160)
-In-Reply-To: <20080219153910.GA4303@ics.muni.cz>
-References: <20080219153910.GA4303@ics.muni.cz>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>,
-	<ipw3945-devel@lists.sourceforge.net>
-Cc: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Lukas Hejtmanek  wrote:
+Hi!
 
-> as of pre 2.6.25 kernels, kismet monitoring tool does not work with
-> the message: # kismet
-> Launching kismet_server: //usr/bin/kismet_server
-> Suid priv-dropping disabled.  This may not be secure.
-> No specific sources given to be enabled, all will be enabled.
-> Non-RFMon VAPs will be destroyed on multi-vap interfaces (ie,
-> madwifi-ng) Enabling channel hopping.
-> Enabling channel splitting.
-> Source 0 (iwl4965): Enabling monitor mode for iwl4965 source
-> interface wlan0 channel 6...
-> FATAL: Failed to set channel 6 5:Input/output error
+> >>> ...I've reported this before, with full debugging. Not sure if
+> >>> anything happened.
+> >> 
+> >> Could you please point me to where you have reported it before?
+> > 
+> > From pavel@ucw.cz Wed Oct 31 01:52:02 2007
+> > From: Pavel Machek <pavel@ucw.cz>
+> > To: linux-wireless@vger.kernel.org,
+> >        kernel list <linux-kernel@vger.kernel.org>,
+> >        ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+> > Subject: iwl3945 in 2.6.24-rc1 dies under load
+> > X-Warning: Reading this can be dangerous to your mental health.
+> > 
+> > ...and thread that resulted.
+> 
+> Could you please create a new bug in our bug tracking system
+> (www.bughost.org) to enable us to track this problem? Please include the
+> relevant information from the thread as well as the information you
+> doscovered recently.
 
-Please load the driver with debugging enabled (debug=0x43fff) and send
-us the log capturing during this kismet startup.
+Hmmm... bugzilla says:
 
-Thanks
+    * Exact steps to reproduce
+    * Reproducability of bug (e.g. intermittent or 100% reproducable)
+    * Did this problem not exist in previous version of the driver?
+    * kernel version
+    * AP brand/model
+    * dmesg output at debug level 0x43fff
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		it would be nice to specify how to do this. It is
+insmod parameter, right?
 
-Reinette
+    * Type of security (if any) you are using (e.g. WEP64, WEP128, WPA, WPA2, 802.1x, etc)
+    * Version of firmware
+    * Version of the ieee80211 module
+    * Proximity to the AP
+
+    * Before reporting any firmware errors, please be sure to read Ben
+Cahill's mailing list post on how to most effectively report such
+bugs. 
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		unfortunately the link here does not work.
+
+BTW, why not use kernel.org bugzilla? Having to create another account
+is nasty...
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
