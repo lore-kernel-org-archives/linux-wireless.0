@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:48820 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbYBFLS7 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:37680 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756715AbYBFVHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 06:18:59 -0500
-Date: Wed, 6 Feb 2008 11:45:13 +0100
-From: Tino Keitel <tino.keitel@gmx.de>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFT 1/1] single_chip test
-Message-ID: <20080206104513.GA12496@eazy.amigager.de> (sfid-20080206_111903_763935_39126AFB)
-References: <20080206014131.9d489a34.akpm@linux-foundation.org> <1202294560-7313-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1202294560-7313-1-git-send-email-jirislaby@gmail.com>
+	Wed, 6 Feb 2008 16:07:01 -0500
+Date: Wed, 6 Feb 2008 13:04:48 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Helge Deller <deller@gmx.de>
+Cc: jt@hpl.hp.com, linux-wireless@vger.kernel.org, rjw@sisk.pl,
+	linux-arm-kernel@lists.arm.linux.org.uk, linville@tuxdriver.com
+Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
+Message-Id: <20080206130448.564f18bb.akpm@linux-foundation.org> (sfid-20080206_210719_622562_C5E67102)
+In-Reply-To: <200802062150.23930.deller@gmx.de>
+References: <200801131516.34567.deller@gmx.de>
+	<20080202224515.20a09553.akpm@linux-foundation.org>
+	<200802062150.23930.deller@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2008 at 11:42:40 +0100, Jiri Slaby wrote:
-> On 02/05/2008 11:57 PM, Tino Keitel wrote:
-> > Hi,
+On Wed, 6 Feb 2008 21:50:23 +0100
+Helge Deller <deller@gmx.de> wrote:
+
+> > > +	/* compile-time check the sizes of structures */
+> > > +	BUILD_BUG_ON(sizeof(psa_t) != PSA_SIZE);
+> > > +	BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
 > > 
-> > I tried the current git (9ef9dc69d4167276c04590d67ee55de8380bc1ad) and
-> > got the following error message from ath5k:
+> > This assertion is now triggering with arm allmodconfig.
 > > 
-> > ath5k_pci 0000:02:00.0: registered as 'phy0'
-> > ath5k phy0: failed to resume the MAC Chip
-> > ath5k_pci: probe of 0000:02:00.0 failed with error -5
+> > Rafael, please track this as a post-2.6.24 regression.
 > 
-> We failed to resume after a hardware reset here for a whole second. Is there any 
-> version of ath5k which worked for you (is this a regression)?
+> Hello Andrew,
+> 
+> with which arm platform did you found this assertion to trigger ?
+> I tried a few (e.g. ARM-poodle and CONFIG_ARCH_SA1100 w/ISA) but didn't saw it breaking.
+> Maybe you could send me you .config file ?
+> 
 
-No, this was my first try with ath5k.
+allmodconfig
 
-> I suspect ath5k_hw_nic_wakeup being called before setting ah_single_chip in 
-> ath5k_hw_attach. Could you test the attached patch?
+> 
+> PS: I tried Linus' current git tree which now includes my patch above as well.
 
-Thanks, I'll try the patch this evening.
-
-Regards,
-Tino
+The assertion triggers with current mainline.  I'm using gcc-3.4.5, from
+http://userweb.kernel.org/~akpm/cross-compilers/
