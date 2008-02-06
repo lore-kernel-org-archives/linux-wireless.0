@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 136-022.dsl.labridge.com ([206.117.136.22]:3475 "EHLO
-	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1754305AbYBORnS (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:28190 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbYBFOog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 12:43:18 -0500
-Subject: [PATCH] net/8021q/vlan_dev.c - Use print_mac
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>
-Cc: bruno@thinktube.com, netdev@vger.kernel.org, jgarzik@pobox.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20080215.025855.202184003.davem@davemloft.net>
-References: <20080215104804.9870.15722.stgit@one>
-	 <20080215.025855.202184003.davem@davemloft.net>
-Content-Type: text/plain
-Date: Fri, 15 Feb 2008 09:42:50 -0800
-Message-Id: <1203097370.21308.18.camel@localhost> (sfid-20080215_174323_227056_8DF878F1)
-Mime-Version: 1.0
+	Wed, 6 Feb 2008 09:44:36 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so490442wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 06:44:31 -0800 (PST)
+Message-ID: <1ba2fa240802060644k3f0b5e7cgb48380a2b3181f41@mail.gmail.com> (sfid-20080206_144439_111561_CA2E3894)
+Date: Wed, 6 Feb 2008 16:44:31 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1202307331.4395.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12022263282085-git-send-email-tomas.winkler@intel.com>
+	 <1202307331.4395.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-15 at 02:58 -0800, David Miller wrote:
-> From: Bruno Randolf <bruno@thinktube.com>
-> Date: Fri, 15 Feb 2008 19:48:05 +0900
-> > is there any chance to include a macro like this for printing mac
-> addresses?
-> > its advantage is that it can be used without the need to declare
-> buffers for
-> > print_mac(), for example:
-> We specifically removed this sort of thing, please don't
-> add it back.
+On Feb 6, 2008 4:15 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> > + * @flags: Tx information (e.g. antenna selectd, guard interval,
+> > etc.)
+>
+> typo: selected, also where are the flags defined?
+>
+> >  struct ieee80211_tx_status {
+> >       struct ieee80211_tx_control control;
+> > @@ -364,6 +382,8 @@ struct ieee80211_tx_status {
+> >       int ack_signal;
+> >       int queue_length;
+> >       int queue_number;
+> > +     size_t rate_ctrl_num;
+> > +     struct ieee80211_tx_rate_ctrl rate_ctrl[0];
+>
+> I think this is going to blow up if any driver sets rate_ctrl_num > 0
+> and uses the irq-safe tx status interface because we there copy the
+> stuff into another buffer and you haven't changed that buffer to be
+> resized accordingly.
 
-Remove direct use of MAC_FMT
+I have the same concern and wanted to set to some reasonable number
+but Felix thinks otherwise.
+In general the driver should know how many rates it wants to report so
+in TX-response path it's allocates enough memory.
+Since on the TX path tx_status resides on stack this has to be copied
+by the driver for TX-response path use.
+Yes it's still , it is quite error prone  :(, maybe some helper
+macros/functions can make it less vulnerable.
 
-Signed-off-by: Joe Perches <joe@perches.com>
-
-diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
-index 77f04e4..839c70e 100644
---- a/net/8021q/vlan_dev.c
-+++ b/net/8021q/vlan_dev.c
-@@ -366,7 +366,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
- 	struct net_device_stats *stats = &dev->stats;
- 	struct vlan_ethhdr *veth = (struct vlan_ethhdr *)(skb->data);
--
-+	DECLARE_MAC_BUF(mac);
-+	DECLARE_MAC_BUF(mac2);
- 	/* Handle non-VLAN frames if they are sent to us, for example by DHCP.
- 	 *
- 	 * NOTE: THIS ASSUMES DIX ETHERNET, SPECIFICALLY NOT SUPPORTING
-@@ -404,11 +405,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- 	pr_debug("%s: about to send skb: %p to dev: %s\n",
- 		__FUNCTION__, skb, skb->dev->name);
--	pr_debug("  " MAC_FMT " " MAC_FMT " %4hx %4hx %4hx\n",
--		 veth->h_dest[0], veth->h_dest[1], veth->h_dest[2],
--		 veth->h_dest[3], veth->h_dest[4], veth->h_dest[5],
--		 veth->h_source[0], veth->h_source[1], veth->h_source[2],
--		 veth->h_source[3], veth->h_source[4], veth->h_source[5],
-+	pr_debug("  %s %s %4hx %4hx %4hx\n",
-+		 print_mac(mac, veth->h_dest), print_mac(mac2, veth->h_source),
- 		 veth->h_vlan_proto, veth->h_vlan_TCI,
- 		 veth->h_vlan_encapsulated_proto);
- 
+sizeof(struct ieee80211_tx_status) +  rates_num * sizeof(struct
+ieee80211_tx_rate_ctrl)
 
 
+void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+				 struct sk_buff *skb,
+				 struct ieee80211_tx_status *status)
+	
+
+	skb->dev = local->mdev;
+	saved = kmalloc(sizeof(struct ieee80211_tx_status), GFP_ATOMIC); ---
+this has to be changed as well.
+	if (unlikely(!saved)) {
+
+
+
+> johannes
+>
