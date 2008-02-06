@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58417 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936130AbYBVWQZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 17:16:25 -0500
-Subject: Re: Link Quality stats not updating, recieved_channel
-From: Dan Williams <dcbw@redhat.com>
-To: Andrew Lunn <andrew.lunn@ascom.ch>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <20080222212103.GA7771@donkey.ma.tech.ascom.ch>
-References: <20080222142614.GA18830@donkey.ma.tech.ascom.ch>
-	 <1203714351.4422.2.camel@localhost.localdomain>
-	 <20080222212103.GA7771@donkey.ma.tech.ascom.ch>
-Content-Type: text/plain
-Date: Fri, 22 Feb 2008 17:14:13 -0500
-Message-Id: <1203718453.4422.17.camel@localhost.localdomain> (sfid-20080222_221647_486134_2CE0AF38)
-Mime-Version: 1.0
+Received: from rv-out-0910.google.com ([209.85.198.184]:21802 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759235AbYBFIxk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 03:53:40 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1886923rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 00:53:37 -0800 (PST)
+Message-ID: <c85cb4470802060053j53f571f8v3a8ed55212ff934d@mail.gmail.com> (sfid-20080206_085352_661005_018D33DE)
+Date: Wed, 6 Feb 2008 10:53:37 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/1] mac80211: fix mis-match in {test,set}_bit qdisc_pool
+Cc: "Tomas Winkler" <tomasw@gmail.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080206003346.GK4252@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12020756782190-git-send-email-tomas.winkler@intel.com>
+	 <20080205205453.GJ4252@tuxdriver.com>
+	 <1ba2fa240802051536y2aac90f1g1e9d3495df9b8bb@mail.gmail.com>
+	 <20080206003346.GK4252@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-22 at 22:21 +0100, Andrew Lunn wrote:
-> > Can you try the attached patch instead?  stats.received_channel really
-> > should be filled by the hardware driver itself.  This patch essentially
-> > does what bcm43xx does.  Can you test it please?
-> 
-> I can try it, but i suspect it will not work. The firmware in the
-> ipw2100 does the scan, not the driver. So priv->channel will not be
-> the frequency the probe_resp corresponds to when the firmware is off
-> scanning on other frequencies.
+> > > > This patch fixes a mis-match in {test,set}_bit for qdisc_pool created by
+> > > > the move to an array of bits.
 
-Yeah; you're right.  I'm not sure there's a good way to do this unless
-there's some way the ipw2100 passes back the channel number each frame
-was received on.  We can't use IPW_ORD_OUR_FREQ because we can't
-guarantee that when the interrupt for received frame occurs the frame
-the driver is handed was received on the same channel that the card is
-now on.
+> > >   CC [M]  net/mac80211/wme.o
+> > > net/mac80211/wme.c: In function 'wme_qdiscop_enqueue':
+> > > net/mac80211/wme.c:161: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c:161: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c:194: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c:194: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c: In function 'wme_qdiscop_dequeue':
+> > > net/mac80211/wme.c:275: warning: passing argument 2 of 'constant_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c:275: warning: passing argument 2 of 'variable_test_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c: In function 'wme_qdiscop_init':
+> > > net/mac80211/wme.c:399: warning: passing argument 2 of 'set_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_add':
+> > > net/mac80211/wme.c:660: warning: passing argument 2 of 'test_and_set_bit' makes pointer from integer without a cast
+> > > net/mac80211/wme.c:673: error: subscripted value is neither array nor pointer
+> > > net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_remove':
+> > > net/mac80211/wme.c:693: warning: passing argument 2 of 'clear_bit' makes pointer from integer without a cast
+> > > make[1]: *** [net/mac80211/wme.o] Error 1
+> > > make: *** [net/mac80211/] Error 2
+> > >
+>
+> I don't see a warning w/o it -- only build breakage w/ it.
+>
 
-But also ignoring the check in update_network() will cause the signal
-strength of networks to be lower than they should be, because the frame
-bled over to a different channel.
-
-Intel devs; does the ipw2100 firmware stick the channel into the frame
-header anywhere like ipw2200?  Perhaps the ipw2100 driver just never got
-updated for that feature?  If not, is there another way this could be
-fixed?
-
-Dan
-
+John, the same errors i get when trying to apply this patch without
+applying first
+"adjustable number of bits for qdisc pool" patch. in fact i think it
+is better that both would be united to one patch, as this patch is a
+fix to warnings caused by "adjustable number of bits for qdisc pool",
+but i leave it to your decision
+thanks
+ron
