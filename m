@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58374 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3355 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757728AbYBOQmc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 11:42:32 -0500
+	id S1755124AbYBFUdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 15:33:23 -0500
+Date: Wed, 6 Feb 2008 15:10:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, bruno randolf <bruno@thinktube.com>,
+	Johannes Berg <johannes@sipsolutions.net>, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Kishore Ramachandran <kishore@winlab.rutgers.edu>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+Message-ID: <20080206201035.GA3229@tuxdriver.com> (sfid-20080206_203326_360140_726DDEAC)
+References: <20080118125252.6455.41047.stgit@one> <200801241226.28394.bruno@thinktube.com> <1201193704.3454.137.camel@johannes.berg> <200801251701.59629.bruno@thinktube.com> <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com> <20080206043451.GT1261@jm.kir.nu> <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-Date: Fri, 15 Feb 2008 08:39:56 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003ABCF72@orsmsx416.amr.corp.intel.com> (sfid-20080215_164312_321913_233FFED4)
-In-Reply-To: <200802150229.09602.patrick@lunatiki.de>
-References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com> <200802150229.09602.patrick@lunatiki.de>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Patrick Grimm" <patrick@lunatiki.de>
-Cc: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 14, 2008 5:29 PM, Patrick Grimm  wrote:
+On Wed, Feb 06, 2008 at 01:33:31PM -0500, Luis R. Rodriguez wrote:
+> On Feb 5, 2008 11:34 PM, Jouni Malinen <j@w1.fi> wrote:
 
->>> Could you please print out the values of fc, priv->iw_mode,
->>> iwl3945_is_associated(priv) and priv->assoc_id just before that
->>> error message is printed?
+> > The BSSID generation as a hash from SSID does not sound like something
+> > that would match the requirements of IEEE 802.11 11.1.6 ("a number
+> > selected in a manner that minimizes the probability of STAs generating
+> > the same number") since it is actually maximizing that probablity for
+> > the case of same SSID ;-).
 > 
-> Yes
-> iwl3945: I iwl3945_tx_skb fc: 8<3>
-> iwl3945: I iwl3945_tx_skb mode: 2<3>
-> iwl3945: I iwl3945_tx_skb assoc_id: 0<3>
-> iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
-> My changes
-> 	IWL_DEBUG_DROP("fc: %d\n", fc);
-> 	IWL_DEBUG_DROP("mode: %d\n", priv->iw_mode);
-> 	IWL_DEBUG_DROP("assoc_id: %d\", priv->assoc_id);
-> 	if ((!iwl3945_is_associated(priv) ||
-> 	    ((priv->iw_mode == IEEE80211_IF_TYPE_STA) &&
-> !priv->assoc_id)) &&
-> 	    ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
-> 		IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
-goto
-> 	drop_unlock; }
-> Was it right?
+> Heh, good catch :)
 
-great - thanks!
+FWIW, that wouldn't be the first time we (i.e. Linux) chose to do
+something that did not completely comply with a standard.  If it
+interoperates with other equipment and is good for users, I don't
+think picky standard compliance is worthwhile.
 
-I think you have given us hints about why ad-hoc does not work in
-iwl3945. From the above the device thinks it is in STA mode, it should
-be in IBSS mode. This is thus a different bug from what the patch is
-trying to solve. The patch is still good for iwl3945.
+Please note that I am not really taking a stand in favor of this ATM,
+only asserting that blind standard compliance is not a good reason
+to NAK it IMHO.
 
->> One more question ... did ad-hoc work for you before this patch?
-> 
-> No. In my tests only ipw3945 works in Ad-Hoc mode.
-
-ok - that explains things. The patch assumes that ad-hoc mode is
-working, which is unfortunately not the case. We have to fix this.
-
-Reinette
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
