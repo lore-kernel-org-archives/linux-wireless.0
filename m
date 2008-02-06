@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:14569 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750999AbYBOBko (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:19403 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752779AbYBFRTI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 20:40:44 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Fri, 15 Feb 2008 10:40:34 +0900
-Cc: "Jouni Malinen" <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>
-References: <20080118125252.6455.41047.stgit@one> <200802121100.02259.bruno@thinktube.com> <43e72e890802141706v528489f5y8a46f13d87bebb62@mail.gmail.com>
-In-Reply-To: <43e72e890802141706v528489f5y8a46f13d87bebb62@mail.gmail.com>
+	Wed, 6 Feb 2008 12:19:08 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802151040.35031.bruno@thinktube.com> (sfid-20080215_014050_670685_27628306)
+	charset="us-ascii"
+Subject: RE: ipw3945: not only it periodically dies, it also BUG()s
+Date: Wed, 6 Feb 2008 09:13:34 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com> (sfid-20080206_171913_754024_2AA79699)
+In-Reply-To: <20080206143218.GA16188@elf.ucw.cz>
+References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Pavel Machek" <pavel@ucw.cz>
+Cc: <ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
+	"kernel list" <linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 February 2008 10:06:37 Luis R. Rodriguez wrote:
-> >  i think the point here is that we still need to be prepared to merge
-> > IBSS (i.e. switch to another BSSID when we receive a beacon with an older
-> > TSF) no matter how we generate our own BSSID in the first place.
->
-> Well that is still possible.
->
-> >  using a hash of the BSSID and channel would reduce the necessity to
-> > merge IBSS for mac80211 drivers but we still need to be able to join
-> > older IBSS from other drivers.
->
-> Sure, how is it that this prevents that?
+On Wednesday, February 06, 2008 6:32 AM, Pavel Machek wrote:
 
-it wouldn't :)
+> On Tue 2008-02-05 18:20:58, Chatre, Reinette wrote:
+>> On Tuesday, February 05, 2008 1:45 PM, Pavel Machek  wrote:
+>> 
+>>> 
+>>> ...I've reported this before, with full debugging. Not sure if
+>>> anything happened.
+>> 
+>> Could you please point me to where you have reported it before?
+> 
+> From pavel@ucw.cz Wed Oct 31 01:52:02 2007
+> From: Pavel Machek <pavel@ucw.cz>
+> To: linux-wireless@vger.kernel.org,
+>        kernel list <linux-kernel@vger.kernel.org>,
+>        ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
+> Subject: iwl3945 in 2.6.24-rc1 dies under load
+> X-Warning: Reading this can be dangerous to your mental health.
+> 
+> ...and thread that resulted.
 
-i agree to johannes approach to set the BSSID from userspace, so people can 
-use all sorts of hashing algorithms to set the bssid. we could implement a 
-default hashing algorithm in "iw" maybe, and introduce a flag "dont merge 
-ibss" to prevent ibss merge for situations where we know we don't want 
-that...
+Could you please create a new bug in our bug tracking system
+(www.bughost.org) to enable us to track this problem? Please include the
+relevant information from the thread as well as the information you
+doscovered recently.
 
-"iwconfig wlan0 ap xx:xx:xx:xx:xx:xx" doesn't work for ibss right now (i'll 
-try to look into that today).
+Thank you very much
 
-bruno
-
+Reinette
 
