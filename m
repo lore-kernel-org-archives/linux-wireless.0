@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35994 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757092AbYBWU0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 15:26:22 -0500
-Message-ID: <47C0815F.7020100@pobox.com> (sfid-20080223_202627_127192_27742B3F)
-Date: Sat, 23 Feb 2008 15:26:07 -0500
-From: Jeff Garzik <jgarzik@pobox.com>
-MIME-Version: 1.0
-To: Sebastian Siewior <netdev@ml.breakpoint.cc>
-CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [PS3] gelic wireless driver needs MAC80211 support
-References: <20080223193517.GA6704@Chamillionaire.breakpoint.cc>
-In-Reply-To: <20080223193517.GA6704@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36818 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758211AbYBFJtq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 04:49:46 -0500
+Date: Wed, 6 Feb 2008 01:41:31 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Tino Keitel <tino.keitel@gmx.de>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: ath5k failure with 2.6.24-git14
+Message-Id: <20080206014131.9d489a34.akpm@linux-foundation.org> (sfid-20080206_094951_590144_F5799264)
+In-Reply-To: <20080205225746.GA4532@dose.home.local>
+References: <20080205225746.GA4532@dose.home.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Siewior wrote:
-> so select it.
-> Signed-off-by: Sebastian Siewior <sebastian@breakpoint.cc>
-> ---
->  drivers/net/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+
+(cc linux-wireless)
+
+On Tue, 5 Feb 2008 23:57:46 +0100 Tino Keitel <tino.keitel@gmx.de> wrote:
+
+> Hi,
 > 
-> diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-> index f337800..a116056 100644
-> --- a/drivers/net/Kconfig
-> +++ b/drivers/net/Kconfig
-> @@ -2363,6 +2363,7 @@ config GELIC_NET
->  config GELIC_WIRELESS
->         bool "PS3 Wireless support"
->         depends on GELIC_NET
-> +       select MAC80211
-
-Given that this is straying clearly into wireless territory, I think the 
-linux-wireless folks and John Linville (wireless maintainer) are 
-appropriate patch targets.
-
-	Jeff
-
+> I tried the current git (9ef9dc69d4167276c04590d67ee55de8380bc1ad) and
+> got the following error message from ath5k:
+> 
+> ath5k_pci 0000:02:00.0: registered as 'phy0'
+> ath5k phy0: failed to resume the MAC Chip
+> ath5k_pci: probe of 0000:02:00.0 failed with error -5
+> 
+> Here is the lspci -vnn output:
+> 
+> 02:00.0 Ethernet controller [0200]: Atheros Communications, Inc.
+> AR5006EG 802.11 b/g Wireless PCI Express Adapter [168c:001c] (rev 01)
+> 	Subsystem: Apple Computer Inc. Unknown device [106b:0086]
+> 	Flags: fast devsel, IRQ 17
+> 	Memory at 90100000 (64-bit, non-prefetchable) [disabled]
+> 	[size=64K]
+> 	Capabilities: [40] Power Management version 2
+> 	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
+> 	Queue=0/0 Enable-
+> 	Capabilities: [60] Express Legacy Endpoint, MSI 00
+> 	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+> 	Capabilities: [100] Advanced Error Reporting <?>
+> 	Capabilities: [140] Virtual Channel <?>
+> 	Kernel modules: ath5k
+> 
+> The same device works with madwifi:
+> 
+> ath_rate_sample: 1.2 (svn r3339)
+> MadWifi: ath_attach: Switching per-packet transmit power control off
+> wifi0: 11a rates: 6Mbps 9Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
+> wifi0: 11b rates: 1Mbps 2Mbps 5.5Mbps 11Mbps
+> wifi0: 11g rates: 1Mbps 2Mbps 5.5Mbps 11Mbps 6Mbps 9Mbps 12Mbps 18Mbps
+> 24Mbps 36Mbps 48Mbps 54Mbps
+> wifi0: turboG rates: 6Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
+> wifi0: H/W encryption support: WEP AES AES_CCM TKIP
+> wifi0: ath_announce: Use hw queue 1 for WME_AC_BE traffic
+> wifi0: ath_announce: Use hw queue 0 for WME_AC_BK traffic
+> wifi0: ath_announce: Use hw queue 2 for WME_AC_VI traffic
+> wifi0: ath_announce: Use hw queue 3 for WME_AC_VO traffic
+> wifi0: ath_announce: Use hw queue 8 for CAB traffic
+> wifi0: ath_announce: Use hw queue 9 for beacons
+> ath_pci: wifi0: Atheros 5424/2424: mem=0x90100000, irq=17
+> 
+> I can also set the interface up and use iwlist ath0 scan.
+> 
 
