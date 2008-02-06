@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757690AbYBOMyy (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:42778 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758895AbYBFC1u convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 07:54:54 -0500
-Subject: Re: [PATCH] add macro for printing mac addresses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <bruno@thinktube.com>
-Cc: netdev@vger.kernel.org, jgarzik@pobox.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20080215104804.9870.15722.stgit@one> (sfid-20080215_104829_866984_5F977706)
-References: <20080215104804.9870.15722.stgit@one>
-	 (sfid-20080215_104829_866984_5F977706)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EXfC4rmfM1w7DszFHSLv"
-Date: Fri, 15 Feb 2008 13:54:40 +0100
-Message-Id: <1203080080.8931.190.camel@johannes.berg> (sfid-20080215_125510_289485_F999DA6D)
-Mime-Version: 1.0
+	Tue, 5 Feb 2008 21:27:50 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: ipw3945: not only it periodically dies, it also BUG()s
+Date: Tue, 5 Feb 2008 18:20:58 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> (sfid-20080206_022755_620447_981B9669)
+In-Reply-To: <20080205214441.GA1518@elf.ucw.cz>
+References: <20080205214441.GA1518@elf.ucw.cz>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Pavel Machek" <pavel@ucw.cz>,
+	<ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
+	"kernel list" <linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday, February 05, 2008 1:45 PM, Pavel Machek  wrote:
 
---=-EXfC4rmfM1w7DszFHSLv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> ...I've reported this before, with full debugging. Not sure if
+> anything happened. 
 
+Could you please point me to where you have reported it before?
 
-On Fri, 2008-02-15 at 19:48 +0900, Bruno Randolf wrote:
-> is there any chance to include a macro like this for printing mac address=
-es?
->=20
-> its advantage is that it can be used without the need to declare buffers =
-for
-> print_mac(), for example:
->=20
-> printk("mac address: " MAC_FMT, MAC_ADDR(addr));
+> Now, I got BUG() in iwl3945-base.c: 3824
 
-you want print_mac()
+Which driver and kernel are you using?
 
-johannes
-
---=-EXfC4rmfM1w7DszFHSLv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7WLj6Vg1VMiehFYAQJmgw/+LKWzUJsNuRB4FtjE2SeHsaiK/tpDjrW3
-oE9FRz7fW8LkLFlQ2eLHVrFiZgBL07kU32O2I7IHCLa2LRGtEPAjkLsbX+bLayiu
-6TOkF1dA6XunaOGh4kRG8hm4EiAwGbfAOFPXT4XMSBI0VsTy543k0iYhHo7Lke9k
-CxxyKcc5rURz+R62rFfN/OH52+rSXgmwP3fh7T///ctteqRaGlNJtQD1/CznF6IO
-SD+0VbQFj4muLZwcggkzMtr82w+CqqMNwwQUcamJ0twFqmhR9Eg2SRdhS8oD2NmY
-gWaBxpNc5yxQRy7D7Tx7viR3CZYmXBcY6Es8HA89VswiwyubXbqsP7TtNDZ5DYhu
-7xpM0Pwrwd4LCwCTINdnMzNWdt//3WPNucjyh2cpnq9zmGT9rnTVPO4wOINBVfXG
-T2Ctzr7eMn3kfrSrqWAGREDo5LFYqWOr/GJUZm8/KxvQtK+r7+RtugctNVb5TyhH
-NaEnLNINKRY5IXrZSvnFp0EozFOWSg6gtzml1O0pfc8Sqld/iLN6xdY6ufB4bVp7
-244Be7z0u/K1IFjbNMhTOP0OEt0YatclSxfOw4f6jCuXvbhuCpDL4msNkRTqZhMR
-5z2cv1FYXb+hbw9F1qYIqnHStd1GZSZJTQy5RKmSQnaGYZuMUE+b6zHpaT9ohR9N
-rLvaUBVl9iw=
-=/pg1
------END PGP SIGNATURE-----
-
---=-EXfC4rmfM1w7DszFHSLv--
+Reinette
 
