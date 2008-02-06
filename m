@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49286 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbYBYPj2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:39:28 -0500
-Message-Id: <20080225153009.411684000@sipsolutions.net> (sfid-20080225_153939_272078_F6FF9A14)
-References: <20080225152740.360393000@sipsolutions.net>
-Date: Mon, 25 Feb 2008 16:27:50 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:32273 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753761AbYBFTUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 14:20:42 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH 10/10] b43: verify sta_notify mac80211 callback
-Mime-Version: 1.0
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/3] iwlwifi: Don't send host commands on rfkill
+Date: Wed,  6 Feb 2008 11:20:40 -0800
+Message-Id: <1202325640-9577-4-git-send-email-reinette.chatre@intel.com> (sfid-20080206_192054_702873_DBEDC90F)
+In-Reply-To: <1202325640-9577-3-git-send-email-reinette.chatre@intel.com>
+References: <1202325640-9577-1-git-send-email-reinette.chatre@intel.com>
+ <1202325640-9577-2-git-send-email-reinette.chatre@intel.com>
+ <1202325640-9577-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helps verify that nothing bad is going on in mac80211,
-it is unfortunately not possible to implement this generically
-in mac80211 easily because there we can't assume that we only
-have a single vif which b43 currently can assume.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+This patch prevents sending host commands when rfkill is on
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/b43/main.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
---- everything.orig/drivers/net/wireless/b43/main.c	2008-02-25 08:46:14.000000000 +0100
-+++ everything/drivers/net/wireless/b43/main.c	2008-02-25 08:49:42.000000000 +0100
-@@ -3835,6 +3835,16 @@ static int b43_op_ibss_beacon_update(str
- 	return 0;
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3216167..b642aa2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -681,6 +681,12 @@ static int iwl3945_enqueue_hcmd(struct iwl3945_priv *priv, struct iwl3945_host_c
+ 	BUG_ON((fix_size > TFD_MAX_PAYLOAD_SIZE) &&
+ 	       !(cmd->meta.flags & CMD_SIZE_HUGE));
  
-+static void b43_op_sta_notify(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif,
-+			      enum sta_notify_cmd notify_cmd,
-+			      const u8 *addr)
-+{
-+	struct b43_wl *wl = hw_to_b43_wl(hw);
 +
-+	B43_WARN_ON(!vif || wl->vif != vif);
-+}
++	if (iwl3945_is_rfkill(priv)) {
++		IWL_DEBUG_INFO("Not sending command - RF KILL");
++		return -EIO;
++	}
 +
- static const struct ieee80211_ops b43_hw_ops = {
- 	.tx			= b43_op_tx,
- 	.conf_tx		= b43_op_conf_tx,
-@@ -3851,6 +3861,7 @@ static const struct ieee80211_ops b43_hw
- 	.set_retry_limit	= b43_op_set_retry_limit,
- 	.set_tim		= b43_op_beacon_set_tim,
- 	.beacon_update		= b43_op_ibss_beacon_update,
-+	.sta_notify		= b43_op_sta_notify,
- };
+ 	if (iwl3945_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
+ 		IWL_ERROR("No space for Tx\n");
+ 		return -ENOSPC;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 846dc16..c771b64 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -686,6 +686,11 @@ static int iwl4965_enqueue_hcmd(struct iwl4965_priv *priv, struct iwl4965_host_c
+ 	BUG_ON((fix_size > TFD_MAX_PAYLOAD_SIZE) &&
+ 	       !(cmd->meta.flags & CMD_SIZE_HUGE));
  
- /* Hard-reset the chip. Do not call this directly.
-
++	if (iwl4965_is_rfkill(priv)) {
++		IWL_DEBUG_INFO("Not sending command - RF KILL");
++		return -EIO;
++	}
++
+ 	if (iwl4965_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
+ 		IWL_ERROR("No space for Tx\n");
+ 		return -ENOSPC;
 -- 
+1.5.3.4
 
