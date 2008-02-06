@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:51910 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbYBDCx4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:46228 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbYBFQS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 21:53:56 -0500
-Date: Sun, 3 Feb 2008 21:53:51 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
-	johannes@sipsolutions.net, bunk@kernel.org
-Subject: [PATCH 7/7] ath5k/phy.c: fix negative array index
-Message-ID: <5b486ef9da13204e3068cc4b3346a89b3c9911ac.1202092325.git.mcgrof@winlab.rutgers.edu> (sfid-20080204_025358_752294_8514590B)
+	Wed, 6 Feb 2008 11:18:56 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so536340wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 08:18:53 -0800 (PST)
+Message-ID: <1ba2fa240802060818t5945ff67jb64ccee0a407c604@mail.gmail.com> (sfid-20080206_161900_023136_B23B3FDC)
+Date: Wed, 6 Feb 2008 18:18:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1202309885.9965.3.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <67abed819770e9d38c69f0e015e153427b3522be.1202092325.git.mcgrof@winlab.rutgers.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12022263282085-git-send-email-tomas.winkler@intel.com>
+	 <1202307331.4395.41.camel@johannes.berg>
+	 <1ba2fa240802060644k3f0b5e7cgb48380a2b3181f41@mail.gmail.com>
+	 <1202309885.9965.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Author: Adrian Bunk <bunk@kernel.org>
+> > Since on the TX path tx_status resides on stack this has to be copied
+> > by the driver for TX-response path use.
+>
+> I don't think I understand? This is tx status, what are you referring to
+> by "tx response"?
 
-This patch fixes a negative array index spotted by the Coverity checker.
+Maybe I'm locked in concepts of iwlwifi but I believe also other
+drivers uses similar concept. I think USB has some URB complete
+handler etc.  So iwlwifi get interrupt (asynchronous) when packet is
+transmitted (TX response flow) and driver retrieves the information of
+transmitting. This is NOT done in TX contexts so you have to store
+tx_status between TX flows and TX response flow so you can feed it
+back to ieee80211_tx_status_irqsafe
+>
+> > void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+> >                                struct sk_buff *skb,
+> >                                struct ieee80211_tx_status *status)
+> >
+> >
+> >       skb->dev = local->mdev;
+> >       saved = kmalloc(sizeof(struct ieee80211_tx_status), GFP_ATOMIC); ---
+> > this has to be changed as well.
+>
+> Yeah that's what I was thinking of. Maybe we should change the
+> ieee80211_tx_status_irqsafe() interface and require the driver to
+> allocate it rather than giving a pointer to a structure on the stack?
+> That way we the driver has to do the calculation, but we don't have to
+> copy things around? Doing it on the stack isn't easy, you'd have to
+> define something like this:
 
-Changes-licensed-under: ISC
+>
+> struct status {
+>         struct ieee80211_tx_status stat;
+>         struct ieee80211_tx_rate_ctrl ratectrl[N];
+> } status __attribute__((packed));
+>
+> so requiring the driver to allocate it when using the irqsafe interface
+> would be better imho.
+>
+Not sure which flow will free this pointer ? Iwlwifi keeps tx_status
+attached to TBD so it have to be sure it won't be overriden somewhere
+in the stack.  But it might be a case that I'm not understand here
+something
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
----
- drivers/net/wireless/ath5k/phy.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Thanks
+Tomas
 
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 248c0f5..405195f 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1178,6 +1178,9 @@ static int ath5k_hw_rf5112_rfregs(struct ath5k_hw *ah,
- 			(channel->center_freq >= 5260 ? 1 :
- 			    (channel->center_freq > 4000 ? 0 : -1)));
- 
-+		if (obdb == -1)
-+			return -EINVAL;
-+
- 		if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
- 				ee->ee_ob[ee_mode][obdb], 3, 279, 0, true))
- 			return -EINVAL;
--- 
-1.5.3.7
-
+> johannes
+>
