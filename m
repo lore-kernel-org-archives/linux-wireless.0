@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2991 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752005AbYB0Rdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 12:33:39 -0500
-Date: Wed, 27 Feb 2008 12:25:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Chris Clayton <chris2553@googlemail.com>, ivdoorn@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Message-ID: <20080227172546.GD3078@tuxdriver.com> (sfid-20080227_173343_056443_5A38BA00)
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802252104.32416.chris2553@googlemail.com> <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com> <200802261911.39577.chris2553@googlemail.com> <20080226194838.GD3013@tuxdriver.com> <c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com> <20080226223814.4ef2b435@morte> <c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com> <20080227082642.218b8014@morte> <20080227155111.GB3078@tuxdriver.com>
+Received: from ascomax.hasler.ascom.ch ([139.79.135.1]:33442 "EHLO
+	ascomax.hasler.ascom.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760036AbYBFKEc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2008 05:04:32 -0500
+Received: from eiger.ma.tech.ascom.ch (eiger.ma.tech.ascom.ch [139.79.100.1])
+	by ascomax.hasler.ascom.ch (8.14.1/8.14.1) with ESMTP id m169x9dF012308
+	for <linux-wireless@vger.kernel.org>; Wed, 6 Feb 2008 10:59:10 +0100 (MET)
+Received: from [139.79.100.143] (helo=donkey.ma.tech.ascom.ch)
+	by eiger.ma.tech.ascom.ch with esmtp (Exim 3.16 #1)
+	id 1JMh3c-0003ea-00
+	for linux-wireless@vger.kernel.org; Wed, 06 Feb 2008 10:59:08 +0100
+Received: from lunn by donkey.ma.tech.ascom.ch with local (Exim 3.36 #1 (Debian))
+	id 1JMh3c-00055R-00
+	for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 10:59:08 +0100
+Date: Wed, 6 Feb 2008 10:59:08 +0100
+From: Andrew Lunn <andrew.lunn@ascom.ch>
+To: linux-wireless@vger.kernel.org
+Subject: B43 not seeing MadWifi AP
+Message-ID: <20080206095908.GU25912@donkey.ma.tech.ascom.ch> (sfid-20080206_100438_305302_EB2FFDB2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080227155111.GB3078@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 10:51:11AM -0500, John W. Linville wrote:
-> On Wed, Feb 27, 2008 at 08:26:42AM +0100, Stefano Brivio wrote:
-> > On Tue, 26 Feb 2008 22:36:19 +0000
-> > "Chris Clayton" <chris2553@googlemail.com> wrote:
-> > 
-> > > 27 135466 rate_change 2 55
-> > > 28 135717 tx_rate 2 55
-> > > 29 135717 tx_status 0 0
-> > > 30 135717 pf_sample 0 3584 1965 0
-> > > 31 135717 rate_change 129 -541505508
-> > > 32 135968 tx_rate 11 540
-> > 
-> > Known and fixed. The fix isn't in 2.6.25-rc3 yet, though.
-> > 
-> > Fix:
-> > commit 32720eae675d08990e97bffbf71a31382599cc8a
-> > Author: Stefano Brivio <stefano.brivio@polimi.it>
-> > Date:   Tue Jan 29 20:29:16 2008 +0100
-> > 
-> >     rc80211-pid: fix rate adjustment
-> 
-> And it currently isn't queued for 2.6.25 at all.
-> 
-> Chris, can you cherry-pick this from the wireless-2.6.26 tree and
-> give it a test on your 2.6.25-rc3 tree?  If it resolves a problem
-> then I'll queue it to Dave for 2.6.25 (which will probably provoke
-> a net-2.6.26 and wireless-2.6.26 rebase).
+Hi Folks
 
-That might be easier said than done.  It looks like that patch depends
-on the big cfg80211 API change queued for 2.6.26.
+I have a number of Linux laptops running kernel 2.6.23.9, and
+compat-wireless-2.6 with what git-describe says is
+v2.6.24-rc7-716-g62ec51e and i am using the b43 driver with a BCM4312
+device.
 
-Stefano offered to rebase that on 2.6.25.  Stefano, could you post
-that as part of this thread?
+I also have some laptop with Atheros PCCard devices and the Madwifi
+driver from SVN, version r3318.
 
-Thanks,
+The Madwifi device is running as an AP. The problem i have is that the
+b43 does not see it. iwlist wlan0 scan does not see this madwifi
+AP. It does see other APs, but not my madwifi driver. Other madwifi
+devices see the AP. Also an ipw2200 device sees the AP. So i know the
+AP is running, sending beacons, etc. It just seems that the b43 does
+not like it. 
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+iwlist ath0 scan lists the "missing" AP as:
+
+   Cell 04 - Address: 06:03:7F:03:42:0B
+             ESSID:"TOWN-SSID"
+             Mode:Master
+             Frequency:2.442 GHz (Channel 7)
+             Quality=49/70  Signal level=-46 dBm  Noise level=-95 dBm
+             Encryption key:off
+             Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+                       11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+                       48 Mb/s; 54 Mb/s
+             Extra:bcn_int=100
+             Extra:wme_ie=dd180050f2020101830002a4400027a4000042435e0062322f00
+             Extra:ath_ie=dd0900037f01010034ff7f
+
+Is the b43 picky about Extra things in the beacon? 
+
+At the beginning of ieee80211_rx_bss_info() there is some commented
+out printk for all received beacons and probe responses. I enabled
+this and don't see anything for the missing device. So it looks like
+the problem is lower down the stack. However i don't see any obvious
+place were it would be discarding beacons.
+
+Anybody got any ideas?
+
+        Thanks
+                Andrew
