@@ -1,204 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47120 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754914AbYBDXYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 18:24:21 -0500
-Subject: Re: ipw2200 stalls on high load
-From: Dan Williams <dcbw@redhat.com>
-To: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-In-Reply-To: <20080204224502.GA22717@Chamillionaire.breakpoint.cc>
-References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc>
-	 <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com>
-	 <20080130225738.GB2648@Chamillionaire.breakpoint.cc>
-	 <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com>
-	 <1202128649.10632.4.camel@localhost.localdomain>
-	 <D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com>
-	 <20080204224502.GA22717@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain
-Date: Mon, 04 Feb 2008 18:24:10 -0500
-Message-Id: <1202167450.5190.2.camel@localhost.localdomain> (sfid-20080204_232425_921923_A1588ADC)
-Mime-Version: 1.0
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:44346 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751956AbYBFCuI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2008 21:50:08 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH] mac80211: enable IBSS merging
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
+Date: Wed, 06 Feb 2008 11:49:57 +0900
+Message-ID: <20080206024957.22838.82194.stgit@one> (sfid-20080206_025012_520612_21BD2648)
+In-Reply-To: <1202209693.4395.29.camel@johannes.berg>
+References: <1202209693.4395.29.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-02-04 at 23:45 +0100, Sebastian Siewior wrote:
-> * Chatre, Reinette | 2008-02-04 10:23:49 [-0800]:
-> 
-> >On Monday, February 04, 2008 4:37 AM, Dan Williams  wrote:
-> >
-> >> Something like the following?  Turns out the rxq->processed
-> >> isn't really
-> >> used that much, and 3945/4965 don't use that field at all (but use
-> >> ->read exclusively instead).  And since it appears that the replenish
-> >> function is simpler in the 2200, it doesn't need to be split like
-> >> 3945/4965.  I haven't been able to stress my 2200 enough to trigger
-> >> the new codepath though. 
-> >
-> >Thank you very much! 
-> Yes, thanks for the patch.
-> 
-> >Sebastian, does this change work for you?
-> No, it doesn't. I get the following:
+addressing johannes latest comments and adding a channel check...
 
-Could you put some debugging information into ipw_rx() to print out the
-values of r and i right before the while (i != r) loop, and inside the
-if (fill_rx) block later down what count and i are?
+enable IBSS cell merging. if an IBSS beacon with the same channel, same ESSID
+and a TSF higher than the local TSF (mactime) is received, we have to join its
+BSSID.  while this might not be immediately apparent from reading the 802.11
+standard it is compliant and necessary to make IBSS mode functional in many
+cases. most drivers have a similar behaviour.
 
-Also, what's the procedure to reproduce this again?  I couldn't get that
-bit to trigger but I wasn't really sure what to do to stress the 2200
-that far, otherwise I could have tested the patch more before posting.
+* move the relevant code section (previously only containing debug code) down
+to the end of the function, so we can reuse the bss structure.
 
-Thanks,
-Dan
+* we have to compare the mactime (TSF at the time of packet receive) rather
+than the current TSF. since some drivers are not able to give a reliable
+mactime we fall back to use the current TSF, which will be enough to catch most
+(but not all) cases where an IBSS merge is necessary.
 
-> | ipw2200: Firmware error detected.  Restarting.
-> | ipw2200: Start IPW Error Log Dump:
-> | ipw2200: Status: 0x800000E0, Config: 00000347
-> | ipw2200: NMI_INTERRUPT 493005888 0x000003b4  0x00000000  0x00000250  0x0000f420  0x00000000
-> | ipw2200: DMA_STATUS 493005892 0x00027980  0x00027740  0x01540002  0x00000000  0x00000000
-> | ipw2200: DMA_STATUS 493005895 0x00028400  0x00028670  0x00540001  0x00000000  0x00000001
-> | ipw2200: DMA_STATUS 493005899 0x00028000  0x00028190  0x00540001  0x00000000  0x00000002
-> | ipw2200: DMA_STATUS 493005903 0x00400000  0x00408000  0x00408000  0x00000087  0x00000003
-> | ipw2200: 492475810	0x00000008	50
-> | ipw2200: 492475836	0x0000003c	264
-> | ipw2200: 492475841	0x0002a9c0	74
-> | ipw2200: 492475846	0x00000042	208
-> | ipw2200: 492477710	0x00000008	32
-> | ipw2200: 492477738	0x00000008	50
-> | ipw2200: 492477790	0x0000003c	264
-> | ipw2200: 492477796	0x0002a930	74
-> | ipw2200: 492477800	0x00000042	208
-> | ipw2200: 492479989	0x00000008	32
-> | ipw2200: 492480017	0x00000008	50
-> | ipw2200: 492480043	0x0000003c	264
-> | ipw2200: 492480048	0x0002a990	74
-> | ipw2200: 492480053	0x00000042	208
-> | ipw2200: 492481989	0x00000008	32
-> | ipw2200: 492482017	0x00000008	50
-> | ipw2200: 492482051	0x0000003c	264
-> | ipw2200: 492482056	0x0002a970	74
-> | ipw2200: 492482061	0x00000042	208
-> | ipw2200: 492484133	0x00000008	32
-> | ipw2200: 492484161	0x00000008	50
-> | ipw2200: 492484189	0x0000003c	264
-> | ipw2200: 492484194	0x0002a880	74
-> | ipw2200: 492484199	0x00000042	208
-> | ipw2200: 492498961	0x00000001	198
-> | ipw2200: 492499005	0x0002a8e0	67
-> | ipw2200: 492499025	0x0000026c	61
-> | ipw2200: 492507155	0x00000389	140
-> | ipw2200: 492507158	0x00000061	139
-> | ipw2200: 492507161	0x00000392	140
-> | ipw2200: 492507169	0x00000001	136
-> | ipw2200: 492507173	0x0000029c	138
-> | ipw2200: 492507177	0x000002ca	138
-> | ipw2200: 492507180	0x00000177	84
-> | ipw2200: 492507185	0x00000005	81
-> | ipw2200: 492507188	0x00000003	82
-> | ipw2200: 492507191	0x00000006	83
-> | ipw2200: 492507196	0x0000039f	140
-> | ipw2200: 492507199	0x00000006	139
-> | ipw2200: 492507202	0x000003ad	139
-> | ipw2200: 492509617	0x00000001	32
-> | ipw2200: 492509620	0x0000023f	179
-> | ipw2200: 492509624	0x00000633	140
-> | ipw2200: 492509627	0x00000640	140
-> | ipw2200: 492509631	0x00000177	84
-> | ipw2200: 492509635	0x00000006	81
-> | ipw2200: 492509638	0x00000004	82
-> | ipw2200: 492509641	0x00000007	83
-> | ipw2200: 492509645	0x0000054d	183
-> | ipw2200: 492509651	0x00000009	184
-> | ipw2200: 492509654	0x00000455	189
-> | ipw2200: 492509657	0x00000000	189
-> | ipw2200: 492509661	0x00000007	184
-> | ipw2200: 492509664	0x00000004	183
-> | ipw2200: 492509669	0x0000042b	191
-> | ipw2200: 492448433	0x0000003d	264
-> | ipw2200: 492448438	0x0002a960	74
-> | ipw2200: 492448547	0x000000b1	200
-> | ipw2200: 492450315	0x00000008	32
-> | ipw2200: 492450343	0x00000008	50
-> | ipw2200: 492450369	0x0000003d	264
-> | ipw2200: 492450374	0x0002a9e0	74
-> | ipw2200: 492450483	0x000000b1	200
-> | ipw2200: 492452305	0x00000008	32
-> | ipw2200: 492452333	0x00000008	50
-> | ipw2200: 492452359	0x0000003d	264
-> | ipw2200: 492452364	0x0002a9a0	74
-> | ipw2200: 492452473	0x000000b1	200
-> | ipw2200: 492454503	0x00000008	32
-> | ipw2200: 492454531	0x00000008	50
-> | ipw2200: 492454557	0x0000003d	264
-> | ipw2200: 492454562	0x0002a960	74
-> | ipw2200: 492454671	0x000000b1	200
-> | ipw2200: 492456782	0x00000008	32
-> | ipw2200: 492456810	0x00000008	50
-> | ipw2200: 492456836	0x0000003d	264
-> | ipw2200: 492456841	0x0002a9e0	74
-> | ipw2200: 492456950	0x000000b1	200
-> | ipw2200: 492458746	0x00000008	32
-> | ipw2200: 492458774	0x00000008	50
-> | ipw2200: 492458800	0x0000003d	264
-> | ipw2200: 492458805	0x0002a9a0	74
-> | ipw2200: 492458914	0x000000b1	200
-> | ipw2200: 492459161	0x00000001	198
-> | ipw2200: 492459201	0x0002a8e0	67
-> | ipw2200: 492459221	0x0000026c	61
-> | ipw2200: 492459341	0x00000008	32
-> | ipw2200: 492459352	0x0000000b	35
-> | ipw2200: 492459356	0x0000000b	24
-> | ipw2200: 492459365	0x00000172	25
-> | ipw2200: 492459369	0x0002a8e0	98
-> | ipw2200: 492461603	0x00000008	32
-> | ipw2200: 492461631	0x00000008	50
-> | ipw2200: 492461657	0x0000003c	264
-> | ipw2200: 492461662	0x0002a990	74
-> | ipw2200: 492461771	0x000000b1	200
-> | ipw2200: 492463197	0x00000008	32
-> | ipw2200: 492463225	0x00000008	50
-> | ipw2200: 492463251	0x0000003c	264
-> | ipw2200: 492463256	0x0002a9c0	74
-> | ipw2200: 492463365	0x000000b1	200
-> | ipw2200: 492465224	0x00000008	32
-> | ipw2200: 492465252	0x00000008	50
-> | ipw2200: 492465290	0x0000003c	264
-> | ipw2200: 492465296	0x0002a930	74
-> | ipw2200: 492465404	0x000000b1	200
-> | ipw2200: 492467359	0x00000008	32
-> | ipw2200: 492467387	0x00000008	50
-> | ipw2200: 492467413	0x0000003c	264
-> | ipw2200: 492467418	0x0002a990	74
-> | ipw2200: 492467527	0x000000b1	200
-> | ipw2200: 492469413	0x00000008	32
-> | ipw2200: 492469441	0x00000008	50
-> | ipw2200: 492469467	0x0000003c	264
-> | ipw2200: 492469472	0x0002a9c0	74
-> | ipw2200: 492469581	0x000000b1	200
-> | ipw2200: 492471611	0x00000008	32
-> | ipw2200: 492471639	0x00000008	50
-> | ipw2200: 492471665	0x0000003c	264
-> | ipw2200: 492471670	0x0002a930	74
-> | ipw2200: 492471779	0x000000b1	200
-> | ipw2200: 492473854	0x00000008	32
-> | ipw2200: 492473882	0x00000008	50
-> | ipw2200: 492473908	0x0000003c	264
-> | ipw2200: 492473913	0x0002a990	74
-> | ipw2200: 492474022	0x000000b1	200
-> | ipw2200: 492474164	0x00000042	208
-> | ipw2200: 492475782	0x00000008	32
-> | ipw2200: U ipw_load initial device response after 10ms
-> | ipw2200: U ipw_stop_master stop master 0ms
-> | ipw2200: U ipw_load_ucode Microcode OK, rev. 53594 (0xd15a) dev. 3 (0x3) of 11/22/04 20:27
-> | ipw2200: U ipw_load device response after 50ms
-> 
-> I can provide you a full log if you want.
-> >Reinette
-> >
-> 
-> Sebastian
+* in IBSS mode we want to allow beacons to override probe response info so we
+can correctly do merges.
+
+* we don't only configure beacons based on scan results, so change that
+message.
+
+* to enable this we have to let all beacons thru in IBSS mode, even if they
+have a different BSSID.
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+---
+
+ include/net/mac80211.h       |    3 +-
+ net/mac80211/ieee80211_sta.c |   70 ++++++++++++++++++++++++++----------------
+ net/mac80211/rx.c            |    5 ++-
+ 3 files changed, 49 insertions(+), 29 deletions(-)
+
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 460da54..4ae3a12 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -276,7 +276,8 @@ struct ieee80211_tx_control {
+  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
+  *	the frame.
+  * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime field)
+- *	is valid.
++ *	is valid. This is useful in monitor mode and necessary for beacon frames
++ *	to enable IBSS merging.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	= 1<<0,
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 08f89fa..4df18ae 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2202,7 +2202,7 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 	struct ieee80211_sta_bss *bss;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	u64 timestamp;
++	u64 timestamp, mactime;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
+ 
+@@ -2220,30 +2220,6 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 		return;
+ 
+ 	timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
+-
+-	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
+-	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0) {
+-#ifdef CONFIG_MAC80211_IBSS_DEBUG
+-		static unsigned long last_tsf_debug = 0;
+-		u64 tsf;
+-		if (local->ops->get_tsf)
+-			tsf = local->ops->get_tsf(local_to_hw(local));
+-		else
+-			tsf = -1LLU;
+-		if (time_after(jiffies, last_tsf_debug + 5 * HZ)) {
+-			printk(KERN_DEBUG "RX beacon SA=%s BSSID="
+-			       "%s TSF=0x%llx BCN=0x%llx diff=%lld "
+-			       "@%lu\n",
+-			       print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->bssid),
+-			       (unsigned long long)tsf,
+-			       (unsigned long long)timestamp,
+-			       (unsigned long long)(tsf - timestamp),
+-			       jiffies);
+-			last_tsf_debug = jiffies;
+-		}
+-#endif /* CONFIG_MAC80211_IBSS_DEBUG */
+-	}
+-
+ 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+ 
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
+@@ -2329,8 +2305,10 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 
+ 	bss->band = rx_status->band;
+ 
+-	if (bss->probe_resp && beacon) {
+-		/* Do not allow beacon to override data from Probe Response. */
++	if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
++	    bss->probe_resp && beacon) {
++		/* STA mode:
++		 * Do not allow beacon to override data from Probe Response. */
+ 		ieee80211_rx_bss_put(dev, bss);
+ 		return;
+ 	}
+@@ -2434,6 +2412,44 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 	bss->noise = rx_status->noise;
+ 	if (!beacon)
+ 		bss->probe_resp++;
++
++	/* check if we need to merge IBSS */
++	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
++	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
++	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
++	    bss->freq == local->oper_channel->center_freq &&
++	    elems.ssid_len == sdata->u.sta.ssid_len &&
++	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0) {
++		if (rx_status->flag & RX_FLAG_TSFT)
++			/* in order for correct IBSS merging we need mactime */
++			mactime = rx_status->mactime;
++		else if (local && local->ops && local->ops->get_tsf)
++			/* second best option: get current TSF */
++			mactime = local->ops->get_tsf(local_to_hw(local));
++		else
++			/* can't merge without knowing the TSF */
++			mactime = -1LLU;
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++		printk(KERN_DEBUG "RX beacon SA=%s BSSID="
++		       "%s TSF=0x%llx BCN=0x%llx diff=%lld @%lu\n",
++		       print_mac(mac, mgmt->sa),
++		       print_mac(mac2, mgmt->bssid),
++		       (unsigned long long)mactime,
++		       (unsigned long long)timestamp,
++		       (unsigned long long)(mactime - timestamp),
++		       jiffies);
++#endif /* CONFIG_MAC80211_IBSS_DEBUG */
++		if (mactime <= timestamp) {
++			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
++				printk(KERN_DEBUG "%s: beacon TSF higher than "
++				       "local TSF - IBSS merge with BSSID %s\n",
++				       dev->name, print_mac(mac, mgmt->bssid));
++			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
++			ieee80211_ibss_add_sta(dev, NULL,
++					       mgmt->bssid, mgmt->sa);
++		}
++	}
++
+ 	ieee80211_rx_bss_put(dev, bss);
+ }
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index beda1bf..ed7cf37 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1612,7 +1612,10 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		if (!bssid)
+ 			return 0;
+-		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
++		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT &&
++		    (rx->fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
++			return 1;
++		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
+ 			if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
+ 				return 0;
+ 			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
 
