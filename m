@@ -1,88 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:21799 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756927AbYBYWRH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41991 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754800AbYBGKfC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:17:07 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so996346ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:17:06 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 3/4] rt2x00: Don't switch to antenna with low rssi
-Date: Mon, 25 Feb 2008 23:15:08 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802252315.08992.IvDoorn@gmail.com> (sfid-20080225_221710_012236_932A8BB4)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 7 Feb 2008 05:35:02 -0500
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <20080206024957.22838.82194.stgit@one>
+References: <1202209693.4395.29.camel@johannes.berg>
+	 <20080206024957.22838.82194.stgit@one>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qcFxK7bCh5MV0Eg07SpE"
+Date: Thu, 07 Feb 2008 00:52:35 +0100
+Message-Id: <1202341955.9965.26.camel@johannes.berg> (sfid-20080207_103509_964358_4FBF3AF0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When rssi_a > rssi_b is true and the current antenna
-was already antenna A, then rt2x00 incorrectly jumped
-to antenna B.
 
-Also don't configure the antenna when there has been
-no change in the antenna setup.
+--=-qcFxK7bCh5MV0Eg07SpE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00config.c |    4 ++++
- drivers/net/wireless/rt2x00/rt2x00dev.c    |   18 +++++-------------
- 2 files changed, 9 insertions(+), 13 deletions(-)
+Looks fine, one last question:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 0d57d7f..07adc57 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -97,6 +97,10 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	libconf.ant.rx = rx;
- 	libconf.ant.tx = tx;
- 
-+	if (rx == rt2x00dev->link.ant.active.rx &&
-+	    tx == rt2x00dev->link.ant.active.tx)
-+		return;
-+
- 	/*
- 	 * Antenna setup changes require the RX to be disabled,
- 	 * else the changes will be ignored by the device.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 00f5f0d..7294c75 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -260,19 +260,11 @@ static void rt2x00lib_evaluate_antenna_sample(struct rt2x00_dev *rt2x00dev)
- 	if (sample_a == sample_b)
- 		return;
- 
--	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) {
--		if (sample_a > sample_b && rx == ANTENNA_B)
--			rx = ANTENNA_A;
--		else if (rx == ANTENNA_A)
--			rx = ANTENNA_B;
--	}
-+	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY)
-+		rx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
- 
--	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY) {
--		if (sample_a > sample_b && tx == ANTENNA_B)
--			tx = ANTENNA_A;
--		else if (tx == ANTENNA_A)
--			tx = ANTENNA_B;
--	}
-+	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)
-+		tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
- 
- 	rt2x00lib_config_antenna(rt2x00dev, rx, tx);
- }
-@@ -327,7 +319,7 @@ static void rt2x00lib_evaluate_antenna(struct rt2x00_dev *rt2x00dev)
- 
- 	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
- 	    !(rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)) {
--		rt2x00dev->link.ant.flags &= ~ANTENNA_MODE_SAMPLE;
-+		rt2x00dev->link.ant.flags = 0;
- 		return;
- 	}
- 
--- 
-1.5.3.2
+> +		if (mactime <=3D timestamp) {
+> +			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
+> +				printk(KERN_DEBUG "%s: beacon TSF higher than "
+> +				       "local TSF - IBSS merge with BSSID %s\n",
+> +				       dev->name, print_mac(mac, mgmt->bssid));
+
+I'd rewrite that as timestamp >=3D mactime and rename the two variables
+(maybe beacon_timestamp and phy_timestamp or so?), but that's not too
+important. However, in any case "<=3D" seems wrong, shouldn't we only
+merge when it's actually higher? If your hardware/firmware has synced
+properly and the PHY delay is accounted for properly etc. then every
+beacon from the own BSS will fulfil the =3D=3D part of the condition, no?
+
+Also, the beacon timestamp is defined as follows:
+
+        A STA sending a beacon shall set the value of the beacon=E2=80=99s
+        timestamp so that it equals the value of the STA=E2=80=99s TSF time=
+r at
+        the time that the data symbol containing the first bit of the
+        timestamp is transmitted to the PHY plus the transmitting STA=E2=80=
+=99s
+        delays through its local PHY from the MAC-PHY interface to its
+        interface with the WM [e.g., antenna, light-emitting diode (LED)
+        emission surface].
+
+(IEEE 802.11 11.1.2)
+
+Since we define the RX timestamp to be when the first data symbol of the
+frame hits the PHY, we here have to take into account the offset between
+the two, at 1 MBit that's 192 (=3D24 bytes * 8 usecs/byte) usecs earlier
+than the beacon timestamp.
+
+On the other hand, you're unlikely to hit that window, but I suppose it
+warrants at least a comment.
+
+johannes
+
+--=-qcFxK7bCh5MV0Eg07SpE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6pIQaVg1VMiehFYAQLXiQ//f2YweAB7hS0ogzyNNy81J70K08zeQ2Ba
+ZlNr/gHBhtXm1ZEVNALseFec3Cw6vF/TmkwnLmtk3azV7t921+ipcbkK4xkmxrx0
+vwo71ABWRB0McRAOzfa+7BE4GGRlLo+yvtPtP1pK7S6DWTE3SKBmNQfu/ZKd0B0L
+RPAwSaj+fniahhgurTqEaxudGb6T1yrY4sxX5q9tk7mp0jFzo00uzP7Qq+6GrQds
+v1hopwNFlKKkdc9S2oIKebINAoI9Gwr1uFFteJsNMaPfcZPdpin8JS9fkwYXzmyo
+0nYpPh9Uh+RtxymvevOfz32hR1gZLgaX+gvSU30K+ZtEpO/ym1Ra9yyi3MI9hM6q
+oVe5pd6UD/fdklGvPcaxEl9b+A29LPbFSJbjrNsxLrGNGxJcd5bjTUZo1VLjQaRy
+uX8ILaSn+7Q7Xh20GboAxYfsr73Zxk0cYGYFiKH+Cffn004xbo1kFtxTOCjrIKsr
+ilE2rA+Nk8jBgL0/8b0xipROs8xaGrNBvROrsaxyoInv2mXliRg4t13XgXBmQLRp
+uH0MV5PkwaFdcqlwxlWVFP8hRKEk+fezdMqcshEc9rB00HyGlnK/Hx1OXRK9XmFL
+Sb6jEzrClHuJKedLZVRZ+JmyH7VqqumvtE0Qu1Y+z+bgtGFSOMmaZL9do8Od6hrk
+Zr+FLxy/MP8=
+=6hxG
+-----END PGP SIGNATURE-----
+
+--=-qcFxK7bCh5MV0Eg07SpE--
 
