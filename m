@@ -1,38 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:37503 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759933AbYBZTZR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 14:25:17 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1461803rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 11:25:13 -0800 (PST)
-Subject: Re: [PATCH 06/10] mac80211: RCU-ify STA info structure access
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1204014238.13162.201.camel@johannes.berg>
-References: <20080225152740.360393000@sipsolutions.net>
-	 <20080225153007.340533000@sipsolutions.net>
-	 <1203985337.6929.120.camel@localhost>
-	 (sfid-20080226_002043_615849_4CE09F20)  <1204014238.13162.201.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 26 Feb 2008 11:26:53 -0800
-Message-Id: <1204054013.6947.18.camel@localhost> (sfid-20080226_192521_843411_4368D4BB)
-Mime-Version: 1.0
+Received: from cantor2.suse.de ([195.135.220.15]:38842 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933694AbYBGUyD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 15:54:03 -0500
+Date: Thu, 7 Feb 2008 12:48:12 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
+Subject: [patch 39/45] b43: Reject new firmware early
+Message-ID: <20080207204812.GN16389@suse.de> (sfid-20080207_205411_037006_F84EB25C)
+References: <20080207204118.202098927@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207204549.GA16389@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-02-26 at 09:23 +0100, Johannes Berg wrote:
-> I put a del_timer() into sta_info_unlink() and a del_timer_sync() into
-> sta_info_destroy(). That should be enough afaict.
+2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-That is for the plink_timer in struct sta_info, if I understand
-correctly. I am talking about the per mesh-path timer (the one in struct
-mesh_path). 
+------------------
+From: Michael Buesch <mb@bu3sch.de>
+
+(not in mainline, as it is not applicable.)
+
+We must reject new incompatible firmware early to avoid
+running into strange transmission failures.
+
+The current development tree supports newer firmware revisions.
+These revisions cause strange failures on the stable 2.6.24 kernel.
+Add a check to avoid confusing users a lot.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/b43/main.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1800,6 +1800,18 @@ static int b43_upload_microcode(struct b
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
++	if (fwrev > 351) {
++		b43err(dev->wl, "YOUR FIRMWARE IS TOO NEW. Please downgrade your "
++		       "firmware.\n");
++		b43err(dev->wl, "Use this firmware tarball: "
++		       "http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2\n");
++		b43err(dev->wl, "Use this b43-fwcutter tarball: "
++		       "http://bu3sch.de/b43/fwcutter/b43-fwcutter-009.tar.bz2\n");
++		b43err(dev->wl, "Read, understand and _do_ what this message says, please.\n");
++		b43_write32(dev, B43_MMIO_MACCTL, 0);
++		err = -EOPNOTSUPP;
++		goto out;
++	}
+ 	b43dbg(dev->wl, "Loading firmware version %u.%u "
+ 	       "(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
+ 	       fwrev, fwpatch,
 
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
