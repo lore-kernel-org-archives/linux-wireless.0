@@ -1,64 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:35955 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750719AbYBGSuo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 13:50:44 -0500
-Date: Thu, 7 Feb 2008 10:49:12 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, deller@gmx.de,
-	jt@hpl.hp.com, rjw@sisk.pl, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.arm.linux.org.uk
-Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
-Message-Id: <20080207104912.c719deed.akpm@linux-foundation.org> (sfid-20080207_185048_617939_BA24FEA7)
-In-Reply-To: <20080207155152.GA3025@tuxdriver.com>
-References: <200801131516.34567.deller@gmx.de>
-	<20080202224515.20a09553.akpm@linux-foundation.org>
-	<200802062150.23930.deller@gmx.de>
-	<20080206130448.564f18bb.akpm@linux-foundation.org>
-	<20080206214747.GG32245@flint.arm.linux.org.uk>
-	<20080206135950.d48ffa36.akpm@linux-foundation.org>
-	<20080207155152.GA3025@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx2.suse.de ([195.135.220.15]:38645 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762393AbYBGUwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 15:52:47 -0500
+Date: Thu, 7 Feb 2008 12:47:52 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [patch 31/45] b43: Fix suspend/resume
+Message-ID: <20080207204752.GF16389@suse.de> (sfid-20080207_205311_347044_3EF34BEE)
+References: <20080207204118.202098927@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207204549.GA16389@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 7 Feb 2008 10:51:52 -0500 "John W. Linville" <linville@tuxdriver.com> wrote:
+2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-> On Wed, Feb 06, 2008 at 01:59:50PM -0800, Andrew Morton wrote:
-> > On Wed, 6 Feb 2008 21:47:47 +0000
-> > Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
-> 
-> > > I assume that it's the second BUILD_BUG_ON() which is triggering?
-> > 
-> > yup.
-> > 
-> > > Given that:
-> > > 
-> > > #define MMW_SIZE        37
-> > > 
-> > > is not a multiple of sizeof(unsigned long) this is hardly surprising.
-> > > 
-> > > If structures are used to define a layout of something and must not
-> > > contain compiler padding, it must be packed.  Given these structures
-> > > contain just unsigned char, there's no concerns about >8bit loads
-> > > becoming less efficient.
-> 
-> Does a patch like this suffice?  I haven't checked whether such a
-> patch implies that the BUILD_BUG_ON()'s become unnecessary...
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-With your patch applied and arm allmodconfig, this
+patch 7be1bb6b798d506693d2d8668e801951996b5a4a in mainline.
 
-        BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
+This patch makes suspend/resume work with the b43 driver.
+We must not overwrite the MAC addresses in the init function, as this
+would also overwrite the MAC on resume. With an all-zero MAC the device
+firmware is not able to ACK any received packets anymore.
+Fix this by moving the initializion stuff that must be done on init but
+not on resume to the start function.
+Also zero out filter_flags to make sure we don't have some flags
+from a previous instance for a tiny timeframe until mac80211 reconfigures
+them.
 
-triggers
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Without your patch applied, these two
+---
+ drivers/net/wireless/b43/main.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-        BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
-        BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3395,8 +3395,6 @@ static int b43_wireless_core_init(struct
+ 	b43_bluetooth_coext_enable(dev);
+ 
+ 	ssb_bus_powerup(bus, 1);	/* Enable dynamic PCTL */
+-	memset(wl->bssid, 0, ETH_ALEN);
+-	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	b43_upload_card_macaddress(dev);
+ 	b43_security_init(dev);
+ 	b43_rng_init(wl);
+@@ -3493,6 +3491,13 @@ static int b43_start(struct ieee80211_hw
+ 	int did_init = 0;
+ 	int err = 0;
+ 
++	/* Kill all old instance specific information to make sure
++	 * the card won't use it in the short timeframe between start
++	 * and mac80211 reconfiguring it. */
++	memset(wl->bssid, 0, ETH_ALEN);
++	memset(wl->mac_addr, 0, ETH_ALEN);
++	wl->filter_flags = 0;
++
+ 	/* First register RFkill.
+ 	 * LEDs that are registered later depend on it. */
+ 	b43_rfkill_init(dev);
 
-are triggering.
-
+-- 
