@@ -1,69 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:5235 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760490AbYBYWJj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:09:39 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so977926wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:09:39 -0800 (PST)
-Message-ID: <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com> (sfid-20080225_221017_219564_4818FB4C)
-Date: Mon, 25 Feb 2008 23:09:39 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: chris2553@googlemail.com
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200802252104.32416.chris2553@googlemail.com>
+Received: from mx1.suse.de ([195.135.220.2]:45965 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933614AbYBGUxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 15:53:40 -0500
+Date: Thu, 7 Feb 2008 12:48:07 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, Michael@hera.kernel.org,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Buesch <mb@bu3sch.de>, Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 37/45] b43legacy: fix DMA slot resource leakage
+Message-ID: <20080207204807.GL16389@suse.de> (sfid-20080207_205345_927301_4EEF50F2)
+References: <20080207204118.202098927@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <c6b1100b0802220746s3441d28cj92896618bbb57bde@mail.gmail.com>
-	 <200802222047.52312.IvDoorn@gmail.com>
-	 <200802252104.32416.chris2553@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207204549.GA16389@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
->  > > >  Checking those out is simply a matter of:
->  > > >  git branch 2.0.11 2d68de3efa62655d551092f5c787505735d561ad
->  > > >  git checkout 2.0.11
->  > >
->  > > OK, we seem to be struggling a little, so I've built an installed git
->  > > and cloned Linus' 2.6 tree. My wireless network dies after a few pings
->  > > with rt2x00 2.0.11.
->  > >
->  > > >  No further bisecting is needed, but with above tests I can at least
->  > > >  narrow it down to find the cause of this issue.
->  > >
->  > > If you need me to bisect, just shout. Please be patient though, I'm
->  > > exploring new territory here :-)
->  >
->  > I don't think bisecting this will help a lot, the rt2x00 2.0.11 release
->  > introduced software diversity. And that is already something I suspect
->  > of being broken.
->  >
->   I've bisected anyway and although the results are not absolutely conclusive,
->  as I neared the end of the process, I was amongst a bunch of mac80211
->  patches. This set me on a path that resulted in me discovering that with the
->  rt61pci driver, I can freeze my wireless network connection almost at will if
->  I set mac82011's ieee80211_default_rc_algo parameter to 'pid'. if the
->  parametre is set to 'simple', the network seems to be reliable. I've just let
->  the ping application run on and ping another box on my network almost 1500
->  times whilst repeatedly transferring a kernel source tarball by ftp from
->  another box and the network connection was mantained That's with the
->  parameter set to 'simple', if \I set it to 'pid' the connection rarely
->  survives more than 40 pings even without the ftp activity.
->
->  If I replace my wireless card with one that uses the rtl8180 driver, the
->  network connection seems to be reliable regardless of how I set the
->  parameter, although I admit that i have not tested this extensively yet. I'll
->  do that now and report later.
+------------------
+From: Stefano Brivio <stefano.brivio@polimi.it>
 
-I'm about to send 4 patches to this (linux-wireless) list with patches
-for rt2x00,
-most of them you already tested individually, but several people reported
-success after those patches.
+patch 8dd0100ce9511e52614ecd0a6587c13ce5769c8b in mainline.
 
-Hopefully it will be working for you as well. :)
+This fixes four resource leakages.
+In any error path we must deallocate the DMA frame slots we
+previously allocated by request_slot().
+This is done by storing the ring pointers before doing any ring
+allocation and restoring the old pointers in case of an error.
 
-Ivo
+This patch by Michael Buesch has been ported to b43legacy.
+
+Cc: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/b43legacy/dma.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/b43legacy/dma.c
++++ b/drivers/net/wireless/b43legacy/dma.c
+@@ -1164,7 +1164,7 @@ static int dma_tx_fragment(struct b43leg
+ {
+ 	const struct b43legacy_dma_ops *ops = ring->ops;
+ 	u8 *header;
+-	int slot;
++	int slot, old_top_slot, old_used_slots;
+ 	int err;
+ 	struct b43legacy_dmadesc_generic *desc;
+ 	struct b43legacy_dmadesc_meta *meta;
+@@ -1174,6 +1174,9 @@ static int dma_tx_fragment(struct b43leg
+ #define SLOTS_PER_PACKET  2
+ 	B43legacy_WARN_ON(skb_shinfo(skb)->nr_frags != 0);
+ 
++	old_top_slot = ring->current_slot;
++	old_used_slots = ring->used_slots;
++
+ 	/* Get a slot for the header. */
+ 	slot = request_slot(ring);
+ 	desc = ops->idx2desc(ring, slot, &meta_hdr);
+@@ -1184,8 +1187,11 @@ static int dma_tx_fragment(struct b43leg
+ 	err = b43legacy_generate_txhdr(ring->dev, header,
+ 				 skb->data, skb->len, ctl,
+ 				 generate_cookie(ring, slot));
+-	if (unlikely(err))
++	if (unlikely(err)) {
++		ring->current_slot = old_top_slot;
++		ring->used_slots = old_used_slots;
+ 		return err;
++	}
+ 
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 				       sizeof(struct b43legacy_txhdr_fw3), 1);
+@@ -1208,6 +1214,8 @@ static int dma_tx_fragment(struct b43leg
+ 	if (dma_mapping_error(meta->dmaaddr)) {
+ 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+ 		if (!bounce_skb) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -ENOMEM;
+ 			goto out_unmap_hdr;
+ 		}
+@@ -1218,6 +1226,8 @@ static int dma_tx_fragment(struct b43leg
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 		if (dma_mapping_error(meta->dmaaddr)) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -EIO;
+ 			goto out_free_bounce;
+ 		}
+
+-- 
