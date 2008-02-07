@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:48586 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233AbYBNOfx (ORCPT
+Received: from eazy.amigager.de ([213.239.192.238]:41824 "EHLO
+	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753576AbYBGVpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 09:35:53 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: Suggestions for USB Wi-Fi device
-Date: Thu, 14 Feb 2008 15:35:18 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <47B37DEF.3080107@lwfinger.net> <1202951545.8941.53.camel@dv>
-In-Reply-To: <1202951545.8941.53.camel@dv>
+	Thu, 7 Feb 2008 16:45:39 -0500
+Date: Thu, 7 Feb 2008 22:25:29 +0100
+From: Tino Keitel <tino.keitel@gmx.de>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFT 1/1] single_chip test
+Message-ID: <20080207212529.GA5975@dose.home.local> (sfid-20080207_214543_259267_8FA23CA7)
+References: <20080206014131.9d489a34.akpm@linux-foundation.org> <1202294560-7313-1-git-send-email-jirislaby@gmail.com> <20080206150043.GA6921@nineveh.local> <b6c5339f0802060746m3a5f87edj4465797564430292@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200802141535.19085.mb@bu3sch.de> (sfid-20080214_143558_204258_80200021)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0802060746m3a5f87edj4465797564430292@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 14 February 2008 02:12:25 Pavel Roskin wrote:
-> On Wed, 2008-02-13 at 16:31 -0700, Larry Finger wrote:
-> > The motherboard on my notebook has failed so that my BCM9311 can no longer be accessed. The machine 
-> > is under warranty, but I will be moving around for the next two months and it will not be repaired 
-> > until April. In the interim, I am thinking about acquiring a USB wi-fi device. If you are using such 
-> > a device and it works out-of-the-box on Linux, please send me the make and model. If this model 
-> > comes with different chips, please tell me what I need.
+On Wed, Feb 06, 2008 at 10:46:39 -0500, Bob Copeland wrote:
+> > > We failed to resume after a hardware reset here for a whole second. Is there any
+> > > version of ath5k which worked for you (is this a regression)?
+> >
+> > I cannot speak for Tino, but my ath5k never worked in MacBook -- it
+> > failed the same way, and I believe the hardware was the same.  My
+> > understanding was that it was a known bug with PCIE devices, but I got
+> > that out of reading list archives.
 > 
-> Look for Level One WNC-0301USB.  There are several revisions, but I
-> checked the Windows drivers, and all appear to have corresponding Linux
-> drivers: rt73usb, rt2500usb, rtl8187 and zd1211rw.
+> Nick Kossifidis and I are in the process of debugging this -- we
+> determined that AR5K_RESET_CTL_PCI hangs the card in hw_nic_wakeup.
+> It doesn't look like there is any general support for 5424 cards yet.
 
-If you don't need good monitor-mode capabilities, you can use a zd1211 device
-like the Longshine LCS-8131G3.
-It works pretty good in STA mode. Monitor mode is somewhat broken. It does
-filter some MAC addresses in hardware.
+I tried the patch, and the card was detected. I was able to associate
+with an WPA2 AP and send/receive some traffic. But after a while the
+interface broke:
 
--- 
-Greetings Michael.
+ath0: No ProbeResp from current AP 00:14:bf:16:25:87 - assume out of
+range
+ath5k_hw_get_isr: 0x00000020
+...
+ath0: failed to set channel 165 (5825 MHz) for scan
+ath0: failed to restore operational channel after scan
+printk: 19 messages suppressed.
+ath5k phy0: calibration timeout (2447MHz)
+printk: 1 messages suppressed.
+ath5k phy0: calibration timeout (2447MHz)
+ath5k phy0: unable to reset hardware: -11
+
+Regards,
+Tino
