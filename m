@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.wanadoo.co.uk ([193.252.22.157]:18702 "EHLO
-	smtp2.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759472AbYBUVHt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 16:07:49 -0500
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <1203542195.3240.1.camel@boulder.homenet>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <1203523555.693.2.camel@localhost.localdomain>
-	 <1203539235.3189.4.camel@boulder.homenet>
-	 <200802202150.20303.IvDoorn@gmail.com>
-	 <1203542195.3240.1.camel@boulder.homenet>
+Received: from mx1.redhat.com ([66.187.233.31]:43281 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755258AbYBGQKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 11:10:16 -0500
+Subject: Re: Getting Started
+From: Dan Williams <dcbw@redhat.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	Neshama Parhoti <pneshama@gmail.com>
+In-Reply-To: <40f31dec0802070704o59ca6f48x1ab5481303c60cec@mail.gmail.com>
+References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
+	 <200802071435.17254.hs4233@mail.mn-solutions.de>
+	 <40f31dec0802070704o59ca6f48x1ab5481303c60cec@mail.gmail.com>
 Content-Type: text/plain
-Date: Thu, 21 Feb 2008 21:07:29 +0000
-Message-Id: <1203628049.3277.6.camel@boulder.homenet> (sfid-20080221_210757_425916_60640476)
+Date: Thu, 07 Feb 2008 11:09:56 -0500
+Message-Id: <1202400596.1689.2.camel@localhost.localdomain> (sfid-20080207_161021_701894_6DAADFDC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-02-20 at 21:16 +0000, Chris Vine wrote: 
-> On Wed, 2008-02-20 at 21:50 +0100, Ivo van Doorn wrote:
-> [snip]
-> > On Wednesday 20 February 2008, Chris Vine wrote:
-> > > I did that yesterday and it just reported a kernel panic on the terminal
-> > > with the message:
-> > > 
-> > >   Kernel panic - not syncing: Aiee, killing interrupt handler!
-> > 
-> > I have an idea, could you try below patch?
-> > Note that while applying it will mention something about a line offset, but that can be ignored.
-> > 
-> > This could perhaps also fix the TX/RX issue mentioned earlier in the thread, but I am not
-> > quite sure about that.
+On Thu, 2008-02-07 at 17:04 +0200, Nick Kossifidis wrote:
+> > For example, the openmoko people are writing a mac80211 driver
+> > for ar6k. Not every driver is already in the wireless-2.6 git
+> > tree.
 > 
-> The patch applied OK (with some offsets as you say) but it doesn't help.
-> The kernel panic still occurs when association is attempted.
+> [OT]
+> 
+> As far as i know Atheros released a GPLed driver along with their SDIO stack.
+> http://sourceforge.net/projects/sdio-linux/
+> 
+> Do you have a plan to include this in kernel ? What's the status ?
 
-Here's some further information.
+2.6.24 already has an SDIO stack; hence the Atheros one is redundant.
+The openmoko people already have a port of their ar6k driver to the
+in-kernel SDIO stack.
 
-I have a fully functioning version of rt2x00-2.0.14 and mac80211 from
-wireless-2.6/compat-wireless-2.6 of mid January which works fine on
-kernel 2.6.24.  On doing a comparison with the rt2x00 in vanilla kernel
-2.6.25-rc2, there are no material differences.  (There was a slight
-change in the declaration a variable in rt2x00usb.c but it is
-immaterial.)
-
-I compiled up the working mid-January version of rt2x00 and mac80211
-under kernel 2.6.25-rc2 and I get exactly the same result as I reported
-earlier, namely I get a kernel panic as soon as I try to associate.  It
-looks therefore as if something has changed within the remainder of the
-kernel which has caused rt2x00 (and possibly mac80211?) to break.
-
-This probably explains the problem another user reported with rt61.
-
-Chris
+Dan
 
 
