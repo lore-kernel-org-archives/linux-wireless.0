@@ -1,55 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47044
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1764743AbYB1VaJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 16:30:09 -0500
-Date: Thu, 28 Feb 2008 13:30:08 -0800 (PST)
-Message-Id: <20080228.133008.228590007.davem@davemloft.net> (sfid-20080228_213014_918281_7E9F0C88)
-To: gordonfarquharson@gmail.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-02-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
-References: <20080228014125.GI3078@tuxdriver.com>
-	<20080227.235110.242439399.davem@davemloft.net>
-	<97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([70.61.120.52]:4528 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751142AbYBGQLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 11:11:00 -0500
+Date: Thu, 7 Feb 2008 10:51:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, deller@gmx.de,
+	jt@hpl.hp.com, rjw@sisk.pl, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.arm.linux.org.uk
+Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
+Message-ID: <20080207155152.GA3025@tuxdriver.com> (sfid-20080207_161107_975828_521AAEF9)
+References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org> <200802062150.23930.deller@gmx.de> <20080206130448.564f18bb.akpm@linux-foundation.org> <20080206214747.GG32245@flint.arm.linux.org.uk> <20080206135950.d48ffa36.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080206135950.d48ffa36.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-Date: Thu, 28 Feb 2008 14:21:21 -0700
+On Wed, Feb 06, 2008 at 01:59:50PM -0800, Andrew Morton wrote:
+> On Wed, 6 Feb 2008 21:47:47 +0000
+> Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
 
-> Hi David
+> > I assume that it's the second BUILD_BUG_ON() which is triggering?
 > 
-> On Thu, Feb 28, 2008 at 12:51 AM, David Miller <davem@davemloft.net> wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> >  Date: Wed, 27 Feb 2008 20:41:25 -0500
-> >
-> >
-> >  > Gordon Farquharson (1):
-> >  >       Fix b43 driver build for arm
-> >
-> >  Please revert this change and resend your pull request.
-> >
-> >  If file2alias doesn't work properly in a cross build environment, we
-> >  don't fix it by crapping up mod_devalias.h with these silly align
-> >  attribute annotations.
+> yup.
 > 
-> This was extensively discussed on LKML [1, 2] and the patch has been
-> merged into Andrew Morton's -mm tree. It is understood that this is
-> not the Right Way to fix to problem, hence the big fat comment in the
-> code. It would be great if you could reconsider your decision.
+> > Given that:
+> > 
+> > #define MMW_SIZE        37
+> > 
+> > is not a multiple of sizeof(unsigned long) this is hardly surprising.
+> > 
+> > If structures are used to define a layout of something and must not
+> > contain compiler padding, it must be packed.  Given these structures
+> > contain just unsigned char, there's no concerns about >8bit loads
+> > becoming less efficient.
 
-If you put that thing in there now, on ARM the structure size changes
-as does the alignment of that final member.
+Does a patch like this suffice?  I haven't checked whether such a
+patch implies that the BUILD_BUG_ON()'s become unnecessary...
 
-Then we're stuck with it and you can't remove that hack from
-mod_devalias.h.  It can't be removed even after the cross build issues
-of file2alias are resolved properly without re-breaking ARM.
+Does anyone actually have this hardware to test?
 
-Feel free to push that via Andrew or someone else, but that turd isn't
-going in by my tree because to me it's clearly the wrong thing to do.
+---
+
+From: John W. Linville <linville@tuxdriver.com>
+Subject: [PATCH] wavelan: mark hardware interfacing structures as packed
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/wavelan.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wavelan.h b/drivers/net/wireless/wavelan.h
+index 27172cd..964db3e 100644
+--- a/drivers/net/wireless/wavelan.h
++++ b/drivers/net/wireless/wavelan.h
+@@ -100,7 +100,7 @@ struct ha_t
+ 	unsigned short	ha_piop1;	/* Program I/O Port 1 */
+ 	unsigned short	ha_pior2;	/* Program I/O Address Register Port 2 */
+ 	unsigned short	ha_piop2;	/* Program I/O Port 2 */
+-};
++} __attribute__ ((packed));
+ 
+ #define HA_SIZE		16
+ 
+@@ -202,7 +202,7 @@ struct psa_t
+   unsigned char	psa_conf_status;	/* [0x3C] Conf Status, bit 0=1:config*/
+   unsigned char	psa_crc[2];		/* [0x3D] CRC-16 over PSA */
+   unsigned char	psa_crc_status;		/* [0x3F] CRC Valid Flag */
+-};
++} __attribute__ ((packed));
+ 
+ #define	PSA_SIZE	64
+ 
+@@ -292,7 +292,7 @@ struct mmw_t
+ #define	MMW_EXT_ANT_INTERNAL	0x00	/* Internal antenna */
+ #define	MMW_EXT_ANT_EXTERNAL	0x03	/* External antenna */
+ #define	MMW_EXT_ANT_IQ_TEST	0x1C	/* IQ test pattern (set to 0) */
+-};
++} __attribute__ ((packed));;
+ 
+ #define	MMW_SIZE	37
+ 
+@@ -347,7 +347,7 @@ struct mmr_t
+   unsigned char	mmr_unused4[1];		/* unused */
+   unsigned char	mmr_fee_data_l;		/* Read data from EEPROM (low) */
+   unsigned char	mmr_fee_data_h;		/* Read data from EEPROM (high) */
+-};
++} __attribute__ ((packed));
+ 
+ #define	MMR_SIZE	36
+ 
+-- 
+1.5.3.3
+
+-- 
+John W. Linville
+linville@tuxdriver.com
