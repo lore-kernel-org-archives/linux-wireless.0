@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:33409 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754018AbYB0SdP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 13:33:15 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so4350448wra.23
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 10:33:13 -0800 (PST)
-Subject: Re: [PATCH 06/10] mac80211: RCU-ify STA info structure access
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1204111417.3729.52.camel@johannes.berg>
-References: <20080225152740.360393000@sipsolutions.net>
-	 <20080225153007.340533000@sipsolutions.net>
-	 <1203985337.6929.120.camel@localhost>
-	 (sfid-20080226_002043_615849_4CE09F20)  <1204014238.13162.201.camel@johannes.berg>
-	 <1204054013.6947.18.camel@localhost>
-	 (sfid-20080226_192522_572761_6E5854EC)  <1204111417.3729.52.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 27 Feb 2008 10:34:52 -0800
-Message-Id: <1204137292.7139.1.camel@localhost> (sfid-20080227_183318_823509_F1D4323D)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:60716 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935101AbYBGVQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 16:16:33 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mabbas@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH v2] iwlwifi: earlier rx allocation
+Date: Thu,  7 Feb 2008 13:16:33 -0800
+Message-Id: <1202418993-31737-1-git-send-email-reinette.chatre@intel.com> (sfid-20080207_211701_793885_6CFE9A99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-02-27 at 12:23 +0100, Johannes Berg wrote:
-> Oh. Good point, I missed that one. I suppose that
-> mesh_path_node_reclaim() always runs in a context suitable for doing
-> del_timer_sync() so it should be fine to just do that there, right? I
-> can look into it or leave it to you, just let me know so we don't both
-> do it.
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
-I will take care of it.
+Value of count is used to decide when to replenish rx buffers. If it is
+equal or above 8 we replenish the buffers. Ensure there is no starvation
+by initializing count to 8 - thus forcing replenish at first iteration.
 
+This is helpful when rx receives batches of buffers smaller than 8.
+
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+
+Resending with new patch description.
+
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a846436..24dcf59 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4272,7 +4272,7 @@ static void iwl3945_rx_handle(struct iwl3945_priv *priv)
+ 	int reclaim;
+ 	unsigned long flags;
+ 	u8 fill_rx = 0;
+-	u32 count = 0;
++	u32 count = 8;
+ 
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	 * buffer that the driver may process (last buffer filled by ucode). */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 8fe47ea..a70d26a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4646,7 +4646,7 @@ static void iwl4965_rx_handle(struct iwl4965_priv *priv)
+ 	int reclaim;
+ 	unsigned long flags;
+ 	u8 fill_rx = 0;
+-	u32 count = 0;
++	u32 count = 8;
+ 
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	 * buffer that the driver may process (last buffer filled by ucode). */
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
+1.5.3.4
 
