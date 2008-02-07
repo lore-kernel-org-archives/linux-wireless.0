@@ -1,38 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:39392 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755958AbYBAU2j (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:40718 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754371AbYBGTwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 15:28:39 -0500
-Received: by an-out-0708.google.com with SMTP id d31so305392and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 12:28:36 -0800 (PST)
-Subject: Re: wireless mini-summit agenda proposals?
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1201896674.4188.74.camel@johannes.berg>
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201882577.4188.68.camel@johannes.berg>
-	 <40f31dec0802011107n3389bbc5l2f43be0f6111d222@mail.gmail.com>
-	 (sfid-20080201_190744_758093_9B00D531)  <1201896674.4188.74.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 01 Feb 2008 12:29:33 -0800
-Message-Id: <1201897773.7002.8.camel@localhost> (sfid-20080201_202843_301023_3672236D)
+	Thu, 7 Feb 2008 14:52:50 -0500
+Date: Thu, 7 Feb 2008 19:50:54 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, deller@gmx.de,
+	jt@hpl.hp.com, rjw@sisk.pl, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.arm.linux.org.uk
+Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
+Message-ID: <20080207195054.GG28435@flint.arm.linux.org.uk> (sfid-20080207_195308_235378_B1DA7A42)
+References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org> <200802062150.23930.deller@gmx.de> <20080206130448.564f18bb.akpm@linux-foundation.org> <20080206214747.GG32245@flint.arm.linux.org.uk> <20080206135950.d48ffa36.akpm@linux-foundation.org> <20080207155152.GA3025@tuxdriver.com> <20080207104912.c719deed.akpm@linux-foundation.org> <20080207190842.GC3025@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207190842.GC3025@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-01 at 21:11 +0100, Johannes Berg wrote:
-> There's no 11s support yet, the cozybit guys never came forward with a
-> second patchset after we commented on their first. 11w (encrypted
+On Thu, Feb 07, 2008 at 02:08:42PM -0500, John W. Linville wrote:
+> On Thu, Feb 07, 2008 at 10:49:12AM -0800, Andrew Morton wrote:
+> > On Thu, 7 Feb 2008 10:51:52 -0500 "John W. Linville" <linville@tuxdriver.com> wrote:
+> > 
+> > > On Wed, Feb 06, 2008 at 01:59:50PM -0800, Andrew Morton wrote:
+> > > > On Wed, 6 Feb 2008 21:47:47 +0000
+> > > > Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
+> > > 
+> > > > > I assume that it's the second BUILD_BUG_ON() which is triggering?
+> > > > 
+> > > > yup.
+> > > > 
+> > > > > Given that:
+> > > > > 
+> > > > > #define MMW_SIZE        37
+> > > > > 
+> > > > > is not a multiple of sizeof(unsigned long) this is hardly surprising.
+> > > > > 
+> > > > > If structures are used to define a layout of something and must not
+> > > > > contain compiler padding, it must be packed.  Given these structures
+> > > > > contain just unsigned char, there's no concerns about >8bit loads
+> > > > > becoming less efficient.
+> > > 
+> > > Does a patch like this suffice?  I haven't checked whether such a
+> > > patch implies that the BUILD_BUG_ON()'s become unnecessary...
+> > 
+> > With your patch applied and arm allmodconfig, this
+> > 
+> >         BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
+> > 
+> > triggers
+> > 
+> > Without your patch applied, these two
+> > 
+> >         BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
+> >         BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
+> > 
+> > are triggering.
+> 
+> The ha_t one triggers either way?  Hmmm...
+> 
+> Russell suggested that the ha_t and psa_t packed attributes were
+> unnecessary, so I'll include the reduced version just in case the
+> above is a typo.
 
-We've been a bit busy, with some luck we will send the second patchset
-today.
+Well, I didn't look properly at ha_t and the unions that make it up
+(#$@%@! typedefs.)
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+union hacs_u
+{
+        unsigned short  hu_command;             /* Command register */
+        unsigned short  hu_status;              /* Status Register */
+};
 
-
+This is what needs to be packed, otherwise sizeof() will be 4.  With
+that done, ha_t should come out at 16 bytes.
