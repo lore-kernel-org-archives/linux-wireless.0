@@ -1,54 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:37502 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753863AbYBEBu2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 20:50:28 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Tue, 5 Feb 2008 10:50:21 +0900
-Cc: "Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>
-References: <20080118125252.6455.41047.stgit@one> <200801251701.59629.bruno@thinktube.com> <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com>
-In-Reply-To: <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:38708 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933543AbYBGUxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 15:53:02 -0500
+Date: Thu, 7 Feb 2008 12:47:59 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 34/45] b43legacy: fix PIO crash
+Message-ID: <20080207204759.GI16389@suse.de> (sfid-20080207_205337_007051_1A0AFA28)
+References: <20080207204118.202098927@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802051050.22187.bruno@thinktube.com> (sfid-20080205_015040_785188_92DD0F0A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207204549.GA16389@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 03 February 2008 08:22:12 Luis R. Rodriguez wrote:
-> Sure ACK. Also as was stated, even with IBSS merge functionality
-> working you could up with nodes splitting up due to missing the
-> "leader" beacon due to interference or even strange radio node
-> problems. A solution to this we implemented at Orbit with MadWifi was
-> that instead of generating "random" BSSIDs you'd create one based on
-> the hash of the SSID [1]. This ensures that nodes with identical SSIDs
-> end up with identical BSSIDs, regardless of any strange problems.
-> Technically from what I have gathered this doesn't break the specs but
-> would prevent this split-IBSS problem. I actually like to see this
-> technique added into mac80211 too.
->
-> [1] http://www.orbit-lab.org/wiki/HowTo/bssidFix
+2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-this looks like a good idea to avoid many ibss merge problems, and it could be 
-really useful to have that (maybe as an option?) in mac80211. but unless we 
-have ibss merge functionality you won't be able to join older networks 
-(higher TSF) which don't use that scheme, so we still need that to be able to 
-communicate with other ("standard") drivers.
+------------------
+From: Stefano Brivio <stefano.brivio@polimi.it>
 
-i guess the general question for mac80211 is: do we want and allow more 
-liberal interpretations of the standard concerning IBSS mode or do we 
-strictly stick with the "book"?
+patch 0cd67d48b519c3d8d89d238fab1cf68a5289638a in mainline.
 
-in my opinion these "extensions" are necessary in order to make IBSS mode 
-useful at all and therefore we need them! and as long as they are able to 
-interoperate with other drivers in IBSS mode i don't see a problem.
+Fix the crash reported below, which seems to happen on bcm4306 rev. 2 devices
+only while using PIO:
 
-what's the position of the mac80211 maintainers concerning this? is there any 
-chance of getting these patches merged?
+Oops: 0000 [#1] PREEMPT
+Modules linked in: b43(F) rfkill(F) led_class(F) input_polldev(F) arc4 b43legacy mac80211 cfg80211 i915 drm snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device ohci1394 ieee1394 ssb pcmcia snd_intel8x0m ehci_hcd uhci_hcd evdev
 
-bruno
+Pid: 0, comm: swapper Tainted: GF	(2.6.24st3 #2)
+EIP: 0060:[<f90f667b>] EFLAGS: 00010002 CPU: 0
+EIP is at b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy]
+EAX: 0000049b EBX: f11f8044 ECX: 00000001 EDX: 00000000
+ESI: f1ff8000 EDI: 00000000 EBP: f11f8040 ESP: c04f4ef4
+ DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+Process swapper (pid: 0, ti=c04f4000 task=c0488300 task.ti=c04b8000)
+Stack: f90f2788 c05009f0 c0500900 000010f7 f1053823 c04f4f24 dfb8e800 00000003
+       f1368000 00000007 00000296 f90f1975 00001000 010c0800 01000000 00000007
+       f90f6391 f11f8000 00000082 c04f4f4a 00000000 00004fd0 10f70000 8c061000
+Call Trace:
+ [<f90f2788>] b43legacy_debugfs_log_txstat+0x48/0xb0 [b43legacy]
+ [<f90f1975>] b43legacy_handle_hwtxstatus+0x75/0x80 [b43legacy]
+ [<f90f6391>] b43legacy_pio_rx+0x201/0x280 [b43legacy]
+ [<f90e4fa3>] b43legacy_interrupt_tasklet+0x2e3/0x870 [b43legacy]
+ [<c0123567>] tasklet_action+0x27/0x60
+ [<c01237b4>] __do_softirq+0x54/0xb0
+ [<c010686b>] do_softirq+0x7b/0xe0
+ [<c01457c0>] handle_level_irq+0x0/0x110
+ [<c01457c0>] handle_level_irq+0x0/0x110
+ [<c0123758>] irq_exit+0x38/0x40
+ [<c0106953>] do_IRQ+0x83/0xd0
+ [<c011812f>] __update_rq_clock+0x4f/0x180
+ [<c0104b4f>] common_interrupt+0x23/0x28
+ [<c011007b>] wakeup_code+0x7b/0xde
+ [<c02b1039>] acpi_processor_idle+0x24a/0x3c9
+ [<c01025c7>] cpu_idle+0x47/0x80
+ [<c04b9ad5>] start_kernel+0x205/0x290
+ [<c04b9360>] unknown_bootoption+0x0/0x1f0
+ =======================
+Code: 0f 00 00 81 fb ff 00 00 00 0f 87 36 01 00 00 8d 04 db 85 ff 8d 6c c6 40 8d 5d 04 0f 85 ef 00 00 00 fe 4e 0e 0f b7 46 0c 8b 53 04 <8b> 4a 50 29 c8 83 e8 52 66 89 46 0c 8b 54 24 14 80 7a 0b 00 74
+EIP: [<f90f667b>] b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy] SS:ESP 0068:c04f4ef4
+Kernel panic - not syncing: Fatal exception in interrupt
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/b43legacy/pio.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/drivers/net/wireless/b43legacy/pio.c
++++ b/drivers/net/wireless/b43legacy/pio.c
+@@ -486,6 +486,9 @@ void b43legacy_pio_handle_txstatus(struc
+ 	queue = parse_cookie(dev, status->cookie, &packet);
+ 	B43legacy_WARN_ON(!queue);
+ 
++	if (!packet->skb)
++		return;
++
+ 	queue->tx_devq_packets--;
+ 	queue->tx_devq_used -= (packet->skb->len +
+ 				sizeof(struct b43legacy_txhdr_fw3));
+
+-- 
