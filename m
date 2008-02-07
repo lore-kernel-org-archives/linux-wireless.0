@@ -1,214 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbYBUTWh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 14:22:37 -0500
-Subject: [PATCH v3] mac80211: atomically check whether STA exists already
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203588582.17534.141.camel@johannes.berg> (sfid-20080221_100953_696094_F22A8795)
-References: <1203549853.17534.98.camel@johannes.berg>
-	 (sfid-20080221_092523_845571_EDF31CA1)  <1203588582.17534.141.camel@johannes.berg>
-	 (sfid-20080221_100953_696094_F22A8795)
-Content-Type: text/plain
-Date: Thu, 21 Feb 2008 14:09:30 +0100
-Message-Id: <1203599370.4427.3.camel@johannes.berg> (sfid-20080221_192244_703859_74240E82)
-Mime-Version: 1.0
+Received: from mx2.suse.de ([195.135.220.15]:38689 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933468AbYBGUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2008 15:52:55 -0500
+Date: Thu, 7 Feb 2008 12:47:57 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 33/45] b43: Fix dma-slot resource leakage
+Message-ID: <20080207204757.GH16389@suse.de> (sfid-20080207_205314_698245_3E5D2F5A)
+References: <20080207204118.202098927@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080207204549.GA16389@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: mac80211: atomically check whether STA exists already
+2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-When a STA structure is added, it is often checked whether it
-already exists before adding it. This, however, isn't done
-atomically so there is a race condition that could lead to two
-STA structures being added with the same MAC address. This
-patch changes sta_info_add() to return an ERR_PTR in case
-of failure and adds the failure mode -EEXIST when the STA
-already exists.
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>
+patch 8dd0100ce9511e52614ecd0a6587c13ce5769c8b in mainline.
+
+This fixes four resource leakages.
+In any error path we must deallocate the DMA frame slots we
+previously allocated by request_slot().
+This is done by storing the ring pointers before doing any ring
+allocation and restoring the old pointers in case of an error.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
-Luis, I don't think the check for max # of STA structs is important
-enough to verify, it is only done for IBSS and it can't really
-happen that we add too many because we process incoming packets in
-order. If you get problems with mesh there feel free to add a strict
-check for the maximum number within the locked section in
-sta_info_add().
+ drivers/net/wireless/b43/dma.c |   19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-v2 fixes a small %d vs. %ld warning.
-v3 fixes the crash when a STA isn't found, sorry
-
- net/mac80211/cfg.c           |   11 ++---------
- net/mac80211/ieee80211.c     |    4 ++--
- net/mac80211/ieee80211_sta.c |    6 +++---
- net/mac80211/sta_info.c      |   38 +++++++++++++++++++++++++++-----------
- net/mac80211/sta_info.h      |    4 ++--
- 5 files changed, 36 insertions(+), 27 deletions(-)
-
---- everything.orig/net/mac80211/sta_info.c	2008-02-21 11:04:18.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-21 14:03:49.000000000 +0100
-@@ -55,19 +55,29 @@ static int sta_info_hash_del(struct ieee
- 	return -ENOENT;
- }
- 
--struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr)
-+/* must hold local->sta_lock */
-+static struct sta_info *__sta_info_find(struct ieee80211_local *local,
-+					u8 *addr)
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1106,7 +1106,7 @@ static int dma_tx_fragment(struct b43_dm
  {
- 	struct sta_info *sta;
+ 	const struct b43_dma_ops *ops = ring->ops;
+ 	u8 *header;
+-	int slot;
++	int slot, old_top_slot, old_used_slots;
+ 	int err;
+ 	struct b43_dmadesc_generic *desc;
+ 	struct b43_dmadesc_meta *meta;
+@@ -1116,6 +1116,9 @@ static int dma_tx_fragment(struct b43_dm
+ #define SLOTS_PER_PACKET  2
+ 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
  
--	read_lock_bh(&local->sta_lock);
- 	sta = local->sta_hash[STA_HASH(addr)];
- 	while (sta) {
--		if (memcmp(sta->addr, addr, ETH_ALEN) == 0) {
--			__sta_info_get(sta);
-+		if (compare_ether_addr(sta->addr, addr) == 0)
- 			break;
--		}
- 		sta = sta->hnext;
- 	}
-+	return sta;
-+}
++	old_top_slot = ring->current_slot;
++	old_used_slots = ring->used_slots;
 +
-+struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr)
-+{
-+	struct sta_info *sta;
-+
-+	read_lock_bh(&local->sta_lock);
-+	sta = __sta_info_find(local, addr);
-+	if (sta)
-+		__sta_info_get(sta);
- 	read_unlock_bh(&local->sta_lock);
- 
- 	return sta;
-@@ -110,8 +120,8 @@ void sta_info_put(struct sta_info *sta)
- EXPORT_SYMBOL(sta_info_put);
- 
- 
--struct sta_info * sta_info_add(struct ieee80211_local *local,
--			       struct net_device *dev, u8 *addr, gfp_t gfp)
-+struct sta_info *sta_info_add(struct ieee80211_local *local,
-+			      struct net_device *dev, u8 *addr, gfp_t gfp)
- {
- 	struct sta_info *sta;
- 	int i;
-@@ -119,7 +129,7 @@ struct sta_info * sta_info_add(struct ie
- 
- 	sta = kzalloc(sizeof(*sta), gfp);
- 	if (!sta)
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 
- 	kref_init(&sta->kref);
- 
-@@ -128,7 +138,7 @@ struct sta_info * sta_info_add(struct ie
- 	if (!sta->rate_ctrl_priv) {
- 		rate_control_put(sta->rate_ctrl);
- 		kfree(sta);
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 	}
- 
- 	memcpy(sta->addr, addr, ETH_ALEN);
-@@ -158,9 +168,15 @@ struct sta_info * sta_info_add(struct ie
- 	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
--	__sta_info_get(sta);	/* sta used by caller, decremented by
--				 * sta_info_put() */
- 	write_lock_bh(&local->sta_lock);
-+	/* mark sta as used (by caller) */
-+	__sta_info_get(sta);
-+	/* check if STA exists already */
-+	if (__sta_info_find(local, addr)) {
-+		write_unlock_bh(&local->sta_lock);
-+		sta_info_put(sta);
-+		return ERR_PTR(-EEXIST);
+ 	/* Get a slot for the header. */
+ 	slot = request_slot(ring);
+ 	desc = ops->idx2desc(ring, slot, &meta_hdr);
+@@ -1125,13 +1128,19 @@ static int dma_tx_fragment(struct b43_dm
+ 	err = b43_generate_txhdr(ring->dev, header,
+ 			   skb->data, skb->len, ctl,
+ 			   generate_cookie(ring, slot));
+-	if (unlikely(err))
++	if (unlikely(err)) {
++		ring->current_slot = old_top_slot;
++		ring->used_slots = old_used_slots;
+ 		return err;
 +	}
- 	list_add(&sta->list, &local->sta_list);
- 	local->num_sta++;
- 	sta_info_hash_add(local, sta);
---- everything.orig/net/mac80211/sta_info.h	2008-02-21 11:08:39.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-21 11:08:46.000000000 +0100
-@@ -239,8 +239,8 @@ static inline void __sta_info_get(struct
  
- struct sta_info * sta_info_get(struct ieee80211_local *local, u8 *addr);
- void sta_info_put(struct sta_info *sta);
--struct sta_info * sta_info_add(struct ieee80211_local *local,
--			       struct net_device *dev, u8 *addr, gfp_t gfp);
-+struct sta_info *sta_info_add(struct ieee80211_local *local,
-+			      struct net_device *dev, u8 *addr, gfp_t gfp);
- void sta_info_remove(struct sta_info *sta);
- void sta_info_free(struct sta_info *sta);
- void sta_info_init(struct ieee80211_local *local);
---- everything.orig/net/mac80211/cfg.c	2008-02-21 11:04:29.000000000 +0100
-+++ everything/net/mac80211/cfg.c	2008-02-21 11:08:46.000000000 +0100
-@@ -568,13 +568,6 @@ static int ieee80211_add_station(struct 
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 					   sizeof(struct b43_txhdr_fw4), 1);
+-	if (dma_mapping_error(meta_hdr->dmaaddr))
++	if (dma_mapping_error(meta_hdr->dmaaddr)) {
++		ring->current_slot = old_top_slot;
++		ring->used_slots = old_used_slots;
+ 		return -EIO;
++	}
+ 	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
+ 			     sizeof(struct b43_txhdr_fw4), 1, 0, 0);
  
--	/* XXX: get sta belonging to dev */
--	sta = sta_info_get(local, mac);
--	if (sta) {
--		sta_info_put(sta);
--		return -EEXIST;
--	}
--
- 	if (params->vlan) {
- 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
- 
-@@ -585,8 +578,8 @@ static int ieee80211_add_station(struct 
- 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	sta = sta_info_add(local, dev, mac, GFP_KERNEL);
--	if (!sta)
--		return -ENOMEM;
-+	if (IS_ERR(sta))
-+		return PTR_ERR(sta);
- 
- 	sta->dev = sdata->dev;
- 	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
---- everything.orig/net/mac80211/ieee80211.c	2008-02-21 11:08:39.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-21 14:03:37.000000000 +0100
-@@ -838,8 +838,8 @@ int ieee80211_if_update_wds(struct net_d
- 
- 	/* Create STA entry for the new peer */
- 	sta = sta_info_add(local, dev, remote_addr, GFP_KERNEL);
--	if (!sta)
--		return -ENOMEM;
-+	if (IS_ERR(sta))
-+		return PTR_ERR(sta);
- 
- 	sta->flags |= WLAN_STA_AUTHORIZED;
- 
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-21 11:04:32.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-02-21 11:08:46.000000000 +0100
-@@ -1806,9 +1806,9 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	if (!sta) {
- 		struct ieee80211_sta_bss *bss;
- 		sta = sta_info_add(local, dev, ifsta->bssid, GFP_KERNEL);
--		if (!sta) {
-+		if (IS_ERR(sta)) {
- 			printk(KERN_DEBUG "%s: failed to add STA entry for the"
--			       " AP\n", dev->name);
-+			       " AP (error %ld)\n", dev->name, PTR_ERR(sta));
- 			return;
+@@ -1149,6 +1158,8 @@ static int dma_tx_fragment(struct b43_dm
+ 	if (dma_mapping_error(meta->dmaaddr)) {
+ 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+ 		if (!bounce_skb) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -ENOMEM;
+ 			goto out_unmap_hdr;
  		}
- 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
-@@ -3819,7 +3819,7 @@ struct sta_info * ieee80211_ibss_add_sta
- 	       wiphy_name(local->hw.wiphy), print_mac(mac, addr), dev->name);
- 
- 	sta = sta_info_add(local, dev, addr, GFP_ATOMIC);
--	if (!sta)
-+	if (IS_ERR(sta))
- 		return NULL;
- 
- 	sta->flags |= WLAN_STA_AUTHORIZED;
+@@ -1159,6 +1170,8 @@ static int dma_tx_fragment(struct b43_dm
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 		if (dma_mapping_error(meta->dmaaddr)) {
++			ring->current_slot = old_top_slot;
++			ring->used_slots = old_used_slots;
+ 			err = -EIO;
+ 			goto out_free_bounce;
+ 		}
 
-
+-- 
