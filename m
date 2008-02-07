@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:49775 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758595AbYBAV2p (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:59185 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756047AbYBGPET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 16:28:45 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so912892wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 13:28:44 -0800 (PST)
-Message-ID: <43e72e890802011328l2b5d56eel1f301f7726b0a365@mail.gmail.com> (sfid-20080201_212851_849042_36069C52)
-Date: Fri, 1 Feb 2008 16:28:44 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
-Cc: bruno@thinktube.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	linville@tuxdriver.com, "Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <1201879259.4188.31.camel@johannes.berg>
+	Thu, 7 Feb 2008 10:04:19 -0500
+Received: by an-out-0708.google.com with SMTP id d31so805488and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2008 07:04:18 -0800 (PST)
+Message-ID: <40f31dec0802070704o59ca6f48x1ab5481303c60cec@mail.gmail.com> (sfid-20080207_150423_135089_E9F7E4C7)
+Date: Thu, 7 Feb 2008 17:04:18 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: Getting Started
+Cc: linux-wireless@vger.kernel.org,
+	"Neshama Parhoti" <pneshama@gmail.com>
+In-Reply-To: <200802071435.17254.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20080201012544.GD28995@ruslug.rutgers.edu>
-	 <1201869496.4188.15.camel@johannes.berg>
-	 <43e72e890802010441n4770fe0ag69899a537f551080@mail.gmail.com>
-	 <1201869970.4188.24.camel@johannes.berg>
-	 <43e72e890802010452s510628ear49136748e06fc670@mail.gmail.com>
-	 <1201879259.4188.31.camel@johannes.berg>
+References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
+	 <200802071435.17254.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/1 Johannes Berg <johannes@sipsolutions.net>:
->
-> > > I guess you could add a helper function that allocates a channels array
-> > > based on a frequency range.
-> >
-> > This is true but also it would be nice as it is the end points which
-> > drivers may want
-> > to access every now and then. I think its worth the few bytes.
->
-> I'm not really worried about the space that needs, but I don't see why
-> the wiphy would need that information.
+> For example, the openmoko people are writing a mac80211 driver
+> for ar6k. Not every driver is already in the wireless-2.6 git
+> tree.
 
-Export capabilities to userspace would be the main reason. The bands
-can be iterated but why do iteration when we can just set the upper
-and lower limits?
+[OT]
 
-> Couldn't you keep it in your
-> driver's per-hw structure as it is?
+As far as i know Atheros released a GPLed driver along with their SDIO stack.
+http://sourceforge.net/projects/sdio-linux/
 
-Sure, we could. But it seems it would be nice to have this information
-easily accessible to drivers and to userspace API.
+Do you have a plan to include this in kernel ? What's the status ?
 
-> Would cfg80211 be required to keep
-> them updated according to regulatory rules when the allowed channels
-> change?
-
-Nope, I'm just thinking in terms of "hw support capabilities".
-
-> I'm much more worried about all the code that would result in :)
-
-Yeah, I'm not thinking of it in terms of regulatory now. Just in terms
-of reasonable capability value accessible to drivers and to userspace.
-
-> But since you're not doing that right now anyway I'll just wait and see
-> what you come up with ;)
-
-Hey man, its tough when you have 2 laptops poop out on you in less
-than 2 months... this is my excuse this month. Its a new months so I
-get one.
-
-  Luis
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
