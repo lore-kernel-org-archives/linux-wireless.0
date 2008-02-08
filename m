@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s6.bay0.hotmail.com ([65.54.246.206]:36443 "EHLO
-	bay0-omc3-s6.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754929AbYBBOZc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 09:25:32 -0500
-Message-ID: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl> (sfid-20080202_142537_726375_237DE106)
-From: Adam Turk <bofh1234@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: rt73 driver doesn't work in 2.6.24
-Date: Sat, 2 Feb 2008 09:18:19 -0500
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59477 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753210AbYBHN1m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2008 08:27:42 -0500
+Subject: iwlwifi aggregation support and queues?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7lrGhfTl4tkih7HFexpG"
+Date: Fri, 08 Feb 2008 14:27:25 +0100
+Message-Id: <1202477245.5718.43.camel@johannes.berg> (sfid-20080208_132816_353564_170491F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hello,
+--=-7lrGhfTl4tkih7HFexpG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I was rather pleased to see that my Edimax ew7318usg was supported by mainline.  I created a new config, compiled, (no errors), and rebooted with the wireless card plugged in and I get errors on module load. Here is the output from dmesg:
+Hi,
 
-rt73usb 1-1:1.0: usb_probe_interface
-rt73usb 1-1:1.0: usb_probe_interface - got id
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x0000
-phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
-phy0: Selected rate control algorithm 'simple'
-phy0: Failed to initialize wep
-phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-rt73usb: probe of 1-1:1.0 failed with error -12
-usbcore: registered new interface driver rt73usb
+I just found that iwlwifi has its own queue allocation scheme
+(iwl4965_txq_ctx_activate_free) when mac80211 already takes care of
+that. Why, and why did you add code for that to mac80211 at all then?
 
-What do I need to do to get a working rt73usb driver?
-Thanks,
-Adam
-_________________________________________________________________
-Shed those extra pounds with MSN and The Biggest Loser!
-http://biggestloser.msn.com/
+johannes
+
+--=-7lrGhfTl4tkih7HFexpG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR6xYvKVg1VMiehFYAQIgdA/+IM60fJ+8VqQ8mon5l4/h06wEEhQh02sb
+xeinztU3DPjonfjMrPNlnKhEYNdiqtC8DDcB7rlcHQX9sdMTdYGgnm2sEpPaUY+3
+r0xSGRgzrF3PXfCywM28W4zKK8qnxLOaluGcTFFz4DlBdtQrS0sFjIdxgOh8ZSCG
+kG/YsDWkGucPSngx+nF8uZVQAIlkYSOKm06wPFSZ1CyEnnq9Np4bD69WozZZrkEq
+ZQPp3tSvxjITfqDEo9v9FnZilObBT11L1aDl/sFKk4AKd12cIoKW6/kWt741+2UO
+MCb8mf8mSffwawy7Wq+C9ub5zB2yW3fUDO+py/gqiELE6mxFOGaTX3TJwd9U1s18
+AifJeRHmkZW0XTRYxRXZcTEobIyPA01m2qExKUMbJy2MWRkiCFqDuJ/40WnCubZ+
+GUc2JqWDQ2gMi6PwYm6y7J7fkGlm+vQKRhUBsRMamSFucFEgtSM6nsmmA8iK8jIY
+qWvLMDxWfCqkIq3lgYw4afyjSt0xi81dKXGl1gc/GVdOECspC/szxI4pjiAXYy5d
+7bcZQXGu+l9wdTBxgFY3BlAUPXIIzzNiOsD5E1pDGvxwG2JEH0kI6fS9FNKUgiUT
+k9x14+aBLJu1wBOh2BlnNtO5+Jje1U0pEouKwtDwKJFOz1b4nXw7qNanfmUBpG5B
+jmoOMu3trBo=
+=6BDs
+-----END PGP SIGNATURE-----
+
+--=-7lrGhfTl4tkih7HFexpG--
+
