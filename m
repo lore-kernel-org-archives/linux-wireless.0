@@ -1,67 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59936 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755389AbYBAMRe (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:36826 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753376AbYBHHue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:17:34 -0500
-Subject: Re: IEEE80211_TXCTL_SEND_AFTER_DTIM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200801312304.58587.IvDoorn@gmail.com> (sfid-20080131_220524_058867_0B78C95A)
-References: <200801312304.58587.IvDoorn@gmail.com>
-	 (sfid-20080131_220524_058867_0B78C95A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CegAVO1nU1rvIRYxu2kX"
-Date: Fri, 01 Feb 2008 13:17:29 +0100
-Message-Id: <1201868249.4188.9.camel@johannes.berg> (sfid-20080201_121746_595242_3AA81586)
-Mime-Version: 1.0
+	Fri, 8 Feb 2008 02:50:34 -0500
+Date: Fri, 8 Feb 2008 08:50:27 +0100
+From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+Subject: Re: ipw2200 stalls on high load
+Message-ID: <20080208075027.GA30283@Chamillionaire.breakpoint.cc> (sfid-20080208_075041_584402_291906E3)
+References: <20080130225738.GB2648@Chamillionaire.breakpoint.cc> <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com> <1202128649.10632.4.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com> <20080204224502.GA22717@Chamillionaire.breakpoint.cc> <1202167450.5190.2.camel@localhost.localdomain> <20080205083511.GA28623@Chamillionaire.breakpoint.cc> <1202224154.1243.7.camel@localhost.localdomain> <20080205235344.GA2507@Chamillionaire.breakpoint.cc> <1202273807.9259.0.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1202273807.9259.0.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+* Dan Williams | 2008-02-05 23:56:47 [-0500]:
 
---=-CegAVO1nU1rvIRYxu2kX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>Ok, I'll prepare a final patch then.
+Okey, thanks for working on that.
 
+>Thanks,
+>Dan
 
-On Thu, 2008-01-31 at 23:04 +0100, Ivo van Doorn wrote:
-> Hi Johannes,
->=20
-> I have overlooked the following patch when you submitted it to this list:
-> 	mac80211: allow easier multicast/broadcast buffering in hardware
->=20
-> But I have a question about it, the flag IEEE80211_TXCTL_SEND_AFTER_DTIM
-> indicates that the frame should be send after the beacon because of PS bu=
-ffering,
-> but doesn't that mean the same thing as using the queue id:
-> 	IEEE80211_TX_QUEUE_AFTER_BEACON
-
-Well, that queue isn't used in mac80211... I am not familiar enough with
-the qos code yet to say for sure what the problem is.
-
-johannes
-
---=-CegAVO1nU1rvIRYxu2kX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6MN2KVg1VMiehFYAQIJHA//SSbjIRe64Nhu3BVJgYd9vDRTMyaAUzin
-4ZgwziU8CmU1sifx4f7i7rznl1zIzysclJ9+xfDWn9j4ur9s2RjmJ94Uu4IBYEG7
-oaZ/cKI+0jqft91aNt5L1wo3FN2xefKmCG/fTeLGfftfQgDdKdv3UPG6bmTxtEYN
-MMAkMWEzKbwnnt03CiVGW8gQhLTOUTmQJMuoXiIA1wjw5rgTCr7QChRkP00I/ItE
-6EYvXmUvvRzigJph2XBnuU4ggslvVg87hoBARdiYw7bzF/PESMJyp9kZhHG3iB0/
-wCEGIiPk6q8ojVpTRvE8TlSJ1+unpXWVXPVKH6Y+lEDZwfXMaJlhz3D0EB92pyAn
-bqtITarJkHxmeqXXuGp6pe8eoQixsHKcbcm0xoFmQoH2hUiU54CdUonfU6jU7bBs
-7YGywCXhcYlhgb82zjBnEAvnTQ+n0nHMFByFaS9YTHewB++UtCcaL8ySfNujwwi0
-EghQhZwPhrNzsOSW3qI37ZznJq1kJQRH84OzBSauwvrg+S+bGkIgxyv8Bt5/W756
-NCaQ0hLxIPk7YGKnWT3e45Bo6XprKTNLxQcYBqYJ+2yWmQBujpzs1sjqwHR16TKy
-REKq1zvli+UO/wISAZ1TmBlJvspZo4VWooDokUVjOFIIBX7BHRnc3W8bqKIyeJNE
-DSdzBjgGuoU=
-=ZOsl
------END PGP SIGNATURE-----
-
---=-CegAVO1nU1rvIRYxu2kX--
-
+Sebastian
