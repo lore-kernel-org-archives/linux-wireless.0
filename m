@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:55824 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757668AbYBICQ4 (ORCPT
+Received: from eazy.amigager.de ([213.239.192.238]:60781 "EHLO
+	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757895AbYBHH2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 21:16:56 -0500
-Received: by py-out-1112.google.com with SMTP id u52so5766183pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 18:16:55 -0800 (PST)
-Subject: Re: [PATCH 07/13] o11s: support for mesh interfaces in mac80211
-	data path
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202345620.9965.80.camel@johannes.berg>
-References: <47a78281.03b48c0a.7362.5d39@mx.google.com>
-	 (sfid-20080204_212421_865811_21908028)  <1202345620.9965.80.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 08 Feb 2008 18:18:01 -0800
-Message-Id: <1202523481.7025.76.camel@localhost> (sfid-20080209_021707_805635_50D9A27C)
-Mime-Version: 1.0
+	Fri, 8 Feb 2008 02:28:36 -0500
+Date: Fri, 8 Feb 2008 08:28:34 +0100
+From: Tino Keitel <tino.keitel@gmx.de>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-kernel@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [RFT 1/1] single_chip test
+Message-ID: <20080208072834.GA19698@dose.home.local> (sfid-20080208_072843_071445_FADAB19E)
+References: <20080206014131.9d489a34.akpm@linux-foundation.org> <1202294560-7313-1-git-send-email-jirislaby@gmail.com> <20080206150043.GA6921@nineveh.local> <b6c5339f0802060746m3a5f87edj4465797564430292@mail.gmail.com> <20080207212529.GA5975@dose.home.local> <47AB7D48.2020805@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47AB7D48.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Feb 07, 2008 at 22:51:04 +0100, Jiri Slaby wrote:
 
-On Thu, 2008-02-07 at 01:53 +0100, Johannes Berg wrote:
-> > +	if (rx->sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
-> > +		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) {
-> > +			if (!((rx->fc & IEEE80211_FCTL_FROMDS) &&
-> > +					(rx->fc & IEEE80211_FCTL_TODS)))
-> 
-> It'd be shorter to write
-> 
-> 	if (rx->fc ^ (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS))
-> 
-> but I'm not sure that's easier to understand ;)
+[...]
 
-Would that work? For data frames rx->fc is 0xYY08 (with YY being the
-flags, including fromDS/toDS), so they would always evaluate to true in
-that if, regardless of the flags.
+> What's the srev a phy ver printed few lines above this, please?
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+ath5k_pci 0000:02:00.0: registered as 'phy0'
+SINGLE: 1, srev: a3, phy:
+phy0: Selected rate control algorithm 'pid'
+ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
 
-
+Regards,
+Tino
