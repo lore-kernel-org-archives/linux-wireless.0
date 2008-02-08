@@ -1,170 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:39654 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbYB2ACb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 19:02:31 -0500
-Date: Thu, 28 Feb 2008 19:02:26 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, bruno@thinktube.com, me@bobcopeland.com
-Subject: Re: [PATCH 7/8] ath5k: Minor code review to match regdumps
-Message-ID: <20080229000226.GN28995@ruslug.rutgers.edu> (sfid-20080229_000234_400054_5C94C4B3)
-References: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu> <3d16ff86ebf71f749d3cc0b4219ebe89c0e4585d.1204236793.git.mcgrof@winlab.rutgers.edu> <20080228234058.GA3396@infradead.org> <43e72e890802281558h2566fbcdxac56ec77918308c3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890802281558h2566fbcdxac56ec77918308c3@mail.gmail.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:51167 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933157AbYBHFdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2008 00:33:08 -0500
+Date: Fri, 8 Feb 2008 06:31:10 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH 1/4] b43legacy: add definitions for MAC control register
+Message-ID: <20080208063110.19abd0e6@morte> (sfid-20080208_053339_531486_0D97A873)
+In-Reply-To: <20080208051650.372197299@polimi.it>
+References: <20080208051650.372197299@polimi.it>>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thu, Feb 28, 2008 at 06:00:24PM -0500, Christoph Hellwig wrote:
->  >  /*
->  > + * ath5k_hw_reset_ar5212 - reset helper for ar5212
->  > + *
->  > + * @ah: the &struct ath5k_hw
->  > + * @channel: the &ieee80211_channel
->  > + *
->  > + * This is a helper to ath5k_hw_reset() for AR5212.
->  > + */
->  > +static inline void ath5k_hw_reset_init_ar5212(struct ath5k_hw *ah,
->  > +     struct ieee80211_channel *channel)
-> 
->  s/inline // please
+This adds some definitions for the MAC control register and uses them. This is
+basically no functional change.
 
-Sure, here it is.
+The patch by Michael Buesch has been ported to b43legacy.
 
-Make some changes which mimic what we see in register dumps. Also,
-lets move ar5212 initial settings out into a helper during reset
-to make code more readible.
-
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 ---
- drivers/net/wireless/ath5k/hw.c |   66 +++++++++++++++++++++++++++++---------
- 1 files changed, 50 insertions(+), 16 deletions(-)
+Index: wireless-2.6/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-2.6/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -195,6 +195,13 @@
+ #define B43legacy_MACCTL_TBTTHOLD	0x10000000 /* TBTT Hold */
+ #define B43legacy_MACCTL_GMODE		0x80000000 /* G Mode */
 
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 6f69e46..b8e412c 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -589,6 +589,38 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
++/* MAC Command bitfield */
++#define B43legacy_MACCMD_BEACON0_VALID	0x00000001 /* Beacon 0 in template RAM is busy/valid */
++#define B43legacy_MACCMD_BEACON1_VALID	0x00000002 /* Beacon 1 in template RAM is busy/valid */
++#define B43legacy_MACCMD_DFQ_VALID	0x00000004 /* Directed frame queue valid (IBSS PS mode, ATIM) */
++#define B43legacy_MACCMD_CCA		0x00000008 /* Clear channel assessment */
++#define B43legacy_MACCMD_BGNOISE	0x00000010 /* Background noise */
++
+ /* 802.11 core specific TM State Low flags */
+ #define B43legacy_TMSLOW_GMODE		0x20000000 /* G Mode Enable */
+ #define B43legacy_TMSLOW_PLLREFSEL	0x00200000 /* PLL Freq Ref Select */
+@@ -641,7 +648,7 @@ struct b43legacy_wldev {
+
+ 	bool __using_pio;	/* Using pio rather than dma. */
+ 	bool bad_frames_preempt;/* Use "Bad Frames Preemption". */
+-	bool reg124_set_0x4;	/* Variable to keep track of IRQ. */
++	bool dfq_valid;		/* Directed frame queue valid (IBSS PS mode, ATIM). */
+ 	bool short_preamble;	/* TRUE if using short preamble. */
+ 	bool short_slot;	/* TRUE if using short slot timing. */
+ 	bool radio_hw_enable;	/* State of radio hardware enable bit. */
+Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -803,9 +803,8 @@ static void b43legacy_generate_noise_sam
+ {
+ 	b43legacy_jssi_write(dev, 0x7F7F7F7F);
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCMD,
+-			  b43legacy_read32(dev,
+-			  B43legacy_MMIO_MACCMD)
+-			  | (1 << 4));
++			  b43legacy_read32(dev, B43legacy_MMIO_MACCMD)
++			  | B43legacy_MACCMD_BGNOISE);
+ 	B43legacy_WARN_ON(dev->noisecalc.channel_at_start !=
+ 			    dev->phy.channel);
  }
- 
- /*
-+ * ath5k_hw_reset_ar5212 - reset helper for ar5212
-+ *
-+ * @ah: the &struct ath5k_hw
-+ * @channel: the &ieee80211_channel
-+ *
-+ * This is a helper to ath5k_hw_reset() for AR5212.
-+ */
-+static void ath5k_hw_reset_init_ar5212(struct ath5k_hw *ah,
-+	struct ieee80211_channel *channel)
-+{
-+	ath5k_hw_reg_write(ah, 0x0002a002, AR5K_PHY(11));
-+
-+	if ((channel->hw_value & CHANNEL_MODES) == CHANNEL_G) {
-+		if (ah->ah_mac_srev < AR5K_SREV_VER_AR2413)
-+			ath5k_hw_reg_write(ah, 0x00f80d80, AR5K_PHY(83));
-+		else if (ah->ah_mac_srev < AR5K_SREV_VER_AR2424)
-+			ath5k_hw_reg_write(ah, 0x00380140, AR5K_PHY(83));
-+		else if (ah->ah_mac_srev < AR5K_SREV_VER_AR2425)
-+			ath5k_hw_reg_write(ah, 0x00fc0ec0, AR5K_PHY(83));
-+		else
-+			/* 2425 */
-+			ath5k_hw_reg_write(ah, 0x00fc0fc0, AR5K_PHY(83));
-+	} else
-+		ath5k_hw_reg_write(ah, 0x00000000, AR5K_PHY(83));
-+
-+	ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
-+	ath5k_hw_reg_write(ah, 0x0000000f, 0x8060);
-+	ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
-+	ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
-+}
-+
-+/*
-  * Main reset function
-  */
- int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
-@@ -724,20 +756,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		/*
- 		 * Write some more initial register settings
- 		 */
--		if (ah->ah_version > AR5K_AR5211){ /* found on 5213+ */
--			ath5k_hw_reg_write(ah, 0x0002a002, AR5K_PHY(11));
--
--			if (channel->hw_value == CHANNEL_G)
--				ath5k_hw_reg_write(ah, 0x00f80d80, AR5K_PHY(83)); /* 0x00fc0ec0 */
--			else
--				ath5k_hw_reg_write(ah, 0x00000000, AR5K_PHY(83));
--
--			ath5k_hw_reg_write(ah, 0x000001b5, 0xa228); /* 0x000009b5 */
--			ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
--			ath5k_hw_reg_write(ah, 0x0000000f, 0x8060);
--			ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
--			ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
--		}
-+		if (ah->ah_version == AR5K_AR5212)
-+			ath5k_hw_reset_init_ar5212(ah, channel);
- 
- 		/* Fix for first revision of the RF5112 RF chipset */
- 		if (ah->ah_radio >= AR5K_RF5112 &&
-@@ -1015,6 +1035,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 	/*
- 	 * Set the 32MHz reference clock on 5212 phy clock sleep register
-+	 *
-+	 * TODO: Find out how to switch to external 32Khz clock to save power
- 	 */
- 	if (ah->ah_version == AR5K_AR5212) {
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCR_32MHZ, AR5K_PHY_SCR);
-@@ -1025,6 +1047,14 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
+@@ -894,18 +893,18 @@ static void handle_irq_tbtt_indication(s
+ 		if (1/*FIXME: the last PSpoll frame was sent successfully */)
+ 			b43legacy_power_saving_ctl_bits(dev, -1, -1);
  	}
- 
-+	if (ah->ah_version == AR5K_AR5212) {
-+		ath5k_hw_reg_write(ah, 0x000100aa, 0x8118);
-+		ath5k_hw_reg_write(ah, 0x00003210, 0x811c);
-+		ath5k_hw_reg_write(ah, 0x00000052, 0x8108);
-+		if (ah->ah_mac_srev >= AR5K_SREV_VER_AR2413)
-+			ath5k_hw_reg_write(ah, 0x00000004, 0x8120);
+-	dev->reg124_set_0x4 = 0;
+ 	if (b43legacy_is_mode(dev->wl, IEEE80211_IF_TYPE_IBSS))
+-		dev->reg124_set_0x4 = 1;
++		dev->dfq_valid = 1;
+ }
+
+ static void handle_irq_atim_end(struct b43legacy_wldev *dev)
+ {
+-	if (!dev->reg124_set_0x4) /*FIXME rename this variable*/
+-		return;
+-	b43legacy_write32(dev, B43legacy_MMIO_MACCMD,
+-			  b43legacy_read32(dev, B43legacy_MMIO_MACCMD)
+-			  | 0x4);
++	if (dev->dfq_valid) {
++		b43legacy_write32(dev, B43legacy_MMIO_MACCMD,
++				  b43legacy_read32(dev, B43legacy_MMIO_MACCMD)
++				  | B43legacy_MACCMD_DFQ_VALID);
++		dev->dfq_valid = 0;
 +	}
-+
- 	/*
- 	 * Disable beacons and reset the register
- 	 */
-@@ -2269,8 +2299,8 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah, const u8 *bssid, u16 assoc_id)
- 	 * Set simple BSSID mask on 5212
- 	 */
- 	if (ah->ah_version == AR5K_AR5212) {
--		ath5k_hw_reg_write(ah, 0xfffffff, AR5K_BSS_IDM0);
--		ath5k_hw_reg_write(ah, 0xfffffff, AR5K_BSS_IDM1);
-+		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_BSS_IDM0);
-+		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_BSS_IDM1);
- 	}
- 
- 	/*
-@@ -2415,6 +2445,8 @@ void ath5k_hw_start_rx_pcu(struct ath5k_hw *ah)
- {
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_DISABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
-+
-+	/* TODO: ANI Support */
  }
- 
- /*
-@@ -2424,6 +2456,8 @@ void ath5k_hw_stop_pcu_recv(struct ath5k_hw *ah)
- {
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_ENABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
-+
-+	/* TODO: ANI Support */
- }
- 
- /*
--- 
-1.5.3.7
 
+ static void handle_irq_pmq(struct b43legacy_wldev *dev)
+@@ -1105,7 +1104,7 @@ static int b43legacy_refresh_cached_beac
+
+ static void b43legacy_update_templates(struct b43legacy_wldev *dev)
+ {
+-	u32 status;
++	u32 cmd;
+
+ 	B43legacy_WARN_ON(!dev->cached_beacon);
+
+@@ -1116,9 +1115,9 @@ static void b43legacy_update_templates(s
+ 	b43legacy_write_probe_resp_template(dev, 0x268, 0x4A,
+ 					    &b43legacy_b_ratetable[0]);
+
+-	status = b43legacy_read32(dev, B43legacy_MMIO_MACCMD);
+-	status |= 0x03;
+-	b43legacy_write32(dev, B43legacy_MMIO_MACCMD, status);
++	cmd = b43legacy_read32(dev, B43legacy_MMIO_MACCMD);
++	cmd |= B43legacy_MACCMD_BEACON0_VALID | B43legacy_MACCMD_BEACON1_VALID;
++	b43legacy_write32(dev, B43legacy_MMIO_MACCMD, cmd);
+ }
+
+ static void b43legacy_refresh_templates(struct b43legacy_wldev *dev,
+@@ -2925,7 +2924,7 @@ static void setup_struct_phy_for_init(st
+ static void setup_struct_wldev_for_init(struct b43legacy_wldev *dev)
+ {
+ 	/* Flags */
+-	dev->reg124_set_0x4 = 0;
++	dev->dfq_valid = 0;
+
+ 	/* Stats */
+ 	memset(&dev->stats, 0, sizeof(dev->stats));
+
+-- 
+Ciao
+Stefano
