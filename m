@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbYBKMWs (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:4361 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662AbYBHJWx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 07:22:48 -0500
-Subject: Re: [PATCH 05/13] o11s: added mesh.h, mesh function and data
-	structures definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a78274.12025a0a.0fb8.67db@mx.google.com> (sfid-20080204_212415_776178_13DE2F2C)
-References: <47a78274.12025a0a.0fb8.67db@mx.google.com>
-	 (sfid-20080204_212415_776178_13DE2F2C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/854zlAdLO1aIBAboLRF"
-Date: Mon, 11 Feb 2008 09:25:15 +0100
-Message-Id: <1202718315.11481.22.camel@johannes.berg> (sfid-20080211_122251_323768_11A4EF0C)
-Mime-Version: 1.0
+	Fri, 8 Feb 2008 04:22:53 -0500
+Received: by py-out-1112.google.com with SMTP id u52so5389995pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 01:22:53 -0800 (PST)
+Message-ID: <43e72e890802080122x67a1fed1s7e6193eea0559f16@mail.gmail.com> (sfid-20080208_092306_794389_16EDF840)
+Date: Fri, 8 Feb 2008 04:22:52 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"bruno randolf" <bruno@thinktube.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
+	"Ivan Seskar" <Seskar@winlab.rutgers.edu>
+In-Reply-To: <20080207035813.GX1261@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080118125252.6455.41047.stgit@one>
+	 <200801241226.28394.bruno@thinktube.com>
+	 <1201193704.3454.137.camel@johannes.berg>
+	 <200801251701.59629.bruno@thinktube.com>
+	 <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com>
+	 <20080206043451.GT1261@jm.kir.nu>
+	 <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com>
+	 <20080206201035.GA3229@tuxdriver.com>
+	 <20080207035813.GX1261@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Feb 6, 2008 10:58 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Feb 06, 2008 at 03:10:35PM -0500, John W. Linville wrote:
+>
+> > FWIW, that wouldn't be the first time we (i.e. Linux) chose to do
+> > something that did not completely comply with a standard.  If it
+> > interoperates with other equipment and is good for users, I don't
+> > think picky standard compliance is worthwhile.
+>
+> Sure, there are cases where this is reasonable.
+>
+> > Please note that I am not really taking a stand in favor of this ATM,
+> > only asserting that blind standard compliance is not a good reason
+> > to NAK it IMHO.
+>
+> In this case, standard compliance is certainly not the only concern I
+> have. I'm worried about interoperability with non-mac80211
+> implementations. If mac80211 were to hardcoded the BSSID for IBSS and
+> refuse to change it no matter what (i.e., behave against the IEEE 802.11
+> standard), IBSS would not interoperate with any other implementation if
+> the other implementation happens to be the creator of the IBSS..
 
---=-/854zlAdLO1aIBAboLRF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+OK so you're saying that some people might actually expect that when
+using the same SSID and same channel in close vicinity they'd get
+separate BSSIDs generated? If so I don't see why people would expect
+this functionality as a feature, I think this is more of a problem
+than an expected result of how the standard is designed.
 
+> Same issues shows up (but in somewhat less frequent form) in an IBSS
+> splitting up and re-joining. In order to allow the STAs using other
+> implementation (no BSSID hacks) to join the IBSS, mac80211 will need to
+> be prepared to change the BSSID (or use some much more questionable
+> hacks to make sure it is always the mac80211-STA that wins in the
+> selection of which BSSID will survive.. ;-).
 
-> +struct ieee80211s_hdr {
-> +	u8 flags;
-> +	u8 ttl;
-> +	u8 seqnum[3];
-> +	u8 eaddr1[6];
-> +	u8 eaddr2[6];
-> +	u8 eaddr3[6];
-> +} __attribute__ ((packed));
+How would the IBSS be split up to generate a new BSSID? If you are
+part of an IBSS and you don't see anyone generate a beacon between the
+random backoff time you simply generate it, but the BSSID would still
+be the same.
 
-Btw, why not add this to include/linux/ieee80211.h?
-
-johannes
-
---=-/854zlAdLO1aIBAboLRF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7AGaqVg1VMiehFYAQL/dQ/+JwXFB33I57zpprqMAaKlcP8b27rLONWi
-5Zigh70a8AO89SFIS/UHR5eIuwVOgNTiVDSCiQC4WqyYfQrcVeZn1X4J76Vri69A
-lKH7xJeeOgg4fwtEq2oiXH1l/5+1t5JUIqjHhF+0w74IFq+EZD4dNI5JnL9IHVhy
-Whkj6A6KgltRc/dbgyelbAuNpUA/GjfPh4ylPjUHHNsOLowSIFDNAQojqMMCbyJr
-DwnCHhoWq3Lf4S1bpL866ufLuWen1jIZ8ys5Gl0qtbIIZcdbm3oqkxFBXEuKJYxo
-tcaMhXhbBY3iPGtPISJTz9Ln2uec2HdCRc0ZZoz9D1teGrIhqGSWD25tilweP8rT
-Nn12AhoMfgCV/7Ng+A++UtNJxVkDfhfaBKruTEqUqczetI9sI7L+0w5hJ6a7wlpT
-wkkGSq1HyHNNJZwdIi51ubV5eprufI0pcJOIKmrFWZ7k7jblw7XmpARJX1DSo6uZ
-/ue0po1gImhmoPXxIm24u1FztSwSrSAWtw8QjpcnaS0OuQji2aazNm/T3j7Rwlor
-IOsrhKFQYD6RW9+10unZcPSxZlJfo8RTqIYKVICpRskiwWT63qG7KEtGsZyU+/Xj
-b6y6VOJ372OCA2Z/FYa8Hca+6bfd6EZ+xkyDsQLS4h1t+5MwQftyVbI5SCP0KYbt
-be6pp7/3ILo=
-=L542
------END PGP SIGNATURE-----
-
---=-/854zlAdLO1aIBAboLRF--
-
+  Luis
