@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52352
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752414AbYBUGOd (ORCPT
+Received: from mail.syneticon.net ([213.239.212.131]:33601 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbYBHXdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 01:14:33 -0500
-Date: Wed, 20 Feb 2008 22:15:10 -0800 (PST)
-Message-Id: <20080220.221510.28377813.davem@davemloft.net> (sfid-20080221_061437_129979_BFA1DA21)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-02-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080221021132.GF3825@tuxdriver.com>
-References: <20080221021132.GF3825@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 8 Feb 2008 18:33:52 -0500
+Message-ID: <47ACE6DA.30001@wpkg.org> (sfid-20080208_233357_058797_C2919D42)
+Date: Sat, 09 Feb 2008 00:33:46 +0100
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: prism54: Out of memory, cannot handle oid, card/socket may be
+ faulty, or IRQ line too busy
+References: <47ACD136.4030705@wpkg.org> <20080208221009.GA2919@tuxdriver.com>
+In-Reply-To: <20080208221009.GA2919@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 20 Feb 2008 21:11:32 -0500
+John W. Linville schrieb:
+> On Fri, Feb 08, 2008 at 11:01:26PM +0100, Tomasz Chmielewski wrote:
+>> I just wanted to use a mini-PCI card using a prism54 module - however, it 
+>> fails to bring the interface up with "Out of memory, cannot handle oid" and 
+>> "Your card/socket may be faulty, or IRQ line too busy" messages.
+> 
+> I vaguely recall seeing an error like that when I used the wrong
+> firmware.  What firmware are you using?
 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+As specified here:
 
-Pulled and pushed back out, thanks John.
+http://prism54.org/fullmac.html
+Only PCI cards with an ISL3877, ISL3880 and ISL3890 work -> I used 
+Version 1.0.4.3 (for ISL3880 and ISL3890)
 
->       ssb: Fix the GPIO API
 
-This could have had a much better changelog, it's way too terse.
+My card is:
 
-For example, what was so unusable about the interface beforehand that
-absolutely requires it be changed in order to subsequently fix bugs?
+Intersil Corporation ISL3890 [Prism GT/Prism Duette]/ISL3886
 
-The changelog doesn't go into any detail at all.
 
-Thanks.
+Is it ISL3890 or ISL3886?
+
+Maybe I should use "Version 2.7.0.0 for PCI devices" firmware?
+
+Will check tomorrow.
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
