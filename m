@@ -1,71 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunatiki.de ([85.214.70.22]:49204 "EHLO
-	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755370AbYBOCFl (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:2564 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759966AbYBHEfL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 21:05:41 -0500
-From: Patrick Grimm <patrick@lunatiki.de>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-Date: Fri, 15 Feb 2008 02:29:09 +0100
+	Thu, 7 Feb 2008 23:35:11 -0500
+Message-ID: <20080207233510.cyfxcv1y8g4gg48w@webmail.spamcop.net> (sfid-20080208_043517_491730_4F9F68A4)
+Date: Thu, 07 Feb 2008 23:35:10 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Andrew Lunn <andrew.lunn@ascom.ch>
 Cc: linux-wireless@vger.kernel.org
-References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com>
+Subject: Re: B43 not seeing MadWifi AP
+References: <20080206095908.GU25912@donkey.ma.tech.ascom.ch>
+	<1202321870.9673.9.camel@dv>
+	<20080206185330.GB28210@donkey.ma.tech.ascom.ch>
+In-Reply-To: <20080206185330.GB28210@donkey.ma.tech.ascom.ch>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802150229.09602.patrick@lunatiki.de> (sfid-20080215_020545_865053_2057C305)
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 15. Februar 2008 01:21:15 schrieb Chatre, Reinette:
-> On , Chatre, Reinette  wrote:
-> > On Thursday, February 14, 2008 3:40 PM, Patrick Grimm  wrote:
-> >> For me not.
-> >> I use 3945ABG card in an ad-hoc network with 4 other wlan devices
-> >> like rt2500 and ath5k. I have applied your
-> >> 0001-iwlwifi-only-check-for-association-id-when-associat.patch
-> >> patch. But i can't see incoming packets witch tcpdump.
-> >> I have try to commet out  the check for associat with the same
-> >> result.
-> >>
-> >> dmesg
-> >> iwl3945: I iwl3945_rx_handle r = 76, i = 75, REPLY_3945_RX, 0x1b
-> >> iwl3945: I iwl3945_rx_handle r = 77, i = 76, REPLY_3945_RX, 0x1b
-> >> iwl3945: I iwl3945_mac_tx enter
-> >> iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
-> >> iwl3945: I iwl3945_mac_tx leave
-> >> iwl3945: I iwl3945_rx_handle r = 78, i = 77, REPLY_3945_RX, 0x1b
-> >> iwl3945: I iwl3945_rx_handle r = 79, i = 78, REPLY_3945_RX, 0x1b
-> >
-> > When you say "with the same result" does it mean that you comment out
-> > the check for priv->assoc_id and you still see the error "Dropping -
-> > !iwl3945_is_associated" or do you then see traffic with tcpdump?
+Quoting Andrew Lunn <andrew.lunn@ascom.ch>:
 
-I mean that I don't see traffic with tcpdump and I don't see the Dropping 
-error.
-> >
-> > Could you please print out the values of fc, priv->iw_mode,
-> > iwl3945_is_associated(priv) and priv->assoc_id just before that error
-> > message is printed?
-
-Yes
-iwl3945: I iwl3945_tx_skb fc: 8<3>
-iwl3945: I iwl3945_tx_skb mode: 2<3>
-iwl3945: I iwl3945_tx_skb assoc_id: 0<3>
-iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
-My changes
-	IWL_DEBUG_DROP("fc: %d\n", fc);
-	IWL_DEBUG_DROP("mode: %d\n", priv->iw_mode);
-	IWL_DEBUG_DROP("assoc_id: %d\", priv->assoc_id);
-	if ((!iwl3945_is_associated(priv) ||
-	    ((priv->iw_mode == IEEE80211_IF_TYPE_STA) && !priv->assoc_id)) &&
-	    ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
-		IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
-		goto drop_unlock;
-	}
-Was it right?
+>> I suggest that you check in the monitor mode that there are indeed
+>> beacons sent with this MAC address.  Maybe they are not.  It's quite
+>> possible.  MadWifi has an option to disable beacons for some virtual
+>> APs.
 >
-> One more question ... did ad-hoc work for you before this patch?
+> Well, other devices are seeing it, eg other Atheros devices and intel
+> IPW2200. So somehow i doubt it is not sending beacons.
 
-No. In my tests only ipw3945 works in Ad-Hoc mode.
+What I have found is that there are beacons for every ESSID, but  
+scanning finds only one ESSID.  I tested that with orinoco driver,  
+which doesn't depend on mac80211.
+
+>> Maybe mac80211 decided to do a passive scan, perhaps due to your country
+>> regulations?
+>
+> CH has no such regulations...
+
+You are right, it's more like the opposite is happening.  It looks  
+like mac80211 relies only on probe requests and not on beacons.
+
+>> It's quite possible that b43 will associate if you set the ESSID
+>> correctly.  Maybe you'll need to set "ap" with iwconfig as well.
+>
+> I hacked the madwifi driver a little, to disable the wme_ie and the
+> ath_ie IEs in the beacon and probe response messages. Only then did
+> the b43 device list the Atheros device in its scan list. However i
+> could not get it to associate. Authentication always failed. The b43
+> driver gives error messages and the MadWifi driver never received the
+> Authentication request messages.
+
+It seems to me that the problem is on the MadWifi side.  Changing the  
+code may be irrelevant.  MadWifi replied to probe requests only on one  
+virtual interface,  and this time it was the interface you needed (for  
+whatever reason).  Maybe it switched back when you tried to associate.
+
+> In the end i gave up. I have another machine with an ipw2100 card
+> which worked first time and i don't see any point using the B43 device
+> when it causes me to much pain.
+
+Maybe b43 does something different, so that the trick with virtual  
+devices doesn't work.  But it looks like some problems don't even need  
+b43 on the client side.
+
+-- 
+Regards,
+Pavel Roskin
