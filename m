@@ -1,86 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.hammerl-bau.at ([213.235.197.82]:55341 "EHLO
-	ns2.hammerl-bau.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756613AbYBBDLL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 22:11:11 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Subject: Re: [PATCH 3/3] ath5k: Add build option to enable hardware encryption
-Date: Sat, 2 Feb 2008 11:34:41 +0900
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com
-References: <20080201133731.GH28995@ruslug.rutgers.edu>
-In-Reply-To: <20080201133731.GH28995@ruslug.rutgers.edu>
-MIME-Version: 1.0
-Message-Id: <200802021134.41989.bruno@thinktube.com> (sfid-20080202_031114_743749_681F01F9)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from mfe1.polimi.it ([131.175.12.23]:44748 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751382AbYBIGXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Feb 2008 01:23:33 -0500
+Date: Sat, 9 Feb 2008 07:20:43 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] b43legacy: Add driver load messages
+Message-ID: <20080209072043.05af8bd5@morte> (sfid-20080209_062338_030058_20F7B7EC)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 February 2008 22:37:31 Luis R. Rodriguez wrote:
-> Add an option to enable hardware encryption (CONFIG_ATH5K_HARDWARE_ENC)
-> and disable it by default. This will enforce software encryption
-> for WEP, WPA (TKIP) and WPA2 (CCMP) until we fix hardware encryption.
->
-> Changes-licensed-under: 3-clause-BSD
-> Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-> ---
->  drivers/net/wireless/ath5k/Kconfig |   14 ++++++++++++++
->  drivers/net/wireless/ath5k/base.c  |    3 +++
->  2 files changed, 17 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/Kconfig
-> b/drivers/net/wireless/ath5k/Kconfig index 31d570e..5e75328 100644
-> --- a/drivers/net/wireless/ath5k/Kconfig
-> +++ b/drivers/net/wireless/ath5k/Kconfig
-> @@ -15,9 +15,23 @@ config ATH5K
->  	  If you choose to build a module, it'll be called ath5k. Say M if
->  	  unsure.
->
-> +config ATH5K_HARDWARE_ENC
-> +	bool "Atheros 5xxx hardware encryption"
-> +	depends on ATH5K
-> +	default n
-> +	---help---
-> +	  Atheros 5xxx hardware encryption.
-> +
-> +	  Say N for now unless you are a developer who wants to fix
-> +	  hardware encryption. Hardware encryption doesn't work yet.
-> +	  Disabling this will let you use software encrption in the
-> +	  meantime, this gives you support for WEP, WPA (TKIP) and
-> +	  WPA2 (CCMP) through mac80211 software encryption.
-> +
->  config ATH5K_DEBUG
->  	bool "Atheros 5xxx debugging"
->  	depends on ATH5K
-> +	default n
->  	---help---
->  	  Atheros 5xxx debugging messages.
->
-> diff --git a/drivers/net/wireless/ath5k/base.c
-> b/drivers/net/wireless/ath5k/base.c index 9f2c30b..a83a548 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -2921,7 +2921,10 @@ ath5k_set_key(struct ieee80211_hw *hw, enum
-> set_key_cmd cmd,
->
->  	switch(key->alg) {
->  	case ALG_WEP:
-> +/* XXX: fix hardware encryption, its not working */
-> +#ifdef CONFIG_ATH5K_HARDWARE_ENC
->  		break;
-> +#endif /* CONFIG_ATH5K_HARDWARE_ENC */
->  	case ALG_TKIP:
->  	case ALG_CCMP:
->  		return -EOPNOTSUPP;
+This adds printk messages with basic information about the driver being loaded.
+This information includes a summary of the compiled-in features, which
+simplifies bug-reporting and debugging a lot.
+Also a firmware ID is printed. This is a unique identifier blob for a specific
+version of the firmware. This ID is attached to a specific version of the firmware
+blob in b43-fwcutter (see fwcutter git).
+This helps users to select the right firmware for their device.
+This also makes it possible to use automated scripts to fetch and extract the right
+firmware for the driver. (The script will grep the .ko for the "Firmware-ID: xxx" string.)
+While the driver might still support other versions of the firmware for backward
+compatibility, this will always print out the officially supported version, which
+people _should_ use.
 
-hi luis!
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: wireless-2.6/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-2.6/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -23,6 +23,10 @@
+ #include "phy.h"
+ 
+ 
++/* The unique identifier of the firmware that's officially supported by this
++ * driver version. */
++#define B43legacy_SUPPORTED_FIRMWARE_ID	"FW10"
++
+ #define B43legacy_IRQWAIT_MAX_RETRIES	20
+ 
+ #define B43legacy_RX_MAX_SSI		60 /* best guess at max ssi */
+Index: wireless-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -3,7 +3,7 @@
+  *  Broadcom B43legacy wireless driver
+  *
+  *  Copyright (c) 2005 Martin Langer <martin-langer@gmx.de>
+- *  Copyright (c) 2005-2007 Stefano Brivio <stefano.brivio@polimi.it>
++ *  Copyright (c) 2005-2008 Stefano Brivio <stefano.brivio@polimi.it>
+  *  Copyright (c) 2005, 2006 Michael Buesch <mb@bu3sch.de>
+  *  Copyright (c) 2005 Danny van Dyk <kugelfang@gentoo.org>
+  *  Copyright (c) 2005 Andreas Jaggi <andreas.jaggi@waterwave.ch>
+@@ -3847,6 +3847,32 @@ static struct ssb_driver b43legacy_ssb_d
+ 	.resume		= b43legacy_resume,
+ };
+ 
++static void b43legacy_print_driverinfo(void)
++{
++	const char *feat_pci = "", *feat_leds = "", *feat_rfkill = "",
++		   *feat_pio = "", *feat_dma = "";
++
++#ifdef CONFIG_B43LEGACY_PCI_AUTOSELECT
++	feat_pci = "P";
++#endif
++#ifdef CONFIG_B43LEGACY_LEDS
++	feat_leds = "L";
++#endif
++#ifdef CONFIG_B43LEGACY_RFKILL
++	feat_rfkill = "R";
++#endif
++#ifdef CONFIG_B43LEGACY_PIO
++	feat_pio = "I";
++#endif
++#ifdef CONFIG_B43LEGACY_DMA
++	feat_dma = "D";
++#endif
++	printk(KERN_INFO "Broadcom 43xx driver loaded "
++	       "[ Features: %s%s%s%s%s, Firmware-ID: "
++	       B43legacy_SUPPORTED_FIRMWARE_ID " ]\n",
++	       feat_pci, feat_leds, feat_rfkill, feat_pio, feat_dma);
++}
++
+ static int __init b43legacy_init(void)
+ {
+ 	int err;
+@@ -3857,6 +3883,8 @@ static int __init b43legacy_init(void)
+ 	if (err)
+ 		goto err_dfs_exit;
+ 
++	b43legacy_print_driverinfo();
++
+ 	return err;
+ 
+ err_dfs_exit:
 
-i think this is pretty much overkill. why would anyone say Y to that? 
-wouldn't it suffice to add that comment to the code and not bother the users?
-developers would work on the code anyways.
 
-bruno
+-- 
+Ciao
+Stefano
