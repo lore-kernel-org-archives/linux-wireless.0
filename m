@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45023 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754681AbYB2KGo (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:6696 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289AbYBIAZ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 05:06:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] Fix the bcm43xx driver breakage in 2.6.24/25.
-Date: Fri, 29 Feb 2008 11:05:35 +0100
-Cc: Alexey Zaytsev <alexey.zaytsev@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Jeff Garzik <jgarzik@pobox.com>, Greg KH <greg@kroah.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Ingo Molnar <mingo@elte.hu>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <47C01D03.9030601@gmail.com> <20080229002119.5314aad2.akpm@linux-foundation.org>
-In-Reply-To: <20080229002119.5314aad2.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802291105.35713.mb@bu3sch.de> (sfid-20080229_100652_017601_3AACAEAD)
+	Fri, 8 Feb 2008 19:25:56 -0500
+Received: by an-out-0708.google.com with SMTP id d31so949523and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:25:53 -0800 (PST)
+Subject: Re: [PATCH 01/13] o11s: (rtnetlink) add commands for mesh tables
+	manipulation
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1202515995.7025.8.camel@localhost>
+References: <47a7825b.06538c0a.3bce.5ec1@mx.google.com>
+	 (sfid-20080204_212408_298998_A7C8CED4)  <1202342208.9965.29.camel@johannes.berg>
+	 <1202515995.7025.8.camel@localhost>
+Content-Type: text/plain
+Date: Fri, 08 Feb 2008 16:26:58 -0800
+Message-Id: <1202516818.7025.22.camel@localhost> (sfid-20080209_002600_815297_1F1BA519)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 February 2008 09:21:19 Andrew Morton wrote:
-> On Sat, 23 Feb 2008 16:17:55 +0300 Alexey Zaytsev <alexey.zaytsev@gmail.com> wrote:
-> 
-> > Theese two patches fix a problem instroduced in Linux 2.6.24, and
-> > still present in the current Linus' 2.6.25 tree.
-> > 
-> > The bcm43xx Wifi driver won't work any more, if the b44 Ethernet
-> > driver is enabled. This happens because the b44 driver
-> > needlessly enables the b43_pci_bridge code, which claims
-> > the same pci ids as the bcm43xx driver. The b43_pci_bridge
-> > code is needed for the b43{legacy} drivers, but for the
-> > b44, only the "ssb pci core" is needed.
-> 
-> Hate to stick my head into this beehive, but...
-> 
-> I have a patch queued (the-scheduled-bcm43xx-removal.patch) which 
-> will remove this driver from 2.6.26.
-> 
-> Is that bad?
+On Fri, 2008-02-08 at 16:13 -0800, Luis Carlos Cobo wrote:
+> I'm not sure understand what you mean with "via netdev". About
 
-Not at all. The b43 driver from 2.6.26 will work. So there's
-no reason to keep bcm43xx.
-Alexey just tested a patch that backports the fix to 2.6.24 and it
-works fine.
+Oh, I guess you mean the mailing list...
 
 -- 
-Greetings Michael.
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
