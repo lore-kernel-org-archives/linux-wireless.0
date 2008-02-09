@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44691 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751187AbYBYVYq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 16:24:46 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m1PLOjCh029898
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:24:45 -0500
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLOi8r026705
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:24:45 -0500
-Received: from [172.16.83.84] (dhcp83-84.boston.redhat.com [172.16.83.84])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLOhLJ018031
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:24:43 -0500
-Subject: 
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
+Received: from py-out-1112.google.com ([64.233.166.181]:55824 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757668AbYBICQ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2008 21:16:56 -0500
+Received: by py-out-1112.google.com with SMTP id u52so5766183pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 18:16:55 -0800 (PST)
+Subject: Re: [PATCH 07/13] o11s: support for mesh interfaces in mac80211
+	data path
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1202345620.9965.80.camel@johannes.berg>
+References: <47a78281.03b48c0a.7362.5d39@mx.google.com>
+	 (sfid-20080204_212421_865811_21908028)  <1202345620.9965.80.camel@johannes.berg>
 Content-Type: text/plain
-Date: Mon, 25 Feb 2008 16:22:39 -0500
-Message-Id: <1203974559.22949.19.camel@localhost.localdomain> (sfid-20080225_212448_530739_B0BC8ACF)
+Date: Fri, 08 Feb 2008 18:18:01 -0800
+Message-Id: <1202523481.7025.76.camel@localhost> (sfid-20080209_021707_805635_50D9A27C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While debugging why ipw2200 and wpa_supplicant would not connect to a
-hidden access point today even with scan_ssid=1, I ran into an
-interesting scan behavior question.
 
-The root of the problem was that since the ipw2200 driver aggressively
-rescans when it doesn't find the requested AP in it's list, and since it
-only allows one scan at a time, wpa_supplicant's specific SSID scans
-just happened to get rejected every time, which means the card never
-sent out probe requests for the hidden SSID I wanted to associate with.
+On Thu, 2008-02-07 at 01:53 +0100, Johannes Berg wrote:
+> > +	if (rx->sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
+> > +		if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) {
+> > +			if (!((rx->fc & IEEE80211_FCTL_FROMDS) &&
+> > +					(rx->fc & IEEE80211_FCTL_TODS)))
+> 
+> It'd be shorter to write
+> 
+> 	if (rx->fc ^ (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS))
+> 
+> but I'm not sure that's easier to understand ;)
 
-There are more general issues here than just ipw2200 though.  Most of
-the fullmac drivers (counting ipw2x00 here) don't handle multiple scan
-requests very well.  I'm not entirely sure what mac80211 does here but
-it probably doesn't have extremely sophisticated scan result handling
-either.  At startup
+Would that work? For data frames rx->fc is 0xYY08 (with YY being the
+flags, including fromDS/toDS), so they would always evaluate to true in
+that if, regardless of the flags.
 
-In the ideal case, the driver would add each separate scan request to a
-queue, execute each request in turn (respecting each requests options
-like active/passive, dwell time, SSID/BSSID, channel list, etc).  Each
-request would trigger a corresponding scan completion event.  Perhaps
-multiple identical scan requests (ie, a few 'iwlist <iface> scan') could
-be batched together for efficiency.  With nl80211/cfg80211, perhaps each
-individual scan request would have a UID to match it up with a specific
-scan response (but the response would still be broadcast too).
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-Less invasive fixes could be made to ipw2200, like caching the last
-SSID-specific request and instead of triggering a general scan the next
-time, trigger a direct scan.  A workaround but not a real fix.
-
-Thoughts?  How should a second, different scan request be handled while
-another is already in flight?
-
-Dan
 
