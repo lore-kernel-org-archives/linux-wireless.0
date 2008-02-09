@@ -1,62 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742AbYBWK66 (ORCPT
+Received: from mail.syneticon.net ([213.239.212.131]:34606 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbYBIKAo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 05:58:58 -0500
-Subject: Re: [PATCH 00/13 v2] o11s: mesh interface support for mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <1203698089.7082.79.camel@johannes.berg> (sfid-20080222_163541_170610_46CD369C)
-References: <47be76f9.03b48c0a.025f.54f4@mx.google.com>
-	 (sfid-20080222_071727_691746_9DC8AC76)  <1203693709.7082.35.camel@johannes.berg>
-	 (sfid-20080222_152202_419952_859BF240)  <1203698089.7082.79.camel@johannes.berg>
-	 (sfid-20080222_163541_170610_46CD369C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VdBWjntD3lwrYFGv0qxG"
-Date: Sat, 23 Feb 2008 11:58:51 +0100
-Message-Id: <1203764331.13162.19.camel@johannes.berg> (sfid-20080223_105918_646823_0EB5F935)
-Mime-Version: 1.0
+	Sat, 9 Feb 2008 05:00:44 -0500
+Message-ID: <47AD79C2.2050309@wpkg.org> (sfid-20080209_100050_683658_F7F20DE4)
+Date: Sat, 09 Feb 2008 11:00:34 +0100
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: prism54: Out of memory, cannot handle oid, card/socket may be
+ faulty, or IRQ line too busy
+References: <47ACD136.4030705@wpkg.org> <20080208221009.GA2919@tuxdriver.com>
+In-Reply-To: <20080208221009.GA2919@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville schrieb:
+> On Fri, Feb 08, 2008 at 11:01:26PM +0100, Tomasz Chmielewski wrote:
+>> I just wanted to use a mini-PCI card using a prism54 module - however, it 
+>> fails to bring the interface up with "Out of memory, cannot handle oid" and 
+>> "Your card/socket may be faulty, or IRQ line too busy" messages.
+> 
+> I vaguely recall seeing an error like that when I used the wrong
+> firmware.  What firmware are you using?
 
---=-VdBWjntD3lwrYFGv0qxG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+So, I tried with 2.7.0.0.arm firmware, and it's the same:
+
+# dmesg
+Loaded prism54 driver, version 1.2
+PCI: Fixing up device 0000:00:02.0
+eth2: resetting device...
+eth2: uploading firmware...
+eth2: firmware version: 2.7.0.0
+eth2: firmware upload complete
+eth2: timeout waiting for mgmt response 250, triggering device
+eth2: timeout waiting for mgmt response 225, triggering device
+eth2: timeout waiting for mgmt response 200, triggering device
+eth2: timeout waiting for mgmt response 175, triggering device
+eth2: timeout waiting for mgmt response 150, triggering device
+eth2: timeout waiting for mgmt response 125, triggering device
+eth2: timeout waiting for mgmt response 100, triggering device
+eth2: timeout waiting for mgmt response 75, triggering device
+eth2: timeout waiting for mgmt response 50, triggering device
+eth2: timeout waiting for mgmt response 25, triggering device
+eth2: timeout waiting for mgmt response
+eth2: mgt_commit_list: failure. oid=ff020008 err=-145
+eth2: timeout waiting for mgmt response 250, triggering device
+eth2: timeout waiting for mgmt response 225, triggering device
+eth2: timeout waiting for mgmt response 200, triggering device
+eth2: timeout waiting for mgmt response 175, triggering device
+eth2: timeout waiting for mgmt response 150, triggering device
+eth2: timeout waiting for mgmt response 125, triggering device
+eth2: timeout waiting for mgmt response 100, triggering device
+eth2: timeout waiting for mgmt response 75, triggering device
+eth2: timeout waiting for mgmt response 50, triggering device
+eth2: timeout waiting for mgmt response 25, triggering device
+eth2: timeout waiting for mgmt response
+eth2: mgt_commit_list: failure. oid=ff020003 err=-145
+eth2: timeout waiting for mgmt response 250, triggering device
+eth2: timeout waiting for mgmt response 225, triggering device
+eth2: timeout waiting for mgmt response 200, triggering device
+eth2: timeout waiting for mgmt response 175, triggering device
+eth2: timeout waiting for mgmt response 150, triggering device
+eth2: timeout waiting for mgmt response 125, triggering device
+eth2: timeout waiting for mgmt response 100, triggering device
+eth2: timeout waiting for mgmt response 75, triggering device
+eth2: timeout waiting for mgmt response 50, triggering device
+eth2: timeout waiting for mgmt response 25, triggering device
+eth2: timeout waiting for mgmt response
+eth2: mgt_commit_list: failure. oid=10000000 err=-145
+eth2: timeout waiting for mgmt response 250, triggering device
+eth2: timeout waiting for mgmt response 225, triggering device
+eth2: timeout waiting for mgmt response 200, triggering device
+eth2: timeout waiting for mgmt response 175, triggering device
+eth2: timeout waiting for mgmt response 150, triggering device
+eth2: timeout waiting for mgmt response 125, triggering device
+eth2: timeout waiting for mgmt response 100, triggering device
+eth2: timeout waiting for mgmt response 75, triggering device
+eth2: timeout waiting for mgmt response 50, triggering device
+eth2: timeout waiting for mgmt response 25, triggering device
+eth2: timeout waiting for mgmt response
+eth2: mgt_commit_list: failure. oid=17000007 err=-145
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=19000001 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=10000002 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=19000004 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000000 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000001 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000002 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000004 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000005 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000006 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000007 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=12000003 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=150007e0 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=ff02000c err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_commit_list: failure. oid=ff020003 err=-12
+eth2: mgmt tx queue is still full
+eth2: mgt_update_addr: failure
+eth2: mgt_commit: failure
+eth2: interface reset failure
+prism54: Your card/socket may be faulty, or IRQ line too busy :(
 
 
-> I think you're right and we should apply this to wireless-testing and
-> fix the remaining problems there. I can then rebase my last 9 patches
-> (including the sta info work) on top of that and we'll see where it
-> conflicts.
 
-I'm just working on fixups, just to let you know.
-
-johannes
-
---=-VdBWjntD3lwrYFGv0qxG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7/8aqVg1VMiehFYAQKSwxAAijqiRvcq9A5S50g3/2Mcrkwl79b46NJS
-WFZnUWmNJJzczKeq8BYUorV/S6yP+9MWjY/8Lrb6h1QlaXi35jQxCpsJwT5jPbHc
-PiLOeoMbrM6Cg0HfhYs1zVS2+YxTiW7YOEIU699efTpfhBGfqFVOS2vkMUwaVEW+
-V2I4oQZJhwbLBYmZ5zpF1H9TsBV9FjXDxPZ2Lu8gs26f/WAeYhM16woJS/3N3fZS
-VME6R8IqjFDQzwE53Vn23AVANm9L4FWb3lYUQ4NYNyvk5kluaRHswGGtaMqB0fHR
-eh4NkInIHg9jyoHUA2lyu/2X3OATC6LSLd2WLQTefWR4fvjbJ46KiCBa6IoqB2yi
-D/Zy8OK2od//w3N0+X4qIMl7Kf+m4DHv8jYygA3hkBp0Ieo3ggwxvQ4xlM1ULQSl
-AbBHBLtjLgxqhjPsKARXrtNXAYz7Qj4HrzOuEo68b9cCZad6GoOI2/bAjFsiVMME
-h3mta93SsGobU2FOW0w1aVfDXH/KH9rbL+x3lg50k+mwg6e1DEESWRjEq5dJggql
-PoCSzh4QfhU8+XlZUdIM0KQE4bCcKOmqv7T4Yry9hIEA55L486xak5probfE9P+X
-LnLilRXkuL4aUduIGbXRXYM+1Cuo3XVelWhiBJsg6jgubJwVe6N7URAQaks0iOAU
-5NBqtmsCL1M=
-=T+R8
------END PGP SIGNATURE-----
-
---=-VdBWjntD3lwrYFGv0qxG--
-
+-- 
+Tomasz Chmielewski
+http://wpkg.org
