@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:52975 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751082AbYBYLUW (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:41603 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754494AbYBIAnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 06:20:22 -0500
-Date: Mon, 25 Feb 2008 12:16:49 +0100
-From: Sebastian Siewior <netdev@ml.breakpoint.cc>
+	Fri, 8 Feb 2008 19:43:10 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so737309wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:43:09 -0800 (PST)
+Subject: Re: [PATCH 05/13] o11s: added mesh.h, mesh function and data
+	structures definitions
+From: Luis Carlos Cobo <luisca@cozybit.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>,
-	Masakazu Mokuno <mokuno@sm.sony.co.jp>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [PS3] gelic wireless driver needs MAC80211 support
-Message-ID: <20080225111649.GA24352@Chamillionaire.breakpoint.cc> (sfid-20080225_112028_384596_B45DAE42)
-References: <20080223193517.GA6704@Chamillionaire.breakpoint.cc> <47C0815F.7020100@pobox.com> <1203934436.13162.64.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1203934436.13162.64.camel@johannes.berg>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1202343919.9965.57.camel@johannes.berg>
+References: <47a78274.12025a0a.0fb8.67db@mx.google.com>
+	 (sfid-20080204_212415_776178_13DE2F2C)  <1202343919.9965.57.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 08 Feb 2008 16:44:15 -0800
+Message-Id: <1202517855.7025.43.camel@localhost> (sfid-20080209_004334_761712_C1035757)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Johannes Berg | 2008-02-25 11:13:56 [+0100]:
+On Thu, 2008-02-07 at 01:25 +0100, Johannes Berg wrote:
+> typo: transitions, what does FSM mean? Also, using kernel-doc instead of
 
->That seems completely wrong since it's a full-mac "chip" (implemented in
->the HV or so maybe). What exactly does it need from mac80211?
-Nothing, please drop. I've sent another patch which enables WEXT what is
-the correct thing to do. Sorry for the noise.
+Flying Spaghetti Monster, obviously.
 
->johannes
+Or maybe it was finite state machine.
 
-Sebastian
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
