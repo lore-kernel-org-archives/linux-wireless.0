@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:45239 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758371AbYB1W7F (ORCPT
+Received: from mail.syneticon.net ([213.239.212.131]:34646 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754052AbYBIKJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 17:59:05 -0500
-Date: Thu, 28 Feb 2008 17:59:01 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
-	me@bobcopeland.com
-Subject: [PATCH 4/8] ath5k: more RF2413 stuff
-Message-ID: <19edc37dfc2a205270bd5a3039866b56813e85f0.1204236793.git.mcgrof@winlab.rutgers.edu> (sfid-20080228_225910_085474_9300F5F3)
+	Sat, 9 Feb 2008 05:09:57 -0500
+Message-ID: <47AD7BEF.9000709@wpkg.org> (sfid-20080209_101002_752721_AA53541D)
+Date: Sat, 09 Feb 2008 11:09:51 +0100
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: prism54: Out of memory, cannot handle oid, card/socket may be
+ faulty, or IRQ line too busy
+References: <47ACD136.4030705@wpkg.org> <20080208221009.GA2919@tuxdriver.com>
+In-Reply-To: <20080208221009.GA2919@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Add AR5K_RF2413 to radio check during hw_reset so it doesn't complain
+John W. Linville schrieb:
+> On Fri, Feb 08, 2008 at 11:01:26PM +0100, Tomasz Chmielewski wrote:
+>> I just wanted to use a mini-PCI card using a prism54 module - however, it 
+>> fails to bring the interface up with "Out of memory, cannot handle oid" and 
+>> "Your card/socket may be faulty, or IRQ line too busy" messages.
+> 
+> I vaguely recall seeing an error like that when I used the wrong
+> firmware.  What firmware are you using?
 
- * Write ah_phy_spending value we set during attach instead of checking
-each time for radio revision
+This is my card:
 
- * Skip txpower setup for RF2413 because it can't transmit with it
-(weird thing is that RF5413 has no problem with it).
+# lspci -nn
+(...)
+00:02.0 Network controller [0280]: Intersil Corporation ISL3890 [Prism 
+GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] [1260:3890] (rev 01)
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
----
- drivers/net/wireless/ath5k/hw.c  |    7 +++----
- drivers/net/wireless/ath5k/phy.c |    9 +++++++++
- 2 files changed, 12 insertions(+), 4 deletions(-)
+According to http://prism54.org/newdrivers.html, my card is among the 
+supported devices, and I should use version 2.7.0.0 for PCI devices 
+firmware:
 
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 96b881d..6bbd732 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -640,7 +640,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	if (ah->ah_version != AR5K_AR5210) {
- 		if (ah->ah_radio != AR5K_RF5111 &&
- 			ah->ah_radio != AR5K_RF5112 &&
--			ah->ah_radio != AR5K_RF5413) {
-+			ah->ah_radio != AR5K_RF5413 &&
-+			ah->ah_radio != AR5K_RF2413) {
- 			ATH5K_ERR(ah->ah_sc,
- 				"invalid phy radio: %u\n", ah->ah_radio);
- 			return -EINVAL;
-@@ -1002,9 +1003,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCAL_32MHZ, AR5K_PHY_SCAL);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
--		ath5k_hw_reg_write(ah, ah->ah_radio == AR5K_RF5111 ?
--			AR5K_PHY_SPENDING_RF5111 : AR5K_PHY_SPENDING_RF5112,
--			AR5K_PHY_SPENDING);
-+		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index f108b08..40efd4d 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -2178,6 +2178,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 		return -EINVAL;
- 	}
- 
-+	/*
-+	 * RF2413 for some reason can't
-+	 * transmit anything if we call
-+	 * this funtion, so we skip it
-+	 * until we fix txpower.
-+	 */
-+	if (ah->ah_radio == AR5K_RF2413)
-+		return 0;
-+
- 	/* Reset TX power values */
- 	memset(&ah->ah_txpower, 0, sizeof(ah->ah_txpower));
- 	ah->ah_txpower.txp_tpc = tpc;
+PCI Vendor (hex)	PCI Product (hex)	Common name
+1260	3890	Generic ISL3890
+
+
+It doesn't work and says "Your card/socket may be faulty, or IRQ line 
+too busy". With 2.7.0.0 firmware, it doesn't say "out of memory" anymore.
+
+Are there more things to be done to make this card work?
+
+
 -- 
-1.5.3.7
-
+Tomasz Chmielewski
+http://wpkg.org
