@@ -1,73 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ag-out-0708.google.com ([72.14.246.240]:65074 "EHLO
-	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462AbYBUUBU (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:53831 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbYBIJYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 15:01:20 -0500
-Received: by ag-out-0708.google.com with SMTP id 33so3606agc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 12:01:19 -0800 (PST)
-Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sam Ravnborg <sam@ravnborg.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1203597776.20331.5.camel@johannes.berg>
-References: <1203503909.17534.14.camel@johannes.berg>
-	 <20080220195913.GE21139@uranus.ravnborg.org>
-	 <1203597776.20331.5.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 21 Feb 2008 12:01:31 -0800
-Message-Id: <1203624091.20345.63.camel@brick> (sfid-20080221_200125_743527_ED99E3DC)
-Mime-Version: 1.0
+	Sat, 9 Feb 2008 04:24:49 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Add firmware information to modinfo
+Date: Sat, 9 Feb 2008 10:23:49 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802091023.49930.mb@bu3sch.de> (sfid-20080209_092454_894279_391C2A9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-02-21 at 13:42 +0100, Johannes Berg wrote:
-> >> [patch doing CHECKFLAGS += -D__CHECK_ENDIAN__ in the
-> >> net/mac80211/Makefile]
-> 
-> > I would prefer it to be kernel wide enabled.
-> > Tried a defconfig build.
-> 
-> Hm. I tend to think there was a reason for this, since this is actually
-> explicitly disabled by include/linux/types.h:
-> 
-> #ifdef __CHECKER__
-> #define __bitwise__ __attribute__((bitwise))
-> #else 
-> #define __bitwise__
-> #endif
-> 
-> #ifdef __CHECK_ENDIAN__
-> #define __bitwise __bitwise__
-> #else
-> #define __bitwise
-> #endif
-> 
+This adds the firmware ID to modinfo.
 
-This seems somewhat suspect.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> I recently ran sparse on my config and was surprised by the number of
-> warnings. Then again, something in mmzone.h or so generated billions of
-> them...
+---
 
-Potentially expensive pointer subtraction 640:....
+John, I'd also like to have this in 2.6.25, although it's not strictly
+a bugfix. The chance to create regressions is less than zero and it will
+help people to get the stuff working.
 
-Patch in -mm.
+Stefano poor-patch-porter Brivio, needs porting :)
 
-> 
-> In any case, I would love to have __CHECK_ENDIAN__ enabled by default at
-> least on the wireless code (just caught another bug with it...)
-> 
 
-I'd love to have it too, but there are so many trivial warnings that
-clutter up valid warnings that it is prohibitive.  I'm working on
-reducing the noise level a bit for 2.6.26, we'll see about turning
-it on then.
-
-Harvey
-
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-02-09 00:17:12.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-02-09 10:17:21.000000000 +0100
+@@ -54,12 +54,14 @@
+ MODULE_DESCRIPTION("Broadcom B43 wireless driver");
+ MODULE_AUTHOR("Martin Langer");
+ MODULE_AUTHOR("Stefano Brivio");
+ MODULE_AUTHOR("Michael Buesch");
+ MODULE_LICENSE("GPL");
+ 
++MODULE_FIRMWARE(B43_SUPPORTED_FIRMWARE_ID);
++
+ 
+ static int modparam_bad_frames_preempt;
+ module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, 0444);
+ MODULE_PARM_DESC(bad_frames_preempt,
+ 		 "enable(1) / disable(0) Bad Frames Preemption");
+ 
