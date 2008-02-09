@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:50384 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754576AbYBBOh2 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:8741 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283AbYBICpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 09:37:28 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2200581pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 06:37:27 -0800 (PST)
-To: Adam Turk <bofh1234@hotmail.com>
-Subject: Re: rt73 driver doesn't work in 2.6.24
-Date: Sat, 2 Feb 2008 15:36:50 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl>
-In-Reply-To: <BAY101-W12F4D19DA27A5DA9F177E1C8310@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802021536.50534.IvDoorn@gmail.com> (sfid-20080202_143741_728478_52F40637)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 8 Feb 2008 21:45:41 -0500
+Received: by an-out-0708.google.com with SMTP id d31so958694and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 18:45:41 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 8 Feb 2008 18:41:17 -0800
+Subject: [PATCH] zd1211rw: Fixed incorrect constant name.
+Message-ID: <47ad13d4.2c012c0a.14e0.fffff14d@mx.google.com> (sfid-20080209_024552_711458_41CE4C9B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Trial and error reveals that CR_ZD1211B_TX_PWR_CTL* do not affect the
+transmission power.  Instead these registers seem to control the contention
+windows limits for different QoS access categories.
 
-> I was rather pleased to see that my Edimax ew7318usg was supported by mainline.  I created a new config, compiled, (no errors), and rebooted with the wireless card plugged in and I get errors on module load. Here is the output from dmesg:
-> 
-> rt73usb 1-1:1.0: usb_probe_interface
-> rt73usb 1-1:1.0: usb_probe_interface - got id
-> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-> phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x0000
-> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
-> phy0: Selected rate control algorithm 'simple'
-> phy0: Failed to initialize wep
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |    8 ++++----
+ drivers/net/wireless/zd1211rw/zd_chip.h |    9 ++++-----
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-This is a problem with mac80211 loading the wep encryption, did you load the arc4 module?
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 66abc4e..0acb5c3 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -771,10 +771,10 @@ static int zd1211b_hw_init_hmac(struct zd_chip *chip)
+ {
+ 	static const struct zd_ioreq32 ioreqs[] = {
+ 		{ CR_ZD1211B_RETRY_MAX,		0x02020202 },
+-		{ CR_ZD1211B_TX_PWR_CTL4,	0x007f003f },
+-		{ CR_ZD1211B_TX_PWR_CTL3,	0x007f003f },
+-		{ CR_ZD1211B_TX_PWR_CTL2,       0x003f001f },
+-		{ CR_ZD1211B_TX_PWR_CTL1,       0x001f000f },
++		{ CR_ZD1211B_CWIN_MAX_MIN_AC0,	0x007f003f },
++		{ CR_ZD1211B_CWIN_MAX_MIN_AC1,	0x007f003f },
++		{ CR_ZD1211B_CWIN_MAX_MIN_AC2,  0x003f001f },
++		{ CR_ZD1211B_CWIN_MAX_MIN_AC3,  0x001f000f },
+ 		{ CR_ZD1211B_AIFS_CTL1,		0x00280028 },
+ 		{ CR_ZD1211B_AIFS_CTL2,		0x008C003C },
+ 		{ CR_ZD1211B_TXOP,		0x01800824 },
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
+index 5cffbd6..3f44db2 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -633,11 +633,10 @@ enum {
+ #define CR_S_MD				CTL_REG(0x0830)
+ 
+ #define CR_USB_DEBUG_PORT		CTL_REG(0x0888)
+-
+-#define CR_ZD1211B_TX_PWR_CTL1		CTL_REG(0x0b00)
+-#define CR_ZD1211B_TX_PWR_CTL2		CTL_REG(0x0b04)
+-#define CR_ZD1211B_TX_PWR_CTL3		CTL_REG(0x0b08)
+-#define CR_ZD1211B_TX_PWR_CTL4		CTL_REG(0x0b0c)
++#define CR_ZD1211B_CWIN_MAX_MIN_AC0	CTL_REG(0x0b00)
++#define CR_ZD1211B_CWIN_MAX_MIN_AC1	CTL_REG(0x0b04)
++#define CR_ZD1211B_CWIN_MAX_MIN_AC2	CTL_REG(0x0b08)
++#define CR_ZD1211B_CWIN_MAX_MIN_AC3	CTL_REG(0x0b0c)
+ #define CR_ZD1211B_AIFS_CTL1		CTL_REG(0x0b10)
+ #define CR_ZD1211B_AIFS_CTL2		CTL_REG(0x0b14)
+ #define CR_ZD1211B_TXOP			CTL_REG(0x0b20)
+-- 
+1.5.2.4
 
-Ivo
+
+
