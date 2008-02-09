@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35380 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756370AbYB2PxY (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.229]:29035 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519AbYBIA5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 10:53:24 -0500
-Subject: p54: fix EEPROM structure endianness
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+	Fri, 8 Feb 2008 19:57:36 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so4251636wxd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:57:33 -0800 (PST)
+Subject: Re: [PATCH 10/13] o11s: mesh discovery and peer link establishment
+	support
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1202346788.9965.95.camel@johannes.berg>
+References: <47a78292.22528c0a.1300.1aef@mx.google.com>
+	 (sfid-20080204_212438_516087_6199B5A8)  <1202346788.9965.95.camel@johannes.berg>
 Content-Type: text/plain
-Date: Fri, 29 Feb 2008 13:56:33 +0100
-Message-Id: <1204289793.3938.20.camel@johannes.berg> (sfid-20080229_155329_330042_63F81510)
+Date: Fri, 08 Feb 2008 16:58:38 -0800
+Message-Id: <1202518718.7025.60.camel@localhost> (sfid-20080209_005749_617064_41D5BC02)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the EEPROM structure is read from hardware, it is
-always little endian, annotate that in the struct and
-make sure to convert where applicable.
+On Thu, 2008-02-07 at 02:13 +0100, Johannes Berg wrote:
+> How would you design implementing support secure peer links? It seems
+> that to do that much of the mesh bookkeeping would need to be done by
+> wpa_supplicant instead of the kernel. In fact, maybe it should always do
+> it and much of this code be migrated into wpa_supplicant's userspace
+> MLME?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
----
-Does anybody have a p54 card and big endian hardware to test it on? I'm
-fairly sure this is a correct change but if it currently works on big
-endian the change would be bad (and I'd be rather surprised.)
+We definitely would implement security in user space but have not
+decided yet were to draw the line. I think that it makes sense at least
+to have path discovery in-kernel, since there is a lot of activity on
+them (each path is rebuilt every few seconds and there can be many of
+them) and many path discovery frames just need to be forwarded and do
+not have to be transferred to user space.
 
- drivers/net/wireless/p54common.c |    2 +-
- drivers/net/wireless/p54common.h |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+> Peer link establishment, mesh path updating etc. could all be done in
+> wpa_supplicant's userspace MLME, no? If we add all this to the kernel
+> now, would we have to reimplement it in the userspace MLME to support
+> secure peer links?
 
---- everything.orig/drivers/net/wireless/p54common.c	2008-02-28 17:26:23.000000000 +0100
-+++ everything/drivers/net/wireless/p54common.c	2008-02-29 13:53:05.000000000 +0100
-@@ -212,7 +212,7 @@ int p54_parse_eeprom(struct ieee80211_hw
- 	int err;
- 
- 	wrap = (struct eeprom_pda_wrap *) eeprom;
--	entry = (void *)wrap->data + wrap->len;
-+	entry = (void *)wrap->data + le16_to_cpu(wrap->len);
- 	i += 2;
- 	i += le16_to_cpu(entry->len)*2;
- 	while (i < len) {
---- everything.orig/drivers/net/wireless/p54common.h	2008-02-19 23:10:32.000000000 +0100
-+++ everything/drivers/net/wireless/p54common.h	2008-02-29 13:53:05.000000000 +0100
-@@ -53,10 +53,10 @@ struct pda_entry {
- } __attribute__ ((packed));
- 
- struct eeprom_pda_wrap {
--	u32 magic;
--	u16 pad;
--	u16 len;
--	u32 arm_opcode;
-+	__le32 magic;
-+	__le16 pad;
-+	__le16 len;
-+	__le32 arm_opcode;
- 	u8 data[0];
- } __attribute__ ((packed));
- 
+AFAIK, it would only be necessary to move part of the peer link
+establishment to user space. Path discovery takes place after the peer
+links have been established.
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
 
