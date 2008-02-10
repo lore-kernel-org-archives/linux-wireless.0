@@ -1,31 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:35786 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753819AbYBDTIE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 14:08:04 -0500
-Message-ID: <47A76273.7090005@openwrt.org> (sfid-20080204_190808_149455_499BBAF0)
-Date: Mon, 04 Feb 2008 20:07:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbYBJVxg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 16:53:36 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:34 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 05/14] rt2x00: Select CONFIG_NEW_LEDS
+Date: Sun, 10 Feb 2008 22:48:47 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>	 <-7767648866191425885@unknownmsgid>	 <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>	 <47A72E13.8070305@openwrt.org>	 <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>	 <47A75BF5.90101@openwrt.org> <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
-In-Reply-To: <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102248.47156.IvDoorn@gmail.com> (sfid-20080210_215338_472701_6A4983A8)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> The problem that this structure is passed with each packett I don't
-> like the idea that anybody would even try to allocate and free this
-> structure as packets goes. However what about the following?
-> 
-> ieee80211_tx_status {
->          size_t nrates;
->          ieee80211_tx_ratectrl  rates[0] ;
-> }
-Yes, I think that would be ok.
+Select CONFIG_NEW_LEDS before selecting the other LED config
+options. This fixes a link error when NEW_LEDS was disabled.
 
-- Felix
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 51adb2f..4bb46e9 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -41,6 +41,7 @@ config RT2X00_LIB_RFKILL
+ config RT2X00_LIB_LEDS
+ 	boolean
+ 	depends on RT2X00_LIB
++	select NEW_LEDS
+ 	select LEDS_CLASS
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
+-- 
+1.5.4
+
