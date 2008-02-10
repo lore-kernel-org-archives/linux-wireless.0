@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:60753 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbYBDK1y (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:33182 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbYBJPE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 05:27:54 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2870676wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 02:27:54 -0800 (PST)
-Message-ID: <1ba2fa240802040227g23fe41adu446adc8f0de22712@mail.gmail.com> (sfid-20080204_102804_728617_F540E02D)
-Date: Mon, 4 Feb 2008 12:27:54 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Felix Fietkau" <nbd@openwrt.org>
-In-Reply-To: <6231174111099834440@unknownmsgid>
+	Sun, 10 Feb 2008 10:04:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] zd1211rw: Fix beacon filter flags thinko
+Date: Sun, 10 Feb 2008 16:03:55 +0100
+Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>
-	 <1202114774.4188.127.camel@johannes.berg>
-	 <1ba2fa240802040153g1d0c9902u6af2ddf3dead975d@mail.gmail.com>
-	 <6231174111099834440@unknownmsgid>
+Message-Id: <200802101603.56095.mb@bu3sch.de> (sfid-20080210_150436_186402_A253CCC1)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 4, 2008 11:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > Where would be this pointer allocated? TX response is not the same
-> > flow as TX where we keep it on the stack. It's will be very error
-> > prone to be outside tx_status. From concept perspective you already
-> > have all transimission information in that structure.
-> > For iwlwifi I actually need only u32 value but I was looking for
-> > something more general even it's a little pain.
->
-> You don't need to allocate it, it can just point to the rate array you
-> have registered, no? Rates information is static after all. Or do it like
-> rx status where we pass the index into the rate array.
+We must not clear the FIF_BCN_PRBRESP_PROMISC bit in the
+new_flags. The zd-driver does support sending beacons and
+probe responses to the host. What the flag does is say "Send me
+all beacons and probe responses". And we actually do that. We always
+do that, so we ignore the case when the bit is disabled. But that is
+fine. But we must not clear the flag, as that tells mac80211 that
+we do not support passing beacons and probe responses to the stack.
+And that's not true.
 
-I prefer not. This is not just plcp rate there is also MCS flags that
-have to passed. With all combinations the array will be huge.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Tomas
+---
 
-> johannes
->
+Should probably go -stable, too.
+
+
+Index: wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-02-10 15:56:18.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/zd1211rw/zd_mac.c	2008-02-10 15:57:51.000000000 +0100
+@@ -765,13 +765,13 @@ static void set_rx_filter_handler(struct
+ 	if (r)
+ 		dev_err(zd_mac_dev(mac), "set_rx_filter_handler error %d\n", r);
+ }
+ 
+ #define SUPPORTED_FIF_FLAGS \
+ 	(FIF_PROMISC_IN_BSS | FIF_ALLMULTI | FIF_FCSFAIL | FIF_CONTROL | \
+-	FIF_OTHER_BSS)
++	FIF_OTHER_BSS | FIF_BCN_PRBRESP_PROMISC)
+ static void zd_op_configure_filter(struct ieee80211_hw *hw,
+ 			unsigned int changed_flags,
+ 			unsigned int *new_flags,
+ 			int mc_count, struct dev_mc_list *mclist)
+ {
+ 	struct zd_mc_hash hash;
