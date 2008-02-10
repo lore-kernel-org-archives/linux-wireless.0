@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbYBKMyS (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56228 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362AbYBJPKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 07:54:18 -0500
-Subject: Re: [PATCH] zd1211rw: Fix beacon filter flags thinko
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <200802101603.56095.mb@bu3sch.de> (sfid-20080210_150436_186402_A253CCC1)
-References: <200802101603.56095.mb@bu3sch.de>
-	 (sfid-20080210_150436_186402_A253CCC1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0RQAaZ77S9HMxsLZ3Lat"
-Date: Mon, 11 Feb 2008 13:53:51 +0100
-Message-Id: <1202734431.11481.80.camel@johannes.berg> (sfid-20080211_125422_887957_88048D2B)
-Mime-Version: 1.0
+	Sun, 10 Feb 2008 10:10:52 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 04/12] Add DBG_CMD for debugging firmware commands
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Date: Sun, 10 Feb 2008 17:00:19 +0200
+Message-ID: <20080210150019.17592.86209.stgit@tikku> (sfid-20080210_151055_302093_62D7F00F)
+In-Reply-To: <20080210145733.17592.61729.stgit@tikku>
+References: <20080210145733.17592.61729.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
---=-0RQAaZ77S9HMxsLZ3Lat
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ drivers/net/wireless/at76_usb.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
 
-On Sun, 2008-02-10 at 16:03 +0100, Michael Buesch wrote:
-> We must not clear the FIF_BCN_PRBRESP_PROMISC bit in the
-> new_flags. The zd-driver does support sending beacons and
-> probe responses to the host. What the flag does is say "Send me
-> all beacons and probe responses". And we actually do that. We always
-> do that, so we ignore the case when the bit is disabled. But that is
-> fine. But we must not clear the flag, as that tells mac80211 that
-> we do not support passing beacons and probe responses to the stack.
-> And that's not true.
-
-Good explanation. Maybe it's needed with the filter flags defines/the
-config_filter callback description?
-
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->=20
-> Should probably go -stable, too.
-
-Unnecessary, I don't think we currently ever test the flag in mac80211.
-
-johannes
-
---=-0RQAaZ77S9HMxsLZ3Lat
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7BFXqVg1VMiehFYAQL6ig//fWll8L/nXvXjxDaT/qKOD4fksChpX5TO
-gRnX4+SFLPcPeDS2uRrbL3UHOzYZtrsgNaqLdvtGilKh0LIQNosZsKe8UbXRbGtC
-tQ5ipMRnE4BD1qK3lF4wpc8nH4ehSnUrNbVup2jOwx0z3NpuRL6zmL6U2ogVVRoX
-keTKGOretbdcwA3NqbcqjL+on/8B4p/axHOvbOtAXicqxqhinYhxGPGdFpXnTDfX
-RTrXLBUT+mCmaLxjSPqt4S+d5ykXQYE8q+HdqnI47OBizTGKKtgV7noJF+CGbnpZ
-Qlywq+oWsQ9f4OYdGZrtw9EhlpIkoFlnvLtjzxOEq+7vHlxsfMlDi8kaHFdV1BMY
-aqDhhoof3E83YONPm9Whz0AUhVqMdkvFxBjvxNFJu97d9X23MAVHPW6AhPIypvQk
-oPxohTclyNz3W+9tBpKbni0QDbHzQ7wu3iTs1xm6zh9kjjk5JAuDq/wxuuw1zGkb
-arkuU8CXyvPVFkXjvzU+7QUI9dUlAzRZuFcnrxSm/TNvIkpgRzlxOO7lLb3Sb85X
-LKSOBcoJXybgkwbOrRF5tiCrJwvHGlmXbD7IBeAvMBVausw2dIeRXXtzp/z3lSLO
-91LC9lICnNfw7L1OC9/epeICdZhmAulq4A7kcqLg7C/L14Lj/xXIT13y6yxMTq+4
-YzQuuy04j9g=
-=TcyX
------END PGP SIGNATURE-----
-
---=-0RQAaZ77S9HMxsLZ3Lat--
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 80b90a3..c312634 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -76,6 +76,7 @@
+ #define DBG_WE_EVENTS		0x08000000	/* dump wireless events */
+ #define DBG_FW			0x10000000	/* firmware download */
+ #define DBG_DFU			0x20000000	/* device firmware upgrade */
++#define DBG_CMD			0x40000000
+ 
+ #define DBG_DEFAULTS		0
+ 
+@@ -786,6 +787,24 @@ static inline int at76_get_cmd_status(struct usb_device *udev, u8 cmd)
+ 	return stat_buf[5];
+ }
+ 
++#define MAKE_CMD_CASE(c) case (c): return #c
++
++static const char *at76_get_cmd_string(u8 cmd_status)
++{
++	switch (cmd_status) {
++		MAKE_CMD_CASE(CMD_SET_MIB);
++		MAKE_CMD_CASE(CMD_GET_MIB);
++		MAKE_CMD_CASE(CMD_SCAN);
++		MAKE_CMD_CASE(CMD_JOIN);
++		MAKE_CMD_CASE(CMD_START_IBSS);
++		MAKE_CMD_CASE(CMD_RADIO_ON);
++		MAKE_CMD_CASE(CMD_RADIO_OFF);
++		MAKE_CMD_CASE(CMD_STARTUP);
++	}
++
++	return "UNKNOWN";
++}
++
+ static int at76_set_card_command(struct usb_device *udev, int cmd, void *buf,
+ 				 int buf_size)
+ {
+@@ -801,6 +820,10 @@ static int at76_set_card_command(struct usb_device *udev, int cmd, void *buf,
+ 	cmd_buf->size = cpu_to_le16(buf_size);
+ 	memcpy(cmd_buf->data, buf, buf_size);
+ 
++	at76_dbg_dump(DBG_CMD, cmd_buf, sizeof(struct at76_command) + buf_size,
++		      "issuing command %s (0x%02x)",
++		      at76_get_cmd_string(cmd), cmd);
++
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0), 0x0e,
+ 			      USB_TYPE_VENDOR | USB_DIR_OUT | USB_RECIP_DEVICE,
+ 			      0, 0, cmd_buf,
 
