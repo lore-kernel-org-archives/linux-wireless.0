@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38634 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbYBYLir (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51125 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbYBJKbk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 06:38:47 -0500
-Subject: Re: [PATCH] [PS3] gelic wireless driver needs MAC80211 support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sebastian Siewior <netdev@ml.breakpoint.cc>
-Cc: Jeff Garzik <jgarzik@pobox.com>,
-	Masakazu Mokuno <mokuno@sm.sony.co.jp>, netdev@vger.kernel.org,
+	Sun, 10 Feb 2008 05:31:40 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
+Date: Sun, 10 Feb 2008 11:31:13 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20080225111649.GA24352@Chamillionaire.breakpoint.cc>
-References: <20080223193517.GA6704@Chamillionaire.breakpoint.cc>
-	 <47C0815F.7020100@pobox.com> <1203934436.13162.64.camel@johannes.berg>
-	 <20080225111649.GA24352@Chamillionaire.breakpoint.cc>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DpEEszsZXEBwH0SGsDIJ"
-Date: Mon, 25 Feb 2008 12:38:00 +0100
-Message-Id: <1203939480.13162.98.camel@johannes.berg> (sfid-20080225_113851_013570_CBFCDD28)
-Mime-Version: 1.0
+References: <200802101121.58058.IvDoorn@gmail.com>
+In-Reply-To: <200802101121.58058.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802101131.13974.mb@bu3sch.de> (sfid-20080210_103143_220935_4896A065)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+> John, please send this patch to the 2.6.24/2.6.25 stable trees.
+> It is already present in the wireless-2.6 tree queued for 2.6.26.
+> 
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index cba7f57..c4a6ab4 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
+>  	/* Hercules */
+>  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	/* Melco */
+> +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
+> -
+>  	/* MSI */
+>  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
+>  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
 
---=-DpEEszsZXEBwH0SGsDIJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
+We always handled adding IDs as features.
 
-
-On Mon, 2008-02-25 at 12:16 +0100, Sebastian Siewior wrote:
-> * Johannes Berg | 2008-02-25 11:13:56 [+0100]:
->=20
-> >That seems completely wrong since it's a full-mac "chip" (implemented in
-> >the HV or so maybe). What exactly does it need from mac80211?
-> Nothing, please drop. I've sent another patch which enables WEXT what is
-> the correct thing to do. Sorry for the noise.
-
-No problem. I saw it later on netdev but had read linux-wireless
-first :)
-
-johannes
-
---=-DpEEszsZXEBwH0SGsDIJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Kol6Vg1VMiehFYAQKUSRAAiw8jPwhliNoXc/6K/BgKKW1SdJSSTJFY
-9aCKn0v9Z4HCd4Ou1YWPe/MkzxBaKVmkLVX2a6vbyebQp3+zqY5HV4Hfi9IROvqT
-sNyiUjOBO59AZxlF4BQ2xenZ0UiAbf4m/+QJOJqNkwLDtkl6l4HBF7/0vwc9Dahn
-uumlkhRZIAC4VTwwtnBKXQg/9qnoCWYv3NDxFvPkTy4ba0ZMzPeTPKaJlXFpkh/o
-eIDxSJ8F42FpgHGAitsQIayuaNefMjEJKrX4AiCMuz2Uep6ACyTzT8MFZ5WBYXM/
-JWhEpeRBqHm5QQ9nLCPo5xcy2mXXcGMCvt20Hoiw/2wwaXA++aOwSnMz3E3yg/8H
-HSnozG82b7APU9SG9dqoLv6cv+J5PEV7JrmTqbbd9UdREtFc2VksERW3YwgPGg3B
-48FOJevm5OxJ9LLP6IVEjKSlA3vbV+JJrJGsGjnyyD4RZPBstcD4l+ASvWgZAEI8
-quHRzVuou0d1/4apNlEf4TClF+rRuB5XgLdQgixDXdVUubUQt/HGf4Q2Ce3G6Imn
-DZSNqgpVVl5IM5cANNNyYcFGiHGDkYvAlRC3XzsFsbo0wllC6rtQbdGIgN+3upuM
-2cywBPGaduBCtkc74a+9bYzz1bUwTC9MXEUIsUs2bCY95cpYSyHGQQUEKZHah7vL
-PcUlwa1X9AY=
-=zLS/
------END PGP SIGNATURE-----
-
---=-DpEEszsZXEBwH0SGsDIJ--
-
+-- 
+Greetings Michael.
