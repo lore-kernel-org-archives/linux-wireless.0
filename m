@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4182 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752850AbYBVPHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 10:07:20 -0500
-Date: Fri, 22 Feb 2008 09:34:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: STA info size
-Message-ID: <20080222143409.GA3067@tuxdriver.com> (sfid-20080222_150738_689668_5F34E6AD)
-References: <1203675307.26341.29.camel@johannes.berg>
+Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbYBJVx6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 16:53:58 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:57 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 13/14] rt2x00: Kill guardian urb during disable_radio
+Date: Sun, 10 Feb 2008 22:52:36 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1203675307.26341.29.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102252.36990.IvDoorn@gmail.com> (sfid-20080210_215400_793078_A50500C8)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 22, 2008 at 11:15:07AM +0100, Johannes Berg wrote:
+When the radio is being disabled we should also
+kill the guardian urb which could still be pending
+in the device.
 
-> I was just reorganising struct sta_info to clarify the locking (will
-> send another mail about that) and noticed that due to the HT stuff, each
-> STA info struct currently (after my reorg) takes 2432 bytes. Almost 2000
-> of those are in struct sta_ampdu_mlme which is most likely not used for
-> most STAs.
-> 
-> Do you think that is too much memory per station? It'd probably be
-> possible to allocate the sta_ampdu_mlme dynamically when needed, no?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
 
-My count was closer to 1.5k, but I may have missed something.
-Either way, that seems a little big to me.  A dynamic allocation
-strategy seems appropriate to me.  Anyone disagree?
-
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 450043b..6cb4432 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -378,6 +378,7 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct queue_entry_priv_usb_rx *priv_rx;
+ 	struct queue_entry_priv_usb_tx *priv_tx;
++	struct queue_entry_priv_usb_bcn *priv_bcn;
+ 	struct data_queue *queue;
+ 	unsigned int i;
+ 
+@@ -392,12 +393,28 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 		usb_kill_urb(priv_rx->urb);
+ 	}
+ 
+-	txall_queue_for_each(rt2x00dev, queue) {
++	tx_queue_for_each(rt2x00dev, queue) {
+ 		for (i = 0; i < queue->limit; i++) {
+ 			priv_tx = queue->entries[i].priv_data;
+ 			usb_kill_urb(priv_tx->urb);
+ 		}
+ 	}
++
++	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
++		priv_bcn = rt2x00dev->bcn->entries[i].priv_data;
++		usb_kill_urb(priv_bcn->urb);
++
++		if (priv_bcn->guardian_urb)
++			usb_kill_urb(priv_bcn->guardian_urb);
++	}
++
++	if (!test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
++		return;
++
++	for (i = 0; i < rt2x00dev->bcn[1].limit; i++) {
++		priv_tx = rt2x00dev->bcn[1].entries[i].priv_data;
++		usb_kill_urb(priv_tx->urb);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_disable_radio);
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.4
+
