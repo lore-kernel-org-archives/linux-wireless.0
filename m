@@ -1,215 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38777 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760200AbYBGUxc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 15:53:32 -0500
-Date: Thu, 7 Feb 2008 12:48:04 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Michael@hera.kernel.org,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Buesch <mb@bu3sch.de>, Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 36/45] b43legacy: drop packets we are not able to encrypt
-Message-ID: <20080207204804.GK16389@suse.de> (sfid-20080207_205340_587097_FD6B4E95)
-References: <20080207204118.202098927@mini.kroah.org>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:47305 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301AbYBJPKh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 10:10:37 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 00/12] at76_usb mac80211 port
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Date: Sun, 10 Feb 2008 16:59:49 +0200
+Message-ID: <20080210145733.17592.61729.stgit@tikku> (sfid-20080210_151042_562062_4F51E716)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207204549.GA16389@suse.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.24-stable review patch.  If anyone has any objections, please let us know.
+Here's a patch series of my at76_usb mac80211 port. I'm sending them now 
+for comments. Currently open mode and WEP authentication are supported.
 
-------------------
-From: Stefano Brivio <stefano.brivio@polimi.it>
+The patches have received very little testing, so please be careful when
+trying these. Also some features, comparated to the original driver, are 
+missing. I will implement the missing features later.
 
-patch 9eca9a8e81928685b4de00ecef83a7c13c340fc9 in mainline.
+I have checked all patches with checkpatch.pl and sparse. gcc warns
+about three unused functions, but I plan to use them with the debugfs
+interface in the future.
 
-We must drop any packets we are not able to encrypt.
-We must not send them unencrypted or with an all-zero-key (which
-basically is the same as unencrypted, from a security point of view).
-
-This might only trigger shortly after resume before mac80211 reassociated
-and reconfigured the keys.
-
-It is safe to drop these packets, as the association they belong to
-is not guaranteed anymore anyway.
-This is a security fix in the sense that it prevents information leakage.
-
-This patch by Michael Buesch has been ported to b43legacy.
-
-Cc: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Thanks to Pavel Roskin for giving me guidance on the port.
 
 ---
- drivers/net/wireless/b43legacy/dma.c  |   11 ++++++++++-
- drivers/net/wireless/b43legacy/pio.c  |   18 +++++++++++++++---
- drivers/net/wireless/b43legacy/xmit.c |   15 ++++++++++++---
- drivers/net/wireless/b43legacy/xmit.h |    2 +-
- 4 files changed, 38 insertions(+), 8 deletions(-)
 
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -1181,9 +1181,11 @@ static int dma_tx_fragment(struct b43leg
- 
- 	header = &(ring->txhdr_cache[slot * sizeof(
- 			       struct b43legacy_txhdr_fw3)]);
--	b43legacy_generate_txhdr(ring->dev, header,
-+	err = b43legacy_generate_txhdr(ring->dev, header,
- 				 skb->data, skb->len, ctl,
- 				 generate_cookie(ring, slot));
-+	if (unlikely(err))
-+		return err;
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 				       sizeof(struct b43legacy_txhdr_fw3), 1);
-@@ -1282,6 +1284,13 @@ int b43legacy_dma_tx(struct b43legacy_wl
- 	B43legacy_BUG_ON(ring->stopped);
- 
- 	err = dma_tx_fragment(ring, skb, ctl);
-+	if (unlikely(err == -ENOKEY)) {
-+		/* Drop this packet, as we don't have the encryption key
-+		 * anymore and must not transmit it unencrypted. */
-+		dev_kfree_skb_any(skb);
-+		err = 0;
-+		goto out_unlock;
-+	}
- 	if (unlikely(err)) {
- 		b43legacyerr(dev->wl, "DMA tx mapping failure\n");
- 		goto out_unlock;
---- a/drivers/net/wireless/b43legacy/pio.c
-+++ b/drivers/net/wireless/b43legacy/pio.c
-@@ -181,7 +181,7 @@ union txhdr_union {
- 	struct b43legacy_txhdr_fw3 txhdr_fw3;
- };
- 
--static void pio_tx_write_fragment(struct b43legacy_pioqueue *queue,
-+static int pio_tx_write_fragment(struct b43legacy_pioqueue *queue,
- 				  struct sk_buff *skb,
- 				  struct b43legacy_pio_txpacket *packet,
- 				  size_t txhdr_size)
-@@ -189,14 +189,17 @@ static void pio_tx_write_fragment(struct
- 	union txhdr_union txhdr_data;
- 	u8 *txhdr = NULL;
- 	unsigned int octets;
-+	int err;
- 
- 	txhdr = (u8 *)(&txhdr_data.txhdr_fw3);
- 
- 	B43legacy_WARN_ON(skb_shinfo(skb)->nr_frags != 0);
--	b43legacy_generate_txhdr(queue->dev,
-+	err = b43legacy_generate_txhdr(queue->dev,
- 				 txhdr, skb->data, skb->len,
- 				 &packet->txstat.control,
- 				 generate_cookie(queue, packet));
-+	if (err)
-+		return err;
- 
- 	tx_start(queue);
- 	octets = skb->len + txhdr_size;
-@@ -204,6 +207,8 @@ static void pio_tx_write_fragment(struct
- 		octets--;
- 	tx_data(queue, txhdr, (u8 *)skb->data, octets);
- 	tx_complete(queue, skb);
-+
-+	return 0;
- }
- 
- static void free_txpacket(struct b43legacy_pio_txpacket *packet,
-@@ -226,6 +231,7 @@ static int pio_tx_packet(struct b43legac
- 	struct b43legacy_pioqueue *queue = packet->queue;
- 	struct sk_buff *skb = packet->skb;
- 	u16 octets;
-+	int err;
- 
- 	octets = (u16)skb->len + sizeof(struct b43legacy_txhdr_fw3);
- 	if (queue->tx_devq_size < octets) {
-@@ -247,8 +253,14 @@ static int pio_tx_packet(struct b43legac
- 	if (queue->tx_devq_used + octets > queue->tx_devq_size)
- 		return -EBUSY;
- 	/* Now poke the device. */
--	pio_tx_write_fragment(queue, skb, packet,
-+	err = pio_tx_write_fragment(queue, skb, packet,
- 			      sizeof(struct b43legacy_txhdr_fw3));
-+	if (unlikely(err == -ENOKEY)) {
-+		/* Drop this packet, as we don't have the encryption key
-+		 * anymore and must not transmit it unencrypted. */
-+		free_txpacket(packet, 1);
-+		return 0;
-+	}
- 
- 	/* Account for the packet size.
- 	 * (We must not overflow the device TX queue)
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -181,7 +181,7 @@ static u8 b43legacy_calc_fallback_rate(u
- 	return 0;
- }
- 
--static void generate_txhdr_fw3(struct b43legacy_wldev *dev,
-+static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- 			       struct b43legacy_txhdr_fw3 *txhdr,
- 			       const unsigned char *fragment_data,
- 			       unsigned int fragment_len,
-@@ -252,6 +252,13 @@ static void generate_txhdr_fw3(struct b4
- 			iv_len = min((size_t)txctl->iv_len,
- 				     ARRAY_SIZE(txhdr->iv));
- 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
-+		} else {
-+			/* This key is invalid. This might only happen
-+			 * in a short timeframe after machine resume before
-+			 * we were able to reconfigure keys.
-+			 * Drop this packet completely. Do not transmit it
-+			 * unencrypted to avoid leaking information. */
-+			return -ENOKEY;
- 		}
- 	}
- 	b43legacy_generate_plcp_hdr((struct b43legacy_plcp_hdr4 *)
-@@ -344,16 +351,18 @@ static void generate_txhdr_fw3(struct b4
- 	/* Apply the bitfields */
- 	txhdr->mac_ctl = cpu_to_le32(mac_ctl);
- 	txhdr->phy_ctl = cpu_to_le16(phy_ctl);
-+
-+	return 0;
- }
- 
--void b43legacy_generate_txhdr(struct b43legacy_wldev *dev,
-+int b43legacy_generate_txhdr(struct b43legacy_wldev *dev,
- 			      u8 *txhdr,
- 			      const unsigned char *fragment_data,
- 			      unsigned int fragment_len,
- 			      const struct ieee80211_tx_control *txctl,
- 			      u16 cookie)
- {
--	generate_txhdr_fw3(dev, (struct b43legacy_txhdr_fw3 *)txhdr,
-+	return generate_txhdr_fw3(dev, (struct b43legacy_txhdr_fw3 *)txhdr,
- 			   fragment_data, fragment_len,
- 			   txctl, cookie);
- }
---- a/drivers/net/wireless/b43legacy/xmit.h
-+++ b/drivers/net/wireless/b43legacy/xmit.h
-@@ -76,7 +76,7 @@ struct b43legacy_txhdr_fw3 {
- 
- 
- 
--void b43legacy_generate_txhdr(struct b43legacy_wldev *dev,
-+int b43legacy_generate_txhdr(struct b43legacy_wldev *dev,
- 			      u8 *txhdr,
- 			      const unsigned char *fragment_data,
- 			      unsigned int fragment_len,
+Kalle Valo (11):
+      Remove struct net_device
+      Prepare for struct net_device removal
+      Allocate struct at76_priv using ieee80211_alloc_hw()
+      Use wiphy_name everywhere where needed
+      Remove support the legacy stack
+      Add support for WEP
+      Add support for monitor mode
+      at76_usb: add mac80211 support
+      Add DBG_CMD for debugging firmware commands
+      Convert DBG_TX levels to use at76_dbg_dump()
+      Add at76_dbg_dump() macro
 
--- 
+Pavel Roskin (1):
+      Use net/mac80211.h instead of net/ieee80211.h
+
+
+ drivers/net/wireless/at76_usb.c | 4149 +++++----------------------------------
+ drivers/net/wireless/at76_usb.h |  172 --
+ 2 files changed, 585 insertions(+), 3736 deletions(-)
+
