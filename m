@@ -1,41 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3246 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753273AbYB0QDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 11:03:13 -0500
-Date: Wed, 27 Feb 2008 10:52:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, bruno@thinktube.com,
-	jirislaby@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Message-ID: <20080227155257.GC3078@tuxdriver.com> (sfid-20080227_160318_675212_6471C259)
-References: <20080224042851.GE4426@makis.domain.invalid> <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com> <20080224175933.GA4360@hash.localnet> <40f31dec0802241058h5b37a471s5092dd370a4f2a48@mail.gmail.com> <43e72e890802261923g528f4006ofd665edbba335d99@mail.gmail.com> <40f31dec0802262154k4e768257hb8ad255e2eb1f6a2@mail.gmail.com> <43e72e890802270530j6ca4a6eal832d642a94a49e94@mail.gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.186]:28570 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbYBJVxw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 16:53:52 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so5147467mue.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:51 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 10/14] rt2x00: Fix skbdesc->data_len initialization
+Date: Sun, 10 Feb 2008 22:51:21 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890802270530j6ca4a6eal832d642a94a49e94@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102251.21346.IvDoorn@gmail.com> (sfid-20080210_215354_902810_5FCB7A46)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 08:30:18AM -0500, Luis R. Rodriguez wrote:
-> On Wed, Feb 27, 2008 at 12:54 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+skbdesc->data_len was not initialized correctly
+in rt2x00pci, rt2x00usb, rt2500usb and rt73usb.
 
-> >  What if there is a pci-e card in the future that needs _PCI bit ?
-> 
-> I don't follow, the member is for struct pci_dev so its either a pci
-> or pci-express device. If you mean what if we later have some srev in
-> the range that is not pci-e, well then we'd use srevs wouldn't we?
-> 
-> > I guess for now we can work on with srevs to be safe but it's good to
-> >  know of that feature, thanx ;-)
-> 
-> The point is that if there is already a variable we can use to detect
-> if a device is pci-e then we shouldn't introduce any other new ones.
+The value was set to queue->data_size which
+means that the incorrect frame size was pased
+to the upper layers.
 
-ACK for Luis's point.
+Correctly base the value on either the skb->len,
+or the rx frame size passed to the driver by the
+device.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c   |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 1ae9e3c..ad8b6a0 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1145,7 +1145,7 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
+ 	 * Set descriptor pointer.
+ 	 */
+ 	skbdesc->data = entry->skb->data;
+-	skbdesc->data_len = entry->queue->data_size;
++	skbdesc->data_len = rxdesc->size;
+ 	skbdesc->desc = entry->skb->data + rxdesc->size;
+ 	skbdesc->desc_len = entry->queue->desc_size;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index b8c6a8c..8f88ca2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -63,7 +63,7 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	skbdesc = get_skb_frame_desc(skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 	skbdesc->data = skb->data;
+-	skbdesc->data_len = queue->data_size;
++	skbdesc->data_len = skb->len;
+ 	skbdesc->desc = priv_tx->desc;
+ 	skbdesc->desc_len = queue->desc_size;
+ 	skbdesc->entry = entry;
+@@ -131,7 +131,7 @@ void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
+ 		skbdesc = get_skb_frame_desc(entry->skb);
+ 		memset(skbdesc, 0, sizeof(*skbdesc));
+ 		skbdesc->data = entry->skb->data;
+-		skbdesc->data_len = queue->data_size;
++		skbdesc->data_len = entry->skb->len;
+ 		skbdesc->desc = priv_rx->desc;
+ 		skbdesc->desc_len = queue->desc_size;
+ 		skbdesc->entry = entry;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 4219057..450043b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -254,7 +254,7 @@ int rt2x00usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 	skbdesc = get_skb_frame_desc(skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 	skbdesc->data = skb->data + queue->desc_size;
+-	skbdesc->data_len = queue->data_size;
++	skbdesc->data_len = skb->len - queue->desc_size;
+ 	skbdesc->desc = skb->data;
+ 	skbdesc->desc_len = queue->desc_size;
+ 	skbdesc->entry = entry;
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1802898..af1bb91 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1395,7 +1395,7 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
+ 	 * Set descriptor and data pointer.
+ 	 */
+ 	skbdesc->data = entry->skb->data + entry->queue->desc_size;
+-	skbdesc->data_len = entry->queue->data_size;
++	skbdesc->data_len = rxdesc->size;
+ 	skbdesc->desc = entry->skb->data;
+ 	skbdesc->desc_len = entry->queue->desc_size;
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.4
+
