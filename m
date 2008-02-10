@@ -1,65 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:53520 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197AbYBAS3U (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33078 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbYBJPN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 13:29:20 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so1212609wra.23
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 10:29:16 -0800 (PST)
-Message-ID: <1ba2fa240802011029h7cce3f77ge61bc11564c378a6@mail.gmail.com> (sfid-20080201_182923_924448_A98B8EE6)
-Date: Fri, 1 Feb 2008 20:29:14 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless mini-summit agenda proposals?
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1201869751.4188.19.camel@johannes.berg>
+	Sun, 10 Feb 2008 10:13:26 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 11/12] Prepare for struct net_device removal
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Date: Sun, 10 Feb 2008 17:01:11 +0200
+Message-ID: <20080210150111.17592.70564.stgit@tikku> (sfid-20080210_151331_222179_74A8E29D)
+In-Reply-To: <20080210145733.17592.61729.stgit@tikku>
+References: <20080210145733.17592.61729.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201801923.3000.13.camel@localhost.localdomain>
-	 <1201869751.4188.19.camel@johannes.berg>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 1, 2008 2:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> > cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
-> > because email isn't optimal for this.  I haven't had enough time to jump
-> > into it yet, but the fact that Johannes is the vast majority of the
-> > effort here is worrisome.  Having a reference implementation (airo,
-> > atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
-> > probably be very useful, even just to get a sense of how the API works.
->
-> cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
-> work it got so far is for hostapd.
->
-> I have a fairly decent plan how to add association/... support but it
-> lacks execution because it's completely boring work that doesn't buy us
-> any new features since we still have to support wext.
->
-Security setting is a bit  broken. There is a missing separation
-between static and dynamic./WPA wep keys.
+Some cleanup to make it easier to remove the struct net_device.
 
-> > 802.11n - do we need any discussion here or is it just a question of
-> > executing on the current plan?
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-> I think with the last patchset from Ron it's mostly done, cleanups still
-> to do and probably QoS improvements (I'm thinking multiqueue netdevs
-> here)
+ drivers/net/wireless/at76_usb.c |   23 ++++++++++++-----------
+ 1 files changed, 12 insertions(+), 11 deletions(-)
 
-Multiqueue  and  AP mode support is planed. AP mode requires changes
-in configuration interface (cfg, wext) and hostapd.
 
-> > Userspace MLME - what's going on here?  Noise around this seems to be
-> > quieter these days.  Is stuff going according to plan/schedule or are
-> > there roadblocks?
->
-> Nobody is working on this, but a good part is done since hostapd works
-> and the userspace MLME needs many of the same features. Again, the
-> biggest thing is cfg80211/nl80211 support, setting a device to userspace
-> MLME mode and implementing the communication.
->
-> johannes
->
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 38a89b4..4832198 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -5026,7 +5026,7 @@ static void at76_rx_tasklet(unsigned long param)
+ 		return;
+ 	}
+ 
+-	if (!priv->rx_skb || !netdev || !priv->rx_skb->data)
++	if (!priv->rx_skb || !priv->rx_skb->data)
+ 		return;
+ 
+ 	buf = (struct at76_rx_buffer *)priv->rx_skb->data;
+@@ -5045,10 +5045,9 @@ static void at76_rx_tasklet(unsigned long param)
+ 	}
+ 
+ 	at76_dbg(DBG_RX_ATMEL_HDR,
+-		 "%s: rx frame: rate %d rssi %d noise %d link %d %s",
++		 "%s: rx frame: rate %d rssi %d noise %d link %d",
+ 		 wiphy_name(priv->hw->wiphy), buf->rx_rate, buf->rssi,
+-		 buf->noise_level, buf->link_quality,
+-		 hex2str(i802_11_hdr, 48));
++		 buf->noise_level, buf->link_quality);
+ 
+ 	{
+ 		struct ieee80211_rx_status rx_status = {0};
+@@ -5857,13 +5856,6 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	netdev->set_mac_address = at76_set_mac_address;
+ 	dev_alloc_name(netdev, "wlan%d");
+ 
+-	printk(KERN_INFO "%s: USB %s, MAC %s, firmware %d.%d.%d-%d\n",
+-	       netdev->name, interface->dev.bus_id, mac2str(priv->mac_addr),
+-	       priv->fw_version.major, priv->fw_version.minor,
+-	       priv->fw_version.patch, priv->fw_version.build);
+-	printk(KERN_INFO "%s: regulatory domain 0x%02x: %s\n", netdev->name,
+-	       priv->regulatory_domain, priv->domain->name);
+-
+ 	/* we let this timer run the whole time this driver instance lives */
+ 	mod_timer(&priv->bss_list_timer, jiffies + BSS_LIST_TIMEOUT);
+ 
+@@ -5883,6 +5875,15 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 
+ 	priv->mac80211_registered = 1;
+ 
++	printk(KERN_INFO "%s: USB %s, MAC %s, firmware %d.%d.%d-%d\n",
++	       wiphy_name(priv->hw->wiphy),
++	       interface->dev.bus_id, mac2str(priv->mac_addr),
++	       priv->fw_version.major, priv->fw_version.minor,
++	       priv->fw_version.patch, priv->fw_version.build);
++	printk(KERN_INFO "%s: regulatory domain 0x%02x: %s\n",
++	       wiphy_name(priv->hw->wiphy),
++	       priv->regulatory_domain, priv->domain->name);
++
+ exit:
+ 	return ret;
+ }
+
