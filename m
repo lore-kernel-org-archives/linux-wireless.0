@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39279 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077AbYBDPYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 10:24:36 -0500
-Message-ID: <47A72E13.8070305@openwrt.org> (sfid-20080204_152441_479078_2DFB741F)
-Date: Mon, 04 Feb 2008 16:24:03 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+Received: from fg-out-1718.google.com ([72.14.220.158]:34204 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755177AbYBJKhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 05:37:20 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3443808fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 02:37:18 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
+Date: Sun, 10 Feb 2008 11:36:28 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>	 <-2417195033053015320@unknownmsgid>	 <1ba2fa240802040326v425fe147y52f2d8731e3012cb@mail.gmail.com>	 <1ba2fa240802040330o5b9ffb2dk32b28f7f959e49f4@mail.gmail.com>	 <5358276387473684738@unknownmsgid>	 <1ba2fa240802040357vf517e6as374540e28dd1ab56@mail.gmail.com>	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>	 <-7767648866191425885@unknownmsgid> <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
-In-Reply-To: <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de>
+In-Reply-To: <200802101131.13974.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802101136.28667.IvDoorn@gmail.com> (sfid-20080210_103724_751010_52766FAB)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
->> > Maybe we should add blob to tx_status let say of skb->cb[] size and
->> > field for rate scale algorithm version/name.  Otherwise we will be
->> > inventing API for each rate scale algorithm...
->>
->> I disagree, we should have something generic enough to allow some sort of
->> "capability negotiation" between the driver and the rate control
->> algorithm, otherwise we could just remove rate control algorithms
->> completely and internalize them into drivers (with some "helper" functions
->> for those who don't want to write their own)... Which I'm sure you might
->> actually like but I don't ;)
+On Sunday 10 February 2008, Michael Buesch wrote:
+> On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > ---
+> > John, please send this patch to the 2.6.24/2.6.25 stable trees.
+> > It is already present in the wireless-2.6 tree queued for 2.6.26.
+> > 
+> >  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > index cba7f57..c4a6ab4 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
+> >  	/* Hercules */
+> >  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	/* Melco */
+> > +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > -
+> >  	/* MSI */
+> >  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
 > 
-> So Felix how many rates do you need for each packet?
-The algorithm is designed to work with 4 different rates with adjustable
-retry counts. A good description can be found here:
-http://madwifi.org/browser/madwifi/trunk/ath_rate/minstrel/minstrel.txt
+> I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
+> We always handled adding IDs as features.
 
-- Felix
+Ok, the user has to wait untill 2.6.26 then.
+
+Ivo
