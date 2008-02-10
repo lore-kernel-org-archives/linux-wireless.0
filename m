@@ -1,415 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:22352 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755876AbYBVHVg (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33850 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbYBKMWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 02:21:36 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so204502rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:21:35 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Thu, 21 Feb 2008 20:29:14 -0800
-Subject: [PATCH 13/13 v2] o11s: changes to cfg.c to support mesh path and mesh peer link operation
-Message-ID: <47be77ff.15b38c0a.6468.ffff811b@mx.google.com> (sfid-20080222_072206_240429_C42FDF57)
+	Mon, 11 Feb 2008 07:22:09 -0500
+Subject: [PATCH v2] mac80211: give burst time in txop rather than 0.1msec
+	units
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 10 Feb 2008 16:49:38 +0100
+Message-Id: <1202658578.11481.4.camel@johannes.berg> (sfid-20080211_122218_015513_F6A3C320)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This changes mac80211 to pass the burst time to conf_tx in txop
+units rather than 0.1msec units. 0.1msec units are only required
+by atheros hardware (according to current driver support), all
+other drivers do other calculations or require the txop value.
+Therefore, it results in fewer calculations and more precision
+if we just pass the txop value through to the driver.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Michael Buesch <mb@bu3sch.de>
 ---
- net/mac80211/cfg.c |  285 +++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 271 insertions(+), 14 deletions(-)
+Michael (Wu), the p54 driver has some values that differ from
+the 802.11 spec, is that intentional?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a083cc7..08e139e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -15,6 +15,11 @@
- #include "ieee80211_i.h"
- #include "cfg.h"
- #include "ieee80211_rate.h"
-+#ifdef CONFIG_MAC80211_MESH
-+#include "mesh.h"
-+#endif
-+
-+#define DEFAULT_RATES 0
- 
- static enum ieee80211_if_types
- nl80211_type_to_mac80211_type(enum nl80211_iftype type)
-@@ -28,13 +33,16 @@ nl80211_type_to_mac80211_type(enum nl80211_iftype type)
- 		return IEEE80211_IF_TYPE_STA;
- 	case NL80211_IFTYPE_MONITOR:
- 		return IEEE80211_IF_TYPE_MNTR;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		return IEEE80211_IF_TYPE_MESH_POINT;
- 	default:
- 		return IEEE80211_IF_TYPE_INVALID;
- 	}
- }
- 
- static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
--			       enum nl80211_iftype type, u32 *flags)
-+			       enum nl80211_iftype type, u32 *flags,
-+			       struct vif_params *params)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	enum ieee80211_if_types itype;
-@@ -48,8 +56,12 @@ static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
- 	itype = nl80211_type_to_mac80211_type(type);
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
-+#ifndef CONFIG_MAC80211_MESH
-+	if (unlikely(itype == IEEE80211_IF_TYPE_MESH_POINT))
-+		return -ENOTSUPP;
-+#endif
- 
--	err = ieee80211_if_add(local->mdev, name, &dev, itype);
-+	err = ieee80211_if_add(local->mdev, name, &dev, itype, params);
- 	if (err || itype != IEEE80211_IF_TYPE_MNTR || !flags)
- 		return err;
- 
-@@ -78,7 +90,8 @@ static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
- }
- 
- static int ieee80211_change_iface(struct wiphy *wiphy, int ifindex,
--				  enum nl80211_iftype type, u32 *flags)
-+				  enum nl80211_iftype type, u32 *flags,
-+				  struct vif_params *params)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct net_device *dev;
-@@ -99,6 +112,10 @@ static int ieee80211_change_iface(struct wiphy *wiphy, int ifindex,
- 	itype = nl80211_type_to_mac80211_type(type);
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
-+#ifndef MAC80211_MESH
-+	if (unlikely(itype == IEEE80211_IF_TYPE_MESH_POINT))
-+		return -ENOTSUPP;
-+#endif
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -108,6 +125,15 @@ static int ieee80211_change_iface(struct wiphy *wiphy, int ifindex,
- 	ieee80211_if_reinit(dev);
- 	ieee80211_if_set_type(dev, itype);
- 
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT &&
-+	    params->mesh_id_len) {
-+		sdata->u.sta.mesh_id_len = params->mesh_id_len;
-+		memcpy(sdata->u.sta.mesh_id, params->mesh_id,
-+		       params->mesh_id_len);
-+	}
-+#endif
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_MNTR || !flags)
- 		return 0;
- 
-@@ -284,26 +310,63 @@ static int ieee80211_config_default_key(struct wiphy *wiphy,
- 	return 0;
- }
- 
--static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
--				 u8 *mac, struct station_stats *stats)
-+static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
-+{
-+#ifdef CONFIG_MAC80211_MESH
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
-+#endif
-+
-+	sinfo->filled = STATION_INFO_INACTIVE_TIME |
-+			STATION_INFO_RX_BYTES |
-+			STATION_INFO_TX_BYTES;
-+
-+	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-+	sinfo->rx_bytes = sta->rx_bytes;
-+	sinfo->tx_bytes = sta->tx_bytes;
-+
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
-+		sinfo->filled |= STATION_INFO_LLID |
-+				 STATION_INFO_PLID |
-+				 STATION_INFO_PLINK_STATE;
-+
-+		sinfo->llid = le16_to_cpu(sta->llid);
-+		sinfo->plid = le16_to_cpu(sta->plid);
-+		sinfo->plink_state = sta->plink_state;
-+	}
-+#endif
-+}
-+
-+
-+static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
-+				 int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
- 
--	sta = sta_info_get(local, mac);
-+	sta = sta_info_get_by_idx(local, idx, dev);
- 	if (!sta)
- 		return -ENOENT;
- 
--	/* XXX: verify sta->dev == dev */
-+	memcpy(mac, sta->addr, ETH_ALEN);
-+	sta_set_sinfo(sta, sinfo);
-+	sta_info_put(sta);
- 
--	stats->filled = STATION_STAT_INACTIVE_TIME |
--			STATION_STAT_RX_BYTES |
--			STATION_STAT_TX_BYTES;
-+	return 0;
-+}
-+
-+static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
-+				 u8 *mac, struct station_info *sinfo)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
- 
--	stats->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
--	stats->rx_bytes = sta->rx_bytes;
--	stats->tx_bytes = sta->tx_bytes;
-+	sta = sta_info_get(local, mac);
-+	if (!sta)
-+		return -ENOENT;
- 
-+	/* XXX: verify sta->dev == dev */
-+	sta_set_sinfo(sta, sinfo);
- 	sta_info_put(sta);
- 
- 	return 0;
-@@ -512,6 +575,9 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 	u32 rates;
- 	int i, j;
- 	struct ieee80211_supported_band *sband;
-+#ifdef CONFIG_MAC80211_MESH
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
-+#endif
- 
- 	if (params->station_flags & STATION_FLAG_CHANGED) {
- 		sta->flags &= ~WLAN_STA_AUTHORIZED;
-@@ -549,6 +615,19 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 		}
- 		sta->supp_rates[local->oper_channel->band] = rates;
- 	}
-+
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT &&
-+	    params->plink_action)
-+		switch (params->plink_action) {
-+		case PLINK_ACTION_OPEN:
-+			mesh_plink_open(sta);
-+			break;
-+		case PLINK_ACTION_BLOCK:
-+			mesh_plink_block(sta);
-+			break;
-+		}
-+#endif
- }
- 
- static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
-@@ -578,7 +657,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	} else
- 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	sta = sta_info_add(local, dev, mac, GFP_KERNEL);
-+#ifdef CONFIG_MAC80211_MESH
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
-+		sta = mesh_plink_add(mac, DEFAULT_RATES, dev);
-+	else
-+#endif
-+		sta = sta_info_add(local, dev, mac, GFP_KERNEL);
-+
- 	if (!sta)
- 		return -ENOMEM;
- 
-@@ -650,6 +735,170 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+#ifdef CONFIG_MAC80211_MESH
-+static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
-+				 u8 *dst, u8 *next_hop)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_path *mpath;
-+	struct sta_info *sta;
-+	int err;
-+
-+	if (!netif_running(dev))
-+		return -ENETDOWN;
-+
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
-+		return -ENOTSUPP;
-+
-+	sta = sta_info_get(local, next_hop);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	err = mesh_path_add(dst, dev);
-+	if (err)
-+		return err;
-+
-+	rcu_read_lock();
-+	mpath = mesh_path_lookup(dst, dev);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		sta_info_put(sta);
-+		return -ENXIO;
-+	}
-+	mesh_path_fix_nexthop(mpath, sta);
-+	sta_info_put(sta);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static int ieee80211_del_mpath(struct wiphy *wiphy, struct net_device *dev,
-+				 u8 *dst)
-+{
-+	if (dst)
-+		return mesh_path_del(dst, dev);
-+
-+	mesh_path_flush(dev);
-+	return 0;
-+}
-+
-+static int ieee80211_change_mpath(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    u8 *dst, u8 *next_hop)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_path *mpath;
-+	struct sta_info *sta;
-+
-+	if (!netif_running(dev))
-+		return -ENETDOWN;
-+
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
-+		return -ENOTSUPP;
-+
-+	sta = sta_info_get(local, next_hop);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	rcu_read_lock();
-+	mpath = mesh_path_lookup(dst, dev);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		sta_info_put(sta);
-+		return -ENOENT;
-+	}
-+
-+	mesh_path_fix_nexthop(mpath, sta);
-+	sta_info_put(sta);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
-+			    struct mpath_info *pinfo)
-+{
-+	if (mpath->next_hop)
-+		memcpy(next_hop, mpath->next_hop->addr, ETH_ALEN);
-+	else
-+		memset(next_hop, 0, ETH_ALEN);
-+
-+	pinfo->filled = MPATH_INFO_FRAME_QLEN |
-+			MPATH_INFO_DSN |
-+			MPATH_INFO_METRIC |
-+			MPATH_INFO_EXPTIME |
-+			MPATH_INFO_DISCOVERY_TIMEOUT |
-+			MPATH_INFO_DISCOVERY_RETRIES |
-+			MPATH_INFO_FLAGS;
-+
-+	pinfo->frame_qlen = mpath->frame_queue.qlen;
-+	pinfo->dsn = mpath->dsn;
-+	pinfo->metric = mpath->metric;
-+	if (time_before(jiffies, mpath->exp_time))
-+		pinfo->exptime = jiffies_to_msecs(mpath->exp_time - jiffies);
-+	pinfo->discovery_timeout =
-+			jiffies_to_msecs(mpath->discovery_timeout);
-+	pinfo->discovery_retries = mpath->discovery_retries;
-+	pinfo->flags = 0;
-+	if (mpath->flags & MESH_PATH_ACTIVE)
-+		pinfo->flags |= NL80211_MPATH_FLAG_ACTIVE;
-+	if (mpath->flags & MESH_PATH_RESOLVING)
-+		pinfo->flags |= NL80211_MPATH_FLAG_RESOLVING;
-+	if (mpath->flags & MESH_PATH_DSN_VALID)
-+		pinfo->flags |= NL80211_MPATH_FLAG_DSN_VALID;
-+	if (mpath->flags & MESH_PATH_FIXED)
-+		pinfo->flags |= NL80211_MPATH_FLAG_FIXED;
-+	if (mpath->flags & MESH_PATH_RESOLVING)
-+		pinfo->flags |= NL80211_MPATH_FLAG_RESOLVING;
-+
-+	pinfo->flags = mpath->flags;
-+}
-+
-+static int ieee80211_get_mpath(struct wiphy *wiphy, struct net_device *dev,
-+			       u8 *dst, u8 *next_hop, struct mpath_info *pinfo)
-+
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_path *mpath;
-+
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
-+		return -ENOTSUPP;
-+
-+	rcu_read_lock();
-+	mpath = mesh_path_lookup(dst, dev);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpath_set_pinfo(mpath, next_hop, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
-+				 int idx, u8 *dst, u8 *next_hop,
-+				 struct mpath_info *pinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_path *mpath;
-+
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
-+		return -ENOTSUPP;
-+
-+	rcu_read_lock();
-+	mpath = mesh_path_lookup_by_idx(idx, dev);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpath_set_pinfo(mpath, next_hop, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+#endif
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -665,4 +914,12 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.del_station = ieee80211_del_station,
- 	.change_station = ieee80211_change_station,
- 	.get_station = ieee80211_get_station,
-+	.dump_station = ieee80211_dump_station,
-+#ifdef CONFIG_MAC80211_MESH
-+	.add_mpath = ieee80211_add_mpath,
-+	.del_mpath = ieee80211_del_mpath,
-+	.change_mpath = ieee80211_change_mpath,
-+	.get_mpath = ieee80211_get_mpath,
-+	.dump_mpath = ieee80211_dump_mpath,
-+#endif
+Changes since v1:
+ * Fix p54 +1 that was for integer division only, thanks goes to
+   Tomas for pointing that out.
+ * CC linux-wireless
+
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ drivers/net/wireless/p54common.c            |   21 +++++++++++++--------
+ include/net/mac80211.h                      |   12 ++++++------
+ net/mac80211/ieee80211_sta.c                |   11 ++++++-----
+ 5 files changed, 27 insertions(+), 21 deletions(-)
+
+--- everything.orig/include/net/mac80211.h	2008-02-08 13:30:12.772100640 +0100
++++ everything/include/net/mac80211.h	2008-02-10 16:37:59.495454318 +0100
+@@ -89,19 +89,19 @@ struct ieee80211_ht_bss_info {
+  * struct ieee80211_tx_queue_params - transmit queue configuration
+  *
+  * The information provided in this structure is required for QoS
+- * transmit queue configuration.
++ * transmit queue configuration. Cf. IEEE 802.11 7.3.2.29.
+  *
+  * @aifs: arbitration interface space [0..255, -1: use default]
+  * @cw_min: minimum contention window [will be a value of the form
+  *	2^n-1 in the range 1..1023; 0: use default]
+  * @cw_max: maximum contention window [like @cw_min]
+- * @burst_time: maximum burst time in units of 0.1ms, 0 meaning disabled
++ * @txop: maximum burst time in units of 32 usecs, 0 meaning disabled
+  */
+ struct ieee80211_tx_queue_params {
+-	int aifs;
+-	int cw_min;
+-	int cw_max;
+-	int burst_time;
++	s16 aifs;
++	u16 cw_min;
++	u16 cw_max;
++	u16 txop;
  };
--- 
-1.5.2.5
-
+ 
+ /**
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-08 13:29:50.532014160 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-02-10 16:37:58.465453667 +0100
+@@ -297,12 +297,13 @@ static void ieee80211_sta_wmm_params(str
+ 		params.aifs = pos[0] & 0x0f;
+ 		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+ 		params.cw_min = ecw2cw(pos[1] & 0x0f);
+-		/* TXOP is in units of 32 usec; burst_time in 0.1 ms */
+-		params.burst_time = (pos[2] | (pos[3] << 8)) * 32 / 100;
++		params.txop = pos[2] | (pos[3] << 8);
++#ifdef CONFIG_MAC80211_DEBUG
+ 		printk(KERN_DEBUG "%s: WMM queue=%d aci=%d acm=%d aifs=%d "
+-		       "cWmin=%d cWmax=%d burst=%d\n",
++		       "cWmin=%d cWmax=%d txop=%d\n",
+ 		       dev->name, queue, aci, acm, params.aifs, params.cw_min,
+-		       params.cw_max, params.burst_time);
++		       params.cw_max, params.txop);
++#endif
+ 		/* TODO: handle ACM (block TX, fallback to next lowest allowed
+ 		 * AC for now) */
+ 		if (local->ops->conf_tx(local_to_hw(local), queue, &params)) {
+@@ -3229,7 +3230,7 @@ int ieee80211_sta_set_ssid(struct net_de
+ 			qparam.cw_min = 15;
+ 
+ 		qparam.cw_max = 1023;
+-		qparam.burst_time = 0;
++		qparam.txop = 0;
+ 
+ 		for (i = IEEE80211_TX_QUEUE_DATA0; i < NUM_TX_DATA_QUEUES; i++)
+ 			local->ops->conf_tx(local_to_hw(local),
+--- everything.orig/drivers/net/wireless/p54common.c	2008-02-08 13:37:00.462002333 +0100
++++ everything/drivers/net/wireless/p54common.c	2008-02-10 16:45:36.095452637 +0100
+@@ -759,13 +759,12 @@ static int p54_set_leds(struct ieee80211
+ 	return 0;
+ }
+ 
+-#define P54_SET_QUEUE(queue, ai_fs, cw_min, cw_max, burst)	\
++#define P54_SET_QUEUE(queue, ai_fs, cw_min, cw_max, _txop)	\
+ do {	 							\
+ 	queue.aifs = cpu_to_le16(ai_fs);			\
+ 	queue.cwmin = cpu_to_le16(cw_min);			\
+ 	queue.cwmax = cpu_to_le16(cw_max);			\
+-	queue.txop = (burst == 0) ? 				\
+-		0 : cpu_to_le16((burst * 100) / 32 + 1);	\
++	queue.txop = cpu_to_le16(_txop);			\
+ } while(0)
+ 
+ static void p54_init_vdcf(struct ieee80211_hw *dev)
+@@ -783,10 +782,16 @@ static void p54_init_vdcf(struct ieee802
+ 
+ 	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
+ 
+-	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 0x000f);
+-	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 0x001e);
+-	P54_SET_QUEUE(vdcf->queue[2], 0x0002, 0x000f, 0x03ff, 0x0014);
+-	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0x0000);
++	/*
++	 * FIXME: The default values in the spec (IEEE 802.11
++	 *	  7.3.2.19 Table 37) are 47, 94, 0, 0, why use
++	 *	  47, 94, 63, 0 here? Also, the default AIFS
++	 *	  values (second parameter) are 2, 2, 3, 7...
++	 */
++	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 47);
++	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 94);
++	P54_SET_QUEUE(vdcf->queue[2], 0x0002, 0x000f, 0x03ff, 63);
++	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0);
+ }
+ 
+ static void p54_set_vdcf(struct ieee80211_hw *dev)
+@@ -939,7 +944,7 @@ static int p54_conf_tx(struct ieee80211_
+ 
+ 	if ((params) && !((queue < 0) || (queue > 4))) {
+ 		P54_SET_QUEUE(vdcf->queue[queue], params->aifs,
+-			params->cw_min, params->cw_max, params->burst_time);
++			params->cw_min, params->cw_max, params->txop);
+ 	} else
+ 		return -EINVAL;
+ 
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-02-08 13:40:35.832004394 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-02-10 16:38:01.385488064 +0100
+@@ -7437,7 +7437,7 @@ static int iwl3945_mac_conf_tx(struct ie
+ 	priv->qos_data.def_qos_parm.ac[q].cw_max = cpu_to_le16(params->cw_max);
+ 	priv->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
+ 	priv->qos_data.def_qos_parm.ac[q].edca_txop =
+-			cpu_to_le16((params->burst_time * 100));
++			cpu_to_le16((params->txop * 32));
+ 
+ 	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 	priv->qos_data.qos_active = 1;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-02-08 13:39:39.672042426 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-02-10 16:38:01.445458387 +0100
+@@ -7915,7 +7915,7 @@ static int iwl4965_mac_conf_tx(struct ie
+ 	priv->qos_data.def_qos_parm.ac[q].cw_max = cpu_to_le16(params->cw_max);
+ 	priv->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
+ 	priv->qos_data.def_qos_parm.ac[q].edca_txop =
+-			cpu_to_le16((params->burst_time * 100));
++			cpu_to_le16((params->txop * 32));
+ 
+ 	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 	priv->qos_data.qos_active = 1;
 
 
