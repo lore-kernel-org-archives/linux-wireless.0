@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191AbYBFOPk (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430AbYBJVx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 09:15:40 -0500
-Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <12022263282085-git-send-email-tomas.winkler@intel.com>
-References: <12022263282085-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6l6t3c2VrB0LRviQTVOC"
-Date: Wed, 06 Feb 2008 15:15:31 +0100
-Message-Id: <1202307331.4395.41.camel@johannes.berg> (sfid-20080206_141543_627612_5184101E)
-Mime-Version: 1.0
+	Sun, 10 Feb 2008 16:53:56 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:56 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 12/14] rt2x00: Cleanup Makefile
+Date: Sun, 10 Feb 2008 22:52:10 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102252.10152.IvDoorn@gmail.com> (sfid-20080210_215359_002593_8CADB8F4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Simplify the way rt2x00 assigns new objects to the
+rt2x00lib module. This saves a few if statements
+and overall does this looks much nicer.
 
---=-6l6t3c2VrB0LRviQTVOC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Makefile |   41 +++++++++++++--------------------
+ 1 files changed, 16 insertions(+), 25 deletions(-)
 
-
-> + * @flags: Tx information (e.g. antenna selectd, guard interval,
-> etc.)
-
-typo: selected, also where are the flags defined?
-
->  struct ieee80211_tx_status {
->  	struct ieee80211_tx_control control;
-> @@ -364,6 +382,8 @@ struct ieee80211_tx_status {
->  	int ack_signal;
->  	int queue_length;
->  	int queue_number;
-> +	size_t rate_ctrl_num;
-> +	struct ieee80211_tx_rate_ctrl rate_ctrl[0];
-
-I think this is going to blow up if any driver sets rate_ctrl_num > 0
-and uses the irq-safe tx status interface because we there copy the
-stuff into another buffer and you haven't changed that buffer to be
-resized accordingly.
-
-johannes
-
---=-6l6t3c2VrB0LRviQTVOC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6nBAqVg1VMiehFYAQIQVg//WkQrcOgcygthkJ78jOq2sOzmOp8LFDCa
-tLriUDK8gUZ2Q1JfARIWSLNItjUWioe3aVap0vnQe0ck+C6DNzo2JbzTUWTyvHz7
-wRxr2EsayZpVWezOg9c27K39L+/uUbgihbH15OebCjyPP805E7eDxjImheGtmeOT
-AstBYDS7UvGckVVH32JFKV/OaMySMBYZ9ojTYykOU2QbTxzw4ue9+xfkMSDqu+kt
-YMq0UJNd+4nVnSWQvHT0/3fGG3B+atRA85Mrq0lB4cb9oFjGxgaoJeEa3iXb1cvi
-C2KjsdOkErIZzjKwq6C5seyfZiAncZrxL6Mmt2jX4O89oRKHCSwxrFfM26ZW343A
-wZTgh65K4ynZUp5CJnr1FjZg6RX15G56Jr6UZ1+3uPcB/9ZeZDo3wVJn/Ssgac22
-k8wHAIgtq3bYi4/AwLq7jPDO71K3Y5g1WMBLWfw9fgvGRrlcZAFWmHsrtgPWi1ki
-AZJ/OiomVGxCG3OCic47vpPgAd1RhaNSD4YlC3FFXcMcNfa58Ty3SZjRnAu+vW/0
-JeTcJDbM1zG5fkPKkTy4S2pyDfO4WWCkIlj3Ain7RbzbR1agJ67LN7XGn4rzim0r
-tiqA5uasV1aTeV+mSrj8Jv8BKWn4a/mYai+ijiYWOr5WZFp2sJmJrd2P3Mbs23Qt
-yxxkOVxo5Zg=
-=AH0L
------END PGP SIGNATURE-----
-
---=-6l6t3c2VrB0LRviQTVOC--
+diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/rt2x00/Makefile
+index 757bbc0..1087dbc 100644
+--- a/drivers/net/wireless/rt2x00/Makefile
++++ b/drivers/net/wireless/rt2x00/Makefile
+@@ -1,26 +1,17 @@
+-rt2x00lib-objs := rt2x00dev.o rt2x00mac.o rt2x00config.o rt2x00queue.o
++rt2x00lib-y				+= rt2x00dev.o
++rt2x00lib-y				+= rt2x00mac.o
++rt2x00lib-y				+= rt2x00config.o
++rt2x00lib-y				+= rt2x00queue.o
++rt2x00lib-$(CONFIG_RT2X00_LIB_DEBUGFS)	+= rt2x00debug.o
++rt2x00lib-$(CONFIG_RT2X00_LIB_RFKILL)	+= rt2x00rfkill.o
++rt2x00lib-$(CONFIG_RT2X00_LIB_FIRMWARE)	+= rt2x00firmware.o
++rt2x00lib-$(CONFIG_RT2X00_LIB_LEDS)	+= rt2x00leds.o
+ 
+-ifeq ($(CONFIG_RT2X00_LIB_DEBUGFS),y)
+-	rt2x00lib-objs += rt2x00debug.o
+-endif
+-
+-ifeq ($(CONFIG_RT2X00_LIB_RFKILL),y)
+-	rt2x00lib-objs += rt2x00rfkill.o
+-endif
+-
+-ifeq ($(CONFIG_RT2X00_LIB_FIRMWARE),y)
+-	rt2x00lib-objs += rt2x00firmware.o
+-endif
+-
+-ifeq ($(CONFIG_RT2X00_LIB_LEDS),y)
+-	rt2x00lib-objs += rt2x00leds.o
+-endif
+-
+-obj-$(CONFIG_RT2X00_LIB)	+= rt2x00lib.o
+-obj-$(CONFIG_RT2X00_LIB_PCI)	+= rt2x00pci.o
+-obj-$(CONFIG_RT2X00_LIB_USB)	+= rt2x00usb.o
+-obj-$(CONFIG_RT2400PCI)		+= rt2400pci.o
+-obj-$(CONFIG_RT2500PCI)		+= rt2500pci.o
+-obj-$(CONFIG_RT61PCI)		+= rt61pci.o
+-obj-$(CONFIG_RT2500USB)		+= rt2500usb.o
+-obj-$(CONFIG_RT73USB)		+= rt73usb.o
++obj-$(CONFIG_RT2X00_LIB)		+= rt2x00lib.o
++obj-$(CONFIG_RT2X00_LIB_PCI)		+= rt2x00pci.o
++obj-$(CONFIG_RT2X00_LIB_USB)		+= rt2x00usb.o
++obj-$(CONFIG_RT2400PCI)			+= rt2400pci.o
++obj-$(CONFIG_RT2500PCI)			+= rt2500pci.o
++obj-$(CONFIG_RT61PCI)			+= rt61pci.o
++obj-$(CONFIG_RT2500USB)			+= rt2500usb.o
++obj-$(CONFIG_RT73USB)			+= rt73usb.o
+-- 
+1.5.4
 
