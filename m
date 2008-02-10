@@ -1,120 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:34900 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:42686 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbYBHXUG (ORCPT
+	with ESMTP id S1753274AbYBJMUh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 18:20:06 -0500
+	Sun, 10 Feb 2008 07:20:37 -0500
 From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add driver load messages
-Date: Sat, 9 Feb 2008 00:18:35 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
+Date: Sun, 10 Feb 2008 13:19:59 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de> <200802101136.28667.IvDoorn@gmail.com>
+In-Reply-To: <200802101136.28667.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Message-Id: <200802090018.35592.mb@bu3sch.de> (sfid-20080208_232012_134071_E39486D5)
+Message-Id: <200802101320.00065.mb@bu3sch.de> (sfid-20080210_122040_921992_90DB6DBA)
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds printk messages with basic information about the driver being loaded.
-This information includes a summary of the compiled-in features, which
-simplifies bug-reporting and debugging a lot.
-Also a firmware ID is printed. This is a unique identifier blob for a specific
-version of the firmware. This ID is attached to a specific version of the firmware
-blob in b43-fwcutter (see fwcutter git).
-This helps users to select the right firmware for their device.
-This also makes it possible to use automated scripts to fetch and extract the right
-firmware for the driver. (the script will grep the .ko for the "Firmware-ID: xxx" string.
-While the driver might still support other versions of the firmware for backward
-compatibility, this will always print out the officially supported version, which
-people _should_ use.
+On Sunday 10 February 2008 11:36:28 Ivo van Doorn wrote:
+> On Sunday 10 February 2008, Michael Buesch wrote:
+> > On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
+> > > 
+> > > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > > ---
+> > > John, please send this patch to the 2.6.24/2.6.25 stable trees.
+> > > It is already present in the wireless-2.6 tree queued for 2.6.26.
+> > > 
+> > >  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+> > >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > > index cba7f57..c4a6ab4 100644
+> > > --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> > > +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
+> > >  	/* Hercules */
+> > >  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	/* Melco */
+> > > +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > > -
+> > >  	/* MSI */
+> > >  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > >  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > 
+> > I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
+> > We always handled adding IDs as features.
+> 
+> Ok, the user has to wait untill 2.6.26 then.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Oh, it seems that -stable does actually accept such patches:
+http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.23.y.git;a=commitdiff;h=2cf220bb5b30a922aebdd5841a7975e02a70ce59
+http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.23.y.git;a=commitdiff;h=955ab48db7fb9e3d74dc770cca9aa6b194e53025
 
----
+I wasn't aware of this, because we always had the rule of ID additions
+being features, in the wireless team.
+So well. I think John should probably make an official decision. :)
 
-John, as this has a negative chance of introducing regressions, I'd like
-to have it in 2.6.25, even if it's not strictly a bugfix.
-Stefano, we should port this to legacy. See fwcutter git for the ID I assigned
-to the legacy firmware blob.
+I would suggest the following: Unless there's another driver in
+the tree that (partially) supports the device being added, adding the ID
+can not cause a regression. So it's OK to add it, even in a stable cycle.
 
-Index: wireless-2.6/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/b43.h	2008-02-08 23:28:23.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/b43.h	2008-02-09 00:05:57.000000000 +0100
-@@ -11,12 +11,18 @@
- #include "debugfs.h"
- #include "leds.h"
- #include "rfkill.h"
- #include "lo.h"
- #include "phy.h"
- 
-+
-+/* The unique identifier of the firmware that's officially supported by
-+ * this driver version. */
-+#define B43_SUPPORTED_FIRMWARE_ID	"FW13"
-+
-+
- #ifdef CONFIG_B43_DEBUG
- # define B43_DEBUG	1
- #else
- # define B43_DEBUG	0
- #endif
- 
-Index: wireless-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-02-08 23:28:23.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-02-09 00:17:12.000000000 +0100
-@@ -4190,23 +4190,51 @@ static struct ssb_driver b43_ssb_driver 
- 	.probe		= b43_probe,
- 	.remove		= b43_remove,
- 	.suspend	= b43_suspend,
- 	.resume		= b43_resume,
- };
- 
-+static void b43_print_driverinfo(void)
-+{
-+	const char *feat_pci = "", *feat_pcmcia = "", *feat_nphy = "",
-+		   *feat_leds = "", *feat_rfkill = "";
-+
-+#ifdef CONFIG_B43_PCI_AUTOSELECT
-+	feat_pci = "P";
-+#endif
-+#ifdef CONFIG_B43_PCMCIA
-+	feat_pcmcia = "M";
-+#endif
-+#ifdef CONFIG_B43_NPHY
-+	feat_nphy = "N";
-+#endif
-+#ifdef CONFIG_B43_LEDS
-+	feat_leds = "L";
-+#endif
-+#ifdef CONFIG_B43_RFKILL
-+	feat_rfkill = "R";
-+#endif
-+	printk(KERN_INFO "Broadcom 43xx driver loaded "
-+	       "[ Features: %s%s%s%s%s, Firmware-ID: "
-+	       B43_SUPPORTED_FIRMWARE_ID " ]\n",
-+	       feat_pci, feat_pcmcia, feat_nphy,
-+	       feat_leds, feat_rfkill);
-+}
-+
- static int __init b43_init(void)
- {
- 	int err;
- 
- 	b43_debugfs_init();
- 	err = b43_pcmcia_init();
- 	if (err)
- 		goto err_dfs_exit;
- 	err = ssb_driver_register(&b43_ssb_driver);
- 	if (err)
- 		goto err_pcmcia_exit;
-+	b43_print_driverinfo();
- 
- 	return err;
- 
- err_pcmcia_exit:
- 	b43_pcmcia_exit();
- err_dfs_exit:
+-- 
+Greetings Michael.
