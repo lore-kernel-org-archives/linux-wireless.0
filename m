@@ -1,230 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39103 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758476AbYBAMJq (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbYBJVxs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:09:46 -0500
-Message-Id: <20080131185054.167645000@sipsolutions.net> (sfid-20080201_120950_879057_BAFE5D33)
-References: <20080131184819.103174000@sipsolutions.net>
-Date: Thu, 31 Jan 2008 19:48:25 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/8] mac80211: remove "dynamic" RX/TX handlers
-Mime-Version: 1.0
+	Sun, 10 Feb 2008 16:53:48 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:48 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 08/14] rt2x00: Add queue statistics to debugfs
+Date: Sun, 10 Feb 2008 22:50:28 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102250.28268.IvDoorn@gmail.com> (sfid-20080210_215352_192910_24EDA6F1)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't really make sense to have extra pointers to the RX/TX
-handler arrays instead of just using the arrays directly, that
-also allows us to make them static.
+Rename "frame" folder to "queue" folder,
+add extra file to this folder which contains
+statistics about all hardware queues. This will
+help debugging and spotting problems in the
+queue indexing system.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/ieee80211.c   |    2 -
- net/mac80211/ieee80211_i.h |   13 -------
- net/mac80211/rx.c          |   80 +++++++++++++++++++++------------------------
- net/mac80211/tx.c          |    9 ++---
- 4 files changed, 43 insertions(+), 61 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   90 ++++++++++++++++++++++++-----
+ 1 files changed, 76 insertions(+), 14 deletions(-)
 
---- everything.orig/net/mac80211/ieee80211.c	2008-01-31 15:46:11.615800454 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-01-31 15:46:13.125794378 +0100
-@@ -1426,8 +1426,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	local->hw.queues = 1; /* default */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 4e048ac..21af11a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -33,7 +33,7 @@
+ #include "rt2x00lib.h"
+ #include "rt2x00dump.h"
  
- 	local->mdev = mdev;
--	local->rx_handlers = ieee80211_rx_handlers;
--	local->tx_handlers = ieee80211_tx_handlers;
+-#define PRINT_LINE_LEN_MAX 32
++#define MAX_LINE_LENGTH 64
  
- 	local->bridge_packets = 1;
+ struct rt2x00debug_intf {
+ 	/*
+@@ -60,8 +60,9 @@ struct rt2x00debug_intf {
+ 	 *     - eeprom offset/value files
+ 	 *     - bbp offset/value files
+ 	 *     - rf offset/value files
+-	 *   - frame dump folder
++	 *   - queue folder
+ 	 *     - frame dump file
++	 *     - queue stats file
+ 	 */
+ 	struct dentry *driver_folder;
+ 	struct dentry *driver_entry;
+@@ -76,8 +77,9 @@ struct rt2x00debug_intf {
+ 	struct dentry *bbp_val_entry;
+ 	struct dentry *rf_off_entry;
+ 	struct dentry *rf_val_entry;
+-	struct dentry *frame_folder;
+-	struct dentry *frame_dump_entry;
++	struct dentry *queue_folder;
++	struct dentry *queue_frame_dump_entry;
++	struct dentry *queue_stats_entry;
  
---- everything.orig/net/mac80211/ieee80211_i.h	2008-01-31 15:46:11.615800454 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-01-31 15:46:13.135794379 +0100
-@@ -190,12 +190,6 @@ struct ieee80211_tx_stored_packet {
- 	unsigned int last_frag_rate_ctrl_probe;
+ 	/*
+ 	 * The frame dump file only allows a single reader,
+@@ -269,6 +271,61 @@ static const struct file_operations rt2x00debug_fop_queue_dump = {
+ 	.release	= rt2x00debug_release_queue_dump,
  };
  
--typedef ieee80211_tx_result (*ieee80211_tx_handler)
--(struct ieee80211_txrx_data *tx);
--
--typedef ieee80211_rx_result (*ieee80211_rx_handler)
--(struct ieee80211_txrx_data *rx);
--
- struct beacon_data {
- 	u8 *head, *tail;
- 	int head_len, tail_len;
-@@ -477,9 +471,6 @@ struct ieee80211_local {
- 			     * deliver multicast frames both back to wireless
- 			     * media and to the local net stack */
- 
--	ieee80211_rx_handler *rx_handlers;
--	ieee80211_tx_handler *tx_handlers;
--
- 	struct list_head interfaces;
- 
- 	bool sta_sw_scanning;
-@@ -779,11 +770,7 @@ int ieee80211_if_remove(struct net_devic
- void ieee80211_if_free(struct net_device *dev);
- void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata);
- 
--/* rx handling */
--extern ieee80211_rx_handler ieee80211_rx_handlers[];
--
- /* tx handling */
--extern ieee80211_tx_handler ieee80211_tx_handlers[];
- void ieee80211_clear_tx_pending(struct ieee80211_local *local);
- void ieee80211_tx_pending(unsigned long data);
- int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev);
---- everything.orig/net/mac80211/rx.c	2008-01-31 15:46:12.415793891 +0100
-+++ everything/net/mac80211/rx.c	2008-01-31 15:46:13.135794379 +0100
-@@ -1448,42 +1448,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_txr
- 	return RX_QUEUED;
- }
- 
--static void ieee80211_invoke_rx_handlers(struct ieee80211_local *local,
--					 ieee80211_rx_handler *handlers,
--					 struct ieee80211_txrx_data *rx,
--					 struct sta_info *sta)
--{
--	ieee80211_rx_handler *handler;
--	ieee80211_rx_result res = RX_DROP_MONITOR;
--
--	for (handler = handlers; *handler != NULL; handler++) {
--		res = (*handler)(rx);
--
--		switch (res) {
--		case RX_CONTINUE:
--			continue;
--		case RX_DROP_UNUSABLE:
--		case RX_DROP_MONITOR:
--			I802_DEBUG_INC(local->rx_handlers_drop);
--			if (sta)
--				sta->rx_dropped++;
--			break;
--		case RX_QUEUED:
--			I802_DEBUG_INC(local->rx_handlers_queued);
--			break;
--		}
--		break;
--	}
--
--	switch (res) {
--	case RX_DROP_MONITOR:
--	case RX_DROP_UNUSABLE:
--	case RX_CONTINUE:
--		dev_kfree_skb(rx->skb);
--		break;
--	}
--}
--
- static void ieee80211_rx_michael_mic_report(struct net_device *dev,
- 					    struct ieee80211_hdr *hdr,
- 					    struct sta_info *sta,
-@@ -1557,7 +1521,8 @@ static void ieee80211_rx_michael_mic_rep
- 	rx->skb = NULL;
- }
- 
--ieee80211_rx_handler ieee80211_rx_handlers[] =
-+typedef ieee80211_rx_result (*ieee80211_rx_handler)(struct ieee80211_txrx_data *);
-+static ieee80211_rx_handler ieee80211_rx_handlers[] =
- {
- 	ieee80211_rx_h_if_stats,
- 	ieee80211_rx_h_passive_scan,
-@@ -1579,6 +1544,41 @@ ieee80211_rx_handler ieee80211_rx_handle
- 	NULL
- };
- 
-+static void ieee80211_invoke_rx_handlers(struct ieee80211_local *local,
-+					 struct ieee80211_txrx_data *rx,
-+					 struct sta_info *sta)
++static ssize_t rt2x00debug_read_queue_stats(struct file *file,
++					    char __user *buf,
++					    size_t length,
++					    loff_t *offset)
 +{
-+	ieee80211_rx_handler *handler;
-+	ieee80211_rx_result res = RX_DROP_MONITOR;
++	struct rt2x00debug_intf *intf = file->private_data;
++	struct data_queue *queue;
++	unsigned int lines = 1 + intf->rt2x00dev->data_queues;
++	size_t size;
++	char *data;
++	char *temp;
 +
-+	for (handler = ieee80211_rx_handlers; *handler != NULL; handler++) {
-+		res = (*handler)(rx);
++	if (*offset)
++		return 0;
 +
-+		switch (res) {
-+		case RX_CONTINUE:
-+			continue;
-+		case RX_DROP_UNUSABLE:
-+		case RX_DROP_MONITOR:
-+			I802_DEBUG_INC(local->rx_handlers_drop);
-+			if (sta)
-+				sta->rx_dropped++;
-+			break;
-+		case RX_QUEUED:
-+			I802_DEBUG_INC(local->rx_handlers_queued);
-+			break;
-+		}
-+		break;
++	data = kzalloc(lines * MAX_LINE_LENGTH, GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	temp = data +
++	    sprintf(data, "qid\tcount\tlimit\tlength\tindex\tdone\tcrypto\n");
++
++	queue_for_each(intf->rt2x00dev, queue) {
++		spin_lock(&queue->lock);
++
++		temp += sprintf(temp, "%d\t%d\t%d\t%d\t%d\t%d\t%d\n", queue->qid,
++				queue->count, queue->limit, queue->length,
++				queue->index[Q_INDEX],
++				queue->index[Q_INDEX_DONE],
++				queue->index[Q_INDEX_CRYPTO]);
++
++		spin_unlock(&queue->lock);
 +	}
 +
-+	switch (res) {
-+	case RX_DROP_MONITOR:
-+	case RX_DROP_UNUSABLE:
-+	case RX_CONTINUE:
-+		dev_kfree_skb(rx->skb);
-+		break;
++	size = strlen(data);
++	size = min(size, length);
++
++	if (copy_to_user(buf, data, size)) {
++		kfree(data);
++		return -EFAULT;
 +	}
++
++	kfree(data);
++
++	*offset += size;
++	return size;
 +}
 +
- /* main receive path */
- 
- static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
-@@ -1756,8 +1756,7 @@ static void __ieee80211_rx_handle_packet
- 		rx.skb = skb_new;
- 		rx.dev = prev->dev;
- 		rx.sdata = prev;
--		ieee80211_invoke_rx_handlers(local, local->rx_handlers,
--					     &rx, sta);
-+		ieee80211_invoke_rx_handlers(local, &rx, sta);
- 		prev = sdata;
- 	}
- 	if (prev) {
-@@ -1765,8 +1764,7 @@ static void __ieee80211_rx_handle_packet
- 		rx.skb = skb;
- 		rx.dev = prev->dev;
- 		rx.sdata = prev;
--		ieee80211_invoke_rx_handlers(local, local->rx_handlers,
--					     &rx, sta);
-+		ieee80211_invoke_rx_handlers(local, &rx, sta);
- 	} else
- 		dev_kfree_skb(skb);
- 
---- everything.orig/net/mac80211/tx.c	2008-01-31 15:46:09.035794161 +0100
-+++ everything/net/mac80211/tx.c	2008-01-31 15:46:13.135794379 +0100
-@@ -813,10 +813,9 @@ ieee80211_tx_h_load_stats(struct ieee802
- 	return TX_CONTINUE;
- }
- 
--/* TODO: implement register/unregister functions for adding TX/RX handlers
-- * into ordered list */
- 
--ieee80211_tx_handler ieee80211_tx_handlers[] =
-+typedef ieee80211_tx_result (*ieee80211_tx_handler)(struct ieee80211_txrx_data *);
-+static ieee80211_tx_handler ieee80211_tx_handlers[] =
++static const struct file_operations rt2x00debug_fop_queue_stats = {
++	.owner		= THIS_MODULE,
++	.read		= rt2x00debug_read_queue_stats,
++	.open		= rt2x00debug_file_open,
++	.release	= rt2x00debug_file_release,
++};
++
+ #define RT2X00DEBUGFS_OPS_READ(__name, __format, __type)	\
+ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 					 char __user *buf,	\
+@@ -386,7 +443,7 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
  {
- 	ieee80211_tx_h_check_assoc,
- 	ieee80211_tx_h_sequence,
-@@ -1158,7 +1157,7 @@ static int ieee80211_tx(struct net_devic
- 	sta = tx.sta;
- 	tx.u.tx.channel = local->hw.conf.channel;
+ 	char *data;
  
--	for (handler = local->tx_handlers; *handler != NULL;
-+	for (handler = ieee80211_tx_handlers; *handler != NULL;
- 	     handler++) {
- 		res = (*handler)(&tx);
- 		if (res != TX_CONTINUE)
-@@ -1914,7 +1913,7 @@ ieee80211_get_buffered_bc(struct ieee802
- 	tx.flags |= IEEE80211_TXRXD_TXPS_BUFFERED;
- 	tx.u.tx.channel = local->hw.conf.channel;
+-	data = kzalloc(3 * PRINT_LINE_LEN_MAX, GFP_KERNEL);
++	data = kzalloc(3 * MAX_LINE_LENGTH, GFP_KERNEL);
+ 	if (!data)
+ 		return NULL;
  
--	for (handler = local->tx_handlers; *handler != NULL; handler++) {
-+	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
- 		res = (*handler)(&tx);
- 		if (res == TX_DROP || res == TX_QUEUED)
- 			break;
-
+@@ -409,7 +466,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	const struct rt2x00debug *debug = intf->debug;
+ 	char *data;
+ 
+-	data = kzalloc(8 * PRINT_LINE_LEN_MAX, GFP_KERNEL);
++	data = kzalloc(8 * MAX_LINE_LENGTH, GFP_KERNEL);
+ 	if (!data)
+ 		return NULL;
+ 
+@@ -496,20 +553,24 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 
+ #undef RT2X00DEBUGFS_CREATE_REGISTER_ENTRY
+ 
+-	intf->frame_folder =
+-	    debugfs_create_dir("frame", intf->driver_folder);
+-	if (IS_ERR(intf->frame_folder))
++	intf->queue_folder =
++	    debugfs_create_dir("queue", intf->driver_folder);
++	if (IS_ERR(intf->queue_folder))
+ 		goto exit;
+ 
+-	intf->frame_dump_entry =
+-	    debugfs_create_file("dump", S_IRUGO, intf->frame_folder,
++	intf->queue_frame_dump_entry =
++	    debugfs_create_file("dump", S_IRUGO, intf->queue_folder,
+ 				intf, &rt2x00debug_fop_queue_dump);
+-	if (IS_ERR(intf->frame_dump_entry))
++	if (IS_ERR(intf->queue_frame_dump_entry))
+ 		goto exit;
+ 
+ 	skb_queue_head_init(&intf->frame_dump_skbqueue);
+ 	init_waitqueue_head(&intf->frame_dump_waitqueue);
+ 
++	intf->queue_stats_entry =
++	    debugfs_create_file("queue", S_IRUGO, intf->queue_folder,
++				intf, &rt2x00debug_fop_queue_stats);
++
+ 	return;
+ 
+ exit:
+@@ -528,8 +589,9 @@ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+ 
+ 	skb_queue_purge(&intf->frame_dump_skbqueue);
+ 
+-	debugfs_remove(intf->frame_dump_entry);
+-	debugfs_remove(intf->frame_folder);
++	debugfs_remove(intf->queue_stats_entry);
++	debugfs_remove(intf->queue_frame_dump_entry);
++	debugfs_remove(intf->queue_folder);
+ 	debugfs_remove(intf->rf_val_entry);
+ 	debugfs_remove(intf->rf_off_entry);
+ 	debugfs_remove(intf->bbp_val_entry);
 -- 
+1.5.4
 
