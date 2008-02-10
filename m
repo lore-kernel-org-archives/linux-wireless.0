@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:14290 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbYBZFXE convert rfc822-to-8bit (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:47306 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbYBJPKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 00:23:04 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1243645rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 21:23:03 -0800 (PST)
-Reply-To: <cs010101@gmail.com>
-From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: ath5k : test
-Date: Tue, 26 Feb 2008 14:22:58 +0900
-Message-ID: <006501c87837$a7ef9590$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080226_052320_310990_1F4F32C5)
+	Sun, 10 Feb 2008 10:10:38 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 02/12] Add at76_dbg_dump() macro
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Date: Sun, 10 Feb 2008 17:00:04 +0200
+Message-ID: <20080210150004.17592.32030.stgit@tikku> (sfid-20080210_151043_963046_C490518B)
+In-Reply-To: <20080210145733.17592.61729.stgit@tikku>
+References: <20080210145733.17592.61729.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-date : 26, Feb (driver's also same)
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-conclusion:
-
-setting 802.11a ad-hoc,=20
-
-5Ghz channel is different.
-
-and iwconfig wlanX rate [more than 24Mbps] : disconnected!
-
-and when I testing, performance was terrible. so often stalled.
-
-so, I made 'mod_timer' comment in base.c (calibration section) and then
-performance was increased.
-
-BUT also when I set more than 24Mb, disconnected.=20
-
-but until now, only atheros driver supports 802.11a with ad-hoc. thanks=
-=2E :-)
-
-hmm...
-
-soon or later, we'll test ralink chipset.
+ drivers/net/wireless/at76_usb.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
 
---
---
-Have a Wonderful Day~~!!
-=B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
-yhkim@corebell.co.kr
-cs010101@gmail.com
-+82-42-863-0340
-+82-10-6753-0987
-HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu,
-Daejon,  Republic of Korea
-305-701
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 1f841bb..d2fe698 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -86,6 +86,14 @@
+ 		printk(KERN_DEBUG DRIVER_NAME ": " format "\n" , ## arg); \
+ 	} while (0)
+ 
++#define at76_dbg_dump(bits, buf, len, format, arg...)	\
++	do { \
++		if (at76_debug & (bits)) { \
++		printk(KERN_DEBUG DRIVER_NAME ": " format "\n" , ## arg); \
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len); \
++		}							\
++	} while (0)
++
+ static int at76_debug = DBG_DEFAULTS;
+ 
+ /* Protect against concurrent firmware loading and parsing */
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
