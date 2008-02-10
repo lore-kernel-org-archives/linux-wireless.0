@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:34268 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755430AbYB2XII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 18:08:08 -0500
-To: linux-wireless@vger.kernel.org
-Subject: ath5k in ad-hoc mode and encryption
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Sat, 01 Mar 2008 00:08:06 +0100
-Message-ID: <m3k5kn9x9l.fsf@maximus.localdomain> (sfid-20080229_230835_636600_BCA926E1)
+Received: from nf-out-0910.google.com ([64.233.182.186]:14470 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457AbYBJVyC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 16:54:02 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1187796nfb.21
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:54:00 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 14/14] rt2x00: Release rt2x00 2.1.1
+Date: Sun, 10 Feb 2008 22:52:56 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102252.57028.IvDoorn@gmail.com> (sfid-20080210_220813_413372_E715DD96)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A simple question I hope.
 
-I want to experiment with point-point encrypted wifi link. Have 2
-machines with AR5212, 5213, 5213A+RF2112A or something like that.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-iwlist enc / iwlist keys says:
-wlan0     2 key sizes : 40, 104bits                                             
-          4 keys available :                                                    
-                [1]: off                                                        
-                [2]: off                                                        
-                [3]: off                                                        
-                [4]: off                                                        
-          Current Transmit Key: [1]                                             
-
-iwlist auth:
-wlan0     Authentication capabilities :                                         
-                WPA                                                             
-                WPA2                                                            
-                CIPHER-TKIP                                                     
-                CIPHER-CCMP                                                     
-          Current Authentication algorithm :                                    
-                open                                                            
-                shared-key   
-
-iwlist wpakeys:                                                
-wlan0     2 key sizes : 40, 104bits                                             
-          4 keys available :                                                    
-Error reading wpa keys (SIOCGIWENCODEEXT): Operation not supported              
-
-
-Now, is it possible to use, for example, CCMP cipher with 256-bit key?
-How do I set the key and CCMP mode?
-
-Or, how do I set 104-bit and WPA+TKIP?
-
-IOW, how do I set it up?
-
-
-I noticed "iwconfig wlan0 key XXXXX" (104 bits) make the transmitting
-card encrypt data, but the receiving card doesn't seem to decrypt them
-(tcpdump shows encrypted traffic on receiving wlan0 and nothing
-works).
-
-Perhaps there is some faq or example?
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 9098532..7a83e0a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.1.0"
++#define DRV_VERSION	"2.1.1"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
 -- 
-Krzysztof Halasa
+1.5.4
+
