@@ -1,95 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44862 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757728AbYBEPqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 10:46:03 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC v2] mac80211: add general rate information to Tx status
-Date: Tue,  5 Feb 2008 17:45:28 +0200
-Message-Id: <12022263282085-git-send-email-tomas.winkler@intel.com> (sfid-20080205_154719_080728_661383B9)
-Content-Type: text/plain; charset="us-ascii"
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56213 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbYBJPKw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Feb 2008 10:10:52 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 08/12] Remove support the legacy stack
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Date: Sun, 10 Feb 2008 17:00:49 +0200
+Message-ID: <20080210150049.17592.10280.stgit@tikku> (sfid-20080210_151056_242195_9397D345)
+In-Reply-To: <20080210145733.17592.61729.stgit@tikku>
+References: <20080210145733.17592.61729.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Now the mac80211 interface will only work, the interface using the legacy
+stack will be defunct. The legacy interface will removed in following
+patches.
 
-This patch introduces data structures meant to contain actual
-configuration in which Tx was made in HW, for general purposes
-and for rate scaling in specific.
-it includes the rate, general flags for the rate (e.g. Tx antenna)
-and the number of retries for the rate.
-
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 ---
- include/net/mac80211.h |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 460da54..ec966c8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -318,6 +318,22 @@ struct ieee80211_rx_status {
+ drivers/net/wireless/at76_usb.c |    6 +-----
+ drivers/net/wireless/at76_usb.h |    1 -
+ 2 files changed, 1 insertions(+), 6 deletions(-)
+
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 4ffae92..017c36c 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -5046,7 +5046,7 @@ static void at76_rx_tasklet(unsigned long param)
+ 		 priv->netdev->name, buf->rx_rate, buf->rssi, buf->noise_level,
+ 		 buf->link_quality, hex2str(i802_11_hdr, 48));
+ 
+-	if (priv->use_mac80211) {
++	{
+ 		struct ieee80211_rx_status rx_status = {0};
+ 		skb_pull(priv->rx_skb, AT76_RX_HDRLEN);
+ 		skb_trim(priv->rx_skb, le16_to_cpu(buf->wlength));
+@@ -5285,8 +5285,6 @@ static int at76_mac80211_start(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&priv->mtx);
+ 
+-	priv->use_mac80211 = 1;
+-
+ 	ret = at76_submit_rx_urb(priv);
+ 	if (ret < 0) {
+ 		printk(KERN_ERR "%s: open: submit_rx_urb failed: %d\n",
+@@ -5313,8 +5311,6 @@ static void at76_mac80211_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&priv->mtx);
+ 
+-	priv->use_mac80211 = 0;
+-
+ 	if (!priv->device_unplugged) {
+ 		/* We are called by "ifconfig ethX down", not because the
+ 		 * device is not available anymore. */
+diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
+index baa85a5..5375f75 100644
+--- a/drivers/net/wireless/at76_usb.h
++++ b/drivers/net/wireless/at76_usb.h
+@@ -560,7 +560,6 @@ struct at76_priv {
+ 
+ 	struct ieee80211_hw *hw;
+ 	struct ieee80211_tx_status tx_status;
+-	int use_mac80211;
+ 	int mac80211_registered;
  };
  
- /**
-+ * struct ieee80211_tx_rate_ctrl - rate ctrl data
-+ *
-+ * The low-level driver should provide this struct as part
-+ * of the ieee80211_tx_status. this struct should give information
-+ * about the tx that is not part of the plcp rates table.
-+ * @bitrate: rate used.
-+ * @flags: Tx information (e.g. antenna selectd, guard interval, etc.)
-+ * @retry_count: number of retries for this specific rate
-+ */
-+struct ieee80211_tx_rate_ctrl {
-+	u32 bitrate;
-+	u32 flags;
-+	u8 retry_count;
-+};
-+
-+/**
-  * enum ieee80211_tx_status_flags - transmit status flags
-  *
-  * Status flags to indicate various transmit conditions.
-@@ -343,7 +359,7 @@ enum ieee80211_tx_status_flags {
-  * @control: a copy of the &struct ieee80211_tx_control passed to the driver
-  *	in the tx() callback.
-  * @flags: transmit status flags, defined above
-- * @retry_count: number of retries
-+ * @retry_count: total number of retries
-  * @excessive_retries: set to 1 if the frame was retried many times
-  *	but not acknowledged
-  * @ampdu_ack_len: number of aggregated frames.
-@@ -353,6 +369,8 @@ enum ieee80211_tx_status_flags {
-  * @ack_signal: signal strength of the ACK frame
-  * @queue_length: ?? REMOVE
-  * @queue_number: ?? REMOVE
-+ * @rate_ctrl_num: number of rate_ctrl allocated
-+ * @rate_ctrl: info for rate at which the packet was actually transmitted
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_tx_control control;
-@@ -364,6 +382,8 @@ struct ieee80211_tx_status {
- 	int ack_signal;
- 	int queue_length;
- 	int queue_number;
-+	size_t rate_ctrl_num;
-+	struct ieee80211_tx_rate_ctrl rate_ctrl[0];
- };
- 
- /**
--- 
-1.5.2.2
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
