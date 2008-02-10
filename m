@@ -1,103 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791AbYBYPcU (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:37068 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbYBJPtw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:32:20 -0500
-Message-Id: <20080225153004.058646000@sipsolutions.net> (sfid-20080225_153231_652593_151D12E9)
-References: <20080225152740.360393000@sipsolutions.net>
-Date: Mon, 25 Feb 2008 16:27:41 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 01/10] mac80211: clarify use of TX status/RX callbacks
-Mime-Version: 1.0
+	Sun, 10 Feb 2008 10:49:52 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH 06/12] Add support for monitor mode
+Date: Sun, 10 Feb 2008 16:49:28 +0100
+Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
+References: <20080210145733.17592.61729.stgit@tikku> <20080210150034.17592.71617.stgit@tikku>
+In-Reply-To: <20080210150034.17592.71617.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802101649.28711.mb@bu3sch.de> (sfid-20080210_154958_641429_AF450611)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch clarifies the use of the irqsafe vs. non-irq-safe
-functions and their respective locking requirements.
+On Sunday 10 February 2008 16:00:34 Kalle Valo wrote:
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+> ---
+> 
+>  drivers/net/wireless/at76_usb.c |   28 ++++++++++++++++++++++++++--
+>  drivers/net/wireless/at76_usb.h |    2 ++
+>  2 files changed, 28 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+> index 6e8a001..0d26086 100644
+> --- a/drivers/net/wireless/at76_usb.c
+> +++ b/drivers/net/wireless/at76_usb.c
+> @@ -19,7 +19,6 @@
+>   * Some iw_handler code was taken from airo.c, (C) 1999 Benjamin Reed
+>   *
+>   * TODO for the mac80211 port:
+> - * o monitor mode
+>   * o adhoc support
+>   * o hardware wep encryption
+>   * o RTS/CTS support
+> @@ -5296,6 +5295,8 @@ static int at76_mac80211_start(struct ieee80211_hw *hw)
+>  
+>  	at76_startup_device(priv);
+>  
+> +	at76_start_monitor(priv);
+> +
+>  error:
+>  	mutex_unlock(&priv->mtx);
+>  
+> @@ -5487,6 +5488,8 @@ static int at76_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+>  
+>  	if (is_valid_ether_addr(priv->bssid))
+>  		at76_join(priv);
+> +	else
+> +		at76_start_monitor(priv);
+>  
+>  	mutex_unlock(&priv->mtx);
+>  
+> @@ -5519,16 +5522,37 @@ static int at76_config_interface(struct ieee80211_hw *hw,
+>  	return 0;
+>  }
+>  
+> +/* must be atomic */
+>  static void at76_configure_filter(struct ieee80211_hw *hw,
+>  				  unsigned int changed_flags,
+>  				  unsigned int *total_flags, int mc_count,
+>  				  struct dev_addr_list *mc_list)
+>  {
+> +	struct at76_mac80211_priv *m_priv = hw->priv;
+> +	struct at76_priv *priv = m_priv->at76_priv;
+> +	int flags;
+> +
+>  	at76_dbg(DBG_MAC80211, "%s(): changed_flags=0x%08x "
+>  		 "total_flags=0x%08x mc_count=%d",
+>  		 __func__, changed_flags, *total_flags, mc_count);
+>  
+> -	*total_flags = 0;
+> +	flags = changed_flags & AT76_SUPPORTED_FILTERS;
+> +	*total_flags = AT76_SUPPORTED_FILTERS;
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
+&= is needed instead of =
 
---- everything.orig/include/net/mac80211.h	2008-02-23 15:13:24.000000000 +0100
-+++ everything/include/net/mac80211.h	2008-02-24 10:07:07.000000000 +0100
-@@ -38,7 +38,11 @@
-  * called in hardware interrupt context. The low-level driver must not call any
-  * other functions in hardware interrupt context. If there is a need for such
-  * call, the low-level driver should first ACK the interrupt and perform the
-- * IEEE 802.11 code call after this, e.g. from a scheduled workqueue function.
-+ * IEEE 802.11 code call after this, e.g. from a scheduled workqueue or even
-+ * tasklet function.
-+ *
-+ * NOTE: If the driver opts to use the _irqsafe() functions, it may not also
-+ *	 use the non-irqsafe functions!
-  */
- 
- /**
-@@ -1213,7 +1217,10 @@ void __ieee80211_rx(struct ieee80211_hw 
-  * buffer in @skb must start with an IEEE 802.11 header or a radiotap
-  * header if %RX_FLAG_RADIOTAP is set in the @status flags.
-  *
-- * This function may not be called in IRQ context.
-+ * This function may not be called in IRQ context. Calls to this function
-+ * for a single hardware must be synchronized against each other. Calls
-+ * to this function and ieee80211_rx_irqsafe() may not be mixed for a
-+ * single hardware.
-  *
-  * @hw: the hardware this frame came in on
-  * @skb: the buffer to receive, owned by mac80211 after this call
-@@ -1230,7 +1237,10 @@ static inline void ieee80211_rx(struct i
-  * ieee80211_rx_irqsafe - receive frame
-  *
-  * Like ieee80211_rx() but can be called in IRQ context
-- * (internally defers to a workqueue.)
-+ * (internally defers to a tasklet.)
-+ *
-+ * Calls to this function and ieee80211_rx() may not be mixed for a
-+ * single hardware.
-  *
-  * @hw: the hardware this frame came in on
-  * @skb: the buffer to receive, owned by mac80211 after this call
-@@ -1249,6 +1259,11 @@ void ieee80211_rx_irqsafe(struct ieee802
-  * transmitted. It is permissible to not call this function for
-  * multicast frames but this can affect statistics.
-  *
-+ * This function may not be called in IRQ context. Calls to this function
-+ * for a single hardware must be synchronized against each other. Calls
-+ * to this function and ieee80211_tx_status_irqsafe() may not be mixed
-+ * for a single hardware.
-+ *
-  * @hw: the hardware the frame was transmitted by
-  * @skb: the frame that was transmitted, owned by mac80211 after this call
-  * @status: status information for this frame; the status pointer need not
-@@ -1258,6 +1273,22 @@ void ieee80211_rx_irqsafe(struct ieee802
- void ieee80211_tx_status(struct ieee80211_hw *hw,
- 			 struct sk_buff *skb,
- 			 struct ieee80211_tx_status *status);
-+
-+/**
-+ * ieee80211_tx_status_irqsafe - irq-safe transmit status callback
-+ *
-+ * Like ieee80211_tx_status() but can be called in IRQ context
-+ * (internally defers to a tasklet.)
-+ *
-+ * Calls to this function and ieee80211_tx_status() may not be mixed for a
-+ * single hardware.
-+ *
-+ * @hw: the hardware the frame was transmitted by
-+ * @skb: the frame that was transmitted, owned by mac80211 after this call
-+ * @status: status information for this frame; the status pointer need not
-+ *	be valid after this function returns and is not freed by mac80211,
-+ *	it is recommended that it points to a stack area
-+ */
- void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
- 				 struct sk_buff *skb,
- 				 struct ieee80211_tx_status *status);
+> +
+> +	/* FIXME: access to priv->promisc should be protected with
+> +	 * priv->mtx, but it's impossible because this function needs to be
+> +	 * atomic */
+> +
+> +	if (flags && !priv->promisc) {
+> +		/* mac80211 wants us to enable promiscuous mode */
+> +		priv->promisc = 1;
+> +	} else if (!flags && priv->promisc) {
+> +		/* we need to disable promiscuous mode */
+> +		priv->promisc = 0;
+> +	} else
+> +		return;
+> +
+> +	queue_work(hw->workqueue, &priv->work_set_promisc);
+>  }
+>  
+>  static const struct ieee80211_ops at76_ops = {
+> diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
+> index 555a948..baa85a5 100644
+> --- a/drivers/net/wireless/at76_usb.h
+> +++ b/drivers/net/wireless/at76_usb.h
+> @@ -577,6 +577,8 @@ struct at76_rx_radiotap {
+>  	s8 rt_noise;
+>  };
+>  
+> +#define AT76_SUPPORTED_FILTERS FIF_PROMISC_IN_BSS
+
+See my recent patch to zd1211rw:
+[PATCH] zd1211rw: Fix beacon filter flags thinko
+I think this thinko also applies here.
+
+A driver does not support a flag, if it can _not_ _provide_
+a specific frame. (so in case it always filters it)
+Not the other way around. So if it always
+provides a specific type of frames, it _does_ support the filter flag.
 
 -- 
-
+Greetings Michael.
