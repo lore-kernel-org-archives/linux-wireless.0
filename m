@@ -1,94 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42901 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755938AbYBWOWE (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:32876 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757640AbYBJKWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 09:22:04 -0500
-Message-Id: <20080223142007.221019000@sipsolutions.net> (sfid-20080223_142344_230465_D3A87F6E)
-References: <20080223141703.194775000@sipsolutions.net>
-Date: Sat, 23 Feb 2008 15:17:04 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 01/18] wireless: various definitions for mesh networking
-Mime-Version: 1.0
+	Sun, 10 Feb 2008 05:22:54 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so139077ugc.16
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 02:22:53 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Add new USB ID to rt2500usb
+Date: Sun, 10 Feb 2008 11:21:57 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802101121.58058.IvDoorn@gmail.com> (sfid-20080210_102258_094393_16D7BD09)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis Carlos Cobo <luisca@cozybit.com>
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/linux/ieee80211.h |   35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+John, please send this patch to the 2.6.24/2.6.25 stable trees.
+It is already present in the wireless-2.6 tree queued for 2.6.26.
 
---- everything.orig/include/linux/ieee80211.h	2008-02-23 14:11:44.000000000 +0100
-+++ everything/include/linux/ieee80211.h	2008-02-23 14:11:52.000000000 +0100
-@@ -97,6 +97,7 @@
- #define IEEE80211_MAX_FRAME_LEN		2352
- 
- #define IEEE80211_MAX_SSID_LEN		32
-+#define IEEE80211_MAX_MESH_ID_LEN	32
- 
- struct ieee80211_hdr {
- 	__le16 frame_control;
-@@ -109,6 +110,16 @@ struct ieee80211_hdr {
- } __attribute__ ((packed));
- 
- 
-+struct ieee80211s_hdr {
-+	u8 flags;
-+	u8 ttl;
-+	u8 seqnum[3];
-+	u8 eaddr1[6];
-+	u8 eaddr2[6];
-+	u8 eaddr3[6];
-+} __attribute__ ((packed));
-+
-+
- struct ieee80211_mgmt {
- 	__le16 frame_control;
- 	__le16 duration;
-@@ -206,6 +217,23 @@ struct ieee80211_mgmt {
- 					__le16 params;
- 					__le16 reason_code;
- 				} __attribute__((packed)) delba;
-+				struct{
-+					u8 action_code;
-+					/* capab_info for open and confirm,
-+					 * reason for close
-+					 */
-+					__le16 aux;
-+					/* Followed in plink_confirm by status
-+					 * code, AID and supported rates,
-+					 * and directly by supported rates in
-+					 * plink_open and plink_close
-+					 */
-+					u8 variable[0];
-+				} __attribute__((packed)) plink_action;
-+				struct{
-+					u8 action_code;
-+					u8 variable[0];
-+				} __attribute__((packed)) mesh_action;
- 			} u;
- 		} __attribute__ ((packed)) action;
- 	} u;
-@@ -437,6 +465,13 @@ enum ieee80211_eid {
- 	WLAN_EID_TS_DELAY = 43,
- 	WLAN_EID_TCLAS_PROCESSING = 44,
- 	WLAN_EID_QOS_CAPA = 46,
-+	/* 802.11s */
-+	WLAN_EID_MESH_CONFIG = 36,      /* Pending IEEE 802.11 ANA approval */
-+	WLAN_EID_MESH_ID = 37,          /* Pending IEEE 802.11 ANA approval */
-+	WLAN_EID_PEER_LINK = 40,	/* Pending IEEE 802.11 ANA approval */
-+	WLAN_EID_PREQ = 53,		/* Pending IEEE 802.11 ANA approval */
-+	WLAN_EID_PREP = 54,		/* Pending IEEE 802.11 ANA approval */
-+	WLAN_EID_PERR = 55,		/* Pending IEEE 802.11 ANA approval */
- 	/* 802.11h */
- 	WLAN_EID_PWR_CONSTRAINT = 32,
- 	WLAN_EID_PWR_CAPABILITY = 33,
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index cba7f57..c4a6ab4 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
+ 	/* Hercules */
+ 	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	/* Melco */
++	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
+-
+ 	/* MSI */
+ 	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
 -- 
+1.5.3.8
 
