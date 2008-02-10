@@ -1,28 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:35339 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081AbYB0DbB (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.186]:28570 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbYBJVxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 22:31:01 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2542302wxd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 19:30:59 -0800 (PST)
-Message-ID: <43e72e890802261930k876a09bv4c1d5c79e369f69@mail.gmail.com> (sfid-20080227_033123_174730_B30B0D16)
-Date: Tue, 26 Feb 2008 22:30:58 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: fix all endian issues reported by sparse
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <20080226225914.28153.48243.stgit@dv.roinet.com>
+	Sun, 10 Feb 2008 16:53:34 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so5147467mue.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:32 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 04/14] rt2x00: correct address calc for queue private data
+Date: Sun, 10 Feb 2008 22:48:19 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802102246.04515.IvDoorn@gmail.com>
+In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080226225914.28153.48243.stgit@dv.roinet.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102248.19392.IvDoorn@gmail.com> (sfid-20080210_215336_893196_E10D9CFA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2008 at 5:59 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Changes-licensed-under: ISC
->  Signed-off-by: Pavel Roskin <proski@gnu.org>
+From: Adam Baker <linux@baker-net.org.uk>
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+When calculating the offset to add to the queue entry base to get the
+individual entry's private data area the base address must be treated
+as a char * not a struct queue_entry so we can do byte oriented
+pointer arithmetic with it.
 
-  Luis
+Signed-off-by: Adam Baker <linux@baker-net.org.uk>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index fde64ea..943afc9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -160,7 +160,8 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
+ 		return -ENOMEM;
+ 
+ #define QUEUE_ENTRY_PRIV_OFFSET(__base, __index, __limit, __esize, __psize) \
+-	( (__base) + ((__limit) * (__esize)) + ((__index) * (__psize)) )
++	( ((char *)(__base)) + ((__limit) * (__esize)) + \
++	    ((__index) * (__psize)) )
+ 
+ 	for (i = 0; i < queue->limit; i++) {
+ 		entries[i].flags = 0;
+-- 
+1.5.4
+
