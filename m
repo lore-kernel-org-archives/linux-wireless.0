@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36266 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762913AbYBFXQ3 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:34552 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbYBJVs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 18:16:29 -0500
-Date: Wed, 6 Feb 2008 15:14:31 -0800
-From: Greg KH <greg@kroah.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [stable] [PATCH stable 1/3] b43: Fix suspend/resume
-Message-ID: <20080206231431.GC12395@kroah.com> (sfid-20080206_231634_160248_B1EF998F)
-References: <200801251211.45980.mb@bu3sch.de>
+	Sun, 10 Feb 2008 16:48:29 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so4237858fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:48:27 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Sun, 10 Feb 2008 22:46:04 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200801251211.45980.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802102246.04515.IvDoorn@gmail.com> (sfid-20080210_214833_495910_A21869F5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2008 at 12:11:45PM +0100, Michael Buesch wrote:
-> This patch makes suspend/resume work with the b43 driver.
-> We must not overwrite the MAC addresses in the init function, as this
-> would also overwrite the MAC on resume. With an all-zero MAC the device
-> firmware is not able to ACK any received packets anymore.
-> Fix this by moving the initializion stuff that must be done on init but
-> not on resume to the start function.
-> Also zero out filter_flags to make sure we don't have some flags
-> from a previous instance for a tiny timeframe until mac80211 reconfigures
-> them.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> ---
-> 
-> This patch is upstream inside of the netdev tree.
+Hi John,
 
-Was this series, and the other one, for .24-stable, or .23-stable?
+Here is a quick followup release labeled 2.1.1. The previous release
+contained many bugs as it was mostly untested. Result was there
+were critical issues with it, of which some have now been fixed.
 
-thanks,
+The most critical issues are random panics due to corrupt memory access,
+at the moment none of the drivers are displaying any activity yet where
+rt73usb is still crashing at random times.
 
-greg k-h
+Ivo
+
+---
+
+The following changes since commit d86916b7d36c4f0db8634fcc17fe2d747b317f17:
+  John W. Linville (1):
+        Merge branch 'at76' into everything
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Adam Baker (1):
+      rt2x00: correct address calc for queue private data
+
+Ivo van Doorn (13):
+      rt2x00: Fix invalid DMA free
+      rt2x00: Make rt2x00 less verbose
+      rt2x00: Remove MGMT ring initialization
+      rt2x00: Select CONFIG_NEW_LEDS
+      rt2x00: make csr_cache and csr_addr an union
+      rt2x00: Fix scheduling while atomic errors in usb drivers
+      rt2x00: Add queue statistics to debugfs
+      rt2x00: Fix typo in debug statement
+      rt2x00: Fix skbdesc->data_len initialization
+      rt2x00: Fix queue->qid initialization
+      rt2x00: Cleanup Makefile
+      rt2x00: Kill guardian urb during disable_radio
+      rt2x00: Release rt2x00 2.1.1
+
+ drivers/net/wireless/rt2x00/Kconfig       |    1 +
+ drivers/net/wireless/rt2x00/Makefile      |   41 +++++-------
+ drivers/net/wireless/rt2x00/rt2400pci.c   |    4 -
+ drivers/net/wireless/rt2x00/rt2500pci.c   |    4 -
+ drivers/net/wireless/rt2x00/rt2500usb.c   |    6 +--
+ drivers/net/wireless/rt2x00/rt2x00.h      |   12 ++--
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   90 ++++++++++++++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00mac.c   |    9 +++-
+ drivers/net/wireless/rt2x00/rt2x00pci.c   |   99 +++++++++++++++++++---------
+ drivers/net/wireless/rt2x00/rt2x00pci.h   |    8 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   36 ++++++-----
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   37 ++++++++---
+ drivers/net/wireless/rt2x00/rt61pci.c     |    8 +--
+ drivers/net/wireless/rt2x00/rt61pci.h     |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c     |    8 +--
+ 15 files changed, 231 insertions(+), 134 deletions(-)
