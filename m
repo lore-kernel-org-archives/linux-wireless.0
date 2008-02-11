@@ -1,66 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37477 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33862 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758052AbYBUU3X (ORCPT
+	with ESMTP id S1753059AbYBKMWY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 15:29:23 -0500
-Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
+	Mon, 11 Feb 2008 07:22:24 -0500
+Subject: Re: [PATCH 10/13] o11s: mesh discovery and peer link establishment
+	support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1203625535.20345.65.camel@brick> (sfid-20080221_202534_134890_BEDDDA07)
-References: <1203503909.17534.14.camel@johannes.berg>
-	 <20080220195913.GE21139@uranus.ravnborg.org>
-	 <1203597776.20331.5.camel@johannes.berg>
-	 <20080221200620.GA29352@uranus.ravnborg.org>
-	 <1203624563.26341.15.camel@johannes.berg> <1203625535.20345.65.camel@brick>
-	 (sfid-20080221_202534_134890_BEDDDA07)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hq8ag07WkkBdZMhKmo5l"
-Date: Thu, 21 Feb 2008 21:29:03 +0100
-Message-Id: <1203625743.26341.18.camel@johannes.berg> (sfid-20080221_202935_190646_D5D274FF)
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1202518689.7025.59.camel@localhost> (sfid-20080209_005705_806985_310BEE6C)
+References: <47a78292.22528c0a.1300.1aef@mx.google.com>
+	 (sfid-20080204_212438_516087_6199B5A8)  <1202346788.9965.95.camel@johannes.berg>
+	 <1202518689.7025.59.camel@localhost> (sfid-20080209_005705_806985_310BEE6C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-34SS6mhm/pO0+6M4FXi9"
+Date: Mon, 11 Feb 2008 08:53:32 +0100
+Message-Id: <1202716412.11481.14.camel@johannes.berg> (sfid-20080211_122227_493630_E15B2D60)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-hq8ag07WkkBdZMhKmo5l
+--=-34SS6mhm/pO0+6M4FXi9
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+> We definitely would implement security in user space but have not
+> decided yet were to draw the line. I think that it makes sense at least
+> to have path discovery in-kernel, since there is a lot of activity on
+> them (each path is rebuilt every few seconds and there can be many of
+> them) and many path discovery frames just need to be forwarded and do
+> not have to be transferred to user space.
 
-> Clean, or did you specifically mean bitwise-clean?
+Sounds reasonable.
 
-bitwise-clean. But I don't do full-mac drivers so most of what you quote
-I don't compile, and the mac80211-based drivers only have few problems.
+> AFAIK, it would only be necessary to move part of the peer link
+> establishment to user space. Path discovery takes place after the peer
+> links have been established.
+
+Yes, ok, that makes sense then. I suppose we'll then have to "rewrite"
+the peer link establishment in userspace once we want to work on that
+but I think it's fine to have it in the kernel too for basic mesh
+functionality, we need to shake out the userspace MLME first (though it
+shouldn't be too much work any more.)
 
 johannes
 
---=-hq8ag07WkkBdZMhKmo5l
+--=-34SS6mhm/pO0+6M4FXi9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR73fDqVg1VMiehFYAQKP8A//dFBtAJoTqy/Zkmhj8vP1367729JB2684
-ah4AjpFyA7SayfspXqKsyP0CHsNnlm4bGn17f0PAsSJawZN7gcF65Mm1ENyIEHLp
-mjplfpZ2Dt32jQ7uccQyEjx3FNZXtOuOve07L1wTRHGX3o8U2zgerQCRt2dudyFd
-RBe3GH8xGz9agF+M738xo+pp56RbQugmpzCyKKTGCIaSTqME6e4OBKnLftJnx4VF
-mf063EKOCdPmOOd9XtE381AYt3clBvp2U5d+De6iPIUeT8GWeLLb2Yk55F0oAFUR
-UZ9hDJtZ3kAzD8lZ9Vxt1UOsb2ylBoqe8Hy6conQyHbl7blLrnjNi6U6wrWhCHPI
-qj1VeoHI2VUEc54mvtdI2wguliFW77Lf8vkrxFSvlQ1enNTiXE6OIUNXI4zkZvIG
-e32U3IwYsH9r8rnzZYdyErIXMnv3kykTLE9VNus84jwJdZ9Mi0GHBNLA2pF5JvIE
-nb+GRRhbSgTFXyFRBC3mdrnXlWNkVjZgyWebO5QIhs3RKToAzV6utpu4Gthx7u1p
-+fLu5REKtRh3SJV27eW+YSkPHi4iaGS/suuYsQBetaEUPppuuLNmTa57iJ2SBsLx
-yP5pZhogh6uGyrJkZge7t1FhkGHwptWd6Cd+kDjp5wDs2JIqmsiSpepWs4fXG4q/
-maYF+xRuCC0=
-=M+ig
+iQIVAwUAR6/++6Vg1VMiehFYAQLuvxAAl9LbdWimm/iOz59u7KCA00FFBJakC1YH
+LKZmt9VXp7Z+96gIKZWGpmsgadJ6+QDxMcETIcoQg/Riq8gtam8kcyTaLb+GsxQT
+rDtNtZ1u8JVDAtQGxiMMcqzecy8lJf3kkKkut/tAl7CtTPePmTQVfQK4fbtwfQ/k
+L5JHCcPWA1IVWLCYZPPojQyfHj9Iq4dr4hQNI9SXu3HumniVQ1HsgR8Mgp0wDPG8
+ZvPaS8LEBaqfqMCfzsXdk69GuMfPeGMCyl5FPVlyGjHfxb+VtseNlazewSgeGnsZ
+Wl/2IYtcM1F/mnoVCBef2S4CzPAYGAmZI6LqsgarTfqEc2ui7FUsrB+1MBP8B5/N
+70GbR1wO0lzS0mBcRW4u0d63EHrggwRgLnzu56E+j/LoufYKmoDZvg8SETLaIuhh
+QTfDZthuaFTxx3dalA3ThuBwMZE8ZJ3qJhac+onQSF9VIHvFA/favXmGEjKFfSgR
+FEfF8QelHzIV5u7rI1hNWEkA36NhMMOpe0wtskUiQt3RiyEJ1Hq25FUNlPL9xRjU
+8ndMfBEYgNzYwOgrSRtvhjt3S3MsnG0m6fHnMLCE4jqVGLuMxIJBksbfiAks+UPV
+NwG3ZMVLAWJIH6ThqT9rZu6tCmqcdk+QLglu19/khkuJ/2oCNLSFcBr7Os2DXA9I
+NAIGKfJkcaA=
+=mmSo
 -----END PGP SIGNATURE-----
 
---=-hq8ag07WkkBdZMhKmo5l--
+--=-34SS6mhm/pO0+6M4FXi9--
 
