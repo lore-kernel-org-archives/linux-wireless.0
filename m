@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40439 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752871AbYB2Gb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 01:31:56 -0500
-Subject: Re: hostapd with mac80211 progress
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1204210453.6309.49.camel@johannes.berg>
-References: <1204190255.3090.165.camel@debian.sh.intel.com>
-	 <1204210453.6309.49.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 29 Feb 2008 14:22:34 +0800
-Message-Id: <1204266154.3090.182.camel@debian.sh.intel.com> (sfid-20080229_063208_201168_BCAF6F71)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753164AbYBKMYg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2008 07:24:36 -0500
+Subject: Re: 2.6.24.x-stable request for
+	69f817b654d683265118188bbfb8bc0d8978cce6 and
+	ece8edddf067d21c4e5abfe3f1205da1588edbb2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: caglar@pardus.org.tr
+Cc: linux-kernel@vger.kernel.org, flamingice@sourmilk.net,
+	jbenc@suse.cz, hschaa@suse.de, yi.zhu@intel.com,
+	linville@tuxdriver.com, jgarzik@pobox.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200802110208.58891.caglar@pardus.org.tr>
+References: <200802110208.58891.caglar@pardus.org.tr>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Szm/gVPdf2OQjwV6JQyZ"
+Date: Mon, 11 Feb 2008 13:21:04 +0100
+Message-Id: <1202732464.11481.66.camel@johannes.berg> (sfid-20080211_122440_003583_521AB62A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Thu, 2008-02-28 at 15:54 +0100, Johannes Berg wrote:
-> 
-> Yes, you need at least the one hostapd patch I still have and also the
-> trivial AP mode enable patch. I'll rebase my patches on the current
-> wireless-testing tree in a minute so check for patch uploads later
-> than this email.
+--=-Szm/gVPdf2OQjwV6JQyZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-OK, I've applied all these patches. The kernel doesn't compile unless I
-enabled CONFIG_NETDEVICES_MULTIQUEUE && CONFIG_MAC80211_MESH and with
-below patch.
 
-Thanks,
--yi
+> On 2.6.24.1-stable kernel review cycle, i requested inclusions of
+> commit 69f817b654d683265118188bbfb8bc0d8978cce6 (mac80211: Restore
+> rx.fc before every invocation of ieee80211_invoke_rx_handlers)=20
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 2c69e5b..b54bdf8 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3584,8 +3584,6 @@ static int iwl4965_tx_status_reply_tx(struct
-iwl4965_priv *priv,
- 
- 		tx_status = &(priv->txq[txq_id].txb[idx].status);
- 		tx_status->retry_count = tx_resp->failure_frame;
--		tx_status->queue_number = status & 0xff;
--		tx_status->queue_length = tx_resp->failure_rts;
- 		tx_status->control.flags &= ~IEEE80211_TXCTL_AMPDU;
- 		tx_status->flags = iwl4965_is_tx_success(status)?
- 			IEEE80211_TX_STATUS_ACK : 0;
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 87b40b2..6728ff0 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -28,7 +28,7 @@ const int ieee802_1d_to_ac[8] = { 2, 3, 3, 2, 1, 1, 0,
-0 };
- 
- struct ieee80211_sched_data
- {
--	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
-+	unsigned long qdisc_pool[BITS_TO_LONGS(QD_MAX_QUEUES)];
- 	struct tcf_proto *filter_list;
- 	struct Qdisc *queues[QD_MAX_QUEUES];
- 	struct sk_buff_head requeued[QD_MAX_QUEUES];
-diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
-index 98597d9..a0a4495 100644
---- a/net/mac80211/wme.h
-+++ b/net/mac80211/wme.h
-@@ -23,6 +23,7 @@
- 
- #define QOS_CONTROL_TID_MASK 0x0f
- #define QOS_CONTROL_ACK_POLICY_SHIFT 5
-+#define QOS_CONTROL_TAG1D_MASK 0x07
- 
- extern const int ieee802_1d_to_ac[8];
- 
+That one I can agree with, it's a trivial fix.
 
+> and ece8edddf067d21c4e5abfe3f1205da1588edbb2 (mac80211: hardware scan
+> rework) into -stable one (they solved disable_hw_scan=3D1 workaround for
+> wpa_secured hidden AP problem).=20
+
+That one I don't really want to take responsibility for in a stable
+cycle.
+
+johannes
+
+--=-Szm/gVPdf2OQjwV6JQyZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7A9r6Vg1VMiehFYAQL0CRAAmi/5WOvJ3MApZ6/aF2sW3zkE3YpiJCMf
+Zi8WDdwYnB7wBKe/JA53CFLUqIidJR67GxxrNzSCvdwNMRkhAb4WipN1eZS1miiw
+Oumc7D46zBGWRU4nBTEUdnvhgqNVLbWkL3W3P9F8ofEA69Z+mOhmsCb1CDkOjKDi
+ebxIqp7iuvraQfb9hjIka7UTjnCw+NdeT9yNetZJrp8pDMNdVrB/xPG++6cWaDjS
+E3kxcoEqDk9IW4tBR9wsEo3sphktIfSc4fHUxhIBUPy9Fqr/Z9m4eIEvM8zdArLL
+6/Tg3prwVKlhWbUR/l6h7G69LQNYWiC4jEjTnYiLU0OBQHHOnFER1Exv2lbM0uEf
+uT2Dt1O+9MbCzGEXHUCI+qMZgDjMUzmPZf/WLEaSLTQotuUJi0cTLstmebTgZKzM
+WzCol4ZRGg/ZSEnVlDvivlSt0Et8pZ/NgvLl0gPMm+6XeggAMD4Zu4e89cuLmAYP
+hGN2a9KYy6COnQJO1ACkrTWODnJqvL1kHzURLMYx8CER1fibZzKbb+wOAgwT3UDf
+VNUSolHq6tRIhdTyeI/dZcQ7B5PDAdrdW2h7TmesgDFoG4ja5NFUsTiK1rBzEnlg
+oG9PBoA1lQW9sRgfhft4up+X1NHvDdM07FMemxrtwVdtNlSHvIIGGqXDKM7tCj2J
+N0bgVr+fBG4=
+=SHfJ
+-----END PGP SIGNATURE-----
+
+--=-Szm/gVPdf2OQjwV6JQyZ--
 
