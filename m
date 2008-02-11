@@ -1,74 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759324AbYBRLQ0 (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:58631 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbYBKSwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 06:16:26 -0500
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: bruno randolf <bruno@thinktube.com>
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-In-Reply-To: <200802181103.47670.bruno@thinktube.com>
-References: <1203088151.8931.197.camel@johannes.berg>
-	 <20080216022918.18775.59888.stgit@one>
-	 <1203239503.12783.22.camel@johannes.berg>
-	 <200802181103.47670.bruno@thinktube.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7u0AmgHdIia6aeZoshfW"
-Date: Mon, 18 Feb 2008 12:16:18 +0100
-Message-Id: <1203333378.12783.35.camel@johannes.berg> (sfid-20080218_111652_356488_0B491467)
-Mime-Version: 1.0
+	Mon, 11 Feb 2008 13:52:41 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: give burst time in txop rather than 0.1msec units
+Date: Mon, 11 Feb 2008 19:52:30 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1202658578.11481.4.camel@johannes.berg>
+In-Reply-To: <1202658578.11481.4.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_ulJsH4zixaEefeb"
+Message-Id: <200802111952.30964.chunkeey@web.de> (sfid-20080211_185245_836655_540EB93F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-7u0AmgHdIia6aeZoshfW
-Content-Type: text/plain
+--Boundary-00=_ulJsH4zixaEefeb
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Sunday 10 February 2008 16:49:38 Johannes Berg wrote:
 
-> > This is assuming that we don't manage to process the frame within 192
-> > usecs. I guess that will be true since we defer it to a tasklet, but do
-> > we want to bet on it in the future or should we simply widen the window
-> > where the merge *won't* happen because the driver doesn't provide enoug=
-h
-> > info and also add the 24 bytes offset here?
+> Michael (Wu), the p54 driver has some values that differ from
+> the 802.11 spec, is that intentional?
+>
+
+> +	/*
+> +	 * FIXME: The default values in the spec (IEEE 802.11
+> +	 *	  7.3.2.19 Table 37) are 47, 94, 0, 0, why use
+> +	 *	  47, 94, 63, 0 here? Also, the default AIFS
+> +	 *	  values (second parameter) are 2, 2, 3, 7...
+> +	 */
+Well, these values are the defaults of the original driver from conexant.
+As far as I know it has something to do with the "proprietary" frameburst
+feature (aka PRISM NITRO)...=20
+
+So on-topic: IEEE 802.11 defaults are fine. Drop the "FIXME".=20
+
+> +	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 47);
+> +	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 94);
+> +	P54_SET_QUEUE(vdcf->queue[2], 0x0003, 0x000f, 0x03ff, 0);
+> +	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0);
+
+and off-topic: please merge another older patch. (see attachment)
+>Re: [PATCH split 4/8] fix 'and' typo's in wireless/p54common
+>Date: 26.10.2007 22:13
+>From: Roel Kluin <12o3l@tiscali.nl>
+>To: linux-wireless@vger.kernel.org
 >=20
-> sorry, i was to fast in agreeing ;)
-> on a second thought i realized that we don't need to worry about that:
->=20
-> since we get to handle the frame after it was received *completely*, we c=
-an be=20
-> sure that the current time returned by get_tsf() is later than the time w=
-hen=20
-> byte 24 was received. so no need for adding the offset.
+> =C2=A0 =C2=A0 =C2=A0 Fix priority mistakes similar to '!x & y' in wireles=
+s/p54common
+>=C2=A0 =C2=A0=20
+> =C2=A0 =C2=A0 =C2=A0 Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+         Acked-by: Christian Lamparter <chunkeey@web.de>
 
-Hah, good point.
+--Boundary-00=_ulJsH4zixaEefeb
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="roel-kluin-p54-negprio.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="roel-kluin-p54-negprio.patch"
 
-johannes
+diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+index 1437db0..8ee1453 100644
+--- a/drivers/net/wireless/p54common.c
++++ b/drivers/net/wireless/p54common.c
+@@ -374,7 +374,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+ 				pad = entry_data->align[0];
 
---=-7u0AmgHdIia6aeZoshfW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+-			if (!status.control.flags & IEEE80211_TXCTL_NO_ACK) {
++			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
+ 				if (!(payload->status & 0x01))
+ 					status.flags |= IEEE80211_TX_STATUS_ACK;
+ 				else
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR7lpAaVg1VMiehFYAQIhRg/7B1Vu1y31o5wIkXKNi3pOYFWeZoCRo6En
-SiK18IBnffPMrgxV8+k1hzW9RpN/BYkECeYRJcrQC40BN1paeSwz3Do+QTUkDquJ
-nBHCWF+vTLkxDthcBDUkWd5BQkOzROTOiZYQaJTDDhJfFThPF/oLe0kk01d08Dtn
-2JpZfOEX8+QEV0+8M1BveGw13dUl33NA8f4pD37DB4UmN6SWFzI4Y22/qzydqqQb
-HwZwhWEIOTkX+zI9u3Y/l01q1mBvGy1jEX1IqLkEMeVAI+pJ/vv+mgQqiE7RNMpK
-gIw06g2NTJaCZlBAnPf6UFV/JOL5bvy0jLJfwRVe301jhPEWfPXAMiKgyMxPT8En
-apYWtTjekag1XvnETmHEnaya5TGsHhJAUVqThbkBYoGjX/9DcHxOeKAn2Y/bXHk4
-x1Suz1VRRNJla2rjOkM+RFmk8Br0sLHlRGBdOsHY4IxMsIqsHhpAh5ToWHH/BZ8e
-9izRxGoXOu+qnD3A6dUL2gN7AIzATWaRYDUCGN4y5Du2nd7zEUdZuR1iki7bo2fY
-5yVAXVyca9PrjNax0OAmpr10cV0eeAWC3Zj9zfqgVzZKA6aBF8RC3YGPY2tLKdDQ
-SYi1t3hDlflppiJvWfpqODOoZwdr6rmZYAy522F48FfNdCFzvW+t7huG5gZRcfz2
-8JkZQOxluAg=
-=9Ns9
------END PGP SIGNATURE-----
-
---=-7u0AmgHdIia6aeZoshfW--
-
+--Boundary-00=_ulJsH4zixaEefeb--
