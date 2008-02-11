@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:48587 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759213AbYBEVbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 16:31:48 -0500
-Date: Tue, 5 Feb 2008 22:23:40 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Felix Fietkau" <nbd@openwrt.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-Message-ID: <20080205222340.70e043cd@morte> (sfid-20080205_213151_232536_983D36D9)
-In-Reply-To: <1ba2fa240802041105g1e11ba99ldaca4acee4a07c35@mail.gmail.com>
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>
-	<47A718CF.50303@openwrt.org>
-	<-5971017268625562167@unknownmsgid>
-	<1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>
-	<-7767648866191425885@unknownmsgid>
-	<1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
-	<47A72E13.8070305@openwrt.org>
-	<1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
-	<47A75BF5.90101@openwrt.org>
-	<1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
-	<1ba2fa240802041105g1e11ba99ldaca4acee4a07c35@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from vs166246.vserver.de ([62.75.166.246]:42951 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757239AbYBKOVE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2008 09:21:04 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Eddy =?utf-8?q?Petri=C8=99or?= <eddy.petrisor@gmail.com>
+Subject: Re: weird issues with b43 - and an oops
+Date: Mon, 11 Feb 2008 15:20:35 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <47B02CBB.1060406@gmail.com>
+In-Reply-To: <47B02CBB.1060406@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200802111520.36105.mb@bu3sch.de> (sfid-20080211_142138_065457_3FEA4775)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 4 Feb 2008 21:05:25 +0200
-"Tomas Winkler" <tomasw@gmail.com> wrote:
+On Monday 11 February 2008 12:08:43 Eddy Petri=C8=99or wrote:
+> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: Microcode not respondi=
+ng
+> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: You must go to=20
+> http://linuxwireless.org/en/users/Drivers/b43#devicefirmware and=20
+> download the correct firmware (version 4).
 
-> Sorry I meant
-> ieee80211_tx_status {
-> >          size_t nrates;
-> >          ieee80211_tx_ratectrl  rates[0] ;
-> > }
+Do this.
 
-FWIW, I'm OK with this. BTW, further changes to this may be required in
-the future as I plan to rework a bit the whole tx_status thing so that
-drivers won't have to report ACKed frames but failed and retransmitted
-frames only - this would reduce the load on slow buses such as USB.
+> Feb 11 03:32:12 bounty dhclient: wmaster0: unknown hardware address t=
+ype 801
+> Feb 11 03:32:12 bounty kernel: input: b43-phy0 as /class/input/input1=
+7
+> Feb 11 03:32:12 bounty kernel: WARNING: at drivers/ssb/main.c:883=20
+> ssb_tmslow_reject_bitmask()
+
+And use the b43 driver from wireless-2.6
 
 
---
-Ciao
-Stefano
+--=20
+Greetings Michael.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
