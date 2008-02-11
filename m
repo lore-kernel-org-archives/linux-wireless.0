@@ -1,110 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:45965 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933614AbYBGUxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 15:53:40 -0500
-Date: Thu, 7 Feb 2008 12:48:07 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Michael@hera.kernel.org,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Buesch <mb@bu3sch.de>, Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 37/45] b43legacy: fix DMA slot resource leakage
-Message-ID: <20080207204807.GL16389@suse.de> (sfid-20080207_205345_927301_4EEF50F2)
-References: <20080207204118.202098927@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207204549.GA16389@suse.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521AbYBKMyS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2008 07:54:18 -0500
+Subject: Re: [PATCH] zd1211rw: Fix beacon filter flags thinko
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <200802101603.56095.mb@bu3sch.de> (sfid-20080210_150436_186402_A253CCC1)
+References: <200802101603.56095.mb@bu3sch.de>
+	 (sfid-20080210_150436_186402_A253CCC1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0RQAaZ77S9HMxsLZ3Lat"
+Date: Mon, 11 Feb 2008 13:53:51 +0100
+Message-Id: <1202734431.11481.80.camel@johannes.berg> (sfid-20080211_125422_887957_88048D2B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-------------------
-From: Stefano Brivio <stefano.brivio@polimi.it>
+--=-0RQAaZ77S9HMxsLZ3Lat
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-patch 8dd0100ce9511e52614ecd0a6587c13ce5769c8b in mainline.
 
-This fixes four resource leakages.
-In any error path we must deallocate the DMA frame slots we
-previously allocated by request_slot().
-This is done by storing the ring pointers before doing any ring
-allocation and restoring the old pointers in case of an error.
+On Sun, 2008-02-10 at 16:03 +0100, Michael Buesch wrote:
+> We must not clear the FIF_BCN_PRBRESP_PROMISC bit in the
+> new_flags. The zd-driver does support sending beacons and
+> probe responses to the host. What the flag does is say "Send me
+> all beacons and probe responses". And we actually do that. We always
+> do that, so we ignore the case when the bit is disabled. But that is
+> fine. But we must not clear the flag, as that tells mac80211 that
+> we do not support passing beacons and probe responses to the stack.
+> And that's not true.
 
-This patch by Michael Buesch has been ported to b43legacy.
+Good explanation. Maybe it's needed with the filter flags defines/the
+config_filter callback description?
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
----
- drivers/net/wireless/b43legacy/dma.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -1164,7 +1164,7 @@ static int dma_tx_fragment(struct b43leg
- {
- 	const struct b43legacy_dma_ops *ops = ring->ops;
- 	u8 *header;
--	int slot;
-+	int slot, old_top_slot, old_used_slots;
- 	int err;
- 	struct b43legacy_dmadesc_generic *desc;
- 	struct b43legacy_dmadesc_meta *meta;
-@@ -1174,6 +1174,9 @@ static int dma_tx_fragment(struct b43leg
- #define SLOTS_PER_PACKET  2
- 	B43legacy_WARN_ON(skb_shinfo(skb)->nr_frags != 0);
- 
-+	old_top_slot = ring->current_slot;
-+	old_used_slots = ring->used_slots;
-+
- 	/* Get a slot for the header. */
- 	slot = request_slot(ring);
- 	desc = ops->idx2desc(ring, slot, &meta_hdr);
-@@ -1184,8 +1187,11 @@ static int dma_tx_fragment(struct b43leg
- 	err = b43legacy_generate_txhdr(ring->dev, header,
- 				 skb->data, skb->len, ctl,
- 				 generate_cookie(ring, slot));
--	if (unlikely(err))
-+	if (unlikely(err)) {
-+		ring->current_slot = old_top_slot;
-+		ring->used_slots = old_used_slots;
- 		return err;
-+	}
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 				       sizeof(struct b43legacy_txhdr_fw3), 1);
-@@ -1208,6 +1214,8 @@ static int dma_tx_fragment(struct b43leg
- 	if (dma_mapping_error(meta->dmaaddr)) {
- 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
- 		if (!bounce_skb) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -ENOMEM;
- 			goto out_unmap_hdr;
- 		}
-@@ -1218,6 +1226,8 @@ static int dma_tx_fragment(struct b43leg
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 		if (dma_mapping_error(meta->dmaaddr)) {
-+			ring->current_slot = old_top_slot;
-+			ring->used_slots = old_used_slots;
- 			err = -EIO;
- 			goto out_free_bounce;
- 		}
+> ---
+>=20
+> Should probably go -stable, too.
 
--- 
+Unnecessary, I don't think we currently ever test the flag in mac80211.
+
+johannes
+
+--=-0RQAaZ77S9HMxsLZ3Lat
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7BFXqVg1VMiehFYAQL6ig//fWll8L/nXvXjxDaT/qKOD4fksChpX5TO
+gRnX4+SFLPcPeDS2uRrbL3UHOzYZtrsgNaqLdvtGilKh0LIQNosZsKe8UbXRbGtC
+tQ5ipMRnE4BD1qK3lF4wpc8nH4ehSnUrNbVup2jOwx0z3NpuRL6zmL6U2ogVVRoX
+keTKGOretbdcwA3NqbcqjL+on/8B4p/axHOvbOtAXicqxqhinYhxGPGdFpXnTDfX
+RTrXLBUT+mCmaLxjSPqt4S+d5ykXQYE8q+HdqnI47OBizTGKKtgV7noJF+CGbnpZ
+Qlywq+oWsQ9f4OYdGZrtw9EhlpIkoFlnvLtjzxOEq+7vHlxsfMlDi8kaHFdV1BMY
+aqDhhoof3E83YONPm9Whz0AUhVqMdkvFxBjvxNFJu97d9X23MAVHPW6AhPIypvQk
+oPxohTclyNz3W+9tBpKbni0QDbHzQ7wu3iTs1xm6zh9kjjk5JAuDq/wxuuw1zGkb
+arkuU8CXyvPVFkXjvzU+7QUI9dUlAzRZuFcnrxSm/TNvIkpgRzlxOO7lLb3Sb85X
+LKSOBcoJXybgkwbOrRF5tiCrJwvHGlmXbD7IBeAvMBVausw2dIeRXXtzp/z3lSLO
+91LC9lICnNfw7L1OC9/epeICdZhmAulq4A7kcqLg7C/L14Lj/xXIT13y6yxMTq+4
+YzQuuy04j9g=
+=TcyX
+-----END PGP SIGNATURE-----
+
+--=-0RQAaZ77S9HMxsLZ3Lat--
+
