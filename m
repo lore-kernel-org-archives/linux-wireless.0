@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:34646 "EHLO
-	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754052AbYBIKJ5 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:26749 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbYBKXKA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Feb 2008 05:09:57 -0500
-Message-ID: <47AD7BEF.9000709@wpkg.org> (sfid-20080209_101002_752721_AA53541D)
-Date: Sat, 09 Feb 2008 11:09:51 +0100
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+	Mon, 11 Feb 2008 18:10:00 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3938061fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2008 15:09:58 -0800 (PST)
+Message-ID: <47B0D5BD.5040109@gmail.com> (sfid-20080211_231006_702181_CA6C7ED2)
+Date: Tue, 12 Feb 2008 01:09:49 +0200
+From: =?UTF-8?B?RWRkeSBQZXRyaciZb3I=?= <eddy.petrisor@gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: prism54: Out of memory, cannot handle oid, card/socket may be
- faulty, or IRQ line too busy
-References: <47ACD136.4030705@wpkg.org> <20080208221009.GA2919@tuxdriver.com>
-In-Reply-To: <20080208221009.GA2919@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Re: weird issues with b43 - and an oops
+References: <47B02CBB.1060406@gmail.com> <200802111520.36105.mb@bu3sch.de>
+In-Reply-To: <200802111520.36105.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville schrieb:
-> On Fri, Feb 08, 2008 at 11:01:26PM +0100, Tomasz Chmielewski wrote:
->> I just wanted to use a mini-PCI card using a prism54 module - however, it 
->> fails to bring the interface up with "Out of memory, cannot handle oid" and 
->> "Your card/socket may be faulty, or IRQ line too busy" messages.
-> 
-> I vaguely recall seeing an error like that when I used the wrong
-> firmware.  What firmware are you using?
+Michael Buesch wrote:
+> On Monday 11 February 2008 12:08:43 Eddy Petri=C8=99or wrote:
+>> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: Microcode not respond=
+ing
+>> Feb 11 03:32:12 bounty kernel: b43-phy0 ERROR: You must go to=20
+>> http://linuxwireless.org/en/users/Drivers/b43#devicefirmware and=20
+>> download the correct firmware (version 4).
+>=20
+> Do this.
 
-This is my card:
+Already did, as noted in the initial mail, thanks.
 
-# lspci -nn
-(...)
-00:02.0 Network controller [0280]: Intersil Corporation ISL3890 [Prism 
-GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] [1260:3890] (rev 01)
+>> Feb 11 03:32:12 bounty dhclient: wmaster0: unknown hardware address =
+type 801
+>> Feb 11 03:32:12 bounty kernel: input: b43-phy0 as /class/input/input=
+17
+>> Feb 11 03:32:12 bounty kernel: WARNING: at drivers/ssb/main.c:883=20
+>> ssb_tmslow_reject_bitmask()
+>=20
+> And use the b43 driver from wireless-2.6
 
-According to http://prism54.org/newdrivers.html, my card is among the 
-supported devices, and I should use version 2.7.0.0 for PCI devices 
-firmware:
+I assume I must use the 'everything' branch, right?
+/me is still waiting for 'clone' to finish
 
-PCI Vendor (hex)	PCI Product (hex)	Common name
-1260	3890	Generic ISL3890
+(I hope this kernel doesn't have suspend-to-ram and suspend-to-disk=20
+issues, I just got them back with 2.6.24)
 
+--=20
+Regards,
+EddyP
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+"Imagination is more important than knowledge" A.Einstein
 
-It doesn't work and says "Your card/socket may be faulty, or IRQ line 
-too busy". With 2.7.0.0 firmware, it doesn't say "out of memory" anymore.
-
-Are there more things to be done to make this card work?
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
