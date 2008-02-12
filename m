@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:58070 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750874AbYBRMzE (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:38623 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbYBLFZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 07:55:04 -0500
-Date: Mon, 18 Feb 2008 04:53:31 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Wael Nasreddine <mla@nasreddine.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 not working properly.
-Message-Id: <20080218045331.ee1dde97.akpm@linux-foundation.org> (sfid-20080218_125511_673845_46F54175)
-In-Reply-To: <20080218045425.GA7381@phoenix.nasreddine.info>
-References: <20080218045425.GA7381@phoenix.nasreddine.info>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 12 Feb 2008 00:25:00 -0500
+To: Dan Williams <dcbw@redhat.com>
+Cc: Budhee Jamaich <budheej@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: madwifi is not fully open source
+References: <57314e840802111427i7e8d00capbe430727faff78a1@mail.gmail.com>
+	<1202770112.6824.35.camel@localhost.localdomain>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 12 Feb 2008 07:24:23 +0200
+In-Reply-To: <1202770112.6824.35.camel@localhost.localdomain> (ext Dan Williams's message of "Mon\, 11 Feb 2008 17\:48\:32 -0500")
+Message-ID: <87skzyiw6w.fsf@nokia.com> (sfid-20080212_052521_095743_AF384FC4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"ext Dan Williams" <dcbw@redhat.com> writes:
 
-(cc linux-wireless)
+>> If I understand correctly, this is because they put the radio-related code
+>> in a binary module, to meet regulatory requirements.
+>
+> To meet _their__interpretation_ of regulatory requirements.
 
-On Mon, 18 Feb 2008 05:54:25 +0100 Wael Nasreddine <mla@nasreddine.com> wrote:
+lwn.net had an article about this:
 
-> Hello,
-> 
-> I have a Toshiba Satellite A135-S4427 with and Intel 3945ABG card, the
-> driver is not working properly.
-> 
-> When I turn on my PC it works fine, but If I ever bring the interface
-> down, I no longer can associate it with any AP without rebooting, even
-> the one I was using, I tried rmmod/modprobe iwl3945, didn't do
-> anything,
-> 
-> iwconfig shows that the wlan0 has the radio turned off, and
-> 
-> $ cat /sys/bus/pci/drivers/iwl3945/0000:04:00.0/rf_kill
-> 1
-> 
-> Even If I echo 0 > /sys/bus/pci/drivers/iwl3945/0000:04:00.0/rf_kill
-> whenever I try to associate the interface with an AP it turns back to
-> 1, I tried both iwconfig and NetworkManager, same problem.
-> 
-> There's a button on my laptop for Radio SoftKill (fn+F8) but it's not
-> working, the soft kill is being enabled/disabled without my
-> interference.
-> 
-> I tried it on kernel-2.6.24 and kernel-2.6.25-rc2 same result...
-> 
-> Any help is appreciated...
-> 
-> P.S: Please Cc to me, I am not subscribed to the mailing list.
-> 
-> -- 
-> Wael Nasreddine
-> http://wael.nasreddine.com
-> PGP: 1024D/C8DD18A2 06F6 1622 4BC8 4CEB D724  DE12 5565 3945 C8DD 18A2
-> 
-> .: An infinite number of monkeys typing into GNU emacs,
->    would never make a good program. (L. Torvalds 1995) :.
-> 
+http://lwn.net/Articles/240840/
+
+-- 
+Kalle Valo
