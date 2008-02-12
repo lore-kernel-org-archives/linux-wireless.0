@@ -1,88 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:63752 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbYBBVj3 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:6395 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756523AbYBLIpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 16:39:29 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2369140pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 13:39:29 -0800 (PST)
-Message-ID: <43e72e890802021339x5b2a44eayad71e796ba48451b@mail.gmail.com> (sfid-20080202_213932_477707_AC49718F)
-Date: Sat, 2 Feb 2008 16:39:28 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com,
-	johannes@sipsolutions.net
-In-Reply-To: <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com>
+	Tue, 12 Feb 2008 03:45:46 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1359795nfb.21
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 00:45:40 -0800 (PST)
+Message-ID: <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com> (sfid-20080212_084600_245746_2698F8AB)
+Date: Tue, 12 Feb 2008 10:45:40 +0200
+From: "Budhee Jamaich" <budheej@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: madwifi is not fully open source
+Cc: linux-wireless@vger.kernel.org, "Kalle Valo" <kalle.valo@nokia.com>
+In-Reply-To: <1202770112.6824.35.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080201012544.GD28995@ruslug.rutgers.edu>
-	 <47A33ECA.5030005@gmail.com>
-	 <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <57314e840802111427i7e8d00capbe430727faff78a1@mail.gmail.com>
+	 <1202770112.6824.35.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 2, 2008 4:35 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
->
-> On Feb 1, 2008 10:46 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > On 02/01/2008 02:25 AM, Luis R. Rodriguez wrote:
-> > > Cleanup after API changes patch (checkpatch.pl stuff) and on
-> > > ath5k_hw_rf5112_channel() make use of the new channel->band and
-> > > existing ath5k_channel_ok() instead of re-implementing the checks
-> > > again. This was necessary to make the code cleaner and fit
-> > > the 80-chars wide limit so sending it within the same patch.
-> > >
-> > > Finally make a note that we should eventually move cap_range stuff
-> > > to struct wiphy.
-> > >
-> > > This patch applies ontop of Nick's API changes patch.
-> > >
-> > > Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-> > >
-> > > drivers/net/wireless/ath5k/ath5k.h:   Changes-licensed-under: ISC
-> > > drivers/net/wireless/ath5k/base.c:    Changes-licensed-under: 3-Clause-BSD
-> > > drivers/net/wireless/ath5k/initvals.c:        Changes-licensed-under: ISC
-> > > drivers/net/wireless/ath5k/phy.c:     Changes-licensed-under: ISC
-> > > ---
-> > >  drivers/net/wireless/ath5k/ath5k.h    |    8 ++-
-> > >  drivers/net/wireless/ath5k/base.c     |  126 +++++++++++++++++++--------------
-> > >  drivers/net/wireless/ath5k/initvals.c |    6 +-
-> > >  drivers/net/wireless/ath5k/phy.c      |   48 +++++++++----
-> > >  4 files changed, 118 insertions(+), 70 deletions(-)
-> > >
-> > [...]
-> > > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> > > index 8ddac36..bd9c9a8 100644
-> > > --- a/drivers/net/wireless/ath5k/base.c
-> > > +++ b/drivers/net/wireless/ath5k/base.c
-> > [...]
-> > > @@ -889,13 +900,15 @@ ath5k_copy_channels(struct ath5k_hw *ah,
-> > >               /* Write channel info and increment counter */
-> > >               channels[count].center_freq = freq;
-> > >
-> > > -             if((mode == AR5K_MODE_11A) ||
-> > > -             (mode == AR5K_MODE_11G)){
-> > > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM;
-> > > -             } else if((mode == AR5K_MODE_11A_TURBO) ||
-> > > -             (mode == AR5K_MODE_11G_TURBO)){
-> > > -                     channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
-> > > -             }if(mode == AR5K_MODE_11B) {
-> > > +             if ((mode == AR5K_MODE_11A) ||
-> > > +                     (mode == AR5K_MODE_11G)) {
-> > > +                     channels[count].hw_value =
-> > > +                             chfreq | CHANNEL_OFDM;
-> > > +             } else if ((mode == AR5K_MODE_11A_TURBO) ||
-> > > +                     (mode == AR5K_MODE_11G_TURBO)) {
-> > > +                     channels[count].hw_value =
-> > > +                             chfreq | CHANNEL_OFDM|CHANNEL_TURBO;
-> > > +             } if (mode == AR5K_MODE_11B) {
-> >
-> > 'else' or '\n' before the if, please
->
-> Good catch, that should have been an "else if" there. Will repost all
-> pending patches in a series addressing all posted comments.
+Hi Dan,
 
-Going to move this to a switch, its much more legible.
+First - thank you for the detailed response!
 
-  Luis
+I have some further questions:
+
+On Feb 12, 2008 12:48 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2008-02-12 at 00:27 +0200, Budhee Jamaich wrote:
+> > What should a new vendor, planning to write a driver, do ? Open Source
+> > everything, and expect legal issues, or release RF code as binary-only ?
+>
+> Talk to your lawyers.  You do not necessarily have legal issues if you
+> open the RF regulatory code,
+
+>From reading SFLC's and LWN's analysis of the situation (Thanks Kalle for
+pointing me to it) I get the opposite impression. Seems like a vendor will
+have to "demonstrate sufficient robustness with a fully free-software
+implementation",
+and that it "could still get certification. But it would not be easy".
+So even if a vendor is willng to completely Open Source it's code,
+having FCC troubles
+is a serious problem.
+
+
+>
+> 2) Keep your RF regulatory code open and hook it into the mac80211
+> regulatory framework like most other open drivers are doing.  Again,
+> consult your lawyers on whether or not they feel this is an acceptable
+> solution.  Your driver can be accepted into the upstream kernel, hordes
+> of developers will improve your driver for you, and everyone is happy.
+
+Is there any vendor who walked this path ? complete Open Source RF code ?
+If yes, has it's chip got FCC certified ?
+>
+> 3) Put your RF regulatory code into the _firmware_ of your device (this
+> is what Intel has done with 3945 and 4965 parts).  This is very
+> acceptable, but still be sure to consult your lawyers.  Your driver can
+> be accepted into the upstream kernel, hordes of developers will improve
+> your driver for you, and everyone is happy.
+
+Seems like a good option, but only if the design of the chip support
+it (CCIIW pls).
+If this idea is not supported in the hardware, we are left with the other
+two options, both of each are not optimal.
+
+So it seems like your three options translate to:
+1. full Open Source: happy Open Source developers (+), can't sell device (big -)
+2. firmware RF code: happy FOSS ppl (+), can sell device (+), depends on
+chip design...(not always possible)
+3. RF blob: mad FOSS ppl (- but can live with if no other option), can
+sell device(+)
+
+> Hope this helps, feel free to ask further questions if some things
+> aren't clear enough.
+
+Greatly helps, thanks again,
+Budhee.
+
+>
+> Dan
+>
+>
