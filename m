@@ -1,268 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:37149 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758612AbYBOHCN (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:50260 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159AbYBLNDL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 02:02:13 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 3/3] mac80211: enable IBSS merging
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
-Date: Fri, 15 Feb 2008 16:02:02 +0900
-Message-ID: <20080215070202.32461.62689.stgit@one> (sfid-20080215_070216_087140_3D717024)
-In-Reply-To: <20080215070116.32461.80795.stgit@one>
-References: <20080215070116.32461.80795.stgit@one>
+	Tue, 12 Feb 2008 08:03:11 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] p54: use IEEE 802.11e defaults for initialization
+Date: Tue, 12 Feb 2008 14:02:06 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1202658578.11481.4.camel@johannes.berg> <200802111952.30964.chunkeey@web.de> <1202815900.8931.1.camel@johannes.berg>
+In-Reply-To: <1202815900.8931.1.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_OjZsHYV+/GAMDYa"
+Message-Id: <200802121402.06985.chunkeey@web.de> (sfid-20080212_130324_477716_80698D5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-note: ieee80211_get_bitrate() might be better places elsewhere, but i d=
-on't
-know where it would fit.
+--Boundary-00=_OjZsHYV+/GAMDYa
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-enable IBSS cell merging. if an IBSS beacon with the same channel, same=
- ESSID
-and a TSF higher than the local TSF (mactime) is received, we have to j=
-oin its
-BSSID.  while this might not be immediately apparent from reading the 8=
-02.11
-standard it is compliant and necessary to make IBSS mode functional in =
-many
-cases. most drivers have a similar behaviour.
+This trival one-liner changes the QoS initialization values to match IEEE 
+802.11e defaults.
 
-* move the relevant code section (previously only containing debug code=
-) down
-to the end of the function, so we can reuse the bss structure.
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 
-* we have to compare the mactime (TSF at the time of packet receive) ra=
-ther
-than the current TSF. since some drivers are not able to give a reliabl=
-e
-mactime we fall back to use the current TSF, which will be enough to ca=
-tch most
-(but not all) cases where an IBSS merge is necessary.
-
-* in IBSS mode we want to allow beacons to override probe response info=
- so we
-can correctly do merges.
-
-* we don't only configure beacons based on scan results, so change that
-message.
-
-* to enable this we have to let all beacons thru in IBSS mode, even if =
-they
-have a different BSSID.
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 ---
+Johannes:
+Which tree do you want? I made two versions. 
+1. ...-2.6.24.2.diff will be fine for the mainline and the everything branch.
+2. ...-txoppatch.diff is made for "[PATCH v2] mac80211: give burst time in 
+txop rather than 0.1msec units" (with some offset?!)
 
- include/net/mac80211.h       |    3 +
- net/mac80211/ieee80211_sta.c |  107 +++++++++++++++++++++++++++++++---=
---------
- net/mac80211/rx.c            |    5 ++
- 3 files changed, 84 insertions(+), 31 deletions(-)
+--Boundary-00=_OjZsHYV+/GAMDYa
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="p54-ieee-qos-values-against-2.6.24.2.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-ieee-qos-values-against-2.6.24.2.diff"
 
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1b807f4..c634607 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -276,7 +276,8 @@ struct ieee80211_tx_control {
-  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
-  *	the frame.
-  * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime fiel=
-d)
-- *	is valid.
-+ *	is valid. This is useful in monitor mode and necessary for beacon f=
-rames
-+ *	to enable IBSS merging.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR	=3D 1<<0,
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
-c
-index 72d7a86..8b24d1f 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2189,6 +2189,19 @@ static int ieee80211_sta_join_ibss(struct net_de=
-vice *dev,
+--- linux-2.6.24.2/drivers/net/wireless/p54common.c.orig	2008-02-12 13:22:26.803058257 +0100
++++ linux-2.6.24.2/drivers/net/wireless/p54common.c	2008-02-12 13:24:21.096297635 +0100
+@@ -742,7 +742,7 @@ static void p54_init_vdcf(struct ieee802
+ 
+ 	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 0x000f);
+ 	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 0x001e);
+-	P54_SET_QUEUE(vdcf->queue[2], 0x0002, 0x000f, 0x03ff, 0x0014);
++	P54_SET_QUEUE(vdcf->queue[2], 0x0003, 0x000f, 0x03ff, 0x0000);
+ 	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0x0000);
  }
-=20
-=20
-+static inline int ieee80211_get_bitrate(struct wiphy *phy,
-+					enum ieee80211_band band, int rate_idx)
-+{
-+	struct ieee80211_supported_band *sband;
-+	if (band > 0 && band < IEEE80211_NUM_BANDS) {
-+		sband =3D phy->bands[band];
-+		if (rate_idx > 0 && rate_idx < sband->n_bitrates)
-+			return sband->bitrates[rate_idx].bitrate;
-+	}
-+	return 0;
-+}
-+
-+
- static void ieee80211_rx_bss_info(struct net_device *dev,
- 				  struct ieee80211_mgmt *mgmt,
- 				  size_t len,
-@@ -2202,7 +2215,7 @@ static void ieee80211_rx_bss_info(struct net_devi=
-ce *dev,
- 	struct ieee80211_sta_bss *bss;
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
--	u64 timestamp;
-+	u64 beacon_timestamp, rx_timestamp;
- 	DECLARE_MAC_BUF(mac);
- 	DECLARE_MAC_BUF(mac2);
-=20
-@@ -2219,31 +2232,7 @@ static void ieee80211_rx_bss_info(struct net_dev=
-ice *dev,
- 	if (baselen > len)
- 		return;
-=20
--	timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
--
--	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && beacon &&
--	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) =3D=3D 0) {
--#ifdef CONFIG_MAC80211_IBSS_DEBUG
--		static unsigned long last_tsf_debug =3D 0;
--		u64 tsf;
--		if (local->ops->get_tsf)
--			tsf =3D local->ops->get_tsf(local_to_hw(local));
--		else
--			tsf =3D -1LLU;
--		if (time_after(jiffies, last_tsf_debug + 5 * HZ)) {
--			printk(KERN_DEBUG "RX beacon SA=3D%s BSSID=3D"
--			       "%s TSF=3D0x%llx BCN=3D0x%llx diff=3D%lld "
--			       "@%lu\n",
--			       print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->bssid),
--			       (unsigned long long)tsf,
--			       (unsigned long long)timestamp,
--			       (unsigned long long)(tsf - timestamp),
--			       jiffies);
--			last_tsf_debug =3D jiffies;
--		}
--#endif /* CONFIG_MAC80211_IBSS_DEBUG */
--	}
--
-+	beacon_timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
- 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems=
-);
-=20
- 	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && elems.supp_rates=
- &&
-@@ -2329,8 +2318,10 @@ static void ieee80211_rx_bss_info(struct net_dev=
-ice *dev,
-=20
- 	bss->band =3D rx_status->band;
-=20
--	if (bss->probe_resp && beacon) {
--		/* Do not allow beacon to override data from Probe Response. */
-+	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS &&
-+	    bss->probe_resp && beacon) {
-+		/* STA mode:
-+		 * Do not allow beacon to override data from Probe Response. */
- 		ieee80211_rx_bss_put(dev, bss);
- 		return;
- 	}
-@@ -2427,13 +2418,71 @@ static void ieee80211_rx_bss_info(struct net_de=
-vice *dev,
- 		bss->ht_ie_len =3D 0;
- 	}
-=20
--	bss->timestamp =3D timestamp;
-+	bss->timestamp =3D beacon_timestamp;
- 	bss->last_update =3D jiffies;
- 	bss->rssi =3D rx_status->ssi;
- 	bss->signal =3D rx_status->signal;
- 	bss->noise =3D rx_status->noise;
- 	if (!beacon)
- 		bss->probe_resp++;
-+
-+	/* check if we need to merge IBSS */
-+	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && beacon &&
-+	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
-+	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
-+	    bss->freq =3D=3D local->oper_channel->center_freq &&
-+	    elems.ssid_len =3D=3D sdata->u.sta.ssid_len &&
-+	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) =3D=3D=
- 0) {
-+		if (rx_status->flag & RX_FLAG_TSFT) {
-+			/* in order for correct IBSS merging we need mactime
-+			 *
-+			 * since mactime is defined as the time the first data
-+			 * symbol of the frame hits the PHY, and the timestamp
-+			 * of the beacon is defined as "the time that the data
-+			 * symbol containing the first bit of the timestamp is
-+			 * transmitted to the PHY plus the transmitting STA=E2=80=99s
-+			 * delays through its local PHY from the MAC-PHY
-+			 * interface to its interface with the WM"
-+			 * (802.11 11.1.2) - equals the time this bit arrives at
-+			 * the receiver - we have to take into account the
-+			 * offset between the two.
-+			 * e.g: at 1 MBit that means mactime is 192 usec earlier
-+			 * (=3D24 bytes * 8 usecs/byte) than the beacon timestamp.
-+			 */
-+			int rate =3D ieee80211_get_bitrate(local->hw.wiphy,
-+					rx_status->band, rx_status->rate_idx);
-+			if (rate)
-+				rx_timestamp =3D rx_status->mactime +
-+						(24 * 8 * 10 / rate);
-+			else
-+				rx_timestamp =3D rx_status->mactime;
-+		} else if (local && local->ops && local->ops->get_tsf)
-+			/* second best option: get current TSF */
-+			rx_timestamp =3D local->ops->get_tsf(local_to_hw(local));
-+		else
-+			/* can't merge without knowing the TSF */
-+			rx_timestamp =3D -1LLU;
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+		printk(KERN_DEBUG "RX beacon SA=3D%s BSSID=3D"
-+		       "%s TSF=3D0x%llx BCN=3D0x%llx diff=3D%lld @%lu\n",
-+		       print_mac(mac, mgmt->sa),
-+		       print_mac(mac2, mgmt->bssid),
-+		       (unsigned long long)rx_timestamp,
-+		       (unsigned long long)beacon_timestamp,
-+		       (unsigned long long)(rx_timestamp - beacon_timestamp),
-+		       jiffies);
-+#endif /* CONFIG_MAC80211_IBSS_DEBUG */
-+		if (beacon_timestamp > rx_timestamp) {
-+			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
-+				printk(KERN_DEBUG "%s: beacon TSF higher than "
-+				       "local TSF - IBSS merge with BSSID %s\n",
-+				       dev->name, print_mac(mac, mgmt->bssid));
-+			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
-+			ieee80211_ibss_add_sta(dev, NULL,
-+					       mgmt->bssid, mgmt->sa);
-+		}
-+	}
-+
- 	ieee80211_rx_bss_put(dev, bss);
- }
-=20
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 943ba90..5dfe6f2 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1694,7 +1694,10 @@ static int prepare_for_handlers(struct ieee80211=
-_sub_if_data *sdata,
- 	case IEEE80211_IF_TYPE_IBSS:
- 		if (!bssid)
- 			return 0;
--		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
-+		if ((rx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_MGMT &&
-+		    (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_BEACON)
-+			return 1;
-+		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
- 			if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
- 				return 0;
- 			rx->flags &=3D ~IEEE80211_TXRXD_RXRA_MATCH;
+ 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Boundary-00=_OjZsHYV+/GAMDYa
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="p54-ieee-qos-values-against-txoppatch.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-ieee-qos-values-against-txoppatch.diff"
+
+--- everything/drivers/net/wireless/p54common.c.orig	2008-02-12 13:37:48.723005027 +0100
++++ everythinh/drivers/net/wireless/p54common.c	2008-02-12 13:38:09.200480691 +0100
+@@ -740,15 +740,9 @@ static void p54_init_vdcf(struct ieee802
+ 
+ 	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
+ 
+-	/*
+-	 * FIXME: The default values in the spec (IEEE 802.11
+-	 *	  7.3.2.19 Table 37) are 47, 94, 0, 0, why use
+-	 *	  47, 94, 63, 0 here? Also, the default AIFS
+-	 *	  values (second parameter) are 2, 2, 3, 7...
+-	 */
+ 	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 47);
+ 	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 94);
+-	P54_SET_QUEUE(vdcf->queue[2], 0x0002, 0x000f, 0x03ff, 63);
++	P54_SET_QUEUE(vdcf->queue[2], 0x0003, 0x000f, 0x03ff, 0);
+ 	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0);
+ }
+ 
+
+--Boundary-00=_OjZsHYV+/GAMDYa--
