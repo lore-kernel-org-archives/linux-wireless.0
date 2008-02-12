@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2773 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751143AbYBAQCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 11:02:11 -0500
-Date: Fri, 1 Feb 2008 10:49:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Mansfield <david@cobite.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: repeatable rmmod/ksofitirqd hang with rtl8187
-Message-ID: <20080201154945.GA3050@tuxdriver.com> (sfid-20080201_160219_987888_E454B009)
-References: <1201878685.18907.54.camel@gandalf.cobite.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:37235 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756072AbYBLUm2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2008 15:42:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH v2] mac80211: give burst time in txop rather than 0.1msec units
+Date: Tue, 12 Feb 2008 21:42:09 +0100
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Christian Lamparter" <chunkeey@web.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1202658578.11481.4.camel@johannes.berg> <200802122021.21211.mb@bu3sch.de> <1ba2fa240802121157t370c8418v8a24484596ce5bcd@mail.gmail.com>
+In-Reply-To: <1ba2fa240802121157t370c8418v8a24484596ce5bcd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1201878685.18907.54.camel@gandalf.cobite.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802122142.10325.mb@bu3sch.de> (sfid-20080212_204232_004738_557C8294)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 01, 2008 at 10:11:25AM -0500, David Mansfield wrote:
-> Hi, 
-> 
-> I'm trying to use the rtl8187 in the Fedora 8 kernel 2.6.23.14-107.fc8
-> on x86_64 and I'm having a number of problems with reliability.
-> However, the most obvious problem is that the module cannot be removed.
-> 
-> Attempting to rmmod the rtl8187 causes rmmod and ksoftirqd to go to 100%
-> every time.
+On Tuesday 12 February 2008 20:57:45 Tomas Winkler wrote:
+> On Feb 12, 2008 9:21 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Tuesday 12 February 2008 12:31:40 Johannes Berg wrote:
+> > > > > + /*
+> > > > > +  * FIXME: The default values in the spec (IEEE 802.11
+> > > > > +  *        7.3.2.19 Table 37) are 47, 94, 0, 0, why use
+> >
+> > Does somebody know the correct place where these values are in
+> > the specs? Section 7.3.2.19 is about "Supported channels IE".
+> >
+> >
+> > > > > +  *        47, 94, 63, 0 here? Also, the default AIFS
+> > > > > +  *        values (second parameter) are 2, 2, 3, 7...
+> > > > > +  */
+> >
+> >
+>  7.3.2.29 EDCA Parameter Set element
 
-I don't see anything in the posted information which clearly
-suggests an rtl8187 problem or even a mac80211 one.  Would you mind
-opening a bugat bugzilla.redhat.com for this issue?  Please add
-"linville@redhat.com" to the CC: field when you open it.
+Thanks, found it :)
 
-Thanks!
 
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
