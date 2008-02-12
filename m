@@ -1,119 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:3715 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757211AbYBVTsY (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:39962 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757197AbYBLVMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 14:48:24 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so331587nfb.21
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 11:48:22 -0800 (PST)
-To: "Chris Clayton" <chris2553@googlemail.com>
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Date: Fri, 22 Feb 2008 20:47:52 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802181911.32128.IvDoorn@gmail.com> <c6b1100b0802220746s3441d28cj92896618bbb57bde@mail.gmail.com>
-In-Reply-To: <c6b1100b0802220746s3441d28cj92896618bbb57bde@mail.gmail.com>
+	Tue, 12 Feb 2008 16:12:38 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH RFT/RFC] b43: Add QOS support
+Date: Tue, 12 Feb 2008 22:12:03 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+References: <200802122205.42799.mb@bu3sch.de>
+In-Reply-To: <200802122205.42799.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200802222047.52312.IvDoorn@gmail.com> (sfid-20080222_194828_437801_9E02BDDE)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200802122212.03325.mb@bu3sch.de> (sfid-20080212_211242_827404_A22F9FE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 22 February 2008, Chris Clayton wrote:
-> Hi Ivo,
-> 
-> On 18/02/2008, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > Hi,
-> >
-> 
-> [...]
-> 
-> > Above traces should be enough, but to determine where rt2x00 broke
-> >  down approximatly I need to have a few test result on specific moments.
-> >  Could you test the kernel with the following versions:
-> >
-> >  rt2x00 2.0.11   2d68de3efa62655d551092f5c787505735d561ad
-> >  rt2x00 2.0.12   a3c7aa58df7df80aa05f166fe3e42482247164cf
-> >  rt2x00 2.0.13   5a6012e105ae1664cd2841c33bf59fbdd8d4dbcc
-> >
-> >  Checking those out is simply a matter of:
-> >  git branch 2.0.11 2d68de3efa62655d551092f5c787505735d561ad
-> >  git checkout 2.0.11
-> >
-> 
-> OK, we seem to be struggling a little, so I've built an installed git
-> and cloned Linus' 2.6 tree. My wireless network dies after a few pings
-> with rt2x00 2.0.11.
-> 
-> >  No further bisecting is needed, but with above tests I can at least
-> >  narrow it down to find the cause of this issue.
-> >
-> 
-> If you need me to bisect, just shout. Please be patient though, I'm
-> exploring new territory here :-)
+On Tuesday 12 February 2008 22:05:42 Michael Buesch wrote:
+> This patch adds QOS support for b43.
+> Please comment on this and test this.
+> This patch depends on Johannes' "burst time -> txop patch" being _not_ applied.
+> One can trivially fix that, though.
+> +	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
+> +		params = &(wl->qos_params[i]);
+> +		if (params->need_hw_update) {
+> +			b43_qos_params_upload(dev, &(params->p),
+> +					      qos_shm_offsets[i]);
+> +			params->need_hw_update = 1;
 
-I don't think bisecting this will help a lot, the rt2x00 2.0.11 release
-introduced software diversity. And that is already something I suspect
-of being broken.
+Whoopsy, needs to be:
+			params->need_hw_update = 0;
 
-Unfortunately software diversity was a bugfix and fix in one,
-the previous setup was broken for some hardware since the
-lack of software diversity caused problems.
+> +		}
+> +	}
+> +
+> +	spin_unlock_irqrestore(&wl->irq_lock, flags);
+> +	b43_mac_enable(dev);
+> +}
 
-Could you check if below patch helps in any way?
+> +/* Initialize the core's QOS capabilities */
+> +static void b43_qos_init(struct b43_wldev *dev)
+> +{
+> +	/* Upload the current QOS parameters. */
 
-Ivo
+And here we need a loop setting all "need_hw_update" to 1.
 
----
+> +	b43_qos_update(dev);
+> +	/* Enable QOS support. */
+> +	b43_hf_write(dev, b43_hf_read(dev) | B43_HF_EDCF);
+> +	b43_write16(dev, B43_MMIO_IFSCTL,
+> +		    b43_read16(dev, B43_MMIO_IFSCTL)
+> +		    | B43_MMIO_IFSCTL_USE_EDCF);
+> +}
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index a1d8e33..6995912 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -122,6 +122,10 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	libconf.ant.rx = rx;
- 	libconf.ant.tx = tx;
- 
-+	if (rx == rt2x00dev->link.ant.active.rx &&
-+	    tx == rt2x00dev->link.ant.active.tx)
-+		return;
-+
- 	/*
- 	 * Antenna setup changes require the RX to be disabled,
- 	 * else the changes will be ignored by the device.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 65a512f..4325c08 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -191,16 +191,16 @@ static void rt2x00lib_evaluate_antenna_sample(struct rt2x00_dev *rt2x00dev)
- 		return;
- 
- 	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) {
--		if (sample_a > sample_b && rx == ANTENNA_B)
-+		if (sample_a > sample_b)
- 			rx = ANTENNA_A;
--		else if (rx == ANTENNA_A)
-+		else
- 			rx = ANTENNA_B;
- 	}
- 
- 	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY) {
--		if (sample_a > sample_b && tx == ANTENNA_B)
-+		if (sample_a > sample_b)
- 			tx = ANTENNA_A;
--		else if (tx == ANTENNA_A)
-+		else
- 			tx = ANTENNA_B;
- 	}
- 
-@@ -257,7 +257,7 @@ static void rt2x00lib_evaluate_antenna(struct rt2x00_dev *rt2x00dev)
- 
- 	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
- 	    !(rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)) {
--		rt2x00dev->link.ant.flags &= ~ANTENNA_MODE_SAMPLE;
-+		rt2x00dev->link.ant.flags = 0;
- 		return;
- 	}
- 
-
+-- 
+Greetings Michael.
