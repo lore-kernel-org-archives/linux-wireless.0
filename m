@@ -1,113 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.238]:56680 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbYBETkk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 14:40:40 -0500
-Received: by qb-out-0506.google.com with SMTP id e11so3575768qbe.15
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2008 11:40:39 -0800 (PST)
-Message-ID: <1ba2fa240802051140j6497593cq3776c77b75ee32be@mail.gmail.com> (sfid-20080205_194050_153951_D84C794A)
-Date: Tue, 5 Feb 2008 21:40:37 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Felix Fietkau" <nbd@openwrt.org>
-Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
-Cc: linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-In-Reply-To: <12022263282085-git-send-email-tomas.winkler@intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3790 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752355AbYBLQb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2008 11:31:28 -0500
+Date: Tue, 12 Feb 2008 11:05:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
+Message-ID: <20080212160507.GC3051@tuxdriver.com> (sfid-20080212_163132_757768_C742DAC4)
+References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de> <efe7343f0802100422o2cba8ec2iaae3916cccd932b9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <12022263282085-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <efe7343f0802100422o2cba8ec2iaae3916cccd932b9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 5, 2008 5:45 PM, Tomas Winkler <tomas.winkler@intel.com> wrote:
-> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->
-> This patch introduces data structures meant to contain actual
-> configuration in which Tx was made in HW, for general purposes
-> and for rate scaling in specific.
-> it includes the rate, general flags for the rate (e.g. Tx antenna)
-> and the number of retries for the rate.
->
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  include/net/mac80211.h |   22 +++++++++++++++++++++-
->  1 files changed, 21 insertions(+), 1 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 460da54..ec966c8 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -318,6 +318,22 @@ struct ieee80211_rx_status {
->  };
->
->  /**
-> + * struct ieee80211_tx_rate_ctrl - rate ctrl data
-> + *
-> + * The low-level driver should provide this struct as part
-> + * of the ieee80211_tx_status. this struct should give information
-> + * about the tx that is not part of the plcp rates table.
-> + * @bitrate: rate used.
-> + * @flags: Tx information (e.g. antenna selectd, guard interval, etc.)
-> + * @retry_count: number of retries for this specific rate
-> + */
-> +struct ieee80211_tx_rate_ctrl {
-> +       u32 bitrate;
-> +       u32 flags;
-> +       u8 retry_count;
-> +};
-> +
-> +/**
->   * enum ieee80211_tx_status_flags - transmit status flags
->   *
->   * Status flags to indicate various transmit conditions.
-> @@ -343,7 +359,7 @@ enum ieee80211_tx_status_flags {
->   * @control: a copy of the &struct ieee80211_tx_control passed to the driver
->   *     in the tx() callback.
->   * @flags: transmit status flags, defined above
-> - * @retry_count: number of retries
-> + * @retry_count: total number of retries
->   * @excessive_retries: set to 1 if the frame was retried many times
->   *     but not acknowledged
->   * @ampdu_ack_len: number of aggregated frames.
-> @@ -353,6 +369,8 @@ enum ieee80211_tx_status_flags {
->   * @ack_signal: signal strength of the ACK frame
->   * @queue_length: ?? REMOVE
->   * @queue_number: ?? REMOVE
-> + * @rate_ctrl_num: number of rate_ctrl allocated
-> + * @rate_ctrl: info for rate at which the packet was actually transmitted
->   */
->  struct ieee80211_tx_status {
->         struct ieee80211_tx_control control;
-> @@ -364,6 +382,8 @@ struct ieee80211_tx_status {
->         int ack_signal;
->         int queue_length;
->         int queue_number;
-> +       size_t rate_ctrl_num;
-> +       struct ieee80211_tx_rate_ctrl rate_ctrl[0];
->  };
->
->  /**
-> --
-> 1.5.2.2
+On Sun, Feb 10, 2008 at 12:22:30PM +0000, Luis Correia wrote:
+> On Sun, Feb 10, 2008 at 10:31 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
 
+> >  > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
+> >  >       /* Hercules */
+> >  >       { USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       /* Melco */
+> >  > +     { USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       { USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       { USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       { USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       { USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  > -
+> >  >       /* MSI */
+> >  >       { USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >  >       { USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >
+> >  I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
+> >  We always handled adding IDs as features.
+> 
+> Please forgive me for stepping in this apparently already closed discussion.
+> 
+> Why is supporting a new USB ID considered a feature, when the users
+> are probably ok with it (it works) and no changes are added to the
+> code?
 
-Felix will this work for you?
+FWIW, I have often sent USB/PCI ID additions as "fixes" to the current
+release.  There may have been some confusion over that in the past --
+if I created that confusion, I apologize. :-)
 
-Thanks
-Tomas
-> ---------------------------------------------------------------------
-> Intel Israel (74) Limited
->
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
