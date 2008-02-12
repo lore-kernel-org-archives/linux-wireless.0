@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:39418 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757374AbYBYWuP (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:9194 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbYBLJOD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:50:15 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2164688wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:50:14 -0800 (PST)
-Message-ID: <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com> (sfid-20080225_225021_086595_C6FBAF5F)
-Date: Tue, 26 Feb 2008 00:50:14 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: sta info locking
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>
-In-Reply-To: <1203972413.13162.163.camel@johannes.berg>
+	Tue, 12 Feb 2008 04:14:03 -0500
+Received: from lin01.mn-solutions.de (pD95F9D9E.dip0.t-ipconnect.de [217.95.157.158])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id B8F4B5E4092
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 10:14:00 +0100 (CET)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 82C0B1E000E
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 10:11:04 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: madwifi is not fully open source
+Date: Tue, 12 Feb 2008 10:13:47 +0100
+References: <57314e840802111427i7e8d00capbe430727faff78a1@mail.gmail.com> <1202770112.6824.35.camel@localhost.localdomain> <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com>
+In-Reply-To: <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1203677069.26341.52.camel@johannes.berg>
-	 <20080222143745.GB3067@tuxdriver.com>
-	 <1203693409.7082.30.camel@johannes.berg>
-	 <20080222155704.GD3067@tuxdriver.com>
-	 <1203972413.13162.163.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802121013.47142.hs4233@mail.mn-solutions.de> (sfid-20080212_091421_567142_191A2B65)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 25, 2008 at 10:46 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  On Fri, 2008-02-22 at 10:57 -0500, John W. Linville wrote:
->  > On Fri, Feb 22, 2008 at 04:16:49PM +0100, Johannes Berg wrote:
->  > >
->  > > > > Hence, I think we can actually get away without more locking if we
->  > > > > protect the flags better. Should we use a spinlock or the atomic
->  > > > > set_bit()/clear_bit()/etc. operations?
->  > > >
->  > > > Using the atomic operations seems appropriate to me.
->  > >
->  > > Right, but I figured if we could get rid of the AMPDU spinlocks and just
->  > > use a single one in total (for flags as well) then that'd be of benefit
->  > > too; even with the dynamic allocation strategy (see other mail) we'd not
->  > > need to allocate two more spinlocks for ampdu.
->  >
->  > Yes, I thought that was behind your question.  I'll let Ron comment
->  > on the AMPDU spinlock usage.
->
->  Ok so the mesh code came with a spinlock too, the AMPDU code has two.
->
->  Ron/Tomas, does the ampdu MLME really need two spinlocks?
+> So it seems like your three options translate to:
+> 1. full Open Source: happy Open Source developers (+), can't
+> sell device (big -)
+> 2. firmware RF code: happy FOSS ppl (+), can sell device
+> (+), depends on chip design...(not always 
+> possible)
+> 3. RF blob: mad FOSS ppl (- but can live with if no other
+> option), can sell device(+)
 
-The problem is that RX a TX BA establishments usually happens
-concurrently for single STA, those are independent state machines.  We
-have to review this carefully before spinlokcs are removed.
+If your device really doesn't have a firmware (some claim 
+firmware is necessary to ensure real-time properties of the 
+protocol) then you could also do:
 
-Thanks
-Tomas
+4. write the driver for Windows in the usual, close source
+   form, "leak" or give docs to some Linux developers and
+   let they write the driver for the device. FCC can't object,
+   you didn't wrote the driver :-)
+
+Chances are actually quite high that the Linux people write a 
+better driver than you :-)
+
+
+Did you know about Greg Kroah-Hahn's "driver for free" incentive? 
+http://www.kroah.com/log/linux/free_drivers.html
