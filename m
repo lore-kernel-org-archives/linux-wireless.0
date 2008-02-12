@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:40718 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754371AbYBGTwu (ORCPT
+Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:47977 "EHLO
+	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760014AbYBLOKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 14:52:50 -0500
-Date: Thu, 7 Feb 2008 19:50:54 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, deller@gmx.de,
-	jt@hpl.hp.com, rjw@sisk.pl, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.arm.linux.org.uk
-Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
-Message-ID: <20080207195054.GG28435@flint.arm.linux.org.uk> (sfid-20080207_195308_235378_B1DA7A42)
-References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org> <200802062150.23930.deller@gmx.de> <20080206130448.564f18bb.akpm@linux-foundation.org> <20080206214747.GG32245@flint.arm.linux.org.uk> <20080206135950.d48ffa36.akpm@linux-foundation.org> <20080207155152.GA3025@tuxdriver.com> <20080207104912.c719deed.akpm@linux-foundation.org> <20080207190842.GC3025@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207190842.GC3025@tuxdriver.com>
+	Tue, 12 Feb 2008 09:10:14 -0500
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: ipw2100-admin@linux.intel.com
+Subject: [PATCH] ipw2100/ipw2200: note firmware loading caveat in Kconfig help text
+Message-Id: <20080212134942.9FD589D4135@zog.reactivated.net> (sfid-20080212_141033_444486_ED50E00D)
+Date: Tue, 12 Feb 2008 13:49:42 +0000 (GMT)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 07, 2008 at 02:08:42PM -0500, John W. Linville wrote:
-> On Thu, Feb 07, 2008 at 10:49:12AM -0800, Andrew Morton wrote:
-> > On Thu, 7 Feb 2008 10:51:52 -0500 "John W. Linville" <linville@tuxdriver.com> wrote:
-> > 
-> > > On Wed, Feb 06, 2008 at 01:59:50PM -0800, Andrew Morton wrote:
-> > > > On Wed, 6 Feb 2008 21:47:47 +0000
-> > > > Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
-> > > 
-> > > > > I assume that it's the second BUILD_BUG_ON() which is triggering?
-> > > > 
-> > > > yup.
-> > > > 
-> > > > > Given that:
-> > > > > 
-> > > > > #define MMW_SIZE        37
-> > > > > 
-> > > > > is not a multiple of sizeof(unsigned long) this is hardly surprising.
-> > > > > 
-> > > > > If structures are used to define a layout of something and must not
-> > > > > contain compiler padding, it must be packed.  Given these structures
-> > > > > contain just unsigned char, there's no concerns about >8bit loads
-> > > > > becoming less efficient.
-> > > 
-> > > Does a patch like this suffice?  I haven't checked whether such a
-> > > patch implies that the BUILD_BUG_ON()'s become unnecessary...
-> > 
-> > With your patch applied and arm allmodconfig, this
-> > 
-> >         BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
-> > 
-> > triggers
-> > 
-> > Without your patch applied, these two
-> > 
-> >         BUILD_BUG_ON(sizeof(mmw_t) != MMW_SIZE);
-> >         BUILD_BUG_ON(sizeof(ha_t) != HA_SIZE);
-> > 
-> > are triggering.
-> 
-> The ha_t one triggers either way?  Hmmm...
-> 
-> Russell suggested that the ha_t and psa_t packed attributes were
-> unnecessary, so I'll include the reduced version just in case the
-> above is a typo.
+Most wireless drivers load their firmware at interface open time, which
+generally occurs after the filesystem is available. However, the ipw drivers
+load their firmware at probe time because firmware is required to read the
+device MAC address. When built-in, probe happens before the filesystem is
+available, hence device init will only complete successfully if the user
+has made special arrangements (including firmware plus a loader in the
+initramfs).
 
-Well, I didn't look properly at ha_t and the unions that make it up
-(#$@%@! typedefs.)
+Note all this in the kconfig help text for both drivers.
 
-union hacs_u
-{
-        unsigned short  hu_command;             /* Command register */
-        unsigned short  hu_status;              /* Status Register */
-};
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/Kconfig |   26 ++++++++++++++++----------
+ 1 files changed, 16 insertions(+), 10 deletions(-)
 
-This is what needs to be packed, otherwise sizeof() will be 4.  With
-that done, ha_t should come out at 16 bytes.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 714a6ca..ff1d5d8 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -146,12 +146,15 @@ config IPW2100
+           configure your card:
+ 
+           <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
++
++          It is recommended that you compile this driver as a module (M)
++          rather than built-in (Y). This driver requires firmware at device
++          initialization time, and when built-in this typically happens
++          before the filesystem is accessible (hence firmware will be
++          unavailable and initialization will fail). If you do choose to build
++          this driver into your kernel image, you can avoid this problem by
++          including the firmware and a firmware loader in an initramfs.
+  
+-          If you want to compile the driver as a module ( = code which can be
+-          inserted in and removed from the running kernel whenever you want),
+-          say M here and read <file:Documentation/kbuild/modules.txt>.
+-          The module will be called ipw2100.ko.
+-	
+ config IPW2100_MONITOR
+         bool "Enable promiscuous mode"
+         depends on IPW2100
+@@ -201,11 +204,14 @@ config IPW2200
+           configure your card:
+ 
+           <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
+- 
+-          If you want to compile the driver as a module ( = code which can be
+-          inserted in and removed from the running kernel whenever you want),
+-          say M here and read <file:Documentation/kbuild/modules.txt>.
+-          The module will be called ipw2200.ko.
++
++          It is recommended that you compile this driver as a module (M)
++          rather than built-in (Y). This driver requires firmware at device
++          initialization time, and when built-in this typically happens
++          before the filesystem is accessible (hence firmware will be
++          unavailable and initialization will fail). If you do choose to build
++          this driver into your kernel image, you can avoid this problem by
++          including the firmware and a firmware loader in an initramfs.
+ 
+ config IPW2200_MONITOR
+         bool "Enable promiscuous mode"
+-- 
+1.5.4
+
