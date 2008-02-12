@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36258 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759517AbYBOPLD (ORCPT
+Received: from root-server.richard-scherping.de ([217.160.107.144]:50192 "EHLO
+	p15125984.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbYBLXG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 10:11:03 -0500
-Subject: Re: sending ARP triggers BUG
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 12 Feb 2008 18:06:58 -0500
+Message-ID: <47B2268D.7060205@scherping.de> (sfid-20080212_230704_097356_19E9468E)
+Date: Wed, 13 Feb 2008 00:06:53 +0100
+From: Richard Scherping <richard@scherping.de>
+MIME-Version: 1.0
 To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
-References: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e6YI0ODnjkEYXObHoFZr"
-Date: Fri, 15 Feb 2008 16:10:19 +0100
-Message-Id: <1203088219.8931.199.camel@johannes.berg> (sfid-20080215_151123_265934_61D68FBB)
-Mime-Version: 1.0
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com>
+In-Reply-To: <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Chatre, Reinette schrieb:
 
---=-e6YI0ODnjkEYXObHoFZr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> We have not done ad-hoc testing in the recent code. Any debugging you
+> can do will be greatly appreciated (anything interesting in your logs?).
+> Just to confirm the monitor mode is ok, can you confirm that your
+> monitoring machine can see data between a host and AP? We have seen some
+> problems with monitoring in iwlwifi so I would like to make sure.
 
-Hi Reinette,
+The monitoring (as well as the counterpart for ad-hoc operation) was done with madwifi 0.9.3.3 on a different machine with kernel 2.6.22 - a setup that has proven to work for me already.
 
-> I recently started seeing the BUG below. ieee80211_subif_start_xmit
-> calls pskb_expand_head, but this function BUGs because the skb is
-> shared.=20
+> Please load the driver with debugging (debug=0x43fff) and send us what
+> you see during data transmission. It may be useful to open a bug at
+> bughost.org at this point for us to keep track of the problem.
 
-I've been expecting this for a while now since I never found where on
-mac80211's input path we make sure the skb isn't cloned/shared... I say
-we just put an skb_unshare() into there since we need to modify the skb
-once we get it.
+Looking at the debugging output helped a bit:
 
-johannes
+Feb 12 23:27:37 merom kernel: iwl4965: I iwl4965_mac_tx enter
+Feb 12 23:27:37 merom kernel: iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated
+Feb 12 23:27:37 merom kernel: iwl4965: I iwl4965_mac_tx leave
 
---=-e6YI0ODnjkEYXObHoFZr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I changed that output to be more verbose:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated: iwl4965_is_associated(priv)=1; priv->assoc_id=0; priv->assoc_station_added=1
 
-iQIVAwUAR7WrWqVg1VMiehFYAQKxihAAgQkShSeJ1bIi+xB0JLgAm1tFBmTnWIZz
-2dQbkIdwzL1d3UlTens+MBJjSjHpKX+07KSkmQ5AXyH/bWF+VdFXTVu6uzHKkiwQ
-P0UBGTdnapnUwTsBa0rSZmofBdw9jqMQ+QC1ls0ucVk0yzDbUVQjNI6Lbux7fnhm
-7sUoZVE4yHr4JfhgT0NEpDt25b93P5gG396UizQOex4pfK/uCDpOfnDHE44ROTYn
-gX6ELX7y4aOt6yfp5vLOy7S99ZX/nqHMQXdzi8iIK9CkNNQdWCq5+Tufkxt5rpfm
-PT0od8mI461PwU78d/WEejls7SkqfxN7wZlFEVTxg0JN5qP8dfiDKVcjufg85E2d
-ODY9T10LxIhE9VpEojCWqZAy/RAiMql8YhUJcFv3hFEVR0SaSUSfVCBGZpHrXwHf
-qfoeWAiNJ82v5gP0pHrolYSFvgbEka8l1Wf40LF+he2HQzoAzvLqRac0d8q4YVsC
-SkVMIbldRMcRxbMmbilkA4ziMaxQz5om9D1dNHOEYK/zDR2gsziSqASB4OPgdl0+
-0O3HeJnROEuLt+LUtCHBbV3Qqu1x2+/LiaOJiYLiW2MiUWPZGrl/X610XFx4lZzr
-z4PUe9GX9Ee+iPcudikEFFwPLs9UGGLjCXNTQnnsDAVFlHYaIongYzKWUfWD2RyZ
-11rCTpSZWaw=
-=2WWU
------END PGP SIGNATURE-----
+This is in line with the following output:
 
---=-e6YI0ODnjkEYXObHoFZr--
+Feb 12 23:44:08 merom kernel: iwl4965: U iwl4965_bg_post_associate Associated as 0 to: 2a:20:22:f0:4f:f0
 
+The full log is available at http://www.scherping.de/misc/iwl4965-2625rc1.txt
+What I did is:
+
+merom:/home/richard# uname -a
+Linux merom 2.6.25-rc1 #1 SMP Mon Feb 11 08:18:47 CET 2008 x86_64 GNU/Linux
+merom:/home/richard# modprobe iwl4965 debug=0x43fff
+merom:/home/richard# iwconfig wlan0 mode ad-hoc
+merom:/home/richard# ifconfig wlan0 10.0.0.1 up
+merom:/home/richard# iwconfig wlan0 channel 1
+merom:/home/richard# iwconfig wlan0 essid test
+merom:/home/richard# iwconfig wlan0
+wlan0     IEEE 802.11g  ESSID:"test"  
+          Mode:Ad-Hoc  Frequency:2.412 GHz  Cell: 2A:20:22:F0:4F:F0   
+          Tx-Power=27 dBm   
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
+          Encryption key:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+merom:/home/richard# ping 10.0.0.2
+PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
+>From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+>From 10.0.0.1 icmp_seq=2 Destination Host Unreachable
+>From 10.0.0.1 icmp_seq=3 Destination Host Unreachable
+^C
+--- 10.0.0.2 ping statistics ---
+5 packets transmitted, 0 received, +3 errors, 100% packet loss, time 4016ms
+, pipe 3
+merom:/home/richard# 
+
+The same thing worked with 2.6.24 - 10.0.0.2 is the other ad-hoc station (MadWifi-based).
+
+Thanks for your help!
+
+Richard
