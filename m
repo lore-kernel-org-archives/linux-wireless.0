@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24312 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:16508 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997AbYBCUQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 15:16:48 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [RFC] mac80211: add rate to ieee80211_tx_status
-Date: Sun,  3 Feb 2008 22:15:05 +0200
-Message-Id: <12020697053277-git-send-email-tomas.winkler@intel.com> (sfid-20080203_201652_621426_CC400D51)
+	id S1751142AbYBLVrd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2008 16:47:33 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [Ipw2100-admin] [PATCH] ipw2100/ipw2200: note firmware loadingcaveat in Kconfig help text
+Date: Tue, 12 Feb 2008 13:44:48 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003A4619E@orsmsx416.amr.corp.intel.com> (sfid-20080212_214742_561491_5BBDF016)
+In-Reply-To: <20080212134942.9FD589D4135@zog.reactivated.net>
+References: <20080212134942.9FD589D4135@zog.reactivated.net>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Daniel Drake" <dsd@gentoo.org>, <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <ipw2100-admin@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds rate to ieee80211_tx_status.
-Downscaling in iwl4965 is done in FW. Rate scaling algorithm
-needs to know at which rate the packet was actually transmitted
-Patch 'cfg80211 API for channels/bitrates' removed the placeholder
-for this information that was present in ieee80211_tx_control.
+On , Daniel Drake wrote:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
+> Most wireless drivers load their firmware at interface open time,
+> which generally occurs after the filesystem is available. However,
+> the ipw drivers
+> load their firmware at probe time because firmware is required
+> to read the
+> device MAC address. When built-in, probe happens before the
+> filesystem is
+> available, hence device init will only complete successfully
+> if the user
+> has made special arrangements (including firmware plus a loader in
+> the initramfs). 
+> 
+> Note all this in the kconfig help text for both drivers.
+> 
+> Signed-off-by: Daniel Drake <dsd@gentoo.org>
+> ---
 
-This fix or something similar is required for bringing iwlwifi back to life.
-Please comments, suggestions 
-Thanks
+Thank you very much.
 
- include/net/mac80211.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 460da54..a700ea6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -342,6 +342,7 @@ enum ieee80211_tx_status_flags {
-  *
-  * @control: a copy of the &struct ieee80211_tx_control passed to the driver
-  *	in the tx() callback.
-+ * @rate: rate at which the packet was actually transmitted
-  * @flags: transmit status flags, defined above
-  * @retry_count: number of retries
-  * @excessive_retries: set to 1 if the frame was retried many times
-@@ -356,6 +357,7 @@ enum ieee80211_tx_status_flags {
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_tx_control control;
-+	struct ieee80211_rate rate;
- 	u8 flags;
- 	u8 retry_count;
- 	bool excessive_retries;
--- 
-1.5.2.2
-
+Reinette
