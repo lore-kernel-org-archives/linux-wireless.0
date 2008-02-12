@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44177 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760358AbYBFXJQ convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:15049 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756684AbYBLHsy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 18:09:16 -0500
+	Tue, 12 Feb 2008 02:48:54 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: ath5k: reset for 5424-based card
+Date: Tue, 12 Feb 2008 08:48:08 +0100
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>, linville@tuxdriver.com
+References: <20080131155901.GA7997@hash.localnet> <20080211150012.GA15956@hash.localnet> <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
+In-Reply-To: <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: ipw3945: not only it periodically dies, it also BUG()s
-Date: Wed, 6 Feb 2008 15:08:57 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003983522@orsmsx416.amr.corp.intel.com> (sfid-20080206_230924_690102_B5C6C5A9)
-In-Reply-To: <20080206210026.GA32641@elf.ucw.cz>
-References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com> <20080206210026.GA32641@elf.ucw.cz>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Pavel Machek" <pavel@ucw.cz>
-Cc: <ipw3945-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
-	"kernel list" <linux-kernel@vger.kernel.org>
+  charset="utf-8"
+Message-Id: <200802120848.08979.hs4233@mail.mn-solutions.de> (sfid-20080212_074858_765388_C7C7573D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, February 06, 2008 1:00 PM, Pavel Machek  wrote:
-
->    * dmesg output at debug level 0x43fff
->      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 		it would be nice to specify how to do this. It is
-> insmod parameter, right?
-
-correct. you can do this as follows:
-$ insmod iwl3945 debug=0x43fff
-or
-$ modprobe iwl3945 debug=0x43fff
-
->    * Before reporting any firmware errors, please be sure to read Ben
-> Cahill's mailing list post on how to most effectively report such
->    bugs.
+> Nope i have them all gathered on my laptop, you 'll sure find
+> some posted on ath5k-devel list. I'll send you a b-only trace
+> from one of my cards (a 5413) to check it out ;-)
 >
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> unfortunately the link here does not work. 
+> We are working on a way to have all dumps uploaded
+> somewhere...
 
-We'll try to dig out the instructions from another location and update
-that link. Thanks for letting us know.
-
-> 
-> BTW, why not use kernel.org bugzilla? Having to create another
-> account is nasty... 
-
-Users can report iwlwifi bugs in many locations ... their OSV's bug
-tracker (which could end up being many) as well as the kernel.org
-bugzilla. We focus on bugs in the bughost.org system.
-
-Reinette
+Why not put them into SVN ?   Put them there in some original 
+format and in a text-format, so you can easily add comments with 
+a text editor into the dumps. That comments could then be used 
+as markers for automatically comparing the dumps of different 
+cards.
