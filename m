@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4348 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2347 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbYBZUDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 15:03:47 -0500
-Date: Tue, 26 Feb 2008 14:48:38 -0500
+	id S1755980AbYBLPBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2008 10:01:21 -0500
+Date: Tue, 12 Feb 2008 09:17:31 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	johannes@sipsolutions.net
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Message-ID: <20080226194838.GD3013@tuxdriver.com> (sfid-20080226_200353_026053_3FC82483)
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802252104.32416.chris2553@googlemail.com> <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com> <200802261911.39577.chris2553@googlemail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: madwifi is not fully open source
+Message-ID: <20080212141731.GB3051@tuxdriver.com> (sfid-20080212_150138_838738_DCD1EC4B)
+References: <57314e840802111427i7e8d00capbe430727faff78a1@mail.gmail.com> <1202770112.6824.35.camel@localhost.localdomain> <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com> <200802121013.47142.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200802261911.39577.chris2553@googlemail.com>
+In-Reply-To: <200802121013.47142.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2008 at 07:11:39PM +0000, Chris Clayton wrote:
+On Tue, Feb 12, 2008 at 10:13:47AM +0100, Holger Schurig wrote:
 
-> Sorry, but that's not the case. I find the same results as without the 
-> patches. With the parameter set to 'pid', the network connection fails very 
-> quickly, but with it set to 'simple' I can ping and ftp files to and from my 
-> laptop as much as I like and the connection stays up. In fact, if anything 
-> the patches seem to have made the network even more fragile, in that it fails 
-> almost instantly once I start some network activity ( < 10 pings).
-> 
-> I'm sure this is not the hardware - it works perfectly with Windows XP, with 
-> 2.6.23.14 plus the out-of-tree rt61 driver from serialmonkey, with the 
-> in-tree driver from 2.6.24.x and with 2.6.25-rc3 with the mac82011's 
-> ieee80211_default_rc_algo parameter set to 'simple'.
+> 4. write the driver for Windows in the usual, close source
+>    form, "leak" or give docs to some Linux developers and
+>    let they write the driver for the device. FCC can't object,
+>    you didn't wrote the driver :-)
 
-At last!  Vindication for insisting that we keep 'simple' around!
-Bwahahaha! :-)
+"FCC can't object"...this is only true to a point.  Sure, AFAIK the
+FCC can do nothing to discipline the software developer in question.
+However, the FCC retains broad discretionary authority over the
+hardware manufacturer.  So if a driver appeared that enabled "bad
+things" to happen with certain hardware, regulators might revoke
+that device's certification.  This would be very expensive for a
+manufacturer and is the root of all wireless vendor non-cooperation.
 
-So, am I to understand that 'pid' works find for you with rtl8180?
-If so, then I wonder if Stefano and Ivo can help us figure-out
-what kind of problem is sensitive to both driver _and_ rate control
-algorithm?
-
-Thanks,
+FWIW, my opinion is that this should be resolvable from a business
+perspective.  The existence of an open source driver should represent
+a quantifiable financial risk -- a risk that is already present
+in some form anyway due to the existence of people with reverse
+engineering skills.  Any decent business is good at managing risk,
+and any number of (re-)insurance firms exist to handle the finances
+involved with that.  It seems to me that a business should be able to
+insure against potential losses at a rate that is more than offset by
+the gains of being strong in the burgeoning Linux market.  Of course,
+if I were a brilliant business man...well, YMMV... :-)
 
 John
 -- 
