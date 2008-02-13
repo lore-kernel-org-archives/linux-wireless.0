@@ -1,86 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38570 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbYBMMIO (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:11143 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758216AbYBMXbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 07:08:14 -0500
-Subject: Re: [PATCH 02/13] o11s: (nl80211/cfg80211) support for mesh
-	interfaces and set_mesh_cfg command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202516743.7025.20.camel@localhost> (sfid-20080209_002444_593114_CF652DE8)
-References: <47a7825f.03b48c0a.7362.5cd9@mx.google.com>
-	 (sfid-20080204_212410_095702_D5CB4C0C)  <1202343489.9965.47.camel@johannes.berg>
-	 <1202516743.7025.20.camel@localhost> (sfid-20080209_002444_593114_CF652DE8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uiAmiUpomsyPlseddLyT"
-Date: Wed, 13 Feb 2008 08:51:29 +0100
-Message-Id: <1202889089.8931.14.camel@johannes.berg> (sfid-20080213_120823_236709_C3C070AF)
-Mime-Version: 1.0
+	Wed, 13 Feb 2008 18:31:25 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so299775wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2008 15:31:24 -0800 (PST)
+Message-ID: <1ba2fa240802131531u46634558o46d4ff4f8b8c3d4a@mail.gmail.com> (sfid-20080213_233130_074343_CB154D32)
+Date: Thu, 14 Feb 2008 01:31:23 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211: net_sched vs. HT
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1202889691.8931.25.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1202489552.24811.10.camel@johannes.berg>
+	 <1ba2fa240802100830t772b245fgf9e54ae058b384fa@mail.gmail.com>
+	 <1202889691.8931.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Feb 13, 2008 10:01 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> > I don't really follow your question. The dummy functions in wme.h for
+> > wme were there before we added only ht functions.
+>
+> Yes I know.
+>
+> > WME i.e. QoS is not defined when NET_SCHED is not defined. This is
+> > more for code completeness then for anything else, in fact with do not
+> > compile mac80211 without NET_SCHED support
+> > Valid QoS STA  is when there is  QoS association and support 4 AC, etc
+>
+> Yes but we still fill in WMM information elements and announce QoS
+> support w/o NET_SCHED which seems to be wrong, especially with HT.
+> That's what I was trying to get at. Should that be dependent on
+> NET_SCHED? I think it should so that we don't announce QoS/HT support
+> when we don't have QoS in the kernel.
 
---=-uiAmiUpomsyPlseddLyT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no use of QoS and HT without NET_SCHD so we should not
+announce support for HT or QoS in that configuration but I'm not sure
+if it's worth the effort to compile mac80211 without NET_SCHED.
 
-Somehow I kept this around, sorry...
+>
+> > AMPDU queues and also 4 AC queues are after all funneled to 4 AC lower
+> > level queues we called them TX FIFOS, which are configured according
+> > QoS parameters (not upper queues, but that's transparent). The major
+> > purpose of AMPDU queue is handling reordering not AC.
+>
+> Right, that's what I thought. I guess the decision on how many frames to
+> aggregate in a single AMPDU is made by firmware then? Doesn't really
+> matter anyway.
 
-> The mesh ID works as the SSID for mesh networks, on mesh beacons/probes
-> SSID is set to the wildcard value to avoid interfering with non-mesh
-> STAs.
+The number or aggregated frames in AMPDU is determined by handshake
+maximum is 64
+IIRC but also dynamically but how many frames fits into TXOP and this
+is also function of how fast are packets brought the HW
 
-Right. So it's just the mesh identifier.
+> In any case, I think this confirms my idea of splitting up the "queues"
+> hardware specific value into "queues" and "ampdu_queues" where "queues"
+> are the number of FIFOs with QoS parameters and "ampdu_queues" are the
+> number of helper DMA queues for ampdu support.
 
-> An MP only opens a peer link with a neighboring mesh peer if you have
-> the same mesh configuration. This mesh configuration is composed by the
-> mesh ID and path discovery protocol/metric/congestion control IDs. Once
-> the link is open the mesh ID is not included in the frames. Let me know
-> if you want more info.
+That would fit perfectly
 
-We don't have settings for the other control IDs yet, or did I miss
-them?
+Broadcom doesn't seem to
+> use extra DMA queues for this, the aggregation decisions are (afaik
+> since the hw has no extra queues I can find) all made in the driver. I
+> suppose b43 will then have to fake a reasonable number of "ampdu_queues"
+> and handle it in the driver.
 
-> It might be a good idea as you suggest in another thread to refuse to
-> change the mesh id for running interfaces as it would make a lot of
-> information stale, will consider it.
+Not sure how retransmission is handled. Where a  packet sits when it
+fails transmission in the single aggregation... that would be a major
+concern.
 
-Ok. I think this is quite a difference to the SSID where you can roam
-between networks, but I guess that roaming between different mesh
-networks doesn't really make sense since the point is to be part of the
-mesh...
+> > In general for example in AP mode you would need to handle <number of
+> > associated station>x<#TID=8> AMPDU queues which can come to a horrible
+> > number.
+> > The limited number of queues is acceptable again due to fact that
+> > medium is shared and you cannot really utilize too many BA ssessions
+> > at the same time. Some policy of eviction based on link quality is
+> > required and still not implemented.
+>
+> Expected traffic too, I would think, no? If the traffic from/to a
+> specific station drops below a threshold I would expect to tear down the
+> BA session.
 
-I still think the mesh parameters could be per-interface attributes
-rather than require a new command, but I'm not too fixed on the idea
-either (although currently it breaks the get/set/new/del grouping.
+That's what we would do part of rate scaling... currently only the
+establishment is done not tear down.
 
-Another, off-topic in this thread, question: How is beaconing defined
-for a mesh point? Is it similar to how it works in an IBSS?
-
-johannes
-
---=-uiAmiUpomsyPlseddLyT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7KhgKVg1VMiehFYAQKC5g/+McqXBvoIZvtxVeo5woKRPCTyVGGJ50ru
-t3sWUCJpw7HsPieGDQhjqEIbacigXVa88aCWDiLB6PWbHelxNiG5YkRtj44yljn9
-94BwEEnPV/qi68dkcgNIi/ZoHpaUqEdrey3oPZzLcwpHw1UONuhz0H5F9m/icv9x
-8+YGAHWoMjxAXvfD1XfVNIHFxeX2egm6POokDg/hJ4zBbICnQPvmdMbsx4oqQyke
-Z3UNngwSHyiIoM4Xw8cOkcqIcYBiSfytH4BDYxT91DOUa2ukQmm0zyaBmTlcmyIV
-x3tnYJVmTNn5IwZxT+PSFiT0+Ul9a9Pbj451RwPG/mSeiSBwM1gQUqtyjkefAZmA
-S9V8epauLBhmiOwQmLWrcvcgwEWHSOZ2kUn+xiwu1cworsOHNU+vYGqRi9mA6S4J
-4hdiBNnGyUdAV2U75B6ugjInxKV+Oc4t0FzKpyYwrJ+lPTxl+5I3/8IZv3i0i2Ao
-Co0Pg/ZDt58XfRLLcq3SM0jB9sUlCo4tp/RiPKFV5lkMiHDYy+lk0VnJS3b5J1CU
-pkyT2rE1jEauFWm7GKz+9ovXztzd3jcifca4bKVgIuP3SqgWl1y0z+W/4ojxxfqb
-dzhhrnlII0fAT+rdje1/gnabqjnsJgPob5Z6cX5fcmvMdmfgfbhSIeDg4Rl0kGXq
-SLK/iYUzU4E=
-=tls4
------END PGP SIGNATURE-----
-
---=-uiAmiUpomsyPlseddLyT--
-
+Hope we soon free our schedule to push this little.
+Thanks
+Tomas
