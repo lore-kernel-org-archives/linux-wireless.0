@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:51549 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764345AbYBBXiw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:26481 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754828AbYBMHma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 18:38:52 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2420663pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 15:38:51 -0800 (PST)
-Message-ID: <43e72e890802021538s72158e2ete8b20fb5304a2ce1@mail.gmail.com> (sfid-20080202_233908_391868_E3C6C57E)
-Date: Sat, 2 Feb 2008 18:38:48 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 3/3] ath5k: Add build option to enable hardware encryption
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com
-In-Reply-To: <43e72e890802021041x63e41a0ei80d7ffbfade0b820@mail.gmail.com>
+	Wed, 13 Feb 2008 02:42:30 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so4313853fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 23:42:28 -0800 (PST)
+Message-ID: <47B29F63.6050605@gmail.com> (sfid-20080213_074235_969268_87635A99)
+Date: Wed, 13 Feb 2008 08:42:27 +0100
+From: drago01 <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080201133731.GH28995@ruslug.rutgers.edu>
-	 <200802021134.41989.bruno@thinktube.com>
-	 <43e72e890802021041x63e41a0ei80d7ffbfade0b820@mail.gmail.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com> <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
+In-Reply-To: <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 2, 2008 1:41 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
-> On Feb 1, 2008 9:34 PM, bruno randolf <bruno@thinktube.com> wrote:
+Tomas Winkler wrote:
+> On Jan 26, 2008 9:00 PM, drago01 <drago01@gmail.com> wrote:
+>   
+>> On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
+>>     
+>>> On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
+>>>       
+>>>>         
+>>>>> -----Original Message-----
+>>>>> From: drago01 [mailto:drago01@gmail.com]
+>>>>> Sent: Tuesday, January 22, 2008 10:12 PM
+>>>>> To: Winkler, Tomas
+>>>>>           
+>>>>> Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
+>>>>> Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+>>>>>
+>>>>> On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
+>>>>>           
+>>>> wrote:
+>>>>         
+>>>>>> I believe it's delaying uCode load to mac_start - still need to be
+>>>>>> polished.
+>>>>>>             
+>>>>> ok, thx for the quick reply.
+>>>>> If you have any potential fixes I would be happy to test them ;)
+>>>>>           
+>>>> Can you get me the sequence it is happening? RF kill switch is off
+>>>> before you power up the laptop or after, during association or in
+>>>> unassociated state..etc
+>>>> Thanks
+>>>>         
+>>> I boot with rf kill off = device on
+>>> acciotate using NM
+>>> kill the card by pressing the rfkill (ie. setting it to on)
+>>> card is dead (like described in my first mail), until I relaod the module
+>>> the rfkill switch  does not have any effect at this time.
+>>>
+>>>       
+>> OK, I investigated a bit and it seems to be the "disable interrupt
+>> when device goes down" is the problem.
+>> In my case NetworkManager detected the rfkill and brought the device
+>> down, which caused the interrupt to be disabled. Now after pressing
+>> the rfkill again nothing happend. But if I bring the device back up
+>> the interrupt is enabled again and rfkill and the card is back to
+>> live.
+>> So in short disabling the interrupt in mac_stop breaks the hw rfkill
+>> while the interface is down.
+>>
+>>     
 >
-> > hi luis!
-> >
-> > i think this is pretty much overkill. why would anyone say Y to that?
-> > wouldn't it suffice to add that comment to the code and not bother the users?
-> > developers would work on the code anyways.
+> Thanks for investigating this, still didn't have to time to dig into it.
 >
-> I am not sure if encryption is going to work similar in later
-> chipsets, this would allow an easy way for developers/distributions
-> tell users to say yes there for chipsets we know it works for, for
-> other chipsets people can say no. If we're sure its the same across
-> chipsets then lets not apply it but I am not sure of that. Anyone?
+>   
+ping?
 
-On second thought this hasn't happened yet so we can do so if it does later.
-
-  Luis
