@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:27497 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752AbYB0OiZ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45443 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbYBMNa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 09:38:25 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3235136wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 06:38:24 -0800 (PST)
-Message-ID: <c74ac3520802270638m7674c0fbh5f509fe0c5e5d566@mail.gmail.com> (sfid-20080227_143842_333475_5104757B)
-Date: Wed, 27 Feb 2008 16:38:24 +0200
-From: "Elyahou ITTAH" <ittah.elyahou@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Compiler error when compile iwlwifi
-In-Reply-To: <D936D925018D154694D8A362EEB0892003C36D06@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c74ac3520802260339p7fd58501rbd967e755f4eaee6@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003C36C47@orsmsx416.amr.corp.intel.com>
-	 <c74ac3520802270146q697f3da8m238372c4c88ed691@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003C36D06@orsmsx416.amr.corp.intel.com>
+	Wed, 13 Feb 2008 08:30:28 -0500
+Subject: Re: [PATCH RFT/RFC] b43: Add QOS support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <200802122356.40865.mb@bu3sch.de>
+References: <200802122205.42799.mb@bu3sch.de>
+	 <200802122356.40865.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RYqirLGUt9lzUDChVU+g"
+Date: Wed, 13 Feb 2008 14:30:21 +0100
+Message-Id: <1202909421.8931.54.camel@johannes.berg> (sfid-20080213_133032_788657_61D64420)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/27, Chatre, Reinette <reinette.chatre@intel.com>:
-> On Wednesday, February 27, 2008 1:46 AM, Elyahou ITTAH  wrote:
->
->  > 2008/2/27, Chatre, Reinette <reinette.chatre@intel.com>:
->  >> On , Elyahou ITTAH  wrote:
->  >>
->  >>  > Hi,
->  >>  >
->  >>  > When i try to compile the iwlwifi driver I have got this error:
->  >>  > http://rafb.net/p/UdH56R87.html
->  >>  >
->  >>
->  >>> I have a 2.6.24-r2 gentoo kernel,with the iwlwifi included... -
->  >>
->  >>> To unsubscribe from this list: send the line "unsubscribe
->  >>  > linux-wireless" in the body of a message to
->  >>  majordomo@vger.kernel.org > More majordomo info at
->  >> http://vger.kernel.org/majordomo-info.html
->  >>
->  >>
->  >> The iwlwifi driver development is now focused on upstream so
->  >>  backporting of the intellinuxwireless.org drivers are only done for
->  >> kernels
->  >>  2.6.18-2.6.23. The easiest way to use the latest driver with your
->  >>  kernel will be to use the compat-wireless project
->  >>  (http://linuxwireless.org/en/users/Download).
->  >>
->  >>
->  >>  Reinette
->  >>
->  >
->  > Apologize
->  > I misunderstood the last answer...
->  >
->  > So I have to wait know the support for the new kernel... :)
->  >
->  > I don't wan't to downgrade it..
->
->
-> No need to downgrade your kernel or the driver. You can use the latest
->  iwlwifi driver available with your current (2.6.24-rc2 gentoo) kernel
->  when you make use of the compat-wireless project.
->
->
->  Reinette
->
 
-Thx,
+--=-RYqirLGUt9lzUDChVU+g
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-But i tried few days ago with the compat tool and i receive en error...
 
-Here's my previous message:
+> Hm, it seems there are two other variables in SHM we should probably writ=
+e:
+>  0x000E  EDCF Status Offset
 
-I have modified my config file : http://rafb.net/p/SfeJHk39.html
+Ok already mentioned this on IRC but for the record: this is set by the
+initial value upload.
 
-I have now compiled the driver, and reboot my PC ( I can't make unload
-because unloading my iwl3945 module causes a kernel panic -that is why
-I upgrade the driver)
+johannes
 
-After the reboot the module can't be loaded... : http://rafb.net/p/FLQeJV50.html
+--=-RYqirLGUt9lzUDChVU+g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thx
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7Lw7KVg1VMiehFYAQIUiA/6A/LWiDz9uAqv+40zXzmvz4sVN9gRjyK/
+7phyYQqsVJNmkGD+Iv1vB7HMtrtOEW5ZdenNGA+bIjhDRLV+usbXQ2iYp9xzGwgm
+9y6BVfpUvI4Kzat+lN+LpwUDJ6B51Ds36spotDUBAMpGuO0v6w9E+Jzfs+Q6YbF5
+P3lzYSB2pkdzgoib4J8Vr7G/RpNVWvwVDImhzY+UnxMbkoAPs7LDZgzQOoiLN82L
+1oGiU8SHCwF9Fbb7UqjoYaht0qPnELfcY9hHzOdiSMrWK+wdp/vMWBVa+6rPajzW
+FU9PZDBUCpNN4PE16shE6e4uFp0gjmPE3isx+KCTOsmFZtJf5b/D+aKuSoS+Fk9k
+HJu3t+gouHlD291axozlthZXPzPTzs+g7PSufEzbi6n/DXZfUQRBTbkCGPgun+6v
+Eolak3p4v93mKZLEUMRr2aG39vkJjm2E16p9x+DwNyyH5XdSwRomgzmO0Vz364Rw
+12DrG3kKLok+iMPcdGViTr/Lb4Jv8vAAqYzVp4sBZig438bj8joA7xYp+3Y570uw
+KF5PlYoEhtjoXbuqvWrQ8HWg6m5VYL0snWYVmZ/5ihklL6+MzfOQf04KB5MV5Bx4
+FsCg1sFk9hxHoT+DMA33B4YgXyOQMRo4S83GiIVO5ODPWdNNVbJqPRYngQBD0ruc
+MsL5gr47JCY=
+=xNxX
+-----END PGP SIGNATURE-----
+
+--=-RYqirLGUt9lzUDChVU+g--
+
