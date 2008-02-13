@@ -1,132 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37005 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753123AbYBYTPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:15:13 -0500
-Subject: Re: [PATCH RESEND] libertas: Remove unused exports
-From: Dan Williams <dcbw@redhat.com>
-To: Roland Dreier <rdreier@cisco.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <aday79b571e.fsf_-_@cisco.com>
-References: <adatzkj0z7l.fsf@cisco.com> <adaprv1vkl7.fsf@cisco.com>
-	 <aday79b571e.fsf_-_@cisco.com>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 14:12:04 -0500
-Message-Id: <1203966724.6981.29.camel@localhost.localdomain> (sfid-20080225_191522_004249_0B5F9090)
-Mime-Version: 1.0
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:60218 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765048AbYBMX4Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2008 18:56:25 -0500
+Date: Thu, 14 Feb 2008 00:56:21 +0100
+From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"zHU, yI" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net
+Subject: Re: [RFT] ipw2200: fix ucode assertion for RX queue overrun
+Message-ID: <20080213235621.GA10003@Chamillionaire.breakpoint.cc> (sfid-20080213_235632_908105_D764DF4F)
+References: <1202740070.2806.9.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1202740070.2806.9.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-02-23 at 20:10 -0800, Roland Dreier wrote:
-> Any chance of getting this applied?  It seems the build is still
-> broken on ia64 at least due to the export of static functions.
-> ---
+* Dan Williams | 2008-02-11 09:27:50 [-0500]:
 
-Normal route is to linux-wireless@...
+>Restock the RX queue when there are a lot of unused frames so that the
+>RX ring buffer doesn't overrun, causing a ucode assertion.  Backport of
+>patch "iwlwifi: fix ucode assertion for RX queue overrun".
+>
+>Signed-off-by: Dan Williams <dcbw@redhat.com>
+Tested-by: Sebastian Siewior <sebastian@breakpoint.cc>
 
-However; if the symbols aren't used anywhere in
-drivers/net/wireless/libertas/*, it makes no sense to keep them around &
-exported.
+>Sebastian, can you test and ensure that this works for you?  Also, can
+Yep, it does.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+>you do some throughput testing to ensure that this patch doesn't cause a
+>throughput regression?  Thanks!
+00:49:41 (666.64 KB/s) - `/dev/null' saved [122563640/122563640]
 
-> 
-> The libertas driver exports a number of symbols with no in-tree
-> users; remove these unused exports.  lbs_reset_device() is completely
-> unused, with no callers at all, so remove the function completely.
-> 
-> A couple of these unused exported symbols are static, which causes the
-> following build error on ia64 with gcc 4.2.3:
-> 
->     drivers/net/wireless/libertas/main.c:1375: error: __ksymtab_lbs_remove_mesh causes a section type conflict
->     drivers/net/wireless/libertas/main.c:1354: error: __ksymtab_lbs_add_mesh causes a section type conflict
-> 
-> This patch fixes this problem.  I don't have hardware, so this is not
-> run-tested, but I tested the build with
-> 
->     CONFIG_LIBERTAS=y
->     CONFIG_LIBERTAS_USB=m
->     CONFIG_LIBERTAS_CS=m
->     CONFIG_LIBERTAS_SDIO=m
-> 
-> and there were no problems with undefined symbols.
-> 
-> Signed-off-by: Roland Dreier <rolandd@cisco.com>
-> ---
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index eab0203..b3c1acb 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1040,7 +1040,6 @@ int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
->  	lbs_deb_leave(LBS_DEB_CMD);
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(lbs_mesh_access);
->  
->  int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan)
->  {
-> @@ -1576,7 +1575,6 @@ done:
->  	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(lbs_prepare_and_send_command);
->  
->  /**
->   *  @brief This function allocates the command buffer and link
-> diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-> index aaacd9b..4e22341 100644
-> --- a/drivers/net/wireless/libertas/decl.h
-> +++ b/drivers/net/wireless/libertas/decl.h
-> @@ -69,7 +69,6 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
->  int lbs_remove_card(struct lbs_private *priv);
->  int lbs_start_card(struct lbs_private *priv);
->  int lbs_stop_card(struct lbs_private *priv);
-> -int lbs_reset_device(struct lbs_private *priv);
->  void lbs_host_to_card_done(struct lbs_private *priv);
->  
->  int lbs_update_channel(struct lbs_private *priv);
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 84fb49c..1eaf6af 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -1351,8 +1350,6 @@ done:
->  	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(lbs_add_mesh);
-> -
->  
->  static void lbs_remove_mesh(struct lbs_private *priv)
->  {
-> @@ -1372,7 +1369,6 @@ static void lbs_remove_mesh(struct lbs_private *priv)
->  	free_netdev(mesh_dev);
->  	lbs_deb_leave(LBS_DEB_MESH);
->  }
-> -EXPORT_SYMBOL_GPL(lbs_remove_mesh);
->  
->  /**
->   *  @brief This function finds the CFP in
-> @@ -1458,20 +1454,6 @@ void lbs_interrupt(struct lbs_private *priv)
->  }
->  EXPORT_SYMBOL_GPL(lbs_interrupt);
->  
-> -int lbs_reset_device(struct lbs_private *priv)
-> -{
-> -	int ret;
-> -
-> -	lbs_deb_enter(LBS_DEB_MAIN);
-> -	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RESET,
-> -				    CMD_ACT_HALT, 0, 0, NULL);
-> -	msleep_interruptible(10);
-> -
-> -	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
-> -	return ret;
-> -}
-> -EXPORT_SYMBOL_GPL(lbs_reset_device);
-> -
->  static int __init lbs_init_module(void)
->  {
->  	lbs_deb_enter(LBS_DEB_MAIN);
+this was a wget from the inet and it hits almost my cap. Currently I don't
+have another local machine where I can test a "local" transfer.
 
+Is this okey for you?
+
+Sebastian
