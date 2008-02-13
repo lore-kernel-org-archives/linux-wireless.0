@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:4361 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662AbYBHJWx (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33896 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbYBMMLi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 04:22:53 -0500
-Received: by py-out-1112.google.com with SMTP id u52so5389995pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 01:22:53 -0800 (PST)
-Message-ID: <43e72e890802080122x67a1fed1s7e6193eea0559f16@mail.gmail.com> (sfid-20080208_092306_794389_16EDF840)
-Date: Fri, 8 Feb 2008 04:22:52 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"bruno randolf" <bruno@thinktube.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>
-In-Reply-To: <20080207035813.GX1261@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125252.6455.41047.stgit@one>
-	 <200801241226.28394.bruno@thinktube.com>
-	 <1201193704.3454.137.camel@johannes.berg>
-	 <200801251701.59629.bruno@thinktube.com>
-	 <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com>
-	 <20080206043451.GT1261@jm.kir.nu>
-	 <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com>
-	 <20080206201035.GA3229@tuxdriver.com>
-	 <20080207035813.GX1261@jm.kir.nu>
+	Wed, 13 Feb 2008 07:11:38 -0500
+Subject: Re: [PATCH v2] mac80211: give burst time in txop rather than
+	0.1msec units
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Christian Lamparter <chunkeey@web.de>,
+	John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200802122142.10325.mb@bu3sch.de>
+References: <1202658578.11481.4.camel@johannes.berg>
+	 <200802122021.21211.mb@bu3sch.de>
+	 <1ba2fa240802121157t370c8418v8a24484596ce5bcd@mail.gmail.com>
+	 <200802122142.10325.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QGujRpmSjfgSNn3AFMeI"
+Date: Wed, 13 Feb 2008 13:10:25 +0100
+Message-Id: <1202904625.8931.37.camel@johannes.berg> (sfid-20080213_121145_475167_2ABA80F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 6, 2008 10:58 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Wed, Feb 06, 2008 at 03:10:35PM -0500, John W. Linville wrote:
->
-> > FWIW, that wouldn't be the first time we (i.e. Linux) chose to do
-> > something that did not completely comply with a standard.  If it
-> > interoperates with other equipment and is good for users, I don't
-> > think picky standard compliance is worthwhile.
->
-> Sure, there are cases where this is reasonable.
->
-> > Please note that I am not really taking a stand in favor of this ATM,
-> > only asserting that blind standard compliance is not a good reason
-> > to NAK it IMHO.
->
-> In this case, standard compliance is certainly not the only concern I
-> have. I'm worried about interoperability with non-mac80211
-> implementations. If mac80211 were to hardcoded the BSSID for IBSS and
-> refuse to change it no matter what (i.e., behave against the IEEE 802.11
-> standard), IBSS would not interoperate with any other implementation if
-> the other implementation happens to be the creator of the IBSS..
 
-OK so you're saying that some people might actually expect that when
-using the same SSID and same channel in close vicinity they'd get
-separate BSSIDs generated? If so I don't see why people would expect
-this functionality as a feature, I think this is more of a problem
-than an expected result of how the standard is designed.
+--=-QGujRpmSjfgSNn3AFMeI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Same issues shows up (but in somewhat less frequent form) in an IBSS
-> splitting up and re-joining. In order to allow the STAs using other
-> implementation (no BSSID hacks) to join the IBSS, mac80211 will need to
-> be prepared to change the BSSID (or use some much more questionable
-> hacks to make sure it is always the mac80211-STA that wins in the
-> selection of which BSSID will survive.. ;-).
 
-How would the IBSS be split up to generate a new BSSID? If you are
-part of an IBSS and you don't see anyone generate a beacon between the
-random backoff time you simply generate it, but the BSSID would still
-be the same.
+> > > > > > +  * FIXME: The default values in the spec (IEEE 802.11
+> > > > > > +  *        7.3.2.19 Table 37) are 47, 94, 0, 0, why use
+> > >
+> > > Does somebody know the correct place where these values are in
+> > > the specs? Section 7.3.2.19 is about "Supported channels IE".
+> > >
+> > >
+> > > > > > +  *        47, 94, 63, 0 here? Also, the default AIFS
+> > > > > > +  *        values (second parameter) are 2, 2, 3, 7...
+> > > > > > +  */
+> > >
+> > >
+> >  7.3.2.29 EDCA Parameter Set element
 
-  Luis
+Sorry, typo, I actually added the correct reference to the mac80211
+header file :)
+
+johannes
+
+--=-QGujRpmSjfgSNn3AFMeI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7LeL6Vg1VMiehFYAQKWBA//fI/PyaB6ASWZIHvIe4b3ITxIrjDqefK7
+MBqgAlCn8e9bxvr/79gJkNaymub/tQkQtF8X1Id/wJ5SKOwQTKm8TtgGLt4GzMdr
+7o3DAufJyWHgxe/HA01vIPRps6pAX2iUdovn9+6Eyjpy4Y6La2qSKqB7+lggcv7x
+Tfwv7z+P7S2hsR/YNxiyFYbyQCHbICdqqs8sZJQN7RHNhGFu1wYh39R3SEeYk5lJ
+iiw3oBT7WTv/AJ/S8CYqsDnlK7t+pGOCnn9P/AKtJWcGAWZ9FJ120H4iQz8sx60q
+3FWPI8Kccs+IeRRraKI+C1O9rWzHPNwtlXfhPY9MtZFnreoMKH5aykQkKKZ7D4qx
+JCeIPUifzKNpJNLgejQP7spuXfKw35V8jNH63grn1z0Qw3bBk3dR84IVYi44HO5h
+MxsmewMKA/kfJ7KEJT3AAHwlVIX/tu2hYBIuv47oWuKUQWA7CbVRrh9NOlIgRUeA
+9RBvOvUTsWHjpcsSVQjU0/E+PjFv0BqhBH6yocGgBPOsgrDHETc1WmkxbMmkOxDA
+wMPiVr9vkU2x3B/WOsrA/bp10EvlAQ6ZAr9WiOwR+zU1L7VmJPNxOUdmsfSWFC8p
+AdlZn63QKwHn3Imz087im1G4qMyZmRtJw0F28t7AxaM1YPP+wPnT0fM/9IqNhs1F
+JAkv1u3AnRk=
+=l7o3
+-----END PGP SIGNATURE-----
+
+--=-QGujRpmSjfgSNn3AFMeI--
+
