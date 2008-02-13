@@ -1,42 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328AbYBTSbP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:31:15 -0500
-Subject: [PATCH] mac80211: check endianness/types in sparse runs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Sam Ravnborg <sam@ravnborg.org>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 11:38:29 +0100
-Message-Id: <1203503909.17534.14.camel@johannes.berg> (sfid-20080220_183118_064616_3A6DF178)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:33093 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755648AbYBMTfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2008 14:35:07 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/3] iwlwifi: Add tx_ant_num hw setting variable
+Date: Wed, 13 Feb 2008 11:32:31 -0800
+Message-Id: <1202931151-4141-4-git-send-email-reinette.chatre@intel.com> (sfid-20080213_193515_062685_61D3D1FE)
+In-Reply-To: <1202931151-4141-3-git-send-email-reinette.chatre@intel.com>
+References: <1202931151-4141-1-git-send-email-reinette.chatre@intel.com>
+ <1202931151-4141-2-git-send-email-reinette.chatre@intel.com>
+ <1202931151-4141-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure sparse checks endianness when run on mac80211.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Added tx_ant_num variable into hw_setting
+This will be used for scanning TX antenna toggling
+On the way removed ac_queue_num unused
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
-Sam, is this an OK use of makefiles or is there something else I should
-be doing?
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-3945.h |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl-4965.h |    4 ++--
+ 4 files changed, 9 insertions(+), 6 deletions(-)
 
-The only warnings this currently triggers are some signedness warnings
-in the PID RC algorithm.
-
- net/mac80211/Makefile |    2 ++
- 1 file changed, 2 insertions(+)
-
---- everything.orig/net/mac80211/Makefile	2008-02-19 18:35:28.151573893 +0100
-+++ everything/net/mac80211/Makefile	2008-02-19 18:41:10.491563910 +0100
-@@ -45,3 +45,5 @@ mac80211-$(CONFIG_MAC80211_RC_PID) += $(
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 50d927b..82d2827 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2300,7 +2300,6 @@ int iwl3945_hw_set_hw_setting(struct iwl3945_priv *priv)
+ 		return -ENOMEM;
+ 	}
  
- # Modular rate algorithms are assigned to mac80211-m - make separate modules
- obj-m += $(mac80211-m)
+-	priv->hw_setting.ac_queue_count = AC_NUM;
+ 	priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE;
+ 	priv->hw_setting.max_pkt_size = 2342;
+ 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl3945_tx_cmd);
+@@ -2308,6 +2307,8 @@ int iwl3945_hw_set_hw_setting(struct iwl3945_priv *priv)
+ 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
+ 	priv->hw_setting.max_stations = IWL3945_STATION_COUNT;
+ 	priv->hw_setting.bcast_sta_id = IWL3945_BROADCAST_ID;
 +
-+CHECKFLAGS += -D__CHECK_ENDIAN__
-
++	priv->hw_setting.tx_ant_num = 2;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 393cff6..dde389d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -508,8 +508,8 @@ struct iwl3945_ibss_seq {
+ /**
+  * struct iwl3945_driver_hw_info
+  * @max_txq_num: Max # Tx queues supported
+- * @ac_queue_count: # Tx queues for EDCA Access Categories (AC)
+  * @tx_cmd_len: Size of Tx command (but not including frame itself)
++ * @tx_ant_num: Number of TX antennas
+  * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
+  * @rx_buf_size:
+  * @max_pkt_size:
+@@ -521,8 +521,8 @@ struct iwl3945_ibss_seq {
+  */
+ struct iwl3945_driver_hw_info {
+ 	u16 max_txq_num;
+-	u16 ac_queue_count;
+ 	u16 tx_cmd_len;
++	u16 tx_ant_num;
+ 	u16 max_rxq_size;
+ 	u32 rx_buf_size;
+ 	u32 max_pkt_size;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index cc141f8..237d3b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1794,7 +1794,6 @@ int iwl4965_hw_set_hw_setting(struct iwl4965_priv *priv)
+ 	memset(priv->hw_setting.shared_virt, 0, sizeof(struct iwl4965_shared));
+ 
+ 	priv->hw_setting.max_txq_num = iwl4965_param_queues_num;
+-	priv->hw_setting.ac_queue_count = AC_NUM;
+ 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl4965_tx_cmd);
+ 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
+ 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
+@@ -1805,6 +1804,9 @@ int iwl4965_hw_set_hw_setting(struct iwl4965_priv *priv)
+ 	priv->hw_setting.max_pkt_size = priv->hw_setting.rx_buf_size - 256;
+ 	priv->hw_setting.max_stations = IWL4965_STATION_COUNT;
+ 	priv->hw_setting.bcast_sta_id = IWL4965_BROADCAST_ID;
++
++	priv->hw_setting.tx_ant_num = 2;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 67189ab..ce17e4f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -580,8 +580,8 @@ struct iwl4965_ibss_seq {
+ /**
+  * struct iwl4965_driver_hw_info
+  * @max_txq_num: Max # Tx queues supported
+- * @ac_queue_count: # Tx queues for EDCA Access Categories (AC)
+  * @tx_cmd_len: Size of Tx command (but not including frame itself)
++ * @tx_ant_num: Number of TX antennas
+  * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
+  * @rx_buffer_size:
+  * @max_rxq_log: Log-base-2 of max_rxq_size
+@@ -592,8 +592,8 @@ struct iwl4965_ibss_seq {
+  */
+ struct iwl4965_driver_hw_info {
+ 	u16 max_txq_num;
+-	u16 ac_queue_count;
+ 	u16 tx_cmd_len;
++	u16 tx_ant_num;
+ 	u16 max_rxq_size;
+ 	u32 rx_buf_size;
+ 	u32 max_pkt_size;
+-- 
+1.5.3.4
 
