@@ -1,65 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:17797 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755255AbYBDTF0 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:52299 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbYBMNdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 14:05:26 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3082896wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 11:05:25 -0800 (PST)
-Message-ID: <1ba2fa240802041105g1e11ba99ldaca4acee4a07c35@mail.gmail.com> (sfid-20080204_190532_923774_7EB079A3)
-Date: Mon, 4 Feb 2008 21:05:25 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Felix Fietkau" <nbd@openwrt.org>
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
+	Wed, 13 Feb 2008 08:33:22 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Add HostFlags HI support
+Date: Wed, 13 Feb 2008 14:31:08 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>
-	 <47A718CF.50303@openwrt.org> <-5971017268625562167@unknownmsgid>
-	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>
-	 <-7767648866191425885@unknownmsgid>
-	 <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
-	 <47A72E13.8070305@openwrt.org>
-	 <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
-	 <47A75BF5.90101@openwrt.org>
-	 <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802131431.08386.mb@bu3sch.de> (sfid-20080213_133329_353075_48BBB92D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 4, 2008 9:03 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->
-> On Feb 4, 2008 8:39 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> > Tomas Winkler wrote:
-> > > Will this work work you?
-> > >
-> > > ieee80211_tx_ratectrl {
-> > >   u32 bitrate ( or pointer to ieee80211_rate I prefer no)
-> > >   u32 flags
-> > >   u32 retry_count
-> > > }
-> > >
-> > > ieee80211_tx_status {
-> > >     ieee80211_tx_ratectrl  retry_count[ X]  / * X >= 4 */
-> > > }
-> > I guess that would work, but shouln't the array below be dynamic based on
-> > what the driver can do? Many drivers can only work with one or two rates, IMHO.
->
-> The problem that this structure is passed with each packett I don't
-> like the idea that anybody would even try to allocate and free this
-> structure as packets goes. However what about the following?
->
-> ieee80211_tx_status {
->          size_t nrates;
->          ieee80211_tx_ratectrl  retry_count[0] ;
-> }
->
-Sorry I meant
-ieee80211_tx_status {
->          size_t nrates;
->          ieee80211_tx_ratectrl  rates[0] ;
-> }
-> > - Felix
-> >
->
+This adds support for the high 16 bits of the hostflags.
+No functional change.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, this is for 2.6.26.
+
+Index: wireless-2.6/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/b43.h	2008-02-13 14:28:06.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/b43.h	2008-02-13 14:28:51.000000000 +0100
+@@ -141,13 +141,14 @@ enum {
+ #define B43_SHM_SH_PCTLWDPOS		0x0008
+ #define B43_SHM_SH_RXPADOFF		0x0034	/* RX Padding data offset (PIO only) */
+ #define B43_SHM_SH_PHYVER		0x0050	/* PHY version */
+ #define B43_SHM_SH_PHYTYPE		0x0052	/* PHY type */
+ #define B43_SHM_SH_ANTSWAP		0x005C	/* Antenna swap threshold */
+ #define B43_SHM_SH_HOSTFLO		0x005E	/* Hostflags for ucode options (low) */
+-#define B43_SHM_SH_HOSTFHI		0x0060	/* Hostflags for ucode options (high) */
++#define B43_SHM_SH_HOSTFMI		0x0060	/* Hostflags for ucode options (middle) */
++#define B43_SHM_SH_HOSTFHI		0x0062	/* Hostflags for ucode options (high) */
+ #define B43_SHM_SH_RFATT		0x0064	/* Current radio attenuation value */
+ #define B43_SHM_SH_RADAR		0x0066	/* Radar register */
+ #define B43_SHM_SH_PHYTXNOI		0x006E	/* PHY noise directly after TX (lower 8bit only) */
+ #define B43_SHM_SH_RFRXSP1		0x0072	/* RF RX SP Register 1 */
+ #define B43_SHM_SH_CHAN			0x00A0	/* Current channel (low 8bit only) */
+ #define  B43_SHM_SH_CHAN_5GHZ		0x0100	/* Bit set, if 5Ghz channel */
+@@ -229,37 +230,47 @@ enum {
+ 
+ /* Hardware Radio Enable masks */
+ #define B43_MMIO_RADIO_HWENABLED_HI_MASK (1 << 16)
+ #define B43_MMIO_RADIO_HWENABLED_LO_MASK (1 << 4)
+ 
+ /* HostFlags. See b43_hf_read/write() */
+-#define B43_HF_ANTDIVHELP		0x00000001	/* ucode antenna div helper */
+-#define B43_HF_SYMW			0x00000002	/* G-PHY SYM workaround */
+-#define B43_HF_RXPULLW			0x00000004	/* RX pullup workaround */
+-#define B43_HF_CCKBOOST			0x00000008	/* 4dB CCK power boost (exclusive with OFDM boost) */
+-#define B43_HF_BTCOEX			0x00000010	/* Bluetooth coexistance */
+-#define B43_HF_GDCW			0x00000020	/* G-PHY DV canceller filter bw workaround */
+-#define B43_HF_OFDMPABOOST		0x00000040	/* Enable PA gain boost for OFDM */
+-#define B43_HF_ACPR			0x00000080	/* Disable for Japan, channel 14 */
+-#define B43_HF_EDCF			0x00000100	/* on if WME and MAC suspended */
+-#define B43_HF_TSSIRPSMW		0x00000200	/* TSSI reset PSM ucode workaround */
+-#define B43_HF_DSCRQ			0x00000400	/* Disable slow clock request in ucode */
+-#define B43_HF_ACIW			0x00000800	/* ACI workaround: shift bits by 2 on PHY CRS */
+-#define B43_HF_2060W			0x00001000	/* 2060 radio workaround */
+-#define B43_HF_RADARW			0x00002000	/* Radar workaround */
+-#define B43_HF_USEDEFKEYS		0x00004000	/* Enable use of default keys */
+-#define B43_HF_BT4PRIOCOEX		0x00010000	/* Bluetooth 2-priority coexistance */
+-#define B43_HF_FWKUP			0x00020000	/* Fast wake-up ucode */
+-#define B43_HF_VCORECALC		0x00040000	/* Force VCO recalculation when powering up synthpu */
+-#define B43_HF_PCISCW			0x00080000	/* PCI slow clock workaround */
+-#define B43_HF_4318TSSI			0x00200000	/* 4318 TSSI */
+-#define B43_HF_FBCMCFIFO		0x00400000	/* Flush bcast/mcast FIFO immediately */
+-#define B43_HF_HWPCTL			0x00800000	/* Enable hardwarre power control */
+-#define B43_HF_BTCOEXALT		0x01000000	/* Bluetooth coexistance in alternate pins */
+-#define B43_HF_TXBTCHECK		0x02000000	/* Bluetooth check during transmission */
+-#define B43_HF_SKCFPUP			0x04000000	/* Skip CFP update */
++#define B43_HF_ANTDIVHELP	0x000000000001ULL /* ucode antenna div helper */
++#define B43_HF_SYMW		0x000000000002ULL /* G-PHY SYM workaround */
++#define B43_HF_RXPULLW		0x000000000004ULL /* RX pullup workaround */
++#define B43_HF_CCKBOOST		0x000000000008ULL /* 4dB CCK power boost (exclusive with OFDM boost) */
++#define B43_HF_BTCOEX		0x000000000010ULL /* Bluetooth coexistance */
++#define B43_HF_GDCW		0x000000000020ULL /* G-PHY DC canceller filter bw workaround */
++#define B43_HF_OFDMPABOOST	0x000000000040ULL /* Enable PA gain boost for OFDM */
++#define B43_HF_ACPR		0x000000000080ULL /* Disable for Japan, channel 14 */
++#define B43_HF_EDCF		0x000000000100ULL /* on if WME and MAC suspended */
++#define B43_HF_TSSIRPSMW	0x000000000200ULL /* TSSI reset PSM ucode workaround */
++#define B43_HF_20IN40IQW	0x000000000200ULL /* 20 in 40 MHz I/Q workaround (rev >= 13 only) */
++#define B43_HF_DSCRQ		0x000000000400ULL /* Disable slow clock request in ucode */
++#define B43_HF_ACIW		0x000000000800ULL /* ACI workaround: shift bits by 2 on PHY CRS */
++#define B43_HF_2060W		0x000000001000ULL /* 2060 radio workaround */
++#define B43_HF_RADARW		0x000000002000ULL /* Radar workaround */
++#define B43_HF_USEDEFKEYS	0x000000004000ULL /* Enable use of default keys */
++#define B43_HF_AFTERBURNER	0x000000008000ULL /* Afterburner enabled */
++#define B43_HF_BT4PRIOCOEX	0x000000010000ULL /* Bluetooth 4-priority coexistance */
++#define B43_HF_FWKUP		0x000000020000ULL /* Fast wake-up ucode */
++#define B43_HF_VCORECALC	0x000000040000ULL /* Force VCO recalculation when powering up synthpu */
++#define B43_HF_PCISCW		0x000000080000ULL /* PCI slow clock workaround */
++#define B43_HF_4318TSSI		0x000000200000ULL /* 4318 TSSI */
++#define B43_HF_FBCMCFIFO	0x000000400000ULL /* Flush bcast/mcast FIFO immediately */
++#define B43_HF_HWPCTL		0x000000800000ULL /* Enable hardwarre power control */
++#define B43_HF_BTCOEXALT	0x000001000000ULL /* Bluetooth coexistance in alternate pins */
++#define B43_HF_TXBTCHECK	0x000002000000ULL /* Bluetooth check during transmission */
++#define B43_HF_SKCFPUP		0x000004000000ULL /* Skip CFP update */
++#define B43_HF_N40W		0x000008000000ULL /* N PHY 40 MHz workaround (rev >= 13 only) */
++#define B43_HF_ANTSEL		0x000020000000ULL /* Antenna selection (for testing antenna div.) */
++#define B43_HF_BT3COEXT		0x000020000000ULL /* Bluetooth 3-wire coexistence (rev >= 13 only) */
++#define B43_HF_BTCANT		0x000040000000ULL /* Bluetooth coexistence (antenna mode) (rev >= 13 only) */
++#define B43_HF_ANTSELEN		0x000100000000ULL /* Antenna selection enabled (rev >= 13 only) */
++#define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode (rev >= 13 only) */
++#define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
++#define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
+ 
+ /* MacFilter offsets. */
+ #define B43_MACFILTER_SELF		0x0000
+ #define B43_MACFILTER_BSSID		0x0003
+ 
+ /* PowerControl */
+Index: wireless-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.c	2008-02-13 14:28:06.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.c	2008-02-13 14:28:51.000000000 +0100
+@@ -461,30 +461,36 @@ void b43_shm_write16(struct b43_wldev *d
+ 	b43_write16(dev, B43_MMIO_SHM_DATA, value);
+ out:
+ 	spin_unlock_irqrestore(&wl->shm_lock, flags);
+ }
+ 
+ /* Read HostFlags */
+-u32 b43_hf_read(struct b43_wldev * dev)
++u64 b43_hf_read(struct b43_wldev * dev)
+ {
+-	u32 ret;
++	u64 ret;
+ 
+ 	ret = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFHI);
+ 	ret <<= 16;
++	ret |= b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFMI);
++	ret <<= 16;
+ 	ret |= b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFLO);
+ 
+ 	return ret;
+ }
+ 
+ /* Write HostFlags */
+-void b43_hf_write(struct b43_wldev *dev, u32 value)
++void b43_hf_write(struct b43_wldev *dev, u64 value)
+ {
+-	b43_shm_write16(dev, B43_SHM_SHARED,
+-			B43_SHM_SH_HOSTFLO, (value & 0x0000FFFF));
+-	b43_shm_write16(dev, B43_SHM_SHARED,
+-			B43_SHM_SH_HOSTFHI, ((value & 0xFFFF0000) >> 16));
++	u16 lo, mi, hi;
++
++	lo = (value & 0x00000000FFFFULL);
++	mi = (value & 0x0000FFFF0000ULL) >> 16;
++	hi = (value & 0xFFFF00000000ULL) >> 32;
++	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFLO, lo);
++	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFMI, mi);
++	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFHI, hi);
+ }
+ 
+ void b43_tsf_read(struct b43_wldev *dev, u64 * tsf)
+ {
+ 	/* We need to be careful. As we read the TSF from multiple
+ 	 * registers, we should take care of register overflows.
+Index: wireless-2.6/drivers/net/wireless/b43/main.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/b43/main.h	2008-02-13 14:27:37.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/b43/main.h	2008-02-13 14:28:51.000000000 +0100
+@@ -92,14 +92,14 @@ void b43_tsf_write(struct b43_wldev *dev
+ 
+ u32 b43_shm_read32(struct b43_wldev *dev, u16 routing, u16 offset);
+ u16 b43_shm_read16(struct b43_wldev *dev, u16 routing, u16 offset);
+ void b43_shm_write32(struct b43_wldev *dev, u16 routing, u16 offset, u32 value);
+ void b43_shm_write16(struct b43_wldev *dev, u16 routing, u16 offset, u16 value);
+ 
+-u32 b43_hf_read(struct b43_wldev *dev);
+-void b43_hf_write(struct b43_wldev *dev, u32 value);
++u64 b43_hf_read(struct b43_wldev *dev);
++void b43_hf_write(struct b43_wldev *dev, u64 value);
+ 
+ void b43_dummy_transmission(struct b43_wldev *dev);
+ 
+ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
+ 
+ void b43_mac_suspend(struct b43_wldev *dev);
