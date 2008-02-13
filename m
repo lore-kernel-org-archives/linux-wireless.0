@@ -1,66 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39067 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755554AbYBAMJK (ORCPT
+Received: from root-server.richard-scherping.de ([217.160.107.144]:60124 "EHLO
+	p15125984.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932244AbYBMJHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:09:10 -0500
-Subject: [PATCH] mac80211: fix initialisation error path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 31 Jan 2008 19:33:53 +0100
-Message-Id: <1201804433.4149.36.camel@johannes.berg> (sfid-20080201_120919_851407_D59A1879)
-Mime-Version: 1.0
+	Wed, 13 Feb 2008 04:07:03 -0500
+Message-ID: <47B2B332.1030404@scherping.de> (sfid-20080213_090722_073703_AC6DE8A0)
+Date: Wed, 13 Feb 2008 10:06:58 +0100
+From: Richard Scherping <richard@scherping.de>
+MIME-Version: 1.0
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+CC: linux-wireless@vger.kernel.org
+Subject: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com> <47B2268D.7060205@scherping.de>
+In-Reply-To: <47B2268D.7060205@scherping.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The error handling in ieee80211_init() is broken when any of
-the built-in rate control algorithms fail to initialise, fix
-it and rename the error labels.
+> iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated: 
+> iwl4965_is_associated(priv)=1; priv->assoc_id=0; 
+> priv->assoc_station_added=1
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Simply uncommenting the check for priv->assoc_id to be non-zero (line 2938 in iwl4965-base.c) made ad-hoc working. Thanks for helping me to find this!
+Does this change have any negative side effects?
 
---- everything.orig/net/mac80211/ieee80211.c	2008-01-31 19:30:42.162269153 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-01-31 19:31:21.572266440 +0100
-@@ -1684,28 +1684,28 @@ static int __init ieee80211_init(void)
- 
- 	ret = rc80211_simple_init();
- 	if (ret)
--		goto fail;
-+		goto out;
- 
- 	ret = rc80211_pid_init();
- 	if (ret)
--		goto fail_simple;
-+		goto out_cleanup_simple;
- 
- 	ret = ieee80211_wme_register();
- 	if (ret) {
- 		printk(KERN_DEBUG "ieee80211_init: failed to "
- 		       "initialize WME (err=%d)\n", ret);
--		goto fail_pid;
-+		goto out_cleanup_pid;
- 	}
- 
- 	ieee80211_debugfs_netdev_init();
- 
- 	return 0;
- 
-- fail_pid:
--	rc80211_simple_exit();
-- fail_simple:
-+ out_cleanup_pid:
- 	rc80211_pid_exit();
-- fail:
-+ out_cleanup_simple:
-+	rc80211_simple_exit();
-+ out:
- 	return ret;
- }
- 
-
-
+Richard
