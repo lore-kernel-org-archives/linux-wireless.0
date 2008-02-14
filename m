@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:21799 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755896AbYBYWQ6 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:32769 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754092AbYBNQpm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:16:58 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so996346ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:16:56 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 0/4] rt2x00: Stable updates
-Date: Mon, 25 Feb 2008 23:14:54 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Thu, 14 Feb 2008 11:45:42 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Wi-Fi interface intermittently missing on HP laptop
+Date: Thu, 14 Feb 2008 17:45:19 +0100
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <47B46E36.3050206@lwfinger.net>
+In-Reply-To: <47B46E36.3050206@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802252314.55404.IvDoorn@gmail.com> (sfid-20080225_221702_441513_1797A7AF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200802141745.19454.mb@bu3sch.de> (sfid-20080214_164545_878782_D079E92D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thursday 14 February 2008 17:37:10 Larry Finger wrote:
+> The BCM94311 interface on my HP dv2125nr is intermittent. Twice (so far) it has gone missing and
+> will not show up when the PCI subsystem is interrogated using lspci. It is hardware because Windows
+> doesn't find it either.
+> 
+> I remember seeing reports of this problem on mailing lists. If your computer has suffered from this
+> error, please let me know what it took to fix it. I suspect a motherboard problem, and would like to
+> know other's experiences when I try to get mine fixed under warranty.
 
-This patch series is intended for the 2.6.25 kernel,
-they (should) fix the reported regression for the rt61pci
-driver (Possibly the other rt2x00 drivers as well, but nobody
-reported any other regressions for the 2.6.25 kernel yet).
+some broadcom chips have problems with some PCI signals.
+I also saw stuff like that. Usually pulling and putting back the card helps.
+I have a b44 card which doesn't work in a PCI extender, because of some signal
+sensing being too low. The additional 10cm of wire added by the extender will
+make it fail then. This also depends on the motherboard's signal strength.
 
-I'll send the patches for the wireless-testing tree separately
-along with some other patches intended only for wireless-testing.
-
-Ivo
+-- 
+Greetings Michael.
