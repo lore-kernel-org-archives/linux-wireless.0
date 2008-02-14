@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc1-s23.bay0.hotmail.com ([65.54.246.95]:33582 "EHLO
-	bay0-omc1-s23.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753957AbYBOVxR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 16:53:17 -0500
-Message-ID: <BAY101-W21EEABECED4579CBF99102C8260@phx.gbl> (sfid-20080215_215324_600955_083B8030)
-From: Adam Turk <bofh1234@hotmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: kernel 2.6.25-rc1 and no /dev/rt73usb
-Date: Fri, 15 Feb 2008 16:53:16 -0500
-In-Reply-To: <200802152224.34055.IvDoorn@gmail.com>
-References: <BAY101-W101FB386E1EF7402881964C8260@phx.gbl>
- <200802152146.06364.IvDoorn@gmail.com>
- <BAY101-W378CC14C633084DBF091A6C8260@phx.gbl>
- <200802152224.34055.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=iso-8859-1
+Received: from lunatiki.de ([85.214.70.22]:48478 "EHLO
+	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756424AbYBOAS0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2008 19:18:26 -0500
+From: Patrick Grimm <patrick@lunatiki.de>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Fri, 15 Feb 2008 00:40:05 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A7FB3E@orsmsx416.amr.corp.intel.com> <47B487EE.3030401@scherping.de>
+In-Reply-To: <47B487EE.3030401@scherping.de>
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802150040.05188.patrick@lunatiki.de> (sfid-20080215_001831_496638_6369806B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
->> The driver I was using before had the interface name of rt73. When I=
- see
->> usbcore: registered new interface driver rt73usb
+Am Donnerstag, 14. Februar 2008 19:26:54 schrieb Richard Scherping:
+> Chatre, Reinette schrieb:
+> > On Wednesday, February 13, 2008 1:07 AM, Richard Scherping  wrote:
+> >>> iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated:
+> >>> iwl4965_is_associated(priv)=1; priv->assoc_id=0;
+> >>> priv->assoc_station_added=1
+> >>
+> >> Simply uncommenting the check for priv->assoc_id to be
+> >> non-zero (line 2938 in iwl4965-base.c) made ad-hoc working.
+> >> Thanks for helping me to find this!
+> >> Does this change have any negative side effects?
+> >>
+> >> Richard
+> >
+> > Could you please try the attached patch instead?
 >
-> Seriously, I wonder with what driver you managed to pull that off.
-> As far as I know there is no rt73 driver that registers an interface =
-called rt73.
-> Neither the Ralink drivers, the rt73 legacy driver or the rt73usb dri=
-ver ever
-> did such a thing.
->
-> Granted the name did change. The Ralink driver and early legacy drive=
-rs
-> did create the interface with the name "rausb", this is still not the=
- same
-> as "rt73".
->
-> Additionally:
->> usbcore: registered new interface driver rt73usb
->
-> Using a different rt73 driver would also produce this line (replacing=
- rt73usb
-> with rt73 or whatever the name of the driver was).
-> But like I said earlier, I know of no rt73 driver that registered a n=
-etwork
-> interface named rt73. It is either "wlan" or "rausb". Unless off cour=
-se you
-> edited the /etc/modprobe.conf file to load the driver with the rt73 i=
-nterface name,
-> but that can be considered "user configuration".
+> Works for me (iwl4965). Thanks!
+For me not.
+I use 3945ABG card in an ad-hoc network with 4 other wlan devices
+like rt2500 and ath5k.
+I have applied your
+0001-iwlwifi-only-check-for-association-id-when-associat.patch
+patch. But i can't see incoming packets witch tcpdump.
+I have try to commet out  the check for associat with the same
+result. 
 
-Ok.  Upon further investigation the name was rausb0.  The rt73 was setu=
-p in /etc/modprobe.conf.  So is the name going to be wlan0 from now on?
+dmesg
+iwl3945: I iwl3945_rx_handle r = 76, i = 75, REPLY_3945_RX, 0x1b
+iwl3945: I iwl3945_rx_handle r = 77, i = 76, REPLY_3945_RX, 0x1b
+iwl3945: I iwl3945_mac_tx enter
+iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
+iwl3945: I iwl3945_mac_tx leave
+iwl3945: I iwl3945_rx_handle r = 78, i = 77, REPLY_3945_RX, 0x1b
+iwl3945: I iwl3945_rx_handle r = 79, i = 78, REPLY_3945_RX, 0x1b
 
-The short version:
-I am stuck on a project where the last guy setup everything, didn't doc=
-ument anything, and left.  I am now trying to figure all of this stuff =
-out.  I am stuck using Slackware.  A hybrid of 9 and 10.  I am a Fedora=
- user so very little is where I except it to be.  I am trying to figure=
- everything out and move to centos with a 2.6.24.x kernel (needed for t=
-he new hardware this monstrosity of an application is moving to). =20
-
-Thanks,
-
-_________________________________________________________________
-Climb to the top of the charts!=A0Play the word scramble challenge with=
- star power.
-http://club.live.com/star_shuffle.aspx?icid=3Dstarshuffle_wlmailtextlin=
-k_jan-
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patrick
