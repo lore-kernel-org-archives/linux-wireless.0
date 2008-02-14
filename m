@@ -1,138 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:46093 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843AbYBKPBh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 10:01:37 -0500
-Date: Mon, 11 Feb 2008 10:00:12 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: reset for 5424-based card
-Message-ID: <20080211150012.GA15956@hash.localnet> (sfid-20080211_150150_705870_47F2C50D)
-References: <20080131155901.GA7997@hash.localnet> <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com> <20080201040358.GA13428@hash.localnet> <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> <20080201225345.GA15922@hash.localnet> <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com> <20080203014559.GA20177@hash.localnet> <40f31dec0802050113w6f332a00ja7c9ad849f80e2e0@mail.gmail.com> <20080210162155.GA10894@hash.localnet> <40f31dec0802101105o61442683ia6b56c264a9af556@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0802101105o61442683ia6b56c264a9af556@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:53721 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757997AbYBNWu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2008 17:50:56 -0500
+Subject: [PATCH] ipw2200: fix ucode assertion for RX queue overrun
+From: Dan Williams <dcbw@redhat.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
+Content-Type: text/plain
+Date: Thu, 14 Feb 2008 17:49:41 -0500
+Message-Id: <1203029381.6570.1.camel@localhost.localdomain> (sfid-20080214_225100_155897_531CD54A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 10, 2008 at 09:05:38PM +0200, Nick Kossifidis wrote:
-> 2008/2/10, Bob Copeland <me@bobcopeland.com>:
-> > I'll post a patch later tonight.
+Restock the RX queue when there are a lot of unused frames so that the
+RX ring buffer doesn't overrun, causing a ucode assertion.  Backport of
+patch "iwlwifi: fix ucode assertion for RX queue overrun".
 
-Well I spoke too soon :)  I was unable to repeatedly get this to work
-so I guess maybe I was lucky the times it did.  Here's what I have so
-far.
-
- - in my traces the hal always set DMA == 128B.  So I did not bump it up,
- and that seemed to cure rx overrun.  Obviously should be done on a
- per-card basis.
-
- - turned off reset of PCI to avoid host interface unit hang as discussed
-   previously
-    
- - noticed this card has a different sleep pending value, not sure what
-   the rf5413 uses compared to this
-
- - added various registers that I have no idea what they do.
-
-> Did you forced b mode via iwpriv while tracing (even if ap is b-only
-> card will use g settings) ? You should at least see different IFS etc
-> settings (check out initvals).
-
-Not sure, I'll try them again.  Are the other traces for other cards
-online somewhere?
-
-> Good work ;-)
-
-Heh I really don't know a phy from a sta so feel free to pick this
-apart...
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
 
->From 53d584dd188a131632e09353d1dd674f02a15b3c Mon Sep 17 00:00:00 2001
-From: Bob Copeland <me@bobcopeland.com>
-Date: Sat, 9 Feb 2008 00:16:12 -0500
-Subject: [PATCH] ath5k: changes for 5424/2424 cards
-
-This adds some register writes and updates some values used by
-the Atheros 5424 chipset.  This is just an experimental patch that
-should not be applied.
----
- drivers/net/wireless/ath5k/hw.c |   29 ++++++++++++++++++++++-------
- 1 files changed, 22 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 3a4bf40..ba832b0 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -358,8 +358,8 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 	}
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 3e6ad7b..a56d9fc 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -3365,7 +3365,6 @@ static void ipw_rx_queue_reset(struct ipw_priv *priv,
+ 	/* Set us so that we have processed and used all buffers, but have
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+-	rxq->processed = RX_QUEUE_SIZE - 1;
+ 	rxq->free_count = 0;
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
+ }
+@@ -3607,7 +3606,22 @@ static int ipw_load(struct ipw_priv *priv)
+  * Driver allocates buffers of this size for Rx
+  */
  
- 	/* ...reset chipset and PCI device */
--	if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
--				AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
-+	if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah, 
-+		AR5K_RESET_CTL_CHIP)) {
- 		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
- 		return -EIO;
- 	}
-@@ -887,9 +887,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	 */
- 	if (ah->ah_version != AR5K_AR5210) {
- 		AR5K_REG_WRITE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_SDMAMR,
--				AR5K_DMASIZE_512B | AR5K_TXCFG_DMASIZE);
-+				AR5K_DMASIZE_128B | AR5K_TXCFG_DMASIZE);
- 		AR5K_REG_WRITE_BITS(ah, AR5K_RXCFG, AR5K_RXCFG_SDMAMW,
--				AR5K_DMASIZE_512B);
-+				AR5K_DMASIZE_128B);
- 	}
- 
- 	/*
-@@ -981,14 +981,22 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	 * Set the 32MHz reference clock on 5212 phy clock sleep register
- 	 */
- 	if (ah->ah_version == AR5K_AR5212) {
-+		int spending;
+-static inline int ipw_queue_space(const struct clx2_queue *q)
++/**
++ * ipw_rx_queue_space - Return number of free slots available in queue.
++ */
++static int ipw_rx_queue_space(const struct ipw_rx_queue *q)
++{
++	int s = q->read - q->write;
++	if (s <= 0)
++		s += RX_QUEUE_SIZE;
++	/* keep some buffer to not confuse full and empty queue */
++	s -= 2;
++	if (s < 0)
++		s = 0;
++	return s;
++}
 +
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCR_32MHZ, AR5K_PHY_SCR);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SLMT_32MHZ, AR5K_PHY_SLMT);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCAL_32MHZ, AR5K_PHY_SCAL);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
--		ath5k_hw_reg_write(ah, ah->ah_radio == AR5K_RF5111 ?
--			AR5K_PHY_SPENDING_RF5111 : AR5K_PHY_SPENDING_RF5112,
--			AR5K_PHY_SPENDING);
++static inline int ipw_tx_queue_space(const struct clx2_queue *q)
+ {
+ 	int s = q->last_used - q->first_empty;
+ 	if (s <= 0)
+@@ -4947,7 +4961,7 @@ static int ipw_queue_tx_reclaim(struct ipw_priv *priv,
+ 		priv->tx_packets++;
+ 	}
+       done:
+-	if ((ipw_queue_space(q) > q->low_mark) &&
++	if ((ipw_tx_queue_space(q) > q->low_mark) &&
+ 	    (qindex >= 0) &&
+ 	    (priv->status & STATUS_ASSOCIATED) && netif_running(priv->net_dev))
+ 		netif_wake_queue(priv->net_dev);
+@@ -4965,7 +4979,7 @@ static int ipw_queue_tx_hcmd(struct ipw_priv *priv, int hcmd, void *buf,
+ 	struct clx2_queue *q = &txq->q;
+ 	struct tfd_frame *tfd;
+ 
+-	if (ipw_queue_space(q) < (sync ? 1 : 2)) {
++	if (ipw_tx_queue_space(q) < (sync ? 1 : 2)) {
+ 		IPW_ERROR("No space for Tx\n");
+ 		return -EBUSY;
+ 	}
+@@ -5070,7 +5084,7 @@ static void ipw_rx_queue_restock(struct ipw_priv *priv)
+ 
+ 	spin_lock_irqsave(&rxq->lock, flags);
+ 	write = rxq->write;
+-	while ((rxq->write != rxq->processed) && (rxq->free_count)) {
++	while ((ipw_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
+ 		element = rxq->rx_free.next;
+ 		rxb = list_entry(element, struct ipw_rx_mem_buffer, list);
+ 		list_del(element);
+@@ -5187,7 +5201,6 @@ static struct ipw_rx_queue *ipw_rx_queue_alloc(struct ipw_priv *priv)
+ 	/* Set us so that we have processed and used all buffers, but have
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+-	rxq->processed = RX_QUEUE_SIZE - 1;
+ 	rxq->free_count = 0;
+ 
+ 	return rxq;
+@@ -8223,13 +8236,17 @@ static void ipw_rx(struct ipw_priv *priv)
+ 	struct ieee80211_hdr_4addr *header;
+ 	u32 r, w, i;
+ 	u8 network_packet;
++	u8 fill_rx = 0;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
+ 	DECLARE_MAC_BUF(mac3);
+ 
+ 	r = ipw_read32(priv, IPW_RX_READ_INDEX);
+ 	w = ipw_read32(priv, IPW_RX_WRITE_INDEX);
+-	i = (priv->rxq->processed + 1) % RX_QUEUE_SIZE;
++	i = priv->rxq->read;
 +
-+		if (ah->ah_radio <= AR5K_RF5111)
-+			spending = AR5K_PHY_SPENDING_RF5111;
-+		else if (ah->ah_radio <= AR5K_RF5112)
-+			spending = AR5K_PHY_SPENDING_RF5112;
-+		else
-+			spending = 0x12;
++	if (ipw_rx_queue_space (priv->rxq) > (RX_QUEUE_SIZE / 2))
++		fill_rx = 1;
+ 
+ 	while (i != r) {
+ 		rxb = priv->rxq->queue[i];
+@@ -8404,11 +8421,17 @@ static void ipw_rx(struct ipw_priv *priv)
+ 		list_add_tail(&rxb->list, &priv->rxq->rx_used);
+ 
+ 		i = (i + 1) % RX_QUEUE_SIZE;
 +
-+		ath5k_hw_reg_write(ah, spending, AR5K_PHY_SPENDING);
++		/* If there are a lot of unsued frames, restock the Rx queue
++		 * so the ucode won't assert */
++		if (fill_rx) {
++			priv->rxq->read = i;
++			ipw_rx_queue_replenish(priv);
++		}
  	}
  
- 	/*
-@@ -997,6 +1005,13 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE |
- 			AR5K_BEACON_RESET_TSF);
- 
-+	if (ah->ah_mac_srev >= AR5K_SREV_VER_AR2424) {
-+		ath5k_hw_reg_write(ah, 0x000100aa, 0x8118);
-+		ath5k_hw_reg_write(ah, 0x00003210, 0x811c);
-+		ath5k_hw_reg_write(ah, 0x00000052, 0x8108);
-+		ath5k_hw_reg_write(ah, 0x001e1e1e, AR5K_TXPC);
-+		ath5k_hw_reg_write(ah, 0x00000004, 0x8120);
-+	}
- 	return 0;
+ 	/* Backtrack one entry */
+-	priv->rxq->processed = (i ? i : RX_QUEUE_SIZE) - 1;
+-
++	priv->rxq->read = i;
+ 	ipw_rx_queue_restock(priv);
  }
  
--- 
-1.5.4
+@@ -10336,7 +10359,7 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
+ 	q->first_empty = ipw_queue_inc_wrap(q->first_empty, q->n_bd);
+ 	ipw_write32(priv, q->reg_w, q->first_empty);
+ 
+-	if (ipw_queue_space(q) < q->high_mark)
++	if (ipw_tx_queue_space(q) < q->high_mark)
+ 		netif_stop_queue(priv->net_dev);
+ 
+ 	return NETDEV_TX_OK;
+@@ -10357,7 +10380,7 @@ static int ipw_net_is_queue_full(struct net_device *dev, int pri)
+ 	struct clx2_tx_queue *txq = &priv->txq[0];
+ #endif				/* CONFIG_IPW2200_QOS */
+ 
+-	if (ipw_queue_space(&txq->q) < txq->q.high_mark)
++	if (ipw_tx_queue_space(&txq->q) < txq->q.high_mark)
+ 		return 1;
+ 
+ 	return 0;
 
 
--- 
-Bob Copeland %% www.bobcopeland.com 
 
