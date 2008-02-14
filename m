@@ -1,82 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41938 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38699 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbYBVQQk (ORCPT
+	with ESMTP id S1753170AbYBNP57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:16:40 -0500
-Subject: Re: [PATCH 08/13 v2] o11s: other changes in mac80211 for mesh
-	interface support
+	Thu, 14 Feb 2008 10:57:59 -0500
+Subject: Re: mac80211: net_sched vs. HT
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com> (sfid-20080222_071830_924260_34482369)
-References: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com>
-	 (sfid-20080222_071830_924260_34482369)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wg543R31+M1AOk6sUztt"
-Date: Fri, 22 Feb 2008 17:16:23 +0100
-Message-Id: <1203696983.7082.63.camel@johannes.berg> (sfid-20080222_161647_594990_DB076DBC)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240802131531u46634558o46d4ff4f8b8c3d4a@mail.gmail.com> (sfid-20080213_233128_584262_CFD0ABE3)
+References: <1202489552.24811.10.camel@johannes.berg>
+	 <1ba2fa240802100830t772b245fgf9e54ae058b384fa@mail.gmail.com>
+	 <1202889691.8931.25.camel@johannes.berg>
+	 <1ba2fa240802131531u46634558o46d4ff4f8b8c3d4a@mail.gmail.com>
+	 (sfid-20080213_233128_584262_CFD0ABE3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hNk7sp4fLIbE34TSDcID"
+Date: Thu, 14 Feb 2008 16:57:46 +0100
+Message-Id: <1203004666.8931.145.camel@johannes.berg> (sfid-20080214_155804_390541_28DEC40E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Wg543R31+M1AOk6sUztt
+--=-hNk7sp4fLIbE34TSDcID
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
->  int ieee80211_set_freq(struct ieee80211_local *local, int freq);
->  /* ieee80211_sta.c */
-> +#define IEEE80211_FC(type, stype) cpu_to_le16(type | stype)
+> There is no use of QoS and HT without NET_SCHD so we should not
+> announce support for HT or QoS in that configuration
 
-That seems... misplaced.
+Ok. Ron, can you maybe make a patch? You're more familiar with where the
+HT hooks are and where stuff would have to be optional. Unless of course
+[see below]
 
->  	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA &&
->  	    sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS &&
-> +	    sdata->vif.type !=3D IEEE80211_IF_TYPE_MESH_POINT &&
->  	    sdata->vif.type !=3D IEEE80211_IF_TYPE_AP)
->  		return -EOPNOTSUPP;
+>  but I'm not sure
+> if it's worth the effort to compile mac80211 without NET_SCHED.
 
-Why no scanning on mesh interfaces?
+Maybe we just want to make mac80211 depend on NET_SCHED then? I
+personally think that is a good thing since otherwise drivers will also
+have to have code that depends on NET_SCHED for QoS features etc.
 
-> +struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int =
-idx,
-> +				     struct net_device *dev)
-> +{
-> +	struct sta_info *sta;
-> +	int i =3D 0;
-> +
-> +	read_lock_bh(&local->sta_lock);
-> +	list_for_each_entry(sta, &local->sta_list, list) {
-> +		if (i < idx) {
-> +			++i;
-> +			continue;
+> The number or aggregated frames in AMPDU is determined by handshake
+> maximum is 64
+> IIRC but also dynamically but how many frames fits into TXOP and this
+> is also function of how fast are packets brought the HW
 
-I already commented on the raciness of this.
+Right.
+
+> > In any case, I think this confirms my idea of splitting up the "queues"
+> > hardware specific value into "queues" and "ampdu_queues" where "queues"
+> > are the number of FIFOs with QoS parameters and "ampdu_queues" are the
+> > number of helper DMA queues for ampdu support.
+>=20
+> That would fit perfectly
+
+Ok, let's do that then as in the WIP patch I had posted.
+
+> Broadcom doesn't seem to
+> > use extra DMA queues for this, the aggregation decisions are (afaik
+> > since the hw has no extra queues I can find) all made in the driver. I
+> > suppose b43 will then have to fake a reasonable number of "ampdu_queues=
+"
+> > and handle it in the driver.
+>=20
+> Not sure how retransmission is handled. Where a  packet sits when it
+> fails transmission in the single aggregation... that would be a major
+> concern.
+
+TBH, I don't know yet.
+
+> > > The limited number of queues is acceptable again due to fact that
+> > > medium is shared and you cannot really utilize too many BA ssessions
+> > > at the same time. Some policy of eviction based on link quality is
+> > > required and still not implemented.
+> >
+> > Expected traffic too, I would think, no? If the traffic from/to a
+> > specific station drops below a threshold I would expect to tear down th=
+e
+> > BA session.
+>=20
+> That's what we would do part of rate scaling... currently only the
+> establishment is done not tear down.
+
+Right, it should be part of rate control. Just trying to understand what
+should happen.
+
+> Hope we soon free our schedule to push this little.
+
+:)
 
 johannes
 
---=-Wg543R31+M1AOk6sUztt
+--=-hNk7sp4fLIbE34TSDcID
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR771VaVg1VMiehFYAQJ7cw/+Po5pK2iyUV6YsuhrvKvg5WkjGd/8uUL/
-lg8pQgQkaloKqAOtGlkrs+hQkzcyT6j5e+57C3zE7hN8cxR39C5BWCGqr43hCAWb
-BzWabh20A4YX1/Xp90vFYmYsj72Acg7Jb3mdHwTPuCnf4RvH9Tm1KdU5scEaxGCn
-tqJiYFIZNn3sfXYoZIm0HFoBTrrixZmIxFXSOy0dgg/vGK36WU92ulvcbH1sjdfO
-aCgQosF/oDpFU+aGUgjxKD+JVjkfGyOGRbeZlTPk34i1J7ick63ixyHnqPMauKw4
-aJDj9ogBsebZysQdNIWHKRDhBQ8x9PkEntpT/k9njwHWh4ue1WlZbwBi7UjxDmxY
-Ny7MXyROYcWwNtkiBwEaro5QEwyOYMtCUyBVMJ7tlaNKgIQHz3rE5wew+NlHLyTE
-ZOMS7/cpVFcHKFcA8IDTw+BNluFxd+eB4UBlp54X8uAgKpcDlG5q6gUS28aTyYlv
-FFEt/nKaI0TYA3kLXCKpZuPcpCIEoc3FyEc+4A1jYoA3FSiM4d594gl5K6Ds6j2a
-lM9koi6bOkvHoaWiP+c5GFvnmtp2uIVYF4QXEJUkYyWRPamtljgb2l4N/p7qz932
-HYbecwrK73iT8i2G4HsTPI7CLtJYzCf9bPoX1wMqwylYJDpR01a//FoT59+McgbV
-zsG/OFmDR+k=
-=SpsB
+iQIVAwUAR7Rk+KVg1VMiehFYAQI2fBAAl5ljZZzO9Ts0dwVvT7bZ3z5bIQzXcPI4
++Txwo7b1IiZXjIhJghEmaPOXS5EFeEn1pRwbIDdkbuvpslBnbvFlGhZnPqz1dvBj
+XXCjqmBIeeqA3i87cJOcsIuKhEThnKPtpDKuFTAZ2pvQXaVJW5gt13aoaS3SKnT8
+LeIFV0B8N31srAxm5Ht/Il4Qo7HrRQoyeTibfPasZAke5OnhgiLYz8rSLF7Fnzmt
+ROT2aa2r339cY/dEyuIAVNvd58TgNEPRBn+mF6O3VwOvFUQ1yvwbHnJIrSS8DdUr
+CXc+h0f/TQYHGJIoS8vhUycmLX0dJFtYqVIT6IscjbARd+E5GPTaC8bESTr8/nEf
+8pGnii9GJcHeXpqMr8yG8hpbULwNN389PJlWkKT24CESOx/rNunnvsbTjXGAql+O
+MvlFfKT7mfWSMBJ1oRm6obrvNBrw2kq7rspvVaJtAPbarzYRrvBelHS1pALZH1xw
+CgshvD593xSjdRe5GQ//MB4bzigThQxkXw4wBXE8JFgA4I+9iIPDejrfXHNMUZiZ
+gdDSuTD7T0XWhKCumiIcw1U3rff3PJQX1idgku/+ujh6G8t6E1yPVXAWWKtCw9ei
+nIh2oyHYEg3/EC+HLDOSOSeTle5lEQvbWZPxy/qfbh+bVYWnFP5OL8e0zs+EQ8/V
+OncbBaEnrgI=
+=Qhd3
 -----END PGP SIGNATURE-----
 
---=-Wg543R31+M1AOk6sUztt--
+--=-hNk7sp4fLIbE34TSDcID--
 
