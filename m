@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:15991 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbYBVHRU (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:48586 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbYBNOfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 02:17:20 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so203984rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:17:19 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Thu, 21 Feb 2008 20:05:04 -0800
-Subject: [PATCH 00/13 v2] o11s: mesh interface support for mac80211
-Message-ID: <47be76fe.13578c0a.6fe5.50a1@mx.google.com> (sfid-20080222_071727_690417_001BBB05)
+	Thu, 14 Feb 2008 09:35:53 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: Suggestions for USB Wi-Fi device
+Date: Thu, 14 Feb 2008 15:35:18 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <47B37DEF.3080107@lwfinger.net> <1202951545.8941.53.camel@dv>
+In-Reply-To: <1202951545.8941.53.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200802141535.19085.mb@bu3sch.de> (sfid-20080214_143558_204258_80200021)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches provides support for (pre) IEEE 802.11s mesh interfaces.
-Current features include mesh discovery, peer link establishment and on-demand
-HWMP path discovery.
+On Thursday 14 February 2008 02:12:25 Pavel Roskin wrote:
+> On Wed, 2008-02-13 at 16:31 -0700, Larry Finger wrote:
+> > The motherboard on my notebook has failed so that my BCM9311 can no longer be accessed. The machine 
+> > is under warranty, but I will be moving around for the next two months and it will not be repaired 
+> > until April. In the interim, I am thinking about acquiring a USB wi-fi device. If you are using such 
+> > a device and it works out-of-the-box on Linux, please send me the make and model. If this model 
+> > comes with different chips, please tell me what I need.
+> 
+> Look for Level One WNC-0301USB.  There are several revisions, but I
+> checked the Windows drivers, and all appear to have corresponding Linux
+> drivers: rt73usb, rt2500usb, rtl8187 and zd1211rw.
 
-This is the second round of patches incorporating the comments from Johannes
-Berg and others. The main changes with the first set of patches are:
+If you don't need good monitor-mode capabilities, you can use a zd1211 device
+like the Longshine LCS-8131G3.
+It works pretty good in STA mode. Monitor mode is somewhat broken. It does
+filter some MAC addresses in hardware.
 
- - We are now using airtime link metric, instead of hop count.
-
- - Mesh peer link table has been discarded, integrating the necessary attributes
-   directly on struct sta_info.
-
- - We no longer use directily rtnetlink for mesh peer link and mesh paths
-   operation, and use nl80211 instead.
-
- - We now support mesh network in scan. The part interacting with wext is a bit
-   ugly but works well. I just read the mail from Johannes with a different
-   approach and will consider it.
-
-The pid rate control algorithm has been modified to provide an estimated
-transmission error, probability, necessary for the airtime link metric, and a to
-call mesh_peer_link_broken() if it detects a sta is no longer reachable.
-
-I would like to point out that it looks like we can get duplicate sta_entries,
-or more entries than the maximum allowed, if stas are added at the same time
-through normal network behaviour and manual operation through nl80211. Please
-correct me if I am wrong or if it is just that no interface type is supposed to
-allow both kinds of additions.
-
-The code has been tested in a 12-node testbed and has proved to be stable and
-functional. We would like to get it integrated as soon as possible so it can get
-more widespread testing and (hopefully) contributions. Unfortunately we have run
-out of funds for this project (we are looking for sponsors!) so work on the
-project from our side might slow down. At the very least, we are commited to
-fixing bugs and tracking changes introduced by newer versions of the 11s draft.
-
-The only supported driver right now is zd1211rw, but changes in the driver for
-mesh functionality are minimal (for the zd1211rw driver most changes were just
-to provide missing functionality such as beaconing support), so we expect a wide
-array of devices to be supported soon.
-
-The patches are to be applied on top of wireless-2.6/everything HEAD. Even
-though I am sure there will be some issues, it would be great if we could
-integrate this as soon as possible to make it easier for other people to
-collaborate and to make my life a bit easier :-)
-
-For more information, please visit: http://o11s.org/devel
-
-Enjoy,
-
-Luis Carlos Cobo
-
-
+-- 
+Greetings Michael.
