@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53753 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbYBFONT (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:51674 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762290AbYBNX6F convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 09:13:19 -0500
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	Felix Fietkau <nbd@openwrt.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240802051515y4028608cj38047fcebeec0898@mail.gmail.com> (sfid-20080205_231540_752489_1734F43B)
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>
-	 <1ba2fa240802040621h2c0e9fe6yb5d84d24513aedf4@mail.gmail.com>
-	 <-7767648866191425885@unknownmsgid>
-	 <1ba2fa240802040713k56fdf22fp8ab15924bbebe88@mail.gmail.com>
-	 <47A72E13.8070305@openwrt.org>
-	 <1ba2fa240802041036v2b311eb4vcced7a9f1e2aa6a0@mail.gmail.com>
-	 <47A75BF5.90101@openwrt.org>
-	 <1ba2fa240802041103v622db90co2ddc24eda3347ffc@mail.gmail.com>
-	 <1ba2fa240802041105g1e11ba99ldaca4acee4a07c35@mail.gmail.com>
-	 <20080205222340.70e043cd@morte>
-	 <1ba2fa240802051515y4028608cj38047fcebeec0898@mail.gmail.com>
-	 (sfid-20080205_231540_752489_1734F43B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5nnFQtAtX0ws8WLJ4K0P"
-Date: Wed, 06 Feb 2008 15:13:03 +0100
-Message-Id: <1202307183.4395.38.camel@johannes.berg> (sfid-20080206_141322_388500_3FC8A15B)
-Mime-Version: 1.0
+	Thu, 14 Feb 2008 18:58:05 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Thu, 14 Feb 2008 15:57:22 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com> (sfid-20080214_235811_861760_29596F21)
+In-Reply-To: <200802150040.05188.patrick@lunatiki.de>
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A7FB3E@orsmsx416.amr.corp.intel.com> <47B487EE.3030401@scherping.de> <200802150040.05188.patrick@lunatiki.de>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Patrick Grimm" <patrick@lunatiki.de>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday, February 14, 2008 3:40 PM, Patrick Grimm  wrote:
 
---=-5nnFQtAtX0ws8WLJ4K0P
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Am Donnerstag, 14. Februar 2008 19:26:54 schrieb Richard Scherping:
+>> Chatre, Reinette schrieb:
+>>> On Wednesday, February 13, 2008 1:07 AM, Richard Scherping  wrote:
+>>>>> iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated:
+>>>>> iwl4965_is_associated(priv)=1; priv->assoc_id=0;
+>>>>> priv->assoc_station_added=1
+>>>> 
+>>>> Simply uncommenting the check for priv->assoc_id to be
+>>>> non-zero (line 2938 in iwl4965-base.c) made ad-hoc working.
+>>>> Thanks for helping me to find this!
+>>>> Does this change have any negative side effects?
+>>>> 
+>>>> Richard
+>>> 
+>>> Could you please try the attached patch instead?
+>> 
+>> Works for me (iwl4965). Thanks!
+> For me not.
+> I use 3945ABG card in an ad-hoc network with 4 other wlan devices
+> like rt2500 and ath5k. I have applied your
+> 0001-iwlwifi-only-check-for-association-id-when-associat.patch
+> patch. But i can't see incoming packets witch tcpdump.
+> I have try to commet out  the check for associat with the same result.
+> 
+> dmesg
+> iwl3945: I iwl3945_rx_handle r = 76, i = 75, REPLY_3945_RX, 0x1b
+> iwl3945: I iwl3945_rx_handle r = 77, i = 76, REPLY_3945_RX, 0x1b
+> iwl3945: I iwl3945_mac_tx enter
+> iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
+> iwl3945: I iwl3945_mac_tx leave
+> iwl3945: I iwl3945_rx_handle r = 78, i = 77, REPLY_3945_RX, 0x1b
+> iwl3945: I iwl3945_rx_handle r = 79, i = 78, REPLY_3945_RX, 0x1b
 
+When you say "with the same result" does it mean that you comment out
+the check for priv->assoc_id and you still see the error "Dropping -
+!iwl3945_is_associated" or do you then see traffic with tcpdump?
 
-> Just keep in mind that some driver requires to report ACKed frames to
-> make rate scaling algorithm to work properly, this should be optional
-> only.
-> Second I believe for some management frames it's good to notify mac
-> about successful transmission regardless of rate scaling algorithm.
+Could you please print out the values of fc, priv->iw_mode,
+iwl3945_is_associated(priv) and priv->assoc_id just before that error
+message is printed?
 
-Hostapd wants that for EAPOL frames as well, so it has to be somehow
-triggerable per-frame.
+Thanks!
 
-johannes
-
---=-5nnFQtAtX0ws8WLJ4K0P
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6nAbqVg1VMiehFYAQKiNA/+LWl6joLJj5ZDL8D3FxxyE5lP1ierAShr
-5qJ1NYMTrKFhWJo2gb5CFmFAMWWJ0t8PbT2ebUGxDMfhLjai9FiaGj+ASS/4LDaj
-gtCkbgrB4UneNKzSxcGvkJlSGX1aJFHBCrwzyWs3+YHqb+gsAV0QCF7ZOBrhEqYs
-58lhmIbOFKM5jcVYnMe+2RpqqigjjZ/2aDj+FGcvda+pInFlrikVfSjL3+mx93dS
-gjHGwvUT9ZXaerdE47NbMYPy1Ma7kZdH1mlI5gEKuAY+LSASA78UrdFftpD6NTcS
-52QqAtbR/b36Uh6hta7a0SlmiT5OcIEL1WV5deo29AJKfUvc7ma7YXZK7mi/408d
-NLkqTKnVcugjohKZkT4ZVK8skAtuuskc+80ApKX8nnJvY43QhMGdaK2iu0FV9QM/
-xG1NFnzAKh4C8jh5lp2HU+iJzJZnUS9HK1JBLsaa1Bcr1vOFKJF5xQ8pwshwcTz1
-PazqLoLp84l7p1os7Ga/MXf0xC5mAGgY2pGODdfisjShBPbnihc6oYBfbRPo5QeX
-N825cOXvMNhg2DT0+VbERvNi1BdO17J3EtH28f72G8iZRy521W8uI22Peewkwivn
-9n3RlCj7WYKMRB9F/NRxkPb9dwlkKoWFll1FTKkpngZ3DCw0zMFaDrRrmR8/EsV5
-USr0YVO9NUo=
-=vJN/
------END PGP SIGNATURE-----
-
---=-5nnFQtAtX0ws8WLJ4K0P--
-
+Reinette
