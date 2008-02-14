@@ -1,103 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:38375 "EHLO venema.h4ckr.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2937 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753548AbYBXE3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 23:29:13 -0500
-Date: Sun, 24 Feb 2008 06:28:51 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Message-ID: <20080224042851.GE4426@makis.domain.invalid> (sfid-20080224_042916_291028_90C6EEB1)
+	id S1755882AbYBNXMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2008 18:12:23 -0500
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id m1ENC6n9018445
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2008 18:12:11 -0500
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id m1EN1n3h018355
+	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2008 18:01:49 -0500
+Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
+	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id m1EMvTwo014846
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2008 17:57:29 -0500
+Received: (from linville@localhost)
+	by linville-t43.mobile (8.14.1/8.14.1/Submit) id m1EMvS8d014845
+	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2008 17:57:28 -0500
+Date: Thu, 14 Feb 2008 17:57:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Upstream wireless process changes
+Message-ID: <20080214225728.GC2981@tuxdriver.com> (sfid-20080214_231226_719097_BFD639A8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Fix nic_wakeup for PCI-E chips (don't set AR5K_RESET_CTL_PCI bit)
+Greetings,
 
- * Fix dma size setting for PCI-E chips (thanx to Bob Copeland).
+Given current discussions, it seems timely to revamp some of the
+upstream wireless tree management policies.  I'm sure I still won't
+be able to please everyone, but maybe I can change who gets to be
+unhappy about the process... :-)
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Let's review the current process.  The wireless-2.6 tree has a number
+of branches, each with a specific use.  Most of these are for my own
+administrative purposes relating to coping with the processes upstream
+from me.  These include any "fixes", "upstream", or "pending" branches,
+as well as any "master-*" branches.  There are also "merged-*" branches
+which I maintain to assist me when rebases are necessary.  In addition,
+there have been topic branches such as "at76" and (formerly) "ath5k".
+And there is the "mm-master" branch, which primarily just collects
+the topic branches together for testing in -mm.
 
----
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index c0b6596..d8ec373 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -971,6 +971,7 @@ struct ath5k_hw {
- 	enum ath5k_version	ah_version;
- 	enum ath5k_radio	ah_radio;
- 	u32			ah_phy;
-+	bool			ah_pcie;
- 
- 	bool			ah_5ghz;
- 	bool			ah_2ghz;
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 3ae5522..cd640ed 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -214,6 +214,14 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		ah->ah_single_chip = false;
- 	}
- 
-+	/* Identify PCI-E cards */
-+	if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
-+	srev >= AR5K_SREV_VER_AR5416) {
-+		ah->ah_pcie = true;
-+	} else {
-+		ah->ah_pcie = false;
-+	}
-+
- 	/* Single chip radio */
- 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
- 		ah->ah_radio_2ghz_revision = 0;
-@@ -377,9 +385,12 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 					AR5K_PHY_TURBO);
- 	}
- 
--	/* ...reset chipset and PCI device */
--	if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
--				AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
-+	/* ...reset chipset
-+	 * Warning: reseting PCI on PCI-E cards results card to hang
-+	 * and always return 0xffff...
-+	 */
-+	if (ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND |
-+				(ah->ah_pcie == false ? AR5K_RESET_CTL_PCI : 0) )) {
- 		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
- 		return -EIO;
- 	}
-@@ -900,13 +911,25 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 	/*
- 	 * Set Rx/Tx DMA Configuration
--	 *(passing dma size not available on 5210)
-+	 * 
-+	 * Set maximum DMA size (512) except for PCI-E cards since
-+	 * it causes rx overruns and tx errors (tested on 5424 but since
-+	 * rx overruns also occur on 5416/5418 with madwifi we set 128
-+	 * for all PCI-E cards to be safe).
-+	 *
-+	 * In dumps this is 128 for allchips.
-+	 *
-+	 * XXX: need to check 5210 for this
-+	 * TODO: Check out tx triger level, it's always 64 on dumps but i 
-+	 * guess we can tweak it and see how it goes ;-)
- 	 */
- 	if (ah->ah_version != AR5K_AR5210) {
- 		AR5K_REG_WRITE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_SDMAMR,
--				AR5K_DMASIZE_512B | AR5K_TXCFG_DMASIZE);
-+				(ah->ah_pcie == true ?
-+				AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
- 		AR5K_REG_WRITE_BITS(ah, AR5K_RXCFG, AR5K_RXCFG_SDMAMW,
--				AR5K_DMASIZE_512B);
-+				(ah->ah_pcie == true ?
-+				AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
- 	}
- 
- 	/*
+The "everything" branch is an integration branch which collects patches
+from all the "fixes", "upstream", and "pending" branches as well
+as any topic branches.  This is the branch I ask developers to use.
+The purpose of this branch is to avoid having API-level patches miss
+any drivers as well as to avoid any similar conflicts.
 
+Finally, in the old process the "master" branch always just pointed
+at the most recent full or -rc release from Linus.  This always seemed
+to confuse users looking for the "latest and greatest" wireless bits.
+Moreover, all the branches created confusion among both users and
+developers.
 
+The new process shifts from reliance on branches to the use of
+several trees.  Each tree may have some placeholder branches used for
+administrative purposes, but the interesting bits will be committed
+on the "master" branches of those trees to avoid confusion about
+which tree normal people should use.
+
+The wireless-2.6 tree will primarily become a vehicle for pushing
+patches to the current -rc release.  This replaces the former "fixes"
+branches.  It is my intent that this will not be rebased except in
+the most extreme (and unforseen) circumstances.
+
+A new wireless-2.6.26 tree (or 2.6.x as appropriate in the future) will
+be the vehicle for queueing patches to net-2.6.26 (or its successors)
+in anticipation of the next merge window.  This tree will regularly
+be updated to correspond to the current state of net-2.6.26.  I will
+avoid rebasing this tree as much as possible, but given its dependence
+on net-2.6.26 I will be somewhat at Dave's mercy... :-)
+
+Finally, a new wireless-testing tree will be created to replace the
+usage of the former 'everything' branch.  This tree will be based
+on a current -rc release in hopes avoiding the churn in between
+-rc releases.  The tree may contain topic branches (e.g. "at76")
+as appropriate, as well as picked commits from wireless-2.6 and
+wireless-2.6.26.  I will attempt to limit rebasing this tree as much as
+practical, at the expense of having some ugly history.  However, this
+tree almost certainly will be rebased from time to time, and you should
+expect any patches in this tree to be re-committed in wireless-2.6
+or wireless-2.6.26 before going upstream -- you have been warned!
+
+I hope that this "covers all the bases" for our various process
+needs (merging fixes, queueing for the merge window, integration and
+on-going development).  Any coments or suggestions you might have
+are welcome now. :-)
+
+So, comments?
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
