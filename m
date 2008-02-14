@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2880 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754606AbYB2UCR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 15:02:17 -0500
-Date: Fri, 29 Feb 2008 14:56:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6.26 2008-02-21
-Message-ID: <20080229195631.GE3234@tuxdriver.com> (sfid-20080229_200225_607858_29B3F3D6)
-References: <20080221021530.GG3825@tuxdriver.com> <20080221172525.GI3094@tuxdriver.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:63879 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753348AbYBNRcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2008 12:32:31 -0500
+Message-ID: <47B47B2A.1090909@lwfinger.net> (sfid-20080214_173237_813322_1C77A87A)
+Date: Thu, 14 Feb 2008 10:32:26 -0700
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080221172525.GI3094@tuxdriver.com>
+To: Ramesh <rramesh1@gmail.com>
+CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Wi-Fi interface intermittently missing on HP laptop
+References: <47B46E36.3050206@lwfinger.net> <c9d168940802140849v3f7ea53ajf23279ec3efd126@mail.gmail.com>
+In-Reply-To: <c9d168940802140849v3f7ea53ajf23279ec3efd126@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 21, 2008 at 12:25:25PM -0500, John W. Linville wrote:
-> On Wed, Feb 20, 2008 at 09:15:30PM -0500, John W. Linville wrote:
+Ramesh wrote:
+> Hi Larry.
 > 
-> > Here are a slew of developments intended for 2.6.26.  The patches are
-> > too diverse to comment upon in this summary... :-)
-> 
-> David,
-> 
-> This is additive on top of the pull request from last night.  Only
-> Pavel's fix for the brown-paper-bag CONFIG_MAC80211_IBSS_DEBUG build
-> issue is applied on top of the previous commits.
-> 
-> Please let me know if there are problems!
+> I have a HP DV6040US & I do see the same problem. Initiallly, when I
+> hit this problem a year back, it was figured out to be a mother board
+> issue and HP fixed it by replacing the motherboard. I am seeing the
+> same problem for the past 10 days. The mini pci doesnt get detected,
+> for every 10 reboots it gets detected once-in-a-while.  It looks like
+> chronic condition with HP Laptops & my laptop went out of warranty & I
+> luckily had it extended, not sure if this is a bcm chipset issue or
+> HP's motherboard problem, planning to put a USB Wireless adapter to
+> fix this problem.
 
-It looks like you haven't pulled this into net-2.6.26 yet.  So just
-disregard this pull request.  I'll rebased on the current net-2.6.26,
-and a few things to it, and send a new request.
+Thanks for the info. Perhaps mine will fail 4 times in the next two years. My extended warranty has
+a "lemon" clause. If the item needs hardware repair 4 times, you get the original purchase price
+toward a new machine. My wife bought a new laptop in 2002 and has had it replaced twice. All it cost
+us was the price of the new extended warranty.
 
-FYI...
+Larry
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
