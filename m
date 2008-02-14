@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51450 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbYBUTUN (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:49079 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425AbYBNEVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 14:20:13 -0500
-Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <20080220195913.GE21139@uranus.ravnborg.org>
-References: <1203503909.17534.14.camel@johannes.berg>
-	 <20080220195913.GE21139@uranus.ravnborg.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GTQatHHLnXsC1L7lGGVz"
-Date: Thu, 21 Feb 2008 13:42:56 +0100
-Message-Id: <1203597776.20331.5.camel@johannes.berg> (sfid-20080221_192023_943392_A7BD79A3)
-Mime-Version: 1.0
+	Wed, 13 Feb 2008 23:21:16 -0500
+Date: Wed, 13 Feb 2008 23:20:07 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: ath5k: reset for 5424-based card
+Message-ID: <20080214042007.GA24186@hash.localnet> (sfid-20080214_042120_277883_2C8CA48F)
+References: <20080201040358.GA13428@hash.localnet> <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> <20080201225345.GA15922@hash.localnet> <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com> <20080203014559.GA20177@hash.localnet> <40f31dec0802050113w6f332a00ja7c9ad849f80e2e0@mail.gmail.com> <20080210162155.GA10894@hash.localnet> <40f31dec0802101105o61442683ia6b56c264a9af556@mail.gmail.com> <20080211150012.GA15956@hash.localnet> <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0802112318q281ef27eg2ec0c1df441ed097@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 12, 2008 at 09:18:05AM +0200, Nick Kossifidis wrote:
+> > Not sure, I'll try them again.  Are the other traces for other cards
+> > online somewhere?
+> 
+> Nope i have them all gathered on my laptop, you 'll sure find some
+> posted on ath5k-devel list. I'll send you a b-only trace from one of
+> my cards (a 5413) to check it out ;-)
+> 
+> We are working on a way to have all dumps uploaded somewhere...
 
---=-GTQatHHLnXsC1L7lGGVz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Okay that would be good.  I was basically searching for differences by
+hooking ath_hw_reg_write with a printk, sorting that, and diffing it
+with a sorted file of "reg_address:value" extracted from the traces.
+Would be useful to run the same scripts over other cards' dumps...
 
->> [patch doing CHECKFLAGS +=3D -D__CHECK_ENDIAN__ in the
->> net/mac80211/Makefile]
+> 
+> > -                               AR5K_DMASIZE_512B);
+> > +                               AR5K_DMASIZE_128B);
+> >         }
+> 
+> Have you tried 256 ? Also have you tried only setting lower dma size for rx ?
 
-> I would prefer it to be kernel wide enabled.
-> Tried a defconfig build.
+I did a few times, but not enough to definitively say which works and 
+which doesn't.  I'll try to get it repeatedly starting up correctly when
+I get some free time, and from there I should be able to figure out 
+what's actually needed and what is noise.
 
-Hm. I tend to think there was a reason for this, since this is actually
-explicitly disabled by include/linux/types.h:
+> > +               ath5k_hw_reg_write(ah, 0x001e1e1e, AR5K_TXPC);
+> 
+> Remove TXPC and see what happens...
 
-#ifdef __CHECKER__
-#define __bitwise__ __attribute__((bitwise))
-#else=20
-#define __bitwise__
-#endif
+Sure, I'll give that a go as well.
 
-#ifdef __CHECK_ENDIAN__
-#define __bitwise __bitwise__
-#else
-#define __bitwise
-#endif
-
-The commit that introduced __CHECK_ENDIAN__ was
-af4ca457eaf2d6682059c18463eb106e2ce58198 ("gfp_t: infrastructure") but
-it doesn't say anything about the rationale for it.
-
-> When I enabled __CHECK_ENDIAN I got:
-> 8 files with > 100 warnings
-> 14 files with 10 to 99 warnings.
->=20
-> So nothing that should scare a kernel hacker...
->=20
-> warnings without: 1686
-> warnings with: 2788
->=20
-> OK - thats a lot, but then fixing 8 files will significantly
-> reduce this.
-
-I recently ran sparse on my config and was surprised by the number of
-warnings. Then again, something in mmzone.h or so generated billions of
-them...
-
-In any case, I would love to have __CHECK_ENDIAN__ enabled by default at
-least on the wireless code (just caught another bug with it...)
-
-johannes
-
---=-GTQatHHLnXsC1L7lGGVz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR71xz6Vg1VMiehFYAQKl+BAAvgqz5hT+aIU5/xJSoTEY7wVE/5mrv23S
-TbJW+52SchPOyUjgX1Wpv2qbXUfqxk+/BgcJjK9a/0cWCqOnV3L2HNsYmIoIg7hD
-Y6gEy/xzd+WQsa92hHhlzD7vvvYleDge/r0HC01i6567Gtzsa9cljdELMk4bYqdN
-YxTZPev9ry46f83QE8b7I+H3KxtQuvBDU2YjvC82GWsKjiHbAklZslAfqxAg3aDa
-Fo9P6qjcKFy46oXbLL5meoPPYEvO4qjvJq47esVObrDa4IfQtes5Q6FAUJ5vkoDp
-9tcfUWNAWHMMVO3841CkkLqyImQiktcKr8pLCArzrBXqGub7qIVrZuCsCjz/clTT
-BR/4gt+GCN/3LRihbPZjpfrc8UX0yfaCcp1OyjnAKGkcTMl68ClP8tIb55N+FZWa
-Mv3DOOru1pju3+ACb4AXmK9auzKpgKR1kR0xxB4HWA1yHeklYxZ9QP6c4MPpJtf5
-3uh3obTpNGaGr9ECTNXirE89ps8M8VCnBMnzLIBBf3H4Eu1IgrB5b0+85CB9jzhL
-PzAd8kuBMUhS/tmaa/3kR6dD8qpOeLHykqtNq4zk96ORDJcdHOmNX0rz9ZXHnEzB
-4ADpjdhGC7wjf4tEoNAK8F1dLye8gBXKy/H1F8FjX622zluTeb6DRQHkrA4ymePx
-ZnZZNKPgqSs=
-=a10Z
------END PGP SIGNATURE-----
-
---=-GTQatHHLnXsC1L7lGGVz--
+-- 
+Bob Copeland %% www.bobcopeland.com 
 
