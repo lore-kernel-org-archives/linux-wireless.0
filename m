@@ -1,428 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755487AbYBWOVu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 09:21:50 -0500
-Message-Id: <20080223142010.953902000@sipsolutions.net> (sfid-20080223_142343_190230_8E601292)
-References: <20080223141703.194775000@sipsolutions.net>
-Date: Sat, 23 Feb 2008 15:17:09 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 06/18] mac80211: support functions for mesh
-Mime-Version: 1.0
+Received: from bay0-omc3-s32.bay0.hotmail.com ([65.54.246.232]:34619 "EHLO
+	bay0-omc3-s32.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752092AbYBNC2e convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2008 21:28:34 -0500
+Message-ID: <BAY101-W1421BB30E73369FE0A2E3DC8250@phx.gbl> (sfid-20080214_022838_372811_F76D121D)
+From: Adam Turk <bofh1234@hotmail.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: RE: kernel 2.6.25-rc1 and no /dev/rt73usb
+Date: Wed, 13 Feb 2008 21:28:33 -0500
+In-Reply-To: <1202952347.29519.5.camel@dv>
+References: <BAY101-W101597BA2B1DDD58D6F497C8250@phx.gbl>
+ <1202952347.29519.5.camel@dv>
+Content-Type: text/plain; charset=iso-8859-1
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis Carlos Cobo <luisca@cozybit.com>
 
-The two important features coded in mesh.c are:
+> From: proski@gnu.org
+>> On Wed, 2008-02-13 at 20:14 -0500, Adam Turk wrote:
+>
+>> However no rt73usb device is created. Why isn't this working?
+>
+> Network devices don't have corresponding device nodes under /dev. The=
+y
+> can be seen with "ifconfig -a", and the wireless properties can be
+> examined and changed with iwconfig.
+>
+> The messages may be different because you changed the debug level or
+> because the device is not brought up by some reason. By the way, it's
+> better to examine kernel messages with the dmesg command, because is
+> shows all messages, whereas syslog can suppress some of them.
 
-Recently Multicast Cache: in on-demand HWMP, multicast traffic is retransmitted
-by every receiving node. Even though a mesh TTL counter avoids infinite loops,
-it is also necessary to avoid traffic explosion by keeping a cache of multicast
-mesh frame that have been received recently. With this feature, maximum number
-of retransmissions of a multicast frame for the case of N nodes within the range
-of each other would be N. Without it, the maximum number of retransmissions
-would be in the order of N^(MESH_TTL - 1).
+Ok.  nothing listed in ifconfig -a.  Here is the dmesg output.  Still t=
+he same error message as 2.6.24.
+drivers/usb/core/inode.c: creating file '002'
+usb 1-1: New USB device found, idVendor=3D148f, idProduct=3D2573
+usb 1-1: New USB device strings: Mfr=3D1, Product=3D2, SerialNumber=3D0
+usb 1-1: Product: 802.11 bg WLAN
+usb 1-1: Manufacturer: Ralink
+hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
+rt73usb 1-1:1.0: usb_probe_interface
+rt73usb 1-1:1.0: usb_probe_interface - got id
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
+phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x00=
+00
+phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, =
+rev: 0002573a.
+phy0: Selected rate control algorithm 'pid'
+phy0: Failed to initialize wep
+phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+rt73usb: probe of 1-1:1.0 failed with error -12
+usbcore: registered new interface driver rt73usb
 
-Code to support mesh tables.
+What is wrong with thing?
+Thanks,
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mesh.c |  383 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 383 insertions(+)
- create mode 100644 net/mac80211/mesh.c
-
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ everything/net/mac80211/mesh.c	2008-02-23 14:51:39.000000000 +0100
-@@ -0,0 +1,383 @@
-+/*
-+ * Copyright (c) 2008 open80211s Ltd.
-+ * Authors:    Luis Carlos Cobo <luisca@cozybit.com>
-+ * 	       Javier Cardona <javier@cozybit.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include "ieee80211_i.h"
-+#include "mesh.h"
-+
-+#define PP_OFFSET 	1		/* Path Selection Protocol */
-+#define PM_OFFSET	5		/* Path Selection Metric   */
-+#define CC_OFFSET	9		/* Congestion Control Mode */
-+#define CAPAB_OFFSET 17
-+#define ACCEPT_PLINKS 0x80
-+
-+int mesh_allocated;
-+static struct kmem_cache *rm_cache;
-+
-+void ieee80211s_init(void)
-+{
-+	mesh_pathtbl_init();
-+	mesh_allocated = 1;
-+	rm_cache = kmem_cache_create("mesh_rmc", sizeof(struct rmc_entry),
-+				     0, 0, NULL);
-+}
-+
-+void ieee80211s_stop(void)
-+{
-+	mesh_pathtbl_unregister();
-+	kmem_cache_destroy(rm_cache);
-+}
-+
-+/**
-+ * mesh_matches_local - check if the config of a mesh point matches ours
-+ *
-+ * @ie: information elements of a management frame from the mesh peer
-+ * @dev: local mesh interface
-+ *
-+ * This function checks if the mesh configuration of a mesh point matches the
-+ * local mesh configuration, i.e. if both nodes belong to the same mesh network.
-+ */
-+bool mesh_matches_local(struct ieee802_11_elems *ie, struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_if_sta *sta = &sdata->u.sta;
-+
-+	if (sta->mesh_id_len == ie->mesh_id_len &&
-+		memcmp(sta->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
-+		memcmp(sta->mesh_pp_id, ie->mesh_config + PP_OFFSET, 4) == 0 &&
-+		memcmp(sta->mesh_pm_id, ie->mesh_config + PM_OFFSET, 4) == 0 &&
-+		memcmp(sta->mesh_cc_id, ie->mesh_config + CC_OFFSET, 4) == 0)
-+	/*
-+	 * As support for each feature is added, check for matching
-+	 * - On mesh config capabilities
-+	 *   - Power Save Support En
-+	 *   - Sync support enabled
-+	 *   - Sync support active
-+	 *   - Sync support required from peer
-+	 *   - MDA enabled
-+	 * - Power management control on fc
-+	 */
-+		return true;
-+
-+	return false;
-+}
-+
-+/**
-+ * mesh_peer_accepts_plinks - check if an mp is willing to establish peer links
-+ *
-+ * @ie: information elements of a management frame from the mesh peer
-+ * @dev: local mesh interface
-+ */
-+bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie,
-+			      struct net_device *dev)
-+{
-+	return (*(ie->mesh_config + CAPAB_OFFSET) & ACCEPT_PLINKS) != 0;
-+}
-+
-+/**
-+ * mesh_accept_plinks_update: update accepting_plink in local mesh beacons
-+ *
-+ * @dev: mesh interface in which mesh beacons are going to be updated
-+ */
-+void mesh_accept_plinks_update(struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	bool free_plinks;
-+
-+	/* In case mesh_plink_free_count > 0 and mesh_plinktbl_capacity == 0,
-+	 * the mesh interface might be able to establish plinks with peers that
-+	 * are already on the table but are not on ESTAB state. However, in
-+	 * general the mesh interface is not accepting peer link requests from
-+	 * new peers, and that must be reflected in the beacon
-+	 */
-+	free_plinks = mesh_plink_availables(sdata);
-+
-+	if (free_plinks != sdata->u.sta.accepting_plinks)
-+		ieee80211_sta_timer((unsigned long) sdata);
-+}
-+
-+void mesh_ids_set_default(struct ieee80211_if_sta *sta)
-+{
-+	u8 def_id[4] = {0x00, 0x0F, 0xAC, 0xff};
-+
-+	memcpy(sta->mesh_pp_id, def_id, 4);
-+	memcpy(sta->mesh_pm_id, def_id, 4);
-+	memcpy(sta->mesh_cc_id, def_id, 4);
-+}
-+
-+int mesh_rmc_init(struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	int i;
-+
-+	sdata->u.sta.rmc = kmalloc(sizeof(struct mesh_rmc), GFP_KERNEL);
-+	if (!sdata->u.sta.rmc)
-+		return -ENOMEM;
-+	sdata->u.sta.rmc->idx_mask = RMC_BUCKETS - 1;
-+	for (i = 0; i < RMC_BUCKETS; i++)
-+		INIT_LIST_HEAD(&sdata->u.sta.rmc->bucket[i].list);
-+	return 0;
-+}
-+
-+void mesh_rmc_free(struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_rmc *rmc = sdata->u.sta.rmc;
-+	struct rmc_entry *p, *n;
-+	int i;
-+
-+	if (!sdata->u.sta.rmc)
-+		return;
-+
-+	for (i = 0; i < RMC_BUCKETS; i++)
-+		list_for_each_entry_safe(p, n, &rmc->bucket[i].list, list) {
-+			list_del(&p->list);
-+			kmem_cache_free(rm_cache, p);
-+		}
-+
-+	kfree(rmc);
-+	sdata->u.sta.rmc = NULL;
-+}
-+
-+/**
-+ * mesh_rmc_check - Check frame in recent multicast cache and add if absent.
-+ *
-+ * @sa:		source address
-+ * @mesh_hdr:	mesh_header
-+ *
-+ * Returns: 0 if the frame is not in the cache, nonzero otherwise.
-+ *
-+ * Checks using the source address and the mesh sequence number if we have
-+ * received this frame lately. If the frame is not in the cache, it is added to
-+ * it.
-+ */
-+int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
-+		   struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct mesh_rmc *rmc = sdata->u.sta.rmc;
-+	u32 seqnum = 0;
-+	int entries = 0;
-+	u8 idx;
-+	struct rmc_entry *p, *n;
-+
-+	/* Don't care about endianness since only match matters */
-+	memcpy(&seqnum, mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
-+	idx = mesh_hdr->seqnum[0] & rmc->idx_mask;
-+	list_for_each_entry_safe(p, n, &rmc->bucket[idx].list, list) {
-+		++entries;
-+		if (time_after(jiffies, p->exp_time) ||
-+				(entries == RMC_QUEUE_MAX_LEN)) {
-+			list_del(&p->list);
-+			kmem_cache_free(rm_cache, p);
-+			--entries;
-+		} else if ((seqnum == p->seqnum)
-+				&& (memcmp(sa, p->sa, ETH_ALEN) == 0))
-+			return -1;
-+	}
-+
-+	p = kmem_cache_alloc(rm_cache, GFP_ATOMIC);
-+	if (!p) {
-+		printk(KERN_DEBUG "o11s: could not allocate RMC entry\n");
-+		return 0;
-+	}
-+	p->seqnum = seqnum;
-+	p->exp_time = jiffies + RMC_TIMEOUT;
-+	memcpy(p->sa, sa, ETH_ALEN);
-+	list_add(&p->list, &rmc->bucket[idx].list);
-+	return 0;
-+}
-+
-+void mesh_mgmt_ies_add(struct sk_buff *skb, struct net_device *dev)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_supported_band *sband;
-+	u8 *pos;
-+	int len, i, rate;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	len = sband->n_bitrates;
-+	if (len > 8)
-+		len = 8;
-+	pos = skb_put(skb, len + 2);
-+	*pos++ = WLAN_EID_SUPP_RATES;
-+	*pos++ = len;
-+	for (i = 0; i < len; i++) {
-+		rate = sband->bitrates[i].bitrate;
-+		*pos++ = (u8) (rate / 5);
-+	}
-+
-+	if (sband->n_bitrates > len) {
-+		pos = skb_put(skb, sband->n_bitrates - len + 2);
-+		*pos++ = WLAN_EID_EXT_SUPP_RATES;
-+		*pos++ = sband->n_bitrates - len;
-+		for (i = len; i < sband->n_bitrates; i++) {
-+			rate = sband->bitrates[i].bitrate;
-+			*pos++ = (u8) (rate / 5);
-+		}
-+	}
-+
-+	pos = skb_put(skb, 2 + sdata->u.sta.mesh_id_len);
-+	*pos++ = WLAN_EID_MESH_ID;
-+	*pos++ = sdata->u.sta.mesh_id_len;
-+	if (sdata->u.sta.mesh_id_len)
-+		memcpy(pos, sdata->u.sta.mesh_id, sdata->u.sta.mesh_id_len);
-+
-+	pos = skb_put(skb, 21);
-+	*pos++ = WLAN_EID_MESH_CONFIG;
-+	*pos++ = MESH_CFG_LEN;
-+	/* Version */
-+	*pos++ = 1;
-+
-+	/* Active path selection protocol ID */
-+	memcpy(pos, sdata->u.sta.mesh_pp_id, 4);
-+	pos += 4;
-+
-+	/* Active path selection metric ID   */
-+	memcpy(pos, sdata->u.sta.mesh_pm_id, 4);
-+	pos += 4;
-+
-+	/* Congestion control mode identifier */
-+	memcpy(pos, sdata->u.sta.mesh_cc_id, 4);
-+	pos += 4;
-+
-+	/* Channel precedence:
-+	 * Not running simple channel unification protocol
-+	 */
-+	memset(pos, 0x00, 4);
-+	pos += 4;
-+
-+	/* Mesh capability */
-+	sdata->u.sta.accepting_plinks = mesh_plink_availables(sdata);
-+	*pos++ = sdata->u.sta.accepting_plinks ? ACCEPT_PLINKS : 0x00;
-+	*pos++ = 0x00;
-+
-+	return;
-+}
-+
-+u32 mesh_table_hash(u8 *addr, struct net_device *dev, struct mesh_table *tbl)
-+{
-+	/* Use last four bytes of hw addr and interface index as hash index */
-+	return jhash_2words(*(u32 *)(addr+2), dev->ifindex, tbl->hash_rnd)
-+		& tbl->hash_mask;
-+}
-+
-+u8 mesh_id_hash(u8 *mesh_id, int mesh_id_len)
-+{
-+	if (!mesh_id_len)
-+		return 1;
-+	else if (mesh_id_len == 1)
-+		return (u8) mesh_id[0];
-+	else
-+		return (u8) (mesh_id[0] + 2 * mesh_id[1]);
-+}
-+
-+struct mesh_table *mesh_table_alloc(int size_order)
-+{
-+	int i;
-+	struct mesh_table *newtbl;
-+
-+	newtbl = kmalloc(sizeof(struct mesh_table), GFP_KERNEL);
-+	if (!newtbl)
-+		return NULL;
-+
-+	newtbl->hash_buckets = kzalloc(sizeof(struct hlist_head) *
-+			(1 << size_order), GFP_KERNEL);
-+
-+	if (!newtbl->hash_buckets) {
-+		kfree(newtbl);
-+		return NULL;
-+	}
-+
-+	newtbl->hashwlock = kmalloc(sizeof(spinlock_t) *
-+			(1 << size_order), GFP_KERNEL);
-+	if (!newtbl->hashwlock) {
-+		kfree(newtbl->hash_buckets);
-+		kfree(newtbl);
-+		return NULL;
-+	}
-+
-+	newtbl->size_order = size_order;
-+	newtbl->hash_mask = (1 << size_order) - 1;
-+	atomic_set(&newtbl->entries,  0);
-+	get_random_bytes(&newtbl->hash_rnd,
-+			sizeof(newtbl->hash_rnd));
-+	for (i = 0; i <= newtbl->hash_mask; i++)
-+		spin_lock_init(&newtbl->hashwlock[i]);
-+
-+	return newtbl;
-+}
-+
-+void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
-+{
-+	struct hlist_head *mesh_hash;
-+	struct hlist_node *p, *q;
-+	int i;
-+
-+	mesh_hash = tbl->hash_buckets;
-+	for (i = 0; i <= tbl->hash_mask; i++) {
-+		spin_lock(&tbl->hashwlock[i]);
-+		hlist_for_each_safe(p, q, &mesh_hash[i]) {
-+			tbl->free_node(p, free_leafs);
-+			atomic_dec(&tbl->entries);
-+		}
-+		spin_unlock(&tbl->hashwlock[i]);
-+	}
-+	kfree(tbl->hash_buckets);
-+	kfree(tbl->hashwlock);
-+	kfree(tbl);
-+}
-+
-+static void ieee80211_mesh_path_timer(unsigned long data)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		(struct ieee80211_sub_if_data *) data;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+	struct ieee80211_local *local = wdev_priv(&sdata->wdev);
-+
-+	queue_work(local->hw.workqueue, &ifsta->work);
-+}
-+
-+struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
-+{
-+	struct mesh_table *newtbl;
-+	struct hlist_head *oldhash;
-+	struct hlist_node *p;
-+	int err = 0;
-+	int i;
-+
-+	if (atomic_read(&tbl->entries)
-+			< tbl->mean_chain_len * (tbl->hash_mask + 1)) {
-+		err = -EPERM;
-+		goto endgrow;
-+	}
-+
-+	newtbl = mesh_table_alloc(tbl->size_order + 1);
-+	if (!newtbl) {
-+		err = -ENOMEM;
-+		goto endgrow;
-+	}
-+
-+	newtbl->free_node = tbl->free_node;
-+	newtbl->mean_chain_len = tbl->mean_chain_len;
-+	newtbl->copy_node = tbl->copy_node;
-+	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
-+
-+	oldhash = tbl->hash_buckets;
-+	for (i = 0; i <= tbl->hash_mask; i++)
-+		hlist_for_each(p, &oldhash[i])
-+			tbl->copy_node(p, newtbl);
-+
-+endgrow:
-+	if (err)
-+		return NULL;
-+	else
-+		return newtbl;
-+}
-
--- 
-
+_________________________________________________________________
+Climb to the top of the charts!=A0Play the word scramble challenge with=
+ star power.
+http://club.live.com/star_shuffle.aspx?icid=3Dstarshuffle_wlmailtextlin=
+k_jan-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
