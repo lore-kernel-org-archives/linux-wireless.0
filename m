@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:49602 "EHLO c60.cesmail.net"
+Received: from mga03.intel.com ([143.182.124.21]:49993 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754663AbYBOHHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 02:07:39 -0500
-Message-ID: <20080215020738.7i4ba6miv4kk8cow@webmail.spamcop.net> (sfid-20080215_070741_927185_A3C3C135)
-Date: Fri, 15 Feb 2008 02:07:38 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Mark Wallis <mwallis@serialmonkey.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: Both rt2500usb and rt73 claim USB device 148f:2573
-References: <1203056096.30732.63.camel@dv>
-	<DF448D07-5C48-43C0-B6DD-12AF17BE0943@serialmonkey.com>
-In-Reply-To: <DF448D07-5C48-43C0-B6DD-12AF17BE0943@serialmonkey.com>
+	id S1755231AbYBNVe3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2008 16:34:29 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+	charset="us-ascii"
+Subject: RE: [Ipw2100-devel] [RFT] ipw2200: fix ucode assertion for RX queue overrun
+Date: Thu, 14 Feb 2008 13:28:50 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003ABC9AF@orsmsx416.amr.corp.intel.com> (sfid-20080214_213434_437095_57785E7F)
+In-Reply-To: <47B48DE2.7000303@ludd.ltu.se>
+References: <1202740070.2806.9.camel@localhost.localdomain><20080213235621.GA10003@Chamillionaire.breakpoint.cc> <47B48DE2.7000303@ludd.ltu.se>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Christian Fredriksson" <ille@ludd.ltu.se>,
+	"Sebastian Siewior" <ipw+2200@ml.breakpoint.cc>
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	<ipw2100-devel@lists.sourceforge.net>,
+	"Zhu, Yi" <yi.zhu@intel.com>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Mark Wallis <mwallis@serialmonkey.com>:
+On , Christian Fredriksson wrote:
 
-> Hi Pavel,
->
-> On 15/02/2008, at 5:14 PM, Pavel Roskin wrote:
->
->> My Level One WNC-0301USB v3 has USB ID 148f:2573, which is listed as
->> compatible both in rt2500usb.c and rt73usb.c.  It only works with rt73
->> but not with rt2500usb.
->>
->> Is this duplication intentional?
->
-> I'm afraid so. That particular manufacturer I believe changed the
-> chipset they were using without updating their USD device ID's. We have
-> seen this a few times now and the only solution we have been able to
-> provide is to give the users instructions for blacklisting the
-> incorrect driver.
->
-> I believe this has been discussed on this list previously.
+> assertion for RX queue overrun
+> 
+> Sebastian Siewior wrote:
+>> * Dan Williams | 2008-02-11 09:27:50 [-0500]:
+>> 
+>> 
+>>> Restock the RX queue when there are a lot of unused frames so that
+>>> the RX ring buffer doesn't overrun, causing a ucode assertion.
+>>> Backport of patch "iwlwifi: fix ucode assertion for RX queue
+>>> overrun". 
+>>> 
+>>> Signed-off-by: Dan Williams <dcbw@redhat.com>
+>>> 
+>> Tested-by: Sebastian Siewior <sebastian@breakpoint.cc>
+>> 
+>> 
+>>> Sebastian, can you test and ensure that this works for you? Also,
+>>> can 
+>>> 
+>> Yep, it does.
+>> 
+>> 
+>>> you do some throughput testing to ensure that this patch doesn't
+>>> cause a throughput regression?  Thanks!
+>>> 
+>> 00:49:41 (666.64 KB/s) - `/dev/null' saved [122563640/122563640]
+>> 
+>> this was a wget from the inet and it hits almost my cap. Currently I
+>> don't have another local machine where I can test a "local" transfer.
+>> 
+>> Is this okey for you?
+>> 
+>> Sebastian
+>> 
+>> 
+>> 
+> The patch seem stable. Throughput are ok.
+> 
+> sftp> get 1001_20071125080100.mpg
+> Fetching /myth/tv/1001_20071125080100.mpg to 1001_20071125080100.mpg
+> /myth/tv/1001_20071125080100.mpg              100% 1120MB   2.6MB/s
+> 07:16 sftp>
+> 
+> /Christian
 
-Thanks and sorry for the noise.
+Sounds great! 
 
--- 
-Regards,
-Pavel Roskin
+Dan, could you please submit a final version - I'll ack it.
+
+Thank you very much
+
+Reinette
