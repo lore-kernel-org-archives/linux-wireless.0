@@ -1,58 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:34204 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177AbYBJKhU (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:29322 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750729AbYBNGUL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 05:37:20 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so3443808fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 02:37:18 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
-Date: Sun, 10 Feb 2008 11:36:28 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de>
-In-Reply-To: <200802101131.13974.mb@bu3sch.de>
+	Thu, 14 Feb 2008 01:20:11 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+Date: Thu, 14 Feb 2008 15:19:38 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+References: <1202209693.4395.29.camel@johannes.berg> <200802121225.02045.bruno@thinktube.com> <1202809819.11481.87.camel@johannes.berg>
+In-Reply-To: <1202809819.11481.87.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802101136.28667.IvDoorn@gmail.com> (sfid-20080210_103724_751010_52766FAB)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200802141519.38971.bruno@thinktube.com> (sfid-20080214_062015_955042_E32B0596)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 February 2008, Michael Buesch wrote:
-> On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> > John, please send this patch to the 2.6.24/2.6.25 stable trees.
-> > It is already present in the wireless-2.6 tree queued for 2.6.26.
-> > 
-> >  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> > index cba7f57..c4a6ab4 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
-> >  	/* Hercules */
-> >  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	/* Melco */
-> > +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > -
-> >  	/* MSI */
-> >  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
-> 
-> I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
-> We always handled adding IDs as features.
+On Tuesday 12 February 2008 18:50:19 Johannes Berg wrote:
+> > thats a very good point! if everything was calibrated properly and =
+all
+> > delays taken into account *exactly* that would cause us to go thru =
+a
+> > merge all the time, on every received beacon. i think we have to ta=
+ke
+> > that into account, for different bitrates. what about something lik=
+e:
+> >
+> > timestamp >=3D ( mactime + (24 * 8 / beacon_phy_rate_in_mbps ))
+>
+> Looks reasonable, though I'm not entirely sure how we defined 'mactim=
+e'
+> and whether it is at the first data or the first phy symbol. I think
+> it's at the first data symbol which makes this correct.
 
-Ok, the user has to wait untill 2.6.26 then.
+hmm, it seems we don't have a strict definition of mactime... the kerne=
+ldoc of=20
+struct ieee80211_rx_status says:
+ * @mactime: MAC timestamp as defined by 802.11
 
-Ivo
+but as far as i understand 802.11, it only defines "timestamp" for beac=
+on and=20
+probe response frames, where it actually means the timestamp field of t=
+he=20
+frame.
+
+"Local Time" is defined as: "The value of the STA=E2=80=99s TSF timer a=
+t the start of=20
+reception of the first octet of the timestamp field of the received fra=
+me=20
+(probe response or beacon) from the found BSS." [802.11 p. 103]
+
+also in "Process Validate_MPDU: it says:
+"Save arrival time of first octet of {what may be a} timestamp field."
+[802.11 p 391 and 460]
+
+which could imply that this value is given as a rx timestamp (mactime).=
+ in=20
+that case we could directly compare timestamp and mactime.
+
+radiotap on the other hand defines it as the first bit of the data (MPD=
+U):
+ * IEEE80211_RADIOTAP_TSFT              u_int64_t       microseconds
+ *
+ *      Value in microseconds of the MAC's 64-bit 802.11 Time
+ *      Synchronization Function timer when the first bit of the
+ *      MPDU arrived at the MAC. For received frames, only.
+
+so i guess right now it depends on the hardware what we actually get as=
+=20
+mactime...
+
+i could not find any definition when the rx timestamp of atheros hardwa=
+re is=20
+taken.
+
+do we have that information for other hardware? is mactime
+ *) the TSF at the reception of the first phy symbol?
+ *) the TSF at the reception of the first data (MPDU) symbol
+ *) the TSF at the reception of the byte 24 (where the timestamp field =
+of
+    beacon and probe response frames is)?
+
+bruno
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
