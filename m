@@ -1,306 +1,408 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:22352 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754124AbYBVHV2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754381AbYBOMw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 02:21:28 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so204502rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:21:27 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Thu, 21 Feb 2008 20:27:13 -0800
-Subject: [PATCH 12/13 v2] o11s: mesh statistics and config through debugfs
-Message-ID: <47be77f6.1f588c0a.6f47.ffff85e8@mx.google.com> (sfid-20080222_072132_900217_0C4135F5)
+	Fri, 15 Feb 2008 07:52:58 -0500
+Subject: Re: [PATCH 2/3] mac80211: move function ieee80211_sta_join_ibss()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <20080215070140.32461.43925.stgit@one>
+References: <20080215070116.32461.80795.stgit@one>
+	 <20080215070140.32461.43925.stgit@one>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Xbn6Y7wWA+sTq2tt8yLg"
+Date: Fri, 15 Feb 2008 13:52:46 +0100
+Message-Id: <1203079966.8931.188.camel@johannes.berg> (sfid-20080215_125302_819558_7346678F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch contains the debugfs code for mesh statistics and configuration
-parameters. Please note that generic support for r/w debugfs attributes has been
-added.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/debugfs_netdev.c |  197 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 197 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 29f7b98..107b0fe 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -39,6 +39,29 @@ static ssize_t ieee80211_if_read(
- 	return ret;
- }
- 
-+#ifdef CONFIG_MAC80211_MESH
-+static ssize_t ieee80211_if_write(
-+	struct ieee80211_sub_if_data *sdata,
-+	char const __user *userbuf,
-+	size_t count, loff_t *ppos,
-+	int (*format)(struct ieee80211_sub_if_data *, char *))
-+{
-+	char buf[10];
-+	int buf_size;
-+
-+	memset(buf, 0x00, sizeof(buf));
-+	buf_size = min(count, (sizeof(buf)-1));
-+	read_lock(&dev_base_lock);
-+	if (copy_from_user(buf, userbuf, buf_size))
-+		goto endwrite;
-+	if (sdata->dev->reg_state == NETREG_REGISTERED)
-+		(*format)(sdata, buf);
-+endwrite:
-+	read_unlock(&dev_base_lock);
-+	return count;
-+}
-+#endif
-+
- #define IEEE80211_IF_FMT(name, field, format_string)			\
- static ssize_t ieee80211_if_fmt_##name(					\
- 	const struct ieee80211_sub_if_data *sdata, char *buf,		\
-@@ -46,6 +69,19 @@ static ssize_t ieee80211_if_fmt_##name(					\
- {									\
- 	return scnprintf(buf, buflen, format_string, sdata->field);	\
- }
-+#define IEEE80211_IF_WFMT(name, field, type)				\
-+static int ieee80211_if_wfmt_##name(					\
-+	struct ieee80211_sub_if_data *sdata, char *buf)			\
-+{									\
-+	unsigned long tmp;						\
-+	char *endp;							\
-+									\
-+	tmp = simple_strtoul(buf, &endp, 0);				\
-+	if ((endp == buf) || ((type)tmp != tmp))			\
-+		return -EINVAL;						\
-+	sdata->field = tmp;						\
-+	return 0;							\
-+}
- #define IEEE80211_IF_FMT_DEC(name, field)				\
- 		IEEE80211_IF_FMT(name, field, "%d\n")
- #define IEEE80211_IF_FMT_HEX(name, field)				\
-@@ -88,6 +124,34 @@ static const struct file_operations name##_ops = {			\
- 		IEEE80211_IF_FMT_##format(name, field)			\
- 		__IEEE80211_IF_FILE(name)
- 
-+#define __IEEE80211_IF_WFILE(name)					\
-+static ssize_t ieee80211_if_read_##name(struct file *file,		\
-+					char __user *userbuf,		\
-+					size_t count, loff_t *ppos)	\
-+{									\
-+	return ieee80211_if_read(file->private_data,			\
-+				 userbuf, count, ppos,			\
-+				 ieee80211_if_fmt_##name);		\
-+}									\
-+static ssize_t ieee80211_if_write_##name(struct file *file,		\
-+					const char __user *userbuf,	\
-+					size_t count, loff_t *ppos)	\
-+{									\
-+	return ieee80211_if_write(file->private_data,			\
-+				 userbuf, count, ppos,			\
-+				 ieee80211_if_wfmt_##name);		\
-+}									\
-+static const struct file_operations name##_ops = {			\
-+	.read = ieee80211_if_read_##name,				\
-+	.write = ieee80211_if_write_##name,				\
-+	.open = mac80211_open_file_generic,				\
-+}
-+
-+#define IEEE80211_IF_WFILE(name, field, format, type)			\
-+		IEEE80211_IF_FMT_##format(name, field)			\
-+		IEEE80211_IF_WFMT(name, field, type)			\
-+		__IEEE80211_IF_WFILE(name)
-+
- /* common attributes */
- IEEE80211_IF_FILE(channel_use, channel_use, DEC);
- IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
-@@ -106,6 +170,7 @@ IEEE80211_IF_FILE(assoc_tries, u.sta.assoc_tries, DEC);
- IEEE80211_IF_FILE(auth_algs, u.sta.auth_algs, HEX);
- IEEE80211_IF_FILE(auth_alg, u.sta.auth_alg, DEC);
- IEEE80211_IF_FILE(auth_transaction, u.sta.auth_transaction, DEC);
-+IEEE80211_IF_FILE(num_beacons_sta, u.sta.num_beacons, DEC);
- 
- static ssize_t ieee80211_if_fmt_flags(
- 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-@@ -139,6 +204,42 @@ __IEEE80211_IF_FILE(num_buffered_multicast);
- /* WDS attributes */
- IEEE80211_IF_FILE(peer, u.wds.remote_addr, MAC);
- 
-+#ifdef CONFIG_MAC80211_MESH
-+/* Mesh stats attributes */
-+IEEE80211_IF_FILE(fwded_frames, u.sta.mshstats.fwded_frames, DEC);
-+IEEE80211_IF_FILE(dropped_frames_ttl, u.sta.mshstats.dropped_frames_ttl, DEC);
-+IEEE80211_IF_FILE(dropped_frames_no_route,
-+		u.sta.mshstats.dropped_frames_no_route, DEC);
-+IEEE80211_IF_FILE(estab_plinks, u.sta.mshstats.estab_plinks, ATOMIC);
-+
-+/* Mesh parameters */
-+IEEE80211_IF_WFILE(dot11MeshMaxRetries,
-+		u.sta.mshcfg.dot11MeshMaxRetries, DEC, u8);
-+IEEE80211_IF_WFILE(dot11MeshRetryTimeout,
-+		u.sta.mshcfg.dot11MeshRetryTimeout, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshConfirmTimeout,
-+		u.sta.mshcfg.dot11MeshConfirmTimeout, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
-+		u.sta.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshTTL, u.sta.mshcfg.dot11MeshTTL, DEC, u8);
-+IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, bool);
-+IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
-+		u.sta.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
-+		u.sta.mshcfg.dot11MeshHWMPactivePathTimeout, DEC, u32);
-+IEEE80211_IF_WFILE(dot11MeshHWMPpreqMinInterval,
-+		u.sta.mshcfg.dot11MeshHWMPpreqMinInterval, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshHWMPnetDiameterTraversalTime,
-+		u.sta.mshcfg.dot11MeshHWMPnetDiameterTraversalTime, DEC, u16);
-+IEEE80211_IF_WFILE(dot11MeshHWMPmaxPREQretries,
-+		u.sta.mshcfg.dot11MeshHWMPmaxPREQretries, DEC, u8);
-+IEEE80211_IF_WFILE(path_refresh_time,
-+		u.sta.mshcfg.path_refresh_time, DEC, u32);
-+IEEE80211_IF_WFILE(min_discovery_timeout,
-+		u.sta.mshcfg.min_discovery_timeout, DEC, u16);
-+#endif
-+
-+
- #define DEBUGFS_ADD(name, type)\
- 	sdata->debugfs.type.name = debugfs_create_file(#name, 0444,\
- 		sdata->debugfsdir, sdata, &name##_ops);
-@@ -161,6 +262,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD(auth_alg, sta);
- 	DEBUGFS_ADD(auth_transaction, sta);
- 	DEBUGFS_ADD(flags, sta);
-+	DEBUGFS_ADD(num_beacons_sta, sta);
- }
- 
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
-@@ -192,12 +294,57 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
- {
- }
- 
-+#ifdef CONFIG_MAC80211_MESH
-+#define MESHSTATS_ADD(name)\
-+	sdata->mesh_stats.name = debugfs_create_file(#name, 0444,\
-+		sdata->mesh_stats_dir, sdata, &name##_ops);
-+
-+static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
-+{
-+	sdata->mesh_stats_dir = debugfs_create_dir("mesh_stats",
-+				sdata->debugfsdir);
-+	MESHSTATS_ADD(fwded_frames);
-+	MESHSTATS_ADD(dropped_frames_ttl);
-+	MESHSTATS_ADD(dropped_frames_no_route);
-+	MESHSTATS_ADD(estab_plinks);
-+}
-+
-+#define MESHPARAMS_ADD(name)\
-+	sdata->mesh_config.name = debugfs_create_file(#name, 0644,\
-+		sdata->mesh_config_dir, sdata, &name##_ops);
-+
-+static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
-+{
-+	sdata->mesh_config_dir = debugfs_create_dir("mesh_config",
-+				sdata->debugfsdir);
-+	MESHPARAMS_ADD(dot11MeshMaxRetries);
-+	MESHPARAMS_ADD(dot11MeshRetryTimeout);
-+	MESHPARAMS_ADD(dot11MeshConfirmTimeout);
-+	MESHPARAMS_ADD(dot11MeshHoldingTimeout);
-+	MESHPARAMS_ADD(dot11MeshTTL);
-+	MESHPARAMS_ADD(auto_open_plinks);
-+	MESHPARAMS_ADD(dot11MeshMaxPeerLinks);
-+	MESHPARAMS_ADD(dot11MeshHWMPactivePathTimeout);
-+	MESHPARAMS_ADD(dot11MeshHWMPpreqMinInterval);
-+	MESHPARAMS_ADD(dot11MeshHWMPnetDiameterTraversalTime);
-+	MESHPARAMS_ADD(dot11MeshHWMPmaxPREQretries);
-+	MESHPARAMS_ADD(path_refresh_time);
-+	MESHPARAMS_ADD(min_discovery_timeout);
-+}
-+#endif
-+
- static void add_files(struct ieee80211_sub_if_data *sdata)
- {
- 	if (!sdata->debugfsdir)
- 		return;
- 
- 	switch (sdata->vif.type) {
-+	case IEEE80211_IF_TYPE_MESH_POINT:
-+#ifdef CONFIG_MAC80211_MESH
-+		add_mesh_stats(sdata);
-+		add_mesh_config(sdata);
-+#endif
-+		/* fall through */
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
- 		add_sta_files(sdata);
-@@ -243,6 +390,7 @@ static void del_sta_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_DEL(auth_alg, sta);
- 	DEBUGFS_DEL(auth_transaction, sta);
- 	DEBUGFS_DEL(flags, sta);
-+	DEBUGFS_DEL(num_beacons_sta, sta);
- }
- 
- static void del_ap_files(struct ieee80211_sub_if_data *sdata)
-@@ -274,12 +422,61 @@ static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
- {
- }
- 
-+#ifdef CONFIG_MAC80211_MESH
-+#define MESHSTATS_DEL(name)			\
-+	do {						\
-+		debugfs_remove(sdata->mesh_stats.name);	\
-+		sdata->mesh_stats.name = NULL;		\
-+	} while (0)
-+
-+static void del_mesh_stats(struct ieee80211_sub_if_data *sdata)
-+{
-+	MESHSTATS_DEL(fwded_frames);
-+	MESHSTATS_DEL(dropped_frames_ttl);
-+	MESHSTATS_DEL(dropped_frames_no_route);
-+	MESHSTATS_DEL(estab_plinks);
-+	debugfs_remove(sdata->mesh_stats_dir);
-+	sdata->mesh_stats_dir = NULL;
-+}
-+
-+#define MESHPARAMS_DEL(name)			\
-+	do {						\
-+		debugfs_remove(sdata->mesh_config.name);	\
-+		sdata->mesh_config.name = NULL;		\
-+	} while (0)
-+
-+static void del_mesh_config(struct ieee80211_sub_if_data *sdata)
-+{
-+	MESHPARAMS_DEL(dot11MeshMaxRetries);
-+	MESHPARAMS_DEL(dot11MeshRetryTimeout);
-+	MESHPARAMS_DEL(dot11MeshConfirmTimeout);
-+	MESHPARAMS_DEL(dot11MeshHoldingTimeout);
-+	MESHPARAMS_DEL(dot11MeshTTL);
-+	MESHPARAMS_DEL(auto_open_plinks);
-+	MESHPARAMS_DEL(dot11MeshMaxPeerLinks);
-+	MESHPARAMS_DEL(dot11MeshHWMPactivePathTimeout);
-+	MESHPARAMS_DEL(dot11MeshHWMPpreqMinInterval);
-+	MESHPARAMS_DEL(dot11MeshHWMPnetDiameterTraversalTime);
-+	MESHPARAMS_DEL(dot11MeshHWMPmaxPREQretries);
-+	MESHPARAMS_DEL(path_refresh_time);
-+	MESHPARAMS_DEL(min_discovery_timeout);
-+	debugfs_remove(sdata->mesh_config_dir);
-+	sdata->mesh_config_dir = NULL;
-+}
-+#endif
-+
- static void del_files(struct ieee80211_sub_if_data *sdata, int type)
- {
- 	if (!sdata->debugfsdir)
- 		return;
- 
- 	switch (type) {
-+	case IEEE80211_IF_TYPE_MESH_POINT:
-+#ifdef CONFIG_MAC80211_MESH
-+		del_mesh_stats(sdata);
-+		del_mesh_config(sdata);
-+#endif
-+		/* fall through */
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
- 		del_sta_files(sdata);
--- 
-1.5.2.5
+--=-Xbn6Y7wWA+sTq2tt8yLg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+On Fri, 2008-02-15 at 16:01 +0900, Bruno Randolf wrote:
+> this moves ieee80211_sta_join_ibss() up for the next patch (ibss merge).
+
+Dunno if it needs sign-off, but
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>=20
+>  net/mac80211/ieee80211_sta.c |  317 +++++++++++++++++++++---------------=
+------
+>  1 files changed, 159 insertions(+), 158 deletions(-)
+>=20
+>=20
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> index 2c7b8be..72d7a86 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -2030,6 +2030,165 @@ void ieee80211_rx_bss_list_deinit(struct net_devi=
+ce *dev)
+>  }
+> =20
+>=20
+> +static int ieee80211_sta_join_ibss(struct net_device *dev,
+> +				   struct ieee80211_if_sta *ifsta,
+> +				   struct ieee80211_sta_bss *bss)
+> +{
+> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> +	int res, rates, i, j;
+> +	struct sk_buff *skb;
+> +	struct ieee80211_mgmt *mgmt;
+> +	struct ieee80211_tx_control control;
+> +	struct rate_selection ratesel;
+> +	u8 *pos;
+> +	struct ieee80211_sub_if_data *sdata;
+> +	struct ieee80211_supported_band *sband;
+> +
+> +	sband =3D local->hw.wiphy->bands[local->hw.conf.channel->band];
+> +
+> +	/* Remove possible STA entries from other IBSS networks. */
+> +	sta_info_flush(local, NULL);
+> +
+> +	if (local->ops->reset_tsf) {
+> +		/* Reset own TSF to allow time synchronization work. */
+> +		local->ops->reset_tsf(local_to_hw(local));
+> +	}
+> +	memcpy(ifsta->bssid, bss->bssid, ETH_ALEN);
+> +	res =3D ieee80211_if_config(dev);
+> +	if (res)
+> +		return res;
+> +
+> +	local->hw.conf.beacon_int =3D bss->beacon_int >=3D 10 ? bss->beacon_int=
+ : 10;
+> +
+> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+> +	sdata->drop_unencrypted =3D bss->capability &
+> +		WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+> +
+> +	res =3D ieee80211_set_freq(local, bss->freq);
+> +
+> +	if (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS) {
+> +		printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
+> +		       "%d MHz\n", dev->name, local->oper_channel->center_freq);
+> +		return -1;
+> +	}
+> +
+> +	/* Set beacon template */
+> +	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+> +	do {
+> +		if (!skb)
+> +			break;
+> +
+> +		skb_reserve(skb, local->hw.extra_tx_headroom);
+> +
+> +		mgmt =3D (struct ieee80211_mgmt *)
+> +			skb_put(skb, 24 + sizeof(mgmt->u.beacon));
+> +		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
+> +		mgmt->frame_control =3D IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+> +						   IEEE80211_STYPE_BEACON);
+> +		memset(mgmt->da, 0xff, ETH_ALEN);
+> +		memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
+> +		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+> +		mgmt->u.beacon.beacon_int =3D
+> +			cpu_to_le16(local->hw.conf.beacon_int);
+> +		mgmt->u.beacon.capab_info =3D cpu_to_le16(bss->capability);
+> +
+> +		pos =3D skb_put(skb, 2 + ifsta->ssid_len);
+> +		*pos++ =3D WLAN_EID_SSID;
+> +		*pos++ =3D ifsta->ssid_len;
+> +		memcpy(pos, ifsta->ssid, ifsta->ssid_len);
+> +
+> +		rates =3D bss->supp_rates_len;
+> +		if (rates > 8)
+> +			rates =3D 8;
+> +		pos =3D skb_put(skb, 2 + rates);
+> +		*pos++ =3D WLAN_EID_SUPP_RATES;
+> +		*pos++ =3D rates;
+> +		memcpy(pos, bss->supp_rates, rates);
+> +
+> +		if (bss->band =3D=3D IEEE80211_BAND_2GHZ) {
+> +			pos =3D skb_put(skb, 2 + 1);
+> +			*pos++ =3D WLAN_EID_DS_PARAMS;
+> +			*pos++ =3D 1;
+> +			*pos++ =3D ieee80211_frequency_to_channel(bss->freq);
+> +		}
+> +
+> +		pos =3D skb_put(skb, 2 + 2);
+> +		*pos++ =3D WLAN_EID_IBSS_PARAMS;
+> +		*pos++ =3D 2;
+> +		/* FIX: set ATIM window based on scan results */
+> +		*pos++ =3D 0;
+> +		*pos++ =3D 0;
+> +
+> +		if (bss->supp_rates_len > 8) {
+> +			rates =3D bss->supp_rates_len - 8;
+> +			pos =3D skb_put(skb, 2 + rates);
+> +			*pos++ =3D WLAN_EID_EXT_SUPP_RATES;
+> +			*pos++ =3D rates;
+> +			memcpy(pos, &bss->supp_rates[8], rates);
+> +		}
+> +
+> +		memset(&control, 0, sizeof(control));
+> +		rate_control_get_rate(dev, sband, skb, &ratesel);
+> +		if (!ratesel.rate) {
+> +			printk(KERN_DEBUG "%s: Failed to determine TX rate "
+> +			       "for IBSS beacon\n", dev->name);
+> +			break;
+> +		}
+> +		control.vif =3D &sdata->vif;
+> +		control.tx_rate =3D ratesel.rate;
+> +		if (sdata->bss_conf.use_short_preamble &&
+> +		    ratesel.rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+> +			control.flags |=3D IEEE80211_TXCTL_SHORT_PREAMBLE;
+> +		control.antenna_sel_tx =3D local->hw.conf.antenna_sel_tx;
+> +		control.flags |=3D IEEE80211_TXCTL_NO_ACK;
+> +		control.retry_limit =3D 1;
+> +
+> +		ifsta->probe_resp =3D skb_copy(skb, GFP_ATOMIC);
+> +		if (ifsta->probe_resp) {
+> +			mgmt =3D (struct ieee80211_mgmt *)
+> +				ifsta->probe_resp->data;
+> +			mgmt->frame_control =3D
+> +				IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+> +					     IEEE80211_STYPE_PROBE_RESP);
+> +		} else {
+> +			printk(KERN_DEBUG "%s: Could not allocate ProbeResp "
+> +			       "template for IBSS\n", dev->name);
+> +		}
+> +
+> +		if (local->ops->beacon_update &&
+> +		    local->ops->beacon_update(local_to_hw(local),
+> +					     skb, &control) =3D=3D 0) {
+> +			printk(KERN_DEBUG "%s: Configured IBSS beacon "
+> +			       "template\n", dev->name);
+> +			skb =3D NULL;
+> +		}
+> +
+> +		rates =3D 0;
+> +		sband =3D local->hw.wiphy->bands[local->hw.conf.channel->band];
+> +		for (i =3D 0; i < bss->supp_rates_len; i++) {
+> +			int bitrate =3D (bss->supp_rates[i] & 0x7f) * 5;
+> +			for (j =3D 0; j < sband->n_bitrates; j++)
+> +				if (sband->bitrates[j].bitrate =3D=3D bitrate)
+> +					rates |=3D BIT(j);
+> +		}
+> +		ifsta->supp_rates_bits[local->hw.conf.channel->band] =3D rates;
+> +	} while (0);
+> +
+> +	if (skb) {
+> +		printk(KERN_DEBUG "%s: Failed to configure IBSS beacon "
+> +		       "template\n", dev->name);
+> +		dev_kfree_skb(skb);
+> +	}
+> +
+> +	ifsta->state =3D IEEE80211_IBSS_JOINED;
+> +	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+> +
+> +	ieee80211_rx_bss_put(dev, bss);
+> +
+> +	return res;
+> +}
+> +
+> +
+>  static void ieee80211_rx_bss_info(struct net_device *dev,
+>  				  struct ieee80211_mgmt *mgmt,
+>  				  size_t len,
+> @@ -2896,164 +3055,6 @@ static int ieee80211_sta_config_auth(struct net_d=
+evice *dev,
+>  	return -1;
+>  }
+> =20
+> -static int ieee80211_sta_join_ibss(struct net_device *dev,
+> -				   struct ieee80211_if_sta *ifsta,
+> -				   struct ieee80211_sta_bss *bss)
+> -{
+> -	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> -	int res, rates, i, j;
+> -	struct sk_buff *skb;
+> -	struct ieee80211_mgmt *mgmt;
+> -	struct ieee80211_tx_control control;
+> -	struct rate_selection ratesel;
+> -	u8 *pos;
+> -	struct ieee80211_sub_if_data *sdata;
+> -	struct ieee80211_supported_band *sband;
+> -
+> -	sband =3D local->hw.wiphy->bands[local->hw.conf.channel->band];
+> -
+> -	/* Remove possible STA entries from other IBSS networks. */
+> -	sta_info_flush(local, NULL);
+> -
+> -	if (local->ops->reset_tsf) {
+> -		/* Reset own TSF to allow time synchronization work. */
+> -		local->ops->reset_tsf(local_to_hw(local));
+> -	}
+> -	memcpy(ifsta->bssid, bss->bssid, ETH_ALEN);
+> -	res =3D ieee80211_if_config(dev);
+> -	if (res)
+> -		return res;
+> -
+> -	local->hw.conf.beacon_int =3D bss->beacon_int >=3D 10 ? bss->beacon_int=
+ : 10;
+> -
+> -	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+> -	sdata->drop_unencrypted =3D bss->capability &
+> -		WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+> -
+> -	res =3D ieee80211_set_freq(local, bss->freq);
+> -
+> -	if (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS) {
+> -		printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
+> -		       "%d MHz\n", dev->name, local->oper_channel->center_freq);
+> -		return -1;
+> -	}
+> -
+> -	/* Set beacon template based on scan results */
+> -	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+> -	do {
+> -		if (!skb)
+> -			break;
+> -
+> -		skb_reserve(skb, local->hw.extra_tx_headroom);
+> -
+> -		mgmt =3D (struct ieee80211_mgmt *)
+> -			skb_put(skb, 24 + sizeof(mgmt->u.beacon));
+> -		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
+> -		mgmt->frame_control =3D IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+> -						   IEEE80211_STYPE_BEACON);
+> -		memset(mgmt->da, 0xff, ETH_ALEN);
+> -		memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
+> -		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+> -		mgmt->u.beacon.beacon_int =3D
+> -			cpu_to_le16(local->hw.conf.beacon_int);
+> -		mgmt->u.beacon.capab_info =3D cpu_to_le16(bss->capability);
+> -
+> -		pos =3D skb_put(skb, 2 + ifsta->ssid_len);
+> -		*pos++ =3D WLAN_EID_SSID;
+> -		*pos++ =3D ifsta->ssid_len;
+> -		memcpy(pos, ifsta->ssid, ifsta->ssid_len);
+> -
+> -		rates =3D bss->supp_rates_len;
+> -		if (rates > 8)
+> -			rates =3D 8;
+> -		pos =3D skb_put(skb, 2 + rates);
+> -		*pos++ =3D WLAN_EID_SUPP_RATES;
+> -		*pos++ =3D rates;
+> -		memcpy(pos, bss->supp_rates, rates);
+> -
+> -		if (bss->band =3D=3D IEEE80211_BAND_2GHZ) {
+> -			pos =3D skb_put(skb, 2 + 1);
+> -			*pos++ =3D WLAN_EID_DS_PARAMS;
+> -			*pos++ =3D 1;
+> -			*pos++ =3D ieee80211_frequency_to_channel(bss->freq);
+> -		}
+> -
+> -		pos =3D skb_put(skb, 2 + 2);
+> -		*pos++ =3D WLAN_EID_IBSS_PARAMS;
+> -		*pos++ =3D 2;
+> -		/* FIX: set ATIM window based on scan results */
+> -		*pos++ =3D 0;
+> -		*pos++ =3D 0;
+> -
+> -		if (bss->supp_rates_len > 8) {
+> -			rates =3D bss->supp_rates_len - 8;
+> -			pos =3D skb_put(skb, 2 + rates);
+> -			*pos++ =3D WLAN_EID_EXT_SUPP_RATES;
+> -			*pos++ =3D rates;
+> -			memcpy(pos, &bss->supp_rates[8], rates);
+> -		}
+> -
+> -		memset(&control, 0, sizeof(control));
+> -		rate_control_get_rate(dev, sband, skb, &ratesel);
+> -		if (!ratesel.rate) {
+> -			printk(KERN_DEBUG "%s: Failed to determine TX rate "
+> -			       "for IBSS beacon\n", dev->name);
+> -			break;
+> -		}
+> -		control.vif =3D &sdata->vif;
+> -		control.tx_rate =3D ratesel.rate;
+> -		if (sdata->bss_conf.use_short_preamble &&
+> -		    ratesel.rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+> -			control.flags |=3D IEEE80211_TXCTL_SHORT_PREAMBLE;
+> -		control.antenna_sel_tx =3D local->hw.conf.antenna_sel_tx;
+> -		control.flags |=3D IEEE80211_TXCTL_NO_ACK;
+> -		control.retry_limit =3D 1;
+> -
+> -		ifsta->probe_resp =3D skb_copy(skb, GFP_ATOMIC);
+> -		if (ifsta->probe_resp) {
+> -			mgmt =3D (struct ieee80211_mgmt *)
+> -				ifsta->probe_resp->data;
+> -			mgmt->frame_control =3D
+> -				IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+> -					     IEEE80211_STYPE_PROBE_RESP);
+> -		} else {
+> -			printk(KERN_DEBUG "%s: Could not allocate ProbeResp "
+> -			       "template for IBSS\n", dev->name);
+> -		}
+> -
+> -		if (local->ops->beacon_update &&
+> -		    local->ops->beacon_update(local_to_hw(local),
+> -					     skb, &control) =3D=3D 0) {
+> -			printk(KERN_DEBUG "%s: Configured IBSS beacon "
+> -			       "template based on scan results\n", dev->name);
+> -			skb =3D NULL;
+> -		}
+> -
+> -		rates =3D 0;
+> -		sband =3D local->hw.wiphy->bands[local->hw.conf.channel->band];
+> -		for (i =3D 0; i < bss->supp_rates_len; i++) {
+> -			int bitrate =3D (bss->supp_rates[i] & 0x7f) * 5;
+> -			for (j =3D 0; j < sband->n_bitrates; j++)
+> -				if (sband->bitrates[j].bitrate =3D=3D bitrate)
+> -					rates |=3D BIT(j);
+> -		}
+> -		ifsta->supp_rates_bits[local->hw.conf.channel->band] =3D rates;
+> -	} while (0);
+> -
+> -	if (skb) {
+> -		printk(KERN_DEBUG "%s: Failed to configure IBSS beacon "
+> -		       "template\n", dev->name);
+> -		dev_kfree_skb(skb);
+> -	}
+> -
+> -	ifsta->state =3D IEEE80211_IBSS_JOINED;
+> -	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+> -
+> -	ieee80211_rx_bss_put(dev, bss);
+> -
+> -	return res;
+> -}
+> -
+> =20
+>  static int ieee80211_sta_create_ibss(struct net_device *dev,
+>  				     struct ieee80211_if_sta *ifsta)
+>=20
+>=20
+
+--=-Xbn6Y7wWA+sTq2tt8yLg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7WLHaVg1VMiehFYAQJfnxAAkiT5ca/t71xrv32B+AveACEYjSPY5AuV
+mxITAnQrdW1HZA2/kjMgkjcO7FStnNF8ZIgsz7NB3j5heYgE3XY5v3ALD/TDfyR3
+N/D/GV0VF0NWb1Dn0bG7HsGoyPlXy0a0xae2x8gioJ1uwj6L6X65z2my6utPHgGc
+pa9zFmstJXNFqTFG1EFBnSXhJ1hSj0erCztRPPgwK9WrT0Ccc5GAN/Mj2dJ7LOpC
+6AP5z7QdvasYPs5Dpq+bf0Nhpwv/gswwmxnW265ZwCVgBBjuoLYDRzuUTqNEnCiq
+VJ5lWJbPDsFxYACraL2rBKv8QHW6q0EM1Rpzf4lV5GyJ2hvZbjU5mMHTcmO6CaZG
+gzncszWlgFjaSPo5IYj+bbPo+LOdlGSFo/pHEDlPGUkZWw/GDHTpOumtnXFTbRDC
+ckzgCFKQpg9Gz0NG4rTNqpmViASYLrDdG9baDn8iGp9Fm9I1uFZeH0DAoJHX5SQR
+Iq5wGhxZASlbDK9zNl7585Rxm6G+KTrnWPMWZHYhBmVvU+346qv1pncJHNl3KAbV
+TXtozAz4+V/5mOhpXVVlR5YnlueMWdMdc1lid21uHROWcH2/gjgIE3KBlX6mlqzI
+v3M8vh0asYwrLrMn2Ck++2Tp2064m4L5i9+tg7LLz8/FVS7JnJ7d9UQ+35y+6ZJE
+pnjLIctbhX4=
+=sJuO
+-----END PGP SIGNATURE-----
+
+--=-Xbn6Y7wWA+sTq2tt8yLg--
 
