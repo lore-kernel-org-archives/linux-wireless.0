@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s28.bay0.hotmail.com ([65.54.246.228]:47457 "EHLO
-	bay0-omc3-s28.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934402AbYBNBOw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 20:14:52 -0500
-Message-ID: <BAY101-W101597BA2B1DDD58D6F497C8250@phx.gbl> (sfid-20080214_011505_642266_367AAAD1)
-From: Adam Turk <bofh1234@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: kernel 2.6.25-rc1 and no /dev/rt73usb
-Date: Wed, 13 Feb 2008 20:14:50 -0500
-Content-Type: text/plain; charset=iso-8859-1
+Received: from an-out-0708.google.com ([209.85.132.249]:45295 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757697AbYBOWAh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 17:00:37 -0500
+Received: by an-out-0708.google.com with SMTP id d31so184421and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 14:00:34 -0800 (PST)
+Message-ID: <40f31dec0802151400r7423c8e9w2524cba76618e07e@mail.gmail.com> (sfid-20080215_220041_738070_01EC442A)
+Date: Sat, 16 Feb 2008 00:00:34 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/3] WDEV: ath5k, fix lock imbalance
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1203109133-32217-1-git-send-email-jirislaby@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1203109133-32217-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/2/15, Jiri Slaby <jirislaby@gmail.com>:
+> Omitted lock causes sparse warning
+>  drivers/net/wireless/ath5k/base.c:1682:1: warning: context imbalance in 'ath5k_tasklet_rx' - different lock contexts for basic block
+>
+>  Add the lock to the guilty fail path.
+>
+>  Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+>  Cc: Nick Kossifidis <mickflemm@gmail.com>
+>  Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+>  ---
+>   drivers/net/wireless/ath5k/base.c |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
+>
+>  diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+>  index ddc8714..49d38e8 100644
+>  --- a/drivers/net/wireless/ath5k/base.c
+>  +++ b/drivers/net/wireless/ath5k/base.c
+>  @@ -1715,6 +1715,7 @@ ath5k_tasklet_rx(unsigned long data)
+>                         break;
+>                 else if (unlikely(ret)) {
+>                         ATH5K_ERR(sc, "error in processing rx descriptor\n");
+>  +                       spin_unlock(&sc->rxbuflock);
+>                         return;
+>                 }
+>
+>
 
-Hello,
 
-I just compiled 2.6.25-rc1 so I could use my wireless card (ID 148f:257=
-3 Ralink Technology, Corp. RT2501USB Wireless Adapter).  With 2.6.25-rc=
-1 when I plug it in I don't get any error messages like I did with 2.6.=
-24.  When I plug it in I get the following in /var/log/messages:
-=46eb 13 19:06:31 (none) kernel: usb 1-1: new full speed USB device usi=
-ng ohci_hcd and address 3
-=46eb 13 19:06:31 (none) kernel: usb 1-1: configuration #1 chosen from =
-1 choice
-=46eb 13 19:06:31 (none) kernel: usb 1-1: New USB device found, idVendo=
-r=3D148f, idProduct=3D2573
-=46eb 13 19:06:31 (none) kernel: usb 1-1: New USB device strings: Mfr=3D=
-1, Product=3D2, SerialNumber=3D0
-=46eb 13 19:06:31 (none) kernel: usb 1-1: Product: 802.11 bg WLAN
-=46eb 13 19:06:31 (none) kernel: usb 1-1: Manufacturer: Ralink
-=46eb 13 19:06:31 (none) kernel: phy0 -> rt2x00_set_chip: Info - Chipse=
-t detected - rt: 1300, rf: 0002, rev: 0002573a.
-=46eb 13 19:06:31 (none) kernel: usbcore: registered new interface driv=
-er rt73usb
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-However no rt73usb device is created.  Why isn't this working? =20
 
-Thanks,
-
-_________________________________________________________________
-Climb to the top of the charts!=A0Play the word scramble challenge with=
- star power.
-http://club.live.com/star_shuffle.aspx?icid=3Dstarshuffle_wlmailtextlin=
-k_jan-
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
