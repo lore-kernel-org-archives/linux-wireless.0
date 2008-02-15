@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:22533 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754422AbYBMH0T (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42134
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756063AbYBOK6W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 02:26:19 -0500
-Received: by an-out-0708.google.com with SMTP id d31so1294657and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 23:26:18 -0800 (PST)
-Message-ID: <912ec82a0802122326v337c21f1tc7f6e165e294996a@mail.gmail.com> (sfid-20080213_072623_632485_213F2788)
-Date: Wed, 13 Feb 2008 09:26:18 +0200
-From: "Neshama Parhoti" <pneshama@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Simplest mac80211 driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 15 Feb 2008 05:58:22 -0500
+Date: Fri, 15 Feb 2008 02:58:55 -0800 (PST)
+Message-Id: <20080215.025855.202184003.davem@davemloft.net> (sfid-20080215_105824_964104_C341F074)
+To: bruno@thinktube.com
+Cc: netdev@vger.kernel.org, jgarzik@pobox.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] add macro for printing mac addresses
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080215104804.9870.15722.stgit@one>
+References: <20080215104804.9870.15722.stgit@one>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Bruno Randolf <bruno@thinktube.com>
+Date: Fri, 15 Feb 2008 19:48:05 +0900
 
-Can you guys please point me at the simplest mac80211-based driver
-that is in linus' tree ?
+> is there any chance to include a macro like this for printing mac addresses?
+> 
+> its advantage is that it can be used without the need to declare buffers for
+> print_mac(), for example:
+> 
+> printk("mac address: " MAC_FMT, MAC_ADDR(addr));
+> 
+> Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 
-I'm trying to understand how to work with mac80211, and the mainline drivers
-that use it are so complex..  I though that a simple driver can be a great
-tutorial/usage sample..
+We specifically removed this sort of thing, please don't
+add it back.
 
-Thank you all
-Neshama
+Thank you.
