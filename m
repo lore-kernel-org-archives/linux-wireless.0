@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:40802 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753404AbYBXEYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 23:24:41 -0500
-Date: Sun, 24 Feb 2008 06:24:25 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 5/8] ath5k: Remove RF5413 from rf gain optimization
-	functions
-Message-ID: <20080224042425.GD4426@makis.domain.invalid> (sfid-20080224_042444_030904_D9F403BF)
+Received: from mu-out-0910.google.com ([209.85.134.191]:64519 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241AbYBOUqP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 15:46:15 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so869253mue.5
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 12:46:13 -0800 (PST)
+To: Adam Turk <bofh1234@hotmail.com>
+Subject: Re: kernel 2.6.25-rc1 and no /dev/rt73usb
+Date: Fri, 15 Feb 2008 21:46:06 +0100
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	linux-wireless@vger.kernel.org
+References: <BAY101-W101FB386E1EF7402881964C8260@phx.gbl> <20080215050358.GA10363@gondor.apana.org.au> <BAY101-W21A064889BC2442893B63BC8260@phx.gbl>
+In-Reply-To: <BAY101-W21A064889BC2442893B63BC8260@phx.gbl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802152146.06364.IvDoorn@gmail.com> (sfid-20080215_204622_278449_0534C132)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 15 February 2008, Adam Turk wrote:
+> 
+> > You need to enable KMOD. Otherwise you must manually preload
+> > the relevant modules.
+> 
+> I thought that was what udev was for?  Anyway I recompiled with KMOD enabled and I have partial success.  I nolonger get any errors when I plug in my wireless card.  
+> dmesg says:
+> usbcore: registered new interface driver rt73usb
+> 
+> I do a ifconfig rt73usb up and I get a device not found.
+> I do a ifconfig -a and see the card is called wlan0 and wmaster0.
+> So there is a disparity having somewhere.  wlan0 or rt73usb?  Which is it?
 
- * Since RF2413 it seems that RF_BUFFER settings are different (notice 
-that the last part -"bank 7" or whatever- is smaller than in 5111/5112).
-So until we know what's going on we assume there is no gain optimization
-stuff in post-5112 chips.
+You are completely missing the point of the concept "modules",
+the module rt73usb is intended to support devices with the rt73 chipset.
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+The rt73usb driver registers the device and creates an network interface
+inside the kernel. This interface is visible to you as user. The name of this
+interface is wlan, depending on the number of wireless network cards in
+your system the interface number is attached to it so in your case wlan0.
 
----
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 75ded08..e69c60d 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1092,7 +1092,6 @@ static s32 ath5k_hw_rfregs_gain_adjust(struct ath5k_hw *ah)
- 		go = &rfgain_opt_5111;
- 		break;
- 	case AR5K_RF5112:
--	case AR5K_RF5413: /* ??? */
- 		go = &rfgain_opt_5112;
- 		break;
- 	default:
-@@ -1556,7 +1555,6 @@ int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
- 		ah->ah_gain.g_active = 1;
- 		break;
- 	case AR5K_RF5112:
--	case AR5K_RF5413: /* ??? */
- 		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
- 		ah->ah_gain.g_step =
- 		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
-
-
+Ivo
