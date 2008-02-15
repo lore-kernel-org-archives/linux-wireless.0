@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:49902 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbYBSJ1D (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:29316 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929AbYBOVYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2008 04:27:03 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so626863nfb.21
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2008 01:27:02 -0800 (PST)
-To: chris2553@googlemail.com
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Date: Tue, 19 Feb 2008 10:26:57 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802181911.32128.IvDoorn@gmail.com> <200802182251.35630.chris2553@googlemail.com>
-In-Reply-To: <200802182251.35630.chris2553@googlemail.com>
+	Fri, 15 Feb 2008 16:24:44 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so883042fkz.5
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 13:24:41 -0800 (PST)
+To: Adam Turk <bofh1234@hotmail.com>
+Subject: Re: kernel 2.6.25-rc1 and no /dev/rt73usb
+Date: Fri, 15 Feb 2008 22:24:33 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <BAY101-W101FB386E1EF7402881964C8260@phx.gbl> <200802152146.06364.IvDoorn@gmail.com> <BAY101-W378CC14C633084DBF091A6C8260@phx.gbl>
+In-Reply-To: <BAY101-W378CC14C633084DBF091A6C8260@phx.gbl>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200802191026.57640.IvDoorn@gmail.com> (sfid-20080219_092712_303886_4DD23E48)
+  charset="iso-8859-1"
+Message-Id: <200802152224.34055.IvDoorn@gmail.com> (sfid-20080215_212458_728689_BC6337A0)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> > I have a series of tests I would like to request from you,
-> > you mentioned you already enabled debugfs, and that is just what we need. ;)
-> > Please use attached script to create dumps of the hardware register contents.
-> > 
-> > There are specific moments that should be dumped:
-> > - kernel 2.6.24 (last known working version for you).
-> > - kernel 2.6.25-rc2 (after ifup, before TX dies)
-> > - kernel 2.6.25-rc2 (after ifup, after TX dies)
-> >  
+On Friday 15 February 2008, Adam Turk wrote:
 > 
-> These diagnostics are attached, with obvious filenames.
+> > You are completely missing the point of the concept "modules",
+> > the module rt73usb is intended to support devices with the rt73 chipset.
+> >
+> > The rt73usb driver registers the device and creates an network interface
+> > inside the kernel. This interface is visible to you as user. The name of this
+> > interface is wlan, depending on the number of wireless network cards in
+> > your system the interface number is attached to it so in your case wlan0.
+> 
+> Yep, I could be missing the concept of modules entirely.  
+> 
+> The driver I was using before had the interface name of rt73.  When I see 
+> usbcore: registered new interface driver rt73usb
 
-Thanks. I think I found something, please test below patch:
+Seriously, I wonder with what driver you managed to pull that off.
+As far as I know there is no rt73 driver that registers an interface called rt73.
+Neither the Ralink drivers, the rt73 legacy driver or the rt73usb driver ever
+did such a thing.
 
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 015738a..8df1991 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -249,10 +249,10 @@ static void rt2x00lib_evaluate_antenna(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->link.ant.flags &= ~ANTENNA_TX_DIVERSITY;
- 
- 	if (rt2x00dev->hw->conf.antenna_sel_rx == 0 &&
--	    rt2x00dev->default_ant.rx != ANTENNA_SW_DIVERSITY)
-+	    rt2x00dev->default_ant.rx == ANTENNA_SW_DIVERSITY)
- 		rt2x00dev->link.ant.flags |= ANTENNA_RX_DIVERSITY;
- 	if (rt2x00dev->hw->conf.antenna_sel_tx == 0 &&
--	    rt2x00dev->default_ant.tx != ANTENNA_SW_DIVERSITY)
-+	    rt2x00dev->default_ant.tx == ANTENNA_SW_DIVERSITY)
- 		rt2x00dev->link.ant.flags |= ANTENNA_TX_DIVERSITY;
- 
- 	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
+Granted the name did change. The Ralink driver and early legacy drivers
+did create the interface with the name "rausb", this is still not the same
+as "rt73".
 
+Additionally:
+> usbcore: registered new interface driver rt73usb
 
+Using a different rt73 driver would also produce this line (replacing rt73usb
+with rt73 or whatever the name of the driver was).
+But like I said earlier, I know of no rt73 driver that registered a network
+interface named rt73. It is either "wlan" or "rausb". Unless off course you
+edited the /etc/modprobe.conf file to load the driver with the rt73 interface name,
+but that can be considered "user configuration".
 
+Ivo
