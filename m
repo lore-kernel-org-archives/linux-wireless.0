@@ -1,71 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13530 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757882AbYBMQzt convert rfc822-to-8bit (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:54205 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754228AbYBOXYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 11:55:49 -0500
+	Fri, 15 Feb 2008 18:24:49 -0500
+Received: by py-out-1112.google.com with SMTP id u52so1063229pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 15:24:48 -0800 (PST)
+Message-ID: <43e72e890802151524q4690f589hcc29ea8645b1d843@mail.gmail.com> (sfid-20080215_232454_010104_4258C3B8)
+Date: Fri, 15 Feb 2008 18:24:47 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 2/3] WDEV, ath5k, don't return int from bool function
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	"Nick Kossifidis" <mickflemm@gmail.com>
+In-Reply-To: <47B61473.7060206@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] ipw2200: le*_add_cpu conversion
-Date: Wed, 13 Feb 2008 08:54:48 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003A7F5B9@orsmsx416.amr.corp.intel.com> (sfid-20080213_165556_417797_DB68E026)
-In-Reply-To: <1202857582-15450-8-git-send-email-marcin.slusarz@gmail.com>
-References: <1202857582-15450-1-git-send-email-marcin.slusarz@gmail.com> <1202857582-15450-8-git-send-email-marcin.slusarz@gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: <marcin.slusarz@gmail.com>, "LKML" <linux-kernel@vger.kernel.org>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+References: <1203109133-32217-1-git-send-email-jirislaby@gmail.com>
+	 <1203109133-32217-2-git-send-email-jirislaby@gmail.com>
+	 <43e72e890802151408g35fa2e49r5eb8557e4a5bbce4@mail.gmail.com>
+	 <47B61473.7060206@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, February 12, 2008 3:06 PM,
-linux-wireless-owner@vger.kernel.org  wrote:
+On Fri, Feb 15, 2008 at 5:38 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>
+> You mean to consider 0 as supported, -ENODEV/-EOPNOTSUPP as
+>  unsupported and the rest as error?
+>
 
-> From: Marcin Slusarz <marcin.slusarz@gmail.com>
-> 
-> replace all:
-> little_endian_variable =
-> cpu_to_leX(leX_to_cpu(little_endian_variable) +
-> 					expression_in_cpu_byteorder);
-> with:
-> 	leX_add_cpu(&little_endian_variable,
-> expression_in_cpu_byteorder);
-> generated with semantic patch
-> 
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> ---
-> drivers/net/wireless/ipw2200.c |    4 +---
-> 1 files changed, 1 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ipw2200.c
-> b/drivers/net/wireless/ipw2200.c
-> index 3e6ad7b..5d9854e 100644
-> --- a/drivers/net/wireless/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2200.c
-> @@ -10326,9 +10326,7 @@ static int ipw_tx_skb(struct ipw_priv
-> *priv, struct ieee80211_txb *txb,
-> 					 remaining_bytes,
-> 					 PCI_DMA_TODEVICE));
-> 
-> -			tfd->u.data.num_chunks =
-> -
-> cpu_to_le32(le32_to_cpu(tfd->u.data.num_chunks) +
-> -					1);
-> +			le32_add_cpu(&tfd->u.data.num_chunks, 1);
-> 		}
-> 	}
-> 
-> --
-> 1.5.3.7
+Yeap, what do you think?
 
-Thanks!
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Reinette
-
+  Luis
