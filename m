@@ -1,50 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:38937 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbYBSVDL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2008 16:03:11 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so742897nfb.21
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2008 13:03:07 -0800 (PST)
-To: chris2553@googlemail.com
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Date: Tue, 19 Feb 2008 22:03:03 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802192046.14184.IvDoorn@gmail.com> <200802192044.52327.chris2553@googlemail.com>
-In-Reply-To: <200802192044.52327.chris2553@googlemail.com>
+Received: from mx1.riseup.net ([204.13.164.18]:54876 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761386AbYBOT4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 14:56:47 -0500
+Date: Fri, 15 Feb 2008 20:56:59 +0100
+From: matthias@kaehlcke.net
+To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [patch 2/3] Convert stats_sem in a mutex
+Message-ID: <20080215195659.GC22741@traven> (sfid-20080215_195653_392104_E159816A)
+References: <20080215195329.912560854@kaehlcke.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200802192203.03741.IvDoorn@gmail.com> (sfid-20080219_210316_638863_9CA127C1)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The semaphore stats_sem is used as mutex, convert it to the mutex API
 
-> > > I've tried the patch but, unfortunately, my wireless LAN still dies after a few pings.
-> > 
-> > Could you use below patch instead, and make a new dump of the register?
-> > I'm still convinced the breakage occurs in the antenna diversity (or rather, I believe
-> > it attempts a software diversity for your card while in fact it shouldn't).
-> > 
-> 
-> Sorry, I've applied that patch and the LAN still dies after a few pings. BTW,
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
-> this and the earlier patch both apply without error, but give warnings of 70
-> line offsets. Were you expecting them to apply completely cleanly? I'm just
-> wondering if there might be some code that you are expecting to be running (or
-> not running) that is (or is not) present in the driver at 2.6.25-rc2.
+Index: linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:43:05.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:44:03.000000000 +0100
+@@ -165,7 +165,7 @@
+ 	struct obj_bss bss, *bss2;
+ 	union oid_res_t r;
+ 
+-	down(&priv->stats_sem);
++	mutex_lock(&priv->stats_lock);
+ 
+ /* Noise floor.
+  * I'm not sure if the unit is dBm.
+@@ -207,7 +207,7 @@
+ 	mgt_get_request(priv, DOT11_OID_MPDUTXFAILED, 0, NULL, &r);
+ 	priv->local_iwstatistics.discard.retries = r.u;
+ 
+-	up(&priv->stats_sem);
++	mutex_unlock(&priv->stats_lock);
+ 
+ 	return;
+ }
+@@ -218,12 +218,12 @@
+ 	islpci_private *priv = netdev_priv(ndev);
+ 
+ 	/* If the stats are being updated return old data */
+-	if (down_trylock(&priv->stats_sem) == 0) {
++	if (mutex_trylock(&priv->stats_lock) == 0) {
+ 		memcpy(&priv->iwstatistics, &priv->local_iwstatistics,
+ 		       sizeof (struct iw_statistics));
+ 		/* They won't be marked updated for the next time */
+ 		priv->local_iwstatistics.qual.updated = 0;
+-		up(&priv->stats_sem);
++		mutex_unlock(&priv->stats_lock);
+ 	} else
+ 		priv->iwstatistics.qual.updated = 0;
+ 
+Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.c	2008-02-15 20:42:15.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.c	2008-02-15 20:44:03.000000000 +0100
+@@ -864,7 +864,7 @@
+ 	mutex_init(&priv->mgmt_lock);
+ 	priv->mgmt_received = NULL;
+ 	init_waitqueue_head(&priv->mgmt_wqueue);
+-	sema_init(&priv->stats_sem, 1);
++	mutex_init(&priv->stats_lock);
+ 	spin_lock_init(&priv->slock);
+ 
+ 	/* init state machine with off#1 state */
+Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:49.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:44:03.000000000 +0100
+@@ -88,7 +88,7 @@
+ 
+ 	/* Take care of the wireless stats */
+ 	struct work_struct stats_work;
+-	struct semaphore stats_sem;
++	struct mutex stats_lock;
+ 	/* remember when we last updated the stats */
+ 	unsigned long stats_timestamp;
+ 	/* The first is accessed under semaphore locking.
 
-Well to be honest I based the patch on rt2x00.git and not 2.6.25-rc2.
-I know the patch would apply safely because the function that were changed
-in that patch haven't changed between them. But some other functions were
-moved. So that offset is correct. ;)
+-- 
+Matthias Kaehlcke
+Linux System Developer
+Barcelona
 
-> The register dumps before and after are attached.
-
-Thanks. I hope to have a new patch ready soon.
-
-Ivo
-
+              We build too many walls and not enough bridges
+                             (Isaac Newton)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
