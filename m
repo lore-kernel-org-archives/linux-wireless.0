@@ -1,122 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37068 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbYBJPtw (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:37493 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751312AbYBOV3V convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 10:49:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH 06/12] Add support for monitor mode
-Date: Sun, 10 Feb 2008 16:49:28 +0100
-Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
-References: <20080210145733.17592.61729.stgit@tikku> <20080210150034.17592.71617.stgit@tikku>
-In-Reply-To: <20080210150034.17592.71617.stgit@tikku>
+	Fri, 15 Feb 2008 16:29:21 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802101649.28711.mb@bu3sch.de> (sfid-20080210_154958_641429_AF450611)
+	charset="us-ascii"
+Subject: RE: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Fri, 15 Feb 2008 13:21:36 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003ABD359@orsmsx416.amr.corp.intel.com> (sfid-20080215_212929_871896_20F6FCB3)
+In-Reply-To: <47B60044.9000801@scherping.de>
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com> <200802150229.09602.patrick@lunatiki.de> <D936D925018D154694D8A362EEB0892003ABCF72@orsmsx416.amr.corp.intel.com> <47B60044.9000801@scherping.de>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Richard Scherping" <richard@scherping.de>
+Cc: "Patrick Grimm" <patrick@lunatiki.de>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 February 2008 16:00:34 Kalle Valo wrote:
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
-> ---
+On Friday, February 15, 2008 1:13 PM, Richard Scherping  wrote:
+
+> Chatre, Reinette schrieb:
+>>>> One more question ... did ad-hoc work for you before this patch?
+>>> No. In my tests only ipw3945 works in Ad-Hoc mode.
+>> 
+>> ok - that explains things. The patch assumes that ad-hoc mode is
+>> working, which is unfortunately not the case. We have to fix this.
+>> 
+>> Reinette
 > 
->  drivers/net/wireless/at76_usb.c |   28 ++++++++++++++++++++++++++--
->  drivers/net/wireless/at76_usb.h |    2 ++
->  2 files changed, 28 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-> index 6e8a001..0d26086 100644
-> --- a/drivers/net/wireless/at76_usb.c
-> +++ b/drivers/net/wireless/at76_usb.c
-> @@ -19,7 +19,6 @@
->   * Some iw_handler code was taken from airo.c, (C) 1999 Benjamin Reed
->   *
->   * TODO for the mac80211 port:
-> - * o monitor mode
->   * o adhoc support
->   * o hardware wep encryption
->   * o RTS/CTS support
-> @@ -5296,6 +5295,8 @@ static int at76_mac80211_start(struct ieee80211_hw *hw)
->  
->  	at76_startup_device(priv);
->  
-> +	at76_start_monitor(priv);
-> +
->  error:
->  	mutex_unlock(&priv->mtx);
->  
-> @@ -5487,6 +5488,8 @@ static int at76_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
->  
->  	if (is_valid_ether_addr(priv->bssid))
->  		at76_join(priv);
-> +	else
-> +		at76_start_monitor(priv);
->  
->  	mutex_unlock(&priv->mtx);
->  
-> @@ -5519,16 +5522,37 @@ static int at76_config_interface(struct ieee80211_hw *hw,
->  	return 0;
->  }
->  
-> +/* must be atomic */
->  static void at76_configure_filter(struct ieee80211_hw *hw,
->  				  unsigned int changed_flags,
->  				  unsigned int *total_flags, int mc_count,
->  				  struct dev_addr_list *mc_list)
->  {
-> +	struct at76_mac80211_priv *m_priv = hw->priv;
-> +	struct at76_priv *priv = m_priv->at76_priv;
-> +	int flags;
-> +
->  	at76_dbg(DBG_MAC80211, "%s(): changed_flags=0x%08x "
->  		 "total_flags=0x%08x mc_count=%d",
->  		 __func__, changed_flags, *total_flags, mc_count);
->  
-> -	*total_flags = 0;
-> +	flags = changed_flags & AT76_SUPPORTED_FILTERS;
-> +	*total_flags = AT76_SUPPORTED_FILTERS;
+> As I said, I have tested with iwl4965 only. Seems as if there
+> are more problems with ad-hoc and iwl3945.
 
-&= is needed instead of =
+I understand. Thanks for your testing. There indeed appears to be more
+problems with ad-hoc and iwl3945, but they are unrelated to the patch
+that you tested.
 
-> +
-> +	/* FIXME: access to priv->promisc should be protected with
-> +	 * priv->mtx, but it's impossible because this function needs to be
-> +	 * atomic */
-> +
-> +	if (flags && !priv->promisc) {
-> +		/* mac80211 wants us to enable promiscuous mode */
-> +		priv->promisc = 1;
-> +	} else if (!flags && priv->promisc) {
-> +		/* we need to disable promiscuous mode */
-> +		priv->promisc = 0;
-> +	} else
-> +		return;
-> +
-> +	queue_work(hw->workqueue, &priv->work_set_promisc);
->  }
->  
->  static const struct ieee80211_ops at76_ops = {
-> diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
-> index 555a948..baa85a5 100644
-> --- a/drivers/net/wireless/at76_usb.h
-> +++ b/drivers/net/wireless/at76_usb.h
-> @@ -577,6 +577,8 @@ struct at76_rx_radiotap {
->  	s8 rt_noise;
->  };
->  
-> +#define AT76_SUPPORTED_FILTERS FIF_PROMISC_IN_BSS
+> Did ad-hoc work in the "old" iwl3945 (before the API change
+> with old version 1.1.17, compared to new version 1.2.23/26)?
 
-See my recent patch to zd1211rw:
-[PATCH] zd1211rw: Fix beacon filter flags thinko
-I think this thinko also applies here.
+This needs to be checked. We do have some bug reports about ad-hoc mode
+in iwl3945 (see http://www.bughost.org/bugzilla/show_bug.cgi?id=1472).
+In this case it was specific to ad-hoc mode in b mode. We will look more
+into ad-hoc mode with iwl3945.
 
-A driver does not support a flag, if it can _not_ _provide_
-a specific frame. (so in case it always filters it)
-Not the other way around. So if it always
-provides a specific type of frames, it _does_ support the filter flag.
-
--- 
-Greetings Michael.
+Reinette
