@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756646AbYBTS21 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:7423 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbYBOWID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:28:27 -0500
-Subject: Re: sending ARP triggers BUG
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
-References: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R76oEgpaGIUZGQ9+jLUc"
-Date: Wed, 20 Feb 2008 01:56:08 +0100
-Message-Id: <1203468968.10983.13.camel@johannes.berg> (sfid-20080220_182849_400764_D720615C)
-Mime-Version: 1.0
+	Fri, 15 Feb 2008 17:08:03 -0500
+Received: by py-out-1112.google.com with SMTP id u52so1040892pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 14:08:01 -0800 (PST)
+Message-ID: <43e72e890802151408g35fa2e49r5eb8557e4a5bbce4@mail.gmail.com> (sfid-20080215_220808_247717_03837F94)
+Date: Fri, 15 Feb 2008 17:08:00 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 2/3] WDEV, ath5k, don't return int from bool function
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	"Nick Kossifidis" <mickflemm@gmail.com>
+In-Reply-To: <1203109133-32217-2-git-send-email-jirislaby@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1203109133-32217-1-git-send-email-jirislaby@gmail.com>
+	 <1203109133-32217-2-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 15, 2008 at 3:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
 
---=-R76oEgpaGIUZGQ9+jLUc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>  -static bool
+>  +static int
+>   ath5k_hw_setup_xr_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
+>         unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2, u_int tx_tries2,
+>         unsigned int tx_rate3, u_int tx_tries3)
+>  @@ -3773,10 +3773,10 @@ ath5k_hw_setup_xr_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
+>
+>   #undef _XTX_TRIES
+>
+>  -               return true;
+>  +               return 1;
+>         }
+>
+>  -       return false;
+>  +       return 0;
+>   }
 
+Shouldn't we then treat 0 as OK?
 
-> I recently started seeing the BUG below. ieee80211_subif_start_xmit
-> calls pskb_expand_head, but this function BUGs because the skb is
-> shared. So far I have only seen this with arp messages ... I don't know
-> the significance of this fact.
-
-Interestingly, I'm starting to see skb problems as well, in AP mode only
-however, namely I get lots of
-
-[ 4340.665679] SKB BUG: Invalid truesize (240) len=3D73, sizeof(sk_buff)=3D=
-176
-
-Anybody have an idea how to debug that? It looks like 'len' is one too
-large, but I've also seen messages where it was two too large or one to
-small.
-
-johannes
-
---=-R76oEgpaGIUZGQ9+jLUc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7t6p6Vg1VMiehFYAQJLWA/+IlgY/eXFhlhQL3LV1HAF3+4+JG93NwaD
-mjdSkm4BHOtIQU4uUbRlY9mkFw5FW1JilWPRc2MX/VKBaYV6+xKPxSZzKXuTAQL+
-0Us0PiCmzhWvlO5MIiCztqLtbXqPmFs3XiONVpCRWBr7NAK/oDp8JJEhRTofYPIi
-LLhT4rmqfLYEBnv3f7RYRzT8HeAmJNnXHcsDF6gtUYc+77HxqZXKbzIA7L0oR8pQ
-eAftLmpf62y3rbi4ayo1qjNzWPqZnzZv0dgjWKOvQFG/v328Benel916/rEi9+cS
-62n3l2uVsOZKiEROl9C0oFShxuwNj7Kr3dcV+Rz1UO9KAnml9sGaTJHeQWjk1ewW
-fwte7UYESVbcDhTsuDhXfnVz5LOPs+AZYxZLdhvuns4FmBHSkQV3xPVShZdXuwDD
-PZj9M2XM1cvV0/EqMnh1VjAszhm30jVwKoUfXwiAtwvDxvIL5SI+zG1jCY8Ng4lh
-bq7W6nWQ53zgIYkBD2KO9sa3f8+Hlee7Jcg9lgCHlhFJZoh63p2G8nmEH/EdteQ6
-7fFo62uQsAOAWzxHvgQOi/RY4ISfiqSPNsCLJfLQumVh/CvaINi8wTDHlcphtC31
-0BCXYDUkQGPfr4LDRqXZyLUPsT4npQdoMfdBrhmm07S3N1GOxo8lsY9lXEuCN9NM
-d54P6b0kBtM=
-=AqdJ
------END PGP SIGNATURE-----
-
---=-R76oEgpaGIUZGQ9+jLUc--
-
+  Luis
