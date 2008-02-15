@@ -1,84 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30026 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757936AbYBMQve convert rfc822-to-8bit (ORCPT
+Received: from tranquility.mcc.ac.uk ([130.88.200.145]:62831 "EHLO
+	tranquility.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbYBOUMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 11:51:34 -0500
+	Fri, 15 Feb 2008 15:12:02 -0500
+Message-ID: <47B5EDE5.50208@gentoo.org> (sfid-20080215_201208_639111_1A4551EC)
+Date: Fri, 15 Feb 2008 19:54:13 +0000
+From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] iwl3945 rfkill regression
-Date: Wed, 13 Feb 2008 08:48:54 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com> (sfid-20080213_165140_061588_6F69394D)
-In-Reply-To: <47B29F63.6050605@gmail.com>
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com> <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com> <47B29F63.6050605@gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "drago01" <drago01@gmail.com>, "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
+To: cs010101@gmail.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: how do I fix for 802.11a in zd1211rw? and please recommand products
+ for 802.11a
+References: <002001c86ffa$6921f780$020aa8c0@39fb6b6b6f434b3>
+In-Reply-To: <002001c86ffa$6921f780$020aa8c0@39fb6b6b6f434b3>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, February 12, 2008 11:42 PM, drago01  wrote:
+Hi,
 
-> Tomas Winkler wrote:
->> On Jan 26, 2008 9:00 PM, drago01 <drago01@gmail.com> wrote:
->> 
->>> On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
->>> 
->>>> On Jan 22, 2008 9:21 PM, Winkler, Tomas
-> <tomas.winkler@intel.com> wrote:
->>>> 
->>>>> 
->>>>>> -----Original Message-----
->>>>>> From: drago01 [mailto:drago01@gmail.com]
->>>>>> Sent: Tuesday, January 22, 2008 10:12 PM
->>>>>> To: Winkler, Tomas
->>>>>> 
->>>>>> Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
->>>>>> Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
->>>>>> 
->>>>>> On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
->>>>>> 
->>>>> wrote:
->>>>> 
->>>>>>> I believe it's delaying uCode load to mac_start - still need to
->>>>>>> be polished. 
->>>>>>> 
->>>>>> ok, thx for the quick reply.
->>>>>> If you have any potential fixes I would be happy to test them ;)
->>>>>> 
->>>>> Can you get me the sequence it is happening? RF kill switch is off
->>>>> before you power up the laptop or after, during association or in
->>>>> unassociated state..etc Thanks
->>>>> 
->>>> I boot with rf kill off = device on
->>>> acciotate using NM
->>>> kill the card by pressing the rfkill (ie. setting it to on)
->>>> card is dead (like described in my first mail), until I relaod the
->>>> module the rfkill switch  does not have any effect at this time.
->>>> 
->>>> 
->>> OK, I investigated a bit and it seems to be the "disable interrupt
->>> when device goes down" is the problem.
->>> In my case NetworkManager detected the rfkill and brought the device
->>> down, which caused the interrupt to be disabled. Now after pressing
->>> the rfkill again nothing happend. But if I bring the device back up
->>> the interrupt is enabled again and rfkill and the card is back to
->>> live. So in short disabling the interrupt in mac_stop breaks the hw
->>> rfkill while the interface is down. 
->>> 
->>> 
->> 
->> Thanks for investigating this, still didn't have to time to dig into
->> it. 
->> 
->> 
-> ping?
+=B1=E8=BF=B5=C8=AF wrote:
+> last time, I tested 3com pci card (atheros) and now testing zd1211b.
+> the general product name is AG-760A.(usb dongle)
+> (only for using 802.11a ad-hoc)
+>=20
+> I took a look at the source : zd_mac.c , zd_usb.c, etc...
+> In these files, I could see the "/* FIXME for 802.11a*/ comment block=
+=2E so,
+> I changed 2GHZ to 5GHZ and 24GHZ to 52GHZ etc..(also with productid)
 
-We are working on this.
+It's not quite as easy as that. In order to support 802.11a you need to=
+=20
+add the AL7230B RF programming code from the vendor driver, with=20
+mac80211 semantics added. That's not a simple task either, but if you=20
+want to give it a go, you can download the vendor driver from=20
+http://zd1211.wiki.sourceforge.net/VendorDriver
 
-Reinette
+You also need a AL7230B-based ZD1211B device, which I'm assuming you=20
+have. Other RFs don't do 802.11a
+
+Daniel
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
