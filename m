@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.wanadoo.co.uk ([193.252.22.157]:49110 "EHLO
-	smtp2.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806AbYBTVU0 (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:9771 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764525AbYBOWl0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 16:20:26 -0500
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200802202150.20303.IvDoorn@gmail.com>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <1203523555.693.2.camel@localhost.localdomain>
-	 <1203539235.3189.4.camel@boulder.homenet>
-	 <200802202150.20303.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 21:16:35 +0000
-Message-Id: <1203542195.3240.1.camel@boulder.homenet> (sfid-20080220_212030_371339_3DB7B02C)
-Mime-Version: 1.0
+	Fri, 15 Feb 2008 17:41:26 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: ipw3945: not only it periodically dies, it also BUG()s
+Date: Fri, 15 Feb 2008 14:41:08 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003ABD431@orsmsx416.amr.corp.intel.com> (sfid-20080215_224141_601661_33109F9A)
+In-Reply-To: <20080206210026.GA32641@elf.ucw.cz>
+References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com> <20080206210026.GA32641@elf.ucw.cz>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Pavel Machek" <pavel@ucw.cz>
+Cc: <ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
+	"kernel list" <linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-02-20 at 21:50 +0100, Ivo van Doorn wrote:
-[snip]
-> On Wednesday 20 February 2008, Chris Vine wrote:
-> > I did that yesterday and it just reported a kernel panic on the terminal
-> > with the message:
-> > 
-> >   Kernel panic - not syncing: Aiee, killing interrupt handler!
+On Wednesday, February 06, 2008 1:00 PM, Pavel Machek  wrote:
+
+> Hmmm... bugzilla says:
 > 
-> I have an idea, could you try below patch?
-> Note that while applying it will mention something about a line offset, but that can be ignored.
+>    * Exact steps to reproduce
+>    * Reproducability of bug (e.g. intermittent or 100% reproducable)
+>    * Did this problem not exist in previous version of the driver?
+>    * kernel version
+>    * AP brand/model
+>    * dmesg output at debug level 0x43fff
+>      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 		it would be nice to specify how to do this. It is
+> insmod parameter, right?
 > 
-> This could perhaps also fix the TX/RX issue mentioned earlier in the thread, but I am not
-> quite sure about that.
+>    * Type of security (if any) you are using (e.g. WEP64,
+> WEP128, WPA, WPA2, 802.1x, etc)
+>    * Version of firmware
+>    * Version of the ieee80211 module
+>    * Proximity to the AP
+> 
+>    * Before reporting any firmware errors, please be sure to read Ben
+> Cahill's mailing list post on how to most effectively report such
+>    bugs.
+>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> unfortunately the link here does not work. 
 
-The patch applied OK (with some offsets as you say) but it doesn't help.
-The kernel panic still occurs when association is attempted.
+The instructions on how to report a bug have been updated to address the
+above issues. Thank you very much for helping us to make it better.
 
-Chris
-
-
+Reinette
