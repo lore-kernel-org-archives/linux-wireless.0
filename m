@@ -1,110 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:40284 "EHLO venema.h4ckr.net"
+Received: from mx1.riseup.net ([204.13.164.18]:54858 "EHLO mx1.riseup.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753963AbYBXEb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 23:31:59 -0500
-Date: Sun, 24 Feb 2008 06:31:41 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 7/8] ath5k: Minor code review to match regdumps
-Message-ID: <20080224043141.GF4426@makis.domain.invalid> (sfid-20080224_043202_711635_CEF862CF)
+	id S1754523AbYBOT4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 14:56:37 -0500
+Date: Fri, 15 Feb 2008 20:56:48 +0100
+From: matthias@kaehlcke.net
+To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [patch 1/3] Convert acl->sem in a mutex
+Message-ID: <20080215195648.GB22741@traven> (sfid-20080215_195652_782095_848F4130)
+References: <20080215195329.912560854@kaehlcke.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The semaphore acl->sem is used as mutex, convert it to the mutex API
 
- * Make some changes to follow register dumps.
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-
----
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index cd640ed..adcce6f 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -727,15 +727,23 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		/*
- 		 * Write some more initial register settings
- 		 */
--		if (ah->ah_version > AR5K_AR5211){ /* found on 5213+ */
-+		if (ah->ah_version == AR5K_AR5212){
- 			ath5k_hw_reg_write(ah, 0x0002a002, AR5K_PHY(11));
+Index: linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:42:17.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:43:05.000000000 +0100
+@@ -1780,7 +1780,7 @@
+ void
+ prism54_acl_init(struct islpci_acl *acl)
+ {
+-	sema_init(&acl->sem, 1);
++	mutex_init(&acl->lock);
+ 	INIT_LIST_HEAD(&acl->mac_list);
+ 	acl->size = 0;
+ 	acl->policy = MAC_POLICY_OPEN;
+@@ -1792,10 +1792,10 @@
+ 	struct list_head *ptr, *next;
+ 	struct mac_entry *entry;
  
- 			if (channel->hw_value == CHANNEL_G)
--				ath5k_hw_reg_write(ah, 0x00f80d80, AR5K_PHY(83)); /* 0x00fc0ec0 */
-+				if (ah->ah_mac_srev < AR5K_SREV_VER_AR2413) {
-+					ath5k_hw_reg_write(ah, 0x00f80d80, AR5K_PHY(83));
-+				} else if (ah->ah_mac_srev < AR5K_SREV_VER_AR2424) {	 
-+					ath5k_hw_reg_write(ah, 0x00380140, AR5K_PHY(83));
-+				} else if (ah->ah_mac_srev < AR5K_SREV_VER_AR2425) {
-+					ath5k_hw_reg_write(ah, 0x00fc0ec0, AR5K_PHY(83));
-+				} else {
-+					/* 2425 */
-+					ath5k_hw_reg_write(ah, 0x00fc0fc0, AR5K_PHY(83));
-+				}
- 			else
- 				ath5k_hw_reg_write(ah, 0x00000000, AR5K_PHY(83));
+-	down(&acl->sem);
++	mutex_lock(&acl->lock);
  
--			ath5k_hw_reg_write(ah, 0x000001b5, 0xa228); /* 0x000009b5 */
- 			ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
- 			ath5k_hw_reg_write(ah, 0x0000000f, 0x8060);
- 			ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
-@@ -1019,6 +1027,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 	/*
- 	 * Set the 32MHz reference clock on 5212 phy clock sleep register
-+	 *
-+	 * TODO: Find out how to switch to external 32Khz clock to save power
- 	 */
- 	if (ah->ah_version == AR5K_AR5212) {
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCR_32MHZ, AR5K_PHY_SCR);
-@@ -1029,6 +1039,14 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
+ 	if (acl->size == 0) {
+-		up(&acl->sem);
++		mutex_unlock(&acl->lock);
+ 		return;
  	}
  
-+	if (ah->ah_version == AR5K_AR5212) {
-+		ath5k_hw_reg_write(ah, 0x000100aa, 0x8118);
-+		ath5k_hw_reg_write(ah, 0x00003210, 0x811c);
-+		ath5k_hw_reg_write(ah, 0x00000052, 0x8108);
-+		if (ah->ah_mac_srev >= AR5K_SREV_VER_AR2413)
-+			ath5k_hw_reg_write(ah, 0x00000004, 0x8120);
-+	}
-+
- 	/*
- 	 * Disable beacons and reset the register
- 	 */
-@@ -2273,8 +2291,8 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah, const u8 *bssid, u16 assoc_id)
- 	 * Set simple BSSID mask on 5212
- 	 */
- 	if (ah->ah_version == AR5K_AR5212) {
--		ath5k_hw_reg_write(ah, 0xfffffff, AR5K_BSS_IDM0);
--		ath5k_hw_reg_write(ah, 0xfffffff, AR5K_BSS_IDM1);
-+		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_BSS_IDM0);
-+		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_BSS_IDM1);
+@@ -1806,7 +1806,7 @@
+ 		kfree(entry);
+ 	}
+ 	acl->size = 0;
+-	up(&acl->sem);
++	mutex_unlock(&acl->lock);
+ }
+ 
+ void
+@@ -1833,13 +1833,13 @@
+ 
+ 	memcpy(entry->addr, addr->sa_data, ETH_ALEN);
+ 
+-	if (down_interruptible(&acl->sem)) {
++	if (mutex_lock_interruptible(&acl->lock)) {
+ 		kfree(entry);
+ 		return -ERESTARTSYS;
+ 	}
+ 	list_add_tail(&entry->_list, &acl->mac_list);
+ 	acl->size++;
+-	up(&acl->sem);
++	mutex_unlock(&acl->lock);
+ 
+ 	return 0;
+ }
+@@ -1856,18 +1856,18 @@
+ 	if (addr->sa_family != ARPHRD_ETHER)
+ 		return -EOPNOTSUPP;
+ 
+-	if (down_interruptible(&acl->sem))
++	if (mutex_lock_interruptible(&acl->lock))
+ 		return -ERESTARTSYS;
+ 	list_for_each_entry(entry, &acl->mac_list, _list) {
+ 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
+ 			list_del(&entry->_list);
+ 			acl->size--;
+ 			kfree(entry);
+-			up(&acl->sem);
++			mutex_unlock(&acl->lock);
+ 			return 0;
+ 		}
+ 	}
+-	up(&acl->sem);
++	mutex_unlock(&acl->lock);
+ 	return -EINVAL;
+ }
+ 
+@@ -1882,7 +1882,7 @@
+ 
+ 	dwrq->length = 0;
+ 
+-	if (down_interruptible(&acl->sem))
++	if (mutex_lock_interruptible(&acl->lock))
+ 		return -ERESTARTSYS;
+ 
+ 	list_for_each_entry(entry, &acl->mac_list, _list) {
+@@ -1891,7 +1891,7 @@
+ 		dwrq->length++;
+ 		dst++;
+ 	}
+-	up(&acl->sem);
++	mutex_unlock(&acl->lock);
+ 	return 0;
+ }
+ 
+@@ -1955,11 +1955,11 @@
+ 	struct mac_entry *entry;
+ 	int res = 0;
+ 
+-	if (down_interruptible(&acl->sem))
++	if (mutex_lock_interruptible(&acl->lock))
+ 		return -ERESTARTSYS;
+ 
+ 	if (acl->policy == MAC_POLICY_OPEN) {
+-		up(&acl->sem);
++		mutex_unlock(&acl->lock);
+ 		return 1;
  	}
  
- 	/*
-@@ -2419,6 +2437,8 @@ void ath5k_hw_start_rx_pcu(struct ath5k_hw *ah)
- {
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_DISABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
-+
-+	/* TODO: ANI Support */
- }
+@@ -1970,7 +1970,7 @@
+ 		}
+ 	}
+ 	res = (acl->policy == MAC_POLICY_ACCEPT) ? !res : res;
+-	up(&acl->sem);
++	mutex_unlock(&acl->lock);
  
- /*
-@@ -2428,6 +2448,8 @@ void ath5k_hw_stop_pcu_recv(struct ath5k_hw *ah)
- {
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_ENABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
-+
-+	/* TODO: ANI Support */
+ 	return res;
  }
+Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:27.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:49.000000000 +0100
+@@ -55,7 +55,7 @@
+    enum { MAC_POLICY_OPEN=0, MAC_POLICY_ACCEPT=1, MAC_POLICY_REJECT=2 } policy;
+    struct list_head mac_list;  /* a list of mac_entry */
+    int size;   /* size of queue */
+-   struct semaphore sem;   /* accessed in ioctls and trap_work */
++   struct mutex lock;   /* accessed in ioctls and trap_work */
+ };
  
- /*
+ struct islpci_membuf {
 
+-- 
+Matthias Kaehlcke
+Linux System Developer
+Barcelona
 
+              We build too many walls and not enough bridges
+                             (Isaac Newton)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
