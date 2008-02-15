@@ -1,101 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38708 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933543AbYBGUxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 15:53:02 -0500
-Date: Thu, 7 Feb 2008 12:47:59 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 34/45] b43legacy: fix PIO crash
-Message-ID: <20080207204759.GI16389@suse.de> (sfid-20080207_205337_007051_1A0AFA28)
-References: <20080207204118.202098927@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207204549.GA16389@suse.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33332 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109AbYBOMwM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 07:52:12 -0500
+Subject: Re: DS params only in 2GHz band?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bruno randolf <bruno@thinktube.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200802151916.07629.bruno@thinktube.com>
+References: <200802151916.07629.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QQhfIe8w55dkAuke1KBz"
+Date: Fri, 15 Feb 2008 13:51:34 +0100
+Message-Id: <1203079894.8931.184.camel@johannes.berg> (sfid-20080215_125218_469359_170FBE8B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.24-stable review patch.  If anyone has any objections, please let us know.
 
-------------------
-From: Stefano Brivio <stefano.brivio@polimi.it>
+--=-QQhfIe8w55dkAuke1KBz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-patch 0cd67d48b519c3d8d89d238fab1cf68a5289638a in mainline.
 
-Fix the crash reported below, which seems to happen on bcm4306 rev. 2 devices
-only while using PIO:
+> > +               if (bss->band =3D=3D IEEE80211_BAND_2GHZ) {
+> > +                       pos =3D skb_put(skb, 2 + 1);
+> > +                       *pos++ =3D WLAN_EID_DS_PARAMS;
+> > +                       *pos++ =3D 1;
+> > +                       *pos++ =3D ieee80211_frequency_to_channel(bss->=
+freq);
+> > +               }
+> >
+> >                 pos =3D skb_put(skb, 2 + 2);
+> >                 *pos++ =3D WLAN_EID_IBSS_PARAMS;
+>=20
+> what's the reason you changed the beacons to include DS params only in th=
+e=20
+> 2GHz band?
 
-Oops: 0000 [#1] PREEMPT
-Modules linked in: b43(F) rfkill(F) led_class(F) input_polldev(F) arc4 b43legacy mac80211 cfg80211 i915 drm snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device ohci1394 ieee1394 ssb pcmcia snd_intel8x0m ehci_hcd uhci_hcd evdev
+IEEE 802.11 7.3.2.4:
 
-Pid: 0, comm: swapper Tainted: GF	(2.6.24st3 #2)
-EIP: 0060:[<f90f667b>] EFLAGS: 00010002 CPU: 0
-EIP is at b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy]
-EAX: 0000049b EBX: f11f8044 ECX: 00000001 EDX: 00000000
-ESI: f1ff8000 EDI: 00000000 EBP: f11f8040 ESP: c04f4ef4
- DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-Process swapper (pid: 0, ti=c04f4000 task=c0488300 task.ti=c04b8000)
-Stack: f90f2788 c05009f0 c0500900 000010f7 f1053823 c04f4f24 dfb8e800 00000003
-       f1368000 00000007 00000296 f90f1975 00001000 010c0800 01000000 00000007
-       f90f6391 f11f8000 00000082 c04f4f4a 00000000 00004fd0 10f70000 8c061000
-Call Trace:
- [<f90f2788>] b43legacy_debugfs_log_txstat+0x48/0xb0 [b43legacy]
- [<f90f1975>] b43legacy_handle_hwtxstatus+0x75/0x80 [b43legacy]
- [<f90f6391>] b43legacy_pio_rx+0x201/0x280 [b43legacy]
- [<f90e4fa3>] b43legacy_interrupt_tasklet+0x2e3/0x870 [b43legacy]
- [<c0123567>] tasklet_action+0x27/0x60
- [<c01237b4>] __do_softirq+0x54/0xb0
- [<c010686b>] do_softirq+0x7b/0xe0
- [<c01457c0>] handle_level_irq+0x0/0x110
- [<c01457c0>] handle_level_irq+0x0/0x110
- [<c0123758>] irq_exit+0x38/0x40
- [<c0106953>] do_IRQ+0x83/0xd0
- [<c011812f>] __update_rq_clock+0x4f/0x180
- [<c0104b4f>] common_interrupt+0x23/0x28
- [<c011007b>] wakeup_code+0x7b/0xde
- [<c02b1039>] acpi_processor_idle+0x24a/0x3c9
- [<c01025c7>] cpu_idle+0x47/0x80
- [<c04b9ad5>] start_kernel+0x205/0x290
- [<c04b9360>] unknown_bootoption+0x0/0x1f0
- =======================
-Code: 0f 00 00 81 fb ff 00 00 00 0f 87 36 01 00 00 8d 04 db 85 ff 8d 6c c6 40 8d 5d 04 0f 85 ef 00 00 00 fe 4e 0e 0f b7 46 0c 8b 53 04 <8b> 4a 50 29 c8 83 e8 52 66 89 46 0c 8b 54 24 14 80 7a 0b 00 74
-EIP: [<f90f667b>] b43legacy_pio_handle_txstatus+0xbb/0x210 [b43legacy] SS:ESP 0068:c04f4ef4
-Kernel panic - not syncing: Fatal exception in interrupt
+The DS Parameter Set element contains information to allow channel
+number identification for STAs using a DSSS PHY.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+johannes
 
----
- drivers/net/wireless/b43legacy/pio.c |    3 +++
- 1 file changed, 3 insertions(+)
+--=-QQhfIe8w55dkAuke1KBz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
---- a/drivers/net/wireless/b43legacy/pio.c
-+++ b/drivers/net/wireless/b43legacy/pio.c
-@@ -486,6 +486,9 @@ void b43legacy_pio_handle_txstatus(struc
- 	queue = parse_cookie(dev, status->cookie, &packet);
- 	B43legacy_WARN_ON(!queue);
- 
-+	if (!packet->skb)
-+		return;
-+
- 	queue->tx_devq_packets--;
- 	queue->tx_devq_used -= (packet->skb->len +
- 				sizeof(struct b43legacy_txhdr_fw3));
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
+iQIVAwUAR7WK1aVg1VMiehFYAQI52g/8CZx8F1WLogBRmMqA0BSSw1BDNbX14yqA
+Lwi9taHl7IXdnj9LJaUkDo5p1PWjP+X3dE8JFsto/UDd2lp29cfh2U4ssSCI3rIf
+yBPSTyk/Tk+ZxUZQUIRhamXIX+AZI0AahE+HgSCBz6QW6seBFeZzM5EpBxV+0Mp7
+ia0gLDLL9Zceore7/wPvVjgMiWXkGwij3n7XGGNOySNz4B+EkTSlsSWvxUp+tyA7
+FSA5wqoCWDbu7Iww45iJ6Xha69PlmmC8dIBlYBh9m/GbQVD/rWoLLouoZDEEvMGk
+OmqsLjB/XrIonVPk2GBXcSvlrW/GOJiuxz6XVrvrWWY8uSev+RM9rj7GLHEWmLiu
+xAHCHaBdidom8bZ6UUqM1szg2yxtJDZr7NyREz1t+ZLX1kDCiGTtH9EGAN0piyA/
+zUTM5h05JMTLms5++ggjA08rFkL8xE9WL9n+sgAc5Gnrn/mTEoZEQ1rDU51Xe2l6
+64+4JYB39u/w0rdef5Q0GK+hgiEtGBGdzWMZWlNQattvz2VkOUkleZF1iVoZQNDp
+T1VR5Ty9wl0v4mpeeWEEsBdVCNI0n1WSSzgbI30EWFDk+sVvymGs3VP71z1TT+dT
+JcBANaSaeIAzvYyDPxemT+uPCa13i1kYa4s9nvtfsbxycr1lbMQvYJxjp8bh/m5U
+aa1FkqZwHcs=
+=FndD
+-----END PGP SIGNATURE-----
+
+--=-QQhfIe8w55dkAuke1KBz--
+
