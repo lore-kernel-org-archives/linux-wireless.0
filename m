@@ -1,44 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:17468 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757AbYBXXs1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 18:48:27 -0500
-Received: by an-out-0708.google.com with SMTP id d31so315654and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2008 15:48:27 -0800 (PST)
-Message-ID: <40f31dec0802241548g6ffb13f3x122046a184eeeac9@mail.gmail.com> (sfid-20080224_234833_873277_DD4BA82C)
-Date: Mon, 25 Feb 2008 01:48:26 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-In-Reply-To: <20080224175933.GA4360@hash.localnet>
+Received: from mx1.riseup.net ([204.13.164.18]:54900 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761604AbYBOT46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 14:56:58 -0500
+Date: Fri, 15 Feb 2008 20:57:07 +0100
+From: matthias@kaehlcke.net
+To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	Matthias Kaehlcke <matthias@kaehlcke.net>
+Subject: [patch 3/3] Convert wpa_sem in a mutex
+Message-ID: <20080215195707.GD22741@traven> (sfid-20080215_195714_442132_7409C5A8)
+References: <20080215195329.912560854@kaehlcke.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080224042851.GE4426@makis.domain.invalid>
-	 <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com>
-	 <20080224175933.GA4360@hash.localnet>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/24, Bob Copeland <me@bobcopeland.com>:
->  Then it works at least as well as I had it working (still with
->  random calibration failures, but I am again sending this mail using the
->  driver).
+The semaphore wpa_sem is used as mutex, convert it to the mutex API
 
-Some thoughts...
+Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
 
-It seems we are doing calibration wrong, i'll check out the other
-chips as well to come up with something, until then can you check out
-how does your card perform on b rates (eg. 11Mbits). Do an iperf test
-and see what you get eg. for 5.5M and 11M, we might force b-only mode
-for these cards until we fix these issues (this would probably also
-make rate control work).
-
+Index: linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:44:03.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:44:11.000000000 +0100
+@@ -2114,7 +2114,7 @@
+ 	if (wpa_ie_len > MAX_WPA_IE_LEN)
+ 		wpa_ie_len = MAX_WPA_IE_LEN;
+ 
+-	down(&priv->wpa_sem);
++	mutex_lock(&priv->wpa_lock);
+ 
+ 	/* try to use existing entry */
+ 	list_for_each(ptr, &priv->bss_wpa_list) {
+@@ -2165,7 +2165,7 @@
+ 		kfree(bss);
+ 	}
+ 
+-	up(&priv->wpa_sem);
++	mutex_unlock(&priv->wpa_lock);
+ }
+ 
+ static size_t
+@@ -2175,7 +2175,7 @@
+ 	struct islpci_bss_wpa_ie *bss = NULL;
+ 	size_t len = 0;
+ 
+-	down(&priv->wpa_sem);
++	mutex_lock(&priv->wpa_lock);
+ 
+ 	list_for_each(ptr, &priv->bss_wpa_list) {
+ 		bss = list_entry(ptr, struct islpci_bss_wpa_ie, list);
+@@ -2187,7 +2187,7 @@
+ 		len = bss->wpa_ie_len;
+ 		memcpy(wpa_ie, bss->wpa_ie, len);
+ 	}
+-	up(&priv->wpa_sem);
++	mutex_unlock(&priv->wpa_lock);
+ 
+ 	return len;
+ }
+@@ -2196,7 +2196,7 @@
+ prism54_wpa_bss_ie_init(islpci_private *priv)
+ {
+ 	INIT_LIST_HEAD(&priv->bss_wpa_list);
+-	sema_init(&priv->wpa_sem, 1);
++	mutex_init(&priv->wpa_lock);
+ }
+ 
+ void
+Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:44:03.000000000 +0100
++++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:44:11.000000000 +0100
+@@ -178,7 +178,7 @@
+ 	int wpa; /* WPA mode enabled */
+ 	struct list_head bss_wpa_list;
+ 	int num_bss_wpa;
+-	struct semaphore wpa_sem;
++	struct mutex wpa_lock;
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	size_t wpa_ie_len;
+ 
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Matthias Kaehlcke
+Linux System Developer
+Barcelona
+
+              We build too many walls and not enough bridges
+                             (Isaac Newton)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
