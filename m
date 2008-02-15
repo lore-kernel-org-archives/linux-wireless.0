@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:32160 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757435AbYBYWYI (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:58374 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757728AbYBOQmc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:24:08 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so929403nfb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:24:06 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 1/6] rt2x00: Check for 5GHz band in link tuner
-Date: Mon, 25 Feb 2008 23:20:33 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802252320.11809.IvDoorn@gmail.com>
-In-Reply-To: <200802252320.11809.IvDoorn@gmail.com>
+	Fri, 15 Feb 2008 11:42:32 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802252320.33976.IvDoorn@gmail.com> (sfid-20080225_222412_412133_E328C125)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	charset="us-ascii"
+Subject: RE: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Fri, 15 Feb 2008 08:39:56 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003ABCF72@orsmsx416.amr.corp.intel.com> (sfid-20080215_164312_321913_233FFED4)
+In-Reply-To: <200802150229.09602.patrick@lunatiki.de>
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com> <200802150229.09602.patrick@lunatiki.de>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Patrick Grimm" <patrick@lunatiki.de>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a typo in the link tuner where accidently the
-2GHz band was checked instead of the 5GHz band.
-This forced the link tuner to work in an invalid
-range for the currently active band.
+On Thursday, February 14, 2008 5:29 PM, Patrick Grimm  wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>>> Could you please print out the values of fc, priv->iw_mode,
+>>> iwl3945_is_associated(priv) and priv->assoc_id just before that
+>>> error message is printed?
+> 
+> Yes
+> iwl3945: I iwl3945_tx_skb fc: 8<3>
+> iwl3945: I iwl3945_tx_skb mode: 2<3>
+> iwl3945: I iwl3945_tx_skb assoc_id: 0<3>
+> iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
+> My changes
+> 	IWL_DEBUG_DROP("fc: %d\n", fc);
+> 	IWL_DEBUG_DROP("mode: %d\n", priv->iw_mode);
+> 	IWL_DEBUG_DROP("assoc_id: %d\", priv->assoc_id);
+> 	if ((!iwl3945_is_associated(priv) ||
+> 	    ((priv->iw_mode == IEEE80211_IF_TYPE_STA) &&
+> !priv->assoc_id)) &&
+> 	    ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
+> 		IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+goto
+> 	drop_unlock; }
+> Was it right?
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 70cfdad..ca83d94 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -769,7 +769,7 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Determine r17 bounds.
- 	 */
--	if (rt2x00dev->rx_status.band == IEEE80211_BAND_2GHZ) {
-+	if (rt2x00dev->rx_status.band == IEEE80211_BAND_5GHZ) {
- 		low_bound = 0x28;
- 		up_bound = 0x48;
- 		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags)) {
--- 
-1.5.3.2
+great - thanks!
+
+I think you have given us hints about why ad-hoc does not work in
+iwl3945. From the above the device thinks it is in STA mode, it should
+be in IBSS mode. This is thus a different bug from what the patch is
+trying to solve. The patch is still good for iwl3945.
+
+>> One more question ... did ad-hoc work for you before this patch?
+> 
+> No. In my tests only ipw3945 works in Ad-Hoc mode.
+
+ok - that explains things. The patch assumes that ad-hoc mode is
+working, which is unfortunately not the case. We have to fix this.
+
+Reinette
+
 
