@@ -1,85 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33078 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbYBJPN0 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:37149 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758612AbYBOHCN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 10:13:26 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 11/12] Prepare for struct net_device removal
-To: linux-wireless@vger.kernel.org
-Cc: Pavel Roskin <proski@gnu.org>
-Date: Sun, 10 Feb 2008 17:01:11 +0200
-Message-ID: <20080210150111.17592.70564.stgit@tikku> (sfid-20080210_151331_222179_74A8E29D)
-In-Reply-To: <20080210145733.17592.61729.stgit@tikku>
-References: <20080210145733.17592.61729.stgit@tikku>
+	Fri, 15 Feb 2008 02:02:13 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 3/3] mac80211: enable IBSS merging
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
+Date: Fri, 15 Feb 2008 16:02:02 +0900
+Message-ID: <20080215070202.32461.62689.stgit@one> (sfid-20080215_070216_087140_3D717024)
+In-Reply-To: <20080215070116.32461.80795.stgit@one>
+References: <20080215070116.32461.80795.stgit@one>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some cleanup to make it easier to remove the struct net_device.
+note: ieee80211_get_bitrate() might be better places elsewhere, but i d=
+on't
+know where it would fit.
 
-Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+enable IBSS cell merging. if an IBSS beacon with the same channel, same=
+ ESSID
+and a TSF higher than the local TSF (mactime) is received, we have to j=
+oin its
+BSSID.  while this might not be immediately apparent from reading the 8=
+02.11
+standard it is compliant and necessary to make IBSS mode functional in =
+many
+cases. most drivers have a similar behaviour.
+
+* move the relevant code section (previously only containing debug code=
+) down
+to the end of the function, so we can reuse the bss structure.
+
+* we have to compare the mactime (TSF at the time of packet receive) ra=
+ther
+than the current TSF. since some drivers are not able to give a reliabl=
+e
+mactime we fall back to use the current TSF, which will be enough to ca=
+tch most
+(but not all) cases where an IBSS merge is necessary.
+
+* in IBSS mode we want to allow beacons to override probe response info=
+ so we
+can correctly do merges.
+
+* we don't only configure beacons based on scan results, so change that
+message.
+
+* to enable this we have to let all beacons thru in IBSS mode, even if =
+they
+have a different BSSID.
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
 ---
 
- drivers/net/wireless/at76_usb.c |   23 ++++++++++++-----------
- 1 files changed, 12 insertions(+), 11 deletions(-)
+ include/net/mac80211.h       |    3 +
+ net/mac80211/ieee80211_sta.c |  107 +++++++++++++++++++++++++++++++---=
+--------
+ net/mac80211/rx.c            |    5 ++
+ 3 files changed, 84 insertions(+), 31 deletions(-)
 
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 38a89b4..4832198 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -5026,7 +5026,7 @@ static void at76_rx_tasklet(unsigned long param)
- 		return;
- 	}
- 
--	if (!priv->rx_skb || !netdev || !priv->rx_skb->data)
-+	if (!priv->rx_skb || !priv->rx_skb->data)
- 		return;
- 
- 	buf = (struct at76_rx_buffer *)priv->rx_skb->data;
-@@ -5045,10 +5045,9 @@ static void at76_rx_tasklet(unsigned long param)
- 	}
- 
- 	at76_dbg(DBG_RX_ATMEL_HDR,
--		 "%s: rx frame: rate %d rssi %d noise %d link %d %s",
-+		 "%s: rx frame: rate %d rssi %d noise %d link %d",
- 		 wiphy_name(priv->hw->wiphy), buf->rx_rate, buf->rssi,
--		 buf->noise_level, buf->link_quality,
--		 hex2str(i802_11_hdr, 48));
-+		 buf->noise_level, buf->link_quality);
- 
- 	{
- 		struct ieee80211_rx_status rx_status = {0};
-@@ -5857,13 +5856,6 @@ static int at76_init_new_device(struct at76_priv *priv,
- 	netdev->set_mac_address = at76_set_mac_address;
- 	dev_alloc_name(netdev, "wlan%d");
- 
--	printk(KERN_INFO "%s: USB %s, MAC %s, firmware %d.%d.%d-%d\n",
--	       netdev->name, interface->dev.bus_id, mac2str(priv->mac_addr),
--	       priv->fw_version.major, priv->fw_version.minor,
--	       priv->fw_version.patch, priv->fw_version.build);
--	printk(KERN_INFO "%s: regulatory domain 0x%02x: %s\n", netdev->name,
--	       priv->regulatory_domain, priv->domain->name);
--
- 	/* we let this timer run the whole time this driver instance lives */
- 	mod_timer(&priv->bss_list_timer, jiffies + BSS_LIST_TIMEOUT);
- 
-@@ -5883,6 +5875,15 @@ static int at76_init_new_device(struct at76_priv *priv,
- 
- 	priv->mac80211_registered = 1;
- 
-+	printk(KERN_INFO "%s: USB %s, MAC %s, firmware %d.%d.%d-%d\n",
-+	       wiphy_name(priv->hw->wiphy),
-+	       interface->dev.bus_id, mac2str(priv->mac_addr),
-+	       priv->fw_version.major, priv->fw_version.minor,
-+	       priv->fw_version.patch, priv->fw_version.build);
-+	printk(KERN_INFO "%s: regulatory domain 0x%02x: %s\n",
-+	       wiphy_name(priv->hw->wiphy),
-+	       priv->regulatory_domain, priv->domain->name);
-+
- exit:
- 	return ret;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1b807f4..c634607 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -276,7 +276,8 @@ struct ieee80211_tx_control {
+  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
+  *	the frame.
+  * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime fiel=
+d)
+- *	is valid.
++ *	is valid. This is useful in monitor mode and necessary for beacon f=
+rames
++ *	to enable IBSS merging.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	=3D 1<<0,
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
+c
+index 72d7a86..8b24d1f 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2189,6 +2189,19 @@ static int ieee80211_sta_join_ibss(struct net_de=
+vice *dev,
  }
+=20
+=20
++static inline int ieee80211_get_bitrate(struct wiphy *phy,
++					enum ieee80211_band band, int rate_idx)
++{
++	struct ieee80211_supported_band *sband;
++	if (band > 0 && band < IEEE80211_NUM_BANDS) {
++		sband =3D phy->bands[band];
++		if (rate_idx > 0 && rate_idx < sband->n_bitrates)
++			return sband->bitrates[rate_idx].bitrate;
++	}
++	return 0;
++}
++
++
+ static void ieee80211_rx_bss_info(struct net_device *dev,
+ 				  struct ieee80211_mgmt *mgmt,
+ 				  size_t len,
+@@ -2202,7 +2215,7 @@ static void ieee80211_rx_bss_info(struct net_devi=
+ce *dev,
+ 	struct ieee80211_sta_bss *bss;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+-	u64 timestamp;
++	u64 beacon_timestamp, rx_timestamp;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
+=20
+@@ -2219,31 +2232,7 @@ static void ieee80211_rx_bss_info(struct net_dev=
+ice *dev,
+ 	if (baselen > len)
+ 		return;
+=20
+-	timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
+-
+-	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && beacon &&
+-	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) =3D=3D 0) {
+-#ifdef CONFIG_MAC80211_IBSS_DEBUG
+-		static unsigned long last_tsf_debug =3D 0;
+-		u64 tsf;
+-		if (local->ops->get_tsf)
+-			tsf =3D local->ops->get_tsf(local_to_hw(local));
+-		else
+-			tsf =3D -1LLU;
+-		if (time_after(jiffies, last_tsf_debug + 5 * HZ)) {
+-			printk(KERN_DEBUG "RX beacon SA=3D%s BSSID=3D"
+-			       "%s TSF=3D0x%llx BCN=3D0x%llx diff=3D%lld "
+-			       "@%lu\n",
+-			       print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->bssid),
+-			       (unsigned long long)tsf,
+-			       (unsigned long long)timestamp,
+-			       (unsigned long long)(tsf - timestamp),
+-			       jiffies);
+-			last_tsf_debug =3D jiffies;
+-		}
+-#endif /* CONFIG_MAC80211_IBSS_DEBUG */
+-	}
+-
++	beacon_timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
+ 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems=
+);
+=20
+ 	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && elems.supp_rates=
+ &&
+@@ -2329,8 +2318,10 @@ static void ieee80211_rx_bss_info(struct net_dev=
+ice *dev,
+=20
+ 	bss->band =3D rx_status->band;
+=20
+-	if (bss->probe_resp && beacon) {
+-		/* Do not allow beacon to override data from Probe Response. */
++	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS &&
++	    bss->probe_resp && beacon) {
++		/* STA mode:
++		 * Do not allow beacon to override data from Probe Response. */
+ 		ieee80211_rx_bss_put(dev, bss);
+ 		return;
+ 	}
+@@ -2427,13 +2418,71 @@ static void ieee80211_rx_bss_info(struct net_de=
+vice *dev,
+ 		bss->ht_ie_len =3D 0;
+ 	}
+=20
+-	bss->timestamp =3D timestamp;
++	bss->timestamp =3D beacon_timestamp;
+ 	bss->last_update =3D jiffies;
+ 	bss->rssi =3D rx_status->ssi;
+ 	bss->signal =3D rx_status->signal;
+ 	bss->noise =3D rx_status->noise;
+ 	if (!beacon)
+ 		bss->probe_resp++;
++
++	/* check if we need to merge IBSS */
++	if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS && beacon &&
++	    !local->sta_sw_scanning && !local->sta_hw_scanning &&
++	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
++	    bss->freq =3D=3D local->oper_channel->center_freq &&
++	    elems.ssid_len =3D=3D sdata->u.sta.ssid_len &&
++	    memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) =3D=3D=
+ 0) {
++		if (rx_status->flag & RX_FLAG_TSFT) {
++			/* in order for correct IBSS merging we need mactime
++			 *
++			 * since mactime is defined as the time the first data
++			 * symbol of the frame hits the PHY, and the timestamp
++			 * of the beacon is defined as "the time that the data
++			 * symbol containing the first bit of the timestamp is
++			 * transmitted to the PHY plus the transmitting STA=E2=80=99s
++			 * delays through its local PHY from the MAC-PHY
++			 * interface to its interface with the WM"
++			 * (802.11 11.1.2) - equals the time this bit arrives at
++			 * the receiver - we have to take into account the
++			 * offset between the two.
++			 * e.g: at 1 MBit that means mactime is 192 usec earlier
++			 * (=3D24 bytes * 8 usecs/byte) than the beacon timestamp.
++			 */
++			int rate =3D ieee80211_get_bitrate(local->hw.wiphy,
++					rx_status->band, rx_status->rate_idx);
++			if (rate)
++				rx_timestamp =3D rx_status->mactime +
++						(24 * 8 * 10 / rate);
++			else
++				rx_timestamp =3D rx_status->mactime;
++		} else if (local && local->ops && local->ops->get_tsf)
++			/* second best option: get current TSF */
++			rx_timestamp =3D local->ops->get_tsf(local_to_hw(local));
++		else
++			/* can't merge without knowing the TSF */
++			rx_timestamp =3D -1LLU;
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++		printk(KERN_DEBUG "RX beacon SA=3D%s BSSID=3D"
++		       "%s TSF=3D0x%llx BCN=3D0x%llx diff=3D%lld @%lu\n",
++		       print_mac(mac, mgmt->sa),
++		       print_mac(mac2, mgmt->bssid),
++		       (unsigned long long)rx_timestamp,
++		       (unsigned long long)beacon_timestamp,
++		       (unsigned long long)(rx_timestamp - beacon_timestamp),
++		       jiffies);
++#endif /* CONFIG_MAC80211_IBSS_DEBUG */
++		if (beacon_timestamp > rx_timestamp) {
++			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
++				printk(KERN_DEBUG "%s: beacon TSF higher than "
++				       "local TSF - IBSS merge with BSSID %s\n",
++				       dev->name, print_mac(mac, mgmt->bssid));
++			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
++			ieee80211_ibss_add_sta(dev, NULL,
++					       mgmt->bssid, mgmt->sa);
++		}
++	}
++
+ 	ieee80211_rx_bss_put(dev, bss);
+ }
+=20
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 943ba90..5dfe6f2 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1694,7 +1694,10 @@ static int prepare_for_handlers(struct ieee80211=
+_sub_if_data *sdata,
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		if (!bssid)
+ 			return 0;
+-		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
++		if ((rx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_MGMT &&
++		    (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_BEACON)
++			return 1;
++		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
+ 			if (!(rx->flags & IEEE80211_TXRXD_RXIN_SCAN))
+ 				return 0;
+ 			rx->flags &=3D ~IEEE80211_TXRXD_RXRA_MATCH;
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
