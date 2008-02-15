@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:4852 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbYBLXJE (ORCPT
+Received: from general-networks3.cust.sloane.cz ([88.146.176.14]:56042 "EHLO
+	server.generalnetworks.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758445AbYBOUhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 18:09:04 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so4228112fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 15:09:03 -0800 (PST)
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Marcin Slusarz <marcin.slusarz@gmail.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] ipw2200: le*_add_cpu conversion
-Date: Wed, 13 Feb 2008 00:06:12 +0100
-Message-Id: <1202857582-15450-8-git-send-email-marcin.slusarz@gmail.com> (sfid-20080212_230921_523375_C729B63E)
-In-Reply-To: <1202857582-15450-1-git-send-email-marcin.slusarz@gmail.com>
-References: <1202857582-15450-1-git-send-email-marcin.slusarz@gmail.com>
-From: marcin.slusarz@gmail.com
+	Fri, 15 Feb 2008 15:37:11 -0500
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 1/1] WDEV: ath5k, test single chip before reset
+Date: Fri, 15 Feb 2008 21:37:07 +0100
+Message-Id: <1203107827-27632-1-git-send-email-jirislaby@gmail.com> (sfid-20080215_203732_913957_BBAF00E7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Move ath5k_hw_nic_wakeup after ah_single_chip being set, because we
+test the value in there and decides whether reset or not.
 
-replace all:
-little_endian_variable = cpu_to_leX(leX_to_cpu(little_endian_variable) +
-					expression_in_cpu_byteorder);
-with:
-	leX_add_cpu(&little_endian_variable, expression_in_cpu_byteorder);
-generated with semantic patch
-
-Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
- drivers/net/wireless/ipw2200.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath5k/hw.c |   21 ++++++++++-----------
+ 1 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 3e6ad7b..5d9854e 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -10326,9 +10326,7 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
- 					 remaining_bytes,
- 					 PCI_DMA_TODEVICE));
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 3a4bf40..9cdd27f 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -181,11 +181,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 	else if (ah->ah_version <= AR5K_AR5211)
+ 		ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
  
--			tfd->u.data.num_chunks =
--			    cpu_to_le32(le32_to_cpu(tfd->u.data.num_chunks) +
--					1);
-+			le32_add_cpu(&tfd->u.data.num_chunks, 1);
- 		}
+-	/* Bring device out of sleep and reset it's units */
+-	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
+-	if (ret)
+-		goto err_free;
+-
+ 	/* Get MAC, PHY and RADIO revisions */
+ 	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
+ 	ah->ah_mac_srev = srev;
+@@ -210,12 +205,13 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
  	}
  
+ 	/* Identify single chip solutions */
+-	if((srev <= AR5K_SREV_VER_AR5414) &&
+-	(srev >= AR5K_SREV_VER_AR2424)) {
+-		ah->ah_single_chip = true;
+-	} else {
+-		ah->ah_single_chip = false;
+-	}
++	ah->ah_single_chip = srev >= AR5K_SREV_VER_AR2424 &&
++			srev <= AR5K_SREV_VER_AR5414;
++
++	/* Bring device out of sleep and reset it's units */
++	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
++	if (ret)
++		goto err_free;
+ 
+ 	/* Single chip radio */
+ 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
 -- 
-1.5.3.7
+1.5.3.8
 
