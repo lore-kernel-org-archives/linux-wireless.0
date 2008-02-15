@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:41564 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757519AbYBYW1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:27:12 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so986653wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:27:11 -0800 (PST)
-Message-ID: <a32f33a40802251427w678d57c1g1b85d7e72830a89e@mail.gmail.com> (sfid-20080225_222727_009027_A0207BED)
-Date: Mon, 25 Feb 2008 23:27:11 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Ahmed Ammar" <b33fc0d3@gmail.com>
-Subject: Re: b43 (H/W 4306 Rev. 03)
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Adam Baker" <linux@baker-net.org.uk>
-In-Reply-To: <84ac67910802250407p527cdee3uc33a572130f41f8d@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:49602 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754663AbYBOHHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 02:07:39 -0500
+Message-ID: <20080215020738.7i4ba6miv4kk8cow@webmail.spamcop.net> (sfid-20080215_070741_927185_A3C3C135)
+Date: Fri, 15 Feb 2008 02:07:38 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Mark Wallis <mwallis@serialmonkey.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: Both rt2500usb and rt73 claim USB device 148f:2573
+References: <1203056096.30732.63.camel@dv>
+	<DF448D07-5C48-43C0-B6DD-12AF17BE0943@serialmonkey.com>
+In-Reply-To: <DF448D07-5C48-43C0-B6DD-12AF17BE0943@serialmonkey.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
-	 <84ac67910802230559g73dafb0focbf62f4b9a6b3158@mail.gmail.com>
-	 <1203776102.13162.27.camel@johannes.berg>
-	 <84ac67910802230628q217542e4gc76bed8076af118f@mail.gmail.com>
-	 <1203777414.13162.29.camel@johannes.berg>
-	 <84ac67910802230925xb7750e8j561efaf951c50321@mail.gmail.com>
-	 <1203794030.13162.39.camel@johannes.berg>
-	 <84ac67910802231156t29724612me8adb74d05bfede8@mail.gmail.com>
-	 <1203933155.13162.56.camel@johannes.berg>
-	 <84ac67910802250407p527cdee3uc33a572130f41f8d@mail.gmail.com>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Quoting Mark Wallis <mwallis@serialmonkey.com>:
 
-> Hmm,
+> Hi Pavel,
 >
->  Well I can only blame the bad rt61pci drivers, I'm out of options now.
+> On 15/02/2008, at 5:14 PM, Pavel Roskin wrote:
+>
+>> My Level One WNC-0301USB v3 has USB ID 148f:2573, which is listed as
+>> compatible both in rt2500usb.c and rt73usb.c.  It only works with rt73
+>> but not with rt2500usb.
+>>
+>> Is this duplication intentional?
+>
+> I'm afraid so. That particular manufacturer I believe changed the
+> chipset they were using without updating their USD device ID's. We have
+> seen this a few times now and the only solution we have been able to
+> provide is to give the users instructions for blacklisting the
+> incorrect driver.
+>
+> I believe this has been discussed on this list previously.
 
-Yes, rt61pci is known to be buggy in monitor mode, there seem
-to be some inconsistencies regarding frame filtering inside the device
-which causes rt61pci to incorrectly filter some frames out.
+Thanks and sorry for the noise.
 
-It is an issue being looked into, and I believe Adam Baker already has
-some patches he will send in for rt2x00 soon (First some other TX/RX
-bugs needed to be fixed).
-
-Ivo
+-- 
+Regards,
+Pavel Roskin
