@@ -1,93 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:44760 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758001AbYBRC3X (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:34814 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136AbYBOVxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 21:29:23 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Upstream wireless process changes
-Date: Mon, 18 Feb 2008 11:29:14 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <20080214225728.GC2981@tuxdriver.com>
-In-Reply-To: <20080214225728.GC2981@tuxdriver.com>
+	Fri, 15 Feb 2008 16:53:34 -0500
+Received: by an-out-0708.google.com with SMTP id d31so183897and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 13:53:33 -0800 (PST)
+Message-ID: <40f31dec0802151353l2d03fdaam23d4f731a6c7bddc@mail.gmail.com> (sfid-20080215_215343_280691_36D37776)
+Date: Fri, 15 Feb 2008 23:53:33 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/1] WDEV: ath5k, test single chip before reset
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1203107827-27632-1-git-send-email-jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802181129.14291.bruno@thinktube.com> (sfid-20080218_022927_850828_D2F2EF85)
+Content-Type: text/plain; charset=UTF-8
+References: <1203107827-27632-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 February 2008 07:57:28 John W. Linville wrote:
-> Greetings,
+2008/2/15, Jiri Slaby <jirislaby@gmail.com>:
+> Move ath5k_hw_nic_wakeup after ah_single_chip being set, because we
+>  test the value in there and decides whether reset or not.
 >
-> Given current discussions, it seems timely to revamp some of the
-> upstream wireless tree management policies.  I'm sure I still won't
-> be able to please everyone, but maybe I can change who gets to be
-> unhappy about the process... :-)
+>  Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+>  Cc: Nick Kossifidis <mickflemm@gmail.com>
+>  Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+>  ---
+>   drivers/net/wireless/ath5k/hw.c |   21 ++++++++++-----------
+>   1 files changed, 10 insertions(+), 11 deletions(-)
 >
-> Let's review the current process.  The wireless-2.6 tree has a number
-> of branches, each with a specific use.  Most of these are for my own
-> administrative purposes relating to coping with the processes upstream
-> from me.  These include any "fixes", "upstream", or "pending" branches,
-> as well as any "master-*" branches.  There are also "merged-*" branches
-> which I maintain to assist me when rebases are necessary.  In addition,
-> there have been topic branches such as "at76" and (formerly) "ath5k".
-> And there is the "mm-master" branch, which primarily just collects
-> the topic branches together for testing in -mm.
+>  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+>  index 3a4bf40..9cdd27f 100644
+>  --- a/drivers/net/wireless/ath5k/hw.c
+>  +++ b/drivers/net/wireless/ath5k/hw.c
+>  @@ -181,11 +181,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+>         else if (ah->ah_version <= AR5K_AR5211)
+>                 ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
 >
-> The "everything" branch is an integration branch which collects patches
-> from all the "fixes", "upstream", and "pending" branches as well
-> as any topic branches.  This is the branch I ask developers to use.
-> The purpose of this branch is to avoid having API-level patches miss
-> any drivers as well as to avoid any similar conflicts.
+>  -       /* Bring device out of sleep and reset it's units */
+>  -       ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
+>  -       if (ret)
+>  -               goto err_free;
+>  -
+>         /* Get MAC, PHY and RADIO revisions */
+>         srev = ath5k_hw_reg_read(ah, AR5K_SREV);
+>         ah->ah_mac_srev = srev;
+>  @@ -210,12 +205,13 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+>         }
 >
-> Finally, in the old process the "master" branch always just pointed
-> at the most recent full or -rc release from Linus.  This always seemed
-> to confuse users looking for the "latest and greatest" wireless bits.
-> Moreover, all the branches created confusion among both users and
-> developers.
+>         /* Identify single chip solutions */
+>  -       if((srev <= AR5K_SREV_VER_AR5414) &&
+>  -       (srev >= AR5K_SREV_VER_AR2424)) {
+>  -               ah->ah_single_chip = true;
+>  -       } else {
+>  -               ah->ah_single_chip = false;
+>  -       }
+>  +       ah->ah_single_chip = srev >= AR5K_SREV_VER_AR2424 &&
+>  +                       srev <= AR5K_SREV_VER_AR5414;
+>  +
+>  +       /* Bring device out of sleep and reset it's units */
+>  +       ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
+>  +       if (ret)
+>  +               goto err_free;
 >
-> The new process shifts from reliance on branches to the use of
-> several trees.  Each tree may have some placeholder branches used for
-> administrative purposes, but the interesting bits will be committed
-> on the "master" branches of those trees to avoid confusion about
-> which tree normal people should use.
+>         /* Single chip radio */
+>         if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
 >
-> The wireless-2.6 tree will primarily become a vehicle for pushing
-> patches to the current -rc release.  This replaces the former "fixes"
-> branches.  It is my intent that this will not be rebased except in
-> the most extreme (and unforseen) circumstances.
->
-> A new wireless-2.6.26 tree (or 2.6.x as appropriate in the future) will
-> be the vehicle for queueing patches to net-2.6.26 (or its successors)
-> in anticipation of the next merge window.  This tree will regularly
-> be updated to correspond to the current state of net-2.6.26.  I will
-> avoid rebasing this tree as much as possible, but given its dependence
-> on net-2.6.26 I will be somewhat at Dave's mercy... :-)
->
-> Finally, a new wireless-testing tree will be created to replace the
-> usage of the former 'everything' branch.  This tree will be based
-> on a current -rc release in hopes avoiding the churn in between
-> -rc releases.  The tree may contain topic branches (e.g. "at76")
-> as appropriate, as well as picked commits from wireless-2.6 and
-> wireless-2.6.26.  I will attempt to limit rebasing this tree as much as
-> practical, at the expense of having some ugly history.  However, this
-> tree almost certainly will be rebased from time to time, and you should
-> expect any patches in this tree to be re-committed in wireless-2.6
-> or wireless-2.6.26 before going upstream -- you have been warned!
->
-> I hope that this "covers all the bases" for our various process
-> needs (merging fixes, queueing for the merge window, integration and
-> on-going development).  Any coments or suggestions you might have
-> are welcome now. :-)
->
-> So, comments?
 
-this might be a stupid question, but which tree do you expect us to base 
-regular development patches on? i basically don't really care when my patches 
-are merged upstream, and i don't know enough about upstream processes to 
-decide that, so i think i'll better leave that decision up to you :)
+NACK, single chip flag is going out since only needed check is for
+5424/2424 during nic_wakeup, 5413/2413 behave like the rest
+5211/5212-combatible cards.
 
-thanks,
-bruno
+Sorry for delaying the relevant patches, i'm working with the 2413
+card i got from Mike to make it work and it'll take some time (not as
+easy as i thought, i probably miss something)...
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
