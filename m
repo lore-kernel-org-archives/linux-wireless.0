@@ -1,35 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46638 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756052AbYBGH2Q (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57984
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758331AbYBPAPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 02:28:16 -0500
-Date: Wed, 6 Feb 2008 23:26:24 -0800
-From: Greg KH <greg@kroah.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [stable] [PATCH stable] b43: Reject new firmware early
-Message-ID: <20080207072624.GB15657@kroah.com> (sfid-20080207_072818_711442_BEE0655D)
-References: <200801261354.52659.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200801261354.52659.mb@bu3sch.de>
+	Fri, 15 Feb 2008 19:15:35 -0500
+Date: Fri, 15 Feb 2008 16:16:06 -0800 (PST)
+Message-Id: <20080215.161606.17646895.davem@davemloft.net> (sfid-20080216_001538_609830_7BEB40B8)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 'fixes' 2008-02-15
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080215191751.GA3054@tuxdriver.com>
+References: <20080215191751.GA3054@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 26, 2008 at 01:54:52PM +0100, Michael Buesch wrote:
-> We must reject new incompatible firmware early to avoid
-> running into strange transmission failures.
-> 
-> The current development tree supports newer firmware revisions.
-> These revisions cause strange failures on the stable 2.6.24 kernel.
-> Add a check to avoid confusing users a lot.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 15 Feb 2008 14:17:51 -0500
 
-Oh wait, I see why it's not in Linus's tree, it doesn't pertain :)
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes
 
-I'll queue this up, sorry for the noise.
+Pulled and pushed out.
 
-greg k-h
+If you haven't noticed, I'm going to try and keep my net-2.6
+tree from rebasing for a while and see how well that works.
+
+So you can feel free to just keep applying patches to your
+fixes branch and I can pull them in cleanly.
