@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:20911 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934131AbYBUU4x (ORCPT
+Received: from lunatiki.de ([85.214.70.22]:41406 "EHLO
+	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752438AbYBPNAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 15:56:53 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so272900wra.23
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 12:56:51 -0800 (PST)
-Message-ID: <84ac67910802211256l66573e79o3abdc256b2d8eaec@mail.gmail.com> (sfid-20080221_205719_492855_EEEA8DD2)
-Date: Thu, 21 Feb 2008 20:56:50 +0000
-From: "Ahmed Ammar" <b33fc0d3@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: b43 (H/W 4306 Rev. 03)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080221201811.GM3094@tuxdriver.com>
+	Sat, 16 Feb 2008 08:00:45 -0500
+From: Patrick Grimm <patrick@lunatiki.de>
+To: Richard Scherping <richard@scherping.de>
+Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Sat, 16 Feb 2008 01:19:07 +0100
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003ABCF72@orsmsx416.amr.corp.intel.com> <47B60044.9000801@scherping.de>
+In-Reply-To: <47B60044.9000801@scherping.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
-	 <20080221163134.GF3094@tuxdriver.com>
-	 <84ac67910802211007n55569d6j92dee1da198e9b1d@mail.gmail.com>
-	 <20080221182615.GK3094@tuxdriver.com>
-	 <84ac67910802211204y575e893cnd056bbd7442f27ea@mail.gmail.com>
-	 <20080221201811.GM3094@tuxdriver.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802160119.07856.patrick@lunatiki.de> (sfid-20080216_130105_856008_71F1E7E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  > bonding: bond0: enslaving wlan0 as an active interface with a down link.
+Am Freitag, 15. Februar 2008 22:12:36 schrieb Richard Scherping:
+> Chatre, Reinette schrieb:
+> >>> One more question ... did ad-hoc work for you before this patch?
+> >>
+> >> No. In my tests only ipw3945 works in Ad-Hoc mode.
+> >
+> > ok - that explains things. The patch assumes that ad-hoc mode is
+> > working, which is unfortunately not the case. We have to fix this.
+> >
+> > Reinette
 >
->
-> This looks a little odd.  Have you had this working in the past?
->  Can you try a setup using just wlan0 (i.e. without bonding)?
->
+> As I said, I have tested with iwl4965 only. Seems as if there are more
+> problems with ad-hoc and iwl3945. Did ad-hoc work in the "old" iwl3945
+> (before the API change with old version 1.1.17, compared to new version
+> 1.2.23/26)?
+I have made some short tests with my working kernel 2.6.23.
+Version 1.1.17 - 1.1.22 Ad-Hoc mode is working.
+Version 1.1.23 -            Ad-Hoc mode is not working.
 
-I have tried with and without bonding, and bonding is definitely not
-the issue here, I am pretty sure this is something wrong with the
-driver/firmware.
+Changes in 1.2.23
 
-I am willing to test any patches that will give you better debugging,
-or even direct access to my box?
+* fix problem when rf_kill switch change during suspend/resume
+* fix possible priv->mutex deadlock during suspend
+* 3954 renames iwl3945_rate_scale_priv to iwl3945_rs_sta
+* 4965 unify rate scale variable names for station data
+* move uCode helper functions to iwl-helpers.h
+* Makefile: enable building using "make -C /path/to/iwlwifi"
+* fix iwl_mac_add_interface handler
+* Fix race conditional panic
+* remove redundant declaration of 'iwl3945_priv' and 'iwl4965_priv' structs
+* document scan command
+* remove iwl4965_tx_cmd
+* move iwl4965_get_dma_hi_address function to iwl-helpers.h
+* fix rate control algo reference leak
+* fix rf_kill state inconsistent during suspend and resume
+* fix priv->ucode_data_backup save problem
+* iwl4965: fix mutex_unlock missed problem in iwl_mac_config exit path
+* iwl4965: Remove redundant code in iwl4965_tx_cmd
+* fix compilation warnings
+* use pci_save_state() before calling pci_disable_device()
+* skip mac80211 conf during a hardware scan and replay it afterwards
+* delay firmware loading from pci_probe to network interface open
+* Makefile: enable HT and HT_AGG by default
+
+Patrick
