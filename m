@@ -1,190 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38651 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756381AbYBMTfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 14:35:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Ester Kummer <ester.kummer@intel.com>
-Subject: [PATCH 2/3] iwlwifi: change iwl->priv iwl_priv * type in iwl-YYY-io.h
-Date: Wed, 13 Feb 2008 11:32:30 -0800
-Message-Id: <1202931151-4141-3-git-send-email-reinette.chatre@intel.com> (sfid-20080213_193517_842755_CE4CC2E6)
-In-Reply-To: <1202931151-4141-2-git-send-email-reinette.chatre@intel.com>
-References: <1202931151-4141-1-git-send-email-reinette.chatre@intel.com>
- <1202931151-4141-2-git-send-email-reinette.chatre@intel.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:44592 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbYBPRQF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Feb 2008 12:16:05 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix support for PCI devices behind a SSB->PCI bridge
+Date: Sat, 16 Feb 2008 18:13:36 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802161813.36879.mb@bu3sch.de> (sfid-20080216_171610_935710_AA3647BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+We must pin all resources and make sure the PCI subsystem
+won't relocate us, as the addresses are hardwired into hardware.
 
-This patch makes all variables of type struct iwl_priv to be named priv
-This is needed for smooth change of debug printing mechanism
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ester Kummer <ester.kummer@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-io.h |   39 ++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-4965-io.h |   39 ++++++++++++---------------
- 2 files changed, 34 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-io.h b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-index 75e20d0..4a18729 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-@@ -59,28 +59,28 @@
-  *
-  */
+Fix for 2.6.25.
+
+Index: linux-2.6.23.16/drivers/ssb/driver_pcicore.c
+===================================================================
+--- linux-2.6.23.16.orig/drivers/ssb/driver_pcicore.c	2008-02-16 17:55:20.000000000 +0100
++++ linux-2.6.23.16/drivers/ssb/driver_pcicore.c	2008-02-16 17:55:35.000000000 +0100
+@@ -66,6 +66,7 @@ int pcibios_plat_dev_init(struct pci_dev
+ 			base = &ssb_pcicore_pcibus_iobase;
+ 		else
+ 			base = &ssb_pcicore_pcibus_membase;
++		res->flags |= IORESOURCE_PCI_FIXED;
+ 		if (res->end) {
+ 			size = res->end - res->start + 1;
+ 			if (*base & (size - 1))
+@@ -88,10 +89,12 @@ int pcibios_plat_dev_init(struct pci_dev
  
--#define _iwl3945_write32(iwl, ofs, val) writel((val), (iwl)->hw_base + (ofs))
-+#define _iwl3945_write32(priv, ofs, val) writel((val), (priv)->hw_base + (ofs))
- #ifdef CONFIG_IWL3945_DEBUG
--static inline void __iwl3945_write32(const char *f, u32 l, struct iwl3945_priv *iwl,
-+static inline void __iwl3945_write32(const char *f, u32 l, struct iwl3945_priv *priv,
- 				 u32 ofs, u32 val)
+ static void __init ssb_fixup_pcibridge(struct pci_dev *dev)
  {
- 	IWL_DEBUG_IO("write32(0x%08X, 0x%08X) - %s %d\n", ofs, val, f, l);
--	_iwl3945_write32(iwl, ofs, val);
-+	_iwl3945_write32(priv, ofs, val);
- }
--#define iwl3945_write32(iwl, ofs, val) \
--	__iwl3945_write32(__FILE__, __LINE__, iwl, ofs, val)
-+#define iwl3945_write32(priv, ofs, val) \
-+	__iwl3945_write32(__FILE__, __LINE__, priv, ofs, val)
- #else
--#define iwl3945_write32(iwl, ofs, val) _iwl3945_write32(iwl, ofs, val)
-+#define iwl3945_write32(priv, ofs, val) _iwl3945_write32(priv, ofs, val)
- #endif
++	u8 lat;
++
+ 	if (dev->bus->number != 0 || PCI_SLOT(dev->devfn) != 0)
+ 		return;
  
--#define _iwl3945_read32(iwl, ofs) readl((iwl)->hw_base + (ofs))
-+#define _iwl3945_read32(priv, ofs) readl((priv)->hw_base + (ofs))
- #ifdef CONFIG_IWL3945_DEBUG
--static inline u32 __iwl3945_read32(char *f, u32 l, struct iwl3945_priv *iwl, u32 ofs)
-+static inline u32 __iwl3945_read32(char *f, u32 l, struct iwl3945_priv *priv, u32 ofs)
- {
- 	IWL_DEBUG_IO("read_direct32(0x%08X) - %s %d\n", ofs, f, l);
--	return _iwl3945_read32(iwl, ofs);
-+	return _iwl3945_read32(priv, ofs);
- }
--#define iwl3945_read32(iwl, ofs) __iwl3945_read32(__FILE__, __LINE__, iwl, ofs)
-+#define iwl3945_read32(priv, ofs) __iwl3945_read32(__FILE__, __LINE__, priv, ofs)
- #else
- #define iwl3945_read32(p, o) _iwl3945_read32(p, o)
- #endif
-@@ -105,18 +105,13 @@ static inline int __iwl3945_poll_bit(const char *f, u32 l,
- 				 u32 bits, u32 mask, int timeout)
- {
- 	int ret = _iwl3945_poll_bit(priv, addr, bits, mask, timeout);
--	if (unlikely(ret  == -ETIMEDOUT))
--		IWL_DEBUG_IO
--		    ("poll_bit(0x%08X, 0x%08X, 0x%08X) - timedout - %s %d\n",
--		     addr, bits, mask, f, l);
--	else
--		IWL_DEBUG_IO
--		    ("poll_bit(0x%08X, 0x%08X, 0x%08X) = 0x%08X - %s %d\n",
--		     addr, bits, mask, ret, f, l);
-+	IWL_DEBUG_IO("poll_bit(0x%08X, 0x%08X, 0x%08X) - %s- %s %d\n",
-+		      addr, bits, mask,
-+		      unlikely(ret  == -ETIMEDOUT)?"timeout":"", f, l);
- 	return ret;
- }
--#define iwl3945_poll_bit(iwl, addr, bits, mask, timeout) \
--	__iwl3945_poll_bit(__FILE__, __LINE__, iwl, addr, bits, mask, timeout)
-+#define iwl3945_poll_bit(priv, addr, bits, mask, timeout) \
-+	__iwl3945_poll_bit(__FILE__, __LINE__, priv, addr, bits, mask, timeout)
- #else
- #define iwl3945_poll_bit(p, a, b, m, t) _iwl3945_poll_bit(p, a, b, m, t)
- #endif
-@@ -321,8 +316,8 @@ static inline int __iwl3945_poll_direct_bit(const char *f, u32 l,
- 			     "- %s %d\n", addr, mask, ret, f, l);
- 	return ret;
- }
--#define iwl3945_poll_direct_bit(iwl, addr, mask, timeout) \
--	__iwl3945_poll_direct_bit(__FILE__, __LINE__, iwl, addr, mask, timeout)
-+#define iwl3945_poll_direct_bit(priv, addr, mask, timeout) \
-+	__iwl3945_poll_direct_bit(__FILE__, __LINE__, priv, addr, mask, timeout)
- #else
- #define iwl3945_poll_direct_bit _iwl3945_poll_direct_bit
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-io.h b/drivers/net/wireless/iwlwifi/iwl-4965-io.h
-index 34a0b57..4af0c01 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-io.h
-@@ -59,28 +59,28 @@
-  *
-  */
+-	ssb_printk(KERN_INFO "PCI: fixing up bridge\n");
++	ssb_printk(KERN_INFO "PCI: Fixing up bridge %s\n", pci_name(dev));
  
--#define _iwl4965_write32(iwl, ofs, val) writel((val), (iwl)->hw_base + (ofs))
-+#define _iwl4965_write32(priv, ofs, val) writel((val), (priv)->hw_base + (ofs))
- #ifdef CONFIG_IWL4965_DEBUG
--static inline void __iwl4965_write32(const char *f, u32 l, struct iwl4965_priv *iwl,
-+static inline void __iwl4965_write32(const char *f, u32 l, struct iwl4965_priv *priv,
- 				 u32 ofs, u32 val)
- {
- 	IWL_DEBUG_IO("write32(0x%08X, 0x%08X) - %s %d\n", ofs, val, f, l);
--	_iwl4965_write32(iwl, ofs, val);
-+	_iwl4965_write32(priv, ofs, val);
- }
--#define iwl4965_write32(iwl, ofs, val) \
--	__iwl4965_write32(__FILE__, __LINE__, iwl, ofs, val)
-+#define iwl4965_write32(priv, ofs, val) \
-+	__iwl4965_write32(__FILE__, __LINE__, priv, ofs, val)
- #else
--#define iwl4965_write32(iwl, ofs, val) _iwl4965_write32(iwl, ofs, val)
-+#define iwl4965_write32(priv, ofs, val) _iwl4965_write32(priv, ofs, val)
- #endif
+ 	/* Enable PCI bridge bus mastering and memory space */
+ 	pci_set_master(dev);
+@@ -101,7 +104,10 @@ static void __init ssb_fixup_pcibridge(s
+ 	pci_write_config_dword(dev, SSB_BAR1_CONTROL, 3);
  
--#define _iwl4965_read32(iwl, ofs) readl((iwl)->hw_base + (ofs))
-+#define _iwl4965_read32(priv, ofs) readl((priv)->hw_base + (ofs))
- #ifdef CONFIG_IWL4965_DEBUG
--static inline u32 __iwl4965_read32(char *f, u32 l, struct iwl4965_priv *iwl, u32 ofs)
-+static inline u32 __iwl4965_read32(char *f, u32 l, struct iwl4965_priv *priv, u32 ofs)
- {
- 	IWL_DEBUG_IO("read_direct32(0x%08X) - %s %d\n", ofs, f, l);
--	return _iwl4965_read32(iwl, ofs);
-+	return _iwl4965_read32(priv, ofs);
+ 	/* Make sure our latency is high enough to handle the devices behind us */
+-	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0xa8);
++	lat = 168;
++	ssb_printk(KERN_INFO "PCI: Fixing latency timer of device %s to %u\n",
++		   pci_name(dev), lat);
++	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
  }
--#define iwl4965_read32(iwl, ofs) __iwl4965_read32(__FILE__, __LINE__, iwl, ofs)
-+#define iwl4965_read32(priv, ofs) __iwl4965_read32(__FILE__, __LINE__, priv, ofs)
- #else
- #define iwl4965_read32(p, o) _iwl4965_read32(p, o)
- #endif
-@@ -105,18 +105,13 @@ static inline int __iwl4965_poll_bit(const char *f, u32 l,
- 				 u32 bits, u32 mask, int timeout)
- {
- 	int ret = _iwl4965_poll_bit(priv, addr, bits, mask, timeout);
--	if (unlikely(ret  == -ETIMEDOUT))
--		IWL_DEBUG_IO
--		    ("poll_bit(0x%08X, 0x%08X, 0x%08X) - timedout - %s %d\n",
--		     addr, bits, mask, f, l);
--	else
--		IWL_DEBUG_IO
--		    ("poll_bit(0x%08X, 0x%08X, 0x%08X) = 0x%08X - %s %d\n",
--		     addr, bits, mask, ret, f, l);
-+	IWL_DEBUG_IO("poll_bit(0x%08X, 0x%08X, 0x%08X) - %s- %s %d\n",
-+		     addr, bits, mask,
-+		     unlikely(ret  == -ETIMEDOUT)?"timeout":"", f, l);
- 	return ret;
- }
--#define iwl4965_poll_bit(iwl, addr, bits, mask, timeout) \
--	__iwl4965_poll_bit(__FILE__, __LINE__, iwl, addr, bits, mask, timeout)
-+#define iwl4965_poll_bit(priv, addr, bits, mask, timeout) \
-+	__iwl4965_poll_bit(__FILE__, __LINE__, priv, addr, bits, mask, timeout)
- #else
- #define iwl4965_poll_bit(p, a, b, m, t) _iwl4965_poll_bit(p, a, b, m, t)
- #endif
-@@ -321,8 +316,8 @@ static inline int __iwl4965_poll_direct_bit(const char *f, u32 l,
- 			     "- %s %d\n", addr, mask, ret, f, l);
- 	return ret;
- }
--#define iwl4965_poll_direct_bit(iwl, addr, mask, timeout) \
--	__iwl4965_poll_direct_bit(__FILE__, __LINE__, iwl, addr, mask, timeout)
-+#define iwl4965_poll_direct_bit(priv, addr, mask, timeout) \
-+	__iwl4965_poll_direct_bit(__FILE__, __LINE__, priv, addr, mask, timeout)
- #else
- #define iwl4965_poll_direct_bit _iwl4965_poll_direct_bit
- #endif
+ DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, ssb_fixup_pcibridge);
+ 
+@@ -279,14 +285,14 @@ static struct resource ssb_pcicore_mem_r
+ 	.name	= "SSB PCIcore external memory",
+ 	.start	= SSB_PCI_DMA,
+ 	.end	= SSB_PCI_DMA + SSB_PCI_DMA_SZ - 1,
+-	.flags	= IORESOURCE_MEM,
++	.flags	= IORESOURCE_MEM | IORESOURCE_PCI_FIXED,
+ };
+ 
+ static struct resource ssb_pcicore_io_resource = {
+ 	.name	= "SSB PCIcore external I/O",
+ 	.start	= 0x100,
+ 	.end	= 0x7FF,
+-	.flags	= IORESOURCE_IO,
++	.flags	= IORESOURCE_IO | IORESOURCE_PCI_FIXED,
+ };
+ 
+ static struct pci_controller ssb_pcicore_controller = {
+@@ -344,7 +350,8 @@ static void ssb_pcicore_init_hostmode(st
+ 	/* Ok, ready to run, register it to the system.
+ 	 * The following needs change, if we want to port hostmode
+ 	 * to non-MIPS platform. */
+-	set_io_port_base((unsigned long)ioremap_nocache(SSB_PCI_MEM, 0x04000000));
++	ssb_pcicore_controller.io_map_base = (unsigned long)ioremap_nocache(SSB_PCI_MEM, 0x04000000);
++	set_io_port_base(ssb_pcicore_controller.io_map_base);
+ 	/* Give some time to the PCI controller to configure itself with the new
+ 	 * values. Not waiting at this point causes crashes of the machine. */
+ 	mdelay(10);
+
 -- 
-1.5.3.4
-
+Greetings Michael.
