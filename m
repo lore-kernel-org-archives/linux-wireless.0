@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3790 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752355AbYBLQb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 11:31:28 -0500
-Date: Tue, 12 Feb 2008 11:05:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
-Message-ID: <20080212160507.GC3051@tuxdriver.com> (sfid-20080212_163132_757768_C742DAC4)
-References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de> <efe7343f0802100422o2cba8ec2iaae3916cccd932b9@mail.gmail.com>
+Received: from rhun.apana.org.au ([64.62.148.172]:37558 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758045AbYBPAW4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2008 19:22:56 -0500
+Date: Sat, 16 Feb 2008 08:22:52 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Adam Turk <bofh1234@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: kernel 2.6.25-rc1 and no /dev/rt73usb
+Message-ID: <20080216002252.GD19209@gondor.apana.org.au> (sfid-20080216_002300_349716_AE82488A)
+References: <BAY101-W101FB386E1EF7402881964C8260@phx.gbl> <20080215050358.GA10363@gondor.apana.org.au> <BAY101-W21A064889BC2442893B63BC8260@phx.gbl>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0802100422o2cba8ec2iaae3916cccd932b9@mail.gmail.com>
+In-Reply-To: <BAY101-W21A064889BC2442893B63BC8260@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 10, 2008 at 12:22:30PM +0000, Luis Correia wrote:
-> On Sun, Feb 10, 2008 at 10:31 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
-
-> >  > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
-> >  >       /* Hercules */
-> >  >       { USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       /* Melco */
-> >  > +     { USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       { USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       { USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       { USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       { USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  > -
-> >  >       /* MSI */
-> >  >       { USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >  >       { USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
-> >
-> >  I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
-> >  We always handled adding IDs as features.
+On Fri, Feb 15, 2008 at 03:27:51PM -0500, Adam Turk wrote:
 > 
-> Please forgive me for stepping in this apparently already closed discussion.
+> > You need to enable KMOD. Otherwise you must manually preload
+> > the relevant modules.
 > 
-> Why is supporting a new USB ID considered a feature, when the users
-> are probably ok with it (it works) and no changes are added to the
-> code?
+> I thought that was what udev was for?  Anyway I recompiled with KMOD enabled and I have partial success.  I nolonger get any errors when I plug in my wireless card.  
 
-FWIW, I have often sent USB/PCI ID additions as "fixes" to the current
-release.  There may have been some confusion over that in the past --
-if I created that confusion, I apologize. :-)
+No udev provides auto-loading for device drivers of e.g., PCI
+devices.  KMOD loads things like network protocols or crypto
+algorithms that are not device-backed.
 
-Thanks,
-
-John
+Cheers,
 -- 
-John W. Linville
-linville@tuxdriver.com
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
