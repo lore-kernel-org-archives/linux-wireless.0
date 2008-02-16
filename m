@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51859 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778AbYBYVYQ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39369
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757627AbYBPAIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 16:24:16 -0500
-Subject: Re: [PATCH 18/18] mac80211: enable mesh in Kconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203973083.6929.79.camel@localhost> (sfid-20080225_205634_226995_07239062)
-References: <20080223141703.194775000@sipsolutions.net>
-	 <20080223142018.468705000@sipsolutions.net>
-	 <1203973083.6929.79.camel@localhost> (sfid-20080225_205634_226995_07239062)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V8hRIePxtKsfwTzrxAhl"
-Date: Mon, 25 Feb 2008 22:24:07 +0100
-Message-Id: <1203974647.13162.174.camel@johannes.berg> (sfid-20080225_212420_862124_CD0924DD)
+	Fri, 15 Feb 2008 19:08:25 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by sunset.davemloft.net (Postfix) with ESMTP id 53E1EC8C1F1
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 16:08:59 -0800 (PST)
+Date: Fri, 15 Feb 2008 16:08:59 -0800 (PST)
+Message-Id: <20080215.160859.33950358.davem@davemloft.net> (sfid-20080216_000833_442805_948159DF)
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH]: Fix ath5k build warnings on 64-bit.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-V8hRIePxtKsfwTzrxAhl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[ATH5K]: Fix build warnings on some 64-bit platforms.
 
+'u64' is not necessarily 'unsigned long long'
 
-On Mon, 2008-02-25 at 12:58 -0800, Luis Carlos Cobo wrote:
-> On Sat, 2008-02-23 at 15:17 +0100, Johannes Berg wrote:
-> > Currently marked BROKEN because of endianness problems.
->=20
-> Will take care of those problems.
+drivers/net/wireless/ath5k/base.c: In function 'ath5k_beacon_update_timers':
+drivers/net/wireless/ath5k/base.c:2130: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'u64'
+drivers/net/wireless/ath5k/base.c:2130: warning: format '%llx' expects type 'long long unsigned int', but argument 5 has type 'u64'
+drivers/net/wireless/ath5k/base.c: In function 'ath5k_intr':
+drivers/net/wireless/ath5k/base.c:2391: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'u64'
 
-Oh this reminds me.
+Signed-off-by: David S. Miller <davem@davemloft.net>
 
-You have a lot of macros like
-
-#define PREQ_IE_ORIG_DSN(x) le32_to_cpu(*((u32 *) (x + 13)))
-
-Would it be possible to define the preq IE as a struct? Not sure if it
-is. Either way, this should be converted to a static inline instead of a
-macro.
-
-Also, you need to add a lot of get_unaligned() to the code. Please read
-Daniel's excellent Documentation/unaligned-memory-access.txt
-
-johannes
-
---=-V8hRIePxtKsfwTzrxAhl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Mx9qVg1VMiehFYAQITTw//axHezqquEP1ZAU68DSuckFKqp2cthASj
-okKE88GMEagJKVddM62ju0wucLYaYpB3hLagJXvghcHQ+vm/rsFxwm5+W0YcpG6g
-o40FrSVXIG1HKB/0U8uTmghFPHxNm4d6quNfdjsMg9NKetA+i8oTc14Q03gBuX/f
-EbX6qD9kYYc/4ovDjTVmePzt/D1lpQTaiem5koZ0ZeQ+3hJ24pMHPeHnhPVJsVZF
-s/HAkCGG6p3emL+Wl7s+AgdWEmj6R/F6178L+Yyuv+JDW4t/p7egT/ONJGBxr54g
-Z1AUSuDlSzGGkEsr7tkrKZ3YapNImODr2mDY0NP7sZa3sWaXrWsnj770BYXgxZkX
-qJhz1EGgauAIpNELdZuhEa7BJwZQgv46/56S/mF2IJnJq0cmc0IIe7ZpOSwzrMOw
-6FMYhVF9Fhl96UBlCFjQAQN+BM70n9SiaQ3EN/6yQgTVTz+BxB5ZZk7T2UnBg8ac
-LxiOGlhDgmrFfejITBRDAVhwmotXSM2Yf5vkTYXh05jAMVOzTxFGKQI5bLB0HXnz
-tPsRL2D1G71Itp28/O42s0BBhyp8AXFZ1J/Vw2zM2jYA2A6cxqyuQ8cswU0dKqOW
-ThU++ipADY9PIzn5N/jSwtjzrrfSs5DYeAU+6HH5BpMis68APUS+6b1p9XxeHdnC
-MKRzSEzP49s=
-=NDLR
------END PGP SIGNATURE-----
-
---=-V8hRIePxtKsfwTzrxAhl--
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index dfdaec0..1e860f5 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2126,8 +2126,9 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
+ 			"updated timers based on beacon TSF\n");
+ 
+ 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
+-		"bc_tsf %llx hw_tsf %llx bc_tu %u hw_tu %u nexttbtt %u\n",
+-		bc_tsf, hw_tsf, bc_tu, hw_tu, nexttbtt);
++			  "bc_tsf %llx hw_tsf %llx bc_tu %u hw_tu %u nexttbtt %u\n",
++			  (unsigned long long) bc_tsf,
++			  (unsigned long long) hw_tsf, bc_tu, hw_tu, nexttbtt);
+ 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "intval %u %s %s\n",
+ 		intval & AR5K_BEACON_PERIOD,
+ 		intval & AR5K_BEACON_ENA ? "AR5K_BEACON_ENA" : "",
+@@ -2385,10 +2386,11 @@ ath5k_intr(int irq, void *dev_id)
+ 					u64 tsf = ath5k_hw_get_tsf64(ah);
+ 					sc->nexttbtt += sc->bintval;
+ 					ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+-						"SWBA nexttbtt: %x hw_tu: %x "
+-						"TSF: %llx\n",
+-						sc->nexttbtt,
+-						TSF_TO_TU(tsf), tsf);
++						  "SWBA nexttbtt: %x hw_tu: %x "
++						  "TSF: %llx\n",
++						  sc->nexttbtt,
++						  TSF_TO_TU(tsf),
++						  (unsigned long long) tsf);
+ 				} else {
+ 					ath5k_beacon_send(sc);
+ 				}
