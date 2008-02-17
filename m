@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:6195 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807AbYBVHkK (ORCPT
+Received: from lunatiki.de ([85.214.70.22]:40566 "EHLO
+	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752368AbYBQVh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 02:40:10 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so512275fkz.5
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:40:08 -0800 (PST)
-From: Chris Clayton <chris2553@googlemail.com>
-Reply-To: chris2553@googlemail.com
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-Date: Fri, 22 Feb 2008 07:39:15 +0000
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802212304.28731.chris2553@googlemail.com> <1203636027.3186.5.camel@boulder.homenet>
-In-Reply-To: <1203636027.3186.5.camel@boulder.homenet>
+	Sun, 17 Feb 2008 16:37:57 -0500
+From: Patrick Grimm <patrick@lunatiki.de>
+To: Richard Scherping <richard@scherping.de>
+Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
+Date: Sun, 17 Feb 2008 22:37:57 +0100
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+References: <47B1F422.4060501@scherping.de> <47B60044.9000801@scherping.de> <200802160119.07856.patrick@lunatiki.de>
+In-Reply-To: <200802160119.07856.patrick@lunatiki.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802220739.15366.chris2553@googlemail.com> (sfid-20080222_074018_231768_390CD775)
+  charset="iso-8859-1"
+Message-Id: <200802172237.57638.patrick@lunatiki.de> (sfid-20080217_213801_174924_D4C21EAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 21 February 2008, Chris Vine wrote:
-> On Thu, 2008-02-21 at 23:04 +0000, Chris Clayton wrote:
-> > On Thursday 21 February 2008, Ivo van Doorn wrote:
-> > > On Thursday 21 February 2008, Chris Vine wrote:
-> [snip]
-> > > > This probably explains the problem another user reported with rt61.
-> > > 
-> > > Perhaps something similar like:
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=10058
-> > > in there a reference is made to the following patch:
-> > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
-> > > 
-> > > Does applying that help?
-> > 
-> > I'm afraid not, Ivo. The test I ran last night was against 2.6.25.-rc2-git4 and
-> > that already has this patch applied. Furthermore, I have another card that uses
-> > the rtl8180 driver and that works reliably. I, therefore, suspect that my problem
-> > lies within the rt61pci driver or the rt2x00 infrastructure.
-> 
-> Does the same happen with 2.0.14 under kernel 2.6.24?
+Am Samstag, 16. Februar 2008 01:19:07 schrieb Patrick Grimm:
+> Am Freitag, 15. Februar 2008 22:12:36 schrieb Richard Scherping:
+> > Chatre, Reinette schrieb:
+> > >>> One more question ... did ad-hoc work for you before this patch?
+> > >>
+> > >> No. In my tests only ipw3945 works in Ad-Hoc mode.
+> > >
+> > > ok - that explains things. The patch assumes that ad-hoc mode is
+> > > working, which is unfortunately not the case. We have to fix this.
+> > >
+> > > Reinette
+> >
+> > As I said, I have tested with iwl4965 only. Seems as if there are more
+> > problems with ad-hoc and iwl3945. Did ad-hoc work in the "old" iwl3945
+> > (before the API change with old version 1.1.17, compared to new version
+> > 1.2.23/26)?
+>
+> I have made some short tests with my working kernel 2.6.23.
+With 2 Ad-Hoc Nodes.
+> Version 1.1.17 - 1.1.22 Ad-Hoc mode is working.
+> Version 1.1.23 -            Ad-Hoc mode is not working.
 
-Unfortunately, a 2.6.24.2 tree with the drivers/net/wireless/rt2x00 directory replaced with that from 2.6.25-rc2-git4 doesn't build:
+The iwlwifi versions 1.1.17 - everything is not working
+with more then 2 Ad-Hoc Nodes.
 
-In file included from drivers/net/wireless/rt2x00/rt2x00dev.c:29:
-drivers/net/wireless/rt2x00/rt2x00.h:942: warning: `struct ieee80211_bss_conf' declared inside parameter list
-drivers/net/wireless/rt2x00/rt2x00.h:942: warning: its scope is only this definition or declaration, which is probably not what you want
+Please keep me updated I will test your patches again.
 
-[...]
-
-drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_configuration_scheduled':
-drivers/net/wireless/rt2x00/rt2x00dev.c:484: error: storage size of `bss_conf' isn't known
-drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: `BSS_CHANGED_ERP_PREAMBLE' undeclared (first use in this function)
-drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: for each function it appears in.)
-drivers/net/wireless/rt2x00/rt2x00dev.c:484: warning: unused variable `bss_conf'
-drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_beacondone_scheduled':
-drivers/net/wireless/rt2x00/rt2x00dev.c:511: warning: passing arg 2 of `ieee80211_beacon_get' makes integer from pointer without a cast
-
-> 
-> Chris
-> 
-> 
-> 
-> 
-
--- 
-Beauty is in the eye of the beerholder.
+Patrick
