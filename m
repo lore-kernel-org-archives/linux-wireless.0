@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4740 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933971AbYBTUde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 15:33:34 -0500
-Date: Wed, 20 Feb 2008 15:25:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: bruno randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Renzmann <mrenzmann@madwifi.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: when does ath5k filter frames?
-Message-ID: <20080220202518.GD3825@tuxdriver.com> (sfid-20080220_203340_020826_46DA6E91)
-References: <1203514108.17534.41.camel@johannes.berg>
+Received: from aa012msr.fastwebnet.it ([85.18.95.72]:60819 "EHLO
+	aa012msr.fastwebnet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754609AbYBQKNS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Feb 2008 05:13:18 -0500
+Received: from localhost (23.249.105.73) by aa012msr.fastwebnet.it (8.0.013.5)
+        id 47AAE88C0174BF55 for linux-wireless@vger.kernel.org; Sun, 17 Feb 2008 11:13:02 +0100
+Date: Sun, 17 Feb 2008 11:12:00 +0100
+From: Fabio Venturi <f.venturi@tdnet.it>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problem compiling ath5k
+Message-ID: <20080217101159.GA7234@silverstar> (sfid-20080217_101410_020712_44D8DA82)
+References: <20080216103846.GC9290@silverstar> <1c252d490802160400gd8a11a6y7e164d9b05f626c8@mail.gmail.com> <20080216172923.GA7439@silverstar> <1c252d490802161607t2bfa8545m1d48b17b272d2534@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1203514108.17534.41.camel@johannes.berg>
+In-Reply-To: <1c252d490802161607t2bfa8545m1d48b17b272d2534@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 20, 2008 at 02:28:28PM +0100, Johannes Berg wrote:
-> Hi,
+On Sun, Feb 17, 2008 at 01:07:25AM +0100, Joachim Frieben wrote:
+> 2008/2/16, Fabio Venturi <f.venturi@tdnet.it>:
+> >
+> > On Sat, Feb 16, 2008 at 01:00:39PM +0100, Joachim Frieben wrote:
+> > OK,
+> > now the driver compile and load without any problem and
+> > the wlan0 and master0 devices are created.
+> > There are no error in dmesg, but I can't scan for stations,
+> > iwlist wlan0 scan
+> > says there are no active stations.
+> > Do I need extra modules for scanning?
+> > I'm using an Atheros AR2413, is this device supposed to work with
+> > the ath5k module?
 > 
-> In mac80211 we have a whole bunch of cryptic code to handle "filtered"
-> frames. The only driver that does that seems to be ath5k, and it doesn't
-> really seem to use this since it is intimately tied to
-> IEEE80211_TXCTL_CLEAR_DST_MASK which it doesn't check...
 > 
-> Any ideas? Should we kill all this code and not use whatever hardware
-> powersave helpers atheros hardware might have?
+> That's exactly the situation that I do encounter myself because I'm using
+> the same chipset. I have tried a preview snapshot of the ath5k driver which
+> is not public yet, and for that one scanning works! 
+
+Where can I get that preview snapshot of ath5k? 
+I could test it.
+
+> However, data
+> transmission doesn't work yet. The main developer is about to resume work on
+> the driver after a break since late December, and he has some pending stuff
+> which needs to be merged with the development tree. Stay tuned, this should
+> be a matters of days. Any significant update will be announced on the
+> wireless list anyway. There are many people out there eagerly waiting for
+> this to happen ...
 > 
-> On the other hand, Broadcom also has powersave helpers in
-> hardware/firmware, maybe we should generalise to be able to use them as
-> well?
+> Cheers,
+> 
+> JF
 
-Do we understand either of these (i.e. Broadcom or Atheros) helpers
-well enough to utilize them?  If so, it sounds like a nice feature
-to support.  Hardware/firmware may be able to do nifty things to
-save power.
+I'll stay tuned as you suggest.
+Best regards,
+Fabio
 
-If we don't really know how those helpers work, it may be better just
-to remove the unused infrastructure.
 
-Is my opinion useful? :-)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
+> Luis R. Rodriguez wrote:
+>
+> You need to turn your interface up first:
+
+> ip link set wlan0 up
+
+> Or
+
+> ifconfig wlan0 up
+
+>   Luis
+
+The interface is up and running, but somehow it seems missing
+the beacon packets.
+Best regards,
+Fabio
