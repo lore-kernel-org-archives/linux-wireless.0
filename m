@@ -1,88 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.wanadoo.co.uk ([193.252.22.157]:22202 "EHLO
-	smtp2.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933971AbYBTUbS (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:30440 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079AbYBQQfv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 15:31:18 -0500
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chris2553@googlemail.com,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <1203523555.693.2.camel@localhost.localdomain>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <200802191026.57640.IvDoorn@gmail.com>
-	 <200802191900.09543.chris2553@googlemail.com>
-	 <200802192046.14184.IvDoorn@gmail.com>
-	 <1203462247.6397.15.camel@boulder.homenet>
-	 <1203523555.693.2.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 20:27:15 +0000
-Message-Id: <1203539235.3189.4.camel@boulder.homenet> (sfid-20080220_203124_190909_E06A9ED5)
-Mime-Version: 1.0
+	Sun, 17 Feb 2008 11:35:51 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1391418fkz.5
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2008 08:35:51 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 04/11] rt2x00: Filter ACK_CTS based on FIF_CONTROL
+Date: Sun, 17 Feb 2008 17:33:13 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802171730.44353.IvDoorn@gmail.com>
+In-Reply-To: <200802171730.44353.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802171733.13851.IvDoorn@gmail.com> (sfid-20080217_163610_510368_BCE529EA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The ACK_CTS frame is a control frame, this means
+dropping the frame depends on the FIF_CONTROL flag
+for filtering.
 
-On Wed, 2008-02-20 at 11:05 -0500, Dan Williams wrote: 
-> On Tue, 2008-02-19 at 23:04 +0000, Chris Vine wrote:
-> > On Tue, 2008-02-19 at 20:46 +0100, Ivo van Doorn wrote:
-> > > Hi,
-> > > 
-> > > [added rt2400-devel (rt2x00 development mailinglist) to the CC list.]
-> > > 
-> > > > > > > I have a series of tests I would like to request from you,
-> > > > > > > you mentioned you already enabled debugfs, and that is just what we need. ;)
-> > > > > > > Please use attached script to create dumps of the hardware register contents.
-> > > > > > > 
-> > > > > > > There are specific moments that should be dumped:
-> > > > > > > - kernel 2.6.24 (last known working version for you).
-> > > > > > > - kernel 2.6.25-rc2 (after ifup, before TX dies)
-> > > > > > > - kernel 2.6.25-rc2 (after ifup, after TX dies)
-> > > > > > >  
-> > > > > > 
-> > > > > > These diagnostics are attached, with obvious filenames.
-> > > > > 
-> > > > > Thanks. I think I found something, please test below patch:
-> > > > > 
-> > > > 
-> > > > I've tried the patch but, unfortunately, my wireless LAN still dies after a few pings.
-> > 
-> > rt2x00 2.0.14 is broken with my rt73 stick in the vanilla 2.6.25-rc2
-> > kernel (not wireless-2.6/rt2x00 git).  The modules load when I plug the
-> > stick in but I then get a complete kernel lock up with two flashing
-> > leds.  Nothing is recorded to system logs.  The last logged messages are
-> > that usbcore has registered new interface driver rt73usb, and that the
-> > rate control algorithm has been selected on phy0.  This happens whether
-> > the simple or pid mac80211 rate control algorithms have been chosen.
-> > 
-> > This is a shame because 2.0.14 was working really well for me until the
-> > mac80211 changes 2 or 3 weeks ago broke it.  (Shortly followed by the
-> > release of 2.1.*).
-> 
-> Switch to a VT with Ctl+Alt+1, then plug the stick in, and take a
-> picture of the panic if one shows up.  _Something_ should show up on the
-> VT.
+This also fixes an obvious typo in register definition.
 
-I did that yesterday and it just reported a kernel panic on the terminal
-with the message:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |    5 +++--
+ drivers/net/wireless/rt2x00/rt61pci.h |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c |    3 ++-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-  Kernel panic - not syncing: Aiee, killing interrupt handler!
-
-There is a complete lock up.  Even the two leds don't send a dump in
-morse code (if that is still a feature of the 2.6 kernels).  They just
-flash together at 1 second intervals.
-
-However, I do not have debugging enabled on 2.6.25-rc2 (I was just
-interested to see how it worked).  If it is thought to be useful I can
-recompile the kernel with debugging enabled, but this should be
-reproducible by anyone with a rt73 stick.
-
-By way of a further data point, I can scan OK using 2.6.25-rc2 and it
-will report all the available access points in my area.  But as soon as
-association is attempted, it blows up.
-
-Chris
-
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index a7aebb4..722d734 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2328,8 +2328,9 @@ static void rt61pci_configure_filter(struct ieee80211_hw *hw,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
+ 			   !(*total_flags & FIF_ALLMULTI));
+-	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_BORADCAST, 0);
+-	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_ACK_CTS, 1);
++	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_BROADCAST, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_ACK_CTS,
++			   !(*total_flags & FIF_CONTROL));
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index 2f9a889..d504e70 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -405,7 +405,7 @@ struct hw_pairwise_ta_entry {
+ #define TXRX_CSR0_DROP_TO_DS		FIELD32(0x00200000)
+ #define TXRX_CSR0_DROP_VERSION_ERROR	FIELD32(0x00400000)
+ #define TXRX_CSR0_DROP_MULTICAST	FIELD32(0x00800000)
+-#define TXRX_CSR0_DROP_BORADCAST	FIELD32(0x01000000)
++#define TXRX_CSR0_DROP_BROADCAST	FIELD32(0x01000000)
+ #define TXRX_CSR0_DROP_ACK_CTS		FIELD32(0x02000000)
+ #define TXRX_CSR0_TX_WITHOUT_WAITING	FIELD32(0x04000000)
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 3ccf4fd..615415a 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1925,7 +1925,8 @@ static void rt73usb_configure_filter(struct ieee80211_hw *hw,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
+ 			   !(*total_flags & FIF_ALLMULTI));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_BROADCAST, 0);
+-	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_ACK_CTS, 1);
++	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_ACK_CTS,
++			   !(*total_flags & FIF_CONTROL));
+ 	rt73usb_register_write(rt2x00dev, TXRX_CSR0, reg);
+ }
+ 
+-- 
+1.5.4
 
