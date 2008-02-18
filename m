@@ -1,123 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from general-networks3.cust.sloane.cz ([88.146.176.14]:57440 "EHLO
-	server.generalnetworks.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284AbYBFKtY (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbYBRNUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 05:49:24 -0500
-From: Jiri Slaby <jirislaby@gmail.com>
-To: Tino Keitel <tino.keitel@gmx.de>
-Cc: <linux-kernel@vger.kernel.org>, ath5k-devel@lists.ath5k.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: [RFT 1/1] single_chip test
-Date: Wed,  6 Feb 2008 11:42:40 +0100
-Message-Id: <1202294560-7313-1-git-send-email-jirislaby@gmail.com> (sfid-20080206_104927_730471_BCFA5CBB)
-In-Reply-To: <20080206014131.9d489a34.akpm@linux-foundation.org>
-References: <20080206014131.9d489a34.akpm@linux-foundation.org>
+	Mon, 18 Feb 2008 08:20:54 -0500
+Subject: [PATCH] rtl818x: fix RTS/CTS-less transmit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	David G Hamblen <dhamblen@roadrunner.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 18 Feb 2008 14:20:30 +0100
+Message-Id: <1203340830.12783.42.camel@johannes.berg> (sfid-20080218_132058_778590_1AE55D5E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2008 11:57 PM, Tino Keitel wrote:
-> Hi,
-> 
-> I tried the current git (9ef9dc69d4167276c04590d67ee55de8380bc1ad) and
-> got the following error message from ath5k:
-> 
-> ath5k_pci 0000:02:00.0: registered as 'phy0'
-> ath5k phy0: failed to resume the MAC Chip
-> ath5k_pci: probe of 0000:02:00.0 failed with error -5
+This fixes packet transmission of packets without RTS/CTS.
 
-We failed to resume after a hardware reset here for a whole second. Is there any 
-version of ath5k which worked for you (is this a regression)?
-
-> Here is the lspci -vnn output:
-> 
-> 02:00.0 Ethernet controller [0200]: Atheros Communications, Inc.
-> AR5006EG 802.11 b/g Wireless PCI Express Adapter [168c:001c] (rev 01)
-> 	Subsystem: Apple Computer Inc. Unknown device [106b:0086]
-> 	Flags: fast devsel, IRQ 17
-> 	Memory at 90100000 (64-bit, non-prefetchable) [disabled]
-> 	[size=64K]
-> 	Capabilities: [40] Power Management version 2
-> 	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
-> 	Queue=0/0 Enable-
-> 	Capabilities: [60] Express Legacy Endpoint, MSI 00
-> 	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-> 	Capabilities: [100] Advanced Error Reporting <?>
-> 	Capabilities: [140] Virtual Channel <?>
-> 	Kernel modules: ath5k
-> 
-> The same device works with madwifi:
-> 
-> ath_rate_sample: 1.2 (svn r3339)
-> MadWifi: ath_attach: Switching per-packet transmit power control off
-> wifi0: 11a rates: 6Mbps 9Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: 11b rates: 1Mbps 2Mbps 5.5Mbps 11Mbps
-> wifi0: 11g rates: 1Mbps 2Mbps 5.5Mbps 11Mbps 6Mbps 9Mbps 12Mbps 18Mbps
-> 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: turboG rates: 6Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: H/W encryption support: WEP AES AES_CCM TKIP
-> wifi0: ath_announce: Use hw queue 1 for WME_AC_BE traffic
-> wifi0: ath_announce: Use hw queue 0 for WME_AC_BK traffic
-> wifi0: ath_announce: Use hw queue 2 for WME_AC_VI traffic
-> wifi0: ath_announce: Use hw queue 3 for WME_AC_VO traffic
-> wifi0: ath_announce: Use hw queue 8 for CAB traffic
-> wifi0: ath_announce: Use hw queue 9 for beacons
-> ath_pci: wifi0: Atheros 5424/2424: mem=0x90100000, irq=17
-> 
-> I can also set the interface up and use iwlist ath0 scan.
-
-Hmm, I guess madwif-old-openhal doesn't work either.
-
-I suspect ath5k_hw_nic_wakeup being called before setting ah_single_chip in 
-ath5k_hw_attach. Could you test the attached patch?
-
---
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath5k/hw.c |   21 ++++++++++-----------
- 1 files changed, 10 insertions(+), 11 deletions(-)
+This patch is similar to the one you already tested and also fixes
+rtl8180.
 
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 3a4bf40..b56d239 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -181,11 +181,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	else if (ah->ah_version <= AR5K_AR5211)
- 		ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
+ drivers/net/wireless/rtl8180_dev.c |   14 ++++++++++----
+ drivers/net/wireless/rtl8187_dev.c |   12 +++++++++---
+ 2 files changed, 19 insertions(+), 7 deletions(-)
+
+--- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:19:40.070030491 +0100
++++ everything/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:52:19.960028104 +0100
+@@ -176,17 +176,23 @@ static int rtl8187_tx(struct ieee80211_h
  
--	/* Bring device out of sleep and reset it's units */
--	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
--	if (ret)
--		goto err_free;
--
- 	/* Get MAC, PHY and RADIO revisions */
- 	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
- 	ah->ah_mac_srev = srev;
-@@ -210,12 +205,16 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	}
- 
- 	/* Identify single chip solutions */
--	if((srev <= AR5K_SREV_VER_AR5414) &&
--	(srev >= AR5K_SREV_VER_AR2424)) {
--		ah->ah_single_chip = true;
--	} else {
--		ah->ah_single_chip = false;
+ 	flags = skb->len;
+ 	flags |= RTL8187_TX_FLAG_NO_ENCRYPT;
+-	flags |= control->rts_cts_rate->hw_value << 19;
++
++	BUG_ON(!control->tx_rate);
++
+ 	flags |= control->tx_rate->hw_value << 24;
+ 	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb->data))
+ 		flags |= RTL8187_TX_FLAG_MORE_FRAG;
+ 	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
++		BUG_ON(!control->rts_cts_rate);
+ 		flags |= RTL8187_TX_FLAG_RTS;
++		flags |= control->rts_cts_rate->hw_value << 19;
+ 		rts_dur = ieee80211_rts_duration(dev, priv->vif,
+ 						 skb->len, control);
 -	}
-+	ah->ah_single_chip = !!(srev >= AR5K_SREV_VER_AR2424 &&
-+			srev <= AR5K_SREV_VER_AR5414);
-+
-+	printk(KERN_INFO "SINGLE: %d, srev: %x, phy:\n",
-+			ah->ah_single_chip, srev, ah->ah_phy_revision);
-+
-+	/* Bring device out of sleep and reset it's units */
-+	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
-+	if (ret)
-+		goto err_free;
+-	if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
++	} else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT) {
++		BUG_ON(!control->rts_cts_rate);
+ 		flags |= RTL8187_TX_FLAG_CTS;
++		flags |= control->rts_cts_rate->hw_value << 19;
++	}
  
- 	/* Single chip radio */
- 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
--- 
-1.5.3.8
+ 	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
+ 	hdr->flags = cpu_to_le32(flags);
+--- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-02-18 12:50:51.580030491 +0100
++++ everything/drivers/net/wireless/rtl8180_dev.c	2008-02-18 12:52:48.240028429 +0100
+@@ -255,19 +255,25 @@ static int rtl8180_tx(struct ieee80211_h
+ 	mapping = pci_map_single(priv->pdev, skb->data,
+ 				 skb->len, PCI_DMA_TODEVICE);
+ 
++	BUG_ON(!control->tx_rate);
++
+ 	tx_flags = RTL8180_TX_DESC_FLAG_OWN | RTL8180_TX_DESC_FLAG_FS |
+ 		   RTL8180_TX_DESC_FLAG_LS |
+-		   (control->tx_rate->hw_value << 24) |
+-		   (control->rts_cts_rate->hw_value << 19) | skb->len;
++		   (control->tx_rate->hw_value << 24) | skb->len;
+ 
+ 	if (priv->r8185)
+ 		tx_flags |= RTL8180_TX_DESC_FLAG_DMA |
+ 			    RTL8180_TX_DESC_FLAG_NO_ENC;
+ 
+-	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
++	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
++		BUG_ON(!control->rts_cts_rate);
+ 		tx_flags |= RTL8180_TX_DESC_FLAG_RTS;
+-	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
++		tx_flags |= control->rts_cts_rate->hw_value << 19;
++	} else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT) {
++		BUG_ON(!control->rts_cts_rate);
+ 		tx_flags |= RTL8180_TX_DESC_FLAG_CTS;
++		tx_flags |= control->rts_cts_rate->hw_value << 19;
++	}
+ 
+ 	*((struct ieee80211_tx_control **) skb->cb) =
+ 		kmemdup(control, sizeof(*control), GFP_ATOMIC);
+
 
