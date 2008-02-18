@@ -1,100 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4528 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142AbYBGQLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 11:11:00 -0500
-Date: Thu, 7 Feb 2008 10:51:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, deller@gmx.de,
-	jt@hpl.hp.com, rjw@sisk.pl, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.arm.linux.org.uk
-Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
-Message-ID: <20080207155152.GA3025@tuxdriver.com> (sfid-20080207_161107_975828_521AAEF9)
-References: <200801131516.34567.deller@gmx.de> <20080202224515.20a09553.akpm@linux-foundation.org> <200802062150.23930.deller@gmx.de> <20080206130448.564f18bb.akpm@linux-foundation.org> <20080206214747.GG32245@flint.arm.linux.org.uk> <20080206135950.d48ffa36.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080206135950.d48ffa36.akpm@linux-foundation.org>
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:2592 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254AbYBRSbb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2008 13:31:31 -0500
+Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
+From: Joe Perches <joe@perches.com>
+To: Patrick McHardy <kaber@trash.net>
+Cc: David Miller <davem@davemloft.net>, bruno@thinktube.com,
+	netdev@vger.kernel.org, jgarzik@pobox.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <47B9A20C.10304@trash.net>
+References: <20080215104804.9870.15722.stgit@one>
+	 <20080215.025855.202184003.davem@davemloft.net>
+	 <1203097370.21308.18.camel@localhost>  <47B9A20C.10304@trash.net>
+Content-Type: text/plain
+Date: Mon, 18 Feb 2008 10:31:02 -0800
+Message-Id: <1203359462.7181.80.camel@localhost> (sfid-20080218_183150_933480_CE8C32E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2008 at 01:59:50PM -0800, Andrew Morton wrote:
-> On Wed, 6 Feb 2008 21:47:47 +0000
-> Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
+On Mon, 2008-02-18 at 16:19 +0100, Patrick McHardy wrote:
+> > @@ -404,11 +405,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+> >  
+> >  	pr_debug("%s: about to send skb: %p to dev: %s\n",
+> >  		__FUNCTION__, skb, skb->dev->name);
+> > -	pr_debug("  " MAC_FMT " " MAC_FMT " %4hx %4hx %4hx\n",
+> > -		 veth->h_dest[0], veth->h_dest[1], veth->h_dest[2],
+> > -		 veth->h_dest[3], veth->h_dest[4], veth->h_dest[5],
+> > -		 veth->h_source[0], veth->h_source[1], veth->h_source[2],
+> > -		 veth->h_source[3], veth->h_source[4], veth->h_source[5],
+> > +	pr_debug("  %s %s %4hx %4hx %4hx\n",
+> > +		 print_mac(mac, veth->h_dest), print_mac(mac2, veth->h_source),
+> This results in print_mac getting called twice per packet even without
+> debugging. Whats the problem with MAC_FMT?
 
-> > I assume that it's the second BUILD_BUG_ON() which is triggering?
-> 
-> yup.
-> 
-> > Given that:
-> > 
-> > #define MMW_SIZE        37
-> > 
-> > is not a multiple of sizeof(unsigned long) this is hardly surprising.
-> > 
-> > If structures are used to define a layout of something and must not
-> > contain compiler padding, it must be packed.  Given these structures
-> > contain just unsigned char, there's no concerns about >8bit loads
-> > becoming less efficient.
+It's just a consistency thing.
+It identifies code where MAC addresses are used.
+an allyesconfig is a bit smaller (~.1%).
+pr_debug is a noop when not debugging, print_mac is optimized away.
 
-Does a patch like this suffice?  I haven't checked whether such a
-patch implies that the BUILD_BUG_ON()'s become unnecessary...
-
-Does anyone actually have this hardware to test?
-
----
-
-From: John W. Linville <linville@tuxdriver.com>
-Subject: [PATCH] wavelan: mark hardware interfacing structures as packed
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wavelan.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/wavelan.h b/drivers/net/wireless/wavelan.h
-index 27172cd..964db3e 100644
---- a/drivers/net/wireless/wavelan.h
-+++ b/drivers/net/wireless/wavelan.h
-@@ -100,7 +100,7 @@ struct ha_t
- 	unsigned short	ha_piop1;	/* Program I/O Port 1 */
- 	unsigned short	ha_pior2;	/* Program I/O Address Register Port 2 */
- 	unsigned short	ha_piop2;	/* Program I/O Port 2 */
--};
-+} __attribute__ ((packed));
- 
- #define HA_SIZE		16
- 
-@@ -202,7 +202,7 @@ struct psa_t
-   unsigned char	psa_conf_status;	/* [0x3C] Conf Status, bit 0=1:config*/
-   unsigned char	psa_crc[2];		/* [0x3D] CRC-16 over PSA */
-   unsigned char	psa_crc_status;		/* [0x3F] CRC Valid Flag */
--};
-+} __attribute__ ((packed));
- 
- #define	PSA_SIZE	64
- 
-@@ -292,7 +292,7 @@ struct mmw_t
- #define	MMW_EXT_ANT_INTERNAL	0x00	/* Internal antenna */
- #define	MMW_EXT_ANT_EXTERNAL	0x03	/* External antenna */
- #define	MMW_EXT_ANT_IQ_TEST	0x1C	/* IQ test pattern (set to 0) */
--};
-+} __attribute__ ((packed));;
- 
- #define	MMW_SIZE	37
- 
-@@ -347,7 +347,7 @@ struct mmr_t
-   unsigned char	mmr_unused4[1];		/* unused */
-   unsigned char	mmr_fee_data_l;		/* Read data from EEPROM (low) */
-   unsigned char	mmr_fee_data_h;		/* Read data from EEPROM (high) */
--};
-+} __attribute__ ((packed));
- 
- #define	MMR_SIZE	36
- 
--- 
-1.5.3.3
-
--- 
-John W. Linville
-linville@tuxdriver.com
