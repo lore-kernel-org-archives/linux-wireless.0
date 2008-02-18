@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 136-022.dsl.labridge.com ([206.117.136.22]:2592 "EHLO
-	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254AbYBRSbb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59834 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759324AbYBRLQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 13:31:31 -0500
-Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
-From: Joe Perches <joe@perches.com>
-To: Patrick McHardy <kaber@trash.net>
-Cc: David Miller <davem@davemloft.net>, bruno@thinktube.com,
-	netdev@vger.kernel.org, jgarzik@pobox.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <47B9A20C.10304@trash.net>
-References: <20080215104804.9870.15722.stgit@one>
-	 <20080215.025855.202184003.davem@davemloft.net>
-	 <1203097370.21308.18.camel@localhost>  <47B9A20C.10304@trash.net>
-Content-Type: text/plain
-Date: Mon, 18 Feb 2008 10:31:02 -0800
-Message-Id: <1203359462.7181.80.camel@localhost> (sfid-20080218_183150_933480_CE8C32E1)
+	Mon, 18 Feb 2008 06:16:26 -0500
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bruno randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <200802181103.47670.bruno@thinktube.com>
+References: <1203088151.8931.197.camel@johannes.berg>
+	 <20080216022918.18775.59888.stgit@one>
+	 <1203239503.12783.22.camel@johannes.berg>
+	 <200802181103.47670.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7u0AmgHdIia6aeZoshfW"
+Date: Mon, 18 Feb 2008 12:16:18 +0100
+Message-Id: <1203333378.12783.35.camel@johannes.berg> (sfid-20080218_111652_356488_0B491467)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-02-18 at 16:19 +0100, Patrick McHardy wrote:
-> > @@ -404,11 +405,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
-> >  
-> >  	pr_debug("%s: about to send skb: %p to dev: %s\n",
-> >  		__FUNCTION__, skb, skb->dev->name);
-> > -	pr_debug("  " MAC_FMT " " MAC_FMT " %4hx %4hx %4hx\n",
-> > -		 veth->h_dest[0], veth->h_dest[1], veth->h_dest[2],
-> > -		 veth->h_dest[3], veth->h_dest[4], veth->h_dest[5],
-> > -		 veth->h_source[0], veth->h_source[1], veth->h_source[2],
-> > -		 veth->h_source[3], veth->h_source[4], veth->h_source[5],
-> > +	pr_debug("  %s %s %4hx %4hx %4hx\n",
-> > +		 print_mac(mac, veth->h_dest), print_mac(mac2, veth->h_source),
-> This results in print_mac getting called twice per packet even without
-> debugging. Whats the problem with MAC_FMT?
 
-It's just a consistency thing.
-It identifies code where MAC addresses are used.
-an allyesconfig is a bit smaller (~.1%).
-pr_debug is a noop when not debugging, print_mac is optimized away.
+--=-7u0AmgHdIia6aeZoshfW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> > This is assuming that we don't manage to process the frame within 192
+> > usecs. I guess that will be true since we defer it to a tasklet, but do
+> > we want to bet on it in the future or should we simply widen the window
+> > where the merge *won't* happen because the driver doesn't provide enoug=
+h
+> > info and also add the 24 bytes offset here?
+>=20
+> sorry, i was to fast in agreeing ;)
+> on a second thought i realized that we don't need to worry about that:
+>=20
+> since we get to handle the frame after it was received *completely*, we c=
+an be=20
+> sure that the current time returned by get_tsf() is later than the time w=
+hen=20
+> byte 24 was received. so no need for adding the offset.
+
+Hah, good point.
+
+johannes
+
+--=-7u0AmgHdIia6aeZoshfW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7lpAaVg1VMiehFYAQIhRg/7B1Vu1y31o5wIkXKNi3pOYFWeZoCRo6En
+SiK18IBnffPMrgxV8+k1hzW9RpN/BYkECeYRJcrQC40BN1paeSwz3Do+QTUkDquJ
+nBHCWF+vTLkxDthcBDUkWd5BQkOzROTOiZYQaJTDDhJfFThPF/oLe0kk01d08Dtn
+2JpZfOEX8+QEV0+8M1BveGw13dUl33NA8f4pD37DB4UmN6SWFzI4Y22/qzydqqQb
+HwZwhWEIOTkX+zI9u3Y/l01q1mBvGy1jEX1IqLkEMeVAI+pJ/vv+mgQqiE7RNMpK
+gIw06g2NTJaCZlBAnPf6UFV/JOL5bvy0jLJfwRVe301jhPEWfPXAMiKgyMxPT8En
+apYWtTjekag1XvnETmHEnaya5TGsHhJAUVqThbkBYoGjX/9DcHxOeKAn2Y/bXHk4
+x1Suz1VRRNJla2rjOkM+RFmk8Br0sLHlRGBdOsHY4IxMsIqsHhpAh5ToWHH/BZ8e
+9izRxGoXOu+qnD3A6dUL2gN7AIzATWaRYDUCGN4y5Du2nd7zEUdZuR1iki7bo2fY
+5yVAXVyca9PrjNax0OAmpr10cV0eeAWC3Zj9zfqgVzZKA6aBF8RC3YGPY2tLKdDQ
+SYi1t3hDlflppiJvWfpqODOoZwdr6rmZYAy522F48FfNdCFzvW+t7huG5gZRcfz2
+8JkZQOxluAg=
+=9Ns9
+-----END PGP SIGNATURE-----
+
+--=-7u0AmgHdIia6aeZoshfW--
 
