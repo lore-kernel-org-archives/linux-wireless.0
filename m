@@ -1,27 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.153]:58759 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754965AbYB1J1E (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:47900 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752883AbYBRCVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 04:27:04 -0500
-Received: by po-out-1718.google.com with SMTP id b23so5041973poe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 01:27:01 -0800 (PST)
-Message-ID: <d9360e520802280127l32f7f27ch401cf510cd5fd86c@mail.gmail.com> (sfid-20080228_092717_649155_CF81C8E4)
-Date: Thu, 28 Feb 2008 14:57:00 +0530
-From: "Bharat Bhushan" <bharat.b.bhushan@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: newbie help required
+	Sun, 17 Feb 2008 21:21:08 -0500
+From: Bruno Randolf <bruno@thinktube.com>
+Subject: [PATCH 1/3] mac80211: better definition of mactime
+To: ath5k-devel@lists.ath5k.org
+Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, flamingice@sourmilk.net, jbenc@suse.cz
+Date: Mon, 18 Feb 2008 11:20:51 +0900
+Message-ID: <20080218022050.5488.90242.stgit@one> (sfid-20080218_022111_700685_2FBF907D)
+In-Reply-To: <20080218021448.5488.10305.stgit@one>
+References: <20080218021448.5488.10305.stgit@one>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-i have been assigned the task of porting our existing 802.11 MAC
-stack to linux standard wireless stack(mac80211), i have prior
-experience of 802.11 but dont have any know how of code flow of
-mac80211 , can any one direct me to any useful link.
+define mactime as the time when the first data symbol arrived at the HW. the
+old definition was questionable because 802.11 defines timestamp only for
+beacon and probe response frames, and there it means the timestamp field.
 
-Thanks a lot in anticipation
+a stricter definition of mactime is necessary for correct merging of IBSS.
 
-Bharat
+note that it is up to the driver to convert whatever its hardware returns to
+this definition. unfortunately we don't know for example when atheros hardware
+takes its rx timestamp exactly :(
+
+Signed-off-by: Bruno Randolf <bruno@thinktube.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+
+ include/net/mac80211.h |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 460da54..1b807f4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -295,7 +295,8 @@ enum mac80211_rx_flags {
+  * The low-level driver should provide this information (the subset
+  * supported by hardware) to the 802.11 code with each received
+  * frame.
+- * @mactime: MAC timestamp as defined by 802.11
++ * @mactime: value in microseconds of the 64-bit Time Synchronization Function
++ * 	(TSF) timer when the first data symbol (MPDU) arrived at the hardware.
+  * @band: the active band when this frame was received
+  * @freq: frequency the radio was tuned to when receiving this frame, in MHz
+  * @ssi: signal strength when receiving this frame
+
