@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55891 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59817 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326AbYBRNUy (ORCPT
+	with ESMTP id S1757625AbYBRLQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 08:20:54 -0500
-Subject: [PATCH] rtl818x: fix RTS/CTS-less transmit
+	Mon, 18 Feb 2008 06:16:07 -0500
+Subject: Re: [PATCH] mac80211: enable IBSS merging
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	David G Hamblen <dhamblen@roadrunner.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 18 Feb 2008 14:20:30 +0100
-Message-Id: <1203340830.12783.42.camel@johannes.berg> (sfid-20080218_132058_778590_1AE55D5E)
+To: bruno randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <200802181042.44428.bruno@thinktube.com>
+References: <1203088151.8931.197.camel@johannes.berg>
+	 <20080216022918.18775.59888.stgit@one>
+	 <1203239503.12783.22.camel@johannes.berg>
+	 <200802181042.44428.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3RAVMVMgBpxSt1i0xxnS"
+Date: Mon, 18 Feb 2008 12:15:54 +0100
+Message-Id: <1203333354.12783.33.camel@johannes.berg> (sfid-20080218_111612_705937_6623C4CD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes packet transmission of packets without RTS/CTS.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This patch is similar to the one you already tested and also fixes
-rtl8180.
+--=-3RAVMVMgBpxSt1i0xxnS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/rtl8180_dev.c |   14 ++++++++++----
- drivers/net/wireless/rtl8187_dev.c |   12 +++++++++---
- 2 files changed, 19 insertions(+), 7 deletions(-)
 
---- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:19:40.070030491 +0100
-+++ everything/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:52:19.960028104 +0100
-@@ -176,17 +176,23 @@ static int rtl8187_tx(struct ieee80211_h
- 
- 	flags = skb->len;
- 	flags |= RTL8187_TX_FLAG_NO_ENCRYPT;
--	flags |= control->rts_cts_rate->hw_value << 19;
-+
-+	BUG_ON(!control->tx_rate);
-+
- 	flags |= control->tx_rate->hw_value << 24;
- 	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb->data))
- 		flags |= RTL8187_TX_FLAG_MORE_FRAG;
- 	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
-+		BUG_ON(!control->rts_cts_rate);
- 		flags |= RTL8187_TX_FLAG_RTS;
-+		flags |= control->rts_cts_rate->hw_value << 19;
- 		rts_dur = ieee80211_rts_duration(dev, priv->vif,
- 						 skb->len, control);
--	}
--	if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
-+	} else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT) {
-+		BUG_ON(!control->rts_cts_rate);
- 		flags |= RTL8187_TX_FLAG_CTS;
-+		flags |= control->rts_cts_rate->hw_value << 19;
-+	}
- 
- 	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
- 	hdr->flags = cpu_to_le32(flags);
---- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-02-18 12:50:51.580030491 +0100
-+++ everything/drivers/net/wireless/rtl8180_dev.c	2008-02-18 12:52:48.240028429 +0100
-@@ -255,19 +255,25 @@ static int rtl8180_tx(struct ieee80211_h
- 	mapping = pci_map_single(priv->pdev, skb->data,
- 				 skb->len, PCI_DMA_TODEVICE);
- 
-+	BUG_ON(!control->tx_rate);
-+
- 	tx_flags = RTL8180_TX_DESC_FLAG_OWN | RTL8180_TX_DESC_FLAG_FS |
- 		   RTL8180_TX_DESC_FLAG_LS |
--		   (control->tx_rate->hw_value << 24) |
--		   (control->rts_cts_rate->hw_value << 19) | skb->len;
-+		   (control->tx_rate->hw_value << 24) | skb->len;
- 
- 	if (priv->r8185)
- 		tx_flags |= RTL8180_TX_DESC_FLAG_DMA |
- 			    RTL8180_TX_DESC_FLAG_NO_ENC;
- 
--	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
-+	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
-+		BUG_ON(!control->rts_cts_rate);
- 		tx_flags |= RTL8180_TX_DESC_FLAG_RTS;
--	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
-+		tx_flags |= control->rts_cts_rate->hw_value << 19;
-+	} else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT) {
-+		BUG_ON(!control->rts_cts_rate);
- 		tx_flags |= RTL8180_TX_DESC_FLAG_CTS;
-+		tx_flags |= control->rts_cts_rate->hw_value << 19;
-+	}
- 
- 	*((struct ieee80211_tx_control **) skb->cb) =
- 		kmemdup(control, sizeof(*control), GFP_ATOMIC);
+> > which I think refers to the last hunk of your patch. However, hardware
+> > also has such filters, so I think we also should set the
+> > FIF_BCN_PRBRESP_PROMISC filter flag when IBSS is enabled, we don't want
+> > to force drivers to do this implicitly when IBSS interfaces are added.
+>=20
+> hmm, i don't know about that and i don't seem to need that for ath5k, so =
+can=20
+> we do that in a follow up patch, please?
 
+Yeah sure, we can do that.
+
+johannes
+
+--=-3RAVMVMgBpxSt1i0xxnS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR7lo6aVg1VMiehFYAQIDJA/8CPNEexOEXRUWHwTavnNc0o50lnKgN4Gl
+hvsxPBmKA9yfyhGhLRcHKXW+6GyKPr5i0TmxBeL2zgEx6CpH3P+xqmO7l5Q70+p+
+xSH1/P3k6tcePF3NkX4G9GF/8y6rd2tmXNEtoCM9URhR79EZ8s5bxDaH1f3tkpBT
+RNSynlEnampG4peYN0Ij4XfgVL9NLEhNVNFkhLqZkqa+xywId/BujMNHGU9yGrrM
+GIhrS5tA6BEamwmetO42xUv5uhSBLSlTsbiomHXzjLv3TTCautSYEiFMxtSJA2bh
+mJhP9q9ujFrV8nYpcRRE4RYG4sWC5TsTceQTbxpL/c1v3Obr9h63zOpsI/CTquxD
+uC98/O5BA96sVjQA2hDlFeVhQ/JhInNCL2m/Ni1N02WFV+FC7hstOT8M1E1NGNkZ
+rTI6H/wvFw972W9IqEuz1wwF6lUNXzq/nhn/5n7a4DQHgEvak93h690mPPqetvrC
+Ap2KyrlaakzK3SSu5vbDYIKHGGlXiPH82DxYpOgZwaxdIPSSOwpQmmD+WvMigIzX
+5R5cbBr92G1OO0noTgROJnE+KGBKc5j7dwqQ0MVo/1wAjWlH4uLLZBzgcRc2Yr7U
+Ds6JCnnTqZtxgF+US2+ZoeRJULdwvKBRPkxBznKnOnsHkeyEBPYqXEAafmcBSDrv
+IGdehL386qo=
+=QXPp
+-----END PGP SIGNATURE-----
+
+--=-3RAVMVMgBpxSt1i0xxnS--
 
