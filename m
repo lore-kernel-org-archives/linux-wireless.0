@@ -1,20 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694AbYBRLMn (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:48088 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbYBRRy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 06:12:43 -0500
+	Mon, 18 Feb 2008 12:54:29 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
 Subject: [PATCH] b43(legacy): include full timestamp in beacon frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 18 Feb 2008 09:05:54 +0100
-Message-Id: <1203321954.12783.30.camel@johannes.berg> (sfid-20080218_111247_946909_C77AC667)
-Mime-Version: 1.0
+Date: Mon, 18 Feb 2008 18:53:55 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+MIME-Version: 1.0
+Message-Id: <200802181853.56155.mb@bu3sch.de> (sfid-20080218_175432_760252_DA14FD34)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
+
+From: Johannes Berg <johannes@sipsolutions.net>
 
 Having the full RX timestamp in beacons is necessary for IBSS
 merge to work properly so extend the 16-bit timestamp to the
@@ -22,8 +25,7 @@ full 64 bits for beacon frames (as well as when monitor mode
 is active.)
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-NB: I don't test IBSS, it doesn't interest me enough.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
  drivers/net/wireless/b43/xmit.c       |   14 +++++++++-----
  drivers/net/wireless/b43legacy/xmit.c |   14 +++++++++-----
@@ -79,3 +81,9 @@ NB: I don't test IBSS, it doesn't interest me enough.
  		b43legacy_tsf_read(dev, &status.mactime);
 
 
+
+
+-------------------------------------------------------
+
+-- 
+Greetings Michael.
