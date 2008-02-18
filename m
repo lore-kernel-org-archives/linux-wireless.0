@@ -1,109 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:18515 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217AbYBZP3t (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:36316 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751582AbYBRBnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 10:29:49 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: Remove unused exports
-Date: Tue, 26 Feb 2008 15:26:56 +0100
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, rolandd@cisco.com
+	Sun, 17 Feb 2008 20:43:11 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: enable IBSS merging
+Date: Mon, 18 Feb 2008 10:42:43 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+References: <1203088151.8931.197.camel@johannes.berg> <20080216022918.18775.59888.stgit@one> <1203239503.12783.22.camel@johannes.berg>
+In-Reply-To: <1203239503.12783.22.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802261526.57001.hs4233@mail.mn-solutions.de> (sfid-20080226_152954_993547_858CCB39)
+  charset="utf-8"
+Message-Id: <200802181042.44428.bruno@thinktube.com> (sfid-20080218_014316_391089_01B6B2A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Dreier <rdreier@cisco.com>
+On Sunday 17 February 2008 18:11:43 Johannes Berg wrote:
+> Looks good, thanks for your patience. 
 
-The libertas driver exports a number of symbols with no in-tree users;
-remove these unused exports.  lbs_reset_device() is completely unused, with
-no callers at all, so remove the function completely.
+thanks for your review :)
 
-A couple of these unused exported symbols are static, which causes the
-following build error on ia64 with gcc 4.2.3:
+> I have two minor comments still, 
+> sorry for the lack of focus in earlier review.
+>
+> > +		} else if (local && local->ops && local->ops->get_tsf)
+> > +			/* second best option: get current TSF */
+> > +			rx_timestamp = local->ops->get_tsf(local_to_hw(local));
+>
+> This is assuming that we don't manage to process the frame within 192
+> usecs. I guess that will be true since we defer it to a tasklet, but do
+> we want to bet on it in the future or should we simply widen the window
+> where the merge *won't* happen because the driver doesn't provide enough
+> info and also add the 24 bytes offset here?
 
-    drivers/net/wireless/libertas/main.c:1375: error: __ksymtab_lbs_remove_mesh causes a section type conflict
-    drivers/net/wireless/libertas/main.c:1354: error: __ksymtab_lbs_add_mesh causes a section type conflict
+true. i'll change that and resend the patch. i have to rebase it anyways for 
+the current tree.
 
-Signed-off-by: Roland Dreier <rolandd@cisco.com>
-Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> Also something else that just occurred to me... You wrote in the
+>
+> description:
+> > * to enable this we have to let all beacons thru in IBSS mode, even if
+> > they have a different BSSID.
+>
+> which I think refers to the last hunk of your patch. However, hardware
+> also has such filters, so I think we also should set the
+> FIF_BCN_PRBRESP_PROMISC filter flag when IBSS is enabled, we don't want
+> to force drivers to do this implicitly when IBSS interfaces are added.
 
+hmm, i don't know about that and i don't seem to need that for ath5k, so can 
+we do that in a follow up patch, please?
 
-Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2008-02-26 11:53:55.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2008-02-26 11:54:29.000000000 +0100
-@@ -1066,7 +1066,6 @@ int lbs_mesh_access(struct lbs_private *
- 	lbs_deb_leave(LBS_DEB_CMD);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(lbs_mesh_access);
- 
- int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan)
- {
-@@ -1571,7 +1570,6 @@ done:
- 	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(lbs_prepare_and_send_command);
- 
- /**
-  *  @brief This function allocates the command buffer and link
-Index: wireless-2.6/drivers/net/wireless/libertas/decl.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/decl.h	2008-02-26 11:54:33.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/decl.h	2008-02-26 11:54:44.000000000 +0100
-@@ -69,7 +69,6 @@ struct lbs_private *lbs_add_card(void *c
- int lbs_remove_card(struct lbs_private *priv);
- int lbs_start_card(struct lbs_private *priv);
- int lbs_stop_card(struct lbs_private *priv);
--int lbs_reset_device(struct lbs_private *priv);
- void lbs_host_to_card_done(struct lbs_private *priv);
- 
- int lbs_update_channel(struct lbs_private *priv);
-Index: wireless-2.6/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/libertas/main.c	2008-02-26 11:54:54.000000000 +0100
-+++ wireless-2.6/drivers/net/wireless/libertas/main.c	2008-02-26 11:55:28.000000000 +0100
-@@ -1366,8 +1366,6 @@ done:
- 	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(lbs_add_mesh);
--
- 
- static void lbs_remove_mesh(struct lbs_private *priv)
- {
-@@ -1387,7 +1385,6 @@ static void lbs_remove_mesh(struct lbs_p
- 	free_netdev(mesh_dev);
- 	lbs_deb_leave(LBS_DEB_MESH);
- }
--EXPORT_SYMBOL_GPL(lbs_remove_mesh);
- 
- /**
-  *  @brief This function finds the CFP in
-@@ -1473,20 +1470,6 @@ void lbs_interrupt(struct lbs_private *p
- }
- EXPORT_SYMBOL_GPL(lbs_interrupt);
- 
--int lbs_reset_device(struct lbs_private *priv)
--{
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_MAIN);
--	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RESET,
--				    CMD_ACT_HALT, 0, 0, NULL);
--	msleep_interruptible(10);
--
--	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
--	return ret;
--}
--EXPORT_SYMBOL_GPL(lbs_reset_device);
--
- static int __init lbs_init_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_MAIN);
+bruno
