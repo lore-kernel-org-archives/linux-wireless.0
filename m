@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39802 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171AbYBUTZS (ORCPT
+Received: from viefep18-int.chello.at ([213.46.255.22]:61693 "EHLO
+	viefep19-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756347AbYBRPTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 14:25:18 -0500
-Subject: Re: [RFC] mac80211: allow specifying RTS/self-CTS protection when
-	injecting packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andy Green <andy@warmcat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080221161129.GB3094@tuxdriver.com>
-References: <1203553034.17534.119.camel@johannes.berg>
-	 <20080221161129.GB3094@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UTakHB/UaAm7bh1M+L+o"
-Date: Thu, 21 Feb 2008 20:22:04 +0100
-Message-Id: <1203621724.26341.2.camel@johannes.berg> (sfid-20080221_192536_427608_AB9042D6)
-Mime-Version: 1.0
+	Mon, 18 Feb 2008 10:19:49 -0500
+Message-ID: <47B9A20C.10304@trash.net> (sfid-20080218_152007_919367_B2512DC0)
+Date: Mon, 18 Feb 2008 16:19:40 +0100
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: David Miller <davem@davemloft.net>, bruno@thinktube.com,
+	netdev@vger.kernel.org, jgarzik@pobox.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
+References: <20080215104804.9870.15722.stgit@one>	 <20080215.025855.202184003.davem@davemloft.net> <1203097370.21308.18.camel@localhost>
+In-Reply-To: <1203097370.21308.18.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe Perches wrote:
+> On Fri, 2008-02-15 at 02:58 -0800, David Miller wrote:
+>> From: Bruno Randolf <bruno@thinktube.com>
+>> Date: Fri, 15 Feb 2008 19:48:05 +0900
+>>> is there any chance to include a macro like this for printing mac
+>> addresses?
+>>> its advantage is that it can be used without the need to declare
+>> buffers for
+>>> print_mac(), for example:
+>> We specifically removed this sort of thing, please don't
+>> add it back.
 
---=-UTakHB/UaAm7bh1M+L+o
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why?
+
+> @@ -404,11 +405,8 @@ static int vlan_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  
+>  	pr_debug("%s: about to send skb: %p to dev: %s\n",
+>  		__FUNCTION__, skb, skb->dev->name);
+> -	pr_debug("  " MAC_FMT " " MAC_FMT " %4hx %4hx %4hx\n",
+> -		 veth->h_dest[0], veth->h_dest[1], veth->h_dest[2],
+> -		 veth->h_dest[3], veth->h_dest[4], veth->h_dest[5],
+> -		 veth->h_source[0], veth->h_source[1], veth->h_source[2],
+> -		 veth->h_source[3], veth->h_source[4], veth->h_source[5],
+> +	pr_debug("  %s %s %4hx %4hx %4hx\n",
+> +		 print_mac(mac, veth->h_dest), print_mac(mac2, veth->h_source),
 
 
-On Thu, 2008-02-21 at 11:11 -0500, John W. Linville wrote:
-> On Thu, Feb 21, 2008 at 01:17:14AM +0100, Johannes Berg wrote:
-> > I made this patch to test RTS/CTS operation in drivers, do you think
-> > it's useful apart that and should be merged?
->=20
-> I don't see why not...what would be the objection?
-
-You can't specify "Don't send RTS/CTS" because not specifying either
-flag means "automatic".
-
-johannes
-
---=-UTakHB/UaAm7bh1M+L+o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR73PW6Vg1VMiehFYAQIXEg/+NnavG7OD3NCFhTNgI+qoxHrsbXOT/JIj
-3FedEX8we2+y5vs1hEqT2XoYVy9beoZUThOd8iOF5AhYocNcre1xexgpU50ge6Xb
-NXg6GN17sqQQtrFcun9JcE/f9SPHr93oUbKTC/bHpiVu6OMlptx8jnW3dsGiY7eK
-1nTFzfqksdrDYnsTGg0HsldDK3IwklhgZ141QDyu+/DyUCQM9zS8R5a+jTJOa2BI
-ZZTmbKh3CccyzPn1FyVZeHc2Qs56vaFhWbL5CLaC9Ga8lrpxbAsbehh1SWYcsrzd
-iOQOd7+v9QdHAgG+DeXg+3Rb03zDdI4CzpgXwSgAWWrU1zdmqAl/zeK+q5eh+zx8
-G97Bk4HmPnXeuUCEDF0JXniFqG3zG5jQ6sSTpE2Bf3G8B7bW26F1rZlQG/lYw5EP
-13O/sP5md1o9tWV8+Abc2PBfSaV+Jtq5JWtKOa6o/BveSZG4OEjmXz8vu5yhK3/s
-Q1EfYEJrKCdR0qFNf3UzMgqjs5rjKXNgT+077hmUmErdDY1JKtprjKSiXJJaYF9s
-DbLE2MQ/gmj242yKvdmUwvGN1IHK4pktum/HZvvg73senJ3IJKuIS8pimzgU0cXN
-feniXX+5vO/YRl8ZaXl9xyQYYjqxWIJRMLuFAaBoChWIb7EvIZmEH247nm8N7Lm5
-px+KsHjbnHU=
-=Btcr
------END PGP SIGNATURE-----
-
---=-UTakHB/UaAm7bh1M+L+o--
-
+This results in print_mac getting called twice per packet even without
+debugging. Whats the problem with MAC_FMT?
