@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48968 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbYBVPQM (ORCPT
+Received: from mta10.adelphia.net ([68.168.78.202]:42955 "EHLO
+	mta10.adelphia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759590AbYBRNRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 10:16:12 -0500
-Subject: Re: mac80211: STA info size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>,
+	Mon, 18 Feb 2008 08:17:05 -0500
+Message-ID: <47B9854B.9090904@roadrunner.com> (sfid-20080218_131711_190404_A081C09B)
+Date: Mon, 18 Feb 2008 08:16:59 -0500
+From: David G Hamblen <dhamblen@roadrunner.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Michael Wu <flamingice@sourmilk.net>, andreamrl@tiscali.it,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080222143409.GA3067@tuxdriver.com> (sfid-20080222_150738_689668_5F34E6AD)
-References: <1203675307.26341.29.camel@johannes.berg>
-	 <20080222143409.GA3067@tuxdriver.com>
-	 (sfid-20080222_150738_689668_5F34E6AD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DsIYCoMxYVfojA9X5DGQ"
-Date: Fri, 22 Feb 2008 16:15:53 +0100
-Message-Id: <1203693353.7082.28.camel@johannes.berg> (sfid-20080222_151624_206155_5F8CA384)
-Mime-Version: 1.0
+Subject: Re: Kernel panic after insmodding rtl8187
+References: <47B71171.6040805@hauke-m.de>	 (sfid-20080216_163902_820241_FD2C42FD) <1203243029.12783.25.camel@johannes.berg>	 <47B8406E.8020105@hauke-m.de> <1203333690.12783.37.camel@johannes.berg>
+In-Reply-To: <1203333690.12783.37.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+With this patch, the rtl8187 driver from origin/everything (2.6.25-rc1) 
+seems to work well for the first time.  Previous versions sometimes 
+worked, but were slow on download speeds (~2.5MB/s vs >4MB/s) compared 
+to my old MA401 card.
 
---=-DsIYCoMxYVfojA9X5DGQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
 
-> > STA info struct currently (after my reorg) takes 2432 bytes. Almost 200=
-0
-> > of those are in struct sta_ampdu_mlme which is most likely not used for
-> > most STAs.
-> >=20
-> > Do you think that is too much memory per station? It'd probably be
-> > possible to allocate the sta_ampdu_mlme dynamically when needed, no?
->=20
-> My count was closer to 1.5k, but I may have missed something.
-
-You need to get pahole :P
-
-http://lwn.net/Articles/206805/
-
-johannes
-
---=-DsIYCoMxYVfojA9X5DGQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR77nKKVg1VMiehFYAQJt2hAAi9znugOl2JOfe6Q3yHJc0pVCVWjjTnvh
-w3dJOrt3y+IghBio3bZb8Co7x/jxoTRkSiGiv3VX3T4FmYbMwL6cpzTLm6ZJvP/r
-9lDVLEf4L8T2+E599RXQXk7Ja5SZkAOnPB3r6W0DuwMmrwNQyIVGGKNQ5HvNyIjD
-k7kuZ7gub+/wsum8KRkCQdNiywxYoFKmzM7ffbLTO70CMpNdqLSLYR792xclE9GF
-Y8JB6nh9BdF7MUu/Ta/hJgHmi7O2PCgwnw5BA9kcfoxX1ODoCWfYp1nUCXR+M0CE
-4KPAB4AXJxtynwJlTZYSJU/WaRI1G1gr+6X+jBgqjGt3Jomlipmk37a4T0xKBcyv
-xH4F1BlaZtg3kyxlnVbMDmblO9573hFd0sFXCkztTk4HcJYbWiRUtTyZ8mBK+F8y
-/jPNsGI2hDlksAVw1hd316inSQZZ5qtOXQqn/GR/+U82C56QnN3uZnIMOf4Nzszt
-FIJxtdPiktELB3fuMLAfYaI3dkKnGfWQ3q2hqTynCDSTPflaXzShl/B7ASVkZcy8
-kNwClaOHmluPNC8Np2RV3ASTsKPegAGGHQUNxY7axhBfY5xCXuvyk3los59sDtgd
-IIGTWg8J78J014RZZLqgw+3+Em7ssRKZesH6JNXTcIjNLigDD8J329hp0ny7J+kk
-NaVN6hyHHTU=
-=GboK
------END PGP SIGNATURE-----
-
---=-DsIYCoMxYVfojA9X5DGQ--
+Johannes Berg wrote:
+>> http://www.hauke-m.de/fileadmin/rtl-wifi/kernel-panic-2008-02-17.JPG
+>>
+>> The error appears when starting the wireless network with "ifup wlan0".
+>> The insmodding works without any error.
+> 
+> Thanks, I think this patch will fix it.
+> 
+> johannes
+> 
+> --- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:19:40.070030491 +0100
+> +++ everything/drivers/net/wireless/rtl8187_dev.c	2008-02-18 12:20:44.290028429 +0100
+> @@ -176,12 +176,16 @@ static int rtl8187_tx(struct ieee80211_h
+>  
+>  	flags = skb->len;
+>  	flags |= RTL8187_TX_FLAG_NO_ENCRYPT;
+> -	flags |= control->rts_cts_rate->hw_value << 19;
+> +
+> +	BUG_ON(!control->tx_rate);
+> +
+>  	flags |= control->tx_rate->hw_value << 24;
+>  	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb->data))
+>  		flags |= RTL8187_TX_FLAG_MORE_FRAG;
+>  	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
+> +		BUG_ON(!control->rts_cts_rate);
+>  		flags |= RTL8187_TX_FLAG_RTS;
+> +		flags |= control->rts_cts_rate->hw_value << 19;
+>  		rts_dur = ieee80211_rts_duration(dev, priv->vif,
+>  						 skb->len, control);
+>  	}
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
