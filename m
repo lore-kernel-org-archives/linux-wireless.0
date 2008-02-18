@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:63879 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753348AbYBNRcb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 12:32:31 -0500
-Message-ID: <47B47B2A.1090909@lwfinger.net> (sfid-20080214_173237_813322_1C77A87A)
-Date: Thu, 14 Feb 2008 10:32:26 -0700
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2442 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750962AbYBRQCM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2008 11:02:12 -0500
+Date: Mon, 18 Feb 2008 10:35:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ronald <ronald645@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [BUG?] b43: Wireless signal lowers when increasing sound
+Message-ID: <20080218153511.GB3098@tuxdriver.com> (sfid-20080218_160216_159550_571E6187)
+References: <47B93277.5030304@gmail.com>
 MIME-Version: 1.0
-To: Ramesh <rramesh1@gmail.com>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Wi-Fi interface intermittently missing on HP laptop
-References: <47B46E36.3050206@lwfinger.net> <c9d168940802140849v3f7ea53ajf23279ec3efd126@mail.gmail.com>
-In-Reply-To: <c9d168940802140849v3f7ea53ajf23279ec3efd126@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47B93277.5030304@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramesh wrote:
-> Hi Larry.
-> 
-> I have a HP DV6040US & I do see the same problem. Initiallly, when I
-> hit this problem a year back, it was figured out to be a mother board
-> issue and HP fixed it by replacing the motherboard. I am seeing the
-> same problem for the past 10 days. The mini pci doesnt get detected,
-> for every 10 reboots it gets detected once-in-a-while.  It looks like
-> chronic condition with HP Laptops & my laptop went out of warranty & I
-> luckily had it extended, not sure if this is a bcm chipset issue or
-> HP's motherboard problem, planning to put a USB Wireless adapter to
-> fix this problem.
+On Mon, Feb 18, 2008 at 08:23:35AM +0100, Ronald wrote:
+> hey,
+>
+> I'm currently using the b43 driver for my BCM4311 chipset. The driver works 
+> extremely well. It is the only option under Linux that supports WPA-AES 
+> with wpa_supplicant :) (and it's more stable than wpa_supplicant). However, 
+> I'm seeing some unexpected behaviour with the card and another chipset. 
+> When I enable my soundcard (setting volume from 0 to > 0) the wireless 
+> signal seems to drop completely (really funny to see my downloadspeeds go 
+> up and down :) ). My question is, is this normal?
+>
+> However, I'm not sure if this is related to the b43 driver so don't flame 
+> me ;)
 
-Thanks for the info. Perhaps mine will fail 4 times in the next two years. My extended warranty has
-a "lemon" clause. If the item needs hardware repair 4 times, you get the original purchase price
-toward a new machine. My wife bought a new laptop in 2002 and has had it replaced twice. All it cost
-us was the price of the new extended warranty.
+Very strange...my only guess would be EMI generated from your audio
+chipset and/or the speakers in your laptop.
 
-Larry
+Is it really just the volume setting?  I.E. if you "play" the audio
+but with the volume turned down does everything work fine?  Does the
+performance continue to degrade as you increase the volume?
 
+Wierd...I'm not sure what we can do about this...
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
