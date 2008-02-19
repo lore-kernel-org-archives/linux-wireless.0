@@ -1,84 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:59195 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755176AbYBYXmA (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:34915 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbYBSL7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 18:42:00 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2187635wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 15:41:59 -0800 (PST)
-Message-ID: <1ba2fa240802251541r218d5f22j5b3490d20ab508e3@mail.gmail.com> (sfid-20080225_234205_953436_79DA884B)
-Date: Tue, 26 Feb 2008 01:41:59 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: sta info locking
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>
-In-Reply-To: <1203981812.13162.187.camel@johannes.berg>
+	Tue, 19 Feb 2008 06:59:32 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix watchdog access for devices without a chipcommon
+Date: Tue, 19 Feb 2008 12:41:30 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1203677069.26341.52.camel@johannes.berg>
-	 <20080222143745.GB3067@tuxdriver.com>
-	 <1203693409.7082.30.camel@johannes.berg>
-	 <20080222155704.GD3067@tuxdriver.com>
-	 <1203972413.13162.163.camel@johannes.berg>
-	 <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com>
-	 <1203980105.13162.182.camel@johannes.berg>
-	 <1ba2fa240802251512k15b40d65oee774acebdb953e0@mail.gmail.com>
-	 <1203981812.13162.187.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802191241.30178.mb@bu3sch.de> (sfid-20080219_115936_388756_E5C9BAD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2008 at 1:23 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  > >  > The problem is that RX a TX BA establishments usually happens
->  > >  > concurrently for single STA, those are independent state machines.  We
->  > >  > have to review this carefully before spinlokcs are removed.
->  > >
->  > >  I wouldn't want to remove them, but it seems overkill two have two
->  > >  spinlocks. What I'd like to do is remove the ampdu tx, ampdu rx and mesh
->  > >  spinlocks and instead use just a single one for all three uses, and then
->  > >  use that one to protect the flags as well.
->  > >
->  > >  It seems to me that even if the RX/TX BA establishment is happening
->  > >  concurrently then it's still serialized by the frames on the air so
->  > >  ultimately can't actually happen on different CPUs so the lock won't be
->  > >  contended.
->  >
->  > I'm not sure about this, this is quite gentle and requires heavy
->  > testing.  I'll try to review this with Ron tomorrow and all other
->  > changes you've suggested.
->
->  Thanks. Yes, I do realize that this is a bit intrusive. On the other
->  hand, I can't see the code holding the spinlock for longer code/periods
->  of time (nor should it). Or do you think the driver is allowed to call
->  into the AMPDU TX setup path while being called from the AMPDU RX setup
->  path? That would be a bit weird.
->
+This fixes the SSB watchdog access for devices without a chipcommon.
+These devices have the watchdog on the extif.
 
-TX and RX BA sessions are triggered from different threads of
-execution namely rate scaling and RX path. The protected sections are
-quite long IMHO including call outs to underlying driver. It is very
-likely that both sides decides for BA session at the same times.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
->  > Do you have any setup to check your these changes?
->
->  Unfortunately not quite yet. I have an 11n AP now though, but broke of
->  one of the antennas, I'll need to see how well it works.
+---
 
-That's bad 11n is too sensitive on antennas setup.
-
->
->  > Currently there is known possible deadlock when unloading driver while
->  > heavy HT traffic. This is happening while trearing down BA session. I
->  > need to solve this as well.
->
->  Interesting, where does it deadlock?
-
-IIRC there is nice loop including queue lock need to dig the
-description tomorrow to satisfy your curiosity.
+Fix for 2.6.25.
 
 
-Tomas
+Index: wireless-testing/drivers/ssb/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/ssb/Kconfig	2008-02-16 19:08:13.000000000 +0100
++++ wireless-testing/drivers/ssb/Kconfig	2008-02-19 12:22:07.000000000 +0100
+@@ -105,6 +105,12 @@ config SSB_DRIVER_MIPS
+ 
+ 	  If unsure, say N
+ 
++# Assumption: We are on embedded, if we compile the MIPS core.
++config SSB_EMBEDDED
++	bool
++	depends on SSB_DRIVER_MIPS
++	default y
++
+ config SSB_DRIVER_EXTIF
+ 	bool "SSB Broadcom EXTIF core driver (EXPERIMENTAL)"
+ 	depends on SSB_DRIVER_MIPS && EXPERIMENTAL
+Index: wireless-testing/drivers/ssb/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/ssb/Makefile	2008-02-16 19:08:13.000000000 +0100
++++ wireless-testing/drivers/ssb/Makefile	2008-02-19 12:20:56.000000000 +0100
+@@ -1,5 +1,6 @@
+ # core
+ ssb-y					+= main.o scan.o
++ssb-$(CONFIG_SSB_EMBEDDED)		+= embedded.o
+ 
+ # host support
+ ssb-$(CONFIG_SSB_PCIHOST)		+= pci.o pcihost_wrapper.o
+Index: wireless-testing/drivers/ssb/driver_extif.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_extif.c	2008-02-16 19:08:13.000000000 +0100
++++ wireless-testing/drivers/ssb/driver_extif.c	2008-02-19 12:04:06.000000000 +0100
+@@ -110,6 +110,12 @@ void ssb_extif_get_clockcontrol(struct s
+ 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
+ }
+ 
++void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
++				  u32 ticks)
++{
++	extif_write32(extif, SSB_EXTIF_WATCHDOG, ticks);
++}
++
+ u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
+ {
+ 	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
+Index: wireless-testing/drivers/ssb/embedded.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-testing/drivers/ssb/embedded.c	2008-02-19 12:16:54.000000000 +0100
+@@ -0,0 +1,26 @@
++/*
++ * Sonics Silicon Backplane
++ * Embedded systems support code
++ *
++ * Copyright 2005-2008, Broadcom Corporation
++ * Copyright 2006-2008, Michael Buesch <mb@bu3sch.de>
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include <linux/ssb/ssb.h>
++#include <linux/ssb/ssb_embedded.h>
++
++
++int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks)
++{
++	if (ssb_chipco_available(&bus->chipco)) {
++		ssb_chipco_watchdog_timer_set(&bus->chipco, ticks);
++		return 0;
++	}
++	if (ssb_extif_available(&bus->extif)) {
++		ssb_extif_watchdog_timer_set(&bus->extif, ticks);
++		return 0;
++	}
++	return -ENODEV;
++}
+Index: wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb_driver_chipcommon.h	2008-02-19 00:19:22.000000000 +0100
++++ wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h	2008-02-19 12:14:54.000000000 +0100
+@@ -357,6 +357,11 @@ struct ssb_chipcommon {
+ 	u16 fast_pwrup_delay;
+ };
+ 
++static inline bool ssb_chipco_available(struct ssb_chipcommon *cc)
++{
++	return (cc->dev != NULL);
++}
++
+ extern void ssb_chipcommon_init(struct ssb_chipcommon *cc);
+ 
+ #include <linux/pm.h>
+Index: wireless-testing/include/linux/ssb/ssb_driver_extif.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb_driver_extif.h	2008-02-16 19:08:15.000000000 +0100
++++ wireless-testing/include/linux/ssb/ssb_driver_extif.h	2008-02-19 12:13:34.000000000 +0100
+@@ -171,6 +171,9 @@ extern void ssb_extif_get_clockcontrol(s
+ extern void ssb_extif_timing_init(struct ssb_extif *extif,
+ 				  unsigned long ns);
+ 
++extern void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
++					 u32 ticks);
++
+ u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
+ 
+ void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value);
+@@ -200,5 +203,11 @@ void ssb_extif_get_clockcontrol(struct s
+ {
+ }
+ 
++static inline
++void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
++				  u32 ticks)
++{
++}
++
+ #endif /* CONFIG_SSB_DRIVER_EXTIF */
+ #endif /* LINUX_SSB_EXTIFCORE_H_ */
+Index: wireless-testing/include/linux/ssb/ssb_embedded.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-testing/include/linux/ssb/ssb_embedded.h	2008-02-19 12:18:38.000000000 +0100
+@@ -0,0 +1,10 @@
++#ifndef LINUX_SSB_EMBEDDED_H_
++#define LINUX_SSB_EMBEDDED_H_
++
++#include <linux/types.h>
++#include <linux/ssb/ssb.h>
++
++
++extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
++
++#endif /* LINUX_SSB_EMBEDDED_H_ */
+
+-- 
+Greetings Michael.
