@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:50419 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755276AbYBAT5e (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.177]:25791 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754919AbYBSWZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 14:57:34 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so871654wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 11:57:30 -0800 (PST)
-Message-ID: <1ba2fa240802011157g5fc538edm7b625c999603e16f@mail.gmail.com> (sfid-20080201_195738_298699_3BAE95F1)
-Date: Fri, 1 Feb 2008 21:57:30 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [PATCH 2/2] iwlwifi: set rate_idx correctly from plcp
-Cc: "Abbas, Mohamed" <mohamed.abbas@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <D936D925018D154694D8A362EEB08920038F3E76@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1201844801-7326-1-git-send-email-reinette.chatre@intel.com>
-	 <1201844801-7326-2-git-send-email-reinette.chatre@intel.com>
-	 <1ba2fa240802010343q519a1dap9d4af5ef5e0110f2@mail.gmail.com>
-	 <33E1C72C74DBE747B7B59C1740F7443702C96D93@orsmsx417.amr.corp.intel.com>
-	 <D936D925018D154694D8A362EEB08920038F3E76@orsmsx416.amr.corp.intel.com>
+	Tue, 19 Feb 2008 17:25:20 -0500
+Received: by el-out-1112.google.com with SMTP id v27so1143132ele.23
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2008 14:25:19 -0800 (PST)
+Subject: Re: [PATCH 00/13] o11s: mesh interface support for mac80211
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890802191359o5c6a869i559a4f6aeb686772@mail.gmail.com>
+References: <47a78212.15588c0a.27b2.61d2@mx.google.com>
+	 <1202343188.9965.41.camel@johannes.berg>
+	 <1203455604.31736.23.camel@localhost>
+	 <43e72e890802191359o5c6a869i559a4f6aeb686772@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 19 Feb 2008 14:26:52 -0800
+Message-Id: <1203460012.31736.38.camel@localhost> (sfid-20080219_222524_437815_49513B05)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 1, 2008 7:40 PM, Chatre, Reinette <reinette.chatre@intel.com> wrote:
-> On Friday, February 01, 2008 8:29 AM, Abbas, Mohamed  wrote:
->
-> > From: Tomas Winkler [mailto:tomasw@gmail.com]
-> > Sent: Friday, February 01, 2008 3:44 AM
-> > On Feb 1, 2008 7:46 AM, Reinette Chatre
-> > <reinette.chatre@intel.com> wrote:
-> >> From: Mohamed Abbas <mohamed.abbas@intel.com>
-> >>
-> >> rate_idx is derived from plcp information
-> >>
-> >> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-> >> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com> ---
-> >>  drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>
->
-> [..snip..]
->
-> > NACK
-> > This should be
-> > rate_idx =
-> > iwl4965_rate_index_from_plcp(wl4965_hw_get_rate(rx_start->rate_
-> > n_flags));
-> >
-> > iwl4965_hw_get_rate - this one extract plcp from rate_n_flags - also
-> > takes care of endinaity Tomas
-> >
-> > Actually iwl4965_rate_index_from_plcp expect rate and flag
-> > data to get the rate index.
-> > Mohamed
->
-> John,
->
-> Sorry about the confusing emails - please go ahead and apply this patch.
->
-> Thank you
+On Tue, 2008-02-19 at 16:59 -0500, Luis R. Rodriguez wrote:
+> > Currently, bss are sorted by ssid, bssid and frequency.
+> 
+> I wouldn't use "sort" here but instead "are made unique". As John has
 
-Sorry it was my mistake.
+Right, sorry for the imprecise use of the word.
 
-> Reinette
->
+> The key'ing of the BSSes based on BSSID/freq/SSID was just a to deal
+> with an issue, how about we just detect if a beacon is from a mesh and
+> if so add it to the list using another type of rule? Since we have no
+> BSSID/SSID strange issue we don't have to apply that rule there.
+
+Sounds good.
+
+
+> > but the user chooses an ad-hoc network), change the type of the
+> > interface and the proceed to connect. Am I right?
+> 
+> Hopefully nothing will be added via wext, but instead nl80211/cfg80211.
+
+Hopefully, but last time I checked (10 days ago) it looked like there
+was no work in progress to implement scanning via nl80211.
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
