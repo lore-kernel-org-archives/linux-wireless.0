@@ -1,91 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42874 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755557AbYBWOVr (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:58286 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761969AbYBSV70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 09:21:47 -0500
-Message-Id: <20080223142009.834012000@sipsolutions.net> (sfid-20080223_142150_385773_54C64119)
-References: <20080223141703.194775000@sipsolutions.net>
-Date: Sat, 23 Feb 2008 15:17:07 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCH 04/18] mac80211: add mesh interface type
-Mime-Version: 1.0
+	Tue, 19 Feb 2008 16:59:26 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2822878pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2008 13:59:25 -0800 (PST)
+Message-ID: <43e72e890802191359o5c6a869i559a4f6aeb686772@mail.gmail.com> (sfid-20080219_215939_521454_FE3E7CA8)
+Date: Tue, 19 Feb 2008 16:59:24 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Luis Carlos Cobo" <luisca@cozybit.com>
+Subject: Re: [PATCH 00/13] o11s: mesh interface support for mac80211
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1203455604.31736.23.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <47a78212.15588c0a.27b2.61d2@mx.google.com>
+	 <1202343188.9965.41.camel@johannes.berg>
+	 <1203455604.31736.23.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the mesh interface type.
+On Feb 19, 2008 4:13 PM, Luis Carlos Cobo <luisca@cozybit.com> wrote:
+> On Thu, 2008-02-07 at 01:13 +0100, Johannes Berg wrote:
+> > > - Scan support: we were waiting for scan to be moved to cfg80211 to avoid
+> > >   messing unnecessarily with wext, is there any effort in this direction?
+> >
+> > What specifically do you need? Scanning for mesh networks? Wouldn't a
+> > regular scan find them as well? As far as I know nobody is currently
+> > working on scan support in nl80211. Maybe you can simply report the
+> > relevant mesh IEs in a custom element and sort it out in userspace (for
+> > now)?
+>
+> Currently, bss are sorted by ssid, bssid and frequency.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h         |    1 +
- net/mac80211/ieee80211.c       |    1 +
- net/mac80211/ieee80211_iface.c |    1 +
- net/mac80211/rx.c              |   10 ++++++++++
- net/mac80211/util.c            |    1 +
- 5 files changed, 14 insertions(+)
+I wouldn't use "sort" here but instead "are made unique". As John has
+mentioned in a recent thread this was done to account for "some
+strange AP implementations that use the same BSSID either on different
+frequencies or in different SSIDs". We actually don't currently sort
+the list of BSSes by any specific value but the idea was to end up
+sorting by signal strength measured, for which I have a base patch.
+Userspace should then be sort by whatever key it wants to presents its
+data to the user.
 
---- everything.orig/include/net/mac80211.h	2008-02-23 14:23:35.000000000 +0100
-+++ everything/include/net/mac80211.h	2008-02-23 14:23:36.000000000 +0100
-@@ -439,6 +439,7 @@ enum ieee80211_if_types {
- 	IEEE80211_IF_TYPE_AP,
- 	IEEE80211_IF_TYPE_STA,
- 	IEEE80211_IF_TYPE_IBSS,
-+	IEEE80211_IF_TYPE_MESH_POINT,
- 	IEEE80211_IF_TYPE_MNTR,
- 	IEEE80211_IF_TYPE_WDS,
- 	IEEE80211_IF_TYPE_VLAN,
---- everything.orig/net/mac80211/ieee80211.c	2008-02-23 14:23:35.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-23 14:23:36.000000000 +0100
-@@ -258,6 +258,7 @@ static int ieee80211_open(struct net_dev
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_MNTR:
- 	case IEEE80211_IF_TYPE_IBSS:
-+	case IEEE80211_IF_TYPE_MESH_POINT:
- 		/* no special treatment */
- 		break;
- 	case IEEE80211_IF_TYPE_INVALID:
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-23 14:23:35.000000000 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-02-23 14:23:36.000000000 +0100
-@@ -231,6 +231,7 @@ void ieee80211_if_reinit(struct net_devi
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 		}
- 		break;
-+	case IEEE80211_IF_TYPE_MESH_POINT:
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
- 		kfree(sdata->u.sta.extra_ie);
---- everything.orig/net/mac80211/rx.c	2008-02-23 14:23:35.000000000 +0100
-+++ everything/net/mac80211/rx.c	2008-02-23 14:23:36.000000000 +0100
-@@ -1713,6 +1713,16 @@ static int prepare_for_handlers(struct i
- 			rx->sta = ieee80211_ibss_add_sta(sdata->dev, rx->skb,
- 							 bssid, hdr->addr2);
- 		break;
-+	case IEEE80211_IF_TYPE_MESH_POINT:
-+		if (!multicast &&
-+		    compare_ether_addr(sdata->dev->dev_addr,
-+				       hdr->addr1) != 0) {
-+			if (!(sdata->dev->flags & IFF_PROMISC))
-+				return 0;
-+
-+			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
-+		}
-+		break;
- 	case IEEE80211_IF_TYPE_VLAN:
- 	case IEEE80211_IF_TYPE_AP:
- 		if (!bssid) {
---- everything.orig/net/mac80211/util.c	2008-02-23 14:23:35.000000000 +0100
-+++ everything/net/mac80211/util.c	2008-02-23 14:23:36.000000000 +0100
-@@ -382,6 +382,7 @@ void ieee80211_iterate_active_interfaces
- 		case IEEE80211_IF_TYPE_STA:
- 		case IEEE80211_IF_TYPE_IBSS:
- 		case IEEE80211_IF_TYPE_WDS:
-+		case IEEE80211_IF_TYPE_MESH_POINT:
- 			break;
- 		}
- 		if (sdata->dev == local->mdev)
+> In mesh beacons
+> and (not yet implemented) mesh probes, the bssid is left zeroed and
+> there is no ssid (actually there is a 0 length ssid IE), so all mesh
+> networks in a single channel would collapse to one scan entry.
 
--- 
+I can see how this can be an issue :)
 
+> I can add
+> the mesh IE, but I also need a substitute for those.
+>
+> One option would be to use mesh id as bssid and source address as bssid
+> (with this we would get a different entry for every mesh peer in rage,
+> not sure if that's what we want), maybe set the mode to IW_MODE_ADHOC
+> and add the extra mesh IE. This way we would not need changes in the
+> wireless extesions layer.
+
+The key'ing of the BSSes based on BSSID/freq/SSID was just a to deal
+with an issue, how about we just detect if a beacon is from a mesh and
+if so add it to the list using another type of rule? Since we have no
+BSSID/SSID strange issue we don't have to apply that rule there.
+
+> I am also curious about the interfaces life cycle. Looks like interfaces
+> report any available network (infra or adhoc), regardless their type.
+> Then a network-manager-like interface would have to bring up an
+> interface to be able to scan, and the if the user chooses a different
+> kind of network (if the interface where the scan is performed is infra
+> but the user chooses an ad-hoc network), change the type of the
+> interface and the proceed to connect. Am I right?
+
+Hopefully nothing will be added via wext, but instead nl80211/cfg80211.
+
+  Luis
