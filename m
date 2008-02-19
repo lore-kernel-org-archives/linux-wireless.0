@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:55628 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843AbYB0SFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 13:05:55 -0500
-Date: Wed, 27 Feb 2008 09:46:20 -0800
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux/wireless.h - missing section
-Message-ID: <20080227174619.GA25139@bougret.hpl.hp.com> (sfid-20080227_180609_299257_D50FC308)
-Reply-To: jt@hpl.hp.com
-References: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:3010 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542AbYBSBEO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2008 20:04:14 -0500
+Subject: Re: [PATCH] net/8021q/vlan_dev.c - Use print_mac
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>
+Cc: kaber@trash.net, bruno@thinktube.com, netdev@vger.kernel.org,
+	jgarzik@pobox.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <20080218.165036.218650084.davem@davemloft.net>
+References: <20080218.125525.192686382.davem@davemloft.net>
+	 <47B9F5E7.3020905@trash.net> <20080218.164305.67586867.davem@davemloft.net>
+	 <20080218.165036.218650084.davem@davemloft.net>
+Content-Type: text/plain
+Date: Mon, 18 Feb 2008 17:03:32 -0800
+Message-Id: <1203383012.7181.102.camel@localhost> (sfid-20080219_010418_476618_88076289)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 07:40:07PM +0200, Tomas Winkler wrote:
-> Does anybody knows why this section is missing from in kernel linux/wireless.h
+On Mon, 2008-02-18 at 16:50 -0800, David Miller wrote:
+> Actually it seems the 'pure' attribute is more important
+> here.  Although it's not semantically a perfect match,
+> what we need to tell the compiler is basically that:
 > 
-> struct iw_range {
+> 1) the return value depends upon the inputs
+> 2) if the input is not used, it's safe to avoid the call
 > 
-> ......
+> and 'pure' accomplishes that without any unwanted side-effects.
 > 
+> I think this will not result in any unwanted over-optimization.
+> Because if the inputs change in any way GCC has to emit the
+> call.
 > 
->         /* More power management stuff */
->         __s32           min_pms;        /* Minimal PM saving */
->         __s32           max_pms;        /* Maximal PM saving */
->         __u16           pms_flags;      /* How to decode max/min PM saving */
-> 
->         /* All available modulations for driver (hw may support less) */
->         __s32           modul_capa;     /* IW_MODUL_* bit field */
-> 
->         /* More bitrate stuff */
->         __u32           bitrate_capa;   /* Types of bitrates supported */
-> };
-> 
-> Thanks
-> Tomas
+> Any objections?
 
-	Because it was rejected by the kernel maitainers.
+Does this need to be done for all function calls
+declared with __attribute__((format(printf, x, y)))
+{
+return 0;
+}
 
-	Jean
+ie: pr_debug, dev_dbg, dev_vdbg?
+
+Perhaps it's more sensible to go back to
+
+#ifdef DEBUG
+#define pr_debug(fmt, arg...) do {} while (0)
+#endif
+
+and give up the printf argument verification
+
