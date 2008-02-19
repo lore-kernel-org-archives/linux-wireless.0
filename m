@@ -1,70 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s32.bay0.hotmail.com ([65.54.246.232]:34619 "EHLO
-	bay0-omc3-s32.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752092AbYBNC2e convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 21:28:34 -0500
-Message-ID: <BAY101-W1421BB30E73369FE0A2E3DC8250@phx.gbl> (sfid-20080214_022838_372811_F76D121D)
-From: Adam Turk <bofh1234@hotmail.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: kernel 2.6.25-rc1 and no /dev/rt73usb
-Date: Wed, 13 Feb 2008 21:28:33 -0500
-In-Reply-To: <1202952347.29519.5.camel@dv>
-References: <BAY101-W101597BA2B1DDD58D6F497C8250@phx.gbl>
- <1202952347.29519.5.camel@dv>
-Content-Type: text/plain; charset=iso-8859-1
+Received: from vs166246.vserver.de ([62.75.166.246]:35497 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbYBSPXP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2008 10:23:15 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Make the GPIO API reentrancy safe
+Date: Tue, 19 Feb 2008 16:22:50 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802191622.50741.mb@bu3sch.de> (sfid-20080219_152321_216748_1515C9D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes the GPIO API to be reentrancy safe.
 
-> From: proski@gnu.org
->> On Wed, 2008-02-13 at 20:14 -0500, Adam Turk wrote:
->
->> However no rt73usb device is created. Why isn't this working?
->
-> Network devices don't have corresponding device nodes under /dev. The=
-y
-> can be seen with "ifconfig -a", and the wireless properties can be
-> examined and changed with iwconfig.
->
-> The messages may be different because you changed the debug level or
-> because the device is not brought up by some reason. By the way, it's
-> better to examine kernel messages with the dmesg command, because is
-> shows all messages, whereas syslog can suppress some of them.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Ok.  nothing listed in ifconfig -a.  Here is the dmesg output.  Still t=
-he same error message as 2.6.24.
-drivers/usb/core/inode.c: creating file '002'
-usb 1-1: New USB device found, idVendor=3D148f, idProduct=3D2573
-usb 1-1: New USB device strings: Mfr=3D1, Product=3D2, SerialNumber=3D0
-usb 1-1: Product: 802.11 bg WLAN
-usb 1-1: Manufacturer: Ralink
-hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
-rt73usb 1-1:1.0: usb_probe_interface
-rt73usb 1-1:1.0: usb_probe_interface - got id
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x00=
-00
-phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, =
-rev: 0002573a.
-phy0: Selected rate control algorithm 'pid'
-phy0: Failed to initialize wep
-phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-rt73usb: probe of 1-1:1.0 failed with error -12
-usbcore: registered new interface driver rt73usb
+---
 
-What is wrong with thing?
-Thanks,
+For 2.6.25
 
-_________________________________________________________________
-Climb to the top of the charts!=A0Play the word scramble challenge with=
- star power.
-http://club.live.com/star_shuffle.aspx?icid=3Dstarshuffle_wlmailtextlin=
-k_jan-
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-testing/drivers/ssb/driver_chipcommon.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_chipcommon.c	2008-02-19 14:23:30.000000000 +0100
++++ wireless-testing/drivers/ssb/driver_chipcommon.c	2008-02-19 15:21:01.000000000 +0100
+@@ -357,37 +357,31 @@ u32 ssb_chipco_gpio_in(struct ssb_chipco
+ {
+ 	return chipco_read32(cc, SSB_CHIPCO_GPIOIN) & mask;
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_in);
+ 
+ u32 ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value)
+ {
+ 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUT, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_out);
+ 
+ u32 ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value)
+ {
+ 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUTEN, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_outen);
+ 
+ u32 ssb_chipco_gpio_control(struct ssb_chipcommon *cc, u32 mask, u32 value)
+ {
+ 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOCTL, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_control);
+ 
+ u32 ssb_chipco_gpio_intmask(struct ssb_chipcommon *cc, u32 mask, u32 value)
+ {
+ 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOIRQ, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_intmask);
+ 
+ u32 ssb_chipco_gpio_polarity(struct ssb_chipcommon *cc, u32 mask, u32 value)
+ {
+ 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPOL, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_chipco_gpio_polarity);
+ 
+ #ifdef CONFIG_SSB_SERIAL
+ int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
+Index: wireless-testing/drivers/ssb/driver_extif.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_extif.c	2008-02-19 14:35:09.000000000 +0100
++++ wireless-testing/drivers/ssb/driver_extif.c	2008-02-19 15:21:18.000000000 +0100
+@@ -122,30 +122,25 @@ u32 ssb_extif_gpio_in(struct ssb_extif *
+ {
+ 	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
+ }
+-EXPORT_SYMBOL(ssb_extif_gpio_in);
+ 
+ u32 ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value)
+ {
+ 	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUT(0),
+ 				   mask, value);
+ }
+-EXPORT_SYMBOL(ssb_extif_gpio_out);
+ 
+ u32 ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value)
+ {
+ 	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUTEN(0),
+ 				   mask, value);
+ }
+-EXPORT_SYMBOL(ssb_extif_gpio_outen);
+ 
+ u32 ssb_extif_gpio_polarity(struct ssb_extif *extif, u32 mask, u32 value)
+ {
+ 	return extif_write32_masked(extif, SSB_EXTIF_GPIO_INTPOL, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_extif_gpio_polarity);
+ 
+ u32 ssb_extif_gpio_intmask(struct ssb_extif *extif, u32 mask, u32 value)
+ {
+ 	return extif_write32_masked(extif, SSB_EXTIF_GPIO_INTMASK, mask, value);
+ }
+-EXPORT_SYMBOL(ssb_extif_gpio_intmask);
+Index: wireless-testing/drivers/ssb/embedded.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/embedded.c	2008-02-19 12:38:55.000000000 +0100
++++ wireless-testing/drivers/ssb/embedded.c	2008-02-19 15:50:33.000000000 +0100
+@@ -11,6 +11,8 @@
+ #include <linux/ssb/ssb.h>
+ #include <linux/ssb/ssb_embedded.h>
+ 
++#include "ssb_private.h"
++
+ 
+ int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks)
+ {
+@@ -24,3 +26,107 @@ int ssb_watchdog_timer_set(struct ssb_bu
+ 	}
+ 	return -ENODEV;
+ }
++
++u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_in(&bus->chipco, mask);
++	else if (ssb_extif_available(&bus->extif))
++		res = ssb_extif_gpio_in(&bus->extif, mask);
++	else
++		SSB_WARN_ON(1);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_in);
++
++u32 ssb_gpio_out(struct ssb_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_out(&bus->chipco, mask, value);
++	else if (ssb_extif_available(&bus->extif))
++		res = ssb_extif_gpio_out(&bus->extif, mask, value);
++	else
++		SSB_WARN_ON(1);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_out);
++
++u32 ssb_gpio_outen(struct ssb_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_outen(&bus->chipco, mask, value);
++	else if (ssb_extif_available(&bus->extif))
++		res = ssb_extif_gpio_outen(&bus->extif, mask, value);
++	else
++		SSB_WARN_ON(1);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_outen);
++
++u32 ssb_gpio_control(struct ssb_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_control(&bus->chipco, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_control);
++
++u32 ssb_gpio_intmask(struct ssb_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_intmask(&bus->chipco, mask, value);
++	else if (ssb_extif_available(&bus->extif))
++		res = ssb_extif_gpio_intmask(&bus->extif, mask, value);
++	else
++		SSB_WARN_ON(1);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_intmask);
++
++u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	if (ssb_chipco_available(&bus->chipco))
++		res = ssb_chipco_gpio_polarity(&bus->chipco, mask, value);
++	else if (ssb_extif_available(&bus->extif))
++		res = ssb_extif_gpio_polarity(&bus->extif, mask, value);
++	else
++		SSB_WARN_ON(1);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(ssb_gpio_polarity);
+Index: wireless-testing/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb.h	2008-02-16 19:08:15.000000000 +0100
++++ wireless-testing/include/linux/ssb/ssb.h	2008-02-19 15:01:00.000000000 +0100
+@@ -283,6 +283,11 @@ struct ssb_bus {
+ 	/* Contents of the SPROM. */
+ 	struct ssb_sprom sprom;
+ 
++#ifdef CONFIG_SSB_EMBEDDED
++	/* Lock for GPIO register access. */
++	spinlock_t gpio_lock;
++#endif /* EMBEDDED */
++
+ 	/* Internal-only stuff follows. Do not touch. */
+ 	struct list_head list;
+ #ifdef CONFIG_SSB_DEBUG
+Index: wireless-testing/include/linux/ssb/ssb_embedded.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb_embedded.h	2008-02-19 12:38:55.000000000 +0100
++++ wireless-testing/include/linux/ssb/ssb_embedded.h	2008-02-19 14:57:36.000000000 +0100
+@@ -7,4 +7,12 @@
+ 
+ extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
+ 
++/* Generic GPIO API */
++u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask);
++u32 ssb_gpio_out(struct ssb_bus *bus, u32 mask, u32 value);
++u32 ssb_gpio_outen(struct ssb_bus *bus, u32 mask, u32 value);
++u32 ssb_gpio_control(struct ssb_bus *bus, u32 mask, u32 value);
++u32 ssb_gpio_intmask(struct ssb_bus *bus, u32 mask, u32 value);
++u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value);
++
+ #endif /* LINUX_SSB_EMBEDDED_H_ */
+Index: wireless-testing/drivers/ssb/main.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/main.c	2008-02-19 13:20:45.000000000 +0100
++++ wireless-testing/drivers/ssb/main.c	2008-02-19 15:38:01.000000000 +0100
+@@ -569,6 +569,9 @@ static int ssb_bus_register(struct ssb_b
+ 
+ 	spin_lock_init(&bus->bar_lock);
+ 	INIT_LIST_HEAD(&bus->list);
++#ifdef CONFIG_SSB_EMBEDDED
++	spin_lock_init(&bus->gpio_lock);
++#endif
+ 
+ 	/* Powerup the bus */
+ 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 1);
+
+-- 
+Greetings Michael.
