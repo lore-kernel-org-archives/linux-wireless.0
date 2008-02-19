@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:6696 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754289AbYBIAZ4 (ORCPT
+Received: from smtp2.wanadoo.co.uk ([193.252.22.157]:45540 "EHLO
+	smtp2.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761683AbYBTAVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 19:25:56 -0500
-Received: by an-out-0708.google.com with SMTP id d31so949523and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:25:53 -0800 (PST)
-Subject: Re: [PATCH 01/13] o11s: (rtnetlink) add commands for mesh tables
-	manipulation
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202515995.7025.8.camel@localhost>
-References: <47a7825b.06538c0a.3bce.5ec1@mx.google.com>
-	 (sfid-20080204_212408_298998_A7C8CED4)  <1202342208.9965.29.camel@johannes.berg>
-	 <1202515995.7025.8.camel@localhost>
+	Tue, 19 Feb 2008 19:21:47 -0500
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: chris2553@googlemail.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200802192046.14184.IvDoorn@gmail.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <200802191026.57640.IvDoorn@gmail.com>
+	 <200802191900.09543.chris2553@googlemail.com>
+	 <200802192046.14184.IvDoorn@gmail.com>
 Content-Type: text/plain
-Date: Fri, 08 Feb 2008 16:26:58 -0800
-Message-Id: <1202516818.7025.22.camel@localhost> (sfid-20080209_002600_815297_1F1BA519)
+Date: Tue, 19 Feb 2008 23:04:07 +0000
+Message-Id: <1203462247.6397.15.camel@boulder.homenet> (sfid-20080220_002152_642177_94CE4D84)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-08 at 16:13 -0800, Luis Carlos Cobo wrote:
-> I'm not sure understand what you mean with "via netdev". About
+On Tue, 2008-02-19 at 20:46 +0100, Ivo van Doorn wrote:
+> Hi,
+> 
+> [added rt2400-devel (rt2x00 development mailinglist) to the CC list.]
+> 
+> > > > > I have a series of tests I would like to request from you,
+> > > > > you mentioned you already enabled debugfs, and that is just what we need. ;)
+> > > > > Please use attached script to create dumps of the hardware register contents.
+> > > > > 
+> > > > > There are specific moments that should be dumped:
+> > > > > - kernel 2.6.24 (last known working version for you).
+> > > > > - kernel 2.6.25-rc2 (after ifup, before TX dies)
+> > > > > - kernel 2.6.25-rc2 (after ifup, after TX dies)
+> > > > >  
+> > > > 
+> > > > These diagnostics are attached, with obvious filenames.
+> > > 
+> > > Thanks. I think I found something, please test below patch:
+> > > 
+> > 
+> > I've tried the patch but, unfortunately, my wireless LAN still dies after a few pings.
 
-Oh, I guess you mean the mailing list...
+rt2x00 2.0.14 is broken with my rt73 stick in the vanilla 2.6.25-rc2
+kernel (not wireless-2.6/rt2x00 git).  The modules load when I plug the
+stick in but I then get a complete kernel lock up with two flashing
+leds.  Nothing is recorded to system logs.  The last logged messages are
+that usbcore has registered new interface driver rt73usb, and that the
+rate control algorithm has been selected on phy0.  This happens whether
+the simple or pid mac80211 rate control algorithms have been chosen.
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+This is a shame because 2.0.14 was working really well for me until the
+mac80211 changes 2 or 3 weeks ago broke it.  (Shortly followed by the
+release of 2.1.*).
+
+Chris
+
 
 
