@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:34320 "EHLO venema.h4ckr.net"
+Received: from mga03.intel.com ([143.182.124.21]:55661 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752064AbYBXEVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 23:21:31 -0500
-Date: Sun, 24 Feb 2008 06:21:15 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: [PATCH 4/8] ath5k: more RF2413 stuff
-Message-ID: <20080224042115.GC4426@makis.domain.invalid> (sfid-20080224_042135_441103_9AFCD59B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753654AbYBSWTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2008 17:19:24 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] iwlwifi: remove twice defined CSR register
+Date: Tue, 19 Feb 2008 14:05:33 -0800
+Message-Id: <1203458733-9177-1-git-send-email-reinette.chatre@intel.com> (sfid-20080219_221929_754126_FE1886C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Add AR5K_RF2413 to radio check during hw_reset so it doesn't complain
+From: Tomas Winkler <tomas.winkler@intel.com>
 
- * Write ah_phy_spending value we set during attach instead of checking 
-each time for radio revision
+This patch removes twice defined CSR register. It was confusing
 
- * Skip txpower setup for RF2413 because it can't transmit with it 
-(weird thing is that RF5413 has no problem with it).
-
-
-Changes-licensed-under: ISC
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 1d7bc1f..3ae5522 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -640,7 +640,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	if (ah->ah_version != AR5K_AR5210) {
- 		if (ah->ah_radio != AR5K_RF5111 &&
- 			ah->ah_radio != AR5K_RF5112 &&
--			ah->ah_radio != AR5K_RF5413) {
-+			ah->ah_radio != AR5K_RF5413 &&
-+			ah->ah_radio != AR5K_RF2413) {
- 			ATH5K_ERR(ah->ah_sc,
- 				"invalid phy radio: %u\n", ah->ah_radio);
- 			return -EINVAL;
-@@ -1002,9 +1003,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCAL_32MHZ, AR5K_PHY_SCAL);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
--		ath5k_hw_reg_write(ah, ah->ah_radio == AR5K_RF5111 ?
--			AR5K_PHY_SPENDING_RF5111 : AR5K_PHY_SPENDING_RF5112,
--			AR5K_PHY_SPENDING);
-+		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index e8378d1..75ded08 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -2177,6 +2177,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 		return -EINVAL;
- 	}
- 
-+	/* 
-+	 * RF2413 for some reason can't
-+	 * transmit anything if we call
-+	 * this funtion, so we skip it
-+	 * until we fix txpower.
-+	 */
-+	if(ah->ah_radio == AR5K_RF2413)
-+		return 0;
-+
- 	/* Reset TX power values */
- 	memset(&ah->ah_txpower, 0, sizeof(ah->ah_txpower));
- 	ah->ah_txpower.txp_tpc = tpc;
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    7 ++++---
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index 571815d..6693767 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -324,7 +324,6 @@ struct iwl3945_eeprom {
+ /*=== CSR (control and status registers) ===*/
+ #define CSR_BASE    (0x000)
+ 
+-#define CSR_SW_VER              (CSR_BASE+0x000)
+ #define CSR_HW_IF_CONFIG_REG    (CSR_BASE+0x000) /* hardware interface config */
+ #define CSR_INT_COALESCING      (CSR_BASE+0x004) /* accum ints, 32-usec units */
+ #define CSR_INT                 (CSR_BASE+0x008) /* host interrupt status/ack */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index ffe1e9d..cc72621 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -413,7 +413,6 @@ struct iwl4965_eeprom {
+ /*=== CSR (control and status registers) ===*/
+ #define CSR_BASE    (0x000)
+ 
+-#define CSR_SW_VER              (CSR_BASE+0x000)
+ #define CSR_HW_IF_CONFIG_REG    (CSR_BASE+0x000) /* hardware interface config */
+ #define CSR_INT_COALESCING      (CSR_BASE+0x004) /* accum ints, 32-usec units */
+ #define CSR_INT                 (CSR_BASE+0x008) /* host interrupt status/ack */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 237d3b2..a9c30bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -545,9 +545,10 @@ int iwl4965_hw_nic_init(struct iwl4965_priv *priv)
+ 
+ 	/* set CSR_HW_CONFIG_REG for uCode use */
+ 
+-	iwl4965_set_bit(priv, CSR_SW_VER, CSR_HW_IF_CONFIG_REG_BIT_KEDRON_R |
+-		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++	iwl4965_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++			CSR_HW_IF_CONFIG_REG_BIT_KEDRON_R |
++			CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
++			CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
+ 
+ 	rc = iwl4965_grab_nic_access(priv);
+ 	if (rc < 0) {
+-- 
+1.5.3.4
 
