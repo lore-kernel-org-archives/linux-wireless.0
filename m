@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbYBMMRQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 07:17:16 -0500
-Subject: Re: [PATCH] p54: use IEEE 802.11e defaults for initialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200802121402.06985.chunkeey@web.de>
-References: <1202658578.11481.4.camel@johannes.berg>
-	 <200802111952.30964.chunkeey@web.de>
-	 <1202815900.8931.1.camel@johannes.berg>
-	 <200802121402.06985.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-D0MJiFmpoPlje75/Yj8s"
-Date: Wed, 13 Feb 2008 13:11:31 +0100
-Message-Id: <1202904691.8931.39.camel@johannes.berg> (sfid-20080213_121811_678779_524412F0)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4724 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764744AbYBTUcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 15:32:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo Couckuyt <iv0co@yahoo.co.uk>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] p54usb: add USB ID for Phillips CPWUA054
+Date: Wed, 20 Feb 2008 15:01:55 -0500
+Message-Id: <1203537715-10263-1-git-send-email-linville@tuxdriver.com> (sfid-20080220_203226_280869_06880CA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ivo Couckuyt <iv0co@yahoo.co.uk>
 
---=-D0MJiFmpoPlje75/Yj8s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Retarget of an old patch against prism54usb in linux-wireless archive:
 
+	http://marc.info/?l=linux-wireless&m=117449935810254&w=2
 
-On Tue, 2008-02-12 at 14:02 +0100, Christian Lamparter wrote:
-> This trival one-liner changes the QoS initialization values to match IEEE=
-=20
-> 802.11e defaults.
->=20
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Cc: Ivo Couckuyt <iv0co@yahoo.co.uk>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/p54usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> Which tree do you want? I made two versions.=20
-> 1. ...-2.6.24.2.diff will be fine for the mainline and the everything bra=
-nch.
-> 2. ...-txoppatch.diff is made for "[PATCH v2] mac80211: give burst time i=
-n=20
-> txop rather than 0.1msec units" (with some offset?!)
-
-I'd prefer the second version since you made it already so I don't have
-to respin the other patch.
-
-johannes
-
---=-D0MJiFmpoPlje75/Yj8s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7LecaVg1VMiehFYAQLMKxAAwhDrUxset5r6kaCYy5tQ5gjGOa7PCClK
-WB/K7bcJkvYu0915WFE/NrF5sj7HtOGARZwe1eG/9J2W2FrZ+hg4Cl1FRSC6KSjm
-UBmV0xcLU/FD+eQQkTPearFEPLnqEL1L3OQcxEvUuR7SGDqzsDjEY+ksYDn6t2Zs
-W57wPBYZ1tj4OXAdj+xyKn48zi2p1FyHFGbwN0HrslV+K//jpFV5rH6ZMN/IFmzI
-bzhZIsLp7xFkbuevmuJjaPn4502Nwl8PpxstD/h5EHLKj+dv+DIhAxNGJMI7iME/
-To0YYGWeMLwx4eEDRaUaQv4Vad35AoXj6QVoVcldIe1rmS2NM0IaPyHfw56C6fsv
-vlyqBEGxtAGqiezfIa2gZtv7YOdPsFvgA7GeH6Y16LcA3brdcLwDmInvgtj+2LOM
-BhIqzl9SFzzXUZeAFkjqcqV4l/8Qil8OP0QOiEX8sKbr8Bw4iLcB2k+83ATCJIAw
-672pe5JyYXj/OUyWhpDLj6YvJOno4R/54/+kNO60dPlX03iDT/5B7aGrF0eRfqAj
-+KiYLSKHyb0lcUTYm8BNKU9jyQgN3jZ1xmZm8+yMFYgQdshkpib053/LnGeBf5lD
-1JXEh7+s8BfOHwuX5stDbViKfvMmd+Mqv4rlYl0M0UNIpRz15aGg5t1sN0qo3CAn
-ICwz2+xIXc4=
-=OPhP
------END PGP SIGNATURE-----
-
---=-D0MJiFmpoPlje75/Yj8s--
+diff --git a/drivers/net/wireless/p54usb.c b/drivers/net/wireless/p54usb.c
+index 60d286e..f869566 100644
+--- a/drivers/net/wireless/p54usb.c
++++ b/drivers/net/wireless/p54usb.c
+@@ -35,6 +35,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0707, 0xee06)},	/* SMC 2862W-G */
+ 	{USB_DEVICE(0x083a, 0x4501)},	/* Accton 802.11g WN4501 USB */
+ 	{USB_DEVICE(0x083a, 0x4502)},	/* Siemens Gigaset USB Adapter */
++	{USB_DEVICE(0x083a, 0x5501)},	/* Phillips CPWUA054 */
+ 	{USB_DEVICE(0x0846, 0x4200)},	/* Netgear WG121 */
+ 	{USB_DEVICE(0x0846, 0x4210)},	/* Netgear WG121 the second ? */
+ 	{USB_DEVICE(0x0846, 0x4220)},	/* Netgear WG111 */
+-- 
+1.5.3.3
 
