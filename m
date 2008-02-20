@@ -1,94 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4468 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755449AbYB2WGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 17:06:06 -0500
-Date: Fri, 29 Feb 2008 16:42:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>, David Miller <davem@davemloft.net>,
-	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Message-ID: <20080229214240.GH3234@tuxdriver.com> (sfid-20080229_220616_874697_91C4CDDE)
-References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg> <20080229191058.GD3234@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080229191058.GD3234@tuxdriver.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60485 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752425AbYBTS0e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 13:26:34 -0500
+Subject: [PATCH] mac80211: invoke set_tim() callback after setting own TIM
+	info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 20 Feb 2008 01:36:16 +0100
+Message-Id: <1203467776.10983.1.camel@johannes.berg> (sfid-20080220_182640_458493_436B888E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 29, 2008 at 02:10:58PM -0500, John W. Linville wrote:
-> On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
-> > 
-> > On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
-> > > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
-> > > 
-> > > > I'm wondering if we can't simply pass a commandline parameter to file2alias
-> > > > that tells it whether we are crosscompiling. It should simply omit the sanity check
-> > > 
-> > > Sounds reasonable to me.
-> > 
-> > In fact, file2alias shouldn't need a command line argument ...
-> > 
-> > > > in that case. Is there any easy and reliable way to find out whether we
-> > > > are crosscompiling from a makefile (I don't know the makefile core that much)?
-> > > 
-> > > Non-empty CROSS_COMPILE definition?
-> > 
-> > ... it can just check whether CROSS_COMPILE is set in its environment.
-> > No?
-> 
-> Not a bad idea...something like this?
+Drivers should be allowed to simply get a complete new beacon when
+set_tim() is invoked (and set_tim() is required for drivers that
+just want a beacon template!), so we need to update our own TIM
+bitmap before calling set_tim() so that getting the beacon will
+now get an already updated beacon.
 
-That version didn't work -- it seems CROSS_COMPILE is always set,
-even if it is empty.
-
-This version seems to work, but it is a bit chatty when CROSS_COMPILE
-is set and you build lots of modules...thoughts?
-
-John
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/mac80211/rx.c       |    8 ++++----
+ net/mac80211/sta_info.c |    4 ++--
+ net/mac80211/tx.c       |    4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-modpost: avoid user/kernel struct size compat check if cross-compiling
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- scripts/mod/file2alias.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
-index 9ddf944..37f311e 100644
---- a/scripts/mod/file2alias.c
-+++ b/scripts/mod/file2alias.c
-@@ -10,6 +10,7 @@
-  * of the GNU General Public License, incorporated herein by reference.
-  */
+--- everything.orig/net/mac80211/rx.c	2008-02-20 01:21:39.000000000 +0100
++++ everything/net/mac80211/rx.c	2008-02-20 01:22:00.000000000 +0100
+@@ -599,10 +599,10 @@ static int ap_sta_ps_end(struct net_devi
+ 		atomic_dec(&sdata->bss->num_sta_ps);
+ 	sta->flags &= ~(WLAN_STA_PS | WLAN_STA_TIM | WLAN_STA_PSPOLL);
+ 	if (!skb_queue_empty(&sta->ps_tx_buf)) {
+-		if (local->ops->set_tim)
+-			local->ops->set_tim(local_to_hw(local), sta->aid, 0);
+ 		if (sdata->bss)
+ 			bss_tim_clear(local, sdata->bss, sta->aid);
++		if (local->ops->set_tim)
++			local->ops->set_tim(local_to_hw(local), sta->aid, 0);
+ 	}
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %s aid %d exits power save mode\n",
+@@ -946,11 +946,11 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
+ 		dev_queue_xmit(skb);
  
-+#include <stdlib.h>
- #include "modpost.h"
+ 		if (no_pending_pkts) {
++			if (rx->sdata->bss)
++				bss_tim_clear(rx->local, rx->sdata->bss, rx->sta->aid);
+ 			if (rx->local->ops->set_tim)
+ 				rx->local->ops->set_tim(local_to_hw(rx->local),
+ 						       rx->sta->aid, 0);
+-			if (rx->sdata->bss)
+-				bss_tim_clear(rx->local, rx->sdata->bss, rx->sta->aid);
+ 		}
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	} else if (!rx->u.rx.sent_ps_buffered) {
+--- everything.orig/net/mac80211/sta_info.c	2008-02-20 01:22:04.000000000 +0100
++++ everything/net/mac80211/sta_info.c	2008-02-20 01:22:09.000000000 +0100
+@@ -396,11 +396,11 @@ void sta_info_remove_aid_ptr(struct sta_
  
- /* We use the ELF typedefs for kernel_ulong_t but bite the bullet and
-@@ -62,6 +63,14 @@ static void device_id_check(const char *modname, const char *device_id,
- 			    void *symval)
- {
- 	int i;
-+	char *cross_compile;
-+
-+	cross_compile = getenv("CROSS_COMPILE");
-+	if (cross_compile && strlen(cross_compile)) {
-+		warn("%s: cross-compile cannot verify userspace/kernel "
-+		     "structure size compatibility.\n", modname);
-+		return;
-+	}
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
  
- 	if (size % id_size || size < id_size) {
- 		fatal("%s: sizeof(struct %s_device_id)=%lu is not a modulo "
--- 
-1.5.3.3
++	if (sdata->bss)
++		__bss_tim_clear(sdata->bss, sta->aid);
+ 	if (sdata->local->ops->set_tim)
+ 		sdata->local->ops->set_tim(local_to_hw(sdata->local),
+ 					  sta->aid, 0);
+-	if (sdata->bss)
+-		__bss_tim_clear(sdata->bss, sta->aid);
+ }
+ 
+ 
+--- everything.orig/net/mac80211/tx.c	2008-02-20 01:22:12.000000000 +0100
++++ everything/net/mac80211/tx.c	2008-02-20 01:22:18.000000000 +0100
+@@ -419,11 +419,11 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 			tx->local->total_ps_buffered++;
+ 		/* Queue frame to be sent after STA sends an PS Poll frame */
+ 		if (skb_queue_empty(&sta->ps_tx_buf)) {
++			if (tx->sdata->bss)
++				bss_tim_set(tx->local, tx->sdata->bss, sta->aid);
+ 			if (tx->local->ops->set_tim)
+ 				tx->local->ops->set_tim(local_to_hw(tx->local),
+ 						       sta->aid, 1);
+-			if (tx->sdata->bss)
+-				bss_tim_set(tx->local, tx->sdata->bss, sta->aid);
+ 		}
+ 		pkt_data = (struct ieee80211_tx_packet_data *)tx->skb->cb;
+ 		pkt_data->jiffies = jiffies;
 
--- 
-John W. Linville
-linville@tuxdriver.com
+
