@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44595 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60393 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756818AbYBUKYP (ORCPT
+	with ESMTP id S1752749AbYBTSbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 05:24:15 -0500
-Subject: [PATCH] mac80211: fix debugfs_sta print_mac() warning
+	Wed, 20 Feb 2008 13:31:48 -0500
+Subject: [PATCH] rtl818x: fix sparse warnings
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, joe@perches.com,
-	netdev@vger.kernel.org,
-	Harvey Harrison <harvey.harrison@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203588993.20345.27.camel@brick> (sfid-20080221_101622_275557_F35DFAB3)
-References: <1203587699.17534.135.camel@johannes.berg>
-	 <20080221.020343.190715910.davem@davemloft.net>
-	 <1203588498.20345.20.camel@brick>
-	 <20080221.021228.09081608.davem@davemloft.net>
-	 <1203588993.20345.27.camel@brick> (sfid-20080221_101622_275557_F35DFAB3)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrea Merello <andreamrl@tiscali.it>,
+	Michael Wu <flamingice@sourmilk.net>
 Content-Type: text/plain
-Date: Thu, 21 Feb 2008 11:22:12 +0100
-Message-Id: <1203589332.17534.150.camel@johannes.berg> (sfid-20080221_102421_689163_49870CA5)
+Date: Wed, 20 Feb 2008 12:05:59 +0100
+Message-Id: <1203505559.17534.22.camel@johannes.berg> (sfid-20080220_183151_053516_3B40F5BE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When print_mac() was marked as __pure to avoid emitting a function
-call in pr_debug() scenarios, a warning in this code surfaced since
-it relies on the fact that the buffer is modified and doesn't use
-the return value. This patch makes it use the return value instead.
+This silences a few sparse warnings. There are two more where
+I can't follow the code.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- net/mac80211/debugfs_sta.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtl8180_dev.c |    8 +++++---
+ drivers/net/wireless/rtl8187_dev.c |    4 +++-
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
---- everything.orig/net/mac80211/debugfs_sta.c	2008-02-21 11:17:48.000000000 +0100
-+++ everything/net/mac80211/debugfs_sta.c	2008-02-21 11:17:59.000000000 +0100
-@@ -297,12 +297,13 @@ STA_OPS_WR(agg_status);
- void ieee80211_sta_debugfs_add(struct sta_info *sta)
+--- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-02-20 11:48:07.000000000 +0100
++++ everything/drivers/net/wireless/rtl8180_dev.c	2008-02-20 11:49:47.000000000 +0100
+@@ -170,13 +170,15 @@ static void rtl8180_handle_tx(struct iee
+ 	while (skb_queue_len(&ring->queue)) {
+ 		struct rtl8180_tx_desc *entry = &ring->desc[ring->idx];
+ 		struct sk_buff *skb;
+-		struct ieee80211_tx_status status = { {0} };
++		struct ieee80211_tx_status status;
+ 		struct ieee80211_tx_control *control;
+ 		u32 flags = le32_to_cpu(entry->flags);
+ 
+ 		if (flags & RTL8180_TX_DESC_FLAG_OWN)
+ 			return;
+ 
++		memset(&status, 0, sizeof(status));
++
+ 		ring->idx = (ring->idx + 1) % ring->entries;
+ 		skb = __skb_dequeue(&ring->queue);
+ 		pci_unmap_single(priv->pdev, le32_to_cpu(entry->tx_buf),
+--- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-02-20 11:50:04.000000000 +0100
++++ everything/drivers/net/wireless/rtl8187_dev.c	2008-02-20 11:50:19.000000000 +0100
+@@ -145,10 +145,12 @@ void rtl8187_write_phy(struct ieee80211_
+ 
+ static void rtl8187_tx_cb(struct urb *urb)
  {
- 	struct dentry *stations_dir = sta->local->debugfs.stations;
--	DECLARE_MAC_BUF(mac);
-+	DECLARE_MAC_BUF(mbuf);
-+	u8 *mac;
+-	struct ieee80211_tx_status status = { {0} };
++	struct ieee80211_tx_status status;
+ 	struct sk_buff *skb = (struct sk_buff *)urb->context;
+ 	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
  
- 	if (!stations_dir)
- 		return;
- 
--	print_mac(mac, sta->addr);
-+	mac = print_mac(mbuf, sta->addr);
- 
- 	sta->debugfs.dir = debugfs_create_dir(mac, stations_dir);
- 	if (!sta->debugfs.dir)
++	memset(&status, 0, sizeof(status));
++
+ 	usb_free_urb(info->urb);
+ 	if (info->control)
+ 		memcpy(&status.control, info->control, sizeof(status.control));
 
 
