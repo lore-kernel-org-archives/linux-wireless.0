@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708AbYBUJ3b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 04:29:31 -0500
-Subject: Re: [PATCH] rndis_wlan: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080220202015.GC3825@tuxdriver.com>
-References: <1203504466.17534.16.camel@johannes.berg>
-	 <20080220202015.GC3825@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k3WOuRtTtywEqGHtMFT9"
-Date: Thu, 21 Feb 2008 10:29:17 +0100
-Message-Id: <1203586157.17534.125.camel@johannes.berg> (sfid-20080221_092939_792450_525D9062)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4722 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933740AbYBTUcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 15:32:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Cavan Carroll <cavancarroll@hotmail.com>
+Subject: [PATCH] p54usb: add USB ID for Linksys WUSB54G ver 2
+Date: Wed, 20 Feb 2008 15:06:30 -0500
+Message-Id: <1203537990-10448-1-git-send-email-linville@tuxdriver.com> (sfid-20080220_203225_580796_4411AF41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Based on report from Cavan Carroll <cavancarroll@hotmail.com>:
 
---=-k3WOuRtTtywEqGHtMFT9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	http://bugzilla.kernel.org/show_bug.cgi?id=9863
 
+Cc: Cavan Carroll <cavancarroll@hotmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/p54usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> > --- everything.orig/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:43:=
-22.000000000 +0100
-> > +++ everything/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:45:35.00=
-0000000 +0100
-> > @@ -228,9 +228,9 @@ struct NDIS_WLAN_BSSID_EX {
-> >  	struct NDIS_802_11_SSID Ssid;
-> >  	__le32 Privacy;
-> >  	__le32 Rssi;
-> > -	enum NDIS_802_11_NETWORK_TYPE NetworkTypeInUse;
-> > +	__le32 NetworkTypeInUse;
-> >  	struct NDIS_802_11_CONFIGURATION Configuration;
-> > -	enum NDIS_802_11_NETWORK_INFRASTRUCTURE InfrastructureMode;
-> > +	__le32 InfrastructureMode;
-> >  	u8 SupportedRates[NDIS_802_11_LENGTH_RATES_EX];
-> >  	__le32 IELength;
-> >  	u8 IEs[0];
->=20
-> This suggests that the values in the enum need to be explicitly
-> defined, does it not?
-
-Yeah, well, it is probably understood that those values are from
-hardware. We don't always explicitly define them even when they are
-defined elsewhere since afaik C guarantees starting at 0 and increasing
-order.
-
-johannes
-
---=-k3WOuRtTtywEqGHtMFT9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR71EbKVg1VMiehFYAQISSg//QHoeNUKSmVaAGFXSJw+ZTz+ajcuywRDD
-80oB9m2k9C1wj3MtBLQAjHMQSDaFLzDI6d4gYBOndBT1RTa/L0yvOTCAcMZTnJlR
-gvjZSTGKaR+H3pnsNNXqkhfG3XU4u2n3T2AganfujiJMblN+hn4C4N1yNKyFL9+F
-R6f4toHX24RDAibsufWx6Osc3bcoO/7nbrFnwsPiQnkM4iaLNpLgU5wViGCZKtii
-88HTq0zsN4XNAgMqQU5ibTY9NGkpsrGK14a7M/wn+mDBfk/kYO9HGvyOYzJm2vBn
-P5FrrXh3b63rwHpVU4qwA/vDAlYQB7Q/tero7eEOkRlw6+RTZYTzigsW00CpbKGc
-cVAi+BKU8lUZKbElfwUFomdt5NAW4Ia/YbumrrCK0CAbTX1vviRTkeSZ99e8dryh
-h9j/wJC2Z1uSRGAcfE+26L3s8Vjcdk0b0KPhWpXEZWRNswuqg7c/Fi4LqT2oVsza
-PBso4RYlacaiv/L+eOEQvyCud2NkOwFBdOzMoWzU/4OCQL4G7HRp7AxWWu2z0HUJ
-I/uhSp5YQQagDP3I9kq707yMmPZK3+t0m62q9VIg9qNiyBugVyobTTZ/QrikSXUl
-MpF/j0r91PRQPtay1rOg1Q8WZpTOChyBejcvYucRfT7ELFBtv6qJmHz9hfpdX5HS
-b75ByVHzC6c=
-=JH0+
------END PGP SIGNATURE-----
-
---=-k3WOuRtTtywEqGHtMFT9--
+diff --git a/drivers/net/wireless/p54usb.c b/drivers/net/wireless/p54usb.c
+index f869566..e7d4aee 100644
+--- a/drivers/net/wireless/p54usb.c
++++ b/drivers/net/wireless/p54usb.c
+@@ -63,6 +63,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
+ 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
+ 	{USB_DEVICE(0x09aa, 0x1000)},	/* Spinnaker Proto board */
++	{USB_DEVICE(0x13b1, 0x000a)},	/* Linksys WUSB54G ver 2 */
+ 	{USB_DEVICE(0x13B1, 0x000C)},	/* Linksys WUSB54AG */
+ 	{USB_DEVICE(0x1435, 0x0427)},	/* Inventel UR054G */
+ 	{USB_DEVICE(0x2001, 0x3704)},	/* DLink DWL-G122 rev A2 */
+-- 
+1.5.3.3
 
