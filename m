@@ -1,71 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41561 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755075AbYBAUMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 15:12:38 -0500
-Subject: Re: wireless mini-summit agenda proposals?
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240802011147j4cd027e8gacf2d5a6de65443d@mail.gmail.com>
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201801923.3000.13.camel@localhost.localdomain>
-	 <1201869751.4188.19.camel@johannes.berg>
-	 <1ba2fa240802011029h7cce3f77ge61bc11564c378a6@mail.gmail.com>
-	 <1201893322.20187.11.camel@localhost.localdomain>
-	 <1ba2fa240802011147j4cd027e8gacf2d5a6de65443d@mail.gmail.com>
+Received: from smtp2.wanadoo.co.uk ([193.252.22.157]:22202 "EHLO
+	smtp2.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933971AbYBTUbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 15:31:18 -0500
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chris2553@googlemail.com,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <1203523555.693.2.camel@localhost.localdomain>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <200802191026.57640.IvDoorn@gmail.com>
+	 <200802191900.09543.chris2553@googlemail.com>
+	 <200802192046.14184.IvDoorn@gmail.com>
+	 <1203462247.6397.15.camel@boulder.homenet>
+	 <1203523555.693.2.camel@localhost.localdomain>
 Content-Type: text/plain
-Date: Fri, 01 Feb 2008 15:11:54 -0500
-Message-Id: <1201896714.20566.8.camel@localhost.localdomain> (sfid-20080201_201242_885092_4D4AFB8B)
+Date: Wed, 20 Feb 2008 20:27:15 +0000
+Message-Id: <1203539235.3189.4.camel@boulder.homenet> (sfid-20080220_203124_190909_E06A9ED5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-02-01 at 21:47 +0200, Tomas Winkler wrote:
-> On Feb 1, 2008 9:15 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Fri, 2008-02-01 at 20:29 +0200, Tomas Winkler wrote:
-> > > On Feb 1, 2008 2:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > > >
-> > > > > cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
-> > > > > because email isn't optimal for this.  I haven't had enough time to jump
-> > > > > into it yet, but the fact that Johannes is the vast majority of the
-> > > > > effort here is worrisome.  Having a reference implementation (airo,
-> > > > > atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
-> > > > > probably be very useful, even just to get a sense of how the API works.
-> > > >
-> > > > cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
-> > > > work it got so far is for hostapd.
-> > > >
-> > > > I have a fairly decent plan how to add association/... support but it
-> > > > lacks execution because it's completely boring work that doesn't buy us
-> > > > any new features since we still have to support wext.
-> > > >
-> > > Security setting is a bit  broken. There is a missing separation
-> > > between static and dynamic./WPA wep keys.
-> >
-> > How do you mean?
+
+On Wed, 2008-02-20 at 11:05 -0500, Dan Williams wrote: 
+> On Tue, 2008-02-19 at 23:04 +0000, Chris Vine wrote:
+> > On Tue, 2008-02-19 at 20:46 +0100, Ivo van Doorn wrote:
+> > > Hi,
+> > > 
+> > > [added rt2400-devel (rt2x00 development mailinglist) to the CC list.]
+> > > 
+> > > > > > > I have a series of tests I would like to request from you,
+> > > > > > > you mentioned you already enabled debugfs, and that is just what we need. ;)
+> > > > > > > Please use attached script to create dumps of the hardware register contents.
+> > > > > > > 
+> > > > > > > There are specific moments that should be dumped:
+> > > > > > > - kernel 2.6.24 (last known working version for you).
+> > > > > > > - kernel 2.6.25-rc2 (after ifup, before TX dies)
+> > > > > > > - kernel 2.6.25-rc2 (after ifup, after TX dies)
+> > > > > > >  
+> > > > > > 
+> > > > > > These diagnostics are attached, with obvious filenames.
+> > > > > 
+> > > > > Thanks. I think I found something, please test below patch:
+> > > > > 
+> > > > 
+> > > > I've tried the patch but, unfortunately, my wireless LAN still dies after a few pings.
+> > 
+> > rt2x00 2.0.14 is broken with my rt73 stick in the vanilla 2.6.25-rc2
+> > kernel (not wireless-2.6/rt2x00 git).  The modules load when I plug the
+> > stick in but I then get a complete kernel lock up with two flashing
+> > leds.  Nothing is recorded to system logs.  The last logged messages are
+> > that usbcore has registered new interface driver rt73usb, and that the
+> > rate control algorithm has been selected on phy0.  This happens whether
+> > the simple or pid mac80211 rate control algorithms have been chosen.
+> > 
+> > This is a shame because 2.0.14 was working really well for me until the
+> > mac80211 changes 2 or 3 weeks ago broke it.  (Shortly followed by the
+> > release of 2.1.*).
 > 
-> In wext there is encoding setting for static keys only for wep and
-> extended encoding for dynamic keys including wep keys. In mac80211
-> both setting are funneled to the same point which is incorrect since
-> the usage is not the same. The major problem is in HW acceleration.
-> The static wep keys are passed as belonging to the station with
-> broadcast address and the driver cannot distinguish if the wep key is
-> dynamic key for the bcast address or it is a static wep key that has
-> to be used for all traffic. The problem is of course visible mostly in
-> AP mode.
+> Switch to a VT with Ctl+Alt+1, then plug the stick in, and take a
+> picture of the panic if one shows up.  _Something_ should show up on the
+> VT.
 
-Ah; right.  I don't think there really should be a difference in the API
-to differentiate static vs. dynamic WEP keys.  Instead each key sent to
-the driver (be it WEP, TKIP, or CCMP) should definitely have a BSSID to
-which it applies which the userspace caller must set, and if the key is
-to be used for _all_ traffic, then maybe have a flag for that or use
-00:00:00:00:00:00 as the BSSID.  If we use "magic" #s like 00:00... for
-the BSSID then we've got to be sure to document that magic # which is
-where we all fell down with WEXT.  Hence I prefer flags, but whatever.
+I did that yesterday and it just reported a kernel panic on the terminal
+with the message:
 
-Dan
+  Kernel panic - not syncing: Aiee, killing interrupt handler!
+
+There is a complete lock up.  Even the two leds don't send a dump in
+morse code (if that is still a feature of the 2.6 kernels).  They just
+flash together at 1 second intervals.
+
+However, I do not have debugging enabled on 2.6.25-rc2 (I was just
+interested to see how it worked).  If it is thought to be useful I can
+recompile the kernel with debugging enabled, but this should be
+reproducible by anyone with a rt73 stick.
+
+By way of a further data point, I can scan OK using 2.6.25-rc2 and it
+will report all the available access points in my area.  But as soon as
+association is attempted, it blows up.
+
+Chris
 
 
