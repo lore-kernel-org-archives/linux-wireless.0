@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19766 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4740 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751484AbYBEQvy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 11:51:54 -0500
+	id S933971AbYBTUde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 15:33:34 -0500
+Date: Wed, 20 Feb 2008 15:25:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: bruno randolf <br1@einfach.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Renzmann <mrenzmann@madwifi.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: when does ath5k filter frames?
+Message-ID: <20080220202518.GD3825@tuxdriver.com> (sfid-20080220_203340_020826_46DA6E91)
+References: <1203514108.17534.41.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [Ipw2100-devel] ipw2200 stalls on high load
-Date: Tue, 5 Feb 2008 08:50:51 -0800
-Message-ID: <4220499A1B034C4FA93B547BA01E1FF0017465A2@orsmsx413.amr.corp.intel.com> (sfid-20080205_165157_026726_5EF25DB0)
-In-reply-to: <1202224154.1243.7.camel@localhost.localdomain>
-References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc><D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com><20080130225738.GB2648@Chamillionaire.breakpoint.cc><D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com><1202128649.10632.4.camel@localhost.localdomain><D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com><20080204224502.GA22717@Chamillionaire.breakpoint.cc><1202167450.5190.2.camel@localhost.localdomain><20080205083511.GA28623@Chamillionaire.breakpoint.cc> <1202224154.1243.7.camel@localhost.localdomain>
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: "Dan Williams" <dcbw@redhat.com>,
-	"Sebastian Siewior" <ipw+2200@ml.breakpoint.cc>
-Cc: "James Ketrenos" <jketreno@linux.intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>, <linux-wireless@vger.kernel.org>,
-	<ipw2100-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1203514108.17534.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
+On Wed, Feb 20, 2008 at 02:28:28PM +0100, Johannes Berg wrote:
+> Hi,
 > 
-> That would mean that count never gets above 8, and that the 
-> RX queue is never restocked.  The (count >= 8) part might be 
-> specific to the
-> 3945/4965 drivers, since they apparently restock the RX queue 
-> in blocks of 8.  
+> In mac80211 we have a whole bunch of cryptic code to handle "filtered"
+> frames. The only driver that does that seems to be ath5k, and it doesn't
+> really seem to use this since it is intimately tied to
+> IEEE80211_TXCTL_CLEAR_DST_MASK which it doesn't check...
+> 
+> Any ideas? Should we kill all this code and not use whatever hardware
+> powersave helpers atheros hardware might have?
+> 
+> On the other hand, Broadcom also has powersave helpers in
+> hardware/firmware, maybe we should generalise to be able to use them as
+> well?
 
-That's right, the 3945 and 4965 hardware like to see the index change on
-boundaries of 8.  You'll see that, somewhere in the driver code, the
-lower 3 bits of the index get masked to 0.  I don't know what 2200's
-requirements are in this regard.
+Do we understand either of these (i.e. Broadcom or Atheros) helpers
+well enough to utilize them?  If so, it sounds like a nice feature
+to support.  Hardware/firmware may be able to do nifty things to
+save power.
 
--- Ben --
+If we don't really know how those helpers work, it may be better just
+to remove the unused infrastructure.
+
+Is my opinion useful? :-)
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
