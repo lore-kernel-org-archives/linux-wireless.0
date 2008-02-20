@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41812 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60380 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755325AbYBAMH5 (ORCPT
+	with ESMTP id S1753056AbYBTSbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:07:57 -0500
-Subject: [PATCH] mac80211 rate control: fix section mismatch
+	Wed, 20 Feb 2008 13:31:33 -0500
+Subject: [PATCH] rndis_wlan: fix sparse warnings
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 31 Jan 2008 19:31:57 +0100
-Message-Id: <1201804317.4149.34.camel@johannes.berg> (sfid-20080201_120801_735547_E3C35D9F)
+Date: Wed, 20 Feb 2008 11:47:45 +0100
+Message-Id: <1203504466.17534.16.camel@johannes.berg> (sfid-20080220_183136_454133_EFF98469)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the rate control algorithms are built-in, their exit
-functions can be called from mac80211's init function so
-they cannot be marked __exit.
+It is obviously wrong to use an enum in a little endian struct,
+and those other enums should be declared differently.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/rc80211_pid_algo.c |    2 +-
- net/mac80211/rc80211_simple.c   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rndis_wlan.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
---- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-01-31 19:20:14.932284778 +0100
-+++ everything/net/mac80211/rc80211_pid_algo.c	2008-01-31 19:20:37.912263836 +0100
-@@ -544,7 +544,7 @@ int __init rc80211_pid_init(void)
- 	return ieee80211_rate_control_register(&mac80211_rcpid);
- }
+--- everything.orig/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:43:22.000000000 +0100
++++ everything/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:45:35.000000000 +0100
+@@ -228,9 +228,9 @@ struct NDIS_WLAN_BSSID_EX {
+ 	struct NDIS_802_11_SSID Ssid;
+ 	__le32 Privacy;
+ 	__le32 Rssi;
+-	enum NDIS_802_11_NETWORK_TYPE NetworkTypeInUse;
++	__le32 NetworkTypeInUse;
+ 	struct NDIS_802_11_CONFIGURATION Configuration;
+-	enum NDIS_802_11_NETWORK_INFRASTRUCTURE InfrastructureMode;
++	__le32 InfrastructureMode;
+ 	u8 SupportedRates[NDIS_802_11_LENGTH_RATES_EX];
+ 	__le32 IELength;
+ 	u8 IEs[0];
+@@ -279,11 +279,11 @@ struct RNDIS_CONFIG_PARAMETER_INFOBUFFER
+ } __attribute__((packed));
  
--void __exit rc80211_pid_exit(void)
-+void rc80211_pid_exit(void)
- {
- 	ieee80211_rate_control_unregister(&mac80211_rcpid);
- }
---- everything.orig/net/mac80211/rc80211_simple.c	2008-01-31 19:20:41.342267959 +0100
-+++ everything/net/mac80211/rc80211_simple.c	2008-01-31 19:20:52.632267796 +0100
-@@ -381,7 +381,7 @@ int __init rc80211_simple_init(void)
- 	return ieee80211_rate_control_register(&mac80211_rcsimple);
- }
+ /* these have to match what is in wpa_supplicant */
+-enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
+-enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP, CIPHER_WEP104 }
+-	wpa_cipher;
+-enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE, KEY_MGMT_802_1X_NO_WPA,
+-	KEY_MGMT_WPA_NONE } wpa_key_mgmt;
++enum wpa_alg { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP };
++enum wpa_cipher { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
++		  CIPHER_WEP104 };
++enum wpa_key_mgmt { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
++		    KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE };
  
--void __exit rc80211_simple_exit(void)
-+void rc80211_simple_exit(void)
- {
- 	ieee80211_rate_control_unregister(&mac80211_rcsimple);
- }
+ /*
+  *  private data
 
 
