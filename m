@@ -1,46 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:46756 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbYBCPzW (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:57364 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759333AbYBTSIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 10:55:22 -0500
-Received: by an-out-0708.google.com with SMTP id d31so439385and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 07:55:21 -0800 (PST)
-To: "Guy Cohen" <guy@cguy.net>
-Subject: Re: mac80211 QoS/aggregation questions, thoughts
-Date: Sun, 3 Feb 2008 16:54:54 +0100
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <j@w1.fi>, "Patrick McHardy" <kaber@trash.net>
-References: <1201882512.4188.66.camel@johannes.berg> <200802020031.24532.IvDoorn@gmail.com> <247d6d340802030736t4a51c4bcg92130277f84e1b58@mail.gmail.com>
-In-Reply-To: <247d6d340802030736t4a51c4bcg92130277f84e1b58@mail.gmail.com>
+	Wed, 20 Feb 2008 13:08:39 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Add support for 8bit register access
+Date: Wed, 20 Feb 2008 19:08:10 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802031654.54311.IvDoorn@gmail.com> (sfid-20080203_155528_181105_1CEC62B5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200802201908.10831.mb@bu3sch.de> (sfid-20080220_180907_636572_CE869A95)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 03 February 2008, Guy Cohen wrote:
-> On 2/2/08, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > On Saturday 02 February 2008, Tomas Winkler wrote:
-> > > 4965 has 4 queues which are used for regular WMM.  Only 11 queues
-> > > might be used for aggregation, but in AP mode we might map one of the
-> > > queues to after beacon multicast traffic.
-> >
-> > Just out of interest, and I don't know about the iwl4965 driver specifics,
-> > but how will you make sure those frames are send after the beacon?
-> > Does the beacon trigger an interrupt after each interval which allows you to queue
-> > the frames or is some other approach used?
-> 
-> For iwl4965, mcast frames are queued into a separate HW TX FIFO (no
-> need to buffer at the host). Beacon periodic transmission and
-> controling the TX of mcast frames from the mcast FIFO are all timely
-> done in real-time by the device.
+This adds support for 8bit wide register reads/writes.
+This is needed in order to support the gigabit ethernet core.
 
-Thanks for the explanation.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Ivo
+---
+
+For 2.6.26
+
+Index: wireless-testing/drivers/ssb/main.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/main.c	2008-02-19 17:43:00.000000000 +0100
++++ wireless-testing/drivers/ssb/main.c	2008-02-20 19:01:19.000000000 +0100
+@@ -505,6 +505,14 @@ error:
+ 	return err;
+ }
+ 
++static u8 ssb_ssb_read8(struct ssb_device *dev, u16 offset)
++{
++	struct ssb_bus *bus = dev->bus;
++
++	offset += dev->core_index * SSB_CORE_SIZE;
++	return readb(bus->mmio + offset);
++}
++
+ static u16 ssb_ssb_read16(struct ssb_device *dev, u16 offset)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -521,6 +529,14 @@ static u32 ssb_ssb_read32(struct ssb_dev
+ 	return readl(bus->mmio + offset);
+ }
+ 
++static void ssb_ssb_write8(struct ssb_device *dev, u16 offset, u8 value)
++{
++	struct ssb_bus *bus = dev->bus;
++
++	offset += dev->core_index * SSB_CORE_SIZE;
++	writeb(value, bus->mmio + offset);
++}
++
+ static void ssb_ssb_write16(struct ssb_device *dev, u16 offset, u16 value)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -539,8 +555,10 @@ static void ssb_ssb_write32(struct ssb_d
+ 
+ /* Ops for the plain SSB bus without a host-device (no PCI or PCMCIA). */
+ static const struct ssb_bus_ops ssb_ssb_ops = {
++	.read8		= ssb_ssb_read8,
+ 	.read16		= ssb_ssb_read16,
+ 	.read32		= ssb_ssb_read32,
++	.write8		= ssb_ssb_write8,
+ 	.write16	= ssb_ssb_write16,
+ 	.write32	= ssb_ssb_write32,
+ };
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c	2008-02-16 19:08:13.000000000 +0100
++++ wireless-testing/drivers/ssb/pci.c	2008-02-20 19:01:19.000000000 +0100
+@@ -572,6 +572,19 @@ static inline int ssb_pci_assert_buspowe
+ }
+ #endif /* DEBUG */
+ 
++static u8 ssb_pci_read8(struct ssb_device *dev, u16 offset)
++{
++	struct ssb_bus *bus = dev->bus;
++
++	if (unlikely(ssb_pci_assert_buspower(bus)))
++		return 0xFF;
++	if (unlikely(bus->mapped_device != dev)) {
++		if (unlikely(ssb_pci_switch_core(bus, dev)))
++			return 0xFF;
++	}
++	return ioread8(bus->mmio + offset);
++}
++
+ static u16 ssb_pci_read16(struct ssb_device *dev, u16 offset)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -598,6 +611,19 @@ static u32 ssb_pci_read32(struct ssb_dev
+ 	return ioread32(bus->mmio + offset);
+ }
+ 
++static void ssb_pci_write8(struct ssb_device *dev, u16 offset, u8 value)
++{
++	struct ssb_bus *bus = dev->bus;
++
++	if (unlikely(ssb_pci_assert_buspower(bus)))
++		return;
++	if (unlikely(bus->mapped_device != dev)) {
++		if (unlikely(ssb_pci_switch_core(bus, dev)))
++			return;
++	}
++	iowrite8(value, bus->mmio + offset);
++}
++
+ static void ssb_pci_write16(struct ssb_device *dev, u16 offset, u16 value)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -626,8 +652,10 @@ static void ssb_pci_write32(struct ssb_d
+ 
+ /* Not "static", as it's used in main.c */
+ const struct ssb_bus_ops ssb_pci_ops = {
++	.read8		= ssb_pci_read8,
+ 	.read16		= ssb_pci_read16,
+ 	.read32		= ssb_pci_read32,
++	.write8		= ssb_pci_write8,
+ 	.write16	= ssb_pci_write16,
+ 	.write32	= ssb_pci_write32,
+ };
+Index: wireless-testing/drivers/ssb/pcmcia.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pcmcia.c	2008-02-16 19:08:13.000000000 +0100
++++ wireless-testing/drivers/ssb/pcmcia.c	2008-02-20 19:01:19.000000000 +0100
+@@ -172,6 +172,22 @@ static int select_core_and_segment(struc
+ 	return 0;
+ }
+ 
++static u8 ssb_pcmcia_read8(struct ssb_device *dev, u16 offset)
++{
++	struct ssb_bus *bus = dev->bus;
++	unsigned long flags;
++	int err;
++	u8 value = 0xFF;
++
++	spin_lock_irqsave(&bus->bar_lock, flags);
++	err = select_core_and_segment(dev, &offset);
++	if (likely(!err))
++		value = readb(bus->mmio + offset);
++	spin_unlock_irqrestore(&bus->bar_lock, flags);
++
++	return value;
++}
++
+ static u16 ssb_pcmcia_read16(struct ssb_device *dev, u16 offset)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -206,6 +222,20 @@ static u32 ssb_pcmcia_read32(struct ssb_
+ 	return (lo | (hi << 16));
+ }
+ 
++static void ssb_pcmcia_write8(struct ssb_device *dev, u16 offset, u8 value)
++{
++	struct ssb_bus *bus = dev->bus;
++	unsigned long flags;
++	int err;
++
++	spin_lock_irqsave(&bus->bar_lock, flags);
++	err = select_core_and_segment(dev, &offset);
++	if (likely(!err))
++		writeb(value, bus->mmio + offset);
++	mmiowb();
++	spin_unlock_irqrestore(&bus->bar_lock, flags);
++}
++
+ static void ssb_pcmcia_write16(struct ssb_device *dev, u16 offset, u16 value)
+ {
+ 	struct ssb_bus *bus = dev->bus;
+@@ -238,8 +268,10 @@ static void ssb_pcmcia_write32(struct ss
+ 
+ /* Not "static", as it's used in main.c */
+ const struct ssb_bus_ops ssb_pcmcia_ops = {
++	.read8		= ssb_pcmcia_read8,
+ 	.read16		= ssb_pcmcia_read16,
+ 	.read32		= ssb_pcmcia_read32,
++	.write8		= ssb_pcmcia_write8,
+ 	.write16	= ssb_pcmcia_write16,
+ 	.write32	= ssb_pcmcia_write32,
+ };
+Index: wireless-testing/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb.h	2008-02-19 17:43:00.000000000 +0100
++++ wireless-testing/include/linux/ssb/ssb.h	2008-02-20 19:01:19.000000000 +0100
+@@ -72,8 +72,10 @@ struct ssb_device;
+ /* Lowlevel read/write operations on the device MMIO.
+  * Internal, don't use that outside of ssb. */
+ struct ssb_bus_ops {
++	u8 (*read8)(struct ssb_device *dev, u16 offset);
+ 	u16 (*read16)(struct ssb_device *dev, u16 offset);
+ 	u32 (*read32)(struct ssb_device *dev, u16 offset);
++	void (*write8)(struct ssb_device *dev, u16 offset, u8 value);
+ 	void (*write16)(struct ssb_device *dev, u16 offset, u16 value);
+ 	void (*write32)(struct ssb_device *dev, u16 offset, u32 value);
+ };
+@@ -344,6 +346,10 @@ void ssb_device_disable(struct ssb_devic
+ 
+ 
+ /* Device MMIO register read/write functions. */
++static inline u8 ssb_read8(struct ssb_device *dev, u16 offset)
++{
++	return dev->ops->read8(dev, offset);
++}
+ static inline u16 ssb_read16(struct ssb_device *dev, u16 offset)
+ {
+ 	return dev->ops->read16(dev, offset);
+@@ -352,6 +358,10 @@ static inline u32 ssb_read32(struct ssb_
+ {
+ 	return dev->ops->read32(dev, offset);
+ }
++static inline void ssb_write8(struct ssb_device *dev, u16 offset, u8 value)
++{
++	dev->ops->write8(dev, offset, value);
++}
+ static inline void ssb_write16(struct ssb_device *dev, u16 offset, u16 value)
+ {
+ 	dev->ops->write16(dev, offset, value);
+
+-- 
+Greetings Michael.
