@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:29322 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750729AbYBNGUL convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60402 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbYBTSb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 01:20:11 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Thu, 14 Feb 2008 15:19:38 +0900
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-References: <1202209693.4395.29.camel@johannes.berg> <200802121225.02045.bruno@thinktube.com> <1202809819.11481.87.camel@johannes.berg>
-In-Reply-To: <1202809819.11481.87.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200802141519.38971.bruno@thinktube.com> (sfid-20080214_062015_955042_E32B0596)
+	Wed, 20 Feb 2008 13:31:57 -0500
+Subject: [PATCH] adm8211: fix sparse warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 20 Feb 2008 12:06:47 +0100
+Message-Id: <1203505607.17534.24.camel@johannes.berg> (sfid-20080220_183200_343589_E1E964EB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 12 February 2008 18:50:19 Johannes Berg wrote:
-> > thats a very good point! if everything was calibrated properly and =
-all
-> > delays taken into account *exactly* that would cause us to go thru =
-a
-> > merge all the time, on every received beacon. i think we have to ta=
-ke
-> > that into account, for different bitrates. what about something lik=
-e:
-> >
-> > timestamp >=3D ( mactime + (24 * 8 / beacon_phy_rate_in_mbps ))
->
-> Looks reasonable, though I'm not entirely sure how we defined 'mactim=
-e'
-> and whether it is at the first data or the first phy symbol. I think
-> it's at the first data symbol which makes this correct.
+Both of these seem to be actual errors, the first is just wrong
+and the second is my mistake introduced by the cfg80211 API
+update.
 
-hmm, it seems we don't have a strict definition of mactime... the kerne=
-ldoc of=20
-struct ieee80211_rx_status says:
- * @mactime: MAC timestamp as defined by 802.11
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/adm8211.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-but as far as i understand 802.11, it only defines "timestamp" for beac=
-on and=20
-probe response frames, where it actually means the timestamp field of t=
-he=20
-frame.
+--- everything.orig/drivers/net/wireless/adm8211.c	2008-02-20 11:51:01.000000000 +0100
++++ everything/drivers/net/wireless/adm8211.c	2008-02-20 11:55:17.000000000 +0100
+@@ -1109,7 +1109,7 @@ static void adm8211_hw_init(struct ieee8
+ 	u32 reg;
+ 	u8 cline;
+ 
+-	reg = le32_to_cpu(ADM8211_CSR_READ(PAR));
++	reg = ADM8211_CSR_READ(PAR);
+ 	reg |= ADM8211_PAR_MRLE | ADM8211_PAR_MRME;
+ 	reg &= ~(ADM8211_PAR_BAR | ADM8211_PAR_CAL);
+ 
+@@ -1702,13 +1702,9 @@ static int adm8211_tx(struct ieee80211_h
+ 	int plcp, dur, len, plcp_signal, short_preamble;
+ 	struct ieee80211_hdr *hdr;
+ 
+-	if (control->tx_rate < 0) {
+-		short_preamble = 1;
+-		plcp_signal = -control->tx_rate->bitrate;
+-	} else {
+-		short_preamble = 0;
+-		plcp_signal = control->tx_rate->bitrate;
+-	}
++	short_preamble = !!(control->tx_rate->flags &
++					IEEE80211_TXCTL_SHORT_PREAMBLE);
++	plcp_signal = control->tx_rate->bitrate;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTED;
 
-"Local Time" is defined as: "The value of the STA=E2=80=99s TSF timer a=
-t the start of=20
-reception of the first octet of the timestamp field of the received fra=
-me=20
-(probe response or beacon) from the found BSS." [802.11 p. 103]
 
-also in "Process Validate_MPDU: it says:
-"Save arrival time of first octet of {what may be a} timestamp field."
-[802.11 p 391 and 460]
-
-which could imply that this value is given as a rx timestamp (mactime).=
- in=20
-that case we could directly compare timestamp and mactime.
-
-radiotap on the other hand defines it as the first bit of the data (MPD=
-U):
- * IEEE80211_RADIOTAP_TSFT              u_int64_t       microseconds
- *
- *      Value in microseconds of the MAC's 64-bit 802.11 Time
- *      Synchronization Function timer when the first bit of the
- *      MPDU arrived at the MAC. For received frames, only.
-
-so i guess right now it depends on the hardware what we actually get as=
-=20
-mactime...
-
-i could not find any definition when the rx timestamp of atheros hardwa=
-re is=20
-taken.
-
-do we have that information for other hardware? is mactime
- *) the TSF at the reception of the first phy symbol?
- *) the TSF at the reception of the first data (MPDU) symbol
- *) the TSF at the reception of the byte 24 (where the timestamp field =
-of
-    beacon and probe response frames is)?
-
-bruno
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
