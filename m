@@ -1,99 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2937 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755882AbYBNXMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 18:12:23 -0500
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id m1ENC6n9018445
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2008 18:12:11 -0500
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id m1EN1n3h018355
-	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2008 18:01:49 -0500
-Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
-	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id m1EMvTwo014846
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2008 17:57:29 -0500
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.14.1/8.14.1/Submit) id m1EMvS8d014845
-	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2008 17:57:28 -0500
-Date: Thu, 14 Feb 2008 17:57:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Upstream wireless process changes
-Message-ID: <20080214225728.GC2981@tuxdriver.com> (sfid-20080214_231226_719097_BFD639A8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60548 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646AbYBTS21 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 13:28:27 -0500
+Subject: Re: sending ARP triggers BUG
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
+References: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R76oEgpaGIUZGQ9+jLUc"
+Date: Wed, 20 Feb 2008 01:56:08 +0100
+Message-Id: <1203468968.10983.13.camel@johannes.berg> (sfid-20080220_182849_400764_D720615C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
 
-Given current discussions, it seems timely to revamp some of the
-upstream wireless tree management policies.  I'm sure I still won't
-be able to please everyone, but maybe I can change who gets to be
-unhappy about the process... :-)
+--=-R76oEgpaGIUZGQ9+jLUc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Let's review the current process.  The wireless-2.6 tree has a number
-of branches, each with a specific use.  Most of these are for my own
-administrative purposes relating to coping with the processes upstream
-from me.  These include any "fixes", "upstream", or "pending" branches,
-as well as any "master-*" branches.  There are also "merged-*" branches
-which I maintain to assist me when rebases are necessary.  In addition,
-there have been topic branches such as "at76" and (formerly) "ath5k".
-And there is the "mm-master" branch, which primarily just collects
-the topic branches together for testing in -mm.
 
-The "everything" branch is an integration branch which collects patches
-from all the "fixes", "upstream", and "pending" branches as well
-as any topic branches.  This is the branch I ask developers to use.
-The purpose of this branch is to avoid having API-level patches miss
-any drivers as well as to avoid any similar conflicts.
+> I recently started seeing the BUG below. ieee80211_subif_start_xmit
+> calls pskb_expand_head, but this function BUGs because the skb is
+> shared. So far I have only seen this with arp messages ... I don't know
+> the significance of this fact.
 
-Finally, in the old process the "master" branch always just pointed
-at the most recent full or -rc release from Linus.  This always seemed
-to confuse users looking for the "latest and greatest" wireless bits.
-Moreover, all the branches created confusion among both users and
-developers.
+Interestingly, I'm starting to see skb problems as well, in AP mode only
+however, namely I get lots of
 
-The new process shifts from reliance on branches to the use of
-several trees.  Each tree may have some placeholder branches used for
-administrative purposes, but the interesting bits will be committed
-on the "master" branches of those trees to avoid confusion about
-which tree normal people should use.
+[ 4340.665679] SKB BUG: Invalid truesize (240) len=3D73, sizeof(sk_buff)=3D=
+176
 
-The wireless-2.6 tree will primarily become a vehicle for pushing
-patches to the current -rc release.  This replaces the former "fixes"
-branches.  It is my intent that this will not be rebased except in
-the most extreme (and unforseen) circumstances.
+Anybody have an idea how to debug that? It looks like 'len' is one too
+large, but I've also seen messages where it was two too large or one to
+small.
 
-A new wireless-2.6.26 tree (or 2.6.x as appropriate in the future) will
-be the vehicle for queueing patches to net-2.6.26 (or its successors)
-in anticipation of the next merge window.  This tree will regularly
-be updated to correspond to the current state of net-2.6.26.  I will
-avoid rebasing this tree as much as possible, but given its dependence
-on net-2.6.26 I will be somewhat at Dave's mercy... :-)
+johannes
 
-Finally, a new wireless-testing tree will be created to replace the
-usage of the former 'everything' branch.  This tree will be based
-on a current -rc release in hopes avoiding the churn in between
--rc releases.  The tree may contain topic branches (e.g. "at76")
-as appropriate, as well as picked commits from wireless-2.6 and
-wireless-2.6.26.  I will attempt to limit rebasing this tree as much as
-practical, at the expense of having some ugly history.  However, this
-tree almost certainly will be rebased from time to time, and you should
-expect any patches in this tree to be re-committed in wireless-2.6
-or wireless-2.6.26 before going upstream -- you have been warned!
+--=-R76oEgpaGIUZGQ9+jLUc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-I hope that this "covers all the bases" for our various process
-needs (merging fixes, queueing for the merge window, integration and
-on-going development).  Any coments or suggestions you might have
-are welcome now. :-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-So, comments?
+iQIVAwUAR7t6p6Vg1VMiehFYAQJLWA/+IlgY/eXFhlhQL3LV1HAF3+4+JG93NwaD
+mjdSkm4BHOtIQU4uUbRlY9mkFw5FW1JilWPRc2MX/VKBaYV6+xKPxSZzKXuTAQL+
+0Us0PiCmzhWvlO5MIiCztqLtbXqPmFs3XiONVpCRWBr7NAK/oDp8JJEhRTofYPIi
+LLhT4rmqfLYEBnv3f7RYRzT8HeAmJNnXHcsDF6gtUYc+77HxqZXKbzIA7L0oR8pQ
+eAftLmpf62y3rbi4ayo1qjNzWPqZnzZv0dgjWKOvQFG/v328Benel916/rEi9+cS
+62n3l2uVsOZKiEROl9C0oFShxuwNj7Kr3dcV+Rz1UO9KAnml9sGaTJHeQWjk1ewW
+fwte7UYESVbcDhTsuDhXfnVz5LOPs+AZYxZLdhvuns4FmBHSkQV3xPVShZdXuwDD
+PZj9M2XM1cvV0/EqMnh1VjAszhm30jVwKoUfXwiAtwvDxvIL5SI+zG1jCY8Ng4lh
+bq7W6nWQ53zgIYkBD2KO9sa3f8+Hlee7Jcg9lgCHlhFJZoh63p2G8nmEH/EdteQ6
+7fFo62uQsAOAWzxHvgQOi/RY4ISfiqSPNsCLJfLQumVh/CvaINi8wTDHlcphtC31
+0BCXYDUkQGPfr4LDRqXZyLUPsT4npQdoMfdBrhmm07S3N1GOxo8lsY9lXEuCN9NM
+d54P6b0kBtM=
+=AqdJ
+-----END PGP SIGNATURE-----
 
-Thanks,
+--=-R76oEgpaGIUZGQ9+jLUc--
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
