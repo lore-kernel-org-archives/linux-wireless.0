@@ -1,161 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.riseup.net ([204.13.164.18]:54858 "EHLO mx1.riseup.net"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:37138 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754523AbYBOT4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 14:56:37 -0500
-Date: Fri, 15 Feb 2008 20:56:48 +0100
-From: matthias@kaehlcke.net
-To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	Matthias Kaehlcke <matthias@kaehlcke.net>
-Subject: [patch 1/3] Convert acl->sem in a mutex
-Message-ID: <20080215195648.GB22741@traven> (sfid-20080215_195652_782095_848F4130)
-References: <20080215195329.912560854@kaehlcke.net>
-MIME-Version: 1.0
+	id S1762787AbYBTT7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 14:59:06 -0500
+Date: Wed, 20 Feb 2008 20:59:13 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
+Message-ID: <20080220195913.GE21139@uranus.ravnborg.org> (sfid-20080220_195930_257984_BE5BDF60)
+References: <1203503909.17534.14.camel@johannes.berg>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1203503909.17534.14.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore acl->sem is used as mutex, convert it to the mutex API
+On Wed, Feb 20, 2008 at 11:38:29AM +0100, Johannes Berg wrote:
+> Make sure sparse checks endianness when run on mac80211.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Sam, is this an OK use of makefiles or is there something else I should
+> be doing?
 
-Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
+I would prefer it to be kernel wide enabled.
+Tried a defconfig build.
 
-Index: linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:42:17.000000000 +0100
-+++ linux-2.6/drivers/net/wireless/prism54/isl_ioctl.c	2008-02-15 20:43:05.000000000 +0100
-@@ -1780,7 +1780,7 @@
- void
- prism54_acl_init(struct islpci_acl *acl)
- {
--	sema_init(&acl->sem, 1);
-+	mutex_init(&acl->lock);
- 	INIT_LIST_HEAD(&acl->mac_list);
- 	acl->size = 0;
- 	acl->policy = MAC_POLICY_OPEN;
-@@ -1792,10 +1792,10 @@
- 	struct list_head *ptr, *next;
- 	struct mac_entry *entry;
- 
--	down(&acl->sem);
-+	mutex_lock(&acl->lock);
- 
- 	if (acl->size == 0) {
--		up(&acl->sem);
-+		mutex_unlock(&acl->lock);
- 		return;
- 	}
- 
-@@ -1806,7 +1806,7 @@
- 		kfree(entry);
- 	}
- 	acl->size = 0;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- }
- 
- void
-@@ -1833,13 +1833,13 @@
- 
- 	memcpy(entry->addr, addr->sa_data, ETH_ALEN);
- 
--	if (down_interruptible(&acl->sem)) {
-+	if (mutex_lock_interruptible(&acl->lock)) {
- 		kfree(entry);
- 		return -ERESTARTSYS;
- 	}
- 	list_add_tail(&entry->_list, &acl->mac_list);
- 	acl->size++;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 
- 	return 0;
- }
-@@ -1856,18 +1856,18 @@
- 	if (addr->sa_family != ARPHRD_ETHER)
- 		return -EOPNOTSUPP;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 	list_for_each_entry(entry, &acl->mac_list, _list) {
- 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
- 			list_del(&entry->_list);
- 			acl->size--;
- 			kfree(entry);
--			up(&acl->sem);
-+			mutex_unlock(&acl->lock);
- 			return 0;
- 		}
- 	}
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 	return -EINVAL;
- }
- 
-@@ -1882,7 +1882,7 @@
- 
- 	dwrq->length = 0;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 
- 	list_for_each_entry(entry, &acl->mac_list, _list) {
-@@ -1891,7 +1891,7 @@
- 		dwrq->length++;
- 		dst++;
- 	}
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 	return 0;
- }
- 
-@@ -1955,11 +1955,11 @@
- 	struct mac_entry *entry;
- 	int res = 0;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 
- 	if (acl->policy == MAC_POLICY_OPEN) {
--		up(&acl->sem);
-+		mutex_unlock(&acl->lock);
- 		return 1;
- 	}
- 
-@@ -1970,7 +1970,7 @@
- 		}
- 	}
- 	res = (acl->policy == MAC_POLICY_ACCEPT) ? !res : res;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 
- 	return res;
- }
-Index: linux-2.6/drivers/net/wireless/prism54/islpci_dev.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:27.000000000 +0100
-+++ linux-2.6/drivers/net/wireless/prism54/islpci_dev.h	2008-02-15 20:43:49.000000000 +0100
-@@ -55,7 +55,7 @@
-    enum { MAC_POLICY_OPEN=0, MAC_POLICY_ACCEPT=1, MAC_POLICY_REJECT=2 } policy;
-    struct list_head mac_list;  /* a list of mac_entry */
-    int size;   /* size of queue */
--   struct semaphore sem;   /* accessed in ioctls and trap_work */
-+   struct mutex lock;   /* accessed in ioctls and trap_work */
- };
- 
- struct islpci_membuf {
+When I enabled __CHECK_ENDIAN I got:
+8 files with > 100 warnings
+14 files with 10 to 99 warnings.
 
--- 
-Matthias Kaehlcke
-Linux System Developer
-Barcelona
+So nothing that should scare a kernel hacker...
 
-              We build too many walls and not enough bridges
-                             (Isaac Newton)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+warnings without: 1686
+warnings with: 2788
+
+OK - thats a lot, but then fixing 8 files will significantly
+reduce this.
+
+	Sam
