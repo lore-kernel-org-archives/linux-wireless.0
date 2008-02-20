@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48025 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202AbYBEIYG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 03:24:06 -0500
-Subject: Re: [patch 1/1] b43: fix build with CONFIG_SSB_PCIHOST=n
-From: Johannes Berg <johannes@sipsolutions.net>
-To: akpm@linux-foundation.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mb@bu3sch.de
-In-Reply-To: <200802050758.m157wNAU010975@imap1.linux-foundation.org> (sfid-20080205_075935_916442_C418B3B8)
-References: <200802050758.m157wNAU010975@imap1.linux-foundation.org>
-	 (sfid-20080205_075935_916442_C418B3B8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y8cb73CuawT+GoQvOKeC"
-Date: Tue, 05 Feb 2008 09:23:49 +0100
-Message-Id: <1202199829.4395.7.camel@johannes.berg> (sfid-20080205_082408_740007_154F1162)
-Mime-Version: 1.0
+Received: from ebb.errno.com ([69.12.149.25]:2298 "EHLO ebb.errno.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827AbYBTSwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2008 13:52:46 -0500
+Message-ID: <47BC76FC.7070109@errno.com> (sfid-20080220_185250_790411_4584F62A)
+Date: Wed, 20 Feb 2008 10:52:44 -0800
+From: Sam Leffler <sam@errno.com>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Michael Renzmann <mrenzmann@madwifi.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	bruno randolf <br1@einfach.org>
+Subject: Re: implementing APSD?
+References: <1203521087.17534.74.camel@johannes.berg> <1ba2fa240802201043v1bd4fbddsc55c2230eb2a1480@mail.gmail.com>
+In-Reply-To: <1ba2fa240802201043v1bd4fbddsc55c2230eb2a1480@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tomas Winkler wrote:
+> On Feb 20, 2008 5:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>   
+>> Hi,
+>>
+>> I've long thought about implementing APSD but it seems to require
+>> setting the "more data" bit in an ACK frame and various other things.
+>> Ron, I think you're the QoS expert, is that really how APSD works? If
+>> so, does iwl firmware implement that?
+>>     
+>
+> We have uAPSD implementation, mainly AP part, yet again it for  older
+> mac. It will take a bit time to merge it in
+> It's a mandatory feature for HT AP.
+>   
 
---=-Y8cb73CuawT+GoQvOKeC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Really?  Can you point where that's called out in the spec?
 
+>   
+>> Also, does Atheros hardware implement that, and how? It doesn't look
+>> like Broadcom firmware implements it, and I don't really understand how
+>> one could implement it without many hardware queues, since it seems
+>> timing critical to send out the frames to the station that is using
+>> APSD.
+>>
+>>     
+> Don't believe it's possible to that without HW support.
+>   
 
-On Mon, 2008-02-04 at 23:58 -0800, akpm@linux-foundation.org wrote:
-> From: Andrew Morton <akpm@linux-foundation.org>
->=20
-> m68k allmodconfig gives
->=20
-> drivers/net/wireless/b43/main.c:251: error: implicit declaration of funct=
-ion 'mmiowb'
->=20
-> because CONFIG_B43=3Dm, CONFIG_SSB_PCIHOST=3Dn.
->=20
-> Might be Kconfig bustage, but this works...
+Sorry, this is incorrect; you can do UAPSD w/o any special h/w support.
 
-It's not Kcconfig bustage and I agree with this patch more than the one
-posted on netdev recently fixing it specifically in b44 (rather than
-like this patch that fixes them both at once).
-
-johannes
-
---=-Y8cb73CuawT+GoQvOKeC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6gdFKVg1VMiehFYAQIcTw/+ODa935MaGTlGXpWmuqr2cSXG3osp0ord
-c3VqkeyekhzKw8Ww8Kjz3Vdon1dHR2GJ6B+39dx/Dj5GqlaV08iGgEwfRekDOTwd
-I8aUIygRE3/67rZnDEqE/TmLI/H2PQ/qoyL3L2IVdoafQkJVUImzVAanvQH0RM0B
-zjrw6tJkala4KHE8sFl/OCrnBorP/Ng/M9ti79e4xAAJKixJKm6tAmDTZSyZqlOO
-LnvuBtPADm6lPnqcHq25PgOKwqiRx9ceL4UIIpdMl38QOqtO1mloKFBTtOhcfnbf
-w8yYVVRnydfc1odOfRzNU80mRjhtkD9wFHTA2K/dRCURnquA6bxGuoyKseI+MIhN
-mIVU+NvnOguvF7zanbK8EATwCsYsEtg5y4l9wuFCLR+1DKpmzZQPAs8iHCnaMzVh
-VLmhrUItit+bFV92HS2v+hu2Qvmu7rFN/oSaKsuNOkdYwKC3V0kqWXSdMbY7naHZ
-5hLjiDbhlxiAj0SDTSesds6tnN8in3fxYFCJHRqfVdFl7TzUaKZ9xSH7d7H5B+GN
-sC2eZniEVkUrTvbXi+s+rqqegOyflkTb3VGd8QSwNyhtrzH7cZ7mt/RW3veh2P/y
-Egs8YycR6DRluX6gHIv+/DanrxGGAXdBLCw/YcQTYs/FCN1QmsJBkiVl5kctCdIE
-IdG0CjB7b5M=
-=NrQc
------END PGP SIGNATURE-----
-
---=-Y8cb73CuawT+GoQvOKeC--
+    Sam
 
