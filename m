@@ -1,185 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:52664 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755855AbYBDWpI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbYBUTUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 17:45:08 -0500
-Date: Mon, 4 Feb 2008 23:45:02 +0100
-From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: Dan Williams <dcbw@redhat.com>, "Zhu, Yi" <yi.zhu@intel.com>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org, ipw2100-devel@lists.sourceforge.net
-Subject: Re: ipw2200 stalls on high load
-Message-ID: <20080204224502.GA22717@Chamillionaire.breakpoint.cc> (sfid-20080204_224513_229110_97FC5158)
-References: <20080126132939.GA22630@Chamillionaire.breakpoint.cc> <D936D925018D154694D8A362EEB0892003800B1B@orsmsx416.amr.corp.intel.com> <20080130225738.GB2648@Chamillionaire.breakpoint.cc> <D936D925018D154694D8A362EEB08920038F4382@orsmsx416.amr.corp.intel.com> <1202128649.10632.4.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <D936D925018D154694D8A362EEB0892003947453@orsmsx416.amr.corp.intel.com>
+	Thu, 21 Feb 2008 14:20:13 -0500
+Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <20080220195913.GE21139@uranus.ravnborg.org>
+References: <1203503909.17534.14.camel@johannes.berg>
+	 <20080220195913.GE21139@uranus.ravnborg.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GTQatHHLnXsC1L7lGGVz"
+Date: Thu, 21 Feb 2008 13:42:56 +0100
+Message-Id: <1203597776.20331.5.camel@johannes.berg> (sfid-20080221_192023_943392_A7BD79A3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Chatre, Reinette | 2008-02-04 10:23:49 [-0800]:
 
->On Monday, February 04, 2008 4:37 AM, Dan Williams  wrote:
->
->> Something like the following?  Turns out the rxq->processed
->> isn't really
->> used that much, and 3945/4965 don't use that field at all (but use
->> ->read exclusively instead).  And since it appears that the replenish
->> function is simpler in the 2200, it doesn't need to be split like
->> 3945/4965.  I haven't been able to stress my 2200 enough to trigger
->> the new codepath though. 
->
->Thank you very much! 
-Yes, thanks for the patch.
+--=-GTQatHHLnXsC1L7lGGVz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->Sebastian, does this change work for you?
-No, it doesn't. I get the following:
+>> [patch doing CHECKFLAGS +=3D -D__CHECK_ENDIAN__ in the
+>> net/mac80211/Makefile]
 
-| ipw2200: Firmware error detected.  Restarting.
-| ipw2200: Start IPW Error Log Dump:
-| ipw2200: Status: 0x800000E0, Config: 00000347
-| ipw2200: NMI_INTERRUPT 493005888 0x000003b4  0x00000000  0x00000250  0x0000f420  0x00000000
-| ipw2200: DMA_STATUS 493005892 0x00027980  0x00027740  0x01540002  0x00000000  0x00000000
-| ipw2200: DMA_STATUS 493005895 0x00028400  0x00028670  0x00540001  0x00000000  0x00000001
-| ipw2200: DMA_STATUS 493005899 0x00028000  0x00028190  0x00540001  0x00000000  0x00000002
-| ipw2200: DMA_STATUS 493005903 0x00400000  0x00408000  0x00408000  0x00000087  0x00000003
-| ipw2200: 492475810	0x00000008	50
-| ipw2200: 492475836	0x0000003c	264
-| ipw2200: 492475841	0x0002a9c0	74
-| ipw2200: 492475846	0x00000042	208
-| ipw2200: 492477710	0x00000008	32
-| ipw2200: 492477738	0x00000008	50
-| ipw2200: 492477790	0x0000003c	264
-| ipw2200: 492477796	0x0002a930	74
-| ipw2200: 492477800	0x00000042	208
-| ipw2200: 492479989	0x00000008	32
-| ipw2200: 492480017	0x00000008	50
-| ipw2200: 492480043	0x0000003c	264
-| ipw2200: 492480048	0x0002a990	74
-| ipw2200: 492480053	0x00000042	208
-| ipw2200: 492481989	0x00000008	32
-| ipw2200: 492482017	0x00000008	50
-| ipw2200: 492482051	0x0000003c	264
-| ipw2200: 492482056	0x0002a970	74
-| ipw2200: 492482061	0x00000042	208
-| ipw2200: 492484133	0x00000008	32
-| ipw2200: 492484161	0x00000008	50
-| ipw2200: 492484189	0x0000003c	264
-| ipw2200: 492484194	0x0002a880	74
-| ipw2200: 492484199	0x00000042	208
-| ipw2200: 492498961	0x00000001	198
-| ipw2200: 492499005	0x0002a8e0	67
-| ipw2200: 492499025	0x0000026c	61
-| ipw2200: 492507155	0x00000389	140
-| ipw2200: 492507158	0x00000061	139
-| ipw2200: 492507161	0x00000392	140
-| ipw2200: 492507169	0x00000001	136
-| ipw2200: 492507173	0x0000029c	138
-| ipw2200: 492507177	0x000002ca	138
-| ipw2200: 492507180	0x00000177	84
-| ipw2200: 492507185	0x00000005	81
-| ipw2200: 492507188	0x00000003	82
-| ipw2200: 492507191	0x00000006	83
-| ipw2200: 492507196	0x0000039f	140
-| ipw2200: 492507199	0x00000006	139
-| ipw2200: 492507202	0x000003ad	139
-| ipw2200: 492509617	0x00000001	32
-| ipw2200: 492509620	0x0000023f	179
-| ipw2200: 492509624	0x00000633	140
-| ipw2200: 492509627	0x00000640	140
-| ipw2200: 492509631	0x00000177	84
-| ipw2200: 492509635	0x00000006	81
-| ipw2200: 492509638	0x00000004	82
-| ipw2200: 492509641	0x00000007	83
-| ipw2200: 492509645	0x0000054d	183
-| ipw2200: 492509651	0x00000009	184
-| ipw2200: 492509654	0x00000455	189
-| ipw2200: 492509657	0x00000000	189
-| ipw2200: 492509661	0x00000007	184
-| ipw2200: 492509664	0x00000004	183
-| ipw2200: 492509669	0x0000042b	191
-| ipw2200: 492448433	0x0000003d	264
-| ipw2200: 492448438	0x0002a960	74
-| ipw2200: 492448547	0x000000b1	200
-| ipw2200: 492450315	0x00000008	32
-| ipw2200: 492450343	0x00000008	50
-| ipw2200: 492450369	0x0000003d	264
-| ipw2200: 492450374	0x0002a9e0	74
-| ipw2200: 492450483	0x000000b1	200
-| ipw2200: 492452305	0x00000008	32
-| ipw2200: 492452333	0x00000008	50
-| ipw2200: 492452359	0x0000003d	264
-| ipw2200: 492452364	0x0002a9a0	74
-| ipw2200: 492452473	0x000000b1	200
-| ipw2200: 492454503	0x00000008	32
-| ipw2200: 492454531	0x00000008	50
-| ipw2200: 492454557	0x0000003d	264
-| ipw2200: 492454562	0x0002a960	74
-| ipw2200: 492454671	0x000000b1	200
-| ipw2200: 492456782	0x00000008	32
-| ipw2200: 492456810	0x00000008	50
-| ipw2200: 492456836	0x0000003d	264
-| ipw2200: 492456841	0x0002a9e0	74
-| ipw2200: 492456950	0x000000b1	200
-| ipw2200: 492458746	0x00000008	32
-| ipw2200: 492458774	0x00000008	50
-| ipw2200: 492458800	0x0000003d	264
-| ipw2200: 492458805	0x0002a9a0	74
-| ipw2200: 492458914	0x000000b1	200
-| ipw2200: 492459161	0x00000001	198
-| ipw2200: 492459201	0x0002a8e0	67
-| ipw2200: 492459221	0x0000026c	61
-| ipw2200: 492459341	0x00000008	32
-| ipw2200: 492459352	0x0000000b	35
-| ipw2200: 492459356	0x0000000b	24
-| ipw2200: 492459365	0x00000172	25
-| ipw2200: 492459369	0x0002a8e0	98
-| ipw2200: 492461603	0x00000008	32
-| ipw2200: 492461631	0x00000008	50
-| ipw2200: 492461657	0x0000003c	264
-| ipw2200: 492461662	0x0002a990	74
-| ipw2200: 492461771	0x000000b1	200
-| ipw2200: 492463197	0x00000008	32
-| ipw2200: 492463225	0x00000008	50
-| ipw2200: 492463251	0x0000003c	264
-| ipw2200: 492463256	0x0002a9c0	74
-| ipw2200: 492463365	0x000000b1	200
-| ipw2200: 492465224	0x00000008	32
-| ipw2200: 492465252	0x00000008	50
-| ipw2200: 492465290	0x0000003c	264
-| ipw2200: 492465296	0x0002a930	74
-| ipw2200: 492465404	0x000000b1	200
-| ipw2200: 492467359	0x00000008	32
-| ipw2200: 492467387	0x00000008	50
-| ipw2200: 492467413	0x0000003c	264
-| ipw2200: 492467418	0x0002a990	74
-| ipw2200: 492467527	0x000000b1	200
-| ipw2200: 492469413	0x00000008	32
-| ipw2200: 492469441	0x00000008	50
-| ipw2200: 492469467	0x0000003c	264
-| ipw2200: 492469472	0x0002a9c0	74
-| ipw2200: 492469581	0x000000b1	200
-| ipw2200: 492471611	0x00000008	32
-| ipw2200: 492471639	0x00000008	50
-| ipw2200: 492471665	0x0000003c	264
-| ipw2200: 492471670	0x0002a930	74
-| ipw2200: 492471779	0x000000b1	200
-| ipw2200: 492473854	0x00000008	32
-| ipw2200: 492473882	0x00000008	50
-| ipw2200: 492473908	0x0000003c	264
-| ipw2200: 492473913	0x0002a990	74
-| ipw2200: 492474022	0x000000b1	200
-| ipw2200: 492474164	0x00000042	208
-| ipw2200: 492475782	0x00000008	32
-| ipw2200: U ipw_load initial device response after 10ms
-| ipw2200: U ipw_stop_master stop master 0ms
-| ipw2200: U ipw_load_ucode Microcode OK, rev. 53594 (0xd15a) dev. 3 (0x3) of 11/22/04 20:27
-| ipw2200: U ipw_load device response after 50ms
+> I would prefer it to be kernel wide enabled.
+> Tried a defconfig build.
 
-I can provide you a full log if you want.
->Reinette
->
+Hm. I tend to think there was a reason for this, since this is actually
+explicitly disabled by include/linux/types.h:
 
-Sebastian
+#ifdef __CHECKER__
+#define __bitwise__ __attribute__((bitwise))
+#else=20
+#define __bitwise__
+#endif
+
+#ifdef __CHECK_ENDIAN__
+#define __bitwise __bitwise__
+#else
+#define __bitwise
+#endif
+
+The commit that introduced __CHECK_ENDIAN__ was
+af4ca457eaf2d6682059c18463eb106e2ce58198 ("gfp_t: infrastructure") but
+it doesn't say anything about the rationale for it.
+
+> When I enabled __CHECK_ENDIAN I got:
+> 8 files with > 100 warnings
+> 14 files with 10 to 99 warnings.
+>=20
+> So nothing that should scare a kernel hacker...
+>=20
+> warnings without: 1686
+> warnings with: 2788
+>=20
+> OK - thats a lot, but then fixing 8 files will significantly
+> reduce this.
+
+I recently ran sparse on my config and was surprised by the number of
+warnings. Then again, something in mmzone.h or so generated billions of
+them...
+
+In any case, I would love to have __CHECK_ENDIAN__ enabled by default at
+least on the wireless code (just caught another bug with it...)
+
+johannes
+
+--=-GTQatHHLnXsC1L7lGGVz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR71xz6Vg1VMiehFYAQKl+BAAvgqz5hT+aIU5/xJSoTEY7wVE/5mrv23S
+TbJW+52SchPOyUjgX1Wpv2qbXUfqxk+/BgcJjK9a/0cWCqOnV3L2HNsYmIoIg7hD
+Y6gEy/xzd+WQsa92hHhlzD7vvvYleDge/r0HC01i6567Gtzsa9cljdELMk4bYqdN
+YxTZPev9ry46f83QE8b7I+H3KxtQuvBDU2YjvC82GWsKjiHbAklZslAfqxAg3aDa
+Fo9P6qjcKFy46oXbLL5meoPPYEvO4qjvJq47esVObrDa4IfQtes5Q6FAUJ5vkoDp
+9tcfUWNAWHMMVO3841CkkLqyImQiktcKr8pLCArzrBXqGub7qIVrZuCsCjz/clTT
+BR/4gt+GCN/3LRihbPZjpfrc8UX0yfaCcp1OyjnAKGkcTMl68ClP8tIb55N+FZWa
+Mv3DOOru1pju3+ACb4AXmK9auzKpgKR1kR0xxB4HWA1yHeklYxZ9QP6c4MPpJtf5
+3uh3obTpNGaGr9ECTNXirE89ps8M8VCnBMnzLIBBf3H4Eu1IgrB5b0+85CB9jzhL
+PzAd8kuBMUhS/tmaa/3kR6dD8qpOeLHykqtNq4zk96ORDJcdHOmNX0rz9ZXHnEzB
+4ADpjdhGC7wjf4tEoNAK8F1dLye8gBXKy/H1F8FjX622zluTeb6DRQHkrA4ymePx
+ZnZZNKPgqSs=
+=a10Z
+-----END PGP SIGNATURE-----
+
+--=-GTQatHHLnXsC1L7lGGVz--
+
