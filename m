@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:34616 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754845AbYBEH7c (ORCPT
+Received: from ag-out-0708.google.com ([72.14.246.240]:65074 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462AbYBUUBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 02:59:32 -0500
-Message-Id: <200802050758.m157wNAU010975@imap1.linux-foundation.org> (sfid-20080205_075935_916442_C418B3B8)
-Subject: [patch 1/1] b43: fix build with CONFIG_SSB_PCIHOST=n
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	mb@bu3sch.de
-From: akpm@linux-foundation.org
-Date: Mon, 04 Feb 2008 23:58:42 -0800
+	Thu, 21 Feb 2008 15:01:20 -0500
+Received: by ag-out-0708.google.com with SMTP id 33so3606agc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 12:01:19 -0800 (PST)
+Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sam Ravnborg <sam@ravnborg.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1203597776.20331.5.camel@johannes.berg>
+References: <1203503909.17534.14.camel@johannes.berg>
+	 <20080220195913.GE21139@uranus.ravnborg.org>
+	 <1203597776.20331.5.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 21 Feb 2008 12:01:31 -0800
+Message-Id: <1203624091.20345.63.camel@brick> (sfid-20080221_200125_743527_ED99E3DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrew Morton <akpm@linux-foundation.org>
+On Thu, 2008-02-21 at 13:42 +0100, Johannes Berg wrote:
+> >> [patch doing CHECKFLAGS += -D__CHECK_ENDIAN__ in the
+> >> net/mac80211/Makefile]
+> 
+> > I would prefer it to be kernel wide enabled.
+> > Tried a defconfig build.
+> 
+> Hm. I tend to think there was a reason for this, since this is actually
+> explicitly disabled by include/linux/types.h:
+> 
+> #ifdef __CHECKER__
+> #define __bitwise__ __attribute__((bitwise))
+> #else 
+> #define __bitwise__
+> #endif
+> 
+> #ifdef __CHECK_ENDIAN__
+> #define __bitwise __bitwise__
+> #else
+> #define __bitwise
+> #endif
+> 
 
-m68k allmodconfig gives
+This seems somewhat suspect.
 
-drivers/net/wireless/b43/main.c:251: error: implicit declaration of function 'mmiowb'
+> I recently ran sparse on my config and was surprised by the number of
+> warnings. Then again, something in mmzone.h or so generated billions of
+> them...
 
-because CONFIG_B43=m, CONFIG_SSB_PCIHOST=n.
+Potentially expensive pointer subtraction 640:....
 
-Might be Kconfig bustage, but this works...
+Patch in -mm.
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+> 
+> In any case, I would love to have __CHECK_ENDIAN__ enabled by default at
+> least on the wireless code (just caught another bug with it...)
+> 
 
- include/linux/ssb/ssb.h |    9 +++++++++
- 1 file changed, 9 insertions(+)
+I'd love to have it too, but there are so many trivial warnings that
+clutter up valid warnings that it is prohibitive.  I'm working on
+reducing the noise level a bit for 2.6.26, we'll see about turning
+it on then.
 
-diff -puN include/linux/ssb/ssb.h~b43-fix-build-with-config_ssb_pcihost=n include/linux/ssb/ssb.h
---- a/include/linux/ssb/ssb.h~b43-fix-build-with-config_ssb_pcihost=n
-+++ a/include/linux/ssb/ssb.h
-@@ -373,6 +373,15 @@ void ssb_pcihost_set_power_state(struct 
- 	if (sdev->bus->bustype == SSB_BUSTYPE_PCI)
- 		pci_set_power_state(sdev->bus->host_pci, state);
- }
-+#else
-+static inline void ssb_pcihost_unregister(struct pci_driver *driver)
-+{
-+}
-+
-+static inline
-+void ssb_pcihost_set_power_state(struct ssb_device *sdev, pci_power_t state)
-+{
-+}
- #endif /* CONFIG_SSB_PCIHOST */
- 
- 
-_
+Harvey
+
