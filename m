@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:27523 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753093AbYBIAla (ORCPT
+Received: from smtp5.freeserve.com ([193.252.22.152]:53304 "EHLO
+	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755806AbYBUXUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 19:41:30 -0500
-Received: by an-out-0708.google.com with SMTP id d31so950756and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 16:41:28 -0800 (PST)
-Subject: Re: [PATCH 08/13] o11s: other changes in mac80211 for mesh
-	interface support
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1202346343.9965.88.camel@johannes.berg>
-References: <47a78286.07045a0a.0fd0.ffff8bb1@mx.google.com>
-	 (sfid-20080204_212428_285984_7DC49E60)  <1202346343.9965.88.camel@johannes.berg>
+	Thu, 21 Feb 2008 18:20:42 -0500
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: chris2553@googlemail.com
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200802212304.28731.chris2553@googlemail.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <1203628049.3277.6.camel@boulder.homenet>
+	 <200802212251.26897.IvDoorn@gmail.com>
+	 <200802212304.28731.chris2553@googlemail.com>
 Content-Type: text/plain
-Date: Fri, 08 Feb 2008 16:42:28 -0800
-Message-Id: <1202517748.7025.40.camel@localhost> (sfid-20080209_004135_891521_B87914D2)
+Date: Thu, 21 Feb 2008 23:20:27 +0000
+Message-Id: <1203636027.3186.5.camel@boulder.homenet> (sfid-20080221_232045_358465_38D3A3DD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-02-07 at 02:05 +0100, Johannes Berg wrote:
-> > +int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
-> > +{
-> > +	int ae = meshhdr->flags & IEEE80211S_FLAGS_AE;
-> > +	/* 7.1.3.5a.2 */
-> > +	switch (ae) {
-> > +	case 0:
-> > +		return 5;
-> > +	case 1:
-> > +		return 11;
-> > +	case 2:
-> > +		return 17;
-> > +	case 3:
-> > +		return 23;
-> > +	default:
-> > +		return 5;
-> > +	}
-> > +}
+On Thu, 2008-02-21 at 23:04 +0000, Chris Clayton wrote:
+> On Thursday 21 February 2008, Ivo van Doorn wrote:
+> > On Thursday 21 February 2008, Chris Vine wrote:
+[snip]
+> > > This probably explains the problem another user reported with rt61.
+> > 
+> > Perhaps something similar like:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=10058
+> > in there a reference is made to the following patch:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+> > 
+> > Does applying that help?
 > 
-> What the hell? This is utterly horrible! Can that be changed in the spec
-> so the header is always a multiple of four bytes? :)
+> I'm afraid not, Ivo. The test I ran last night was against 2.6.25.-rc2-git4 and
+> that already has this patch applied. Furthermore, I have another card that uses
+> the rtl8180 driver and that works reliably. I, therefore, suspect that my problem
+> lies within the rt61pci driver or the rt2x00 infrastructure.
 
-Well it actually can be changed as it is still a draft... Guess you just
-need to convince a few hardware manufacturers that the change is in
-their interest..
+Does the same happen with 2.0.14 under kernel 2.6.24?
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+Chris
 
-
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
 
 
