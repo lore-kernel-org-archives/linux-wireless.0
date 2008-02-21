@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb.errno.com ([69.12.149.25]:2298 "EHLO ebb.errno.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827AbYBTSwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:52:46 -0500
-Message-ID: <47BC76FC.7070109@errno.com> (sfid-20080220_185250_790411_4584F62A)
-Date: Wed, 20 Feb 2008 10:52:44 -0800
-From: Sam Leffler <sam@errno.com>
+Received: from fk-out-0910.google.com ([209.85.128.185]:4931 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbYBUWve (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Feb 2008 17:51:34 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so314245fkz.5
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 14:51:32 -0800 (PST)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+Date: Thu, 21 Feb 2008 23:51:11 +0100
+Cc: Chris Vine <chris@cvine.freeserve.co.uk>,
+	Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802212251.26897.IvDoorn@gmail.com> <1203633991.3186.2.camel@boulder.homenet>
+In-Reply-To: <1203633991.3186.2.camel@boulder.homenet>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Michael Renzmann <mrenzmann@madwifi.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	bruno randolf <br1@einfach.org>
-Subject: Re: implementing APSD?
-References: <1203521087.17534.74.camel@johannes.berg> <1ba2fa240802201043v1bd4fbddsc55c2230eb2a1480@mail.gmail.com>
-In-Reply-To: <1ba2fa240802201043v1bd4fbddsc55c2230eb2a1480@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802212351.12637.IvDoorn@gmail.com> (sfid-20080221_225137_775676_8542AD2E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> On Feb 20, 2008 5:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->   
->> Hi,
->>
->> I've long thought about implementing APSD but it seems to require
->> setting the "more data" bit in an ACK frame and various other things.
->> Ron, I think you're the QoS expert, is that really how APSD works? If
->> so, does iwl firmware implement that?
->>     
->
-> We have uAPSD implementation, mainly AP part, yet again it for  older
-> mac. It will take a bit time to merge it in
-> It's a mandatory feature for HT AP.
->   
+On Thursday 21 February 2008, Chris Vine wrote:
+> On Thu, 2008-02-21 at 22:51 +0100, Ivo van Doorn wrote:
+> > On Thursday 21 February 2008, Chris Vine wrote:
+> [snip] 
+> > > Here's some further information.
+> > > 
+> > > I have a fully functioning version of rt2x00-2.0.14 and mac80211 from
+> > > wireless-2.6/compat-wireless-2.6 of mid January which works fine on
+> > > kernel 2.6.24.  On doing a comparison with the rt2x00 in vanilla kernel
+> > > 2.6.25-rc2, there are no material differences.  (There was a slight
+> > > change in the declaration a variable in rt2x00usb.c but it is
+> > > immaterial.)
+> > > 
+> > > I compiled up the working mid-January version of rt2x00 and mac80211
+> > > under kernel 2.6.25-rc2 and I get exactly the same result as I reported
+> > > earlier, namely I get a kernel panic as soon as I try to associate.  It
+> > > looks therefore as if something has changed within the remainder of the
+> > > kernel which has caused rt2x00 (and possibly mac80211?) to break.
+> > > 
+> > > This probably explains the problem another user reported with rt61.
+> > 
+> > Perhaps something similar like:
+> > http://bugzilla.kernel.org/show_bug.cgi?id=10058
+> > in there a reference is made to the following patch:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+> > 
+> > Does applying that help?
+> 
+> Yes, well done.
+> 
+> I have spent 20 minutes testing it and it seems to work fine (at least
+> as well as 2.0.14 does under kernel 2.6.24).  The rate control algorithm
+> seems to work better as well, but that is probably a mac80211 thing.
 
-Really?  Can you point where that's called out in the spec?
+Excellent, I am currently updating rt2x00.git from wireless-testing to get
+the above mentioned patch into the repository.
 
->   
->> Also, does Atheros hardware implement that, and how? It doesn't look
->> like Broadcom firmware implements it, and I don't really understand how
->> one could implement it without many hardware queues, since it seems
->> timing critical to send out the frames to the station that is using
->> APSD.
->>
->>     
-> Don't believe it's possible to that without HW support.
->   
-
-Sorry, this is incorrect; you can do UAPSD w/o any special h/w support.
-
-    Sam
+Ivo
 
