@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:42686 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753274AbYBJMUh (ORCPT
+Received: from smtp-out28.alice.it ([85.33.2.28]:2505 "EHLO
+	smtp-out28.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755940AbYBUBMO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 07:20:37 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
-Date: Sun, 10 Feb 2008 13:19:59 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200802101121.58058.IvDoorn@gmail.com> <200802101131.13974.mb@bu3sch.de> <200802101136.28667.IvDoorn@gmail.com>
-In-Reply-To: <200802101136.28667.IvDoorn@gmail.com>
+	Wed, 20 Feb 2008 20:12:14 -0500
+From: Matteo Croce <matteo@openwrt.org>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: airo WPA
+Date: Thu, 21 Feb 2008 01:55:52 +0100
+Cc: Michal Schmidt <xschmi00@stud.feec.vutbr.cz>,
+	Matthieu Castet <castet.matthieu@free.fr>,
+	Fabrice Bellet <fabrice@bellet.info>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	PReDaCoN <alessandroferrari@gmail.com>,
+	Benjamin Reed <breed@users.sourceforge.net>,
+	Javier Achirica <achirica@users.sourceforge.net>,
+	Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless@vger.kernel.org, linux-net@vger.kernel.org
+References: <200711070307.09832.rootkit85@yahoo.it> <200711071559.47916.rootkit85@yahoo.it> <1194448388.23721.0.camel@localhost.localdomain>
+In-Reply-To: <1194448388.23721.0.camel@localhost.localdomain>
 MIME-Version: 1.0
-Message-Id: <200802101320.00065.mb@bu3sch.de> (sfid-20080210_122040_921992_90DB6DBA)
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200802210155.53337.matteo@openwrt.org> (sfid-20080221_011219_878716_D79DE970)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 February 2008 11:36:28 Ivo van Doorn wrote:
-> On Sunday 10 February 2008, Michael Buesch wrote:
-> > On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
-> > > 
-> > > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > > ---
-> > > John, please send this patch to the 2.6.24/2.6.25 stable trees.
-> > > It is already present in the wireless-2.6 tree queued for 2.6.26.
-> > > 
-> > >  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
-> > >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> > > index cba7f57..c4a6ab4 100644
-> > > --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> > > +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> > > @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
-> > >  	/* Hercules */
-> > >  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	/* Melco */
-> > > +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > > -
-> > >  	/* MSI */
-> > >  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > >  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
-> > 
-> > I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
-> > We always handled adding IDs as features.
-> 
-> Ok, the user has to wait untill 2.6.26 then.
+Il Wednesday 07 November 2007 16:13:08 Dan Williams ha scritto:
+> Well, ideally we push the patch upstream and then people can send
+> updates to this list... =C2=A0I think it's really close and I feel li=
+ke it
+> can be submitted for 2.6.25.
+>=20
+> Dan
 
-Oh, it seems that -stable does actually accept such patches:
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.23.y.git;a=commitdiff;h=2cf220bb5b30a922aebdd5841a7975e02a70ce59
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.23.y.git;a=commitdiff;h=955ab48db7fb9e3d74dc770cca9aa6b194e53025
+I've seen so many updates in GIT, so I applied all up to 3eb9b41f...ae9=
+e76e4 to my 2.6.24 kernel and it compiles, loads and runs fine, but the=
+re are no WPA commits.
+Where is the WPA version that should go in 2.6.25? There are repository=
+ or patches floating around? I offer myself as betatester, I'm really i=
+nterested in this.
 
-I wasn't aware of this, because we always had the rule of ID additions
-being features, in the wireless team.
-So well. I think John should probably make an official decision. :)
-
-I would suggest the following: Unless there's another driver in
-the tree that (partially) supports the device being added, adding the ID
-can not cause a regression. So it's OK to add it, even in a stable cycle.
-
--- 
-Greetings Michael.
+Cheers,
+Matteo Croce
+--=20
+  _______                     ________        __
+ |       |.-----.-----.-----.|  |  |  |.----.|  |_
+ |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+ |_______||   __|_____|__|__||________||__|  |____|
+          |__| W I R E L E S S   F R E E D O M
+ KAMIKAZE (bleeding edge) -----------------------
+  * 10 oz Vodka       Shake well with ice and strain
+  * 10 oz Triple sec  mixture into 10 shot glasses.
+  * 10 oz lime juice  Salute!
+ ---------------------------------------------------
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
