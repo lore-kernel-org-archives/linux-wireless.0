@@ -1,134 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:48861 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932329AbYBHJKS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755707AbYBUKJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 04:10:18 -0500
-Received: by py-out-1112.google.com with SMTP id u52so5379679pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2008 01:10:17 -0800 (PST)
-Message-ID: <43e72e890802080110t47d8c9ci2a6fd7ea78215336@mail.gmail.com> (sfid-20080208_091039_502616_B7051AE2)
-Date: Fri, 8 Feb 2008 04:10:17 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Cc: "bruno randolf" <bruno@thinktube.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>
-In-Reply-To: <20080207035202.GW1261@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080118125252.6455.41047.stgit@one>
-	 <200801241226.28394.bruno@thinktube.com>
-	 <1201193704.3454.137.camel@johannes.berg>
-	 <200801251701.59629.bruno@thinktube.com>
-	 <43e72e890802021522g5bffe97cg31ba57f6f1f200b9@mail.gmail.com>
-	 <20080206043451.GT1261@jm.kir.nu>
-	 <43e72e890802061033k5ca3e83doca28ca43a5c1830b@mail.gmail.com>
-	 <20080207035202.GW1261@jm.kir.nu>
+	Thu, 21 Feb 2008 05:09:50 -0500
+Subject: [PATCH v2] mac80211: atomically check whether STA exists already
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203549853.17534.98.camel@johannes.berg> (sfid-20080221_092523_845571_EDF31CA1)
+References: <1203549853.17534.98.camel@johannes.berg>
+	 (sfid-20080221_092523_845571_EDF31CA1)
+Content-Type: text/plain
+Date: Thu, 21 Feb 2008 11:09:42 +0100
+Message-Id: <1203588582.17534.141.camel@johannes.berg> (sfid-20080221_100953_696094_F22A8795)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 6, 2008 10:52 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Wed, Feb 06, 2008 at 01:33:31PM -0500, Luis R. Rodriguez wrote:
->
-> > Yes I see your point, this is definitely an issue, unless of course
-> > the driver/stack is configured to default to use a specific channel by
-> > default. But regardless its a problem.
->
-> It doesn't really help even if the driver/stack would be configured to
-> default to a specific channel. This has to work with other
-> implementations, too.
+When a STA structure is added, it is often checked whether it
+already exists before adding it. This, however, isn't done
+atomically so there is a race condition that could lead to two
+STA structures being added with the same MAC address. This
+patch changes sta_info_add() to return an ERR_PTR in case
+of failure and adds the failure mode -EEXIST when the STA
+already exists.
 
-Right, my point was just that if a stack was configured to try to use
-a channel by default when creating an IBSS and you'd end up with the
-same BSSID you'd eventually get a merge. But I see your point about
-interoperability and I think its key.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+---
+Luis, I don't think the check for max # of STA structs is important
+enough to verify, it is only done for IBSS and it can't really
+happen that we add too many because we process incoming packets in
+order. If you get problems with mesh there feel free to add a strict
+check for the maximum number within the locked section in
+sta_info_add().
 
-> Hardcoding BSSID based on SSID may be fine for
-> most cases when a new IBSS is created, but still, the implementation
-> will need to allow this to be changed when merging with other parts of
-> the IBSS since those other parts may not implement this type of hack.
+v2 fixes a small %d vs. %ld warning.
 
-I'm not quite sure I understand the problem here. The *key* feature of
-using some sort of a hash is just to guarantee the "random" BSSID you
-create matches that of the other stations using the same BSSID (and
-channel if channel is part of the hash as well as you suggest). What
-changes here is just the method for generation of the BSSID should no
-beacon be received yet for the SSID chosen.
+ net/mac80211/cfg.c           |   11 ++---------
+ net/mac80211/ieee80211.c     |    4 ++--
+ net/mac80211/ieee80211_sta.c |    6 +++---
+ net/mac80211/sta_info.c      |   37 ++++++++++++++++++++++++++-----------
+ net/mac80211/sta_info.h      |    4 ++--
+ 5 files changed, 35 insertions(+), 27 deletions(-)
 
-> I'm somewhat concerned about the possibility of getting the same BSSID
-> on different channels, though. Using the same BSSID for different groups
-> is not really a very good solution.. Including the channel number in the
-> hash data would resolve this concern.
+--- everything.orig/net/mac80211/sta_info.c	2008-02-21 11:04:18.000000000 +0100
++++ everything/net/mac80211/sta_info.c	2008-02-21 11:08:46.000000000 +0100
+@@ -55,19 +55,28 @@ static int sta_info_hash_del(struct ieee
+ 	return -ENOENT;
+ }
+ 
+-struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr)
++/* must hold local->sta_lock */
++static struct sta_info *__sta_info_find(struct ieee80211_local *local,
++					u8 *addr)
+ {
+ 	struct sta_info *sta;
+ 
+-	read_lock_bh(&local->sta_lock);
+ 	sta = local->sta_hash[STA_HASH(addr)];
+ 	while (sta) {
+-		if (memcmp(sta->addr, addr, ETH_ALEN) == 0) {
+-			__sta_info_get(sta);
++		if (compare_ether_addr(sta->addr, addr) == 0)
+ 			break;
+-		}
+ 		sta = sta->hnext;
+ 	}
++	return sta;
++}
++
++struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr)
++{
++	struct sta_info *sta;
++
++	read_lock_bh(&local->sta_lock);
++	sta = __sta_info_find(local, addr);
++	__sta_info_get(sta);
+ 	read_unlock_bh(&local->sta_lock);
+ 
+ 	return sta;
+@@ -110,8 +119,8 @@ void sta_info_put(struct sta_info *sta)
+ EXPORT_SYMBOL(sta_info_put);
+ 
+ 
+-struct sta_info * sta_info_add(struct ieee80211_local *local,
+-			       struct net_device *dev, u8 *addr, gfp_t gfp)
++struct sta_info *sta_info_add(struct ieee80211_local *local,
++			      struct net_device *dev, u8 *addr, gfp_t gfp)
+ {
+ 	struct sta_info *sta;
+ 	int i;
+@@ -119,7 +128,7 @@ struct sta_info * sta_info_add(struct ie
+ 
+ 	sta = kzalloc(sizeof(*sta), gfp);
+ 	if (!sta)
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	kref_init(&sta->kref);
+ 
+@@ -128,7 +137,7 @@ struct sta_info * sta_info_add(struct ie
+ 	if (!sta->rate_ctrl_priv) {
+ 		rate_control_put(sta->rate_ctrl);
+ 		kfree(sta);
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+ 	memcpy(sta->addr, addr, ETH_ALEN);
+@@ -158,9 +167,15 @@ struct sta_info * sta_info_add(struct ie
+ 	}
+ 	skb_queue_head_init(&sta->ps_tx_buf);
+ 	skb_queue_head_init(&sta->tx_filtered);
+-	__sta_info_get(sta);	/* sta used by caller, decremented by
+-				 * sta_info_put() */
+ 	write_lock_bh(&local->sta_lock);
++	/* mark sta as used (by caller) */
++	__sta_info_get(sta);
++	/* check if STA exists already */
++	if (__sta_info_find(local, addr)) {
++		write_unlock_bh(&local->sta_lock);
++		sta_info_put(sta);
++		return ERR_PTR(-EEXIST);
++	}
+ 	list_add(&sta->list, &local->sta_list);
+ 	local->num_sta++;
+ 	sta_info_hash_add(local, sta);
+--- everything.orig/net/mac80211/sta_info.h	2008-02-21 11:08:39.000000000 +0100
++++ everything/net/mac80211/sta_info.h	2008-02-21 11:08:46.000000000 +0100
+@@ -239,8 +239,8 @@ static inline void __sta_info_get(struct
+ 
+ struct sta_info * sta_info_get(struct ieee80211_local *local, u8 *addr);
+ void sta_info_put(struct sta_info *sta);
+-struct sta_info * sta_info_add(struct ieee80211_local *local,
+-			       struct net_device *dev, u8 *addr, gfp_t gfp);
++struct sta_info *sta_info_add(struct ieee80211_local *local,
++			      struct net_device *dev, u8 *addr, gfp_t gfp);
+ void sta_info_remove(struct sta_info *sta);
+ void sta_info_free(struct sta_info *sta);
+ void sta_info_init(struct ieee80211_local *local);
+--- everything.orig/net/mac80211/cfg.c	2008-02-21 11:04:29.000000000 +0100
++++ everything/net/mac80211/cfg.c	2008-02-21 11:08:46.000000000 +0100
+@@ -568,13 +568,6 @@ static int ieee80211_add_station(struct 
+ 	if (!netif_running(dev))
+ 		return -ENETDOWN;
+ 
+-	/* XXX: get sta belonging to dev */
+-	sta = sta_info_get(local, mac);
+-	if (sta) {
+-		sta_info_put(sta);
+-		return -EEXIST;
+-	}
+-
+ 	if (params->vlan) {
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+@@ -585,8 +578,8 @@ static int ieee80211_add_station(struct 
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	sta = sta_info_add(local, dev, mac, GFP_KERNEL);
+-	if (!sta)
+-		return -ENOMEM;
++	if (IS_ERR(sta))
++		return PTR_ERR(sta);
+ 
+ 	sta->dev = sdata->dev;
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
+--- everything.orig/net/mac80211/ieee80211.c	2008-02-21 11:08:39.000000000 +0100
++++ everything/net/mac80211/ieee80211.c	2008-02-21 11:08:46.000000000 +0100
+@@ -838,8 +838,8 @@ int ieee80211_if_update_wds(struct net_d
+ 
+ 	/* Create STA entry for the new peer */
+ 	sta = sta_info_add(local, dev, remote_addr, GFP_KERNEL);
+-	if (!sta)
+-		return -ENOMEM;
++	if (IS_ERR(sta))
++		return PTR_ERR(sta);
+ 
+ 	sta->flags |= WLAN_STA_AUTHORIZED;
+ 
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-21 11:04:32.000000000 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-02-21 11:08:46.000000000 +0100
+@@ -1806,9 +1806,9 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	if (!sta) {
+ 		struct ieee80211_sta_bss *bss;
+ 		sta = sta_info_add(local, dev, ifsta->bssid, GFP_KERNEL);
+-		if (!sta) {
++		if (IS_ERR(sta)) {
+ 			printk(KERN_DEBUG "%s: failed to add STA entry for the"
+-			       " AP\n", dev->name);
++			       " AP (error %ld)\n", dev->name, PTR_ERR(sta));
+ 			return;
+ 		}
+ 		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
+@@ -3819,7 +3819,7 @@ struct sta_info * ieee80211_ibss_add_sta
+ 	       wiphy_name(local->hw.wiphy), print_mac(mac, addr), dev->name);
+ 
+ 	sta = sta_info_add(local, dev, addr, GFP_ATOMIC);
+-	if (!sta)
++	if (IS_ERR(sta))
+ 		return NULL;
+ 
+ 	sta->flags |= WLAN_STA_AUTHORIZED;
 
-Sure.
 
-> > Well the idea is that if it misses the timer from the leader it'll try
-> > to create the IBSS but will end up using the same BSSID as the leader
-> > would have, eventually causing a merge amongst the nodes. So you would
-> > not merge unless its with the same BSSID.
->
-> I'm not completely what the "misses the timer from the leader" is
-> referring to or even what this "leader" would be in context of IBSS.
-> Anyway, the implementation has to merge regardless of what BSSID is used
-> (i.e., SSID match is enough).
-
-Oh well I mean the TSF becaon leader when in IBSS in the BSS during
-beacon generation. When in IBSS you have a node who has the greatest
-time for the TSF, this is what I call the leader. If a STA misses the
-"leader beacon" it'll generate its own beacon and may create a
-separate BSS. If however, you change the algorithm for picking the
-"random BSSID" and instead use some sort of hash based on desired SSID
-(and channel) you'd end up generating beacons for the same BSSID,
-eventually forcing a merge even if you missed the first few beacons
-from the TSF leader for the BSS.
-
-> > I haven't run the test myself but I am informed this hack helps to try
-> > to solve the issue with 400 nodes on IBSS mode.
->
-> Sure, if you can control all the STAs in the IBSS. That just is not the
-> case in general and Linux wireless stack must not be designed with the
-> view point of all STAs following the exact same rules (unless those
-> rules are based on a required standard behavior)..
-
-Agreed that we shouldn't assume everyone will have the same hacks, and
-that we should focus on interoperability but I am wondering how this
-could break things. All that would be changed here is the algorithm
-for BSSID generation, instead of using a random BSSID you'd use one as
-a hash of say SSID and channel. Can you think of issues with
-interoperability with STAs who choose a random BSSID generator instead
-of a hash other than those using a hash being able to guarantee
-sticking to the same BSSID ?
-
-> Taken into account that we should really implement proper IBSS merge to
-> allow interoperation with non-mac80211 implementations, I don't know how
-> much of a benefit this BSSID=hash(SSID,chan) mechanism would really
-> provide.
-
-It simply would solve the IBSS split issue, which can be caused by
-several reasons, until that is solved within the standard or someone
-thinks of a better solution.
-
-> If it can be shown that the IBSS merges in a large network are
-> not stable,
-
-Oh we have proof for this :) and we also have proof of how using a
-hash helps correct it, of course, as  hack. I'll try to see if we can
-come up with something a bit more formal I guess.
-
-> this could of course be helpful and I don't think I would
-> object it as long as the BSSID is going to end up being same only on the
-> same channel and the mac80211 implementation allows the BSSID to be
-> changed if a Beacon frame is received with a larger timestamp value than
-> the local TSF timer.
-
-Respecting the higher TSF is not affected, all that would be changed
-would be the algorithm used for generating the BSSID. Once we have
-IBSS merge on mac80211 I'll then test a patch for this on the 40x40
-grid with ath5k and let you know how it goes. I'll try to use two
-BSSes, each on a separate channel. Not sure yet what topology to use.
-
-  Luis
