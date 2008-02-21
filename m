@@ -1,48 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.152]:53304 "EHLO
-	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755806AbYBUXUm (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760026AbYBUJY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 18:20:42 -0500
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: chris2553@googlemail.com
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200802212304.28731.chris2553@googlemail.com>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <1203628049.3277.6.camel@boulder.homenet>
-	 <200802212251.26897.IvDoorn@gmail.com>
-	 <200802212304.28731.chris2553@googlemail.com>
+	Thu, 21 Feb 2008 04:24:29 -0500
+Subject: [PATCH] mac80211: Disallow concurrent IBSS/STA mode interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 21 Feb 2008 23:20:27 +0000
-Message-Id: <1203636027.3186.5.camel@boulder.homenet> (sfid-20080221_232045_358465_38D3A3DD)
+Date: Thu, 21 Feb 2008 01:10:07 +0100
+Message-Id: <1203552607.17534.117.camel@johannes.berg> (sfid-20080221_092526_969749_9DEA53C7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-02-21 at 23:04 +0000, Chris Clayton wrote:
-> On Thursday 21 February 2008, Ivo van Doorn wrote:
-> > On Thursday 21 February 2008, Chris Vine wrote:
-[snip]
-> > > This probably explains the problem another user reported with rt61.
-> > 
-> > Perhaps something similar like:
-> > http://bugzilla.kernel.org/show_bug.cgi?id=10058
-> > in there a reference is made to the following patch:
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
-> > 
-> > Does applying that help?
-> 
-> I'm afraid not, Ivo. The test I ran last night was against 2.6.25.-rc2-git4 and
-> that already has this patch applied. Furthermore, I have another card that uses
-> the rtl8180 driver and that works reliably. I, therefore, suspect that my problem
-> lies within the rt61pci driver or the rt2x00 infrastructure.
+Disallow having more than one IBSS interface up at any time
+because of beacon distribution issues, and for now also disallow
+having more than one IBSS/STA interface up at the same time
+because we use the master interface's BSS struct which would
+be completely corrupted when we have more than one up.
 
-Does the same happen with 2.0.14 under kernel 2.6.24?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Having two STA mode interfaces associated to the same AP
+actually works, but is pretty useless. That restriction,
+however, can fairly easily be lifted should anybody want to.
 
-Chris
+Note that right now we don't have any drivers allowing this,
+but still.
 
+ net/mac80211/ieee80211.c |   51 +++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 47 insertions(+), 4 deletions(-)
+
+--- everything.orig/net/mac80211/ieee80211.c	2008-02-21 00:46:41.000000000 +0100
++++ everything/net/mac80211/ieee80211.c	2008-02-21 01:04:10.000000000 +0100
+@@ -183,8 +183,52 @@ static int ieee80211_open(struct net_dev
+ 	list_for_each_entry(nsdata, &local->interfaces, list) {
+ 		struct net_device *ndev = nsdata->dev;
+ 
+-		if (ndev != dev && ndev != local->mdev && netif_running(ndev) &&
+-		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0) {
++		if (ndev != dev && ndev != local->mdev && netif_running(ndev)) {
++			/*
++			 * Allow only a single IBSS interface to be up at any
++			 * time. This is restricted because beacon distribution
++			 * cannot work properly if both are in the same IBSS.
++			 *
++			 * To remove this restriction we'd have to disallow them
++			 * from setting the same SSID on different IBSS interfaces
++			 * belonging to the same hardware. Then, however, we're
++			 * faced with having to adopt two different TSF timers...
++			 */
++			if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS &&
++			    nsdata->vif.type == IEEE80211_IF_TYPE_IBSS)
++				return -EBUSY;
++
++			/*
++			 * Disallow multiple IBSS/STA mode interfaces.
++			 *
++			 * This is a technical restriction, it is possible although
++			 * most likely not IEEE 802.11 compliant to have multiple
++			 * STAs with just a single hardware (the TSF timer will not
++			 * be adjusted properly.)
++			 *
++			 * However, because mac80211 uses the master device's BSS
++			 * information for each STA/IBSS interface, doing this will
++			 * currently corrupt that BSS information completely, unless,
++			 * a not very useful case, both STAs are associated to the
++			 * same BSS.
++			 *
++			 * To remove this restriction, the BSS information needs to
++			 * be embedded in the STA/IBSS mode sdata instead of using
++			 * the master device's BSS structure.
++			 */
++			if ((sdata->vif.type == IEEE80211_IF_TYPE_STA ||
++			     sdata->vif.type == IEEE80211_IF_TYPE_IBSS) &&
++			    (nsdata->vif.type == IEEE80211_IF_TYPE_STA ||
++			     nsdata->vif.type == IEEE80211_IF_TYPE_IBSS))
++				return -EBUSY;
++
++			/*
++			 * The remaining checks are only performed for interfaces
++			 * with the same MAC address.
++			 */
++			if (compare_ether_addr(dev->dev_addr, ndev->dev_addr))
++				continue;
++
+ 			/*
+ 			 * check whether it may have the same address
+ 			 */
+@@ -196,8 +240,7 @@ static int ieee80211_open(struct net_dev
+ 			 * can only add VLANs to enabled APs
+ 			 */
+ 			if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN &&
+-			    nsdata->vif.type == IEEE80211_IF_TYPE_AP &&
+-			    netif_running(nsdata->dev))
++			    nsdata->vif.type == IEEE80211_IF_TYPE_AP)
+ 				sdata->u.vlan.ap = nsdata;
+ 		}
+ 	}
 
 
