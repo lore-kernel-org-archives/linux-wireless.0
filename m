@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43610 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39802 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757943AbYBZPjx (ORCPT
+	with ESMTP id S1753171AbYBUTZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 10:39:53 -0500
-Subject: Re: mac80211: sta info locking
+	Thu, 21 Feb 2008 14:25:18 -0500
+Subject: Re: [RFC] mac80211: allow specifying RTS/self-CTS protection when
+	injecting packets
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-In-Reply-To: <1ba2fa240802251630n151a0accn4a1f814e6479e7c@mail.gmail.com> (sfid-20080226_003046_253410_E0EA15F0)
-References: <1203677069.26341.52.camel@johannes.berg>
-	 <1203693409.7082.30.camel@johannes.berg>
-	 <20080222155704.GD3067@tuxdriver.com>
-	 <1203972413.13162.163.camel@johannes.berg>
-	 <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com>
-	 <1203980105.13162.182.camel@johannes.berg>
-	 <1ba2fa240802251512k15b40d65oee774acebdb953e0@mail.gmail.com>
-	 <1203981812.13162.187.camel@johannes.berg>
-	 <1ba2fa240802251541r218d5f22j5b3490d20ab508e3@mail.gmail.com>
-	 <1203983284.13162.196.camel@johannes.berg>
-	 <1ba2fa240802251630n151a0accn4a1f814e6479e7c@mail.gmail.com>
-	 (sfid-20080226_003046_253410_E0EA15F0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ymtI21mZ3kbQEExPjiA/"
-Date: Tue, 26 Feb 2008 10:59:09 +0100
-Message-Id: <1204019949.13162.219.camel@johannes.berg> (sfid-20080226_154005_300831_8C0E7690)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andy Green <andy@warmcat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080221161129.GB3094@tuxdriver.com>
+References: <1203553034.17534.119.camel@johannes.berg>
+	 <20080221161129.GB3094@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UTakHB/UaAm7bh1M+L+o"
+Date: Thu, 21 Feb 2008 20:22:04 +0100
+Message-Id: <1203621724.26341.2.camel@johannes.berg> (sfid-20080221_192536_427608_AB9042D6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ymtI21mZ3kbQEExPjiA/
+--=-UTakHB/UaAm7bh1M+L+o
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> Number of antennas is not the same as number of chains.  Also 4965 has
-> 3 antennas but only 2 chains.   We have some fixes in that context
-> coming this week.
+On Thu, 2008-02-21 at 11:11 -0500, John W. Linville wrote:
+> On Thu, Feb 21, 2008 at 01:17:14AM +0100, Johannes Berg wrote:
+> > I made this patch to test RTS/CTS operation in drivers, do you think
+> > it's useful apart that and should be merged?
+>=20
+> I don't see why not...what would be the objection?
 
-Hah, ok, I thought it was the same. Does it do diversity then? I guess I
-need to catch up and finally actually read the 11n draft.
+You can't specify "Don't send RTS/CTS" because not specifying either
+flag means "automatic".
 
 johannes
 
---=-ymtI21mZ3kbQEExPjiA/
+--=-UTakHB/UaAm7bh1M+L+o
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR8Pi7KVg1VMiehFYAQIh6hAAq6oAByN05yM/ufLIwTRvH6gTJYsxmBSx
-+mwlRr269idBtOb45yex6QOkdTiO76V4N5BICoJHz/sBHzgIu4EvLpcO+f8XFXNY
-Wrp7H4b4LTfnrSJfqLvE8FVwLZZmFY97b5wJ7W+qTN4GIE3XZidLI5OJTxEISMc9
-6vGo87DVxzhpNifJpYBYHywX3n0KPysDYN+72bPyCSiCUKVXjuJ2LG7X7szezBUW
-7nELD633dA55bAO5oWTBzpqftrmLwWe7mCzKyQe2VQSsG2Q86RdqKCn/4yHYx27/
-evslfApdQvB2Vv7oneLppSae4EAbPNgeH1AdFv+AXtSImxu/e4Bl+L9KG4sJv6wm
-05AtjdsvmrZ1c/GCugQdZK16GIyIAp+MqQizZG+MRYjeO8Wu37l/C1Mmdv3omJrn
-lToGOcgCJiEtxST6JVltj4KD3Qypa1xkL/jLXxvXiWKO0BgNMyIGfkulBypbIfuk
-igF64JKOkPVrOW1Pe3NwjY4WUJNqv3b7QFT1szrpJeL/vGQZYQmvD5IzJjSHXlpd
-zAz88FkQVwVOriW7q48f5JUQckUrc0i18BUQWeyak4zDOWJnE2mZt3etAnG7JqZE
-5/wAisBdK8OuWJNa4m009YjLsRQTSm7Aidf5eXuwG6JoX5jYh0lpPyNFYHEVIJTC
-Hj8Xhwx20co=
-=nOoP
+iQIVAwUAR73PW6Vg1VMiehFYAQIXEg/+NnavG7OD3NCFhTNgI+qoxHrsbXOT/JIj
+3FedEX8we2+y5vs1hEqT2XoYVy9beoZUThOd8iOF5AhYocNcre1xexgpU50ge6Xb
+NXg6GN17sqQQtrFcun9JcE/f9SPHr93oUbKTC/bHpiVu6OMlptx8jnW3dsGiY7eK
+1nTFzfqksdrDYnsTGg0HsldDK3IwklhgZ141QDyu+/DyUCQM9zS8R5a+jTJOa2BI
+ZZTmbKh3CccyzPn1FyVZeHc2Qs56vaFhWbL5CLaC9Ga8lrpxbAsbehh1SWYcsrzd
+iOQOd7+v9QdHAgG+DeXg+3Rb03zDdI4CzpgXwSgAWWrU1zdmqAl/zeK+q5eh+zx8
+G97Bk4HmPnXeuUCEDF0JXniFqG3zG5jQ6sSTpE2Bf3G8B7bW26F1rZlQG/lYw5EP
+13O/sP5md1o9tWV8+Abc2PBfSaV+Jtq5JWtKOa6o/BveSZG4OEjmXz8vu5yhK3/s
+Q1EfYEJrKCdR0qFNf3UzMgqjs5rjKXNgT+077hmUmErdDY1JKtprjKSiXJJaYF9s
+DbLE2MQ/gmj242yKvdmUwvGN1IHK4pktum/HZvvg73senJ3IJKuIS8pimzgU0cXN
+feniXX+5vO/YRl8ZaXl9xyQYYjqxWIJRMLuFAaBoChWIb7EvIZmEH247nm8N7Lm5
+px+KsHjbnHU=
+=Btcr
 -----END PGP SIGNATURE-----
 
---=-ymtI21mZ3kbQEExPjiA/--
+--=-UTakHB/UaAm7bh1M+L+o--
 
