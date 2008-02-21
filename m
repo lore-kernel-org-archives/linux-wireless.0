@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.248]:27823 "EHLO
-	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755990AbYBGQSA (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44595 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756818AbYBUKYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 11:18:00 -0500
-Received: by hs-out-2122.google.com with SMTP id 54so2772697hsz.5
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2008 08:17:55 -0800 (PST)
-Message-ID: <40f31dec0802070817r254155d0h9fd9c8f57bd7ab6c@mail.gmail.com> (sfid-20080207_161804_464365_B1CA874E)
-Date: Thu, 7 Feb 2008 18:17:55 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: Getting Started
-Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"Neshama Parhoti" <pneshama@gmail.com>
-In-Reply-To: <1202400904.1689.4.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
-	 <200802071435.17254.hs4233@mail.mn-solutions.de>
-	 <40f31dec0802070704o59ca6f48x1ab5481303c60cec@mail.gmail.com>
-	 <1202400596.1689.2.camel@localhost.localdomain>
-	 <1202400904.1689.4.camel@localhost.localdomain>
+	Thu, 21 Feb 2008 05:24:15 -0500
+Subject: [PATCH] mac80211: fix debugfs_sta print_mac() warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, joe@perches.com,
+	netdev@vger.kernel.org,
+	Harvey Harrison <harvey.harrison@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203588993.20345.27.camel@brick> (sfid-20080221_101622_275557_F35DFAB3)
+References: <1203587699.17534.135.camel@johannes.berg>
+	 <20080221.020343.190715910.davem@davemloft.net>
+	 <1203588498.20345.20.camel@brick>
+	 <20080221.021228.09081608.davem@davemloft.net>
+	 <1203588993.20345.27.camel@brick> (sfid-20080221_101622_275557_F35DFAB3)
+Content-Type: text/plain
+Date: Thu, 21 Feb 2008 11:22:12 +0100
+Message-Id: <1203589332.17534.150.camel@johannes.berg> (sfid-20080221_102421_689163_49870CA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/7, Dan Williams <dcbw@redhat.com>:
-> On Thu, 2008-02-07 at 11:09 -0500, Dan Williams wrote:
-> > On Thu, 2008-02-07 at 17:04 +0200, Nick Kossifidis wrote:
-> > > > For example, the openmoko people are writing a mac80211 driver
-> > > > for ar6k. Not every driver is already in the wireless-2.6 git
-> > > > tree.
-> > >
-> > > [OT]
-> > >
-> > > As far as i know Atheros released a GPLed driver along with their SDIO stack.
-> > > http://sourceforge.net/projects/sdio-linux/
-> > >
-> > > Do you have a plan to include this in kernel ? What's the status ?
-> >
-> > 2.6.24 already has an SDIO stack; hence the Atheros one is redundant.
-> > The openmoko people already have a port of their ar6k driver to the
-> > in-kernel SDIO stack.
->
-> Which of course means that one big barrier to including the ar6k driver
-> is already removed.  You can browse the ar6k openmoko code at:
->
-> http://svn.openmoko.org/developers/sameo/patches/ar6k-ng/
->
-> Dan
->
->
+When print_mac() was marked as __pure to avoid emitting a function
+call in pr_debug() scenarios, a warning in this code surfaced since
+it relies on the fact that the buffer is modified and doesn't use
+the return value. This patch makes it use the return value instead.
 
-Great news !
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/debugfs_sta.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thnx for the info ;-)
+--- everything.orig/net/mac80211/debugfs_sta.c	2008-02-21 11:17:48.000000000 +0100
++++ everything/net/mac80211/debugfs_sta.c	2008-02-21 11:17:59.000000000 +0100
+@@ -297,12 +297,13 @@ STA_OPS_WR(agg_status);
+ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ {
+ 	struct dentry *stations_dir = sta->local->debugfs.stations;
+-	DECLARE_MAC_BUF(mac);
++	DECLARE_MAC_BUF(mbuf);
++	u8 *mac;
+ 
+ 	if (!stations_dir)
+ 		return;
+ 
+-	print_mac(mac, sta->addr);
++	mac = print_mac(mbuf, sta->addr);
+ 
+ 	sta->debugfs.dir = debugfs_create_dir(mac, stations_dir);
+ 	if (!sta->debugfs.dir)
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+
