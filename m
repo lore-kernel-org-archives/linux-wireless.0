@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from root-server.richard-scherping.de ([217.160.107.144]:60124 "EHLO
-	p15125984.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932244AbYBMJHD (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.230]:20911 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934131AbYBUU4x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 04:07:03 -0500
-Message-ID: <47B2B332.1030404@scherping.de> (sfid-20080213_090722_073703_AC6DE8A0)
-Date: Wed, 13 Feb 2008 10:06:58 +0100
-From: Richard Scherping <richard@scherping.de>
+	Thu, 21 Feb 2008 15:56:53 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so272900wra.23
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 12:56:51 -0800 (PST)
+Message-ID: <84ac67910802211256l66573e79o3abdc256b2d8eaec@mail.gmail.com> (sfid-20080221_205719_492855_EEEA8DD2)
+Date: Thu, 21 Feb 2008 20:56:50 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080221201811.GM3094@tuxdriver.com>
 MIME-Version: 1.0
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com> <47B2268D.7060205@scherping.de>
-In-Reply-To: <47B2268D.7060205@scherping.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <20080221163134.GF3094@tuxdriver.com>
+	 <84ac67910802211007n55569d6j92dee1da198e9b1d@mail.gmail.com>
+	 <20080221182615.GK3094@tuxdriver.com>
+	 <84ac67910802211204y575e893cnd056bbd7442f27ea@mail.gmail.com>
+	 <20080221201811.GM3094@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated: 
-> iwl4965_is_associated(priv)=1; priv->assoc_id=0; 
-> priv->assoc_station_added=1
+>  > bonding: bond0: enslaving wlan0 as an active interface with a down link.
+>
+>
+> This looks a little odd.  Have you had this working in the past?
+>  Can you try a setup using just wlan0 (i.e. without bonding)?
+>
 
-Simply uncommenting the check for priv->assoc_id to be non-zero (line 2938 in iwl4965-base.c) made ad-hoc working. Thanks for helping me to find this!
-Does this change have any negative side effects?
+I have tried with and without bonding, and bonding is definitely not
+the issue here, I am pretty sure this is something wrong with the
+driver/firmware.
 
-Richard
+I am willing to test any patches that will give you better debugging,
+or even direct access to my box?
