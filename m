@@ -1,164 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:34915 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971AbYBSL7c (ORCPT
+Received: from smtp5.freeserve.com ([193.252.22.159]:58105 "EHLO
+	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675AbYBUWqr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2008 06:59:32 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Fix watchdog access for devices without a chipcommon
-Date: Tue, 19 Feb 2008 12:41:30 +0100
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802191241.30178.mb@bu3sch.de> (sfid-20080219_115936_388756_E5C9BAD3)
+	Thu, 21 Feb 2008 17:46:47 -0500
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200802212251.26897.IvDoorn@gmail.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <1203542195.3240.1.camel@boulder.homenet>
+	 <1203628049.3277.6.camel@boulder.homenet>
+	 <200802212251.26897.IvDoorn@gmail.com>
+Content-Type: text/plain
+Date: Thu, 21 Feb 2008 22:46:31 +0000
+Message-Id: <1203633991.3186.2.camel@boulder.homenet> (sfid-20080221_224652_797892_7ADD9FC5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the SSB watchdog access for devices without a chipcommon.
-These devices have the watchdog on the extif.
+On Thu, 2008-02-21 at 22:51 +0100, Ivo van Doorn wrote:
+> On Thursday 21 February 2008, Chris Vine wrote:
+[snip] 
+> > Here's some further information.
+> > 
+> > I have a fully functioning version of rt2x00-2.0.14 and mac80211 from
+> > wireless-2.6/compat-wireless-2.6 of mid January which works fine on
+> > kernel 2.6.24.  On doing a comparison with the rt2x00 in vanilla kernel
+> > 2.6.25-rc2, there are no material differences.  (There was a slight
+> > change in the declaration a variable in rt2x00usb.c but it is
+> > immaterial.)
+> > 
+> > I compiled up the working mid-January version of rt2x00 and mac80211
+> > under kernel 2.6.25-rc2 and I get exactly the same result as I reported
+> > earlier, namely I get a kernel panic as soon as I try to associate.  It
+> > looks therefore as if something has changed within the remainder of the
+> > kernel which has caused rt2x00 (and possibly mac80211?) to break.
+> > 
+> > This probably explains the problem another user reported with rt61.
+> 
+> Perhaps something similar like:
+> http://bugzilla.kernel.org/show_bug.cgi?id=10058
+> in there a reference is made to the following patch:
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+> 
+> Does applying that help?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Yes, well done.
 
----
+I have spent 20 minutes testing it and it seems to work fine (at least
+as well as 2.0.14 does under kernel 2.6.24).  The rate control algorithm
+seems to work better as well, but that is probably a mac80211 thing.
 
-Fix for 2.6.25.
+Chris
 
 
-Index: wireless-testing/drivers/ssb/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/ssb/Kconfig	2008-02-16 19:08:13.000000000 +0100
-+++ wireless-testing/drivers/ssb/Kconfig	2008-02-19 12:22:07.000000000 +0100
-@@ -105,6 +105,12 @@ config SSB_DRIVER_MIPS
- 
- 	  If unsure, say N
- 
-+# Assumption: We are on embedded, if we compile the MIPS core.
-+config SSB_EMBEDDED
-+	bool
-+	depends on SSB_DRIVER_MIPS
-+	default y
-+
- config SSB_DRIVER_EXTIF
- 	bool "SSB Broadcom EXTIF core driver (EXPERIMENTAL)"
- 	depends on SSB_DRIVER_MIPS && EXPERIMENTAL
-Index: wireless-testing/drivers/ssb/Makefile
-===================================================================
---- wireless-testing.orig/drivers/ssb/Makefile	2008-02-16 19:08:13.000000000 +0100
-+++ wireless-testing/drivers/ssb/Makefile	2008-02-19 12:20:56.000000000 +0100
-@@ -1,5 +1,6 @@
- # core
- ssb-y					+= main.o scan.o
-+ssb-$(CONFIG_SSB_EMBEDDED)		+= embedded.o
- 
- # host support
- ssb-$(CONFIG_SSB_PCIHOST)		+= pci.o pcihost_wrapper.o
-Index: wireless-testing/drivers/ssb/driver_extif.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_extif.c	2008-02-16 19:08:13.000000000 +0100
-+++ wireless-testing/drivers/ssb/driver_extif.c	2008-02-19 12:04:06.000000000 +0100
-@@ -110,6 +110,12 @@ void ssb_extif_get_clockcontrol(struct s
- 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
- }
- 
-+void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
-+				  u32 ticks)
-+{
-+	extif_write32(extif, SSB_EXTIF_WATCHDOG, ticks);
-+}
-+
- u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
- {
- 	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
-Index: wireless-testing/drivers/ssb/embedded.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ wireless-testing/drivers/ssb/embedded.c	2008-02-19 12:16:54.000000000 +0100
-@@ -0,0 +1,26 @@
-+/*
-+ * Sonics Silicon Backplane
-+ * Embedded systems support code
-+ *
-+ * Copyright 2005-2008, Broadcom Corporation
-+ * Copyright 2006-2008, Michael Buesch <mb@bu3sch.de>
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+
-+#include <linux/ssb/ssb.h>
-+#include <linux/ssb/ssb_embedded.h>
-+
-+
-+int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks)
-+{
-+	if (ssb_chipco_available(&bus->chipco)) {
-+		ssb_chipco_watchdog_timer_set(&bus->chipco, ticks);
-+		return 0;
-+	}
-+	if (ssb_extif_available(&bus->extif)) {
-+		ssb_extif_watchdog_timer_set(&bus->extif, ticks);
-+		return 0;
-+	}
-+	return -ENODEV;
-+}
-Index: wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb_driver_chipcommon.h	2008-02-19 00:19:22.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h	2008-02-19 12:14:54.000000000 +0100
-@@ -357,6 +357,11 @@ struct ssb_chipcommon {
- 	u16 fast_pwrup_delay;
- };
- 
-+static inline bool ssb_chipco_available(struct ssb_chipcommon *cc)
-+{
-+	return (cc->dev != NULL);
-+}
-+
- extern void ssb_chipcommon_init(struct ssb_chipcommon *cc);
- 
- #include <linux/pm.h>
-Index: wireless-testing/include/linux/ssb/ssb_driver_extif.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb_driver_extif.h	2008-02-16 19:08:15.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb_driver_extif.h	2008-02-19 12:13:34.000000000 +0100
-@@ -171,6 +171,9 @@ extern void ssb_extif_get_clockcontrol(s
- extern void ssb_extif_timing_init(struct ssb_extif *extif,
- 				  unsigned long ns);
- 
-+extern void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
-+					 u32 ticks);
-+
- u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
- 
- void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value);
-@@ -200,5 +203,11 @@ void ssb_extif_get_clockcontrol(struct s
- {
- }
- 
-+static inline
-+void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
-+				  u32 ticks)
-+{
-+}
-+
- #endif /* CONFIG_SSB_DRIVER_EXTIF */
- #endif /* LINUX_SSB_EXTIFCORE_H_ */
-Index: wireless-testing/include/linux/ssb/ssb_embedded.h
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ wireless-testing/include/linux/ssb/ssb_embedded.h	2008-02-19 12:18:38.000000000 +0100
-@@ -0,0 +1,10 @@
-+#ifndef LINUX_SSB_EMBEDDED_H_
-+#define LINUX_SSB_EMBEDDED_H_
-+
-+#include <linux/types.h>
-+#include <linux/ssb/ssb.h>
-+
-+
-+extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
-+
-+#endif /* LINUX_SSB_EMBEDDED_H_ */
-
--- 
-Greetings Michael.
