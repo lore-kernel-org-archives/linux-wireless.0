@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59611 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39790 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757833AbYB1QBh (ORCPT
+	with ESMTP id S1752240AbYBUTZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 11:01:37 -0500
-Subject: RE: Roaming issues: Monitoring of a usable link to the AP.
+	Thu, 21 Feb 2008 14:25:00 -0500
+Subject: blockack sessions vs. sta removal
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <001e01c879fc$46372e00$0b3ca8c0@gotws1589>
-References: <001e01c879fc$46372e00$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CUZRIvvWefFhDG6939Sd"
-Date: Thu, 28 Feb 2008 17:00:55 +0100
-Message-Id: <1204214455.6309.68.camel@johannes.berg> (sfid-20080228_160145_611070_C14ED161)
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cP0Sne/AeBuiAXEoMv9r"
+Date: Thu, 21 Feb 2008 15:20:16 +0100
+Message-Id: <1203603616.4462.5.camel@johannes.berg> (sfid-20080221_192509_998057_70427FE2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-CUZRIvvWefFhDG6939Sd
+--=-cP0Sne/AeBuiAXEoMv9r
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hi Ron,
 
-> First, I was wrong about receiving frames from other STA using same AP. I=
-t
-> was my fault.
+I was looking through some kernel oops with removing a driver
+(unregister_hw()) while an AP is active and noticed that we don't clean
+up, i.e. call ieee80211_sta_stop_rx_ba_session(), when a sta structure
+is deleted. I think that's a bug.
 
-Ok, no worries, just seemed weird to me :)
+Also, the code in ieee80211_stop() that iterates the sta_list should
+have some locking, no?
 
-> Below (see attachment) is a trace from ieee80211_rx_h_sta_process()=20
-> You can see the frames that will update the last_rx field.
-
-So what's the problem with this trace? It means we update the last_rx
-field whenever we receive a frame from the AP, no matter whether it's
-for us or not. Is that wrong?
-
-> In my code I have added a feature that monitors BEACONS from 'my' AP.
-> When number of received beacons drops below 5 / 2 seconds, I assume out o=
-f
-> range.
-> I do not know if this is necessary but it gives faster roaming in the
-> out-of-range scenario.
-
-That is indeed a good feature and some hardware even has offload
-capabilities for it, would be interested in seeing patches. Of course,
-it can't be fixed to 5/2sec, it should be calculated based on the beacon
-interval instead.
+I really need to work on cleaning up the sta info code, it really is a
+huge mess.
 
 johannes
 
---=-CUZRIvvWefFhDG6939Sd
+--=-cP0Sne/AeBuiAXEoMv9r
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR8bat6Vg1VMiehFYAQKKexAAjtww2+2EwBBBlGh4njcFAStYWQAFEC3/
-7WB4MRbc0ECbxSqv0L7qLhrX3ty9iO9zm4pwB6EqDemtB2ga7PuC0qAUGxM79126
-Cw0r611ZOcBAnKekA4vPyJ6oiMX8vU+XvK4zSvDBOPA954pZvzps0luLMKRE6cyE
-semaEcvLFKfAXS6zXPtHs0qcziRA4tHWOUGuTnFdsSpbatzaga3RrylN62/BCEX2
-RdG008VmlnUM5oC8W+vHot0jr6+gdcvkeU1kQPPql2DvS/dQkkthOf9SfY3kyqb5
-WzXJVZCdap4M6lUTw42dBYHM66nGHRGdzc+59XyQCYKXjsBQ5Dy5WPxXayHBoOsx
-iHEBKdL81Ujd0BRoAHyktrABixQ3IV9OfwXGFgHyi5xNYN8OXS2rM5WCQKrvDopU
-M5hGO5ERq2jayBJFjH62mkYRq/XNkcRbS5wAm/ImvbQ9oJAcwlBCMScd6KOO+b2J
-SgHnVWn6UpMbUjFHxG0b/hUCvwMTu2gH6JYAs5l2v1nlfKLLZvynHyy3GYkxzD3x
-BXnrDoDggvJ16K8Wb2E6i8H/K+vdORIqekThT+mffa0s+X4S/yHvmloVMUX9/L+k
-4ZUr4ipQVRzVL/BNVFb2FMdwCuhVQeHx2Z8f6gxquRRjpyycIV+aQg2TWehD2+L6
-QHOwSgnqdTo=
-=UFDu
+iQIVAwUAR72In6Vg1VMiehFYAQIWbxAAsqdkpe4c8mVWMWava/lDkLNTkaw/N073
+uQjqY41zDeaNIGyETQJItiQ2yRMQdLHLoNYC0iMjD9A/kBp/X7lb7Exhgt2XkpCS
+OQU0Pu6FjQ3/BcCXbMfcBOFS16a21ZBM77V20SyqYibWqDhvZuPp2fRRaTJTaI5N
+i0ivnDJNBpRJPrmTckKZYj3YQ9FlDCFrLbvsAwVJa92eH5bwANsgyLJf4HPInFCs
+O/9KqbD62quhkK3zwHFGf8FB+5aCK4FYuglySkdlDDtxr1uQh4h7Cp0moDAPRsVe
+s7FAQ/p5IOUFUSHD6XPIUc/Wj2hVT3EEl1f62WhW17xXegjxhw4rWXZaEb8Wfnne
+z7ZuhOrv/KCGYyfIhoD3vSvtTPB3i+CQuJrkF1NWDC1K8YCAd2ikaThs26ZTh8md
+wwraUTET5ILDQCNf6CRzZsJm8EEjnSBN5HSCdspAFwWdyse9m/n4w26ApSmRfv+E
+JHLRWekSPzce3+kswHcNuIBkBH3+gdor3yC9TfLzR7y/r44cJJcAZbhlEmNl0tqC
+hszoMFFRzhyhFNzDLZNd1Po4zkOW3AfuVzwtPpRoxHH8gLSuFtDXG3HBfnH1QUzB
+ufLCweVaT6S6sJLy/E09MxeY+gK6h9oFTHw5QiLwfz9uzxgTh8/jU2NnqgEnLwzY
+rCnrqFSHJCE=
+=d9AF
 -----END PGP SIGNATURE-----
 
---=-CUZRIvvWefFhDG6939Sd--
+--=-cP0Sne/AeBuiAXEoMv9r--
 
