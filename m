@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041AbYBYLgs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 06:36:48 -0500
-Subject: Re: mac80211 locking: tasklet vs. non-tasklet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1ba2fa240802250333p1d0a4ebqd37ff4f837aa556f@mail.gmail.com> (sfid-20080225_113326_228690_F3FD5D96)
-References: <1203676145.26341.39.camel@johannes.berg>
-	 <1ba2fa240802240829s7c650ad1yd47c6b25e466a50@mail.gmail.com>
-	 <1203933096.13162.54.camel@johannes.berg>
-	 <1ba2fa240802250252x753796f7ob071c12c72aec172@mail.gmail.com>
-	 <1203937042.13162.81.camel@johannes.berg>
-	 <1203937235.13162.83.camel@johannes.berg>
-	 <1ba2fa240802250333p1d0a4ebqd37ff4f837aa556f@mail.gmail.com>
-	 (sfid-20080225_113326_228690_F3FD5D96)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mKkbSz7QTIAQDWzhDzVN"
-Date: Mon, 25 Feb 2008 12:36:41 +0100
-Message-Id: <1203939401.13162.96.camel@johannes.berg> (sfid-20080225_113651_776869_74426C49)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2615 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761448AbYBUUDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Feb 2008 15:03:11 -0500
+Date: Thu, 21 Feb 2008 14:43:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: bruno randolf <br1@einfach.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix IBSS code
+Message-ID: <20080221194307.GL3094@tuxdriver.com> (sfid-20080221_200319_883905_AB9C8EA6)
+References: <1203588513.17534.138.camel@johannes.berg> <20080221170710.GG3094@tuxdriver.com> <1203621836.26341.4.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1203621836.26341.4.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Feb 21, 2008 at 08:23:56PM +0100, Johannes Berg wrote:
+> 
+> On Thu, 2008-02-21 at 12:07 -0500, John W. Linville wrote:
+> > On Thu, Feb 21, 2008 at 11:08:33AM +0100, Johannes Berg wrote:
+> > > This patch fixes two errors introduced by
+> > > 
+> > >     commit 19d35612f3cd7f60dd9174c0100584e21f5a1025
+> > >     Author: Bruno Randolf <bruno@thinktube.com>
+> > >     Date:   Mon Feb 18 11:21:36 2008 +0900
+> > > 
+> > >         mac80211: enable IBSS merging
+> > > 
+> > > The first error is an endianness problem that sparse found and
+> > > the second is a build failure when CONFIG_MAC80211_IBSS_DEBUG
+> > > is not set.
+> > 
+> > I think I like Pavel's fix for the CONFIG_MAC80211_IBSS_DEBUG build
+> > issue better.  Do you want to repsin the sparse warning bit?  If you
+> > like, I can respin it for you -- just let me know.
+> 
+> Eh, where do we stand now? Bruno wanted the message to not be rate
+> limited in the DEBUG case, and the endianness fix is definitely
+> required.
 
---=-mKkbSz7QTIAQDWzhDzVN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'll rebase your original patch on top of what is there now.  I.E. the
+result will be as if I had only applied your patch.
 
-
-> I would notify mac only if driver cannot deal with reset and also
-> mac80211 configuration have to be reapplied such as start association
-> process again in STA mode.   It would be probably security problem if
-> we put just station into associated mode without proper association
-> process.
-
-Hm, guess it could be. I think this will require quite some work to
-completely put the mac80211 state into the hardware again, but this
-would also be great for suspend/hibernate since that really is a similar
-case.
-
-johannes
-
---=-mKkbSz7QTIAQDWzhDzVN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8KoSKVg1VMiehFYAQKmyBAAnN+c2jK1hxMc4OGeSkgj8IqkGwcpfLMi
-CQ1L0oWcwq2VtB7pGZcoqPL0XDsVCuSMCC3PovTXEefvAomSle11Pq/Nv+7gIifC
-BnwbfqfVb8pWD49RNmhPAank8+LP90zhjZs3EJl8sElmDA9GYj+0VFNAf3wL1alH
-bFZVZC8Ss9hKxta2p28xCwcRKbFFGFr/6NoHKV7dov+kQ+gVeGi1uTpF1GaljAjp
-H2CsiTczoQ+slf6EOvPNt3lloGjiXT/iX9croq6/Ohrrw/ZHKsRVBnORloJy2Pde
-kBg5OyMRyC19Xc/LvZRfPJdyb/aJVTT5vPgeEZ22KVGVUFplsiMhPYqBUyEkqcwT
-nKhNOUAJIju2yrFkLOx1gPsdLe9zQniTmzWzpBV3Sl/F9vX4IqMSsD+pxQfUEYGI
-R+O03TdT19r0Ilk2WychBk2QhigecwSORI1dz1ye/ahKKXTrv30KGmQVlIcCnr97
-WdxuadPxo0tsvv11bVn78KFk7FfdPQI8on7IuD6R92WITThqrWv79EQpxfQkvXyq
-/RCTRZfvyFd6eks8j8eQlG+Cuk5Wr32anjQesJes4NHSn2K5YXeRACe3Ga6Mjq7L
-fHsn5BiZ88iCOOWsAyzzIxwsgxgIjxITBtaFEeAONDNCIRXlwb9qOiBLlmXbiTAJ
-17DepC73kPQ=
-=yemt
------END PGP SIGNATURE-----
-
---=-mKkbSz7QTIAQDWzhDzVN--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
