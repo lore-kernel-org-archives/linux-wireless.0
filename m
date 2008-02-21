@@ -1,73 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19999 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759941AbYBNXgD convert rfc822-to-8bit (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.231]:58448 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757011AbYBUUZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 18:36:03 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: sending ARP triggers BUG
-Date: Thu, 14 Feb 2008 15:34:29 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com> (sfid-20080214_233616_475030_0973B7CC)
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>
+	Thu, 21 Feb 2008 15:25:24 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so18006qbe.15
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 12:25:23 -0800 (PST)
+Subject: Re: [PATCH] mac80211: check endianness/types in sparse runs
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sam Ravnborg <sam@ravnborg.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1203624563.26341.15.camel@johannes.berg>
+References: <1203503909.17534.14.camel@johannes.berg>
+	 <20080220195913.GE21139@uranus.ravnborg.org>
+	 <1203597776.20331.5.camel@johannes.berg>
+	 <20080221200620.GA29352@uranus.ravnborg.org>
+	 <1203624563.26341.15.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 21 Feb 2008 12:25:35 -0800
+Message-Id: <1203625535.20345.65.camel@brick> (sfid-20080221_202534_133553_8476E8DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2008-02-21 at 21:09 +0100, Johannes Berg wrote:
+> > > In any case, I would love to have __CHECK_ENDIAN__ enabled by default at
+> > > least on the wireless code (just caught another bug with it...)
+> > 
+> > I should then add support for something like:
+> > 
+> > checkflags-y := -D__CHECK_ENDIAN__
+> > 
+> > to match the style of the rest.
+> > 
+> > I do not like all the buried in assumption about the
+> > global variables.
+> 
+> That might be good. I retract my patch for now then.
+> 
+> > But I would prefer that someone would spend a few days looking into the
+> > warnings generated with sparse.
+> 
+> I did spend a bit of time running it on all the tree, but wireless,
+> where I do most work, is clean. 
 
-I recently started seeing the BUG below. ieee80211_subif_start_xmit
-calls pskb_expand_head, but this function BUGs because the skb is
-shared. So far I have only seen this with arp messages ... I don't know
-the significance of this fact.
+Clean, or did you specifically mean bitwise-clean?
 
-------------[ cut here ]------------
-kernel BUG at .../net/core/skbuff.c:643!
-invalid opcode: 0000 [#1] PREEMPT SMP
-Modules linked in: iwl3945 rfcomm l2cap bluetooth ipv6 acpi_cpufreq
-cpufreq_powersave cpufe
-Pid: 0, comm: swapper Not tainted (2.6.24 #3)
-EIP: 0060:[<c024ef05>] EFLAGS: 00010202 CPU: 1
-EIP is at pskb_expand_head+0x23/0x140
-EAX: dba19d50 EBX: daa72bb8 ECX: 0000000c EDX: dba19cd0
-ESI: 0000000c EDI: dba19cd2 EBP: da473d04 ESP: da473ce8
- DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-Process swapper (pid: 0, ti=da472000 task=da46a000 task.ti=da472000)
-Stack: 00000025 d74ee000 da473d04 000000d3 00000006 0000000c dba19cd2
-da473d84
-       dca9360e 00000020 c0143622 da46a57c d797f000 daa72bb8 dba19ce0
-dba19cf4
-       c037f108 da46a000 00000002 da46a050 0000001a 00000000 d9bb82a0
-08000002
-Call Trace:
- [<c01050bc>] show_trace_log_lvl+0x1a/0x2f
- [<c010516c>] show_stack_log_lvl+0x9b/0xa3
- [<c0105218>] show_registers+0xa4/0x1d9
- [<c010546e>] die+0x121/0x202
- [<c02b7458>] do_trap+0x8a/0xa3
- [<c010580e>] do_invalid_op+0x88/0x92
- [<c02b722a>] error_code+0x72/0x78
- [<dca9360e>] ieee80211_subif_start_xmit+0x330/0x56e [mac80211]
- [<c02540e7>] dev_hard_start_xmit+0x24e/0x2b3
- [<c02627d9>] __qdisc_run+0x74/0x16b
- [<c025643e>] dev_queue_xmit+0x19f/0x2e5
- [<c028f1f1>] arp_xmit+0x4b/0x51
- [<c028fc08>] arp_send+0x45/0x4c
- [<c02904c6>] arp_solicit+0x196/0x1aa
- [<c025babb>] neigh_timer_handler+0x267/0x2a8
- [<c012d1b0>] run_timer_softirq+0x142/0x1a4
- [<c0129bd1>] __do_softirq+0x78/0xed
- [<c0129c7f>] do_softirq+0x39/0x55
- [<c0129e32>] irq_exit+0x45/0x83
- [<c0115edf>] smp_apic_timer_interrupt+0x77/0x84
- [<c0104b6f>] apic_timer_interrupt+0x33/0x38
- [<c010259c>] cpu_idle+0x9e/0xd3
- [<c0114c82>] start_secondary+0x165/0x16c
- [<00000000>] 0x0
- =======================
-Code: f1 f4 f1 ff 5b 5e 5d c3 55 89 e5 57 56 53 89 c3 83 ec 10 83 bb a0
-00 00 00 01 89 55
-EIP: [<c024ef05>] pskb_expand_head+0x23/0x140 SS:ESP 0068:da473ce8
-Kernel panic - not syncing: Fatal exception in interrupt
+drivers/net/wireless/ipw2100.c:2837:7: warning: symbol 'i' shadows an earlier one
+drivers/net/wireless/ipw2100.c:2760:9: originally declared here
+drivers/net/wireless/ipw2100.c:7873:15: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2100.c:187:12: originally declared here
+drivers/net/wireless/ipw2100.c:7937:11: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2100.c:187:12: originally declared here
+drivers/net/wireless/ipw2100.c:7985:11: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2100.c:187:12: originally declared here
+drivers/net/wireless/ipw2100.c:8253:13: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2100.c:8253:13: originally declared here
+drivers/net/wireless/ipw2100.c:8253:13: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2100.c:8253:13: originally declared here
+drivers/net/wireless/ipw2100.c:8253:13: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2100.c:8253:13: originally declared here
+drivers/net/wireless/ipw2100.c:1929:15: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:1929:15:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:1929:15:    got int *<noident>
+drivers/net/wireless/ipw2100.c:1937:69: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:1937:69:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:1937:69:    got int *<noident>
+drivers/net/wireless/ipw2100.c:1945:60: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:1945:60:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:1945:60:    got int *<noident>
+drivers/net/wireless/ipw2100.c:1952:65: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:1952:65:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:1952:65:    got int *<noident>
+drivers/net/wireless/ipw2100.c:4071:66: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:4071:66:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:4071:66:    got int *<noident>
+drivers/net/wireless/ipw2100.c:4078:15: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:4078:15:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:4078:15:    got int *<noident>
+drivers/net/wireless/ipw2100.c:4084:60: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:4084:60:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:4084:60:    got int *<noident>
+drivers/net/wireless/ipw2100.c:5275:6: warning: symbol 'ipw2100_queues_initialize' was not declared. Should it be static?
+drivers/net/wireless/ipw2100.c:5282:6: warning: symbol 'ipw2100_queues_free' was not declared. Should it be static?
+drivers/net/wireless/ipw2100.c:5289:5: warning: symbol 'ipw2100_queues_allocate' was not declared. Should it be static?
+drivers/net/wireless/ipw2100.c:7146:66: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:7146:66:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:7146:66:    got int *<noident>
+drivers/net/wireless/ipw2100.c:8322:20: warning: incorrect type in argument 4 (different signedness)
+drivers/net/wireless/ipw2100.c:8322:20:    expected unsigned int [usertype] *len
+drivers/net/wireless/ipw2100.c:8322:20:    got int *<noident>
+drivers/net/wireless/ipw2200.c:833:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:877:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:921:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:966:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1002:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1037:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1806:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:4253:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4253:12: originally declared here
+drivers/net/wireless/ipw2200.c:6211:7: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:6327:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:6793:5: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:7888:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:8662:5: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:9665:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:9723:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:9829:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:10325:7: warning: symbol 'remaining_bytes' shadows an earlier one
+drivers/net/wireless/ipw2200.c:10193:6: originally declared here
+drivers/net/wireless/strip.c:490:16: error: bad constant expression
+drivers/net/wireless/arlan-main.c:969:48: warning: incorrect type in initializer (different address spaces)
+drivers/net/wireless/arlan-main.c:969:48:    expected struct arlan_shmem volatile [noderef] <asn:2>*arlan
+drivers/net/wireless/arlan-main.c:969:48:    got struct arlan_shmem *<noident>
+drivers/net/wireless/arlan-main.c:1088:11: warning: incorrect type in assignment (different address spaces)
+drivers/net/wireless/arlan-main.c:1088:11:    expected struct arlan_shmem [noderef] <asn:2>*card
+drivers/net/wireless/arlan-main.c:1088:11:    got void *<noident>
+drivers/net/wireless/arlan-main.c:1776:19: warning: symbol 'arlan_probe' was not declared. Should it be static?
+drivers/net/wireless/rtl8180_dev.c:138:42: warning: Using plain integer as NULL pointer
+drivers/net/wireless/rtl8187_dev.c:116:41: warning: Using plain integer as NULL pointer
+drivers/net/wireless/orinoco.c:3232:2: warning: context imbalance in 'orinoco_ioctl_getnick' - unexpected unlock
+drivers/net/wireless/airo.c:3800:8: warning: symbol 'i' shadows an earlier one
+drivers/net/wireless/airo.c:3711:6: originally declared here
+drivers/net/wireless/airo.c:3807:8: warning: symbol 'i' shadows an earlier one
+drivers/net/wireless/airo.c:3711:6: originally declared here
+drivers/net/wireless/airo.c:3821:7: warning: symbol 'i' shadows an earlier one
+drivers/net/wireless/airo.c:3711:6: originally declared here
+drivers/net/wireless/airo.c:2092:14: warning: incorrect type in initializer (different signedness)
+drivers/net/wireless/airo.c:2092:14:    expected unsigned int [usertype] *fids
+drivers/net/wireless/airo.c:2092:14:    got int *<noident>
+drivers/net/wireless/airo.c:2116:14: warning: incorrect type in initializer (different signedness)
+drivers/net/wireless/airo.c:2116:14:    expected unsigned int [usertype] *fids
+drivers/net/wireless/airo.c:2116:14:    got int *<noident>
+drivers/net/wireless/airo.c:2157:14: warning: incorrect type in initializer (different signedness)
+drivers/net/wireless/airo.c:2157:14:    expected unsigned int [usertype] *fids
+drivers/net/wireless/airo.c:2157:14:    got int *<noident>
+drivers/net/wireless/airo.c:2181:14: warning: incorrect type in initializer (different signedness)
+drivers/net/wireless/airo.c:2181:14:    expected unsigned int [usertype] *fids
+drivers/net/wireless/airo.c:2181:14:    got int *<noident>
+drivers/net/wireless/airo.c:3612:6: warning: symbol 'mpi_receive_802_11' was not declared. Should it be static?
+drivers/net/wireless/atmel.c:3174:6: warning: symbol 'atmel_join_bss' was not declared. Should it be static?
+drivers/net/wireless/ath5k/base.c:1682:1: warning: context imbalance in 'ath5k_tasklet_rx' - different lock contexts for basic block
+drivers/net/wireless/ath5k/hw.c:3764:10: warning: cast truncates bits from constant value (ffffffea becomes 0)
+drivers/net/wireless/b43legacy/phy.c:1298:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/b43legacy/phy.c:1298:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/b43legacy/phy.c:1298:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/b43legacy/pio.c:140:16: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_main.c:3232:2: warning: context imbalance in 'bcm43xx_periodic_work_handler' - different lock contexts for basic block
+drivers/net/wireless/bcm43xx/bcm43xx_phy.c:1470:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_phy.c:1470:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_phy.c:1470:31: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_phy.c:94:6: warning: context imbalance in 'bcm43xx_raw_phy_lock' - different lock contexts for basic block
+drivers/net/wireless/bcm43xx/bcm43xx_phy.c:120:4: warning: context imbalance in 'bcm43xx_raw_phy_unlock' - unexpected unlock
+drivers/net/wireless/bcm43xx/bcm43xx_leds.c:38:20: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_leds.c:77:20: warning: potentially expensive pointer subtraction
+drivers/net/wireless/bcm43xx/bcm43xx_pio.c:140:16: warning: potentially expensive pointer subtraction
+drivers/net/wireless/hostap/hostap_80211_rx.c:128:34: warning: symbol 'hdr' shadows an earlier one
+drivers/net/wireless/hostap/hostap_80211_rx.c:67:29: originally declared here
+drivers/net/wireless/hostap/hostap_80211_rx.c:150:32: warning: symbol 'hdr' shadows an earlier one
+drivers/net/wireless/hostap/hostap_80211_rx.c:67:29: originally declared here
+drivers/net/wireless/hostap/hostap_ap.c:1903:18: warning: cast truncates bits from constant value (ffff3fff becomes 3fff)
+drivers/net/wireless/hostap/hostap_main.c:597:5: warning: symbol 'hostap_80211_header_parse' was not declared. Should it be static?
+drivers/net/wireless/hostap/hostap_hw.c:2838:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/hostap/hostap_hw.c:64:12: originally declared here
+drivers/net/wireless/hostap/hostap_cs.c:583:3: warning: symbol 'ret' shadows an earlier one
+drivers/net/wireless/hostap/hostap_cs.c:552:6: originally declared here
+drivers/net/wireless/hostap/hostap_cs.c:585:3: warning: symbol 'ret' shadows an earlier one
+drivers/net/wireless/hostap/hostap_cs.c:552:6: originally declared here
+drivers/net/wireless/hostap/hostap_cs.c:665:3: warning: symbol 'ret' shadows an earlier one
+drivers/net/wireless/hostap/hostap_cs.c:552:6: originally declared here
+drivers/net/wireless/hostap/hostap_hw.c:2838:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/hostap/hostap_hw.c:64:12: originally declared here
+drivers/net/wireless/hostap/hostap_hw.c:2838:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/hostap/hostap_hw.c:64:12: originally declared here
+drivers/net/wireless/prism54/isl_ioctl.c:2052:20: warning: incorrect type in assignment (different address spaces)
+drivers/net/wireless/prism54/isl_ioctl.c:2052:20:    expected void [noderef] <asn:1>*pointer
+drivers/net/wireless/prism54/isl_ioctl.c:2052:20:    got char *[assigned] memptr
+drivers/net/wireless/prism54/isl_ioctl.c:2071:20: warning: incorrect type in assignment (different address spaces)
+drivers/net/wireless/prism54/isl_ioctl.c:2071:20:    expected void [noderef] <asn:1>*pointer
+drivers/net/wireless/prism54/isl_ioctl.c:2071:20:    got char *[assigned] memptr
+drivers/net/wireless/prism54/isl_ioctl.c:2993:25: warning: incorrect type in argument 2 (different signedness)
+drivers/net/wireless/prism54/isl_ioctl.c:2993:25:    expected int enum oid_num_t *<noident>
+drivers/net/wireless/prism54/isl_ioctl.c:2993:25:    got unsigned int *<noident>
+drivers/net/wireless/prism54/islpci_hotplug.c:97:1: warning: symbol 'prism54_probe' was not declared. Should it be static?
+drivers/net/wireless/prism54/islpci_hotplug.c:220:1: warning: symbol 'prism54_remove' was not declared. Should it be static?
+drivers/net/wireless/prism54/islpci_hotplug.c:263:1: warning: symbol 'prism54_suspend' was not declared. Should it be static?
+drivers/net/wireless/prism54/islpci_hotplug.c:286:1: warning: symbol 'prism54_resume' was not declared. Should it be static?
+drivers/net/wireless/prism54/oid_mgt.c:424:15: warning: symbol '_data' shadows an earlier one
+include/asm-generic/sections.h:7:13: originally declared here
+drivers/net/wireless/prism54/oid_mgt.c:712:35: warning: incorrect type in argument 2 (different signedness)
+drivers/net/wireless/prism54/oid_mgt.c:712:35:    expected int enum oid_num_t *l
+drivers/net/wireless/prism54/oid_mgt.c:712:35:    got unsigned int *<noident>
+drivers/net/wireless/rt2x00/rt2x00mac.c:217:13: warning: Using plain integer as NULL pointer
+drivers/net/wireless/zd1211rw/zd_mac.c:363:40: warning: Using plain integer as NULL pointer
+drivers/net/wireless/zd1211rw/zd_mac.c:392:42: warning: Using plain integer as NULL pointer
+drivers/net/wireless/zd1211rw/zd_mac.c:606:42: warning: Using plain integer as NULL pointer
+drivers/net/wireless/ray_cs.c:831:5: warning: symbol 'ray_dev_init' was not declared. Should it be static?
+drivers/net/wireless/rndis_wlan.c:282:64: warning: symbol 'wpa_alg' was not declared. Should it be static?
+drivers/net/wireless/rndis_wlan.c:284:2: warning: symbol 'wpa_cipher' was not declared. Should it be static?
+drivers/net/wireless/rndis_wlan.c:286:22: warning: symbol 'wpa_key_mgmt' was not declared. Should it be static?
+drivers/net/wireless/p54common.c:352:42: warning: Using plain integer as NULL pointer
+
+
