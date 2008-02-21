@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:33840 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750851AbYBYCEV (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:46918 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751081AbYBUTUE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 21:04:21 -0500
-Date: Sun, 24 Feb 2008 18:04:19 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: can't bring up wlan0
-Message-Id: <20080224180419.b7b44524.akpm@linux-foundation.org> (sfid-20080225_020435_249055_0DDC158F)
-In-Reply-To: <1203904312.3082.156.camel@debian.sh.intel.com>
-References: <20080223153142.da9fc4e4.akpm@linux-foundation.org>
-	<1203904312.3082.156.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 21 Feb 2008 14:20:04 -0500
+Message-ID: <47BDCC24.1050604@warmcat.com> (sfid-20080221_192017_613173_2CC20F44)
+Date: Fri, 22 Feb 2008 03:08:20 +0800
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: allow specifying RTS/self-CTS protection when
+ injecting packets
+References: <1203553034.17534.119.camel@johannes.berg>
+In-Reply-To: <1203553034.17534.119.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 25 Feb 2008 09:51:52 +0800 Zhu Yi <yi.zhu@intel.com> wrote:
+Somebody in the thread at some point said:
+> I made this patch to test RTS/CTS operation in drivers, do you think
+> it's useful apart that and should be merged?
 
-> 
-> On Sat, 2008-02-23 at 15:31 -0800, Andrew Morton wrote:
-> > t61p:/home/akpm# ifconfig wlan0 up
-> > SIOCSIFFLAGS: No such device
-> 
-> Did dmesg tell something about missing firmware?
-> 
+> + * IEEE80211_RADIOTAP_TX_FLAGS
+> +
+> +   IEEE80211_RADIOTAP_F_TX_RTS:	use RTS/CTS handshake
+> +   IEEE80211_RADIOTAP_F_TX_CTS:	use CTS-to-self protection
+> +
+> +
+>  The injection code can also skip all other currently defined radiotap fields
+>  facilitating replay of captured radiotap headers directly.
 
-Nope, but things got a lot better when I turned the wireless kill switch
-back on. oops ;)
+Hi Johannes -
 
-I don't think ipw2200 worked that way?  I'm fairly sure I used to be able
-to configure the interface whichever way the switch was positioned?
+Sure the footprint is nothing to speak of and it just exposes flags
+there already supported using radiotap flags already existing.
 
+I didn't think of a use for it but if the original flag has any use then
+no doubt it can be used by the injection path by some enterprising soul.
+
+(Sorry for late reply, travelling)
+
+-Andy
