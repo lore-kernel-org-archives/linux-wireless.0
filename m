@@ -1,118 +1,569 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:33208 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900AbYBXEpe (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:20654 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbYBVHSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2008 23:45:34 -0500
-Received: by an-out-0708.google.com with SMTP id d31so255999and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Feb 2008 20:45:33 -0800 (PST)
-Message-ID: <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com> (sfid-20080224_044539_149487_FF892C46)
-Date: Sun, 24 Feb 2008 06:45:33 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com, "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-In-Reply-To: <20080224042851.GE4426@makis.domain.invalid>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080224042851.GE4426@makis.domain.invalid>
+	Fri, 22 Feb 2008 02:18:35 -0500
+Received: by py-out-1112.google.com with SMTP id u52so571621pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:18:34 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 21 Feb 2008 20:19:31 -0800
+Subject: [PATCH 10/13 v2] o11s: mesh path table support
+Message-ID: <47be7749.03098c0a.4848.677c@mx.google.com> (sfid-20080222_074735_961851_0F538E79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/24, Nick Kossifidis <mick@madwifi.org>:
->  * Fix nic_wakeup for PCI-E chips (don't set AR5K_RESET_CTL_PCI bit)
->
->   * Fix dma size setting for PCI-E chips (thanx to Bob Copeland).
->
->  Changes-licensed-under: ISC
->  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->
->  ---
->  diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
->  index c0b6596..d8ec373 100644
->  --- a/drivers/net/wireless/ath5k/ath5k.h
->  +++ b/drivers/net/wireless/ath5k/ath5k.h
->  @@ -971,6 +971,7 @@ struct ath5k_hw {
->         enum ath5k_version      ah_version;
->         enum ath5k_radio        ah_radio;
->         u32                     ah_phy;
->  +       bool                    ah_pcie;
->
->         bool                    ah_5ghz;
->         bool                    ah_2ghz;
->  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
->  index 3ae5522..cd640ed 100644
->  --- a/drivers/net/wireless/ath5k/hw.c
->  +++ b/drivers/net/wireless/ath5k/hw.c
->  @@ -214,6 +214,14 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->                 ah->ah_single_chip = false;
->         }
->
->  +       /* Identify PCI-E cards */
->  +       if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
->  +       srev >= AR5K_SREV_VER_AR5416) {
->  +               ah->ah_pcie = true;
->  +       } else {
->  +               ah->ah_pcie = false;
->  +       }
->  +
->         /* Single chip radio */
->         if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
->                 ah->ah_radio_2ghz_revision = 0;
->  @@ -377,9 +385,12 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
->                                         AR5K_PHY_TURBO);
->         }
->
->  -       /* ...reset chipset and PCI device */
->  -       if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
->  -                               AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
->  +       /* ...reset chipset
->  +        * Warning: reseting PCI on PCI-E cards results card to hang
->  +        * and always return 0xffff...
->  +        */
->  +       if (ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND |
->  +                               (ah->ah_pcie == false ? AR5K_RESET_CTL_PCI : 0) )) {
->                 ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
->                 return -EIO;
->         }
->  @@ -900,13 +911,25 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
->
->         /*
->          * Set Rx/Tx DMA Configuration
->  -        *(passing dma size not available on 5210)
->  +        *
->  +        * Set maximum DMA size (512) except for PCI-E cards since
->  +        * it causes rx overruns and tx errors (tested on 5424 but since
->  +        * rx overruns also occur on 5416/5418 with madwifi we set 128
->  +        * for all PCI-E cards to be safe).
->  +        *
->  +        * In dumps this is 128 for allchips.
->  +        *
->  +        * XXX: need to check 5210 for this
->  +        * TODO: Check out tx triger level, it's always 64 on dumps but i
->  +        * guess we can tweak it and see how it goes ;-)
->          */
->         if (ah->ah_version != AR5K_AR5210) {
->                 AR5K_REG_WRITE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_SDMAMR,
->  -                               AR5K_DMASIZE_512B | AR5K_TXCFG_DMASIZE);
->  +                               (ah->ah_pcie == true ?
->  +                               AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
->                 AR5K_REG_WRITE_BITS(ah, AR5K_RXCFG, AR5K_RXCFG_SDMAMW,
->  -                               AR5K_DMASIZE_512B);
->  +                               (ah->ah_pcie == true ?
->  +                               AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
->         }
->
->         /*
->
+The mesh path table associates destinations with the next hop to reach them. The
+table is a hash of linked lists protected by rcu mechanisms. Every mesh path
+contains a lock to protect the mesh path state.
 
-Sorry, forgot to CC Bob...
+Each outgoing mesh frame requires a look up into this table. Therefore, the
+table it has been designed so it is not necessary to hold any lock to find the
+appropriate next hop.
 
-Bob can you test this on your 5242 (together with the next patch) and
-see what happens ?
+If the path is determined to be active within a rcu context we can safely
+dereference mpath->next_hop->addr, since it holds a reference to the sta
+next_hop. After a mesh path has been set active for the first time it next_hop
+must always point to a valid sta.  If this is not possible the mpath must be
+deleted or replaced in a RCU safe fashion.
 
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |  522 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 522 insertions(+), 0 deletions(-)
+ create mode 100644 net/mac80211/mesh_pathtbl.c
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+new file mode 100644
+index 0000000..3709494
+--- /dev/null
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -0,0 +1,522 @@
++/*
++ * Copyright (c) 2008 open80211s Ltd.
++ * Author:     Luis Carlos Cobo <luisca@cozybit.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/etherdevice.h>
++#include <linux/list.h>
++#include <linux/netdevice.h>
++#include <linux/random.h>
++#include <linux/spinlock.h>
++#include <linux/string.h>
++#include <net/mac80211.h>
++#include "ieee80211_i.h"
++#include "mesh.h"
++
++/* There will be initially 2^INIT_PATHS_SIZE_ORDER buckets */
++#define INIT_PATHS_SIZE_ORDER	2
++
++/* Keep the mean chain length below this constant */
++#define MEAN_CHAIN_LEN		2
++
++#define MPATH_EXPIRED(mpath) ((mpath->flags & MESH_PATH_ACTIVE) && \
++				time_after(jiffies, mpath->exp_time) && \
++				!(mpath->flags & MESH_PATH_FIXED))
++
++struct mpath_node {
++	struct hlist_node list;
++	struct rcu_head rcu;
++	/* This indirection allows two different tables to point to the same
++	 * mesh_path structure, useful when resizing
++	 */
++	struct mesh_path *mpath;
++};
++
++static struct mesh_table *mesh_paths;
++
++/* This lock will have the grow table function as writer and add / delete nodes
++ * as readers. When reading the table (i.e. doing lookups) we are well protected
++ * by RCU
++ */
++static DEFINE_RWLOCK(pathtbl_resize_lock);
++
++/**
++ *
++ * mesh_path_assign_nexthop - update mesh path next hop
++ *
++ * @mpath: mesh path to update
++ * @sta: next hop to assign
++ *
++ * Locking: mpath->state_lock must be held when calling this function
++ */
++void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
++{
++	__sta_info_get(sta);
++	if (mpath->next_hop)
++		sta_info_put(mpath->next_hop);
++	mpath->next_hop = sta;
++}
++
++
++/**
++ * mesh_path_lookup - look up a path in the mesh path table
++ * @dst: hardware address (ETH_ALEN length) of destination
++ * @dev: local interface
++ *
++ * Returns: pointer to the mesh path structure, or NULL if not found
++ *
++ * Locking: must be called within a read rcu section.
++ */
++struct mesh_path *mesh_path_lookup(u8 *dst, struct net_device *dev)
++{
++	struct mesh_path *mpath;
++	struct hlist_node *n;
++	struct hlist_head *bucket;
++	struct mesh_table *tbl;
++	struct mpath_node *node;
++
++	tbl = rcu_dereference(mesh_paths);
++
++	bucket = &tbl->hash_buckets[mesh_table_hash(dst, dev, tbl)];
++	hlist_for_each_entry_rcu(node, n, bucket, list) {
++		mpath = node->mpath;
++		if (mpath->dev == dev &&
++				memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
++			if (MPATH_EXPIRED(mpath)) {
++				spin_lock_bh(&mpath->state_lock);
++				if (MPATH_EXPIRED(mpath))
++					mpath->flags &= ~MESH_PATH_ACTIVE;
++				spin_unlock_bh(&mpath->state_lock);
++			}
++			return mpath;
++		}
++	}
++	return NULL;
++}
++
++/**
++ * mesh_path_lookup_by_idx - look up a path in the mesh path table by its index
++ * @idx: index
++ * @dev: local interface
++ *
++ * Returns: pointer to the mesh path structure, or NULL if not found.
++ *
++ * Locking: must be called within a read rcu section.
++ */
++struct mesh_path *mesh_path_lookup_by_idx(int idx, struct net_device *dev)
++{
++	struct mpath_node *node;
++	struct hlist_node *p;
++	int i;
++	int j = 0;
++
++	for_each_mesh_entry(mesh_paths, p, node, i)
++		if (j++ == idx) {
++			if (MPATH_EXPIRED(node->mpath)) {
++				spin_lock_bh(&node->mpath->state_lock);
++				if (MPATH_EXPIRED(node->mpath))
++					node->mpath->flags &= ~MESH_PATH_ACTIVE;
++				spin_unlock_bh(&node->mpath->state_lock);
++			}
++			return node->mpath;
++		}
++
++	return NULL;
++}
++
++/**
++ * mesh_path_add - allocate and add a new path to the mesh path table
++ * @addr: destination address of the path (ETH_ALEN length)
++ * @dev: local interface
++ *
++ * Returns: 0 on sucess
++ *
++ * State: the initial state of the new path is set to 0
++ */
++int mesh_path_add(u8 *dst, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mesh_path *mpath, *new_mpath;
++	struct mpath_node *node, *new_node;
++	struct hlist_head *bucket;
++	struct hlist_node *n;
++	int grow = 0;
++	int err = 0;
++	u32 hash_idx;
++
++	if (memcmp(dst, dev->dev_addr, ETH_ALEN) == 0)
++		/* never add ourselves as neighbours */
++		return -ENOTSUPP;
++
++	if (is_multicast_ether_addr(dst))
++		return -ENOTSUPP;
++
++	if (atomic_add_unless(&sdata->u.sta.mpaths, 1, MESH_MAX_MPATHS) == 0)
++		return -ENOSPC;
++
++	read_lock(&pathtbl_resize_lock);
++
++	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
++	if (!new_mpath) {
++		atomic_dec(&sdata->u.sta.mpaths);
++		err = -ENOMEM;
++		goto endadd2;
++	}
++	memcpy(new_mpath->dst, dst, ETH_ALEN);
++	new_mpath->dev = dev;
++	new_mpath->flags = 0;
++	skb_queue_head_init(&new_mpath->frame_queue);
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	new_node->mpath = new_mpath;
++	new_mpath->timer.data = (unsigned long) new_mpath;
++	new_mpath->timer.function = mesh_path_timer;
++	new_mpath->exp_time = jiffies;
++	spin_lock_init(&new_mpath->state_lock);
++	init_timer(&new_mpath->timer);
++
++	hash_idx = mesh_table_hash(dst, dev, mesh_paths);
++	bucket = &mesh_paths->hash_buckets[hash_idx];
++
++	spin_lock(&mesh_paths->hashwlock[hash_idx]);
++
++	hlist_for_each_entry(node, n, bucket, list) {
++		mpath = node->mpath;
++		if (mpath->dev == dev && memcmp(dst, mpath->dst, ETH_ALEN)
++				== 0) {
++			err = -EEXIST;
++			atomic_dec(&sdata->u.sta.mpaths);
++			kfree(new_node);
++			kfree(new_mpath);
++			goto endadd;
++		}
++	}
++
++	hlist_add_head_rcu(&new_node->list, bucket);
++	if (atomic_inc_return(&mesh_paths->entries) >=
++		mesh_paths->mean_chain_len * (mesh_paths->hash_mask + 1))
++		grow = 1;
++
++endadd:
++	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
++endadd2:
++	read_unlock(&pathtbl_resize_lock);
++	if (!err && grow) {
++		struct mesh_table *oldtbl, *newtbl;
++
++		write_lock(&pathtbl_resize_lock);
++		oldtbl = mesh_paths;
++		newtbl = mesh_table_grow(mesh_paths);
++		if (!newtbl) {
++			write_unlock(&pathtbl_resize_lock);
++			return -ENOMEM;
++		}
++		rcu_assign_pointer(mesh_paths, newtbl);
++		synchronize_rcu();
++		mesh_table_free(oldtbl, false);
++		write_unlock(&pathtbl_resize_lock);
++	}
++	return err;
++}
++
++
++/**
++ * mesh_plink_broken - deactivates paths and sends perr when a link breaks
++ *
++ * @sta: broken peer link
++ *
++ * This function must be called from the rate control algorithm if enough
++ * delivery errors suggest that a peer link is no longer usable.
++ */
++void mesh_plink_broken(struct sta_info *sta)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_node *p;
++	struct net_device *dev = sta->dev;
++	int i;
++
++	rcu_read_lock();
++	for_each_mesh_entry(mesh_paths, p, node, i) {
++		mpath = node->mpath;
++		spin_lock_bh(&mpath->state_lock);
++		if (mpath->next_hop == sta &&
++		    mpath->flags & MESH_PATH_ACTIVE &&
++		    !(mpath->flags & MESH_PATH_FIXED)) {
++			mpath->flags &= ~MESH_PATH_ACTIVE;
++			++mpath->dsn;
++			spin_unlock_bh(&mpath->state_lock);
++			mesh_path_error_tx(mpath->dst,
++					cpu_to_le32(mpath->dsn),
++					dev->broadcast, dev);
++		} else
++		spin_unlock_bh(&mpath->state_lock);
++	}
++	rcu_read_unlock();
++}
++
++/**
++ * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
++ *
++ * @sta - mesh peer to match
++ *
++ * RCU notes: this function is called when a mesh plink transitions from ESTAB
++ * to any other state, since ESTAB state is the only one that allows path
++ * creation. This will happen before the sta can be freed (since we hold
++ * a reference to it) so any reader in a rcu read block will be protected
++ * against the plink dissapearing.
++ */
++void mesh_path_flush_by_nexthop(struct sta_info *sta)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_node *p;
++	int i;
++
++	for_each_mesh_entry(mesh_paths, p, node, i) {
++		mpath = node->mpath;
++		if (mpath->next_hop == sta)
++			mesh_path_del(mpath->dst, mpath->dev);
++	}
++}
++
++void mesh_path_flush(struct net_device *dev)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_node *p;
++	int i;
++
++	for_each_mesh_entry(mesh_paths, p, node, i) {
++		mpath = node->mpath;
++		if (mpath->dev == dev)
++			mesh_path_del(mpath->dst, mpath->dev);
++	}
++}
++
++static void mesh_path_node_reclaim(struct rcu_head *rp)
++{
++	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
++	struct ieee80211_sub_if_data *sdata =
++		IEEE80211_DEV_TO_SUB_IF(node->mpath->dev);
++	if (node->mpath->next_hop)
++		sta_info_put(node->mpath->next_hop);
++	atomic_dec(&sdata->u.sta.mpaths);
++	kfree(node->mpath);
++	kfree(node);
++}
++
++/**
++ * mesh_path_del - delete a mesh path from the table
++ *
++ * @addr: dst address (ETH_ALEN length)
++ * @dev: local interface
++ *
++ * Returns: 0 if succesful
++ *
++ * State: if the path is being resolved, the deletion will be postponed until
++ * the path resolution completes or times out.
++ */
++int mesh_path_del(u8 *addr, struct net_device *dev)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_head *bucket;
++	struct hlist_node *n;
++	int hash_idx;
++	int err = 0;
++
++	read_lock(&pathtbl_resize_lock);
++	hash_idx = mesh_table_hash(addr, dev, mesh_paths);
++	bucket = &mesh_paths->hash_buckets[hash_idx];
++
++	spin_lock(&mesh_paths->hashwlock[hash_idx]);
++	hlist_for_each_entry(node, n, bucket, list) {
++		mpath = node->mpath;
++		if (mpath->dev == dev &&
++				memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
++			spin_lock_bh(&mpath->state_lock);
++			if (mpath->flags & MESH_PATH_RESOLVING) {
++				mpath->flags |= MESH_PATH_DELETE;
++			} else {
++				mpath->flags |= MESH_PATH_RESOLVING;
++				hlist_del_rcu(&node->list);
++				call_rcu(&node->rcu, mesh_path_node_reclaim);
++				atomic_dec(&mesh_paths->entries);
++			}
++			spin_unlock_bh(&mpath->state_lock);
++			goto enddel;
++		}
++	}
++
++	err = -ENXIO;
++enddel:
++	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
++	read_unlock(&pathtbl_resize_lock);
++	return err;
++}
++
++/**
++ * mesh_path_tx_pending - sends pending frames in a mesh path queue
++ *
++ * @mpath: mesh path to activate
++ *
++ * Locking: the state_lock of the mpath structure must NOT be held when calling
++ * this function.
++ */
++void mesh_path_tx_pending(struct mesh_path *mpath)
++{
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
++			(mpath->flags & MESH_PATH_ACTIVE))
++		dev_queue_xmit(skb);
++}
++
++/**
++ * mesh_path_discard_frame - discard a frame whose path could not be resolved
++ *
++ * @skb: frame to discard
++ * @dev: network device the frame was to be sent through
++ *
++ * If the frame was beign forwarded from another MP, a PERR frame will be sent
++ * to the precursor.
++ *
++ * Locking: the function must me called within a rcu_read_lock region
++ */
++void mesh_path_discard_frame(struct sk_buff *skb, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mesh_path *mpath;
++	u32 dsn = 0;
++
++	if (skb->pkt_type == PACKET_OTHERHOST) {
++		struct ieee80211s_hdr *prev_meshhdr;
++		int mshhdrlen;
++		u8 *ra, *da;
++
++		prev_meshhdr = ((struct ieee80211s_hdr *)skb->cb);
++		mshhdrlen = ieee80211_get_mesh_hdrlen(prev_meshhdr);
++		da = skb->data;
++		ra = MESH_PREQ(skb);
++		mpath = mesh_path_lookup(da, dev);
++		if (mpath)
++			dsn = ++mpath->dsn;
++		mesh_path_error_tx(skb->data, cpu_to_le32(dsn), ra, dev);
++	}
++
++	kfree_skb(skb);
++	sdata->u.sta.mshstats.dropped_frames_no_route++;
++}
++
++/**
++ * mesh_path_flush_pending - free the pending queue of a mesh path
++ *
++ * @mpath: mesh path whose queue has to be freed
++ *
++ * Locking: the function must me called withing a rcu_read_lock region
++ */
++void mesh_path_flush_pending(struct mesh_path *mpath)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct sk_buff *skb;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(mpath->dev);
++
++	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
++			(mpath->flags & MESH_PATH_ACTIVE))
++		mesh_path_discard_frame(skb, mpath->dev);
++}
++
++/**
++ * mesh_path_fix_nexthop - force a specific next hop for a mesh path
++ *
++ * @mpath: the mesh path to modify
++ * @next_hop: the next hop to force
++ *
++ * Locking: this function must be called holding mpath->state_lock
++ */
++void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop)
++{
++	spin_lock_bh(&mpath->state_lock);
++	mesh_path_assign_nexthop(mpath, next_hop);
++	mpath->dsn = 0xffff;
++	mpath->metric = 0;
++	mpath->hop_count = 0;
++	mpath->exp_time = 0;
++	mpath->flags |= MESH_PATH_FIXED;
++	mesh_path_activate(mpath);
++	spin_unlock_bh(&mpath->state_lock);
++	mesh_path_tx_pending(mpath);
++}
++
++static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node = hlist_entry(p, struct mpath_node, list);
++	mpath = node->mpath;
++	hlist_del_rcu(p);
++	synchronize_rcu();
++	if (free_leafs)
++		kfree(mpath);
++	kfree(node);
++}
++
++static void mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node, *new_node;
++	u32 hash_idx;
++
++	node = hlist_entry(p, struct mpath_node, list);
++	mpath = node->mpath;
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	new_node->mpath = mpath;
++	hash_idx = mesh_table_hash(mpath->dst, mpath->dev, newtbl);
++	hlist_add_head(&new_node->list,
++			&newtbl->hash_buckets[hash_idx]);
++}
++
++int mesh_pathtbl_init(void)
++{
++	mesh_paths = mesh_table_alloc(INIT_PATHS_SIZE_ORDER);
++	mesh_paths->free_node = &mesh_path_node_free;
++	mesh_paths->copy_node = &mesh_path_node_copy;
++	mesh_paths->mean_chain_len = MEAN_CHAIN_LEN;
++	if (!mesh_paths)
++		return -ENOMEM;
++	return 0;
++}
++
++void mesh_path_expire(struct net_device *dev)
++{
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_node *p;
++	int i;
++
++	read_lock(&pathtbl_resize_lock);
++	for_each_mesh_entry(mesh_paths, p, node, i) {
++		if (node->mpath->dev != dev)
++			continue;
++		mpath = node->mpath;
++		spin_lock_bh(&mpath->state_lock);
++		if ((!(mpath->flags & MESH_PATH_RESOLVING)) &&
++		    (!(mpath->flags & MESH_PATH_FIXED)) &&
++			time_after(jiffies,
++			 mpath->exp_time + MESH_PATH_EXPIRE)) {
++			spin_unlock_bh(&mpath->state_lock);
++			mesh_path_del(mpath->dst, mpath->dev);
++		} else
++			spin_unlock_bh(&mpath->state_lock);
++	}
++	read_unlock(&pathtbl_resize_lock);
++}
++
++void mesh_pathtbl_unregister(void)
++{
++	mesh_table_free(mesh_paths, true);
++}
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.2.5
+
+
+
