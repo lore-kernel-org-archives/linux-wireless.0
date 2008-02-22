@@ -1,78 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.uc3m.es ([163.117.176.132]:41415 "EHLO smtp02.uc3m.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750809AbYBXWDF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 17:03:05 -0500
-From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
-Message-Id: <200802242157.m1OLvS429023@inv.it.uc3m.es> (sfid-20080224_220312_353058_4025F8DA)
-Subject: ADM8211
-To: linux-wireless@vger.kernel.org
-Date: Sun, 24 Feb 2008 22:57:28 +0100 (MET)
-CC: flamingice@sourmilk.net
-Reply-To: ptb@inv.it.uc3m.es
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40540 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761809AbYBVOIE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 09:08:04 -0500
+Message-Id: <20080222111749.198388000@sipsolutions.net> (sfid-20080222_140812_436133_1B785131)
+References: <20080222111644.183587000@sipsolutions.net>
+Date: Fri, 22 Feb 2008 12:16:47 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 3/8] mac80211: split ieee80211_key_alloc
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In order to RCU-ify sta_info, we need to be able to allocate
+a key without linking it to an sdata/sta structure (because
+allocation cannot be done in an rcu critical section). This
+patch splits up ieee80211_key_alloc() and updates all users
+appropriately.
 
-What's support like for the old broadcom pci ADM8211 card these days?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c             |   13 ++++-
+ net/mac80211/ieee80211_ioctl.c |   91 ++++++++++++++++++++++-------------------
+ net/mac80211/ieee80211_key.h   |   11 +++-
+ net/mac80211/key.c             |   32 +++++++++-----
+ 4 files changed, 87 insertions(+), 60 deletions(-)
 
-  0000:00:0b.0 Network controller: Linksys ADMtek ADM8211 802.11b
-  Wireless Interface (rev 11)
-  Subsystem: Standard Microsystems Corp [SMC]: Unknown device 2602
-  Flags: medium devsel, IRQ 19
-  I/O ports at 9400 [size=256]
-  Memory at ed101000 (32-bit, non-prefetchable) [size=1K]
-  Expansion ROM at 30100000 [disabled] [size=128K]
-  Capabilities: [c0] Power Management version 2
+--- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-02-21 16:02:41.000000000 +0100
++++ everything/net/mac80211/ieee80211_ioctl.c	2008-02-21 16:12:55.000000000 +0100
+@@ -33,8 +33,8 @@ static int ieee80211_set_encryption(stru
+ 				    size_t key_len)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int ret = 0;
+-	struct sta_info *sta;
++	int ret;
++	struct sta_info *sta = NULL;
+ 	struct ieee80211_key *key;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -46,58 +46,65 @@ static int ieee80211_set_encryption(stru
+ 		return -EINVAL;
+ 	}
+ 
+-	if (is_broadcast_ether_addr(sta_addr)) {
+-		sta = NULL;
+-		key = sdata->keys[idx];
+-	} else {
+-		set_tx_key = 0;
+-		/*
+-		 * According to the standard, the key index of a pairwise
+-		 * key must be zero. However, some AP are broken when it
+-		 * comes to WEP key indices, so we work around this.
+-		 */
+-		if (idx != 0 && alg != ALG_WEP) {
+-			printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
+-			       "individual key\n", dev->name);
+-			return -EINVAL;
++	if (remove) {
++		if (is_broadcast_ether_addr(sta_addr)) {
++			key = sdata->keys[idx];
++		} else {
++			sta = sta_info_get(local, sta_addr);
++			if (!sta) {
++				ret = -ENOENT;
++				key = NULL;
++				goto err_out;
++			}
++
++			key = sta->key;
+ 		}
+ 
+-		sta = sta_info_get(local, sta_addr);
+-		if (!sta) {
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-			DECLARE_MAC_BUF(mac);
+-			printk(KERN_DEBUG "%s: set_encrypt - unknown addr "
+-			       "%s\n",
+-			       dev->name, print_mac(mac, sta_addr));
+-#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
++		if (!key)
++			ret = -ENOENT;
++		else
++			ret = 0;
++	} else {
++		key = ieee80211_key_alloc(alg, idx, key_len, _key);
++		if (!key)
++			return -ENOMEM;
++
++		if (!is_broadcast_ether_addr(sta_addr)) {
++			set_tx_key = 0;
++			/*
++			 * According to the standard, the key index of a
++			 * pairwise key must be zero. However, some AP are
++			 * broken when it comes to WEP key indices, so we
++			 * work around this.
++			 */
++			if (idx != 0 && alg != ALG_WEP) {
++				ret = -EINVAL;
++				goto err_out;
++			}
+ 
+-			return -ENOENT;
++			sta = sta_info_get(local, sta_addr);
++			if (!sta) {
++				ret = -ENOENT;
++				goto err_out;
++			}
+ 		}
+ 
+-		key = sta->key;
+-	}
++		/* Automatically frees any old key if present. */
++		ieee80211_key_link(key, sdata, sta);
+ 
+-	if (remove) {
+-		ieee80211_key_free(key);
++		if (set_tx_key || (!sta && !sdata->default_key && key))
++			ieee80211_set_default_key(sdata, idx);
++
++		/* don't free key later */
+ 		key = NULL;
+-	} else {
+-		/*
+-		 * Automatically frees any old key if present.
+-		 */
+-		key = ieee80211_key_alloc(sdata, sta, alg, idx, key_len, _key);
+-		if (!key) {
+-			ret = -ENOMEM;
+-			goto err_out;
+-		}
+-	}
+ 
+-	if (set_tx_key || (!sta && !sdata->default_key && key))
+-		ieee80211_set_default_key(sdata, idx);
++		ret = 0;
++	}
+ 
+-	ret = 0;
+  err_out:
+ 	if (sta)
+ 		sta_info_put(sta);
++	ieee80211_key_free(key);
+ 	return ret;
+ }
+ 
+--- everything.orig/net/mac80211/ieee80211_key.h	2008-02-21 16:02:40.000000000 +0100
++++ everything/net/mac80211/ieee80211_key.h	2008-02-21 16:02:46.000000000 +0100
+@@ -112,12 +112,17 @@ struct ieee80211_key {
+ 	struct ieee80211_key_conf conf;
+ };
+ 
+-struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
+-					  struct sta_info *sta,
+-					  enum ieee80211_key_alg alg,
++struct ieee80211_key *ieee80211_key_alloc(enum ieee80211_key_alg alg,
+ 					  int idx,
+ 					  size_t key_len,
+ 					  const u8 *key_data);
++/*
++ * Insert a key into data structures (sdata, sta if necessary)
++ * to make it used.
++ */
++void ieee80211_key_link(struct ieee80211_key *key,
++			struct ieee80211_sub_if_data *sdata,
++			struct sta_info *sta);
+ void ieee80211_key_free(struct ieee80211_key *key);
+ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx);
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
+--- everything.orig/net/mac80211/key.c	2008-02-21 16:02:41.000000000 +0100
++++ everything/net/mac80211/key.c	2008-02-21 16:18:13.000000000 +0100
+@@ -111,9 +111,7 @@ static void ieee80211_key_disable_hw_acc
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ }
+ 
+-struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
+-					  struct sta_info *sta,
+-					  enum ieee80211_key_alg alg,
++struct ieee80211_key *ieee80211_key_alloc(enum ieee80211_key_alg alg,
+ 					  int idx,
+ 					  size_t key_len,
+ 					  const u8 *key_data)
+@@ -138,10 +136,6 @@ struct ieee80211_key *ieee80211_key_allo
+ 	key->conf.keylen = key_len;
+ 	memcpy(key->conf.key, key_data, key_len);
+ 
+-	key->local = sdata->local;
+-	key->sdata = sdata;
+-	key->sta = sta;
+-
+ 	if (alg == ALG_CCMP) {
+ 		/*
+ 		 * Initialize AES key state here as an optimization so that
+@@ -154,6 +148,23 @@ struct ieee80211_key *ieee80211_key_allo
+ 		}
+ 	}
+ 
++	return key;
++}
++
++void ieee80211_key_link(struct ieee80211_key *key,
++			struct ieee80211_sub_if_data *sdata,
++			struct sta_info *sta)
++{
++	int idx;
++
++	BUG_ON(!sdata);
++	BUG_ON(!key);
++
++	idx = key->conf.keyidx;
++	key->local = sdata->local;
++	key->sdata = sdata;
++	key->sta = sta;
++
+ 	ieee80211_debugfs_key_add(key->local, key);
+ 
+ 	/* remove key first */
+@@ -196,8 +207,6 @@ struct ieee80211_key *ieee80211_key_allo
+ 		rcu_assign_pointer(sdata->keys[idx], key);
+ 
+ 	list_add(&key->list, &sdata->key_list);
+-
+-	return key;
+ }
+ 
+ void ieee80211_key_free(struct ieee80211_key *key)
+@@ -207,7 +216,7 @@ void ieee80211_key_free(struct ieee80211
+ 
+ 	if (key->sta) {
+ 		rcu_assign_pointer(key->sta->key, NULL);
+-	} else {
++	} else if (key->sdata) {
+ 		if (key->sdata->default_key == key)
+ 			ieee80211_set_default_key(key->sdata, -1);
+ 		if (key->conf.keyidx >= 0 &&
+@@ -228,7 +237,8 @@ void ieee80211_key_free(struct ieee80211
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+ 	ieee80211_debugfs_key_remove(key);
+ 
+-	list_del(&key->list);
++	if (key->sdata)
++		list_del(&key->list);
+ 
+ 	kfree(key);
+ }
+--- everything.orig/net/mac80211/cfg.c	2008-02-21 16:13:31.000000000 +0100
++++ everything/net/mac80211/cfg.c	2008-02-21 16:15:07.000000000 +0100
+@@ -129,6 +129,7 @@ static int ieee80211_add_key(struct wiph
+ 	struct sta_info *sta = NULL;
+ 	enum ieee80211_key_alg alg;
+ 	int ret;
++	struct ieee80211_key *key;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -147,16 +148,20 @@ static int ieee80211_add_key(struct wiph
+ 		return -EINVAL;
+ 	}
+ 
++	key = ieee80211_key_alloc(alg, key_idx, params->key_len, params->key);
++	if (!key)
++		return -ENOMEM;
++
+ 	if (mac_addr) {
+ 		sta = sta_info_get(sdata->local, mac_addr);
+-		if (!sta)
++		if (!sta) {
++			ieee80211_key_free(key);
+ 			return -ENOENT;
++		}
+ 	}
+ 
++	ieee80211_key_link(key, sdata, sta);
+ 	ret = 0;
+-	if (!ieee80211_key_alloc(sdata, sta, alg, key_idx,
+-				 params->key_len, params->key))
+-		ret = -ENOMEM;
+ 
+ 	if (sta)
+ 		sta_info_put(sta);
 
-This produces zilch on my 64 bit athlon running kern 2.6.22.10 in 64
-bit mode with the latest wireles-compat stack:
-
-  [590632.616943] ACPI: PCI Interrupt 0000:00:0b.0[A] -> GSI 19 (level, low) -> IRQ 19
-  [590632.640345] 0000:00:0b.0 (adm8211): Channel range: 1 - 13
-  [590632.640463] 0000:00:0b.0 (adm8211): RFtype=1 BBPtype=1 Specific BBP=0 Transceiver=0
-  [590632.640535] WARNING: at /usr/local/src/compat-wireless-2.6/net/wireless/core.c:267 wiphy_register()
-  [590632.665337]
-  [590632.665338] Call Trace:
-  [590632.676634]  [<ffffffff880ed566>] :cfg80211:wiphy_register+0x126/0x150
-  [590632.694525]  [<ffffffff881d9040>] :adm8211:adm8211_eeprom_register_write+0x0/0x60
-  [590632.715011]  [<ffffffff881a44f9>] :mac80211:ieee80211_register_hw+0x29/0x3c0
-  [590632.734315]  [<ffffffff881dcdf9>] :adm8211:adm8211_probe+0x339/0x500
-  [590632.751704]  [<ffffffff802d1f30>] sysfs_make_dirent+0x30/0x50
-  [590632.769234]  [<ffffffff803245c0>] pci_call_probe+0x10/0x20
-  [590632.784307]  [<ffffffff8032462d>] __pci_device_probe+0x5d/0x70
-  [590632.800321]  [<ffffffff80324670>] pci_device_probe+0x30/0x60
-  [590632.815867]  [<ffffffff8037f074>] really_probe+0x94/0x130
-  [590632.830710]  [<ffffffff8037f17b>] driver_probe_device+0x4b/0x70
-  [590632.846955]  [<ffffffff8037f30b>] __driver_attach+0xbb/0xf0
-  [590632.862266]  [<ffffffff8037f250>] __driver_attach+0x0/0xf0
-  [590632.877319]  [<ffffffff8037f250>] __driver_attach+0x0/0xf0
-  [590632.892400]  [<ffffffff8037e0ba>] bus_for_each_dev+0x5a/0x80
-  [590632.907946]  [<ffffffff8037e88c>] bus_add_driver+0x7c/0x120
-  [590632.923256]  [<ffffffff80324a3d>] __pci_register_driver+0x5d/0xa0
-  [590632.939971]  [<ffffffff8024ed26>] sys_init_module+0xf6/0x170
-  [590632.955491]  [<ffffffff8020a0be>] system_call+0x7e/0x83
-  [590632.970435]
-  [590632.974797] 0000:00:0b.0 (adm8211): Cannot register device
-  [590632.990001] ACPI: PCI interrupt for device 0000:00:0b.0 disabled
-  [590633.006636] adm8211: probe of 0000:00:0b.0 failed with error -22
-  [590633.028461] usbcore: registered new interface driver zd1211rw
-  [590633.050754] usbcore: registered new interface driver rtl8187
-
-The warning is
-
-       if (!have_band) {
-               WARN_ON(1);
-               return -EINVAL;
-                                               }
-Which appears to come from
-
-    wiphy->bands[band] == NULL
-
-for band = 0 to IEEE80211_NUM_BANDS - 1. I'd guess it got nothing by
-reading some registers.
-
-Any clues?
-
-Peter
+-- 
 
