@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:53793 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934258AbYBBVPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 16:15:32 -0500
-Date: Sat, 2 Feb 2008 23:16:17 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
-	mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [RFC: 2.6 patch] ath5k/phy.c: fix negative array index
-Message-ID: <20080202211617.GE9375@cs181133002.pp.htv.fi> (sfid-20080202_211537_371236_64A0E7E1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40549 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754223AbYBVOIK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 09:08:10 -0500
+Message-Id: <20080222111748.540603000@sipsolutions.net> (sfid-20080222_140819_469718_5EBF63FC)
+References: <20080222111644.183587000@sipsolutions.net>
+Date: Fri, 22 Feb 2008 12:16:46 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 2/8] mac80211: safely free beacon in ieee80211_if_reinit
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a negative array index spotted by the Coverity checker.
+If ieee80211_if_reinit() is called from ieee80211_unregister_hw()
+then it is possible that the driver will still request a beacon
+(it is allowed to until ieee80211_unregister_hw() has returned.)
+This means we need to use an RCU-protected write to the beacon
+information even in this function.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/mac80211/ieee80211_iface.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-I'm not 100% sure whether my patch is correct, but if not this patch is 
-the easiest way to show the problem.
+--- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-21 14:35:24.000000000 +0100
++++ everything/net/mac80211/ieee80211_iface.c	2008-02-21 15:13:17.000000000 +0100
+@@ -193,6 +193,7 @@ void ieee80211_if_reinit(struct net_devi
+ 		/* Remove all virtual interfaces that use this BSS
+ 		 * as their sdata->bss */
+ 		struct ieee80211_sub_if_data *tsdata, *n;
++		struct beacon_data *beacon;
+ 
+ 		list_for_each_entry_safe(tsdata, n, &local->interfaces, list) {
+ 			if (tsdata != sdata && tsdata->bss == &sdata->u.ap) {
+@@ -210,7 +211,10 @@ void ieee80211_if_reinit(struct net_devi
+ 			}
+ 		}
+ 
+-		kfree(sdata->u.ap.beacon);
++		beacon = sdata->u.ap.beacon;
++		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
++		synchronize_rcu();
++		kfree(beacon);
+ 
+ 		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
+ 			local->total_ps_buffered--;
 
---- linux-2.6/drivers/net/wireless/ath5k/phy.c.old	2008-02-02 21:44:58.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/ath5k/phy.c	2008-02-02 21:48:28.000000000 +0200
-@@ -1176,10 +1176,13 @@ static int ath5k_hw_rf5112_rfregs(struct
- 		obdb = channel->freq >= 5725 ? 3 :
- 		    (channel->freq >= 5500 ? 2 :
- 			(channel->freq >= 5260 ? 1 :
- 			    (channel->freq > 4000 ? 0 : -1)));
- 
-+		if (obdb == -1)
-+			return -EINVAL;
-+
- 		if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
- 				ee->ee_ob[ee_mode][obdb], 3, 279, 0, true))
- 			return -EINVAL;
- 
- 		if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
+-- 
+
