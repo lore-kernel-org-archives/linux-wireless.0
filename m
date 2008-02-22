@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:39120 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761914AbYBUVvs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 16:51:48 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1114136ugc.16
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 13:51:46 -0800 (PST)
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-Date: Thu, 21 Feb 2008 22:51:26 +0100
-Cc: Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <1203542195.3240.1.camel@boulder.homenet> <1203628049.3277.6.camel@boulder.homenet>
-In-Reply-To: <1203628049.3277.6.camel@boulder.homenet>
+Received: from MGW3.Sony.CO.JP ([137.153.0.15]:39031 "EHLO mgw3.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754004AbYBVHqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 02:46:18 -0500
+Received: from mail37.sony.co.jp (localhost [127.0.0.1])
+	by mail37.sony.co.jp (R8/Sony) with ESMTP id m1M7jQL4010949
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 16:45:27 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+	by mail37.sony.co.jp (R8/Sony) with ESMTP id m1M7jQNY010937
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 16:45:26 +0900 (JST)
+Received: from imail.sm.sony.co.jp (imail.sm.sony.co.jp [43.4.141.32]) by smail1.sm.sony.co.jp (8.11.6p2/8.11.6) with ESMTP id m1M7jQP23705 for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 16:45:26 +0900 (JST)
+Received: from [43.4.146.40] (bluenote.sm.sony.co.jp [43.4.146.40])
+	by imail.sm.sony.co.jp (8.12.11/3.7W) with ESMTP id m1M7jQbd015686
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 16:45:26 +0900 (JST)
+Date: Fri, 22 Feb 2008 16:45:26 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] PS3: gelic: Link the wireless net_device structure to the corresponding device structure
+Message-Id: <20080222163604.CFC0.40F06B3A@sm.sony.co.jp> (sfid-20080222_074630_846188_6D101D44)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200802212251.26897.IvDoorn@gmail.com> (sfid-20080221_215154_245891_D71B08C0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 21 February 2008, Chris Vine wrote:
-> On Wed, 2008-02-20 at 21:16 +0000, Chris Vine wrote: 
-> > On Wed, 2008-02-20 at 21:50 +0100, Ivo van Doorn wrote:
-> > [snip]
-> > > On Wednesday 20 February 2008, Chris Vine wrote:
-> > > > I did that yesterday and it just reported a kernel panic on the terminal
-> > > > with the message:
-> > > > 
-> > > >   Kernel panic - not syncing: Aiee, killing interrupt handler!
-> > > 
-> > > I have an idea, could you try below patch?
-> > > Note that while applying it will mention something about a line offset, but that can be ignored.
-> > > 
-> > > This could perhaps also fix the TX/RX issue mentioned earlier in the thread, but I am not
-> > > quite sure about that.
-> > 
-> > The patch applied OK (with some offsets as you say) but it doesn't help.
-> > The kernel panic still occurs when association is attempted.
-> 
-> Here's some further information.
-> 
-> I have a fully functioning version of rt2x00-2.0.14 and mac80211 from
-> wireless-2.6/compat-wireless-2.6 of mid January which works fine on
-> kernel 2.6.24.  On doing a comparison with the rt2x00 in vanilla kernel
-> 2.6.25-rc2, there are no material differences.  (There was a slight
-> change in the declaration a variable in rt2x00usb.c but it is
-> immaterial.)
-> 
-> I compiled up the working mid-January version of rt2x00 and mac80211
-> under kernel 2.6.25-rc2 and I get exactly the same result as I reported
-> earlier, namely I get a kernel panic as soon as I try to associate.  It
-> looks therefore as if something has changed within the remainder of the
-> kernel which has caused rt2x00 (and possibly mac80211?) to break.
-> 
-> This probably explains the problem another user reported with rt61.
+Link the net_device structure of the wireless part to the
+corresponding device structure.  
 
-Perhaps something similar like:
-http://bugzilla.kernel.org/show_bug.cgi?id=10058
-in there a reference is made to the following patch:
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+Without this, the sysfs node for this net_device would not have
+'device' link.
 
-Does applying that help?
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+---
+ drivers/net/ps3_gelic_wireless.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Ivo
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -2690,6 +2690,7 @@ int gelic_wl_driver_probe(struct gelic_c
+ 		return -ENOMEM;
+ 
+ 	/* setup net_device structure */
++	SET_NETDEV_DEV(netdev, &card->dev->core);
+ 	gelic_wl_setup_netdev_ops(netdev);
+ 
+ 	/* setup some of net_device and register it */
+
+-- 
+Masakazu MOKUNO
+
