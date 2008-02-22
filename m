@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:54522 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbYBAJCe convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55591 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbYBVPn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 04:02:34 -0500
-Received: by an-out-0708.google.com with SMTP id d31so251215and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 01:02:31 -0800 (PST)
-Reply-To: <cs010101@gmail.com>
-From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Q) I need you help... Chip selection.
-Date: Fri, 1 Feb 2008 18:02:22 +0900
-Message-ID: <000101c864b1$2c840e20$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080201_090243_717256_35E04CA0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+	Fri, 22 Feb 2008 10:43:56 -0500
+Subject: Re: does not build iplwifi3945 in my 2.6.24 kernel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Richardson <tim@tim-richardson.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1203690249.9268.5.camel@d420> (sfid-20080222_152408_802004_483C21F3)
+References: <1203690249.9268.5.camel@d420>
+	 (sfid-20080222_152408_802004_483C21F3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fy5aoCybtPxzqaIa3c8w"
+Date: Fri, 22 Feb 2008 16:43:49 +0100
+Message-Id: <1203695029.7082.39.camel@johannes.berg> (sfid-20080222_154400_559084_7825D0F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-Some days before, I asked a question why 3crdag675b(3com) NIC does not
-support the speed of 802.11a. and then our members tried to modify ath5=
-k
-driver.
-but, we have not solved the problems.
-(when connecting two NICs(3crdag675b) to each other for ad-hoc mode -
-802.11a -, connection is unstable. max bandwidth is from 2Mbps to 17Mbp=
-s.)
-testing tool : iperf
-
-Our members plan to modify driver sources, mac sources and then test th=
-em
-with new NICs(also, we plan to make a hardware module using atheros
-chipset).
-But now, the 3crdag675b we bought is -.-;; so so.....
-
-Because of these, I want to get some helps *^_^*
-
-We want to find out new NICs using atheros chipset(AR5414). For this, s=
-ome
-reqirements.
-1. Shuld be opened the driver sources(linux).(because, we have to modif=
-y
-mac sources, driver sources.)
-2. Working well on LINUX machine.
-3. AND NICs type SHOULD BE PCI.
-4. if there's no nics using atheros chipset AR5414, recommend other
-products supporting above requirements please...
-
-anyone know about this, ^^ help us......
-
-thank you~~~=20
+--=-fy5aoCybtPxzqaIa3c8w
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
---
---
-Have a Wonderful Day~~!!
-=B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
-yhkim@corebell.co.kr
-cs010101@gmail.com
-+82-42-863-0340
-+82-10-6753-0987
-HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu,
-Daejon,  Republic of Korea
-305-701
+> /home/tim/compat-wireless-2.6/drivers/net/wireless/ipw2200.c: In
+> function =E2=80=98ipw_tx_skb=E2=80=99:
+> /home/tim/compat-wireless-2.6/drivers/net/wireless/ipw2200.c:10352:
+> error: implicit declaration of function =E2=80=98le32_add_cpu=E2=80=99
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+See mail from Bill Moss.
+
+johannes
+
+--=-fy5aoCybtPxzqaIa3c8w
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR77ttKVg1VMiehFYAQJDYRAAir8rLfNZ7yyb0XMIMnrULORjCuJ4Acms
+/wwUHQP80z4JtH676jHuq5V3f65o8eFmgYAXN5xEvsQ23vsqwsugL7feItOLVhQP
+z8L655XuxKM1DR7EU6OzS3Iiu26dDbq1oa9gWQncCRN0x8qPh6XtiwSLxV7gxLPo
+fDyHGEjeDrSVIlwGUg2y7xEajbbn9AzZkwQSVN1J6s3bYqHhFZV8YwGh1f5hk2We
+r9+SKkZlG7gXbxG4OQX5b8/YhmM2sB4fAVrZXgsuZ3RhKN4zMPv6TQexMec01uJe
+Fiyh8QtxoXMqmuEhy6+b9teILHQ14vNadDsGPGUs4/DpqkE7pFt4WBuV7k4EIW4V
+yYBySrOII3kW5nM56nyOjJpNWDskiv5eT42i6vQgZOSbind9Yu9DQ2UCT5blKNcd
+j/cQ/PCgNGPAW7C8U0KOj7uBtXCO8toR/zgfcexrmLyknfxvzxGKVPV4kDeWWeEZ
+kBL3++XzWyRvTYh1efr82tiuH8qieZiABwf3Sp636IQSOl0izkT4ac1Qj5dlglw8
+sxh9RnmDRfA040Z6ziZIwf3Ncjm+DCR119qCNNtRnhgsn54VrG9kRV1dH9zpEQBh
+0gZCbZ2qsGY/fNuZufasEQ3lC533Pe+44Vk2uXBC6WL7Tfwpa+3FLfJQdSiq9q62
+QRnE4Li4aJc=
+=m2yd
+-----END PGP SIGNATURE-----
+
+--=-fy5aoCybtPxzqaIa3c8w--
+
