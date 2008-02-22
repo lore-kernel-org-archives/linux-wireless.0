@@ -1,104 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42007 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40554 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756060AbYBGKfT (ORCPT
+	with ESMTP id S1762522AbYBVOIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 05:35:19 -0500
-Subject: Re: [PATCH 00/13] o11s: mesh interface support for mac80211
+	Fri, 22 Feb 2008 09:08:14 -0500
+Message-Id: <20080222111747.671292000@sipsolutions.net> (sfid-20080222_140823_123244_6A3490DB)
+References: <20080222111644.183587000@sipsolutions.net>
+Date: Fri, 22 Feb 2008 12:16:45 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a78212.15588c0a.27b2.61d2@mx.google.com> (sfid-20080204_212233_169667_739F231D)
-References: <47a78212.15588c0a.27b2.61d2@mx.google.com>
-	 (sfid-20080204_212233_169667_739F231D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nZAcQp/FhR1TKeTVoZaO"
-Date: Thu, 07 Feb 2008 01:13:08 +0100
-Message-Id: <1202343188.9965.41.camel@johannes.berg> (sfid-20080207_103527_147888_7C38C7A2)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/8] mac80211: clarify use of TX status/RX callbacks
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch clarifies the use of the irqsafe vs. non-irq-safe
+functions and their respective locking requirements.
 
---=-nZAcQp/FhR1TKeTVoZaO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |   37 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 34 insertions(+), 3 deletions(-)
 
-Cool stuff! Code looks pretty good but there seems to be some
-misunderstanding, especially wrt. beaconing.
+--- everything.orig/include/net/mac80211.h	2008-02-22 11:45:11.000000000 +0100
++++ everything/include/net/mac80211.h	2008-02-22 11:49:23.000000000 +0100
+@@ -38,7 +38,11 @@
+  * called in hardware interrupt context. The low-level driver must not call any
+  * other functions in hardware interrupt context. If there is a need for such
+  * call, the low-level driver should first ACK the interrupt and perform the
+- * IEEE 802.11 code call after this, e.g. from a scheduled workqueue function.
++ * IEEE 802.11 code call after this, e.g. from a scheduled workqueue or even
++ * tasklet function.
++ *
++ * NOTE: If the driver opts to use the _irqsafe() functions, it may not also
++ *	 use the non-irqsafe functions!
+  */
+ 
+ /**
+@@ -1204,7 +1208,10 @@ void __ieee80211_rx(struct ieee80211_hw 
+  * buffer in @skb must start with an IEEE 802.11 header or a radiotap
+  * header if %RX_FLAG_RADIOTAP is set in the @status flags.
+  *
+- * This function may not be called in IRQ context.
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other. Calls
++ * to this function and ieee80211_rx_irqsafe() may not be mixed for a
++ * single hardware.
+  *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+@@ -1221,7 +1228,10 @@ static inline void ieee80211_rx(struct i
+  * ieee80211_rx_irqsafe - receive frame
+  *
+  * Like ieee80211_rx() but can be called in IRQ context
+- * (internally defers to a workqueue.)
++ * (internally defers to a tasklet.)
++ *
++ * Calls to this function and ieee80211_rx() may not be mixed for a
++ * single hardware.
+  *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+@@ -1240,6 +1250,11 @@ void ieee80211_rx_irqsafe(struct ieee802
+  * transmitted. It is permissible to not call this function for
+  * multicast frames but this can affect statistics.
+  *
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other. Calls
++ * to this function and ieee80211_tx_status_irqsafe() may not be mixed
++ * for a single hardware.
++ *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
+  * @status: status information for this frame; the status pointer need not
+@@ -1249,6 +1264,22 @@ void ieee80211_rx_irqsafe(struct ieee802
+ void ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			 struct sk_buff *skb,
+ 			 struct ieee80211_tx_status *status);
++
++/**
++ * ieee80211_tx_status_irqsafe - irq-safe transmit status callback
++ *
++ * Like ieee80211_tx_status() but can be called in IRQ context
++ * (internally defers to a tasklet.)
++ *
++ * Calls to this function and ieee80211_tx_status() may not be mixed for a
++ * single hardware.
++ *
++ * @hw: the hardware the frame was transmitted by
++ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ * @status: status information for this frame; the status pointer need not
++ *	be valid after this function returns and is not freed by mac80211,
++ *	it is recommended that it points to a stack area
++ */
+ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ 				 struct sk_buff *skb,
+ 				 struct ieee80211_tx_status *status);
 
-> - Possible integration between mesh peer link and sta_info structures. Th=
-eir
->   purpose is similar and it will make it easier to implement mesh rate co=
-ntrol
->   and airtime link metric.
-
-Indeed, I think this should be done. For one, we already look up the TA
-sta_info structure for each frame so you don't need to look it up if you
-pass it appropriately. Also a second hash table based on TA address just
-takes up a lot of space.
-
-> - Beaconing support: the current beacon model is appropriate for the zd12=
-11rw
->   driver but might not be for others.
-
-Indeed. You shouldn't set conf->beacon directly, instead you should
-change ieee80211_beacon_get() to support getting an IBSS beacon and then
-you need to call ieee80211_if_config_beacon() where appropriate. Using
-IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE from the stack is simply wrong
-too.
-
-> - set_mesh_cfg command to set mesh ID and use of broadcast mesh ID when n=
-one is
->   set: Johannes suggested the mesh ID should be specified when creating t=
-he mesh
->   interface [1]. However we feel that a "mesh configuration" or "mesh net=
-work"
->   object analogous to the "association" object he talks about would be mo=
-re
->   appropriate. Such an association object has not yet been implemented. W=
-e
->   would appreciate some advice on how to implement our mesh network objec=
-t so
->   that it follows the spirit of mac80211.
-
-Is it really useful to change the mesh ID on a running interface? It
-seems that would totally throw off things like multicast caching and
-peer link establishment. Therefore, it seems that
-ieee80211_if_set_mesh_cfg should reject to configure a running
-interface.
-
-> - Scan support: we were waiting for scan to be moved to cfg80211 to avoid
->   messing unnecessarily with wext, is there any effort in this direction?
-
-What specifically do you need? Scanning for mesh networks? Wouldn't a
-regular scan find them as well? As far as I know nobody is currently
-working on scan support in nl80211. Maybe you can simply report the
-relevant mesh IEs in a custom element and sort it out in userspace (for
-now)?
-
-johannes
-
---=-nZAcQp/FhR1TKeTVoZaO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6pNE6Vg1VMiehFYAQJeIg/8DSc/N5CiDNnSqPetRQ3qj+n9LHJCcQu6
-UBp2Kj4PPrIza/dMnnI7V8x0j4BaCiioGZpOGMDZ+EOCsg7TAMHHBhzf+jJw2ATy
-Pb9Hk3BxmLyTWa9iWUiJlOmn5jZyWmNg0kYdxIR31zGfPkZSSNFhjE5hLJs42KT7
-oN/YDOSiiUWmoVtUkxnC/7AEFUiD6PiKj+gEp46LbcOLoCfWnDXwFxrC0EZIKxAN
-Cku5OQSy4+SCQNYEcBs2nKBqW5hr5LeOV57DrnXKHeWC0WKU+kHvyiG7y/99rYxq
-BNDT4dNxsp7UFwjjIAXFcmBoorpSun2m2v90jHI0ICJSnbOzwLpfGMkDzvBOfD6l
-ORohsYtNY83d1YEzpENcCb6zagkTLhUpchifS0LX7Sh/VfPgTjKB4S2U4axz9DDP
-zD2y6DRZn2A6Osk59gTq1EX3mHf3fv4x/6hV+M15D6Mc8g7SNmb1aGWHrUqsOIFl
-zptibjUq/rOwokeiHeL7BtHVECFIKdbrrrrqC02G9VCVtob0fxki/zd8AdGd4p3l
-NfKAYu1krAu+qvkYTy11QfLZ0IldPOOGYlAts5m77bxJXSMCKiqw+VO+YIMehYSe
-e5zFW/EqXEnNGyiAi5DjiOSjUlZlIR7inSYr6lY2+F9QEeO3vl4fA/RgxY/WmEkz
-4TtPFRDLjCU=
-=sbN5
------END PGP SIGNATURE-----
-
---=-nZAcQp/FhR1TKeTVoZaO--
+-- 
 
