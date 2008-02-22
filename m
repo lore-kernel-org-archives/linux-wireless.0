@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:31822 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbYB0N7Y (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755522AbYBVQaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 08:59:24 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so4457820mue.5
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 05:59:21 -0800 (PST)
-Message-ID: <43e72e890802270559g408f75bdm62682f12bd40fa6c@mail.gmail.com> (sfid-20080227_135928_726623_604FFC01)
-Date: Wed, 27 Feb 2008 08:59:19 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Lars Ericsson" <Lars_Ericsson@telia.com>
-Subject: Re: Roaming issues.
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <004501c87946$e5f1f490$0b3ca8c0@gotws1589>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <004501c87946$e5f1f490$0b3ca8c0@gotws1589>
+	Fri, 22 Feb 2008 11:30:25 -0500
+Subject: Re: [PATCH 11/13 v2] o11s: support for on-demand Hybrid Wireless
+	Mesh Protocol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47be77ee.02098c0a.5eba.ffff81ef@mx.google.com> (sfid-20080222_072128_730595_F951750B)
+References: <47be77ee.02098c0a.5eba.ffff81ef@mx.google.com>
+	 (sfid-20080222_072128_730595_F951750B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-grJ3XA2px20QSQ4tVHs/"
+Date: Fri, 22 Feb 2008 17:30:19 +0100
+Message-Id: <1203697819.7082.75.camel@johannes.berg> (sfid-20080222_163028_634677_CC225461)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2008 at 8:44 AM, Lars Ericsson <Lars_Ericsson@telia.com> wrote:
 
->  AP deauthentication.
->  =====================
->  When any of the ieee80211_rx_mgmt_deauth() or ieee80211_rx_mgmt_disassoc()
->  are executed, the mac layer takes two actions.
->  1) Tells wpa_supplicant what had happened.
->  2) Start reestabliching the connaction again.
->
->  The later action will stop or significantly delay the decisions/action taken
->  by wpa_supplicant as a result of action 1. Normally the supplicant will
->  start an AP scan.
->  But the mac layer is busy with reestablishing the link and will not start
->  any scan action.
+--=-grJ3XA2px20QSQ4tVHs/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for reviewing this, some comments below.
 
->  Timeout handling
->  =================
->  When any of the ieee80211_authenticate() or ieee80211_associate() function
->  are executed.
->  The mac silently set its state to IEEE80211_DISABLED and waits for the
->  wpa_supplicant to timeout its current action.
+> +static u32 airtime_link_metric_get(struct ieee80211_local *local,
+> +				   struct sta_info *sta)
+> +{
+> +	struct ieee80211_supported_band *sband;
+> +	/* This should be adjusted for each device */
+> +	int device_constant =3D 1 << ARITH_SHIFT;
+> +	int test_frame_len =3D TEST_FRAME_LEN << ARITH_SHIFT;
+> +	int s_unit =3D 1 << ARITH_SHIFT;
 
-This doesn't seem to account for pre-authentication, which should
-assist roaming. During pre-auth we'd authenticate with local APs even
-if we're not going to complete an assoc(), we'd leave the assoc() for
-a later time once the signal strength of the new AP is better. I'm not
-sure how wpa_supplicant handles with pre-authentication settings
-though or if it even supports it but the point here is we should be
-able to authenticate many times while we only have one assoc() pre
-STA.
+For each device as in the peer or in the hardware we run on? Would this
+need a new entry in struct ieee80211_hw?
 
-  Luis
+johannes
+
+--=-grJ3XA2px20QSQ4tVHs/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR774mqVg1VMiehFYAQLi5Q//aSRo+xjI+gI0BtUhfeZbeDuWf7CljLCN
+rPwzbhY/6SK2k7ZHWoSY8cY/6Gr0Z6GBYfgal4QeuZYrpJ8yuBATyvoFKkisXDdu
+ZFNmk9GpiOoDo1cgXsFTcSCd9fb/D77cgKc/G9BaH9t03EbbRUM1RPZbkyvwtOCI
+hYjTRoTWBFBWDYF0EsS+CdKTKw1geqRFCBjA/aiyVRMefpx2sM620GZ7yb5F2pMy
+0ev2Kis/oU3G2ZuP1YE8tkNx+ZEtiHsDgLk3SZuwlMrMmNJDEYpnMoWEJLR1n9CZ
+EamAtf5EfRkBLV4XObBZ5GbjcKomNevLU6fZzXI2IMJBb4XGJKGkqdoaPEOshnkG
+oc5jwCuvESyOcmA3CpkpIAOo8len7KBQY9uTAVHcXwIKbH4Y2tJfGXvDIPzd1cGR
+unEpc9tllsnVEI/u9+uXtJv9s4uG8Lw5TfepTz6wdBsipl+kE/twhOD3cdvafK7w
+tn8fEKYmA6QOaHlI9U+aEv76w+1hnS+abcWJf3Qwg1CF+61o3aVPBH2yqbDpodaO
+jM7pYgD4KK7hoygBNPTCCYYwzSsvd3bB8+PL4035OxxbsC8fxIU/29AoVnsQtzkE
+Ehx+T4B4GsQfQzDONti3zJ/yw3z4P07pkZEqmXpJlExHoaeChuOqrqCRqdEr1Exd
+sIWUdFKrgng=
+=fZn3
+-----END PGP SIGNATURE-----
+
+--=-grJ3XA2px20QSQ4tVHs/--
+
