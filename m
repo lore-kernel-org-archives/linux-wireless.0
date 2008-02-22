@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57467 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:33192 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751242AbYBLWBj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 17:01:39 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-Date: Tue, 12 Feb 2008 13:51:48 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com> (sfid-20080212_220154_289545_DE643DF5)
-In-Reply-To: <47B1F422.4060501@scherping.de>
-References: <47B1F422.4060501@scherping.de>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Richard Scherping" <richard@scherping.de>,
-	<linux-wireless@vger.kernel.org>
+	id S1754488AbYBVVIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 16:08:13 -0500
+Subject: Re: Link Quality stats not updating, recieved_channel
+From: Dan Williams <dcbw@redhat.com>
+To: Andrew Lunn <andrew.lunn@ascom.ch>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080222142614.GA18830@donkey.ma.tech.ascom.ch>
+References: <20080222142614.GA18830@donkey.ma.tech.ascom.ch>
+Content-Type: text/plain
+Date: Fri, 22 Feb 2008 16:05:51 -0500
+Message-Id: <1203714351.4422.2.camel@localhost.localdomain> (sfid-20080222_210820_181842_49F25A7C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Richard Scherping wrote:
-
-> Hello list!
+On Fri, 2008-02-22 at 15:26 +0100, Andrew Lunn wrote:
+> Hi Folks
 > 
-> Sorry for this slightly off-topic post (as I have not tried
-> the latest wirless-dev git version)...
+> I found a problem with the IPW2100/ieee80211 drivers which i think
+> also affects other users of ieee80211 in stock 2.6.24 and earlier.
 > 
-> When trying to set up an ad-hoc interface on iwl4965 (version
-> 1.2.23 according to modinfo) on recently released kernel
-> 2.6.25-rc1 it seems to work at first glance (accepts setting
-> of channel and essid, starts beaconing and receives frames
-> just fine) but the TX part does not work at all. Frames are
-> shown in "tcpdump -i wlan0" but never make it into the air
-> (checked with dedicated machine equipped with an Atheros card running
-> in monitor mode). With 2.6.24 (iwl4965 version 1.1.17) everything
-> worked fine. System is Debian Lenny amd64 on a Thinkpad T61p.
+> The function net/ieee80211/ieee80211_rx.c:update_network() gets called
+> in response to a beacon or a probe response. It is responsible for
+> updating the information we already have about the network described
+> by the beacon or the probe response. At the beginning of the function
+> is:
 > 
-> Unfortunately I do not have the time to debug this
-> intensively, so any hints what to check first are welcome! Did
-> something with the last big API change in mac80211 went wrong?
+>         /* We only update the statistics if they were created by receiving
+>          * the network information on the actual channel the network is on.
+>          *
+>          * This keeps beacons received on neighbor channels from bringing
+>          * down the signal level of an AP. */
+>         if (dst->channel == src->stats.received_channel)
+>                 memcpy(&dst->stats, &src->stats,
+>                        sizeof(struct ieee80211_rx_stats));
+>         else
+>                 IEEE80211_DEBUG_SCAN("Network %s info received "
+>                         "off channel (%d vs. %d)\n", print_mac(mac, src->bssid),
+>                         dst->channel, src->stats.received_channel);
+> 
+> The problem is that the ipw2100 driver never fills in the
+> stats.received_channel. So the RSSI and other link quality parameters
+> never get updated. The RSSI is always the RSSI of the first frame
+> which caused the network record to be created. 
 
-We have not done ad-hoc testing in the recent code. Any debugging you
-can do will be greatly appreciated (anything interesting in your logs?).
-Just to confirm the monitor mode is ok, can you confirm that your
-monitoring machine can see data between a host and AP? We have seen some
-problems with monitoring in iwlwifi so I would like to make sure.
+Can you try the attached patch instead?  stats.received_channel really
+should be filled by the hardware driver itself.  This patch essentially
+does what bcm43xx does.  Can you test it please?
 
-Please load the driver with debugging (debug=0x43fff) and send us what
-you see during data transmission. It may be useful to open a bug at
-bughost.org at this point for us to keep track of the problem.
+Dan
 
-Thanks!
 
-Reinette
+
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index 5bf9e00..8a3ce3a 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -2654,6 +2654,8 @@ static void __ipw2100_rx_process(struct ipw2100_priv *priv)
+ 			stats.mask |= IEEE80211_STATMASK_RSSI;
+ 		stats.freq = IEEE80211_24GHZ_BAND;
+ 
++		stats.received_channel = priv->channel;
++
+ 		IPW_DEBUG_RX("%s: '%s' frame type received (%d).\n",
+ 			     priv->net_dev->name, frame_types[frame_type],
+ 			     stats.len);
+
