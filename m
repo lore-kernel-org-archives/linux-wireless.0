@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34729 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755309AbYBNXJM convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.190]:24146 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbYBVRZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 18:09:12 -0500
+	Fri, 22 Feb 2008 12:25:45 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so307352rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 09:25:42 -0800 (PST)
+Message-ID: <84ac67910802220925v6d44b352r9db15f35022793f0@mail.gmail.com> (sfid-20080222_172855_291027_E6A8F1BF)
+Date: Fri, 22 Feb 2008 17:25:42 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1203693294.7082.26.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] ipw2200: fix ucode assertion for RX queue overrun
-Date: Thu, 14 Feb 2008 14:59:44 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003ABCB43@orsmsx416.amr.corp.intel.com> (sfid-20080214_230916_602047_89C300B0)
-In-Reply-To: <1203029381.6570.1.camel@localhost.localdomain>
-References: <1203029381.6570.1.camel@localhost.localdomain>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	<ipw2100-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <20080221163134.GF3094@tuxdriver.com>
+	 <84ac67910802211007n55569d6j92dee1da198e9b1d@mail.gmail.com>
+	 <20080221182615.GK3094@tuxdriver.com>
+	 <84ac67910802211204y575e893cnd056bbd7442f27ea@mail.gmail.com>
+	 <20080221201811.GM3094@tuxdriver.com>
+	 <84ac67910802211256l66573e79o3abdc256b2d8eaec@mail.gmail.com>
+	 <1203693294.7082.26.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 14, 2008 2:50 PM, Dan Williams  wrote:
+> Can you make a packet dump with a second card in monitor mode?
 
-> Restock the RX queue when there are a lot of unused frames so that the
-> RX ring buffer doesn't overrun, causing a ucode assertion.  Backport
-> of patch "iwlwifi: fix ucode assertion for RX queue overrun".
-> 
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Thank you very much
-
-Reinette
+I will try, but i have never used my second card in monitor mode and i
+don't even know if it supports it.
