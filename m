@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19035 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbYBAFvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 00:51:51 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/2] iwlwifi: initialize ieee80211_channel->hw_value
-Date: Thu, 31 Jan 2008 21:46:40 -0800
-Message-Id: <1201844801-7326-1-git-send-email-reinette.chatre@intel.com> (sfid-20080201_055153_777172_0E99EF3F)
+Received: from nf-out-0910.google.com ([64.233.182.187]:2253 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758955AbYBVTLn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 14:11:43 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so322133nfb.21
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 11:11:43 -0800 (PST)
+To: chris2553@googlemail.com
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+Date: Fri, 22 Feb 2008 20:11:15 +0100
+Cc: Chris Vine <chris@cvine.freeserve.co.uk>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <1203636027.3186.5.camel@boulder.homenet> <200802220739.15366.chris2553@googlemail.com>
+In-Reply-To: <200802220739.15366.chris2553@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802222011.16225.IvDoorn@gmail.com> (sfid-20080222_191149_204631_4DDA399E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+On Friday 22 February 2008, Chris Clayton wrote:
+> On Thursday 21 February 2008, Chris Vine wrote:
+> > On Thu, 2008-02-21 at 23:04 +0000, Chris Clayton wrote:
+> > > On Thursday 21 February 2008, Ivo van Doorn wrote:
+> > > > On Thursday 21 February 2008, Chris Vine wrote:
+> > [snip]
+> > > > > This probably explains the problem another user reported with rt61.
+> > > > 
+> > > > Perhaps something similar like:
+> > > > http://bugzilla.kernel.org/show_bug.cgi?id=10058
+> > > > in there a reference is made to the following patch:
+> > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+> > > > 
+> > > > Does applying that help?
+> > > 
+> > > I'm afraid not, Ivo. The test I ran last night was against 2.6.25.-rc2-git4 and
+> > > that already has this patch applied. Furthermore, I have another card that uses
+> > > the rtl8180 driver and that works reliably. I, therefore, suspect that my problem
+> > > lies within the rt61pci driver or the rt2x00 infrastructure.
+> > 
+> > Does the same happen with 2.0.14 under kernel 2.6.24?
+> 
+> Unfortunately, a 2.6.24.2 tree with the drivers/net/wireless/rt2x00 directory replaced with that from 2.6.25-rc2-git4 doesn't build:
 
-hw_value is being used uninitialized. fix it.
+You need the mac80211 compat  module from Intel. That allows new mac80211 versions to run
+on older kernels. When you use that you need to grab the rt2x00 cvs tarball from:
+http://rt2x00.serialmonkey.com/wiki/index.php/Downloads
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+which allows rt2x00 to be compiled outside of the kernel.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f82aec5..b0f1155 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5388,6 +5388,7 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
- 		geo_ch->center_freq = ieee80211chan2mhz(ch->channel);
- 		geo_ch->max_power = ch->max_power_avg;
- 		geo_ch->max_antenna_gain = 0xff;
-+		geo_ch->hw_value = ch->channel;
- 
- 		if (is_channel_valid(ch)) {
- 			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index a4fa6bf..402cd9a 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5810,6 +5810,7 @@ static int iwl4965_init_geos(struct iwl4965_priv *priv)
- 		geo_ch->center_freq = ieee80211chan2mhz(ch->channel);
- 		geo_ch->max_power = ch->max_power_avg;
- 		geo_ch->max_antenna_gain = 0xff;
-+		geo_ch->hw_value = ch->channel;
- 
- 		if (is_channel_valid(ch)) {
- 			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
--- 
-1.5.3.4
+> In file included from drivers/net/wireless/rt2x00/rt2x00dev.c:29:
+> drivers/net/wireless/rt2x00/rt2x00.h:942: warning: `struct ieee80211_bss_conf' declared inside parameter list
+> drivers/net/wireless/rt2x00/rt2x00.h:942: warning: its scope is only this definition or declaration, which is probably not what you want
+> 
+> [...]
+> 
+> drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_configuration_scheduled':
+> drivers/net/wireless/rt2x00/rt2x00dev.c:484: error: storage size of `bss_conf' isn't known
+> drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: `BSS_CHANGED_ERP_PREAMBLE' undeclared (first use in this function)
+> drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: (Each undeclared identifier is reported only once
+> drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: for each function it appears in.)
+> drivers/net/wireless/rt2x00/rt2x00dev.c:484: warning: unused variable `bss_conf'
+> drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_beacondone_scheduled':
+> drivers/net/wireless/rt2x00/rt2x00dev.c:511: warning: passing arg 2 of `ieee80211_beacon_get' makes integer from pointer without a cast
 
+Ivo
