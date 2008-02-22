@@ -1,117 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gpo1.cc.swin.edu.au ([136.186.1.221]:54732 "EHLO swin.edu.au"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753595AbYBZHQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 02:16:08 -0500
-Date: Tue, 26 Feb 2008 17:47:45 +1100 (EST)
-From: Tim Connors <tconnors@astro.swin.edu.au>
-To: Andrew Morton <akpm@linux-foundation.org>
-cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwl4965 dropping packets and __dev_addr_discard: address leakage!
- da_users=1
-In-Reply-To: <20080225223823.db13a7fe.akpm@linux-foundation.org>
-Message-ID: <Pine.LNX.4.61.0802261740090.21163@pentane.ssi.swin.edu.au> (sfid-20080226_071614_727559_5AD75E56)
-References: <slrn-0.9.7.4-5027-27940-200802261551-tc@hexane.ssi.swin.edu.au>
- <20080225223823.db13a7fe.akpm@linux-foundation.org>
+Received: from fk-out-0910.google.com ([209.85.128.188]:6195 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbYBVHkK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 02:40:10 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so512275fkz.5
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:40:08 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
+Date: Fri, 22 Feb 2008 07:39:15 +0000
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802212304.28731.chris2553@googlemail.com> <1203636027.3186.5.camel@boulder.homenet>
+In-Reply-To: <1203636027.3186.5.camel@boulder.homenet>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802220739.15366.chris2553@googlemail.com> (sfid-20080222_074018_231768_390CD775)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 25 Feb 2008, Andrew Morton wrote:
-
-> On Tue, 26 Feb 2008 16:22:43 +1100 Tim Connors <tconnors@astro.swin.edu.au> wrote:
+On Thursday 21 February 2008, Chris Vine wrote:
+> On Thu, 2008-02-21 at 23:04 +0000, Chris Clayton wrote:
+> > On Thursday 21 February 2008, Ivo van Doorn wrote:
+> > > On Thursday 21 February 2008, Chris Vine wrote:
+> [snip]
+> > > > This probably explains the problem another user reported with rt61.
+> > > 
+> > > Perhaps something similar like:
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=10058
+> > > in there a reference is made to the following patch:
+> > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
+> > > 
+> > > Does applying that help?
+> > 
+> > I'm afraid not, Ivo. The test I ran last night was against 2.6.25.-rc2-git4 and
+> > that already has this patch applied. Furthermore, I have another card that uses
+> > the rtl8180 driver and that works reliably. I, therefore, suspect that my problem
+> > lies within the rt61pci driver or the rt2x00 infrastructure.
 > 
-> > Possibly because of the frequent renegotiating my iwl4965 card has
-> > been making, it has now decided it's not going to pass packets
-> > reliably until presumably next time I reboot.
-> > 
-> > I've noticed messages in syslog that I hadn't seen when things were
-> > working fine.  The problem possibly has only surfaced after rmmodding
-> > the iwl4965 module, then remodding it.  It stays with me through being
-> > removed and modprobed again.  It is being bonded in conjunction with a
-> > physical ethernet, if that is relevant, although I think I reproduced
-> > it when it was on its lonesome.
-> > 
-> > 
-> > Fresh after reboot:
-> > 
-> > Feb 22 09:49:31 dirac kernel: iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-> > Feb 22 09:49:31 dirac kernel: iwl4965: Copyright(c) 2003-2007 Intel Corporation
-> > Feb 22 09:49:31 dirac kernel: ACPI: PCI Interrupt 0000:0c:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-> > Feb 22 09:49:31 dirac kernel: PCI: Setting latency timer of device 0000:0c:00.0 to 64
-> > Feb 22 09:49:31 dirac kernel: iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-> > Feb 22 09:49:31 dirac kernel: ACPI: PCI Interrupt 0000:00:1b.0[A] -> GSI 21 (level, low) -> IRQ 21
-> > Feb 22 09:49:31 dirac kernel: PCI: Setting latency timer of device 0000:00:1b.0 to 64
-> > Feb 22 09:49:31 dirac kernel: iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-> > Feb 22 09:49:31 dirac kernel: phy0: Selected rate control algorithm 'iwl-4965-rs'
-> > 
-> > now finished with it, will be deconfigured and rmmodded:
-> > 
-> > Feb 23 03:05:23 dirac kernel: __dev_addr_discard: address leakage! da_users=1
-> > Feb 23 03:05:23 dirac kernel: ACPI: PCI interrupt for device 0000:0c:00.0 disabled
-> > 
-> > The modprobed again:
-> > 
-> > Feb 23 03:05:35 dirac kernel: iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-> > Feb 23 03:05:35 dirac kernel: iwl4965: Copyright(c) 2003-2007 Intel Corporation
-> > Feb 23 03:05:35 dirac kernel: ACPI: PCI Interrupt 0000:0c:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-> > Feb 23 03:05:35 dirac kernel: PCI: Setting latency timer of device 0000:0c:00.0 to 64
-> > Feb 23 03:05:35 dirac kernel: iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-> > Feb 23 03:05:35 dirac kernel: iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-> > Feb 23 03:05:35 dirac kernel: phy9: Selected rate control algorithm 'iwl-4965-rs'
-> > 
-> > according to lspci -vvv, 0c:00.0 is:
-> > 
-> > 0c:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN Network Connection (rev 61)
-> >         Subsystem: Intel Corporation Unknown device 1120
-> >         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >         Latency: 0, Cache Line Size: 64 bytes
-> >         Interrupt: pin A routed to IRQ 379
-> >         Region 0: Memory at f9ffe000 (64-bit, non-prefetchable) [size=8K]
-> >         Capabilities: [c8] Power Management version 3
-> >                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> >                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-> >         Capabilities: [d0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable+
-> >                 Address: 00000000fee0300c  Data: 4194
-> >         Capabilities: [e0] Express (v1) Endpoint, MSI 00
-> >                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
-> >                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> >                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> >                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-> >                         MaxPayload 128 bytes, MaxReadReq 128 bytes
-> >                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-> >                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-> >                         ClockPM+ Suprise- LLActRep- BwNot-
-> >                 LnkCtl: ASPM L0s Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> >                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> >         Capabilities: [100] Advanced Error Reporting <?>
-> >         Capabilities: [140] Device Serial Number d7-36-9b-ff-ff-e8-13-00
-> >         Kernel driver in use: iwl4965
-> >         Kernel modules: iwl4965
-> 
-> (cc linux-wireless)
-> 
-> What kernel version is this?
-> 
-> Is this a regression from an earlier kenrel version?  If so, which?
+> Does the same happen with 2.0.14 under kernel 2.6.24?
 
-kernel 2.6.24
-version 4.44.1.20 of the firmware.
+Unfortunately, a 2.6.24.2 tree with the drivers/net/wireless/rt2x00 directory replaced with that from 2.6.25-rc2-git4 doesn't build:
 
-The iwl4965 version is fairly ancient in mainline kernel: 1.1.17kds
-Last time I looked, 1.2.24 was the latest version, but I never succeeded 
-in getting it to work (or compile?) in 2.6.24.
+In file included from drivers/net/wireless/rt2x00/rt2x00dev.c:29:
+drivers/net/wireless/rt2x00/rt2x00.h:942: warning: `struct ieee80211_bss_conf' declared inside parameter list
+drivers/net/wireless/rt2x00/rt2x00.h:942: warning: its scope is only this definition or declaration, which is probably not what you want
 
-Don't know whether it's a regression - I've only been excercising my 
-wireless recently, although I'm sure I would have come across it before 
-when I was using 2.6.23 (which also comes version 0.1.15kds of the iwl4965 
-module, by the looks of it).  Haven't rebooted yet since this problem 
-began, just in case this is just a temporary problem that needs debugging.
+[...]
+
+drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_configuration_scheduled':
+drivers/net/wireless/rt2x00/rt2x00dev.c:484: error: storage size of `bss_conf' isn't known
+drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: `BSS_CHANGED_ERP_PREAMBLE' undeclared (first use in this function)
+drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/rt2x00/rt2x00dev.c:494: error: for each function it appears in.)
+drivers/net/wireless/rt2x00/rt2x00dev.c:484: warning: unused variable `bss_conf'
+drivers/net/wireless/rt2x00/rt2x00dev.c: In function `rt2x00lib_beacondone_scheduled':
+drivers/net/wireless/rt2x00/rt2x00dev.c:511: warning: passing arg 2 of `ieee80211_beacon_get' makes integer from pointer without a cast
+
+> 
+> Chris
+> 
+> 
+> 
+> 
 
 -- 
-Tim Connors
-
+Beauty is in the eye of the beerholder.
