@@ -1,69 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:30440 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756881AbYBQQft (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40561 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934306AbYBVOIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 11:35:49 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1391418fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2008 08:35:46 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 01/11] rt2x00: Send frames out with configured TX power
-Date: Sun, 17 Feb 2008 17:31:48 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802171730.44353.IvDoorn@gmail.com>
-In-Reply-To: <200802171730.44353.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200802171731.48259.IvDoorn@gmail.com> (sfid-20080217_163607_809408_3F99F59D)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 22 Feb 2008 09:08:20 -0500
+Message-Id: <20080222111751.106472000@sipsolutions.net> (sfid-20080222_140845_701897_C1EA5BDF)
+References: <20080222111644.183587000@sipsolutions.net>
+Date: Fri, 22 Feb 2008 12:16:51 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 7/8] mac80211: remove STA infos last_ack stuff
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 sends the txpower to use during config(),
-we already store it in the rt2x00_dev structure.
-When writing the descriptor correctly initialize
-the txpower field with this value to make sure
-all frames are send out with the correct tx power.
+These things aren't used and the only possible use is within
+rate control algorithms, however those can, if they need it,
+keep track of it in their private data. last_ack_ms isn't
+even updated so completely useless.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |    4 +---
- drivers/net/wireless/rt2x00/rt73usb.c |    4 +---
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ net/mac80211/debugfs_sta.c      |   29 -----------------------------
+ net/mac80211/rc80211_pid_algo.c |    3 ---
+ net/mac80211/rc80211_simple.c   |    3 ---
+ net/mac80211/sta_info.h         |    4 ----
+ 4 files changed, 39 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 43d5dd3..bc8a6e4 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1500,10 +1500,8 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_desc_write(txd, 2, word);
+--- everything.orig/net/mac80211/sta_info.h	2008-02-22 09:56:08.000000000 +0100
++++ everything/net/mac80211/sta_info.h	2008-02-22 09:57:17.000000000 +0100
+@@ -182,8 +182,6 @@ struct sta_info {
+ 	int last_rssi; /* RSSI of last received frame from this STA */
+ 	int last_signal; /* signal of last received frame from this STA */
+ 	int last_noise; /* noise of last received frame from this STA */
+-	int last_ack_rssi[3]; /* RSSI of last received ACKs from this STA */
+-	unsigned long last_ack;
+ 	int channel_use;
+ 	int channel_use_raw;
  
- 	rt2x00_desc_read(txd, 5, &word);
--/* XXX: removed for now
- 	rt2x00_set_field32(&word, TXD_W5_TX_POWER,
--			   TXPOWER_TO_DEV(control->power_level));
-- */
-+			   TXPOWER_TO_DEV(rt2x00dev->tx_power));
- 	rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
- 	rt2x00_desc_write(txd, 5, word);
+@@ -211,8 +209,6 @@ struct sta_info {
+ 		struct dentry *dir;
+ 		struct dentry *flags;
+ 		struct dentry *num_ps_buf_frames;
+-		struct dentry *last_ack_rssi;
+-		struct dentry *last_ack_ms;
+ 		struct dentry *inactive_ms;
+ 		struct dentry *last_seq_ctrl;
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+--- everything.orig/net/mac80211/debugfs_sta.c	2008-02-22 09:58:02.000000000 +0100
++++ everything/net/mac80211/debugfs_sta.c	2008-02-22 09:58:12.000000000 +0100
+@@ -98,31 +98,6 @@ static ssize_t sta_num_ps_buf_frames_rea
+ }
+ STA_OPS(num_ps_buf_frames);
  
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index af1bb91..63f7604 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1236,10 +1236,8 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_desc_write(txd, 2, word);
+-static ssize_t sta_last_ack_rssi_read(struct file *file, char __user *userbuf,
+-				      size_t count, loff_t *ppos)
+-{
+-	char buf[100];
+-	struct sta_info *sta = file->private_data;
+-	int res = scnprintf(buf, sizeof(buf), "%d %d %d\n",
+-			    sta->last_ack_rssi[0],
+-			    sta->last_ack_rssi[1],
+-			    sta->last_ack_rssi[2]);
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+-}
+-STA_OPS(last_ack_rssi);
+-
+-static ssize_t sta_last_ack_ms_read(struct file *file, char __user *userbuf,
+-				    size_t count, loff_t *ppos)
+-{
+-	char buf[20];
+-	struct sta_info *sta = file->private_data;
+-	int res = scnprintf(buf, sizeof(buf), "%d\n",
+-			    sta->last_ack ?
+-			    jiffies_to_msecs(jiffies - sta->last_ack) : -1);
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+-}
+-STA_OPS(last_ack_ms);
+-
+ static ssize_t sta_inactive_ms_read(struct file *file, char __user *userbuf,
+ 				    size_t count, loff_t *ppos)
+ {
+@@ -311,8 +286,6 @@ void ieee80211_sta_debugfs_add(struct st
  
- 	rt2x00_desc_read(txd, 5, &word);
--/* XXX: removed for now
- 	rt2x00_set_field32(&word, TXD_W5_TX_POWER,
--			   TXPOWER_TO_DEV(control->power_level));
-- */
-+			   TXPOWER_TO_DEV(rt2x00dev->tx_power));
- 	rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
- 	rt2x00_desc_write(txd, 5, word);
- 
+ 	DEBUGFS_ADD(flags);
+ 	DEBUGFS_ADD(num_ps_buf_frames);
+-	DEBUGFS_ADD(last_ack_rssi);
+-	DEBUGFS_ADD(last_ack_ms);
+ 	DEBUGFS_ADD(inactive_ms);
+ 	DEBUGFS_ADD(last_seq_ctrl);
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+@@ -326,8 +299,6 @@ void ieee80211_sta_debugfs_remove(struct
+ {
+ 	DEBUGFS_DEL(flags);
+ 	DEBUGFS_DEL(num_ps_buf_frames);
+-	DEBUGFS_DEL(last_ack_rssi);
+-	DEBUGFS_DEL(last_ack_ms);
+ 	DEBUGFS_DEL(inactive_ms);
+ 	DEBUGFS_DEL(last_seq_ctrl);
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-02-22 09:56:46.000000000 +0100
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-02-22 09:56:52.000000000 +0100
+@@ -282,9 +282,6 @@ static void rate_control_pid_tx_status(v
+ 		sta->tx_num_consecutive_failures++;
+ 		sta->tx_num_mpdu_fail++;
+ 	} else {
+-		sta->last_ack_rssi[0] = sta->last_ack_rssi[1];
+-		sta->last_ack_rssi[1] = sta->last_ack_rssi[2];
+-		sta->last_ack_rssi[2] = status->ack_signal;
+ 		sta->tx_num_consecutive_failures = 0;
+ 		sta->tx_num_mpdu_ok++;
+ 	}
+--- everything.orig/net/mac80211/rc80211_simple.c	2008-02-22 09:58:29.000000000 +0100
++++ everything/net/mac80211/rc80211_simple.c	2008-02-22 09:59:32.000000000 +0100
+@@ -133,9 +133,6 @@ static void rate_control_simple_tx_statu
+ 		sta->tx_num_consecutive_failures++;
+ 		sta->tx_num_mpdu_fail++;
+ 	} else {
+-		sta->last_ack_rssi[0] = sta->last_ack_rssi[1];
+-		sta->last_ack_rssi[1] = sta->last_ack_rssi[2];
+-		sta->last_ack_rssi[2] = status->ack_signal;
+ 		sta->tx_num_consecutive_failures = 0;
+ 		sta->tx_num_mpdu_ok++;
+ 	}
+
 -- 
-1.5.4
 
