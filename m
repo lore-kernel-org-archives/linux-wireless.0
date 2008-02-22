@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:45743 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbYBXX1d (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49007 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753471AbYBVPRZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 18:27:33 -0500
-Received: by an-out-0708.google.com with SMTP id d31so314539and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2008 15:27:32 -0800 (PST)
-Message-ID: <40f31dec0802241527p8263572t67bd9a9c64ae5d4@mail.gmail.com> (sfid-20080224_232736_398059_CDA38CA1)
-Date: Mon, 25 Feb 2008 01:27:32 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com, "Bob Copeland" <me@bobcopeland.com>
-In-Reply-To: <20080224201719.GB20715@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080224042851.GE4426@makis.domain.invalid>
-	 <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com>
-	 <20080224201719.GB20715@infradead.org>
+	Fri, 22 Feb 2008 10:17:25 -0500
+Subject: Re: mac80211: sta info locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080222143745.GB3067@tuxdriver.com> (sfid-20080222_150653_481242_9B66FAA1)
+References: <1203677069.26341.52.camel@johannes.berg>
+	 <20080222143745.GB3067@tuxdriver.com>
+	 (sfid-20080222_150653_481242_9B66FAA1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Tof5O+ZmbQe4aIdQlEi2"
+Date: Fri, 22 Feb 2008 16:16:49 +0100
+Message-Id: <1203693409.7082.30.camel@johannes.berg> (sfid-20080222_151736_254806_EA5B252D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/24, Christoph Hellwig <hch@infradead.org>:
-> On Sun, Feb 24, 2008 at 06:45:33AM +0200, Nick Kossifidis wrote:
->
-> > Sorry, forgot to CC Bob...
->  >
->  > Bob can you test this on your 5242 (together with the next patch) and
->  > see what happens ?
->
->
-> Talking about unsupported chips.  My MacBook Pro has a AR5418, do you
->  guys need any kind of help for this chip, e.g. mmio traces?
->
 
-I've got a MacBook pro myself, we'll work on AR5416/8 sometime in the
-future but we have other things to fix first (e.g. AR5212/5213 +
-RF5111/5112/2112 can reach up to 27Mbit/s while 5413/2413 only go as
-far as 13Mbit/s with ath5k). Thanx for the offer, i'll keep you posted
-if we need anything ;-)
+--=-Tof5O+ZmbQe4aIdQlEi2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> > Hence, I think we can actually get away without more locking if we
+> > protect the flags better. Should we use a spinlock or the atomic
+> > set_bit()/clear_bit()/etc. operations?
+>=20
+> Using the atomic operations seems appropriate to me.
+
+Right, but I figured if we could get rid of the AMPDU spinlocks and just
+use a single one in total (for flags as well) then that'd be of benefit
+too; even with the dynamic allocation strategy (see other mail) we'd not
+need to allocate two more spinlocks for ampdu.
+
+johannes
+
+--=-Tof5O+ZmbQe4aIdQlEi2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR77nX6Vg1VMiehFYAQJ0og//a+QeaEmcKMZgjb3wXUDr+2TP+tJShANi
+NXhbm/F8y70QwvzPv4jIq7XQ9I2m6VHcw4t6WLy2rUSKxn3g8VcrM1xnCxIzMYwO
+cvJDWNsSeFaa5a5KIllMWVAx6tMVmCOR+uqeO8z79VNTbwEf5Xwvih2HZnucPk2u
+X6lvhJ0NQuKHcAGNyi2N2p0m0QsiSJ63r5ndTD4bDoqUyztmLrTw7Yq/h7wP4+1C
+813vTnyyTI0xN4/9C+g4nndHeqQeYcQMVyXxGOM+PeAb58cdC5LbOEVXj1yKOxJr
+nJlKu2HwpmIDmf/BkuPuAToq3iQLel+BwVNlutlRoJLr8CemomCC1kd2ysvfRPKq
+Hp+seFGj+kKtJwb4Rr1NM3L7dbfojIVayUZ2tfXnmijc1dDrwiCAucxFy5+4z3fY
+Z2CqHc6uuwfgzFXQ20P2VXJ/DfOJV7BqGfJEbF2TzXlgvIsIuOGFh1wwBI7pGXHS
+GEWrpkzRccfwDFW9SgyRhgRZ6FW5tBCek5BRhgzXHzpRvMeqJiW2oo0RSeOaBNch
+n6s9iTVjAalbQ1TVnJ/RATM/7CZtFjD6CFCpbV9FeOLL26GmpsF8loq3Kt2RySNz
+/UvgKUXBULqjymjiop0Rzi1Zdb2p0poezLKlQxqpymZG/lbcMgDJJvVKQlSsFpSi
+dpN1r7iRAAU=
+=LEbq
+-----END PGP SIGNATURE-----
+
+--=-Tof5O+ZmbQe4aIdQlEi2--
+
