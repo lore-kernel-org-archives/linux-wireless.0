@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36468 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755434AbYBVQL6 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:4661 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbYBVBfv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 11:11:58 -0500
-Subject: Re: [PATCH 06/13 v2] o11s: support for mesh interfaces in mac80211
-	data path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47be773a.29578c0a.41e9.ffffa95d@mx.google.com> (sfid-20080222_071823_283753_CB1EE72E)
-References: <47be773a.29578c0a.41e9.ffffa95d@mx.google.com>
-	 (sfid-20080222_071823_283753_CB1EE72E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ozfxFUmwGcMkpMrW3Jv/"
-Date: Fri, 22 Feb 2008 17:11:32 +0100
-Message-Id: <1203696692.7082.58.camel@johannes.berg> (sfid-20080222_161207_816974_68B4C7A9)
-Mime-Version: 1.0
+	Thu, 21 Feb 2008 20:35:51 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1169272ugc.16
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 17:35:50 -0800 (PST)
+Reply-To: <cs010101@gmail.com>
+From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Q : zd1211 vendor driver with 802.11a ad-hoc
+Date: Fri, 22 Feb 2008 10:35:41 +0900
+Message-ID: <000301c874f3$3e76b0e0$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080222_013556_643880_C9AEFDE0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ks_c_5601-1987
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+hello~ friends~
 
---=-ozfxFUmwGcMkpMrW3Jv/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+recently, we've tested various wlan nics : atheros 5414, zydas 1211b,
+ralink 2561 (and more)
+
+at the beginning, we did plan to modify the drv source and mac source.
+but because we did not enough time, we've been testing some nics instea=
+d of
+that.
+
+until now,we've known :
+
+1. atheros 5414 : compat-driver - support 802.11a with ad-hoc but happe=
+ned
+packet loss.
+                          madwifi-driver - support 802.11a with ad-hoc =
+and
+no packet loss, but distance between two wlan nics is too short.(we are
+testing 100m to more than 500m but this driver was disconnected in 40m)
+
+2. zydas 1211b : kernel driver - not support 802.11a(X)
+                         vendor driver - I can see the list of 5.xxGhz
+channel but it was some strange, and it was not configured 802.11a with=
+ ad-
+hoc
+
+3. ralink 2561 : it's coming ....^^ after one week
 
 
-> +#ifdef CONFIG_MAC80211_MESH
-> +#include "mesh.h"
-> +#endif
+Hence, at this time, I want to know the difference of two atheros drive=
+r.
+if compat-driver does not happen packet loss, we want to atheros chipse=
+t.
+And in using zydas vendor driver, how can we use 802.11a mode with ad-h=
+oc?
 
-same here.
+and ralink 2561 later......
 
-> @@ -1474,8 +1512,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
->          * EAPOL frames from the local station.
->          */
->         if (unlikely(!is_multicast_ether_addr(hdr.addr1) &&
-> -                    !(sta_flags & WLAN_STA_AUTHORIZED) &&
-> -                    !(ethertype =3D=3D ETH_P_PAE &&
-> +                     !(sta_flags & WLAN_STA_AUTHORIZED) &&
-> +                     !(ethertype =3D=3D ETH_P_PAE &&
->                        compare_ether_addr(dev->dev_addr,
->                                           skb->data + ETH_ALEN) =3D=3D 0)=
-)) {
->  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG=20
 
-?
+thanks.
 
-> +#ifdef CONFIG_MAC80211_MESH
-> +static struct sk_buff *ieee80211_mesh_beacon_get(struct net_device *dev)
-> +{
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +	struct sk_buff *skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 400=
-);
 
-What's 400? No way to know how large it'll get?
 
-johannes
 
---=-ozfxFUmwGcMkpMrW3Jv/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--
+--
+Have a Wonderful Day~~!!
+=B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
+yhkim@corebell.co.kr
+cs010101@gmail.com
++82-42-863-0340
++82-10-6753-0987
+HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu,
+Daejon,  Republic of Korea
+305-701
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR770M6Vg1VMiehFYAQIISA//fI0dEzS9j9/IADF8unpSOqJ6z3/jqI+i
-UPD+eL+FLYaF71VWykqr3wRS37kuEeHzj8K3hOh2RhmlEfqSDkHXSSUC52mQwwhi
-LcGcUQq4q663m9H6OXmlm+oZZ+x5xX4nvqzIlpKTF3BVw7fkAVlg5OAVsJY1SGiq
-AxBafDQB5oR6/4KMYryG8EiBzTTl8k5YTFPg6rmcyXKQ5y9214iSWt4fGrDeQ+/H
-jyszPUiGCTf7F+l2jkhQHXTDxUvKaK81nETOLgz11E+zaqTVEMo3yUq7LfagY8G1
-HJMyF+SjI9sPmpNPBJbWQah6JTFKzkbJwH1LfHp4d+V5tINnwFu+zZDC0EBfXDRx
-dwTlTCDKtuM07a33aPUo44VTFXFpnIHuRHwkpBXJoE3Mlxtp7NRnlTwYFohB2VTe
-PZP47AUhkuM9T1DQ9RC+MxLwAN1kUCkjfChwN4wDfVOeO+YUubX/8lVDqKZ4b3NN
-orm+IDWGMDeApAiLdvEO5Op/FIEo2N5g1WrumPePHCBeF6btJ4DvYHhKd3j691wy
-xwE+LnIvkGkwdH6ihr73Refkk0/S/UXnoFOUvEPWpoDC8wt++/Idnz+umrIPavp3
-iFlZ3dpXwSr6R7nn77XChJUUiRsC7NBOxFvXebbfomhFm7qeKjEDujp7+BAJyGDz
-Bwjvtaeemh0=
-=T+mB
------END PGP SIGNATURE-----
-
---=-ozfxFUmwGcMkpMrW3Jv/--
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
