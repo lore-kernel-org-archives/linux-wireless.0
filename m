@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s26.bay0.hotmail.com ([65.54.246.226]:42288 "EHLO
-	bay0-omc3-s26.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751316AbYBDQJb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 11:09:31 -0500
-Message-ID: <BAY101-W4222A12F4019C98589AB3EC8330@phx.gbl> (sfid-20080204_160935_682904_5E192C54)
-From: Adam Turk <bofh1234@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: RE: rt73 driver doesn't work in 2.6.24
-Date: Mon, 4 Feb 2008 11:09:30 -0500
-Content-Type: text/plain; charset=iso-8859-1
-MIME-Version: 1.0
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50419 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498AbYBVN4q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 08:56:46 -0500
+Subject: mac80211 locking: tasklet vs. non-tasklet
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Tomas Winkler <tomasw@gmail.com>, bruno randolf <br1@einfach.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KF5N6T1ZsOageNf4aBv/"
+Date: Fri, 22 Feb 2008 11:29:05 +0100
+Message-Id: <1203676145.26341.39.camel@johannes.berg> (sfid-20080222_135652_855219_D8443BD0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> This is a problem with mac80211 loading the wep encryption, did you l=
-oad the arc4 module?
->
-> Ivo
+--=-KF5N6T1ZsOageNf4aBv/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I just compiled a new 2.6.24 kernel with arc4 compiled into the kernel =
-and still the driver gives the following output:
+Hi,
 
-rt73usb 1-1:1.0: usb_probe_interface
-rt73usb 1-1:1.0: usb_probe_interface - got id
-ACPI: PCI Interrupt 0000:00:12.0[A] -> GSI 18 (level, low) -> IRQ 19
-snd-ca0106: Model 1006 Rev 00000000 Serial 10061102
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x00=
-00
-phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, =
-rev: 0002 573a.
-phy0: Selected rate control algorithm 'simple'
-phy0: Failed to initialize wep
-phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-rt73usb: probe of 1-1:1.0 failed with error -12
-usbcore: registered new interface driver rt73usb
+Looking through the locking in sta_info I noticed it was completely
+broken especially wrt STA flag updates. However, most other things are
+fine iff the drivers only use EITHER ieee80211_rx_irqsafe and
+ieee80211_tx_status_irqsafe OR __ieee80211_rx and ieee80211_tx_status.
+Also, in the latter case, drivers have to make sure that only one of
+each of those calls is active at the same time, even on an SMP system.
 
-Despite the statement about registering the new interface driver rt73us=
-b, the interface is not created. Can someone please tell me what is wro=
-ng and get a fix into 2.6.24.1?
+The only drivers that currently use the non-irqsafe versions are ath5k
+and iwlwifi, where iwlwifi even mixes between the two groups. ath5k
+seems fine, it defers both to tasklets so only one call can be done at a
+time.
 
-Thanks,
-Adam
+With iwlwifi, however, there is a possibility that it invokes
+ieee80211_tx_status() on one CPU while mac80211's tasklet is processing
+another TX status that was submitted with ieee80211_tx_status_irqsafe().
+Tomas, I think you mentioned that the TX status processing can't
+actually ever call the non-irqsafe version, can we remove that call to
+be sure? :)
 
-_________________________________________________________________
-Need to know the score, the latest news, or you need your Hotmail=AE-ge=
-t your "fix".
-http://www.msnmobilefix.com/Default.aspx-
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alternatively, short of imposing these requirements, we can add new
+locking in mac80211. I don't think that would be good though.
+
+johannes
+
+--=-KF5N6T1ZsOageNf4aBv/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR76j8KVg1VMiehFYAQKA5hAAkXFrGdhZCSyKMxGE7OgVvdjW/WG8e53h
+4/Rmt3XEDLq3+pI50W6fWF04wLW51cKLpFBOVfMyFjeD7zAwKWWMDd6Vc1Ei7HzT
+nk2wJL9rHiHrAw4N6mwQyWQo6f4XpImVATBI8xgjehzG+O5KW7JFw3nA29M7Ftq6
+v9CSWr8kqWi+UREBOGp2iFCxOW/nSIL409pOhZpx0UwMOQzoc4wQX3CeKQ8+7Vch
+iUoJj3ajwwFvR6opuHwTEvVibTiHSo+k4XO/h/TM7zsOe5UccdzN17ml53Ne1UXb
+i4O9Uz07jVoLA4vE16W/LlMOyD86fUTldALbLQbKcf3HbIM29AFoXhoy0Aqh2JBv
+FVg3Cr3JZBdLzHZgcajHix8Azw0o8DD3jfAS/toFeEqby0qfkAqJouPXtl/zZCdt
+9QMQcvrSTxlrOdjp8SaoTSHu0oQI6yFVWYkF9N3JGlPLF2tVnaMXobd7xhrcWkeF
+8T+Ev3Rc0WBxxNLBHga6QdV+nIufkxFHvwKFJATVHiwbtXdhfwuvJ0EOHy9V/8VH
+Gk3itxsEJWLuVs18YITLi1nqWG3ZSbdgPOPKoUzerOs8PPIXV7MnfkGKH9C8lQkQ
+Z+Hnbm5KdhZt3Vgpuz7c01D+DbOfglqT5sEnD9PBN0L4UCYe18aZ4l7eEKCyI4jV
+jr6YKp596Lw=
+=wFJG
+-----END PGP SIGNATURE-----
+
+--=-KF5N6T1ZsOageNf4aBv/--
+
