@@ -1,85 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:59030 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbYBYBeE (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49834 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825AbYBVP56 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 20:34:04 -0500
-Date: Sun, 24 Feb 2008 20:33:45 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, linville@tuxdriver.com, hch@infradead.org
-Subject: [PATCH] ath5k: set pcie flag before calling wakeup
-Message-ID: <20080225013345.GA8833@hash.localnet> (sfid-20080225_013425_819391_9E27BE36)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 22 Feb 2008 10:57:58 -0500
+Subject: Re: [PATCH 01/13 v2] o11s: (nl80211/cfg80211) support for mesh
+	interfaces and mesh paths
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47be7703.20f8720a.1044.6474@mx.google.com> (sfid-20080222_071730_424685_4330467A)
+References: <47be7703.20f8720a.1044.6474@mx.google.com>
+	 (sfid-20080222_071730_424685_4330467A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HYXZU86GUuKqNJg0BzFV"
+Date: Fri, 22 Feb 2008 16:57:46 +0100
+Message-Id: <1203695866.7082.49.camel@johannes.berg> (sfid-20080222_155831_933711_8528D283)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From bd98f2fb1e651dd942a7822e25b73e735b026b6e Mon Sep 17 00:00:00 2001
-From: Bob Copeland <me@bobcopeland.com>
-Date: Sun, 24 Feb 2008 10:30:50 -0500
-Subject: [PATCH] ath5k: set pcie flag before calling wakeup
 
-In ath5k_hw_nic_wakeup we do not reset the pci unit for pcie devices.
-However, we didn't mark devices as pcie until after the first call to
-wakeup causing such devices to hang.
+--=-HYXZU86GUuKqNJg0BzFV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Changes-licensed-under: ISC
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
 
-Fixed whitespace and bracing issues.  Also moved the comment about
-getting MAC/PHY revisions back where it was originally since my moving
-it didn't make any sense.
+On Thu, 2008-02-21 at 20:06 -0800, Luis Carlos Cobo wrote:
+> Added support for mesh id and mesh path operation.
 
- drivers/net/wireless/ath5k/hw.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+Looks great, a few minor comments.
 
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index adcce6f..1888b8d 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -178,13 +178,21 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	else if (ah->ah_version <= AR5K_AR5211)
- 		ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
- 
-+	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+
-+	/* Identify PCI-E cards */
-+	if ((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
-+	    srev >= AR5K_SREV_VER_AR5416)
-+		ah->ah_pcie = true;
-+	else
-+		ah->ah_pcie = false;
-+
- 	/* Bring device out of sleep and reset it's units */
- 	ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
- 	if (ret)
- 		goto err_free;
- 
- 	/* Get MAC, PHY and RADIO revisions */
--	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
- 	ah->ah_mac_srev = srev;
- 	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
- 	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
-@@ -214,14 +222,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 		ah->ah_single_chip = false;
- 	}
- 
--	/* Identify PCI-E cards */
--	if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
--	srev >= AR5K_SREV_VER_AR5416) {
--		ah->ah_pcie = true;
--	} else {
--		ah->ah_pcie = false;
--	}
--
- 	/* Single chip radio */
- 	if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
- 		ah->ah_radio_2ghz_revision = 0;
--- 
-1.5.4.2.182.gb3092
+> +/**
+> + * struct vif_params - describes virtual interface parameters
+> + * @mesh_id: mesh ID to use
+> + * @mesh_id_len: length of the mesh ID
+> + */
+> +struct vif_params {
+> +       u8 *mesh_id;
+> +       int mesh_id_len;
+> +};
 
--- 
-Bob Copeland %% www.bobcopeland.com 
+>	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+> -				    enum nl80211_iftype type, u32 *flags);
+> +				    enum nl80211_iftype type, u32 *flags,
+> +				    struct vif_params *params);
+
+I think we should move flags into the params struct, but we can do that
+in a follow-up patch.
+
+> +	int	(*dump_station)(struct wiphy *wiphy, struct net_device *dev,
+> +			       int idx, u8 *mac, struct station_info *sinfo);
+
+How do you use this? I can see that the "idx" is used to iterate, but
+this cannot possibly provide race-free access because the implementation
+in mac80211's cfg.c needs to give up the lock. I think we need to change
+this to
+
+int (*dump_stations)(wiphy, dev,
+		     void (*callback)(wiphy, dev, data, mac, sinfo),
+		     void *data);
+
+The same seems to apply to nl80211_dump_mpath() and the corresponding
+callback.
+
+An alternative would be to provide start_station_dump() and
+stop_station_dump() callbacks for the locking, or, something I wouldn't
+really like to see, document the interface to lock when idx =3D=3D 0 and
+unlock when the return value is -ENOENT or something...
+
+The rest looks fine.
+
+johannes
+
+--=-HYXZU86GUuKqNJg0BzFV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR77w+aVg1VMiehFYAQKW4A//SCIQdp2t93s49edOr/zBU3T5BsDdqVMq
+gqT0HLo6o+IlhWoo3OXHePP4pR0AFVvg1CqhXPGQy8JgrRpZh7MJwDpM43xCz5oE
+DH9Ufdqh0E6e8XNztE5JRIxF3B8h3Q+pSjXFM+I6XpNM7ja97f4e4zxyr+fBsLlR
+jYGvdssANSyHWyBtwzngCYILyBzQ+DPQ73mO6IzSAfgiNatoyE5omlTgqeZ5XU3O
+qNJoUb3T+MZqrvyj+LbVdCepkG8RWDgneJZVWfTIrgwPqQJg6oyBn1Vyw6dx5dYF
+ELsEGRAafrYw8LRbjg6G5c9U9w8QgmC++j9zP/3sLvoU01H/7rNZCKHrXk90OtGD
+OMKRdGSdN0g9NOJ2RYAf/AeNl5LYonVr2Q7ikE2crIbQI7nhu/YzhGIkHpMwlbtf
+ezdhmNb3c8N0CvNB6EzeGmA/P1/SO/7IyYI9W6AkUetVNQR3pl2TYZQwxqugPHO/
+ySVP6aq20bwjRbJhy+t1V2iEbv3HBtG3bWli+of6e1E2FtTA6GjxfJGIMTehVDG8
++tAA4o+m5h75ILV5rbiU0W7Naidbp+SsA5S4iLFemvwqGLzEANqinJhQo75JjIki
+4EiNF6+9JNimkAGSPVf+3oeiJHwfYMMyrF/IGuYZi/mwKGlLxheAWOiEkUl/ZSD/
+/VLVM43WuqI=
+=hC2m
+-----END PGP SIGNATURE-----
+
+--=-HYXZU86GUuKqNJg0BzFV--
 
