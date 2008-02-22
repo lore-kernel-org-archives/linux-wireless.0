@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60416 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646AbYBTScS (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:24678 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757436AbYBVAvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:32:18 -0500
-Subject: [PATCH] p54: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 12:08:12 +0100
-Message-Id: <1203505692.17534.28.camel@johannes.berg> (sfid-20080220_183222_315117_37370D12)
-Mime-Version: 1.0
+	Thu, 21 Feb 2008 19:51:17 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: fix IBSS code
+Date: Fri, 22 Feb 2008 09:51:02 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Pavel Roskin <proski@gnu.org>
+References: <1203588513.17534.138.camel@johannes.berg> <1203621836.26341.4.camel@johannes.berg> <20080221194307.GL3094@tuxdriver.com>
+In-Reply-To: <20080221194307.GL3094@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802220951.02985.bruno@thinktube.com> (sfid-20080222_005121_182402_B433E48A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a few sparse warnings in p54.
+On Friday 22 February 2008 04:43:07 John W. Linville wrote:
+> On Thu, Feb 21, 2008 at 08:23:56PM +0100, Johannes Berg wrote:
+> > On Thu, 2008-02-21 at 12:07 -0500, John W. Linville wrote:
+> > > On Thu, Feb 21, 2008 at 11:08:33AM +0100, Johannes Berg wrote:
+> > > > This patch fixes two errors introduced by
+> > > >
+> > > >     commit 19d35612f3cd7f60dd9174c0100584e21f5a1025
+> > > >     Author: Bruno Randolf <bruno@thinktube.com>
+> > > >     Date:   Mon Feb 18 11:21:36 2008 +0900
+> > > >
+> > > >         mac80211: enable IBSS merging
+> > > >
+> > > > The first error is an endianness problem that sparse found and
+> > > > the second is a build failure when CONFIG_MAC80211_IBSS_DEBUG
+> > > > is not set.
+> > >
+> > > I think I like Pavel's fix for the CONFIG_MAC80211_IBSS_DEBUG build
+> > > issue better.  Do you want to repsin the sparse warning bit?  If you
+> > > like, I can respin it for you -- just let me know.
+> >
+> > Eh, where do we stand now? Bruno wanted the message to not be rate
+> > limited in the DEBUG case, and the endianness fix is definitely
+> > required.
+>
+> I'll rebase your original patch on top of what is there now.  I.E. the
+> result will be as if I had only applied your patch.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/p54common.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+sorry, i should have tested the patch with IBSS debugging disabled, too :(
 
---- everything.orig/drivers/net/wireless/p54common.c	2008-02-20 11:57:04.000000000 +0100
-+++ everything/drivers/net/wireless/p54common.c	2008-02-20 11:58:04.000000000 +0100
-@@ -59,7 +59,7 @@ static struct ieee80211_channel p54_chan
- 	{ .center_freq = 2484, .hw_value = 14, },
- };
- 
--struct ieee80211_supported_band band_2GHz = {
-+static struct ieee80211_supported_band band_2GHz = {
- 	.channels = p54_channels,
- 	.n_channels = ARRAY_SIZE(p54_channels),
- 	.bitrates = p54_rates,
-@@ -389,7 +389,7 @@ static void p54_rx_frame_sent(struct iee
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
- 		range = (struct memrecord *)&entry->cb;
- 		if (range->start_addr == addr) {
--			struct ieee80211_tx_status status = {{0}};
-+			struct ieee80211_tx_status status;
- 			struct p54_control_hdr *entry_hdr;
- 			struct p54_tx_control_allocdata *entry_data;
- 			int pad = 0;
-@@ -405,6 +405,7 @@ static void p54_rx_frame_sent(struct iee
- 				kfree_skb(entry);
- 				break;
- 			}
-+			memset(&status, 0, sizeof(status));
- 			memcpy(&status.control, range->control,
- 			       sizeof(status.control));
- 			kfree(range->control);
-
-
+bruno
