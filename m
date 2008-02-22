@@ -1,128 +1,418 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:27736 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234AbYBBBsg (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:44941 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbYBVHSP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 20:48:36 -0500
-Received: by an-out-0708.google.com with SMTP id d31so328154and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 17:48:35 -0800 (PST)
-Message-ID: <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com> (sfid-20080202_014839_888735_3E146012)
-Date: Sat, 2 Feb 2008 03:48:34 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: ath5k: reset for 5424-based card
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20080201225345.GA15922@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080131155901.GA7997@hash.localnet>
-	 <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com>
-	 <20080201040358.GA13428@hash.localnet>
-	 <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com>
-	 <20080201225345.GA15922@hash.localnet>
+	Fri, 22 Feb 2008 02:18:15 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so346322wah.23
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:18:15 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 21 Feb 2008 20:10:14 -0800
+Subject: [PATCH 05/13 v2] o11s: mesh.c, support functions for mesh
+Message-ID: <47be7736.09d7720a.37a2.6115@mx.google.com> (sfid-20080222_071818_973520_9B55DA17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/2, Bob Copeland <me@bobcopeland.com>:
-> On Fri, Feb 01, 2008 at 02:09:26PM +0200, Nick Kossifidis wrote:
-> >
-> > Do you have an AP so you can run the testbed-trace as described here ?
-> > http://madwifi.org/wiki/DevDocs/MadwifiTrace
->
-> Yeah I have an AP but it's broadcom based.  I'll try to do the traces this
-> weekend.
->
+The two important features coded in mesh.c are:
 
-Thanx ;-)
+Recently Multicast Cache: in on-demand HWMP, multicast traffic is retransmitted
+by every receiving node. Even though a mesh TTL counter avoids infinite loops,
+it is also necessary to avoid traffic explosion by keeping a cache of multicast
+mesh frame that have been received recently. With this feature, maximum number
+of retransmissions of a multicast frame for the case of N nodes within the range
+of each other would be N. Without it, the maximum number of retransmissions
+would be in the order of N^(MESH_TTL - 1).
 
-> > One more question: can you plz describe card's behaviour with ath5k ?
-> > What error message does it return on reset-failure ?
->
-> Well, with the change from my original post, the card appears to
-> function somewhat but the cpu gets busy and the whole machine crawls.
-> Note, I didn't make any changes for initvals.
->
-> I can associate but not for very long.  dmesg looks like this:
->
-> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
-> NET: Registered protocol family 17
-> ath0: Initial auth_alg=0
-> ath0: authenticate with AP 00:1a:70:da:a9:cd
-> ath0: RX authentication from 00:1a:70:da:a9:cd (alg=0 transaction=2
-> status=0)
-> ath0: authenticated
-> ath0: associate with AP 00:1a:70:da:a9:cd
-> ath0: RX AssocResp from 00:1a:70:da:a9:cd (capab=0x411 status=0 aid=2)
-> ath0: associated
-> ath0: switched to long barker preamble (BSSID=00:1a:70:da:a9:cd)
-> ath5k_hw_get_isr: 0x00000020
-> ath5k_hw_get_isr: 0x00000020
-> ath5k_hw_get_isr: 0x00000020
-> ath5k_hw_get_isr: 0x00000020
+Code to support mesh tables.
 
-Great info ! Your card sends the RXORN interrupt (Rx overrun), at
-least we know what the problem is ;-)
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/mesh.c |  373 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 373 insertions(+), 0 deletions(-)
+ create mode 100644 net/mac80211/mesh.c
 
-How about your signal strength ?
-
-> [repeats a ton]
-> ath0: No ProbeResp from current AP 00:1a:70:da:a9:cd - assume out of
-> range
-
-That's normal since we have rx overrun frames don't reach the driver...
-
-> and sometimes:
-> ath5k phy3: noise floor calibration timeout (2462MHz)
->
-
-That's ok since we haven't added initvals/rfbuffer tables for your
-card so phy isn't initialized propertly (this is the first problem we
-should fix so we can be sure that rx overrun is not phy-related).
-
-> With debug on these were the resets I was seeing, may be normal but I
-> didn't know:
->
-> ath5k trace ath5k_hw_stop_tx_dma:1241
-> ath5k trace ath5k_hw_stop_pcu_recv:2433
-> ath5k trace ath5k_hw_set_rx_filter:2518
-> ath5k trace ath5k_hw_stop_rx_dma:1143
-> ath5k trace ath5k_hw_reset:573
-> ath5k trace ath5k_hw_get_rf_gain:1349
-> ath5k trace ath5k_hw_nic_wakeup:290
-> ath5k trace ath5k_hw_set_power:1058
-> ath5k trace ath5k_hw_set_power:1058
-> ath5k trace ath5k_hw_nic_reset:1011
-> ath5k trace ath5k_hw_txpower:2012
-> ath5k trace ath5k_hw_get_rate_table:401
-> ath5k trace ath5k_hw_disable_pspoll:4342
-> ath5k trace ath5k_hw_set_opmode:2187
-> ath5k trace ath5k_hw_reset_tx_queue:3173
->
-
-Yup on rx overrun card resets but it worries me that get_isr reports
-it, get_isr only prints an interrupt code when it doesn't process it,
-and that's a bug in your case (on some cards rx overrun is fatal and
-we don't handle this right now, well just one more fix to add on my
-pending patches ;-) ).
-
-Try this fix...
-edit drivers/net/wireless/ath5k/hw.c, go to ath5k_hw_get_isr and
-you'll see this...
-
-1472         if (ah->ah_version != AR5K_AR5210) {
-1473                 /*HIU = Host Interface Unit (PCI etc)*/
-1474                 if (unlikely(data & (AR5K_ISR_HIUERR)))
-1475                         *interrupt_mask |= AR5K_INT_FATAL;
-
-
-Change AR5K_ISR_HIUERR with AR5K_ISR_RXORN
-
-This will force a card reset once you receive an RXORN interrupt (will
-report it as FATAL) and will get rid of get_isr message ;-)
-
-
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+new file mode 100644
+index 0000000..36005e8
+--- /dev/null
++++ b/net/mac80211/mesh.c
+@@ -0,0 +1,373 @@
++/*
++ * Copyright (c) 2008 open80211s Ltd.
++ * Authors:    Luis Carlos Cobo <luisca@cozybit.com>
++ * 	       Javier Cardona <javier@cozybit.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include "ieee80211_i.h"
++#include "mesh.h"
++
++#define PP_OFFSET 	1		/* Path Selection Protocol */
++#define PM_OFFSET	5		/* Path Selection Metric   */
++#define CC_OFFSET	9		/* Congestion Control Mode */
++#define CAPAB_OFFSET 17
++#define ACCEPT_PLINKS 0x80
++
++int mesh_allocated;
++static struct kmem_cache *rm_cache;
++
++void ieee80211s_init(void)
++{
++	mesh_pathtbl_init();
++	mesh_allocated = 1;
++	rm_cache = kmem_cache_create("mesh_rmc", sizeof(struct rmc_entry),
++				     0, 0, NULL);
++}
++
++void ieee80211s_stop(void)
++{
++	mesh_pathtbl_unregister();
++	kmem_cache_destroy(rm_cache);
++}
++
++/**
++ * mesh_matches_local - check if the config of a mesh point matches ours
++ *
++ * @ie: information elements of a management frame from the mesh peer
++ * @dev: local mesh interface
++ *
++ * This function checks if the mesh configuration of a mesh point matches the
++ * local mesh configuration, i.e. if both nodes belong to the same mesh network.
++ */
++bool mesh_matches_local(struct ieee802_11_elems *ie, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_if_sta *sta = &sdata->u.sta;
++
++	if (sta->mesh_id_len == ie->mesh_id_len &&
++		memcmp(sta->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
++		memcmp(sta->mesh_pp_id, ie->mesh_config + PP_OFFSET, 4) == 0 &&
++		memcmp(sta->mesh_pm_id, ie->mesh_config + PM_OFFSET, 4) == 0 &&
++		memcmp(sta->mesh_cc_id, ie->mesh_config + CC_OFFSET, 4) == 0)
++	/*
++	 * As support for each feature is added, check for matching
++	 * - On mesh config capabilities
++	 *   - Power Save Support En
++	 *   - Sync support enabled
++	 *   - Sync support active
++	 *   - Sync support required from peer
++	 *   - MDA enabled
++	 * - Power management control on fc
++	 */
++		return true;
++
++	return false;
++}
++
++/**
++ * mesh_peer_accepts_plinks - check if an mp is willing to establish peer links
++ *
++ * @ie: information elements of a management frame from the mesh peer
++ * @dev: local mesh interface
++ */
++bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie,
++			      struct net_device *dev)
++{
++	return (*(ie->mesh_config + CAPAB_OFFSET) & ACCEPT_PLINKS) != 0;
++}
++
++/**
++ * mesh_accept_plinks_update: update accepting_plink in local mesh beacons
++ *
++ * @dev: mesh interface in which mesh beacons are going to be updated
++ */
++void mesh_accept_plinks_update(struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	bool free_plinks;
++
++	/* In case mesh_plink_free_count > 0 and mesh_plinktbl_capacity == 0,
++	 * the mesh interface might be able to establish plinks with peers that
++	 * are already on the table but are not on ESTAB state. However, in
++	 * general the mesh interface is not accepting peer link requests from
++	 * new peers, and that must be reflected in the beacon
++	 */
++	free_plinks = mesh_plink_availables(sdata);
++
++	if (free_plinks != sdata->u.sta.accepting_plinks)
++		ieee80211_sta_timer((unsigned long) sdata);
++}
++
++void mesh_ids_set_default(struct ieee80211_if_sta *sta)
++{
++	u8 def_id[4] = {0x00, 0x0F, 0xAC, 0xff};
++
++	memcpy(sta->mesh_pp_id, def_id, 4);
++	memcpy(sta->mesh_pm_id, def_id, 4);
++	memcpy(sta->mesh_cc_id, def_id, 4);
++}
++
++int mesh_rmc_init(struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int i;
++
++	sdata->u.sta.rmc = kmalloc(sizeof(struct mesh_rmc), GFP_KERNEL);
++	if (!sdata->u.sta.rmc)
++		return -ENOMEM;
++	sdata->u.sta.rmc->idx_mask = RMC_BUCKETS - 1;
++	for (i = 0; i < RMC_BUCKETS; i++)
++		INIT_LIST_HEAD(&sdata->u.sta.rmc->bucket[i].list);
++	return 0;
++}
++
++void mesh_rmc_free(struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mesh_rmc *rmc = sdata->u.sta.rmc;
++	struct rmc_entry *p, *n;
++	int i;
++
++	if (!sdata->u.sta.rmc)
++		return;
++
++	for (i = 0; i < RMC_BUCKETS; i++)
++		list_for_each_entry_safe(p, n, &rmc->bucket[i].list, list) {
++			list_del(&p->list);
++			kmem_cache_free(rm_cache, p);
++		}
++
++	kfree(rmc);
++	sdata->u.sta.rmc = NULL;
++}
++
++/**
++ * mesh_rmc_check - Check frame in recent multicast cache and add if absent.
++ *
++ * @sa:		source address
++ * @mesh_hdr:	mesh_header
++ *
++ * Returns: 0 if the frame is not in the cache, nonzero otherwise.
++ *
++ * Checks using the source address and the mesh sequence number if we have
++ * received this frame lately. If the frame is not in the cache, it is added to
++ * it.
++ */
++int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
++		   struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mesh_rmc *rmc = sdata->u.sta.rmc;
++	u32 seqnum = 0;
++	int entries = 0;
++	u8 idx;
++	struct rmc_entry *p, *n;
++
++	/* Don't care about endianness since only match matters */
++	memcpy(&seqnum, mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
++	idx = mesh_hdr->seqnum[0] & rmc->idx_mask;
++	list_for_each_entry_safe(p, n, &rmc->bucket[idx].list, list) {
++		++entries;
++		if (time_after(jiffies, p->exp_time) ||
++				(entries == RMC_QUEUE_MAX_LEN)) {
++			list_del(&p->list);
++			kmem_cache_free(rm_cache, p);
++			--entries;
++		} else if ((seqnum == p->seqnum)
++				&& (memcmp(sa, p->sa, ETH_ALEN) == 0))
++			return -1;
++	}
++
++	p = kmem_cache_alloc(rm_cache, GFP_ATOMIC);
++	if (!p) {
++		printk(KERN_DEBUG "o11s: could not allocate RMC entry\n");
++		return 0;
++	}
++	p->seqnum = seqnum;
++	p->exp_time = jiffies + RMC_TIMEOUT;
++	memcpy(p->sa, sa, ETH_ALEN);
++	list_add(&p->list, &rmc->bucket[idx].list);
++	return 0;
++}
++
++void mesh_mgmt_ies_add(struct sk_buff *skb, struct net_device *dev)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_supported_band *sband;
++	u8 *pos;
++	int len, i, rate;
++
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	len = sband->n_bitrates;
++	if (len > 8)
++		len = 8;
++	pos = skb_put(skb, len + 2);
++	*pos++ = WLAN_EID_SUPP_RATES;
++	*pos++ = len;
++	for (i = 0; i < len; i++) {
++		rate = sband->bitrates[i].bitrate;
++		*pos++ = (u8) (rate / 5);
++	}
++
++	if (sband->n_bitrates > len) {
++		pos = skb_put(skb, sband->n_bitrates - len + 2);
++		*pos++ = WLAN_EID_EXT_SUPP_RATES;
++		*pos++ = sband->n_bitrates - len;
++		for (i = len; i < sband->n_bitrates; i++) {
++			rate = sband->bitrates[i].bitrate;
++			*pos++ = (u8) (rate / 5);
++		}
++	}
++
++	pos = skb_put(skb, 2 + sdata->u.sta.mesh_id_len);
++	*pos++ = WLAN_EID_MESH_ID;
++	*pos++ = sdata->u.sta.mesh_id_len;
++	if (sdata->u.sta.mesh_id_len)
++		memcpy(pos, sdata->u.sta.mesh_id, sdata->u.sta.mesh_id_len);
++
++	pos = skb_put(skb, 21);
++	*pos++ = WLAN_EID_MESH_CONFIG;
++	*pos++ = MESH_CFG_LEN;
++	/* Version */
++	*pos++ = 1;
++
++	/* Active path selection protocol ID */
++	memcpy(pos, sdata->u.sta.mesh_pp_id, 4);
++	pos += 4;
++
++	/* Active path selection metric ID   */
++	memcpy(pos, sdata->u.sta.mesh_pm_id, 4);
++	pos += 4;
++
++	/* Congestion control mode identifier */
++	memcpy(pos, sdata->u.sta.mesh_cc_id, 4);
++	pos += 4;
++
++	/* Channel precedence:
++	 * Not running simple channel unification protocol
++	 */
++	memset(pos, 0x00, 4);
++	pos += 4;
++
++	/* Mesh capability */
++	sdata->u.sta.accepting_plinks = mesh_plink_availables(sdata);
++	*pos++ = sdata->u.sta.accepting_plinks ? ACCEPT_PLINKS : 0x00;
++	*pos++ = 0x00;
++
++	return;
++}
++
++u32 mesh_table_hash(u8 *addr, struct net_device *dev, struct mesh_table *tbl)
++{
++	/* Use last four bytes of hw addr and interface index as hash index */
++	return jhash_2words(*(u32 *)(addr+2), dev->ifindex, tbl->hash_rnd)
++		& tbl->hash_mask;
++}
++
++u8 mesh_id_hash(u8 *mesh_id, int mesh_id_len)
++{
++	if (!mesh_id_len)
++		return 1;
++	else if (mesh_id_len == 1)
++		return (u8) mesh_id[0];
++	else
++		return (u8) (mesh_id[0] + 2 * mesh_id[1]);
++}
++
++struct mesh_table *mesh_table_alloc(int size_order)
++{
++	int i;
++	struct mesh_table *newtbl;
++
++	newtbl = kmalloc(sizeof(struct mesh_table), GFP_KERNEL);
++	if (!newtbl)
++		return NULL;
++
++	newtbl->hash_buckets = kzalloc(sizeof(struct hlist_head) *
++			(1 << size_order), GFP_KERNEL);
++
++	if (!newtbl->hash_buckets) {
++		kfree(newtbl);
++		return NULL;
++	}
++
++	newtbl->hashwlock = kmalloc(sizeof(spinlock_t) *
++			(1 << size_order), GFP_KERNEL);
++	if (!newtbl->hashwlock) {
++		kfree(newtbl->hash_buckets);
++		kfree(newtbl);
++		return NULL;
++	}
++
++	newtbl->size_order = size_order;
++	newtbl->hash_mask = (1 << size_order) - 1;
++	atomic_set(&newtbl->entries,  0);
++	get_random_bytes(&newtbl->hash_rnd,
++			sizeof(newtbl->hash_rnd));
++	for (i = 0; i <= newtbl->hash_mask; i++)
++		spin_lock_init(&newtbl->hashwlock[i]);
++
++	return newtbl;
++}
++
++void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
++{
++	struct hlist_head *mesh_hash;
++	struct hlist_node *p, *q;
++	int i;
++
++	mesh_hash = tbl->hash_buckets;
++	for (i = 0; i <= tbl->hash_mask; i++) {
++		spin_lock(&tbl->hashwlock[i]);
++		hlist_for_each_safe(p, q, &mesh_hash[i]) {
++			tbl->free_node(p, free_leafs);
++			atomic_dec(&tbl->entries);
++		}
++		spin_unlock(&tbl->hashwlock[i]);
++	}
++	kfree(tbl->hash_buckets);
++	kfree(tbl->hashwlock);
++	kfree(tbl);
++}
++
++struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
++{
++	struct mesh_table *newtbl;
++	struct hlist_head *oldhash;
++	struct hlist_node *p;
++	int err = 0;
++	int i;
++
++	if (atomic_read(&tbl->entries)
++			< tbl->mean_chain_len * (tbl->hash_mask + 1)) {
++		err = -EPERM;
++		goto endgrow;
++	}
++
++	newtbl = mesh_table_alloc(tbl->size_order + 1);
++	if (!newtbl) {
++		err = -ENOMEM;
++		goto endgrow;
++	}
++
++	newtbl->free_node = tbl->free_node;
++	newtbl->mean_chain_len = tbl->mean_chain_len;
++	newtbl->copy_node = tbl->copy_node;
++	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
++
++	oldhash = tbl->hash_buckets;
++	for (i = 0; i <= tbl->hash_mask; i++)
++		hlist_for_each(p, &oldhash[i])
++			tbl->copy_node(p, newtbl);
++
++endgrow:
++	if (err)
++		return NULL;
++	else
++		return newtbl;
++}
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.2.5
+
+
+
