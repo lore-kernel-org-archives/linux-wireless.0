@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:55373 "EHLO smtp4.pp.htv.fi"
+Received: from c60.cesmail.net ([216.154.195.49]:7288 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755992AbYBBVSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 16:18:16 -0500
-Date: Sat, 2 Feb 2008 23:19:01 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: yi.zhu@intel.com, reinette.chatre@intel.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: [2.6 patch] iwl3945-base.c: fix off-by-one errors
-Message-ID: <20080202211901.GI9375@cs181133002.pp.htv.fi> (sfid-20080202_211820_451216_F3B902A4)
+	id S1750743AbYBVFBH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 00:01:07 -0500
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 5/5] at76_usb: make the driver depend on MAC80211
+To: linux-wireless@vger.kernel.org, at76c503a-develop@lists.berlios.de
+Date: Fri, 22 Feb 2008 00:01:07 -0500
+Message-ID: <20080222050107.11158.49112.stgit@dv.roinet.com> (sfid-20080222_050115_004405_72A6450C)
+In-Reply-To: <20080222050044.11158.86655.stgit@dv.roinet.com>
+References: <20080222050044.11158.86655.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes two off-by-one errors resulting in array overflows
-spotted by the Coverity checker.
-
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
 
-I remember having fixed exactly the same bug in iwl4965-base.c some time 
-ago - it might perhaps be possible to share some of the duplicated code 
-between the two drivers?
+ drivers/net/wireless/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4207,13 +4207,13 @@ static u8 ratio2dB[100] = {
-  * Conversion assumes that levels are voltages (20*log), not powers (10*log). */
- int iwl3945_calc_db_from_ratio(int sig_ratio)
- {
--	/* Anything above 1000:1 just report as 60 dB */
--	if (sig_ratio > 1000)
-+	/* 1000:1 or higher just report as 60 dB */
-+	if (sig_ratio >= 1000)
- 		return 60;
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 8f935e0..8d368b4 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -459,7 +459,7 @@ config PCMCIA_ATMEL
  
--	/* Above 100:1, divide by 10 and use table,
-+	/* 100:1 or higher, divide by 10 and use table,
- 	 *   add 20 dB to make up for divide by 10 */
--	if (sig_ratio > 100)
-+	if (sig_ratio >= 100)
- 		return (20 + (int)ratio2dB[sig_ratio/10]);
- 
- 	/* We shouldn't see this */
-
+ config USB_ATMEL
+ 	tristate "Atmel at76c503/at76c505/at76c505a USB cards"
+-	depends on WLAN_80211 && USB
++	depends on MAC80211 && WLAN_80211 && USB
+ 	select FW_LOADER
+ 	---help---
+ 	  Enable support for USB Wireless devices using Atmel at76c503,
