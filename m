@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:22250 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763449AbYBCOvo (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:15991 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795AbYBVHRP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 09:51:44 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1675498fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:51:41 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/19] rt2x00: Add new USB ID to rt2500usb
-Date: Sun, 3 Feb 2008 15:47:02 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802031541.52167.IvDoorn@gmail.com>
-In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802031547.02626.IvDoorn@gmail.com> (sfid-20080203_145147_777259_138A2600)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 22 Feb 2008 02:17:15 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so203984rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:17:13 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 21 Feb 2008 20:05:04 -0800
+Subject: [PATCH 00/13 v2] o11s: mesh interface support for mac80211
+Message-ID: <47be76f9.03b48c0a.025f.54f4@mx.google.com> (sfid-20080222_071727_691746_9DC8AC76)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series of patches provides support for (pre) IEEE 802.11s mesh interfaces.
+Current features include mesh discovery, peer link establishment and on-demand
+HWMP path discovery.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+This is the second round of patches incorporating the comments from Johannes
+Berg and others. The main changes with the first set of patches are:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 764a920..4a7c665 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1876,11 +1876,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	/* Hercules */
- 	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Melco */
-+	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
--
- 	/* MSI */
- 	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
--- 
-1.5.3.8
+ - We are now using airtime link metric, instead of hop count.
+
+ - Mesh peer link table has been discarded, integrating the necessary attributes
+   directly on struct sta_info.
+
+ - We no longer use directly rtnetlink for mesh peer link and mesh paths
+   operation, and use nl80211 instead.
+
+ - We now support mesh network in scan. The part interacting with wext is a bit
+   ugly but works well. I just read the mail from Johannes with a different
+   approach and will consider it.
+
+The pid rate control algorithm has been modified to provide an estimated
+transmission error, probability, necessary for the airtime link metric, and a to
+call mesh_peer_link_broken() if it detects a sta is no longer reachable.
+
+I would like to point out that it looks like we can get duplicate sta_entries,
+or more entries than the maximum allowed, if stas are added at the same time
+through normal network behavior and manual operation through nl80211. Please
+correct me if I am wrong or if it is just that no interface type is supposed to
+allow both kinds of additions.
+
+The code has been tested in a 12-node testbed and has proved to be stable and
+functional. The only supported driver right now is zd1211rw, but changes in the
+driver for mesh functionality are minimal (for the zd1211rw driver most changes
+were just to provide missing functionality such as beaconing support), so we
+expect a wide array of devices to be supported soon.
+
+The patches are to be applied on top of wireless-2.6/everything HEAD. Even
+though I am sure there will be some issues, it would be great if we could
+integrate this as soon as possible to make it easier for other people to
+collaborate and to make my life a bit easier :-)
+
+For more information, please visit: http://o11s.org/devel
+
+Enjoy,
+
+Luis Carlos Cobo
+
 
