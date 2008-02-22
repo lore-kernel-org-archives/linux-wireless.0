@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:38893 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755780AbYBEWAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2008 17:00:35 -0500
-Date: Tue, 5 Feb 2008 22:44:41 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: ipw3945-devel@lists.sourceforge.net, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	kernel list <linux-kernel@vger.kernel.org>
-Subject: ipw3945: not only it periodically dies, it also BUG()s
-Message-ID: <20080205214441.GA1518@elf.ucw.cz> (sfid-20080205_220042_578688_33862EAE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from aliencamel.com ([69.93.184.242]:34731 "EHLO aliencamel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753509AbYBVPYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 10:24:03 -0500
+Received: from [212.238.154.110] (account timothyr HELO [192.168.1.21])
+  by aliencamel.com (CommuniGate Pro SMTP 4.2.10)
+  with ESMTP-TLS id 56141775 for linux-wireless@vger.kernel.org; Fri, 22 Feb 2008 14:24:01 +0000
+Subject: does not build iplwifi3945 in my 2.6.24 kernel.
+From: Tim Richardson <tim@tim-richardson.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 22 Feb 2008 15:24:09 +0100
+Message-Id: <1203690249.9268.5.camel@d420> (sfid-20080222_152408_802004_483C21F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
 
-Under not-even-high load, it periodically restarts:
+I downloaded the tarball today.
 
-Feb  5 21:08:50 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000008.
-Feb  5 21:08:52 amd kernel: iwl3945: Can't stop Rx DMA.
-Feb  5 21:12:51 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000008.
-Feb  5 21:12:53 amd kernel: iwl3945: Can't stop Rx DMA.
-Feb  5 21:21:44 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000008.
-Feb  5 21:21:46 amd kernel: iwl3945: Can't stop Rx DMA.
-Feb  5 21:27:32 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000008.
-Feb  5 21:27:34 amd kernel: iwl3945: Can't stop Rx DMA.
-Feb  5 21:41:29 amd -- MARK --
-Feb  5 22:01:29 amd -- MARK --
-Feb  5 22:09:11 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000008.
-Feb  5 22:09:12 amd kernel: iwl3945: Can't stop Rx DMA.
+I want to build it against Debian 2.6.24
 
-...I've reported this before, with full debugging. Not sure if
-anything happened.
+I get these errors from make
 
-Now, I got BUG() in iwl3945-base.c: 3824
 
-static void iwl3945_tx_cmd_complete(struct iwl3945_priv *priv,
-                                struct iwl3945_rx_mem_buffer *rxb)
-{
-        struct iwl3945_rx_packet *pkt = (struct iwl3945_rx_packet
-*)rxb->skb->data;
-        u16 sequence = le16_to_cpu(pkt->hdr.sequence);
-        int txq_id = SEQ_TO_QUEUE(sequence);
-        int index = SEQ_TO_INDEX(sequence);
-        int huge = sequence & SEQ_HUGE_FRAME;
-        int cmd_index;
-        struct iwl3945_cmd *cmd;
+/home/tim/compat-wireless-2.6/drivers/net/wireless/ipw2200.c: In
+function =E2=80=98ipw_tx_skb=E2=80=99:
+/home/tim/compat-wireless-2.6/drivers/net/wireless/ipw2200.c:10352:
+error: implicit declaration of function =E2=80=98le32_add_cpu=E2=80=99
+make[3]: ***
+[/home/tim/compat-wireless-2.6/drivers/net/wireless/ipw2200.o] Error 1
+make[2]: *** [/home/tim/compat-wireless-2.6/drivers/net/wireless] Error
+2
+make[1]: *** [_module_/home/tim/compat-wireless-2.6] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.24-1-686'
+make: *** [modules] Error 2
 
-        /* If a Tx command is being handled and it isn't in the actual
-         * command queue then there a command routing bug has been
-introduced
-         * in the queue management code. */
-        if (txq_id != IWL_CMD_QUEUE_NUM)
-                IWL_ERROR("Error wrong command queue %d command id
-0x%X\n",
-                          txq_id, pkt->hdr.cmd);
-        BUG_ON(txq_id != IWL_CMD_QUEUE_NUM);
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here. Any ideas?
-									Pavel
+Am I doing something wrong?
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+regards
+Tim
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
