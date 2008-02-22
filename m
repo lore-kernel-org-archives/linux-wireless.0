@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:25405 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715AbYBATHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 14:07:43 -0500
-Received: by an-out-0708.google.com with SMTP id d31so297766and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 11:07:42 -0800 (PST)
-Message-ID: <40f31dec0802011107n3389bbc5l2f43be0f6111d222@mail.gmail.com> (sfid-20080201_190746_267980_DE11F03F)
-Date: Fri, 1 Feb 2008 21:07:42 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless mini-summit agenda proposals?
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1201882577.4188.68.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4182 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752850AbYBVPHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 10:07:20 -0500
+Date: Fri, 22 Feb 2008 09:34:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211: STA info size
+Message-ID: <20080222143409.GA3067@tuxdriver.com> (sfid-20080222_150738_689668_5F34E6AD)
+References: <1203675307.26341.29.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201882577.4188.68.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1203675307.26341.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/1, Johannes Berg <johannes@sipsolutions.net>:
->
-> > What discussions pertinent to Linux wireless development do
-> > you want to see?
->
-> QoS/multiqueue rework.
->
+On Fri, Feb 22, 2008 at 11:15:07AM +0100, Johannes Berg wrote:
 
-Plzzz someone explain how WMM is implemented in mac80211 and suggest
-some tests so we can be sure we implement it correctly, we really want
-to add multiqueue support in ath5k ;-)
+> I was just reorganising struct sta_info to clarify the locking (will
+> send another mail about that) and noticed that due to the HT stuff, each
+> STA info struct currently (after my reorg) takes 2432 bytes. Almost 2000
+> of those are in struct sta_ampdu_mlme which is most likely not used for
+> most STAs.
+> 
+> Do you think that is too much memory per station? It'd probably be
+> possible to allocate the sta_ampdu_mlme dynamically when needed, no?
 
-Also it would be great if someone explained what's new in
-802.11n/802.11s and what drivers are expected to do (i think on the
-previous summit there was a talk about encrypted management frames, do
-we have a plan for that ?).
+My count was closer to 1.5k, but I may have missed something.
+Either way, that seems a little big to me.  A dynamic allocation
+strategy seems appropriate to me.  Anyone disagree?
 
-
+John
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville
+linville@tuxdriver.com
