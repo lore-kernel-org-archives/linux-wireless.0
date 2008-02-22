@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from root-server.richard-scherping.de ([217.160.107.144]:41602 "EHLO
-	p15125984.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617AbYBNS1B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 13:27:01 -0500
-Message-ID: <47B487EE.3030401@scherping.de> (sfid-20080214_182705_950177_A17CC1D1)
-Date: Thu, 14 Feb 2008 19:26:54 +0100
-From: Richard Scherping <richard@scherping.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4181 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751392AbYBVPGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 10:06:44 -0500
+Date: Fri, 22 Feb 2008 09:37:45 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211: sta info locking
+Message-ID: <20080222143745.GB3067@tuxdriver.com> (sfid-20080222_150653_481242_9B66FAA1)
+References: <1203677069.26341.52.camel@johannes.berg>
 MIME-Version: 1.0
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A461BF@orsmsx416.amr.corp.intel.com> <47B2268D.7060205@scherping.de> <47B2B332.1030404@scherping.de> <D936D925018D154694D8A362EEB0892003A7FB3E@orsmsx416.amr.corp.intel.com>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003A7FB3E@orsmsx416.amr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1203677069.26341.52.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chatre, Reinette schrieb:
-> On Wednesday, February 13, 2008 1:07 AM, Richard Scherping  wrote:
-> 
->>> iwl4965: I iwl4965_tx_skb Dropping - !iwl4965_is_associated:
->>> iwl4965_is_associated(priv)=1; priv->assoc_id=0;
->>> priv->assoc_station_added=1
->> Simply uncommenting the check for priv->assoc_id to be
->> non-zero (line 2938 in iwl4965-base.c) made ad-hoc working.
->> Thanks for helping me to find this!
->> Does this change have any negative side effects?
->>
->> Richard
-> 
-> Could you please try the attached patch instead?
+On Fri, Feb 22, 2008 at 11:44:29AM +0100, Johannes Berg wrote:
 
-Works for me (iwl4965). Thanks!
+> Hence, I think we can actually get away without more locking if we
+> protect the flags better. Should we use a spinlock or the atomic
+> set_bit()/clear_bit()/etc. operations?
 
-Richard
+Using the atomic operations seems appropriate to me.
+
+-- 
+John W. Linville
+linville@tuxdriver.com
