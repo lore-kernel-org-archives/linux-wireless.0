@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753142AbYBNOCk (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:15991 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981AbYBVHRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 09:02:40 -0500
-Subject: [PATCH] mac80211: fix ecw2cw brain-damage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 14 Feb 2008 00:30:35 +0100
-Message-Id: <1202945435.8931.102.camel@johannes.berg> (sfid-20080214_140247_937386_4C9351D5)
-Mime-Version: 1.0
+	Fri, 22 Feb 2008 02:17:20 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so203984rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2008 23:17:19 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 21 Feb 2008 20:05:04 -0800
+Subject: [PATCH 00/13 v2] o11s: mesh interface support for mac80211
+Message-ID: <47be76fe.13578c0a.6fe5.50a1@mx.google.com> (sfid-20080222_071727_690417_001BBB05)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This brain-damaged code just bothers me, fix it.
+This series of patches provides support for (pre) IEEE 802.11s mesh interfaces.
+Current features include mesh discovery, peer link establishment and on-demand
+HWMP path discovery.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_sta.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+This is the second round of patches incorporating the comments from Johannes
+Berg and others. The main changes with the first set of patches are:
 
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-14 00:23:04.447865289 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-02-14 00:24:11.977817546 +0100
-@@ -227,12 +227,7 @@ static void ieee802_11_parse_elems(u8 *s
- 
- static int ecw2cw(int ecw)
- {
--	int cw = 1;
--	while (ecw > 0) {
--		cw <<= 1;
--		ecw--;
--	}
--	return cw - 1;
-+	return (1 << ecw) - 1;
- }
- 
- static void ieee80211_sta_wmm_params(struct net_device *dev,
+ - We are now using airtime link metric, instead of hop count.
+
+ - Mesh peer link table has been discarded, integrating the necessary attributes
+   directly on struct sta_info.
+
+ - We no longer use directily rtnetlink for mesh peer link and mesh paths
+   operation, and use nl80211 instead.
+
+ - We now support mesh network in scan. The part interacting with wext is a bit
+   ugly but works well. I just read the mail from Johannes with a different
+   approach and will consider it.
+
+The pid rate control algorithm has been modified to provide an estimated
+transmission error, probability, necessary for the airtime link metric, and a to
+call mesh_peer_link_broken() if it detects a sta is no longer reachable.
+
+I would like to point out that it looks like we can get duplicate sta_entries,
+or more entries than the maximum allowed, if stas are added at the same time
+through normal network behaviour and manual operation through nl80211. Please
+correct me if I am wrong or if it is just that no interface type is supposed to
+allow both kinds of additions.
+
+The code has been tested in a 12-node testbed and has proved to be stable and
+functional. We would like to get it integrated as soon as possible so it can get
+more widespread testing and (hopefully) contributions. Unfortunately we have run
+out of funds for this project (we are looking for sponsors!) so work on the
+project from our side might slow down. At the very least, we are commited to
+fixing bugs and tracking changes introduced by newer versions of the 11s draft.
+
+The only supported driver right now is zd1211rw, but changes in the driver for
+mesh functionality are minimal (for the zd1211rw driver most changes were just
+to provide missing functionality such as beaconing support), so we expect a wide
+array of devices to be supported soon.
+
+The patches are to be applied on top of wireless-2.6/everything HEAD. Even
+though I am sure there will be some issues, it would be great if we could
+integrate this as soon as possible to make it easier for other people to
+collaborate and to make my life a bit easier :-)
+
+For more information, please visit: http://o11s.org/devel
+
+Enjoy,
+
+Luis Carlos Cobo
 
 
