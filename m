@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:52247 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1764505AbYBZV4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 16:56:55 -0500
-Date: Tue, 26 Feb 2008 22:44:10 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "Ivo Van Doorn" <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Chris Clayton" <chris2553@googlemail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Message-ID: <20080226224410.4b9216e5@morte> (sfid-20080226_215659_669045_F2AE520F)
-In-Reply-To: <a32f33a40802261230o1743773dle38684609d702959@mail.gmail.com>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	<200802252104.32416.chris2553@googlemail.com>
-	<a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
-	<200802261911.39577.chris2553@googlemail.com>
-	<20080226194838.GD3013@tuxdriver.com>
-	<a32f33a40802261230o1743773dle38684609d702959@mail.gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434AbYBVQL6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2008 11:11:58 -0500
+Subject: Re: [PATCH 06/13 v2] o11s: support for mesh interfaces in mac80211
+	data path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47be773a.29578c0a.41e9.ffffa95d@mx.google.com> (sfid-20080222_071823_283753_CB1EE72E)
+References: <47be773a.29578c0a.41e9.ffffa95d@mx.google.com>
+	 (sfid-20080222_071823_283753_CB1EE72E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ozfxFUmwGcMkpMrW3Jv/"
+Date: Fri, 22 Feb 2008 17:11:32 +0100
+Message-Id: <1203696692.7082.58.camel@johannes.berg> (sfid-20080222_161207_816974_68B4C7A9)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 26 Feb 2008 21:30:38 +0100
-"Ivo Van Doorn" <ivdoorn@gmail.com> wrote:
 
-> rt2x00 is known to be less sensitive then the legacy drivers, scanning
-> produces less and more inconsistent results (Not all AP's are reported,
-> even when that AP has a high rssi), and the reported RSSI is often
-> much lower then expected with the distance to the AP.
-> I have compared many register dumps, but have never managed to
-> find a real register setting that might cause this. So what might be
-> the problem is that rt2x00 is not reporting the RSSI correctly to mac80211.
-
-No, we don't care at all about RSSI in rc80211-pid.
-
-> I have to admit that I haven't looked into the 'pid' algorithm closely,
-> but could it be that some fields in the tx status report upon txdone
-> are being treated as "very important" while the driver doesn't report it
-> (For example ack signal strength)?
-
-The only important thing drivers should report back to mac80211 are ACKed
-frames. In rc80211-pid (and it's just the same in rc80211-simple) the only
-inputs from mac80211 are succesfully (re)transmitted frames and failed
-frames.
+--=-ozfxFUmwGcMkpMrW3Jv/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Ciao
-Stefano
+> +#ifdef CONFIG_MAC80211_MESH
+> +#include "mesh.h"
+> +#endif
+
+same here.
+
+> @@ -1474,8 +1512,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+>          * EAPOL frames from the local station.
+>          */
+>         if (unlikely(!is_multicast_ether_addr(hdr.addr1) &&
+> -                    !(sta_flags & WLAN_STA_AUTHORIZED) &&
+> -                    !(ethertype =3D=3D ETH_P_PAE &&
+> +                     !(sta_flags & WLAN_STA_AUTHORIZED) &&
+> +                     !(ethertype =3D=3D ETH_P_PAE &&
+>                        compare_ether_addr(dev->dev_addr,
+>                                           skb->data + ETH_ALEN) =3D=3D 0)=
+)) {
+>  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG=20
+
+?
+
+> +#ifdef CONFIG_MAC80211_MESH
+> +static struct sk_buff *ieee80211_mesh_beacon_get(struct net_device *dev)
+> +{
+> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> +	struct sk_buff *skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 400=
+);
+
+What's 400? No way to know how large it'll get?
+
+johannes
+
+--=-ozfxFUmwGcMkpMrW3Jv/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR770M6Vg1VMiehFYAQIISA//fI0dEzS9j9/IADF8unpSOqJ6z3/jqI+i
+UPD+eL+FLYaF71VWykqr3wRS37kuEeHzj8K3hOh2RhmlEfqSDkHXSSUC52mQwwhi
+LcGcUQq4q663m9H6OXmlm+oZZ+x5xX4nvqzIlpKTF3BVw7fkAVlg5OAVsJY1SGiq
+AxBafDQB5oR6/4KMYryG8EiBzTTl8k5YTFPg6rmcyXKQ5y9214iSWt4fGrDeQ+/H
+jyszPUiGCTf7F+l2jkhQHXTDxUvKaK81nETOLgz11E+zaqTVEMo3yUq7LfagY8G1
+HJMyF+SjI9sPmpNPBJbWQah6JTFKzkbJwH1LfHp4d+V5tINnwFu+zZDC0EBfXDRx
+dwTlTCDKtuM07a33aPUo44VTFXFpnIHuRHwkpBXJoE3Mlxtp7NRnlTwYFohB2VTe
+PZP47AUhkuM9T1DQ9RC+MxLwAN1kUCkjfChwN4wDfVOeO+YUubX/8lVDqKZ4b3NN
+orm+IDWGMDeApAiLdvEO5Op/FIEo2N5g1WrumPePHCBeF6btJ4DvYHhKd3j691wy
+xwE+LnIvkGkwdH6ihr73Refkk0/S/UXnoFOUvEPWpoDC8wt++/Idnz+umrIPavp3
+iFlZ3dpXwSr6R7nn77XChJUUiRsC7NBOxFvXebbfomhFm7qeKjEDujp7+BAJyGDz
+Bwjvtaeemh0=
+=T+mB
+-----END PGP SIGNATURE-----
+
+--=-ozfxFUmwGcMkpMrW3Jv/--
+
