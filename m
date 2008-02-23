@@ -1,30 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43344 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbYBXMhV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42857 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755087AbYBWOVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 07:37:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Ahmed Ammar" <b33fc0d3@gmail.com>
-Subject: Re: b43 (H/W 4306 Rev. 03)
-Date: Sun, 24 Feb 2008 13:36:56 +0100
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com> <84ac67910802231156t29724612me8adb74d05bfede8@mail.gmail.com> <84ac67910802240403l3de7dd0fib949a0b3a78f1776@mail.gmail.com>
-In-Reply-To: <84ac67910802240403l3de7dd0fib949a0b3a78f1776@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802241336.56277.mb@bu3sch.de> (sfid-20080224_123724_193861_6E0A7464)
+	Sat, 23 Feb 2008 09:21:30 -0500
+Message-Id: <20080223141703.194775000@sipsolutions.net> (sfid-20080223_142138_743612_1D842388)
+Date: Sat, 23 Feb 2008 15:17:03 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 00/18] mac80211 802.11s networking code
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 24 February 2008 13:03:15 Ahmed Ammar wrote:
-> I've found out that this seems to be a pci only issue, other users
-> with the exact same PHY revision on cardbus report b43 working fine.
+This is a cleaned up version of Luis's 11s code which doesn't break
+git bisect, compiles cleanly and ultimately has a lot less #ifdefs.
 
-So, can you tell us the revision?
+Let's merge this code and fix the remaining problems later.
 
--- 
-Greetings Michael.
+Notably, this marks 11s as BROKEN because of endianness problems in it.
+
+John, this applies after the following patches:
+ * mac80211: fix IBSS code
+ * mac80211: rework TX filtered frame code
+ * mac80211: atomically check whether STA exists already
+ * mac80211: fix debugfs_sta print_mac() warning
+ * mac80211: Disallow concurrent IBSS/STA mode interfaces
+
+Please apply those first and then this set, I will respin my sta_info
+rework on top of these patches (it needs bugfixes anyway.)
+
+johannes
+
