@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:47974 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450AbYBYTfL (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:10228 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754570AbYBWHkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:35:11 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so937334wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:35:11 -0800 (PST)
-Subject: Re: [PATCH 11/13 v2] o11s: support for on-demand Hybrid Wireless
-	Mesh Protocol
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203967819.13162.136.camel@johannes.berg>
-References: <47be77ee.02098c0a.5eba.ffff81ef@mx.google.com>
-	 (sfid-20080222_072128_730595_F951750B)  <1203697819.7082.75.camel@johannes.berg>
-	 <1203967829.6929.16.camel@localhost>
-	 (sfid-20080225_192854_280269_CEC357A7)  <1203967819.13162.136.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 11:36:50 -0800
-Message-Id: <1203968210.6929.22.camel@localhost> (sfid-20080225_193519_540352_338C7C73)
-Mime-Version: 1.0
+	Sat, 23 Feb 2008 02:40:43 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so444040rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2008 23:40:42 -0800 (PST)
+Message-ID: <84ac67910802222340p3690e7c4o47898ee89976a762@mail.gmail.com> (sfid-20080223_074048_312554_9EFEA2E7)
+Date: Sat, 23 Feb 2008 07:40:42 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200802230718.00960.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <1203693294.7082.26.camel@johannes.berg>
+	 <84ac67910802220925v6d44b352r9db15f35022793f0@mail.gmail.com>
+	 <200802230718.00960.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-02-25 at 20:30 +0100, Johannes Berg wrote:
-> What sort of value is this?
+> Is the AP an IEEE 802.11b-only AP that doesn't support IEEE 802.11g?
+>
 
-Channel access overhead, in hundreths of TUs. 
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+No, this is an IEEE 802.11g AP.
