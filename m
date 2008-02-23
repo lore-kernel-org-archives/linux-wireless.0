@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:7423 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091AbYBOWID (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:41074 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754259AbYBWUo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 17:08:03 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1040892pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 14:08:01 -0800 (PST)
-Message-ID: <43e72e890802151408g35fa2e49r5eb8557e4a5bbce4@mail.gmail.com> (sfid-20080215_220808_247717_03837F94)
-Date: Fri, 15 Feb 2008 17:08:00 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 2/3] WDEV, ath5k, don't return int from bool function
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	"Nick Kossifidis" <mickflemm@gmail.com>
-In-Reply-To: <1203109133-32217-2-git-send-email-jirislaby@gmail.com>
+	Sat, 23 Feb 2008 15:44:29 -0500
+Date: Sat, 23 Feb 2008 21:43:53 +0100
+From: Sebastian Siewior <netdev@ml.breakpoint.cc>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sebastian Siewior <netdev@ml.breakpoint.cc>,
+	Masakazu Mokuno <mokuno@sm.sony.co.jp>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] [PS3] gelic wireless driver needs MAC80211 support
+Message-ID: <20080223204353.GE7135@Chamillionaire.breakpoint.cc> (sfid-20080223_204443_513647_6EF77ABA)
+References: <20080223193517.GA6704@Chamillionaire.breakpoint.cc> <47C0815F.7020100@pobox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1203109133-32217-1-git-send-email-jirislaby@gmail.com>
-	 <1203109133-32217-2-git-send-email-jirislaby@gmail.com>
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <47C0815F.7020100@pobox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 15, 2008 at 3:58 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+* Jeff Garzik | 2008-02-23 15:26:07 [-0500]:
 
->  -static bool
->  +static int
->   ath5k_hw_setup_xr_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
->         unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2, u_int tx_tries2,
->         unsigned int tx_rate3, u_int tx_tries3)
->  @@ -3773,10 +3773,10 @@ ath5k_hw_setup_xr_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
->
->   #undef _XTX_TRIES
->
->  -               return true;
->  +               return 1;
->         }
->
->  -       return false;
->  +       return 0;
->   }
+> Given that this is straying clearly into wireless territory, I think the 
+> linux-wireless folks and John Linville (wireless maintainer) are 
+> appropriate patch targets.
+Okey, I'm going to forward the pach.
 
-Shouldn't we then treat 0 as OK?
+> 	Jeff
 
-  Luis
+Sebastian
