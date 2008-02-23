@@ -1,66 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60425 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42913 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206AbYBTSc3 (ORCPT
+	with ESMTP id S1756012AbYBWOWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:32:29 -0500
-Subject: [PATCH] zd1211rw: fix sparse warnings
+	Sat, 23 Feb 2008 09:22:12 -0500
+Message-Id: <20080223142016.559382000@sipsolutions.net> (sfid-20080223_142217_660205_43F5BDBC)
+References: <20080223141703.194775000@sipsolutions.net>
+Date: Sat, 23 Feb 2008 15:17:18 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 12:09:25 +0100
-Message-Id: <1203505765.17534.31.camel@johannes.berg> (sfid-20080220_183232_963470_DA03D33C)
+Cc: linux-wireless@vger.kernel.org,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 15/18] mac80211: complete the mesh (interface handling) code
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This silences sparse when run on zd1211rw.
+From: Luis Carlos Cobo <luisca@cozybit.com>
 
+This completes the mesh interface handling code and a few other
+bits about the mac80211 module.
+
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ net/mac80211/ieee80211.c |   28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
---- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-02-20 11:58:51.000000000 +0100
-+++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-02-20 11:59:36.000000000 +0100
-@@ -345,11 +345,14 @@ void zd_mac_tx_failed(struct ieee80211_h
- {
- 	struct sk_buff_head *q = &zd_hw_mac(hw)->ack_wait_queue;
- 	struct sk_buff *skb;
--	struct ieee80211_tx_status status = {{0}};
-+	struct ieee80211_tx_status status;
+--- everything.orig/net/mac80211/ieee80211.c	2008-02-23 14:53:02.000000000 +0100
++++ everything/net/mac80211/ieee80211.c	2008-02-23 14:53:32.000000000 +0100
+@@ -26,6 +26,9 @@
  
- 	skb = skb_dequeue(q);
- 	if (skb == NULL)
- 		return;
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
++#ifdef CONFIG_MAC80211_MESH
++#include "mesh.h"
++#endif
+ #include "wep.h"
+ #include "wme.h"
+ #include "aes_ccm.h"
+@@ -138,9 +141,15 @@ static void ieee80211_master_set_multica
+ 
+ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ {
++	int meshhdrlen;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 +
-+	memset(&status, 0, sizeof(status));
++	meshhdrlen = (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) ? 5 : 0;
 +
- 	tx_status(hw, skb, &status, 0);
+ 	/* FIX: what would be proper limits for MTU?
+ 	 * This interface uses 802.3 frames. */
+-	if (new_mtu < 256 || new_mtu > IEEE80211_MAX_DATA_LEN - 24 - 6) {
++	if (new_mtu < 256 ||
++		new_mtu > IEEE80211_MAX_DATA_LEN - 24 - 6 - meshhdrlen) {
+ 		printk(KERN_WARNING "%s: invalid MTU %d\n",
+ 		       dev->name, new_mtu);
+ 		return -EINVAL;
+@@ -441,6 +450,9 @@ static int ieee80211_stop(struct net_dev
+ 		ieee80211_configure_filter(local);
+ 		netif_tx_unlock_bh(local->mdev);
+ 		break;
++	case IEEE80211_IF_TYPE_MESH_POINT:
++		sta_info_flush(local, dev);
++		/* fall through */
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		sdata->u.sta.state = IEEE80211_DISABLED;
+@@ -926,6 +938,11 @@ static int __ieee80211_if_config(struct 
+ 		conf.bssid = sdata->u.sta.bssid;
+ 		conf.ssid = sdata->u.sta.ssid;
+ 		conf.ssid_len = sdata->u.sta.ssid_len;
++#ifdef CONFIG_MAC80211_MESH
++	} else if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT) {
++		conf.beacon = beacon;
++		ieee80211_start_mesh(dev);
++#endif
+ 	} else if (sdata->vif.type == IEEE80211_IF_TYPE_AP) {
+ 		conf.ssid = sdata->u.ap.ssid;
+ 		conf.ssid_len = sdata->u.ap.ssid_len;
+@@ -938,6 +955,11 @@ static int __ieee80211_if_config(struct 
+ 
+ int ieee80211_if_config(struct net_device *dev)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT &&
++	    (local->hw.flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE))
++		return ieee80211_if_config_beacon(dev);
+ 	return __ieee80211_if_config(dev, NULL, NULL);
  }
  
-@@ -374,7 +377,8 @@ void zd_mac_tx_to_dev(struct sk_buff *sk
- 		if (unlikely(error ||
- 		    (cb->control->flags & IEEE80211_TXCTL_NO_ACK)))
- 		{
--			struct ieee80211_tx_status status = {{0}};
-+			struct ieee80211_tx_status status;
-+			memset(&status, 0, sizeof(status));
- 			tx_status(hw, skb, &status, !error);
- 		} else {
- 			struct sk_buff_head *q =
-@@ -590,7 +594,9 @@ static int filter_ack(struct ieee80211_h
- 		tx_hdr = (struct ieee80211_hdr *)skb->data;
- 		if (likely(!compare_ether_addr(tx_hdr->addr2, rx_hdr->addr1)))
- 		{
--			struct ieee80211_tx_status status = {{0}};
-+			struct ieee80211_tx_status status;
-+
-+			memset(&status, 0, sizeof(status));
- 			status.flags = IEEE80211_TX_STATUS_ACK;
- 			status.ack_signal = stats->ssi;
- 			__skb_unlink(skb, q);
+@@ -1802,6 +1824,10 @@ static void __exit ieee80211_exit(void)
+ 	rc80211_simple_exit();
+ 	rc80211_pid_exit();
+ 
++#ifdef CONFIG_MAC80211_MESH
++	if (mesh_allocated)
++		ieee80211s_stop();
++#endif
+ 	ieee80211_wme_unregister();
+ 	ieee80211_debugfs_netdev_exit();
+ }
 
+-- 
 
