@@ -1,44 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from root-server.richard-scherping.de ([217.160.107.144]:34687 "EHLO
-	p15125984.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbYBQRJa (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42874 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755557AbYBWOVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 12:09:30 -0500
-Message-ID: <47B86A44.50004@scherping.de> (sfid-20080217_170934_333733_2B388C2A)
-Date: Sun, 17 Feb 2008 18:09:24 +0100
-From: Richard Scherping <richard@scherping.de>
-MIME-Version: 1.0
-To: Fabio Venturi <f.venturi@tdnet.it>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: Problem compiling ath5k
-References: <20080216103846.GC9290@silverstar> <1c252d490802160400gd8a11a6y7e164d9b05f626c8@mail.gmail.com> <20080216172923.GA7439@silverstar> <1c252d490802161607t2bfa8545m1d48b17b272d2534@mail.gmail.com> <20080217101159.GA7234@silverstar>
-In-Reply-To: <20080217101159.GA7234@silverstar>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+	Sat, 23 Feb 2008 09:21:47 -0500
+Message-Id: <20080223142009.834012000@sipsolutions.net> (sfid-20080223_142150_385773_54C64119)
+References: <20080223141703.194775000@sipsolutions.net>
+Date: Sat, 23 Feb 2008 15:17:07 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 04/18] mac80211: add mesh interface type
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> OK,
->>> now the driver compile and load without any problem and
->>> the wlan0 and master0 devices are created.
->>> There are no error in dmesg, but I can't scan for stations,
->>> iwlist wlan0 scan
->>> says there are no active stations.
->>> Do I need extra modules for scanning?
->>> I'm using an Atheros AR2413, is this device supposed to work with
->>> the ath5k module?
-> 
-> The interface is up and running, but somehow it seems missing
-> the beacon packets.
-> Best regards,
-> Fabio
+This adds the mesh interface type.
 
-AR2413 is not yet properly supported in ath5k. The last statement about this is from 15.02.2008, where Nick Kossifidis said:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h         |    1 +
+ net/mac80211/ieee80211.c       |    1 +
+ net/mac80211/ieee80211_iface.c |    1 +
+ net/mac80211/rx.c              |   10 ++++++++++
+ net/mac80211/util.c            |    1 +
+ 5 files changed, 14 insertions(+)
 
-"Sorry for delaying the relevant patches, i'm working with the 2413
-card i got from Mike to make it work and it'll take some time (not as
-easy as i thought, i probably miss something)..."
+--- everything.orig/include/net/mac80211.h	2008-02-23 14:23:35.000000000 +0100
++++ everything/include/net/mac80211.h	2008-02-23 14:23:36.000000000 +0100
+@@ -439,6 +439,7 @@ enum ieee80211_if_types {
+ 	IEEE80211_IF_TYPE_AP,
+ 	IEEE80211_IF_TYPE_STA,
+ 	IEEE80211_IF_TYPE_IBSS,
++	IEEE80211_IF_TYPE_MESH_POINT,
+ 	IEEE80211_IF_TYPE_MNTR,
+ 	IEEE80211_IF_TYPE_WDS,
+ 	IEEE80211_IF_TYPE_VLAN,
+--- everything.orig/net/mac80211/ieee80211.c	2008-02-23 14:23:35.000000000 +0100
++++ everything/net/mac80211/ieee80211.c	2008-02-23 14:23:36.000000000 +0100
+@@ -258,6 +258,7 @@ static int ieee80211_open(struct net_dev
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_MNTR:
+ 	case IEEE80211_IF_TYPE_IBSS:
++	case IEEE80211_IF_TYPE_MESH_POINT:
+ 		/* no special treatment */
+ 		break;
+ 	case IEEE80211_IF_TYPE_INVALID:
+--- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-23 14:23:35.000000000 +0100
++++ everything/net/mac80211/ieee80211_iface.c	2008-02-23 14:23:36.000000000 +0100
+@@ -231,6 +231,7 @@ void ieee80211_if_reinit(struct net_devi
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+ 		}
+ 		break;
++	case IEEE80211_IF_TYPE_MESH_POINT:
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_IBSS:
+ 		kfree(sdata->u.sta.extra_ie);
+--- everything.orig/net/mac80211/rx.c	2008-02-23 14:23:35.000000000 +0100
++++ everything/net/mac80211/rx.c	2008-02-23 14:23:36.000000000 +0100
+@@ -1713,6 +1713,16 @@ static int prepare_for_handlers(struct i
+ 			rx->sta = ieee80211_ibss_add_sta(sdata->dev, rx->skb,
+ 							 bssid, hdr->addr2);
+ 		break;
++	case IEEE80211_IF_TYPE_MESH_POINT:
++		if (!multicast &&
++		    compare_ether_addr(sdata->dev->dev_addr,
++				       hdr->addr1) != 0) {
++			if (!(sdata->dev->flags & IFF_PROMISC))
++				return 0;
++
++			rx->flags &= ~IEEE80211_TXRXD_RXRA_MATCH;
++		}
++		break;
+ 	case IEEE80211_IF_TYPE_VLAN:
+ 	case IEEE80211_IF_TYPE_AP:
+ 		if (!bssid) {
+--- everything.orig/net/mac80211/util.c	2008-02-23 14:23:35.000000000 +0100
++++ everything/net/mac80211/util.c	2008-02-23 14:23:36.000000000 +0100
+@@ -382,6 +382,7 @@ void ieee80211_iterate_active_interfaces
+ 		case IEEE80211_IF_TYPE_STA:
+ 		case IEEE80211_IF_TYPE_IBSS:
+ 		case IEEE80211_IF_TYPE_WDS:
++		case IEEE80211_IF_TYPE_MESH_POINT:
+ 			break;
+ 		}
+ 		if (sdata->dev == local->mdev)
 
-I am waiting for this PHY to get supported, too.
+-- 
 
-Richard
