@@ -1,100 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:21710 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751615AbYBLDZi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 22:25:38 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: enable IBSS merging
-Date: Tue, 12 Feb 2008 12:25:01 +0900
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-References: <1202209693.4395.29.camel@johannes.berg> <20080206024957.22838.82194.stgit@one> <1202341955.9965.26.camel@johannes.berg>
-In-Reply-To: <1202341955.9965.26.camel@johannes.berg>
+Received: from srv5.dvmed.net ([207.36.208.214]:35994 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757092AbYBWU0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2008 15:26:22 -0500
+Message-ID: <47C0815F.7020100@pobox.com> (sfid-20080223_202627_127192_27742B3F)
+Date: Sat, 23 Feb 2008 15:26:07 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200802121225.02045.bruno@thinktube.com> (sfid-20080212_032542_688045_E2D16EC9)
+To: Sebastian Siewior <netdev@ml.breakpoint.cc>
+CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] [PS3] gelic wireless driver needs MAC80211 support
+References: <20080223193517.GA6704@Chamillionaire.breakpoint.cc>
+In-Reply-To: <20080223193517.GA6704@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 07 February 2008 08:52:35 Johannes Berg wrote:
-> Looks fine, one last question:
-> > +		if (mactime <=3D timestamp) {
-> > +			if (CONFIG_MAC80211_IBSS_DEBUG || net_ratelimit())
-> > +				printk(KERN_DEBUG "%s: beacon TSF higher than "
-> > +				       "local TSF - IBSS merge with BSSID %s\n",
-> > +				       dev->name, print_mac(mac, mgmt->bssid));
->
-> I'd rewrite that as timestamp >=3D mactime and rename the two variabl=
-es
-> (maybe beacon_timestamp and phy_timestamp or so?), but that's not too
-> important.
+Sebastian Siewior wrote:
+> so select it.
+> Signed-off-by: Sebastian Siewior <sebastian@breakpoint.cc>
+> ---
+>  drivers/net/Kconfig |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+> index f337800..a116056 100644
+> --- a/drivers/net/Kconfig
+> +++ b/drivers/net/Kconfig
+> @@ -2363,6 +2363,7 @@ config GELIC_NET
+>  config GELIC_WIRELESS
+>         bool "PS3 Wireless support"
+>         depends on GELIC_NET
+> +       select MAC80211
 
-i'll do that, sure.
+Given that this is straying clearly into wireless territory, I think the 
+linux-wireless folks and John Linville (wireless maintainer) are 
+appropriate patch targets.
 
-> However, in any case "<=3D" seems wrong, shouldn't we only=20
-> merge when it's actually higher? If your hardware/firmware has synced
-> properly and the PHY delay is accounted for properly etc. then every
-> beacon from the own BSS will fulfil the =3D=3D part of the condition,=
- no?
+	Jeff
 
-true. i was not aware that the beacon timestamp is taking PHY delays in=
-to=20
-account and wrongly asumed that the RX timestamp should always be a bit=
-=20
-later.
-(which is also what i saw on my atheros hardware: we usually get the RX=
-=20
-timestamp about 60 to 300 usec later than the beacon timestamp, but it'=
-s=20
-quite likely that we have not calibrated everything 100% correctly.)
 
-> Also, the beacon timestamp is defined as follows:
->
->         A STA sending a beacon shall set the value of the beacon=E2=80=
-=99s
->         timestamp so that it equals the value of the STA=E2=80=99s TS=
-=46 timer at
->         the time that the data symbol containing the first bit of the
->         timestamp is transmitted to the PHY plus the transmitting STA=
-=E2=80=99s
->         delays through its local PHY from the MAC-PHY interface to it=
-s
->         interface with the WM [e.g., antenna, light-emitting diode (L=
-ED)
->         emission surface].
->
-> (IEEE 802.11 11.1.2)
->
-> Since we define the RX timestamp to be when the first data symbol of =
-the
-> frame hits the PHY, we here have to take into account the offset betw=
-een
-> the two, at 1 MBit that's 192 (=3D24 bytes * 8 usecs/byte) usecs earl=
-ier
-> than the beacon timestamp.
->
-> On the other hand, you're unlikely to hit that window, but I suppose =
-it
-> warrants at least a comment.
-
-thats a very good point! if everything was calibrated properly and all =
-delays=20
-taken into account *exactly* that would cause us to go thru a merge all=
- the=20
-time, on every received beacon. i think we have to take that into accou=
-nt,=20
-for different bitrates. what about something like:
-
-timestamp >=3D ( mactime + (24 * 8 / beacon_phy_rate_in_mbps ))
-
-i'll resend my patch adding that and the other proposed changes soon.
-
-bruno
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
