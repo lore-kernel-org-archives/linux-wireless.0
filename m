@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:34814 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754136AbYBOVxe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43080 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbYBWMjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 16:53:34 -0500
-Received: by an-out-0708.google.com with SMTP id d31so183897and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2008 13:53:33 -0800 (PST)
-Message-ID: <40f31dec0802151353l2d03fdaam23d4f731a6c7bddc@mail.gmail.com> (sfid-20080215_215343_280691_36D37776)
-Date: Fri, 15 Feb 2008 23:53:33 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] WDEV: ath5k, test single chip before reset
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1203107827-27632-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1203107827-27632-1-git-send-email-jirislaby@gmail.com>
+	Sat, 23 Feb 2008 07:39:01 -0500
+Subject: Re: b43 (H/W 4306 Rev. 03)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ahmed Ammar <b33fc0d3@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <84ac67910802230418k1c739c81o278a4497b7ec29a4@mail.gmail.com> (sfid-20080223_121805_317375_DF2CC2D8)
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <20080221163134.GF3094@tuxdriver.com>
+	 <84ac67910802211007n55569d6j92dee1da198e9b1d@mail.gmail.com>
+	 <20080221182615.GK3094@tuxdriver.com>
+	 <84ac67910802211204y575e893cnd056bbd7442f27ea@mail.gmail.com>
+	 <20080221201811.GM3094@tuxdriver.com>
+	 <84ac67910802211256l66573e79o3abdc256b2d8eaec@mail.gmail.com>
+	 <1203693294.7082.26.camel@johannes.berg>
+	 <84ac67910802230418k1c739c81o278a4497b7ec29a4@mail.gmail.com>
+	 (sfid-20080223_121805_317375_DF2CC2D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pRd/jHI97HcgHEKY2fOT"
+Date: Sat, 23 Feb 2008 13:38:51 +0100
+Message-Id: <1203770331.13162.21.camel@johannes.berg> (sfid-20080223_123907_314172_8B7FA105)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/2/15, Jiri Slaby <jirislaby@gmail.com>:
-> Move ath5k_hw_nic_wakeup after ah_single_chip being set, because we
->  test the value in there and decides whether reset or not.
->
->  Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
->  Cc: Nick Kossifidis <mickflemm@gmail.com>
->  Cc: Luis R. Rodriguez <mcgrof@gmail.com>
->  ---
->   drivers/net/wireless/ath5k/hw.c |   21 ++++++++++-----------
->   1 files changed, 10 insertions(+), 11 deletions(-)
->
->  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
->  index 3a4bf40..9cdd27f 100644
->  --- a/drivers/net/wireless/ath5k/hw.c
->  +++ b/drivers/net/wireless/ath5k/hw.c
->  @@ -181,11 +181,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->         else if (ah->ah_version <= AR5K_AR5211)
->                 ah->ah_proc_rx_desc = ath5k_hw_proc_old_rx_status;
->
->  -       /* Bring device out of sleep and reset it's units */
->  -       ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
->  -       if (ret)
->  -               goto err_free;
->  -
->         /* Get MAC, PHY and RADIO revisions */
->         srev = ath5k_hw_reg_read(ah, AR5K_SREV);
->         ah->ah_mac_srev = srev;
->  @@ -210,12 +205,13 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
->         }
->
->         /* Identify single chip solutions */
->  -       if((srev <= AR5K_SREV_VER_AR5414) &&
->  -       (srev >= AR5K_SREV_VER_AR2424)) {
->  -               ah->ah_single_chip = true;
->  -       } else {
->  -               ah->ah_single_chip = false;
->  -       }
->  +       ah->ah_single_chip = srev >= AR5K_SREV_VER_AR2424 &&
->  +                       srev <= AR5K_SREV_VER_AR5414;
->  +
->  +       /* Bring device out of sleep and reset it's units */
->  +       ret = ath5k_hw_nic_wakeup(ah, AR5K_INIT_MODE, true);
->  +       if (ret)
->  +               goto err_free;
->
->         /* Single chip radio */
->         if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
->
 
-NACK, single chip flag is going out since only needed check is for
-5424/2424 during nic_wakeup, 5413/2413 behave like the rest
-5211/5212-combatible cards.
-
-Sorry for delaying the relevant patches, i'm working with the 2413
-card i got from Mike to make it work and it'll take some time (not as
-easy as i thought, i probably miss something)...
+--=-pRd/jHI97HcgHEKY2fOT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+On Sat, 2008-02-23 at 12:18 +0000, Ahmed Ammar wrote:
+> > Can you make a packet dump with a second card in monitor mode?
+> >
+>=20
+> Used wireshark and my rt61pci card. The dump is attached.
+
+Nope. And there's no need to CC such files to the list anyway.
+
+johannes
+
+--=-pRd/jHI97HcgHEKY2fOT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8AT2qVg1VMiehFYAQKNEQ//fJV2aRRrqzCEePAKEMVFnateVSrrt9BB
+u4SpRo/F/jCZNdBFZ6yXl1AxNdDYEGn96kMpNAFhWrLgoOdRlq9LfnUw4VGNLDks
+M1P8iIBajDqfWu2HeIq5Xmn8AJTtbTF8FAMRkwkcwrQfq4h+N0M9h9BitVih0lml
+q9LXdEwh2OM+rfcdghIqfn+mjOSoTtJOEPmoiA9S1/nrKN/JCIz3z7ob2V9Mck1m
+Qhfx9eMZ9Su67XBJp0Fip0hZpHjoblL9avkO51Wel+BJ45LazZF7fejqqEleiQe6
+LnmPTGz6lhTCw5d0ZIxJ1vEK2dF8tUGxKTUlXtS3zzuN/b+ruAvocntMIoHmKOMt
+rCUn0zxB3euMcDuz5z1Ciz7ycsDW3aylG6H0+ehyHYFPPjvT1GsGY9/zRddWJKmh
+tIbV7lqYEwnfsYN7QSjhISk8yMie21aCVJpSPGqU+n9CDFBQ+I3kgE5ECUVN0Nff
+tv8H4ilbqYSdychSnXAeJP1EsehwlduKgb75SDt8BgdRJQDq8yt8/eYF91L2tylY
+gVcU/hzP0TQcYAqYNa74T36R1NIfoGZ9JcfItVodmpYFJ8lsCdBe4Mzt5l0yxOrp
+6+2WKT/lACNbN8TJbL3G36cE6wr7l/feSXaZgXlNe+qsxYgIj9gEMyiMPbLSZ468
+51kbVSJppMU=
+=kTNS
+-----END PGP SIGNATURE-----
+
+--=-pRd/jHI97HcgHEKY2fOT--
+
