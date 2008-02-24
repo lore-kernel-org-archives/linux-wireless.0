@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:24678 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757436AbYBVAvR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 19:51:17 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: fix IBSS code
-Date: Fri, 22 Feb 2008 09:51:02 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pavel Roskin <proski@gnu.org>
-References: <1203588513.17534.138.camel@johannes.berg> <1203621836.26341.4.camel@johannes.berg> <20080221194307.GL3094@tuxdriver.com>
-In-Reply-To: <20080221194307.GL3094@tuxdriver.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:34320 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752064AbYBXEVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2008 23:21:31 -0500
+Date: Sun, 24 Feb 2008 06:21:15 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: [PATCH 4/8] ath5k: more RF2413 stuff
+Message-ID: <20080224042115.GC4426@makis.domain.invalid> (sfid-20080224_042135_441103_9AFCD59B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802220951.02985.bruno@thinktube.com> (sfid-20080222_005121_182402_B433E48A)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 22 February 2008 04:43:07 John W. Linville wrote:
-> On Thu, Feb 21, 2008 at 08:23:56PM +0100, Johannes Berg wrote:
-> > On Thu, 2008-02-21 at 12:07 -0500, John W. Linville wrote:
-> > > On Thu, Feb 21, 2008 at 11:08:33AM +0100, Johannes Berg wrote:
-> > > > This patch fixes two errors introduced by
-> > > >
-> > > >     commit 19d35612f3cd7f60dd9174c0100584e21f5a1025
-> > > >     Author: Bruno Randolf <bruno@thinktube.com>
-> > > >     Date:   Mon Feb 18 11:21:36 2008 +0900
-> > > >
-> > > >         mac80211: enable IBSS merging
-> > > >
-> > > > The first error is an endianness problem that sparse found and
-> > > > the second is a build failure when CONFIG_MAC80211_IBSS_DEBUG
-> > > > is not set.
-> > >
-> > > I think I like Pavel's fix for the CONFIG_MAC80211_IBSS_DEBUG build
-> > > issue better.  Do you want to repsin the sparse warning bit?  If you
-> > > like, I can respin it for you -- just let me know.
-> >
-> > Eh, where do we stand now? Bruno wanted the message to not be rate
-> > limited in the DEBUG case, and the endianness fix is definitely
-> > required.
->
-> I'll rebase your original patch on top of what is there now.  I.E. the
-> result will be as if I had only applied your patch.
+ * Add AR5K_RF2413 to radio check during hw_reset so it doesn't complain
 
-sorry, i should have tested the patch with IBSS debugging disabled, too :(
+ * Write ah_phy_spending value we set during attach instead of checking 
+each time for radio revision
 
-bruno
+ * Skip txpower setup for RF2413 because it can't transmit with it 
+(weird thing is that RF5413 has no problem with it).
+
+
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 1d7bc1f..3ae5522 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -640,7 +640,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		if (ah->ah_radio != AR5K_RF5111 &&
+ 			ah->ah_radio != AR5K_RF5112 &&
+-			ah->ah_radio != AR5K_RF5413) {
++			ah->ah_radio != AR5K_RF5413 &&
++			ah->ah_radio != AR5K_RF2413) {
+ 			ATH5K_ERR(ah->ah_sc,
+ 				"invalid phy radio: %u\n", ah->ah_radio);
+ 			return -EINVAL;
+@@ -1002,9 +1003,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SCAL_32MHZ, AR5K_PHY_SCAL);
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
+-		ath5k_hw_reg_write(ah, ah->ah_radio == AR5K_RF5111 ?
+-			AR5K_PHY_SPENDING_RF5111 : AR5K_PHY_SPENDING_RF5112,
+-			AR5K_PHY_SPENDING);
++		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index e8378d1..75ded08 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -2177,6 +2177,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
++	/* 
++	 * RF2413 for some reason can't
++	 * transmit anything if we call
++	 * this funtion, so we skip it
++	 * until we fix txpower.
++	 */
++	if(ah->ah_radio == AR5K_RF2413)
++		return 0;
++
+ 	/* Reset TX power values */
+ 	memset(&ah->ah_txpower, 0, sizeof(ah->ah_txpower));
+ 	ah->ah_txpower.txp_tpc = tpc;
+
+
