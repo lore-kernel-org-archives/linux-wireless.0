@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:44002 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751215AbYBDU4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 15:56:15 -0500
-Date: Mon, 4 Feb 2008 21:06:14 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Thomas Ilnseher <illth@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: b43 doesn't reset hardware when loaded/unloaded [severity:
- minor]
-Message-ID: <20080204210614.760595db@morte> (sfid-20080204_205621_030335_23A09EF9)
-In-Reply-To: <1202153575.8270.7.camel@note.localnet>
-References: <1202153575.8270.7.camel@note.localnet>
+Received: from pne-smtpout3-sn1.fre.skanova.net ([81.228.11.120]:40781 "EHLO
+	pne-smtpout3-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751542AbYBXLEG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2008 06:04:06 -0500
+Subject: Re: [PATCH] rndis_wlan: fix sparse warnings
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203504466.17534.16.camel@johannes.berg>
+References: <1203504466.17534.16.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 24 Feb 2008 13:02:25 +0200
+Message-Id: <1203850945.12137.10.camel@localhost> (sfid-20080224_110411_710295_2C92100C)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 04 Feb 2008 20:32:55 +0100
-Thomas Ilnseher <illth@gmx.de> wrote:
-
-> Hi!
+On Wed, 2008-02-20 at 11:47 +0100, Johannes Berg wrote:
+> It is obviously wrong to use an enum in a little endian struct,
+> and those other enums should be declared differently.
 > 
-> I upgraded my kernel to 2.6.24, and
-> so I also upgraded from bcm43xx to b43.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+Thanks, and also works as nice style cleanup.
+
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+> ---
+>  drivers/net/wireless/rndis_wlan.c |   14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
 > 
-> There used to be a problem with bcm43xx that after 
-> resuming from Supend-To-Ram, wireless didn't work anymore.
+> --- everything.orig/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:43:22.000000000 +0100
+> +++ everything/drivers/net/wireless/rndis_wlan.c	2008-02-20 11:45:35.000000000 +0100
+> @@ -228,9 +228,9 @@ struct NDIS_WLAN_BSSID_EX {
+>  	struct NDIS_802_11_SSID Ssid;
+>  	__le32 Privacy;
+>  	__le32 Rssi;
+> -	enum NDIS_802_11_NETWORK_TYPE NetworkTypeInUse;
+> +	__le32 NetworkTypeInUse;
+>  	struct NDIS_802_11_CONFIGURATION Configuration;
+> -	enum NDIS_802_11_NETWORK_INFRASTRUCTURE InfrastructureMode;
+> +	__le32 InfrastructureMode;
+>  	u8 SupportedRates[NDIS_802_11_LENGTH_RATES_EX];
+>  	__le32 IELength;
+>  	u8 IEs[0];
+> @@ -279,11 +279,11 @@ struct RNDIS_CONFIG_PARAMETER_INFOBUFFER
+>  } __attribute__((packed));
+>  
+>  /* these have to match what is in wpa_supplicant */
+> -enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
+> -enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP, CIPHER_WEP104 }
+> -	wpa_cipher;
+> -enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE, KEY_MGMT_802_1X_NO_WPA,
+> -	KEY_MGMT_WPA_NONE } wpa_key_mgmt;
+> +enum wpa_alg { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP };
+> +enum wpa_cipher { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
+> +		  CIPHER_WEP104 };
+> +enum wpa_key_mgmt { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
+> +		    KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE };
+>  
+>  /*
+>   *  private data
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-[...]
- 
-> It doesn't work with b43. (of course replacing bcm43xx with b43).
-> I *assume* that the core isn't completely reseted on insmod'ing.
-
-This should be fixed in 2.6.24.1. A patch is available in the wireless-2.6
-tree.
-
-
--- 
-Ciao
-Stefano
