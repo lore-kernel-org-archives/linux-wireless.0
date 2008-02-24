@@ -1,96 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41343 "EHLO ogre.sisk.pl"
+Received: from venema.h4ckr.net ([217.24.1.135]:40396 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755168AbYBMMTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 07:19:15 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] WAVELAN - compile-time check for struct sizes
-Date: Wed, 13 Feb 2008 13:17:45 +0100
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux@arm.linux.org.uk,
-	deller@gmx.de, jt@hpl.hp.com, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.arm.linux.org.uk
-References: <200801131516.34567.deller@gmx.de> <20080207120238.d169a0d2.akpm@linux-foundation.org> <20080207204601.GD3025@tuxdriver.com>
-In-Reply-To: <20080207204601.GD3025@tuxdriver.com>
+	id S1753688AbYBXEdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2008 23:33:36 -0500
+Date: Sun, 24 Feb 2008 06:33:19 +0200
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: [PATCH 8/8] ath5k: Add RF2413 name to srev_names
+Message-ID: <20080224043319.GG4426@makis.domain.invalid> (sfid-20080224_043339_220903_BC31C932)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802131317.46168.rjw@sisk.pl> (sfid-20080213_121920_600161_D1E26F8E)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, 7 of February 2008, John W. Linville wrote:
-> On Thu, Feb 07, 2008 at 12:02:38PM -0800, Andrew Morton wrote:
-> > On Thu, 7 Feb 2008 14:08:42 -0500
-> > "John W. Linville" <linville@tuxdriver.com> wrote:
-> 
-> > > Subject: [PATCH] wavelan: mark hardware interfacing structures as packed
-> 
-> > ha_t is still triggering with this patch.
-> > 
-> > This incremental patch:
-> 
-> <snip>
-> 
-> > fixes things up.  If forces `union hacs_u' to be two bytes, not four.
-> 
-> OK, so I'll queue this one...'salright?
 
-Can you please tell me what the status of this patch is?
-
-Thanks,
-Rafael
+ * Add 2413 to srev_names so that it shows up during module load
 
 
-> ---
-> 
-> From: John W. Linville <linville@tuxdriver.com>
-> Subject: [PATCH] wavelan: mark hardware interfacing structures as packed
-> 
-> With assists from Russell King <rmk+kernel@arm.linux.org.uk> and
-> Andrew Morton <akpm@linux-foundation.org>...
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/wavelan.h |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wavelan.h b/drivers/net/wireless/wavelan.h
-> index 27172cd..9ab3605 100644
-> --- a/drivers/net/wireless/wavelan.h
-> +++ b/drivers/net/wireless/wavelan.h
-> @@ -85,7 +85,7 @@ union hacs_u
->  #define		HASR_MMC_INTR		0x0002	/* Interrupt request from MMC */
->  #define		HASR_MMC_BUSY		0x0004	/* MMC busy indication */
->  #define		HASR_PSA_BUSY		0x0008	/* LAN parameter storage area busy */
-> -};
-> +} __attribute__ ((packed));
->  
->  typedef struct ha_t	ha_t;
->  struct ha_t
-> @@ -292,7 +292,7 @@ struct mmw_t
->  #define	MMW_EXT_ANT_INTERNAL	0x00	/* Internal antenna */
->  #define	MMW_EXT_ANT_EXTERNAL	0x03	/* External antenna */
->  #define	MMW_EXT_ANT_IQ_TEST	0x1C	/* IQ test pattern (set to 0) */
-> -};
-> +} __attribute__ ((packed));
->  
->  #define	MMW_SIZE	37
->  
-> @@ -347,7 +347,7 @@ struct mmr_t
->    unsigned char	mmr_unused4[1];		/* unused */
->    unsigned char	mmr_fee_data_l;		/* Read data from EEPROM (low) */
->    unsigned char	mmr_fee_data_h;		/* Read data from EEPROM (high) */
-> -};
-> +} __attribute__ ((packed));
->  
->  #define	MMR_SIZE	36
->  
-> -- 
-> 1.5.3.3
-> 
+Changes-licensed-under: 3-clause-BSD
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 0b743f7..d72dec0 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -118,6 +118,8 @@ static struct ath5k_srev_name srev_names[] = {
+ 	{ "5212",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5212 },
+ 	{ "5213",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213 },
+ 	{ "5213A",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213A },
++	{ "2413",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2413 },
++	{ "2414",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2414 },
+ 	{ "2424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2424 },
+ 	{ "5424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5424 },
+ 	{ "5413",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5413 },
+@@ -132,6 +134,7 @@ static struct ath5k_srev_name srev_names[] = {
+ 	{ "5112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5112A },
+ 	{ "2112",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112 },
+ 	{ "2112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112A },
++	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC0 },
+ 	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC1 },
+ 	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC2 },
+ 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
 
 
-
--- 
-"Premature optimization is the root of all evil." - Donald Knuth
