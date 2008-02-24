@@ -1,153 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38667 "EHLO mx2.suse.de"
+Received: from xyz.pp.se ([212.31.160.244]:62638 "EHLO xyz.pp.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933451AbYBGUwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 15:52:51 -0500
-Date: Thu, 7 Feb 2008 12:47:54 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [patch 32/45] b43: Drop packets we are not able to encrypt
-Message-ID: <20080207204754.GG16389@suse.de> (sfid-20080207_205312_787127_45FEBE8A)
-References: <20080207204118.202098927@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080207204549.GA16389@suse.de>
+	id S1753155AbYBXVNi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2008 16:13:38 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by xyz.pp.se (Postfix) with ESMTP id ACD951CC012
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2008 22:04:26 +0100 (CET)
+Received: from xyz.pp.se ([127.0.0.1])
+	by localhost (xyz.pp.se [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xvtcsDurDGs4 for <linux-wireless@vger.kernel.org>;
+	Sun, 24 Feb 2008 22:04:14 +0100 (CET)
+Received: from [10.0.0.97] (hbg-112-76-233-83.3.cust.bredband2.com [83.233.76.112])
+	by xyz.pp.se (Postfix) with ESMTP id 637FC1CC010
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2008 22:04:14 +0100 (CET)
+Subject: 'make unload' fails if you run Ubuntu Hardy
+From: Thomas Novin <thnov@xyz.pp.se>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Sun, 24 Feb 2008 21:34:39 +0100
+Message-Id: <1203885279.7537.1.camel@pc-thnov-ubuntu> (sfid-20080224_211343_740879_5A3C3747)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.24-stable review patch.  If anyone has any objections, please let us know.
+Hello
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+I have just installed the latest compat-wireless system and 'make
+unload' failed for me.
 
-patch 09552ccd8277e6382097e93a40f7311a09449367 in mainline
+thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo make unload
+Unloading iwl3945...
+Unloading mac80211...
+Unloading cfg80211...
+FATAL: Module cfg80211 is in use.
+make: *** [unload] Error 1
+thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ lsmod | grep iwl
+iwlwifi_mac80211      220004  0
+cfg80211               15112  1 iwlwifi_mac80211
+thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo modprobe -r
+iwlwifi_mac80211
+thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo make unload
+thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ 
+ 
+So by manually unloading iwlwifi_mac80211 I managed to get past this.
 
-We must drop any packets we are not able to encrypt.
-We must not send them unencrypted or with an all-zero-key (which
-basically is the same as unencrypted, from a security point of view).
+Rgds,
 
-This might only trigger shortly after resume before mac80211 reassociated
-and reconfigured the keys.
+Thomas
 
-It is safe to drop these packets, as the association they belong to
-is not guaranteed anymore anyway.
-This is a security fix in the sense that it prevents information leakage.
+Ps. I'm not on the list.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/net/wireless/b43/dma.c  |   11 ++++++++++-
- drivers/net/wireless/b43/xmit.c |   20 +++++++++++++++-----
- drivers/net/wireless/b43/xmit.h |    2 +-
- 3 files changed, 26 insertions(+), 7 deletions(-)
-
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1122,9 +1122,11 @@ static int dma_tx_fragment(struct b43_dm
- 	memset(meta_hdr, 0, sizeof(*meta_hdr));
- 
- 	header = &(ring->txhdr_cache[slot * sizeof(struct b43_txhdr_fw4)]);
--	b43_generate_txhdr(ring->dev, header,
-+	err = b43_generate_txhdr(ring->dev, header,
- 			   skb->data, skb->len, ctl,
- 			   generate_cookie(ring, slot));
-+	if (unlikely(err))
-+		return err;
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 					   sizeof(struct b43_txhdr_fw4), 1);
-@@ -1219,6 +1221,13 @@ int b43_dma_tx(struct b43_wldev *dev,
- 	B43_WARN_ON(ring->stopped);
- 
- 	err = dma_tx_fragment(ring, skb, ctl);
-+	if (unlikely(err == -ENOKEY)) {
-+		/* Drop this packet, as we don't have the encryption key
-+		 * anymore and must not transmit it unencrypted. */
-+		dev_kfree_skb_any(skb);
-+		err = 0;
-+		goto out_unlock;
-+	}
- 	if (unlikely(err)) {
- 		b43err(dev->wl, "DMA tx mapping failure\n");
- 		goto out_unlock;
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -177,7 +177,7 @@ static u8 b43_calc_fallback_rate(u8 bitr
- 	return 0;
- }
- 
--static void generate_txhdr_fw4(struct b43_wldev *dev,
-+static int generate_txhdr_fw4(struct b43_wldev *dev,
- 			       struct b43_txhdr_fw4 *txhdr,
- 			       const unsigned char *fragment_data,
- 			       unsigned int fragment_len,
-@@ -235,7 +235,15 @@ static void generate_txhdr_fw4(struct b4
- 
- 		B43_WARN_ON(key_idx >= dev->max_nr_keys);
- 		key = &(dev->key[key_idx]);
--		B43_WARN_ON(!key->keyconf);
-+
-+		if (unlikely(!key->keyconf)) {
-+			/* This key is invalid. This might only happen
-+			 * in a short timeframe after machine resume before
-+			 * we were able to reconfigure keys.
-+			 * Drop this packet completely. Do not transmit it
-+			 * unencrypted to avoid leaking information. */
-+			return -ENOKEY;
-+		}
- 
- 		/* Hardware appends ICV. */
- 		plcp_fragment_len += txctl->icv_len;
-@@ -352,16 +360,18 @@ static void generate_txhdr_fw4(struct b4
- 	txhdr->mac_ctl = cpu_to_le32(mac_ctl);
- 	txhdr->phy_ctl = cpu_to_le16(phy_ctl);
- 	txhdr->extra_ft = extra_ft;
-+
-+	return 0;
- }
- 
--void b43_generate_txhdr(struct b43_wldev *dev,
-+int b43_generate_txhdr(struct b43_wldev *dev,
- 			u8 * txhdr,
- 			const unsigned char *fragment_data,
- 			unsigned int fragment_len,
- 			const struct ieee80211_tx_control *txctl, u16 cookie)
- {
--	generate_txhdr_fw4(dev, (struct b43_txhdr_fw4 *)txhdr,
--			   fragment_data, fragment_len, txctl, cookie);
-+	return generate_txhdr_fw4(dev, (struct b43_txhdr_fw4 *)txhdr,
-+				  fragment_data, fragment_len, txctl, cookie);
- }
- 
- static s8 b43_rssi_postprocess(struct b43_wldev *dev,
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -82,7 +82,7 @@ struct b43_txhdr_fw4 {
- #define  B43_TX4_PHY_ANT1		0x0100	/* Use antenna 1 */
- #define  B43_TX4_PHY_ANTLAST	0x0300	/* Use last used antenna */
- 
--void b43_generate_txhdr(struct b43_wldev *dev,
-+int b43_generate_txhdr(struct b43_wldev *dev,
- 			u8 * txhdr,
- 			const unsigned char *fragment_data,
- 			unsigned int fragment_len,
-
--- 
