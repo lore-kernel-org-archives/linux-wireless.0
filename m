@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:24731 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbYB0EEU (ORCPT
+Received: from mfe1.polimi.it ([131.175.12.23]:33641 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751130AbYBXMni convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 23:04:20 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so4114335mue.5
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 20:04:18 -0800 (PST)
-Message-ID: <43e72e890802262004r552d6a83ua6e24bdbb9e9ca83@mail.gmail.com> (sfid-20080227_040423_042983_1D986855)
-Date: Tue, 26 Feb 2008 23:04:16 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: Re: [PATCH 1/8] ath5k: Add RF2413 srev values
-In-Reply-To: <20080224041045.GA4408@makis.domain.invalid>
-MIME-Version: 1.0
+	Sun, 24 Feb 2008 07:43:38 -0500
+Date: Sun, 24 Feb 2008 13:35:16 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "R. Hofmann" <anmue@gmx.net>, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: B43legancy_warn_on - error ...???
+Message-ID: <20080224133516.24d65036@morte> (sfid-20080224_124344_783050_85986017)
+In-Reply-To: <200802241335.30226.mb@bu3sch.de>
+References: <20080224103031.127510@gmx.net>
+	<200802241335.30226.mb@bu3sch.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <20080224041045.GA4408@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 23, 2008 at 11:10 PM, Nick Kossifidis <mick@madwifi.org> wrote:
->  * Add RF2413 srev values and a new entry on ath5k_radio enum for it
->    since it differs from RF5413 (it's not like 5112-2112).
->
->  Changes-licensed-under: ISC
->  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+On Sun, 24 Feb 2008 13:35:29 +0100
+Michael Buesch <mb@bu3sch.de> wrote:
 
-Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> On Sunday 24 February 2008 11:30:31 R. Hofmann wrote:
+> > localhost:/source/compat-wireless-2.6 # make
+> > make -C /lib/modules/2.6.22.5-31-default/build M=3D/source/compat-w=
+ireless-2.6 modules
+> > make[1]: Entering directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/=
+default'
+> > make -C ../../../linux-2.6.22.5-31 O=3D../linux-2.6.22.5-31-obj/x86=
+_64/default modules
+> >   CC [M]  /source/compat-wireless-2.6/drivers/net/wireless/b43legac=
+y/main.o
+> > /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c: =
+In function =E2=80=98b43legacy_ram_write=E2=80=99:
+> > /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c:2=
+36: error: implicit declaration of function =E2=80=98B43legacy_WARN_ON=E2=
+=80=99
+> > make[6]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43l=
+egacy/main.o] Fehler 1
+> > make[5]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43l=
+egacy] Fehler 2
+> > make[4]: *** [/source/compat-wireless-2.6/drivers/net/wireless] Feh=
+ler 2
+> > make[3]: *** [_module_/source/compat-wireless-2.6] Fehler 2
+> > make[2]: *** [modules] Fehler 2
+> > make[1]: *** [modules] Fehler 2
+> > make[1]: Leaving directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/d=
+efault'
+> > make: *** [modules] Fehler 2
+> >=20
+>=20
+> That's pretty weird.
+> Oh wait... This is the compat package, right?
 
-  Luis
+This is because I'm an idiot. Patch coming soon. In the meanwhile, you =
+may
+want to build that with debugging enabled to solve the issue.
+
+
+--
+Ciao
+Stefano
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
