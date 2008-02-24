@@ -1,42 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59583 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752522AbYBYCcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 21:32:41 -0500
-Subject: Re: can't bring up wlan0
-From: Zhu Yi <yi.zhu@intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080224180419.b7b44524.akpm@linux-foundation.org>
-References: <20080223153142.da9fc4e4.akpm@linux-foundation.org>
-	 <1203904312.3082.156.camel@debian.sh.intel.com>
-	 <20080224180419.b7b44524.akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 10:31:51 +0800
-Message-Id: <1203906711.3082.168.camel@debian.sh.intel.com> (sfid-20080225_023300_592765_E85B69B6)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.249]:33208 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755900AbYBXEpe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2008 23:45:34 -0500
+Received: by an-out-0708.google.com with SMTP id d31so255999and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Feb 2008 20:45:33 -0800 (PST)
+Message-ID: <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com> (sfid-20080224_044539_149487_FF892C46)
+Date: Sun, 24 Feb 2008 06:45:33 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com, "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
+In-Reply-To: <20080224042851.GE4426@makis.domain.invalid>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080224042851.GE4426@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/2/24, Nick Kossifidis <mick@madwifi.org>:
+>  * Fix nic_wakeup for PCI-E chips (don't set AR5K_RESET_CTL_PCI bit)
+>
+>   * Fix dma size setting for PCI-E chips (thanx to Bob Copeland).
+>
+>  Changes-licensed-under: ISC
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+>  ---
+>  diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+>  index c0b6596..d8ec373 100644
+>  --- a/drivers/net/wireless/ath5k/ath5k.h
+>  +++ b/drivers/net/wireless/ath5k/ath5k.h
+>  @@ -971,6 +971,7 @@ struct ath5k_hw {
+>         enum ath5k_version      ah_version;
+>         enum ath5k_radio        ah_radio;
+>         u32                     ah_phy;
+>  +       bool                    ah_pcie;
+>
+>         bool                    ah_5ghz;
+>         bool                    ah_2ghz;
+>  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+>  index 3ae5522..cd640ed 100644
+>  --- a/drivers/net/wireless/ath5k/hw.c
+>  +++ b/drivers/net/wireless/ath5k/hw.c
+>  @@ -214,6 +214,14 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+>                 ah->ah_single_chip = false;
+>         }
+>
+>  +       /* Identify PCI-E cards */
+>  +       if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
+>  +       srev >= AR5K_SREV_VER_AR5416) {
+>  +               ah->ah_pcie = true;
+>  +       } else {
+>  +               ah->ah_pcie = false;
+>  +       }
+>  +
+>         /* Single chip radio */
+>         if (ah->ah_radio_2ghz_revision == ah->ah_radio_5ghz_revision)
+>                 ah->ah_radio_2ghz_revision = 0;
+>  @@ -377,9 +385,12 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+>                                         AR5K_PHY_TURBO);
+>         }
+>
+>  -       /* ...reset chipset and PCI device */
+>  -       if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
+>  -                               AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
+>  +       /* ...reset chipset
+>  +        * Warning: reseting PCI on PCI-E cards results card to hang
+>  +        * and always return 0xffff...
+>  +        */
+>  +       if (ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND |
+>  +                               (ah->ah_pcie == false ? AR5K_RESET_CTL_PCI : 0) )) {
+>                 ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
+>                 return -EIO;
+>         }
+>  @@ -900,13 +911,25 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>
+>         /*
+>          * Set Rx/Tx DMA Configuration
+>  -        *(passing dma size not available on 5210)
+>  +        *
+>  +        * Set maximum DMA size (512) except for PCI-E cards since
+>  +        * it causes rx overruns and tx errors (tested on 5424 but since
+>  +        * rx overruns also occur on 5416/5418 with madwifi we set 128
+>  +        * for all PCI-E cards to be safe).
+>  +        *
+>  +        * In dumps this is 128 for allchips.
+>  +        *
+>  +        * XXX: need to check 5210 for this
+>  +        * TODO: Check out tx triger level, it's always 64 on dumps but i
+>  +        * guess we can tweak it and see how it goes ;-)
+>          */
+>         if (ah->ah_version != AR5K_AR5210) {
+>                 AR5K_REG_WRITE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_SDMAMR,
+>  -                               AR5K_DMASIZE_512B | AR5K_TXCFG_DMASIZE);
+>  +                               (ah->ah_pcie == true ?
+>  +                               AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
+>                 AR5K_REG_WRITE_BITS(ah, AR5K_RXCFG, AR5K_RXCFG_SDMAMW,
+>  -                               AR5K_DMASIZE_512B);
+>  +                               (ah->ah_pcie == true ?
+>  +                               AR5K_DMASIZE_128B : AR5K_DMASIZE_512B));
+>         }
+>
+>         /*
+>
 
-On Sun, 2008-02-24 at 18:04 -0800, Andrew Morton wrote:
-> 
-> I don't think ipw2200 worked that way?  I'm fairly sure I used to be
-> able to configure the interface whichever way the switch was
-> positioned?
+Sorry, forgot to CC Bob...
 
-Yes, the iwlwifi driver changes the behaviour (vs. ipw2200) to load the
-firmware from pci_probe to network interface open (ifconfig up). It is
-expected to support 1) wireless driver buildin kernel (ipw2200 doesn't
-support it because network device is initialized before hard disk in
-boot up process: no firmware found); 2) saves more power when you load
-the module but don't use wireless.
+Bob can you test this on your 5242 (together with the next patch) and
+see what happens ?
 
-So when the RF kill switch is turned on, the firmware loading is failed.
-
-BTW, we also have patches to delay ipw2100/2200 firmware loading like
-this.
-
-Thanks,
--yi
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
