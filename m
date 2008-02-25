@@ -1,58 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53459 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754516AbYBIAjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 19:39:14 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: Update iwlwifi version stamp to 1.2.26
-Date: Fri,  8 Feb 2008 16:39:11 -0800
-Message-Id: <1202517551-8691-1-git-send-email-reinette.chatre@intel.com> (sfid-20080209_003918_567535_AAB46688)
+Received: from smtp4.int-evry.fr ([157.159.10.71]:44569 "EHLO
+	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbYBYR40 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 12:56:26 -0500
+From: Florian Fainelli <florian.fainelli@telecomint.eu>
+To: Chr <chunkeey@web.de>
+Subject: Re: p54usb with Inventel UR054g dongle
+Date: Mon, 25 Feb 2008 18:56:28 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200802251731.22264.florian.fainelli@telecomint.eu> <200802251841.49431.chunkeey@web.de>
+In-Reply-To: <200802251841.49431.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200802251856.28661.florian.fainelli@telecomint.eu> (sfid-20080225_175632_263920_221150DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We update the version stamp at this time to distinguish the in-kernel
-driver from the out of tree driver. The out of tree driver currently
-has version number 1.2.25, but the latest driver code can only be
-found in this in-kernel driver.
+Le lundi 25 f=E9vrier 2008, Chr a =E9crit=A0:
+> Please, could you make a "dump" of the eeprom? Because these "code" v=
+alues
+> are invalid...
 
-Having a later version number will reduce confusion between the two
-versions as we transition from out of tree to in-kernel.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index b2f3a2a..c0d99ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -91,7 +91,7 @@ int iwl3945_param_queues_num = IWL_MAX_NUM_QUEUES; /* def: 8 Tx queues */
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.2.23k" VD VS
-+#define IWLWIFI_VERSION "1.2.26k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 3402495..3fa0bb4 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -90,7 +90,7 @@ int iwl4965_param_amsdu_size_8K;   /* def: enable 8K amsdu size */
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.2.23k" VD VS
-+#define IWLWIFI_VERSION "1.2.26k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
- #define DRV_VERSION     IWLWIFI_VERSION
- 
--- 
-1.5.3.4
-
+How can I easily dump the eeprom ? Thanks.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
