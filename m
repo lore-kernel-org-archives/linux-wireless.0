@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51125 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbYBJKbk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbYBYPb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 05:31:40 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: Add new USB ID to rt2500usb
-Date: Sun, 10 Feb 2008 11:31:13 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200802101121.58058.IvDoorn@gmail.com>
-In-Reply-To: <200802101121.58058.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802101131.13974.mb@bu3sch.de> (sfid-20080210_103143_220935_4896A065)
+	Mon, 25 Feb 2008 10:31:58 -0500
+Message-Id: <20080225153004.876977000@sipsolutions.net> (sfid-20080225_153207_333055_05680667)
+References: <20080225152740.360393000@sipsolutions.net>
+Date: Mon, 25 Feb 2008 16:27:42 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 02/10] mac80211: safely free beacon in ieee80211_if_reinit
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 February 2008 11:21:57 Ivo van Doorn wrote:
-> 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
-> John, please send this patch to the 2.6.24/2.6.25 stable trees.
-> It is already present in the wireless-2.6 tree queued for 2.6.26.
-> 
->  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index cba7f57..c4a6ab4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1871,11 +1871,11 @@ static struct usb_device_id rt2500usb_device_table[] = {
->  	/* Hercules */
->  	{ USB_DEVICE(0x06f8, 0xe000), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	/* Melco */
-> +	{ USB_DEVICE(0x0411, 0x005e), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x0411, 0x0066), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x0411, 0x0067), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x0411, 0x008b), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x0411, 0x0097), USB_DEVICE_DATA(&rt2500usb_ops) },
-> -
->  	/* MSI */
->  	{ USB_DEVICE(0x0db0, 0x6861), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x0db0, 0x6865), USB_DEVICE_DATA(&rt2500usb_ops) },
+If ieee80211_if_reinit() is called from ieee80211_unregister_hw()
+then it is possible that the driver will still request a beacon
+(it is allowed to until ieee80211_unregister_hw() has returned.)
+This means we need to use an RCU-protected write to the beacon
+information even in this function.
 
-I'm unsure on how this is an actual _fix_ that we need in a stable kernel.
-We always handled adding IDs as features.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_iface.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-23 14:59:28.000000000 +0100
++++ everything/net/mac80211/ieee80211_iface.c	2008-02-24 10:07:16.000000000 +0100
+@@ -209,6 +209,7 @@ void ieee80211_if_reinit(struct net_devi
+ 		/* Remove all virtual interfaces that use this BSS
+ 		 * as their sdata->bss */
+ 		struct ieee80211_sub_if_data *tsdata, *n;
++		struct beacon_data *beacon;
+ 
+ 		list_for_each_entry_safe(tsdata, n, &local->interfaces, list) {
+ 			if (tsdata != sdata && tsdata->bss == &sdata->u.ap) {
+@@ -226,7 +227,10 @@ void ieee80211_if_reinit(struct net_devi
+ 			}
+ 		}
+ 
+-		kfree(sdata->u.ap.beacon);
++		beacon = sdata->u.ap.beacon;
++		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
++		synchronize_rcu();
++		kfree(beacon);
+ 
+ 		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
+ 			local->total_ps_buffered--;
 
 -- 
-Greetings Michael.
+
