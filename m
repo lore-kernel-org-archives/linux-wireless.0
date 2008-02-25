@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45443 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbYBMNa2 (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:51375 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755549AbYBYToI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 08:30:28 -0500
-Subject: Re: [PATCH RFT/RFC] b43: Add QOS support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Mon, 25 Feb 2008 14:44:08 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1103571rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:44:06 -0800 (PST)
+Subject: Re: [PATCH 00/13 v2] o11s: mesh interface support for mac80211
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
 	Stefano Brivio <stefano.brivio@polimi.it>
-In-Reply-To: <200802122356.40865.mb@bu3sch.de>
-References: <200802122205.42799.mb@bu3sch.de>
-	 <200802122356.40865.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RYqirLGUt9lzUDChVU+g"
-Date: Wed, 13 Feb 2008 14:30:21 +0100
-Message-Id: <1202909421.8931.54.camel@johannes.berg> (sfid-20080213_133032_788657_61D64420)
+In-Reply-To: <1203693709.7082.35.camel@johannes.berg>
+References: <47be76f9.03b48c0a.025f.54f4@mx.google.com>
+	 (sfid-20080222_071727_691746_9DC8AC76)  <1203693709.7082.35.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 11:45:45 -0800
+Message-Id: <1203968745.6929.30.camel@localhost> (sfid-20080225_194425_608447_2EC81F79)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-02-22 at 16:21 +0100, Johannes Berg wrote:
+> >  - We no longer use directly rtnetlink for mesh peer link and mesh paths
+> >    operation, and use nl80211 instead.
+> 
+> Nice too. What does libertas currently do btw?
+> 
 
---=-RYqirLGUt9lzUDChVU+g
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+iwpriv...
 
+> > I would like to point out that it looks like we can get duplicate sta_entries,
+> > or more entries than the maximum allowed, if stas are added at the same time
+> > through normal network behavior and manual operation through nl80211. Please
+> > correct me if I am wrong or if it is just that no interface type is supposed to
+> > allow both kinds of additions.
+> 
+> I think I CC'ed you on the patch fixing that, no?
 
-> Hm, it seems there are two other variables in SHM we should probably writ=
-e:
->  0x000E  EDCF Status Offset
+Not sure which patch are you talking about, anyway I will check that
+along with the mesh + sta_info changes testing.
 
-Ok already mentioned this on IRC but for the record: this is set by the
-initial value upload.
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-johannes
-
---=-RYqirLGUt9lzUDChVU+g
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7Lw7KVg1VMiehFYAQIUiA/6A/LWiDz9uAqv+40zXzmvz4sVN9gRjyK/
-7phyYQqsVJNmkGD+Iv1vB7HMtrtOEW5ZdenNGA+bIjhDRLV+usbXQ2iYp9xzGwgm
-9y6BVfpUvI4Kzat+lN+LpwUDJ6B51Ds36spotDUBAMpGuO0v6w9E+Jzfs+Q6YbF5
-P3lzYSB2pkdzgoib4J8Vr7G/RpNVWvwVDImhzY+UnxMbkoAPs7LDZgzQOoiLN82L
-1oGiU8SHCwF9Fbb7UqjoYaht0qPnELfcY9hHzOdiSMrWK+wdp/vMWBVa+6rPajzW
-FU9PZDBUCpNN4PE16shE6e4uFp0gjmPE3isx+KCTOsmFZtJf5b/D+aKuSoS+Fk9k
-HJu3t+gouHlD291axozlthZXPzPTzs+g7PSufEzbi6n/DXZfUQRBTbkCGPgun+6v
-Eolak3p4v93mKZLEUMRr2aG39vkJjm2E16p9x+DwNyyH5XdSwRomgzmO0Vz364Rw
-12DrG3kKLok+iMPcdGViTr/Lb4Jv8vAAqYzVp4sBZig438bj8joA7xYp+3Y570uw
-KF5PlYoEhtjoXbuqvWrQ8HWg6m5VYL0snWYVmZ/5ihklL6+MzfOQf04KB5MV5Bx4
-FsCg1sFk9hxHoT+DMA33B4YgXyOQMRo4S83GiIVO5ODPWdNNVbJqPRYngQBD0ruc
-MsL5gr47JCY=
-=xNxX
------END PGP SIGNATURE-----
-
---=-RYqirLGUt9lzUDChVU+g--
 
