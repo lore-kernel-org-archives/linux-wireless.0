@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40566 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41875 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbYBVOI1 (ORCPT
+	with ESMTP id S1752611AbYBYPcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 09:08:27 -0500
-Message-Id: <20080222111749.689180000@sipsolutions.net> (sfid-20080222_140848_367865_E5D0A15C)
-References: <20080222111644.183587000@sipsolutions.net>
-Date: Fri, 22 Feb 2008 12:16:48 +0100
+	Mon, 25 Feb 2008 10:32:12 -0500
+Message-Id: <20080225153007.340533000@sipsolutions.net> (sfid-20080225_153221_663598_BD4CFF6F)
+References: <20080225152740.360393000@sipsolutions.net>
+Date: Mon, 25 Feb 2008 16:27:46 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 4/8] mac80211: RCU-ify STA info structure access
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCH 06/10] mac80211: RCU-ify STA info structure access
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
@@ -19,35 +19,45 @@ List-ID: <linux-wireless.vger.kernel.org>
 This makes access to the STA hash table/list use RCU to protect
 against freeing of items. However, it's not a true RCU, the
 copy step is missing: whenever somebody changes a STA item it
-is simply updated. That will be addressed by a later change.
+is simply updated. This is an existing race condition that is
+now somewhat understandable.
+
+This patch also fixes the race key freeing vs. STA destruction
+by making sure that sta_info_destroy() is always called under
+RTNL and frees the key.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   31 +-
  drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   27 +-
- net/mac80211/cfg.c                         |   82 ++++--
+ net/mac80211/cfg.c                         |  110 ++++----
  net/mac80211/debugfs_sta.c                 |    4 
  net/mac80211/debugfs_sta.h                 |    2 
- net/mac80211/ieee80211.c                   |   76 ++++--
- net/mac80211/ieee80211_i.h                 |   13 -
+ net/mac80211/ieee80211.c                   |   78 +++--
+ net/mac80211/ieee80211_i.h                 |   13 
  net/mac80211/ieee80211_iface.c             |   11 
- net/mac80211/ieee80211_ioctl.c             |   60 +++-
+ net/mac80211/ieee80211_ioctl.c             |   42 +--
  net/mac80211/ieee80211_rate.c              |    8 
  net/mac80211/ieee80211_rate.h              |    1 
- net/mac80211/ieee80211_sta.c               |  126 ++++++----
- net/mac80211/key.c                         |    5 
- net/mac80211/rc80211_pid_algo.c            |   23 +
+ net/mac80211/ieee80211_sta.c               |  127 ++++++---
+ net/mac80211/key.c                         |    8 
+ net/mac80211/mesh.c                        |    5 
+ net/mac80211/mesh.h                        |   16 -
+ net/mac80211/mesh_hwmp.c                   |    6 
+ net/mac80211/mesh_pathtbl.c                |   30 +-
+ net/mac80211/mesh_plink.c                  |  101 +++----
+ net/mac80211/rc80211_pid_algo.c            |   25 +
  net/mac80211/rc80211_simple.c              |   18 -
  net/mac80211/rx.c                          |   24 -
- net/mac80211/sta_info.c                    |  350 +++++++++++++++++------------
- net/mac80211/sta_info.h                    |   58 +++-
- net/mac80211/tx.c                          |   48 ++-
+ net/mac80211/sta_info.c                    |  383 +++++++++++++++++------------
+ net/mac80211/sta_info.h                    |   61 +++-
+ net/mac80211/tx.c                          |   48 +--
  net/mac80211/wme.c                         |    8 
- 20 files changed, 612 insertions(+), 363 deletions(-)
+ 25 files changed, 699 insertions(+), 488 deletions(-)
 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-02-22 00:48:34.000000000 +0100
-@@ -426,6 +426,7 @@ struct ieee80211_local {
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/ieee80211_i.h	2008-02-25 16:15:22.000000000 +0100
+@@ -574,6 +574,7 @@ struct ieee80211_local {
  	unsigned int filter_flags; /* FIF_* */
  	struct iw_statistics wstats;
  	u8 wstats_flags;
@@ -55,7 +65,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	int tx_headroom; /* required headroom for hardware/radiotap */
  
  	enum {
-@@ -443,9 +444,15 @@ struct ieee80211_local {
+@@ -591,9 +592,15 @@ struct ieee80211_local {
  	struct sk_buff_head skb_queue;
  	struct sk_buff_head skb_queue_unreliable;
  
@@ -74,9 +84,17 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct list_head sta_list;
  	struct sta_info *sta_hash[STA_HASH_SIZE];
  	struct timer_list sta_cleanup;
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-02-22 00:48:31.000000000 +0100
-@@ -856,6 +856,8 @@ static void ieee80211_associated(struct 
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-02-25 16:15:22.000000000 +0100
+@@ -24,6 +24,7 @@
+ #include <linux/wireless.h>
+ #include <linux/random.h>
+ #include <linux/etherdevice.h>
++#include <linux/rtnetlink.h>
+ #include <net/iw_handler.h>
+ #include <asm/types.h>
+ 
+@@ -845,6 +846,8 @@ static void ieee80211_associated(struct 
  
  	ifsta->state = IEEE80211_ASSOCIATED;
  
@@ -85,7 +103,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sta = sta_info_get(local, ifsta->bssid);
  	if (!sta) {
  		printk(KERN_DEBUG "%s: No STA entry for own AP %s\n",
-@@ -871,7 +873,7 @@ static void ieee80211_associated(struct 
+@@ -860,7 +863,7 @@ static void ieee80211_associated(struct 
  				       "range\n",
  				       dev->name, print_mac(mac, ifsta->bssid));
  				disassoc = 1;
@@ -94,7 +112,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			} else
  				ieee80211_send_probe_req(dev, ifsta->bssid,
  							 local->scan_ssid,
-@@ -887,8 +889,15 @@ static void ieee80211_associated(struct 
+@@ -876,8 +879,17 @@ static void ieee80211_associated(struct 
  							 ifsta->ssid_len);
  			}
  		}
@@ -105,13 +123,15 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +
 +	if (disassoc && sta) {
 +		synchronize_rcu();
++		rtnl_lock();
 +		sta_info_destroy(sta);
++		rtnl_unlock();
 +	}
 +
  	if (disassoc) {
  		ifsta->state = IEEE80211_DISABLED;
  		ieee80211_set_associated(dev, ifsta, 0);
-@@ -1114,9 +1123,13 @@ static void ieee80211_sta_process_addba_
+@@ -1103,9 +1115,13 @@ static void ieee80211_sta_process_addba_
  	int ret = -EOPNOTSUPP;
  	DECLARE_MAC_BUF(mac);
  
@@ -126,7 +146,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	/* extract session parameters from addba request frame */
  	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
-@@ -1207,9 +1220,9 @@ end:
+@@ -1196,9 +1212,9 @@ end:
  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
  
  end_no_lock:
@@ -139,7 +159,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  static void ieee80211_sta_process_addba_resp(struct net_device *dev,
-@@ -1223,9 +1236,13 @@ static void ieee80211_sta_process_addba_
+@@ -1212,9 +1228,13 @@ static void ieee80211_sta_process_addba_
  	u16 tid;
  	u8 *state;
  
@@ -154,7 +174,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
  	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-@@ -1240,7 +1257,7 @@ static void ieee80211_sta_process_addba_
+@@ -1229,7 +1249,7 @@ static void ieee80211_sta_process_addba_
  #ifdef CONFIG_MAC80211_HT_DEBUG
  		printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
  #endif /* CONFIG_MAC80211_HT_DEBUG */
@@ -163,7 +183,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  
-@@ -1254,7 +1271,7 @@ static void ieee80211_sta_process_addba_
+@@ -1243,7 +1263,7 @@ static void ieee80211_sta_process_addba_
  			spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
  			printk(KERN_DEBUG "state not HT_ADDBA_REQUESTED_MSK:"
  				"%d\n", *state);
@@ -172,7 +192,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			return;
  		}
  
-@@ -1281,7 +1298,7 @@ static void ieee80211_sta_process_addba_
+@@ -1270,7 +1290,7 @@ static void ieee80211_sta_process_addba_
  		ieee80211_stop_tx_ba_session(hw, sta->addr, tid,
  					     WLAN_BACK_INITIATOR);
  	}
@@ -181,7 +201,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
-@@ -1336,16 +1353,20 @@ void ieee80211_sta_stop_rx_ba_session(st
+@@ -1325,16 +1345,20 @@ void ieee80211_sta_stop_rx_ba_session(st
  	struct sta_info *sta;
  	int ret, i;
  
@@ -204,7 +224,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  	sta->ampdu_mlme.tid_rx[tid].state =
-@@ -1384,7 +1405,7 @@ void ieee80211_sta_stop_rx_ba_session(st
+@@ -1373,7 +1397,7 @@ void ieee80211_sta_stop_rx_ba_session(st
  	kfree(sta->ampdu_mlme.tid_rx[tid].reorder_buf);
  
  	sta->ampdu_mlme.tid_rx[tid].state = HT_AGG_STATE_IDLE;
@@ -213,7 +233,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  
-@@ -1397,9 +1418,13 @@ static void ieee80211_sta_process_delba(
+@@ -1386,9 +1410,13 @@ static void ieee80211_sta_process_delba(
  	u16 initiator;
  	DECLARE_MAC_BUF(mac);
  
@@ -228,7 +248,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	params = le16_to_cpu(mgmt->u.action.u.delba.params);
  	tid = (params & IEEE80211_DELBA_PARAM_TID_MASK) >> 12;
-@@ -1424,7 +1449,7 @@ static void ieee80211_sta_process_delba(
+@@ -1413,7 +1441,7 @@ static void ieee80211_sta_process_delba(
  		ieee80211_stop_tx_ba_session(&local->hw, sta->addr, tid,
  					     WLAN_BACK_RECIPIENT);
  	}
@@ -237,7 +257,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  /*
-@@ -1447,9 +1472,13 @@ void sta_addba_resp_timer_expired(unsign
+@@ -1436,9 +1464,13 @@ void sta_addba_resp_timer_expired(unsign
  	struct sta_info *sta;
  	u8 *state;
  
@@ -252,7 +272,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	state = &sta->ampdu_mlme.tid_tx[tid].state;
  	/* check if the TID waits for addBA response */
-@@ -1471,7 +1500,7 @@ void sta_addba_resp_timer_expired(unsign
+@@ -1460,7 +1492,7 @@ void sta_addba_resp_timer_expired(unsign
  				     WLAN_BACK_INITIATOR);
  
  timer_expired_exit:
@@ -261,7 +281,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  /*
-@@ -1491,8 +1520,8 @@ void sta_rx_agg_session_timer_expired(un
+@@ -1480,8 +1512,8 @@ void sta_rx_agg_session_timer_expired(un
  					 timer_to_tid[0]);
  
  	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
@@ -272,7 +292,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  					 WLAN_REASON_QSTA_TIMEOUT);
  }
  
-@@ -1801,14 +1830,18 @@ static void ieee80211_rx_mgmt_assoc_resp
+@@ -1790,14 +1822,18 @@ static void ieee80211_rx_mgmt_assoc_resp
  	if (ifsta->assocresp_ies)
  		memcpy(ifsta->assocresp_ies, pos, ifsta->assocresp_ies_len);
  
@@ -292,7 +312,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			return;
  		}
  		bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
-@@ -1822,7 +1855,6 @@ static void ieee80211_rx_mgmt_assoc_resp
+@@ -1811,7 +1847,6 @@ static void ieee80211_rx_mgmt_assoc_resp
  		}
  	}
  
@@ -300,7 +320,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sta->flags |= WLAN_STA_AUTH | WLAN_STA_ASSOC | WLAN_STA_ASSOC_AP |
  		      WLAN_STA_AUTHORIZED;
  
-@@ -1893,7 +1925,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+@@ -1882,7 +1917,7 @@ static void ieee80211_rx_mgmt_assoc_resp
  	bss_conf->aid = aid;
  	ieee80211_set_associated(dev, ifsta, 1);
  
@@ -309,16 +329,16 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	ieee80211_associated(dev, ifsta);
  }
-@@ -2218,6 +2250,8 @@ static void ieee80211_rx_bss_info(struct
- 	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
- 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+@@ -2328,6 +2363,8 @@ static void ieee80211_rx_bss_info(struct
+ 				      mesh_peer_accepts_plinks(&elems, dev));
+ 	}
  
 +	rcu_read_lock();
 +
  	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
  	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
  	    (sta = sta_info_get(local, mgmt->sa))) {
-@@ -2272,9 +2306,10 @@ static void ieee80211_rx_bss_info(struct
+@@ -2353,9 +2390,10 @@ static void ieee80211_rx_bss_info(struct
  			       (unsigned long long) supp_rates,
  			       (unsigned long long) sta->supp_rates[rx_status->band]);
  		}
@@ -327,12 +347,12 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
 +	rcu_read_unlock();
 +
- 	if (!elems.ssid)
- 		return;
- 
-@@ -2459,8 +2494,10 @@ static void ieee80211_rx_bss_info(struct
- 				       "local TSF - IBSS merge with BSSID %s\n",
+ 	if (elems.ds_params && elems.ds_params_len == 1)
+ 		freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
+ 	else
+@@ -2549,8 +2587,10 @@ static void ieee80211_rx_bss_info(struct
  				       dev->name, print_mac(mac, mgmt->bssid));
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
  			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
 +			rcu_read_lock();
  			ieee80211_ibss_add_sta(dev, NULL,
@@ -341,17 +361,17 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		}
  	}
  
-@@ -2788,45 +2825,49 @@ static int ieee80211_sta_active_ibss(str
+@@ -2892,17 +2932,20 @@ static int ieee80211_sta_active_ibss(str
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  	int active = 0;
  	struct sta_info *sta;
 +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	rcu_read_lock();
  
 -	read_lock_bh(&local->sta_lock);
 -	list_for_each_entry(sta, &local->sta_list, list) {
 -		if (sta->dev == dev &&
++	rcu_read_lock();
++
 +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
 +		if (sta->sdata == sdata &&
  		    time_after(sta->last_rx + IEEE80211_IBSS_MERGE_INTERVAL,
@@ -366,12 +386,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	return active;
  }
- 
- 
--static void ieee80211_sta_expire(struct net_device *dev)
-+static void ieee80211_sta_expire_ibss(struct net_device *dev)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+@@ -2914,22 +2957,25 @@ static void ieee80211_sta_expire(struct 
  	struct sta_info *sta, *tmp;
  	LIST_HEAD(tmp_list);
  	DECLARE_MAC_BUF(mac);
@@ -380,8 +395,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -	write_lock_bh(&local->sta_lock);
 +	spin_lock_irqsave(&local->sta_lock, flags);
  	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
- 		if (time_after(jiffies, sta->last_rx +
- 			       IEEE80211_IBSS_INACTIVITY_LIMIT)) {
+ 		if (time_after(jiffies, sta->last_rx + exp_time)) {
  			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
  			       dev->name, print_mac(mac, sta->addr));
 -			__sta_info_get(sta);
@@ -402,21 +416,14 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +
 +	synchronize_rcu();
 +
++	rtnl_lock();
 +	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
 +		sta_info_destroy(sta);
++	rtnl_unlock();
  }
  
  
-@@ -2835,7 +2876,7 @@ static void ieee80211_sta_merge_ibss(str
- {
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
- 
--	ieee80211_sta_expire(dev);
-+	ieee80211_sta_expire_ibss(dev);
- 	if (ieee80211_sta_active_ibss(dev))
- 		return;
- 
-@@ -3796,6 +3837,7 @@ int ieee80211_sta_set_extra_ie(struct ne
+@@ -3976,6 +4022,7 @@ int ieee80211_sta_set_extra_ie(struct ne
  }
  
  
@@ -424,7 +431,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
  					 struct sk_buff *skb, u8 *bssid,
  					 u8 *addr)
-@@ -3818,7 +3860,7 @@ struct sta_info * ieee80211_ibss_add_sta
+@@ -3998,7 +4045,7 @@ struct sta_info * ieee80211_ibss_add_sta
  	printk(KERN_DEBUG "%s: Adding new IBSS station %s (dev=%s)\n",
  	       wiphy_name(local->hw.wiphy), print_mac(mac, addr), dev->name);
  
@@ -433,7 +440,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	if (IS_ERR(sta))
  		return NULL;
  
-@@ -3829,7 +3871,7 @@ struct sta_info * ieee80211_ibss_add_sta
+@@ -4009,7 +4056,7 @@ struct sta_info * ieee80211_ibss_add_sta
  
  	rate_control_rate_init(sta, local);
  
@@ -442,11 +449,19 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  
---- everything.orig/net/mac80211/sta_info.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-22 00:50:38.000000000 +0100
-@@ -22,14 +22,43 @@
- #include "sta_info.h"
+--- everything.orig/net/mac80211/sta_info.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/sta_info.c	2008-02-25 16:15:22.000000000 +0100
+@@ -15,6 +15,7 @@
+ #include <linux/skbuff.h>
+ #include <linux/if_arp.h>
+ #include <linux/timer.h>
++#include <linux/rtnetlink.h>
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+@@ -23,14 +24,43 @@
  #include "debugfs_sta.h"
+ #include "mesh.h"
  
 -/* Caller must hold local->sta_lock */
 -static void sta_info_hash_add(struct ieee80211_local *local,
@@ -486,7 +501,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 + * If @sta_info_unlink() did not clear the pointer then the caller owns
 + * the STA info structure now and is responsible of destroying it with
 + * a call to @sta_info_destroy(), not before RCU synchronisation, of
-+ * course.
++ * course. Note that sta_info_destroy() must be protected by the RTNL.
 + *
 + * In all other cases, there is no concept of ownership on a STA entry,
 + * each structure is owned by the global hash table/list until it is
@@ -496,7 +511,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  /* Caller must hold local->sta_lock */
  static int sta_info_hash_del(struct ieee80211_local *local,
-@@ -41,109 +70,108 @@ static int sta_info_hash_del(struct ieee
+@@ -42,46 +72,39 @@ static int sta_info_hash_del(struct ieee
  	if (!s)
  		return -ENOENT;
  	if (s == sta) {
@@ -550,6 +565,27 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  EXPORT_SYMBOL(sta_info_get);
  
+@@ -91,81 +114,97 @@ struct sta_info *sta_info_get_by_idx(str
+ 	struct sta_info *sta;
+ 	int i = 0;
+ 
+-	read_lock_bh(&local->sta_lock);
+-	list_for_each_entry(sta, &local->sta_list, list) {
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+ 		if (i < idx) {
+ 			++i;
+ 			continue;
+-		} else if (!dev || dev == sta->dev) {
+-			__sta_info_get(sta);
+-			read_unlock_bh(&local->sta_lock);
++		} else if (!dev || dev == sta->sdata->dev) {
+ 			return sta;
+ 		}
+ 	}
+-	read_unlock_bh(&local->sta_lock);
+ 
+ 	return NULL;
+ }
  
 -static void sta_info_release(struct kref *kref)
 +void sta_info_destroy(struct sta_info *sta)
@@ -563,11 +599,25 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -	 * hash table etc. external structures. Make sure that all
 -	 * buffered frames are release (one might have been added
 -	 * after sta_info_free() was called). */
-+	ieee80211_key_free(sta->key);
-+	sta->key = NULL;
++	ASSERT_RTNL();
++	might_sleep();
 +
 +	rate_control_remove_sta_debugfs(sta);
 +	ieee80211_sta_debugfs_remove(sta);
++
++	if (ieee80211_vif_is_mesh(&sta->sdata->vif))
++		mesh_plink_deactivate(sta);
++
++	/*
++	 * NOTE: This will call synchronize_rcu() internally to
++	 * make sure no key references can be in use. We rely on
++	 * that here for the mesh code!
++	 */
++	ieee80211_key_free(sta->key);
++	WARN_ON(sta->key);
++
++	if (ieee80211_vif_is_mesh(&sta->sdata->vif))
++		del_timer_sync(&sta->plink_timer);
 +
  	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
  		local->total_ps_buffered--;
@@ -639,7 +689,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
  	spin_lock_init(&sta->ampdu_mlme.ampdu_tx);
  	for (i = 0; i < STA_TID_NUM; i++) {
-@@ -168,29 +196,26 @@ struct sta_info *sta_info_add(struct iee
+@@ -190,29 +229,26 @@ struct sta_info *sta_info_add(struct iee
  	}
  	skb_queue_head_init(&sta->ps_tx_buf);
  	skb_queue_head_init(&sta->tx_filtered);
@@ -675,7 +725,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
  	printk(KERN_DEBUG "%s: Added STA %s\n",
-@@ -230,19 +255,20 @@ static void __sta_info_set_tim_bit(struc
+@@ -252,19 +288,20 @@ static void __sta_info_set_tim_bit(struc
  {
  	if (bss)
  		__bss_tim_set(bss, sta->aid);
@@ -703,7 +753,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
-@@ -250,88 +276,128 @@ static void __sta_info_clear_tim_bit(str
+@@ -272,93 +309,135 @@ static void __sta_info_clear_tim_bit(str
  {
  	if (bss)
  		__bss_tim_clear(bss, sta->aid);
@@ -772,6 +822,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -		__sta_info_clear_tim_bit(sdata->bss, sta);
 -	}
 -	local->num_sta--;
+-
+-	if (ieee80211_vif_is_mesh(&sdata->vif))
+-		mesh_accept_plinks_update(sdata->dev);
 +	return ret;
  }
  
@@ -780,7 +833,11 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  {
 -	struct sk_buff *skb;
 -	struct ieee80211_local *local = sta->local;
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+-
 -	DECLARE_MAC_BUF(mac);
+-
+-	might_sleep();
 +	struct ieee80211_local *local = (*sta)->local;
 +	struct ieee80211_sub_if_data *sdata = (*sta)->sdata;
 +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
@@ -794,7 +851,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +		return;
 +	}
  
--	might_sleep();
+-	write_lock_bh(&local->sta_lock);
+-	sta_info_remove(sta);
+-	write_unlock_bh(&local->sta_lock);
 +	/*
 +	 * Also pull caller's reference if the STA is pinned by the
 +	 * task that is adding the debugfs entries. In that case, we
@@ -822,9 +881,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +		return;
 +	}
  
--	write_lock_bh(&local->sta_lock);
--	sta_info_remove(sta);
--	write_unlock_bh(&local->sta_lock);
+-	if (ieee80211_vif_is_mesh(&sdata->vif))
+-		mesh_plink_deactivate(sta);
 +	list_del(&(*sta)->list);
  
 -	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
@@ -846,13 +904,10 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
 -
 -	ieee80211_key_free(sta->key);
--	sta->key = NULL;
+-	WARN_ON(sta->key);
 +	local->num_sta--;
  
  	if (local->ops->sta_notify) {
--		struct ieee80211_sub_if_data *sdata;
--
--		sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
 -
  		if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
  			sdata = sdata->u.vlan.ap;
@@ -864,7 +919,13 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
 -	rate_control_remove_sta_debugfs(sta);
 -	ieee80211_sta_debugfs_remove(sta);
--
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		mesh_accept_plinks_update(sdata);
++#ifdef CONFIG_MAC80211_MESH
++		del_timer(&(*sta)->plink_timer);
++#endif
++	}
+ 
 -	sta_info_put(sta);
 +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
 +	printk(KERN_DEBUG "%s: Removed STA %s\n",
@@ -884,7 +945,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  static inline int sta_info_buffer_expired(struct ieee80211_local *local,
  					  struct sta_info *sta,
-@@ -377,7 +443,7 @@ static void sta_info_cleanup_expire_buff
+@@ -404,7 +483,7 @@ static void sta_info_cleanup_expire_buff
  		if (!skb)
  			break;
  
@@ -893,7 +954,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		local->total_ps_buffered--;
  		printk(KERN_DEBUG "Buffered frame expired (STA "
  		       "%s)\n", print_mac(mac, sta->addr));
-@@ -394,13 +460,10 @@ static void sta_info_cleanup(unsigned lo
+@@ -421,13 +500,10 @@ static void sta_info_cleanup(unsigned lo
  	struct ieee80211_local *local = (struct ieee80211_local *) data;
  	struct sta_info *sta;
  
@@ -910,7 +971,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	local->sta_cleanup.expires =
  		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
-@@ -408,37 +471,45 @@ static void sta_info_cleanup(unsigned lo
+@@ -435,37 +511,45 @@ static void sta_info_cleanup(unsigned lo
  }
  
  #ifdef CONFIG_MAC80211_DEBUGFS
@@ -962,7 +1023,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	INIT_LIST_HEAD(&local->sta_list);
  
  	setup_timer(&local->sta_cleanup, sta_info_cleanup,
-@@ -447,7 +518,7 @@ void sta_info_init(struct ieee80211_loca
+@@ -474,7 +558,7 @@ void sta_info_init(struct ieee80211_loca
  		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
  
  #ifdef CONFIG_MAC80211_DEBUGFS
@@ -971,7 +1032,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  #endif
  }
  
-@@ -466,24 +537,29 @@ void sta_info_stop(struct ieee80211_loca
+@@ -493,24 +577,29 @@ void sta_info_stop(struct ieee80211_loca
  /**
   * sta_info_flush - flush matching STA entries from the STA table
   * @local: local interface data
@@ -1014,8 +1075,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
 +		sta_info_destroy(sta);
  }
---- everything.orig/net/mac80211/sta_info.h	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-22 00:48:31.000000000 +0100
+--- everything.orig/net/mac80211/sta_info.h	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/sta_info.h	2008-02-25 16:19:33.000000000 +0100
 @@ -12,7 +12,6 @@
  #include <linux/list.h>
  #include <linux/types.h>
@@ -1024,7 +1085,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  #include "ieee80211_key.h"
  
  /**
-@@ -124,8 +123,14 @@ struct sta_ampdu_mlme {
+@@ -134,8 +133,14 @@ struct sta_ampdu_mlme {
  	u8 dialog_token_allocator;
  };
  
@@ -1040,7 +1101,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct list_head list;
  	struct sta_info *hnext; /* next entry in hash table list */
  
-@@ -154,8 +159,8 @@ struct sta_info {
+@@ -166,8 +171,8 @@ struct sta_info {
  	/* last rates used to send a frame to this STA */
  	int last_txrate_idx, last_nonerp_txrate_idx;
  
@@ -1051,7 +1112,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	struct ieee80211_key *key;
  
-@@ -189,6 +194,12 @@ struct sta_info {
+@@ -199,6 +204,12 @@ struct sta_info {
  
  	u16 listen_interval;
  
@@ -1064,7 +1125,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct ieee80211_ht_info ht_info; /* 802.11n HT capabilities
  					     of this STA */
  	struct sta_ampdu_mlme ampdu_mlme;
-@@ -232,23 +243,32 @@ struct sta_info {
+@@ -262,25 +273,37 @@ static inline enum plink_state sta_plink
   */
  #define STA_INFO_CLEANUP_INTERVAL (10 * HZ)
  
@@ -1074,6 +1135,15 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -}
 -
 -struct sta_info * sta_info_get(struct ieee80211_local *local, u8 *addr);
++/*
++ * Get a STA info, must have be under RCU read lock.
++ */
++struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr);
++/*
++ * Get STA info by index, BROKEN!
++ */
+ struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int idx,
+ 				      struct net_device *dev);
 -void sta_info_put(struct sta_info *sta);
 -struct sta_info *sta_info_add(struct ieee80211_local *local,
 -			      struct net_device *dev, u8 *addr, gfp_t gfp);
@@ -1083,10 +1153,6 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -int sta_info_start(struct ieee80211_local *local);
 -void sta_info_stop(struct ieee80211_local *local);
 -void sta_info_flush(struct ieee80211_local *local, struct net_device *dev);
-+/*
-+ * Get a STA info, must have be under RCU read lock.
-+ */
-+struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr);
 +/*
 + * Add a new STA info, must be under RCU read lock
 + * because otherwise the returned reference isn't
@@ -1112,9 +1178,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +		    struct ieee80211_sub_if_data *sdata);
 +
  #endif /* STA_INFO_H */
---- everything.orig/net/mac80211/tx.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/tx.c	2008-02-22 00:48:34.000000000 +0100
-@@ -323,10 +323,8 @@ static void purge_old_ps_buffers(struct 
+--- everything.orig/net/mac80211/tx.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/tx.c	2008-02-25 16:15:22.000000000 +0100
+@@ -327,10 +327,8 @@ static void purge_old_ps_buffers(struct 
  		}
  		total += skb_queue_len(&ap->ps_bc_buf);
  	}
@@ -1126,7 +1192,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		skb = skb_dequeue(&sta->ps_tx_buf);
  		if (skb) {
  			purged++;
-@@ -334,7 +332,8 @@ static void purge_old_ps_buffers(struct 
+@@ -338,7 +336,8 @@ static void purge_old_ps_buffers(struct 
  		}
  		total += skb_queue_len(&sta->ps_tx_buf);
  	}
@@ -1136,7 +1202,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	local->total_ps_buffered = total;
  	printk(KERN_DEBUG "%s: PS buffers full - purged %d frames\n",
-@@ -1137,20 +1136,17 @@ static int ieee80211_tx(struct net_devic
+@@ -1141,20 +1140,17 @@ static int ieee80211_tx(struct net_devic
  		return 0;
  	}
  
@@ -1158,9 +1224,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 -	rcu_read_lock();
 -
  	sta = tx.sta;
- 	tx.u.tx.channel = local->hw.conf.channel;
+ 	tx.channel = local->hw.conf.channel;
  
-@@ -1163,9 +1159,6 @@ static int ieee80211_tx(struct net_devic
+@@ -1167,9 +1163,6 @@ static int ieee80211_tx(struct net_devic
  
  	skb = tx.skb; /* handlers are allowed to change skb */
  
@@ -1170,7 +1236,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	if (unlikely(res == TX_DROP)) {
  		I802_DEBUG_INC(local->tx_handlers_drop);
  		goto drop;
-@@ -1453,11 +1446,11 @@ int ieee80211_subif_start_xmit(struct sk
+@@ -1489,11 +1482,11 @@ int ieee80211_subif_start_xmit(struct sk
  	 * in AP mode)
  	 */
  	if (!is_multicast_ether_addr(hdr.addr1)) {
@@ -1185,7 +1251,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	}
  
  	/* receiver is QoS enabled, use a QoS type frame */
-@@ -1680,7 +1673,6 @@ static void ieee80211_beacon_add_tim(str
+@@ -1722,7 +1715,6 @@ static void ieee80211_beacon_add_tim(str
  
  	/* Generate bitmap for TIM only if there are any STAs in power save
  	 * mode. */
@@ -1193,7 +1259,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	if (atomic_read(&bss->num_sta_ps) > 0)
  		/* in the hope that this is faster than
  		 * checking byte-for-byte */
-@@ -1731,7 +1723,6 @@ static void ieee80211_beacon_add_tim(str
+@@ -1773,7 +1765,6 @@ static void ieee80211_beacon_add_tim(str
  		*pos++ = aid0; /* Bitmap control */
  		*pos++ = 0; /* Part Virt Bitmap */
  	}
@@ -1201,31 +1267,31 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
-@@ -1779,7 +1770,22 @@ struct sk_buff *ieee80211_beacon_get(str
+@@ -1821,7 +1812,22 @@ struct sk_buff *ieee80211_beacon_get(str
+ 			ieee80211_include_sequence(sdata,
+ 					(struct ieee80211_hdr *)skb->data);
  
- 	ieee80211_include_sequence(sdata, (struct ieee80211_hdr *)skb->data);
- 
--	ieee80211_beacon_add_tim(local, ap, skb, beacon);
-+	/*
-+	 * Not very nice, but we want to allow the driver to call
-+	 * ieee80211_beacon_get() as a response to the set_tim()
-+	 * callback. That, however, is already invoked under the
-+	 * sta_lock to guarantee consistent and race-free update
-+	 * of the tim bitmap in mac80211 and the driver.
-+	 */
-+	if (local->tim_in_locked_section) {
-+		ieee80211_beacon_add_tim(local, ap, skb, beacon);
-+	} else {
-+		unsigned long flags;
+-			ieee80211_beacon_add_tim(local, ap, skb, beacon);
++			/*
++			 * Not very nice, but we want to allow the driver to call
++			 * ieee80211_beacon_get() as a response to the set_tim()
++			 * callback. That, however, is already invoked under the
++			 * sta_lock to guarantee consistent and race-free update
++			 * of the tim bitmap in mac80211 and the driver.
++			 */
++			if (local->tim_in_locked_section) {
++				ieee80211_beacon_add_tim(local, ap, skb, beacon);
++			} else {
++				unsigned long flags;
 +
-+		spin_lock_irqsave(&local->sta_lock, flags);
-+		ieee80211_beacon_add_tim(local, ap, skb, beacon);
-+		spin_unlock_irqrestore(&local->sta_lock, flags);
-+	}
++				spin_lock_irqsave(&local->sta_lock, flags);
++				ieee80211_beacon_add_tim(local, ap, skb, beacon);
++				spin_unlock_irqrestore(&local->sta_lock, flags);
++			}
  
- 	if (beacon->tail)
- 		memcpy(skb_put(skb, beacon->tail_len), beacon->tail,
-@@ -1881,7 +1887,6 @@ ieee80211_get_buffered_bc(struct ieee802
+ 			if (beacon->tail)
+ 				memcpy(skb_put(skb, beacon->tail_len),
+@@ -1965,7 +1971,6 @@ ieee80211_get_buffered_bc(struct ieee802
  		rcu_read_unlock();
  		return NULL;
  	}
@@ -1233,7 +1299,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	if (bss->dtim_count != 0)
  		return NULL; /* send buffered bc/mc only after DTIM beacon */
-@@ -1926,8 +1931,7 @@ ieee80211_get_buffered_bc(struct ieee802
+@@ -2010,8 +2015,7 @@ ieee80211_get_buffered_bc(struct ieee802
  		skb = NULL;
  	}
  
@@ -1243,9 +1309,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	return skb;
  }
---- everything.orig/net/mac80211/cfg.c	2008-02-21 22:09:29.000000000 +0100
-+++ everything/net/mac80211/cfg.c	2008-02-22 00:48:31.000000000 +0100
-@@ -128,7 +128,6 @@ static int ieee80211_add_key(struct wiph
+--- everything.orig/net/mac80211/cfg.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/cfg.c	2008-02-25 16:15:22.000000000 +0100
+@@ -142,7 +142,6 @@ static int ieee80211_add_key(struct wiph
  	struct ieee80211_sub_if_data *sdata;
  	struct sta_info *sta = NULL;
  	enum ieee80211_key_alg alg;
@@ -1253,101 +1319,126 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct ieee80211_key *key;
  
  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -152,21 +151,22 @@ static int ieee80211_add_key(struct wiph
- 	if (!key)
- 		return -ENOMEM;
- 
-+	rcu_read_lock();
-+
- 	if (mac_addr) {
- 		sta = sta_info_get(sdata->local, mac_addr);
- 		if (!sta) {
- 			ieee80211_key_free(key);
-+			rcu_read_unlock();
- 			return -ENOENT;
- 		}
- 	}
+@@ -176,12 +175,7 @@ static int ieee80211_add_key(struct wiph
  
  	ieee80211_key_link(key, sdata, sta);
--	ret = 0;
  
+-	ret = 0;
+-
 -	if (sta)
 -		sta_info_put(sta);
-+	rcu_read_unlock();
- 
+-
 -	return ret;
 +	return 0;
  }
  
  static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
-@@ -179,9 +179,13 @@ static int ieee80211_del_key(struct wiph
+@@ -190,7 +184,6 @@ static int ieee80211_del_key(struct wiph
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	int ret;
+-	struct ieee80211_key *key;
+ 
  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
- 	if (mac_addr) {
-+		rcu_read_lock();
-+
- 		sta = sta_info_get(sdata->local, mac_addr);
--		if (!sta)
-+		if (!sta) {
-+			rcu_read_unlock();
- 			return -ENOENT;
-+		}
+@@ -201,21 +194,18 @@ static int ieee80211_del_key(struct wiph
  
  		ret = 0;
- 		if (sta->key)
-@@ -189,7 +193,7 @@ static int ieee80211_del_key(struct wiph
- 		else
+ 		if (sta->key) {
+-			key = sta->key;
+-			ieee80211_key_free(key);
++			ieee80211_key_free(sta->key);
+ 			WARN_ON(sta->key);
+ 		} else
  			ret = -ENOENT;
  
 -		sta_info_put(sta);
-+		rcu_read_unlock();
  		return ret;
  	}
  
-@@ -215,6 +219,8 @@ static int ieee80211_get_key(struct wiph
- 	u16 iv16;
- 	int err = -ENOENT;
+ 	if (!sdata->keys[key_idx])
+ 		return -ENOENT;
  
-+	rcu_read_lock();
-+
- 	if (mac_addr) {
- 		sta = sta_info_get(sdata->local, mac_addr);
- 		if (!sta)
-@@ -278,8 +284,7 @@ static int ieee80211_get_key(struct wiph
+-	key = sdata->keys[key_idx];
+-	ieee80211_key_free(key);
++	ieee80211_key_free(sdata->keys[key_idx]);
+ 	WARN_ON(sdata->keys[key_idx]);
+ 
+ 	return 0;
+@@ -298,8 +288,6 @@ static int ieee80211_get_key(struct wiph
  	err = 0;
  
   out:
 -	if (sta)
 -		sta_info_put(sta);
-+	rcu_read_unlock();
  	return err;
  }
  
-@@ -301,9 +306,13 @@ static int ieee80211_get_station(struct 
+@@ -317,7 +305,7 @@ static int ieee80211_config_default_key(
+ 
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
+ 			STATION_INFO_RX_BYTES |
+@@ -346,16 +334,20 @@ static int ieee80211_dump_station(struct
+ {
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  	struct sta_info *sta;
- 
-+	rcu_read_lock();
++	int ret = -ENOENT;
 +
- 	sta = sta_info_get(local, mac);
++	rcu_read_lock();
+ 
+ 	sta = sta_info_get_by_idx(local, idx, dev);
 -	if (!sta)
-+	if (!sta) {
-+		rcu_read_unlock();
- 		return -ENOENT;
+-		return -ENOENT;
++	if (sta) {
++		ret = 0;
++		memcpy(mac, sta->addr, ETH_ALEN);
++		sta_set_sinfo(sta, sinfo);
 +	}
  
- 	/* XXX: verify sta->dev == dev */
- 
-@@ -315,7 +324,7 @@ static int ieee80211_get_station(struct 
- 	stats->rx_bytes = sta->rx_bytes;
- 	stats->tx_bytes = sta->tx_bytes;
- 
+-	memcpy(mac, sta->addr, ETH_ALEN);
+-	sta_set_sinfo(sta, sinfo);
 -	sta_info_put(sta);
 +	rcu_read_unlock();
  
- 	return 0;
+-	return 0;
++	return ret;
  }
-@@ -510,8 +519,8 @@ static void ieee80211_send_layer2_update
+ 
+ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+@@ -363,16 +355,21 @@ static int ieee80211_get_station(struct 
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct sta_info *sta;
++	int ret = -ENOENT;
+ 
+-	sta = sta_info_get(local, mac);
+-	if (!sta)
+-		return -ENOENT;
++	rcu_read_lock();
+ 
+ 	/* XXX: verify sta->dev == dev */
+-	sta_set_sinfo(sta, sinfo);
+-	sta_info_put(sta);
+ 
+-	return 0;
++	sta = sta_info_get(local, mac);
++	if (sta) {
++		ret = 0;
++		sta_set_sinfo(sta, sinfo);
++	}
++
++	rcu_read_unlock();
++
++	return ret;
+ }
+ 
+ /*
+@@ -565,8 +562,8 @@ static void ieee80211_send_layer2_update
  	msg->xid_info[1] = 1;	/* LLC types/classes: Type 1 LLC */
  	msg->xid_info[2] = 0;	/* XID sender's receive window size (RW) */
  
@@ -1358,34 +1449,41 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	memset(skb->cb, 0, sizeof(skb->cb));
  	netif_rx(skb);
  }
-@@ -582,11 +591,14 @@ static int ieee80211_add_station(struct 
- 	} else
+@@ -578,7 +575,7 @@ static void sta_apply_parameters(struct 
+ 	u32 rates;
+ 	int i, j;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	if (params->station_flags & STATION_FLAG_CHANGED) {
+ 		sta->flags &= ~WLAN_STA_AUTHORIZED;
+@@ -650,14 +647,13 @@ static int ieee80211_add_station(struct 
  		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
--	sta = sta_info_add(local, dev, mac, GFP_KERNEL);
--	if (IS_ERR(sta))
-+	rcu_read_lock();
-+
-+	sta = sta_info_add(sdata, mac);
-+	if (IS_ERR(sta)) {
-+		rcu_read_unlock();
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+-		sta = mesh_plink_add(mac, DEFAULT_RATES, dev);
++		sta = mesh_plink_add(mac, DEFAULT_RATES, sdata);
+ 	else
+-		sta = sta_info_add(local, dev, mac, GFP_KERNEL);
++		sta = sta_info_add(sdata, mac);
+ 
+ 	if (IS_ERR(sta))
  		return PTR_ERR(sta);
-+	}
  
 -	sta->dev = sdata->dev;
  	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
  	    sdata->vif.type == IEEE80211_IF_TYPE_AP)
  		ieee80211_send_layer2_update(sta);
-@@ -597,7 +609,7 @@ static int ieee80211_add_station(struct 
+@@ -668,15 +664,14 @@ static int ieee80211_add_station(struct 
  
  	rate_control_rate_init(sta, local);
  
 -	sta_info_put(sta);
-+	rcu_read_unlock();
- 
+-
  	return 0;
  }
-@@ -605,19 +617,29 @@ static int ieee80211_add_station(struct 
+ 
  static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
  				 u8 *mac)
  {
@@ -1395,20 +1493,13 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct sta_info *sta;
  
  	if (mac) {
- 		/* XXX: get sta belonging to dev */
-+		rcu_read_lock();
- 		sta = sta_info_get(local, mac);
--		if (!sta)
-+		if (!sta) {
-+			rcu_read_unlock();
+@@ -685,10 +680,14 @@ static int ieee80211_del_station(struct 
+ 		if (!sta)
  			return -ENOENT;
-+		}
-+
-+		sta_info_unlink(&sta);
  
 -		sta_info_free(sta);
 -		sta_info_put(sta);
-+		rcu_read_unlock();
++		sta_info_unlink(&sta);
 +
 +		if (sta) {
 +			synchronize_rcu();
@@ -1420,30 +1511,17 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	return 0;
  }
-@@ -631,25 +653,31 @@ static int ieee80211_change_station(stru
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
- 
-+	rcu_read_lock();
-+
- 	/* XXX: get sta belonging to dev */
- 	sta = sta_info_get(local, mac);
--	if (!sta)
-+	if (!sta) {
-+		rcu_read_unlock();
+@@ -707,21 +706,19 @@ static int ieee80211_change_station(stru
+ 	if (!sta)
  		return -ENOENT;
-+	}
  
 -	if (params->vlan && params->vlan != sta->dev) {
 +	if (params->vlan && params->vlan != sta->sdata->dev) {
  		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
  
  		if (vlansdata->vif.type != IEEE80211_IF_TYPE_VLAN ||
--		    vlansdata->vif.type != IEEE80211_IF_TYPE_AP)
-+		    vlansdata->vif.type != IEEE80211_IF_TYPE_AP) {
-+		    	rcu_read_unlock();
+ 		    vlansdata->vif.type != IEEE80211_IF_TYPE_AP)
  			return -EINVAL;
-+		}
  
 -		sta->dev = params->vlan;
 +		sta->sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
@@ -1453,13 +1531,81 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sta_apply_parameters(local, sta, params);
  
 -	sta_info_put(sta);
-+	rcu_read_unlock();
- 
+-
  	return 0;
  }
---- everything.orig/net/mac80211/ieee80211.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-22 00:48:31.000000000 +0100
-@@ -367,15 +367,19 @@ static int ieee80211_stop(struct net_dev
+ 
+@@ -741,23 +738,26 @@ static int ieee80211_add_mpath(struct wi
+ 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
+ 		return -ENOTSUPP;
+ 
++	rcu_read_lock();
+ 	sta = sta_info_get(local, next_hop);
+-	if (!sta)
++	if (!sta) {
++		rcu_read_unlock();
+ 		return -ENOENT;
++	}
+ 
+ 	err = mesh_path_add(dst, dev);
+-	if (err)
++	if (err) {
++		rcu_read_unlock();
+ 		return err;
++	}
+ 
+-	rcu_read_lock();
+ 	mpath = mesh_path_lookup(dst, dev);
+ 	if (!mpath) {
+ 		rcu_read_unlock();
+-		sta_info_put(sta);
+ 		return -ENXIO;
+ 	}
+ 	mesh_path_fix_nexthop(mpath, sta);
+-	sta_info_put(sta);
++
+ 	rcu_read_unlock();
+ 	return 0;
+ }
+@@ -766,7 +766,7 @@ static int ieee80211_del_mpath(struct wi
+ 				 u8 *dst)
+ {
+ 	if (dst)
+-		return mesh_path_del(dst, dev);
++		return mesh_path_del(dst, dev, false);
+ 
+ 	mesh_path_flush(dev);
+ 	return 0;
+@@ -787,20 +787,22 @@ static int ieee80211_change_mpath(struct
+ 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
+ 		return -ENOTSUPP;
+ 
++	rcu_read_lock();
++
+ 	sta = sta_info_get(local, next_hop);
+-	if (!sta)
++	if (!sta) {
++		rcu_read_unlock();
+ 		return -ENOENT;
++	}
+ 
+-	rcu_read_lock();
+ 	mpath = mesh_path_lookup(dst, dev);
+ 	if (!mpath) {
+ 		rcu_read_unlock();
+-		sta_info_put(sta);
+ 		return -ENOENT;
+ 	}
+ 
+ 	mesh_path_fix_nexthop(mpath, sta);
+-	sta_info_put(sta);
++
+ 	rcu_read_unlock();
+ 	return 0;
+ }
+--- everything.orig/net/mac80211/ieee80211.c	2008-02-25 16:14:09.000000000 +0100
++++ everything/net/mac80211/ieee80211.c	2008-02-25 16:15:22.000000000 +0100
+@@ -375,15 +375,19 @@ static int ieee80211_stop(struct net_dev
  
  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
@@ -1482,7 +1628,16 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	netif_stop_queue(dev);
  
  	/*
-@@ -511,9 +515,12 @@ int ieee80211_start_tx_ba_session(struct
+@@ -449,7 +453,7 @@ static int ieee80211_stop(struct net_dev
+ 		netif_tx_unlock_bh(local->mdev);
+ 		break;
+ 	case IEEE80211_IF_TYPE_MESH_POINT:
+-		sta_info_flush(local, dev);
++		sta_info_flush(local, sdata);
+ 		/* fall through */
+ 	case IEEE80211_IF_TYPE_STA:
+ 	case IEEE80211_IF_TYPE_IBSS:
+@@ -522,9 +526,12 @@ int ieee80211_start_tx_ba_session(struct
  				print_mac(mac, ra), tid);
  #endif /* CONFIG_MAC80211_HT_DEBUG */
  
@@ -1495,7 +1650,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return -ENOENT;
  	}
  
-@@ -553,7 +560,7 @@ int ieee80211_start_tx_ba_session(struct
+@@ -564,7 +571,7 @@ int ieee80211_start_tx_ba_session(struct
  		spin_unlock_bh(&local->mdev->queue_lock);
  		goto start_ba_exit;
  	}
@@ -1504,7 +1659,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	/* Ok, the Addba frame hasn't been sent yet, but if the driver calls the
  	 * call back right away, it must see that the flow has begun */
-@@ -590,7 +597,7 @@ int ieee80211_start_tx_ba_session(struct
+@@ -601,7 +608,7 @@ int ieee80211_start_tx_ba_session(struct
  			sta->ampdu_mlme.dialog_token_allocator;
  	sta->ampdu_mlme.tid_tx[tid].ssn = start_seq_num;
  
@@ -1513,7 +1668,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			 sta->ampdu_mlme.tid_tx[tid].dialog_token,
  			 sta->ampdu_mlme.tid_tx[tid].ssn,
  			 0x40, 5000);
-@@ -603,7 +610,7 @@ int ieee80211_start_tx_ba_session(struct
+@@ -614,7 +621,7 @@ int ieee80211_start_tx_ba_session(struct
  
  start_ba_exit:
  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
@@ -1522,7 +1677,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	return ret;
  }
  EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
-@@ -626,9 +633,12 @@ int ieee80211_stop_tx_ba_session(struct 
+@@ -637,9 +644,12 @@ int ieee80211_stop_tx_ba_session(struct 
  				print_mac(mac, ra), tid);
  #endif /* CONFIG_MAC80211_HT_DEBUG */
  
@@ -1536,7 +1691,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	/* check if the TID is in aggregation */
  	state = &sta->ampdu_mlme.tid_tx[tid].state;
-@@ -662,7 +672,7 @@ int ieee80211_stop_tx_ba_session(struct 
+@@ -673,7 +683,7 @@ int ieee80211_stop_tx_ba_session(struct 
  
  stop_BA_exit:
  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
@@ -1545,7 +1700,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	return ret;
  }
  EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
-@@ -680,8 +690,10 @@ void ieee80211_start_tx_ba_cb(struct iee
+@@ -691,8 +701,10 @@ void ieee80211_start_tx_ba_cb(struct iee
  		return;
  	}
  
@@ -1556,7 +1711,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		printk(KERN_DEBUG "Could not find station: %s\n",
  				print_mac(mac, ra));
  		return;
-@@ -694,7 +706,7 @@ void ieee80211_start_tx_ba_cb(struct iee
+@@ -705,7 +717,7 @@ void ieee80211_start_tx_ba_cb(struct iee
  		printk(KERN_DEBUG "addBA was not requested yet, state is %d\n",
  				*state);
  		spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
@@ -1565,7 +1720,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  
-@@ -707,7 +719,7 @@ void ieee80211_start_tx_ba_cb(struct iee
+@@ -718,7 +730,7 @@ void ieee80211_start_tx_ba_cb(struct iee
  		ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
  	}
  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
@@ -1574,7 +1729,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
  
-@@ -728,10 +740,12 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+@@ -739,10 +751,12 @@ void ieee80211_stop_tx_ba_cb(struct ieee
  	printk(KERN_DEBUG "Stop a BA session requested on DA %s tid %d\n",
  				print_mac(mac, ra), tid);
  
@@ -1587,7 +1742,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  	state = &sta->ampdu_mlme.tid_tx[tid].state;
-@@ -739,13 +753,13 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+@@ -750,13 +764,13 @@ void ieee80211_stop_tx_ba_cb(struct ieee
  	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
  	if ((*state & HT_AGG_STATE_REQ_STOP_BA_MSK) == 0) {
  		printk(KERN_DEBUG "unexpected callback to A-MPDU stop\n");
@@ -1603,7 +1758,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
  
  	agg_queue = sta->tid_to_tx_q[tid];
-@@ -766,7 +780,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+@@ -777,7 +791,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee
  	sta->ampdu_mlme.tid_tx[tid].addba_req_num = 0;
  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
  
@@ -1612,7 +1767,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
  
-@@ -876,32 +890,41 @@ int ieee80211_if_update_wds(struct net_d
+@@ -887,32 +901,41 @@ int ieee80211_if_update_wds(struct net_d
  	struct sta_info *sta;
  	DECLARE_MAC_BUF(mac);
  
@@ -1663,7 +1818,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	return 0;
  }
  
-@@ -1311,6 +1334,8 @@ void ieee80211_tx_status(struct ieee8021
+@@ -1330,6 +1353,8 @@ void ieee80211_tx_status(struct ieee8021
  		return;
  	}
  
@@ -1672,7 +1827,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	if (status->excessive_retries) {
  		struct sta_info *sta;
  		sta = sta_info_get(local, hdr->addr1);
-@@ -1324,10 +1349,9 @@ void ieee80211_tx_status(struct ieee8021
+@@ -1343,10 +1368,9 @@ void ieee80211_tx_status(struct ieee8021
  				status->flags |= IEEE80211_TX_STATUS_TX_FILTERED;
  				ieee80211_handle_filtered_frame(local, sta,
  								skb, status);
@@ -1684,7 +1839,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		}
  	}
  
-@@ -1337,12 +1361,14 @@ void ieee80211_tx_status(struct ieee8021
+@@ -1356,12 +1380,14 @@ void ieee80211_tx_status(struct ieee8021
  		if (sta) {
  			ieee80211_handle_filtered_frame(local, sta, skb,
  							status);
@@ -1700,8 +1855,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	ieee80211_led_tx(local, 0);
  
  	/* SNMP counters
---- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/rc80211_pid_algo.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-02-25 16:15:22.000000000 +0100
 @@ -77,7 +77,7 @@ static void rate_control_pid_adjust_rate
  	int cur_sorted, new_sorted, probe, tmp, n_bitrates, band;
  	int cur = sta->txrate_idx;
@@ -1711,7 +1866,16 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
  	band = sband->band;
  	n_bitrates = sband->n_bitrates;
-@@ -239,23 +239,25 @@ static void rate_control_pid_tx_status(v
+@@ -149,7 +149,7 @@ static void rate_control_pid_sample(stru
+ 				    struct sta_info *sta)
+ {
+ #ifdef CONFIG_MAC80211_MESH
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ #endif
+ 	struct rc_pid_sta_info *spinfo = sta->rate_ctrl_priv;
+ 	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
+@@ -249,23 +249,25 @@ static void rate_control_pid_tx_status(v
  	unsigned long period;
  	struct ieee80211_supported_band *sband;
  
@@ -1741,7 +1905,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	spinfo = sta->rate_ctrl_priv;
  	spinfo->tx_num_xmit++;
-@@ -296,8 +298,8 @@ static void rate_control_pid_tx_status(v
+@@ -303,8 +305,8 @@ static void rate_control_pid_tx_status(v
  	if (time_after(jiffies, spinfo->last_sample + period))
  		rate_control_pid_sample(pinfo, local, sta);
  
@@ -1752,7 +1916,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  static void rate_control_pid_get_rate(void *priv, struct net_device *dev,
-@@ -312,6 +314,8 @@ static void rate_control_pid_get_rate(vo
+@@ -319,6 +321,8 @@ static void rate_control_pid_get_rate(vo
  	int rateidx;
  	u16 fc;
  
@@ -1761,7 +1925,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sta = sta_info_get(local, hdr->addr1);
  
  	/* Send management frames and broadcast/multicast data using lowest
-@@ -320,8 +324,7 @@ static void rate_control_pid_get_rate(vo
+@@ -327,8 +331,7 @@ static void rate_control_pid_get_rate(vo
  	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
  	    is_multicast_ether_addr(hdr->addr1) || !sta) {
  		sel->rate = rate_lowest(local, sband, sta);
@@ -1771,7 +1935,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  
-@@ -337,7 +340,7 @@ static void rate_control_pid_get_rate(vo
+@@ -344,7 +347,7 @@ static void rate_control_pid_get_rate(vo
  
  	sta->last_txrate_idx = rateidx;
  
@@ -1780,8 +1944,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	sel->rate = &sband->bitrates[rateidx];
  
---- everything.orig/net/mac80211/rc80211_simple.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/rc80211_simple.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/rc80211_simple.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/rc80211_simple.c	2008-02-25 16:15:22.000000000 +0100
 @@ -40,7 +40,7 @@ static void rate_control_rate_inc(struct
  	int i = sta->txrate_idx;
  	int maxrate;
@@ -1814,7 +1978,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	srctrl = sta->rate_ctrl_priv;
  	srctrl->tx_num_xmit++;
-@@ -194,7 +196,8 @@ static void rate_control_simple_tx_statu
+@@ -191,7 +193,8 @@ static void rate_control_simple_tx_statu
  		}
  	}
  
@@ -1824,7 +1988,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  
-@@ -211,6 +214,8 @@ rate_control_simple_get_rate(void *priv,
+@@ -208,6 +211,8 @@ rate_control_simple_get_rate(void *priv,
  	int rateidx;
  	u16 fc;
  
@@ -1833,7 +1997,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	sta = sta_info_get(local, hdr->addr1);
  
  	/* Send management frames and broadcast/multicast data using lowest
-@@ -219,8 +224,7 @@ rate_control_simple_get_rate(void *priv,
+@@ -216,8 +221,7 @@ rate_control_simple_get_rate(void *priv,
  	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
  	    is_multicast_ether_addr(hdr->addr1) || !sta) {
  		sel->rate = rate_lowest(local, sband, sta);
@@ -1843,7 +2007,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		return;
  	}
  
-@@ -236,7 +240,7 @@ rate_control_simple_get_rate(void *priv,
+@@ -233,7 +237,7 @@ rate_control_simple_get_rate(void *priv,
  
  	sta->last_txrate_idx = rateidx;
  
@@ -1852,9 +2016,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	sel->rate = &sband->bitrates[rateidx];
  }
---- everything.orig/net/mac80211/rx.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/rx.c	2008-02-22 00:48:34.000000000 +0100
-@@ -574,7 +574,7 @@ static void ap_sta_ps_start(struct net_d
+--- everything.orig/net/mac80211/rx.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/rx.c	2008-02-25 16:15:22.000000000 +0100
+@@ -631,7 +631,7 @@ static void ap_sta_ps_start(struct net_d
  	struct ieee80211_sub_if_data *sdata;
  	DECLARE_MAC_BUF(mac);
  
@@ -1863,7 +2027,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	if (sdata->bss)
  		atomic_inc(&sdata->bss->num_sta_ps);
-@@ -595,7 +595,7 @@ static int ap_sta_ps_end(struct net_devi
+@@ -652,7 +652,7 @@ static int ap_sta_ps_end(struct net_devi
  	struct ieee80211_tx_packet_data *pkt_data;
  	DECLARE_MAC_BUF(mac);
  
@@ -1872,7 +2036,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	if (sdata->bss)
  		atomic_dec(&sdata->bss->num_sta_ps);
-@@ -1212,7 +1212,7 @@ ieee80211_deliver_skb(struct ieee80211_t
+@@ -1287,7 +1287,7 @@ ieee80211_deliver_skb(struct ieee80211_r
  				       "multicast frame\n", dev->name);
  		} else {
  			dsta = sta_info_get(local, skb->data);
@@ -1881,7 +2045,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  				/*
  				 * The destination station is associated to
  				 * this AP (in this VLAN), so send the frame
-@@ -1222,8 +1222,6 @@ ieee80211_deliver_skb(struct ieee80211_t
+@@ -1297,8 +1297,6 @@ ieee80211_deliver_skb(struct ieee80211_r
  				xmit_skb = skb;
  				skb = NULL;
  			}
@@ -1890,7 +2054,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		}
  	}
  
-@@ -1786,13 +1784,13 @@ static void __ieee80211_rx_handle_packet
+@@ -1905,13 +1903,13 @@ static void __ieee80211_rx_handle_packet
  
  	rx.sta = sta_info_get(local, hdr->addr2);
  	if (rx.sta) {
@@ -1907,7 +2071,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	}
  
  	if (unlikely(local->sta_sw_scanning || local->sta_hw_scanning))
-@@ -1851,10 +1849,6 @@ static void __ieee80211_rx_handle_packet
+@@ -1970,10 +1968,6 @@ static void __ieee80211_rx_handle_packet
  		ieee80211_invoke_rx_handlers(prev, &rx, skb);
  	} else
  		dev_kfree_skb(skb);
@@ -1918,7 +2082,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  #define SEQ_MODULO 0x1000
-@@ -2031,7 +2025,7 @@ static u8 ieee80211_rx_reorder_ampdu(str
+@@ -2150,7 +2144,7 @@ static u8 ieee80211_rx_reorder_ampdu(str
  	/* if this mpdu is fragmented - terminate rx aggregation session */
  	sc = le16_to_cpu(hdr->seq_ctrl);
  	if (sc & IEEE80211_SCTL_FRAG) {
@@ -1927,7 +2091,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  			tid, 0, WLAN_REASON_QSTA_REQUIRE_SETUP);
  		ret = 1;
  		goto end_reorder;
-@@ -2041,9 +2035,7 @@ static u8 ieee80211_rx_reorder_ampdu(str
+@@ -2160,9 +2154,7 @@ static u8 ieee80211_rx_reorder_ampdu(str
  	mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
  	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
  						mpdu_seq_num, 0);
@@ -1938,152 +2102,110 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	return ret;
  }
  
---- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-02-21 22:09:29.000000000 +0100
-+++ everything/net/mac80211/ieee80211_ioctl.c	2008-02-21 22:09:30.000000000 +0100
-@@ -47,14 +47,15 @@ static int ieee80211_set_encryption(stru
- 	}
+--- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/ieee80211_ioctl.c	2008-02-25 16:15:22.000000000 +0100
+@@ -33,8 +33,7 @@ static int ieee80211_set_encryption(stru
+ 				    size_t key_len)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int ret;
+-	struct sta_info *sta = NULL;
++	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+ 	struct ieee80211_sub_if_data *sdata;
  
- 	if (remove) {
-+		rcu_read_lock();
-+
- 		if (is_broadcast_ether_addr(sta_addr)) {
+@@ -51,24 +50,23 @@ static int ieee80211_set_encryption(stru
  			key = sdata->keys[idx];
  		} else {
  			sta = sta_info_get(local, sta_addr);
- 			if (!sta) {
- 				ret = -ENOENT;
+-			if (!sta) {
+-				ret = -ENOENT;
 -				key = NULL;
 -				goto err_out;
-+				goto out_rcu_unlock;
- 			}
- 
+-			}
+-
++			if (!sta)
++				return -ENOENT;
  			key = sta->key;
-@@ -64,11 +65,18 @@ static int ieee80211_set_encryption(stru
- 			ret = -ENOENT;
- 		else
- 			ret = 0;
+ 		}
+ 
+ 		if (!key)
+-			ret = -ENOENT;
+-		else
+-			ret = 0;
++			return -ENOENT;
 +
 +		ieee80211_key_free(key);
-+ out_rcu_unlock:
-+		rcu_read_unlock();
-+
-+		return ret;
++		return 0;
  	} else {
  		key = ieee80211_key_alloc(alg, idx, key_len, _key);
  		if (!key)
  			return -ENOMEM;
  
-+		rcu_read_lock();
++		sta = NULL;
++
  		if (!is_broadcast_ether_addr(sta_addr)) {
  			set_tx_key = 0;
  			/*
-@@ -79,13 +87,13 @@ static int ieee80211_set_encryption(stru
+@@ -78,14 +76,14 @@ static int ieee80211_set_encryption(stru
+ 			 * work around this.
  			 */
  			if (idx != 0 && alg != ALG_WEP) {
- 				ret = -EINVAL;
+-				ret = -EINVAL;
 -				goto err_out;
-+				goto out_free_unlock;
++				ieee80211_key_free(key);
++				return -EINVAL;
  			}
  
  			sta = sta_info_get(local, sta_addr);
  			if (!sta) {
- 				ret = -ENOENT;
+-				ret = -ENOENT;
 -				goto err_out;
-+				goto out_free_unlock;
++				ieee80211_key_free(key);
++				return -ENOENT;
  			}
  		}
  
-@@ -95,17 +103,17 @@ static int ieee80211_set_encryption(stru
+@@ -93,18 +91,9 @@ static int ieee80211_set_encryption(stru
+ 
  		if (set_tx_key || (!sta && !sdata->default_key && key))
  			ieee80211_set_default_key(sdata, idx);
- 
-+		ret = 0;
-+
- 		/* don't free key later */
- 		key = NULL;
- 
+-
+-		/* don't free key later */
+-		key = NULL;
+-
 -		ret = 0;
--	}
-+ out_free_unlock:
-+		ieee80211_key_free(key);
-+		rcu_read_unlock();
+ 	}
  
 - err_out:
 -	if (sta)
 -		sta_info_put(sta);
 -	ieee80211_key_free(key);
 -	return ret;
-+		return ret;
-+	}
++	return 0;
  }
  
  static int ieee80211_ioctl_siwgenie(struct net_device *dev,
-@@ -611,15 +619,22 @@ static int ieee80211_ioctl_giwrate(struc
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_supported_band *sband;
-+	int ret = 0;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (sdata->vif.type == IEEE80211_IF_TYPE_STA)
-+	rcu_read_lock();
-+
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
- 		sta = sta_info_get(local, sdata->u.sta.bssid);
--	else
--		return -EOPNOTSUPP;
--	if (!sta)
--		return -ENODEV;
-+	} else {
-+		ret = -EOPNOTSUPP;
-+		goto out_unlock;
-+	}
-+	if (!sta) {
-+		ret = -ENODEV;
-+		goto out_unlock;
-+	}
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
-@@ -628,8 +643,11 @@ static int ieee80211_ioctl_giwrate(struc
+@@ -628,7 +617,7 @@ static int ieee80211_ioctl_giwrate(struc
  	else
  		rate->value = 0;
  	rate->value *= 100000;
 -	sta_info_put(sta);
--	return 0;
 +
-+ out_unlock:
-+	rcu_read_unlock();
-+
-+	return ret;
+ 	return 0;
  }
  
- static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
-@@ -988,6 +1006,8 @@ static struct iw_statistics *ieee80211_g
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta = NULL;
- 
-+	rcu_read_lock();
-+
- 	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
- 	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS)
- 		sta = sta_info_get(local, sdata->u.sta.bssid);
-@@ -1003,8 +1023,10 @@ static struct iw_statistics *ieee80211_g
+@@ -1003,7 +992,6 @@ static struct iw_statistics *ieee80211_g
  		wstats->qual.qual = sta->last_signal;
  		wstats->qual.noise = sta->last_noise;
  		wstats->qual.updated = local->wstats_flags;
 -		sta_info_put(sta);
  	}
-+
-+	rcu_read_unlock();
-+
  	return wstats;
  }
- 
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-02-21 22:09:30.000000000 +0100
-@@ -224,16 +224,21 @@ void ieee80211_if_reinit(struct net_devi
+--- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/ieee80211_iface.c	2008-02-25 16:15:22.000000000 +0100
+@@ -240,16 +240,21 @@ void ieee80211_if_reinit(struct net_devi
  		break;
  	}
  	case IEEE80211_IF_TYPE_WDS:
@@ -2105,9 +2227,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 +			sta_info_destroy(sta);
 +		}
  		break;
+ 	case IEEE80211_IF_TYPE_MESH_POINT:
  	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
-@@ -258,7 +263,7 @@ void ieee80211_if_reinit(struct net_devi
+@@ -275,7 +280,7 @@ void ieee80211_if_reinit(struct net_devi
  	}
  
  	/* remove all STAs that are bound to this virtual interface */
@@ -2116,8 +2238,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  
  	memset(&sdata->u, 0, sizeof(sdata->u));
  	ieee80211_if_sdata_init(sdata);
---- everything.orig/net/mac80211/ieee80211_rate.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211_rate.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/ieee80211_rate.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/ieee80211_rate.c	2008-02-25 16:15:22.000000000 +0100
 @@ -170,9 +170,12 @@ void rate_control_get_rate(struct net_de
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  	struct rate_control_ref *ref = local->rate_ctrl;
@@ -2142,8 +2264,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  }
  
  struct rate_control_ref *rate_control_get(struct rate_control_ref *ref)
---- everything.orig/net/mac80211/ieee80211_rate.h	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/ieee80211_rate.h	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/ieee80211_rate.h	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/ieee80211_rate.h	2008-02-25 16:15:22.000000000 +0100
 @@ -14,6 +14,7 @@
  #include <linux/netdevice.h>
  #include <linux/skbuff.h>
@@ -2152,9 +2274,9 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  #include <net/mac80211.h>
  #include "ieee80211_i.h"
  #include "sta_info.h"
---- everything.orig/net/mac80211/key.c	2008-02-21 22:09:29.000000000 +0100
-+++ everything/net/mac80211/key.c	2008-02-21 22:09:30.000000000 +0100
-@@ -186,14 +186,17 @@ void ieee80211_key_link(struct ieee80211
+--- everything.orig/net/mac80211/key.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/key.c	2008-02-25 16:15:22.000000000 +0100
+@@ -233,14 +233,17 @@ void ieee80211_key_link(struct ieee80211
  		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
  			struct sta_info *ap;
  
@@ -2173,8 +2295,18 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  		}
  	}
  
---- everything.orig/net/mac80211/debugfs_sta.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/debugfs_sta.c	2008-02-21 22:09:30.000000000 +0100
+@@ -277,6 +280,9 @@ void ieee80211_key_free(struct ieee80211
+ 		 */
+ 		__ieee80211_key_replace(key->sdata, key->sta, key, NULL);
+ 
++		/*
++		 * Do NOT remove this without looking at sta_info_destroy()
++		 */
+ 		synchronize_rcu();
+ 
+ 		/*
+--- everything.orig/net/mac80211/debugfs_sta.c	2008-02-25 16:15:22.000000000 +0100
++++ everything/net/mac80211/debugfs_sta.c	2008-02-25 16:15:22.000000000 +0100
 @@ -51,7 +51,7 @@ static const struct file_operations sta_
  		STA_OPS(name)
  
@@ -2184,7 +2316,7 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  STA_FILE(rx_packets, rx_packets, LU);
  STA_FILE(tx_packets, tx_packets, LU);
  STA_FILE(rx_bytes, rx_bytes, LU);
-@@ -225,7 +225,7 @@ static ssize_t sta_agg_status_write(stru
+@@ -200,7 +200,7 @@ static ssize_t sta_agg_status_write(stru
  		const char __user *user_buf, size_t count, loff_t *ppos)
  {
  	struct sta_info *sta = file->private_data;
@@ -2193,8 +2325,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  	struct ieee80211_hw *hw = &local->hw;
  	u8 *da = sta->addr;
---- everything.orig/net/mac80211/wme.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/wme.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/wme.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/wme.c	2008-02-25 16:15:22.000000000 +0100
 @@ -153,6 +153,7 @@ static int wme_qdiscop_enqueue(struct sk
  
  	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
@@ -2233,8 +2365,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	}
  
  	if (unlikely(queue >= local->hw.queues)) {
---- everything.orig/net/mac80211/debugfs_sta.h	2008-02-21 22:09:14.000000000 +0100
-+++ everything/net/mac80211/debugfs_sta.h	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/net/mac80211/debugfs_sta.h	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/debugfs_sta.h	2008-02-25 16:15:22.000000000 +0100
 @@ -1,6 +1,8 @@
  #ifndef __MAC80211_DEBUGFS_STA_H
  #define __MAC80211_DEBUGFS_STA_H
@@ -2244,8 +2376,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  #ifdef CONFIG_MAC80211_DEBUGFS
  void ieee80211_sta_debugfs_add(struct sta_info *sta);
  void ieee80211_sta_debugfs_remove(struct sta_info *sta);
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-02-21 22:09:15.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-02-25 16:14:09.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-02-25 16:15:22.000000000 +0100
 @@ -471,10 +471,11 @@ static void rs_tx_status(void *priv_rate
  		return;
  	}
@@ -2349,8 +2481,8 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	spin_unlock_irqrestore(&rs_sta->lock, flags);
  
  	rssi = priv->last_rx_rssi;
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c	2008-02-21 22:09:14.000000000 +0100
-+++ everything/drivers/net/wireless/iwlwifi/iwl-4965-rs.c	2008-02-21 22:09:30.000000000 +0100
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c	2008-02-25 16:14:09.000000000 +0100
++++ everything/drivers/net/wireless/iwlwifi/iwl-4965-rs.c	2008-02-25 16:15:22.000000000 +0100
 @@ -847,12 +847,12 @@ static void rs_tx_status(void *priv_rate
  	if (retries > 15)
  		retries = 15;
@@ -2449,6 +2581,556 @@ Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
  	return cnt;
  }
  
+--- everything.orig/net/mac80211/mesh.h	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/mesh.h	2008-02-25 16:15:22.000000000 +0100
+@@ -65,9 +65,10 @@ enum mesh_path_flags {
+  * @state_lock: mesh pat state lock
+  *
+  *
+- * The combination of dst and dev is unique in the mesh path table. A reference
+- * to the next_hop sta will be kept and in case this sta is removed, the
+- * mesh_path structure must be also removed or substitued in a rcu safe way
++ * The combination of dst and dev is unique in the mesh path table. Since the
++ * next_hop STA is only protected by RCU as well, deleting the STA must also
++ * remove/substitute the mesh_path structure and wait until that is no longer
++ * reachable before destroying the STA completely.
+  */
+ struct mesh_path {
+ 	u8 dst[ETH_ALEN];
+@@ -230,8 +231,9 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ 		bool add);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie,
+ 			      struct net_device *dev);
+-void mesh_accept_plinks_update(struct net_device *dev);
+-struct sta_info *mesh_plink_add(u8 *hw_addr, u64 rates, struct net_device *dev);
++void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
++struct sta_info *mesh_plink_add(u8 *hw_addr, u64 rates,
++				struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+ void mesh_plink_deactivate(struct sta_info *sta);
+ int mesh_plink_open(struct sta_info *sta);
+@@ -254,7 +256,7 @@ void mesh_path_flush_pending(struct mesh
+ void mesh_path_tx_pending(struct mesh_path *mpath);
+ int mesh_pathtbl_init(void);
+ void mesh_pathtbl_unregister(void);
+-int mesh_path_del(u8 *addr, struct net_device *dev);
++int mesh_path_del(u8 *addr, struct net_device *dev, bool force);
+ void mesh_path_timer(unsigned long data);
+ void mesh_path_flush_by_nexthop(struct sta_info *sta);
+ void mesh_path_discard_frame(struct sk_buff *skb, struct net_device *dev);
+@@ -270,7 +272,7 @@ static inline int mesh_plink_free_count(
+ 
+ static inline bool mesh_plink_availables(struct ieee80211_sub_if_data *sdata)
+ {
+-	return (min(mesh_plink_free_count(sdata),
++	return (min_t(long, mesh_plink_free_count(sdata),
+ 		   MESH_MAX_PLINKS - sdata->local->num_sta)) > 0;
+ }
+ 
+--- everything.orig/net/mac80211/mesh.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/mesh.c	2008-02-25 16:15:22.000000000 +0100
+@@ -83,11 +83,10 @@ bool mesh_peer_accepts_plinks(struct iee
+ /**
+  * mesh_accept_plinks_update: update accepting_plink in local mesh beacons
+  *
+- * @dev: mesh interface in which mesh beacons are going to be updated
++ * @sdata: mesh interface in which mesh beacons are going to be updated
+  */
+-void mesh_accept_plinks_update(struct net_device *dev)
++void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	bool free_plinks;
+ 
+ 	/* In case mesh_plink_free_count > 0 and mesh_plinktbl_capacity == 0,
+--- everything.orig/net/mac80211/mesh_pathtbl.c	2008-02-25 16:14:15.000000000 +0100
++++ everything/net/mac80211/mesh_pathtbl.c	2008-02-25 16:19:30.000000000 +0100
+@@ -55,10 +55,7 @@ static DEFINE_RWLOCK(pathtbl_resize_lock
+  */
+ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
+ {
+-	__sta_info_get(sta);
+-	if (mpath->next_hop)
+-		sta_info_put(mpath->next_hop);
+-	mpath->next_hop = sta;
++	rcu_assign_pointer(mpath->next_hop, sta);
+ }
+ 
+ 
+@@ -236,7 +233,7 @@ void mesh_plink_broken(struct sta_info *
+ 	struct mesh_path *mpath;
+ 	struct mpath_node *node;
+ 	struct hlist_node *p;
+-	struct net_device *dev = sta->dev;
++	struct net_device *dev = sta->sdata->dev;
+ 	int i;
+ 
+ 	rcu_read_lock();
+@@ -266,9 +263,9 @@ EXPORT_SYMBOL(mesh_plink_broken);
+  *
+  * RCU notes: this function is called when a mesh plink transitions from ESTAB
+  * to any other state, since ESTAB state is the only one that allows path
+- * creation. This will happen before the sta can be freed (since we hold
+- * a reference to it) so any reader in a rcu read block will be protected
+- * against the plink dissapearing.
++ * creation. This will happen before the sta can be freed (because
++ * sta_info_destroy() calls this) so any reader in a rcu read block will be
++ * protected against the plink disappearing.
+  */
+ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ {
+@@ -280,7 +277,7 @@ void mesh_path_flush_by_nexthop(struct s
+ 	for_each_mesh_entry(mesh_paths, p, node, i) {
+ 		mpath = node->mpath;
+ 		if (mpath->next_hop == sta)
+-			mesh_path_del(mpath->dst, mpath->dev);
++			mesh_path_del(mpath->dst, mpath->dev, true);
+ 	}
+ }
+ 
+@@ -294,7 +291,7 @@ void mesh_path_flush(struct net_device *
+ 	for_each_mesh_entry(mesh_paths, p, node, i) {
+ 		mpath = node->mpath;
+ 		if (mpath->dev == dev)
+-			mesh_path_del(mpath->dst, mpath->dev);
++			mesh_path_del(mpath->dst, mpath->dev, false);
+ 	}
+ }
+ 
+@@ -303,8 +300,8 @@ static void mesh_path_node_reclaim(struc
+ 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+ 	struct ieee80211_sub_if_data *sdata =
+ 		IEEE80211_DEV_TO_SUB_IF(node->mpath->dev);
+-	if (node->mpath->next_hop)
+-		sta_info_put(node->mpath->next_hop);
++
++	rcu_assign_pointer(node->mpath->next_hop, NULL);
+ 	atomic_dec(&sdata->u.sta.mpaths);
+ 	kfree(node->mpath);
+ 	kfree(node);
+@@ -319,9 +316,10 @@ static void mesh_path_node_reclaim(struc
+  * Returns: 0 if succesful
+  *
+  * State: if the path is being resolved, the deletion will be postponed until
+- * the path resolution completes or times out.
++ * the path resolution completes or times out, unless the force parameter
++ * is given.
+  */
+-int mesh_path_del(u8 *addr, struct net_device *dev)
++int mesh_path_del(u8 *addr, struct net_device *dev, bool force)
+ {
+ 	struct mesh_path *mpath;
+ 	struct mpath_node *node;
+@@ -340,7 +338,7 @@ int mesh_path_del(u8 *addr, struct net_d
+ 		if (mpath->dev == dev &&
+ 				memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
+ 			spin_lock_bh(&mpath->state_lock);
+-			if (mpath->flags & MESH_PATH_RESOLVING) {
++			if (!force && mpath->flags & MESH_PATH_RESOLVING) {
+ 				mpath->flags |= MESH_PATH_DELETE;
+ 			} else {
+ 				mpath->flags |= MESH_PATH_RESOLVING;
+@@ -510,7 +508,7 @@ void mesh_path_expire(struct net_device 
+ 			time_after(jiffies,
+ 			 mpath->exp_time + MESH_PATH_EXPIRE)) {
+ 			spin_unlock_bh(&mpath->state_lock);
+-			mesh_path_del(mpath->dst, mpath->dev);
++			mesh_path_del(mpath->dst, mpath->dev, false);
+ 		} else
+ 			spin_unlock_bh(&mpath->state_lock);
+ 	}
+--- everything.orig/net/mac80211/mesh_plink.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/mesh_plink.c	2008-02-25 16:15:22.000000000 +0100
+@@ -65,14 +65,14 @@ static inline
+ void mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
+ {
+ 	atomic_inc(&sdata->u.sta.mshstats.estab_plinks);
+-	mesh_accept_plinks_update(sdata->dev);
++	mesh_accept_plinks_update(sdata);
+ }
+ 
+ static inline
+ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+ {
+ 	atomic_dec(&sdata->u.sta.mshstats.estab_plinks);
+-	mesh_accept_plinks_update(sdata->dev);
++	mesh_accept_plinks_update(sdata);
+ }
+ 
+ /**
+@@ -99,12 +99,13 @@ static inline void mesh_plink_fsm_restar
+  *
+  * Returns: non-NULL on success, ERR_PTR() on error.
+  */
+-struct sta_info *mesh_plink_add(u8 *hw_addr, u64 rates, struct net_device *dev)
++struct sta_info *mesh_plink_add(u8 *hw_addr, u64 rates,
++				struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
+-	if (memcmp(hw_addr, dev->dev_addr, ETH_ALEN) == 0)
++	if (compare_ether_addr(hw_addr, sdata->dev->dev_addr) == 0)
+ 		/* never add ourselves as neighbours */
+ 		return ERR_PTR(-EINVAL);
+ 
+@@ -114,7 +115,7 @@ struct sta_info *mesh_plink_add(u8 *hw_a
+ 	if (local->num_sta >= MESH_MAX_PLINKS)
+ 		return ERR_PTR(-ENOSPC);
+ 
+-	sta = sta_info_add(local, dev, hw_addr, GFP_KERNEL);
++	sta = sta_info_add(sdata, hw_addr);
+ 	if (IS_ERR(sta))
+ 		return sta;
+ 
+@@ -125,7 +126,7 @@ struct sta_info *mesh_plink_add(u8 *hw_a
+ 	sta->supp_rates[local->hw.conf.channel->band] = rates;
+ 	rate_control_rate_init(sta, local);
+ 
+-	mesh_accept_plinks_update(dev);
++	mesh_accept_plinks_update(sdata);
+ 
+ 	return sta;
+ }
+@@ -141,7 +142,8 @@ struct sta_info *mesh_plink_add(u8 *hw_a
+  */
+ static void __mesh_plink_deactivate(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++
+ 	if (sta->plink_state == ESTAB)
+ 		mesh_plink_dec_estab_count(sdata);
+ 	sta->plink_state = BLOCKED;
+@@ -246,11 +248,15 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct sta_info *sta;
+ 
++	rcu_read_lock();
++
+ 	sta = sta_info_get(local, hw_addr);
+ 	if (!sta) {
+-		sta = mesh_plink_add(hw_addr, rates, dev);
+-		if (IS_ERR(sta))
++		sta = mesh_plink_add(hw_addr, rates, sdata);
++		if (IS_ERR(sta)) {
++			rcu_read_unlock();
+ 			return;
++		}
+ 	}
+ 
+ 	sta->last_rx = jiffies;
+@@ -260,7 +266,7 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ 			sdata->u.sta.mshcfg.auto_open_plinks)
+ 		mesh_plink_open(sta);
+ 
+-	sta_info_put(sta);
++	rcu_read_unlock();
+ }
+ 
+ static void mesh_plink_timer(unsigned long data)
+@@ -273,6 +279,11 @@ static void mesh_plink_timer(unsigned lo
+ 	DECLARE_MAC_BUF(mac);
+ #endif
+ 
++	/*
++	 * This STA is valid because sta_info_destroy() will
++	 * del_timer_sync() this timer after having made sure
++	 * it cannot be readded (by deleting the plink.)
++	 */
+ 	sta = (struct sta_info *) data;
+ 
+ 	spin_lock_bh(&sta->plink_lock);
+@@ -286,8 +297,8 @@ static void mesh_plink_timer(unsigned lo
+ 	reason = 0;
+ 	llid = sta->llid;
+ 	plid = sta->plid;
+-	dev = sta->dev;
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	sdata = sta->sdata;
++	dev = sdata->dev;
+ 
+ 	switch (sta->plink_state) {
+ 	case OPN_RCVD:
+@@ -302,8 +313,7 @@ static void mesh_plink_timer(unsigned lo
+ 			sta->plink_timeout = sta->plink_timeout +
+ 					     rand % sta->plink_timeout;
+ 			++sta->plink_retries;
+-			if (!mod_plink_timer(sta, sta->plink_timeout))
+-				__sta_info_get(sta);
++			mod_plink_timer(sta, sta->plink_timeout);
+ 			spin_unlock_bh(&sta->plink_lock);
+ 			mesh_plink_frame_tx(dev, PLINK_OPEN, sta->addr, llid,
+ 					    0, 0);
+@@ -316,16 +326,14 @@ static void mesh_plink_timer(unsigned lo
+ 		if (!reason)
+ 			reason = cpu_to_le16(MESH_CONFIRM_TIMEOUT);
+ 		sta->plink_state = HOLDING;
+-		if (!mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata)))
+-			__sta_info_get(sta);
++		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+ 		spin_unlock_bh(&sta->plink_lock);
+ 		mesh_plink_frame_tx(dev, PLINK_CLOSE, sta->addr, llid, plid,
+ 				    reason);
+ 		break;
+ 	case HOLDING:
+ 		/* holding timer */
+-		if (del_timer(&sta->plink_timer))
+-			sta_info_put(sta);
++		del_timer(&sta->plink_timer);
+ 		mesh_plink_fsm_restart(sta);
+ 		spin_unlock_bh(&sta->plink_lock);
+ 		break;
+@@ -333,8 +341,6 @@ static void mesh_plink_timer(unsigned lo
+ 		spin_unlock_bh(&sta->plink_lock);
+ 		break;
+ 	}
+-
+-	sta_info_put(sta);
+ }
+ 
+ static inline void mesh_plink_timer_set(struct sta_info *sta, int timeout)
+@@ -343,14 +349,13 @@ static inline void mesh_plink_timer_set(
+ 	sta->plink_timer.data = (unsigned long) sta;
+ 	sta->plink_timer.function = mesh_plink_timer;
+ 	sta->plink_timeout = timeout;
+-	__sta_info_get(sta);
+ 	add_timer(&sta->plink_timer);
+ }
+ 
+ int mesh_plink_open(struct sta_info *sta)
+ {
+ 	__le16 llid;
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+ 	DECLARE_MAC_BUF(mac);
+ #endif
+@@ -360,7 +365,6 @@ int mesh_plink_open(struct sta_info *sta
+ 	sta->llid = llid;
+ 	if (sta->plink_state != LISTEN) {
+ 		spin_unlock_bh(&sta->plink_lock);
+-		sta_info_put(sta);
+ 		return -EBUSY;
+ 	}
+ 	sta->plink_state = OPN_SNT;
+@@ -369,7 +373,8 @@ int mesh_plink_open(struct sta_info *sta
+ 	mpl_dbg("Mesh plink: starting establishment with %s\n",
+ 		print_mac(mac, sta->addr));
+ 
+-	return mesh_plink_frame_tx(sta->dev, PLINK_OPEN, sta->addr, llid, 0, 0);
++	return mesh_plink_frame_tx(sdata->dev, PLINK_OPEN,
++				   sta->addr, llid, 0, 0);
+ }
+ 
+ void mesh_plink_block(struct sta_info *sta)
+@@ -386,7 +391,7 @@ void mesh_plink_block(struct sta_info *s
+ 
+ int mesh_plink_close(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	int llid, plid, reason;
+ #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+ 	DECLARE_MAC_BUF(mac);
+@@ -401,13 +406,11 @@ int mesh_plink_close(struct sta_info *st
+ 	if (sta->plink_state == LISTEN || sta->plink_state == BLOCKED) {
+ 		mesh_plink_fsm_restart(sta);
+ 		spin_unlock_bh(&sta->plink_lock);
+-		sta_info_put(sta);
+ 		return 0;
+ 	} else if (sta->plink_state == ESTAB) {
+ 		__mesh_plink_deactivate(sta);
+ 		/* The timer should not be running */
+-		if (!mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata)))
+-			__sta_info_get(sta);
++		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+ 	} else if (!mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata)))
+ 		sta->ignore_plink_timer = true;
+ 
+@@ -415,15 +418,16 @@ int mesh_plink_close(struct sta_info *st
+ 	llid = sta->llid;
+ 	plid = sta->plid;
+ 	spin_unlock_bh(&sta->plink_lock);
+-	mesh_plink_frame_tx(sta->dev, PLINK_CLOSE, sta->addr, llid, plid,
+-			    reason);
++	mesh_plink_frame_tx(sta->sdata->dev, PLINK_CLOSE, sta->addr, llid,
++			    plid, reason);
+ 	return 0;
+ }
+ 
+ void mesh_rx_plink_frame(struct net_device *dev, struct ieee80211_mgmt *mgmt,
+ 			 size_t len, struct ieee80211_rx_status *rx_status)
+ {
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee802_11_elems elems;
+ 	struct sta_info *sta;
+ 	enum plink_event event;
+@@ -435,7 +439,6 @@ void mesh_rx_plink_frame(struct net_devi
+ #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+ 	DECLARE_MAC_BUF(mac);
+ #endif
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	if (is_multicast_ether_addr(mgmt->da)) {
+ 		mpl_dbg("Mesh plink: ignore frame from multicast address");
+@@ -474,14 +477,17 @@ void mesh_rx_plink_frame(struct net_devi
+ 	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 7))
+ 		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
+ 
++	rcu_read_lock();
++
+ 	sta = sta_info_get(local, mgmt->sa);
+ 	if (!sta && ftype != PLINK_OPEN) {
+ 		mpl_dbg("Mesh plink: cls or cnf from unknown peer\n");
++		rcu_read_unlock();
+ 		return;
+ 	}
+ 
+ 	if (sta && sta->plink_state == BLOCKED) {
+-		sta_info_put(sta);
++		rcu_read_unlock();
+ 		return;
+ 	}
+ 
+@@ -505,13 +511,15 @@ void mesh_rx_plink_frame(struct net_devi
+ 		u64 rates;
+ 		if (!mesh_plink_free_count(sdata)) {
+ 			mpl_dbg("Mesh plink error: no more free plinks\n");
++			rcu_read_unlock();
+ 			return;
+ 		}
+ 
+ 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
+-		sta = mesh_plink_add(mgmt->sa, rates, dev);
++		sta = mesh_plink_add(mgmt->sa, rates, sdata);
+ 		if (IS_ERR(sta)) {
+ 			mpl_dbg("Mesh plink error: plink table full\n");
++			rcu_read_unlock();
+ 			return;
+ 		}
+ 		event = OPN_ACPT;
+@@ -521,14 +529,14 @@ void mesh_rx_plink_frame(struct net_devi
+ 		switch (ftype) {
+ 		case PLINK_OPEN:
+ 			if (!mesh_plink_free_count(sdata) ||
+-					(sta->plid && sta->plid != plid))
++			    (sta->plid && sta->plid != plid))
+ 				event = OPN_IGNR;
+ 			else
+ 				event = OPN_ACPT;
+ 			break;
+ 		case PLINK_CONFIRM:
+ 			if (!mesh_plink_free_count(sdata) ||
+-				(sta->llid != llid || sta->plid != plid))
++			    (sta->llid != llid || sta->plid != plid))
+ 				event = CNF_IGNR;
+ 			else
+ 				event = CNF_ACPT;
+@@ -555,7 +563,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 		default:
+ 			mpl_dbg("Mesh plink: unknown frame subtype\n");
+ 			spin_unlock_bh(&sta->plink_lock);
+-			sta_info_put(sta);
++			rcu_read_unlock();
+ 			return;
+ 		}
+ 	}
+@@ -659,8 +667,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 					    plid, 0);
+ 			break;
+ 		case CNF_ACPT:
+-			if (del_timer(&sta->plink_timer))
+-				sta_info_put(sta);
++			del_timer(&sta->plink_timer);
+ 			sta->plink_state = ESTAB;
+ 			mesh_plink_inc_estab_count(sdata);
+ 			spin_unlock_bh(&sta->plink_lock);
+@@ -693,8 +700,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 					    plid, reason);
+ 			break;
+ 		case OPN_ACPT:
+-			if (del_timer(&sta->plink_timer))
+-				sta_info_put(sta);
++			del_timer(&sta->plink_timer);
+ 			sta->plink_state = ESTAB;
+ 			mesh_plink_inc_estab_count(sdata);
+ 			spin_unlock_bh(&sta->plink_lock);
+@@ -717,9 +723,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 			__mesh_plink_deactivate(sta);
+ 			sta->plink_state = HOLDING;
+ 			llid = sta->llid;
+-			if (!mod_plink_timer(sta,
+-					dot11MeshHoldingTimeout(sdata)))
+-				__sta_info_get(sta);
++			mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+ 			spin_unlock_bh(&sta->plink_lock);
+ 			mesh_plink_frame_tx(dev, PLINK_CLOSE, sta->addr, llid,
+ 					    plid, reason);
+@@ -738,10 +742,8 @@ void mesh_rx_plink_frame(struct net_devi
+ 	case HOLDING:
+ 		switch (event) {
+ 		case CLS_ACPT:
+-			if (del_timer(&sta->plink_timer)) {
++			if (del_timer(&sta->plink_timer))
+ 				sta->ignore_plink_timer = 1;
+-				sta_info_put(sta);
+-			}
+ 			mesh_plink_fsm_restart(sta);
+ 			spin_unlock_bh(&sta->plink_lock);
+ 			break;
+@@ -766,5 +768,6 @@ void mesh_rx_plink_frame(struct net_devi
+ 		spin_unlock_bh(&sta->plink_lock);
+ 		break;
+ 	}
+-	sta_info_put(sta);
++
++	rcu_read_unlock();
+ }
+--- everything.orig/net/mac80211/mesh_hwmp.c	2008-02-25 16:14:08.000000000 +0100
++++ everything/net/mac80211/mesh_hwmp.c	2008-02-25 16:15:22.000000000 +0100
+@@ -294,7 +294,6 @@ static u32 hwmp_route_info_get(struct ne
+ 		orig_metric = PREP_IE_METRIC(hwmp_ie);
+ 		break;
+ 	default:
+-		sta_info_put(sta);
+ 		rcu_read_unlock();
+ 		return 0;
+ 	}
+@@ -330,7 +329,6 @@ static u32 hwmp_route_info_get(struct ne
+ 			mpath = mesh_path_lookup(orig_addr, dev);
+ 			if (!mpath) {
+ 				rcu_read_unlock();
+-				sta_info_put(sta);
+ 				return 0;
+ 			}
+ 			spin_lock_bh(&mpath->state_lock);
+@@ -372,7 +370,6 @@ static u32 hwmp_route_info_get(struct ne
+ 			mpath = mesh_path_lookup(ta, dev);
+ 			if (!mpath) {
+ 				rcu_read_unlock();
+-				sta_info_put(sta);
+ 				return 0;
+ 			}
+ 			spin_lock_bh(&mpath->state_lock);
+@@ -391,7 +388,6 @@ static u32 hwmp_route_info_get(struct ne
+ 			spin_unlock_bh(&mpath->state_lock);
+ 	}
+ 
+-	sta_info_put(sta);
+ 	rcu_read_unlock();
+ 
+ 	return process ? new_metric : 0;
+@@ -861,5 +857,5 @@ void mesh_path_timer(unsigned long data)
+ endmpathtimer:
+ 	rcu_read_unlock();
+ 	if (delete)
+-		mesh_path_del(mpath->dst, mpath->dev);
++		mesh_path_del(mpath->dst, mpath->dev, false);
+ }
 
 -- 
 
