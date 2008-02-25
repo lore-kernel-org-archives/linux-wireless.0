@@ -1,85 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43468 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760584AbYBGKiw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 05:38:52 -0500
-Subject: Re: [PATCH 08/13] o11s: other changes in mac80211 for mesh
-	interface support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47a78286.07045a0a.0fd0.ffff8bb1@mx.google.com> (sfid-20080204_212428_285984_7DC49E60)
-References: <47a78286.07045a0a.0fd0.ffff8bb1@mx.google.com>
-	 (sfid-20080204_212428_285984_7DC49E60)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+miIPj4qIvTNt//ZOKcD"
-Date: Thu, 07 Feb 2008 02:05:43 +0100
-Message-Id: <1202346343.9965.88.camel@johannes.berg> (sfid-20080207_103914_571851_5046927D)
+Received: from mx1.redhat.com ([66.187.233.31]:33239 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699AbYBYV2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 16:28:06 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m1PLS4tM031249
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:04 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLS4ug029458
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:04 -0500
+Received: from [172.16.83.84] (dhcp83-84.boston.redhat.com [172.16.83.84])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLS1DK018944
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:01 -0500
+Subject: scanning behavior question
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 16:25:57 -0500
+Message-Id: <1203974757.22949.21.camel@localhost.localdomain> (sfid-20080225_212810_151716_A9A58A6D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[resend; I apparently forgot a subject the first time...]
 
---=-+miIPj4qIvTNt//ZOKcD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+While debugging why ipw2200 and wpa_supplicant would not connect to a
+hidden access point today even with scan_ssid=1, I ran into an
+interesting scan behavior question.
 
->  	default:
-> +		printk(KERN_DEBUG "%s: received unknown action frame - "
-> +		       "category=3D%d\n", dev->name, mgmt->u.action.category);
+The root of the problem was that since the ipw2200 driver aggressively
+rescans when it doesn't find the requested AP in it's list, and since it
+only allows one scan at a time, wpa_supplicant's specific SSID scans
+just happened to get rejected every time, which means the card never
+sent out probe requests for the hidden SSID I wanted to associate with.
 
-Needs to be rate limited or ignored as it was before.
+There are more general issues here than just ipw2200 though.  Most of
+the fullmac drivers (counting ipw2x00 here) don't handle multiple scan
+requests very well.  I'm not entirely sure what mac80211 does here but
+it probably doesn't have extremely sophisticated scan result handling
+either.  At startup
 
-> +int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
-> +{
-> +	int ae =3D meshhdr->flags & IEEE80211S_FLAGS_AE;
-> +	/* 7.1.3.5a.2 */
-> +	switch (ae) {
-> +	case 0:
-> +		return 5;
-> +	case 1:
-> +		return 11;
-> +	case 2:
-> +		return 17;
-> +	case 3:
-> +		return 23;
-> +	default:
-> +		return 5;
-> +	}
-> +}
+In the ideal case, the driver would add each separate scan request to a
+queue, execute each request in turn (respecting each requests options
+like active/passive, dwell time, SSID/BSSID, channel list, etc).  Each
+request would trigger a corresponding scan completion event.  Perhaps
+multiple identical scan requests (ie, a few 'iwlist <iface> scan') could
+be batched together for efficiency.  With nl80211/cfg80211, perhaps each
+individual scan request would have a UID to match it up with a specific
+scan response (but the response would still be broadcast too).
 
-What the hell? This is utterly horrible! Can that be changed in the spec
-so the header is always a multiple of four bytes? :)
+Less invasive fixes could be made to ipw2200, like caching the last
+SSID-specific request and instead of triggering a general scan the next
+time, trigger a direct scan.  A workaround but not a real fix.
 
-This means we need to copy each mesh frame on platforms that don't
-handle unaligned loads, I don't see any DMA engine inserting 5 bytes
-padding... this makes things really complicated with alignment now and
-means we do have to clean up the mess in the stack, we can't require
-drivers to handle this weird mesh stuff :(
+Thoughts?  How should a second, different scan request be handled while
+another is already in flight?
 
-johannes
-
---=-+miIPj4qIvTNt//ZOKcD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6pZZqVg1VMiehFYAQICCQ/9E5s5RIGC+38rVWGw1xUjVp9obDQXhv/P
-+Ye0EBRYxg9z/b3e6NpqAPvbSbP4Sm2QhxVMyKbaYZaxAANf8O+5zhcapx4tqrta
-4FybamEaZmpjFEzqvC0lYM2EXf1xOIolDVs1xfTuc/G+lk2ODSnXtjIG7c/Zn4XC
-u7GCvegRXBDf+3axl6W9vdEOrmI7A3C4UkyQM++HixxOk3DUNqtyTLdNEHJevLx3
-o4LjvAum/XfCwV2aV+UdMJkT3A436H39AOrUVJN15YUH9uMpR4aNntdVuSaEYgGS
-UINLLnDjGHGt2K1/yZMl6yxlvYeL+Z0rlYsD3mR6BiaLR8vz9yh7iiJi8Z6AcC2A
-UWvgywAobI0pMaEahZcxVX09LF9zz7XubpM05HrXyqKtYcUwV0/7FrvoCuFoXHbI
-c+9UR/x0PpMTsD+aWnEy3gryQ7auJ6Gszzs5Hd3QBdPtlLNpPREbYYDLodH0r9Ch
-2vMtF0EaWKw6YY/xrZ/bpfjpB4nwoEHKFjN3OmulqX9HCbWIfgaxCiPSeByxp5Zc
-l4iEjKeQZcVx7zu1ScKLhCU4Tl6oqCVg8gkUilS8UobxeUwdcMzGBlzQjecXimpK
-3Agy0f2NHPVEFY4bU+kDWVGDee3xNCwkciSrDx4mCkeL2EuJTGiUvggBGVkhAHm7
-DMtUaozLEGM=
-=+RhR
------END PGP SIGNATURE-----
-
---=-+miIPj4qIvTNt//ZOKcD--
+Dan
 
