@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:38996 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbYBJVx6 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:34131 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbYBYPn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 16:53:58 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so4239380fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:57 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 13/14] rt2x00: Kill guardian urb during disable_radio
-Date: Sun, 10 Feb 2008 22:52:36 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802102246.04515.IvDoorn@gmail.com>
-In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
+	Mon, 25 Feb 2008 10:43:29 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802102252.36990.IvDoorn@gmail.com> (sfid-20080210_215400_793078_A50500C8)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <E1JTfTv-0002bm-Qp@hash.localnet> (sfid-20080225_154333_414150_E7A69E60)
+Date: Mon, 25 Feb 2008 10:43:07 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the radio is being disabled we should also
-kill the guardian urb which could still be pending
-in the device.
+> > Hey, that's a good clue... I just switched over to b-only and it seems to
+> >  be much more stable.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+...or not.  I still got some calibration errors last night in b-mode.  Just
+so we're on the same page, I see things in the dmesg like:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 450043b..6cb4432 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -378,6 +378,7 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- {
- 	struct queue_entry_priv_usb_rx *priv_rx;
- 	struct queue_entry_priv_usb_tx *priv_tx;
-+	struct queue_entry_priv_usb_bcn *priv_bcn;
- 	struct data_queue *queue;
- 	unsigned int i;
- 
-@@ -392,12 +393,28 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- 		usb_kill_urb(priv_rx->urb);
- 	}
- 
--	txall_queue_for_each(rt2x00dev, queue) {
-+	tx_queue_for_each(rt2x00dev, queue) {
- 		for (i = 0; i < queue->limit; i++) {
- 			priv_tx = queue->entries[i].priv_data;
- 			usb_kill_urb(priv_tx->urb);
- 		}
- 	}
-+
-+	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
-+		priv_bcn = rt2x00dev->bcn->entries[i].priv_data;
-+		usb_kill_urb(priv_bcn->urb);
-+
-+		if (priv_bcn->guardian_urb)
-+			usb_kill_urb(priv_bcn->guardian_urb);
-+	}
-+
-+	if (!test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
-+		return;
-+
-+	for (i = 0; i < rt2x00dev->bcn[1].limit; i++) {
-+		priv_tx = rt2x00dev->bcn[1].entries[i].priv_data;
-+		usb_kill_urb(priv_tx->urb);
-+	}
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_disable_radio);
- 
+ath0: failed to restore operational channel after scan
+ath5k phy0: calibration timeout (2412 MHz)
+ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+ath0: failed to set freq to 2412 MHz for scan
+ath5k phy0: calibration timeout (2417 MHz)
+
+> If i'm correct you should get 4-7Mbit/sec @ 11Mbit. Plz let me know if
+> you have some results, meanwhile i'll try to figure out the i/q
+> calibration algo (we are ok for noise floor calibration i believe).
+
+One thing I noticed from my traces is that the binary driver sets
+bits AR5K_PHY_AGCCTL_NF | AR5K_PHY_AGCCTL_CAL in AR5K_PHY_AGCCTL.
+Then it makes a whole lot of misc register writes, then re-reads
+AR5K_PHY_AGCCTL; in that time only the noise floor bit got cleared
+but _CAL is still high.  Dunno if that means anything to you or not.
+
+e.g:
+
+R: 0x9860 = 0x00009d18 - AR5K_PHY_AGCCTL
+W: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL  <-- set (_CAL | _NF)
+W: 0x1000 = 0x00000001 - AR5K_DCU_QCUMASK_BASE
+W: 0x1004 = 0x00000002 - unknown
+W: 0x1008 = 0x00000004 - unknown
+[... lots more writes to DCU & IMR regs ...]
+W: 0x00a0 = 0x00080965 - AR5K_PIMR
+R: 0x00ac = 0x00000000 - AR5K_SIMR2
+W: 0x00ac = 0x00070000 - AR5K_SIMR2
+R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+R: 0x9860 = 0x00009d1a - AR5K_PHY_AGCCTL  <-- _NF cleared
+
+Maybe a red herring as obviously the current method of doing things
+works for me sometimes...
+
 -- 
-1.5.4
+Bob Copeland %% www.bobcopeland.com
+
 
