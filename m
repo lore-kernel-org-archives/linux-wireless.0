@@ -1,75 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49903 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbYBYLAn (ORCPT
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:33840 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750851AbYBYCEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 06:00:43 -0500
-Subject: Re: mac80211 locking: tasklet vs. non-tasklet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1203937042.13162.81.camel@johannes.berg> (sfid-20080225_105732_203616_A9BE06D8)
-References: <1203676145.26341.39.camel@johannes.berg>
-	 <1ba2fa240802240829s7c650ad1yd47c6b25e466a50@mail.gmail.com>
-	 <1203933096.13162.54.camel@johannes.berg>
-	 <1ba2fa240802250252x753796f7ob071c12c72aec172@mail.gmail.com>
-	 (sfid-20080225_105254_843501_AE739B69)  <1203937042.13162.81.camel@johannes.berg>
-	 (sfid-20080225_105732_203616_A9BE06D8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TA/AncKLCQ8T8irfqi2c"
-Date: Mon, 25 Feb 2008 12:00:35 +0100
-Message-Id: <1203937235.13162.83.camel@johannes.berg> (sfid-20080225_110046_243803_AA76DEF7)
+	Sun, 24 Feb 2008 21:04:21 -0500
+Date: Sun, 24 Feb 2008 18:04:19 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: can't bring up wlan0
+Message-Id: <20080224180419.b7b44524.akpm@linux-foundation.org> (sfid-20080225_020435_249055_0DDC158F)
+In-Reply-To: <1203904312.3082.156.camel@debian.sh.intel.com>
+References: <20080223153142.da9fc4e4.akpm@linux-foundation.org>
+	<1203904312.3082.156.camel@debian.sh.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 25 Feb 2008 09:51:52 +0800 Zhu Yi <yi.zhu@intel.com> wrote:
 
---=-TA/AncKLCQ8T8irfqi2c
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> On Sat, 2008-02-23 at 15:31 -0800, Andrew Morton wrote:
+> > t61p:/home/akpm# ifconfig wlan0 up
+> > SIOCSIFFLAGS: No such device
+> 
+> Did dmesg tell something about missing firmware?
+> 
 
-> > >  > A disconnection can happen due to
-> > >  > device resume or internal recoverable error. In this cases I would
-> > >  > expect mac to try associate again upon such trigger.
-> > >
-> > >  I guess that's just missing. You can stop the queues but you can't t=
-ell
-> > >  mac80211 that you reset the hw.
-> >=20
-> > If there is no objection we will introduce some notification
-> > mechanism...suggestions are welcome as well.
->=20
-> I have no objection, though I'm unsure what precisely you want. What,
-> for example, if you're running hostapd and your hardware resets? Can you
-> keep station tables etc.?
+Nope, but things got a lot better when I turned the wireless kill switch
+back on. oops ;)
 
-I mean, if the hw simply resets quickly then I would expect the
-association to withstand that, no?
-
-johannes
-
---=-TA/AncKLCQ8T8irfqi2c
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Kf0qVg1VMiehFYAQKuTw//Wdz5QgpFXB1MgqSBMTqGJ8x9ejhskJTp
-RTX5ZpWh5Yezn6nYF06IuCdMCa27cFEkifG/Vr9Kx+AdUcKj0ND2U/M1nnnSiPpL
-rwdcae95x+CCHzKECzS8evT1QHnf2pt/i6hysQ9jl/2IPBMzu4l9Psmw491zAcWy
-MJTa5wa33dgJHlBbWCKXA1pzsxej3eUQiq9IPl9DGl3tEGy7QKT1a13G5WEE4z5k
-53YBdftb4BDPKk7AeOU+kJMsiM2V/L9JzQA5pXpycdiQPw3/slXH7zD+MF2NDGjI
-LCZg9bb4o3IAOJPq975b/SD9JkFq7+i7p8QGnysEb4oEU1bQF24K7cYTB29bofsN
-Ku/6lEuz8ZGwsnRd6UWl3Vo6ZdENC+/C/5j2k6LLFJIJUy3nEVv17+Z4dm94tJn5
-ROt3EuCeaVxgeLuGc613L/rDRuiqocYLYFnfOxhKp7CN/NZtnk5/1lFlOlVBjxhl
-bYb0auh+mun/oTW6MBp4DC/4PHqNTmQejf9CSKRN+VWROYIqmFzYLbw3xE4MyRhM
-eVI/Gm3WNgYIOt2RF9qaW+vLwsXKnlgoGZ/VpwUJ1Nvaw8H5/8dfkeTKD0feoaFt
-maM/NaU/2CewG0WMKxPGEWJ3icOldW/YlwrjFAytqsEpF9SEPPcPSHPlGBWMm9H5
-IHeU/RyaXyU=
-=VtDp
------END PGP SIGNATURE-----
-
---=-TA/AncKLCQ8T8irfqi2c--
+I don't think ipw2200 worked that way?  I'm fairly sure I used to be able
+to configure the interface whichever way the switch was positioned?
 
