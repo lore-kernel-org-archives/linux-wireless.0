@@ -1,60 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43192 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656AbYBXMgD convert rfc822-to-8bit (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:41851 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758559AbYBYWYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 07:36:03 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "R. Hofmann" <anmue@gmx.net>
-Subject: Re: B43legancy_warn_on - error ...???
-Date: Sun, 24 Feb 2008 13:35:29 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <20080224103031.127510@gmx.net>
-In-Reply-To: <20080224103031.127510@gmx.net>
+	Mon, 25 Feb 2008 17:24:23 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so998790ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:24:23 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 5/6] rt2x00: Fix rt2x00lib_reset_link_tuner()
+Date: Mon, 25 Feb 2008 23:21:55 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802252320.11809.IvDoorn@gmail.com>
+In-Reply-To: <200802252320.11809.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Message-Id: <200802241335.30226.mb@bu3sch.de> (sfid-20080224_123619_473840_916EF2DC)
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802252321.55909.IvDoorn@gmail.com> (sfid-20080225_222426_422336_7604FCEA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 24 February 2008 11:30:31 R. Hofmann wrote:
-> localhost:/source/compat-wireless-2.6 # make
-> make -C /lib/modules/2.6.22.5-31-default/build M=3D/source/compat-wir=
-eless-2.6 modules
-> make[1]: Entering directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/de=
-fault'
-> make -C ../../../linux-2.6.22.5-31 O=3D../linux-2.6.22.5-31-obj/x86_6=
-4/default modules
->   CC [M]  /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/=
-main.o
-> /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c: In=
- function =E2=80=98b43legacy_ram_write=E2=80=99:
-> /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c:236=
-: error: implicit declaration of function =E2=80=98B43legacy_WARN_ON=E2=
-=80=99
-> make[6]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43leg=
-acy/main.o] Fehler 1
-> make[5]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43leg=
-acy] Fehler 2
-> make[4]: *** [/source/compat-wireless-2.6/drivers/net/wireless] Fehle=
-r 2
-> make[3]: *** [_module_/source/compat-wireless-2.6] Fehler 2
-> make[2]: *** [modules] Fehler 2
-> make[1]: *** [modules] Fehler 2
-> make[1]: Leaving directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/def=
-ault'
-> make: *** [modules] Fehler 2
->=20
+rt2x00lib_reset_link_tuner() can be called from within
+the link tuner itself. This means that it should
+_not_ call rt2x00lib_stop_link_tuner() since that will
+cause the thread to hang.
 
-That's pretty weird.
-Oh wait... This is the compat package, right?
+Reorder the things that should be done during a
+link tuner reset and during a link tuner start.
 
---=20
-Greetings Michael.
+Also make antenna tuning the last step of the link
+tuner since it could possibly reset some statistical
+information which we need for average calculation.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   49 +++++++++++++++++++------------
+ 1 files changed, 30 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 1df1687..b3a639a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -33,11 +33,33 @@
+ /*
+  * Link tuning handlers
+  */
+-static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
++void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
++	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++		return;
++
++	/*
++	 * Reset link information.
++	 * Both the currently active vgc level as well as
++	 * the link tuner counter should be reset. Resetting
++	 * the counter is important for devices where the
++	 * device should only perform link tuning during the
++	 * first minute after being enabled.
++	 */
+ 	rt2x00dev->link.count = 0;
+ 	rt2x00dev->link.vgc_level = 0;
+ 
++	/*
++	 * Reset the link tuner.
++	 */
++	rt2x00dev->ops->lib->reset_tuner(rt2x00dev);
++}
++
++static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
++{
++	/*
++	 * Clear all (possibly) pre-existing quality statistics.
++	 */
+ 	memset(&rt2x00dev->link.qual, 0, sizeof(rt2x00dev->link.qual));
+ 
+ 	/*
+@@ -51,10 +73,7 @@ static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->link.qual.rx_percentage = 50;
+ 	rt2x00dev->link.qual.tx_percentage = 50;
+ 
+-	/*
+-	 * Reset the link tuner.
+-	 */
+-	rt2x00dev->ops->lib->reset_tuner(rt2x00dev);
++	rt2x00lib_reset_link_tuner(rt2x00dev);
+ 
+ 	queue_delayed_work(rt2x00dev->hw->workqueue,
+ 			   &rt2x00dev->link.work, LINK_TUNE_INTERVAL);
+@@ -65,15 +84,6 @@ static void rt2x00lib_stop_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	cancel_delayed_work_sync(&rt2x00dev->link.work);
+ }
+ 
+-void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev)
+-{
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
+-		return;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-	rt2x00lib_stop_link_tuner(rt2x00dev);
+-	rt2x00lib_start_link_tuner(rt2x00dev);
+-}
+-
+ /*
+  * Radio control handlers.
+  */
+@@ -363,11 +373,6 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
+ 		rt2x00dev->ops->lib->link_tuner(rt2x00dev);
+ 
+ 	/*
+-	 * Evaluate antenna setup.
+-	 */
+-	rt2x00lib_evaluate_antenna(rt2x00dev);
+-
+-	/*
+ 	 * Precalculate a portion of the link signal which is
+ 	 * in based on the tx/rx success/failure counters.
+ 	 */
+@@ -379,6 +384,12 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
+ 	rt2x00leds_led_quality(rt2x00dev, rt2x00dev->link.qual.avg_rssi);
+ 
+ 	/*
++	 * Evaluate antenna setup, make this the last step since this could
++	 * possibly reset some statistics.
++	 */
++	rt2x00lib_evaluate_antenna(rt2x00dev);
++
++	/*
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+ 	 */
+ 	rt2x00dev->link.count++;
+-- 
+1.5.3.2
+
