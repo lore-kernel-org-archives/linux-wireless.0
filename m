@@ -1,105 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33856 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087AbYB0Roa (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:41851 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757802AbYBYWYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 12:44:30 -0500
-Subject: Re: Roaming issues.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <1204133806.11761.12.camel@localhost.localdomain>
-References: <004501c87946$e5f1f490$0b3ca8c0@gotws1589>
-	 <1204129706.6309.19.camel@johannes.berg>
-	 <1204133806.11761.12.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PBgG3Nf1YlZ6BLgMNeO6"
-Date: Wed, 27 Feb 2008 18:44:15 +0100
-Message-Id: <1204134256.6309.31.camel@johannes.berg> (sfid-20080227_174500_067179_F4C413D1)
-Mime-Version: 1.0
+	Mon, 25 Feb 2008 17:24:16 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so998790ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:24:15 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 3/6] rt2x00: Add link tuner safe RX toggle states
+Date: Mon, 25 Feb 2008 23:21:15 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200802252320.11809.IvDoorn@gmail.com>
+In-Reply-To: <200802252320.11809.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802252321.15198.IvDoorn@gmail.com> (sfid-20080225_222419_122485_FB078840)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds 2 new states which both are used to toggle
+the RX. These new states are required for usage
+inside the link tuner thread, because the normal
+RX toggling will stop the link tuner thread.
+While it is possible that the link tuner thread itself
+is the caller of the RX toggle (when using software
+antenna diversity).
 
---=-PBgG3Nf1YlZ6BLgMNeO6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c    |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00reg.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt61pci.c      |    6 +++++-
+ drivers/net/wireless/rt2x00/rt73usb.c      |    6 +++++-
+ 7 files changed, 29 insertions(+), 7 deletions(-)
 
-
-> > Does associating actually block scanning?
->=20
-> If it doesn't, it really should.  There's been a number of problems over
-> the years with scan requests screwing up association because the card is
-> on a different channel and misses the association/auth exchanges.  To
-> ensure that association/authentication is as robust as possible, the
-> driver should refuse scans while association is ongoing.
-
-Good point.
-
-> > > My patches simply put the mac layer in IEEE80211_DISABLED state and w=
-ait for
-> > > the supplicant to decide.
-> >=20
-> > That would break supplicant-less operation which we can't do.
->=20
-> Yeah; roaming is an area that's somewhat underdefined right now.  Wasn't
-> there previous discussion of a knob to tell the driver that userspace
-> was going to handle roaming?  Could be wrong, but the driver doesn't
-> always have all the details for roaming and there are times when
-> userspace knows better.  Could default to "driver" for roaming and then
-> the supplicant could set it to "off" when it takes over.
-
-Well you can set a fixed BSSID so mac80211 won't roam. I think
-wpa_supplicant does that, but it still tries to re-auth if it lost the
-connection and the AP is in range.
-
-> Which brings up the other issue of auto-association by drivers, which is
-> usually the wrong thing.  Yeah, it makes 1337 kernel hackers in the
-> woods happier because the card will be up automatically and associated
-> with their single open AP, but it's pretty much a bad idea anywhere else
-> (ipw2200 associate=3D1 for example).  The driver should only be
-> associating when it's told to do so, it shouldn't be going out and
-> finding APs on it's own ever.
-
-mac80211 never associates on its own afaik.
-
-> > > I think it would be a good idea to signal to the supplicant that the
-> > > operation has timeout, and no further action will be taken.
-> > > To speed up the timeout response I had squeezed the supplicant timeou=
-t.
-> >=20
-> > How do you signal that? Make a wext event with the BSSID all-zeroes or
-> > something? Sounds ok.
->=20
-> Yeah, a zero-BSSID event would mean "disconnected" or "association
-> failed" and the supplicant would take over at that point.
-
-Right, that's a simple patch for somebody willing to dig through
-ieee80211_sta.c
-
-johannes
-
---=-PBgG3Nf1YlZ6BLgMNeO6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8WhbqVg1VMiehFYAQJcXBAAmcJjAS6xSJ+v4K9rak+AYVlJHtq6UTjL
-i+cyEJmJEKsmREYmeiilzSQmCWxXQel+ocC3blRFtt/mQP9aRQX2apBaLLvMhvJA
-OfvyX4zHsZAqhN7XT0125469tNyQD8opaLJkFZVA88h1IGuO/+dAXxoMqZ2oZVpY
-732COkrWAKJWQ6gsIWkAj/7SJAofJC8vmkzvfjAiF7vafD5kqXTT7iCMbjJq2wOA
-X+DJscaFORF0xVG4bGcPLCro67gkc/okuaG2CmbmdqN+WO4rRaFvxSiZGs1hlt4Q
-2g1Lk2bpvRDmbSnkLwqUoutSsAt8CFvu2PWuyWxyuaKFy2GInHMvctiSsVY+tkzO
-DxCND1TjnzjXpOxZzNZxHUZoV7200IntcWMn8wBIMSmIXVbU6fHbrzx0JWiJ1Hbr
-VubGaiNtogKshCEvFXDOmNhwQ0TUzMR3GOqEVP0HEwKL3NA2JvMsvCi3vFuJq4BR
-U/QpWuPHbhqJ3nbkpWyu4iOlW5qE3WLqlll/tYfPAXlsYlj1D/6Wm0pCSIy85462
-iZCqyCOBw191b8pUZvF9afdtuH6gGzlhCvC+FP2bs+TPcICR0z5TqYnVtAzAR+Lr
-mW6VLhPllVp8jbXxrccF7JNqHAhMPKhvSIsjbVggtKUGn29iWwxugqRjEIUq3GJB
-6mJrbYPvRas=
-=+Qv5
------END PGP SIGNATURE-----
-
---=-PBgG3Nf1YlZ6BLgMNeO6--
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index b63bc66..460ef2f 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -953,8 +953,12 @@ static int rt2400pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		rt2400pci_disable_radio(rt2x00dev);
+ 		break;
+ 	case STATE_RADIO_RX_ON:
++	case STATE_RADIO_RX_ON_LINK:
++		rt2400pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		break;
+ 	case STATE_RADIO_RX_OFF:
+-		rt2400pci_toggle_rx(rt2x00dev, state);
++	case STATE_RADIO_RX_OFF_LINK:
++		rt2400pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 		break;
+ 	case STATE_DEEP_SLEEP:
+ 	case STATE_SLEEP:
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index add8aff..ffcd996 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1106,8 +1106,12 @@ static int rt2500pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		rt2500pci_disable_radio(rt2x00dev);
+ 		break;
+ 	case STATE_RADIO_RX_ON:
++	case STATE_RADIO_RX_ON_LINK:
++		rt2500pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		break;
+ 	case STATE_RADIO_RX_OFF:
+-		rt2500pci_toggle_rx(rt2x00dev, state);
++	case STATE_RADIO_RX_OFF_LINK:
++		rt2500pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 		break;
+ 	case STATE_DEEP_SLEEP:
+ 	case STATE_SLEEP:
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index d9643c5..9f59db9 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -996,8 +996,12 @@ static int rt2500usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		rt2500usb_disable_radio(rt2x00dev);
+ 		break;
+ 	case STATE_RADIO_RX_ON:
++	case STATE_RADIO_RX_ON_LINK:
++		rt2500usb_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		break;
+ 	case STATE_RADIO_RX_OFF:
+-		rt2500usb_toggle_rx(rt2x00dev, state);
++	case STATE_RADIO_RX_OFF_LINK:
++		rt2500usb_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 		break;
+ 	case STATE_DEEP_SLEEP:
+ 	case STATE_SLEEP:
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 46888f9..a1d8e33 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -127,7 +127,7 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	 * else the changes will be ignored by the device.
+ 	 */
+ 	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
+-		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
++		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF_LINK);
+ 
+ 	/*
+ 	 * Write new antenna setup to device and reset the link tuner.
+@@ -141,7 +141,7 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00dev->link.ant.active.tx = libconf.ant.tx;
+ 
+ 	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
+-		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
+ }
+ 
+ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index add1f09..0325bed 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -85,6 +85,8 @@ enum dev_state {
+ 	STATE_RADIO_OFF,
+ 	STATE_RADIO_RX_ON,
+ 	STATE_RADIO_RX_OFF,
++	STATE_RADIO_RX_ON_LINK,
++	STATE_RADIO_RX_OFF_LINK,
+ 	STATE_RADIO_IRQ_ON,
+ 	STATE_RADIO_IRQ_OFF,
+ };
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index ca83d94..091fe39 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1458,8 +1458,12 @@ static int rt61pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		rt61pci_disable_radio(rt2x00dev);
+ 		break;
+ 	case STATE_RADIO_RX_ON:
++	case STATE_RADIO_RX_ON_LINK:
++		rt61pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		break;
+ 	case STATE_RADIO_RX_OFF:
+-		rt61pci_toggle_rx(rt2x00dev, state);
++	case STATE_RADIO_RX_OFF_LINK:
++		rt61pci_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 		break;
+ 	case STATE_DEEP_SLEEP:
+ 	case STATE_SLEEP:
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 7d6ee97..6546b0d 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1196,8 +1196,12 @@ static int rt73usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		rt73usb_disable_radio(rt2x00dev);
+ 		break;
+ 	case STATE_RADIO_RX_ON:
++	case STATE_RADIO_RX_ON_LINK:
++		rt73usb_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
++		break;
+ 	case STATE_RADIO_RX_OFF:
+-		rt73usb_toggle_rx(rt2x00dev, state);
++	case STATE_RADIO_RX_OFF_LINK:
++		rt73usb_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 		break;
+ 	case STATE_DEEP_SLEEP:
+ 	case STATE_SLEEP:
+-- 
+1.5.3.2
 
