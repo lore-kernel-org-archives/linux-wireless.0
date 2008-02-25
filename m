@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:46981 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751078AbYBXMpG convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:27049 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093AbYBYUzL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 07:45:06 -0500
-Date: Sun, 24 Feb 2008 13:36:53 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "R. Hofmann" <anmue@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: B43legancy_warn_on - error ...???
-Message-ID: <20080224133653.7095d2e5@morte> (sfid-20080224_124510_383818_1625135F)
-In-Reply-To: <20080224103031.127510@gmx.net>
-References: <20080224103031.127510@gmx.net>
+	Mon, 25 Feb 2008 15:55:11 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so957470wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 12:55:10 -0800 (PST)
+Subject: Re: [PATCH 07/13 v2] o11s: changes to ieee80211_sta
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203972564.13162.165.camel@johannes.berg>
+References: <47be773d.22b38c0a.2fbf.ffffb131@mx.google.com>
+	 (sfid-20080222_074745_247391_EDD9C862)  <1203697317.7082.68.camel@johannes.berg>
+	 <1203972580.6929.74.camel@localhost>
+	 (sfid-20080225_204804_927071_F77C43A6)  <1203972564.13162.165.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 12:56:49 -0800
+Message-Id: <1203973009.6929.77.camel@localhost> (sfid-20080225_205516_797081_9ADA9793)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 24 Feb 2008 11:30:31 +0100
-"R. Hofmann" <anmue@gmx.net> wrote:
+On Mon, 2008-02-25 at 21:49 +0100, Johannes Berg wrote:
+> Can you do things as follow-up patches that apply after the sta_info
+> stuff I sent out today? I'd prefer to not respin the 11s and the
+> sta_info patches.
 
-> localhost:/source/compat-wireless-2.6 # make
-> make -C /lib/modules/2.6.22.5-31-default/build M=3D/source/compat-wir=
-eless-2.6 modules
-> make[1]: Entering directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/de=
-fault'
-> make -C ../../../linux-2.6.22.5-31 O=3D../linux-2.6.22.5-31-obj/x86_6=
-4/default modules
->   CC [M]  /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/=
-main.o
-> /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c: In=
- function =E2=80=98b43legacy_ram_write=E2=80=99:
-> /source/compat-wireless-2.6/drivers/net/wireless/b43legacy/main.c:236=
-: error: implicit declaration of function =E2=80=98B43legacy_WARN_ON=E2=
-=80=99
-> make[6]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43leg=
-acy/main.o] Fehler 1
-> make[5]: *** [/source/compat-wireless-2.6/drivers/net/wireless/b43leg=
-acy] Fehler 2
-> make[4]: *** [/source/compat-wireless-2.6/drivers/net/wireless] Fehle=
-r 2
-> make[3]: *** [_module_/source/compat-wireless-2.6] Fehler 2
-> make[2]: *** [modules] Fehler 2
-> make[1]: *** [modules] Fehler 2
-> make[1]: Leaving directory `/usr/src/linux-2.6.22.5-31-obj/x86_64/def=
-ault'
-> make: *** [modules] Fehler 2
+Of course, I have to test it first and everything I send from now on
+will be on top of that.
 
-This is because I'm an idiot. Patch coming soon. In the meanwhile, you =
-may
-want to build that with debugging enabled to solve the issue.
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
 
---=20
-Ciao
-Stefano
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
