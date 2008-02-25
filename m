@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:53761 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764355AbYBBXkT (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.184]:31519 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093AbYBYUx7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 18:40:19 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2421336pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 15:40:18 -0800 (PST)
-Message-ID: <43e72e890802021540t7486aa90xd2ed3a03d5fa0595@mail.gmail.com> (sfid-20080202_234052_130316_F60F4501)
-Date: Sat, 2 Feb 2008 18:40:14 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: Cleanup after API changes patch
-Cc: bruno@thinktube.com, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <43e72e890802021428t205622d8l3a1aab8f2c6dea18@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080201012544.GD28995@ruslug.rutgers.edu>
-	 <47A33ECA.5030005@gmail.com>
-	 <43e72e890802021335g181e76e9gf95356ac729ad6d9@mail.gmail.com>
-	 <43e72e890802021339x5b2a44eayad71e796ba48451b@mail.gmail.com>
-	 <47A4ECC5.6070503@gmail.com>
-	 <43e72e890802021428t205622d8l3a1aab8f2c6dea18@mail.gmail.com>
+	Mon, 25 Feb 2008 15:53:59 -0500
+Received: by gv-out-0910.google.com with SMTP id s4so693048gve.37
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 12:53:57 -0800 (PST)
+Subject: Re: [PATCH 05/13 v2] o11s: mesh.c, support functions for mesh
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1203697511.7082.73.camel@johannes.berg>
+References: <47be7736.09d7720a.37a2.6115@mx.google.com>
+	 (sfid-20080222_071818_973520_9B55DA17)  <1203697511.7082.73.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 12:55:33 -0800
+Message-Id: <1203972933.6929.75.camel@localhost> (sfid-20080225_205402_647036_A925720F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 2, 2008 5:28 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
->
-> On Feb 2, 2008 5:20 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > On 02/02/2008 10:39 PM, Luis R. Rodriguez wrote:
-> > > On Feb 2, 2008 4:35 PM, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
-> > >> On Feb 1, 2008 10:46 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
-> > >>> On 02/01/2008 02:25 AM, Luis R. Rodriguez wrote:
-> > >>>> @@ -889,13 +900,15 @@ ath5k_copy_channels(struct ath5k_hw *ah,
-> > >>>>               /* Write channel info and increment counter */
-> > >>>>               channels[count].center_freq = freq;
-> > >>>>
-> > >>>> -             if((mode == AR5K_MODE_11A) ||
-> > >>>> -             (mode == AR5K_MODE_11G)){
-> > >>>> -                     channels[count].hw_value = chfreq|CHANNEL_OFDM;
-> > >>>> -             } else if((mode == AR5K_MODE_11A_TURBO) ||
-> > >>>> -             (mode == AR5K_MODE_11G_TURBO)){
-> > >>>> -                     channels[count].hw_value = chfreq|CHANNEL_OFDM|CHANNEL_TURBO;
-> > >>>> -             }if(mode == AR5K_MODE_11B) {
-> > >>>> +             if ((mode == AR5K_MODE_11A) ||
-> > >>>> +                     (mode == AR5K_MODE_11G)) {
-> > >>>> +                     channels[count].hw_value =
-> > >>>> +                             chfreq | CHANNEL_OFDM;
-> > >>>> +             } else if ((mode == AR5K_MODE_11A_TURBO) ||
-> > >>>> +                     (mode == AR5K_MODE_11G_TURBO)) {
-> > >>>> +                     channels[count].hw_value =
-> > >>>> +                             chfreq | CHANNEL_OFDM|CHANNEL_TURBO;
-> > >>>> +             } if (mode == AR5K_MODE_11B) {
-> > >>> 'else' or '\n' before the if, please
-> > >> Good catch, that should have been an "else if" there. Will repost all
-> > >> pending patches in a series addressing all posted comments.
-> > >
-> > > Going to move this to a switch, its much more legible.
-> >
-> > There was switch IIRC, I think either sparse or -W don't like it too much (enum
-> > <-> int)? Please could you check? (-W doesn't bother us.)
->
-> Thanks for the heads up, will do.
+On Fri, 2008-02-22 at 17:25 +0100, Johannes Berg wrote:
+> > +	 *   - Sync support required from peer
+> > +	 *   - MDA enabled
+> > +	 * - Power management control on fc
+> > +	 */
+> > +		return true;
+> 
+> Can the comment be before the if please?
 
-Tested with sparse from git, no complaints.
+Ok, will make a patch when the series you submitted make it to wireless
+testing.
 
-   Luis
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
