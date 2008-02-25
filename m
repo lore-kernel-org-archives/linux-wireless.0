@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:26481 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828AbYBMHma (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:59195 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755176AbYBYXmA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 02:42:30 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so4313853fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2008 23:42:28 -0800 (PST)
-Message-ID: <47B29F63.6050605@gmail.com> (sfid-20080213_074235_969268_87635A99)
-Date: Wed, 13 Feb 2008 08:42:27 +0100
-From: drago01 <drago01@gmail.com>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Dan Williams <dcbw@redhat.com>,
+	Mon, 25 Feb 2008 18:42:00 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2187635wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 15:41:59 -0800 (PST)
+Message-ID: <1ba2fa240802251541r218d5f22j5b3490d20ab508e3@mail.gmail.com> (sfid-20080225_234205_953436_79DA884B)
+Date: Tue, 26 Feb 2008 01:41:59 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211: sta info locking
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com> <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-In-Reply-To: <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <1203981812.13162.187.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1203677069.26341.52.camel@johannes.berg>
+	 <20080222143745.GB3067@tuxdriver.com>
+	 <1203693409.7082.30.camel@johannes.berg>
+	 <20080222155704.GD3067@tuxdriver.com>
+	 <1203972413.13162.163.camel@johannes.berg>
+	 <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com>
+	 <1203980105.13162.182.camel@johannes.berg>
+	 <1ba2fa240802251512k15b40d65oee774acebdb953e0@mail.gmail.com>
+	 <1203981812.13162.187.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> On Jan 26, 2008 9:00 PM, drago01 <drago01@gmail.com> wrote:
->   
->> On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
->>     
->>> On Jan 22, 2008 9:21 PM, Winkler, Tomas <tomas.winkler@intel.com> wrote:
->>>       
->>>>         
->>>>> -----Original Message-----
->>>>> From: drago01 [mailto:drago01@gmail.com]
->>>>> Sent: Tuesday, January 22, 2008 10:12 PM
->>>>> To: Winkler, Tomas
->>>>>           
->>>>> Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
->>>>> Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
->>>>>
->>>>> On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
->>>>>           
->>>> wrote:
->>>>         
->>>>>> I believe it's delaying uCode load to mac_start - still need to be
->>>>>> polished.
->>>>>>             
->>>>> ok, thx for the quick reply.
->>>>> If you have any potential fixes I would be happy to test them ;)
->>>>>           
->>>> Can you get me the sequence it is happening? RF kill switch is off
->>>> before you power up the laptop or after, during association or in
->>>> unassociated state..etc
->>>> Thanks
->>>>         
->>> I boot with rf kill off = device on
->>> acciotate using NM
->>> kill the card by pressing the rfkill (ie. setting it to on)
->>> card is dead (like described in my first mail), until I relaod the module
->>> the rfkill switch  does not have any effect at this time.
->>>
->>>       
->> OK, I investigated a bit and it seems to be the "disable interrupt
->> when device goes down" is the problem.
->> In my case NetworkManager detected the rfkill and brought the device
->> down, which caused the interrupt to be disabled. Now after pressing
->> the rfkill again nothing happend. But if I bring the device back up
->> the interrupt is enabled again and rfkill and the card is back to
->> live.
->> So in short disabling the interrupt in mac_stop breaks the hw rfkill
->> while the interface is down.
->>
->>     
+On Tue, Feb 26, 2008 at 1:23 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> Thanks for investigating this, still didn't have to time to dig into it.
+>  > >  > The problem is that RX a TX BA establishments usually happens
+>  > >  > concurrently for single STA, those are independent state machines.  We
+>  > >  > have to review this carefully before spinlokcs are removed.
+>  > >
+>  > >  I wouldn't want to remove them, but it seems overkill two have two
+>  > >  spinlocks. What I'd like to do is remove the ampdu tx, ampdu rx and mesh
+>  > >  spinlocks and instead use just a single one for all three uses, and then
+>  > >  use that one to protect the flags as well.
+>  > >
+>  > >  It seems to me that even if the RX/TX BA establishment is happening
+>  > >  concurrently then it's still serialized by the frames on the air so
+>  > >  ultimately can't actually happen on different CPUs so the lock won't be
+>  > >  contended.
+>  >
+>  > I'm not sure about this, this is quite gentle and requires heavy
+>  > testing.  I'll try to review this with Ron tomorrow and all other
+>  > changes you've suggested.
 >
->   
-ping?
+>  Thanks. Yes, I do realize that this is a bit intrusive. On the other
+>  hand, I can't see the code holding the spinlock for longer code/periods
+>  of time (nor should it). Or do you think the driver is allowed to call
+>  into the AMPDU TX setup path while being called from the AMPDU RX setup
+>  path? That would be a bit weird.
+>
 
+TX and RX BA sessions are triggered from different threads of
+execution namely rate scaling and RX path. The protected sections are
+quite long IMHO including call outs to underlying driver. It is very
+likely that both sides decides for BA session at the same times.
+
+>  > Do you have any setup to check your these changes?
+>
+>  Unfortunately not quite yet. I have an 11n AP now though, but broke of
+>  one of the antennas, I'll need to see how well it works.
+
+That's bad 11n is too sensitive on antennas setup.
+
+>
+>  > Currently there is known possible deadlock when unloading driver while
+>  > heavy HT traffic. This is happening while trearing down BA session. I
+>  > need to solve this as well.
+>
+>  Interesting, where does it deadlock?
+
+IIRC there is nice loop including queue lock need to dig the
+description tomorrow to satisfy your curiosity.
+
+
+Tomas
