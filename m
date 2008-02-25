@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:31670 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753235AbYBQQhO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbYBYTcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 11:37:14 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1391939fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2008 08:37:12 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 10/11] rt2x00: Fix MAC address defines in rt61pci
-Date: Sun, 17 Feb 2008 17:36:33 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802171730.44353.IvDoorn@gmail.com>
-In-Reply-To: <200802171730.44353.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802171736.33183.IvDoorn@gmail.com> (sfid-20080217_164719_746912_0EBC499D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 25 Feb 2008 14:32:39 -0500
+Subject: Re: [PATCH 08/13 v2] o11s: other changes in mac80211 for mesh
+	interface support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203967945.6929.17.camel@localhost> (sfid-20080225_193048_901987_FFAAAB59)
+References: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com>
+	 (sfid-20080222_071830_924260_34482369)  <1203696983.7082.63.camel@johannes.berg>
+	 <1203967945.6929.17.camel@localhost> (sfid-20080225_193048_901987_FFAAAB59)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gb6W3FbM/gSt55Q40vwq"
+Date: Mon, 25 Feb 2008 20:32:32 +0100
+Message-Id: <1203967952.13162.138.camel@johannes.berg> (sfid-20080225_193242_560642_69FE30A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MAC address offset defines were incorrect because
-the byte offset was used instead of word index. This
-bug had no affect on normal operations since these
-defines weren't used. (EEPROM_MAC_ADDR_0 was used
-to read 6 bytes from).
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+--=-gb6W3FbM/gSt55Q40vwq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index 4ef7ef3..3511bba 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -1130,10 +1130,10 @@ struct hw_pairwise_ta_entry {
- #define EEPROM_MAC_ADDR_0		0x0002
- #define EEPROM_MAC_ADDR_BYTE0		FIELD16(0x00ff)
- #define EEPROM_MAC_ADDR_BYTE1		FIELD16(0xff00)
--#define EEPROM_MAC_ADDR1		0x0004
-+#define EEPROM_MAC_ADDR1		0x0003
- #define EEPROM_MAC_ADDR_BYTE2		FIELD16(0x00ff)
- #define EEPROM_MAC_ADDR_BYTE3		FIELD16(0xff00)
--#define EEPROM_MAC_ADDR_2		0x0006
-+#define EEPROM_MAC_ADDR_2		0x0004
- #define EEPROM_MAC_ADDR_BYTE4		FIELD16(0x00ff)
- #define EEPROM_MAC_ADDR_BYTE5		FIELD16(0xff00)
- 
--- 
-1.5.4
+
+On Mon, 2008-02-25 at 11:32 -0800, Luis Carlos Cobo wrote:
+> On Fri, 2008-02-22 at 17:16 +0100, Johannes Berg wrote:
+> > >  	if (sdata->vif.type !=3D IEEE80211_IF_TYPE_STA &&
+> > >  	    sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS &&
+> > > +	    sdata->vif.type !=3D IEEE80211_IF_TYPE_MESH_POINT &&
+> > >  	    sdata->vif.type !=3D IEEE80211_IF_TYPE_AP)
+> > >  		return -EOPNOTSUPP;
+> >=20
+> > Why no scanning on mesh interfaces?
+>=20
+> ? That's actually allowing mesh interfaces to scan.
+
+D'oh. Yeah I'm confused here, sorry, was probably reading too quickly.
+
+johannes
+
+--=-gb6W3FbM/gSt55Q40vwq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8MXz6Vg1VMiehFYAQJ9bQ//Reg67xrTx2F57No03oyWOIBzrFNzX9Bn
+6H5rK04llu8IKX69zTXjUVI91faYPEa4n/yZsvocs94j2Cr6HVRkapzW0Ae7AoV+
+gAPpNnuIVai5My4iTgvq1Y4EXBLskq9M8CsyM1uydIQgNe3P7gG4gDLUHwtswAZV
+tDWJgS2+qayRBbcOI5d6Cwo1Y5o5phsqErauaao9MVdsTqJ/8e3kMmtVX95xT57U
+3U/luuuPmmGfrPbMKMLsHDbCBcClVC3MmM1kpZRIEqfkmt3upx0pJLNdV+e0QhMO
+OJy6mOi7riVf8mE6jx+JtNXmJveZhrbdRaewhCZMG0mmgB9vfDhvmyaLRquir837
+Voog3aNAUFvGQQ8jvmL+2SXo9CKUKq2NqpmnIcR6m61tuEfmuX1olb1lKB+DBOGh
+iqk32VQQK01NhVylWvHCMH3T6yl6+kSiUDEtx1amby8BKLjgaKRqwOg/Z7Rfzk32
+AmHVYIdHGAVrJnL4YzyKf7vSl1xTarvJKXK+xRz9p03RbE9oyoShQrXkFnC3te9C
+2e7VBc0rUg+ANo3eluoLysG+VCkJ+D5OO4DooGgo60ylpP49vn0hs1fGRsxQdvrV
+6qhGc+uoJOJxvZstN885noZAHWU27RUJBmW2LVsjCFC5/E7fWIIBYO+pREeOhG9+
+0IdJb9/vVBo=
+=n6IQ
+-----END PGP SIGNATURE-----
+
+--=-gb6W3FbM/gSt55Q40vwq--
 
