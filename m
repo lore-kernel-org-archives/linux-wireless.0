@@ -1,75 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47083 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbYB2Wvf (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.186]:44413 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755351AbYBYTkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 17:51:35 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH] Fix the bcm43xx driver breakage in 2.6.24/25.
-Date: Fri, 29 Feb 2008 23:49:30 +0100
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Alexey Zaytsev <alexey.zaytsev@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Jeff Garzik <jgarzik@pobox.com>, Greg KH <greg@kroah.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <47C01D03.9030601@gmail.com> <200802291105.35713.mb@bu3sch.de> <20080229205400.GG27212@elte.hu>
-In-Reply-To: <20080229205400.GG27212@elte.hu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802292349.31415.mb@bu3sch.de> (sfid-20080229_225204_284902_356AA2B4)
+	Mon, 25 Feb 2008 14:40:21 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1102559rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 11:40:18 -0800 (PST)
+Subject: Re: [PATCH 17/18] mac80211: mesh hwmp locking fixes
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203966581.13162.129.camel@johannes.berg>
+References: <20080223141703.194775000@sipsolutions.net>
+	 <20080223142017.846789000@sipsolutions.net>
+	 <1203966549.6929.4.camel@localhost>
+	 (sfid-20080225_190733_174041_A31E50BE)  <1203966581.13162.129.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 11:41:56 -0800
+Message-Id: <1203968516.6929.26.camel@localhost> (sfid-20080225_194027_977018_99BF45C6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 February 2008 21:54:00 Ingo Molnar wrote:
-> 
-> * Michael Buesch <mb@bu3sch.de> wrote:
-> 
-> > On Friday 29 February 2008 09:21:19 Andrew Morton wrote:
-> > > On Sat, 23 Feb 2008 16:17:55 +0300 Alexey Zaytsev <alexey.zaytsev@gmail.com> wrote:
-> > > 
-> > > > Theese two patches fix a problem instroduced in Linux 2.6.24, and
-> > > > still present in the current Linus' 2.6.25 tree.
-> > > > 
-> > > > The bcm43xx Wifi driver won't work any more, if the b44 Ethernet
-> > > > driver is enabled. This happens because the b44 driver
-> > > > needlessly enables the b43_pci_bridge code, which claims
-> > > > the same pci ids as the bcm43xx driver. The b43_pci_bridge
-> > > > code is needed for the b43{legacy} drivers, but for the
-> > > > b44, only the "ssb pci core" is needed.
-> > > 
-> > > Hate to stick my head into this beehive, but...
-> > > 
-> > > I have a patch queued (the-scheduled-bcm43xx-removal.patch) which 
-> > > will remove this driver from 2.6.26.
-> > > 
-> > > Is that bad?
-> > 
-> > Not at all. The b43 driver from 2.6.26 will work. So there's no reason 
-> > to keep bcm43xx. Alexey just tested a patch that backports the fix to 
-> > 2.6.24 and it works fine.
-> 
-> yeah, i'd support the removal of it too, if the transition is smooth and 
-> the regressions are resolved. And it should be smooth, as long as users 
-> are able to load the firmware blob, right? There's also an entry for it 
+On Mon, 2008-02-25 at 20:09 +0100, Johannes Berg wrote:
+> Ah, but sta_info_get will require rcu locking after a few more patches
+> so I now that I posted both sets this is easier (otherwise the sta info
+> rcu-ification would have to add all the code and revert this patch)
 
-As far as I can see, yes. The b43 driver is pretty mature these days.
-It does base on the codebase of the bcm43xx driver and the most intrusive
-changes date back over a year ago. The driver got lots of testing in the
-meantime.
-I do own the most common device flavours (except the 4311. So if somebody
-has one do donate.. :) ) and I don't see any regressions.
-
-Most "regressions" come from people not installing the updated firmware.
-But that's an issue we simply cannot solve in the driver.
-
-Of course, as I always said, if some last-minute regression appears, we
-will defer the bcm43xx removal. So I hope I'm not _really_ the worst
-maintainer ever, although I try hard to, when it comes to patches I
-really dislike. ;)
+You're right, just noticed the sta rcu-ification process.
 
 -- 
-Greetings Michael.
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
