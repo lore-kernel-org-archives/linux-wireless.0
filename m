@@ -1,64 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:50697 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754000AbYBAXAr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbYBYUte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 18:00:47 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so957761wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2008 15:00:46 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 QoS/aggregation questions, thoughts
-Date: Sat, 2 Feb 2008 00:00:24 +0100
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>, Tomas Winkler <tomasw@gmail.com>,
-	Patrick McHardy <kaber@trash.net>
-References: <1201882512.4188.66.camel@johannes.berg> <200802012325.26163.IvDoorn@gmail.com> <1201905133.4188.91.camel@johannes.berg>
-In-Reply-To: <1201905133.4188.91.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200802020000.24604.IvDoorn@gmail.com> (sfid-20080201_230104_213281_0967731F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 25 Feb 2008 15:49:34 -0500
+Subject: Re: [PATCH 07/13 v2] o11s: changes to ieee80211_sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1203972580.6929.74.camel@localhost> (sfid-20080225_204804_927071_F77C43A6)
+References: <47be773d.22b38c0a.2fbf.ffffb131@mx.google.com>
+	 (sfid-20080222_074745_247391_EDD9C862)  <1203697317.7082.68.camel@johannes.berg>
+	 <1203972580.6929.74.camel@localhost> (sfid-20080225_204804_927071_F77C43A6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ok9C95OLLFqmIAzpHeGW"
+Date: Mon, 25 Feb 2008 21:49:23 +0100
+Message-Id: <1203972564.13162.165.camel@johannes.berg> (sfid-20080225_204938_027283_FB9983D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 February 2008, Johannes Berg wrote:
-> 
-> > Like I mentioned earlier, ring/queue handling has received an overhaul,
-> > so not much of the rt2x00 part of this patch will apply after the update.
-> > However the change should be easier afterwards. ;)
-> 
-> :)
-> Keep the patches coming. No need to test them in rt2x00.git first,
-> wireless-2.6 git is pretty broken anyway right now. Due to me,
-> unfortunately.
 
-Ok. I'll try to implement LED classes this weekend. I already have the initial
-patches for that ready, but those were not really correct. Ones those are in
-I'll submit all patches as the 2.1.0 release.
-If I release them all this weekend they will be compile tested only, and I would
-like to have at least 1 run test to make sure no obvious NULL pointers or segmentation
-faults are there during init.
-
-> > Personally I think these queue identifiers should be completely seperated from the ieee80211_queue
-> > enumeration, and not be used inside a variable mixed.
-> > But that will be implementation details for later, and something I should probably take care of. ;)
-> 
-> Yeah, but this seemed easiest for now. We never use the beacon queue in
-> mac80211 and I believe that we shouldn't because not all hardware uses a
-> queue for beacons.
-
-I understand the change, and my comment was more a first idea for teh rt2x00 implementation. ;)
-I think I'll try to remove the IEEE80211_TX_QUEUE_BEACON tomorrow already and setup the correct
-implementation. That value is set as identifier by rt2x00 manually anyways (it never relies on
-mac80211 passing that value, so moving it to a different identifier can easily be done seperately from
-your patch. Saves you some time updating the patch anyway. :)
+--=-Ok9C95OLLFqmIAzpHeGW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-> > Other then that, the patch is fine with me, but not this patch probably needs to be respinned after
-> > my rt2x00 queue and virtual interfaces overhaul.
-> 
-> Right, no worries, I'm not entirely sure about this patch anyway.
+On Mon, 2008-02-25 at 12:49 -0800, Luis Carlos Cobo wrote:
+> On Fri, 2008-02-22 at 17:21 +0100, Johannes Berg wrote:
+> > > +	atomic_inc(&bss->users);
+> > > +	atomic_inc(&bss->users);
+> >=20
+> > ?
+> > That was just allocated, shouldn't it just be atomic_set() then? And wh=
+y
+> > two anyway?
+>=20
+> I was following the behavior in ieee80211_rx_bss_add(), where the same
+> thing is done. It is needed to to avoid the bss being freed on the next
+> ieee80211_rx_bss_put(), works as a reference count. Agree that
+> atomic_set() would be better.
 
-Ivo
+Ok, I didn't realise that it was the same in rx_bss_add(), I'm not too
+familiar with the code.
+
+> > > +			memset(&iwe, 0, sizeof(iwe));
+> > > +			iwe.cmd =3D IWEVCUSTOM;
+> > > +			sprintf(buf, "Mesh network (version %d)\n"
+> > > +			"\t\t\tPath Selection Protocol ID: 0x%02X%02X%02X%02X\n"
+> > > +			"\t\t\tPath Selection Metric ID: 0x%02X%02X%02X%02X\n"
+> > > +			"\t\t\tCongestion Control Mode ID: 0x%02X%02X%02X%02X\n"
+> > > +			"\t\t\tChannel Precedence: 0x%02X%02X%02X%02X",
+> >=20
+> > Maybe we should add separate items for this to make it easier to parse
+> > them?
+>=20
+> Ok, will include that too.
+
+Can you do things as follow-up patches that apply after the sta_info
+stuff I sent out today? I'd prefer to not respin the 11s and the
+sta_info patches.
+
+johannes
+
+--=-Ok9C95OLLFqmIAzpHeGW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8Mp06Vg1VMiehFYAQLEdg/+JTbmU7PD7JV8JtkB0N+qxv6rIG2UTsgO
+joP+peIzaQhNKlzvybLRGvWRWRCU+AdaoGe0VHr+ZBtiY4/2scMZrD1i8BWYCaYF
+MLTqDl4RcKA+Jdnsth2rhsVcL15y5ZidK7PYasjE7YeFNCrjObpnXzde6oukF5po
+xskF6ODKhSXZ782wLs2jmi9ogxCIlQqjvXSfCIW5ymxf92q+qob3XNuT9GR+qVlx
+a9pOnZ5I+VZFDKYI9Fmv3PSUKHVFjrKeywBvrCFS/Bt/1kEJLN2nBrzbIijaxclB
++af2tojfbkd4wb3S//Unp5uo/grybmoZ70+wAURnDuHGikcqykljvKV2IeEGPUQa
+HgGhfAMo0i0oCxENMKXVRkGJt9Z0I1zVa0JusBnF6if8myffsol/2xtnytMOsh9w
+dVNHw0BTTbAzyy4djrrRXnJK/EBh+pEeEtAc2GAiV6uoadw2ba7q4/QoMn9R4Ivc
+nO4tb7wjg4f3TRvmNnOafcc1uwFUshKB74UW5JH9lcHxOiE5VbQb6UJIujPVFZuj
+kvpOLYFWq6E5Qgdzf6EOkX+zuBXhuWAsRGWFCPT4ZPaA4VeGHGd71C/FUj/8BPP6
+ODZ6BS/yo+zMtSOpOsXXUgK5RArLk/80cjFFQ+nACamiYuw+l3Go1/SODsm50Q+N
+cQe7iItKTHQ=
+=vtlr
+-----END PGP SIGNATURE-----
+
+--=-Ok9C95OLLFqmIAzpHeGW--
+
