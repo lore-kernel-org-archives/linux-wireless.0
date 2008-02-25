@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:2564 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759966AbYBHEfL convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51859 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778AbYBYVYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 23:35:11 -0500
-Message-ID: <20080207233510.cyfxcv1y8g4gg48w@webmail.spamcop.net> (sfid-20080208_043517_491730_4F9F68A4)
-Date: Thu, 07 Feb 2008 23:35:10 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Andrew Lunn <andrew.lunn@ascom.ch>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: B43 not seeing MadWifi AP
-References: <20080206095908.GU25912@donkey.ma.tech.ascom.ch>
-	<1202321870.9673.9.camel@dv>
-	<20080206185330.GB28210@donkey.ma.tech.ascom.ch>
-In-Reply-To: <20080206185330.GB28210@donkey.ma.tech.ascom.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+	Mon, 25 Feb 2008 16:24:16 -0500
+Subject: Re: [PATCH 18/18] mac80211: enable mesh in Kconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203973083.6929.79.camel@localhost> (sfid-20080225_205634_226995_07239062)
+References: <20080223141703.194775000@sipsolutions.net>
+	 <20080223142018.468705000@sipsolutions.net>
+	 <1203973083.6929.79.camel@localhost> (sfid-20080225_205634_226995_07239062)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V8hRIePxtKsfwTzrxAhl"
+Date: Mon, 25 Feb 2008 22:24:07 +0100
+Message-Id: <1203974647.13162.174.camel@johannes.berg> (sfid-20080225_212420_862124_CD0924DD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Andrew Lunn <andrew.lunn@ascom.ch>:
 
->> I suggest that you check in the monitor mode that there are indeed
->> beacons sent with this MAC address.  Maybe they are not.  It's quite
->> possible.  MadWifi has an option to disable beacons for some virtual
->> APs.
->
-> Well, other devices are seeing it, eg other Atheros devices and intel
-> IPW2200. So somehow i doubt it is not sending beacons.
+--=-V8hRIePxtKsfwTzrxAhl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What I have found is that there are beacons for every ESSID, but  
-scanning finds only one ESSID.  I tested that with orinoco driver,  
-which doesn't depend on mac80211.
 
->> Maybe mac80211 decided to do a passive scan, perhaps due to your country
->> regulations?
->
-> CH has no such regulations...
+On Mon, 2008-02-25 at 12:58 -0800, Luis Carlos Cobo wrote:
+> On Sat, 2008-02-23 at 15:17 +0100, Johannes Berg wrote:
+> > Currently marked BROKEN because of endianness problems.
+>=20
+> Will take care of those problems.
 
-You are right, it's more like the opposite is happening.  It looks  
-like mac80211 relies only on probe requests and not on beacons.
+Oh this reminds me.
 
->> It's quite possible that b43 will associate if you set the ESSID
->> correctly.  Maybe you'll need to set "ap" with iwconfig as well.
->
-> I hacked the madwifi driver a little, to disable the wme_ie and the
-> ath_ie IEs in the beacon and probe response messages. Only then did
-> the b43 device list the Atheros device in its scan list. However i
-> could not get it to associate. Authentication always failed. The b43
-> driver gives error messages and the MadWifi driver never received the
-> Authentication request messages.
+You have a lot of macros like
 
-It seems to me that the problem is on the MadWifi side.  Changing the  
-code may be irrelevant.  MadWifi replied to probe requests only on one  
-virtual interface,  and this time it was the interface you needed (for  
-whatever reason).  Maybe it switched back when you tried to associate.
+#define PREQ_IE_ORIG_DSN(x) le32_to_cpu(*((u32 *) (x + 13)))
 
-> In the end i gave up. I have another machine with an ipw2100 card
-> which worked first time and i don't see any point using the B43 device
-> when it causes me to much pain.
+Would it be possible to define the preq IE as a struct? Not sure if it
+is. Either way, this should be converted to a static inline instead of a
+macro.
 
-Maybe b43 does something different, so that the trick with virtual  
-devices doesn't work.  But it looks like some problems don't even need  
-b43 on the client side.
+Also, you need to add a lot of get_unaligned() to the code. Please read
+Daniel's excellent Documentation/unaligned-memory-access.txt
 
--- 
-Regards,
-Pavel Roskin
+johannes
+
+--=-V8hRIePxtKsfwTzrxAhl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8Mx9qVg1VMiehFYAQITTw//axHezqquEP1ZAU68DSuckFKqp2cthASj
+okKE88GMEagJKVddM62ju0wucLYaYpB3hLagJXvghcHQ+vm/rsFxwm5+W0YcpG6g
+o40FrSVXIG1HKB/0U8uTmghFPHxNm4d6quNfdjsMg9NKetA+i8oTc14Q03gBuX/f
+EbX6qD9kYYc/4ovDjTVmePzt/D1lpQTaiem5koZ0ZeQ+3hJ24pMHPeHnhPVJsVZF
+s/HAkCGG6p3emL+Wl7s+AgdWEmj6R/F6178L+Yyuv+JDW4t/p7egT/ONJGBxr54g
+Z1AUSuDlSzGGkEsr7tkrKZ3YapNImODr2mDY0NP7sZa3sWaXrWsnj770BYXgxZkX
+qJhz1EGgauAIpNELdZuhEa7BJwZQgv46/56S/mF2IJnJq0cmc0IIe7ZpOSwzrMOw
+6FMYhVF9Fhl96UBlCFjQAQN+BM70n9SiaQ3EN/6yQgTVTz+BxB5ZZk7T2UnBg8ac
+LxiOGlhDgmrFfejITBRDAVhwmotXSM2Yf5vkTYXh05jAMVOzTxFGKQI5bLB0HXnz
+tPsRL2D1G71Itp28/O42s0BBhyp8AXFZ1J/Vw2zM2jYA2A6cxqyuQ8cswU0dKqOW
+ThU++ipADY9PIzn5N/jSwtjzrrfSs5DYeAU+6HH5BpMis68APUS+6b1p9XxeHdnC
+MKRzSEzP49s=
+=NDLR
+-----END PGP SIGNATURE-----
+
+--=-V8hRIePxtKsfwTzrxAhl--
+
