@@ -1,64 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:1114 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756747AbYBBVkm (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:13745 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbYBYVFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 16:40:42 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2369647pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 13:40:41 -0800 (PST)
-Message-ID: <43e72e890802021340h7d4778a8hf9827531cd387bcc@mail.gmail.com> (sfid-20080202_214045_187835_298546F8)
-Date: Sat, 2 Feb 2008 16:40:40 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [RFC: 2.6 patch] ath5k/phy.c: fix negative array index
-Cc: "Adrian Bunk" <bunk@kernel.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <40f31dec0802021338x6075d134n5c1270a424d7ae5b@mail.gmail.com>
+	Mon, 25 Feb 2008 16:05:42 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so907232nfb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 13:05:38 -0800 (PST)
+From: Chris Clayton <chris2553@googlemail.com>
+Reply-To: chris2553@googlemail.com
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Date: Mon, 25 Feb 2008 21:04:32 +0000
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <c6b1100b0802220746s3441d28cj92896618bbb57bde@mail.gmail.com> <200802222047.52312.IvDoorn@gmail.com>
+In-Reply-To: <200802222047.52312.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080202211617.GE9375@cs181133002.pp.htv.fi>
-	 <40f31dec0802021338x6075d134n5c1270a424d7ae5b@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802252104.32416.chris2553@googlemail.com> (sfid-20080225_210549_174487_26AE8249)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 2, 2008 4:38 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2008/2/2, Adrian Bunk <bunk@kernel.org>:
->
-> > This patch fixes a negative array index spotted by the Coverity checker.
-> >
-> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> >
-> > ---
-> >
-> > I'm not 100% sure whether my patch is correct, but if not this patch is
-> > the easiest way to show the problem.
-> >
-> > --- linux-2.6/drivers/net/wireless/ath5k/phy.c.old      2008-02-02 21:44:58.000000000 +0200
-> > +++ linux-2.6/drivers/net/wireless/ath5k/phy.c  2008-02-02 21:48:28.000000000 +0200
-> > @@ -1176,10 +1176,13 @@ static int ath5k_hw_rf5112_rfregs(struct
-> >                 obdb = channel->freq >= 5725 ? 3 :
-> >                     (channel->freq >= 5500 ? 2 :
-> >                         (channel->freq >= 5260 ? 1 :
-> >                             (channel->freq > 4000 ? 0 : -1)));
-> >
-> > +               if (obdb == -1)
-> > +                       return -EINVAL;
-> > +
-> >                 if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
-> >                                 ee->ee_ob[ee_mode][obdb], 3, 279, 0, true))
-> >                         return -EINVAL;
-> >
-> >                 if (!ath5k_hw_rfregs_op(rf, ah->ah_offset[6],
-> >
->
-> Thanx ;-)
->
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Hi,
 
-This won't apply after the API changes, I'll port it and send it as
-part of the series.
+Firstly apologies for trimming linux-kernel and linux-wireless from my reply 
+to Ivo yesterday. Basically, I replied saying that the patch below didn't fix 
+the problem. But please do read on...
 
-Thanks,
+On Friday 22 February 2008, Ivo van Doorn wrote:
+> On Friday 22 February 2008, Chris Clayton wrote:
+> > Hi Ivo,
+> >
+> > On 18/02/2008, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > Hi,
+> >
+> > [...]
+> >
+> > > Above traces should be enough, but to determine where rt2x00 broke
+> > >  down approximatly I need to have a few test result on specific
+> > > moments. Could you test the kernel with the following versions:
+> > >
+> > >  rt2x00 2.0.11   2d68de3efa62655d551092f5c787505735d561ad
+> > >  rt2x00 2.0.12   a3c7aa58df7df80aa05f166fe3e42482247164cf
+> > >  rt2x00 2.0.13   5a6012e105ae1664cd2841c33bf59fbdd8d4dbcc
+> > >
+> > >  Checking those out is simply a matter of:
+> > >  git branch 2.0.11 2d68de3efa62655d551092f5c787505735d561ad
+> > >  git checkout 2.0.11
+> >
+> > OK, we seem to be struggling a little, so I've built an installed git
+> > and cloned Linus' 2.6 tree. My wireless network dies after a few pings
+> > with rt2x00 2.0.11.
+> >
+> > >  No further bisecting is needed, but with above tests I can at least
+> > >  narrow it down to find the cause of this issue.
+> >
+> > If you need me to bisect, just shout. Please be patient though, I'm
+> > exploring new territory here :-)
+>
+> I don't think bisecting this will help a lot, the rt2x00 2.0.11 release
+> introduced software diversity. And that is already something I suspect
+> of being broken.
+>
+ I've bisected anyway and although the results are not absolutely conclusive, 
+as I neared the end of the process, I was amongst a bunch of mac80211 
+patches. This set me on a path that resulted in me discovering that with the 
+rt61pci driver, I can freeze my wireless network connection almost at will if 
+I set mac82011's ieee80211_default_rc_algo parameter to 'pid'. if the 
+parametre is set to 'simple', the network seems to be reliable. I've just let 
+the ping application run on and ping another box on my network almost 1500 
+times whilst repeatedly transferring a kernel source tarball by ftp from 
+another box and the network connection was mantained That's with the 
+parameter set to 'simple', if \I set it to 'pid' the connection rarely 
+survives more than 40 pings even without the ftp activity.
 
-  Luis
+If I replace my wireless card with one that uses the rtl8180 driver, the 
+network connection seems to be reliable regardless of how I set the 
+parameter, although I admit that i have not tested this extensively yet. I'll 
+do that now and report later.
+
+Hope this helps.
+
+Chris
+
+> Unfortunately software diversity was a bugfix and fix in one,
+> the previous setup was broken for some hardware since the
+> lack of software diversity caused problems.
+>
+> Could you check if below patch helps in any way?
+>
+> Ivo
+>
+> ---
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c
+> b/drivers/net/wireless/rt2x00/rt2x00config.c index a1d8e33..6995912 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+> @@ -122,6 +122,10 @@ void rt2x00lib_config_antenna(struct rt2x00_dev
+> *rt2x00dev, libconf.ant.rx = rx;
+>  	libconf.ant.tx = tx;
+>
+> +	if (rx == rt2x00dev->link.ant.active.rx &&
+> +	    tx == rt2x00dev->link.ant.active.tx)
+> +		return;
+> +
+>  	/*
+>  	 * Antenna setup changes require the RX to be disabled,
+>  	 * else the changes will be ignored by the device.
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> b/drivers/net/wireless/rt2x00/rt2x00dev.c index 65a512f..4325c08 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -191,16 +191,16 @@ static void rt2x00lib_evaluate_antenna_sample(struct
+> rt2x00_dev *rt2x00dev) return;
+>
+>  	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) {
+> -		if (sample_a > sample_b && rx == ANTENNA_B)
+> +		if (sample_a > sample_b)
+>  			rx = ANTENNA_A;
+> -		else if (rx == ANTENNA_A)
+> +		else
+>  			rx = ANTENNA_B;
+>  	}
+>
+>  	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY) {
+> -		if (sample_a > sample_b && tx == ANTENNA_B)
+> +		if (sample_a > sample_b)
+>  			tx = ANTENNA_A;
+> -		else if (tx == ANTENNA_A)
+> +		else
+>  			tx = ANTENNA_B;
+>  	}
+>
+> @@ -257,7 +257,7 @@ static void rt2x00lib_evaluate_antenna(struct
+> rt2x00_dev *rt2x00dev)
+>
+>  	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
+>  	    !(rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)) {
+> -		rt2x00dev->link.ant.flags &= ~ANTENNA_MODE_SAMPLE;
+> +		rt2x00dev->link.ant.flags = 0;
+>  		return;
+>  	}
+
+
+
+-- 
+Beauty is in the eye of the beerholder.
