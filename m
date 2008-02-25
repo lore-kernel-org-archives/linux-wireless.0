@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:1996 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751702AbYBOKQN (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.236]:38852 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756752AbYBYU43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 05:16:13 -0500
-From: bruno randolf <bruno@thinktube.com>
+	Mon, 25 Feb 2008 15:56:29 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1708094wxd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 12:56:26 -0800 (PST)
+Subject: Re: [PATCH 18/18] mac80211: enable mesh in Kconfig
+From: Luis Carlos Cobo <luisca@cozybit.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: DS params only in 2GHz band?
-Date: Fri, 15 Feb 2008 19:16:07 +0900
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802151916.07629.bruno@thinktube.com> (sfid-20080215_101627_793671_DF5990DA)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080223142018.468705000@sipsolutions.net>
+References: <20080223141703.194775000@sipsolutions.net>
+	 <20080223142018.468705000@sipsolutions.net>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 12:58:03 -0800
+Message-Id: <1203973083.6929.79.camel@localhost> (sfid-20080225_205647_226964_0BEB6C2F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello johannes!
+On Sat, 2008-02-23 at 15:17 +0100, Johannes Berg wrote:
+> Currently marked BROKEN because of endianness problems.
 
-in your commit e1251b1d3c0e12a481c4c6b3ef60dfdf0f6be8c1:
-> @@ -2945,10 +2968,12 @@ static int ieee80211_sta_join_ibss(struct
-> net_device *dev, *pos++ = rates;
->                 memcpy(pos, bss->supp_rates, rates);
->
-> -               pos = skb_put(skb, 2 + 1);
-> -               *pos++ = WLAN_EID_DS_PARAMS;
-> -               *pos++ = 1;
-> -               *pos++ = bss->channel;
-> +               if (bss->band == IEEE80211_BAND_2GHZ) {
-> +                       pos = skb_put(skb, 2 + 1);
-> +                       *pos++ = WLAN_EID_DS_PARAMS;
-> +                       *pos++ = 1;
-> +                       *pos++ = ieee80211_frequency_to_channel(bss->freq);
-> +               }
->
->                 pos = skb_put(skb, 2 + 2);
->                 *pos++ = WLAN_EID_IBSS_PARAMS;
+Will take care of those problems.
 
-what's the reason you changed the beacons to include DS params only in the 
-2GHz band?
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-thanks,
-bruno
+
