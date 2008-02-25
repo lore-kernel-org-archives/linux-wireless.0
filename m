@@ -1,71 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44513 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756693AbYBYTio (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.183]:29427 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754088AbYBYMHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 14:38:44 -0500
-Subject: Re: [PATCH 11/13 v2] o11s: support for on-demand Hybrid Wireless
-	Mesh Protocol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203968210.6929.22.camel@localhost> (sfid-20080225_193515_727081_D7673A7D)
-References: <47be77ee.02098c0a.5eba.ffff81ef@mx.google.com>
-	 (sfid-20080222_072128_730595_F951750B)  <1203697819.7082.75.camel@johannes.berg>
-	 <1203967829.6929.16.camel@localhost>
-	 (sfid-20080225_192854_280269_CEC357A7)  <1203967819.13162.136.camel@johannes.berg>
-	 <1203968210.6929.22.camel@localhost> (sfid-20080225_193515_727081_D7673A7D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ky+5/Utc9te0KRjgiygs"
-Date: Mon, 25 Feb 2008 20:38:32 +0100
-Message-Id: <1203968312.13162.142.camel@johannes.berg> (sfid-20080225_193926_096741_29DAECE0)
-Mime-Version: 1.0
+	Mon, 25 Feb 2008 07:07:49 -0500
+Received: by el-out-1112.google.com with SMTP id v27so1283324ele.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 04:07:48 -0800 (PST)
+Message-ID: <84ac67910802250407p527cdee3uc33a572130f41f8d@mail.gmail.com> (sfid-20080225_120753_830440_CA54949C)
+Date: Mon, 25 Feb 2008 12:07:47 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1203933155.13162.56.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <1203773250.13162.23.camel@johannes.berg>
+	 <84ac67910802230559g73dafb0focbf62f4b9a6b3158@mail.gmail.com>
+	 <1203776102.13162.27.camel@johannes.berg>
+	 <84ac67910802230628q217542e4gc76bed8076af118f@mail.gmail.com>
+	 <1203777414.13162.29.camel@johannes.berg>
+	 <84ac67910802230925xb7750e8j561efaf951c50321@mail.gmail.com>
+	 <1203794030.13162.39.camel@johannes.berg>
+	 <84ac67910802231156t29724612me8adb74d05bfede8@mail.gmail.com>
+	 <1203933155.13162.56.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hmm,
 
---=-Ky+5/Utc9te0KRjgiygs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-On Mon, 2008-02-25 at 11:36 -0800, Luis Carlos Cobo wrote:
-> On Mon, 2008-02-25 at 20:30 +0100, Johannes Berg wrote:
-> > What sort of value is this?
->=20
-> Channel access overhead, in hundreths of TUs.=20
-
-Huh. The draft says something like
-
-"includes frame headers, training sequences, access protocol frames,
-etc."
-
-That doesn't seem to depend on the hardware but rather on the PHY type
-used, i.e. whether you have short/long preamble or 5GHz etc. Am I
-misunderstanding it?
-
-johannes
-
---=-Ky+5/Utc9te0KRjgiygs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8MZNqVg1VMiehFYAQKVoRAAph+cGh1de6u2W2RaB4agy890L9Pq27Nd
-/qwmri0lP79ATj/FceJj62rEHyucvSFNHgPwOH7v6nYj8ZnMUhEpZczwSCdUOiMe
-9ZHhcUs2sifra336Cxj4Up6O0+2zaHmH1ep16Q9avx08qliZgxkbFuoBw483pxlG
-DVM/qnHaghJtFbW5vBPJshoEL8erLV1AfH9MSeevMfijwOpe+j4xTRp7jDixtUa+
-OeNY2U1Q6VsX31RSZA0YBl4m5oSFOZgOYOEXydMVlI38ETInFi3HoG6fMvBkCSYn
-On8icRAaVM72RXmZtGEJkVcx9nTmr6+oYylLYb9FJZgOn23pQOLVnruxXv8oaEWl
-n1ccZPocC5f3mq4IALiW4a5gy797JypNi8smuf2IpAUitYCnWaWr+ctThMn5fVCz
-BuwT1vDD1Pfp3nSYigc3TugK+SoWUeTkhuZDfqJT36nVqcy3tnWB1JX69Ow41vh8
-zVDsmndVXBf3TfqNqb6HHATKl0g1S9gndnMhDQ+Hzq642VPa4Tbo1OrWZWs1xmoZ
-UknXkWT1xSNW4ulZqYl6tS8LAP3oabJfTVgVU3vcS0dxJ/y7Wyyhwlhhb19BcnTq
-rAnLBnUy95PYH8yiLnOBQ8wY8SiC+wQspQM7pr5RtUBDrn4esPYy0k5Qp/APtWpQ
-nW/XZe7FDYE=
-=3JJD
------END PGP SIGNATURE-----
-
---=-Ky+5/Utc9te0KRjgiygs--
-
+Well I can only blame the bad rt61pci drivers, I'm out of options now.
