@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:46228 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:39418 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbYBFQS4 (ORCPT
+	with ESMTP id S1757374AbYBYWuP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 11:18:56 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so536340wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2008 08:18:53 -0800 (PST)
-Message-ID: <1ba2fa240802060818t5945ff67jb64ccee0a407c604@mail.gmail.com> (sfid-20080206_161900_023136_B23B3FDC)
-Date: Wed, 6 Feb 2008 18:18:53 +0200
+	Mon, 25 Feb 2008 17:50:15 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2164688wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:50:14 -0800 (PST)
+Message-ID: <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com> (sfid-20080225_225021_086595_C6FBAF5F)
+Date: Tue, 26 Feb 2008 00:50:14 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC v2] mac80211: add general rate information to Tx status
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1202309885.9965.3.camel@johannes.berg>
+Subject: Re: mac80211: sta info locking
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <1203972413.13162.163.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <12022263282085-git-send-email-tomas.winkler@intel.com>
-	 <1202307331.4395.41.camel@johannes.berg>
-	 <1ba2fa240802060644k3f0b5e7cgb48380a2b3181f41@mail.gmail.com>
-	 <1202309885.9965.3.camel@johannes.berg>
+References: <1203677069.26341.52.camel@johannes.berg>
+	 <20080222143745.GB3067@tuxdriver.com>
+	 <1203693409.7082.30.camel@johannes.berg>
+	 <20080222155704.GD3067@tuxdriver.com>
+	 <1203972413.13162.163.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Since on the TX path tx_status resides on stack this has to be copied
-> > by the driver for TX-response path use.
+On Mon, Feb 25, 2008 at 10:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> I don't think I understand? This is tx status, what are you referring to
-> by "tx response"?
+>  On Fri, 2008-02-22 at 10:57 -0500, John W. Linville wrote:
+>  > On Fri, Feb 22, 2008 at 04:16:49PM +0100, Johannes Berg wrote:
+>  > >
+>  > > > > Hence, I think we can actually get away without more locking if we
+>  > > > > protect the flags better. Should we use a spinlock or the atomic
+>  > > > > set_bit()/clear_bit()/etc. operations?
+>  > > >
+>  > > > Using the atomic operations seems appropriate to me.
+>  > >
+>  > > Right, but I figured if we could get rid of the AMPDU spinlocks and just
+>  > > use a single one in total (for flags as well) then that'd be of benefit
+>  > > too; even with the dynamic allocation strategy (see other mail) we'd not
+>  > > need to allocate two more spinlocks for ampdu.
+>  >
+>  > Yes, I thought that was behind your question.  I'll let Ron comment
+>  > on the AMPDU spinlock usage.
+>
+>  Ok so the mesh code came with a spinlock too, the AMPDU code has two.
+>
+>  Ron/Tomas, does the ampdu MLME really need two spinlocks?
 
-Maybe I'm locked in concepts of iwlwifi but I believe also other
-drivers uses similar concept. I think USB has some URB complete
-handler etc.  So iwlwifi get interrupt (asynchronous) when packet is
-transmitted (TX response flow) and driver retrieves the information of
-transmitting. This is NOT done in TX contexts so you have to store
-tx_status between TX flows and TX response flow so you can feed it
-back to ieee80211_tx_status_irqsafe
->
-> > void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
-> >                                struct sk_buff *skb,
-> >                                struct ieee80211_tx_status *status)
-> >
-> >
-> >       skb->dev = local->mdev;
-> >       saved = kmalloc(sizeof(struct ieee80211_tx_status), GFP_ATOMIC); ---
-> > this has to be changed as well.
->
-> Yeah that's what I was thinking of. Maybe we should change the
-> ieee80211_tx_status_irqsafe() interface and require the driver to
-> allocate it rather than giving a pointer to a structure on the stack?
-> That way we the driver has to do the calculation, but we don't have to
-> copy things around? Doing it on the stack isn't easy, you'd have to
-> define something like this:
-
->
-> struct status {
->         struct ieee80211_tx_status stat;
->         struct ieee80211_tx_rate_ctrl ratectrl[N];
-> } status __attribute__((packed));
->
-> so requiring the driver to allocate it when using the irqsafe interface
-> would be better imho.
->
-Not sure which flow will free this pointer ? Iwlwifi keeps tx_status
-attached to TBD so it have to be sure it won't be overriden somewhere
-in the stack.  But it might be a case that I'm not understand here
-something
+The problem is that RX a TX BA establishments usually happens
+concurrently for single STA, those are independent state machines.  We
+have to review this carefully before spinlokcs are removed.
 
 Thanks
 Tomas
-
-> johannes
->
