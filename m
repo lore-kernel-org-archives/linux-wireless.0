@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-outboundfilter-1.mail.uk.tiscali.com ([212.74.114.37]:31794
-	"EHLO mk-outboundfilter-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754946AbYB2XtQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42978 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbYBYJut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 18:49:16 -0500
-From: Adam Baker <linux@baker-net.org.uk>
-To: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: FIF_ filter flags
-Date: Fri, 29 Feb 2008 23:39:27 +0000
-Cc: "Johannes Berg" <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802292339.27174.linux@baker-net.org.uk> (sfid-20080229_234920_378694_469ECF42)
+	Mon, 25 Feb 2008 04:50:49 -0500
+Subject: [PATCH] mac80211: add missing "break" statement in mesh code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 10:11:50 +0100
+Message-Id: <1203930711.13162.46.camel@johannes.berg> (sfid-20080225_095100_986157_14F5140B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This inserts a missing break statement which, if hit, would cause
+the code to fall-through and unlock a spinlock twice. Noticed via
+sparse's "lock count wrong in basic block" warning and careful
+code inspection.
 
-I've spotted something in the way rt2x00 handles the filter setting flags that 
-doesn't seem to match the documentation. I suspect it makes no difference in 
-practice but there is a change needed in that area anyway so I'd like to get 
-it right in the patch.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-The documentation says a driver should clear any flags for data which it can't 
-provide but makes no mention of doing anything about unrequested data that it 
-does provide. The current rt2x00 implementation will set the relevant flag if 
-it can't help providing something that wasn't asked for.
+--- everything.orig/net/mac80211/mesh_plink.c	2008-02-24 12:22:02.000000000 +0100
++++ everything/net/mac80211/mesh_plink.c	2008-02-24 12:22:18.000000000 +0100
+@@ -691,6 +691,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 			spin_unlock_bh(&sta->plink_lock);
+ 			mesh_plink_frame_tx(dev, PLINK_CLOSE, sta->addr, llid,
+ 					    plid, reason);
++			break;
+ 		case OPN_ACPT:
+ 			if (del_timer(&sta->plink_timer))
+ 				sta_info_put(sta);
 
-For example rt2x00 devices only have one promiscuous mode that covers traffic 
-in the same and other BSSes therefore if either of FIF_PROMISC_IN_BSS or 
-FIF_OTHER_BSS are set then the driver will set both of them in the returned 
-flags value.
 
-It will also for some devices set the FIF_ALLMULTI flag if mc_count is non 
-zero.
-
-If this behaviour is considered desirable then I'll keep it working when 
-making the change but if not I'll remove it.
-
-Thanks
-
-Adam
