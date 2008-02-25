@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:59900 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672AbYBXUVZ (ORCPT
+Received: from smtp4.int-evry.fr ([157.159.10.71]:39637 "EHLO
+	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754180AbYBYRFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 15:21:25 -0500
-Date: Sun, 24 Feb 2008 15:21:12 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
-	mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
-Message-ID: <20080224202112.GA4545@hash.localnet> (sfid-20080224_202131_536223_7DFB24D7)
-References: <20080224042851.GE4426@makis.domain.invalid> <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com> <20080224175933.GA4360@hash.localnet> <40f31dec0802241058h5b37a471s5092dd370a4f2a48@mail.gmail.com>
+	Mon, 25 Feb 2008 12:05:00 -0500
+Received: from smtp2.int-evry.fr (smtp2.int-evry.fr [157.159.10.45])
+	by smtp4.int-evry.fr (Postfix) with ESMTP id 0DA5F350835
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 17:31:19 +0100 (CET)
+Received: from smtp-ext.int-evry.fr (smtp-ext.int-evry.fr [157.159.11.17])
+	by smtp2.int-evry.fr (Postfix) with ESMTP id 999443EDE8D
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 17:31:17 +0100 (CET)
+Received: from ibook (unknown [77.192.17.45])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp-ext.int-evry.fr (Postfix) with ESMTP id 8EC268D16A2
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 17:31:17 +0100 (CET)
+From: Florian Fainelli <florian.fainelli@telecomint.eu>
+To: linux-wireless@vger.kernel.org
+Subject: p54usb with Inventel UR054g dongle
+Date: Mon, 25 Feb 2008 17:31:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0802241058h5b37a471s5092dd370a4f2a48@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802251731.22264.florian.fainelli@telecomint.eu> (sfid-20080225_170509_083515_761B3E00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 24, 2008 at 08:58:09PM +0200, Nick Kossifidis wrote:
-> Thanx, just plz put a new line here ->
-> 
-> +	/* Get MAC, PHY and RADIO revisions */
-> +	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-> +
-> +	/* Identify PCI-E cards */
+Hi all,
 
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+I am testing an Inventel UR054g dongle with p54usb, and some fields cannot be 
+parsed :
 
-Do you want me to respin and post the patch with the newline, or
-are you just going to roll it into your changes?  I don't mind
-either way, but if you pick it up, feel free to add my:
+p54: LM86 firmware
+p54: FW rev 2.5.8.0 - Softmac protocol 3.0
+code = 100
+data = ecd96a24
+code = 6700
+data = ecd96a26
+code = 1300
+data = ecd96c28
+p54: not all required entries found in eeprom!
+p54: eeprom parse failed!
+prism54usb: Invalid hwaddr! Using randomly generated MAC addr
 
-Tested-by: Bob Copeland <me@bobcopeland.com>
+I have added some printks here to show the code it fails to decode and the 
+associated eeprom entry.
 
+Do you have any hints about what these particular codes mean ?
+
+Thank you very much in advance.
 -- 
-Bob Copeland %% www.bobcopeland.com 
-
