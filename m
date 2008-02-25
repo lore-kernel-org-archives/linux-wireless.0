@@ -1,43 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:60218 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1765048AbYBMX4Z (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:41851 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756918AbYBYWYE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 18:56:25 -0500
-Date: Thu, 14 Feb 2008 00:56:21 +0100
-From: Sebastian Siewior <ipw+2200@ml.breakpoint.cc>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"zHU, yI" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net
-Subject: Re: [RFT] ipw2200: fix ucode assertion for RX queue overrun
-Message-ID: <20080213235621.GA10003@Chamillionaire.breakpoint.cc> (sfid-20080213_235632_908105_D764DF4F)
-References: <1202740070.2806.9.camel@localhost.localdomain>
+	Mon, 25 Feb 2008 17:24:04 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so998790ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:24:02 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Mon, 25 Feb 2008 23:20:11 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1202740070.2806.9.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200802252320.11809.IvDoorn@gmail.com> (sfid-20080225_222409_682179_B1225238)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dan Williams | 2008-02-11 09:27:50 [-0500]:
+Hi John,
 
->Restock the RX queue when there are a lot of unused frames so that the
->RX ring buffer doesn't overrun, causing a ucode assertion.  Backport of
->patch "iwlwifi: fix ucode assertion for RX queue overrun".
->
->Signed-off-by: Dan Williams <dcbw@redhat.com>
-Tested-by: Sebastian Siewior <sebastian@breakpoint.cc>
+Here is the 2.1.3 release of rt2x00.
+Most bugfixes concentrate on the link tuner issues reported for
+the rt2x00 2.0.14 version inside kernel 2.6.25.
+One additional fix for rt61pci is present where the recent
+"mode->band" changes in mac80211 contained a bug for rt61pci.
 
->Sebastian, can you test and ensure that this works for you?  Also, can
-Yep, it does.
-
->you do some throughput testing to ensure that this patch doesn't cause a
->throughput regression?  Thanks!
-00:49:41 (666.64 KB/s) - `/dev/null' saved [122563640/122563640]
-
-this was a wget from the inet and it hits almost my cap. Currently I don't
-have another local machine where I can test a "local" transfer.
-
-Is this okey for you?
-
-Sebastian
+Ivo
