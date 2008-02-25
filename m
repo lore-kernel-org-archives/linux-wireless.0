@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46200
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756136AbYB1TWa (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:57738 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbYBYCXv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 14:22:30 -0500
-Date: Thu, 28 Feb 2008 11:22:29 -0800 (PST)
-Message-Id: <20080228.112229.135415548.davem@davemloft.net> (sfid-20080228_192234_838486_23A04A5F)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-02-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080228145136.GD3063@tuxdriver.com>
-References: <20080228014125.GI3078@tuxdriver.com>
-	<20080227.235110.242439399.davem@davemloft.net>
-	<20080228145136.GD3063@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 24 Feb 2008 21:23:51 -0500
+Date: Sun, 24 Feb 2008 21:23:36 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
+Message-ID: <20080225022336.GA8936@hash.localnet> (sfid-20080225_022355_475845_ECED8E52)
+References: <20080224042851.GE4426@makis.domain.invalid> <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com> <20080224175933.GA4360@hash.localnet> <40f31dec0802241548g6ffb13f3x122046a184eeeac9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0802241548g6ffb13f3x122046a184eeeac9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 28 Feb 2008 09:51:36 -0500
-
-> This version drops the "Fix b43 drivers build for arm" patch, and adds a
-> one-line build fix for SSB-attached PCI cores (found on bcm47xx mips).
-
-Thanks.
-
-> P.S. This will create a merge conflict with the code I already
-> requested that you pull for net-2.6.26.  The merge is easily resolved,
-> since it is two "comment block + single statement" additions at the
-> same place in the file.  Just take both sets of changes, and order
-> the "Evalue antenna setup" group _after_ the "Send a signal to the
-> led" group.  I have the conflict corrected in my wireless-testing
-> tree for reference if you need it.
-
-Understood.
-
-> The following changes since commit d9595a7b9c777d45a74774f1428c263a0a47f4c0:
->   David S. Miller (1):
->         [AF_KEY]: Fix oops by converting to proc_net_*().
+> Some thoughts...
 > 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+> It seems we are doing calibration wrong, i'll check out the other
+> chips as well to come up with something, until then can you check out
+> how does your card perform on b rates (eg. 11Mbits). Do an iperf test
 
-Pulled and pushed back out, thanks John!
+Hey, that's a good clue... I just switched over to b-only and it seems to
+be much more stable.  It may be a few days before I can do the iperf tests,
+gotta reconfigure my LAN somewhat.
+
+-- 
+Bob Copeland %% www.bobcopeland.com 
+
