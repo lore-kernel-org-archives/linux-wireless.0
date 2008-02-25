@@ -1,177 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:23023 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324AbYBJVxi (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57257 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684AbYBYTSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 16:53:38 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so3582755fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2008 13:53:36 -0800 (PST)
-To: linville@tuxdriver.com
-Subject: [PATCH 06/14] rt2x00: make csr_cache and csr_addr an union
-Date: Sun, 10 Feb 2008 22:49:13 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802102246.04515.IvDoorn@gmail.com>
-In-Reply-To: <200802102246.04515.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802102249.13147.IvDoorn@gmail.com> (sfid-20080210_215341_172623_F2050D42)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 25 Feb 2008 14:18:54 -0500
+Subject: Re: [PATCH 04/13 v2] o11s: added mesh.h, mesh function and data
+	structures definitions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1203966978.6929.11.camel@localhost> (sfid-20080225_191446_935065_00D100D8)
+References: <47be7732.20588c0a.0360.ffff8f1c@mx.google.com>
+	 (sfid-20080222_071816_353396_9A4A9995)  <1203697425.7082.70.camel@johannes.berg>
+	 <1203966978.6929.11.camel@localhost> (sfid-20080225_191446_935065_00D100D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L0aflKV/3MLJKazva3ov"
+Date: Mon, 25 Feb 2008 20:18:44 +0100
+Message-Id: <1203967124.13162.131.camel@johannes.berg> (sfid-20080225_191858_769138_D9250125)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The csr_cache and csr_addr pointers are both the same size
-and they are never used both by the same driver. This makes
-them a nice candidate for an union.
-We could merge into 1 pointer, but that would either upset sparse,
-or require a lot of __force casts.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |   10 ++++++----
- drivers/net/wireless/rt2x00/rt2x00pci.c |   10 +++++-----
- drivers/net/wireless/rt2x00/rt2x00pci.h |    8 ++++----
- drivers/net/wireless/rt2x00/rt2x00usb.c |   16 ++++++++--------
- 4 files changed, 23 insertions(+), 21 deletions(-)
+--=-L0aflKV/3MLJKazva3ov
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index f6ec9fe..9098532 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -707,11 +707,13 @@ struct rt2x00_dev {
- 
- 	/*
- 	 * Register pointers
--	 * csr_addr: Base register address. (PCI)
--	 * csr_cache: CSR cache for usb_control_msg. (USB)
-+	 * csr.base: CSR base register address. (PCI)
-+	 * csr.cache: CSR cache for usb_control_msg. (USB)
- 	 */
--	void __iomem *csr_addr;
--	void *csr_cache;
-+	union csr {
-+		void __iomem *base;
-+		void *cache;
-+	} csr;
- 
- 	/*
- 	 * Mutex to protect register accesses on USB devices.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 238f1c1..b8c6a8c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -350,9 +350,9 @@ static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
- 	kfree(rt2x00dev->eeprom);
- 	rt2x00dev->eeprom = NULL;
- 
--	if (rt2x00dev->csr_addr) {
--		iounmap(rt2x00dev->csr_addr);
--		rt2x00dev->csr_addr = NULL;
-+	if (rt2x00dev->csr.base) {
-+		iounmap(rt2x00dev->csr.base);
-+		rt2x00dev->csr.base = NULL;
- 	}
- }
- 
-@@ -360,9 +360,9 @@ static int rt2x00pci_alloc_reg(struct rt2x00_dev *rt2x00dev)
- {
- 	struct pci_dev *pci_dev = rt2x00dev_pci(rt2x00dev);
- 
--	rt2x00dev->csr_addr = ioremap(pci_resource_start(pci_dev, 0),
-+	rt2x00dev->csr.base = ioremap(pci_resource_start(pci_dev, 0),
- 				      pci_resource_len(pci_dev, 0));
--	if (!rt2x00dev->csr_addr)
-+	if (!rt2x00dev->csr.base)
- 		goto exit;
- 
- 	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
-index 71335e1..8932b31 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
-@@ -61,7 +61,7 @@ static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
- 					   const unsigned long offset,
- 					   u32 *value)
- {
--	*value = readl(rt2x00dev->csr_addr + offset);
-+	*value = readl(rt2x00dev->csr.base + offset);
- }
- 
- static inline void
-@@ -69,14 +69,14 @@ rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
- 			     const unsigned long offset,
- 			     void *value, const u16 length)
- {
--	memcpy_fromio(value, rt2x00dev->csr_addr + offset, length);
-+	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
- }
- 
- static inline void rt2x00pci_register_write(struct rt2x00_dev *rt2x00dev,
- 					    const unsigned long offset,
- 					    u32 value)
- {
--	writel(value, rt2x00dev->csr_addr + offset);
-+	writel(value, rt2x00dev->csr.base + offset);
- }
- 
- static inline void
-@@ -84,7 +84,7 @@ rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
- 			      const unsigned long offset,
- 			      void *value, const u16 length)
- {
--	memcpy_toio(rt2x00dev->csr_addr + offset, value, length);
-+	memcpy_toio(rt2x00dev->csr.base + offset, value, length);
- }
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 44ab216..4219057 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -84,20 +84,20 @@ int rt2x00usb_vendor_req_buff_lock(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Check for Cache availability.
- 	 */
--	if (unlikely(!rt2x00dev->csr_cache || buffer_length > CSR_CACHE_SIZE)) {
-+	if (unlikely(!rt2x00dev->csr.cache || buffer_length > CSR_CACHE_SIZE)) {
- 		ERROR(rt2x00dev, "CSR cache not available.\n");
- 		return -ENOMEM;
- 	}
- 
- 	if (requesttype == USB_VENDOR_REQUEST_OUT)
--		memcpy(rt2x00dev->csr_cache, buffer, buffer_length);
-+		memcpy(rt2x00dev->csr.cache, buffer, buffer_length);
- 
- 	status = rt2x00usb_vendor_request(rt2x00dev, request, requesttype,
--					  offset, 0, rt2x00dev->csr_cache,
-+					  offset, 0, rt2x00dev->csr.cache,
- 					  buffer_length, timeout);
- 
- 	if (!status && requesttype == USB_VENDOR_REQUEST_IN)
--		memcpy(buffer, rt2x00dev->csr_cache, buffer_length);
-+		memcpy(buffer, rt2x00dev->csr.cache, buffer_length);
- 
- 	return status;
- }
-@@ -562,14 +562,14 @@ static void rt2x00usb_free_reg(struct rt2x00_dev *rt2x00dev)
- 	kfree(rt2x00dev->eeprom);
- 	rt2x00dev->eeprom = NULL;
- 
--	kfree(rt2x00dev->csr_cache);
--	rt2x00dev->csr_cache = NULL;
-+	kfree(rt2x00dev->csr.cache);
-+	rt2x00dev->csr.cache = NULL;
- }
- 
- static int rt2x00usb_alloc_reg(struct rt2x00_dev *rt2x00dev)
- {
--	rt2x00dev->csr_cache = kzalloc(CSR_CACHE_SIZE, GFP_KERNEL);
--	if (!rt2x00dev->csr_cache)
-+	rt2x00dev->csr.cache = kzalloc(CSR_CACHE_SIZE, GFP_KERNEL);
-+	if (!rt2x00dev->csr.cache)
- 		goto exit;
- 
- 	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
--- 
-1.5.4
+
+On Mon, 2008-02-25 at 11:16 -0800, Luis Carlos Cobo wrote:
+> On Fri, 2008-02-22 at 17:23 +0100, Johannes Berg wrote:
+> > I don't think I fully understand that. The mesh path points to a sta
+> > structure, so when that sta is removed, the corresponding mesh path mus=
+t
+> > also be deleted. I think I need to look closer at where that is done to
+> > understand how it could be substituted.
+>=20
+> In sta_info_free() we call mesh_plink_deactivate(sta), which calls
+> mesh_path_flush_by_nexthop(). There is where you could substitute the
+> mesh path (copy it with next_hop pointing to NULL, substitute pointer,
+> rcu_synchronize()). However there is not much to gain. Since mesh paths
+> are freed if inactive sooner than mesh peer links are, this will
+> actually only happen when mesh peer links are either deleted from user
+> land or because a specific "peer link close" frame is received.
+
+Yup. I think I understand it now, but I had to add a "force" parameter
+there so that the path is actually completely removed when a STA info is
+destroyed.
+
+johannes
+
+--=-L0aflKV/3MLJKazva3ov
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8MUk6Vg1VMiehFYAQLnvA//eViQlzfqY7hWW7AlzYNUD3UgIT0dW1Pc
+jbCT4/Z8VquHQAjCzFxBh1Q+imVPJBlfjjVZs6fvYCl2TLACVQaiBbzLJhavfu77
+nV68lUSDTHrP2Q/1uRbC64K9H5n5q1+ES4teSuODdRnZTNTURZZAgg0B9ElDu0BJ
+k7cq4DoHjA+WNfLsLXi13bSL+wXXKs9l+BUZ3mFVckIrRqenEQYd039ffnNRiy21
+l0qKSbk/xpz90IiYyLnnXoXGVrUul0LvFcqw3iUHBLW26enQ4IWH32vPVoBFK16A
+yiigTcrdWCGS8IMjvbnuZngWoGrtWDmbsTp33402PFLEvttoi+7oUm23/oHLPGYX
+mTnjPHsLegvK/GENAcnfaWjagIa5ub6HnIbtK7Y76MYtiSuQzGnT4NnglBgBB6dK
+xPLt3W4+hTH06XCbQcKwXsOafZRYOfmdhAHD+RWLiCQ5dNoVea9Mr8E52mwENS9Q
+hEf576VO0G9BMrdRHXLMKZIRJ2Z2LFWxDCv87zd3uq2CEfw8H03spy9jx5AL7L1o
+zCAJt6rOyNsPGMkHTmeojLm2IyLZCkduRhDrv4RtazgTrkfPsCrLvKOcLXbF+SzX
+ypd1+ue1ToI0BEukQJxi/j4tpMKMyDSmmOvycHzzqdCiDY0zf01IVIbiRKEiOYHO
+WmNdWkz3t1E=
+=VEPK
+-----END PGP SIGNATURE-----
+
+--=-L0aflKV/3MLJKazva3ov--
 
