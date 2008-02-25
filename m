@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he2.nervous.it ([87.230.21.66]:59867 "EHLO he2.nervous.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754985AbYBPAw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 19:52:57 -0500
-Message-ID: <47B631BE.6070704@atsystem.org> (sfid-20080216_005308_194308_8DAF7C63)
-Date: Sat, 16 Feb 2008 01:43:42 +0100
-From: Antonio Quartulli <quartulli@atsystem.org>
+Received: from wa-out-1112.google.com ([209.85.146.179]:31801 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753303AbYBYLdZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 06:33:25 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1848291wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 03:33:22 -0800 (PST)
+Message-ID: <1ba2fa240802250333p1d0a4ebqd37ff4f837aa556f@mail.gmail.com> (sfid-20080225_113329_807270_D8513557)
+Date: Mon, 25 Feb 2008 13:33:22 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211 locking: tasklet vs. non-tasklet
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"bruno randolf" <br1@einfach.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1203937235.13162.83.camel@johannes.berg>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1203676145.26341.39.camel@johannes.berg>
+	 <1ba2fa240802240829s7c650ad1yd47c6b25e466a50@mail.gmail.com>
+	 <1203933096.13162.54.camel@johannes.berg>
+	 <1ba2fa240802250252x753796f7ob071c12c72aec172@mail.gmail.com>
+	 <1203937042.13162.81.camel@johannes.berg>
+	 <1203937235.13162.83.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Mon, Feb 25, 2008 at 1:00 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> > > >  > A disconnection can happen due to
+>  > > >  > device resume or internal recoverable error. In this cases I would
+>  > > >  > expect mac to try associate again upon such trigger.
+>  > > >
+>  > > >  I guess that's just missing. You can stop the queues but you can't tell
+>  > > >  mac80211 that you reset the hw.
+>  > >
+>  > > If there is no objection we will introduce some notification
+>  > > mechanism...suggestions are welcome as well.
+>  >
+>  > I have no objection, though I'm unsure what precisely you want. What,
+>  > for example, if you're running hostapd and your hardware resets? Can you
+>  > keep station tables etc.?
+>
+>  I mean, if the hw simply resets quickly then I would expect the
+>  association to withstand that, no?
 
-Why is iwlwifi still at version 1.2.23?
-Is there some problem with it?
+I would notify mac only if driver cannot deal with reset and also
+mac80211 configuration have to be reapplied such as start association
+process again in STA mode.   It would be probably security problem if
+we put just station into associated mode without proper association
+process.
+If in AP mode  stations have only soft state that it would be probably
+not necessary to reset station table.
 
-- --
-Antonio Quartulli,
- Student of Computer Science at University of Pisa
- Web: www.quartulli.org
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Tomas
 
-iQEVAwUBR7YxvpUBe9lBofULAQKazggAmHSKYtXEs9eCLfiCVpwY+En0jNpghP2r
-xN/JJibRq4qbHtMKC521PeLZ6RP2901TnL5p8htpRlC0A02b19UU+7V7ivSuHOip
-LRgOP6Q3LUYaXTcG/GCULmTCdeGCI20ENrfbwuo1twODPX21XXUUgzq3ckHRjqLs
-opxGgC9sQ8KamUHqs9Sf78mRV+SHEN19jf7aOT5uPQZQBTA6LWYlOiAxhauNpzCJ
-7Lr5wExAA0hA4rVrxNXI5bcaCXofEB2x+NrpPkNMYD8tvR9nB0olERcPHDNboaBx
-e0M4t7khI/GT5S52Py6BO83+jwDLUD4/7WuLGyWbErKZF5t99B2WTw==
-=omxU
------END PGP SIGNATURE-----
+>  johannes
+>
