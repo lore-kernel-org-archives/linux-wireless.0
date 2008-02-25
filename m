@@ -1,98 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:53475 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752251AbYBZGjG (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.227]:46738 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbYBYUsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 01:39:06 -0500
-Date: Mon, 25 Feb 2008 22:38:23 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Tim Connors <tconnors@astro.swin.edu.au>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwl4965 dropping packets and __dev_addr_discard: address
- leakage! da_users=1
-Message-Id: <20080225223823.db13a7fe.akpm@linux-foundation.org> (sfid-20080226_063910_557503_849EE5CE)
-In-Reply-To: <slrn-0.9.7.4-5027-27940-200802261551-tc@hexane.ssi.swin.edu.au>
-References: <slrn-0.9.7.4-5027-27940-200802261551-tc@hexane.ssi.swin.edu.au>
+	Mon, 25 Feb 2008 15:48:06 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so2700010wra.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 12:48:02 -0800 (PST)
+Subject: Re: [PATCH 07/13 v2] o11s: changes to ieee80211_sta
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1203697317.7082.68.camel@johannes.berg>
+References: <47be773d.22b38c0a.2fbf.ffffb131@mx.google.com>
+	 (sfid-20080222_074745_247391_EDD9C862)  <1203697317.7082.68.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 12:49:40 -0800
+Message-Id: <1203972580.6929.74.camel@localhost> (sfid-20080225_204809_197216_D9B98B8F)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 26 Feb 2008 16:22:43 +1100 Tim Connors <tconnors@astro.swin.edu.au> wrote:
+On Fri, 2008-02-22 at 17:21 +0100, Johannes Berg wrote:
+> > +	atomic_inc(&bss->users);
+> > +	atomic_inc(&bss->users);
+> 
+> ?
+> That was just allocated, shouldn't it just be atomic_set() then? And why
+> two anyway?
 
-> Possibly because of the frequent renegotiating my iwl4965 card has
-> been making, it has now decided it's not going to pass packets
-> reliably until presumably next time I reboot.
-> 
-> I've noticed messages in syslog that I hadn't seen when things were
-> working fine.  The problem possibly has only surfaced after rmmodding
-> the iwl4965 module, then remodding it.  It stays with me through being
-> removed and modprobed again.  It is being bonded in conjunction with a
-> physical ethernet, if that is relevant, although I think I reproduced
-> it when it was on its lonesome.
-> 
-> 
-> Fresh after reboot:
-> 
-> Feb 22 09:49:31 dirac kernel: iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-> Feb 22 09:49:31 dirac kernel: iwl4965: Copyright(c) 2003-2007 Intel Corporation
-> Feb 22 09:49:31 dirac kernel: ACPI: PCI Interrupt 0000:0c:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-> Feb 22 09:49:31 dirac kernel: PCI: Setting latency timer of device 0000:0c:00.0 to 64
-> Feb 22 09:49:31 dirac kernel: iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-> Feb 22 09:49:31 dirac kernel: ACPI: PCI Interrupt 0000:00:1b.0[A] -> GSI 21 (level, low) -> IRQ 21
-> Feb 22 09:49:31 dirac kernel: PCI: Setting latency timer of device 0000:00:1b.0 to 64
-> Feb 22 09:49:31 dirac kernel: iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-> Feb 22 09:49:31 dirac kernel: phy0: Selected rate control algorithm 'iwl-4965-rs'
-> 
-> now finished with it, will be deconfigured and rmmodded:
-> 
-> Feb 23 03:05:23 dirac kernel: __dev_addr_discard: address leakage! da_users=1
-> Feb 23 03:05:23 dirac kernel: ACPI: PCI interrupt for device 0000:0c:00.0 disabled
-> 
-> The modprobed again:
-> 
-> Feb 23 03:05:35 dirac kernel: iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.1.17kds
-> Feb 23 03:05:35 dirac kernel: iwl4965: Copyright(c) 2003-2007 Intel Corporation
-> Feb 23 03:05:35 dirac kernel: ACPI: PCI Interrupt 0000:0c:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-> Feb 23 03:05:35 dirac kernel: PCI: Setting latency timer of device 0000:0c:00.0 to 64
-> Feb 23 03:05:35 dirac kernel: iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-> Feb 23 03:05:35 dirac kernel: iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-> Feb 23 03:05:35 dirac kernel: phy9: Selected rate control algorithm 'iwl-4965-rs'
-> 
-> according to lspci -vvv, 0c:00.0 is:
-> 
-> 0c:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN Network Connection (rev 61)
->         Subsystem: Intel Corporation Unknown device 1120
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 379
->         Region 0: Memory at f9ffe000 (64-bit, non-prefetchable) [size=8K]
->         Capabilities: [c8] Power Management version 3
->                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [d0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable+
->                 Address: 00000000fee0300c  Data: 4194
->         Capabilities: [e0] Express (v1) Endpoint, MSI 00
->                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
->                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
->                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
->                         MaxPayload 128 bytes, MaxReadReq 128 bytes
->                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
->                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
->                         ClockPM+ Suprise- LLActRep- BwNot-
->                 LnkCtl: ASPM L0s Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->         Capabilities: [100] Advanced Error Reporting <?>
->         Capabilities: [140] Device Serial Number d7-36-9b-ff-ff-e8-13-00
->         Kernel driver in use: iwl4965
->         Kernel modules: iwl4965
+I was following the behavior in ieee80211_rx_bss_add(), where the same
+thing is done. It is needed to to avoid the bss being freed on the next
+ieee80211_rx_bss_put(), works as a reference count. Agree that
+atomic_set() would be better.
 
-(cc linux-wireless)
 
-What kernel version is this?
+> > +			memset(&iwe, 0, sizeof(iwe));
+> > +			iwe.cmd = IWEVCUSTOM;
+> > +			sprintf(buf, "Mesh network (version %d)\n"
+> > +			"\t\t\tPath Selection Protocol ID: 0x%02X%02X%02X%02X\n"
+> > +			"\t\t\tPath Selection Metric ID: 0x%02X%02X%02X%02X\n"
+> > +			"\t\t\tCongestion Control Mode ID: 0x%02X%02X%02X%02X\n"
+> > +			"\t\t\tChannel Precedence: 0x%02X%02X%02X%02X",
+> 
+> Maybe we should add separate items for this to make it easier to parse
+> them?
 
-Is this a regression from an earlier kenrel version?  If so, which?
+Ok, will include that too.
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
