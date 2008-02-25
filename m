@@ -1,60 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33239 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbYBYV2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 16:28:06 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m1PLS4tM031249
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:04 -0500
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLS4ug029458
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:04 -0500
-Received: from [172.16.83.84] (dhcp83-84.boston.redhat.com [172.16.83.84])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id m1PLS1DK018944
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:28:01 -0500
-Subject: scanning behavior question
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57857 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbYBYPZC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 10:25:02 -0500
+Subject: [PATCH] mac80211: clean up mesh RX path a bit more
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 25 Feb 2008 16:25:57 -0500
-Message-Id: <1203974757.22949.21.camel@localhost.localdomain> (sfid-20080225_212810_151716_A9A58A6D)
+Date: Mon, 25 Feb 2008 16:24:38 +0100
+Message-Id: <1203953078.13162.108.camel@johannes.berg> (sfid-20080225_152539_320655_9E958903)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resend; I apparently forgot a subject the first time...]
+Moves another ifdef into the sta_info header file in favour of
+compiling more code even w/o CONFIG_MAC80211_MESH.
 
-While debugging why ipw2200 and wpa_supplicant would not connect to a
-hidden access point today even with scan_ssid=1, I ran into an
-interesting scan behavior question.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+---
+Luis, should sta_plink_state return something else for the non-mesh
+case? Can you please make a patch that
+ (a) renames the enum plink_state members to PLINK_*
+ (b) explains them with a kernel-doc comment
+ (c) changes the return there if required
 
-The root of the problem was that since the ipw2200 driver aggressively
-rescans when it doesn't find the requested AP in it's list, and since it
-only allows one scan at a time, wpa_supplicant's specific SSID scans
-just happened to get rejected every time, which means the card never
-sent out probe requests for the hidden SSID I wanted to associate with.
+You should probably wait until after the sta_info rework I'm about to
+post.
 
-There are more general issues here than just ipw2200 though.  Most of
-the fullmac drivers (counting ipw2x00 here) don't handle multiple scan
-requests very well.  I'm not entirely sure what mac80211 does here but
-it probably doesn't have extremely sophisticated scan result handling
-either.  At startup
+Thanks,
+johannes
 
-In the ideal case, the driver would add each separate scan request to a
-queue, execute each request in turn (respecting each requests options
-like active/passive, dwell time, SSID/BSSID, channel list, etc).  Each
-request would trigger a corresponding scan completion event.  Perhaps
-multiple identical scan requests (ie, a few 'iwlist <iface> scan') could
-be batched together for efficiency.  With nl80211/cfg80211, perhaps each
-individual scan request would have a UID to match it up with a specific
-scan response (but the response would still be broadcast too).
+ net/mac80211/rx.c       |   17 ++++++-----------
+ net/mac80211/sta_info.h |    8 ++++++++
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
-Less invasive fixes could be made to ipw2200, like caching the last
-SSID-specific request and instead of triggering a general scan the next
-time, trigger a direct scan.  A workaround but not a real fix.
+--- everything.orig/net/mac80211/rx.c	2008-02-25 16:23:36.000000000 +0100
++++ everything/net/mac80211/rx.c	2008-02-25 16:23:39.000000000 +0100
+@@ -391,13 +391,14 @@ ieee80211_rx_h_passive_scan(struct ieee8
+ 	return RX_CONTINUE;
+ }
+ 
+-#ifdef CONFIG_MAC80211_MESH
+-#define msh_h_get(h, l) ((struct ieee80211s_hdr *) ((u8 *)h + l))
+ static ieee80211_rx_result
+ ieee80211_rx_mesh_check(struct ieee80211_txrx_data *rx)
+ {
+ 	int hdrlen = ieee80211_get_hdrlen(rx->fc);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
++
++#define msh_h_get(h, l) ((struct ieee80211s_hdr *) ((u8 *)h + l))
++
+ 	if ((rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) {
+ 		if (!((rx->fc & IEEE80211_FCTL_FROMDS) &&
+ 		      (rx->fc & IEEE80211_FCTL_TODS)))
+@@ -410,8 +411,9 @@ ieee80211_rx_mesh_check(struct ieee80211
+ 	 * establisment frame, beacon or probe, drop the frame.
+ 	 */
+ 
+-	if (!rx->sta || rx->sta->plink_state != ESTAB) {
++	if (!rx->sta || sta_plink_state(rx->sta) != ESTAB) {
+ 		struct ieee80211_mgmt *mgmt;
++
+ 		if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT)
+ 			return RX_DROP_MONITOR;
+ 
+@@ -434,17 +436,10 @@ ieee80211_rx_mesh_check(struct ieee80211
+ 		    is_broadcast_ether_addr(hdr->addr1) &&
+ 		    mesh_rmc_check(hdr->addr4, msh_h_get(hdr, hdrlen), rx->dev))
+ 		return RX_DROP_MONITOR;
+-	else
+-		return RX_CONTINUE;
+-}
+ #undef msh_h_get
+-#else
+-static inline ieee80211_rx_result
+-ieee80211_rx_mesh_check(struct ieee80211_txrx_data *rx)
+-{
++
+ 	return RX_CONTINUE;
+ }
+-#endif
+ 
+ 
+ static ieee80211_rx_result
+--- everything.orig/net/mac80211/sta_info.h	2008-02-25 16:23:36.000000000 +0100
++++ everything/net/mac80211/sta_info.h	2008-02-25 16:23:39.000000000 +0100
+@@ -239,6 +239,14 @@ struct sta_info {
+ #endif
+ };
+ 
++static inline enum plink_state sta_plink_state(struct sta_info *sta)
++{
++#ifdef CONFIG_MAC80211_MESH
++	return sta->plink_state;
++#endif
++	return LISTEN;
++}
++
+ 
+ /* Maximum number of concurrently registered stations */
+ #define MAX_STA_COUNT 2007
 
-Thoughts?  How should a second, different scan request be handled while
-another is already in flight?
-
-Dan
 
