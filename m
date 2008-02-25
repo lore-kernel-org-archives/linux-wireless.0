@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5775 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755244AbYBMS6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 13:58:42 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] wireless: update US regulatory domain
-Date: Wed, 13 Feb 2008 20:58:34 +0200
-Message-Id: <12029291143993-git-send-email-tomas.winkler@intel.com> (sfid-20080213_185857_772034_0F44D30E)
-Content-Type: text/plain; charset="us-ascii"
+Received: from ug-out-1314.google.com ([66.249.92.173]:21799 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756927AbYBYWRH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 17:17:07 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so996346ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 14:17:06 -0800 (PST)
+To: linville@tuxdriver.com
+Subject: [PATCH 3/4] rt2x00: Don't switch to antenna with low rssi
+Date: Mon, 25 Feb 2008 23:15:08 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802252315.08992.IvDoorn@gmail.com> (sfid-20080225_221710_012236_932A8BB4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds channels to US regulatory domain
+When rssi_a > rssi_b is true and the current antenna
+was already antenna A, then rt2x00 incorrectly jumped
+to antenna B.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Also don't configure the antenna when there has been
+no change in the antenna setup.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/wireless/reg.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 ++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   18 +++++-------------
+ 2 files changed, 9 insertions(+), 13 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2b63c96..8cc6037 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -58,8 +58,14 @@ struct ieee80211_regdomain {
- static const struct ieee80211_channel_range ieee80211_US_channels[] = {
- 	/* IEEE 802.11b/g, channels 1..11 */
- 	RANGE_PWR(2412, 2462, 27, 6, 0),
--	/* IEEE 802.11a, channels 52..64 */
--	RANGE_PWR(5260, 5320, 23, 6, 0),
-+	/* IEEE 802.11a, channel 36*/
-+	RANGE_PWR(5180, 5180, 23, 6, 0),
-+	/* IEEE 802.11a, channel 40*/
-+	RANGE_PWR(5200, 5200, 23, 6, 0),
-+	/* IEEE 802.11a, channel 44*/
-+	RANGE_PWR(5220, 5220, 23, 6, 0),
-+	/* IEEE 802.11a, channels 48..64 */
-+	RANGE_PWR(5240, 5320, 23, 6, 0),
- 	/* IEEE 802.11a, channels 149..165, outdoor */
- 	RANGE_PWR(5745, 5825, 30, 6, 0),
- };
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 0d57d7f..07adc57 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -97,6 +97,10 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	libconf.ant.rx = rx;
+ 	libconf.ant.tx = tx;
+ 
++	if (rx == rt2x00dev->link.ant.active.rx &&
++	    tx == rt2x00dev->link.ant.active.tx)
++		return;
++
+ 	/*
+ 	 * Antenna setup changes require the RX to be disabled,
+ 	 * else the changes will be ignored by the device.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 00f5f0d..7294c75 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -260,19 +260,11 @@ static void rt2x00lib_evaluate_antenna_sample(struct rt2x00_dev *rt2x00dev)
+ 	if (sample_a == sample_b)
+ 		return;
+ 
+-	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) {
+-		if (sample_a > sample_b && rx == ANTENNA_B)
+-			rx = ANTENNA_A;
+-		else if (rx == ANTENNA_A)
+-			rx = ANTENNA_B;
+-	}
++	if (rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY)
++		rx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
+ 
+-	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY) {
+-		if (sample_a > sample_b && tx == ANTENNA_B)
+-			tx = ANTENNA_A;
+-		else if (tx == ANTENNA_A)
+-			tx = ANTENNA_B;
+-	}
++	if (rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)
++		tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
+ 
+ 	rt2x00lib_config_antenna(rt2x00dev, rx, tx);
+ }
+@@ -327,7 +319,7 @@ static void rt2x00lib_evaluate_antenna(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (!(rt2x00dev->link.ant.flags & ANTENNA_RX_DIVERSITY) &&
+ 	    !(rt2x00dev->link.ant.flags & ANTENNA_TX_DIVERSITY)) {
+-		rt2x00dev->link.ant.flags &= ~ANTENNA_MODE_SAMPLE;
++		rt2x00dev->link.ant.flags = 0;
+ 		return;
+ 	}
+ 
 -- 
-1.5.2.2
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.3.2
 
