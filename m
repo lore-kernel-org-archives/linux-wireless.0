@@ -1,69 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbYBKMYg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2008 07:24:36 -0500
-Subject: Re: 2.6.24.x-stable request for
-	69f817b654d683265118188bbfb8bc0d8978cce6 and
-	ece8edddf067d21c4e5abfe3f1205da1588edbb2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: caglar@pardus.org.tr
-Cc: linux-kernel@vger.kernel.org, flamingice@sourmilk.net,
-	jbenc@suse.cz, hschaa@suse.de, yi.zhu@intel.com,
-	linville@tuxdriver.com, jgarzik@pobox.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200802110208.58891.caglar@pardus.org.tr>
-References: <200802110208.58891.caglar@pardus.org.tr>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Szm/gVPdf2OQjwV6JQyZ"
-Date: Mon, 11 Feb 2008 13:21:04 +0100
-Message-Id: <1202732464.11481.66.camel@johannes.berg> (sfid-20080211_122440_003583_521AB62A)
+Received: from mx1.redhat.com ([66.187.233.31]:37005 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753123AbYBYTPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 14:15:13 -0500
+Subject: Re: [PATCH RESEND] libertas: Remove unused exports
+From: Dan Williams <dcbw@redhat.com>
+To: Roland Dreier <rdreier@cisco.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <aday79b571e.fsf_-_@cisco.com>
+References: <adatzkj0z7l.fsf@cisco.com> <adaprv1vkl7.fsf@cisco.com>
+	 <aday79b571e.fsf_-_@cisco.com>
+Content-Type: text/plain
+Date: Mon, 25 Feb 2008 14:12:04 -0500
+Message-Id: <1203966724.6981.29.camel@localhost.localdomain> (sfid-20080225_191522_004249_0B5F9090)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2008-02-23 at 20:10 -0800, Roland Dreier wrote:
+> Any chance of getting this applied?  It seems the build is still
+> broken on ia64 at least due to the export of static functions.
+> ---
 
---=-Szm/gVPdf2OQjwV6JQyZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Normal route is to linux-wireless@...
 
+However; if the symbols aren't used anywhere in
+drivers/net/wireless/libertas/*, it makes no sense to keep them around &
+exported.
 
-> On 2.6.24.1-stable kernel review cycle, i requested inclusions of
-> commit 69f817b654d683265118188bbfb8bc0d8978cce6 (mac80211: Restore
-> rx.fc before every invocation of ieee80211_invoke_rx_handlers)=20
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-That one I can agree with, it's a trivial fix.
-
-> and ece8edddf067d21c4e5abfe3f1205da1588edbb2 (mac80211: hardware scan
-> rework) into -stable one (they solved disable_hw_scan=3D1 workaround for
-> wpa_secured hidden AP problem).=20
-
-That one I don't really want to take responsibility for in a stable
-cycle.
-
-johannes
-
---=-Szm/gVPdf2OQjwV6JQyZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7A9r6Vg1VMiehFYAQL0CRAAmi/5WOvJ3MApZ6/aF2sW3zkE3YpiJCMf
-Zi8WDdwYnB7wBKe/JA53CFLUqIidJR67GxxrNzSCvdwNMRkhAb4WipN1eZS1miiw
-Oumc7D46zBGWRU4nBTEUdnvhgqNVLbWkL3W3P9F8ofEA69Z+mOhmsCb1CDkOjKDi
-ebxIqp7iuvraQfb9hjIka7UTjnCw+NdeT9yNetZJrp8pDMNdVrB/xPG++6cWaDjS
-E3kxcoEqDk9IW4tBR9wsEo3sphktIfSc4fHUxhIBUPy9Fqr/Z9m4eIEvM8zdArLL
-6/Tg3prwVKlhWbUR/l6h7G69LQNYWiC4jEjTnYiLU0OBQHHOnFER1Exv2lbM0uEf
-uT2Dt1O+9MbCzGEXHUCI+qMZgDjMUzmPZf/WLEaSLTQotuUJi0cTLstmebTgZKzM
-WzCol4ZRGg/ZSEnVlDvivlSt0Et8pZ/NgvLl0gPMm+6XeggAMD4Zu4e89cuLmAYP
-hGN2a9KYy6COnQJO1ACkrTWODnJqvL1kHzURLMYx8CER1fibZzKbb+wOAgwT3UDf
-VNUSolHq6tRIhdTyeI/dZcQ7B5PDAdrdW2h7TmesgDFoG4ja5NFUsTiK1rBzEnlg
-oG9PBoA1lQW9sRgfhft4up+X1NHvDdM07FMemxrtwVdtNlSHvIIGGqXDKM7tCj2J
-N0bgVr+fBG4=
-=SHfJ
------END PGP SIGNATURE-----
-
---=-Szm/gVPdf2OQjwV6JQyZ--
+> 
+> The libertas driver exports a number of symbols with no in-tree
+> users; remove these unused exports.  lbs_reset_device() is completely
+> unused, with no callers at all, so remove the function completely.
+> 
+> A couple of these unused exported symbols are static, which causes the
+> following build error on ia64 with gcc 4.2.3:
+> 
+>     drivers/net/wireless/libertas/main.c:1375: error: __ksymtab_lbs_remove_mesh causes a section type conflict
+>     drivers/net/wireless/libertas/main.c:1354: error: __ksymtab_lbs_add_mesh causes a section type conflict
+> 
+> This patch fixes this problem.  I don't have hardware, so this is not
+> run-tested, but I tested the build with
+> 
+>     CONFIG_LIBERTAS=y
+>     CONFIG_LIBERTAS_USB=m
+>     CONFIG_LIBERTAS_CS=m
+>     CONFIG_LIBERTAS_SDIO=m
+> 
+> and there were no problems with undefined symbols.
+> 
+> Signed-off-by: Roland Dreier <rolandd@cisco.com>
+> ---
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index eab0203..b3c1acb 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -1040,7 +1040,6 @@ int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+>  	lbs_deb_leave(LBS_DEB_CMD);
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(lbs_mesh_access);
+>  
+>  int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan)
+>  {
+> @@ -1576,7 +1575,6 @@ done:
+>  	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(lbs_prepare_and_send_command);
+>  
+>  /**
+>   *  @brief This function allocates the command buffer and link
+> diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+> index aaacd9b..4e22341 100644
+> --- a/drivers/net/wireless/libertas/decl.h
+> +++ b/drivers/net/wireless/libertas/decl.h
+> @@ -69,7 +69,6 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
+>  int lbs_remove_card(struct lbs_private *priv);
+>  int lbs_start_card(struct lbs_private *priv);
+>  int lbs_stop_card(struct lbs_private *priv);
+> -int lbs_reset_device(struct lbs_private *priv);
+>  void lbs_host_to_card_done(struct lbs_private *priv);
+>  
+>  int lbs_update_channel(struct lbs_private *priv);
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 84fb49c..1eaf6af 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -1351,8 +1350,6 @@ done:
+>  	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(lbs_add_mesh);
+> -
+>  
+>  static void lbs_remove_mesh(struct lbs_private *priv)
+>  {
+> @@ -1372,7 +1369,6 @@ static void lbs_remove_mesh(struct lbs_private *priv)
+>  	free_netdev(mesh_dev);
+>  	lbs_deb_leave(LBS_DEB_MESH);
+>  }
+> -EXPORT_SYMBOL_GPL(lbs_remove_mesh);
+>  
+>  /**
+>   *  @brief This function finds the CFP in
+> @@ -1458,20 +1454,6 @@ void lbs_interrupt(struct lbs_private *priv)
+>  }
+>  EXPORT_SYMBOL_GPL(lbs_interrupt);
+>  
+> -int lbs_reset_device(struct lbs_private *priv)
+> -{
+> -	int ret;
+> -
+> -	lbs_deb_enter(LBS_DEB_MAIN);
+> -	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RESET,
+> -				    CMD_ACT_HALT, 0, 0, NULL);
+> -	msleep_interruptible(10);
+> -
+> -	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
+> -	return ret;
+> -}
+> -EXPORT_SYMBOL_GPL(lbs_reset_device);
+> -
+>  static int __init lbs_init_module(void)
+>  {
+>  	lbs_deb_enter(LBS_DEB_MAIN);
 
