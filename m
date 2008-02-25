@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37907 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757016AbYBOAXF convert rfc822-to-8bit (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:39242 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbYBYXMH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2008 19:23:05 -0500
+	Mon, 25 Feb 2008 18:12:07 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2173885wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 15:12:06 -0800 (PST)
+Message-ID: <1ba2fa240802251512k15b40d65oee774acebdb953e0@mail.gmail.com> (sfid-20080225_231213_521309_1CC77712)
+Date: Tue, 26 Feb 2008 01:12:06 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211: sta info locking
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <1203980105.13162.182.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-Date: Thu, 14 Feb 2008 16:21:15 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003ABCCAE@orsmsx416.amr.corp.intel.com> (sfid-20080215_002311_230207_B8200556)
-In-Reply-To: <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com>
-References: <47B1F422.4060501@scherping.de> <D936D925018D154694D8A362EEB0892003A7FB3E@orsmsx416.amr.corp.intel.com> <47B487EE.3030401@scherping.de> <200802150040.05188.patrick@lunatiki.de> <D936D925018D154694D8A362EEB0892003ABCC4A@orsmsx416.amr.corp.intel.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Patrick Grimm" <patrick@lunatiki.de>
-Cc: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1203677069.26341.52.camel@johannes.berg>
+	 <20080222143745.GB3067@tuxdriver.com>
+	 <1203693409.7082.30.camel@johannes.berg>
+	 <20080222155704.GD3067@tuxdriver.com>
+	 <1203972413.13162.163.camel@johannes.berg>
+	 <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com>
+	 <1203980105.13162.182.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Chatre, Reinette  wrote:
+On Tue, Feb 26, 2008 at 12:55 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>
+>  On Tue, 2008-02-26 at 00:50 +0200, Tomas Winkler wrote:
+>  > On Mon, Feb 25, 2008 at 10:46 PM, Johannes Berg
+>  > <johannes@sipsolutions.net> wrote:
+>  > >
+>  > >  On Fri, 2008-02-22 at 10:57 -0500, John W. Linville wrote:
+>  > >  > On Fri, Feb 22, 2008 at 04:16:49PM +0100, Johannes Berg wrote:
+>  > >  > >
+>  > >  > > > > Hence, I think we can actually get away without more locking if we
+>  > >  > > > > protect the flags better. Should we use a spinlock or the atomic
+>  > >  > > > > set_bit()/clear_bit()/etc. operations?
+>  > >  > > >
+>  > >  > > > Using the atomic operations seems appropriate to me.
+>  > >  > >
+>  > >  > > Right, but I figured if we could get rid of the AMPDU spinlocks and just
+>  > >  > > use a single one in total (for flags as well) then that'd be of benefit
+>  > >  > > too; even with the dynamic allocation strategy (see other mail) we'd not
+>  > >  > > need to allocate two more spinlocks for ampdu.
+>  > >  >
+>  > >  > Yes, I thought that was behind your question.  I'll let Ron comment
+>  > >  > on the AMPDU spinlock usage.
+>  > >
+>  > >  Ok so the mesh code came with a spinlock too, the AMPDU code has two.
+>  > >
+>  > >  Ron/Tomas, does the ampdu MLME really need two spinlocks?
+>  >
+>  > The problem is that RX a TX BA establishments usually happens
+>  > concurrently for single STA, those are independent state machines.  We
+>  > have to review this carefully before spinlokcs are removed.
+>
+>  I wouldn't want to remove them, but it seems overkill two have two
+>  spinlocks. What I'd like to do is remove the ampdu tx, ampdu rx and mesh
+>  spinlocks and instead use just a single one for all three uses, and then
+>  use that one to protect the flags as well.
+>
+>  It seems to me that even if the RX/TX BA establishment is happening
+>  concurrently then it's still serialized by the frames on the air so
+>  ultimately can't actually happen on different CPUs so the lock won't be
+>  contended.
 
-> On Thursday, February 14, 2008 3:40 PM, Patrick Grimm  wrote:
+I'm not sure about this, this is quite gentle and requires heavy
+testing.  I'll try to review this with Ron tomorrow and all other
+changes you've suggested.
 
->> For me not.
->> I use 3945ABG card in an ad-hoc network with 4 other wlan devices
->> like rt2500 and ath5k. I have applied your
->> 0001-iwlwifi-only-check-for-association-id-when-associat.patch
->> patch. But i can't see incoming packets witch tcpdump.
->> I have try to commet out  the check for associat with the same
->> result. 
->> 
->> dmesg
->> iwl3945: I iwl3945_rx_handle r = 76, i = 75, REPLY_3945_RX, 0x1b
->> iwl3945: I iwl3945_rx_handle r = 77, i = 76, REPLY_3945_RX, 0x1b
->> iwl3945: I iwl3945_mac_tx enter
->> iwl3945: I iwl3945_tx_skb Dropping - !iwl3945_is_associated
->> iwl3945: I iwl3945_mac_tx leave
->> iwl3945: I iwl3945_rx_handle r = 78, i = 77, REPLY_3945_RX, 0x1b
->> iwl3945: I iwl3945_rx_handle r = 79, i = 78, REPLY_3945_RX, 0x1b
-> 
-> When you say "with the same result" does it mean that you comment out
-> the check for priv->assoc_id and you still see the error "Dropping -
-> !iwl3945_is_associated" or do you then see traffic with tcpdump?
-> 
-> Could you please print out the values of fc, priv->iw_mode,
-> iwl3945_is_associated(priv) and priv->assoc_id just before that error
-> message is printed? 
+Do you have any setup to check your these changes?
 
-One more question ... did ad-hoc work for you before this patch?
+Currently there is known possible deadlock when unloading driver while
+heavy HT traffic. This is happening while treering down BA session. I
+need to solve this as well.
+
 
 Thanks
-
-Reinette
+Tomas
