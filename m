@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:16675 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761782AbYBCOv3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 09:51:29 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2316098wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:51:28 -0800 (PST)
-Message-ID: <1ba2fa240802030651x58ab6c63yd1b4d9ccaa2ecd42@mail.gmail.com> (sfid-20080203_145131_618228_8222291B)
-Date: Sun, 3 Feb 2008 16:51:27 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: cfg80211 API changes
-Cc: linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1202049444.4188.125.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240802030539h132c7365g1bc1c20b1c560c0@mail.gmail.com>
-	 <1ba2fa240802030555v28873634wceff4ecea67d3530@mail.gmail.com>
-	 <1202049444.4188.125.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:54524 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763241AbYBZPob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 10:44:31 -0500
+Subject: Re: mesh beaconing questions
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1204034825.13162.233.camel@johannes.berg>
+References: <1204034825.13162.233.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 26 Feb 2008 10:42:08 -0500
+Message-Id: <1204040528.30146.44.camel@localhost.localdomain> (sfid-20080226_154508_024531_7A859FA3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 3, 2008 4:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> > I'm finding it a bit cumbersome,. now when tx_rate is pointer and
-> > doesn't resides in the ieee80211_tx_control
-> > I've seen in your patch you've just ripped this code off but our rate
-> > scale algorithms doesn't work without it actually the code that read
-> > this value in rate scale algorithm is there but it actually looking
-> > into empty space...
-> >
-> >  -       tx_status->control.tx_rate =
-> >  -               iwl4965_hw_get_rate_n_flags(tx_resp->rate_n_flags);
-> >
-> >  I'm just asking if you had something in mind or it's just something you forgot.
->
-> TBH, that confused me completely since the rate scale algorithm tells
-> the hardware what rate to use so why does the hw need to assign a
-> different rate in the tx status?
+On Tue, 2008-02-26 at 15:07 +0100, Johannes Berg wrote:
+> Hi,
+> 
+> The Draft states that beacons may be sent either as defined for IBSS or
+> as defined for infrastructure mode.
+> 
+> I have a few questions, some of which are related to our implementation
+> and others which are related to the Draft.
+> 
+> 1. Are we going to let drivers choose which mode to use? Should they
+> indicate that somehow so userspace knows? Or are we going to make this
+> configurable? Can all hardware support both modes? (the last question
+> probably ties in with the next)
+> 
+> 2. The Draft states to use either procedures 11.1.2.2 (IBSS) or 11.1.2.1
+> (infrastructure). It is easy to "port" 11.1.2.1 to mesh, but 11.1.2.2
+> reads like this:
 
-I see.  Rate scale algorithm only tels FW from what rate to start
-transmission. FW is responsible to do downscaling.  Which is quite
-reasonable as retransmission is real time process. Instead of
-retransmitting on the same rate FW downscales. T X response provides
-to the rate scaling algorithm the successful rate.
- There is a little difference between 4956 and 3945 how the rate scale
-table is given to FW, but this is off the topic.
+Next question, more relevant to how this affects the user:
 
-Thanks
-Tomas
+What's the meaningful difference between these two choices?  When would
+you use one and when would you use the other?  Should the user (ie, a
+user of something like NetworkManager) care whether a particular node is
+doing IBSS or infrastructure beacons?
 
+Dan
+
+> --- >% ---
+> [...]
+> 
+> At each TBTT, the STA shall:
+> 
+> [...]
+> 
+>  (d) Cancel the remaining random delay and the pending beacon
+>      transmission, if a beacon arrives from the IBSS of which the STA is
+>      a member before the random delay timer has expired, at which time
+>      the ATIM backoff timer shall resume decrementing.
+> [...]
+> --- %< ---
+> 
+> However, I feel that pointing from the mesh amendement to something
+> rather IBSS specific is not well defined. This clause doesn't
+> "obviously" port to mesh since the BSSID is left zeroed in mesh! But the
+> draft doesn't change 11.1.2.2 either to adjust for this difference.
+> 
+> Hence, I think the draft needs to be expanded to modify 11.1.2.2 to
+> explain under which circumstances an MP shall cancel its beacon if it
+> opts to use IBSS-like beaconing.
+> 
+> I think the only useful thing is to require it to look at the mesh IEs,
+> but that is not implementable with existing hardware, at least not
+> without firmware changes. I could probably do it in Broadcom firmware
+> fairly easily...
+> 
+> So now I've probably answered my first question implicitly because I
+> pointed out how I think using IBSS-like beaconing isn't even
+> well-defined ;)
+> 
 > johannes
->
+
