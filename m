@@ -1,98 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49834 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34587 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825AbYBVP56 (ORCPT
+	with ESMTP id S1750744AbYBZIdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 10:57:58 -0500
-Subject: Re: [PATCH 01/13 v2] o11s: (nl80211/cfg80211) support for mesh
-	interfaces and mesh paths
+	Tue, 26 Feb 2008 03:33:37 -0500
+Subject: Re: iwl4965 dropping packets and __dev_addr_discard: address
+	leakage! da_users=1
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47be7703.20f8720a.1044.6474@mx.google.com> (sfid-20080222_071730_424685_4330467A)
-References: <47be7703.20f8720a.1044.6474@mx.google.com>
-	 (sfid-20080222_071730_424685_4330467A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HYXZU86GUuKqNJg0BzFV"
-Date: Fri, 22 Feb 2008 16:57:46 +0100
-Message-Id: <1203695866.7082.49.camel@johannes.berg> (sfid-20080222_155831_933711_8528D283)
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tim Connors <tconnors@astro.swin.edu.au>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080225223823.db13a7fe.akpm@linux-foundation.org> (sfid-20080226_063910_557503_849EE5CE)
+References: <slrn-0.9.7.4-5027-27940-200802261551-tc@hexane.ssi.swin.edu.au>
+	 <20080225223823.db13a7fe.akpm@linux-foundation.org>
+	 (sfid-20080226_063910_557503_849EE5CE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6XvJQkheEHFwzQkxYFib"
+Date: Tue, 26 Feb 2008 09:33:18 +0100
+Message-Id: <1204014798.13162.209.camel@johannes.berg> (sfid-20080226_083341_608371_0BD34DC1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HYXZU86GUuKqNJg0BzFV
+--=-6XvJQkheEHFwzQkxYFib
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Thu, 2008-02-21 at 20:06 -0800, Luis Carlos Cobo wrote:
-> Added support for mesh id and mesh path operation.
+> > Possibly because of the frequent renegotiating my iwl4965 card has
+> > been making, it has now decided it's not going to pass packets
+> > reliably until presumably next time I reboot.
 
-Looks great, a few minor comments.
+Can't say anything about that.
 
-> +/**
-> + * struct vif_params - describes virtual interface parameters
-> + * @mesh_id: mesh ID to use
-> + * @mesh_id_len: length of the mesh ID
-> + */
-> +struct vif_params {
-> +       u8 *mesh_id;
-> +       int mesh_id_len;
-> +};
+> > I've noticed messages in syslog that I hadn't seen when things were
+> > working fine.  The problem possibly has only surfaced after rmmodding
+> > the iwl4965 module, then remodding it.  It stays with me through being
+> > removed and modprobed again.  It is being bonded in conjunction with a
+> > physical ethernet, if that is relevant, although I think I reproduced
+> > it when it was on its lonesome.
 
->	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
-> -				    enum nl80211_iftype type, u32 *flags);
-> +				    enum nl80211_iftype type, u32 *flags,
-> +				    struct vif_params *params);
+> > Feb 23 03:05:23 dirac kernel: __dev_addr_discard: address leakage! da_u=
+sers=3D1
 
-I think we should move flags into the params struct, but we can do that
-in a follow-up patch.
-
-> +	int	(*dump_station)(struct wiphy *wiphy, struct net_device *dev,
-> +			       int idx, u8 *mac, struct station_info *sinfo);
-
-How do you use this? I can see that the "idx" is used to iterate, but
-this cannot possibly provide race-free access because the implementation
-in mac80211's cfg.c needs to give up the lock. I think we need to change
-this to
-
-int (*dump_stations)(wiphy, dev,
-		     void (*callback)(wiphy, dev, data, mac, sinfo),
-		     void *data);
-
-The same seems to apply to nl80211_dump_mpath() and the corresponding
-callback.
-
-An alternative would be to provide start_station_dump() and
-stop_station_dump() callbacks for the locking, or, something I wouldn't
-really like to see, document the interface to lock when idx =3D=3D 0 and
-unlock when the return value is -ENOENT or something...
-
-The rest looks fine.
+I've seen that before on other hardware but so far haven't managed to
+track it down or even reliably reproduce it.
 
 johannes
 
---=-HYXZU86GUuKqNJg0BzFV
+--=-6XvJQkheEHFwzQkxYFib
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR77w+aVg1VMiehFYAQKW4A//SCIQdp2t93s49edOr/zBU3T5BsDdqVMq
-gqT0HLo6o+IlhWoo3OXHePP4pR0AFVvg1CqhXPGQy8JgrRpZh7MJwDpM43xCz5oE
-DH9Ufdqh0E6e8XNztE5JRIxF3B8h3Q+pSjXFM+I6XpNM7ja97f4e4zxyr+fBsLlR
-jYGvdssANSyHWyBtwzngCYILyBzQ+DPQ73mO6IzSAfgiNatoyE5omlTgqeZ5XU3O
-qNJoUb3T+MZqrvyj+LbVdCepkG8RWDgneJZVWfTIrgwPqQJg6oyBn1Vyw6dx5dYF
-ELsEGRAafrYw8LRbjg6G5c9U9w8QgmC++j9zP/3sLvoU01H/7rNZCKHrXk90OtGD
-OMKRdGSdN0g9NOJ2RYAf/AeNl5LYonVr2Q7ikE2crIbQI7nhu/YzhGIkHpMwlbtf
-ezdhmNb3c8N0CvNB6EzeGmA/P1/SO/7IyYI9W6AkUetVNQR3pl2TYZQwxqugPHO/
-ySVP6aq20bwjRbJhy+t1V2iEbv3HBtG3bWli+of6e1E2FtTA6GjxfJGIMTehVDG8
-+tAA4o+m5h75ILV5rbiU0W7Naidbp+SsA5S4iLFemvwqGLzEANqinJhQo75JjIki
-4EiNF6+9JNimkAGSPVf+3oeiJHwfYMMyrF/IGuYZi/mwKGlLxheAWOiEkUl/ZSD/
-/VLVM43WuqI=
-=hC2m
+iQIVAwUAR8POzaVg1VMiehFYAQKhww//SEO+VtjEo+LA61LYh3MSt8w8TgUZ6kCv
+Rv0yTBY98fhJ++XHyvjaUNq9fslu8eZD1TU1+oAW1ZjWnED08Twc2N5PT2Vvgcge
+/WcpQbd1oxX7rbsuSyniTBOW7N7wVCyaO7YDaUr5yvlkGZM0IDJn16Lk8zUXQHnS
+o+fhBUURk/X3oAHiR761WuoxLBYzux/V+GDxxD8A440azGiuxxOixwxKiDmAlqyA
+/1Vw+DJZ9jOM/l39xj25APMKT+65Lg8Mn61qnUE3OBQV1Q7CsS7qnQ68lfqpnHZR
+kJRrK8JvuvdQZf+q60zfsCoSPo4151bvKJmkou/B2dDdRzXTMwKDKURZYBgOSyyz
+sSBL5l9WCEdCW2HQLB8Z0ewNl2UFzF1TvlrczfHrOnzbRNKqQQo5ptj95ReVN13r
+En0t/5WgTc2xO49Kb0MFFsJwy59ahk5KRj8/xhXbVeZELs6x0T3hu3C4XS1x3JnD
+/qir5obFZZVPEehyfG/TlJ4X8J+XUzecx9FNNN/L8ugzZwAemMO53pBBSowhVpjT
+fGXMRe9/9QV5nZGr4X4Fd/fmMEz/UzZryDrrevk/ge+JOp2CJGmT4mmE16DbIWMD
+AxrXwbUAxdZS75HdtGL//NhcpWVQ+3gV7X+ghiZGLROA4Zt1JlRiZHT4a0Lnbbx6
+mmklZ+J/UVI=
+=9nnG
 -----END PGP SIGNATURE-----
 
---=-HYXZU86GUuKqNJg0BzFV--
+--=-6XvJQkheEHFwzQkxYFib--
 
