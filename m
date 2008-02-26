@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53336 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756676AbYBAMnF (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:4521 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbYBZVNv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:43:05 -0500
-Subject: Re: wireless mini-summit agenda proposals?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1201801923.3000.13.camel@localhost.localdomain> (sfid-20080131_175252_912444_0BC17431)
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201801923.3000.13.camel@localhost.localdomain>
-	 (sfid-20080131_175252_912444_0BC17431)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ywk4a+II6cI55LlDTXu/"
-Date: Fri, 01 Feb 2008 13:42:30 +0100
-Message-Id: <1201869751.4188.19.camel@johannes.berg> (sfid-20080201_124311_472957_E1BD484C)
-Mime-Version: 1.0
+	Tue, 26 Feb 2008 16:13:51 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1237690nfb.21
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 13:13:49 -0800 (PST)
+Message-ID: <c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com> (sfid-20080226_211355_172819_213EAE04)
+Date: Tue, 26 Feb 2008 21:13:48 +0000
+From: "Chris Clayton" <chris2553@googlemail.com>
+To: linville@tuxdriver.com
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Cc: ivdoorn@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	johannes@sipsolutions.net
+In-Reply-To: <20080226194838.GD3013@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <200802252104.32416.chris2553@googlemail.com>
+	 <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
+	 <200802261911.39577.chris2553@googlemail.com>
+	 <20080226194838.GD3013@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 26/02/2008, John W. Linville <linville@tuxdriver.com> wrote:
+> On Tue, Feb 26, 2008 at 07:11:39PM +0000, Chris Clayton wrote:
+>
+>  > Sorry, but that's not the case. I find the same results as without the
+>  > patches. With the parameter set to 'pid', the network connection fails very
+>  > quickly, but with it set to 'simple' I can ping and ftp files to and from my
+>  > laptop as much as I like and the connection stays up. In fact, if anything
+>  > the patches seem to have made the network even more fragile, in that it fails
+>  > almost instantly once I start some network activity ( < 10 pings).
+>  >
+>  > I'm sure this is not the hardware - it works perfectly with Windows XP, with
+>  > 2.6.23.14 plus the out-of-tree rt61 driver from serialmonkey, with the
+>  > in-tree driver from 2.6.24.x and with 2.6.25-rc3 with the mac82011's
+>  > ieee80211_default_rc_algo parameter set to 'simple'.
+>
+>
+> At last!  Vindication for insisting that we keep 'simple' around!
+>  Bwahahaha! :-)
+>
 
---=-Ywk4a+II6cI55LlDTXu/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's nice to be able to make someone happy :-)
 
+>  So, am I to understand that 'pid' works find for you with rtl8180?
 
-> cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
-> because email isn't optimal for this.  I haven't had enough time to jump
-> into it yet, but the fact that Johannes is the vast majority of the
-> effort here is worrisome.  Having a reference implementation (airo,
-> atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
-> probably be very useful, even just to get a sense of how the API works.
+Yes John, using the rtl8180 driver I get reliable network performance
+with either 'pid' or 'simple'. With the rt61pci driver, I find that
+'simple' provides a reliable network, but 'pid' simply does not work.
+So keeping 'simple' around gets my vote too.
 
-cfg80211/nl80211 is no further for fullmac drivers than a year ago, all
-work it got so far is for hostapd.
+>  If so, then I wonder if Stefano and Ivo can help us figure-out
+>  what kind of problem is sensitive to both driver _and_ rate control
+>  algorithm?
+>
 
-I have a fairly decent plan how to add association/... support but it
-lacks execution because it's completely boring work that doesn't buy us
-any new features since we still have to support wext.
+And I will help in any way I can, providing diagnostics and trying patches.
 
-> 802.11n - do we need any discussion here or is it just a question of
-> executing on the current plan?
+>  Thanks,
+>
+>  John
+>
+> --
+>  John W. Linville
+>  linville@tuxdriver.com
+>
 
-I think with the last patchset from Ron it's mostly done, cleanups still
-to do and probably QoS improvements (I'm thinking multiqueue netdevs
-here)
-
-> Userspace MLME - what's going on here?  Noise around this seems to be
-> quieter these days.  Is stuff going according to plan/schedule or are
-> there roadblocks?
-
-Nobody is working on this, but a good part is done since hostapd works
-and the userspace MLME needs many of the same features. Again, the
-biggest thing is cfg80211/nl80211 support, setting a device to userspace
-MLME mode and implementing the communication.
-
-johannes
-
---=-Ywk4a+II6cI55LlDTXu/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6MTtaVg1VMiehFYAQI81hAAqTfm9fhzK23yQsQ2jIo5BWmRoib23x5d
-bLsKySgsgLhqL7kVA1vkTdZaS5bpNArQemTAiCB+i4OH3UV/T+VWBZag0kWx23tr
-/Icetd314fCXl8FwwSZaoyppA30zMUnnxiywg4uNfeaiyrzm5Zbsjqil5UJ516pg
-1u5bpfdTUdI3L0buQ+2y6zC9156VuYvtsYp8vVwctBBN491TNZvECAebaVkB3ZPO
-YVlCe8TIjbmYNxVAtGTorJGWDuOpWyX5UjRphqrJV6PIFIVeff8W+4qjwXq9xBlh
-09UrYZo8Ezcrw3jgsAOZFs436STM6/Pz/XHHd5SSQZUYAlI2FJVr9a3h+FGjb36c
-aciE4bbB9jEOgGP9VTAB5e0+dFZkOKdv/UHCKha/XwdfUcCg3czfxQmK/H5RgmZz
-ic2IjcmgpyJqxYuMTT2yGenbM5YBI0Wae9rPfCh3lsQ+wbvTLpasC6MBS5ABjJNX
-YuwZb2eWG6SPXLGFpPi+jAUEowRFIvQjHO3WPDtyewFP4yJN34J3q8t1INYvAeXv
-c4K+Ozbxxjnrm/s1j0eSLjVgiDee7drVyDkL1M7V5L3081FTbFPmdejn9eg57b08
-Eu2JvTn22wHbZ/CtNNEaUtfAvTU4TDgfM/PmzQuHR8OFNXk4D1Mn0c8OdKXLqPxx
-53TQ+yTfdxQ=
-=OzJy
------END PGP SIGNATURE-----
-
---=-Ywk4a+II6cI55LlDTXu/--
-
+-- 
+Beauty is in the eye of the beerholder.
