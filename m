@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:48088 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206AbYBRRy3 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbYBZIYJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2008 12:54:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43(legacy): include full timestamp in beacon frames
-Date: Mon, 18 Feb 2008 18:53:55 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-MIME-Version: 1.0
-Message-Id: <200802181853.56155.mb@bu3sch.de> (sfid-20080218_175432_760252_DA14FD34)
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Tue, 26 Feb 2008 03:24:09 -0500
+Subject: Re: [PATCH 06/10] mac80211: RCU-ify STA info structure access
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1203985337.6929.120.camel@localhost> (sfid-20080226_002043_615849_4CE09F20)
+References: <20080225152740.360393000@sipsolutions.net>
+	 <20080225153007.340533000@sipsolutions.net>
+	 <1203985337.6929.120.camel@localhost>
+	 (sfid-20080226_002043_615849_4CE09F20)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Eeosmt6JT9VX8PtRl4NR"
+Date: Tue, 26 Feb 2008 09:23:58 +0100
+Message-Id: <1204014238.13162.201.camel@johannes.berg> (sfid-20080226_082413_168440_22BA2967)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
 
-Having the full RX timestamp in beacons is necessary for IBSS
-merge to work properly so extend the 16-bit timestamp to the
-full 64 bits for beacon frames (as well as when monitor mode
-is active.)
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
- drivers/net/wireless/b43/xmit.c       |   14 +++++++++-----
- drivers/net/wireless/b43legacy/xmit.c |   14 +++++++++-----
- 2 files changed, 18 insertions(+), 10 deletions(-)
-
---- everything.orig/drivers/net/wireless/b43/xmit.c	2008-02-18 09:02:29.921823351 +0100
-+++ everything/drivers/net/wireless/b43/xmit.c	2008-02-18 09:04:15.121823730 +0100
-@@ -589,12 +589,16 @@ void b43_rx(struct b43_wldev *dev, struc
- 	status.antenna = !!(phystat0 & B43_RX_PHYST0_ANT);
- 
- 	/*
--	 * If monitors are present get full 64-bit timestamp. This
--	 * code assumes we get to process the packet within 16 bits
--	 * of timestamp, i.e. about 65 milliseconds after the PHY
--	 * received the first symbol.
-+	 * All frames on monitor interfaces and beacons always need a full
-+	 * 64-bit timestamp. Monitor interfaces need it for diagnostic
-+	 * purposes and beacons for IBSS merging.
-+	 * This code assumes we get to process the packet within 16 bits
-+	 * of timestamp, i.e. about 65 milliseconds after the PHY received
-+	 * the first symbol.
- 	 */
--	if (dev->wl->radiotap_enabled) {
-+	if (((fctl & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE))
-+	    == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) ||
-+	    dev->wl->radiotap_enabled) {
- 		u16 low_mactime_now;
- 
- 		b43_tsf_read(dev, &status.mactime);
---- everything.orig/drivers/net/wireless/b43legacy/xmit.c	2008-02-06 17:38:25.416098905 +0100
-+++ everything/drivers/net/wireless/b43legacy/xmit.c	2008-02-18 09:04:40.471819824 +0100
-@@ -546,12 +546,16 @@ void b43legacy_rx(struct b43legacy_wldev
- 	status.antenna = !!(phystat0 & B43legacy_RX_PHYST0_ANT);
- 
- 	/*
--	 * If monitors are present get full 64-bit timestamp. This
--	 * code assumes we get to process the packet within 16 bits
--	 * of timestamp, i.e. about 65 milliseconds after the PHY
--	 * received the first symbol.
-+	 * All frames on monitor interfaces and beacons always need a full
-+	 * 64-bit timestamp. Monitor interfaces need it for diagnostic
-+	 * purposes and beacons for IBSS merging.
-+	 * This code assumes we get to process the packet within 16 bits
-+	 * of timestamp, i.e. about 65 milliseconds after the PHY received
-+	 * the first symbol.
- 	 */
--	if (dev->wl->radiotap_enabled) {
-+	if (((fctl & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE))
-+	    == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) ||
-+	    dev->wl->radiotap_enabled) {
- 		u16 low_mactime_now;
- 
- 		b43legacy_tsf_read(dev, &status.mactime);
+--=-Eeosmt6JT9VX8PtRl4NR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> > @@ -303,8 +300,8 @@ static void mesh_path_node_reclaim(struc
+> >  	struct mpath_node *node =3D container_of(rp, struct mpath_node, rcu);
+> >  	struct ieee80211_sub_if_data *sdata =3D
+> >  		IEEE80211_DEV_TO_SUB_IF(node->mpath->dev);
+> > -	if (node->mpath->next_hop)
+> > -		sta_info_put(node->mpath->next_hop);
+> > +
+> > +	rcu_assign_pointer(node->mpath->next_hop, NULL);
+>=20
+> Is that necessary? If we are here nobody else should have access to this
+> path and we should just free it, right?
 
+Yeah I think you're right and we can just free it since access is gone
+already.
 
--------------------------------------------------------
+> Also since now we can force deletion, the mesh path timer might be
+> running and we need a del_timer_sync() somewhere. After adding that, we
+> may as well always force the path deletion.
 
--- 
-Greetings Michael.
+I put a del_timer() into sta_info_unlink() and a del_timer_sync() into
+sta_info_destroy(). That should be enough afaict.
+
+johannes
+
+--=-Eeosmt6JT9VX8PtRl4NR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8PMnaVg1VMiehFYAQK84BAAvYE94Sz66ZpxC0urPvpb0Hvls0FbwPqq
+EBS85OrMMqGlfubMS1SzoylqdWohCibw0jLTK2F4EHo0hlPOU6TuHEzv0L4JZjcy
+VlLufQmi+/k7iGa6RHERJGjULmhwXLhy0FXa+tsjvfJ5VSJj4uU0VQ+ap5u1EWx7
+uCzAgUi35Jvc/OpIjCIPqNC+FJRYTMoPGkAP4Am2s/MlB5ihrnZF+c0zjXV7yMpW
+rBzkrNpWNoITLO8WMvSXi+8epEh5r7D1yvjeQpgPoGqF17OX0lBEQytRfj630dQ9
+jqkG15uKOnMnwW4o48fCBffxJBJswRNaD5H8Vnfys26e9fRmKZ32NKxQqD/MKxNr
+pdPyAA0HCGV/+hqM4/NdgcyCkzsyBmCH9ucTxQoh96H3LIExPMXZlVmKHTXVNpq6
+kC9JCJD7gN17UjmjwpJUbvsb9AG7Z1teQWdAp9T6qjNIJbxKZHOuAjbt9rarvSf/
+daogqfDkQke24/mJlYvYP1iPp0oZZ6o3Vzik/pPr0q1rTEckPg0QcwVZHd5lyMCI
+VxTJbKO26dXIab1UDJBWR4tcfJu7Cqjix6DVHA/SQLEkRI5NYqJ8saKcZm0wLTII
++KVRjxCPBzgtXDEb1I5ML3keHsXdHdL3evTNib1HYs2B7Y8pes3Rjwnqc/A38Mb8
+7VP3ZYnWHLo=
+=BZWh
+-----END PGP SIGNATURE-----
+
+--=-Eeosmt6JT9VX8PtRl4NR--
+
