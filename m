@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4485 "EHLO ra.tuxdriver.com"
+Received: from mgw1.diku.dk ([130.225.96.91]:53895 "EHLO mgw1.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759961AbYBLOb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 09:31:56 -0500
-Date: Tue, 12 Feb 2008 08:58:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Budhee Jamaich <budheej@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Kalle Valo <kalle.valo@nokia.com>
-Subject: Re: madwifi is not fully open source
-Message-ID: <20080212135857.GA3051@tuxdriver.com> (sfid-20080212_143200_210670_8DF4458C)
-References: <57314e840802111427i7e8d00capbe430727faff78a1@mail.gmail.com> <1202770112.6824.35.camel@localhost.localdomain> <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com>
+	id S1762923AbYBZVL3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 16:11:29 -0500
+Date: Tue, 26 Feb 2008 21:44:23 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct use of
+ ! and &
+Message-ID: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> (sfid-20080226_211146_965575_5A9BAAEE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57314e840802120045h6e6960d8jde5657da8aff0e3e@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 12, 2008 at 10:45:40AM +0200, Budhee Jamaich wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> First - thank you for the detailed response!
+In commit e6bafba5b4765a5a252f1b8d31cbf6d2459da337, a bug was fixed that
+involved converting !x & y to !(x & y).  The code below shows the same
+pattern, and thus should perhaps be fixed in the same way.
 
-Yes, thanks Dan!
+This is not tested and clearly changes the semantics, so it is only
+something to consider.
 
-> So even if a vendor is willng to completely Open Source it's code,
-> having FCC troubles
-> is a serious problem.
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-The answer of course is "it depends".  For example, depending on the
-device it might be possible to provide code to configure the device
-in "good" ways without necessarily revealing how to configure it in
-"bad" ways...YMMV.  This may be more or less difficult depending on
-the exact details of your hardware design.
+// <smpl>
+@@ expression E1,E2; @@
+(
+  !E1 & !E2
+|
+- !E1 & E2
++ !(E1 & E2)
+)
+// </smpl>
 
-> Is there any vendor who walked this path ? complete Open Source RF code ?
-> If yes, has it's chip got FCC certified ?
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-The rtl8180 driver does not use any firmware and is completely open
-source.  The driver code contains lots of "magic number" tables related
-to initializing and configuring the device.  I don't know enough
-about the hardware to tell you if the hardware is flexible enough
-to be easily forced into non-compliant power or frequency settings,
-so I can't really characterize the risk to Realtek.
+---
 
-I do know that Realtek supported rtl8180 driver development with
-datasheets and access to developers.  Presumably they feel that
-whatever risk there is is acceptable to their business.
-
-Hth!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+diff -u -p a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c 2008-02-05 20:56:01.000000000 +0100
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c 2008-02-26 08:09:12.000000000 +0100
+@@ -4589,7 +4589,7 @@ static u8 iwl4965_is_fat_tx_allowed(stru
+ 
+ 	if (sta_ht_inf) {
+ 		if ((!sta_ht_inf->ht_supported) ||
+-		   (!sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH))
++		   (!(sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH)))
+ 			return 0;
+ 	}
+ 
