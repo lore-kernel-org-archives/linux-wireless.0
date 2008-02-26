@@ -1,61 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39962 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757197AbYBLVMi (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:6094 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424AbYBZD5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:12:38 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RFT/RFC] b43: Add QOS support
-Date: Tue, 12 Feb 2008 22:12:03 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-References: <200802122205.42799.mb@bu3sch.de>
-In-Reply-To: <200802122205.42799.mb@bu3sch.de>
+	Mon, 25 Feb 2008 22:57:24 -0500
+Received: by an-out-0708.google.com with SMTP id d31so449690and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 19:57:23 -0800 (PST)
+Message-ID: <40f31dec0802251957o3b5b542vb5bf591fa2e73599@mail.gmail.com> (sfid-20080226_035727_417172_6FEDEAC9)
+Date: Tue, 26 Feb 2008 05:57:22 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "bruno randolf" <bruno@thinktube.com>
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
+Cc: "Bob Copeland" <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+In-Reply-To: <200802261113.34604.bruno@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802122212.03325.mb@bu3sch.de> (sfid-20080212_211242_827404_A22F9FE4)
+Content-Type: text/plain; charset=UTF-8
+References: <E1JTfTv-0002bm-Qp@hash.localnet>
+	 <200802261113.34604.bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 12 February 2008 22:05:42 Michael Buesch wrote:
-> This patch adds QOS support for b43.
-> Please comment on this and test this.
-> This patch depends on Johannes' "burst time -> txop patch" being _not_ applied.
-> One can trivially fix that, though.
-> +	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
-> +		params = &(wl->qos_params[i]);
-> +		if (params->need_hw_update) {
-> +			b43_qos_params_upload(dev, &(params->p),
-> +					      qos_shm_offsets[i]);
-> +			params->need_hw_update = 1;
+2008/2/26, bruno randolf <bruno@thinktube.com>:
+> On Tuesday 26 February 2008 00:43:07 Bob Copeland wrote:
+>  > > > Hey, that's a good clue... I just switched over to b-only and it seems
+>  > > > to be much more stable.
+>  >
+>  > ...or not.  I still got some calibration errors last night in b-mode.  Just
+>  > so we're on the same page, I see things in the dmesg like:
+>  >
+>  > ath0: failed to restore operational channel after scan
+>  > ath5k phy0: calibration timeout (2412 MHz)
+>  > ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+>  > ath0: failed to set freq to 2412 MHz for scan
+>  > ath5k phy0: calibration timeout (2417 MHz)
+>  >
+>  > > If i'm correct you should get 4-7Mbit/sec @ 11Mbit. Plz let me know if
+>  > > you have some results, meanwhile i'll try to figure out the i/q
+>  > > calibration algo (we are ok for noise floor calibration i believe).
+>  >
+>  > One thing I noticed from my traces is that the binary driver sets
+>  > bits AR5K_PHY_AGCCTL_NF | AR5K_PHY_AGCCTL_CAL in AR5K_PHY_AGCCTL.
+>  > Then it makes a whole lot of misc register writes, then re-reads
+>  > AR5K_PHY_AGCCTL; in that time only the noise floor bit got cleared
+>  > but _CAL is still high.  Dunno if that means anything to you or not.
+>  >
+>  > e.g:
+>  >
+>  > R: 0x9860 = 0x00009d18 - AR5K_PHY_AGCCTL
+>  > W: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL  <-- set (_CAL | _NF)
+>  > W: 0x1000 = 0x00000001 - AR5K_DCU_QCUMASK_BASE
+>  > W: 0x1004 = 0x00000002 - unknown
+>  > W: 0x1008 = 0x00000004 - unknown
+>  > [... lots more writes to DCU & IMR regs ...]
+>  > W: 0x00a0 = 0x00080965 - AR5K_PIMR
+>  > R: 0x00ac = 0x00000000 - AR5K_SIMR2
+>  > W: 0x00ac = 0x00070000 - AR5K_SIMR2
+>  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+>  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+>  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+>  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+>  > R: 0x9860 = 0x00009d1b - AR5K_PHY_AGCCTL
+>  > R: 0x9860 = 0x00009d1a - AR5K_PHY_AGCCTL  <-- _NF cleared
+>  >
+>  > Maybe a red herring as obviously the current method of doing things
+>  > works for me sometimes...
+>
+>
+> so when is AR5K_PHY_AGCCTL_CAL getting cleared?
+>
+>  i'm not sure if that is related because the error message you are seeing is
+>  not due to noise floor calibration timeout but because AR5K_PHY_AGCCTL_CAL is
+>  not cleared in the time that ath5k expects, but i want to mention it anyways:
+>
+>  the HAL enables noise floor calibration, and reads the result on then next
+>  calibration interval, then enables calibration again and reads on the next...
+>  i think that way it makes sure there is always enough time for the noise
+>  floor calibration to take place in the mean time (the calibration can only
+>  happen when the channel is otherwise silent).
+>
+>  if i understand correctly, ath5k currenty expects the noise floor calibration
+>  to finish within 300ms (ath5k_hw_register_timeout) and then we give it
+>  another 20ms for the noise floor value to settle ( for (i = 20; i > 0; i--)
+>  mdelay(1); ) that worked well for older chipsets, but also for 5424 this
+>  results in more noise floor calibration timeouts.
+>
+>
+>  bruno
+>
 
-Whoopsy, needs to be:
-			params->need_hw_update = 0;
+There are 3 types of calibration, noise floor calibration (which gets
+us the noise floor value), I/Q calibration (which fixes QAM
+constellation on OFDM rates) and the _CAL bit which is another kind of
+calibration we don't know about (i'll check out Atheros patent docs
+again, they might give us a clue)... I know that NF and I/Q
+calibration must be done periodically (i also had an idea about
+forcing I/Q calibration on certain rate changes since QAM
+constellation changes) but i have no idea about _CAL stuff...
 
-> +		}
-> +	}
-> +
-> +	spin_unlock_irqrestore(&wl->irq_lock, flags);
-> +	b43_mac_enable(dev);
-> +}
+Noise floor calibration is not the problem, I/Q calibration is where
+we are failing, that's why we have problems in OFDM rates. Even in
+madwifi we get weird noise floor values sometimes (and calibration
+function returns failure sometimes). We might have to add some extra
+time for noise floor calibration, HAL has one function (phy_calibrate)
+for both of them (I/Q + noise floor), i guess we can treat them in a
+different way in our implementation.
 
-> +/* Initialize the core's QOS capabilities */
-> +static void b43_qos_init(struct b43_wldev *dev)
-> +{
-> +	/* Upload the current QOS parameters. */
+Anyway we don't get a NF calibration timeout but we get timeout for
+_CAL stuff and since HAL doesn't seem to check for it (it only sets
+that bit during reset and during phy_calibrate but doesn't check for
+it) we can also skip the test i guess...
 
-And here we need a loop setting all "need_hw_update" to 1.
+Bob try removing this and see what happens (in terms of
+performance/stability)...
 
-> +	b43_qos_update(dev);
-> +	/* Enable QOS support. */
-> +	b43_hf_write(dev, b43_hf_read(dev) | B43_HF_EDCF);
-> +	b43_write16(dev, B43_MMIO_IFSCTL,
-> +		    b43_read16(dev, B43_MMIO_IFSCTL)
-> +		    | B43_MMIO_IFSCTL_USE_EDCF);
-> +}
+	if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+			AR5K_PHY_AGCCTL_CAL, 0, false)) {
+		ATH5K_ERR(ah->ah_sc, "calibration timeout (%uMHz)\n",
+			channel->center_freq);
+		return -EAGAIN;
+	}
+
 
 -- 
-Greetings Michael.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
