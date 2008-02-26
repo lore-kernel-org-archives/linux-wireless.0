@@ -1,35 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59106
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753022AbYBUGfq (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:18515 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217AbYBZP3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 01:35:46 -0500
-Date: Wed, 20 Feb 2008 22:36:22 -0800 (PST)
-Message-Id: <20080220.223622.148453409.davem@davemloft.net> (sfid-20080221_063549_867023_D568E25B)
-To: johannes@sipsolutions.net
-Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: sending ARP triggers BUG
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1203468968.10983.13.camel@johannes.berg>
-References: <D936D925018D154694D8A362EEB0892003ABCBD2@orsmsx416.amr.corp.intel.com>
-	<1203468968.10983.13.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 26 Feb 2008 10:29:49 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: Remove unused exports
+Date: Tue, 26 Feb 2008 15:26:56 +0100
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, rolandd@cisco.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802261526.57001.hs4233@mail.mn-solutions.de> (sfid-20080226_152954_993547_858CCB39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 20 Feb 2008 01:56:08 +0100
+From: Roland Dreier <rdreier@cisco.com>
 
-> [ 4340.665679] SKB BUG: Invalid truesize (240) len=73, sizeof(sk_buff)=176
-> 
-> Anybody have an idea how to debug that? It looks like 'len' is one too
-> large, but I've also seen messages where it was two too large or one to
-> small.
+The libertas driver exports a number of symbols with no in-tree users;
+remove these unused exports.  lbs_reset_device() is completely unused, with
+no callers at all, so remove the function completely.
 
-The BUG occurs when you use paged SKBs, it's different from
-the other problem the person you are replying to is seeing.
+A couple of these unused exported symbols are static, which causes the
+following build error on ia64 with gcc 4.2.3:
 
-The easiest thing to do to look for potentially problematic areas
-is to find code that modifies skb->data_len but doesn't make
-similar adjustments to skb->truesize.
+    drivers/net/wireless/libertas/main.c:1375: error: __ksymtab_lbs_remove_mesh causes a section type conflict
+    drivers/net/wireless/libertas/main.c:1354: error: __ksymtab_lbs_add_mesh causes a section type conflict
+
+Signed-off-by: Roland Dreier <rolandd@cisco.com>
+Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+
+Index: wireless-2.6/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/cmd.c	2008-02-26 11:53:55.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/cmd.c	2008-02-26 11:54:29.000000000 +0100
+@@ -1066,7 +1066,6 @@ int lbs_mesh_access(struct lbs_private *
+ 	lbs_deb_leave(LBS_DEB_CMD);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lbs_mesh_access);
+ 
+ int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan)
+ {
+@@ -1571,7 +1570,6 @@ done:
+ 	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lbs_prepare_and_send_command);
+ 
+ /**
+  *  @brief This function allocates the command buffer and link
+Index: wireless-2.6/drivers/net/wireless/libertas/decl.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/decl.h	2008-02-26 11:54:33.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/decl.h	2008-02-26 11:54:44.000000000 +0100
+@@ -69,7 +69,6 @@ struct lbs_private *lbs_add_card(void *c
+ int lbs_remove_card(struct lbs_private *priv);
+ int lbs_start_card(struct lbs_private *priv);
+ int lbs_stop_card(struct lbs_private *priv);
+-int lbs_reset_device(struct lbs_private *priv);
+ void lbs_host_to_card_done(struct lbs_private *priv);
+ 
+ int lbs_update_channel(struct lbs_private *priv);
+Index: wireless-2.6/drivers/net/wireless/libertas/main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/libertas/main.c	2008-02-26 11:54:54.000000000 +0100
++++ wireless-2.6/drivers/net/wireless/libertas/main.c	2008-02-26 11:55:28.000000000 +0100
+@@ -1366,8 +1366,6 @@ done:
+ 	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lbs_add_mesh);
+-
+ 
+ static void lbs_remove_mesh(struct lbs_private *priv)
+ {
+@@ -1387,7 +1385,6 @@ static void lbs_remove_mesh(struct lbs_p
+ 	free_netdev(mesh_dev);
+ 	lbs_deb_leave(LBS_DEB_MESH);
+ }
+-EXPORT_SYMBOL_GPL(lbs_remove_mesh);
+ 
+ /**
+  *  @brief This function finds the CFP in
+@@ -1473,20 +1470,6 @@ void lbs_interrupt(struct lbs_private *p
+ }
+ EXPORT_SYMBOL_GPL(lbs_interrupt);
+ 
+-int lbs_reset_device(struct lbs_private *priv)
+-{
+-	int ret;
+-
+-	lbs_deb_enter(LBS_DEB_MAIN);
+-	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RESET,
+-				    CMD_ACT_HALT, 0, 0, NULL);
+-	msleep_interruptible(10);
+-
+-	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
+-	return ret;
+-}
+-EXPORT_SYMBOL_GPL(lbs_reset_device);
+-
+ static int __init lbs_init_module(void)
+ {
+ 	lbs_deb_enter(LBS_DEB_MAIN);
