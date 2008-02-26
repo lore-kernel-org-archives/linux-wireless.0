@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:15980 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758899AbYBOKsV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2008 05:48:21 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH] add macro for printing mac addresses
-To: netdev@vger.kernel.org
-Cc: jgarzik@pobox.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Date: Fri, 15 Feb 2008 19:48:05 +0900
-Message-ID: <20080215104804.9870.15722.stgit@one> (sfid-20080215_104829_866984_5F977706)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mfe1.polimi.it ([131.175.12.23]:52247 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1764505AbYBZV4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 16:56:55 -0500
+Date: Tue, 26 Feb 2008 22:44:10 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "Ivo Van Doorn" <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Chris Clayton" <chris2553@googlemail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Message-ID: <20080226224410.4b9216e5@morte> (sfid-20080226_215659_669045_F2AE520F)
+In-Reply-To: <a32f33a40802261230o1743773dle38684609d702959@mail.gmail.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	<200802252104.32416.chris2553@googlemail.com>
+	<a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
+	<200802261911.39577.chris2553@googlemail.com>
+	<20080226194838.GD3013@tuxdriver.com>
+	<a32f33a40802261230o1743773dle38684609d702959@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-is there any chance to include a macro like this for printing mac addresses?
+On Tue, 26 Feb 2008 21:30:38 +0100
+"Ivo Van Doorn" <ivdoorn@gmail.com> wrote:
 
-its advantage is that it can be used without the need to declare buffers for
-print_mac(), for example:
+> rt2x00 is known to be less sensitive then the legacy drivers, scanning
+> produces less and more inconsistent results (Not all AP's are reported,
+> even when that AP has a high rssi), and the reported RSSI is often
+> much lower then expected with the distance to the AP.
+> I have compared many register dumps, but have never managed to
+> find a real register setting that might cause this. So what might be
+> the problem is that rt2x00 is not reporting the RSSI correctly to mac80211.
 
-printk("mac address: " MAC_FMT, MAC_ADDR(addr));
+No, we don't care at all about RSSI in rc80211-pid.
 
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
+> I have to admit that I haven't looked into the 'pid' algorithm closely,
+> but could it be that some fields in the tx status report upon txdone
+> are being treated as "very important" while the driver doesn't report it
+> (For example ack signal strength)?
 
- include/linux/if_ether.h |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+The only important thing drivers should report back to mac80211 are ACKed
+frames. In rc80211-pid (and it's just the same in rc80211-simple) the only
+inputs from mac80211 are succesfully (re)transmitted frames and failed
+frames.
 
 
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index 5f92977..b9a6fb2 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -127,6 +127,15 @@ extern struct ctl_table ether_table[];
-  *	Display a 6 byte device address (MAC) in a readable format.
-  */
- #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-+
-+#define MAC_ADDR(addr) \
-+    ((unsigned char *)(addr))[0], \
-+    ((unsigned char *)(addr))[1], \
-+    ((unsigned char *)(addr))[2], \
-+    ((unsigned char *)(addr))[3], \
-+    ((unsigned char *)(addr))[4], \
-+    ((unsigned char *)(addr))[5]
-+
- extern char *print_mac(char *buf, const u8 *addr);
- #define DECLARE_MAC_BUF(var) char var[18] __maybe_unused
- 
-
+-- 
+Ciao
+Stefano
