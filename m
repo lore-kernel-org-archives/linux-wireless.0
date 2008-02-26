@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:14093 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753562AbYB1VVW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 16:21:22 -0500
-Received: by an-out-0708.google.com with SMTP id d31so813304and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 13:21:21 -0800 (PST)
-Message-ID: <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> (sfid-20080228_212147_148411_38295552)
-Date: Thu, 28 Feb 2008 14:21:21 -0700
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080227.235110.242439399.davem@davemloft.net>
+Received: from khc.piap.pl ([195.187.100.11]:51442 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760869AbYBZDhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2008 22:37:23 -0500
+To: linux-wireless@vger.kernel.org
+Subject: ath5k bf=xxx bf_skb=0 warnings
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Tue, 26 Feb 2008 04:37:21 +0100
+Message-ID: <m3ve4cqtfy.fsf@maximus.localdomain> (sfid-20080226_033801_900453_64064F8D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080228014125.GI3078@tuxdriver.com>
-	 <20080227.235110.242439399.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David
+Hi,
 
-On Thu, Feb 28, 2008 at 12:51 AM, David Miller <davem@davemloft.net> wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
->  Date: Wed, 27 Feb 2008 20:41:25 -0500
->
->
->  > Gordon Farquharson (1):
->  >       Fix b43 driver build for arm
->
->  Please revert this change and resend your pull request.
->
->  If file2alias doesn't work properly in a cross build environment, we
->  don't fix it by crapping up mod_devalias.h with these silly align
->  attribute annotations.
+Just wondering if "bf=xxx bf_skb=0" warnings printed to console
+(ath5k/base.c:ath5k_beacon_send) are normal?
 
-This was extensively discussed on LKML [1, 2] and the patch has been
-merged into Andrew Morton's -mm tree. It is understood that this is
-not the Right Way to fix to problem, hence the big fat comment in the
-code. It would be great if you could reconsider your decision.
+Linux ixp425 2.6.25-rc3 (ARM big-endian), AR5413
 
-Thanks.
+iwconfig wlan0 essid $ESSID mode ad-hoc channel $CH
+iwconfig wlan0 key restricted $KEY
+ifconfig wlan0 up
 
-Gordon
-
-[1] http://groups.google.com/group/linux.kernel/browse_thread/thread/0013ccdcfce3feaa/608657870eb62a12?#608657870eb62a12
-[2] http://groups.google.com/group/linux.kernel/browse_thread/thread/13ccdcfce3feaa/a37a5fcbb6431eb0?lnk=gst&q=Fix+b43+driver+build+for+arm#a37a5fcbb6431eb0
-
+I understand sc->bbuf->skb is never set, the only possible place is
+ath5k_beacon_update() but it's never called.
 -- 
-Gordon Farquharson
-GnuPG Key ID: 32D6D676
+Krzysztof Halasa
