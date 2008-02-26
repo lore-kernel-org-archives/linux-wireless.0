@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:41177 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:8431 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbYBDLFy (ORCPT
+	with ESMTP id S1757892AbYBZAan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2008 06:05:54 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2886972wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2008 03:05:54 -0800 (PST)
-Message-ID: <1ba2fa240802040305u611bb7edk3c757b73f40c1037@mail.gmail.com> (sfid-20080204_110600_738621_CD642328)
-Date: Mon, 4 Feb 2008 13:05:53 +0200
+	Mon, 25 Feb 2008 19:30:43 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2208179wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 16:30:42 -0800 (PST)
+Message-ID: <1ba2fa240802251630n151a0accn4a1f814e6479e7c@mail.gmail.com> (sfid-20080226_003047_173306_2739039D)
+Date: Tue, 26 Feb 2008 02:30:42 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: add rate to ieee80211_tx_status
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Felix Fietkau" <nbd@openwrt.org>
-In-Reply-To: <-6799378017406559341@unknownmsgid>
+Subject: Re: mac80211: sta info locking
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>
+In-Reply-To: <1203983284.13162.196.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <12020697053277-git-send-email-tomas.winkler@intel.com>
-	 <1202114774.4188.127.camel@johannes.berg>
-	 <1ba2fa240802040153g1d0c9902u6af2ddf3dead975d@mail.gmail.com>
-	 <6231174111099834440@unknownmsgid>
-	 <1ba2fa240802040227g23fe41adu446adc8f0de22712@mail.gmail.com>
-	 <-6799378017406559341@unknownmsgid>
+References: <1203677069.26341.52.camel@johannes.berg>
+	 <1203693409.7082.30.camel@johannes.berg>
+	 <20080222155704.GD3067@tuxdriver.com>
+	 <1203972413.13162.163.camel@johannes.berg>
+	 <1ba2fa240802251450x4ee13b94yb93e64fd9ebfcec8@mail.gmail.com>
+	 <1203980105.13162.182.camel@johannes.berg>
+	 <1ba2fa240802251512k15b40d65oee774acebdb953e0@mail.gmail.com>
+	 <1203981812.13162.187.camel@johannes.berg>
+	 <1ba2fa240802251541r218d5f22j5b3490d20ab508e3@mail.gmail.com>
+	 <1203983284.13162.196.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 4, 2008 12:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Tomas Winkler wrote:
+On Tue, Feb 26, 2008 at 1:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> > I prefer not. This is not just plcp rate there is also MCS flags that
-> > have to passed. With all combinations the array will be huge.
+>  > >  Thanks. Yes, I do realize that this is a bit intrusive. On the other
+>  > >  hand, I can't see the code holding the spinlock for longer code/periods
+>  > >  of time (nor should it). Or do you think the driver is allowed to call
+>  > >  into the AMPDU TX setup path while being called from the AMPDU RX setup
+>  > >  path? That would be a bit weird.
+>  > >
+>  >
+>  > TX and RX BA sessions are triggered from different threads of
+>  > execution namely rate scaling and RX path. The protected sections are
+>  > quite long IMHO including call outs to underlying driver. It is very
+>  > likely that both sides decides for BA session at the same times.
 >
-> So you'd actually abuse the struct bitrate contents if you add the
-> bitrate? I prefer that wouldn't be done, it makes the code impossible to
-> follow.
+>  Yes, but I still can't see how the driver would be calling both RX and
+>  TX aggregation functions /within each other/. That's the only thing that
+>  really matters since all the frame TX/RX is synchronized and thus the
+>  spinlock can't really be contended. Anyway, I need to look deeper into
+>  the code or just try or something.
 >
-> I guess we need to rework the rate control algorithm API completely.
 >
+>  > >  > Do you have any setup to check your these changes?
+>  > >
+>  > >  Unfortunately not quite yet. I have an 11n AP now though, but broke of
+>  > >  one of the antennas, I'll need to see how well it works.
+>  >
+>  > That's bad 11n is too sensitive on antennas setup.
+>
+>  Yeah, I know. I don't know why my router has three antennas though
+>  knowing that the Broadcom HW only has two chains.
 
-No I won't we add rate flags which are part of spec anyway  and then
-plcp rate it self will be in bitrate.
-
-num ieee80211_rate_flags {
-	IEEE80211_RATE_SHORT_PREAMBLE	= 1<<0,
-	IEEE80211_RATE_MANDATORY_A	= 1<<1,
-	IEEE80211_RATE_MANDATORY_B	= 1<<2,
-	IEEE80211_RATE_MANDATORY_G	= 1<<3,
-	IEEE80211_RATE_ERP_G		= 1<<4,
-        IEEE80211_RATE_HT_GF	=  1<<5,  /* green field */
-        IEEE80211_RATE_HT_SGI	=  1<<5,  /* short guarding interval */
-        IEEE80211_RATE_HT_FAT	=  1<<6, /* 40Mhz Channel */
-        IEEE80211_RATE_HT_SISO	=  1<<7,
-        IEEE80211_RATE_HT_MIMO	=  1<<8,
-        IEEE80211_RATE_ANT_A   =  1<<8,    /* Number of antenna - no
-radio goes over 3 so 4 will be enough */
-        IEEE80211_RATE_ANT_B   =  1<<8,
-        IEEE80211_RATE_ANT_C   =  1<<8,
-        IEEE80211_RATE_ANT_D   =  1<<8,
-};
-
-/**
- * struct ieee80211_rate - bitrate definition
- *
- * This structure describes a bitrate that an 802.11 PHY can
- * operate with. The two values @hw_value and @hw_value_short
- * are only for driver use when pointers to this structure are
- * passed around.
- *
- * @flags: rate-specific flags
- * @bitrate: bitrate in units of 100 Kbps
- * @hw_value: driver/hardware value for this rate
- * @hw_value_short: driver/hardware value for this rate when
- *	short preamble is used
- */
-struct ieee80211_rate {
-	u32 flags;
-	u16 bitrate;
-	u16 hw_value, hw_value_short;
-};
-> johannes
->
+Number of antennas is not the same as number of chains.  Also 4965 has
+3 antennas but only 2 chains.   We have some fixes in that context
+coming this week.
+Tomas
