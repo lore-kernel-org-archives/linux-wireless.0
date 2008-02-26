@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.226]:4578 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbYBCO5B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 09:57:01 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2272846wxd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:56:55 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/19] rt2x00: Fix queue index handling
-Date: Sun, 3 Feb 2008 15:55:21 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802031541.52167.IvDoorn@gmail.com>
-In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4348 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750877AbYBZUDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 15:03:47 -0500
+Date: Tue, 26 Feb 2008 14:48:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	johannes@sipsolutions.net
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Message-ID: <20080226194838.GD3013@tuxdriver.com> (sfid-20080226_200353_026053_3FC82483)
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802252104.32416.chris2553@googlemail.com> <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com> <200802261911.39577.chris2553@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802031555.21297.IvDoorn@gmail.com> (sfid-20080203_145706_127363_65BB212A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200802261911.39577.chris2553@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When Q_INDEX is increased, the queue->length should be increased,
-only when Q_INDEX_DONE is increased should queue_length be descreased.
+On Tue, Feb 26, 2008 at 07:11:39PM +0000, Chris Clayton wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+> Sorry, but that's not the case. I find the same results as without the 
+> patches. With the parameter set to 'pid', the network connection fails very 
+> quickly, but with it set to 'simple' I can ping and ftp files to and from my 
+> laptop as much as I like and the connection stays up. In fact, if anything 
+> the patches seem to have made the network even more fragile, in that it fails 
+> almost instantly once I start some network activity ( < 10 pings).
+> 
+> I'm sure this is not the hardware - it works perfectly with Windows XP, with 
+> 2.6.23.14 plus the out-of-tree rt61 driver from serialmonkey, with the 
+> in-tree driver from 2.6.24.x and with 2.6.25-rc3 with the mac82011's 
+> ieee80211_default_rc_algo parameter set to 'simple'.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 52bb57d..fde64ea 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -84,8 +84,12 @@ void rt2x00queue_index_inc(struct data_queue *queue, enum queue_index index)
- 	if (queue->index[index] >= queue->limit)
- 		queue->index[index] = 0;
- 
--	queue->length--;
--	queue->count += (index == Q_INDEX_DONE);
-+	if (index == Q_INDEX) {
-+		queue->length++;
-+	} else if (index == Q_INDEX_DONE) {
-+		queue->length--;
-+		queue->count ++;
-+	}
- 
- 	spin_unlock(&queue->lock);
- }
+At last!  Vindication for insisting that we keep 'simple' around!
+Bwahahaha! :-)
+
+So, am I to understand that 'pid' works find for you with rtl8180?
+If so, then I wonder if Stefano and Ivo can help us figure-out
+what kind of problem is sensitive to both driver _and_ rate control
+algorithm?
+
+Thanks,
+
+John
 -- 
-1.5.3.8
-
+John W. Linville
+linville@tuxdriver.com
