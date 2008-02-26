@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5330 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751648AbYBARrx convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10765 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755642AbYBZPXU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 12:47:53 -0500
+	Tue, 26 Feb 2008 10:23:20 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: implement SSID scanning for SIOCSIWSCAN
+Date: Tue, 26 Feb 2008 15:20:32 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200801281728.56885.hs4233@mail.mn-solutions.de> <1201631880.28652.13.camel@localhost.localdomain>
+In-Reply-To: <1201631880.28652.13.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 2/2] iwlwifi: set rate_idx correctly from plcp
-Date: Fri, 1 Feb 2008 09:40:25 -0800
-Message-ID: <D936D925018D154694D8A362EEB08920038F3E76@orsmsx416.amr.corp.intel.com> (sfid-20080201_174801_881664_1DD7D76E)
-In-Reply-To: <33E1C72C74DBE747B7B59C1740F7443702C96D93@orsmsx417.amr.corp.intel.com>
-References: <1201844801-7326-1-git-send-email-reinette.chatre@intel.com> <1201844801-7326-2-git-send-email-reinette.chatre@intel.com> <1ba2fa240802010343q519a1dap9d4af5ef5e0110f2@mail.gmail.com> <33E1C72C74DBE747B7B59C1740F7443702C96D93@orsmsx417.amr.corp.intel.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	"Tomas Winkler" <tomasw@gmail.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200802261520.32440.hs4233@mail.mn-solutions.de> (sfid-20080226_152325_123273_3CAB9D2F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, February 01, 2008 8:29 AM, Abbas, Mohamed  wrote:
+> 1) I don't think scan_ssid_len gets cleared in enough places.
 
-> From: Tomas Winkler [mailto:tomasw@gmail.com]
-> Sent: Friday, February 01, 2008 3:44 AM
-> On Feb 1, 2008 7:46 AM, Reinette Chatre
-> <reinette.chatre@intel.com> wrote:
->> From: Mohamed Abbas <mohamed.abbas@intel.com>
->> 
->> rate_idx is derived from plcp information
->> 
->> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
->> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com> ---
->>  drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->> 
+lbs_scan_networks() is now static. This makes it easy to verify
+that all code paths that call lbs_scan_networks() directly or=20
+throught queue_delayed_work(..., &priv->scan_work, ...)=20
+initialize scan_ssid_len.
 
-[..snip..]
 
-> NACK
-> This should be
-> rate_idx =
-> iwl4965_rate_index_from_plcp(wl4965_hw_get_rate(rx_start->rate_
-> n_flags)); 
-> 
-> iwl4965_hw_get_rate - this one extract plcp from rate_n_flags - also
-> takes care of endinaity Tomas
-> 
-> Actually iwl4965_rate_index_from_plcp expect rate and flag
-> data to get the rate index.
-> Mohamed
+> 2) might as well kill the filtered scan stuff in
+> lbs_scan_networks().
 
-John,
+Done.
 
-Sorry about the confusing emails - please go ahead and apply this patch.
 
-Thank you
+> 3) Add
+>
+> =A0=A0=A0=A0=A0=A0=A0=A0range->scan_capa =3D IW_SCAN_CAPA_ESSID;
 
-Reinette
+Done.
+
+
+I'm sending the new version ASAP :-)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
