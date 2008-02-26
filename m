@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbYBTSbs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:31:48 -0500
-Subject: [PATCH] rtl818x: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrea Merello <andreamrl@tiscali.it>,
-	Michael Wu <flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 12:05:59 +0100
-Message-Id: <1203505559.17534.22.camel@johannes.berg> (sfid-20080220_183151_053516_3B40F5BE)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:33200 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610AbYBZW7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 17:59:16 -0500
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] ath5k: fix all endian issues reported by sparse
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Date: Tue, 26 Feb 2008 17:59:14 -0500
+Message-ID: <20080226225914.28153.48243.stgit@dv.roinet.com> (sfid-20080226_225922_252961_0C79CC2D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This silences a few sparse warnings. There are two more where
-I can't follow the code.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Changes-licensed-under: ISC
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/rtl8180_dev.c |    8 +++++---
- drivers/net/wireless/rtl8187_dev.c |    4 +++-
- 2 files changed, 8 insertions(+), 4 deletions(-)
 
---- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-02-20 11:48:07.000000000 +0100
-+++ everything/drivers/net/wireless/rtl8180_dev.c	2008-02-20 11:49:47.000000000 +0100
-@@ -170,13 +170,15 @@ static void rtl8180_handle_tx(struct iee
- 	while (skb_queue_len(&ring->queue)) {
- 		struct rtl8180_tx_desc *entry = &ring->desc[ring->idx];
- 		struct sk_buff *skb;
--		struct ieee80211_tx_status status = { {0} };
-+		struct ieee80211_tx_status status;
- 		struct ieee80211_tx_control *control;
- 		u32 flags = le32_to_cpu(entry->flags);
- 
- 		if (flags & RTL8180_TX_DESC_FLAG_OWN)
- 			return;
- 
-+		memset(&status, 0, sizeof(status));
-+
- 		ring->idx = (ring->idx + 1) % ring->entries;
- 		skb = __skb_dequeue(&ring->queue);
- 		pci_unmap_single(priv->pdev, le32_to_cpu(entry->tx_buf),
---- everything.orig/drivers/net/wireless/rtl8187_dev.c	2008-02-20 11:50:04.000000000 +0100
-+++ everything/drivers/net/wireless/rtl8187_dev.c	2008-02-20 11:50:19.000000000 +0100
-@@ -145,10 +145,12 @@ void rtl8187_write_phy(struct ieee80211_
- 
- static void rtl8187_tx_cb(struct urb *urb)
- {
--	struct ieee80211_tx_status status = { {0} };
-+	struct ieee80211_tx_status status;
- 	struct sk_buff *skb = (struct sk_buff *)urb->context;
- 	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
- 
-+	memset(&status, 0, sizeof(status));
-+
- 	usb_free_urb(info->urb);
- 	if (info->control)
- 		memcpy(&status.control, info->control, sizeof(status.control));
+ drivers/net/wireless/ath5k/base.c |    8 ++++----
+ drivers/net/wireless/ath5k/hw.c   |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 0b743f7..393b5f3 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1717,11 +1717,11 @@ ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
+ 	u32 hw_tu;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+ 
+-	if ((mgmt->frame_control & IEEE80211_FCTL_FTYPE) ==
++	if ((le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_FTYPE) ==
+ 		IEEE80211_FTYPE_MGMT &&
+-	    (mgmt->frame_control & IEEE80211_FCTL_STYPE) ==
++	    (le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_STYPE) ==
+ 		IEEE80211_STYPE_BEACON &&
+-	    mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
++	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
+ 	    memcmp(mgmt->bssid, sc->ah->ah_bssid, ETH_ALEN) == 0) {
+ 		/*
+ 		 * Received an IBSS beacon with the same BSSID. Hardware might
+@@ -1730,7 +1730,7 @@ ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
+ 		hw_tu = TSF_TO_TU(ath5k_hw_get_tsf64(sc->ah));
+ 		if (hw_tu >= sc->nexttbtt) {
+ 			ath5k_beacon_update_timers(sc,
+-				mgmt->u.beacon.timestamp);
++				le64_to_cpu(mgmt->u.beacon.timestamp));
+ 			ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
+ 				"detected HW merge from received beacon\n");
+ 		}
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 998da6b..eec2b80 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -531,8 +531,8 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
+ 		 * actual rate for this rate. See mac80211 tx.c
+ 		 * ieee80211_duration() for a brief description of
+ 		 * what rate we should choose to TX ACKs. */
+-		tx_time = ieee80211_generic_frame_duration(sc->hw,
+-			sc->vif, 10, &srate);
++		tx_time = le16_to_cpu(ieee80211_generic_frame_duration(sc->hw,
++							sc->vif, 10, &srate));
+ 
+ 		ath5k_hw_reg_write(ah, tx_time, reg);
+ 
