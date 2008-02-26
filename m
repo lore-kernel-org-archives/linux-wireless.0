@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:42008 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763481AbYBCOvu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 09:51:50 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1586229fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Feb 2008 06:51:49 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/19] rt2x00: Add per-interface structure
-Date: Sun, 3 Feb 2008 15:49:59 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200802031541.52167.IvDoorn@gmail.com>
-In-Reply-To: <200802031541.52167.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200802031549.59280.IvDoorn@gmail.com> (sfid-20080203_145152_487057_D727E6E5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:38265 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1764149AbYBZUs3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 15:48:29 -0500
+Date: Tue, 26 Feb 2008 21:36:42 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: [PATCH 08/13 v2] o11s: other changes in mac80211 for mesh
+ interface support
+Message-ID: <20080226213642.6af22561@morte> (sfid-20080226_204853_735138_7631B18C)
+In-Reply-To: <1203974113.6929.93.camel@localhost>
+References: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com>
+	<20080223074133.32a4609c@morte>
+	<1203974113.6929.93.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rework the interface handling. Delete the interface structure
-and replace it with a per-interface structure. This changes the
-way rt2x00 handles the active interface drastically.
+On Mon, 25 Feb 2008 13:15:13 -0800
+Luis Carlos Cobo <luisca@cozybit.com> wrote:
 
-Copy ieee80211_bss_conf to the this rt2x00_intf structure during
-the bss_info_changed() callback function. This will allow us to
-reference it later, and removes the requirement for the device flag
-SHORT_PREAMBLE flag which is interface specific.
+> > >  		pf <<= RC_PID_ARITH_SHIFT;
+> > > +		sta->fail_avg = ((pf + (spinfo->last_pf << 3)) / 9)
+> > > +					>> RC_PID_ARITH_SHIFT;
+> > >  	}
+> > 
+> > What do you need fail_avg for? Please note that we have better estimates of
+> > the frame failure trends (e.g., err_avg). What these magic values are?
+> 
+> It's supposed to be an estimation of the probability of a frame
+> transmission failure. The magic numbers just express the formula
+> 
+> fail_avg = (8 * old_fail_avg + 1 * fail_avg) / 9
+> 
+> a simple smoothing, there is nothing special to the exact numbers.
+> 
+> If you think err_avg is a good candidate (is it also 0-100?) I'd be
+> happy to use that instead.
 
-Drivers receive the option to give the maximum number of virtual
-interfaces the device can handle. Virtual interface support:
-rt2400pci: 1 sta or 1 ap, * monitor interfaces
-rt2500pci: 1 sta or 1 ap, * monitor interfaces
-rt2500usb: 1 sta or 1 ap, * monitor interfaces
-rt61pci: 1 sta or 4 ap, * monitor interfaces
-rt73usb: 1 sta or 4 ap, * monitor interfaces
+In short: no, it's not 0-100. And probably it's not what you expect it to
+be. But you may consider to use it.
 
-At the moment none of the drivers support AP and STA interfaces
-simultaneously, this is a hardware limitation so future support
-will be very unlikely.
+Boring explanation: in the algorithm, we define the error(T), which is a
+function of time T (jiffies in the code), as the difference between the
+failed frames rate f (pf) and a given value we use to call "target", t
+(target_pf), at some time T.
 
-Each interface structure receives its dedicated beacon entry,
-with this we can easily work with beaconing while multiple master
-mode interfaces are currently active.
+Currently, t can be set through debugfs only, but it's meant to be tunable
+by iw (the mac80211-ish replacement for wireless-tools) in a near future.
+Other parameters will be tunable, such as s (>> smoothing_shift), which
+stands for "smoothing".
 
-The configuration handlers for the MAC, BSSID and type are
-often called together since they all belong to the interface
-configuration. Merge the 3 configuration calls and cleanup
-the API between rt2x00lib and the drivers. While we are cleaning
-up the interface configuration anyway, we might as well clean up
-the configuration handler as well.
+Hence, err_avg is an exponential moving average of error(T), such that:
+	err_avg = error(T - 1) / s + ... + error(T - n) / (s * n).
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
+Now, I'm not sure about what you need for mesh networks, but from this
+algorithm you can quickly and cheaply get a proportional, integral or
+derivative error ("error" as in difference between the failed frame rate and
+the allowance for packet loss) or even get them all. The first one is just
+linearly based upon the current behaviour, the second is about weighed
+behaviour in the past, and the third emphasizes the current trend. We
+actually use them all to adjust rates we use in "regular" 802.11 networks,
+so I think they may suit your needs as well. If they don't, I'm fine with
+this fail_avg thing you introduced.
 
-Patch size 77k, located on server
-http://kernel.org//pub/linux/kernel/people/ivd/rt2x00-2.1.0/0008-rt2x00-Add-per-interface-structure.patch
 
- drivers/net/wireless/rt2x00/rt2400pci.c    |   84 ++++++------
- drivers/net/wireless/rt2x00/rt2500pci.c    |   98 +++++++------
- drivers/net/wireless/rt2x00/rt2500usb.c    |  207 ++++++++++++++++------------
- drivers/net/wireless/rt2x00/rt2500usb.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h       |  113 +++++++++++----
- drivers/net/wireless/rt2x00/rt2x00config.c |  119 ++++++++++-------
- drivers/net/wireless/rt2x00/rt2x00dev.c    |  154 +++++++++++++++------
- drivers/net/wireless/rt2x00/rt2x00lib.h    |   10 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c    |  152 ++++++++++++++-------
- drivers/net/wireless/rt2x00/rt2x00pci.c    |   32 +++--
- drivers/net/wireless/rt2x00/rt2x00queue.h  |    3 -
- drivers/net/wireless/rt2x00/rt61pci.c      |  169 +++++++++++++----------
- drivers/net/wireless/rt2x00/rt61pci.h      |   18 ++-
- drivers/net/wireless/rt2x00/rt73usb.c      |  179 +++++++++++++-----------
- drivers/net/wireless/rt2x00/rt73usb.h      |   17 ++-
- 15 files changed, 826 insertions(+), 530 deletions(-)
+--
+Ciao
+Stefano
