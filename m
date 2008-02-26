@@ -1,30 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.int-evry.fr ([157.159.10.71]:44569 "EHLO
-	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbYBYR40 convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:37503 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759933AbYBZTZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 12:56:26 -0500
-From: Florian Fainelli <florian.fainelli@telecomint.eu>
-To: Chr <chunkeey@web.de>
-Subject: Re: p54usb with Inventel UR054g dongle
-Date: Mon, 25 Feb 2008 18:56:28 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200802251731.22264.florian.fainelli@telecomint.eu> <200802251841.49431.chunkeey@web.de>
-In-Reply-To: <200802251841.49431.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200802251856.28661.florian.fainelli@telecomint.eu> (sfid-20080225_175632_263920_221150DB)
+	Tue, 26 Feb 2008 14:25:17 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1461803rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 11:25:13 -0800 (PST)
+Subject: Re: [PATCH 06/10] mac80211: RCU-ify STA info structure access
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1204014238.13162.201.camel@johannes.berg>
+References: <20080225152740.360393000@sipsolutions.net>
+	 <20080225153007.340533000@sipsolutions.net>
+	 <1203985337.6929.120.camel@localhost>
+	 (sfid-20080226_002043_615849_4CE09F20)  <1204014238.13162.201.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 26 Feb 2008 11:26:53 -0800
+Message-Id: <1204054013.6947.18.camel@localhost> (sfid-20080226_192521_843411_4368D4BB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le lundi 25 f=E9vrier 2008, Chr a =E9crit=A0:
-> Please, could you make a "dump" of the eeprom? Because these "code" v=
-alues
-> are invalid...
+On Tue, 2008-02-26 at 09:23 +0100, Johannes Berg wrote:
+> I put a del_timer() into sta_info_unlink() and a del_timer_sync() into
+> sta_info_destroy(). That should be enough afaict.
 
-How can I easily dump the eeprom ? Thanks.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That is for the plink_timer in struct sta_info, if I understand
+correctly. I am talking about the per mesh-path timer (the one in struct
+mesh_path). 
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
