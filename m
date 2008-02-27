@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440AbYBMMLi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2008 07:11:38 -0500
-Subject: Re: [PATCH v2] mac80211: give burst time in txop rather than
-	0.1msec units
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200802122142.10325.mb@bu3sch.de>
-References: <1202658578.11481.4.camel@johannes.berg>
-	 <200802122021.21211.mb@bu3sch.de>
-	 <1ba2fa240802121157t370c8418v8a24484596ce5bcd@mail.gmail.com>
-	 <200802122142.10325.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QGujRpmSjfgSNn3AFMeI"
-Date: Wed, 13 Feb 2008 13:10:25 +0100
-Message-Id: <1202904625.8931.37.camel@johannes.berg> (sfid-20080213_121145_475167_2ABA80F6)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2991 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752005AbYB0Rdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 12:33:39 -0500
+Date: Wed, 27 Feb 2008 12:25:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Chris Clayton <chris2553@googlemail.com>, ivdoorn@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Message-ID: <20080227172546.GD3078@tuxdriver.com> (sfid-20080227_173343_056443_5A38BA00)
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com> <200802252104.32416.chris2553@googlemail.com> <a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com> <200802261911.39577.chris2553@googlemail.com> <20080226194838.GD3013@tuxdriver.com> <c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com> <20080226223814.4ef2b435@morte> <c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com> <20080227082642.218b8014@morte> <20080227155111.GB3078@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080227155111.GB3078@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Feb 27, 2008 at 10:51:11AM -0500, John W. Linville wrote:
+> On Wed, Feb 27, 2008 at 08:26:42AM +0100, Stefano Brivio wrote:
+> > On Tue, 26 Feb 2008 22:36:19 +0000
+> > "Chris Clayton" <chris2553@googlemail.com> wrote:
+> > 
+> > > 27 135466 rate_change 2 55
+> > > 28 135717 tx_rate 2 55
+> > > 29 135717 tx_status 0 0
+> > > 30 135717 pf_sample 0 3584 1965 0
+> > > 31 135717 rate_change 129 -541505508
+> > > 32 135968 tx_rate 11 540
+> > 
+> > Known and fixed. The fix isn't in 2.6.25-rc3 yet, though.
+> > 
+> > Fix:
+> > commit 32720eae675d08990e97bffbf71a31382599cc8a
+> > Author: Stefano Brivio <stefano.brivio@polimi.it>
+> > Date:   Tue Jan 29 20:29:16 2008 +0100
+> > 
+> >     rc80211-pid: fix rate adjustment
+> 
+> And it currently isn't queued for 2.6.25 at all.
+> 
+> Chris, can you cherry-pick this from the wireless-2.6.26 tree and
+> give it a test on your 2.6.25-rc3 tree?  If it resolves a problem
+> then I'll queue it to Dave for 2.6.25 (which will probably provoke
+> a net-2.6.26 and wireless-2.6.26 rebase).
 
---=-QGujRpmSjfgSNn3AFMeI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That might be easier said than done.  It looks like that patch depends
+on the big cfg80211 API change queued for 2.6.26.
 
+Stefano offered to rebase that on 2.6.25.  Stefano, could you post
+that as part of this thread?
 
-> > > > > > +  * FIXME: The default values in the spec (IEEE 802.11
-> > > > > > +  *        7.3.2.19 Table 37) are 47, 94, 0, 0, why use
-> > >
-> > > Does somebody know the correct place where these values are in
-> > > the specs? Section 7.3.2.19 is about "Supported channels IE".
-> > >
-> > >
-> > > > > > +  *        47, 94, 63, 0 here? Also, the default AIFS
-> > > > > > +  *        values (second parameter) are 2, 2, 3, 7...
-> > > > > > +  */
-> > >
-> > >
-> >  7.3.2.29 EDCA Parameter Set element
+Thanks,
 
-Sorry, typo, I actually added the correct reference to the mac80211
-header file :)
-
-johannes
-
---=-QGujRpmSjfgSNn3AFMeI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR7LeL6Vg1VMiehFYAQKWBA//fI/PyaB6ASWZIHvIe4b3ITxIrjDqefK7
-MBqgAlCn8e9bxvr/79gJkNaymub/tQkQtF8X1Id/wJ5SKOwQTKm8TtgGLt4GzMdr
-7o3DAufJyWHgxe/HA01vIPRps6pAX2iUdovn9+6Eyjpy4Y6La2qSKqB7+lggcv7x
-Tfwv7z+P7S2hsR/YNxiyFYbyQCHbICdqqs8sZJQN7RHNhGFu1wYh39R3SEeYk5lJ
-iiw3oBT7WTv/AJ/S8CYqsDnlK7t+pGOCnn9P/AKtJWcGAWZ9FJ120H4iQz8sx60q
-3FWPI8Kccs+IeRRraKI+C1O9rWzHPNwtlXfhPY9MtZFnreoMKH5aykQkKKZ7D4qx
-JCeIPUifzKNpJNLgejQP7spuXfKw35V8jNH63grn1z0Qw3bBk3dR84IVYi44HO5h
-MxsmewMKA/kfJ7KEJT3AAHwlVIX/tu2hYBIuv47oWuKUQWA7CbVRrh9NOlIgRUeA
-9RBvOvUTsWHjpcsSVQjU0/E+PjFv0BqhBH6yocGgBPOsgrDHETc1WmkxbMmkOxDA
-wMPiVr9vkU2x3B/WOsrA/bp10EvlAQ6ZAr9WiOwR+zU1L7VmJPNxOUdmsfSWFC8p
-AdlZn63QKwHn3Imz087im1G4qMyZmRtJw0F28t7AxaM1YPP+wPnT0fM/9IqNhs1F
-JAkv1u3AnRk=
-=l7o3
------END PGP SIGNATURE-----
-
---=-QGujRpmSjfgSNn3AFMeI--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
