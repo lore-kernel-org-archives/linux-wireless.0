@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:53556 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756490AbYBLHTm convert rfc822-to-8bit (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.236]:33890 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752556AbYB0Dvs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 02:19:42 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so4025086fga.17
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2008 23:19:41 -0800 (PST)
-Message-ID: <47B14882.9070703@gmail.com> (sfid-20080212_071945_541009_AB19D470)
-Date: Tue, 12 Feb 2008 09:19:30 +0200
-From: =?UTF-8?B?RWRkeSBQZXRyaciZb3I=?= <eddy.petrisor@gmail.com>
+	Tue, 26 Feb 2008 22:51:48 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so3807511wra.23
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 19:51:47 -0800 (PST)
+Message-ID: <43e72e890802261951w17484becj34d0c469100e21d2@mail.gmail.com> (sfid-20080227_035151_196151_758F2F75)
+Date: Tue, 26 Feb 2008 22:51:47 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Thomas Novin" <thnov@xyz.pp.se>
+Subject: Re: 'make unload' fails if you run Ubuntu Hardy
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1203885279.7537.1.camel@pc-thnov-ubuntu>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: weird issues with b43 - and an oops
-References: <47B02CBB.1060406@gmail.com> <200802111520.36105.mb@bu3sch.de> <47B0D5BD.5040109@gmail.com>
-In-Reply-To: <47B0D5BD.5040109@gmail.com>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <1203885279.7537.1.camel@pc-thnov-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eddy Petri=C8=99or wrote:
-> Michael Buesch wrote:
->>
->> Do this.
->=20
-> Already did, as noted in the initial mail, thanks.
->=20
->>> Feb 11 03:32:12 bounty dhclient: wmaster0: unknown hardware address=
-=20
->>> type 801
->>> Feb 11 03:32:12 bounty kernel: input: b43-phy0 as /class/input/inpu=
-t17
->>> Feb 11 03:32:12 bounty kernel: WARNING: at drivers/ssb/main.c:883=20
->>> ssb_tmslow_reject_bitmask()
->>
->> And use the b43 driver from wireless-2.6
->=20
-> I assume I must use the 'everything' branch, right?
-> /me is still waiting for 'clone' to finish
+On Sun, Feb 24, 2008 at 3:34 PM, Thomas Novin <thnov@xyz.pp.se> wrote:
+> Hello
+>
+>  I have just installed the latest compat-wireless system and 'make
+>  unload' failed for me.
+>
+>  thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo make unload
+>  Unloading iwl3945...
+>  Unloading mac80211...
+>  Unloading cfg80211...
+>  FATAL: Module cfg80211 is in use.
+>  make: *** [unload] Error 1
+>  thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ lsmod | grep iwl
+>  iwlwifi_mac80211      220004  0
+>  cfg80211               15112  1 iwlwifi_mac80211
+>  thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo modprobe -r
+>  iwlwifi_mac80211
+>  thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$ sudo make unload
+>  thnov@pc-thnov-ubuntu:~/src/compat-wireless-2.6$
+>
+>  So by manually unloading iwlwifi_mac80211 I managed to get past this.
 
-Thanks, this worked.
+Got it, fixed and pushed.
 
-> (I hope this kernel doesn't have suspend-to-ram and suspend-to-disk=20
-> issues, I just got them back with 2.6.24)
+Thanks,
 
-Sigh, suspend to disk doesn't work; I'll try to see if, indeed, in=20
-2.6.24 it didn't worked. Not sure if I have the time for a bisect.
-I'll return with more info, if I will have any news, if not, assume I=20
-either fixed this or lost interest in solving it :-/ .
-
---=20
-Regards,
-EddyP
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-"Imagination is more important than knowledge" A.Einstein
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
