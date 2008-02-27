@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60316 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758371AbYBYVbB (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:44054 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbYB0DXH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 16:31:01 -0500
-Subject: Re: multiple scan request handling (was: <empty>)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1203974559.22949.19.camel@localhost.localdomain> (sfid-20080225_212448_530739_B0BC8ACF)
-References: <1203974559.22949.19.camel@localhost.localdomain>
-	 (sfid-20080225_212448_530739_B0BC8ACF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4LE5EHgU+p2ekkmU/Cei"
-Date: Mon, 25 Feb 2008 22:30:52 +0100
-Message-Id: <1203975052.13162.179.camel@johannes.berg> (sfid-20080225_213132_180831_D237C07C)
-Mime-Version: 1.0
+	Tue, 26 Feb 2008 22:23:07 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3892980pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 19:23:07 -0800 (PST)
+Message-ID: <43e72e890802261923g528f4006ofd665edbba335d99@mail.gmail.com> (sfid-20080227_032314_972759_347BBD80)
+Date: Tue, 26 Feb 2008 22:23:06 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Fixes for PCI-E cards
+Cc: "Bob Copeland" <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	bruno@thinktube.com, jirislaby@gmail.com
+In-Reply-To: <40f31dec0802241058h5b37a471s5092dd370a4f2a48@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080224042851.GE4426@makis.domain.invalid>
+	 <40f31dec0802232045v2902d76dg8ee1c4a4685862fe@mail.gmail.com>
+	 <20080224175933.GA4360@hash.localnet>
+	 <40f31dec0802241058h5b37a471s5092dd370a4f2a48@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Feb 24, 2008 at 1:58 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2008/2/24, Bob Copeland <me@bobcopeland.com>:
+>
+>
+> > On Sun, Feb 24, 2008 at 06:45:33AM +0200, Nick Kossifidis wrote:
+>  >  > >  +       /* Identify PCI-E cards */
+>  >  > >  +       if((srev >= AR5K_SREV_VER_AR2424 && srev <= AR5K_SREV_VER_AR5424) ||
+>  >  > >  +       srev >= AR5K_SREV_VER_AR5416) {
+>  >  > >  +               ah->ah_pcie = true;
 
---=-4LE5EHgU+p2ekkmU/Cei
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+struct pci_dev now has member,  "is_pcie" which could be used here I
+think instead. No need to add to ath5k_hw the ah_pcie then.
 
-
-> In the ideal case, the driver would add each separate scan request to a
-> queue, execute each request in turn (respecting each requests options
-> like active/passive, dwell time, SSID/BSSID, channel list, etc).  Each
-> request would trigger a corresponding scan completion event. =20
-
-I'm not sure that each separate scan request should be added, if they
-just differ a bit wrt. dwell time, especially if the second requested
-dwell time is larger, I think they shouldn't necessarily be batched.
-
-> Perhaps
-> multiple identical scan requests (ie, a few 'iwlist <iface> scan') could
-> be batched together for efficiency. =20
-
-Yeah at least when they're identical.
-
-> With nl80211/cfg80211, perhaps each
-> individual scan request would have a UID to match it up with a specific
-> scan response (but the response would still be broadcast too).
-
-That would certainly be doable although it seems that including the scan
-config in the response might be better?
-
-It seems reasonable to require some sort of queuing especially when it
-is possible that, like you experienced, automatically triggered scans
-don't allow manual ones to go through.
-
-Maybe that should ultimately be done at the cfg80211 level already?
-
-johannes
-
---=-4LE5EHgU+p2ekkmU/Cei
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Mzi6Vg1VMiehFYAQKZYhAAhtRUOFcRK6SGvtNwcFDG1pA2id7207ts
-0nu4fjpH45zmoMPwOBsTn5yki9RfiAtFwFRBSDYdbRFTV21EW/bbjJZ3tjDEw2jz
-RbUjkPGD6V5vBkxASZIJXTjbsvapzfF8iac1weT4EHtvtGfvL8rQDuNYl2UWwy97
-G+Hden1dDRRSmsUjeCc6HVIb6jqAycxf6VvH0/VTF0R7LCd4jdcJtvg4Uw0Qz/2z
-u3/kSTGCKSGQxD9P+IfreuU3q4pCDdulrGalDH1qQMa/dudOBzKMKhGMt2R9cZCO
-MdHOuFV2RKaliVSAjb6avrXkBfJ9vtXDi3HUziMx3W0zF32npEL/UGD+IhP+4lkp
-PCqlfiokPuioTBv8xG+42oCdCc8Fi00uG55+CbIYym+d6eTGIuQ16Vjxj1CY+Jff
-k7pbLTDvseElAsyw6F11wg0ZR8drNJVtWKDhtgZ95vjpwGE7qejh6y7MwLXD5ODR
-Nnu11N5lGgoRg+2y2t6wCmfMiZdAbjLZaKBXVI3lU/kiq/cOBwKH5PZSUCi7wc/3
-1UdNCixf/n12yyCmJvPXpGAtA85Nin4qO4HNJixqe3RiIzmG2GL9UiW4z4wIbQP9
-XWJtUIRj5SNXeT5H1rSMIvDikbcHaDiaTaFdHcJ2Lk1MWrODcvqKgCgnwBg/KRvi
-yauAmvHH70M=
-=TOtR
------END PGP SIGNATURE-----
-
---=-4LE5EHgU+p2ekkmU/Cei--
-
+  Luis
