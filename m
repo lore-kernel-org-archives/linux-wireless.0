@@ -1,95 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:44592 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbYBPRQF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Feb 2008 12:16:05 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Fix support for PCI devices behind a SSB->PCI bridge
-Date: Sat, 16 Feb 2008 18:13:36 +0100
-Cc: linux-wireless@vger.kernel.org
+Received: from madara.hpl.hp.com ([192.6.19.124]:55628 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751843AbYB0SFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 13:05:55 -0500
+Date: Wed, 27 Feb 2008 09:46:20 -0800
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux/wireless.h - missing section
+Message-ID: <20080227174619.GA25139@bougret.hpl.hp.com> (sfid-20080227_180609_299257_D50FC308)
+Reply-To: jt@hpl.hp.com
+References: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802161813.36879.mb@bu3sch.de> (sfid-20080216_171610_935710_AA3647BF)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must pin all resources and make sure the PCI subsystem
-won't relocate us, as the addresses are hardwired into hardware.
+On Wed, Feb 27, 2008 at 07:40:07PM +0200, Tomas Winkler wrote:
+> Does anybody knows why this section is missing from in kernel linux/wireless.h
+> 
+> struct iw_range {
+> 
+> ......
+> 
+> 
+>         /* More power management stuff */
+>         __s32           min_pms;        /* Minimal PM saving */
+>         __s32           max_pms;        /* Maximal PM saving */
+>         __u16           pms_flags;      /* How to decode max/min PM saving */
+> 
+>         /* All available modulations for driver (hw may support less) */
+>         __s32           modul_capa;     /* IW_MODUL_* bit field */
+> 
+>         /* More bitrate stuff */
+>         __u32           bitrate_capa;   /* Types of bitrates supported */
+> };
+> 
+> Thanks
+> Tomas
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+	Because it was rejected by the kernel maitainers.
 
----
-
-Fix for 2.6.25.
-
-Index: linux-2.6.23.16/drivers/ssb/driver_pcicore.c
-===================================================================
---- linux-2.6.23.16.orig/drivers/ssb/driver_pcicore.c	2008-02-16 17:55:20.000000000 +0100
-+++ linux-2.6.23.16/drivers/ssb/driver_pcicore.c	2008-02-16 17:55:35.000000000 +0100
-@@ -66,6 +66,7 @@ int pcibios_plat_dev_init(struct pci_dev
- 			base = &ssb_pcicore_pcibus_iobase;
- 		else
- 			base = &ssb_pcicore_pcibus_membase;
-+		res->flags |= IORESOURCE_PCI_FIXED;
- 		if (res->end) {
- 			size = res->end - res->start + 1;
- 			if (*base & (size - 1))
-@@ -88,10 +89,12 @@ int pcibios_plat_dev_init(struct pci_dev
- 
- static void __init ssb_fixup_pcibridge(struct pci_dev *dev)
- {
-+	u8 lat;
-+
- 	if (dev->bus->number != 0 || PCI_SLOT(dev->devfn) != 0)
- 		return;
- 
--	ssb_printk(KERN_INFO "PCI: fixing up bridge\n");
-+	ssb_printk(KERN_INFO "PCI: Fixing up bridge %s\n", pci_name(dev));
- 
- 	/* Enable PCI bridge bus mastering and memory space */
- 	pci_set_master(dev);
-@@ -101,7 +104,10 @@ static void __init ssb_fixup_pcibridge(s
- 	pci_write_config_dword(dev, SSB_BAR1_CONTROL, 3);
- 
- 	/* Make sure our latency is high enough to handle the devices behind us */
--	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0xa8);
-+	lat = 168;
-+	ssb_printk(KERN_INFO "PCI: Fixing latency timer of device %s to %u\n",
-+		   pci_name(dev), lat);
-+	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, ssb_fixup_pcibridge);
- 
-@@ -279,14 +285,14 @@ static struct resource ssb_pcicore_mem_r
- 	.name	= "SSB PCIcore external memory",
- 	.start	= SSB_PCI_DMA,
- 	.end	= SSB_PCI_DMA + SSB_PCI_DMA_SZ - 1,
--	.flags	= IORESOURCE_MEM,
-+	.flags	= IORESOURCE_MEM | IORESOURCE_PCI_FIXED,
- };
- 
- static struct resource ssb_pcicore_io_resource = {
- 	.name	= "SSB PCIcore external I/O",
- 	.start	= 0x100,
- 	.end	= 0x7FF,
--	.flags	= IORESOURCE_IO,
-+	.flags	= IORESOURCE_IO | IORESOURCE_PCI_FIXED,
- };
- 
- static struct pci_controller ssb_pcicore_controller = {
-@@ -344,7 +350,8 @@ static void ssb_pcicore_init_hostmode(st
- 	/* Ok, ready to run, register it to the system.
- 	 * The following needs change, if we want to port hostmode
- 	 * to non-MIPS platform. */
--	set_io_port_base((unsigned long)ioremap_nocache(SSB_PCI_MEM, 0x04000000));
-+	ssb_pcicore_controller.io_map_base = (unsigned long)ioremap_nocache(SSB_PCI_MEM, 0x04000000);
-+	set_io_port_base(ssb_pcicore_controller.io_map_base);
- 	/* Give some time to the PCI controller to configure itself with the new
- 	 * values. Not waiting at this point causes crashes of the machine. */
- 	mdelay(10);
-
--- 
-Greetings Michael.
+	Jean
