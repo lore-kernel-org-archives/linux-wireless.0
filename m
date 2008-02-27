@@ -1,184 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39075 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756893AbYBAMJR (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55523 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755572AbYB0Ffy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:09:17 -0500
-Message-Id: <20080131185053.184012000@sipsolutions.net> (sfid-20080201_120925_947106_0729C34E)
-References: <20080131184819.103174000@sipsolutions.net>
-Date: Thu, 31 Jan 2008 19:48:23 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 4/8] mac80211: Use monitor configuration flags
-Mime-Version: 1.0
+	Wed, 27 Feb 2008 00:35:54 -0500
+Message-ID: <47C4F4B4.7030300@gmail.com> (sfid-20080227_053626_538241_5E241915)
+Date: Tue, 26 Feb 2008 22:27:16 -0700
+From: Larry Finger <Larry.Finger@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problems with RTL8187 USB device
+References: <47C49D21.1030905@lwfinger.net> <20080227010732.GB3066@tuxdriver.com>
+In-Reply-To: <20080227010732.GB3066@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+John W. Linville wrote:
+> On Tue, Feb 26, 2008 at 04:13:37PM -0700, Larry Finger wrote:
+>   
+>> After the BCM4311 that is built-in on my laptop failed, I bought a USB wi-fi device to use until I
+>> get my laptop fixed. Based on suggestions from the wireless mailing list, I bought one with an
+>> RTL8187 chip. Naturally, I am having problems getting it working.
+>>
+>> First of all, the device works with Windows - thus it is OK.
+>>
+>> The device is manufactured by "Level 1". The FCC ID is NDD9573160714 and it has the identifying code
+>> of WNC-0301USB07091001070-V5.
+>>
+>> The output of 'lsusb -v' for this device when run as root is
+>>
+>> Bus 001 Device 002: ID 0bda:8187 Realtek Semiconductor Corp.
+>>     
+>
+> This looks like it should be supported by the rtl8187 driver.
+>
+> <snip>
+>
+>   
+>>   iProduct                2 RTL8187B_WLAN_Adapter
+>>     
+>
+> <snip>
+>
+>   
+>>         bEndpointAddress     0x83  EP 3 IN
+>>     
+>
+> <snip>
+>
+> But these bits look like it is actually an rtl8187b, which is not
+> supported by the driver.  I didn't know that there where some 'b'
+> devices using the same USB ID as the non-b devices -- crappy vendor's
+> strike again.  I'm not sure what to do about that one.
+>
+> As for rtl8187b support in general, I've been looking at porting
+> support for those devices form the vendor-provided driver.  But the
+> patch is incomplete ATM -- hopefully soon, depending on events. :-(
+>
+> I'm sorry you are caught in the middle.  I'll try to get that b support
+> patch done soon -- hopefully we can get something working for you then.
+>
+>   
+Thanks for the info.
 
-Take advantage of the monitor configuration flags now provided by cfg80211.
+If I can give you any help with the patch, please let me know. In about
+another week, I will be forced to use Windows to access the Internet
+(Yuck!!).
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net> 
----
-
- net/mac80211/cfg.c             |   15 ++++++++++
- net/mac80211/ieee80211.c       |   56 ++++++++++++++++++++++++++++++-----------
- net/mac80211/ieee80211_i.h     |    3 ++
- net/mac80211/ieee80211_iface.c |    2 +
- 4 files changed, 60 insertions(+), 16 deletions(-)
-
---- everything.orig/net/mac80211/cfg.c	2008-01-31 15:46:10.825789821 +0100
-+++ everything/net/mac80211/cfg.c	2008-01-31 15:46:11.615800454 +0100
-@@ -38,6 +38,9 @@ static int ieee80211_add_iface(struct wi
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	enum ieee80211_if_types itype;
-+	struct net_device *dev;
-+	struct ieee80211_sub_if_data *sdata;
-+	int err;
- 
- 	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
- 		return -ENODEV;
-@@ -46,7 +49,13 @@ static int ieee80211_add_iface(struct wi
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
- 
--	return ieee80211_if_add(local->mdev, name, NULL, itype);
-+	err = ieee80211_if_add(local->mdev, name, &dev, itype);
-+	if (err || itype != IEEE80211_IF_TYPE_MNTR || !flags)
-+		return err;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	sdata->u.mntr_flags = *flags;
-+	return 0;
- }
- 
- static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
-@@ -99,6 +108,10 @@ static int ieee80211_change_iface(struct
- 	ieee80211_if_reinit(dev);
- 	ieee80211_if_set_type(dev, itype);
- 
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_MNTR || !flags)
-+		return 0;
-+
-+	sdata->u.mntr_flags = *flags;
- 	return 0;
- }
- 
---- everything.orig/net/mac80211/ieee80211.c	2008-01-31 15:46:06.365796278 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-01-31 15:46:11.615800454 +0100
-@@ -67,9 +67,19 @@ static void ieee80211_configure_filter(s
- 		new_flags |= FIF_ALLMULTI;
- 
- 	if (local->monitors)
--		new_flags |= FIF_CONTROL |
--			     FIF_OTHER_BSS |
--			     FIF_BCN_PRBRESP_PROMISC;
-+		new_flags |= FIF_BCN_PRBRESP_PROMISC;
-+
-+	if (local->fif_fcsfail)
-+		new_flags |= FIF_FCSFAIL;
-+
-+	if (local->fif_plcpfail)
-+		new_flags |= FIF_PLCPFAIL;
-+
-+	if (local->fif_control)
-+		new_flags |= FIF_CONTROL;
-+
-+	if (local->fif_other_bss)
-+		new_flags |= FIF_OTHER_BSS;
- 
- 	changed_flags = local->filter_flags ^ new_flags;
- 
-@@ -230,13 +240,21 @@ static int ieee80211_open(struct net_dev
- 	case IEEE80211_IF_TYPE_MNTR:
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
--		if (local->monitors == 1) {
--			netif_tx_lock_bh(local->mdev);
--			ieee80211_configure_filter(local);
--			netif_tx_unlock_bh(local->mdev);
--
-+		if (local->monitors == 1)
- 			local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
--		}
-+
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
-+			local->fif_fcsfail++;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
-+			local->fif_plcpfail++;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL)
-+			local->fif_control++;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
-+			local->fif_other_bss++;
-+
-+		netif_tx_lock_bh(local->mdev);
-+		ieee80211_configure_filter(local);
-+		netif_tx_unlock_bh(local->mdev);
- 		break;
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
-@@ -350,13 +368,21 @@ static int ieee80211_stop(struct net_dev
- 		break;
- 	case IEEE80211_IF_TYPE_MNTR:
- 		local->monitors--;
--		if (local->monitors == 0) {
--			netif_tx_lock_bh(local->mdev);
--			ieee80211_configure_filter(local);
--			netif_tx_unlock_bh(local->mdev);
--
-+		if (local->monitors == 0)
- 			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
--		}
-+
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
-+			local->fif_fcsfail--;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
-+			local->fif_plcpfail--;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL)
-+			local->fif_control--;
-+		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
-+			local->fif_other_bss--;
-+
-+		netif_tx_lock_bh(local->mdev);
-+		ieee80211_configure_filter(local);
-+		netif_tx_unlock_bh(local->mdev);
- 		break;
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
---- everything.orig/net/mac80211/ieee80211_i.h	2008-01-31 15:46:09.975794650 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-01-31 15:46:11.615800454 +0100
-@@ -345,6 +345,7 @@ struct ieee80211_sub_if_data {
- 		struct ieee80211_if_wds wds;
- 		struct ieee80211_if_vlan vlan;
- 		struct ieee80211_if_sta sta;
-+		u32 mntr_flags;
- 	} u;
- 	int channel_use;
- 	int channel_use_raw;
-@@ -425,6 +426,8 @@ struct ieee80211_local {
- 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
- 	int open_count;
- 	int monitors;
-+	/* number of interfaces with corresponding FIF_ flags */
-+	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss;
- 	unsigned int filter_flags; /* FIF_* */
- 	struct iw_statistics wstats;
- 	u8 wstats_flags;
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-01-31 15:45:56.075794649 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-01-31 15:46:11.615800454 +0100
-@@ -160,6 +160,8 @@ void ieee80211_if_set_type(struct net_de
- 	case IEEE80211_IF_TYPE_MNTR:
- 		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		dev->hard_start_xmit = ieee80211_monitor_start_xmit;
-+		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
-+				      MONITOR_FLAG_OTHER_BSS;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
-
--- 
+Larry
 
