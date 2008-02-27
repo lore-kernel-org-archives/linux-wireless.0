@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46387 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751521AbYBUGNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 01:13:02 -0500
-Subject: Re: hardware/firmware powersave help, Broadcom scheme
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	bruno randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1203520709.17534.68.camel@johannes.berg>
-References: <1203520709.17534.68.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 21 Feb 2008 14:12:25 +0800
-Message-Id: <1203574345.3099.64.camel@debian.sh.intel.com> (sfid-20080221_061310_991133_D61C5A66)
-Mime-Version: 1.0
+Received: from mu-out-0910.google.com ([209.85.134.190]:31822 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbYB0N7Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 08:59:24 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so4457820mue.5
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 05:59:21 -0800 (PST)
+Message-ID: <43e72e890802270559g408f75bdm62682f12bd40fa6c@mail.gmail.com> (sfid-20080227_135928_726623_604FFC01)
+Date: Wed, 27 Feb 2008 08:59:19 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: Re: Roaming issues.
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <004501c87946$e5f1f490$0b3ca8c0@gotws1589>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <004501c87946$e5f1f490$0b3ca8c0@gotws1589>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Feb 27, 2008 at 8:44 AM, Lars Ericsson <Lars_Ericsson@telia.com> wrote:
 
-On Wed, 2008-02-20 at 16:18 +0100, Johannes Berg wrote:
-> 
-> Broadcom hardware, on the other hand, has a slightly more complicated
-> scheme. All powersave transitions are registered by the firmware (!)
-> in
-> a hardware FIFO (really a ring buffer I think), the "power management
-> queue". I'm not entirely sure how entries are deleted again, but IIUC
-> they can only be deleted once there are no frames "in flight" for any
-> powersave station any more.
-> 
-> The atheros scheme seems to be implemented in mac80211, but I think we
-> might also want to implement the Broadcom scheme. This could be done
-> fully in the driver but that has a chance that the PS flags get out of
-> sync between the firmware, driver and mac80211. To fix this, we'd have
-> to export a new function to set/clear the PS flag (i.e. invoke
-> ap_sta_ps_start/ap_sta_ps_end) on driver request rather than on
-> received
-> frames.
-> 
-> Thoughts?
+>  AP deauthentication.
+>  =====================
+>  When any of the ieee80211_rx_mgmt_deauth() or ieee80211_rx_mgmt_disassoc()
+>  are executed, the mac layer takes two actions.
+>  1) Tells wpa_supplicant what had happened.
+>  2) Start reestabliching the connaction again.
+>
+>  The later action will stop or significantly delay the decisions/action taken
+>  by wpa_supplicant as a result of action 1. Normally the supplicant will
+>  start an AP scan.
+>  But the mac layer is busy with reestablishing the link and will not start
+>  any scan action.
 
-Hey, and there is also ipw firmware!
+Thanks for reviewing this, some comments below.
 
-As broadcom, the iwl4965AGN firmware is also aware of the powersave
-state for the station/stations (consider about the master mode). In
-stead of having a special "power management queue", the 4965 firmware
-still use the normal 4 QoS queues for frames destined to powersaved
-STAs. But these frames will be dropped by firmware eventually. In this
-case, mac80211 ieee80211_tx_status() will get these SKBs with a tx error
-state DST_STA_IN_POWERSAVE so that it can requeue them (to send them
-later when STA wakes up). Note, this scheme is to resolve the race
-condition you mentioned that in the small window the STA powersave state
-mismatches between mac80211 and firmware. After mac80211 receives the PS
-frame, it stops to Tx more frames to hardware.
+>  Timeout handling
+>  =================
+>  When any of the ieee80211_authenticate() or ieee80211_associate() function
+>  are executed.
+>  The mac silently set its state to IEEE80211_DISABLED and waits for the
+>  wpa_supplicant to timeout its current action.
 
-This scheme works well but we have one requirement for mac80211. That
-is, in the master mode, when the destined STA wakes up from powersave
-mode, mac80211 should not begin to Tx frames to hardware until the
-current h/w Tx queues are drained. Otherwise we can expect frames out of
-order issue happens (for example, some frames in h/w queues are requeued
-but others are left when mac80211 begins to Tx).
+This doesn't seem to account for pre-authentication, which should
+assist roaming. During pre-auth we'd authenticate with local APs even
+if we're not going to complete an assoc(), we'd leave the assoc() for
+a later time once the signal strength of the new AP is better. I'm not
+sure how wpa_supplicant handles with pre-authentication settings
+though or if it even supports it but the point here is we should be
+able to authenticate many times while we only have one assoc() pre
+STA.
 
-It's good that you look into mac80211 powersave now. We also have code
-that enables master mode PS poll and uAPSD based on an early version of
-mac80211. We will merge it to the latest mac80211 and submit but it
-takes some time. I can point you the patch if you are interested.
-
-Thanks,
--yi
-
+  Luis
