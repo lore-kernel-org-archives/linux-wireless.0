@@ -1,71 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36818 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758211AbYBFJtq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44907 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbYB0LPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 04:49:46 -0500
-Date: Wed, 6 Feb 2008 01:41:31 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Tino Keitel <tino.keitel@gmx.de>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: ath5k failure with 2.6.24-git14
-Message-Id: <20080206014131.9d489a34.akpm@linux-foundation.org> (sfid-20080206_094951_590144_F5799264)
-In-Reply-To: <20080205225746.GA4532@dose.home.local>
-References: <20080205225746.GA4532@dose.home.local>
+	Wed, 27 Feb 2008 06:15:33 -0500
+Subject: [PATCH] mac80211: fix sta_info mesh timer bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 27 Feb 2008 09:56:40 +0100
+Message-Id: <1204102600.3729.39.camel@johannes.berg> (sfid-20080227_111542_638951_1A09AE52)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I noticed a bug I introduced when mesh is enabled: sta_info_destroy()
+will end up calling cancel_timer() on a timer that has never been
+initialized because the timer is only initialized in mesh_plink_alloc(),
+not in sta_info_alloc(). This patch moves the initialization of all mesh
+related fields into sta_info_alloc(), adds a bit of sanity checking to
+the cfg80211 handlers and sta_info_insert() and makes mesh_plink_alloc()
+a static helper function that is only used from the mesh plink code.
 
-(cc linux-wireless)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/cfg.c        |   13 +++++++------
+ net/mac80211/mesh.h       |    2 --
+ net/mac80211/mesh_plink.c |   31 +++++--------------------------
+ net/mac80211/sta_info.c   |   33 +++++++++++++++++++++++++--------
+ 4 files changed, 37 insertions(+), 42 deletions(-)
 
-On Tue, 5 Feb 2008 23:57:46 +0100 Tino Keitel <tino.keitel@gmx.de> wrote:
+--- everything.orig/net/mac80211/cfg.c	2008-02-27 09:33:30.000000000 +0100
++++ everything/net/mac80211/cfg.c	2008-02-27 09:39:33.000000000 +0100
+@@ -17,8 +17,6 @@
+ #include "ieee80211_rate.h"
+ #include "mesh.h"
+ 
+-#define DEFAULT_RATES 0
+-
+ static enum ieee80211_if_types
+ nl80211_type_to_mac80211_type(enum nl80211_iftype type)
+ {
+@@ -660,10 +658,13 @@ static int ieee80211_add_station(struct 
+ 	} else
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	if (ieee80211_vif_is_mesh(&sdata->vif))
+-		sta = mesh_plink_alloc(sdata, mac, DEFAULT_RATES, GFP_KERNEL);
+-	else
+-		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
++	if (compare_ether_addr(mac, dev->dev_addr) == 0)
++		return -EINVAL;
++
++	if (is_multicast_ether_addr(mac))
++		return -EINVAL;
++
++	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
+ 	if (!sta)
+ 		return -ENOMEM;
+ 
+--- everything.orig/net/mac80211/mesh.h	2008-02-27 09:33:43.000000000 +0100
++++ everything/net/mac80211/mesh.h	2008-02-27 09:33:45.000000000 +0100
+@@ -232,8 +232,6 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie,
+ 			      struct net_device *dev);
+ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+-struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+-				  u8 *hw_addr, u64 rates, gfp_t gfp);
+ void mesh_plink_broken(struct sta_info *sta);
+ void mesh_plink_deactivate(struct sta_info *sta);
+ int mesh_plink_open(struct sta_info *sta);
+--- everything.orig/net/mac80211/sta_info.c	2008-02-27 09:34:33.000000000 +0100
++++ everything/net/mac80211/sta_info.c	2008-02-27 09:51:13.000000000 +0100
+@@ -31,13 +31,12 @@
+  * for faster lookup and a list for iteration. They are managed using
+  * RCU, i.e. access to the list and hash table is protected by RCU.
+  *
+- * Upon allocating a STA info structure with sta_info_alloc() or
+- * mesh_plink_alloc(), the caller owns that structure. It must then either
+- * destroy it using sta_info_destroy() (which is pretty useless) or insert
+- * it into the hash table using sta_info_insert() which demotes the reference
+- * from ownership to a regular RCU-protected reference; if the function
+- * is called without protection by an RCU critical section the reference
+- * is instantly invalidated.
++ * Upon allocating a STA info structure with sta_info_alloc(), the caller owns
++ * that structure. It must then either destroy it using sta_info_destroy()
++ * (which is pretty useless) or insert it into the hash table using
++ * sta_info_insert() which demotes the reference from ownership to a regular
++ * RCU-protected reference; if the function is called without protection by an
++ * RCU critical section the reference is instantly invalidated.
+  *
+  * Because there are debugfs entries for each station, and adding those
+  * must be able to sleep, it is also possible to "pin" a station entry,
+@@ -244,6 +243,12 @@ struct sta_info *sta_info_alloc(struct i
+ 	       wiphy_name(local->hw.wiphy), print_mac(mbuf, sta->addr));
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+ 
++#ifdef CONFIG_MAC80211_MESH
++	sta->plink_state = LISTEN;
++	spin_lock_init(&sta->plink_lock);
++	init_timer(&sta->plink_timer);
++#endif
++
+ 	return sta;
+ }
+ 
+@@ -254,7 +259,19 @@ int sta_info_insert(struct sta_info *sta
+ 	unsigned long flags;
+ 	DECLARE_MAC_BUF(mac);
+ 
+-	WARN_ON(!netif_running(sdata->dev));
++	/*
++	 * Can't be a WARN_ON because it can be triggered through a race:
++	 * something inserts a STA (on one CPU) without holding the RTNL
++	 * and another CPU turns off the net device.
++	 */
++	if (unlikely(!netif_running(sdata->dev)))
++		return -ENETDOWN;
++
++	if (WARN_ON(compare_ether_addr(sta->addr, sdata->dev->dev_addr) == 0))
++		return -EINVAL;
++
++	if (WARN_ON(is_multicast_ether_addr(sta->addr)))
++		return -EINVAL;
+ 
+ 	spin_lock_irqsave(&local->sta_lock, flags);
+ 	/* check if STA exists already */
+--- everything.orig/net/mac80211/mesh_plink.c	2008-02-27 09:35:20.000000000 +0100
++++ everything/net/mac80211/mesh_plink.c	2008-02-27 09:44:36.000000000 +0100
+@@ -88,40 +88,19 @@ static inline void mesh_plink_fsm_restar
+ 	sta->llid = sta->plid = sta->reason = sta->plink_retries = 0;
+ }
+ 
+-/**
+- * mesh_plink_alloc - allocate a new mesh peer link
+- *
+- * @sdata: local mesh interface
+- * @hw_addr: hardware address (ETH_ALEN length)
+- * @rates: rates the mesh peer supports
+- *
+- * The initial state of the new plink is set to LISTEN
+- *
+- * Returns: NULL on error.
+- */
+-struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+-				  u8 *hw_addr, u64 rates, gfp_t gfp)
++static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
++					 u8 *hw_addr, u64 rates)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
+-	if (compare_ether_addr(hw_addr, sdata->dev->dev_addr) == 0)
+-		/* never add ourselves as neighbours */
+-		return NULL;
+-
+-	if (is_multicast_ether_addr(hw_addr))
+-		return NULL;
+-
+ 	if (local->num_sta >= MESH_MAX_PLINKS)
+ 		return NULL;
+ 
+-	sta = sta_info_alloc(sdata, hw_addr, gfp);
++	sta = sta_info_alloc(sdata, hw_addr, GFP_ATOMIC);
+ 	if (!sta)
+ 		return NULL;
+ 
+-	sta->plink_state = LISTEN;
+-	spin_lock_init(&sta->plink_lock);
+-	init_timer(&sta->plink_timer);
+ 	sta->flags |= WLAN_STA_AUTHORIZED;
+ 	sta->supp_rates[local->hw.conf.channel->band] = rates;
+ 
+@@ -249,7 +228,7 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ 
+ 	sta = sta_info_get(local, hw_addr);
+ 	if (!sta) {
+-		sta = mesh_plink_alloc(sdata, hw_addr, rates, GFP_ATOMIC);
++		sta = mesh_plink_alloc(sdata, hw_addr, rates);
+ 		if (!sta) {
+ 			rcu_read_unlock();
+ 			return;
+@@ -518,7 +497,7 @@ void mesh_rx_plink_frame(struct net_devi
+ 		}
+ 
+ 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
+-		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, GFP_ATOMIC);
++		sta = mesh_plink_alloc(sdata, mgmt->sa, rates);
+ 		if (!sta) {
+ 			mpl_dbg("Mesh plink error: plink table full\n");
+ 			rcu_read_unlock();
 
-> Hi,
-> 
-> I tried the current git (9ef9dc69d4167276c04590d67ee55de8380bc1ad) and
-> got the following error message from ath5k:
-> 
-> ath5k_pci 0000:02:00.0: registered as 'phy0'
-> ath5k phy0: failed to resume the MAC Chip
-> ath5k_pci: probe of 0000:02:00.0 failed with error -5
-> 
-> Here is the lspci -vnn output:
-> 
-> 02:00.0 Ethernet controller [0200]: Atheros Communications, Inc.
-> AR5006EG 802.11 b/g Wireless PCI Express Adapter [168c:001c] (rev 01)
-> 	Subsystem: Apple Computer Inc. Unknown device [106b:0086]
-> 	Flags: fast devsel, IRQ 17
-> 	Memory at 90100000 (64-bit, non-prefetchable) [disabled]
-> 	[size=64K]
-> 	Capabilities: [40] Power Management version 2
-> 	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
-> 	Queue=0/0 Enable-
-> 	Capabilities: [60] Express Legacy Endpoint, MSI 00
-> 	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-> 	Capabilities: [100] Advanced Error Reporting <?>
-> 	Capabilities: [140] Virtual Channel <?>
-> 	Kernel modules: ath5k
-> 
-> The same device works with madwifi:
-> 
-> ath_rate_sample: 1.2 (svn r3339)
-> MadWifi: ath_attach: Switching per-packet transmit power control off
-> wifi0: 11a rates: 6Mbps 9Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: 11b rates: 1Mbps 2Mbps 5.5Mbps 11Mbps
-> wifi0: 11g rates: 1Mbps 2Mbps 5.5Mbps 11Mbps 6Mbps 9Mbps 12Mbps 18Mbps
-> 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: turboG rates: 6Mbps 12Mbps 18Mbps 24Mbps 36Mbps 48Mbps 54Mbps
-> wifi0: H/W encryption support: WEP AES AES_CCM TKIP
-> wifi0: ath_announce: Use hw queue 1 for WME_AC_BE traffic
-> wifi0: ath_announce: Use hw queue 0 for WME_AC_BK traffic
-> wifi0: ath_announce: Use hw queue 2 for WME_AC_VI traffic
-> wifi0: ath_announce: Use hw queue 3 for WME_AC_VO traffic
-> wifi0: ath_announce: Use hw queue 8 for CAB traffic
-> wifi0: ath_announce: Use hw queue 9 for beacons
-> ath_pci: wifi0: Atheros 5424/2424: mem=0x90100000, irq=17
-> 
-> I can also set the interface up and use iwlist ath0 scan.
-> 
 
