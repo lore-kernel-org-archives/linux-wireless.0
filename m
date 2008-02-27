@@ -1,432 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40573 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043AbYBVOId (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 09:08:33 -0500
-Message-Id: <20080222111750.613304000@sipsolutions.net> (sfid-20080222_140849_607480_717D65FD)
-References: <20080222111644.183587000@sipsolutions.net>
-Date: Fri, 22 Feb 2008 12:16:50 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 6/8] mac80211: split sta_info_add
+Received: from mx1.redhat.com ([66.187.233.31]:43696 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756959AbYB0Tjq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 14:39:46 -0500
+Subject: [RFC PATCH] ipw2200: queue direct scans
+From: Dan Williams <dcbw@redhat.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: ipw2100-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Wed, 27 Feb 2008 14:37:18 -0500
+Message-Id: <1204141038.3007.5.camel@localhost.localdomain> (sfid-20080227_193953_630552_747425AA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_info_add() has two functions: allocating a station info
-structure and inserting it into the hash table/list. Splitting
-these two functions allows allocating with GFP_KERNEL in many
-places instead of GFP_ATOMIC which is now required by the RCU
-protection. Additionally, in many places RCU protection is now
-no longer needed at all because between sta_info_alloc() and
-sta_info_insert() the caller owns the structure.
+When another scan is in progress, a direct scan gets dropped on the
+floor.  However, that direct scan is usually the scan that's really
+needed by userspace, and gets stomped on by all the broadcast scans the
+ipw2200 driver issues internally.  Make sure the direct scan happens
+eventually, and as a bonus ensure that the passive scan worker is
+cleaned up when appropriate.
 
-This fixes a few race conditions with setting initial flags
-and similar, but not all (see comments in ieee80211_sta.c and
-cfg.c).
+The change of request_passive_scan form a struct work to struct
+delayed_work is only to make the set_wx_scan() code a bit simpler, it's
+still only used with a delay of 0 to match previous behavior.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c           |   38 ++++++++++++++++-------
- net/mac80211/ieee80211.c     |   18 ++++++-----
- net/mac80211/ieee80211_sta.c |   44 ++++++++++++++++++++-------
- net/mac80211/sta_info.c      |   69 +++++++++++++++++++++++++++++--------------
- net/mac80211/sta_info.h      |   17 +++++++---
- 5 files changed, 129 insertions(+), 57 deletions(-)
+Comments?
 
---- everything.orig/net/mac80211/sta_info.c	2008-02-22 11:53:23.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-22 11:54:34.000000000 +0100
-@@ -29,12 +29,13 @@
-  * for faster lookup and a list for iteration. They are managed using
-  * RCU, i.e. access to the list and hash table is protected by RCU.
-  *
-- * STA info structures are always "alive" when they are added with
-- * @sta_info_add() [this may be changed in the future to allow allocating
-- * outside of a critical section!], they are then added to the hash
-- * table and list. Therefore, @sta_info_add() must also be RCU protected,
-- * also, the caller of @sta_info_add() cannot assume that it owns the
-- * structure.
-+ * Upon allocating a STA info structure with @sta_info_alloc(), the
-+ * caller owns that structure. It must then either destroy it using
-+ * @sta_info_destroy() (which is pretty useless) or insert it into
-+ * the hash table using @sta_info_insert() which demotes the reference
-+ * from ownership to a regular RCU-protected reference, if the function
-+ * is called without protection by an RCU critical section the reference
-+ * is instantly invalidated.
-  *
-  * Because there are debugfs entries for each station, and adding those
-  * must be able to sleep, it is also possible to "pin" a station entry,
-@@ -112,6 +113,10 @@ void sta_info_destroy(struct sta_info *s
- 	struct ieee80211_local *local = sta->local;
- 	struct sk_buff *skb;
- 	int i;
-+	DECLARE_MAC_BUF(mbuf);
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index a56d9fc..8a09ebc 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -1753,6 +1753,8 @@ static int ipw_radio_kill_sw(struct ipw_priv *priv, int disable_radio)
+ 
+ 		if (priv->workqueue) {
+ 			cancel_delayed_work(&priv->request_scan);
++			cancel_delayed_work(&priv->request_direct_scan);
++			cancel_delayed_work(&priv->request_passive_scan);
+ 			cancel_delayed_work(&priv->scan_event);
+ 		}
+ 		queue_work(priv->workqueue, &priv->down);
+@@ -2005,6 +2007,8 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ 		priv->status &= ~(STATUS_ASSOCIATED | STATUS_ASSOCIATING);
+ 		cancel_delayed_work(&priv->request_scan);
++		cancel_delayed_work(&priv->request_direct_scan);
++		cancel_delayed_work(&priv->request_passive_scan);
+ 		cancel_delayed_work(&priv->scan_event);
+ 		schedule_work(&priv->link_down);
+ 		queue_delayed_work(priv->workqueue, &priv->rf_kill, 2 * HZ);
+@@ -4712,6 +4716,12 @@ static void ipw_rx_notification(struct ipw_priv *priv,
+ 			priv->status &= ~STATUS_SCAN_FORCED;
+ #endif				/* CONFIG_IPW2200_MONITOR */
+ 
++			/* Do queued direct scans first */
++			if (priv->status & STATUS_DIRECT_SCAN_PENDING) {
++				queue_delayed_work(priv->workqueue,
++						   &priv->request_direct_scan, 0);
++			}
 +
-+	if (!sta)
-+		return;
+ 			if (!(priv->status & (STATUS_ASSOCIATED |
+ 					      STATUS_ASSOCIATING |
+ 					      STATUS_ROAMING |
+@@ -6279,7 +6289,7 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type)
+ 	mutex_lock(&priv->mutex);
  
- 	ieee80211_key_free(sta->key);
- 	sta->key = NULL;
-@@ -134,6 +139,11 @@ void sta_info_destroy(struct sta_info *s
- 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
- 	rate_control_put(sta->rate_ctrl);
+ 	if (priv->status & STATUS_SCANNING) {
+-		IPW_DEBUG_HC("Concurrent scan requested.  Ignoring.\n");
++		IPW_DEBUG_HC("Concurrent scan requested.  Queuing.\n");
+ 		priv->status |= STATUS_SCAN_PENDING;
+ 		goto done;
+ 	}
+@@ -6292,7 +6302,7 @@ static int ipw_request_scan_helper(struct ipw_priv *priv, int type)
+ 	}
  
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+	printk(KERN_DEBUG "%s: Destroyed STA %s\n",
-+	       wiphy_name(local->hw.wiphy), print_mac(mbuf, sta->addr));
-+#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
-+
- 	kfree(sta);
- }
- 
-@@ -146,18 +156,17 @@ static void sta_info_hash_add(struct iee
- 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->addr)], sta);
- }
- 
--struct sta_info *sta_info_add(struct ieee80211_sub_if_data *sdata,
--			      u8 *addr)
-+struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
-+				u8 *addr, gfp_t gfp)
+ 	if (priv->status & STATUS_RF_KILL_MASK) {
+-		IPW_DEBUG_HC("Aborting scan due to RF Kill activation\n");
++		IPW_DEBUG_HC("Queuing scan due to RF Kill activation\n");
+ 		priv->status |= STATUS_SCAN_PENDING;
+ 		goto done;
+ 	}
+@@ -6402,7 +6412,7 @@ done:
+ static void ipw_request_passive_scan(struct work_struct *work)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int i;
--	DECLARE_MAC_BUF(mac);
--	unsigned long flags;
-+	DECLARE_MAC_BUF(mbuf);
- 
--	sta = kzalloc(sizeof(*sta), GFP_ATOMIC);
-+	sta = kzalloc(sizeof(*sta), gfp);
- 	if (!sta)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	sta->local = local;
-@@ -165,11 +174,11 @@ struct sta_info *sta_info_add(struct iee
- 
- 	sta->rate_ctrl = rate_control_get(local->rate_ctrl);
- 	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
--						     GFP_ATOMIC);
-+						     gfp);
- 	if (!sta->rate_ctrl_priv) {
- 		rate_control_put(sta->rate_ctrl);
- 		kfree(sta);
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 	}
- 
- 	spin_lock_init(&sta->ampdu_mlme.ampdu_rx);
-@@ -196,11 +205,27 @@ struct sta_info *sta_info_add(struct iee
- 	}
- 	skb_queue_head_init(&sta->ps_tx_buf);
- 	skb_queue_head_init(&sta->tx_filtered);
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+	printk(KERN_DEBUG "%s: Allocated STA %s\n",
-+	       wiphy_name(local->hw.wiphy), print_mac(mbuf, sta->addr));
-+#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
-+
-+	return sta;
-+}
-+
-+int sta_info_insert(struct sta_info *sta)
-+{
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	unsigned long flags;
-+	DECLARE_MAC_BUF(mac);
-+
- 	spin_lock_irqsave(&local->sta_lock, flags);
- 	/* check if STA exists already */
--	if (__sta_info_find(local, addr)) {
-+	if (__sta_info_find(local, sta->addr)) {
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
--		return ERR_PTR(-EEXIST);
-+		return -EEXIST;
- 	}
- 	list_add(&sta->list, &local->sta_list);
- 	local->num_sta++;
-@@ -212,16 +237,16 @@ struct sta_info *sta_info_add(struct iee
- 			sdata = sdata->u.vlan.ap;
- 
- 		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
--				       STA_NOTIFY_ADD, addr);
-+				       STA_NOTIFY_ADD, sta->addr);
- 	}
- 
--	spin_unlock_irqrestore(&local->sta_lock, flags);
--
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--	printk(KERN_DEBUG "%s: Added STA %s\n",
--	       wiphy_name(local->hw.wiphy), print_mac(mac, addr));
-+	printk(KERN_DEBUG "%s: Inserted STA %s\n",
-+	       wiphy_name(local->hw.wiphy), print_mac(mac, sta->addr));
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
-+	spin_unlock_irqrestore(&local->sta_lock, flags);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/* debugfs entry adding might sleep, so schedule process
- 	 * context task for adding entry for STAs that do not yet
-@@ -229,7 +254,7 @@ struct sta_info *sta_info_add(struct iee
- 	queue_work(local->hw.workqueue, &local->sta_debugfs_add);
- #endif
- 
--	return sta;
-+	return 0;
+ 	struct ipw_priv *priv =
+-		container_of(work, struct ipw_priv, request_passive_scan);
++		container_of(work, struct ipw_priv, request_passive_scan.work);
+   	ipw_request_scan_helper(priv, IW_SCAN_TYPE_PASSIVE);
  }
  
- static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
---- everything.orig/net/mac80211/sta_info.h	2008-02-22 11:53:23.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-22 11:54:34.000000000 +0100
-@@ -248,12 +248,19 @@ struct sta_info {
-  */
- struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr);
- /*
-- * Add a new STA info, must be under RCU read lock
-- * because otherwise the returned reference isn't
-- * necessarily valid long enough.
-+ * Create a new STA info, caller owns returned structure
-+ * until sta_info_insert().
-  */
--struct sta_info *sta_info_add(struct ieee80211_sub_if_data *sdata,
--			      u8 *addr);
-+struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
-+				u8 *addr, gfp_t gfp);
-+/*
-+ * Insert STA info into hash table/list, returns zero or a
-+ * -EEXIST if (if the same MAC address is already present).
-+ *
-+ * Calling this without RCU protection makes the caller
-+ * relinquish its reference to @sta.
-+ */
-+int sta_info_insert(struct sta_info *sta);
- /*
-  * Unlink a STA info from the hash table/list.
-  * This can NULL the STA pointer if somebody else
---- everything.orig/net/mac80211/cfg.c	2008-02-22 11:53:23.000000000 +0100
-+++ everything/net/mac80211/cfg.c	2008-02-22 12:03:23.000000000 +0100
-@@ -533,6 +533,12 @@ static void sta_apply_parameters(struct 
- 	int i, j;
- 	struct ieee80211_supported_band *sband;
+@@ -6413,6 +6423,91 @@ static void ipw_request_scan(struct work_struct *work)
+ 	ipw_request_scan_helper(priv, IW_SCAN_TYPE_ACTIVE);
+ }
  
-+	/*
-+	 * FIXME: updating the flags is racy when this function is
-+	 *	  called from ieee80211_change_station(), this will
-+	 *	  be resolved in a future patch.
-+	 */
++static int ipw_request_direct_scan_helper(struct ipw_priv *priv)
++{
++	struct ipw_scan_request_ext scan;
++	int err = 0, scan_type;
 +
- 	if (params->station_flags & STATION_FLAG_CHANGED) {
- 		sta->flags &= ~WLAN_STA_AUTHORIZED;
- 		if (params->station_flags & STATION_FLAG_AUTHORIZED)
-@@ -547,6 +553,13 @@ static void sta_apply_parameters(struct 
- 			sta->flags |= WLAN_STA_WME;
- 	}
- 
-+	/*
-+	 * FIXME: updating the following information is racy when this
-+	 *	  function is called from ieee80211_change_station().
-+	 *	  However, all this information should be static so
-+	 *	  maybe we should just reject attemps to change it.
-+	 */
++	if (!(priv->status & STATUS_INIT) ||
++	    (priv->status & STATUS_EXIT_PENDING))
++		return 0;
 +
- 	if (params->aid) {
- 		sta->aid = params->aid;
- 		if (sta->aid > IEEE80211_MAX_AID)
-@@ -577,6 +590,7 @@ static int ieee80211_add_station(struct 
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata;
-+	int err;
- 
- 	/* Prevent a race with changing the rate control algorithm */
- 	if (!netif_running(dev))
-@@ -591,17 +605,9 @@ static int ieee80211_add_station(struct 
- 	} else
- 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	rcu_read_lock();
--
--	sta = sta_info_add(sdata, mac);
--	if (IS_ERR(sta)) {
--		rcu_read_unlock();
--		return PTR_ERR(sta);
--	}
--
--	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
--	    sdata->vif.type == IEEE80211_IF_TYPE_AP)
--		ieee80211_send_layer2_update(sta);
-+	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
-+	if (!sta)
-+		return -ENOMEM;
- 
- 	sta->flags = WLAN_STA_AUTH | WLAN_STA_ASSOC;
- 
-@@ -609,7 +615,15 @@ static int ieee80211_add_station(struct 
- 
- 	rate_control_rate_init(sta, local);
- 
--	rcu_read_unlock();
-+	err = sta_info_insert(sta);
-+	if (err) {
-+		sta_info_destroy(sta);
-+		return err;
++	mutex_lock(&priv->mutex);
++
++	if (priv->direct_scan_ssid_len == 0) {
++		IPW_DEBUG_HC("Direct scan requested but no SSID to scan for\n");
++		priv->status &= ~STATUS_DIRECT_SCAN_PENDING;
++		goto done;
 +	}
 +
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN ||
-+	    sdata->vif.type == IEEE80211_IF_TYPE_AP)
-+		ieee80211_send_layer2_update(sta);
++	if (priv->status & STATUS_RF_KILL_MASK) {
++		IPW_DEBUG_HC("Queuing scan due to RF kill activation\n");
++		priv->status |= STATUS_DIRECT_SCAN_PENDING;
++		goto done;
++	}
++
++	if (priv->status & STATUS_SCANNING) {
++		IPW_DEBUG_HC("Concurrent scan requested.  Queuing.\n");
++		priv->status |= STATUS_DIRECT_SCAN_PENDING;
++		goto done;
++	}
++
++	if (priv->status & STATUS_SCAN_ABORTING) {
++		IPW_DEBUG_HC("Scan request while abort pending.  Queuing.\n");
++		priv->status |= STATUS_DIRECT_SCAN_PENDING;
++		goto done;
++	}
++
++	IPW_DEBUG_HC("starting request direct scan!\n");
++
++	memset(&scan, 0, sizeof(scan));
++
++	if (priv->config & CFG_SPEED_SCAN)
++		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =
++		    cpu_to_le16(30);
++	else
++		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =
++		    cpu_to_le16(20);
++
++	scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN] =
++	    cpu_to_le16(20);
++	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] = cpu_to_le16(120);
++	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] = cpu_to_le16(20);
++
++	scan.full_scan_index = cpu_to_le32(ieee80211_get_scans(priv->ieee));
++
++	err = ipw_send_ssid(priv, priv->direct_scan_ssid,
++	                    priv->direct_scan_ssid_len);
++	if (err) {
++		IPW_DEBUG_HC("Attempt to send SSID command failed\n");
++		goto done;
++	}
++	scan_type = IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN;
++
++	ipw_add_scan_channels(priv, &scan, scan_type);
++
++	err = ipw_send_scan_request_ext(priv, &scan);
++	if (err) {
++		IPW_DEBUG_HC("Sending scan command failed: %08X\n", err);
++		goto done;
++	}
++
++	priv->status |= STATUS_SCANNING;
++	priv->status &= ~STATUS_DIRECT_SCAN_PENDING;
++	priv->direct_scan_ssid_len = 0;
++
++done:
++	mutex_unlock(&priv->mutex);
++	return err;
++}
++
++static void ipw_request_direct_scan(struct work_struct *work)
++{
++	struct ipw_priv *priv =
++		container_of(work, struct ipw_priv, request_direct_scan.work);
++  	ipw_request_direct_scan_helper(priv);
++}
++
+ static void ipw_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct ipw_priv *priv =
+@@ -9454,99 +9549,38 @@ static int ipw_wx_get_retry(struct net_device *dev,
+ 	return 0;
+ }
+ 
+-static int ipw_request_direct_scan(struct ipw_priv *priv, char *essid,
+-				   int essid_len)
+-{
+-	struct ipw_scan_request_ext scan;
+-	int err = 0, scan_type;
+-
+-	if (!(priv->status & STATUS_INIT) ||
+-	    (priv->status & STATUS_EXIT_PENDING))
+-		return 0;
+-
+-	mutex_lock(&priv->mutex);
+-
+-	if (priv->status & STATUS_RF_KILL_MASK) {
+-		IPW_DEBUG_HC("Aborting scan due to RF kill activation\n");
+-		priv->status |= STATUS_SCAN_PENDING;
+-		goto done;
+-	}
+-
+-	IPW_DEBUG_HC("starting request direct scan!\n");
+-
+-	if (priv->status & (STATUS_SCANNING | STATUS_SCAN_ABORTING)) {
+-		/* We should not sleep here; otherwise we will block most
+-		 * of the system (for instance, we hold rtnl_lock when we
+-		 * get here).
+-		 */
+-		err = -EAGAIN;
+-		goto done;
+-	}
+-	memset(&scan, 0, sizeof(scan));
+-
+-	if (priv->config & CFG_SPEED_SCAN)
+-		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =
+-		    cpu_to_le16(30);
+-	else
+-		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =
+-		    cpu_to_le16(20);
+-
+-	scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN] =
+-	    cpu_to_le16(20);
+-	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] = cpu_to_le16(120);
+-	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] = cpu_to_le16(20);
+-
+-	scan.full_scan_index = cpu_to_le32(ieee80211_get_scans(priv->ieee));
+-
+-	err = ipw_send_ssid(priv, essid, essid_len);
+-	if (err) {
+-		IPW_DEBUG_HC("Attempt to send SSID command failed\n");
+-		goto done;
+-	}
+-	scan_type = IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN;
+-
+-	ipw_add_scan_channels(priv, &scan, scan_type);
+-
+-	err = ipw_send_scan_request_ext(priv, &scan);
+-	if (err) {
+-		IPW_DEBUG_HC("Sending scan command failed: %08X\n", err);
+-		goto done;
+-	}
+-
+-	priv->status |= STATUS_SCANNING;
+-
+-      done:
+-	mutex_unlock(&priv->mutex);
+-	return err;
+-}
+-
+ static int ipw_wx_set_scan(struct net_device *dev,
+ 			   struct iw_request_info *info,
+ 			   union iwreq_data *wrqu, char *extra)
+ {
+ 	struct ipw_priv *priv = ieee80211_priv(dev);
+ 	struct iw_scan_req *req = (struct iw_scan_req *)extra;
++	struct delayed_work *work = NULL;
+ 
+ 	mutex_lock(&priv->mutex);
++
+ 	priv->user_requested_scan = 1;
+-	mutex_unlock(&priv->mutex);
+ 
+ 	if (wrqu->data.length == sizeof(struct iw_scan_req)) {
+ 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+-			ipw_request_direct_scan(priv, req->essid,
+-						req->essid_len);
+-			return 0;
+-		}
+-		if (req->scan_type == IW_SCAN_TYPE_PASSIVE) {
+-			queue_work(priv->workqueue,
+-				   &priv->request_passive_scan);
+-			return 0;
++			int len = min((int)req->essid_len,
++			              (int)sizeof(priv->direct_scan_ssid));
++			memcpy(priv->direct_scan_ssid, req->essid, len);
++			priv->direct_scan_ssid_len = len;
++			work = &priv->request_direct_scan;
++		} else if (req->scan_type == IW_SCAN_TYPE_PASSIVE) {
++			work = &priv->request_passive_scan;
+ 		}
+-	}
++	} else {
++		/* Normal active broadcast scan */
++		work = &priv->request_scan;
++ 	}
++
++	mutex_unlock(&priv->mutex);
+ 
+ 	IPW_DEBUG_WX("Start scan\n");
+ 
+-	queue_delayed_work(priv->workqueue, &priv->request_scan, 0);
++	queue_delayed_work(priv->workqueue, work, 0);
  
  	return 0;
  }
---- everything.orig/net/mac80211/ieee80211.c	2008-02-22 11:53:23.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-22 11:54:34.000000000 +0100
-@@ -888,6 +888,7 @@ int ieee80211_if_update_wds(struct net_d
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta;
-+	int err;
- 	DECLARE_MAC_BUF(mac);
- 
- 	might_sleep();
-@@ -895,16 +896,19 @@ int ieee80211_if_update_wds(struct net_d
- 	if (compare_ether_addr(remote_addr, sdata->u.wds.remote_addr) == 0)
- 		return 0;
- 
--	rcu_read_lock();
--
- 	/* Create STA entry for the new peer */
--	sta = sta_info_add(sdata, remote_addr);
--	if (IS_ERR(sta)) {
--		rcu_read_unlock();
--		return PTR_ERR(sta);
--	}
-+	sta = sta_info_alloc(sdata, remote_addr, GFP_KERNEL);
-+	if (!sta)
-+		return -ENOMEM;
- 
- 	sta->flags |= WLAN_STA_AUTHORIZED;
-+	err = sta_info_insert(sta);
-+	if (err) {
-+		sta_info_destroy(sta);
-+		return err;
-+	}
-+
-+	rcu_read_lock();
- 
- 	/* Remove STA entry for the old peer */
- 	sta = sta_info_get(local, sdata->u.wds.remote_addr);
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-02-22 11:53:23.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-02-22 11:56:41.000000000 +0100
-@@ -1461,7 +1461,7 @@ void sta_addba_resp_timer_expired(unsign
- {
- 	/* not an elegant detour, but there is no choice as the timer passes
- 	 * only one argument, and both sta_info and TID are needed, so init
--	 * flow in sta_info_add gives the TID as data, while the timer_to_id
-+	 * flow in sta_info_create gives the TID as data, while the timer_to_id
- 	 * array gives the sta through container_of */
- 	u16 tid = *(int *)data;
- 	struct sta_info *temp_sta = container_of((void *)data,
-@@ -1512,7 +1512,7 @@ void sta_rx_agg_session_timer_expired(un
- {
- 	/* not an elegant detour, but there is no choice as the timer passes
- 	 * only one argument, and verious sta_info are needed here, so init
--	 * flow in sta_info_add gives the TID as data, while the timer_to_id
-+	 * flow in sta_info_create gives the TID as data, while the timer_to_id
- 	 * array gives the sta through container_of */
- 	u8 *ptid = (u8 *)data;
- 	u8 *timer_to_id = ptid - *ptid;
-@@ -1836,11 +1836,12 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	sta = sta_info_get(local, ifsta->bssid);
- 	if (!sta) {
- 		struct ieee80211_sta_bss *bss;
-+		int err;
- 
--		sta = sta_info_add(sdata, ifsta->bssid);
--		if (IS_ERR(sta)) {
--			printk(KERN_DEBUG "%s: failed to add STA entry for the"
--			       " AP (error %ld)\n", dev->name, PTR_ERR(sta));
-+		sta = sta_info_alloc(sdata, ifsta->bssid, GFP_ATOMIC);
-+		if (!sta) {
-+			printk(KERN_DEBUG "%s: failed to alloc STA entry for"
-+			       " the AP\n", dev->name);
- 			rcu_read_unlock();
- 			return;
- 		}
-@@ -1853,8 +1854,27 @@ static void ieee80211_rx_mgmt_assoc_resp
- 			sta->last_noise = bss->noise;
- 			ieee80211_rx_bss_put(dev, bss);
- 		}
-+
-+		err = sta_info_insert(sta);
-+		if (err) {
-+			printk(KERN_DEBUG "%s: failed to insert STA entry for"
-+			       " the AP (error %d)\n", dev->name, err);
-+			sta_info_destroy(sta);
-+			rcu_read_unlock();
-+			return;
-+		}
+@@ -10709,6 +10743,8 @@ static void ipw_link_up(struct ipw_priv *priv)
  	}
  
-+	/*
-+	 * FIXME: Do we really need to update the sta_info's information here?
-+	 *	  We already know about the AP (we found it in our list) so it
-+	 *	  should already be filled with the right info, no?
-+	 *	  As is stands, all this is racy because typically we assume
-+	 *	  the information that is filled in here (except flags) doesn't
-+	 *	  change while a STA structure is alive. As such, it should move
-+	 *	  to between the sta_info_alloc() and sta_info_insert() above.
-+	 */
-+
- 	sta->flags |= WLAN_STA_AUTH | WLAN_STA_ASSOC | WLAN_STA_ASSOC_AP |
- 		      WLAN_STA_AUTHORIZED;
+ 	cancel_delayed_work(&priv->request_scan);
++	cancel_delayed_work(&priv->request_direct_scan);
++	cancel_delayed_work(&priv->request_passive_scan);
+ 	cancel_delayed_work(&priv->scan_event);
+ 	ipw_reset_stats(priv);
+ 	/* Ensure the rate is updated immediately */
+@@ -10739,6 +10775,8 @@ static void ipw_link_down(struct ipw_priv *priv)
  
-@@ -2494,10 +2514,8 @@ static void ieee80211_rx_bss_info(struct
- 				       "local TSF - IBSS merge with BSSID %s\n",
- 				       dev->name, print_mac(mac, mgmt->bssid));
- 			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
--			rcu_read_lock();
- 			ieee80211_ibss_add_sta(dev, NULL,
- 					       mgmt->bssid, mgmt->sa);
--			rcu_read_unlock();
- 		}
- 	}
+ 	/* Cancel any queued work ... */
+ 	cancel_delayed_work(&priv->request_scan);
++	cancel_delayed_work(&priv->request_direct_scan);
++	cancel_delayed_work(&priv->request_passive_scan);
+ 	cancel_delayed_work(&priv->adhoc_check);
+ 	cancel_delayed_work(&priv->gather_stats);
  
-@@ -3837,7 +3855,6 @@ int ieee80211_sta_set_extra_ie(struct ne
- }
+@@ -10778,8 +10816,9 @@ static int __devinit ipw_setup_deferred_work(struct ipw_priv *priv)
+ 	INIT_WORK(&priv->up, ipw_bg_up);
+ 	INIT_WORK(&priv->down, ipw_bg_down);
+ 	INIT_DELAYED_WORK(&priv->request_scan, ipw_request_scan);
++	INIT_DELAYED_WORK(&priv->request_direct_scan, ipw_request_direct_scan);
++	INIT_DELAYED_WORK(&priv->request_passive_scan, ipw_request_passive_scan);
+ 	INIT_DELAYED_WORK(&priv->scan_event, ipw_scan_event);
+-	INIT_WORK(&priv->request_passive_scan, ipw_request_passive_scan);
+ 	INIT_DELAYED_WORK(&priv->gather_stats, ipw_bg_gather_stats);
+ 	INIT_WORK(&priv->abort_scan, ipw_bg_abort_scan);
+ 	INIT_WORK(&priv->roam, ipw_bg_roam);
+@@ -11811,6 +11850,8 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 	cancel_delayed_work(&priv->adhoc_check);
+ 	cancel_delayed_work(&priv->gather_stats);
+ 	cancel_delayed_work(&priv->request_scan);
++	cancel_delayed_work(&priv->request_direct_scan);
++	cancel_delayed_work(&priv->request_passive_scan);
+ 	cancel_delayed_work(&priv->scan_event);
+ 	cancel_delayed_work(&priv->rf_kill);
+ 	cancel_delayed_work(&priv->scan_check);
+diff --git a/drivers/net/wireless/ipw2200.h b/drivers/net/wireless/ipw2200.h
+index fdc187e..89f7130 100644
+--- a/drivers/net/wireless/ipw2200.h
++++ b/drivers/net/wireless/ipw2200.h
+@@ -1033,6 +1033,7 @@ struct ipw_cmd {
+ #define STATUS_DISASSOC_PENDING (1<<12)
+ #define STATUS_STATE_PENDING    (1<<13)
  
++#define STATUS_DIRECT_SCAN_PENDING (1<<19)
+ #define STATUS_SCAN_PENDING     (1<<20)
+ #define STATUS_SCANNING         (1<<21)
+ #define STATUS_SCAN_ABORTING    (1<<22)
+@@ -1288,6 +1289,8 @@ struct ipw_priv {
+ 	struct iw_public_data wireless_data;
  
--/* must be called under RCU read lock */
- struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
- 					 struct sk_buff *skb, u8 *bssid,
- 					 u8 *addr)
-@@ -3860,8 +3877,8 @@ struct sta_info * ieee80211_ibss_add_sta
- 	printk(KERN_DEBUG "%s: Adding new IBSS station %s (dev=%s)\n",
- 	       wiphy_name(local->hw.wiphy), print_mac(mac, addr), dev->name);
+ 	int user_requested_scan;
++	u8 direct_scan_ssid[IW_ESSID_MAX_SIZE];
++	u8 direct_scan_ssid_len;
  
--	sta = sta_info_add(sdata, addr);
--	if (IS_ERR(sta))
-+	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
-+	if (!sta)
- 		return NULL;
+ 	struct workqueue_struct *workqueue;
  
- 	sta->flags |= WLAN_STA_AUTHORIZED;
-@@ -3871,6 +3888,11 @@ struct sta_info * ieee80211_ibss_add_sta
- 
- 	rate_control_rate_init(sta, local);
- 
-+	if (sta_info_insert(sta)) {
-+		sta_info_destroy(sta);
-+		return NULL;
-+	}
-+
- 	return sta;
- }
- 
-
--- 
+@@ -1297,8 +1300,9 @@ struct ipw_priv {
+ 	struct work_struct system_config;
+ 	struct work_struct rx_replenish;
+ 	struct delayed_work request_scan;
++	struct delayed_work request_direct_scan;
++  	struct delayed_work request_passive_scan;
+ 	struct delayed_work scan_event;
+-  	struct work_struct request_passive_scan;
+ 	struct work_struct adapter_restart;
+ 	struct delayed_work rf_kill;
+ 	struct work_struct up;
 
