@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48758 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756795AbYBJB1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Feb 2008 20:27:35 -0500
-From: Reinhard Biegel <r.biegel@gmx.at>
-To: linux-wireless@vger.kernel.org
-Subject: Re: prism54: Out of memory, cannot handle oid, card/socket may be faulty, or IRQ line too busy
-Date: Sun, 10 Feb 2008 02:27:06 +0100
-References: <47ACD136.4030705@wpkg.org> <20080208221009.GA2919@tuxdriver.com>
-In-Reply-To: <20080208221009.GA2919@tuxdriver.com>
+Received: from py-out-1112.google.com ([64.233.166.183]:13629 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbYB0EFN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2008 23:05:13 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3914345pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 20:05:13 -0800 (PST)
+Message-ID: <43e72e890802262005u7a5b833fkf4f2b8879e183919@mail.gmail.com> (sfid-20080227_040516_832982_22A4B4DA)
+Date: Tue, 26 Feb 2008 23:05:12 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: Re: [PATCH 8/8] ath5k: Add RF2413 name to srev_names
+In-Reply-To: <20080224043319.GG4426@makis.domain.invalid>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802100227.06799.r.biegel@gmx.at> (sfid-20080210_012803_024768_1AE70BE1)
+Content-Type: text/plain; charset=UTF-8
+References: <20080224043319.GG4426@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I'm having the same problem with my Netgear WG511 (PCMCIA, SoftMAC version) 
-and Kernel 2.6.24.
-
-With 2.6.23 and the drivers from www.linuxwireless.org (compat-wireless-2.6) 
-it works. At least most of the time. More or less regulary there is an ACPI 
-error message telling me that the IRQ of the card has been disabled. Then I 
-have to replug it to get it up again. I'm using the same firmware with both 
-kernels/drivers (v2.7.0.0).
-
-Regards,
-Reinhard Biegel
-
-
-On Friday, 8. February 2008 23:10:09 you wrote:
-> On Fri, Feb 08, 2008 at 11:01:26PM +0100, Tomasz Chmielewski wrote:
-> > I just wanted to use a mini-PCI card using a prism54 module - however, it
-> > fails to bring the interface up with "Out of memory, cannot handle oid"
-> > and "Your card/socket may be faulty, or IRQ line too busy" messages.
+On Sat, Feb 23, 2008 at 11:33 PM, Nick Kossifidis <mick@madwifi.org> wrote:
 >
-> I vaguely recall seeing an error like that when I used the wrong
-> firmware.  What firmware are you using?
+>   * Add 2413 to srev_names so that it shows up during module load
 >
-> John
+>
+>  Changes-licensed-under: 3-clause-BSD
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
+  Luis
