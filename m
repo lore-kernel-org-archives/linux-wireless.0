@@ -1,81 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54524 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763241AbYBZPob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 10:44:31 -0500
-Subject: Re: mesh beaconing questions
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1204034825.13162.233.camel@johannes.berg>
-References: <1204034825.13162.233.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 26 Feb 2008 10:42:08 -0500
-Message-Id: <1204040528.30146.44.camel@localhost.localdomain> (sfid-20080226_154508_024531_7A859FA3)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.242]:9933 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711AbYB0GAC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 01:00:02 -0500
+Received: by an-out-0708.google.com with SMTP id d31so578690and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 21:59:59 -0800 (PST)
+Message-ID: <40f31dec0802262159p293d2e95ucb653b09be8b07ce@mail.gmail.com> (sfid-20080227_060006_355080_DCD042E4)
+Date: Wed, 27 Feb 2008 07:59:58 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: fix all endian issues reported by sparse
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <20080226225914.28153.48243.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080226225914.28153.48243.stgit@dv.roinet.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-02-26 at 15:07 +0100, Johannes Berg wrote:
-> Hi,
-> 
-> The Draft states that beacons may be sent either as defined for IBSS or
-> as defined for infrastructure mode.
-> 
-> I have a few questions, some of which are related to our implementation
-> and others which are related to the Draft.
-> 
-> 1. Are we going to let drivers choose which mode to use? Should they
-> indicate that somehow so userspace knows? Or are we going to make this
-> configurable? Can all hardware support both modes? (the last question
-> probably ties in with the next)
-> 
-> 2. The Draft states to use either procedures 11.1.2.2 (IBSS) or 11.1.2.1
-> (infrastructure). It is easy to "port" 11.1.2.1 to mesh, but 11.1.2.2
-> reads like this:
+2008/2/27, Pavel Roskin <proski@gnu.org>:
+> Changes-licensed-under: ISC
+>  Signed-off-by: Pavel Roskin <proski@gnu.org>
+>  ---
+>
+>   drivers/net/wireless/ath5k/base.c |    8 ++++----
+>   drivers/net/wireless/ath5k/hw.c   |    4 ++--
+>   2 files changed, 6 insertions(+), 6 deletions(-)
+>
+>  diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+>  index 0b743f7..393b5f3 100644
+>  --- a/drivers/net/wireless/ath5k/base.c
+>  +++ b/drivers/net/wireless/ath5k/base.c
+>  @@ -1717,11 +1717,11 @@ ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
+>         u32 hw_tu;
+>         struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+>
+>  -       if ((mgmt->frame_control & IEEE80211_FCTL_FTYPE) ==
+>  +       if ((le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_FTYPE) ==
+>                 IEEE80211_FTYPE_MGMT &&
+>  -           (mgmt->frame_control & IEEE80211_FCTL_STYPE) ==
+>  +           (le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_STYPE) ==
+>                 IEEE80211_STYPE_BEACON &&
+>  -           mgmt->u.beacon.capab_info & WLAN_CAPABILITY_IBSS &&
+>  +           le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
+>             memcmp(mgmt->bssid, sc->ah->ah_bssid, ETH_ALEN) == 0) {
+>                 /*
+>                  * Received an IBSS beacon with the same BSSID. Hardware might
+>  @@ -1730,7 +1730,7 @@ ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
+>                 hw_tu = TSF_TO_TU(ath5k_hw_get_tsf64(sc->ah));
+>                 if (hw_tu >= sc->nexttbtt) {
+>                         ath5k_beacon_update_timers(sc,
+>  -                               mgmt->u.beacon.timestamp);
+>  +                               le64_to_cpu(mgmt->u.beacon.timestamp));
+>                         ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
+>                                 "detected HW merge from received beacon\n");
+>                 }
+>  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+>  index 998da6b..eec2b80 100644
+>  --- a/drivers/net/wireless/ath5k/hw.c
+>  +++ b/drivers/net/wireless/ath5k/hw.c
+>  @@ -531,8 +531,8 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
+>                  * actual rate for this rate. See mac80211 tx.c
+>                  * ieee80211_duration() for a brief description of
+>                  * what rate we should choose to TX ACKs. */
+>  -               tx_time = ieee80211_generic_frame_duration(sc->hw,
+>  -                       sc->vif, 10, &srate);
+>  +               tx_time = le16_to_cpu(ieee80211_generic_frame_duration(sc->hw,
+>  +                                                       sc->vif, 10, &srate));
+>
+>                 ath5k_hw_reg_write(ah, tx_time, reg);
+>
 
-Next question, more relevant to how this affects the user:
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-What's the meaningful difference between these two choices?  When would
-you use one and when would you use the other?  Should the user (ie, a
-user of something like NetworkManager) care whether a particular node is
-doing IBSS or infrastructure beacons?
-
-Dan
-
-> --- >% ---
-> [...]
-> 
-> At each TBTT, the STA shall:
-> 
-> [...]
-> 
->  (d) Cancel the remaining random delay and the pending beacon
->      transmission, if a beacon arrives from the IBSS of which the STA is
->      a member before the random delay timer has expired, at which time
->      the ATIM backoff timer shall resume decrementing.
-> [...]
-> --- %< ---
-> 
-> However, I feel that pointing from the mesh amendement to something
-> rather IBSS specific is not well defined. This clause doesn't
-> "obviously" port to mesh since the BSSID is left zeroed in mesh! But the
-> draft doesn't change 11.1.2.2 either to adjust for this difference.
-> 
-> Hence, I think the draft needs to be expanded to modify 11.1.2.2 to
-> explain under which circumstances an MP shall cancel its beacon if it
-> opts to use IBSS-like beaconing.
-> 
-> I think the only useful thing is to require it to look at the mesh IEs,
-> but that is not implementable with existing hardware, at least not
-> without firmware changes. I could probably do it in Broadcom firmware
-> fairly easily...
-> 
-> So now I've probably answered my first question implicitly because I
-> pointed out how I think using IBSS-like beaconing isn't even
-> well-defined ;)
-> 
-> johannes
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
