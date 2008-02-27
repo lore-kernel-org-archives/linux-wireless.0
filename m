@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:51903 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbYBDCxZ (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.191]:24731 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163AbYB0EEU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2008 21:53:25 -0500
-Date: Sun, 3 Feb 2008 21:53:20 -0500
+	Tue, 26 Feb 2008 23:04:20 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so4114335mue.5
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 20:04:18 -0800 (PST)
+Message-ID: <43e72e890802262004r552d6a83ua6e24bdbb9e9ca83@mail.gmail.com> (sfid-20080227_040423_042983_1D986855)
+Date: Tue, 26 Feb 2008 23:04:16 -0500
 From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
-	johannes@sipsolutions.net
-Subject: [PATCH 6/7] ath5k: Use software encryption for now
-Message-ID: <6571fb0f1b7c8435e6306745e6cf71366f306440.1202092325.git.mcgrof@winlab.rutgers.edu> (sfid-20080204_025327_162035_D33477EE)
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: Re: [PATCH 1/8] ath5k: Add RF2413 srev values
+In-Reply-To: <20080224041045.GA4408@makis.domain.invalid>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <67abed819770e9d38c69f0e015e153427b3522be.1202092325.git.mcgrof@winlab.rutgers.edu>
+Content-Type: text/plain; charset=UTF-8
+References: <20080224041045.GA4408@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware encryption doesn't work yet so lets use software
-encryption for now.
+On Sat, Feb 23, 2008 at 11:10 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+>  * Add RF2413 srev values and a new entry on ath5k_radio enum for it
+>    since it differs from RF5413 (it's not like 5112-2112).
+>
+>  Changes-licensed-under: ISC
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Changes-licensed-under: 3-Clause-BSD
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
----
- drivers/net/wireless/ath5k/base.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index bfe6836..ef9655c 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2922,7 +2922,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	switch(key->alg) {
- 	case ALG_WEP:
--		break;
-+	/* XXX: fix hardware encryption, its not working. For now
-+	 * allow software encryption */
-+		/* break; */
- 	case ALG_TKIP:
- 	case ALG_CCMP:
- 		return -EOPNOTSUPP;
--- 
-1.5.3.7
-
+  Luis
