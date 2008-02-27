@@ -1,95 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39086 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757691AbYBAMJ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 07:09:28 -0500
-Message-Id: <20080131185053.674773000@sipsolutions.net> (sfid-20080201_120938_818746_3193A18B)
-References: <20080131184819.103174000@sipsolutions.net>
-Date: Thu, 31 Jan 2008 19:48:24 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8] mac80211: clean up some things in the RX path
+Received: from mfe1.polimi.it ([131.175.12.23]:40222 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1763164AbYB0Hj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 02:39:29 -0500
+Date: Wed, 27 Feb 2008 08:26:42 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "Chris Clayton" <chris2553@googlemail.com>
+Cc: linville@tuxdriver.com, ivdoorn@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Message-ID: <20080227082642.218b8014@morte> (sfid-20080227_073951_884499_A216F151)
+In-Reply-To: <c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	<200802252104.32416.chris2553@googlemail.com>
+	<a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
+	<200802261911.39577.chris2553@googlemail.com>
+	<20080226194838.GD3013@tuxdriver.com>
+	<c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com>
+	<20080226223814.4ef2b435@morte>
+	<c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uninline ieee80211_invoke_rx_handlers to save .text space,
-make the code more readable in some places and remove the
-"optimisation" that is hit only very few times and unclear
-to start with.
+On Tue, 26 Feb 2008 22:36:19 +0000
+"Chris Clayton" <chris2553@googlemail.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-I have a plan to add back such an optimisation but it is rather
-involved requiring a scan handling change and per-sdata sta
-structures.
+> 27 135466 rate_change 2 55
+> 28 135717 tx_rate 2 55
+> 29 135717 tx_status 0 0
+> 30 135717 pf_sample 0 3584 1965 0
+> 31 135717 rate_change 129 -541505508
+> 32 135968 tx_rate 11 540
 
- net/mac80211/rx.c |   37 ++++++++++---------------------------
- 1 file changed, 10 insertions(+), 27 deletions(-)
+Known and fixed. The fix isn't in 2.6.25-rc3 yet, though.
 
---- everything.orig/net/mac80211/rx.c	2008-01-31 15:46:09.985793781 +0100
-+++ everything/net/mac80211/rx.c	2008-01-31 15:46:12.415793891 +0100
-@@ -1448,11 +1448,10 @@ ieee80211_rx_h_mgmt(struct ieee80211_txr
- 	return RX_QUEUED;
- }
- 
--static inline ieee80211_rx_result __ieee80211_invoke_rx_handlers(
--				struct ieee80211_local *local,
--				ieee80211_rx_handler *handlers,
--				struct ieee80211_txrx_data *rx,
--				struct sta_info *sta)
-+static void ieee80211_invoke_rx_handlers(struct ieee80211_local *local,
-+					 ieee80211_rx_handler *handlers,
-+					 struct ieee80211_txrx_data *rx,
-+					 struct sta_info *sta)
- {
- 	ieee80211_rx_handler *handler;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
-@@ -1476,19 +1475,13 @@ static inline ieee80211_rx_result __ieee
- 		break;
- 	}
- 
--	if (res == RX_DROP_UNUSABLE || res == RX_DROP_MONITOR)
--		dev_kfree_skb(rx->skb);
--	return res;
--}
--
--static inline void ieee80211_invoke_rx_handlers(struct ieee80211_local *local,
--						ieee80211_rx_handler *handlers,
--						struct ieee80211_txrx_data *rx,
--						struct sta_info *sta)
--{
--	if (__ieee80211_invoke_rx_handlers(local, handlers, rx, sta) ==
--	    RX_CONTINUE)
-+	switch (res) {
-+	case RX_DROP_MONITOR:
-+	case RX_DROP_UNUSABLE:
-+	case RX_CONTINUE:
- 		dev_kfree_skb(rx->skb);
-+		break;
-+	}
- }
- 
- static void ieee80211_rx_michael_mic_report(struct net_device *dev,
-@@ -1718,16 +1711,6 @@ static void __ieee80211_rx_handle_packet
- 
- 	skb = rx.skb;
- 
--	if (sta && !(sta->flags & (WLAN_STA_WDS | WLAN_STA_ASSOC_AP)) &&
--	    !atomic_read(&local->iff_promiscs) &&
--	    !is_multicast_ether_addr(hdr->addr1)) {
--		rx.flags |= IEEE80211_TXRXD_RXRA_MATCH;
--		ieee80211_invoke_rx_handlers(local, local->rx_handlers, &rx,
--					     rx.sta);
--		sta_info_put(sta);
--		return;
--	}
--
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (!netif_running(sdata->dev))
- 			continue;
+Fix:
+commit 32720eae675d08990e97bffbf71a31382599cc8a
+Author: Stefano Brivio <stefano.brivio@polimi.it>
+Date:   Tue Jan 29 20:29:16 2008 +0100
 
--- 
+    rc80211-pid: fix rate adjustment
 
+
+--
+Ciao
+Stefano
