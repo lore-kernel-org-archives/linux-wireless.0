@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60402 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042AbYBTSb5 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:9633 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756153AbYB0TXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 13:31:57 -0500
-Subject: [PATCH] adm8211: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 20 Feb 2008 12:06:47 +0100
-Message-Id: <1203505607.17534.24.camel@johannes.berg> (sfid-20080220_183200_343589_E1E964EB)
-Mime-Version: 1.0
+	Wed, 27 Feb 2008 14:23:24 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3411244wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2008 11:23:24 -0800 (PST)
+Message-ID: <1ba2fa240802271123v1cbaf0ael9c01508b47a817b4@mail.gmail.com> (sfid-20080227_192328_957082_AB32C97F)
+Date: Wed, 27 Feb 2008 21:23:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: linux/wireless.h - missing section
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, jt@hpl.hp.com
+In-Reply-To: <20080227182613.GE3078@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240802270940te95e776n4958ff6b9f5beb20@mail.gmail.com>
+	 <20080227182613.GE3078@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both of these seem to be actual errors, the first is just wrong
-and the second is my mistake introduced by the cfg80211 API
-update.
+On Wed, Feb 27, 2008 at 8:26 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Feb 27, 2008 at 07:40:07PM +0200, Tomas Winkler wrote:
+>
+>
+> > Does anybody knows why this section is missing from in kernel linux/wireless.h
+>  >
+>  > struct iw_range {
+>  >
+>  > ......
+>  >
+>  >
+>  >         /* More power management stuff */
+>  >         __s32           min_pms;        /* Minimal PM saving */
+>  >         __s32           max_pms;        /* Maximal PM saving */
+>  >         __u16           pms_flags;      /* How to decode max/min PM saving */
+>  >
+>  >         /* All available modulations for driver (hw may support less) */
+>  >         __s32           modul_capa;     /* IW_MODUL_* bit field */
+>  >
+>  >         /* More bitrate stuff */
+>  >         __u32           bitrate_capa;   /* Types of bitrates supported */
+>  > };
+>
+>  Those were in Jean's original WE-21 patch.  They got
+>  dropped in the redacted version of WE-21 I applied in commit
+>  baef186519c69b11cf7e48c26e75feb1e6173baa.  Please see these threads:
+>
+>         http://marc.info/?l=linux-netdev&m=115689985827349&w=2
+>         http://marc.info/?l=linux-netdev&m=115757728300747&w=2
+>
+>  Hth!
+>
+>  John
+>  --
+>  John W. Linville
+>  linville@tuxdriver.com
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/adm8211.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
-
---- everything.orig/drivers/net/wireless/adm8211.c	2008-02-20 11:51:01.000000000 +0100
-+++ everything/drivers/net/wireless/adm8211.c	2008-02-20 11:55:17.000000000 +0100
-@@ -1109,7 +1109,7 @@ static void adm8211_hw_init(struct ieee8
- 	u32 reg;
- 	u8 cline;
- 
--	reg = le32_to_cpu(ADM8211_CSR_READ(PAR));
-+	reg = ADM8211_CSR_READ(PAR);
- 	reg |= ADM8211_PAR_MRLE | ADM8211_PAR_MRME;
- 	reg &= ~(ADM8211_PAR_BAR | ADM8211_PAR_CAL);
- 
-@@ -1702,13 +1702,9 @@ static int adm8211_tx(struct ieee80211_h
- 	int plcp, dur, len, plcp_signal, short_preamble;
- 	struct ieee80211_hdr *hdr;
- 
--	if (control->tx_rate < 0) {
--		short_preamble = 1;
--		plcp_signal = -control->tx_rate->bitrate;
--	} else {
--		short_preamble = 0;
--		plcp_signal = control->tx_rate->bitrate;
--	}
-+	short_preamble = !!(control->tx_rate->flags &
-+					IEEE80211_TXCTL_SHORT_PREAMBLE);
-+	plcp_signal = control->tx_rate->bitrate;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTED;
-
-
+Thanks for answer. It's just that user space utility differs from what
+is in kernel which is a bit odd
+Tomas
