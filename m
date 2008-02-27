@@ -1,113 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.227]:50668 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754367AbYBZHV7 convert rfc822-to-8bit (ORCPT
+Received: from pne-smtpout1-sn1.fre.skanova.net ([81.228.11.98]:39009 "EHLO
+	pne-smtpout1-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754203AbYB0NpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 02:21:59 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so1963917wxd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2008 23:21:56 -0800 (PST)
-Reply-To: <cs010101@gmail.com>
-From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
-To: "'bruno randolf'" <bruno@thinktube.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <006501c87837$a7ef9590$3b0aa8c0@39fb6b6b6f434b3> <200802261506.32712.bruno@thinktube.com>
-Subject: RE: ath5k : test
-Date: Tue, 26 Feb 2008 16:21:50 +0900
-Message-ID: <006901c87848$42f06b90$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080226_072224_230624_C267536F)
+	Wed, 27 Feb 2008 08:45:03 -0500
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Roaming issues.
+Date: Wed, 27 Feb 2008 14:44:38 +0100
+Message-ID: <004501c87946$e5f1f490$0b3ca8c0@gotws1589> (sfid-20080227_134510_426616_D994B201)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
-In-Reply-To: <200802261506.32712.bruno@thinktube.com>
+Content-Type: text/plain;
+	charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- yes...^^ forgot it.
+Johannes,
 
-current environment :
-
-vanilla kernel 2.6.23.16
-compat wireless 2.6 driver (date : Dec, 2007)
-chipset : AR5414
-3com 3CRDAG675B
-
-loading module, dmesg:
------------------------------------------------------------------------=
------
----------------------
-ath5k_pci 0000:02:0b.0: registered as 'phy0'
-ath5k phy0: Device only partially supported.
-phy0: Selected rate control algorithm 'simple'
-ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-net wlan2: device_rename: sysfs_create_symlink failed (-17)
-udev: renamed network interface wlan0 to wlan2
-ADDRCONF(NETDEV_UP): wlan2: link is not ready
------------------------------------------------------------------------=
------
---------------------
-
------Original Message-----
-=46rom: bruno randolf [mailto:bruno@thinktube.com]=20
-Sent: Tuesday, February 26, 2008 3:07 PM
-To: cs010101@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k : test
-
-hello =B1=E8=BF=B5=C8=AF!
-
-thanks for the report, however it's very important to tell us which
-hardware you are using. see the output of dmesg after ath5k is loaded a=
-nd
-please include that in the next report.
-
-bruno
-
-On Tuesday 26 February 2008 14:22:58 =B1=E8=BF=B5=C8=AF wrote:
-> date : 26, Feb (driver's also same)
->
-> conclusion:
->
-> setting 802.11a ad-hoc,
->
-> 5Ghz channel is different.
->
-> and iwconfig wlanX rate [more than 24Mbps] : disconnected!
->
-> and when I testing, performance was terrible. so often stalled.
->
-> so, I made 'mod_timer' comment in base.c (calibration section) and=20
-> then performance was increased.
->
-> BUT also when I set more than 24Mb, disconnected.
->
-> but until now, only atheros driver supports 802.11a with ad-hoc. than=
-ks.
-> :-)
->
-> hmm...
-> soon or later, we'll test ralink chipset.
->
->
-> --
-> --
-> Have a Wonderful Day~~!!
-> =B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
-> yhkim@corebell.co.kr
-> cs010101@gmail.com
-> +82-42-863-0340
-> +82-10-6753-0987
-> HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu, Daejon,  Republic of=
-=20
-> Korea
-> 305-701
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess"
-> in the body of a message to majordomo@vger.kernel.org More majordomo=20
-> info at  http://vger.kernel.org/majordomo-info.html
+Back with som data regarding roaming.
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Prerequisites
+=============
+Just for your knowledge I'm using the following equipment:
+- RT61, mini PCI
+- rt2x00.git / 1e0b4c51393308a98f2918db424c676cc99cf123
+- Managed mode
+- Wpa_supplicant 0.5.9
+
+AP deauthentication.
+=====================
+When any of the ieee80211_rx_mgmt_deauth() or ieee80211_rx_mgmt_disassoc()
+are executed, the mac layer takes two actions.
+1) Tells wpa_supplicant what had happened.
+2) Start reestabliching the connaction again.
+
+The later action will stop or significantly delay the decisions/action taken
+by wpa_supplicant as a result of action 1. Normally the supplicant will
+start an AP scan. 
+But the mac layer is busy with reestablishing the link and will not start
+any scan action.
+  
+My patches simply put the mac layer in IEEE80211_DISABLED state and wait for
+the supplicant to decide.
+
+
+Monitoring of a usable link to the AP.
+======================================
+The ieee80211_rx_h_sta_process() and  ieee80211_associated() are involved in
+monitors for dead AP connection. A last_rx value is set to indicate a
+working connection.
+
+The porblem is the following lines.
+	if (!is_multicast_ether_addr(hdr->addr1) ||
+	    rx->sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+
+Any package that arrives to an STA will update the last_rx value and
+prohibit a link lost action.
+
+I have noticed in my system that this function receives the following type
+of frames:
+1) Broad cast frames from my BSS (beacons).
+2) Data frames addressed to me ;)
+3) Data frames from other STA addressed to other MAC addresses but using the
+same BSS.
+ 
+It is the case 3 that creates the problem. Another STA, closer to my BSS
+will update my last_rx value even I do not receive the BSS.
+
+I have made the following change:
+
+	if ( compare_ether_addr(hdr->addr2, hdr->addr3) == 0 &&
+	    rx->sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+
+My last_rx will only be updated as long as I can receive frames from my BSS.
+I might have to add some frame type validation, but it solved my problems.
+
+
+Timeout handling
+=================
+When any of the ieee80211_authenticate() or ieee80211_associate() function
+are executed. 
+The mac silently set its state to IEEE80211_DISABLED and waits for the
+wpa_supplicant to timeout its current action.
+
+I think it would be a good idea to signal to the supplicant that the
+operation has timeout, and no further action will be taken.
+To speed up the timeout response I had squeezed the supplicant timeout.
+
+I have patches for all modification but it might be a good start to verify
+that my suggestion is 'usabel'
+
+Regards
+Lars
+
+
