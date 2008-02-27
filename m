@@ -1,62 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57961 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707AbYBGN0T (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.228]:35339 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081AbYB0DbB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 08:26:19 -0500
-Subject: Re: Getting Started
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Neshama Parhoti <pneshama@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com> (sfid-20080207_131150_582268_59D85824)
-References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
-	 (sfid-20080207_131150_582268_59D85824)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FivsZMlhecdhxSb4RNVi"
-Date: Thu, 07 Feb 2008 14:26:09 +0100
-Message-Id: <1202390769.5718.6.camel@johannes.berg> (sfid-20080207_132622_886072_41449EA1)
-Mime-Version: 1.0
+	Tue, 26 Feb 2008 22:31:01 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so2542302wxd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2008 19:30:59 -0800 (PST)
+Message-ID: <43e72e890802261930k876a09bv4c1d5c79e369f69@mail.gmail.com> (sfid-20080227_033123_174730_B30B0D16)
+Date: Tue, 26 Feb 2008 22:30:58 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: fix all endian issues reported by sparse
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <20080226225914.28153.48243.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080226225914.28153.48243.stgit@dv.roinet.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 26, 2008 at 5:59 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Changes-licensed-under: ISC
+>  Signed-off-by: Pavel Roskin <proski@gnu.org>
 
---=-FivsZMlhecdhxSb4RNVi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-Hi,
-
-> Can you please point me to known good knowledge
-> references/overviews/tutorials on the subject ?
-
-The best can currently offer is
- (a) checking http://johannes.sipsolutions.net/files/mac80211/
- (b) reading include/net/mac80211.h
- (c) comparing to an existing driver, for example b43's main.c
- (d) asking questions here
-
-johannes
-
---=-FivsZMlhecdhxSb4RNVi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6sG8KVg1VMiehFYAQJT7g/+NBoaP1oflnUqXTTMJWeRiqImkq2jzelx
-Is2mexB8v+PqprLaJB+tRq2CWCWFdiNHHtdDPPlUzjauBfYHZCh+Pa6tCyGjvtXZ
-wpgrtWh/qH14U5yf4vfzC/YWHiC66zNzH6MweyQnVkNheo7ILJSae3wM1z5U0Wuy
-ro32OEs0czVjqpChCu34DufRPRCIkyD1KKI4a9GXP7ZcBvFmbIRDjH40rt1vlj1r
-RikS2M4CWZjNWeOc3NRHLjvYrmdMISvxcRyd+xJTGt3rXtNC5XSWrBIk8u0IvVk3
-AI1bxggAloJ2yRrKVgwDLNPhvFcuvOdFJc3g1fyveqXLhMY2Zo51d+a2HZ4GZizT
-9t2jhEl8gUcDZD/BCMxDDswRZpF9tH8jALlZ2+nm9F2OPPOsXMBi5nRYAu2tYTby
-KSXM+jHrgjRtmyZnccWE0m6H3xOi29unO8DSPCkJO88A/vKytnOTJ3GjaL7f9ags
-kQ02misXNvgybof5GgWKzihPthK8pPxFLxgK5YfUaChGd6aLhz4LzAs3FM/lAzGv
-D88Uf+DE0QtGAczKR9zOahF5G0U7I/N21t38FMZ3ZZ1DfvFJbvMob+et0Jvs+ul5
-CeXCFAkBstdJa+/VX66Hc84bQvFtZgL3rnYcSnJHbfUc7X6j5ugzcf2IcglvQwyD
-NmZ9NUFPEvA=
-=GWRr
------END PGP SIGNATURE-----
-
---=-FivsZMlhecdhxSb4RNVi--
-
+  Luis
