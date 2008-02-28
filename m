@@ -1,59 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49565 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759473AbYBHLJn (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:45239 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758371AbYB1W7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 06:09:43 -0500
-Received: from [91.5.73.180] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.68)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1JNR70-0007l4-KP
-	for linux-wireless@vger.kernel.org; Fri, 08 Feb 2008 11:09:42 +0000
-Subject: linuxwireless.org pointed elsewhere
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MQyA7M3QuTBHCBMgnm+/"
-Date: Fri, 08 Feb 2008 12:09:37 +0100
-Message-Id: <1202468977.5718.34.camel@johannes.berg> (sfid-20080208_110946_692469_B23B64AA)
-Mime-Version: 1.0
+	Thu, 28 Feb 2008 17:59:05 -0500
+Date: Thu, 28 Feb 2008 17:59:01 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	me@bobcopeland.com
+Subject: [PATCH 4/8] ath5k: more RF2413 stuff
+Message-ID: <19edc37dfc2a205270bd5a3039866b56813e85f0.1204236793.git.mcgrof@winlab.rutgers.edu> (sfid-20080228_225910_085474_9300F5F3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ * Add AR5K_RF2413 to radio check during hw_reset so it doesn't complain
 
---=-MQyA7M3QuTBHCBMgnm+/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ * Write ah_phy_spending value we set during attach instead of checking
+each time for radio revision
 
-Dunno if we'll get that sorted out, in the meantime I have put up
+ * Skip txpower setup for RF2413 because it can't transmit with it
+(weird thing is that RF5413 has no problem with it).
 
-	http://linuxwireless.sipsolutions.net/
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/ath5k/hw.c  |    7 +++----
+ drivers/net/wireless/ath5k/phy.c |    9 +++++++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-so you can access the contents.
-
-johannes
-
---=-MQyA7M3QuTBHCBMgnm+/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6w4b6Vg1VMiehFYAQKQOA/+Nhx5jWgUoWbbgBkgjmOtu+7L8jLQ0nmL
-Pkq0wkvTQgpuoooOyg8jjYS+3dE1nmD6Fh0jK0VNF14psdtokvwlKhWT4+s9HOmL
-VKvslxB0UnWHngxKtUcfiY7LwK9zhxQqTY042nGMRO4PEbha05v6FW17MW2DQIV9
-lky4+2lvUAmc+8jQE0hwYRoueXHZqqZQucSes7/wZUHNVSdzCoVxhiu3vLl7ytFB
-9Q1AhrfO0nj7TcIRIBAI3wUHO4+hP9TotPseRf97595QW3hVhANWVnFLzG4oJqag
-lRqTahnMgR1+Ji+KD5f3luEoJ9F/HZ8Pv3CN/b2CaLY7F5D3aymRZXQR1Nra3kGq
-9XYb9RlW6aJ9GR4jyj2BTu+/hqOG2XpDmTWFsUBhzl0hxHRE0OpUH8H3d4EI0MEO
-jKOYRjaPXMTaF/MrSdMd7ZG9Lt8MKUx7ROF6am7/gMrQ/WW7N1juCfURPo7u3cxP
-JHhzDY/cnQI1lYyEjLTiPs1lUGiliKgr2wsAvluU7J2+pS1xpYftFQx5V9SksWGg
-sGxFjt7aRPsjpMyiyLzJoiVSd0q0ZpH/eQwS9l01yL6cdO8Ln4HnXFmETv+UujXL
-p9hX3cPOzv00K23zsZ3U2QVq5XP4Eh5ifCEwfiTYuSc6MRTZowUmGfrt/YVhJTMX
-vZ6JCzyhXoU=
-=0qN7
------END PGP SIGNATURE-----
-
---=-MQyA7M3QuTBHCBMgnm+/--
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 96b881d..6bbd732 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -640,7 +640,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		if (ah->ah_radio != AR5K_RF5111 &&
+ 			ah->ah_radio != AR5K_RF5112 &&
+-			ah->ah_radio != AR5K_RF5413) {
++			ah->ah_radio != AR5K_RF5413 &&
++			ah->ah_radio != AR5K_RF2413) {
+ 			ATH5K_ERR(ah->ah_sc,
+ 				"invalid phy radio: %u\n", ah->ah_radio);
+ 			return -EINVAL;
+@@ -1002,9 +1003,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SCAL_32MHZ, AR5K_PHY_SCAL);
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
+-		ath5k_hw_reg_write(ah, ah->ah_radio == AR5K_RF5111 ?
+-			AR5K_PHY_SPENDING_RF5111 : AR5K_PHY_SPENDING_RF5112,
+-			AR5K_PHY_SPENDING);
++		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index f108b08..40efd4d 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -2178,6 +2178,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * RF2413 for some reason can't
++	 * transmit anything if we call
++	 * this funtion, so we skip it
++	 * until we fix txpower.
++	 */
++	if (ah->ah_radio == AR5K_RF2413)
++		return 0;
++
+ 	/* Reset TX power values */
+ 	memset(&ah->ah_txpower, 0, sizeof(ah->ah_txpower));
+ 	ah->ah_txpower.txp_tpc = tpc;
+-- 
+1.5.3.7
 
