@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51612 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbYBXNnf (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.225]:47328 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbYB1WAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2008 08:43:35 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: Fix nondebug build
-Date: Sun, 24 Feb 2008 14:42:29 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"R. Hofmann" <anmue@gmx.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
+	Thu, 28 Feb 2008 17:00:06 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so5439945wra.23
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 14:00:05 -0800 (PST)
+Message-ID: <43e72e890802281400s33c8cd6fk8835c46eaf7d00ff@mail.gmail.com> (sfid-20080228_220015_949087_2B615504)
+Date: Thu, 28 Feb 2008 17:00:03 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: iwl3945 Microcode SW error, and then can't stop Rx DMA
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200802241442.29497.mb@bu3sch.de> (sfid-20080224_134340_920706_DCCD5C60)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a typo.
+After a while of running on my iwl3945 I get the following error:
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+[ 8414.072734] wlan0: CTS protection disabled (BSSID=00:13:c4:f4:25:30)
+[ 8473.409534] wlan0: CTS protection enabled (BSSID=00:13:c4:f4:25:30)
+[12059.081930] iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+[12059.081950] iwl3945: Error Reply type 0x00000005 cmd REPLY_TX
+(0x1C) seq 0x0000 ser 0x0000004B
+[12060.076397] iwl3945: Can't stop Rx DMA.
 
+I then have to remove the module and add it back. Haven't been able to
+replicate it again, but will let you know once I do see it again. This
+is running the latest pull from wireless-testing.git.
 
-Index: wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/b43legacy.h	2008-02-24 14:23:51.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h	2008-02-24 14:40:25.000000000 +0100
-@@ -343,7 +343,7 @@ enum {
- #else
- /* This will evaluate the argument even if debugging is disabled. */
- static inline bool __b43legacy_warn_on_dummy(bool x) { return x; }
--# define B43_WARN_ON(x)	__b43legacy_warn_on_dummy(unlikely(!!(x)))
-+# define B43legacy_WARN_ON(x)	__b43legacy_warn_on_dummy(unlikely(!!(x)))
- # define B43legacy_BUG_ON(x)	do { /* nothing */ } while (0)
- # define B43legacy_DEBUG	0
- #endif
-
--- 
-Greetings Michael.
+  Luis
