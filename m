@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:50481 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755650AbYBAPDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2008 10:03:35 -0500
-Date: Fri, 1 Feb 2008 15:57:22 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211 rate control: fix section mismatch
-Message-ID: <20080201155722.7e6f0d9a@morte> (sfid-20080201_150344_163452_24BD7FB5)
-In-Reply-To: <1201804317.4149.34.camel@johannes.berg>
-References: <1201804317.4149.34.camel@johannes.berg>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47369
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751633AbYB1HvM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2008 02:51:12 -0500
+Date: Wed, 27 Feb 2008 23:51:10 -0800 (PST)
+Message-Id: <20080227.235110.242439399.davem@davemloft.net> (sfid-20080228_075118_705760_A85A0887)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-02-27
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080228014125.GI3078@tuxdriver.com>
+References: <20080228014125.GI3078@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 31 Jan 2008 19:31:57 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 27 Feb 2008 20:41:25 -0500
 
-> When the rate control algorithms are built-in, their exit
-> functions can be called from mac80211's init function so
-> they cannot be marked __exit.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Gordon Farquharson (1):
+>       Fix b43 driver build for arm
 
-Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
+Please revert this change and resend your pull request.
 
+If file2alias doesn't work properly in a cross build environment, we
+don't fix it by crapping up mod_devalias.h with these silly align
+attribute annotations.
 
--- 
-Ciao
-Stefano
+Thanks.
