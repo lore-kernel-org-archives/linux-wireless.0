@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:65393 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755685AbYBTXL7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46200
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756136AbYB1TWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2008 18:11:59 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so3158469fkz.5
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2008 15:11:57 -0800 (PST)
-Message-ID: <247d6d340802201511u59b56ac8g128b28147fe92176@mail.gmail.com> (sfid-20080220_231207_034178_8AD13707)
-Date: Thu, 21 Feb 2008 01:11:56 +0200
-From: "Guy Cohen" <guy.cohen@intel.com>
-To: "Sam Leffler" <sam@errno.com>
-Subject: Re: implementing APSD?
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	"Michael Renzmann" <mrenzmann@madwifi.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"bruno randolf" <br1@einfach.org>
-In-Reply-To: <47BC76FC.7070109@errno.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1203521087.17534.74.camel@johannes.berg>
-	 <1ba2fa240802201043v1bd4fbddsc55c2230eb2a1480@mail.gmail.com>
-	 <47BC76FC.7070109@errno.com>
+	Thu, 28 Feb 2008 14:22:30 -0500
+Date: Thu, 28 Feb 2008 11:22:29 -0800 (PST)
+Message-Id: <20080228.112229.135415548.davem@davemloft.net> (sfid-20080228_192234_838486_23A04A5F)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-02-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080228145136.GD3063@tuxdriver.com>
+References: <20080228014125.GI3078@tuxdriver.com>
+	<20080227.235110.242439399.davem@davemloft.net>
+	<20080228145136.GD3063@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/20/08, Sam Leffler <sam@errno.com> wrote:
-> Tomas Winkler wrote:
-> > On Feb 20, 2008 5:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >
-> >> Hi,
-> >>
-> >> I've long thought about implementing APSD but it seems to require
-> >> setting the "more data" bit in an ACK frame and various other things.
-> >> Ron, I think you're the QoS expert, is that really how APSD works? If
-> >> so, does iwl firmware implement that?
-> >>
-> >
-> > We have uAPSD implementation, mainly AP part, yet again it for  older
-> > mac. It will take a bit time to merge it in
-> > It's a mandatory feature for HT AP.
-> >
->
-> Really?  Can you point where that's called out in the spec?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 28 Feb 2008 09:51:36 -0500
 
-You can not get WFA 11n certification without getting first WMM-uAPSD
-certification.
+> This version drops the "Fix b43 drivers build for arm" patch, and adds a
+> one-line build fix for SSB-attached PCI cores (found on bcm47xx mips).
 
-4965AGN uCode image supports uAPSD in client mode (and certified under
-Windows). uAPSD in AP mode is under developement currently.
+Thanks.
 
-> >
-> >> Also, does Atheros hardware implement that, and how? It doesn't look
-> >> like Broadcom firmware implements it, and I don't really understand how
-> >> one could implement it without many hardware queues, since it seems
-> >> timing critical to send out the frames to the station that is using
-> >> APSD.
-> >>
-> >>
-> > Don't believe it's possible to that without HW support.
-> >
->
-> Sorry, this is incorrect; you can do UAPSD w/o any special h/w support.
->
->    Sam
+> P.S. This will create a merge conflict with the code I already
+> requested that you pull for net-2.6.26.  The merge is easily resolved,
+> since it is two "comment block + single statement" additions at the
+> same place in the file.  Just take both sets of changes, and order
+> the "Evalue antenna setup" group _after_ the "Send a signal to the
+> led" group.  I have the conflict corrected in my wireless-testing
+> tree for reference if you need it.
 
-I think you may do uAPSD client mode w/o special HW/FW support (though
-it won't be optimized), but definitelly not AP mode - you need some RT
-capabilites for tracking the client state (wake/sleep/doze) and stop
-sending frames to a client that entered a sleep state, need to avoid
-out-of-order transmission when rescheduling frames that were dropped
-because a client entered sleep/doze state, Service Period control,
-etc.
+Understood.
 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> The following changes since commit d9595a7b9c777d45a74774f1428c263a0a47f4c0:
+>   David S. Miller (1):
+>         [AF_KEY]: Fix oops by converting to proc_net_*().
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Pulled and pushed back out, thanks John!
