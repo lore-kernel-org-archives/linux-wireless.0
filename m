@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754787AbYBGNfm (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47044
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1764743AbYB1VaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2008 08:35:42 -0500
-Subject: Re: Getting Started
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Neshama Parhoti <pneshama@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <912ec82a0802070532p2c041a4fn7dedab1fa0913b15@mail.gmail.com> (sfid-20080207_133225_244568_31655E11)
-References: <912ec82a0802070511y734f9836q244abb7800210961@mail.gmail.com>
-	 <1202390769.5718.6.camel@johannes.berg>
-	 <912ec82a0802070532p2c041a4fn7dedab1fa0913b15@mail.gmail.com>
-	 (sfid-20080207_133225_244568_31655E11)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LUHDQomiI4vthvcm7k3f"
-Date: Thu, 07 Feb 2008 14:35:34 +0100
-Message-Id: <1202391334.5718.14.camel@johannes.berg> (sfid-20080207_133553_154680_E759C941)
+	Thu, 28 Feb 2008 16:30:09 -0500
+Date: Thu, 28 Feb 2008 13:30:08 -0800 (PST)
+Message-Id: <20080228.133008.228590007.davem@davemloft.net> (sfid-20080228_213014_918281_7E9F0C88)
+To: gordonfarquharson@gmail.com
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-02-27
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
+References: <20080228014125.GI3078@tuxdriver.com>
+	<20080227.235110.242439399.davem@davemloft.net>
+	<97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+Date: Thu, 28 Feb 2008 14:21:21 -0700
 
---=-LUHDQomiI4vthvcm7k3f
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Hi David
+> 
+> On Thu, Feb 28, 2008 at 12:51 AM, David Miller <davem@davemloft.net> wrote:
+> > From: "John W. Linville" <linville@tuxdriver.com>
+> >  Date: Wed, 27 Feb 2008 20:41:25 -0500
+> >
+> >
+> >  > Gordon Farquharson (1):
+> >  >       Fix b43 driver build for arm
+> >
+> >  Please revert this change and resend your pull request.
+> >
+> >  If file2alias doesn't work properly in a cross build environment, we
+> >  don't fix it by crapping up mod_devalias.h with these silly align
+> >  attribute annotations.
+> 
+> This was extensively discussed on LKML [1, 2] and the patch has been
+> merged into Andrew Morton's -mm tree. It is understood that this is
+> not the Right Way to fix to problem, hence the big fat comment in the
+> code. It would be great if you could reconsider your decision.
 
+If you put that thing in there now, on ARM the structure size changes
+as does the alignment of that final member.
 
-> Any idea where I can find an updated, general, panoramic introduction for
-> the wireless subject and terms (without having to delve into the specs
-> themselves..) ?
+Then we're stuck with it and you can't remove that hack from
+mod_devalias.h.  It can't be removed even after the cross build issues
+of file2alias are resolved properly without re-breaking ARM.
 
-Not really. Some stuff is on linuxwireless.org but you said you read
-that already :) I'm sure there are books like "An introduction to
-802.11" or so but I never read any so I can't recommend anything.
-
-> I guess I ought to understand basic concepts before delving into the actu=
-al
-> code and interfaces.
-
-That is probably a good idea, yes.
-
-johannes
-
---=-LUHDQomiI4vthvcm7k3f
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR6sJJKVg1VMiehFYAQIc7A//SzrPew6hhxKHCnWEmndgpMi+j80wjw/J
-kWTPmvCY1P7RtU5Bu7AZx1JZOP1+EiJgIQ6RmC5Rut9vLTUjXWcLlNbU6hccmx/X
-nqQAJ2Lgcz435wVrwJe+OjDoeKAzPACYMsHwPunZq9c0HIxplItWuRPDVI1Dw+ot
-zjcdrHRwaB2kVfT+tf7ryeymv7OcFoJCdX+A9VJ4b50LxOMV4vcdXZXdYVZt5nhL
-ijBcEq73fKc/EaU3qn/kkNtDE/R3FVOX+RzSb0+51uMHndkiZ/2JqyaTsA77ls1n
-qXkRmo8/d4dZSijDJLQWNGID5s5J1J8QoH3a7p/pOUu2xB4COQlVDhGH5wAvEuoD
-M7u5JY3VezVySvKepoJXSk387ICe+4PR1g/L1cE424jF3XB5G4kWB3TJzRoI314O
-+cSDWN4DOBPcVrXHtOf4XVx2aWS9TNhl0mIOp/atkMr3sQg4GZ1GwulkZac5qjuX
-Gvhi4DRNH2MA6o6OOA7UJvMJVQ9d/9uQOpZsGQSVXRIuJTiqgFINBONzq6MokOOG
-q7yZW0oA90Zf6TazCHCImKLM5yXSmKahX4eWGSw2Nft9hTTyplZnqnIi03gef+iG
-wA5aVM90PhFs3YzYB67SxQF125pIIPCBZYkAP/F7m97tco89p6qoIrIwnat6zy+c
-d8EBNtCqmy0=
-=a+gB
------END PGP SIGNATURE-----
-
---=-LUHDQomiI4vthvcm7k3f--
-
+Feel free to push that via Andrew or someone else, but that turd isn't
+going in by my tree because to me it's clearly the wrong thing to do.
