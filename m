@@ -1,169 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933207AbYBHLFy (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:45233 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758331AbYB1W6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2008 06:05:54 -0500
-Subject: [PATCH] mac80211: defer master netdev allocation to
-	ieee80211_register_hw
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>
-Content-Type: text/plain
-Date: Fri, 08 Feb 2008 09:48:13 +0100
-Message-Id: <1202460493.5718.28.camel@johannes.berg> (sfid-20080208_110559_952311_403BDA61)
-Mime-Version: 1.0
+	Thu, 28 Feb 2008 17:58:46 -0500
+Date: Thu, 28 Feb 2008 17:58:42 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	me@bobcopeland.com
+Subject: [PATCH 3/8] ath5k: Identify RF2413 and deal with PHY_SPENDING
+Message-ID: <5c1454da60bece1cae6cab4e025b1126d6e28f49.1204236793.git.mcgrof@winlab.rutgers.edu> (sfid-20080228_225859_809401_62FD1638)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we want to go multiqueue, we will need to know the number of
-queues the hardware has for registering the master netdev. This
-number is only available in ieee80211_register_hw() rather than
-ieee80211_alloc_hw(), so defer allocation of the master device to
-ieee80211_register_hw().
+ * Attach RF2413.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+ * Propertly handle different AR5K_PHY_SPENDING settings for each RF
+chip by adding a field in ath5k_hw. This way we won't have to check
+inside hw_reset (see next patch).
+
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 ---
- net/mac80211/ieee80211.c |   72 ++++++++++++++++++++++++-----------------------
- 1 file changed, 38 insertions(+), 34 deletions(-)
+ drivers/net/wireless/ath5k/ath5k.h |    1 +
+ drivers/net/wireless/ath5k/hw.c    |   27 +++++++++++++++++++++++++--
+ drivers/net/wireless/ath5k/reg.h   |    4 +++-
+ 3 files changed, 29 insertions(+), 3 deletions(-)
 
---- everything.orig/net/mac80211/ieee80211.c	2008-02-08 09:37:02.531263075 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-08 09:41:04.271263563 +0100
-@@ -1372,9 +1372,7 @@ EXPORT_SYMBOL(ieee80211_tx_status);
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops)
- {
--	struct net_device *mdev;
- 	struct ieee80211_local *local;
--	struct ieee80211_sub_if_data *sdata;
- 	int priv_size;
- 	struct wiphy *wiphy;
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 25c8e98..c0b6596 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -966,6 +966,7 @@ struct ath5k_hw {
+ 	u16			ah_phy_revision;
+ 	u16			ah_radio_5ghz_revision;
+ 	u16			ah_radio_2ghz_revision;
++	u32			ah_phy_spending;
  
-@@ -1420,22 +1418,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	BUG_ON(!ops->configure_filter);
- 	local->ops = ops;
+ 	enum ath5k_version	ah_version;
+ 	enum ath5k_radio	ah_radio;
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 998da6b..96b881d 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -208,7 +208,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
  
--	/* for now, mdev needs sub_if_data :/ */
--	mdev = alloc_netdev(sizeof(struct ieee80211_sub_if_data),
--			    "wmaster%d", ether_setup);
--	if (!mdev) {
--		wiphy_free(wiphy);
--		return NULL;
--	}
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(mdev);
--	mdev->ieee80211_ptr = &sdata->wdev;
--	sdata->wdev.wiphy = wiphy;
--
- 	local->hw.queues = 1; /* default */
- 
--	local->mdev = mdev;
--
- 	local->bridge_packets = 1;
- 
- 	local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
-@@ -1447,26 +1431,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	INIT_LIST_HEAD(&local->interfaces);
- 
- 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_sta_scan_work);
--	ieee80211_rx_bss_list_init(mdev);
- 
- 	sta_info_init(local);
- 
--	mdev->hard_start_xmit = ieee80211_master_start_xmit;
--	mdev->open = ieee80211_master_open;
--	mdev->stop = ieee80211_master_stop;
--	mdev->type = ARPHRD_IEEE80211;
--	mdev->header_ops = &ieee80211_header_ops;
--	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
--
--	sdata->vif.type = IEEE80211_IF_TYPE_AP;
--	sdata->dev = mdev;
--	sdata->local = local;
--	sdata->u.ap.force_unicast_rateidx = -1;
--	sdata->u.ap.max_ratectrl_rateidx = -1;
--	ieee80211_if_sdata_init(sdata);
--	/* no RCU needed since we're still during init phase */
--	list_add_tail(&sdata->list, &local->interfaces);
--
- 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
- 		     (unsigned long)local);
- 	tasklet_disable(&local->tx_pending_tasklet);
-@@ -1489,6 +1456,8 @@ int ieee80211_register_hw(struct ieee802
- 	const char *name;
- 	int result;
- 	enum ieee80211_band band;
-+	struct net_device *mdev;
-+	struct ieee80211_sub_if_data *sdata;
- 
- 	/*
- 	 * generic code guarantees at least one band,
-@@ -1512,6 +1481,37 @@ int ieee80211_register_hw(struct ieee802
- 	if (result < 0)
- 		return result;
- 
-+	/* for now, mdev needs sub_if_data :/ */
-+	mdev = alloc_netdev(sizeof(struct ieee80211_sub_if_data),
-+			    "wmaster%d", ether_setup);
-+	if (!mdev)
-+		goto fail_mdev_alloc;
+ 	/* Identify single chip solutions */
+ 	if((srev <= AR5K_SREV_VER_AR5414) &&
+-	(srev >= AR5K_SREV_VER_AR2424)) {
++	(srev >= AR5K_SREV_VER_AR2413)) {
+ 		ah->ah_single_chip = true;
+ 	} else {
+ 		ah->ah_single_chip = false;
+@@ -223,10 +223,33 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		ah->ah_radio = AR5K_RF5110;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112) {
+ 		ah->ah_radio = AR5K_RF5111;
+-	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC1) {
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5111;
++	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC0) {
 +
-+	sdata = IEEE80211_DEV_TO_SUB_IF(mdev);
-+	mdev->ieee80211_ptr = &sdata->wdev;
-+	sdata->wdev.wiphy = local->hw.wiphy;
+ 		ah->ah_radio = AR5K_RF5112;
 +
-+	local->mdev = mdev;
++		if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112A) {
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
++		} else {
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++		}
 +
-+	ieee80211_rx_bss_list_init(mdev);
++	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC1) {
++		ah->ah_radio = AR5K_RF2413;
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
+ 	} else {
 +
-+	mdev->hard_start_xmit = ieee80211_master_start_xmit;
-+	mdev->open = ieee80211_master_open;
-+	mdev->stop = ieee80211_master_stop;
-+	mdev->type = ARPHRD_IEEE80211;
-+	mdev->header_ops = &ieee80211_header_ops;
-+	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
+ 		ah->ah_radio = AR5K_RF5413;
 +
-+	sdata->vif.type = IEEE80211_IF_TYPE_AP;
-+	sdata->dev = mdev;
-+	sdata->local = local;
-+	sdata->u.ap.force_unicast_rateidx = -1;
-+	sdata->u.ap.max_ratectrl_rateidx = -1;
-+	ieee80211_if_sdata_init(sdata);
++		if (ah->ah_mac_srev <= AR5K_SREV_VER_AR5424 &&
++			ah->ah_mac_srev >= AR5K_SREV_VER_AR2424)
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5424;
++		else if (ah->ah_mac_srev >= AR5K_SREV_VER_AR2425)
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
++		else
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
 +
-+	/* no RCU needed since we're still during init phase */
-+	list_add_tail(&sdata->list, &local->interfaces);
 +
- 	name = wiphy_dev(local->hw.wiphy)->driver->name;
- 	local->hw.workqueue = create_singlethread_workqueue(name);
- 	if (!local->hw.workqueue) {
-@@ -1603,6 +1603,9 @@ fail_sta_info:
- 	debugfs_hw_del(local);
- 	destroy_workqueue(local->hw.workqueue);
- fail_workqueue:
-+	ieee80211_if_free(local->mdev);
-+	local->mdev = NULL;
-+fail_mdev_alloc:
- 	wiphy_unregister(local->hw.wiphy);
- 	return result;
- }
-@@ -1663,6 +1666,8 @@ void ieee80211_unregister_hw(struct ieee
- 	wiphy_unregister(local->hw.wiphy);
- 	ieee80211_wep_free(local);
- 	ieee80211_led_exit(local);
-+	ieee80211_if_free(local->mdev);
-+	local->mdev = NULL;
- }
- EXPORT_SYMBOL(ieee80211_unregister_hw);
+ 	}
  
-@@ -1670,7 +1675,6 @@ void ieee80211_free_hw(struct ieee80211_
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
+ 	ah->ah_phy = AR5K_PHY(0);
+diff --git a/drivers/net/wireless/ath5k/reg.h b/drivers/net/wireless/ath5k/reg.h
+index 2f41c83..30629b3 100644
+--- a/drivers/net/wireless/ath5k/reg.h
++++ b/drivers/net/wireless/ath5k/reg.h
+@@ -1923,7 +1923,9 @@ after DFS is enabled */
+ #define AR5K_PHY_SDELAY_32MHZ		0x000000ff
+ #define AR5K_PHY_SPENDING		0x99f8
+ #define AR5K_PHY_SPENDING_RF5111	0x00000018
+-#define AR5K_PHY_SPENDING_RF5112	0x00000014
++#define AR5K_PHY_SPENDING_RF5112	0x00000014 /* <- i 've only seen this on 2425 dumps ! */
++#define AR5K_PHY_SPENDING_RF5112A	0x0000000e /* but since i only have 5112A-based chips */
++#define AR5K_PHY_SPENDING_RF5424	0x00000012 /* to test it might be also for old 5112.  */
  
--	ieee80211_if_free(local->mdev);
- 	wiphy_free(local->hw.wiphy);
- }
- EXPORT_SYMBOL(ieee80211_free_hw);
-
+ /*
+  * Misc PHY/radio registers [5110 - 5111]
+-- 
+1.5.3.7
 
