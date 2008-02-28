@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54666 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbYBYPPW (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.224]:42388 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbYB1Wu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 10:15:22 -0500
-Subject: [PATCH] mac80211: export mesh_plink_broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Content-Type: text/plain
-Date: Mon, 25 Feb 2008 16:15:06 +0100
-Message-Id: <1203952506.13162.105.camel@johannes.berg> (sfid-20080225_151530_294590_0E721D92)
-Mime-Version: 1.0
+	Thu, 28 Feb 2008 17:50:56 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so5477277wra.23
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 14:50:55 -0800 (PST)
+Message-ID: <43e72e890802281450x42b44929q1a2e2cd518c2bbc6@mail.gmail.com> (sfid-20080228_225059_755531_014AD054)
+Date: Thu, 28 Feb 2008 17:50:53 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: Re: [PATCH 7/8] ath5k: Minor code review to match regdumps
+In-Reply-To: <20080224043141.GF4426@makis.domain.invalid>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080224043141.GF4426@makis.domain.invalid>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This needs to be exported because rate control algorithms
-can be modular.
+On Sat, Feb 23, 2008 at 11:31 PM, Nick Kossifidis <mick@madwifi.org> wrote:
+>
+>   * Make some changes to follow register dumps.
+>
+>  Changes-licensed-under: ISC
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+>  ---
+>  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+>  index cd640ed..adcce6f 100644
+>  --- a/drivers/net/wireless/ath5k/hw.c
+>  +++ b/drivers/net/wireless/ath5k/hw.c
+>  @@ -727,15 +727,23 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+>                 /*
+>                  * Write some more initial register settings
+>                  */
+>  -               if (ah->ah_version > AR5K_AR5211){ /* found on 5213+ */
+>  +               if (ah->ah_version == AR5K_AR5212){
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mesh_pathtbl.c |    1 +
- 1 file changed, 1 insertion(+)
+We should probably just move this to a helper. Will send a patch based on this.
 
---- everything.orig/net/mac80211/mesh_pathtbl.c	2008-02-25 16:14:08.000000000 +0100
-+++ everything/net/mac80211/mesh_pathtbl.c	2008-02-25 16:14:15.000000000 +0100
-@@ -257,6 +257,7 @@ void mesh_plink_broken(struct sta_info *
- 	}
- 	rcu_read_unlock();
- }
-+EXPORT_SYMBOL(mesh_plink_broken);
- 
- /**
-  * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
-
-
+  Luis
