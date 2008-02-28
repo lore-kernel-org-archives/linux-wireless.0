@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34163
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751548AbYB2APZ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36952 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751376AbYB1OyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 19:15:25 -0500
-Date: Thu, 28 Feb 2008 16:15:24 -0800 (PST)
-Message-Id: <20080228.161524.183616961.davem@davemloft.net> (sfid-20080229_001529_791619_26419A83)
-To: gordonfarquharson@gmail.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-02-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <97a0a9ac0802281556q2d65ea0fu9f59e02b989fffcf@mail.gmail.com>
-References: <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
-	<20080228.133008.228590007.davem@davemloft.net>
-	<97a0a9ac0802281556q2d65ea0fu9f59e02b989fffcf@mail.gmail.com>
+	Thu, 28 Feb 2008 09:54:22 -0500
+Subject: Re: hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1204190255.3090.165.camel@debian.sh.intel.com>
+References: <1204190255.3090.165.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x1fc3fS6aIMgEkNnOjfr"
+Date: Thu, 28 Feb 2008 15:54:13 +0100
+Message-Id: <1204210453.6309.49.camel@johannes.berg> (sfid-20080228_145441_859146_9DC7EE44)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-Date: Thu, 28 Feb 2008 16:56:52 -0700
 
-> On Thu, Feb 28, 2008 at 2:30 PM, David Miller <davem@davemloft.net> wrote:
-> >  Feel free to push that via Andrew or someone else, but that turd isn't
-> >  going in by my tree because to me it's clearly the wrong thing to do.
-> 
-> Would you support the idea, put forward by Matthieu Castet on LKML, to
-> change the test in file2alias such that it issues a warning as opposed
-> to an error?
+--=-x1fc3fS6aIMgEkNnOjfr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm ambivalent, the only constraint is that you cannot
-change the layout and alignment of this struct since it
-already appeared in 2.6.24 and therefore tools have
-been compiled against the existing way it is defined.
+
+On Thu, 2008-02-28 at 17:17 +0800, Zhu Yi wrote:
+> Johannes,
+>=20
+> What's the current state for hostapd and mac80211? I'm using below
+> trees. Do I need to apply additional patches from your
+> http://johannes.sipsolutions.net/patches/?
+
+Yes, you need at least the one hostapd patch I still have and also the
+trivial AP mode enable patch. I'll rebase my patches on the current
+wireless-testing tree in a minute so check for patch uploads later than
+this email.
+
+> mac80211 from
+> http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-2.6.git;a=
+=3Dsummary
+
+As John said, you need -testing.
+
+johannes
+
+--=-x1fc3fS6aIMgEkNnOjfr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8bLFKVg1VMiehFYAQKxhQ/+MB3bL1ejJM1JK9281eHKXeDCP08Y3snF
+c9Amk4lyWr79GGrEDuJW/nMyRr80wJXIbZXKLoKu5LlLa4oXe3KyWnRsEo91eLwd
+QVE0WtvTVza4kpZh6nFu2eZOgz4xQzqiD+ZGSRccDWhVGMIK1NzmnEVcMFKQMM8C
+bBXWWgxCtxFJNvrQfxKVLMkPAf4/fYt/ziHbrPE1QKjPyqKqvAKIScg+qQ1sxnU+
+tk0TihFw6WhvWLam5IqcEJWPFmP16ySebp8z3DH9CBuREmaIcWzNx3Z6LsoEqyNT
+rBn7RiLttv82VSzNe+q7imn1wXs27lUwEc++2JUspS+W5sjvlGekQM0fl02RBNWN
+REYj0CFlF6u8fILtyJxXgR2P1Ngcj3nGNXImJKf3/95xj99TsDhVy8OTY2EdVhqs
+DX3SoHjbPpGahTkgfYpLlnae39PrGLK/sCygQRSwwJI5V4MV2QnhP51fWYpUYwzp
+1jh2DO8Rbtkks5dR1hQYQzy0UX/aHhn65DQGuDh3GVfnsdTNAYL78bGZrPasRzGE
+49brsMeZw0/t9JcSQQDy/1juCjGjjC/tij2wHcEHjJZqG+LQrAwnqCOQaMa8mBfk
+gesL7il03Itr6RlTFsaon2me5ihWGZIfq2qLWtiUhSqa2SshsBNe39ZhXo+f/vap
+Hy049F4+b6s=
+=frf/
+-----END PGP SIGNATURE-----
+
+--=-x1fc3fS6aIMgEkNnOjfr--
+
