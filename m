@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunatiki.de ([85.214.70.22]:40566 "EHLO
-	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752368AbYBQVh5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2008 16:37:57 -0500
-From: Patrick Grimm <patrick@lunatiki.de>
-To: Richard Scherping <richard@scherping.de>
-Subject: Re: [HOTFIX] Re: mac80211/iwl4965: ad-hoc broken in 2.6.25-rc1
-Date: Sun, 17 Feb 2008 22:37:57 +0100
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-References: <47B1F422.4060501@scherping.de> <47B60044.9000801@scherping.de> <200802160119.07856.patrick@lunatiki.de>
-In-Reply-To: <200802160119.07856.patrick@lunatiki.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200802172237.57638.patrick@lunatiki.de> (sfid-20080217_213801_174924_D4C21EAC)
+Received: from mx1.redhat.com ([66.187.233.31]:53376 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761AbYB1CcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2008 21:32:00 -0500
+Subject: Re: [PATCH, take 2] libertas: implement SSID scanning for
+	SIOCSIWSCAN
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200802261522.05676.hs4233@mail.mn-solutions.de>
+References: <200802261522.05676.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 27 Feb 2008 21:28:37 -0500
+Message-Id: <1204165717.26788.1.camel@localhost.localdomain> (sfid-20080228_023212_414955_A1F92D99)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 16. Februar 2008 01:19:07 schrieb Patrick Grimm:
-> Am Freitag, 15. Februar 2008 22:12:36 schrieb Richard Scherping:
-> > Chatre, Reinette schrieb:
-> > >>> One more question ... did ad-hoc work for you before this patch?
-> > >>
-> > >> No. In my tests only ipw3945 works in Ad-Hoc mode.
-> > >
-> > > ok - that explains things. The patch assumes that ad-hoc mode is
-> > > working, which is unfortunately not the case. We have to fix this.
-> > >
-> > > Reinette
-> >
-> > As I said, I have tested with iwl4965 only. Seems as if there are more
-> > problems with ad-hoc and iwl3945. Did ad-hoc work in the "old" iwl3945
-> > (before the API change with old version 1.1.17, compared to new version
-> > 1.2.23/26)?
->
-> I have made some short tests with my working kernel 2.6.23.
-With 2 Ad-Hoc Nodes.
-> Version 1.1.17 - 1.1.22 Ad-Hoc mode is working.
-> Version 1.1.23 -            Ad-Hoc mode is not working.
+On Tue, 2008-02-26 at 15:22 +0100, Holger Schurig wrote:
+> libertas: implement SSID scanning for SIOCSIWSCAN
+> 
+> After my bit scan re-writing the SIOCSIWSCAN wext ioctl no longer supported
+> scanning for a specific SSID. However, wpa_supplicant is a possible user of
+> this ioctl, so here is code that add's this.
+> 
+> While passing, removed even more of the debugfs-based scanning. You can (and
+> should) the SIOCSIWSCAN to ask for scans, so there is no need for
+> proprietary interfaces for scanning. And, besides, the scan result couldn't
+> be used further, e.g. not for associating.
 
-The iwlwifi versions 1.1.17 - everything is not working
-with more then 2 Ad-Hoc Nodes.
+Was going to test this; but it doesn't apply to either libertas-2.6 or
+to wireless-2.6/everything.  Which branch is it a diff from?
 
-Please keep me updated I will test your patches again.
+Also, should we still be targeting libertas-2.6 or just go straight to
+Linville since Woodhouse seems to have gone quiet for a bit?  If he has,
+we should probably get Linville to pull the latest from libertas-2.6
+since there's a few good cleanups in there (the should_deauth_infra()
+return value for one).  Then send further patches to wireless-2.6 until
+woodhouse shows up again.
 
-Patrick
+Dan
+
+
