@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:4986 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbYBBSlF (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:14093 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753562AbYB1VVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2008 13:41:05 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2303455pyb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2008 10:41:05 -0800 (PST)
-Message-ID: <43e72e890802021041x63e41a0ei80d7ffbfade0b820@mail.gmail.com> (sfid-20080202_184115_480212_E0D34CB2)
-Date: Sat, 2 Feb 2008 13:41:03 -0500
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH 3/3] ath5k: Add build option to enable hardware encryption
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com
-In-Reply-To: <200802021134.41989.bruno@thinktube.com>
+	Thu, 28 Feb 2008 16:21:22 -0500
+Received: by an-out-0708.google.com with SMTP id d31so813304and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 13:21:21 -0800 (PST)
+Message-ID: <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> (sfid-20080228_212147_148411_38295552)
+Date: Thu, 28 Feb 2008 14:21:21 -0700
+From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080227.235110.242439399.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080201133731.GH28995@ruslug.rutgers.edu>
-	 <200802021134.41989.bruno@thinktube.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080228014125.GI3078@tuxdriver.com>
+	 <20080227.235110.242439399.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 1, 2008 9:34 PM, bruno randolf <bruno@thinktube.com> wrote:
+Hi David
 
-> hi luis!
+On Thu, Feb 28, 2008 at 12:51 AM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+>  Date: Wed, 27 Feb 2008 20:41:25 -0500
 >
-> i think this is pretty much overkill. why would anyone say Y to that?
-> wouldn't it suffice to add that comment to the code and not bother the users?
-> developers would work on the code anyways.
+>
+>  > Gordon Farquharson (1):
+>  >       Fix b43 driver build for arm
+>
+>  Please revert this change and resend your pull request.
+>
+>  If file2alias doesn't work properly in a cross build environment, we
+>  don't fix it by crapping up mod_devalias.h with these silly align
+>  attribute annotations.
 
-I am not sure if encryption is going to work similar in later
-chipsets, this would allow an easy way for developers/distributions
-tell users to say yes there for chipsets we know it works for, for
-other chipsets people can say no. If we're sure its the same across
-chipsets then lets not apply it but I am not sure of that. Anyone?
+This was extensively discussed on LKML [1, 2] and the patch has been
+merged into Andrew Morton's -mm tree. It is understood that this is
+not the Right Way to fix to problem, hence the big fat comment in the
+code. It would be great if you could reconsider your decision.
 
-  Luis
+Thanks.
+
+Gordon
+
+[1] http://groups.google.com/group/linux.kernel/browse_thread/thread/0013ccdcfce3feaa/608657870eb62a12?#608657870eb62a12
+[2] http://groups.google.com/group/linux.kernel/browse_thread/thread/13ccdcfce3feaa/a37a5fcbb6431eb0?lnk=gst&q=Fix+b43+driver+build+for+arm#a37a5fcbb6431eb0
+
+-- 
+Gordon Farquharson
+GnuPG Key ID: 32D6D676
