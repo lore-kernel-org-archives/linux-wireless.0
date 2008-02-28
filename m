@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.159]:58105 "EHLO
-	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbYBUWqr (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:45260 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755332AbYB1W7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2008 17:46:47 -0500
-Subject: Re: [Rt2400-devel] 2.6.25-rc2 regression in rt61pci wireless driver
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, chris2553@googlemail.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200802212251.26897.IvDoorn@gmail.com>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <1203542195.3240.1.camel@boulder.homenet>
-	 <1203628049.3277.6.camel@boulder.homenet>
-	 <200802212251.26897.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Thu, 21 Feb 2008 22:46:31 +0000
-Message-Id: <1203633991.3186.2.camel@boulder.homenet> (sfid-20080221_224652_797892_7ADD9FC5)
-Mime-Version: 1.0
+	Thu, 28 Feb 2008 17:59:19 -0500
+Date: Thu, 28 Feb 2008 17:59:15 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	me@bobcopeland.com
+Subject: [PATCH 5/8] ath5k: Remove RF5413 from rf gain optimization functions
+Message-ID: <337c8a3f140d21bc2b56c23cd6d5888fe5d6cdeb.1204236793.git.mcgrof@winlab.rutgers.edu> (sfid-20080228_225921_845731_357E926B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-02-21 at 22:51 +0100, Ivo van Doorn wrote:
-> On Thursday 21 February 2008, Chris Vine wrote:
-[snip] 
-> > Here's some further information.
-> > 
-> > I have a fully functioning version of rt2x00-2.0.14 and mac80211 from
-> > wireless-2.6/compat-wireless-2.6 of mid January which works fine on
-> > kernel 2.6.24.  On doing a comparison with the rt2x00 in vanilla kernel
-> > 2.6.25-rc2, there are no material differences.  (There was a slight
-> > change in the declaration a variable in rt2x00usb.c but it is
-> > immaterial.)
-> > 
-> > I compiled up the working mid-January version of rt2x00 and mac80211
-> > under kernel 2.6.25-rc2 and I get exactly the same result as I reported
-> > earlier, namely I get a kernel panic as soon as I try to associate.  It
-> > looks therefore as if something has changed within the remainder of the
-> > kernel which has caused rt2x00 (and possibly mac80211?) to break.
-> > 
-> > This probably explains the problem another user reported with rt61.
-> 
-> Perhaps something similar like:
-> http://bugzilla.kernel.org/show_bug.cgi?id=10058
-> in there a reference is made to the following patch:
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc2/2.6.25-rc2-mm1/broken-out/revert-send-a-single-notification-on-device-state-changes.patch
-> 
-> Does applying that help?
+ * Since RF2413 it seems that RF_BUFFER settings are different (notice
+that the last part -"bank 7" or whatever- is smaller than in 5111/5112).
+So until we know what's going on we assume there is no gain optimization
+stuff in post-5112 chips.
 
-Yes, well done.
+Changes-licensed-under: ISC
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+---
+ drivers/net/wireless/ath5k/phy.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-I have spent 20 minutes testing it and it seems to work fine (at least
-as well as 2.0.14 does under kernel 2.6.24).  The rate control algorithm
-seems to work better as well, but that is probably a mac80211 thing.
-
-Chris
-
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 40efd4d..ee1dc0f 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1092,7 +1092,6 @@ static s32 ath5k_hw_rfregs_gain_adjust(struct ath5k_hw *ah)
+ 		go = &rfgain_opt_5111;
+ 		break;
+ 	case AR5K_RF5112:
+-	case AR5K_RF5413: /* ??? */
+ 		go = &rfgain_opt_5112;
+ 		break;
+ 	default:
+@@ -1557,7 +1556,6 @@ int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
+ 		ah->ah_gain.g_active = 1;
+ 		break;
+ 	case AR5K_RF5112:
+-	case AR5K_RF5413: /* ??? */
+ 		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
+ 		ah->ah_gain.g_step =
+ 		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
+-- 
+1.5.3.7
 
