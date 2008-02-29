@@ -1,334 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115AbYBVOIl (ORCPT
+Received: from mk-outboundfilter-1.mail.uk.tiscali.com ([212.74.114.37]:31794
+	"EHLO mk-outboundfilter-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754946AbYB2XtQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2008 09:08:41 -0500
-Subject: [PATCH] mac80211: remove STA entries when taking down interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain
-Date: Fri, 22 Feb 2008 14:21:38 +0100
-Message-Id: <1203686498.7082.16.camel@johannes.berg> (sfid-20080222_140850_587204_DB8F3743)
-Mime-Version: 1.0
+	Fri, 29 Feb 2008 18:49:16 -0500
+From: Adam Baker <linux@baker-net.org.uk>
+To: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: FIF_ filter flags
+Date: Fri, 29 Feb 2008 23:39:27 +0000
+Cc: "Johannes Berg" <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200802292339.27174.linux@baker-net.org.uk> (sfid-20080229_234920_378694_469ECF42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we take down an interface, we need to remove the STA info
-items that belong to it because otherwise we might invoke a
-sta_notify() callback in the driver when we later delete the
-STA entries, but in that case the driver will already have
-removed its knowledge of the interface they belonged to leading
-to confusion. Also, we could invoke the set_tim() callback after
-the driver removed its knowledge of the interface, which can
-lead to a crash if it requests a beacon with a then-invalid vif
-pointer!
+Hi,
 
-A side effect of this patch is that, because it was easier, it
-disallows changing the WDS peer while an interface is up. Should
-that actually be necessary, it can be added back, but the WDS
-peer STA entry may not be added while the interface is UP so for
-now I've simplified the WDS peer's STA entry lifetime management.
+I've spotted something in the way rt2x00 handles the filter setting flags that 
+doesn't seem to match the documentation. I suspect it makes no difference in 
+practice but there is a change needed in that area anyway so I'd like to get 
+it right in the patch.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Fixes a crash in ieee80211_beacon_get() when I rmmod b43 or
-ip link set wlan0 down while hostapd is running on that iface
-and stations are associated.
+The documentation says a driver should clear any flags for data which it can't 
+provide but makes no mention of doing anything about unrequested data that it 
+does provide. The current rt2x00 implementation will set the relevant flag if 
+it can't help providing something that wasn't asked for.
 
- net/mac80211/ieee80211.c       |   97 +++++++++++++++++------------------------
- net/mac80211/ieee80211_i.h     |    1 
- net/mac80211/ieee80211_iface.c |   22 +--------
- net/mac80211/ieee80211_ioctl.c |   18 +++++--
- net/mac80211/sta_info.c        |   14 +++++
- net/mac80211/sta_info.h        |    2 
- 6 files changed, 73 insertions(+), 81 deletions(-)
+For example rt2x00 devices only have one promiscuous mode that covers traffic 
+in the same and other BSSes therefore if either of FIF_PROMISC_IN_BSS or 
+FIF_OTHER_BSS are set then the driver will set both of them in the returned 
+flags value.
 
---- everything.orig/net/mac80211/ieee80211.c	2008-02-22 14:03:20.000000000 +0100
-+++ everything/net/mac80211/ieee80211.c	2008-02-22 14:03:26.000000000 +0100
-@@ -176,6 +176,7 @@ static int ieee80211_open(struct net_dev
- 	struct ieee80211_if_init_conf conf;
- 	int res;
- 	bool need_hw_reconfig = 0;
-+	struct sta_info *sta;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -249,6 +250,20 @@ static int ieee80211_open(struct net_dev
- 	case IEEE80211_IF_TYPE_WDS:
- 		if (is_zero_ether_addr(sdata->u.wds.remote_addr))
- 			return -ENOLINK;
-+
-+		/* Create STA entry for the WDS peer */
-+		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
-+				     GFP_KERNEL);
-+		if (!sta)
-+			return -ENOMEM;
-+
-+		sta->flags |= WLAN_STA_AUTHORIZED;
-+
-+		res = sta_info_insert(sta);
-+		if (res) {
-+			sta_info_destroy(sta);
-+			return res;
-+		}
- 		break;
- 	case IEEE80211_IF_TYPE_VLAN:
- 		if (!sdata->u.vlan.ap)
-@@ -359,14 +374,20 @@ static int ieee80211_open(struct net_dev
- 
- static int ieee80211_stop(struct net_device *dev)
- {
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_init_conf conf;
- 	struct sta_info *sta;
- 	int i;
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	/*
-+	 * Stop TX on this interface first.
-+	 */
-+	netif_stop_queue(dev);
- 
-+	/*
-+	 * Now delete all active aggregation sessions.
-+	 */
- 	rcu_read_lock();
- 
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-@@ -380,7 +401,24 @@ static int ieee80211_stop(struct net_dev
- 
- 	rcu_read_unlock();
- 
--	netif_stop_queue(dev);
-+	/*
-+	 * Remove all stations associated with this interface.
-+	 *
-+	 * This must be done before calling ops->remove_interface()
-+	 * because otherwise we can later invoke ops->sta_notify()
-+	 * whenever the STAs are removed, and that invalidates driver
-+	 * assumptions about always getting a vif pointer that is valid
-+	 * (because if we remove a STA after ops->remove_interface()
-+	 * the driver will have removed the vif info already!)
-+	 *
-+	 * We could relax this and only unlink the stations from the
-+	 * hash table and list but keep them on a per-sdata list that
-+	 * will be inserted back again when the interface is brought
-+	 * up again, but I don't currently see a use case for that,
-+	 * except with WDS which gets a STA entry created when it is
-+	 * brought up.
-+	 */
-+	sta_info_flush(local, sdata);
- 
- 	/*
- 	 * Don't count this interface for promisc/allmulti while it
-@@ -881,57 +919,6 @@ void ieee80211_if_setup(struct net_devic
- 	dev->destructor = ieee80211_if_free;
- }
- 
--/* WDS specialties */
--
--int ieee80211_if_update_wds(struct net_device *dev, u8 *remote_addr)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct sta_info *sta;
--	int err;
--	DECLARE_MAC_BUF(mac);
--
--	might_sleep();
--
--	if (compare_ether_addr(remote_addr, sdata->u.wds.remote_addr) == 0)
--		return 0;
--
--	/* Create STA entry for the new peer */
--	sta = sta_info_alloc(sdata, remote_addr, GFP_KERNEL);
--	if (!sta)
--		return -ENOMEM;
--
--	sta->flags |= WLAN_STA_AUTHORIZED;
--	err = sta_info_insert(sta);
--	if (err) {
--		sta_info_destroy(sta);
--		return err;
--	}
--
--	rcu_read_lock();
--
--	/* Remove STA entry for the old peer */
--	sta = sta_info_get(local, sdata->u.wds.remote_addr);
--	if (sta)
--		sta_info_unlink(&sta);
--	else
--		printk(KERN_DEBUG "%s: could not find STA entry for WDS link "
--		       "peer %s\n",
--		       dev->name, print_mac(mac, sdata->u.wds.remote_addr));
--
--	/* Update WDS link data */
--	memcpy(&sdata->u.wds.remote_addr, remote_addr, ETH_ALEN);
--
--	rcu_read_unlock();
--
--	if (sta) {
--		synchronize_rcu();
--		sta_info_destroy(sta);
--	}
--
--	return 0;
--}
--
- /* everything else */
- 
- static int __ieee80211_if_config(struct net_device *dev,
---- everything.orig/net/mac80211/sta_info.c	2008-02-22 14:03:20.000000000 +0100
-+++ everything/net/mac80211/sta_info.c	2008-02-22 14:03:26.000000000 +0100
-@@ -221,6 +221,8 @@ int sta_info_insert(struct sta_info *sta
- 	unsigned long flags;
- 	DECLARE_MAC_BUF(mac);
- 
-+	WARN_ON(!netif_running(sdata->dev));
-+
- 	spin_lock_irqsave(&local->sta_lock, flags);
- 	/* check if STA exists already */
- 	if (__sta_info_find(local, sta->addr)) {
-@@ -561,14 +563,18 @@ void sta_info_stop(struct ieee80211_loca
- 
- /**
-  * sta_info_flush - flush matching STA entries from the STA table
-+ *
-+ * Returns the number of removed STA entries.
-+ *
-  * @local: local interface data
-  * @sdata: matching rule for the net device (sta->dev) or %NULL to match all STAs
-  */
--void sta_info_flush(struct ieee80211_local *local,
-+int sta_info_flush(struct ieee80211_local *local,
- 		    struct ieee80211_sub_if_data *sdata)
- {
- 	struct sta_info *sta, *tmp;
- 	LIST_HEAD(tmp_list);
-+	int ret = 0;
- 	unsigned long flags;
- 
- 	might_sleep();
-@@ -577,8 +583,10 @@ void sta_info_flush(struct ieee80211_loc
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
- 		if (!sdata || sdata == sta->sdata) {
- 			__sta_info_unlink(&sta);
--			if (sta)
-+			if (sta) {
- 				list_add_tail(&sta->list, &tmp_list);
-+				ret++;
-+			}
- 		}
- 	}
- 	spin_unlock_irqrestore(&local->sta_lock, flags);
-@@ -587,4 +595,6 @@ void sta_info_flush(struct ieee80211_loc
- 
- 	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
- 		sta_info_destroy(sta);
-+
-+	return ret;
- }
---- everything.orig/net/mac80211/ieee80211_iface.c	2008-02-22 14:03:18.000000000 +0100
-+++ everything/net/mac80211/ieee80211_iface.c	2008-02-22 14:03:26.000000000 +0100
-@@ -175,8 +175,8 @@ void ieee80211_if_reinit(struct net_devi
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct sta_info *sta;
- 	struct sk_buff *skb;
-+	int flushed;
- 
- 	ASSERT_RTNL();
- 
-@@ -224,21 +224,7 @@ void ieee80211_if_reinit(struct net_devi
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_WDS:
--		rcu_read_lock();
--		sta = sta_info_get(local, sdata->u.wds.remote_addr);
--		if (sta) {
--			sta_info_unlink(&sta);
--		} else {
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			printk(KERN_DEBUG "%s: Someone had deleted my STA "
--			       "entry for the WDS link\n", dev->name);
--#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
--		}
--		rcu_read_unlock();
--		if (sta) {
--			synchronize_rcu();
--			sta_info_destroy(sta);
--		}
-+		/* nothing to do */
- 		break;
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
-@@ -262,8 +248,8 @@ void ieee80211_if_reinit(struct net_devi
- 		break;
- 	}
- 
--	/* remove all STAs that are bound to this virtual interface */
--	sta_info_flush(local, sdata);
-+	flushed = sta_info_flush(local, sdata);
-+	WARN_ON(flushed);
- 
- 	memset(&sdata->u, 0, sizeof(sdata->u));
- 	ieee80211_if_sdata_init(sdata);
---- everything.orig/net/mac80211/ieee80211_i.h	2008-02-22 14:03:19.000000000 +0100
-+++ everything/net/mac80211/ieee80211_i.h	2008-02-22 14:03:26.000000000 +0100
-@@ -667,7 +667,6 @@ int ieee80211_hw_config(struct ieee80211
- int ieee80211_if_config(struct net_device *dev);
- int ieee80211_if_config_beacon(struct net_device *dev);
- void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
--int ieee80211_if_update_wds(struct net_device *dev, u8 *remote_addr);
- void ieee80211_if_setup(struct net_device *dev);
- int ieee80211_hw_config_ht(struct ieee80211_local *local, int enable_ht,
- 			   struct ieee80211_ht_info *req_ht_cap,
---- everything.orig/net/mac80211/sta_info.h	2008-02-22 14:03:22.000000000 +0100
-+++ everything/net/mac80211/sta_info.h	2008-02-22 14:03:26.000000000 +0100
-@@ -296,7 +296,7 @@ void sta_info_clear_tim_bit(struct sta_i
- void sta_info_init(struct ieee80211_local *local);
- int sta_info_start(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
--void sta_info_flush(struct ieee80211_local *local,
-+int sta_info_flush(struct ieee80211_local *local,
- 		    struct ieee80211_sub_if_data *sdata);
- 
- #endif /* STA_INFO_H */
---- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-02-22 14:03:18.000000000 +0100
-+++ everything/net/mac80211/ieee80211_ioctl.c	2008-02-22 14:03:37.000000000 +0100
-@@ -491,10 +491,20 @@ static int ieee80211_ioctl_siwap(struct 
- 		ieee80211_sta_req_auth(dev, &sdata->u.sta);
- 		return 0;
- 	} else if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
--		if (memcmp(sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
--			   ETH_ALEN) == 0)
--			return 0;
--		return ieee80211_if_update_wds(dev, (u8 *) &ap_addr->sa_data);
-+		/*
-+		 * If it is necessary to update the WDS peer address
-+		 * while the interface is running, then we need to do
-+		 * more work here, namely if it is running we need to
-+		 * add a new and remove the old STA entry, this is
-+		 * normally handled by _open() and _stop().
-+		 */
-+		if (netif_running(dev))
-+			return -EBUSY;
-+
-+		memcpy(&sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
-+		       ETH_ALEN);
-+
-+		return 0;
- 	}
- 
- 	return -EOPNOTSUPP;
+It will also for some devices set the FIF_ALLMULTI flag if mc_count is non 
+zero.
 
+If this behaviour is considered desirable then I'll keep it working when 
+making the change but if not I'll remove it.
 
+Thanks
+
+Adam
