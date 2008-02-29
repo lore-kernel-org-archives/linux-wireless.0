@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4947 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757019AbYB0BcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 20:32:11 -0500
-Date: Tue, 26 Feb 2008 20:07:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problems with RTL8187 USB device
-Message-ID: <20080227010732.GB3066@tuxdriver.com> (sfid-20080227_013215_501948_A28A2495)
-References: <47C49D21.1030905@lwfinger.net>
+Received: from vs166246.vserver.de ([62.75.166.246]:47083 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743AbYB2Wvf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 17:51:35 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH] Fix the bcm43xx driver breakage in 2.6.24/25.
+Date: Fri, 29 Feb 2008 23:49:30 +0100
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Alexey Zaytsev <alexey.zaytsev@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Jeff Garzik <jgarzik@pobox.com>, Greg KH <greg@kroah.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <47C01D03.9030601@gmail.com> <200802291105.35713.mb@bu3sch.de> <20080229205400.GG27212@elte.hu>
+In-Reply-To: <20080229205400.GG27212@elte.hu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47C49D21.1030905@lwfinger.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200802292349.31415.mb@bu3sch.de> (sfid-20080229_225204_284902_356AA2B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2008 at 04:13:37PM -0700, Larry Finger wrote:
-> After the BCM4311 that is built-in on my laptop failed, I bought a USB wi-fi device to use until I
-> get my laptop fixed. Based on suggestions from the wireless mailing list, I bought one with an
-> RTL8187 chip. Naturally, I am having problems getting it working.
->
-> First of all, the device works with Windows - thus it is OK.
->
-> The device is manufactured by "Level 1". The FCC ID is NDD9573160714 and it has the identifying code
-> of WNC-0301USB07091001070-V5.
->
-> The output of 'lsusb -v' for this device when run as root is
->
-> Bus 001 Device 002: ID 0bda:8187 Realtek Semiconductor Corp.
+On Friday 29 February 2008 21:54:00 Ingo Molnar wrote:
+> 
+> * Michael Buesch <mb@bu3sch.de> wrote:
+> 
+> > On Friday 29 February 2008 09:21:19 Andrew Morton wrote:
+> > > On Sat, 23 Feb 2008 16:17:55 +0300 Alexey Zaytsev <alexey.zaytsev@gmail.com> wrote:
+> > > 
+> > > > Theese two patches fix a problem instroduced in Linux 2.6.24, and
+> > > > still present in the current Linus' 2.6.25 tree.
+> > > > 
+> > > > The bcm43xx Wifi driver won't work any more, if the b44 Ethernet
+> > > > driver is enabled. This happens because the b44 driver
+> > > > needlessly enables the b43_pci_bridge code, which claims
+> > > > the same pci ids as the bcm43xx driver. The b43_pci_bridge
+> > > > code is needed for the b43{legacy} drivers, but for the
+> > > > b44, only the "ssb pci core" is needed.
+> > > 
+> > > Hate to stick my head into this beehive, but...
+> > > 
+> > > I have a patch queued (the-scheduled-bcm43xx-removal.patch) which 
+> > > will remove this driver from 2.6.26.
+> > > 
+> > > Is that bad?
+> > 
+> > Not at all. The b43 driver from 2.6.26 will work. So there's no reason 
+> > to keep bcm43xx. Alexey just tested a patch that backports the fix to 
+> > 2.6.24 and it works fine.
+> 
+> yeah, i'd support the removal of it too, if the transition is smooth and 
+> the regressions are resolved. And it should be smooth, as long as users 
+> are able to load the firmware blob, right? There's also an entry for it 
 
-This looks like it should be supported by the rtl8187 driver.
+As far as I can see, yes. The b43 driver is pretty mature these days.
+It does base on the codebase of the bcm43xx driver and the most intrusive
+changes date back over a year ago. The driver got lots of testing in the
+meantime.
+I do own the most common device flavours (except the 4311. So if somebody
+has one do donate.. :) ) and I don't see any regressions.
 
-<snip>
+Most "regressions" come from people not installing the updated firmware.
+But that's an issue we simply cannot solve in the driver.
 
->   iProduct                2 RTL8187B_WLAN_Adapter
+Of course, as I always said, if some last-minute regression appears, we
+will defer the bcm43xx removal. So I hope I'm not _really_ the worst
+maintainer ever, although I try hard to, when it comes to patches I
+really dislike. ;)
 
-<snip>
-
->         bEndpointAddress     0x83  EP 3 IN
-
-<snip>
-
-But these bits look like it is actually an rtl8187b, which is not
-supported by the driver.  I didn't know that there where some 'b'
-devices using the same USB ID as the non-b devices -- crappy vendor's
-strike again.  I'm not sure what to do about that one.
-
-As for rtl8187b support in general, I've been looking at porting
-support for those devices form the vendor-provided driver.  But the
-patch is incomplete ATM -- hopefully soon, depending on events. :-(
-
-I'm sorry you are caught in the middle.  I'll try to get that b support
-patch done soon -- hopefully we can get something working for you then.
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
