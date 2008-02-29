@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.versatel.nl ([62.58.50.91]:34342 "EHLO smtp4.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753976AbYCWOZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2008 10:25:01 -0400
-Subject: Re: hostapd with mac80211 and rt2500pci: hostapd doesn't receive
-	clients EAPOL keys unless mon.wlan1 is promiscuous
-From: Bas Hulsken <bhulsken@zonnet.nl>
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1206277237.2902.37.camel@Bas>
-References: <1206271458.2902.27.camel@Bas>
-	 (sfid-20080323_113430_380950_98BCE00E)  <1206274341.16475.185.camel@johannes.berg>
-	 <1206277237.2902.37.camel@Bas>
-Content-Type: text/plain
-Date: Sun, 23 Mar 2008 15:14:13 +0100
-Message-Id: <1206281653.2902.45.camel@Bas> (sfid-20080323_142507_798343_627B957B)
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.177]:23981 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759093AbYCCUUn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2008 15:20:43 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so277416wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:42 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Fri, 29 Feb 2008 14:49:37 -0800
+Subject: [PATCH 06/10] mac80211: delete mesh_path timer on mesh_path removal
+Message-ID: <47cc5d9a.16bc720a.25a2.ffffac2c@mx.google.com> (sfid-20080303_202058_957426_CF4FBCC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+This avoids dereferencing a no longer existing struct mesh_path.
 
-On Sun, 2008-03-23 at 14:00 +0100, Bas Hulsken wrote:
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> before I blow up the system, I guess this should do the trick?
-> (remember, I'm not a kernel hacker ;-):
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index ab4d757..bd58849 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -301,6 +301,7 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
+ 	struct ieee80211_sub_if_data *sdata =
+ 		IEEE80211_DEV_TO_SUB_IF(node->mpath->dev);
+ 
++	del_timer_sync(&node->mpath->timer);
+ 	atomic_dec(&sdata->u.sta.mpaths);
+ 	kfree(node->mpath);
+ 	kfree(node);
+-- 
+1.5.2.5
 
-ok.. so I decided to just give it a try.. seems to work, this is dmesg
-upon ifupping the interface:
-
-phy0: Selected rate control algorithm 'pid'
-Registered led device: rt2500pci-phy0:radio
-rt2500pci MAC changed: 00:0c:f6:14:05:19
-rt2500pci filter_flags: 2
-ADDRCONF(NETDEV_UP): wlan1: link is not ready
-
-when I run hostapd, this is in dmesg:
-
-rt2500pci MAC changed: 00:00:00:00:00:00
-rt2500pci MAC changed: 00:0c:f6:14:05:19
-rt2500pci MAC changed: 00:00:00:00:00:00
-rt2500pci MAC changed: 00:0c:f6:14:05:19
-rt2500pci filter_flags: 2
-rt2500pci filter_flags: 0
-rt2500pci MAC changed: 00:00:00:00:00:00
-rt2500pci MAC changed: 00:0c:f6:14:05:19
-rt2500pci filter_flags: 2
-
-this is immediately on startup of hostapd, after that filter and MAC
-remain unchanged (at least if my printk catches everything).
-
-thanks,
-Bas
 
 
