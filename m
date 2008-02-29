@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:46214 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbYBJQXG (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52479 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760965AbYB2Typ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2008 11:23:06 -0500
-Date: Sun, 10 Feb 2008 11:21:55 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: ath5k: reset for 5424-based card
-Message-ID: <20080210162155.GA10894@hash.localnet> (sfid-20080210_162320_011184_1574347D)
-References: <20080131155901.GA7997@hash.localnet> <40f31dec0801310856p28513848nd22c4b3c590b7a46@mail.gmail.com> <20080201040358.GA13428@hash.localnet> <40f31dec0802010409i47374309o5da3d76fb1bc7025@mail.gmail.com> <20080201225345.GA15922@hash.localnet> <40f31dec0802011748i5a1b8aaftf42f7798762cca3d@mail.gmail.com> <20080203014559.GA20177@hash.localnet> <40f31dec0802050113w6f332a00ja7c9ad849f80e2e0@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0802050113w6f332a00ja7c9ad849f80e2e0@mail.gmail.com>
+	Fri, 29 Feb 2008 14:54:45 -0500
+Subject: Re: pull request: wireless-2.6 2008-02-27
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, David Miller <davem@davemloft.net>,
+	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <20080229191058.GD3234@tuxdriver.com>
+References: <20080228014125.GI3078@tuxdriver.com>
+	 <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com>
+	 <20080228.133008.228590007.davem@davemloft.net>
+	 <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com>
+	 <1204302853.3938.40.camel@johannes.berg>
+	 <20080229191058.GD3234@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-POWEJcvVWXuZhXlgS8Ll"
+Date: Fri, 29 Feb 2008 20:54:15 +0100
+Message-Id: <1204314856.3938.42.camel@johannes.berg> (sfid-20080229_195455_583476_0D6129FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 05, 2008 at 11:13:35AM +0200, Nick Kossifidis wrote:
-> It's fine, that's cool it seems phy is ok (and hopefully is the same
-> with 5413 as i thought), it must be some mac settings related to pci-e
-> that result rx overrun, i've spotted some registers but i'll need to
-> spend some time on it and right now that's not possible ;-(
 
-So I played around with the code this weekend and have gotten it to
-work somewhat (I am posting this using the driver).  I think it only
-works right after system power-up and something's not right because it's 
-a little laggy.
+--=-POWEJcvVWXuZhXlgS8Ll
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-One weird thing -- in my traces, the g-mode tables seem to be the b-mode 
-tables and vice-versa.  I may have mixed up the trace files but I'm not
-sure how.  Anyway it works without changes to the initvals.
 
-I'll post a patch later tonight.
+> > ... it can just check whether CROSS_COMPILE is set in its environment.
+> > No?
+>=20
+> Not a bad idea...something like this?
 
--- 
-Bob Copeland %% www.bobcopeland.com 
+*shrug* I don't even know what the thread is about :) Just
+interfering ;)
+
+johannes
+
+--=-POWEJcvVWXuZhXlgS8Ll
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8hi5qVg1VMiehFYAQL8/A/8CvLFYQDdk+OtWshazRmJZNjENALG3R8O
+aHGAOoaZ27rJgwAT+j6T9vRNkgtHnb1ZrqaTY9vHFcvH3kmwvLL5geSMYYV0npsc
+059UvBuQMJ0HTtQVTC8J+yr8P3GTgwtMGmd2euSwtU/l1EPdnHYBaFS7gXdDFVjY
+ndMtz7kzD/bA1ol1HFKxvUseEo1GQnaeW48XBByUK+q5iPOIYJKH+OMXUxh5lKPq
+UC2/yDnGGqlNc7LJ91gIF5iB4eDdqyMuW1F0n7TD+1sh/BMmXk/Xttw+RiwkDdVp
+rjncGHal+tO1w6wGmKCs97ilSZ6bWFL8oYoZEog4eLvl9GushP//vQidTeh+s0J7
++Vk7F9LpgmjQeOb1tskHUCKpyh/lY5YaFTm2QASOyUzpntA11nVCejKIYq/HlUaR
+kmxnF4xvGgsPxvMnXjq3sgTW6iaTLcnlIwg5fxVcyp85AfcBgceCyHGtIiXC9sma
+E1wciV+VM7oS8/U9AXKPyOqxko7gb1SyYvk7aZNtaPtJsTsqq1wPfhPUFk3CC83v
+a+pTCe0gK/XWQAoI52M09W/yqQNy3cqdR94nPLqImvn4j92klP/M9MaAEiIH5bwF
+m1mlrxcpi8rkiLoR5ma3ohi6uR3x/r/x2WuuY1tiTH2MTfyj7GE7lAbpWqjnE2qR
+BLKY0DSO6AM=
+=AYIm
+-----END PGP SIGNATURE-----
+
+--=-POWEJcvVWXuZhXlgS8Ll--
 
