@@ -1,45 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60828
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754982AbYCTVMv (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.177]:35229 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbYCCUUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 17:12:51 -0400
-Date: Thu, 20 Mar 2008 14:13:07 -0700 (PDT)
-Message-Id: <20080320.141307.173590705.davem@davemloft.net> (sfid-20080320_211256_479866_CD9380A7)
-To: johannes@sipsolutions.net
-Cc: sam@ravnborg.org, dsd@gentoo.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
- symbol
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1206038373.16475.150.camel@johannes.berg>
-References: <1206023695.16475.137.camel@johannes.berg>
-	<20080320181310.GA17884@uranus.ravnborg.org>
-	<1206038373.16475.150.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 3 Mar 2008 15:20:09 -0500
+Received: by el-out-1112.google.com with SMTP id v27so330025ele.17
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:07 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Fri, 29 Feb 2008 12:13:38 -0800
+Subject: [PATCH 00/10] mac80211: fix mesh remaining issues
+Message-ID: <47cc5d75.24bc720a.7d54.ffffacc3@mx.google.com> (sfid-20080303_202053_897232_F04A36AD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 20 Mar 2008 19:39:33 +0100
+This patches fix all the remaining issues in the mesh implementation in
+wireless-testing. The sparse endianness warnings have been solved and the mesh
+option is no longer marked as BROKEN.
 
-> In many cases, especially in networking, it can be beneficial to
-> know at compile time whether the architecture can do unaligned
-> accesses. This patch introduces a new Kconfig symbol
-> 	ARCH_CAN_UNALIGNED_ACCESS
-> for that purpose and adds it to the powerpc and x86 architectures.
-> Also add some documentation about alignment and networking, and
-> especially one intended use of this symbol.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This applys on top of wireless-testing 6d85dc1886.
 
-I think you're semantically testing the wrong thing.
 
-It's not if unaligned accesses are supported, it's if they are
-efficient enough or not.
-
-For example, sparc64 fully handles unaligned accesses but taking the
-trap to fix it up is slow.  So sparc64 "can" handle unaligned
-accesses, but whether we want to set this symbol or not is another
-matter.
