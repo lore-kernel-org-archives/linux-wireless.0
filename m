@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:39293 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbYBFKsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2008 05:48:09 -0500
-From: Andreas Schwab <schwab@suse.de>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Tino Keitel <tino.keitel@gmx.de>, <linux-kernel@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFT 1/1] single_chip test
-References: <20080206014131.9d489a34.akpm@linux-foundation.org>
-	<1202294560-7313-1-git-send-email-jirislaby@gmail.com>
-Date: Wed, 06 Feb 2008 11:48:06 +0100
-In-Reply-To: <1202294560-7313-1-git-send-email-jirislaby@gmail.com> (Jiri
-	Slaby's message of "Wed\, 6 Feb 2008 11\:42\:40 +0100")
-Message-ID: <jezluetl7d.fsf@sykes.suse.de> (sfid-20080206_104812_669786_38897964)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from wf-out-1314.google.com ([209.85.200.170]:7841 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761840AbYB2UzE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 15:55:04 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so4319786wff.4
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Feb 2008 12:55:01 -0800 (PST)
+Subject: Re: [PATCH 08/13 v2] o11s: other changes in mac80211 for mesh
+	interface support
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mattias Nissler <mattias.nissler@gmx.de>
+In-Reply-To: <20080223074133.32a4609c@morte>
+References: <47be7741.05d6720a.44c4.ffffd0c9@mx.google.com>
+	 <20080223074133.32a4609c@morte>
+Content-Type: text/plain
+Date: Fri, 29 Feb 2008 12:56:46 -0800
+Message-Id: <1204318606.7735.16.camel@localhost> (sfid-20080229_205525_022197_2DE50A91)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby <jirislaby@gmail.com> writes:
+On Sat, 2008-02-23 at 07:41 +0100, Stefano Brivio wrote:
+> > +#ifdef CONFIG_MAC80211_MESH
+> > +		if (pf == 100 &&
+> > +		    sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
+> > +			mesh_plink_broken(sta);
+> > +#endif
+> 
+> I'd like to have this moved, maybe right before this:
 
-> @@ -210,12 +205,16 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_s=
-oftc *sc, u8 mac_version)
->  	}
-> =20
->  	/* Identify single chip solutions */
-> -	if((srev <=3D AR5K_SREV_VER_AR5414) &&
-> -	(srev >=3D AR5K_SREV_VER_AR2424)) {
-> -		ah->ah_single_chip =3D true;
-> -	} else {
-> -		ah->ah_single_chip =3D false;
-> -	}
-> +	ah->ah_single_chip =3D !!(srev >=3D AR5K_SREV_VER_AR2424 &&
-                             ^^
+Why? pf and tx_num_xmit (which is checked in an if leading to this
+lines) are modified between this point and where you want to move the
+code. If it is necessary I can add a 'broken link' flag to execute
+mesh_plink_broken later.
 
-This is useless.
+I think by now I will keep using fail_avg, but if you figure out a
+better way to compute a meaningful value please feel free to modify it.
+What we need is the probability (value between 0 and 1, now using
+integers from 0 to 100 to represent it) that a frame sent in the near
+future to this station will fail and will have to be retransmitted.
 
-Andreas.
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
