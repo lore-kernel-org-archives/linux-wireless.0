@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42397 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722AbYB1PAn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2008 10:00:43 -0500
-Subject: Re: newbie help required
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bharat Bhushan <bharat.b.bhushan@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:40439 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752871AbYB2Gb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 01:31:56 -0500
+Subject: Re: hostapd with mac80211 progress
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <d9360e520802280127l32f7f27ch401cf510cd5fd86c@mail.gmail.com> (sfid-20080228_092717_649155_CF81C8E4)
-References: <d9360e520802280127l32f7f27ch401cf510cd5fd86c@mail.gmail.com>
-	 (sfid-20080228_092717_649155_CF81C8E4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zbnC0hD08NlShUgxOzLS"
-Date: Thu, 28 Feb 2008 16:00:23 +0100
-Message-Id: <1204210823.6309.56.camel@johannes.berg> (sfid-20080228_150054_336309_00C28BC1)
+In-Reply-To: <1204210453.6309.49.camel@johannes.berg>
+References: <1204190255.3090.165.camel@debian.sh.intel.com>
+	 <1204210453.6309.49.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 29 Feb 2008 14:22:34 +0800
+Message-Id: <1204266154.3090.182.camel@debian.sh.intel.com> (sfid-20080229_063208_201168_BCAF6F71)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-zbnC0hD08NlShUgxOzLS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2008-02-28 at 15:54 +0100, Johannes Berg wrote:
+> 
+> Yes, you need at least the one hostapd patch I still have and also the
+> trivial AP mode enable patch. I'll rebase my patches on the current
+> wireless-testing tree in a minute so check for patch uploads later
+> than this email.
 
+OK, I've applied all these patches. The kernel doesn't compile unless I
+enabled CONFIG_NETDEVICES_MULTIQUEUE && CONFIG_MAC80211_MESH and with
+below patch.
 
-On Thu, 2008-02-28 at 14:57 +0530, Bharat Bhushan wrote:
-> Hi all,
-> i have been assigned the task of porting our existing 802.11 MAC
-> stack to linux standard wireless stack(mac80211), i have prior
-> experience of 802.11 but dont have any know how of code flow of
-> mac80211 , can any one direct me to any useful link.
+Thanks,
+-yi
 
-You can look at http://johannes.sipsolutions.net/files/mac80211/, it's a
-bit outdated but some of it still applies. Also, you should look at the
-files include/net/mac80211.h and include/net/wireless.h and maybe a
-simple driver like adm8211.
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 2c69e5b..b54bdf8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3584,8 +3584,6 @@ static int iwl4965_tx_status_reply_tx(struct
+iwl4965_priv *priv,
+ 
+ 		tx_status = &(priv->txq[txq_id].txb[idx].status);
+ 		tx_status->retry_count = tx_resp->failure_frame;
+-		tx_status->queue_number = status & 0xff;
+-		tx_status->queue_length = tx_resp->failure_rts;
+ 		tx_status->control.flags &= ~IEEE80211_TXCTL_AMPDU;
+ 		tx_status->flags = iwl4965_is_tx_success(status)?
+ 			IEEE80211_TX_STATUS_ACK : 0;
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 87b40b2..6728ff0 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -28,7 +28,7 @@ const int ieee802_1d_to_ac[8] = { 2, 3, 3, 2, 1, 1, 0,
+0 };
+ 
+ struct ieee80211_sched_data
+ {
+-	unsigned long qdisc_pool[BITS_TO_LONGS(TC_80211_MAX_QUEUES)];
++	unsigned long qdisc_pool[BITS_TO_LONGS(QD_MAX_QUEUES)];
+ 	struct tcf_proto *filter_list;
+ 	struct Qdisc *queues[QD_MAX_QUEUES];
+ 	struct sk_buff_head requeued[QD_MAX_QUEUES];
+diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
+index 98597d9..a0a4495 100644
+--- a/net/mac80211/wme.h
++++ b/net/mac80211/wme.h
+@@ -23,6 +23,7 @@
+ 
+ #define QOS_CONTROL_TID_MASK 0x0f
+ #define QOS_CONTROL_ACK_POLICY_SHIFT 5
++#define QOS_CONTROL_TAG1D_MASK 0x07
+ 
+ extern const int ieee802_1d_to_ac[8];
+ 
 
-johannes
-
---=-zbnC0hD08NlShUgxOzLS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8bMhqVg1VMiehFYAQISVA//YLCsYjZSZOeEQSyo7ibUEHH+S9MvOH5y
-Z6tPfCavmKwibI46oAGNlv8skBeqeqwgK8800OjwGdJUpbdn75JyjSlAjVgV6kCC
-olniwVwOtvyRcqjqMLVGJvP3McgZjuPuEaZ6XgMj6qTpDM7jK6pij7B4Z1j29ssV
-H15DoVDKoQjD4f6xSBC+0dmntgrUqXe7dBVNTW4DegRe1plY1Yz02CtF6kQLvC/g
-yKD8F5n5bxmTF6E6RPhQaCCzAlAG95PkQA3Xpad6Bb+GoX+dYEK+dri7Fso6lsCH
-zCP5Nv5qHxw07ojuXqB7VsqzVkZ8+9LNA4mE6mEbXfs+B4Lf9W4GgbGg0jifd/5x
-+iu1fAQ454fI12V5sXbe9dK18OwIKghLd+wNcz6FOsZGWeh2jKPJnkk/EcY9lCA7
-HZg7wf4e9hAZphW/DzezLjmiEVWufBz0I/5vZgwF+81wQqW4bhZ8gOzikp6ju+Yl
-yESqfTeY9sIGo6o/LNV/T73msY+dpZilWWG7EQSAgzzrMTc+oXt14fqsbM+EO9YE
-L6fmjvD9N7xU7ROPS4UDXUCgNP9yM3THjNed6j+qIQvMuJodjW4qon7JODlYQvbX
-SnFcBWTe5qrrB6CxCSF8qzbMStlNgVwZtnptjU6b8RNKRc3hRiXrhI50bNC5Kjyz
-gJz1E+9jGB8=
-=jheH
------END PGP SIGNATURE-----
-
---=-zbnC0hD08NlShUgxOzLS--
 
