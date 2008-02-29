@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44153 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754429AbYBYQDX (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:55807 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbYB2CDn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2008 11:03:23 -0500
-Subject: Re: [PATCH 01/13 v2] o11s: (nl80211/cfg80211) support for mesh
-	interfaces and mesh paths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1203695866.7082.49.camel@johannes.berg> (sfid-20080222_155831_933711_8528D283)
-References: <47be7703.20f8720a.1044.6474@mx.google.com>
-	 (sfid-20080222_071730_424685_4330467A)  <1203695866.7082.49.camel@johannes.berg>
-	 (sfid-20080222_155831_933711_8528D283)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RITpKS7HVSkvfpTHBkrq"
-Date: Mon, 25 Feb 2008 17:03:12 +0100
-Message-Id: <1203955392.13162.111.camel@johannes.berg> (sfid-20080225_160332_317111_E485CC4C)
-Mime-Version: 1.0
+	Thu, 28 Feb 2008 21:03:43 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so56595ugc.16
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2008 18:03:40 -0800 (PST)
+Message-ID: <b6c5339f0802281803v2035f462ud2de071725af3b48@mail.gmail.com> (sfid-20080229_020347_477851_BE8280B9)
+Date: Thu, 28 Feb 2008 21:03:39 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Subject: Re: [PATCH 6/8] ath5k: Fixes for PCI-E cards
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, bruno@thinktube.com
+In-Reply-To: <539106d71489e812ae2b9f000e15332022b21d75.1204236793.git.mcgrof@winlab.rutgers.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
+	 <539106d71489e812ae2b9f000e15332022b21d75.1204236793.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Feb 28, 2008 at 5:59 PM, Luis R. Rodriguez
+<mcgrof@winlab.rutgers.edu> wrote:
+>  * Fix nic_wakeup for PCI-E chips (don't set AR5K_RESET_CTL_PCI bit)
+>
+>   * Fix dma size setting for PCI-E chips (thanx to Bob Copeland).
+>
+>  Changes-licensed-under: ISC
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>  Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+>  ---
+>   drivers/net/wireless/ath5k/ath5k.h |   10 ++++----
+>   drivers/net/wireless/ath5k/hw.c    |   39 ++++++++++++++++++++++++++---------
+>   2 files changed, 34 insertions(+), 15 deletions(-)
 
---=-RITpKS7HVSkvfpTHBkrq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This version works the same as Nick's patchset for me (pcie 5424 - 0xa3).
 
-
-> > +	int	(*dump_station)(struct wiphy *wiphy, struct net_device *dev,
-> > +			       int idx, u8 *mac, struct station_info *sinfo);
->=20
-> How do you use this? I can see that the "idx" is used to iterate, but
-> this cannot possibly provide race-free access because the implementation
-> in mac80211's cfg.c needs to give up the lock. I think we need to change
-> this to
->=20
-> int (*dump_stations)(wiphy, dev,
-> 		     void (*callback)(wiphy, dev, data, mac, sinfo),
-> 		     void *data);
->=20
-> The same seems to apply to nl80211_dump_mpath() and the corresponding
-> callback.
->=20
-> An alternative would be to provide start_station_dump() and
-> stop_station_dump() callbacks for the locking, or, something I wouldn't
-> really like to see, document the interface to lock when idx =3D=3D 0 and
-> unlock when the return value is -ENOENT or something...
-
-Ok, I changed my mind, it has to be with conditional locking even for
-the RTNL because .dumpit callbacks can be invoked multiple times for a
-single dump operation and need to keep all locks (even the rtnl) across
-the calls.
-
-Can you do that in both nl80211 and mac80211 for both STAs and paths?
-Look at net/netlink/genetlink.c ctrl_dumpfamily() for an example.
-
-johannes
-
---=-RITpKS7HVSkvfpTHBkrq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Lmv6Vg1VMiehFYAQLgmw//WhHd6LTCX14jGV96ZmrV0XX+bMeNFX2R
-UWBZ+8JzIHp9kCeftMOMKLj0XGEEbt99GmFUDrEksg4OTbAma4DrVpt8aSdE9wKr
-wsoOyIZ9CDhm7XkyL9CQJrY4Rp0WO0WG0FIgT8GP0QJLL6xa31OkMt3bqD8+cs/I
-Wn6DySdwq3TosZLxaQQ4Gm6Ns/z8EDBYlj1FWj+GYxA6frQE8rnRf0umqChaX8yr
-HNVC6eQ/l86FU21D5m5dVDCzbXwvWjLAMaOGDcw/yDHBfr34c7+I7rVrW7FHuXL0
-KZF8ShGK/KOnYi0m/CKbckAmPEyFolrTwfyte/fxynDfO6IL616dQoxJKHRdZ6rA
-xEvDeHm/qsMtYwYazKHHRSD0MUMDQPhzelb9Q/qZWMtrMt09dmtBrVcugVaFFgff
-/NSwrgVtuNBU3yqzKeyFAPTuCxqnc1wRMrv4zTC8Kzsv/q0vFwCO/9hat7E9as7Q
-98+0AAeAe2sWsIbmLO2rSeuq/sSAs03vUeupVlK6ERaWfA+noaxW1wryr64biGXl
-7Znxv21mwlncBAvOSU6aEa/yTqug65BCOXzI0F54VSSV2RzKq1k3HVEwaHmQGDqq
-8JPD9c/iztyXSjZWv5ODdKy9V04Ehra/+artvE6w40LEyjpDlXaUdXY3OpHNf8/+
-gojNKbLKNzI=
-=LF+/
------END PGP SIGNATURE-----
-
---=-RITpKS7HVSkvfpTHBkrq--
-
+Tested-by: Bob Copeland <me@bobcopeland.com>
