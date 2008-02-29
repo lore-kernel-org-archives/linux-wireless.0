@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3257 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755037AbYCYRHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 13:07:13 -0400
-Date: Tue, 25 Mar 2008 12:37:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: silently accept deletion of non-existant key
-Message-ID: <20080325163751.GA19318@tuxdriver.com> (sfid-20080325_170736_717110_67D75DDA)
-References: <1206459795-18167-1-git-send-email-linville@tuxdriver.com> <1206462125.16475.303.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1206462125.16475.303.camel@johannes.berg>
+Received: from wa-out-1112.google.com ([209.85.146.177]:23981 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758905AbYCCUUf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2008 15:20:35 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so277416wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:35 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Fri, 29 Feb 2008 12:32:46 -0800
+Subject: [PATCH 04/10] mac80211: breakdown mesh network attributes in different extra fields for wext
+Message-ID: <47cc5d92.26d7720a.13e8.ffffad1b@mx.google.com> (sfid-20080303_202058_137732_FFE21D73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 05:22:05PM +0100, Johannes Berg wrote:
-> 
-> On Tue, 2008-03-25 at 11:43 -0400, John W. Linville wrote:
-> > From: John W. Linville <linville@linville-t41.local>
-> > 
-> > Otherwise, 'iwconfig wlan0 key off' with no key set results in:
-> > 
-> > 	Error for wireless request "Set Encode" (8B2A) :
-> > 	    SET failed on device wlan0 ; No such file or directory.
-> 
-> And what is the problem with us telling iwconfig that there was no key?
-> You should argue for iwconfig ignoring that particular problem, but I
-> don't think we should do so in the kernel.
 
-Why is it a problem?  How does it hurt anything?  How is it useful
-to return an error?
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/ieee80211_sta.c |   35 ++++++++++++++++++++++++++---------
+ 1 files changed, 26 insertions(+), 9 deletions(-)
 
-FWIW, other drivers seem to accept it.  I don't see why we need to
-complain.
-
-John
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index c9d0018..75ced9a 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -3976,18 +3976,35 @@ ieee80211_sta_scan_result(struct net_device *dev,
+ 	if (bss_mesh_cfg(bss)) {
+ 		char *buf;
+ 		u8 *cfg = bss_mesh_cfg(bss);
+-		buf = kmalloc(200, GFP_ATOMIC);
++		buf = kmalloc(50, GFP_ATOMIC);
+ 		if (buf) {
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = IWEVCUSTOM;
+-			sprintf(buf, "Mesh network (version %d)\n"
+-			"\t\t\tPath Selection Protocol ID: 0x%02X%02X%02X%02X\n"
+-			"\t\t\tPath Selection Metric ID: 0x%02X%02X%02X%02X\n"
+-			"\t\t\tCongestion Control Mode ID: 0x%02X%02X%02X%02X\n"
+-			"\t\t\tChannel Precedence: 0x%02X%02X%02X%02X",
+-			cfg[0], cfg[1], cfg[2], cfg[3], cfg[4], cfg[5], cfg[6],
+-			cfg[7], cfg[8], cfg[9], cfg[10], cfg[11], cfg[12],
+-			cfg[13], cfg[14], cfg[15], cfg[16]);
++			sprintf(buf, "Mesh network (version %d)", cfg[0]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(current_ev, end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Path Selection Protocol ID: "
++				"0x%02X%02X%02X%02X", cfg[1], cfg[2], cfg[3],
++							cfg[4]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(current_ev, end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Path Selection Metric ID: "
++				"0x%02X%02X%02X%02X", cfg[5], cfg[6], cfg[7],
++							cfg[8]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(current_ev, end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Congestion Control Mode ID: "
++				"0x%02X%02X%02X%02X", cfg[9], cfg[10],
++							cfg[11], cfg[12]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(current_ev, end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Channel Precedence: "
++				"0x%02X%02X%02X%02X", cfg[13], cfg[14],
++							cfg[15], cfg[16]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(current_ev, end_buf,
+ 							  &iwe, buf);
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2.5
+
+
+
