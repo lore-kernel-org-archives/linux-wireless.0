@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:44239 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751573AbYBSXsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2008 18:48:03 -0500
-Date: Wed, 20 Feb 2008 00:48:22 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
-	kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: ipw3945: not only it periodically dies, it also BUG()s
-Message-ID: <20080219234822.GA23882@elf.ucw.cz> (sfid-20080219_234809_091203_B9E19952)
-References: <20080205214441.GA1518@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982BB1@orsmsx416.amr.corp.intel.com> <20080206143218.GA16188@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003982E4C@orsmsx416.amr.corp.intel.com> <20080206210026.GA32641@elf.ucw.cz> <D936D925018D154694D8A362EEB0892003ABD431@orsmsx416.amr.corp.intel.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:57723 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760170AbYB2MR0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 07:17:26 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Date: Fri, 29 Feb 2008 13:16:59 +0100
+Cc: gordonfarquharson@gmail.com, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net>
+In-Reply-To: <20080228.133008.228590007.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <D936D925018D154694D8A362EEB0892003ABD431@orsmsx416.amr.corp.intel.com>
+Message-Id: <200802291316.59738.mb@bu3sch.de> (sfid-20080229_121802_297528_461731FA)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-
-> > unfortunately the link here does not work. 
+On Thursday 28 February 2008 22:30:08 David Miller wrote:
+> From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+> Date: Thu, 28 Feb 2008 14:21:21 -0700
 > 
-> The instructions on how to report a bug have been updated to address the
-> above issues. Thank you very much for helping us to make it better.
+> > Hi David
+> > 
+> > On Thu, Feb 28, 2008 at 12:51 AM, David Miller <davem@davemloft.net> wrote:
+> > > From: "John W. Linville" <linville@tuxdriver.com>
+> > >  Date: Wed, 27 Feb 2008 20:41:25 -0500
+> > >
+> > >
+> > >  > Gordon Farquharson (1):
+> > >  >       Fix b43 driver build for arm
+> > >
+> > >  Please revert this change and resend your pull request.
+> > >
+> > >  If file2alias doesn't work properly in a cross build environment, we
+> > >  don't fix it by crapping up mod_devalias.h with these silly align
+> > >  attribute annotations.
+> > 
+> > This was extensively discussed on LKML [1, 2] and the patch has been
+> > merged into Andrew Morton's -mm tree. It is understood that this is
+> > not the Right Way to fix to problem, hence the big fat comment in the
+> > code. It would be great if you could reconsider your decision.
+> 
+> If you put that thing in there now, on ARM the structure size changes
+> as does the alignment of that final member.
+> 
+> Then we're stuck with it and you can't remove that hack from
+> mod_devalias.h.  It can't be removed even after the cross build issues
+> of file2alias are resolved properly without re-breaking ARM.
+> 
+> Feel free to push that via Andrew or someone else, but that turd isn't
+> going in by my tree because to me it's clearly the wrong thing to do.
 
-Thanks.
+I didn't even think of this being an actual ABI issue when _removing_
+it again. So you get another NACK from me for this patch. :)
 
-One more nit:
+I'm wondering if we can't simply pass a commandline parameter to file2alias
+that tells it whether we are crosscompiling. It should simply omit the sanity check
+in that case. Is there any easy and reliable way to find out whether we
+are crosscompiling from a makefile (I don't know the makefile core that much)?
 
-bugzilla-daemon@bughost.org seems like normal bugzilla, where you can
-hit reply button, and control it using email... but that does not
-actually work.
+Andrew, can you please drop it? We need to fix this differently. No matter how.
 
-It would be nice to fix that. (Or at least make mail appear from
-noreply@bughost.org, so that it is plain to see it does not work).
-
-It seems that iwl3945 problem is somehow linked to
-GROUP_SCHED... probably iwl can not handle latencies introduced by it?
-
-
-									Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Greetings Michael.
