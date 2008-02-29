@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57003 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbYBLTN0 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57092 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753705AbYB2Q0G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 14:13:26 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH #2] mac80211: Extend filter flag documentation about unsupported flags
-Date: Tue, 12 Feb 2008 20:12:45 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Message-Id: <200802122012.45307.mb@bu3sch.de> (sfid-20080212_191333_067678_F8C30205)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Fri, 29 Feb 2008 11:26:06 -0500
+Subject: Re: hostapd with mac80211 progress
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1204266154.3090.182.camel@debian.sh.intel.com>
+References: <1204190255.3090.165.camel@debian.sh.intel.com>
+	 <1204210453.6309.49.camel@johannes.berg>
+	 <1204266154.3090.182.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5Kc/D2oh+LqmbCn95kRO"
+Date: Fri, 29 Feb 2008 17:25:56 +0100
+Message-Id: <1204302356.3938.36.camel@johannes.berg> (sfid-20080229_162611_741965_A97D96DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends the filter flags documentation to make it clear
-what clearing a flag really means.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+--=-5Kc/D2oh+LqmbCn95kRO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-2.6/include/net/mac80211.h
-===================================================================
---- wireless-2.6.orig/include/net/mac80211.h	2008-02-08 22:54:22.000000000 +0100
-+++ wireless-2.6/include/net/mac80211.h	2008-02-12 20:07:19.000000000 +0100
-@@ -790,14 +790,24 @@ static inline void SET_IEEE80211_PERM_AD
-  *
-  * If your device has no multicast address filters your driver will
-  * need to check both the %FIF_ALLMULTI flag and the @mc_count
-  * parameter to see whether multicast frames should be accepted
-  * or dropped.
-  *
-- * All unsupported flags in @total_flags must be cleared, i.e. you
-- * should clear all bits except those you honoured.
-+ * All unsupported flags in @total_flags must be cleared.
-+ * Hardware does not support a flag if it is incapable of _passing_
-+ * the frame to the stack. Otherwise the driver must ignore
-+ * the flag, but not clear it.
-+ * You must _only_ clear the flag (announce no support for the
-+ * flag to mac80211) if you are not able to pass the packet type
-+ * to the stack (so the hardware always filters it).
-+ * So for example, you should clear @FIF_CONTROL, if your hardware
-+ * always filters control frames. If your hardware always passes
-+ * control frames to the kernel and is incapable of filtering them,
-+ * you do _not_ clear the @FIF_CONTROL flag.
-+ * This rule applies to all other FIF flags as well.
-  */
- 
- /**
-  * enum ieee80211_filter_flags - hardware filter flags
-  *
-  * These flags determine what the filter in hardware should be
+
+On Fri, 2008-02-29 at 14:22 +0800, Zhu Yi wrote:
+> On Thu, 2008-02-28 at 15:54 +0100, Johannes Berg wrote:
+> >=20
+> > Yes, you need at least the one hostapd patch I still have and also the
+> > trivial AP mode enable patch. I'll rebase my patches on the current
+> > wireless-testing tree in a minute so check for patch uploads later
+> > than this email.
+>=20
+> OK, I've applied all these patches. The kernel doesn't compile unless I
+> enabled CONFIG_NETDEVICES_MULTIQUEUE && CONFIG_MAC80211_MESH and with
+> below patch.
+
+Ok, now that John merged more stuff you should only need the hostapd
+patch and the allow-ap-vlan-modes patch from my kernel series :)
+
+johannes
+
+--=-5Kc/D2oh+LqmbCn95kRO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8gyE6Vg1VMiehFYAQLSeBAAojU94QDLhBqees5G1CXvq6vBpLZRWUkJ
+RH4NyMMmx/MZaJO/vH/36YS2U9/66+iduh+CIFb9gG9kKKmbaJv1ZUMcSbqqCknn
+1NUMmG+gurFSxZIczWjGzxRb2+84DSm+ftFYvQy0llEyjPWJKpqlHdf//quvwQgn
+uYwxXFAEQJI65h2wfVuOICjrnDIXiUSPOWO1uPPfzODhoL/moBmVFg0DnHzNp9Au
+jZdHelE4DhVmf86L+mSXO4EER6irFJJiiLlz2idqP3MMMDLKZuzfc5IBmg6furQK
+LZ4u3NbTGJUt375JO2Y2GFIOrHZXk/m8LDFLnxliHamBv4PfAgDYfXBLzVS7UIfs
+LQ7t6huVMph305Pv+m7ynzCrh8qRGbGv8MLiGr6CHB0dvnRpP/ibmLCK6a1RjYio
+z95F8GvNn9HQXTuhCelxtjO4f2gHRAd3c0b+cKrmG0ZxvbJ2FRfTCu7LK+Sw9H3m
+DfSybPFH4lVqY61JTOuJ+u2WiNZdbPnz1C6wESCcRbXxvSfqn1CsD6zhH20qZAJU
+5uHFLvj/F7KlNmBavvFYq7qXFUAnOOowAIc/qVXwjyz5tKEMatJWA/ExlOO8Jwcq
++GhZvpKzFKdOd/5A1+VZuXRPc2Ws5vUvRKhCnYOEnF5J2AsDX0zOJBUTuRyAK1TH
+XpvAvhiKFMc=
+=XwFX
+-----END PGP SIGNATURE-----
+
+--=-5Kc/D2oh+LqmbCn95kRO--
+
