@@ -1,75 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55523 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755572AbYB0Ffy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2008 00:35:54 -0500
-Message-ID: <47C4F4B4.7030300@gmail.com> (sfid-20080227_053626_538241_5E241915)
-Date: Tue, 26 Feb 2008 22:27:16 -0700
-From: Larry Finger <Larry.Finger@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4468 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755449AbYB2WGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 17:06:06 -0500
+Date: Fri, 29 Feb 2008 16:42:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>, David Miller <davem@davemloft.net>,
+	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Message-ID: <20080229214240.GH3234@tuxdriver.com> (sfid-20080229_220616_874697_91C4CDDE)
+References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg> <20080229191058.GD3234@tuxdriver.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problems with RTL8187 USB device
-References: <47C49D21.1030905@lwfinger.net> <20080227010732.GB3066@tuxdriver.com>
-In-Reply-To: <20080227010732.GB3066@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080229191058.GD3234@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Tue, Feb 26, 2008 at 04:13:37PM -0700, Larry Finger wrote:
->   
->> After the BCM4311 that is built-in on my laptop failed, I bought a USB wi-fi device to use until I
->> get my laptop fixed. Based on suggestions from the wireless mailing list, I bought one with an
->> RTL8187 chip. Naturally, I am having problems getting it working.
->>
->> First of all, the device works with Windows - thus it is OK.
->>
->> The device is manufactured by "Level 1". The FCC ID is NDD9573160714 and it has the identifying code
->> of WNC-0301USB07091001070-V5.
->>
->> The output of 'lsusb -v' for this device when run as root is
->>
->> Bus 001 Device 002: ID 0bda:8187 Realtek Semiconductor Corp.
->>     
->
-> This looks like it should be supported by the rtl8187 driver.
->
-> <snip>
->
->   
->>   iProduct                2 RTL8187B_WLAN_Adapter
->>     
->
-> <snip>
->
->   
->>         bEndpointAddress     0x83  EP 3 IN
->>     
->
-> <snip>
->
-> But these bits look like it is actually an rtl8187b, which is not
-> supported by the driver.  I didn't know that there where some 'b'
-> devices using the same USB ID as the non-b devices -- crappy vendor's
-> strike again.  I'm not sure what to do about that one.
->
-> As for rtl8187b support in general, I've been looking at porting
-> support for those devices form the vendor-provided driver.  But the
-> patch is incomplete ATM -- hopefully soon, depending on events. :-(
->
-> I'm sorry you are caught in the middle.  I'll try to get that b support
-> patch done soon -- hopefully we can get something working for you then.
->
->   
-Thanks for the info.
+On Fri, Feb 29, 2008 at 02:10:58PM -0500, John W. Linville wrote:
+> On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
+> > 
+> > On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
+> > > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
+> > > 
+> > > > I'm wondering if we can't simply pass a commandline parameter to file2alias
+> > > > that tells it whether we are crosscompiling. It should simply omit the sanity check
+> > > 
+> > > Sounds reasonable to me.
+> > 
+> > In fact, file2alias shouldn't need a command line argument ...
+> > 
+> > > > in that case. Is there any easy and reliable way to find out whether we
+> > > > are crosscompiling from a makefile (I don't know the makefile core that much)?
+> > > 
+> > > Non-empty CROSS_COMPILE definition?
+> > 
+> > ... it can just check whether CROSS_COMPILE is set in its environment.
+> > No?
+> 
+> Not a bad idea...something like this?
 
-If I can give you any help with the patch, please let me know. In about
-another week, I will be forced to use Windows to access the Internet
-(Yuck!!).
+That version didn't work -- it seems CROSS_COMPILE is always set,
+even if it is empty.
 
-Larry
+This version seems to work, but it is a bit chatty when CROSS_COMPILE
+is set and you build lots of modules...thoughts?
 
+John
+
+---
+
+modpost: avoid user/kernel struct size compat check if cross-compiling
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ scripts/mod/file2alias.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
+index 9ddf944..37f311e 100644
+--- a/scripts/mod/file2alias.c
++++ b/scripts/mod/file2alias.c
+@@ -10,6 +10,7 @@
+  * of the GNU General Public License, incorporated herein by reference.
+  */
+ 
++#include <stdlib.h>
+ #include "modpost.h"
+ 
+ /* We use the ELF typedefs for kernel_ulong_t but bite the bullet and
+@@ -62,6 +63,14 @@ static void device_id_check(const char *modname, const char *device_id,
+ 			    void *symval)
+ {
+ 	int i;
++	char *cross_compile;
++
++	cross_compile = getenv("CROSS_COMPILE");
++	if (cross_compile && strlen(cross_compile)) {
++		warn("%s: cross-compile cannot verify userspace/kernel "
++		     "structure size compatibility.\n", modname);
++		return;
++	}
+ 
+ 	if (size % id_size || size < id_size) {
+ 		fatal("%s: sizeof(struct %s_device_id)=%lu is not a modulo "
+-- 
+1.5.3.3
+
+-- 
+John W. Linville
+linville@tuxdriver.com
