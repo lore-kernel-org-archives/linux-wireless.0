@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756058AbYBZPzA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2008 10:55:00 -0500
-Subject: Re: mesh beaconing questions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1204040528.30146.44.camel@localhost.localdomain> (sfid-20080226_154432_804140_8257168D)
-References: <1204034825.13162.233.camel@johannes.berg>
-	 <1204040528.30146.44.camel@localhost.localdomain>
-	 (sfid-20080226_154432_804140_8257168D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W1CZW3oOJCSjktsoFxtW"
-Date: Tue, 26 Feb 2008 16:54:19 +0100
-Message-Id: <1204041259.13162.247.camel@johannes.berg> (sfid-20080226_155637_480160_5066A30B)
-Mime-Version: 1.0
+Received: from mx3.mail.elte.hu ([157.181.1.138]:58322 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095AbYB2Uyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Feb 2008 15:54:49 -0500
+Date: Fri, 29 Feb 2008 21:54:00 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Alexey Zaytsev <alexey.zaytsev@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Jeff Garzik <jgarzik@pobox.com>, Greg KH <greg@kroah.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fix the bcm43xx driver breakage in 2.6.24/25.
+Message-ID: <20080229205400.GG27212@elte.hu> (sfid-20080229_205454_126293_070819D1)
+References: <47C01D03.9030601@gmail.com> <20080229002119.5314aad2.akpm@linux-foundation.org> <200802291105.35713.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200802291105.35713.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-W1CZW3oOJCSjktsoFxtW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* Michael Buesch <mb@bu3sch.de> wrote:
 
+> On Friday 29 February 2008 09:21:19 Andrew Morton wrote:
+> > On Sat, 23 Feb 2008 16:17:55 +0300 Alexey Zaytsev <alexey.zaytsev@gmail.com> wrote:
+> > 
+> > > Theese two patches fix a problem instroduced in Linux 2.6.24, and
+> > > still present in the current Linus' 2.6.25 tree.
+> > > 
+> > > The bcm43xx Wifi driver won't work any more, if the b44 Ethernet
+> > > driver is enabled. This happens because the b44 driver
+> > > needlessly enables the b43_pci_bridge code, which claims
+> > > the same pci ids as the bcm43xx driver. The b43_pci_bridge
+> > > code is needed for the b43{legacy} drivers, but for the
+> > > b44, only the "ssb pci core" is needed.
+> > 
+> > Hate to stick my head into this beehive, but...
+> > 
+> > I have a patch queued (the-scheduled-bcm43xx-removal.patch) which 
+> > will remove this driver from 2.6.26.
+> > 
+> > Is that bad?
+> 
+> Not at all. The b43 driver from 2.6.26 will work. So there's no reason 
+> to keep bcm43xx. Alexey just tested a patch that backports the fix to 
+> 2.6.24 and it works fine.
 
-> > 2. The Draft states to use either procedures 11.1.2.2 (IBSS) or 11.1.2.=
-1
-> > (infrastructure). It is easy to "port" 11.1.2.1 to mesh, but 11.1.2.2
-> > reads like this:
->=20
-> Next question, more relevant to how this affects the user:
->=20
-> What's the meaningful difference between these two choices?  When would
-> you use one and when would you use the other?  Should the user (ie, a
-> user of something like NetworkManager) care whether a particular node is
-> doing IBSS or infrastructure beacons?
+yeah, i'd support the removal of it too, if the transition is smooth and 
+the regressions are resolved. And it should be smooth, as long as users 
+are able to load the firmware blob, right? There's also an entry for it 
+in Documentation/feature-removal-schedule.txt:
 
-Good point. I guess the relevance is that the IBSS mode requires less
-power because you don't have to transmit every beacon? There's a *lot*
-of text in the Draft about beaconing/synchronization and not having
-TBTTs at the same time between different STAs and whatever though so
-maybe there's more to it.
+  What:   bcm43xx wireless network driver
+  When:   2.6.26
+  Files:  drivers/net/wireless/bcm43xx
+  Why:    This driver's functionality has been replaced by the
+          mac80211-based b43 and b43legacy drivers.
+  Who:    John W. Linville <linville@tuxdriver.com>
 
-johannes
-
---=-W1CZW3oOJCSjktsoFxtW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8Q2KqVg1VMiehFYAQKIkw//ae+uxlcbGo1ZJR7oTHU81RnqoGwqGZ8e
-ev2SMvLBAkMjfbe3KqnJmi0K1Rlr5+/Hde8ymeB+yERAbdaD3wj/5DHiWoxspnpY
-b9MbyjBHaBPQjfjaHd+KgOpyyoIwTfNeplBN0yOs/SU2Ku316eu3BRft8cCBDVoe
-GwgpJCWDeY67Y5lTtY8ws14MUGejFBoPYCS2Ie3Sxui72H4FdEJosJPcvrIadzGB
-LPLRKExtk8jNiPiJnInS759DBkQ+HONBEPgsSCudW6JDAFyrOjPquhEcZRY/FEtS
-jxGK5YsE0gFpHcyf++4dvoOtxBSAV2QEnaGSD9CTw1QqsZcChl0nMWiem+QVezUt
-RayXUbFrIfCLBPIlO7TPTUXnWeXta0nxfSVZNzdj37RE6lHHUAf85SLa/W0RidvG
-PX2irID/C9eKc6OWXWfzP7eKRn4u/HtPbR6H6T1ouoXU3QAl3LDmSR3VWM2T8UTC
-HbKyDC2Zd6i7ukQTXkuv50VzocFA8UIMicuWg7pQX/9FLo95u/3MHfhXRLf0MsfL
-inmlWGjTamgTW+4bERylwE2OF2pW6lOqIfvzPMIBuOl4YKh9N2Ln35KOvMSide5l
-TAGhrY/JCFgyMNqt5A/Ar2gElDo7SbiJwSxXNzxp8AV89guWlCBKarQl8ZAvpKc9
-yXlBoRVBLyE=
-=2VT/
------END PGP SIGNATURE-----
-
---=-W1CZW3oOJCSjktsoFxtW--
-
+	Ingo
