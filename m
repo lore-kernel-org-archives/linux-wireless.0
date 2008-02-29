@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:16508 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:19603 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142AbYBLVrd convert rfc822-to-8bit (ORCPT
+	id S932233AbYB2Xly convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:47:33 -0500
+	Fri, 29 Feb 2008 18:41:54 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Subject: RE: [Ipw2100-admin] [PATCH] ipw2100/ipw2200: note firmware loadingcaveat in Kconfig help text
-Date: Tue, 12 Feb 2008 13:44:48 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003A4619E@orsmsx416.amr.corp.intel.com> (sfid-20080212_214742_561491_5BBDF016)
-In-Reply-To: <20080212134942.9FD589D4135@zog.reactivated.net>
-References: <20080212134942.9FD589D4135@zog.reactivated.net>
+Subject: RE: iwl3945 Microcode SW error, and then can't stop Rx DMA
+Date: Fri, 29 Feb 2008 15:38:17 -0800
+Message-ID: <D936D925018D154694D8A362EEB0892003CAD81A@orsmsx416.amr.corp.intel.com> (sfid-20080229_234201_496937_A15F7127)
+In-Reply-To: <43e72e890802281400s33c8cd6fk8835c46eaf7d00ff@mail.gmail.com>
+References: <43e72e890802281400s33c8cd6fk8835c46eaf7d00ff@mail.gmail.com>
 From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Daniel Drake" <dsd@gentoo.org>, <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <ipw2100-admin@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Daniel Drake wrote:
+On , Luis R. Rodriguez wrote:
 
-> Most wireless drivers load their firmware at interface open time,
-> which generally occurs after the filesystem is available. However,
-> the ipw drivers
-> load their firmware at probe time because firmware is required
-> to read the
-> device MAC address. When built-in, probe happens before the
-> filesystem is
-> available, hence device init will only complete successfully
-> if the user
-> has made special arrangements (including firmware plus a loader in
-> the initramfs). 
+> After a while of running on my iwl3945 I get the following error:
 > 
-> Note all this in the kconfig help text for both drivers.
+> [ 8414.072734] wlan0: CTS protection disabled
+> (BSSID=00:13:c4:f4:25:30) [ 8473.409534] wlan0: CTS protection
+> enabled (BSSID=00:13:c4:f4:25:30) [12059.081930] iwl3945: Microcode
+> SW error detected. 
+> Restarting 0x82000008.
+> [12059.081950] iwl3945: Error Reply type 0x00000005 cmd REPLY_TX
+> (0x1C) seq 0x0000 ser 0x0000004B
+> [12060.076397] iwl3945: Can't stop Rx DMA.
 > 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
-> ---
+> I then have to remove the module and add it back. Haven't been able to
+> replicate it again, but will let you know once I do see it again. This
+> is running the latest pull from wireless-testing.git.
 
-Thank you very much.
+If you can reproduce it, please have the driver loaded with debugging
+(debug=0x43fff). This will cause the microcode event log to be dumped to
+the screen and we can then pinpoint what caused the microcode to
+complain.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Thanks
 
 Reinette
