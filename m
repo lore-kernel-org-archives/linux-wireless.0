@@ -1,107 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38734 "EHLO mga11.intel.com"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:43252 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323AbYCJSlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2008 14:41:24 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/7] iwlwifi: fix bug to show hidden APs during scan
-Date: Mon, 10 Mar 2008 11:35:07 -0700
-Message-Id: <1205174112-18962-3-git-send-email-reinette.chatre@intel.com> (sfid-20080310_184129_815707_42743238)
-In-Reply-To: <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
-References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
+	id S1754674AbYCANBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2008 08:01:22 -0500
+Date: Sat, 1 Mar 2008 14:01:33 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	David Miller <davem@davemloft.net>,
+	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Message-ID: <20080301130133.GA14250@uranus.ravnborg.org> (sfid-20080301_130153_599457_864121E6)
+References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg> <20080229191058.GD3234@tuxdriver.com> <20080229214240.GH3234@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080229214240.GH3234@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indirect scanning ('iwlist scan') should report information about
-hidden APs. When an AP is hidden it does not respond to active scanning,
-we thus have to use passive scanning to locate these APs.
+On Fri, Feb 29, 2008 at 04:42:40PM -0500, John W. Linville wrote:
+> On Fri, Feb 29, 2008 at 02:10:58PM -0500, John W. Linville wrote:
+> > On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
+> > > 
+> > > On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
+> > > > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
+> > > > 
+> > > > > I'm wondering if we can't simply pass a commandline parameter to file2alias
+> > > > > that tells it whether we are crosscompiling. It should simply omit the sanity check
+> > > > 
+> > > > Sounds reasonable to me.
+> > > 
+> > > In fact, file2alias shouldn't need a command line argument ...
+> > > 
+> > > > > in that case. Is there any easy and reliable way to find out whether we
+> > > > > are crosscompiling from a makefile (I don't know the makefile core that much)?
+> > > > 
+> > > > Non-empty CROSS_COMPILE definition?
+> > > 
+> > > ... it can just check whether CROSS_COMPILE is set in its environment.
+> > > No?
+> > 
+> > Not a bad idea...something like this?
+> 
+> That version didn't work -- it seems CROSS_COMPILE is always set,
+> even if it is empty.
+> 
+> This version seems to work, but it is a bit chatty when CROSS_COMPILE
+> is set and you build lots of modules...thoughts?
 
-This fixes http://bughost.org/bugzilla/show_bug.cgi?id=1499
+We cannot use CROSS_COMPILE to detect a cross build as CROSS_COMPILE
+is used used to select different gcc versions, cccache etc.
+The only relaiably way to detect a cross build is to check
+is ARCH != modified uname -m arch.
+So this check would have to be done in the top-level Makefile.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Tested-by: Bill Moss <bmoss@clemson.edu>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   21 +++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   21 +++++++++++++--------
- 2 files changed, 26 insertions(+), 16 deletions(-)
+And that for shaving 6 bytes of a structure..
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c3c21ab..e791fa6 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6316,18 +6316,23 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
- 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
- 
--	if (direct_mask)
-+	if (direct_mask) {
- 		IWL_DEBUG_SCAN
- 		    ("Initiating direct scan for %s.\n",
- 		     iwl3945_escape_essid(priv->essid, priv->essid_len));
--	else
-+		scan->channel_count =
-+			iwl3945_get_channels_for_scan(
-+				priv, band, 1, /* active */
-+				direct_mask,
-+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+	} else {
- 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
--
--	scan->channel_count =
--		iwl3945_get_channels_for_scan(
--			priv, band, 1, /* active */
--			direct_mask,
--			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+		scan->channel_count =
-+			iwl3945_get_channels_for_scan(
-+				priv, band, 0, /* passive */
-+				direct_mask,
-+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+	}
- 
- 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
- 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 029556e..b3bafef 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6829,18 +6829,23 @@ static void iwl4965_bg_request_scan(struct work_struct *data)
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
- 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
- 
--	if (direct_mask)
-+	if (direct_mask) {
- 		IWL_DEBUG_SCAN
- 		    ("Initiating direct scan for %s.\n",
- 		     iwl4965_escape_essid(priv->essid, priv->essid_len));
--	else
-+		scan->channel_count =
-+			iwl4965_get_channels_for_scan(
-+				priv, band, 1, /* active */
-+				direct_mask,
-+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+	} else {
- 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
--
--	scan->channel_count =
--		iwl4965_get_channels_for_scan(
--			priv, band, 1, /* active */
--			direct_mask,
--			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+		scan->channel_count =
-+			iwl4965_get_channels_for_scan(
-+				priv, band, 0, /* passive */
-+				direct_mask,
-+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+	}
- 
- 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
- 	    scan->channel_count * sizeof(struct iwl4965_scan_channel);
--- 
-1.5.3.4
-
+	Sam
