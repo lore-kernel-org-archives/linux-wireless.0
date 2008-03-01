@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753460AbYCIVuq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:50:46 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:50:45 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 04/24] rt2x00: Don't use uninitialized desc_len
-Date: Sun, 9 Mar 2008 22:40:06 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200803092237.43451.IvDoorn@gmail.com>
-In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803092240.06525.IvDoorn@gmail.com> (sfid-20080309_215050_026222_82F8A638)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:29146 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751206AbYCAX2B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2008 18:28:01 -0500
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] iwlwifi: removing unused priv->config
+Date: Sun,  2 Mar 2008 01:25:59 +0200
+Message-Id: <1204413959-12282-1-git-send-email-tomas.winkler@intel.com> (sfid-20080301_232828_198139_6405BF5D)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-skbdesc->desc_len is uninitialized at the start
-of the function. So it is a _bad_ idea to use it...
+This patch removes unused variable in iwlYYYY_priv
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt73usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 +--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +--
+ 4 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index b4b7085..a48c82f 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1381,7 +1381,7 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
- 	skb_push(entry->skb, offset);
- 	memcpy(entry->skb->data, rxd, entry->queue->desc_size);
- 	rxd = (__le32 *)entry->skb->data;
--	skb_pull(entry->skb, offset + skbdesc->desc_len);
-+	skb_pull(entry->skb, offset + entry->queue->desc_size);
- 	skb_trim(entry->skb, rxdesc->size);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index dde389d..d36ae00 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -800,7 +800,6 @@ struct iwl3945_priv {
+ 	struct iwl3945_tx_queue txq[IWL_MAX_NUM_QUEUES];
  
- 	/*
+ 	unsigned long status;
+-	u32 config;
+ 
+ 	int last_rx_rssi;	/* From Rx packet statisitics */
+ 	int last_rx_noise;	/* From beacon statistics */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index ce17e4f..cc0745b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -1104,7 +1104,6 @@ struct iwl4965_priv {
+ 	u32 scd_base_addr;	/* scheduler sram base address */
+ 
+ 	unsigned long status;
+-	u32 config;
+ 
+ 	int last_rx_rssi;	/* From Rx packet statisitics */
+ 	int last_rx_noise;	/* From beacon statistics */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 0fab832..139a4a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4506,8 +4506,7 @@ static void iwl3945_dump_nic_error_log(struct iwl3945_priv *priv)
+ 
+ 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
+ 		IWL_ERROR("Start IWL Error Log Dump:\n");
+-		IWL_ERROR("Status: 0x%08lX, Config: %08X count: %d\n",
+-			  priv->status, priv->config, count);
++		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
+ 	}
+ 
+ 	IWL_ERROR("Desc       Time       asrtPC  blink2 "
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 20d012d..99a9f82 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4886,8 +4886,7 @@ static void iwl4965_dump_nic_error_log(struct iwl4965_priv *priv)
+ 
+ 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
+ 		IWL_ERROR("Start IWL Error Log Dump:\n");
+-		IWL_ERROR("Status: 0x%08lX, Config: %08X count: %d\n",
+-			  priv->status, priv->config, count);
++		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
+ 	}
+ 
+ 	desc = iwl4965_read_targ_mem(priv, base + 1 * sizeof(u32));
 -- 
-1.5.4.3
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
