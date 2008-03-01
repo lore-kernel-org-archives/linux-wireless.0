@@ -1,160 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21744 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752721AbYCFSls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 13:41:48 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/2] iwlwifi: add iwl-core module
-Date: Thu,  6 Mar 2008 10:40:19 -0800
-Message-Id: <1204828820-11768-2-git-send-email-reinette.chatre@intel.com> (sfid-20080306_184153_326352_8B439776)
-In-Reply-To: <1204828820-11768-1-git-send-email-reinette.chatre@intel.com>
-References: <1204828820-11768-1-git-send-email-reinette.chatre@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45224 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbYCAJ1I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2008 04:27:08 -0500
+Subject: Re: [PATCH 01/13 v2] o11s: (nl80211/cfg80211) support for mesh
+	interfaces and mesh paths
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1204335110.7735.30.camel@localhost> (sfid-20080301_013020_804923_984AFACD)
+References: <47be7703.20f8720a.1044.6474@mx.google.com>
+	 (sfid-20080222_071730_424685_4330467A)  <1203695866.7082.49.camel@johannes.berg>
+	 (sfid-20080222_155831_933711_8528D283)  <1203955392.13162.111.camel@johannes.berg>
+	 <1204335110.7735.30.camel@localhost> (sfid-20080301_013020_804923_984AFACD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OyWpSupn2AX8kJ2CWnfu"
+Date: Sat, 01 Mar 2008 10:26:56 +0100
+Message-Id: <1204363616.3938.63.camel@johannes.berg> (sfid-20080301_092736_447642_1501FDE0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch adds iwl-core module to iwlwifi driver.
-This module will contain common code and infrastracture for iwlwifi
-driver
+--=-OyWpSupn2AX8kJ2CWnfu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig        |    5 +++
- drivers/net/wireless/iwlwifi/Makefile       |    3 ++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   47 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 ++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 +----
- 5 files changed, 59 insertions(+), 7 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-core.c
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 24c3e3d..5b7c016 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -1,7 +1,12 @@
-+config IWLCORE
-+	tristate "Intel Wireless Wifi Core"
-+	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
-+
- config IWL4965
- 	tristate "Intel Wireless WiFi 4965AGN"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
- 	select FW_LOADER
-+	select IWLCORE
- 	---help---
- 	  Select to build the driver supporting the:
- 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 3bbd383..6b85cca 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -1,3 +1,6 @@
-+obj-$(CONFIG_IWLCORE)	+= iwlcore.o
-+iwlcore-objs 		= iwl-core.o
-+
- obj-$(CONFIG_IWL3945)	+= iwl3945.o
- iwl3945-objs		= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-new file mode 100644
-index 0000000..675b34b
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -0,0 +1,47 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ * Tomas Winkler <tomas.winkler@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *****************************************************************************/
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/version.h>
-+
-+#include "iwl-4965-debug.h"
-+#include "iwl-core.h"
-+
-+MODULE_DESCRIPTION("iwl core");
-+MODULE_VERSION(IWLWIFI_VERSION);
-+MODULE_AUTHOR(DRV_COPYRIGHT);
-+MODULE_LICENSE("GPL/BSD");
-+
-+#ifdef CONFIG_IWL4965_DEBUG
-+u32 iwl4965_debug_level;
-+EXPORT_SYMBOL(iwl4965_debug_level);
-+#endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e6449af..bdd32f8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -63,6 +63,9 @@
- #ifndef __iwl_core_h__
- #define __iwl_core_h__
- 
-+#define IWLWIFI_VERSION "1.2.26k"
-+#define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
-+
- #define IWL_PCI_DEVICE(dev, subdev, cfg) \
- 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = (subdev), \
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 5005c95..af95626 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -49,10 +49,6 @@
- #include "iwl-4965.h"
- #include "iwl-helpers.h"
- 
--#ifdef CONFIG_IWL4965_DEBUG
--u32 iwl4965_debug_level;
--#endif
--
- static int iwl4965_tx_queue_update_write_ptr(struct iwl4965_priv *priv,
- 				  struct iwl4965_tx_queue *txq);
- 
-@@ -91,9 +87,7 @@ int iwl4965_param_amsdu_size_8K;   /* def: enable 8K amsdu size */
- #define VS
- #endif
- 
--#define IWLWIFI_VERSION "1.2.26k" VD VS
--#define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
--#define DRV_VERSION     IWLWIFI_VERSION
-+#define DRV_VERSION     IWLWIFI_VERSION VD VS
- 
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--- 
-1.5.3.4
+On Fri, 2008-02-29 at 17:31 -0800, Luis Carlos Cobo wrote:
+> On Mon, 2008-02-25 at 17:03 +0100, Johannes Berg wrote:
+> > Can you do that in both nl80211 and mac80211 for both STAs and paths?
+> > Look at net/netlink/genetlink.c ctrl_dumpfamily() for an example.
+>=20
+> I'm not sure I completely get what changes are necessary.
+>=20
+> What I understand is that I should acquire (if idx =3D=3D 0) and release
+> (just before returning -ENOENT) the rtnl_lock() from within (mac80211 or
+> equivalent) dump_station function instead of from nl80211_dump_station.
+> Is this the whole idea?
+
+I think it's a bit more complicated because nl80211's dump_station() can
+also be invoked multiple times.
+
+To guarantee the cfg80211 rtnl_lock() promise, dump_station() should
+acquire the rtnl and all locks it needs when it first enters the
+function (oh. that's actually a bug in the other functions too, they
+should acquire the mutex conditionally, will fix).
+
+mac80211 also needs to acquire the sta_lock because otherwise stations
+can be added or removed while dumping.
+
+I suppose the struct netlink_callback needs to be passed through to
+mac80211's dump function with the limitation that the first two entries
+are already used by nl80211...
+
+johannes
+
+--=-OyWpSupn2AX8kJ2CWnfu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8khX6Vg1VMiehFYAQI0Aw/9Gr5EJx+Ud/XMQU9LoKRGrYLWGcp5gv9G
+wtNEI2SHhuT85AS2CnKTB6NXM9UI2dyxTjJf/SfZ1kAjEtM+h2G84g1GcJiaU7JY
+a3DX/xKTyaVu2rJOmAA9vnwR4yDXbEoAwuUDBb1eh9X/k62t9QmabG/WhYGKsYHK
+fLu5xm+YIX5XzWX6oTcyNqWR8wcR2jE++YQN2J3cUDDVr9wZ+RdQWRURNJHEBFZJ
+bMAJFP0hBRMa/PccuqsN/eaQimJN89UD0O2N/5+8U1Nj4pWySRZF2zI0FN7bctz0
+uYxu3aPxv5wkuQJ5g4pGrZ7bnS4L9hWjz7ZtsebKuUkYmS5c3Ex3b0cd6oNfYOMC
+Hw4Z1tImknb+DSWQ82tC9hRgonzj2j7PdpV5AhZmIw1ier8FubZ+93Zq211dVH51
+IzjxyMpdABo0Wi/lBjaSaO2R9uYZb4rsMIjRPPiNvGn6ppWE0H04o+fH6iiCkb0D
+IZq++Yow+KcUDOQNrkvJtOsD23Uyfn1i6cNSW35O8r2kgc9KRXBBtuV/HeaNiIYJ
+X+++YU22rZdH/t0ifvn8p3D6Vyg7aVXyizBmU0AEK31zuiQ6urNmnHDBDjCYp784
+ZE7hhmkpvBFMo/h+pNUnPdDjGRQz20KSFzP6eT1oV1eGEuEeSBJJA1RPKGyp2Bfc
+JiJjYrNM+ic=
+=8+wc
+-----END PGP SIGNATURE-----
+
+--=-OyWpSupn2AX8kJ2CWnfu--
 
