@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:4098 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751898AbYCRByU (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:56965 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754633AbYCAPwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 21:54:20 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC PATCH] mac80211: use hardware flags for signal/noise units
-Date: Tue, 18 Mar 2008 10:54:06 +0900
+	Sat, 1 Mar 2008 10:52:38 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Date: Sat, 1 Mar 2008 16:51:12 +0100
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	jbenc@suse.cz, jirislaby@gmail.com, mickflemm@gmail.com,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <200803082101.24424.bruno@thinktube.com> <1205094875.6387.48.camel@johannes.berg> <43e72e890803171708s3361e1bbxa949cfa27086c31f@mail.gmail.com>
-In-Reply-To: <43e72e890803171708s3361e1bbxa949cfa27086c31f@mail.gmail.com>
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20080228014125.GI3078@tuxdriver.com> <20080229214240.GH3234@tuxdriver.com> <20080301130133.GA14250@uranus.ravnborg.org>
+In-Reply-To: <20080301130133.GA14250@uranus.ravnborg.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803181054.06860.bruno@thinktube.com> (sfid-20080318_015424_356109_168F58DA)
+  charset="iso-8859-1"
+Message-Id: <200803011651.13652.mb@bu3sch.de> (sfid-20080301_155242_475256_05EDAB69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 18 March 2008 09:08:08 Luis R. Rodriguez wrote:
-> On Sun, Mar 9, 2008 at 4:34 PM, Johannes Berg <johannes@sipsolutions.net> 
-wrote:
-> >  On Sat, 2008-03-08 at 21:01 +0900, bruno randolf wrote:
-> >  > RFC: trying to clean up the signal/noise mess - what do you think?
-> >  > (yep, my mailer probably messed up the linebreaks)
-> >  >
-> >  >     mac80211: use hardware flags for signal/noise units
-> >
-> >  No real opinion right now, on skiing vacation ;) Looks like an
-> >  improvement though.
->
-> I believe this counts as an ACK :) Not sure if this applies yet but it
-> sure would be nice to get this in.
+On Saturday 01 March 2008, Sam Ravnborg wrote:
+> > This version seems to work, but it is a bit chatty when CROSS_COMPILE
+> > is set and you build lots of modules...thoughts?
+> 
+> We cannot use CROSS_COMPILE to detect a cross build as CROSS_COMPILE
+> is used used to select different gcc versions, cccache etc.
+> The only relaiably way to detect a cross build is to check
+> is ARCH != modified uname -m arch.
+> So this check would have to be done in the top-level Makefile.
+> 
+> And that for shaving 6 bytes of a structure..
 
-i'll send the patch again soon, with some minor modifications.
-
-bruno
+Wrong. For maintaining userspace ABI compatibility.
