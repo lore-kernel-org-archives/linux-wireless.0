@@ -1,101 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:12251 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587AbYCZJAN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52536 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754908AbYCBPMQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 05:00:13 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: kill useless #define LBS_MONITOR_OFF 0
-Date: Wed, 26 Mar 2008 09:57:14 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803260957.14966.hs4233@mail.mn-solutions.de> (sfid-20080326_090018_360767_77733E3A)
+	Sun, 2 Mar 2008 10:12:16 -0500
+Subject: Re: p54: fix EEPROM structure endianness
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Fainelli <florian.fainelli@telecomint.eu>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200803021559.28528.florian.fainelli@telecomint.eu> (sfid-20080302_150231_277924_AA60DE19)
+References: <1204289793.3938.20.camel@johannes.berg>
+	 <200803021324.51010.florian.fainelli@telecomint.eu>
+	 <1204465244.3917.17.camel@johannes.berg>
+	 <200803021559.28528.florian.fainelli@telecomint.eu>
+	 (sfid-20080302_150231_277924_AA60DE19)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-STS1uHHApdkrM0c0lmIj"
+Date: Sun, 02 Mar 2008 16:11:53 +0100
+Message-Id: <1204470713.3917.20.camel@johannes.berg> (sfid-20080302_151246_307878_58DF3E33)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
---- wireless-testing.orig/drivers/net/wireless/libertas/wext.h
-+++ wireless-testing/drivers/net/wireless/libertas/wext.h
-@@ -15,8 +15,6 @@
- 	u32 value;
- };
- 
--#define LBS_MONITOR_OFF			0
--
- extern struct iw_handler_def lbs_handler_def;
- extern struct iw_handler_def mesh_handler_def;
- 
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c
-+++ wireless-testing/drivers/net/wireless/libertas/main.c
-@@ -277,10 +277,10 @@
- 	struct lbs_private *priv = to_net_dev(dev)->priv;
- 
- 	sscanf(buf, "%x", &monitor_mode);
--	if (monitor_mode != LBS_MONITOR_OFF) {
--		if(priv->monitormode == monitor_mode)
-+	if (monitor_mode) {
-+		if (priv->monitormode == monitor_mode)
- 			return strlen(buf);
--		if (priv->monitormode == LBS_MONITOR_OFF) {
-+		if (!priv->monitormode) {
- 			if (priv->infra_open || priv->mesh_open)
- 				return -EBUSY;
- 			if (priv->mode == IW_MODE_INFRA)
-@@ -293,9 +293,9 @@
- 	}
- 
- 	else {
--		if (priv->monitormode == LBS_MONITOR_OFF)
-+		if (!priv->monitormode)
- 			return strlen(buf);
--		priv->monitormode = LBS_MONITOR_OFF;
-+		priv->monitormode = 0;
- 		lbs_remove_rtap(priv);
- 
- 		if (priv->currenttxskb) {
-@@ -392,7 +392,7 @@
- 
- 	spin_lock_irq(&priv->driver_lock);
- 
--	if (priv->monitormode != LBS_MONITOR_OFF) {
-+	if (priv->monitormode) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
---- wireless-testing.orig/drivers/net/wireless/libertas/rx.c
-+++ wireless-testing/drivers/net/wireless/libertas/rx.c
-@@ -155,7 +155,7 @@
- 
- 	skb->ip_summed = CHECKSUM_NONE;
- 
--	if (priv->monitormode != LBS_MONITOR_OFF)
-+	if (priv->monitormode)
- 		return process_rxed_802_11_packet(priv, skb);
- 
- 	p_rx_pkt = (struct rxpackethdr *) skb->data;
---- wireless-testing.orig/drivers/net/wireless/libertas/tx.c
-+++ wireless-testing/drivers/net/wireless/libertas/tx.c
-@@ -151,7 +151,7 @@
- 
- 	dev->trans_start = jiffies;
- 
--	if (priv->monitormode != LBS_MONITOR_OFF) {
-+	if (priv->monitormode) {
- 		/* Keep the skb to echo it back once Tx feedback is
- 		   received from FW */
- 		skb_orphan(skb);
-@@ -186,8 +186,7 @@
- 	int txfail;
- 	int try_count;
- 
--	if (priv->monitormode == LBS_MONITOR_OFF ||
--	    priv->currenttxskb == NULL)
-+	if (!priv->monitormode || priv->currenttxskb == NULL)
- 		return;
- 
- 	radiotap_hdr = (struct tx_radiotap_hdr *)priv->currenttxskb->data;
+--=-STS1uHHApdkrM0c0lmIj
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+> Le dimanche 2 mars 2008, Johannes Berg a =C3=A9crit :
+> > You mean my patch fixes it?
+>=20
+> Yes absolutely, before, I got error from the eeprom parsing function that=
+ it=20
+> could not read all required eeprom fields, leading to a non-working wirel=
+ess=20
+> interface, causing oopses sometimes.
+>=20
+> With your patch, MAC address, calibration values are read correctly and I=
+ can=20
+> use the USB dongle successfully. Of course the dongle does not oops anymo=
+re=20
+> on big-endian hosts.
+>=20
+> Tested-by: Florian Fainelli <florian.fainelli@telecomint.eu>
+
+Great, thanks for testing, confirms my suspicions about the eeprom
+reading code. Can you do me a favour and also test my patch titled
+"[PATCH] p54: fix eeprom parser length sanity checks"?
+
+johannes
+
+--=-STS1uHHApdkrM0c0lmIj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8rDuKVg1VMiehFYAQIlJQ//fSh2M6qM4gWGFKO/Z0XL4rlP5r2jdaIW
+aHFqzANxv8Fz6wPWSMzClKBWpVcv8vmRPeSudAIgYNR0lQCeL/44qxMSAUnjT3Ac
+PwXyAPeHLK9dbjznR1NpZ1vC8fHj2LL/ryt2JHwIFf+7Z3Kx5ME/EtAamJG38wf3
+Lbti6qJmRJHkbd7TjoUjAEB8QyEVw45XBjuQed0V7X0TojanIPRoTWqI0qU0eh5Z
+8m/DLgpRxLbDrsD7jVTdY69aLI0PINBFne/kk5OfgpZbh9KavoL5EN9Szxqn9Jbw
+ZPEHIubKg8T4Cwc2icebr3xLD0HmVk0nYwV8T/ylz6cUpUjly3EUbAhvi3whKNzL
+aDTiQyoP9OTSvFzaZ7lT69f4jMWL1ZWe70kIeFix/t27LAbYkRcsLcgJ9s1ukrQF
+7MlycmJZvzQ3GtkUS7/M/6aNFSZ3cTykBIPamTDpuES/BB9XCdYwIIVpaCds+2na
+VVIqeczsmlyTMItg6vJ9ZemtVCu5xVeHUstOeF1Pt8lPyEBEm5/Jv1qYhjFP0K4X
+XeHsajKe3joeYlh/lYjuWKQEH7W3boGXJIhUCexwMPotp4A0fiXFVSz3qdZwh6Ei
+4e8QRYupq4oVE+nPmnJ/TD03qWBVJ6yn4tXn2Zz36+iHn8ChG8BWM0d2nl9kKP1U
+D3ufazTIhf8=
+=Sfky
+-----END PGP SIGNATURE-----
+
+--=-STS1uHHApdkrM0c0lmIj--
+
