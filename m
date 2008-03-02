@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:51890 "EHLO
-	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757442AbYCEM3D (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:3288 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbYCBBFw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 07:29:03 -0500
-Message-ID: <47CE8E68.5060701@knosof.co.uk> (sfid-20080305_122915_937019_EEBFF4E6)
-Date: Wed, 05 Mar 2008 12:13:28 +0000
-From: Derek M Jones <derek@knosof.co.uk>
+	Sat, 1 Mar 2008 20:05:52 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1152446ugc.16
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Mar 2008 17:05:51 -0800 (PST)
+Message-ID: <2c0942db0803011705j260186bbgb02dcd8f9842e52b@mail.gmail.com> (sfid-20080302_010558_329137_C31AD12B)
+Date: Sat, 1 Mar 2008 17:05:50 -0800
+From: "Ray Lee" <ray-lk@madrabbit.org>
+To: "kernel list" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Oops in mac80211:rate_control_pid_tx_status
+Cc: "John Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-To: Ingo Molnar <mingo@elte.hu>
-CC: Harvey Harrison <harvey.harrison@gmail.com>,
-	Christopher Li <sparse@chrisli.org>,
-	Julia Lawall <julia@diku.dk>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Alexander Viro <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
- use of ! and &
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com> <20080305070201.GA32434@elte.hu> <1204700995.17484.7.camel@brick> <20080305081904.GA17789@elte.hu>
-In-Reply-To: <20080305081904.GA17789@elte.hu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+Kernel version 2.6.24+ a little (but pre-rc1).
 
->>> i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
->>>
->> Well, (!x & y) and (!x | y) are probably the two that might have been 
->> intended otherwise.  (x & !y), (x | !y) are probably ok.
-> 
-> i think the proper intention in the latter cases is (x & ~y) and
-> (x | ~y).
-> 
-> My strong bet is that in 99% of the cases they are real bugs and && or 
-> || was intended.
+I have a wireless base station that I switched from B/G mixed mode to
+purely B to try to debug a separate issue with a different device on
+my network. As soon as I did that (and on every subsequent boot), the
+system oopses as soon as it tries to associate. Switching the base
+station back to "mixed" avoids the oops.
 
-Developer knowledge of operator precedence and the issue of what
-they intended to write are interesting topics.  Some experimental
-work is described in (binary operators only I'm afraid):
+This is with the b43 driver.
 
-www.knosof.co.uk/cbook/accu06a.pdf
-www.knosof.co.uk/cbook/accu07a.pdf
+Nothing gets to the logs, but there's a photo at:
+    http://madrabbit.org/~ray/mac80211-oops.jpg
 
-The ACCU 2006 experiment provides evidence that developer knowledge
-is proportional to the number of occurrences of a construct in
-source code, it also shows a stunningly high percentage of incorrect
-answers.
-
-The ACCU 2007 experiment provides evidence that the names of the
-operands has a significant impact on operator precedence choice.
-
-I wonder what kind of names are used as the operand of unary
-operators?
-
-I would expect the ~ operator to have a bitwise name, but the
-! operator might have an arithmetic or bitwise name.
-
--- 
-Derek M. Jones                              tel: +44 (0) 1252 520 667
-Knowledge Software Ltd                      mailto:derek@knosof.co.uk
-Applications Standards Conformance Testing    http://www.knosof.co.uk
+Ray
