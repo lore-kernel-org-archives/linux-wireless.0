@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:12023 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760205AbYCFXgv convert rfc822-to-8bit (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:59908 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbYCBU02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 18:36:51 -0500
+	Sun, 2 Mar 2008 15:26:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Date: Sun, 2 Mar 2008 21:25:15 +0100
+Cc: "Sam Ravnborg" <sam@ravnborg.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"Andrew Morton" <akpm@linux-foundation.org>
+References: <20080228014125.GI3078@tuxdriver.com> <20080302115828.GA15820@uranus.ravnborg.org> <97a0a9ac0803021200v117379b6x1c4bc0f8ae580040@mail.gmail.com>
+In-Reply-To: <97a0a9ac0803021200v117379b6x1c4bc0f8ae580040@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: iwl4965 on Compaq 8510p wireless speed very low, unusable
-Date: Thu, 6 Mar 2008 15:34:01 -0800
-Message-ID: <D936D925018D154694D8A362EEB0892003D751F6@orsmsx416.amr.corp.intel.com> (sfid-20080306_233655_576314_88C8A4B6)
-In-Reply-To: <c4aed99f0803061452v59ccfbf9y40782856c45f7560@mail.gmail.com>
-References: <c4aed99f0803061220y40628cdxc8c2a4a0d2cac89f@mail.gmail.com> <D936D925018D154694D8A362EEB0892003D74F74@orsmsx416.amr.corp.intel.com> <c4aed99f0803061452v59ccfbf9y40782856c45f7560@mail.gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Chris Hallinan" <challinan@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
+  charset="iso-8859-1"
+Message-Id: <200803022125.15933.mb@bu3sch.de> (sfid-20080302_202632_619000_41E0E082)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, March 06, 2008 2:53 PM, Chris Hallinan  wrote:
-
-> On Thu, Mar 6, 2008 at 4:05 PM, Chatre, Reinette
-> <reinette.chatre@intel.com> wrote:
->> On , Chris Hallinan  wrote:
->> 
->>  >
->>  > After a couple days of searching (Google, bughost, etc) I've
->>  noticed > others with similar problems, but never came across a
->>  resolution.  Bug > 1481 is similar, though not exact.  Performance
->> is acceptable under  > WinXP (400KB+) 
->> 
->>  Please add information about your environment and test results to
->>  bug 1481 if you think it is appropriate - otherwise, please do
->>  submit a new bug to enable us to track it.
+On Sunday 02 March 2008 21:00:23 Gordon Farquharson wrote:
+> Hi Sam
 > 
-> Bug 1623 has been submitted.
+> On Sun, Mar 2, 2008 at 4:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
 > 
-> In the mean time, is there anything I can do help isolate?
+> >  Find below a patch that detect when we do a cross build and thus ignore
+> >  the check.
 > 
+> Works for me.
+> 
+> Tested-by: Gordon Farquharson <gordonfarquharson@gmail.com>
 
-Can you compare the bandwidth you get with and without encryption? The
-amount of data transmitted when using encryption is significantly more
-than without ... comparing these two numbers may show something.
+The patch looks good. I suggest Andrew pull it for some time into
+the -mm tree and then pushes it forward to Linus for 2.6.25.
 
-Reinette
+You can add an Acked-by: Michael Buesch <mb@bu3sch.de>
+although I can not runtime test it here.
+
+-- 
+Greetings Michael.
