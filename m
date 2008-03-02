@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:64158 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbYCYNNz (ORCPT
+Received: from smtp4.int-evry.fr ([157.159.10.71]:36940 "EHLO
+	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbYCBO7Z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 09:13:55 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so2372169ugc.16
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 06:13:52 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 1/2] rt2x00: Fix rate detection for invalid signals
-Date: Tue, 25 Mar 2008 14:12:45 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Sun, 2 Mar 2008 09:59:25 -0500
+From: Florian Fainelli <florian.fainelli@telecomint.eu>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: p54: fix EEPROM structure endianness
+Date: Sun, 2 Mar 2008 15:59:27 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1204289793.3938.20.camel@johannes.berg> <200803021324.51010.florian.fainelli@telecomint.eu> <1204465244.3917.17.camel@johannes.berg>
+In-Reply-To: <1204465244.3917.17.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803251412.45853.IvDoorn@gmail.com> (sfid-20080325_131402_709609_13720E4A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200803021559.28528.florian.fainelli@telecomint.eu> (sfid-20080302_150231_277924_AA60DE19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It has been observed on rt2500pci hardware that some
-frames received with signal 0x0C do not have the OFDM
-flag set.
+Hi Johannes,
 
-Signals can have 2 meanings:
- 1) The PLCP value
- 2) The bitrate * 10
+Le dimanche 2 mars 2008, Johannes Berg a =E9crit=A0:
+> You mean my patch fixes it?
 
-For rt2500pci (1) is for frames received with a OFDM rate,
-and (2) is for frames received with a CCK rate.
-But 0x0C is a invalid bitrate value but is a valid PLCP
-value for 54Mbs (obvious OFDM rate).
-This means that it is possible that the hardware does not
-set the OFDM bit correctly under all circumstances.
-This results in rt2x00 failing to detect the rate and
-mac80211 triggering a WARN_ON() and dropping the frame.
+Yes absolutely, before, I got error from the eeprom parsing function th=
+at it=20
+could not read all required eeprom fields, leading to a non-working wir=
+eless=20
+interface, causing oopses sometimes.
 
-To bypass this, print a warning when such a frame is received,
-and reset the rate to the lowest supported rate for the current band.
+With your patch, MAC address, calibration values are read correctly and=
+ I can=20
+use the USB dongle successfully. Of course the dongle does not oops any=
+more=20
+on big-endian hosts.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 566f707..d2c0967 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -589,6 +589,13 @@ void rt2x00lib_rxdone(struct queue_entry *entry,
- 		}
- 	}
- 
-+	if (idx < 0) {
-+		WARNING(rt2x00dev, "Frame received with unrecognized signal,"
-+			"signal=0x%.2x, plcp=%d.\n", rxdesc->signal,
-+			!!(rxdesc->dev_flags & RXDONE_SIGNAL_PLCP));
-+		idx = 0;
-+	}
-+
- 	/*
- 	 * Only update link status if this is a beacon frame carrying our bssid.
- 	 */
--- 
-1.5.4.4
-
+Tested-by: Florian Fainelli <florian.fainelli@telecomint.eu>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
