@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2481 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757594AbYCTWIE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 18:08:04 -0400
-Date: Thu, 20 Mar 2008 18:03:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, sam@ravnborg.org,
-	dsd@gentoo.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
-	symbol
-Message-ID: <20080320220348.GC1330@tuxdriver.com> (sfid-20080320_220810_539312_7D4C058A)
-References: <1206023695.16475.137.camel@johannes.berg> <20080320181310.GA17884@uranus.ravnborg.org> <1206038373.16475.150.camel@johannes.berg> <20080320.141307.173590705.davem@davemloft.net> <1206048106.16475.161.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1206048106.16475.161.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbYCBP3F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Mar 2008 10:29:05 -0500
+Subject: Re: [PATCH] p54: fix eeprom parser length sanity checks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Fainelli <florian.fainelli@telecomint.eu>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200803021618.14123.florian.fainelli@telecomint.eu>
+References: <1204324105.3938.49.camel@johannes.berg>
+	 <200803021618.14123.florian.fainelli@telecomint.eu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FjjekAM1B+lCZFMGQ+gU"
+Date: Sun, 02 Mar 2008 16:28:51 +0100
+Message-Id: <1204471731.3917.22.camel@johannes.berg> (sfid-20080302_152915_004051_96BF2D5D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 20, 2008 at 10:21:46PM +0100, Johannes Berg wrote:
-> 
-> > I think you're semantically testing the wrong thing.
-> > 
-> > It's not if unaligned accesses are supported, it's if they are
-> > efficient enough or not.
-> > 
-> > For example, sparc64 fully handles unaligned accesses but taking the
-> > trap to fix it up is slow.  So sparc64 "can" handle unaligned
-> > accesses, but whether we want to set this symbol or not is another
-> > matter.
-> 
-> Yeah, good point. Should I rename it to HAVE_EFFICIENT_UNALIGNED_ACCESS
-> or similar? Or have it defined as some sort of number so you can make
-> actually make tradeoffs? Like Dave Woodhouse suggested at some point to
-> have get_unaligned() take an argument that indicates the probability...
 
-Ugh...that sounds like premature optimization to me...
+--=-FjjekAM1B+lCZFMGQ+gU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-While I think Dave has a point, I don't think you should labor the word
-choice too much.  Try to document it as clearly as possible and hope
-for the best -- I hear that the arch maintainers are top notch! :-)
 
-John
+> > When I called p54_parse_eeprom() on a hand-coded structure
+> > I managed to make a small mistake with wrap->len which caused
+> > a segfault a few lines down when trying to read entry->len.
+> > This patch changes the validation code to avoid such problems.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> I confirm this patch works, thanks Johannes. Tested with an Inventel UR05=
+4g=20
+> dongle.
+>=20
+> Tested-by: Florian Fainelli <florian.fainelli@telecomint.eu>
 
--- 
-John W. Linville
-linville@tuxdriver.com
+Great, thanks for testing.
+
+John, please merge both these patches.
+
+johannes
+
+--=-FjjekAM1B+lCZFMGQ+gU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8rHsqVg1VMiehFYAQLVXw//To9+H8fIBkGroCbH6IeKg8T91AufYlv8
+BFqzBchRPsdp9kF+btcQp/G/EkuIZlYFpdgFOpDXFTsr9tnSAHI6+xfsFfWVTRkB
+b8jVPN7ULLER07Sp6DELyLXTbwdBQ2aehHxtU7CukFOxW9o86LNQBcwXiAP9XQ/K
+r6/OTPmYkIJDIj55bXQivMAv1evxD5dUsM+SIOSwDH5pyxHvF3Ik83Ul4yDyhR0R
+OYC0Za17gr4RdHgcJWyQgGCCeKWdGa2n5n790U2mNZOkl4AhJ/BAGXDlBcgdTD1F
+4fJvkJDKmDyUZwDnjH1dt+M4PZZtZlEVwnURH8ygZJ5s7tsC5A23ztpPvKNjESpI
+561zUkU9zrkW+MrjjALWe9R11RrrgaXU8VvJnCDW0Vr35qQAy2rmAZyoeK+tD5y/
+CF83fBzisNRDQa5lQ82OYWR7o6ZaU5EI+x8g6zC0k92+wMycTDhyBFsrrPcTsQRj
+sFVzpZFGk/cXe1Vx5t4XEJNZNZM5pqDbvmos55o5htM12196lzsRSrJbC/ogcsSM
+J8IFQOEx4VqoI73Y8gzNbesK0cjT2ZWp0Mk1NFn9CNlH439nIeINpYpPHMxmfdXY
+ALium+MdjCOb+QNzVdL/yZeybs+dwxliaNtcqbNojxL0nCn0eiqk1psVeVNyQDJy
+mPFF1quzVhs=
+=fpAR
+-----END PGP SIGNATURE-----
+
+--=-FjjekAM1B+lCZFMGQ+gU--
+
