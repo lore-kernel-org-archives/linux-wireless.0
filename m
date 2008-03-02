@@ -1,122 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:17663 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbYCYJlJ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48741 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701AbYCBWMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 05:41:09 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3916083wah.23
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 02:41:08 -0700 (PDT)
-Message-ID: <1ba2fa240803250241q7a1e9f4eta9565371d83772c9@mail.gmail.com> (sfid-20080325_094116_014823_D34D3F40)
-Date: Tue, 25 Mar 2008 11:41:08 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: IBSS RTNL assertion
-In-Reply-To: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
+	Sun, 2 Mar 2008 17:12:23 -0500
+Subject: Re: bughost-1583&1499
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bill Moss <bmoss@CLEMSON.EDU>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <47C9DA17.7000005@clemson.edu>
+References: <47C983A6.8060502@clemson.edu>
+	 <1204395671.3917.4.camel@johannes.berg>  <47C9DA17.7000005@clemson.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CwRh9+4TKz5jT9p+AygZ"
+Date: Sun, 02 Mar 2008 23:12:07 +0100
+Message-Id: <1204495927.3917.26.camel@johannes.berg> (sfid-20080302_221227_611082_A6565CD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 24, 2008 at 6:21 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> Has anybody experience the one bellow? Any insights?
->
->  Thanks
->  Tomas
->
 
-Looks like there is number of places in the code where
-sta_info_destroy(sta); is not called under rtnl_lock nether under rcu
-lock...
-Looks like there is a quite lock mess in wireless-testing.
-
-Thanks
-Tomas
+--=-CwRh9+4TKz5jT9p+AygZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+On Sat, 2008-03-01 at 17:35 -0500, Bill Moss wrote:
+> I have pounded on your patch hard for both broadcast and hidden access=20
+> points and its seems solid. I can't make it fail. After boot or iwl3945=20
+> module reload, I run
 
+Good, thanks, I'll respin without the extra loop and some cleanups. Or
+actually, I should do that as a separate patch now that you've tested
+it.
 
->  wl4965: U iwl4965_mac_reset_tsf enter
->  iwl4965: U iwl4965_mac_reset_tsf leave
->  iwl4965: U iwl4965_mac_config_interface bssid: 02:0e:35:20:5a:48
->  iwl4965: U iwl4965_mac_config_interface leave
->  iwl4965: U iwl4965_mac_config enter to channel 1
->  iwl4965: U iwl4965_mac_config leave
->  iwl4965: U iwl4965_mac_beacon_update enter
->  iwl4965: U iwl4965_mac_beacon_update leave
->  wlan0: Configured IBSS beacon template
->  phy2: Adding new IBSS station 00:0e:35:24:c1:32 (dev=wlan0)
->  RTNL: assertion failed at net/mac80211/sta_info.c (140)
->  Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
->   [<f8a74427>] sta_info_destroy+0x30/0xf4 [mac80211]
->   [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
->   [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
->   [<c042fc92>] __queue_work+0x1c/0x28
->   [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
->   [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
->   [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
->   [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<c0426d6a>] irq_exit+0x50/0x67
->   [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
->   [<c046be74>] add_partial+0x23/0x33
->   [<c046cfdf>] __slab_free+0x60/0x1db
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<c046d95e>] kmem_cache_free+0x60/0x69
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
->   [<c04d9e80>] __next_cpu+0x12/0x21
->   [<c04198a3>] find_busiest_group+0x210/0x605
->   [<c047f0b7>] d_alloc+0x1b/0x16e
->   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
->   [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
->   [<c041e864>] hrtick_set+0x7a/0xd8
->   [<c0601229>] schedule+0x6df/0x711
->   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
->   [<c042f919>] run_workqueue+0x6b/0xe0
->   [<c042ffe9>] worker_thread+0x0/0xbd
->   [<c043009c>] worker_thread+0xb3/0xbd
->   [<c04321ec>] autoremove_wake_function+0x0/0x2d
->   [<c0432128>] kthread+0x38/0x60
->   [<c04320f0>] kthread+0x0/0x60
->   [<c0405527>] kernel_thread_helper+0x7/0x10
->   =======================
->  RTNL: assertion failed at net/mac80211/key.c (275)
->  Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
->   [<f8a82d79>] ieee80211_key_free+0x2b/0x97 [mac80211]
->   [<f8ab02ad>] rs_remove_debugfs+0x0/0x25 [iwl4965]
->   [<f8a74461>] sta_info_destroy+0x6a/0xf4 [mac80211]
->   [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
->   [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
->   [<c042fc92>] __queue_work+0x1c/0x28
->   [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
->   [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
->   [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
->   [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<c0426d6a>] irq_exit+0x50/0x67
->   [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
->   [<c046be74>] add_partial+0x23/0x33
->   [<c046cfdf>] __slab_free+0x60/0x1db
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<c046d95e>] kmem_cache_free+0x60/0x69
->   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
->   [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
->   [<c04d9e80>] __next_cpu+0x12/0x21
->   [<c04198a3>] find_busiest_group+0x210/0x605
->   [<c047f0b7>] d_alloc+0x1b/0x16e
->   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
->   [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
->   [<c041e864>] hrtick_set+0x7a/0xd8
->   [<c0601229>] schedule+0x6df/0x711
->   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
->   [<c042f919>] run_workqueue+0x6b/0xe0
->   [<c042ffe9>] worker_thread+0x0/0xbd
->   [<c043009c>] worker_thread+0xb3/0xbd
->   [<c04321ec>] autoremove_wake_function+0x0/0x2d
->   [<c0432128>] kthread+0x38/0x60
->   [<c04320f0>] kthread+0x0/0x60
->   [<c0405527>] kernel_thread_helper+0x7/0x10
->   =======================
->
+> For a broadcast access point, I rarely see the 'No scan results' output=20
+> when running 'iwlist wlan0 scan'. For the hidden access point case, here=20
+> are some results
+>=20
+> After module reload: 50 'No scan results' out of 50 scans
+>=20
+> After association/disassociation: 24 'No scan results' out of 50 scans
+>=20
+> Scanning while not associated is what NetworkManager does when it starts=20
+> up and compares the scanned access point list with its stored list of=20
+> acceptable access points. This is why I am interested in this bug. So=20
+> far I am stumped. Any suggestions?
+
+Hm, not really. You could create a monitor interface with iw
+(git.sipsolutions.net), something like
+# iw phydev wmaster0 interface add moni0 type monitor
+
+and then capture on the master interface and see if there are any probe
+responses. Also, can you test software scan for the second problem? If
+it doesn't occur with software scan and you don't see any beacons/probe
+responses on the monitor for those access points you're missing, then I
+can't help you.
+
+johannes
+
+--=-CwRh9+4TKz5jT9p+AygZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR8smNqVg1VMiehFYAQK11w/9GdBxwdJ4KD9Ph3FoLanF6q6No9nCpAOg
+FObl9/NmrlVm0f2SgRgsPGbI25LJlSG6wJ91Z3ItR15S3+FxT49Qq+t+lPJtzmLq
+fTiAGqeuQZ2HGCOSea0eNyujlfme0ixPFYPQF4E8RhcRS1jqH/Deqp2f1gYFi+ow
+bJT4wOwgiXAKh/8L+0a5114Sf8WKKJY5t/h9bTNzo50QuJqiOYWtb3+v5BliSmOz
+QoQ/3HgHlJWPLLfvEkQDV2CLeIXy2GNuGjkyviuRz26CiJ5z+ebv/131V9oJpAmX
+XAytRILdBdFHzh3ueWusp9HvuIykLhLAYd1KHZx6OSpI/bGlqQTRizojyDrqQLm5
+DFC+LriWO7Lmp+JF9ijyXt1IrnMvnq0X0Iaa84hdxnqxWY3aQj+4RaKugPw9MZU+
+E69ZPNULoUpW6T8LaotE8Sy0HNnVxI8FsUZmnQaWTUJFKJwz8WZd9+weEhZe5PsA
+PGuNpVuS93NBgBcRSAXP/ZDoOyE+xy/Rj+7DNepn4rxCoDdJxdSZRI1uGQ6cfxVu
+wusF9oXPELcN2OZAiAXdrx6isO3kDIjExtGGHHG816lXZ/h8PMLfVbzx/0CnJOJK
+JYTi+8pfj0buRZkvVDpkT/rtF4b764h0w5DdAa6N/1KR5I05jqEAVoMdmp6h+9k9
+hOpJVTnHtDo=
+=78Wa
+-----END PGP SIGNATURE-----
+
+--=-CwRh9+4TKz5jT9p+AygZ--
+
