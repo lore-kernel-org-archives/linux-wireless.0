@@ -1,157 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39856 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935418AbYCDX1k (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.181]:31486 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453AbYCBLT5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 18:27:40 -0500
-Message-Id: <200803042326.m24NQ9bB003292@imap1.linux-foundation.org> (sfid-20080304_232751_806240_32E5AFD6)
-Subject: [patch 04/10] prism54: convert acl->sem in a mutex
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	matthias@kaehlcke.net, flamingice@sourmilk.net,
-	mcgrof@winlab.rutgers.edu
-From: akpm@linux-foundation.org
-Date: Tue, 04 Mar 2008 15:26:09 -0800
+	Sun, 2 Mar 2008 06:19:57 -0500
+Received: by el-out-1112.google.com with SMTP id v27so1038722ele.17
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 03:19:56 -0800 (PST)
+Message-ID: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com> (sfid-20080302_112001_009527_4298B19F)
+Date: Sun, 2 Mar 2008 22:19:54 +1100
+From: "Julian Calaby" <julian.calaby@gmail.com>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Netgear WG311v3 - Marvell 88w8355 "Libertas"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthias Kaehlcke <matthias@kaehlcke.net>
+Hi,
 
-The semaphore acl->sem is used as mutex, convert it to the mutex API
+I'm not sure if this is the correct place to ask this, but here goes.
 
-Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+I have recently obtained a Netgear WG311v3 card, under the
+misunderstanding that it was an atheros card. (though I have no idea
+how I managed to do that)
 
- drivers/net/wireless/prism54/isl_ioctl.c  |   28 ++++++++++----------
- drivers/net/wireless/prism54/islpci_dev.h |    2 -
- 2 files changed, 15 insertions(+), 15 deletions(-)
+Following some random FAQ, I have this card working reliably, for the
+moment, using ndiswrapper, which is more than suitable for my needs.
 
-diff -puN drivers/net/wireless/prism54/isl_ioctl.c~convert-acl-sem-in-a-mutex drivers/net/wireless/prism54/isl_ioctl.c
---- a/drivers/net/wireless/prism54/isl_ioctl.c~convert-acl-sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1780,7 +1780,7 @@ prism54_set_raw(struct net_device *ndev,
- void
- prism54_acl_init(struct islpci_acl *acl)
- {
--	sema_init(&acl->sem, 1);
-+	mutex_init(&acl->lock);
- 	INIT_LIST_HEAD(&acl->mac_list);
- 	acl->size = 0;
- 	acl->policy = MAC_POLICY_OPEN;
-@@ -1792,10 +1792,10 @@ prism54_clear_mac(struct islpci_acl *acl
- 	struct list_head *ptr, *next;
- 	struct mac_entry *entry;
- 
--	down(&acl->sem);
-+	mutex_lock(&acl->lock);
- 
- 	if (acl->size == 0) {
--		up(&acl->sem);
-+		mutex_unlock(&acl->lock);
- 		return;
- 	}
- 
-@@ -1806,7 +1806,7 @@ prism54_clear_mac(struct islpci_acl *acl
- 		kfree(entry);
- 	}
- 	acl->size = 0;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- }
- 
- void
-@@ -1833,13 +1833,13 @@ prism54_add_mac(struct net_device *ndev,
- 
- 	memcpy(entry->addr, addr->sa_data, ETH_ALEN);
- 
--	if (down_interruptible(&acl->sem)) {
-+	if (mutex_lock_interruptible(&acl->lock)) {
- 		kfree(entry);
- 		return -ERESTARTSYS;
- 	}
- 	list_add_tail(&entry->_list, &acl->mac_list);
- 	acl->size++;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 
- 	return 0;
- }
-@@ -1856,18 +1856,18 @@ prism54_del_mac(struct net_device *ndev,
- 	if (addr->sa_family != ARPHRD_ETHER)
- 		return -EOPNOTSUPP;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 	list_for_each_entry(entry, &acl->mac_list, _list) {
- 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
- 			list_del(&entry->_list);
- 			acl->size--;
- 			kfree(entry);
--			up(&acl->sem);
-+			mutex_unlock(&acl->lock);
- 			return 0;
- 		}
- 	}
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 	return -EINVAL;
- }
- 
-@@ -1882,7 +1882,7 @@ prism54_get_mac(struct net_device *ndev,
- 
- 	dwrq->length = 0;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 
- 	list_for_each_entry(entry, &acl->mac_list, _list) {
-@@ -1891,7 +1891,7 @@ prism54_get_mac(struct net_device *ndev,
- 		dwrq->length++;
- 		dst++;
- 	}
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 	return 0;
- }
- 
-@@ -1955,11 +1955,11 @@ prism54_mac_accept(struct islpci_acl *ac
- 	struct mac_entry *entry;
- 	int res = 0;
- 
--	if (down_interruptible(&acl->sem))
-+	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 
- 	if (acl->policy == MAC_POLICY_OPEN) {
--		up(&acl->sem);
-+		mutex_unlock(&acl->lock);
- 		return 1;
- 	}
- 
-@@ -1970,7 +1970,7 @@ prism54_mac_accept(struct islpci_acl *ac
- 		}
- 	}
- 	res = (acl->policy == MAC_POLICY_ACCEPT) ? !res : res;
--	up(&acl->sem);
-+	mutex_unlock(&acl->lock);
- 
- 	return res;
- }
-diff -puN drivers/net/wireless/prism54/islpci_dev.h~convert-acl-sem-in-a-mutex drivers/net/wireless/prism54/islpci_dev.h
---- a/drivers/net/wireless/prism54/islpci_dev.h~convert-acl-sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/islpci_dev.h
-@@ -55,7 +55,7 @@ struct islpci_acl {
-    enum { MAC_POLICY_OPEN=0, MAC_POLICY_ACCEPT=1, MAC_POLICY_REJECT=2 } policy;
-    struct list_head mac_list;  /* a list of mac_entry */
-    int size;   /* size of queue */
--   struct semaphore sem;   /* accessed in ioctls and trap_work */
-+   struct mutex lock;   /* accessed in ioctls and trap_work */
- };
- 
- struct islpci_membuf {
-_
+However I yearn for more.
+
+I have discovered here:
+http://users.linpro.no/janl/hardware/wifi.html
+that this card appears to use a Marvel 88w8355 "Libertas" chipset.
+However I have not yet confirmed the exact chip used on my card.
+
+I believe variants of this chip, are supported on SDIO, (8385, 8686)
+USB (8388) and CompactFlash (8385) using the libertas driver.
+
+Annoyingly I can find no information on this chip, or anything related
+to it, and I have heard that Marvel has been relatively uninterested
+in supporting these chips on Linux.
+
+I also note that this chip appears to have been designed exclusively
+for the embedded market, and as such, my card is somewhat rare, which
+has probably contributed to the lack of any interest in a pci driver.
+
+I can also find no information on a pci version of the libertas
+driver, only a proposal which appeared to go nowhere due to lack of
+documentation. I also cannot find any information on any linux support
+for this card outside of using ndiswrapper.
+
+As such, I am considering reverse engineering the pci interface for
+this chipset, and hopefully linking it up with the existing libertas
+driver.
+
+I was hoping to use the ndiswrapper driver as a starting point, using
+it as a black box to see how it talks to the PCI card. (possibly
+hacking together a OS level PCI sniffer) and hopefully, what I'll see
+will match up to what's going on in the libertas driver for similar
+tasks, and then I should be able to write the necessary code (or
+specifications) to do this.
+
+I am also concerned about any possible legal ramifications of this
+reverse engineering. Is it all right for me to do this, providing that
+I treat the ndiswrapper driver as a black box? or am I too close to
+non-free code to have my code be untainted?
+
+I also must point out that this will be my first reverse engineering
+project of this scale, and I am inexperienced in linux drivers in
+general - however I see it as a good way to learn.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
