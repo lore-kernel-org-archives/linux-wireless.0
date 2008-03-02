@@ -1,158 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18467 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755424AbYCECKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 21:10:14 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 05/11] mac80211: adding mac80211_tx_control_flags and HT flags
-Date: Tue,  4 Mar 2008 18:09:26 -0800
-Message-Id: <1204682972-26004-6-git-send-email-reinette.chatre@intel.com> (sfid-20080305_021038_546690_48517A50)
-In-Reply-To: <1204682972-26004-5-git-send-email-reinette.chatre@intel.com>
-References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-5-git-send-email-reinette.chatre@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:33128 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbYCBPL4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Mar 2008 10:11:56 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so3038589nfb.21
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 07:11:54 -0800 (PST)
+Message-ID: <c6b1100b0803020711m52bcbba3re1b673e734ef629a@mail.gmail.com> (sfid-20080302_151243_477962_02C74156)
+Date: Sun, 2 Mar 2008 15:11:54 +0000
+From: "Chris Clayton" <chris2553@googlemail.com>
+To: "Stefano Brivio" <stefano.brivio@polimi.it>
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Cc: "John W. Linville" <linville@tuxdriver.com>, ivdoorn@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net,
+	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	"Mike Kelly" <pioto@pioto.org>
+In-Reply-To: <20080302113310.7acbe9b3@morte>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	 <200802261911.39577.chris2553@googlemail.com>
+	 <20080226194838.GD3013@tuxdriver.com>
+	 <c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com>
+	 <20080226223814.4ef2b435@morte>
+	 <c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
+	 <20080227082642.218b8014@morte> <20080227155111.GB3078@tuxdriver.com>
+	 <20080227172546.GD3078@tuxdriver.com> <20080302113310.7acbe9b3@morte>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On 02/03/2008, Stefano Brivio <stefano.brivio@polimi.it> wrote:
+> On Wed, 27 Feb 2008 12:25:46 -0500
+>  "John W. Linville" <linville@tuxdriver.com> wrote:
+>
+>  > That might be easier said than done.  It looks like that patch depends
+>  > on the big cfg80211 API change queued for 2.6.26.
+>  >
+>  > Stefano offered to rebase that on 2.6.25.  Stefano, could you post
+>  > that as part of this thread?
+>
+>
+> Sorry for the delay. This is based on 2.6.25-rc3. Please test.
+>
 
-This patch makes enum from the defines previously dwelled inside
-ieee80211_tx_control for better readability.
-The patch also addes HT flags, for 802.11n drivers:
-- IEEE80211_TXCTL_OFDM_HT: request low-level driver to use HT OFDM rates
-- IEEE80211_TXCTL_GREEN_FIELD: use green field protection
-- IEEE80211_TXCTL_DUP_DATA: duplicate data on both 20 Mhz channels
-- IEEE80211_TXCTL_40_MHZ_WIDTH: send this frame in 40Mhz width
-- IEEE80211_TXCTL_SHORT_GI: send this frame with short guard interval
+I've tested this with the pid algorithm selected and my wireless
+network connection is reliable. In a loop, I repeatedly ftp'd a kernel
+source tarball from another box on my network for 40 minutes with no
+failure, whilst at the same time, pinging my gateway. Without the
+patch, that activity would have led to network failure in seconds. The
+tests were with the patch applied to 2.6.25-rc3-git3, so that Ivo's
+rt2x00 patches for 2.6.25 are also applied.
 
-Tx command can be a combination of any of these flags, along with
-bitrate represented by ieee80211_rate. this will allow legacy drivers to
-switch easily to any 11n rate representation.
+Thanks to everyone who has helped fix this.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   86 ++++++++++++++++++++++++++++++-----------------
- 1 files changed, 55 insertions(+), 31 deletions(-)
+>  ---
+>
+>  Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
+>  in order to make the learning algorithm aware of constraints on rates. Also
+>  add some comments and rename variables.
+>
+>  This fixes a bug which prevented 802.11b/g non-AP STAs from working with
+>  802.11b only AP STAs.
+>
+>  Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d002b1c..cde1b49 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -205,6 +205,58 @@ struct ieee80211_bss_conf {
- 	bool use_short_preamble;
- };
- 
-+/**
-+ * enum mac80211_tx_control_flags - flags to describe Tx configuration for
-+ * 				    the Tx frame
-+ *
-+ * These flags are used with the @flags member of &ieee80211_tx_control
-+ *
-+ * @IEEE80211_TXCTL_REQ_TX_STATUS: request TX status callback for this frame.
-+ * @IEEE80211_TXCTL_DO_NOT_ENCRYPT: send this frame without encryption;
-+ * 				    e.g., for EAPOL frame
-+ * @IEEE80211_TXCTL_USE_RTS_CTS: use RTS-CTS before sending frame
-+ * @IEEE80211_TXCTL_USE_CTS_PROTECT: use CTS protection for the frame (e.g.,
-+ * 				     for combined 802.11g / 802.11b networks)
-+ * @IEEE80211_TXCTL_NO_ACK: tell the low level not to wait for an ack
-+ * @IEEE80211_TXCTL_RATE_CTRL_PROBE
-+ * @EEE80211_TXCTL_CLEAR_PS_FILT: clear powersave filter
-+ *                                 for destination station
-+ * @IEEE80211_TXCTL_REQUEUE:
-+ * @IEEE80211_TXCTL_FIRST_FRAGMENT: this is a first fragment of the frame
-+ * @IEEE80211_TXCTL_LONG_RETRY_LIMIT: this frame should be send using the
-+ * 				      through set_retry_limit configured long
-+ * 				      retry value
-+ * @IEEE80211_TXCTL_EAPOL_FRAME: internal to mac80211
-+ * @IEEE80211_TXCTL_SEND_AFTER_DTIM: send this frame after DTIM beacon
-+ * @IEEE80211_TXCTL_AMPDU: this frame should be sent as part of an A-MPDU
-+ * @IEEE80211_TXCTL_OFDM_HT: this frame can be sent in HT OFDM rates
-+ * @IEEE80211_TXCTL_GREEN_FIELD: use green field protection for this frame
-+ * @IEEE80211_TXCTL_40_MHZ_WIDTH: send this frame using 40 Mhz channel width
-+ * @IEEE80211_TXCTL_DUP_DATA: duplicate data frame on both 20 Mhz channels
-+ * @IEEE80211_TXCTL_SHORT_GI: send this frame using short guard interval
-+ */
-+enum mac80211_tx_control_flags {
-+	IEEE80211_TXCTL_REQ_TX_STATUS		= (1<<0),
-+	IEEE80211_TXCTL_DO_NOT_ENCRYPT		= (1<<1),
-+	IEEE80211_TXCTL_USE_RTS_CTS		= (1<<2),
-+	IEEE80211_TXCTL_USE_CTS_PROTECT		= (1<<3),
-+	IEEE80211_TXCTL_NO_ACK			= (1<<4),
-+	IEEE80211_TXCTL_RATE_CTRL_PROBE		= (1<<5),
-+	IEEE80211_TXCTL_CLEAR_PS_FILT		= (1<<6),
-+	IEEE80211_TXCTL_REQUEUE			= (1<<7),
-+	IEEE80211_TXCTL_FIRST_FRAGMENT		= (1<<8),
-+	IEEE80211_TXCTL_SHORT_PREAMBLE		= (1<<9),
-+	IEEE80211_TXCTL_LONG_RETRY_LIMIT	= (1<<10),
-+	IEEE80211_TXCTL_EAPOL_FRAME		= (1<<11),
-+	IEEE80211_TXCTL_SEND_AFTER_DTIM		= (1<<12),
-+	IEEE80211_TXCTL_AMPDU			= (1<<13),
-+	IEEE80211_TXCTL_OFDM_HT			= (1<<14),
-+	IEEE80211_TXCTL_GREEN_FIELD		= (1<<15),
-+	IEEE80211_TXCTL_40_MHZ_WIDTH		= (1<<16),
-+	IEEE80211_TXCTL_DUP_DATA		= (1<<17),
-+	IEEE80211_TXCTL_SHORT_GI		= (1<<18),
-+};
-+
- /* Transmit control fields. This data structure is passed to low-level driver
-  * with each TX frame. The low-level driver is responsible for configuring
-  * the hardware to use given values (depending on what is supported). */
-@@ -219,42 +271,14 @@ struct ieee80211_tx_control {
- 	/* retry rate for the last retries */
- 	struct ieee80211_rate *alt_retry_rate;
- 
--#define IEEE80211_TXCTL_REQ_TX_STATUS	(1<<0)/* request TX status callback for
--						* this frame */
--#define IEEE80211_TXCTL_DO_NOT_ENCRYPT	(1<<1) /* send this frame without
--						* encryption; e.g., for EAPOL
--						* frames */
--#define IEEE80211_TXCTL_USE_RTS_CTS	(1<<2) /* use RTS-CTS before sending
--						* frame */
--#define IEEE80211_TXCTL_USE_CTS_PROTECT	(1<<3) /* use CTS protection for the
--						* frame (e.g., for combined
--						* 802.11g / 802.11b networks) */
--#define IEEE80211_TXCTL_NO_ACK		(1<<4) /* tell the low level not to
--						* wait for an ack */
--#define IEEE80211_TXCTL_RATE_CTRL_PROBE	(1<<5)
--#define IEEE80211_TXCTL_CLEAR_PS_FILT	(1<<6) /* clear powersave filter
--						* for destination station */
--#define IEEE80211_TXCTL_REQUEUE		(1<<7)
--#define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
--						* the frame */
--#define IEEE80211_TXCTL_SHORT_PREAMBLE	(1<<9)
--#define IEEE80211_TXCTL_LONG_RETRY_LIMIT (1<<10) /* this frame should be send
--						  * using the through
--						  * set_retry_limit configured
--						  * long retry value */
--#define IEEE80211_TXCTL_EAPOL_FRAME	(1<<11) /* internal to mac80211 */
--#define IEEE80211_TXCTL_SEND_AFTER_DTIM	(1<<12) /* send this frame after DTIM
--						 * beacon */
--#define IEEE80211_TXCTL_AMPDU		(1<<13) /* this frame should be sent
--						 * as part of an A-MPDU */
--	u32 flags;			       /* tx control flags defined
--						* above */
-+	u32 flags;		/* tx control flags defined above */
- 	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
- 				 * IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
- 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, ..
- 				 * This could be used when set_retry_limit
- 				 * is not implemented by the driver */
--	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
-+	u8 antenna_sel_tx; 	/* 0 = default/diversity, otherwise bit
-+				 * position represents antenna number used */
- 	u8 icv_len;		/* length of the ICV/MIC field in octets */
- 	u8 iv_len;		/* length of the IV field in octets */
- 	u8 queue;		/* hardware queue to use for this frame;
+Tested-by: Chris Clayton <chris2553@googlemail.com>
+
+>  ---
+>  Index: linux-2.6.24/net/mac80211/rc80211_pid_algo.c
+>  ===================================================================
+>  --- linux-2.6.24.orig/net/mac80211/rc80211_pid_algo.c
+>  +++ linux-2.6.24/net/mac80211/rc80211_pid_algo.c
+>  @@ -2,7 +2,7 @@
+>   * Copyright 2002-2005, Instant802 Networks, Inc.
+>   * Copyright 2005, Devicescape Software, Inc.
+>   * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
+>  - * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
+>  + * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
+>   *
+>   * This program is free software; you can redistribute it and/or modify
+>   * it under the terms of the GNU General Public License version 2 as
+>  @@ -63,72 +63,66 @@
+>   * RC_PID_ARITH_SHIFT.
+>   */
+>
+>  -
+>  -/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
+>  - * a worse failed frames behaviour and we'll choose the highest rate whose
+>  - * failed frames behaviour is not worse than the one of the original rate
+>  - * target. While at it, check that the adjustment is within the ranges. Then,
+>  - * provide the new rate index. */
+>  -static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
+>  -                                        int adj, int cur, int l)
+>  -{
+>  -       int i, j, k, tmp;
+>  -
+>  -       j = r[cur].rev_index;
+>  -       i = j + adj;
+>  -
+>  -       if (i < 0)
+>  -               return r[0].index;
+>  -       if (i >= l - 1)
+>  -               return r[l - 1].index;
+>  -
+>  -       tmp = i;
+>  -
+>  -       if (adj < 0) {
+>  -               for (k = j; k >= i; k--)
+>  -                       if (r[k].diff <= r[j].diff)
+>  -                               tmp = k;
+>  -       } else {
+>  -               for (k = i + 1; k + i < l; k++)
+>  -                       if (r[k].diff <= r[i].diff)
+>  -                               tmp = k;
+>  -       }
+>  -
+>  -       return r[tmp].index;
+>  -}
+>  -
+>  +/* Adjust the rate while ensuring that we won't switch to a lower rate if it
+>  + * exhibited a worse failed frames behaviour and we'll choose the highest rate
+>  + * whose failed frames behaviour is not worse than the one of the original rate
+>  + * target. While at it, check that the new rate is valid. */
+>   static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+>                                          struct sta_info *sta, int adj,
+>                                          struct rc_pid_rateinfo *rinfo)
+>   {
+>         struct ieee80211_sub_if_data *sdata;
+>         struct ieee80211_hw_mode *mode;
+>  -       int newidx;
+>  -       int maxrate;
+>  -       int back = (adj > 0) ? 1 : -1;
+>  +       int cur_sorted, new_sorted, probe, tmp, n_bitrates;
+>  +       int cur = sta->txrate;
+>
+>         sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+>
+>         mode = local->oper_hw_mode;
+>  -       maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
+>  +       n_bitrates = mode->num_rates;
+>
+>  -       newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
+>  -                                              mode->num_rates);
+>  +       /* Map passed arguments to sorted values. */
+>  +       cur_sorted = rinfo[cur].rev_index;
+>  +       new_sorted = cur_sorted + adj;
+>  +
+>  +       /* Check limits. */
+>  +       if (new_sorted < 0)
+>  +               new_sorted = rinfo[0].rev_index;
+>  +       else if (new_sorted >= n_bitrates)
+>  +               new_sorted = rinfo[n_bitrates - 1].rev_index;
+>
+>  -       while (newidx != sta->txrate) {
+>  -               if (rate_supported(sta, mode, newidx) &&
+>  -                   (maxrate < 0 || newidx <= maxrate)) {
+>  -                       sta->txrate = newidx;
+>  -                       break;
+>  -               }
+>  +       tmp = new_sorted;
+>
+>  -               newidx += back;
+>  +       if (adj < 0) {
+>  +               /* Ensure that the rate decrease isn't disadvantageous. */
+>  +               for (probe = cur_sorted; probe >= new_sorted; probe--)
+>  +                       if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
+>  +                           rate_supported(sta, mode, rinfo[probe].index))
+>  +                               tmp = probe;
+>  +       } else {
+>  +               /* Look for rate increase with zero (or below) cost. */
+>  +               for (probe = new_sorted + 1; probe < n_bitrates; probe++)
+>  +                       if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
+>  +                           rate_supported(sta, mode, rinfo[probe].index))
+>  +                               tmp = probe;
+>         }
+>
+>  +       /* Fit the rate found to the nearest supported rate. */
+>  +       do {
+>  +               if (rate_supported(sta, mode, rinfo[tmp].index)) {
+>  +                       sta->txrate = rinfo[tmp].index;
+>  +                       break;
+>  +               }
+>  +               if (adj < 0)
+>  +                       tmp--;
+>  +               else
+>  +                       tmp++;
+>  +       } while (tmp < n_bitrates && tmp >= 0);
+>  +
+>   #ifdef CONFIG_MAC80211_DEBUGFS
+>         rate_control_pid_event_rate_change(
+>                 &((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
+>  -               newidx, mode->rates[newidx].rate);
+>  +               cur, mode->rates[cur].rate);
+>   #endif
+>   }
+>
+>
+>
+>  --
+>  Ciao
+>
+> Stefano
+>
+
+
 -- 
-1.5.3.4
-
+Beauty is in the eye of the beerholder.
