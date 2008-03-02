@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38575 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752879AbYCUC32 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 22:29:28 -0400
-Date: Thu, 20 Mar 2008 19:27:19 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	David Brownell <david-b@pacbell.net>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	netdev@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	video4linux-list@redhat.com,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	lm-sensors@lm-sensors.org
-Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
-Message-Id: <20080320192719.6a32386e.akpm@linux-foundation.org> (sfid-20080321_022934_006352_F66AC906)
-In-Reply-To: <200803210236.52063.mb@bu3sch.de>
-References: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org>
-	<200803210236.52063.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:53255 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752215AbYCBPqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Mar 2008 10:46:00 -0500
+Date: Sun, 2 Mar 2008 17:44:29 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	David Miller <davem@davemloft.net>,
+	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Message-ID: <20080302154429.GK25835@cs181133002.pp.htv.fi> (sfid-20080302_154605_111491_569783D6)
+References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg> <20080229191058.GD3234@tuxdriver.com> <20080229214240.GH3234@tuxdriver.com> <20080301130133.GA14250@uranus.ravnborg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20080301130133.GA14250@uranus.ravnborg.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 21 Mar 2008 02:36:51 +0100 Michael Buesch <mb@bu3sch.de> wrote:
-
-> On Friday 21 March 2008 02:31:44 Alan Stern wrote:
-> > On Thu, 20 Mar 2008, Andrew Morton wrote:
+On Sat, Mar 01, 2008 at 02:01:33PM +0100, Sam Ravnborg wrote:
+> On Fri, Feb 29, 2008 at 04:42:40PM -0500, John W. Linville wrote:
+> > On Fri, Feb 29, 2008 at 02:10:58PM -0500, John W. Linville wrote:
+> > > On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
+> > > > 
+> > > > On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
+> > > > > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
+> > > > > 
+> > > > > > I'm wondering if we can't simply pass a commandline parameter to file2alias
+> > > > > > that tells it whether we are crosscompiling. It should simply omit the sanity check
+> > > > > 
+> > > > > Sounds reasonable to me.
+> > > > 
+> > > > In fact, file2alias shouldn't need a command line argument ...
+> > > > 
+> > > > > > in that case. Is there any easy and reliable way to find out whether we
+> > > > > > are crosscompiling from a makefile (I don't know the makefile core that much)?
+> > > > > 
+> > > > > Non-empty CROSS_COMPILE definition?
+> > > > 
+> > > > ... it can just check whether CROSS_COMPILE is set in its environment.
+> > > > No?
+> > > 
+> > > Not a bad idea...something like this?
 > > 
-> > > On Thu, 20 Mar 2008 21:36:04 -0300 Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
-> > > 
-> > > > Well, so far so good for LEDs, but what about the other users of in_atomic
-> > > > that apparently should not be doing it either?
-> > > 
-> > > Ho hum.  Lots of cc's added.
+> > That version didn't work -- it seems CROSS_COMPILE is always set,
+> > even if it is empty.
 > > 
-> > ...
-> > 
-> > > The usual pattern for most of the above is
-> > > 
-> > > 	if (!in_atomic())
-> > > 		do_something_which_might_sleep();
-> > > 
-> > > problem is, in_atomic() returns false inside spinlock on non-preptible
-> > > kernels.  So if anyone calls those functions inside spinlock they will
-> > > incorrectly schedule and another task can then come in and try take the
-> > > already-held lock.
-> > > 
-> > > Now, it happens that in_atomic() returns true on non-preemtible kernels
-> > > when running in interrupt or softirq context.  But if the above code really
-> > > is using in_atomic() to detect am-i-called-from-interrupt and NOT
-> > > am-i-called-from-inside-spinlock, they should be using in_irq(),
-> > > in_softirq() or in_interrupt().
-> > 
-> > Presumably most of these places are actually trying to detect 
-> > am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
+> > This version seems to work, but it is a bit chatty when CROSS_COMPILE
+> > is set and you build lots of modules...thoughts?
 > 
-> No, I think there is no such check in the kernel. Most likely for performance
-> reasons, as it would require a global flag that is set on each spinlock.
+> We cannot use CROSS_COMPILE to detect a cross build as CROSS_COMPILE
+> is used used to select different gcc versions, cccache etc.
+> The only relaiably way to detect a cross build is to check
+> is ARCH != modified uname -m arch.
+> So this check would have to be done in the top-level Makefile.
+> 
+> And that for shaving 6 bytes of a structure..
 
-Yup.  non-preemptible kernels avoid the inc/dec of
-current_thread_info->preempt_count on spin_lock/spin_unlock
+I remember two other occassions where this file2alias mess has bitten us 
+recently.
 
-> You simply must always _know_, if you are allowed to sleep or not. This is
-> done by defining an API. The call-context is part of any kernel API.
+I don't mind that much how it gets fixed, but the current status quo of 
+having this kind of problems again and again is simply not acceptable.
 
-Yup.  99.99% of kernel code manages to do this...
+> 	Sam
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
