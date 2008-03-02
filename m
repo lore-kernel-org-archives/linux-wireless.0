@@ -1,170 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:13593 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753043AbYCCUUu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 15:20:50 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so170725gve.37
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:48 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Fri, 29 Feb 2008 15:04:13 -0800
-Subject: [PATCH 07/10] mac80211: always force mesh_path deletions
-Message-ID: <47cc5d9e.06d6720a.421c.7563@mx.google.com> (sfid-20080303_202100_317234_23C7B313)
+Received: from mfe1.polimi.it ([131.175.12.23]:46108 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752087AbYCBKsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Mar 2008 05:48:03 -0500
+Date: Sun, 2 Mar 2008 11:33:10 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Chris Clayton <chris2553@googlemail.com>, ivdoorn@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mike Kelly <pioto@pioto.org>
+Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
+Message-ID: <20080302113310.7acbe9b3@morte> (sfid-20080302_104851_585945_9D0DA400)
+In-Reply-To: <20080227172546.GD3078@tuxdriver.com>
+References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
+	<200802252104.32416.chris2553@googlemail.com>
+	<a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
+	<200802261911.39577.chris2553@googlemail.com>
+	<20080226194838.GD3013@tuxdriver.com>
+	<c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com>
+	<20080226223814.4ef2b435@morte>
+	<c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
+	<20080227082642.218b8014@morte>
+	<20080227155111.GB3078@tuxdriver.com>
+	<20080227172546.GD3078@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Postponing the deletion is not really useful anymore.
+On Wed, 27 Feb 2008 12:25:46 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+> That might be easier said than done.  It looks like that patch depends
+> on the big cfg80211 API change queued for 2.6.26.
+> 
+> Stefano offered to rebase that on 2.6.25.  Stefano, could you post
+> that as part of this thread?
+
+Sorry for the delay. This is based on 2.6.25-rc3. Please test.
+
 ---
- net/mac80211/cfg.c          |    2 +-
- net/mac80211/mesh.h         |    4 +---
- net/mac80211/mesh_hwmp.c    |    8 +-------
- net/mac80211/mesh_pathtbl.c |   24 ++++++++----------------
- 4 files changed, 11 insertions(+), 27 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 69238fa..6b183a3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -785,7 +785,7 @@ static int ieee80211_del_mpath(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *dst)
- {
- 	if (dst)
--		return mesh_path_del(dst, dev, false);
-+		return mesh_path_del(dst, dev);
- 
- 	mesh_path_flush(dev);
- 	return 0;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index add9b0d..742003d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -30,7 +30,6 @@
-  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
-  * 	modified
-  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
-- * @MESH_PATH_DELETE: the mesh path is scheduled to be deleted
+Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
+in order to make the learning algorithm aware of constraints on rates. Also
+add some comments and rename variables.
+
+This fixes a bug which prevented 802.11b/g non-AP STAs from working with
+802.11b only AP STAs.
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: linux-2.6.24/net/mac80211/rc80211_pid_algo.c
+===================================================================
+--- linux-2.6.24.orig/net/mac80211/rc80211_pid_algo.c
++++ linux-2.6.24/net/mac80211/rc80211_pid_algo.c
+@@ -2,7 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
+- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
++ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
   *
-  * MESH_PATH_RESOLVED and MESH_PATH_DELETE are used by the mesh path timer to
-  * decide when to stop or cancel the mesh path discovery.
-@@ -41,7 +40,6 @@ enum mesh_path_flags {
- 	MESH_PATH_DSN_VALID =	BIT(2),
- 	MESH_PATH_FIXED	=	BIT(3),
- 	MESH_PATH_RESOLVED =	BIT(4),
--	MESH_PATH_DELETE =	BIT(5),
- };
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -63,72 +63,66 @@
+  * RC_PID_ARITH_SHIFT.
+  */
  
- /**
-@@ -254,7 +252,7 @@ void mesh_path_flush_pending(struct mesh_path *mpath);
- void mesh_path_tx_pending(struct mesh_path *mpath);
- int mesh_pathtbl_init(void);
- void mesh_pathtbl_unregister(void);
--int mesh_path_del(u8 *addr, struct net_device *dev, bool force);
-+int mesh_path_del(u8 *addr, struct net_device *dev);
- void mesh_path_timer(unsigned long data);
- void mesh_path_flush_by_nexthop(struct sta_info *sta);
- void mesh_path_discard_frame(struct sk_buff *skb, struct net_device *dev);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index c8c7d9a..324ebea 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -828,7 +828,6 @@ void mesh_path_timer(unsigned long data)
+-
+-/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
+- * a worse failed frames behaviour and we'll choose the highest rate whose
+- * failed frames behaviour is not worse than the one of the original rate
+- * target. While at it, check that the adjustment is within the ranges. Then,
+- * provide the new rate index. */
+-static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
+-					 int adj, int cur, int l)
+-{
+-	int i, j, k, tmp;
+-
+-	j = r[cur].rev_index;
+-	i = j + adj;
+-
+-	if (i < 0)
+-		return r[0].index;
+-	if (i >= l - 1)
+-		return r[l - 1].index;
+-
+-	tmp = i;
+-
+-	if (adj < 0) {
+-		for (k = j; k >= i; k--)
+-			if (r[k].diff <= r[j].diff)
+-				tmp = k;
+-	} else {
+-		for (k = i + 1; k + i < l; k++)
+-			if (r[k].diff <= r[i].diff)
+-				tmp = k;
+-	}
+-
+-	return r[tmp].index;
+-}
+-
++/* Adjust the rate while ensuring that we won't switch to a lower rate if it
++ * exhibited a worse failed frames behaviour and we'll choose the highest rate
++ * whose failed frames behaviour is not worse than the one of the original rate
++ * target. While at it, check that the new rate is valid. */
+ static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
+ 					 struct sta_info *sta, int adj,
+ 					 struct rc_pid_rateinfo *rinfo)
  {
  	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
--	bool delete = false;
+ 	struct ieee80211_hw_mode *mode;
+-	int newidx;
+-	int maxrate;
+-	int back = (adj > 0) ? 1 : -1;
++	int cur_sorted, new_sorted, probe, tmp, n_bitrates;
++	int cur = sta->txrate;
  
- 	rcu_read_lock();
- 	mpath = (struct mesh_path *) data;
-@@ -837,10 +836,7 @@ void mesh_path_timer(unsigned long data)
- 		goto endmpathtimer;
- 	spin_lock_bh(&mpath->state_lock);
- 	sdata = IEEE80211_DEV_TO_SUB_IF(mpath->dev);
--	if (mpath->flags & MESH_PATH_DELETE) {
--		mpath->flags = 0;
--		delete = true;
--	} else if (mpath->flags & MESH_PATH_RESOLVED ||
-+	if (mpath->flags & MESH_PATH_RESOLVED ||
- 			(!(mpath->flags & MESH_PATH_RESOLVING)))
- 		mpath->flags &= ~(MESH_PATH_RESOLVING | MESH_PATH_RESOLVED);
- 	else if (mpath->discovery_retries < max_preq_retries(sdata)) {
-@@ -856,6 +852,4 @@ void mesh_path_timer(unsigned long data)
- 	spin_unlock_bh(&mpath->state_lock);
- endmpathtimer:
- 	rcu_read_unlock();
--	if (delete)
--		mesh_path_del(mpath->dst, mpath->dev, false);
- }
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index bd58849..f74e4ce 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -277,7 +277,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	for_each_mesh_entry(mesh_paths, p, node, i) {
- 		mpath = node->mpath;
- 		if (mpath->next_hop == sta)
--			mesh_path_del(mpath->dst, mpath->dev, true);
-+			mesh_path_del(mpath->dst, mpath->dev);
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+ 
+ 	mode = local->oper_hw_mode;
+-	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
++	n_bitrates = mode->num_rates;
+ 
+-	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
+-					       mode->num_rates);
++	/* Map passed arguments to sorted values. */
++	cur_sorted = rinfo[cur].rev_index;
++	new_sorted = cur_sorted + adj;
++
++	/* Check limits. */
++	if (new_sorted < 0)
++		new_sorted = rinfo[0].rev_index;
++	else if (new_sorted >= n_bitrates)
++		new_sorted = rinfo[n_bitrates - 1].rev_index;
+ 
+-	while (newidx != sta->txrate) {
+-		if (rate_supported(sta, mode, newidx) &&
+-		    (maxrate < 0 || newidx <= maxrate)) {
+-			sta->txrate = newidx;
+-			break;
+-		}
++	tmp = new_sorted;
+ 
+-		newidx += back;
++	if (adj < 0) {
++		/* Ensure that the rate decrease isn't disadvantageous. */
++		for (probe = cur_sorted; probe >= new_sorted; probe--)
++			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
++			    rate_supported(sta, mode, rinfo[probe].index))
++				tmp = probe;
++	} else {
++		/* Look for rate increase with zero (or below) cost. */
++		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
++			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
++			    rate_supported(sta, mode, rinfo[probe].index))
++				tmp = probe;
  	}
+ 
++	/* Fit the rate found to the nearest supported rate. */
++	do {
++		if (rate_supported(sta, mode, rinfo[tmp].index)) {
++			sta->txrate = rinfo[tmp].index;
++			break;
++		}
++		if (adj < 0)
++			tmp--;
++		else
++			tmp++;
++	} while (tmp < n_bitrates && tmp >= 0);
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	rate_control_pid_event_rate_change(
+ 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
+-		newidx, mode->rates[newidx].rate);
++		cur, mode->rates[cur].rate);
+ #endif
  }
  
-@@ -291,7 +291,7 @@ void mesh_path_flush(struct net_device *dev)
- 	for_each_mesh_entry(mesh_paths, p, node, i) {
- 		mpath = node->mpath;
- 		if (mpath->dev == dev)
--			mesh_path_del(mpath->dst, mpath->dev, false);
-+			mesh_path_del(mpath->dst, mpath->dev);
- 	}
- }
- 
-@@ -314,12 +314,8 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
-  * @dev: local interface
-  *
-  * Returns: 0 if succesful
-- *
-- * State: if the path is being resolved, the deletion will be postponed until
-- * the path resolution completes or times out, unless the force parameter
-- * is given.
-  */
--int mesh_path_del(u8 *addr, struct net_device *dev, bool force)
-+int mesh_path_del(u8 *addr, struct net_device *dev)
- {
- 	struct mesh_path *mpath;
- 	struct mpath_node *node;
-@@ -338,14 +334,10 @@ int mesh_path_del(u8 *addr, struct net_device *dev, bool force)
- 		if (mpath->dev == dev &&
- 				memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
- 			spin_lock_bh(&mpath->state_lock);
--			if (!force && mpath->flags & MESH_PATH_RESOLVING) {
--				mpath->flags |= MESH_PATH_DELETE;
--			} else {
--				mpath->flags |= MESH_PATH_RESOLVING;
--				hlist_del_rcu(&node->list);
--				call_rcu(&node->rcu, mesh_path_node_reclaim);
--				atomic_dec(&mesh_paths->entries);
--			}
-+			mpath->flags |= MESH_PATH_RESOLVING;
-+			hlist_del_rcu(&node->list);
-+			call_rcu(&node->rcu, mesh_path_node_reclaim);
-+			atomic_dec(&mesh_paths->entries);
- 			spin_unlock_bh(&mpath->state_lock);
- 			goto enddel;
- 		}
-@@ -508,7 +500,7 @@ void mesh_path_expire(struct net_device *dev)
- 			time_after(jiffies,
- 			 mpath->exp_time + MESH_PATH_EXPIRE)) {
- 			spin_unlock_bh(&mpath->state_lock);
--			mesh_path_del(mpath->dst, mpath->dev, false);
-+			mesh_path_del(mpath->dst, mpath->dev);
- 		} else
- 			spin_unlock_bh(&mpath->state_lock);
- 	}
+
+
 -- 
-1.5.2.5
-
-
-
+Ciao
+Stefano
