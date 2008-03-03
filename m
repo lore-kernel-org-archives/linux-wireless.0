@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58521 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51505 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761944AbYCTAHI (ORCPT
+	with ESMTP id S1754947AbYCCV1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 20:07:08 -0400
-Subject: Re: [PATCH] iwlwifi: prevent tuning during scanning
+	Mon, 3 Mar 2008 16:27:33 -0500
+Subject: Re: [PATCH 00/10] mac80211: fix mesh remaining issues
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-In-Reply-To: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_234534_228497_EC4DD4E8)
-References: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com>
-	 (sfid-20080319_234534_228497_EC4DD4E8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bS7sBhoAHkcuQt+yNEPT"
-Date: Thu, 20 Mar 2008 01:06:52 +0100
-Message-Id: <1205971612.16475.87.camel@johannes.berg> (sfid-20080320_000714_985260_CF9C7AB4)
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <47cc5d75.24bc720a.7d54.ffffacc3@mx.google.com> (sfid-20080303_202012_190534_9E638A96)
+References: <47cc5d75.24bc720a.7d54.ffffacc3@mx.google.com>
+	 (sfid-20080303_202012_190534_9E638A96)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m8MNrsvNeZh2P5yXaMNQ"
+Date: Mon, 03 Mar 2008 22:27:21 +0100
+Message-Id: <1204579641.3917.62.camel@johannes.berg> (sfid-20080303_212737_267701_4D6D9E6A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-bS7sBhoAHkcuQt+yNEPT
+--=-m8MNrsvNeZh2P5yXaMNQ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Wrong patch title. Trying to sneak patches past me? ;)
 
-Also, I thought you explicitly wanted the channel change callback to be
-allowed during hw scan because hw scan could return to the home channel
-inbetween...
+On Fri, 2008-02-29 at 12:13 -0800, Luis Carlos Cobo wrote:
+> This patches fix all the remaining issues in the mesh implementation in
+> wireless-testing. The sparse endianness warnings have been solved and the=
+ mesh
+> option is no longer marked as BROKEN.
+>=20
+> This applys on top of wireless-testing 6d85dc1886.
+
+Patches all look good, thanks.
+
+For all 10 of them, here's my
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+just in case somebody cares. :)
 
 johannes
 
---=-bS7sBhoAHkcuQt+yNEPT
+--=-m8MNrsvNeZh2P5yXaMNQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR+Gqm6Vg1VMiehFYAQIgwA//R4NQKwjMXkfs+DQi0gnMw5D9GcVCUPHM
-3A0TOruJ8vIqcrchzCwFXD5bzE5qJ9zXvxev8SkuygtNemMKymJZDwKrlpZnU0fb
-unKmwIaz0fr1PiONbX/dqptgYbrbzAXpD9893oWqcXzNGqd0ckN/LnKZ2pkstsHD
-L2OKg7JyVwcQlxpoyZrQ8S5uElbuoViLUyl9DDe8+GQMD8/W8SYxDiy8R5DTjTxG
-1tBBK2I9LSWXzjbmG5c27Eaj0syPWYARp+DqE0PX5H11SjnLQp/fIr9wHaw7xOA1
-31N9aIyH1eLV6V1Lvh7oRqk8yNrGO6YMIxVLAvlgaqeLTTkAwrQRE/aslLFCp4vj
-vq414sycxFgNog3ZANaop9PuwAI4Elt0w6ZMudZ6j9SRaIQ1nMvTq1UPt19+MpLa
-QScwRza5p9oB4dSMndS3XrI0R7o5DF1jXcsStmKLxjBN9t3RNQrRa97UuaXYXLUz
-zXhGPkrrLkzW0rEBoY2dgv9Ouw7KNSZ8mM6ZX3W6NbQb1m+FH5TLwxXGxrNf3Wof
-X69NitJWtA/YK/P+5pkwGuKbavoprDKAj5ijsPlWCE0pbMWpj6fZGRG/dm5zAYjI
-m1m0lsn+EAze2KWb3dqTFVplCKF28rc1oBeBHNX8ZBoRM0sRSvyDj91f1R8X0yGq
-QE8OdgvB2cw=
-=jY80
+iQIVAwUAR8xtN6Vg1VMiehFYAQK3PQ//S3/xjM27vT95oY7EX2VP54LQPQfHQoIj
+keNHRBVoFDbNjh993tW9VjIMzY02SdpNU8AHfizanRJWslFDiwMQWIluBQ1h4QXn
+3ZyvvVw9wHP7USQw7IoGujeDpksneTtq+27Yxda4+Aq52v8kGP9WBUbAbDG7dnCF
+EHLH9g4N8+ZhZWed/Cmo4J+Y1PAHY/aAHw395r15shjDiMjTVj9iTxxI4Ysf+NQM
++0urjWvEBV++eElhX3beLjqMaEgPWEVEQRs9IKN3UQ0WU7FPm0p+7eTV9fWQqY41
+jYhjJKULwKqcQJu3WVrhXvP0GVNvccb5JmI33fuL8lKLXijCXHuLG8GwW4NqZwbe
+rE/1tLMnM4akqolIIZTgSigCYU4+kuIw33iGOq1yb5cQI4IXTp0EAQJQ7fnulLK0
+/Je9jgKN1oe+/npOo37ehCXdiGkJarFc1hNajImOZm9AVl+TlF406eSwr2Mbx31o
+tuEEWm2xpWehfE8jjqa0v7kxeYpZojplMQ7d2Jz9mCJk+oY4C7duTSx/bmigq/AK
+lzwJShp1RUSrD2TK4ok+WNhItQzpSkQNDxQ/yyfPBzMdRbMn+x1DgDl14qcBUkqd
+MyEfKkhMxZHkaMvrT/oSdEufRJIQpRykl26rOc5W2EO83Gelw9sqWpk2SjlpjyBz
+3wnCCeh60A4=
+=hJZt
 -----END PGP SIGNATURE-----
 
---=-bS7sBhoAHkcuQt+yNEPT--
+--=-m8MNrsvNeZh2P5yXaMNQ--
 
