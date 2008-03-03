@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:10048 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756AbYCMUYJ convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:1212 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbYCCMTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2008 16:24:09 -0400
+	Mon, 3 Mar 2008 07:19:40 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: add LED control TLV to types.h
+Date: Mon, 3 Mar 2008 12:16:42 +0100
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] iwlwifi: Update git URL
-Date: Thu, 13 Mar 2008 13:21:10 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892003E8D25A@orsmsx416.amr.corp.intel.com> (sfid-20080313_202416_183170_947B2C60)
-In-Reply-To: <1205432413.1469.3.camel@plop>
-References: <1205432413.1469.3.camel@plop>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Pascal Terjan" <pterjan@mandriva.com>, <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
-	<ipw3945-devel@lists.sourceforge.net>
+  charset="us-ascii"
+Message-Id: <200803031216.42283.hs4233@mail.mn-solutions.de> (sfid-20080303_121954_381612_F1F8715A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, March 13, 2008 11:20 AM, Pascal Terjan  wrote:
+From: David Woodhouse <dwmw2@infradead.org>
 
-> Signed-off-by: Pascal Terjan <pterjan@mandriva.com> ---
-> MAINTAINERS |    2 +-
-> 1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8391b0c..f895d98 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -2125,7 +2125,7 @@ M:	reinette.chatre@intel.com
-> L:	linux-wireless@vger.kernel.org
-> L:	ipw3945-devel@lists.sourceforge.net
-> W:	http://intellinuxwireless.org
-> -T:	git git://intellinuxwireless.org/repos/iwlwifi
-> +T:	git
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless
-> -testing.git S:	Supported
-> 
-> IOC3 ETHERNET DRIVER
-> --
-> 1.5.4.3
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 
-We are actually working on a iwlwifi specific repository on
-git.kernel.org. This URL should point there instead. I will submit a
-patch for this when the repo is up and running.
-
-Thanks
-
-Reinette
+diff --git a/drivers/net/wireless/libertas/types.h b/drivers/net/wireless/libertas/types.h
+index f0d5795..4031be4 100644
+--- a/drivers/net/wireless/libertas/types.h
++++ b/drivers/net/wireless/libertas/types.h
+@@ -239,4 +239,17 @@ struct mrvlietypes_ledgpio {
+ 	struct led_pin ledpin[1];
+ } __attribute__ ((packed));
+ 
++struct led_bhv {
++	uint8_t	firmwarestate;
++	uint8_t	led;
++	uint8_t	ledstate;
++	uint8_t	ledarg;
++} __attribute__ ((packed));
++
++
++struct mrvlietypes_ledbhv {
++	struct mrvlietypesheader header;
++	struct led_bhv ledbhv[1];
++} __attribute__ ((packed));
++
+ #endif
