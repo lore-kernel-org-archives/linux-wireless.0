@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:16379 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754645AbYCYNrR (ORCPT
+Received: from embla.aitel.hist.no ([158.38.50.22]:41884 "EHLO
+	embla.aitel.hist.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648AbYCCPkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 09:47:17 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1064786nfb.21
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 06:47:16 -0700 (PDT)
-To: Alejandro Riveira =?iso-8859-1?q?Fern=E1ndez?=
-	<ariveira@gmail.com>
-Subject: Re: Spammed logs again rt2500pci 2.6.25-rc6-00268-gd2532dd
-Date: Tue, 25 Mar 2008 14:46:28 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linux-kernel@vger.kernel.org
-References: <20080117225744.29aa214c@Varda> <20080325131250.5167e311@Varda> <200803251441.22394.IvDoorn@gmail.com>
-In-Reply-To: <200803251441.22394.IvDoorn@gmail.com>
+	Mon, 3 Mar 2008 10:40:47 -0500
+Message-ID: <47CC1926.1090708@aitel.hist.no> (sfid-20080303_154102_528147_0AF8F74E)
+Date: Mon, 03 Mar 2008 16:28:38 +0100
+From: Helge Hafting <helge.hafting@aitel.hist.no>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803251446.28472.IvDoorn@gmail.com> (sfid-20080325_134723_472241_4B4987CD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Problems with iwl3945, hard to connect to encrypted networks
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I have a Dell830 that uses the 3945 driver.
+I have tried kernels 2.6.23, 2.6.24 and 2.6.35-rc3.
 
-> You mean http://rt2x00.serialmonkey.com/phpBB2/index.php?
-> 'ignored' is not the right word, more likely overlooked.
-> There are quite a lot of messages and I don't always have time to answer them all.
-> So there is no need to be upset about such thing, simply posting a reminder is usually
-> enough to make it noticed by me...
+Unencrypted networks seems to work well,
+I usually connect on first try.
 
-I just checked the forums and apparently you mean that 8 replies to your topic including the
-answer about "it has been fixed" in 2.1.0 counts as 'ignored'...
+Encrypted networks are harder. They work fine
+once I get connected, but I have to try
+very many times before the connection works.
 
-For reference:
-http://rt2x00.serialmonkey.com/phpBB2/viewtopic.php?t=4512&highlight=
+I bring up the interface using
+ifconfig wlan0 up
+and configure it with
+iwconfig wlan0 essid SSID key s:password
 
-and yes the following topic was unanswered
-http://rt2x00.serialmonkey.com/phpBB2/viewtopic.php?t=4572&highlight=
-but that topic is a duplicate of your fist topic, and I am not responding to forum spammers...
+If I run iwconfig first, I usually get something
+like this in the dmesg log:
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
-> > (Someone may want to change the web forums pointer in the logs to 
-> > the linux-wireless mailing list)
-> 
-> What pointer? And rt2400-devel is the mailinglist for rt2x00...
-> The MAINTAINERS file in the kernel tree indicates 2 mailinglists for rt2x00:
-> 	rt2400-devel@lists.sourceforge.net
-> 	linux-wireless@vger.kernel.org
-> 
-> Ivo
-> 
+If I run iwconfig after ifconfig, I get:
+wlan0: Initial auth_alg=0
+wlan0: authenticate with AP 00:14:1b:5a:13:40
+wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
+wlan0: RX authentication from 00:14:1b:5a:13:40 (alg=0 transaction=2 
+status=0)
+wlan0: authenticated
+wlan0: associate with AP 00:14:1b:5a:13:40
+wlan0: mismatch in privacy configuration and mixed-cell disabled - abort 
+association
+wlan0: RX deauthenticaion from 00:14:1b:5a:13:40 (reason=2)
+wlan0: deauthenticated
+
+
+Try fifty times - and sometimes it just works. Most of the time I get 
+this exact failure.  The same happens with other access points that uses 
+encryption. Retrying manually is tedious though.
+
+I compiled the kernels myself using gcc-4.2.3 from debian.
+The kernel is 64-bit and SMP, to take full advantage of
+the core2duo processor.
+
+
+Helge Hafting
+
+
+
+
+
 
 
