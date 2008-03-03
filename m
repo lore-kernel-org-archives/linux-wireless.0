@@ -1,343 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:1104 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421AbYCCMSk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 07:18:40 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert KEY_MATERIAL to a direct command
-Date: Mon, 3 Mar 2008 12:15:39 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803031215.39947.hs4233@mail.mn-solutions.de> (sfid-20080303_121855_515507_5802CA02)
+Received: from mga01.intel.com ([192.55.52.88]:56232 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752720AbYCCHHy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2008 02:07:54 -0500
+Subject: Re: hostapd with mac80211 progress
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1204302356.3938.36.camel@johannes.berg>
+References: <1204190255.3090.165.camel@debian.sh.intel.com>
+	 <1204210453.6309.49.camel@johannes.berg>
+	 <1204266154.3090.182.camel@debian.sh.intel.com>
+	 <1204302356.3938.36.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 03 Mar 2008 15:08:19 +0800
+Message-Id: <1204528099.3087.15.camel@debian.sh.intel.com> (sfid-20080303_070808_335564_7319B766)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <dwmw2@infradead.org>
 
-The struct enc_key probably wants to die too, but that can come later.
+On Fri, 2008-02-29 at 17:25 +0100, Johannes Berg wrote:
+> now that John merged more stuff you should only need the hostapd
+> patch and the allow-ap-vlan-modes patch from my kernel series :)
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
+OK. This time is much better. Now I can at least ping my 4965 AP with
+below fix.
 
-Hi John !
+The removal of mac80211 IEEE80211_CHAN_W_SCAN flag causes channel flag
+incompatibility between hostapd and driver. Hostapd expects
+HOSTAPD_CHAN_W_SCAN (0x1) to be set for the configured channel while 0x1
+means IEEE80211_CHAN_DISABLED in the new mac80211. We should make
+ieee80211_channel_flags and HOSTAPD_CHAN_W_xxx compatible. What do you
+think? I now just workaround the problem with:
 
-David said on IRC:
+diff --git a/hostapd/hw_features.c b/hostapd/hw_features.c
+index c58e1e4..8a7b013 100644
+--- a/hostapd/hw_features.c
++++ b/hostapd/hw_features.c
+@@ -294,8 +294,7 @@ static int select_hw_mode1(struct hostapd_iface
+*iface)
+ 	for (j = 0; j < iface->current_mode->num_channels; j++) {
+ 		struct hostapd_channel_data *chan =
+ 			&iface->current_mode->channels[j];
+-		if ((chan->flag & HOSTAPD_CHAN_W_SCAN) &&
+-		    (chan->chan == iface->conf->channel)) {
++		if (chan->chan == iface->conf->channel) {
+ 			ok = 1;
+ 			break;
+ 		}
 
-[11:18] <dwmw2> if you want to rebase the tree, or send the patches upstream, be my guest :)
 
-So here are some patches from libertas-2.6 that I want to have
-upstream so that they don't bit-rot.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index c622e9b..495c2bd 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -358,11 +358,7 @@ static int assoc_helper_wpa_keys(struct lbs_private *priv,
- 
- 	if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
- 		clear_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags);
--		ret = lbs_prepare_and_send_command(priv,
--					CMD_802_11_KEY_MATERIAL,
--					CMD_ACT_SET,
--					CMD_OPTION_WAITFORRSP,
--					0, assoc_req);
-+		ret = lbs_cmd_802_11_key_material(priv, CMD_ACT_SET, assoc_req);
- 		assoc_req->flags = flags;
- 	}
- 
-@@ -372,11 +368,7 @@ static int assoc_helper_wpa_keys(struct lbs_private *priv,
- 	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
- 		clear_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags);
- 
--		ret = lbs_prepare_and_send_command(priv,
--					CMD_802_11_KEY_MATERIAL,
--					CMD_ACT_SET,
--					CMD_OPTION_WAITFORRSP,
--					0, assoc_req);
-+		ret = lbs_cmd_802_11_key_material(priv, CMD_ACT_SET, assoc_req);
- 		assoc_req->flags = flags;
- 	}
- 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 4d06dec..9158328 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -327,75 +327,103 @@ int lbs_cmd_802_11_enable_rsn(struct lbs_private *priv, uint16_t cmd_action,
- 	return ret;
- }
- 
--static void set_one_wpa_key(struct MrvlIEtype_keyParamSet * pkeyparamset,
--                            struct enc_key * pkey)
-+static void set_one_wpa_key(struct MrvlIEtype_keyParamSet *keyparam,
-+                            struct enc_key *key)
- {
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
--	if (pkey->flags & KEY_INFO_WPA_ENABLED) {
--		pkeyparamset->keyinfo |= cpu_to_le16(KEY_INFO_WPA_ENABLED);
--	}
--	if (pkey->flags & KEY_INFO_WPA_UNICAST) {
--		pkeyparamset->keyinfo |= cpu_to_le16(KEY_INFO_WPA_UNICAST);
--	}
--	if (pkey->flags & KEY_INFO_WPA_MCAST) {
--		pkeyparamset->keyinfo |= cpu_to_le16(KEY_INFO_WPA_MCAST);
--	}
-+	if (key->flags & KEY_INFO_WPA_ENABLED)
-+		keyparam->keyinfo |= cpu_to_le16(KEY_INFO_WPA_ENABLED);
-+	if (key->flags & KEY_INFO_WPA_UNICAST)
-+		keyparam->keyinfo |= cpu_to_le16(KEY_INFO_WPA_UNICAST);
-+	if (key->flags & KEY_INFO_WPA_MCAST)
-+		keyparam->keyinfo |= cpu_to_le16(KEY_INFO_WPA_MCAST);
- 
--	pkeyparamset->type = cpu_to_le16(TLV_TYPE_KEY_MATERIAL);
--	pkeyparamset->keytypeid = cpu_to_le16(pkey->type);
--	pkeyparamset->keylen = cpu_to_le16(pkey->len);
--	memcpy(pkeyparamset->key, pkey->key, pkey->len);
--	pkeyparamset->length = cpu_to_le16(  sizeof(pkeyparamset->keytypeid)
--	                                        + sizeof(pkeyparamset->keyinfo)
--	                                        + sizeof(pkeyparamset->keylen)
--	                                        + sizeof(pkeyparamset->key));
-+	keyparam->type = cpu_to_le16(TLV_TYPE_KEY_MATERIAL);
-+	keyparam->keytypeid = cpu_to_le16(key->type);
-+	keyparam->keylen = cpu_to_le16(key->len);
-+	memcpy(keyparam->key, key->key, key->len);
-+
-+	/* Length field doesn't include the {type,length} header */
-+	keyparam->length = cpu_to_le16(sizeof(*keyparam) - 4);
- 	lbs_deb_leave(LBS_DEB_CMD);
- }
- 
--static int lbs_cmd_802_11_key_material(struct lbs_private *priv,
--					struct cmd_ds_command *cmd,
--					u16 cmd_action,
--					u32 cmd_oid, void *pdata_buf)
-+int lbs_cmd_802_11_key_material(struct lbs_private *priv, uint16_t cmd_action,
-+				struct assoc_request *assoc)
- {
--	struct cmd_ds_802_11_key_material *pkeymaterial =
--	    &cmd->params.keymaterial;
--	struct assoc_request * assoc_req = pdata_buf;
-+	struct cmd_ds_802_11_key_material cmd;
- 	int ret = 0;
- 	int index = 0;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
--	cmd->command = cpu_to_le16(CMD_802_11_KEY_MATERIAL);
--	pkeymaterial->action = cpu_to_le16(cmd_action);
-+	cmd.action = cpu_to_le16(cmd_action);
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 
- 	if (cmd_action == CMD_ACT_GET) {
--		cmd->size = cpu_to_le16(S_DS_GEN + sizeof (pkeymaterial->action));
--		ret = 0;
--		goto done;
--	}
-+		cmd.hdr.size = cpu_to_le16(S_DS_GEN + 2);
-+	} else {
-+		memset(cmd.keyParamSet, 0, sizeof(cmd.keyParamSet));
- 
--	memset(&pkeymaterial->keyParamSet, 0, sizeof(pkeymaterial->keyParamSet));
-+		if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc->flags)) {
-+			set_one_wpa_key(&cmd.keyParamSet[index],
-+					&assoc->wpa_unicast_key);
-+			index++;
-+		}
- 
--	if (test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
--		set_one_wpa_key(&pkeymaterial->keyParamSet[index],
--		                &assoc_req->wpa_unicast_key);
--		index++;
--	}
-+		if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc->flags)) {
-+			set_one_wpa_key(&cmd.keyParamSet[index],
-+					&assoc->wpa_mcast_key);
-+			index++;
-+		}
- 
--	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
--		set_one_wpa_key(&pkeymaterial->keyParamSet[index],
--		                &assoc_req->wpa_mcast_key);
--		index++;
-+		/* The common header and as many keys as we included */
-+		cmd.hdr.size = cpu_to_le16(offsetof(typeof(cmd),
-+						    keyParamSet[index]));
- 	}
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_KEY_MATERIAL, &cmd);
-+	/* Copy the returned key to driver private data */
-+	if (!ret && cmd_action == CMD_ACT_GET) {
-+		void *buf_ptr = cmd.keyParamSet;
-+		void *resp_end = &(&cmd)[1];
-+
-+		while (buf_ptr < resp_end) {
-+			struct MrvlIEtype_keyParamSet *keyparam = buf_ptr;
-+			struct enc_key *key;
-+			uint16_t param_set_len = le16_to_cpu(keyparam->length);
-+			uint16_t key_len = le16_to_cpu(keyparam->keylen);
-+			uint16_t key_flags = le16_to_cpu(keyparam->keyinfo);
-+			uint16_t key_type = le16_to_cpu(keyparam->keytypeid);
-+			void *end;
-+
-+			end = (void *)keyparam + sizeof(keyparam->type)
-+				+ sizeof(keyparam->length) + param_set_len;
-+
-+			/* Make sure we don't access past the end of the IEs */
-+			if (end > resp_end)
-+				break;
- 
--	cmd->size = cpu_to_le16(  S_DS_GEN
--	                        + sizeof (pkeymaterial->action)
--	                        + (index * sizeof(struct MrvlIEtype_keyParamSet)));
-+			if (key_flags & KEY_INFO_WPA_UNICAST)
-+				key = &priv->wpa_unicast_key;
-+			else if (key_flags & KEY_INFO_WPA_MCAST)
-+				key = &priv->wpa_mcast_key;
-+			else
-+				break;
- 
--	ret = 0;
-+			/* Copy returned key into driver */
-+			memset(key, 0, sizeof(struct enc_key));
-+			if (key_len > sizeof(key->key))
-+				break;
-+			key->type = key_type;
-+			key->flags = key_flags;
-+			key->len = key_len;
-+			memcpy(key->key, keyparam->key, key->len);
-+
-+			buf_ptr = end + 1;
-+		}
-+	}
- 
--done:
- 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
- 	return ret;
- }
-@@ -1427,11 +1455,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_80211_ad_hoc_stop(priv, cmdptr);
- 		break;
- 
--	case CMD_802_11_KEY_MATERIAL:
--		ret = lbs_cmd_802_11_key_material(priv, cmdptr, cmd_action,
--				cmd_oid, pdata_buf);
--		break;
--
- 	case CMD_802_11_PAIRWISE_TSC:
- 		break;
- 	case CMD_802_11_GROUP_TSC:
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index b9ab85c..d250e6b 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -57,5 +57,7 @@ int lbs_cmd_802_11_set_wep(struct lbs_private *priv, uint16_t cmd_action,
- 			   struct assoc_request *assoc);
- int lbs_cmd_802_11_enable_rsn(struct lbs_private *priv, uint16_t cmd_action,
- 			      uint16_t *enable);
-+int lbs_cmd_802_11_key_material(struct lbs_private *priv, uint16_t cmd_action,
-+				struct assoc_request *assoc);
- 
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 159216a..595fbff 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -204,61 +204,6 @@ static int lbs_ret_802_11_snmp_mib(struct lbs_private *priv,
- 	return 0;
- }
- 
--static int lbs_ret_802_11_key_material(struct lbs_private *priv,
--					struct cmd_ds_command *resp)
--{
--	struct cmd_ds_802_11_key_material *pkeymaterial =
--	    &resp->params.keymaterial;
--	u16 action = le16_to_cpu(pkeymaterial->action);
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	/* Copy the returned key to driver private data */
--	if (action == CMD_ACT_GET) {
--		u8 * buf_ptr = (u8 *) &pkeymaterial->keyParamSet;
--		u8 * resp_end = (u8 *) (resp + le16_to_cpu(resp->size));
--
--		while (buf_ptr < resp_end) {
--			struct MrvlIEtype_keyParamSet * pkeyparamset =
--			    (struct MrvlIEtype_keyParamSet *) buf_ptr;
--			struct enc_key * pkey;
--			u16 param_set_len = le16_to_cpu(pkeyparamset->length);
--			u16 key_len = le16_to_cpu(pkeyparamset->keylen);
--			u16 key_flags = le16_to_cpu(pkeyparamset->keyinfo);
--			u16 key_type = le16_to_cpu(pkeyparamset->keytypeid);
--			u8 * end;
--
--			end = (u8 *) pkeyparamset + sizeof (pkeyparamset->type)
--			                          + sizeof (pkeyparamset->length)
--			                          + param_set_len;
--			/* Make sure we don't access past the end of the IEs */
--			if (end > resp_end)
--				break;
--
--			if (key_flags & KEY_INFO_WPA_UNICAST)
--				pkey = &priv->wpa_unicast_key;
--			else if (key_flags & KEY_INFO_WPA_MCAST)
--				pkey = &priv->wpa_mcast_key;
--			else
--				break;
--
--			/* Copy returned key into driver */
--			memset(pkey, 0, sizeof(struct enc_key));
--			if (key_len > sizeof(pkey->key))
--				break;
--			pkey->type = key_type;
--			pkey->flags = key_flags;
--			pkey->len = key_len;
--			memcpy(pkey->key, pkeyparamset->key, pkey->len);
--
--			buf_ptr = end + 1;
--		}
--	}
--
--	lbs_deb_enter(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_ret_802_11_mac_address(struct lbs_private *priv,
- 				       struct cmd_ds_command *resp)
- {
-@@ -475,10 +420,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 		ret = lbs_ret_80211_ad_hoc_stop(priv, resp);
- 		break;
- 
--	case CMD_RET(CMD_802_11_KEY_MATERIAL):
--		ret = lbs_ret_802_11_key_material(priv, resp);
--		break;
--
- 	case CMD_RET(CMD_802_11_EEPROM_ACCESS):
- 		ret = lbs_ret_802_11_eeprom_access(priv, resp);
- 		break;
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index be325ed..b183fc1 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -572,6 +572,8 @@ struct cmd_ds_host_sleep {
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_key_material {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
- 	struct MrvlIEtype_keyParamSet keyParamSet[2];
- } __attribute__ ((packed));
-@@ -712,7 +714,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_802_11_rssi_rsp rssirsp;
- 		struct cmd_ds_802_11_disassociate dassociate;
- 		struct cmd_ds_802_11_mac_address macadd;
--		struct cmd_ds_802_11_key_material keymaterial;
- 		struct cmd_ds_mac_reg_access macreg;
- 		struct cmd_ds_bbp_reg_access bbpreg;
- 		struct cmd_ds_rf_reg_access rfreg;
+
