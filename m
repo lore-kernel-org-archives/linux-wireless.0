@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22575 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755842AbYCUU6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2008 16:58:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Toralf Forster <toralf.foerster@gmx.de>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/5] iwlwifi: fix __devexit_p points to __devexit functions
-Date: Fri, 21 Mar 2008 13:53:41 -0700
-Message-Id: <1206132824-20558-3-git-send-email-reinette.chatre@intel.com> (sfid-20080321_205959_724959_E7CA82EF)
-In-Reply-To: <1206132824-20558-2-git-send-email-reinette.chatre@intel.com>
-References: <1206132824-20558-1-git-send-email-reinette.chatre@intel.com>
- <1206132824-20558-2-git-send-email-reinette.chatre@intel.com>
+Received: from wx-out-0506.google.com ([66.249.82.231]:1342 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277AbYCCVcV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2008 16:32:21 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so361081wxd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 13:32:19 -0800 (PST)
+Message-ID: <646765f40803031332o2edc9eecm807bc974ac17dc2@mail.gmail.com> (sfid-20080303_213225_643802_1E6CE957)
+Date: Tue, 4 Mar 2008 08:32:18 +1100
+From: "Julian Calaby" <julian.calaby@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: Netgear WG311v3 - Marvell 88w8355 "Libertas"
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1204558117.3155.1.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com>
+	 <1204472016.13121.27.camel@localhost.localdomain>
+	 <646765f40803021401i65e31e16v5efd0784bffcc177@mail.gmail.com>
+	 <1204505713.3070.0.camel@localhost.localdomain>
+	 <646765f40803022006h39ec0c43uf9af99924dedc29@mail.gmail.com>
+	 <1204558117.3155.1.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iwlxxxx_pci_remove functions are not needed when drivers are not
-compiled as modules - they can thus be discarded at kernel link time.
-This is already captured by having them as __devexit_p in the pci_driver
-struct - these are supposed to be pointers to __devexit functions, but was not.
-This is now fixed.
+On Tue, Mar 4, 2008 at 2:28 AM, Dan Williams <dcbw@redhat.com> wrote:
+>
+> On Mon, 2008-03-03 at 15:06 +1100, Julian Calaby wrote:
+>  > On Mon, Mar 3, 2008 at 11:55 AM, Dan Williams <dcbw@redhat.com> wrote:
+>  > >
+>  > > On Mon, 2008-03-03 at 09:01 +1100, Julian Calaby wrote:
+>  > >  > Well, that explains why the "Libertas" parts supported by the current
+>  > >  > kernel require firmware and why the ndiswrapper driver I'm using
+>  > >  > doesn't.
+>  > >
+>  > >  The 8335 still requires firmware.  Lots of the windows drivers embed the
+>  > >  firmware into the .sys or .dll files, whereas on Linux embedding
+>  > >  firmware into the driver is quite frowned upon.
+>  >
+>  > Yeah, I discovered that the mrv8k driver still requires firmware,
+>  > despite there being no actual file in the windows driver that I can
+>  > point to as being the firmware image.
+>
+>  It's likely embedded into the sys file, try:
+>
+>  http://www.saillard.org/linux/mrv8k/files/mrv8k_extract_fw.c
+>
+>  to extract the firmware from a supported driver file.  At least one
+>  versoin of WG311v3 driver seems to be supported there ("NETGEAR
+>  WG311v3", "3.1.1.7") for extracting the firmware from.
 
-This problem was reported by Toralf Forster when testing the compilation of
-2.6.25-rc6.
+Thought as much, I've already downloaded it, and will be trying it out tonight.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: Toralf Forster <toralf.foerster@gmx.de>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 7b6517f..5bc5f6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8159,7 +8159,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	return err;
- }
- 
--static void iwl3945_pci_remove(struct pci_dev *pdev)
-+static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- {
- 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
- 	struct list_head *p, *q;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 29448d5..3562449 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -8370,7 +8370,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	return err;
- }
- 
--static void iwl4965_pci_remove(struct pci_dev *pdev)
-+static void __devexit iwl4965_pci_remove(struct pci_dev *pdev)
- {
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 	struct list_head *p, *q;
+(sorry for the dupe, hit the wrong button)
+
 -- 
-1.5.3.4
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
