@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56174 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900AbYCIUY0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:2891 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754126AbYCCJhU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 16:24:26 -0400
-Subject: Re: [PATCH 1/2] tkip: remove unused function, other cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1204946240.23455.19.camel@brick> (sfid-20080308_031744_226744_CE5F76EA)
-References: <1204946240.23455.19.camel@brick>
-	 (sfid-20080308_031744_226744_CE5F76EA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E8xIn94PseLRfFj8+7ql"
-Date: Sat, 08 Mar 2008 07:52:36 +0100
-Message-Id: <1204959156.6387.34.camel@johannes.berg> (sfid-20080309_202429_960874_0569C2A4)
-Mime-Version: 1.0
+	Mon, 3 Mar 2008 04:37:20 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so6755214wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 01:37:19 -0800 (PST)
+Message-ID: <a32f33a40803030137k116fadbfk1e5e571e94cf222a@mail.gmail.com> (sfid-20080303_093725_353799_C0F66513)
+Date: Mon, 3 Mar 2008 10:37:19 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+Cc: "Franz Apeltauer" <franz.apeltauer@gmx.at>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1204504331.3917.31.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <47CB3B5E.4020701@gmx.at> <1204504331.3917.31.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-E8xIn94PseLRfFj8+7ql
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>  >    CC [M]
+>  > .../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware=
+=2Eo
+>  > .../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware=
+=2Ec:116:
+>  > Fehler: Redefinition von =BBrt2x00lib_load_firmware=AB
+>  > =3D Error: redefiniton of  =BBrt2x00lib_load_firmware=AB
+>  >
+>
+> > When I tried to "export CONFIG_CRC_ITU_T=3Dy" before "make",
+>  > rt2x00firmware.c compiled fine. (Probably this is not a good idea.=
+ I
+>  > just wanted to see, if it compiles then.)
+>
+>  That's odd because the latest config.mk should check for CRC_ITU_T
+>  before... Ivo could there be a problem with rt2x00 when crc-itu-t is=
+n't
+>  available?
 
+Yes, but only for rt61 and rt73. The crc-itu-t is used for firmware
+crc validation.
+(Note that rt2x00firmware.o should only be compiled when rt61 and rt73 =
+are
+being compiled).
 
-> -static inline u16 tkip_S(u16 val)
-> +static u16 tkip_S(u16 val)
->  {
-> -	u16 a =3D tkip_sbox[Hi8(val)];
-> -
-> -	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
-> +	return tkip_sbox[val & 0xff] ^ __swab16(tkip_sbox[val >> 8]);
+There currently is also a dependency on crc-ccitt, but that is for the
+upcoming rt2800 drivers (Yes, I could do the same as the legacy driver
+and use crc-itu-t, but I dislike the idea of bit-reverting each firmwar=
+e word
+before pushing it through the crc algorithm.).
 
-What's wrong with using the non-underscored versions? This is pure
-kernel code...
-
-johannes
-
---=-E8xIn94PseLRfFj8+7ql
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9I3s6Vg1VMiehFYAQJemhAApdd1qSkLZXcjrbMpB6B9xt1cBVl/cP/B
-znzZmckUnDaytHmLyp1CGFqt7VZw8l0DFgzs9ijQ3q44EcYuz5Y/c7Bh1f/pnay6
-R4xGOrKpD1m/opVZ8yQghNPFr7nD5R8gUgHZJhqAP75yOGV0F+VwjE0boanxEvyM
-OUFu1JINW8QVsgJXgstbxfxnunQweO4htF88nC3OxrEGE9xJ2ob04++TexrcoPnD
-M9xmfSaSdUyxiUBLWIwN/YqSD1E8D5U2xaNAR6H+r2Evx1yNXxu/KbPyjiQnKrti
-CP8XG0jl5Vv2M2NivNG4aVY8kPBCn824ReoyD2xsXx/dS3dt4GLcj05Ou3Gr8iQG
-4dWoIOyxw/rppnaK8+vj0s2jDJjtKkAbqYNaXyUD09ASE+1kQ6703SMgL70lmtMM
-forXfP4GXqUPKNS413wMSYVXDPkU9vkBaJBh5f9NjrXYvb7tC7ecGje3dQTdW1NM
-bwN8EKEHLFjkLXwA1d3W6Do2PdDLXSQcSXpMEQ8l/jfhup5tGj3q03HAMf5SvtOZ
-kYC8WLjHwWEw+hj2HE1vpl22C3ca/rnTd39WSR1Z5hNR5aB1wM2JcJFjsUdXFSjK
-Jh+xZZlhAlDzhuPIxlJwOttNN4abkyhMjEfimVokSU9tkWemPNvWmyJMjyOfq2Xu
-5OfuAxoF8zk=
-=ZFIC
------END PGP SIGNATURE-----
-
---=-E8xIn94PseLRfFj8+7ql--
-
+>  > In /usr/src/linux-headers-2.6.22-14/include/linux/slab.h I found:
+>  >     struct kmem_cache *kmem_cache_create(const char *, size_t, siz=
+e_t,
+>  >               unsigned long,
+>  >               void (*)(void *, struct kmem_cache *, unsigned long)=
+,
+>  >               void (*)(void *, struct kmem_cache *, unsigned long)=
+);
+>  > i.e. the old, 6-parameter version.
+>  >
+>  > So, IMHO the #define kmem_cache_create in
+>  > - compat-wireless-2.6/include/net/compat.h, line 120 and
+>  > - compat-wireless-2.6/compat/compat.h, line 120
+>  > should be moved 2 lines downwards into the block named
+>  > /* Compat work for 2.6.22 and 2.6.23 */
+>  > Then it compiles fine.
+>
+>  Ok, indeed, it should be moved then, I was working on .21 when I not=
+iced
+>  that needed to be done.
+>
+>  johannes
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
