@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:19721 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760592AbYCSTx2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:53:28 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Received: from www.tglx.de ([62.245.132.106]:59573 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757871AbYCDSWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 13:22:07 -0500
+Date: Tue, 4 Mar 2008 19:20:27 +0100
+From: Sebastian Siewior <bigeasy@tglx.de>
 To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] libertas: store rssi as an int
-Date: Wed, 19 Mar 2008 16:20:18 +0100
-Cc: linux-wireless@vger.kernel.org,
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-References: <200803181515.15584.hs4233@mail.mn-solutions.de> <1205938267.26119.33.camel@localhost.localdomain>
-In-Reply-To: <1205938267.26119.33.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803191620.18554.hs4233@mail.mn-solutions.de> (sfid-20080319_195438_346290_B2FCBB4B)
+Subject: Re: [PATCH] [NET] libertas: compare the current command with response
+Message-ID: <20080304182027.GA23871@www.tglx.de> (sfid-20080304_182211_895233_D15B38D0)
+References: <20080304172227.GA14225@www.tglx.de> <1204651390.30024.19.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1204651390.30024.19.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> RSSI as defined in 802.11 as a positive 8-bit value; the
-> libertas firmware also reports the RSSI in scan results as a
-> u8.  So I'd suggest a u8 instead of an int; an int isn't the
-> right thing to do here.
+* Dan Williams | 2008-03-04 12:23:10 [-0500]:
 
-"struct bss_descriptor" has nothing to do with hardware, 
-otherwise you would see __le32 there. Using an "u8" saves us 
-nothing, except we move all u8's at the end of the struct. But 
-this would give us unaligned u8's and some processors have 
-problems with that.
+>On Tue, 2008-03-04 at 18:22 +0100, Sebastian Siewior wrote:
+>> instead of with itself.
+Argh, I mixed up the libertas ml with wireless. Sorry for that.
+
+>Woodhouse already patched this, and Holger submitted woodhouse's patch.
+>So I think this is solved.
+Holger posted five patches yesterday on the libertas ml, one of them was
+
+|libertas: fix sanity check on sequence number in command
+Are you refering to this one? 
+This patch fixes the "sequence number compare" but than we still have the
+"command compare" which is also comparing with itself.
+In case you are talking about another one, than I have overlooked it.
+
+>Dan
+Sebastian
