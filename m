@@ -1,119 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13185 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:60914 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756150AbYCECKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 21:10:14 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Guy Cohen <guy.cohen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 04/11] iwlwifi: 802.11n spec removes AUTO offset for FAT channel
-Date: Tue,  4 Mar 2008 18:09:25 -0800
-Message-Id: <1204682972-26004-5-git-send-email-reinette.chatre@intel.com> (sfid-20080305_021033_536617_CBFAC823)
-In-Reply-To: <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
-References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
- <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
+	id S1751123AbYCDOIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 09:08:13 -0500
+Subject: Re: [PATCH, take 2] libertas: implement SSID scanning for
+	SIOCSIWSCAN
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803040738.19911.hs4233@mail.mn-solutions.de>
+References: <200802261522.05676.hs4233@mail.mn-solutions.de>
+	 <1204571891.16248.1.camel@localhost.localdomain>
+	 <200803040738.19911.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Tue, 04 Mar 2008 09:04:10 -0500
+Message-Id: <1204639450.7183.22.camel@localhost.localdomain> (sfid-20080304_140818_684950_9BC5B31E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guy Cohen <guy.cohen@intel.com>
+On Tue, 2008-03-04 at 07:38 +0100, Holger Schurig wrote:
+> > However, it never found the hidden AP I was using (ie, it
+> > never replaced the blank SSID in the iwlist scan results with
+> > the actual SSID as I'd expect).  I haven't tracked that down
+> > quite yet, but it might be an issue in the scan result
+> > handling code or it could be firmware.
+> 
+> Do you mean that 
+> 
+> 00:1D:60:14:33:2B   <empty SSID>
+> 00:1D:60:14:33:2B   WLAN
+> 
+> should be unified into
+> 
+> 00:1D:60:14:33:2B   WLAN
+> 
+> ???
 
-This patch adapts to 802.11 patch and remove AUTO offset for FAT
-channel
+_If and only if_ the BSSID and all security and flags match, then yes.  
 
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 +++-----
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    9 ++++-----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 ++++++++--
- 3 files changed, 15 insertions(+), 12 deletions(-)
+But that wasn't the issue; the issue was that even after doing 'iwlist
+eth1 scan ssid hidden-test' the SSID 'hidden-test' was never returned in
+the scan results, but the AP's BSSID without an SSID was.  So, assuming
+that I know 00:1D:60:14:33:2B is an AP with an ssid of 'hidden-test':
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 8b9c419..bb8f002 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4416,7 +4416,7 @@ static u8 iwl4965_is_channel_extension(struct iwl4965_priv *priv,
- 	if (!is_channel_valid(ch_info))
- 		return 0;
- 
--	if (extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_AUTO)
-+	if (extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_NONE)
- 		return 0;
- 
- 	if ((ch_info->fat_extension_channel == extension_chan_offset) ||
-@@ -4433,7 +4433,7 @@ static u8 iwl4965_is_fat_tx_allowed(struct iwl4965_priv *priv,
- 
- 	if ((!iwl_ht_conf->is_ht) ||
- 	   (iwl_ht_conf->supported_chan_width != IWL_CHANNEL_WIDTH_40MHZ) ||
--	   (iwl_ht_conf->extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_AUTO))
-+	   (iwl_ht_conf->extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_NONE))
- 		return 0;
- 
- 	if (sta_ht_inf) {
-@@ -4478,9 +4478,7 @@ void iwl4965_set_rxon_ht(struct iwl4965_priv *priv, struct iwl_ht_info *ht_info)
- 	case IWL_EXT_CHANNEL_OFFSET_BELOW:
- 		rxon->flags |= RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK;
- 		break;
--	case IWL_EXT_CHANNEL_OFFSET_AUTO:
--		rxon->flags &= ~RXON_FLG_CHANNEL_MODE_MIXED_MSK;
--		break;
-+	case IWL_EXT_CHANNEL_OFFSET_NONE:
- 	default:
- 		rxon->flags &= ~RXON_FLG_CHANNEL_MODE_MIXED_MSK;
- 		break;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 4b3def3..de79816 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -798,11 +798,10 @@ struct iwl4965_kw {
- #define IWL_OPERATION_MODE_MIXED    2
- #define IWL_OPERATION_MODE_20MHZ    3
- 
--#define IWL_EXT_CHANNEL_OFFSET_AUTO   0
--#define IWL_EXT_CHANNEL_OFFSET_ABOVE  1
--#define IWL_EXT_CHANNEL_OFFSET_       2
--#define IWL_EXT_CHANNEL_OFFSET_BELOW  3
--#define IWL_EXT_CHANNEL_OFFSET_MAX    4
-+#define IWL_EXT_CHANNEL_OFFSET_NONE      0
-+#define IWL_EXT_CHANNEL_OFFSET_ABOVE     1
-+#define IWL_EXT_CHANNEL_OFFSET_RESERVE1  2
-+#define IWL_EXT_CHANNEL_OFFSET_BELOW     3
- 
- #define NRG_NUM_PREV_STAT_L     20
- #define NUM_RX_CHAINS           (3)
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 2ed6937..b0f6044 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -7957,15 +7957,21 @@ static void iwl4965_ht_info_fill(struct ieee80211_conf *conf,
- 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
- 	iwl_conf->max_amsdu_size =
- 		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
-+
- 	iwl_conf->supported_chan_width =
- 		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
-+	iwl_conf->extension_chan_offset =
-+		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
-+	/* If no above or below channel supplied disable FAT channel */
-+	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
-+	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
-+		iwl_conf->supported_chan_width = 0;
-+
- 	iwl_conf->tx_mimo_ps_mode =
- 		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
- 	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
- 
- 	iwl_conf->control_channel = ht_bss_conf->primary_channel;
--	iwl_conf->extension_chan_offset =
--		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
- 	iwl_conf->tx_chan_width =
- 		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
- 	iwl_conf->ht_protection =
--- 
-1.5.3.4
+----------------------------------------
+iwlist eth1 scan
+
+00:1D:60:14:33:2B   <empty SSID>
+
+iwlist eth1 scan essid hidden-test
+
+00:1D:60:14:33:2B   <empty SSID>
+
+iwlist eth1 scan essid hidden-test
+
+00:1D:60:14:33:2B   <empty SSID>
+
+(repeat...)
+----------------------------------------
+
+I need to do some more investigation inside libertas though, because I'm
+not confident where the bug may lie.  If it's something in the firmware,
+there's not much we can do of course.
+
+> First I wanted to do that, but then I thought that maybe this is 
+> erraneous. An AP can have several SSIDs, one of them could be 
+> hidden, the other ones not hidden. E.g. this is easy to setup on 
+> a Cisco 123x or Cisco 124x access-point.
+
+Right.  I've done that :)
+
+> I also have a "take 3" of this patch now, because I adapted 
+> (after a chat with David on IRC) the outstanding patches from 
+> libertas-2.6 to wireless-testing. Two of the patches touched 
+> scan.c as well, so I rewrote my scan-for-specific-ssid patch to 
+> apply on top of the 5 David-Woodhouse-patches.
+
+Yeah, was going to ask that you rebase your patch on top of the ones you
+posted from libertas-2.6.
+
+Thanks,
+Dan
+
 
