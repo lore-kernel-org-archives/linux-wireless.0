@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:42593 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753366AbYCQJhU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 05:37:20 -0400
-From: =?utf-8?q?S=2E=C3=87a=C4=9Flar=20Onur?= <caglar@pardus.org.tr>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] net/mac80211/: Use time_* macros
-Date: Mon, 17 Mar 2008 11:36:29 +0200
-Message-Id: <1205746593-24820-7-git-send-email-caglar@pardus.org.tr> (sfid-20080317_093806_574858_4DBD4188)
-In-Reply-To: <1205746593-24820-6-git-send-email-caglar@pardus.org.tr>
-References: <>
- <1205746593-24820-1-git-send-email-caglar@pardus.org.tr>
- <1205746593-24820-2-git-send-email-caglar@pardus.org.tr>
- <1205746593-24820-3-git-send-email-caglar@pardus.org.tr>
- <1205746593-24820-4-git-send-email-caglar@pardus.org.tr>
- <1205746593-24820-5-git-send-email-caglar@pardus.org.tr>
- <1205746593-24820-6-git-send-email-caglar@pardus.org.tr>
+Received: from vs166246.vserver.de ([62.75.166.246]:50927 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762389AbYCDTLU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 14:11:20 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Ahmed Ammar" <b33fc0d3@gmail.com>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Date: Tue, 4 Mar 2008 20:10:17 +0100
+Cc: "Ivo Van Doorn" <ivdoorn@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Adam Baker" <linux@baker-net.org.uk>
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com> <200803041915.08582.mb@bu3sch.de> <84ac67910803041104t63f1658bn8bb4a51f529c9b0f@mail.gmail.com>
+In-Reply-To: <84ac67910803041104t63f1658bn8bb4a51f529c9b0f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803042010.18134.mb@bu3sch.de> (sfid-20080304_191124_790439_308C7D2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions time_before, time_before_eq, time_after, and time_after_e=
-q are more robust for comparing jiffies against other values.
+On Tuesday 04 March 2008 20:04:26 Ahmed Ammar wrote:
+> > You already told me to do so, still I can't really follow this thread.
+> >  It's in progress since several weeks, still you seem to fail to
+> >  provide a _short_ and to the point summary of what actually goes wrong
+> >  for you.
+> >  There's something about weird PCI-only issues and so on which I doubt
+> >  very much.
+> >
+> >  So can you please reinterate the problem you are seeing?
+> >  Please describe what does work and what does not, without adding
+> >  weird theories like the PCI-only stuff, for example. Please add
+> >  logging output as well.
+> >  And that all in one mail, please, that doesn't require me to
+> >  waste time by grepping the mail archives.
+> 
+> I have forwarded you all the mail I have, now read it.
 
-So following patch implements usage of the time_after() macro, defined =
-at linux/jiffies.h, which deals with wrapping correctly
+No.
+As I said, I need a _summary_ of this.
+I am not going to grep mail that is 864kb in size.
 
-Cc: linux-wireless@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: S.=C3=87a=C4=9Flar Onur <caglar@pardus.org.tr>
----
- net/mac80211/rc80211_simple.c |    3 ++-
- net/mac80211/rx.c             |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Please describe in one mail, without randomly adding forwards of
+old mails, what's going wrong and what you expect it to do.
+Then add one complete dmesg log please.
 
-diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simpl=
-e.c
-index 9a78b11..91bbff1 100644
---- a/net/mac80211/rc80211_simple.c
-+++ b/net/mac80211/rc80211_simple.c
-@@ -7,6 +7,7 @@
-  * published by the Free Software Foundation.
-  */
-=20
-+#include <linux/jiffies.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
- #include <linux/types.h>
-@@ -177,7 +178,7 @@ static void rate_control_simple_tx_status(void *pri=
-v, struct net_device *dev,
- 		rate_control_rate_dec(local, sta);
- 	}
-=20
--	if (srctrl->avg_rate_update + 60 * HZ < jiffies) {
-+	if (time_after(jiffies, srctrl->avg_rate_update + 60 * HZ)) {
- 		srctrl->avg_rate_update =3D jiffies;
- 		if (srctrl->tx_avg_rate_num > 0) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 535407d..592581a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -9,6 +9,7 @@
-  * published by the Free Software Foundation.
-  */
-=20
-+#include <linux/jiffies.h>
- #include <linux/kernel.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-@@ -801,7 +802,7 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_d=
-ata *sdata,
- 		    compare_ether_addr(hdr->addr2, f_hdr->addr2) !=3D 0)
- 			continue;
-=20
--		if (entry->first_frag_time + 2 * HZ < jiffies) {
-+		if (time_after(jiffies, entry->first_frag_time + 2 * HZ)) {
- 			__skb_queue_purge(&entry->skb_list);
- 			continue;
- 		}
---=20
-1.5.4.3
+If you don't want to do this, I'll simply ignore this thread from then on.
+That's fine for me as well. Maybe not for you, but hey... ;)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
