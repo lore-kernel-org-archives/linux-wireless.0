@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:51839 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755553AbYCQX0e (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:55508 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753097AbYCDTsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 19:26:34 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so6615404wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 16:26:33 -0700 (PDT)
-Message-ID: <1ba2fa240803171626y33571613ud1c809159da711af@mail.gmail.com> (sfid-20080317_232644_967650_8E8F6F4A)
-Date: Tue, 18 Mar 2008 01:26:33 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Reinette Chatre" <reinette.chatre@intel.com>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205788005.9583.4.camel@localhost.localdomain>
+	Tue, 4 Mar 2008 14:48:33 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Ahmed Ammar" <b33fc0d3@gmail.com>
+Subject: Re: B43 will not associate
+Date: Tue, 4 Mar 2008 20:47:35 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+In-Reply-To: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
-	 <1205747912.1614.19.camel@johannes.berg>
-	 <1ba2fa240803170320i4805e055ofebbbd9928a59354@mail.gmail.com>
-	 <1205751455.1614.25.camel@johannes.berg>
-	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
-	 <1205758276.1614.45.camel@johannes.berg>
-	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
-	 <1205761758.1614.79.camel@johannes.berg>
-	 <1205788005.9583.4.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803042047.35710.mb@bu3sch.de> (sfid-20080304_194838_889589_89F8370F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->  So the problem with this is, how does Dynamic WEP work here?  Dynamic
->  WEP uses 802.1x/EAP to rekey stations periodically just like
->  WPA[2]-Enterprise, but of courses uses WEP only.  It's not "static" WEP
->  as you guys have been talking about it (you could call static WEP
->  "WEP-PSK" if you like).
->
->  The problem here is that with WEXT, there's not a good way to
->  distinguish between the two.  Both static & dynamic WEP might look the
->  same to the driver when the call comes through SIWENCODE/SIWENCODEEXT.
->  So you've got to be careful here classifying all WEP key requests as
->  static.
+On Tuesday 04 March 2008 20:43:12 Ahmed Ammar wrote:
+> b43 driver will never associate to my AP.
 
-Yes this two are not enough you need also specify the the key management method
-via SIWEAUTH .
+You are wrong:
 
-Tomas
+wlan0: Initial auth_alg=1
+wlan0: authenticate with AP 00:90:d0:f2:ad:7b
+wlan0: RX authentication from 00:90:d0:f2:ad:7b (alg=1 transaction=2 status=0)
+wlan0: replying to auth challenge
+wlan0: RX authentication from 00:90:d0:f2:ad:7b (alg=1 transaction=4 status=0)
+wlan0: authenticated
+wlan0: associate with AP 00:90:d0:f2:ad:7b
+wlan0: RX AssocResp from 00:90:d0:f2:ad:7b (capab=0x411 status=0 aid=1)
+wlan0: associated
+
+> below is the full dmesg 
+> output. Also attached is the wireless capture from another card.
+
+Can you try disabling bonding? It seems to have problems:
+
+bonding: bond0: link status definitely up for interface wlan0.
+bonding: bond0: Interface wlan0 is already enslaved!
+
+-- 
+Greetings Michael.
