@@ -1,26 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:43419 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:49747 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758071AbYCGBkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 20:40:19 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/4] iwlwifi driver updates
-Date: Thu,  6 Mar 2008 17:36:52 -0800
-Message-Id: <1204853816-8964-1-git-send-email-reinette.chatre@intel.com> (sfid-20080307_014027_883878_BF2A63A6)
+	id S1761225AbYCDRQj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 12:16:39 -0500
+Subject: Re: [PATCH] libertas: fix sanity check on sequence number in
+	command response
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803031220.12420.hs4233@mail.mn-solutions.de>
+References: <200803031220.12420.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Tue, 04 Mar 2008 12:12:44 -0500
+Message-Id: <1204650764.30024.8.camel@localhost.localdomain> (sfid-20080304_171701_160083_BCAF9234)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches are mostly cleanup. One patch fixes rate scaling in 3945.
+On Mon, 2008-03-03 at 12:20 +0100, Holger Schurig wrote:
+> From: David Woodhouse <dwmw2@infradead.org>
+> 
+> Slightly more useful if we compare it against the sequence number of the
+> command we have outstanding, rather than comparing the reply with itself.
+>     
+> Doh. Pointed out by Sebastian Siewior
+>     
+> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 
-[PATCH 1/4] iwlwifi: queue functions cleanup
-[PATCH 2/4] iwlwifi: Fix 3945 rate scaling
-[PATCH 3/4] iwlwifi: 3945 split tx_complete to command and packet function
-[PATCH 4/4] iwlwifi: grab NIC access when disabling aggregations
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Thanks
+> diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+> index e6b4b23..52d02f3 100644
+> --- a/drivers/net/wireless/libertas/cmdresp.c
+> +++ b/drivers/net/wireless/libertas/cmdresp.c
+> @@ -509,9 +509,9 @@ int lbs_process_rx_command(struct lbs_private *priv)
+>  		     respcmd, le16_to_cpu(resp->seqnum), priv->upld_len, jiffies);
+>  	lbs_deb_hex(LBS_DEB_CMD, "CMD_RESP", (void *) resp, priv->upld_len);
+>  
+> -	if (resp->seqnum != resp->seqnum) {
+> +	if (resp->seqnum != priv->cur_cmd->cmdbuf->seqnum) {
+>  		lbs_pr_info("Received CMD_RESP with invalid sequence %d (expected %d)\n",
+> -			    le16_to_cpu(resp->seqnum), le16_to_cpu(resp->seqnum));
+> +			    le16_to_cpu(resp->seqnum), le16_to_cpu(priv->cur_cmd->cmdbuf->seqnum));
+>  		spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  		ret = -1;
+>  		goto done;
 
-Reinette
