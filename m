@@ -1,200 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.179]:35320 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758043AbYCKVMG (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:53599 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756714AbYCDTcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 17:12:06 -0400
-Received: by el-out-1112.google.com with SMTP id v27so1617040ele.17
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 14:12:06 -0700 (PDT)
-Subject: [PATCH 6/6] b43legacy: use clamp_val macro instead of limit_value
-	macro
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 11 Mar 2008 14:12:02 -0700
-Message-Id: <1205269922.22317.38.camel@brick> (sfid-20080311_211234_609658_8B0F82A6)
-Mime-Version: 1.0
+	Tue, 4 Mar 2008 14:32:01 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43legacy: Fix module init message
+Date: Tue, 4 Mar 2008 20:31:13 +0100
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803042031.13929.mb@bu3sch.de> (sfid-20080304_193207_456909_4EBD6B16)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the kernel-provided clamp_val macro as it is identical to the
-b43legacy-specific limit_value macro.
+This fixes the module init message to tell that the legacy
+driver loaded. This makes it less confusing, in case both drivers are loaded.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/b43legacy/b43legacy.h |   17 -----------------
- drivers/net/wireless/b43legacy/main.c      |    8 ++++----
- drivers/net/wireless/b43legacy/phy.c       |   14 +++++++-------
- drivers/net/wireless/b43legacy/radio.c     |   12 ++++++------
- 4 files changed, 17 insertions(+), 34 deletions(-)
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
-index 93d45b7..378b9ff 100644
---- a/drivers/net/wireless/b43legacy/b43legacy.h
-+++ b/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -814,23 +814,6 @@ void b43legacydbg(struct b43legacy_wl *wl, const char *fmt, ...)
- # define b43legacydbg(wl, fmt...) do { /* nothing */ } while (0)
- #endif /* DEBUG */
- 
--
--/** Limit a value between two limits */
--#ifdef limit_value
--# undef limit_value
--#endif
--#define limit_value(value, min, max)  \
--	({						\
--		typeof(value) __value = (value);	\
--		typeof(value) __min = (min);		\
--		typeof(value) __max = (max);		\
--		if (__value < __min)			\
--			__value = __min;		\
--		else if (__value > __max)		\
--			__value = __max;		\
--		__value;				\
--	})
--
- /* Macros for printing a value in Q5.2 format */
- #define Q52_FMT		"%u.%u"
- #define Q52_ARG(q52)	((q52) / 4), (((q52) & 3) * 100 / 4)
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 5f3f34e..d55c101 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -839,10 +839,10 @@ static void handle_irq_noise(struct b43legacy_wldev *dev)
- 	/* Get the noise samples. */
- 	B43legacy_WARN_ON(dev->noisecalc.nr_samples >= 8);
- 	i = dev->noisecalc.nr_samples;
--	noise[0] = limit_value(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[1] = limit_value(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[2] = limit_value(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[3] = limit_value(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[0] = clamp_val(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[1] = clamp_val(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[2] = clamp_val(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[3] = clamp_val(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
- 	dev->noisecalc.samples[i][0] = phy->nrssi_lt[noise[0]];
- 	dev->noisecalc.samples[i][1] = phy->nrssi_lt[noise[1]];
- 	dev->noisecalc.samples[i][2] = phy->nrssi_lt[noise[2]];
-diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
-index 8e5c09b..768cccb 100644
---- a/drivers/net/wireless/b43legacy/phy.c
-+++ b/drivers/net/wireless/b43legacy/phy.c
-@@ -1088,7 +1088,7 @@ static void b43legacy_phy_initg(struct b43legacy_wldev *dev)
- 		 * the value 0x7FFFFFFF here. I think that is some weird
- 		 * compiler optimization in the original driver.
- 		 * Essentially, what we do here is resetting all NRSSI LT
--		 * entries to -32 (see the limit_value() in nrssi_hw_update())
-+		 * entries to -32 (see the clamp_val() in nrssi_hw_update())
- 		 */
- 		b43legacy_nrssi_hw_update(dev, 0xFFFF);
- 		b43legacy_calc_nrssi_threshold(dev);
-@@ -1756,7 +1756,7 @@ static s8 b43legacy_phy_estimate_power_out(struct b43legacy_wldev *dev, s8 tssi)
- 	switch (phy->type) {
- 	case B43legacy_PHYTYPE_B:
- 	case B43legacy_PHYTYPE_G:
--		tmp = limit_value(tmp, 0x00, 0x3F);
-+		tmp = clamp_val(tmp, 0x00, 0x3F);
- 		dbm = phy->tssi2dbm[tmp];
- 		break;
- 	default:
-@@ -1859,7 +1859,7 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
- 
- 	/* find the desired power in Q5.2 - power_level is in dBm
- 	 * and limit it - max_pwr is already in Q5.2 */
--	desired_pwr = limit_value(phy->power_level << 2, 0, max_pwr);
-+	desired_pwr = clamp_val(phy->power_level << 2, 0, max_pwr);
- 	if (b43legacy_debug(dev, B43legacy_DBG_XMITPOWER))
- 		b43legacydbg(dev->wl, "Current TX power output: " Q52_FMT
- 		       " dBm, Desired TX power output: " Q52_FMT
-@@ -1905,7 +1905,7 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
- 			radio_attenuation++;
- 		}
- 	}
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
- 
- 	txpower = phy->txctl1;
- 	if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
-@@ -1933,8 +1933,8 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
- 	}
- 	/* Save the control values */
- 	phy->txctl1 = txpower;
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
--	radio_attenuation = limit_value(radio_attenuation, 0, 9);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
-+	radio_attenuation = clamp_val(radio_attenuation, 0, 9);
- 	phy->rfatt = radio_attenuation;
- 	phy->bbatt = baseband_attenuation;
- 
-@@ -1979,7 +1979,7 @@ s8 b43legacy_tssi2dbm_entry(s8 entry [], u8 index, s16 pab0, s16 pab1, s16 pab2)
- 		f = q;
- 		i++;
- 	} while (delta >= 2);
--	entry[index] = limit_value(b43legacy_tssi2dbm_ad(m1 * f, 8192),
-+	entry[index] = clamp_val(b43legacy_tssi2dbm_ad(m1 * f, 8192),
- 				   -127, 128);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
-index 955832e..2df545c 100644
---- a/drivers/net/wireless/b43legacy/radio.c
-+++ b/drivers/net/wireless/b43legacy/radio.c
-@@ -357,7 +357,7 @@ void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val)
- 	for (i = 0; i < 64; i++) {
- 		tmp = b43legacy_nrssi_hw_read(dev, i);
- 		tmp -= val;
--		tmp = limit_value(tmp, -32, 31);
-+		tmp = clamp_val(tmp, -32, 31);
- 		b43legacy_nrssi_hw_write(dev, i, tmp);
- 	}
- }
-@@ -375,7 +375,7 @@ void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev)
- 		tmp = (i - delta) * phy->nrssislope;
- 		tmp /= 0x10000;
- 		tmp += 0x3A;
--		tmp = limit_value(tmp, 0, 0x3F);
-+		tmp = clamp_val(tmp, 0, 0x3F);
- 		phy->nrssi_lt[i] = tmp;
- 	}
- }
-@@ -839,7 +839,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
- 		} else
- 			threshold = phy->nrssi[1] - 5;
- 
--		threshold = limit_value(threshold, 0, 0x3E);
-+		threshold = clamp_val(threshold, 0, 0x3E);
- 		b43legacy_phy_read(dev, 0x0020); /* dummy read */
- 		b43legacy_phy_write(dev, 0x0020, (((u16)threshold) << 8)
- 				    | 0x001C);
-@@ -892,7 +892,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
- 			else
- 				a += 32;
- 			a = a >> 6;
--			a = limit_value(a, -31, 31);
-+			a = clamp_val(a, -31, 31);
- 
- 			b = b * (phy->nrssi[1] - phy->nrssi[0]);
- 			b += (phy->nrssi[0] << 6);
-@@ -901,7 +901,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
- 			else
- 				b += 32;
- 			b = b >> 6;
--			b = limit_value(b, -31, 31);
-+			b = clamp_val(b, -31, 31);
- 
- 			tmp_u16 = b43legacy_phy_read(dev, 0x048A) & 0xF000;
- 			tmp_u16 |= ((u32)b & 0x0000003F);
-@@ -1905,7 +1905,7 @@ void b43legacy_radio_set_txpower_a(struct b43legacy_wldev *dev, u16 txpower)
- 	u16 dac;
- 	u16 ilt;
- 
--	txpower = limit_value(txpower, 0, 63);
-+	txpower = clamp_val(txpower, 0, 63);
- 
- 	pamp = b43legacy_get_txgain_freq_power_amp(txpower);
- 	pamp <<= 5;
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c	2008-02-24 14:23:51.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c	2008-03-04 20:29:32.000000000 +0100
+@@ -3870,7 +3870,7 @@ static void b43legacy_print_driverinfo(v
+ #ifdef CONFIG_B43LEGACY_DMA
+ 	feat_dma = "D";
+ #endif
+-	printk(KERN_INFO "Broadcom 43xx driver loaded "
++	printk(KERN_INFO "Broadcom 43xx-legacy driver loaded "
+ 	       "[ Features: %s%s%s%s%s, Firmware-ID: "
+ 	       B43legacy_SUPPORTED_FIRMWARE_ID " ]\n",
+ 	       feat_pci, feat_leds, feat_rfkill, feat_pio, feat_dma);
+
 -- 
-1.5.4.4.592.g32d4c
-
+Greetings Michael.
