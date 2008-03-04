@@ -1,71 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:43292 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.186]:38905 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758294AbYCEGts (ORCPT
+	with ESMTP id S1763255AbYCDTRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 01:49:48 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so798383rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 22:49:47 -0800 (PST)
-Message-ID: <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com> (sfid-20080305_064954_860134_CB37A934)
-Date: Tue, 4 Mar 2008 22:49:47 -0800
-From: "Christopher Li" <sparse@chrisli.org>
-To: "Ingo Molnar" <mingo@elte.hu>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct use of ! and &
-Cc: "Julia Lawall" <julia@diku.dk>, yi.zhu@intel.com,
+	Tue, 4 Mar 2008 14:17:24 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so606163rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 11:17:23 -0800 (PST)
+Message-ID: <84ac67910803041117t3ccdf6acr3da05596036ba918@mail.gmail.com> (sfid-20080304_191729_030345_FE2B4F0E)
+Date: Tue, 4 Mar 2008 19:17:23 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Cc: "Ivo Van Doorn" <ivdoorn@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	"Harvey Harrison" <harvey.harrison@gmail.com>,
-	"Alexander Viro" <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org,
-	"Josh Triplett" <josh@freedesktop.org>
-In-Reply-To: <20080305063842.GA24495@elte.hu>
+	"Adam Baker" <linux@baker-net.org.uk>
+In-Reply-To: <200803042010.18134.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
-	 <20080305063842.GA24495@elte.hu>
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com>
+	 <200803041915.08582.mb@bu3sch.de>
+	 <84ac67910803041104t63f1658bn8bb4a51f529c9b0f@mail.gmail.com>
+	 <200803042010.18134.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think Al Viro has sent a patch to linux-sparse with subject
-"[PATCH 3/3] catch !x & y brainos" does exactly that.
-
-Chris
-
-
-
-On Tue, Mar 4, 2008 at 10:38 PM, Ingo Molnar <mingo@elte.hu> wrote:
->
->  * Julia Lawall <julia@diku.dk> wrote:
->
->  > From: Julia Lawall <julia@diku.dk>
->  >
->  > In commit e6bafba5b4765a5a252f1b8d31cbf6d2459da337, a bug was fixed
->  > that involved converting !x & y to !(x & y).  The code below shows the
->  > same pattern, and thus should perhaps be fixed in the same way.
->
->
-> >       if (sta_ht_inf) {
->  >               if ((!sta_ht_inf->ht_supported) ||
->  > -                (!sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH))
->  > +                (!(sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH)))
->  >                       return 0;
->
->  i'm wondering, could Sparse be extended to check for such patterns?
->
->  People are regularly running "make C=1" and are sending fixes to make
->  entire subsystems sparse-warning-free, so Sparse is a nice mechanism
->  that works and it keeps code clean in the long run.
->
->  I dont think the "!X & Y" pattern is ever used legitimately [and even if
->  it were used legitimately, it's easy to avoid the sparse false positive
->  - while in the buggy case we have a clear bug].
->
->         Ingo
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-sparse" in
->
->
-> the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The _first_ email in this thread covers exactly that. I don't
+understand what else you need, the size of the entire thread is very
+big because i was asked to get some packet dumps (which shouldn't have
+been sent to the list). I find it pointless to copy and paste the
+first e-mail to give you that information. If you don't want to fix
+this bug then it's not a big problem for me.
