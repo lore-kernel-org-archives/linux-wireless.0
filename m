@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:49441 "EHLO mgw1.diku.dk"
+Received: from mx1.redhat.com ([66.187.233.31]:35410 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932238AbYCEMfd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 07:35:33 -0500
-Date: Wed, 5 Mar 2008 13:35:29 +0100 (MET)
-From: Julia Lawall <julia@diku.dk>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Christopher Li <sparse@chrisli.org>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Harvey Harrison <harvey.harrison@gmail.com>,
-	Alexander Viro <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
- use of ! and &
-In-Reply-To: <20080305122010.GA999@elte.hu>
-Message-ID: <Pine.LNX.4.58.0803051331550.1188@pc-041.diku.dk> (sfid-20080305_123606_537033_55F034A6)
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
- <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
- <20080305070201.GA32434@elte.hu> <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk>
- <20080305122010.GA999@elte.hu>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1751344AbYCDOBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 09:01:34 -0500
+Subject: Re: Patch for linux wireless extension
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: hce <webmail.hce@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1204626369.3917.96.camel@johannes.berg>
+References: <95455e980803031901x67360bffsca3794f1dfde586b@mail.gmail.com>
+	 (sfid-20080304_030142_484588_E01052A6)  <1204626369.3917.96.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 04 Mar 2008 08:58:21 -0500
+Message-Id: <1204639101.7183.17.camel@localhost.localdomain> (sfid-20080304_140137_664897_86793F14)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 5 Mar 2008, Ingo Molnar wrote:
+On Tue, 2008-03-04 at 11:26 +0100, Johannes Berg wrote:
+> Jim,
+> 
+> > I am running a wifi device on kernel 2.6.11 and wireless extension
+> > version 17 for an ARM processor, it works fine with an open AP and
+> > wpa_supplicant 0.5.8. 
+> 
+> That's ancient.
+> 
+> > Now I would like to support WEP and WPA. I know
+> > the best is to upgrade to latest kernel, but I am not in the position
+> > to do it as various reasons. 
+> 
+> Upgrade anyway.
+> 
+> > An alternative as people suggested is to
+> > do a wireless extension patch which supports WEP and WPA on kernel
+> > 2.6.11. Any advice if it is feasible and where can I find the wireless
+> > extension patch for WEP and WPA on kernel 2.6.11 please?
+> 
+> Hahaha. We'll you'll have to *make* that patch and invest a
+> *significant* amount of time into that.
 
->
-> * Julia Lawall <julia@diku.dk> wrote:
->
-> > There are some legitimate uses of !x & y which are actually of the
-> > form !x & !y, where x and y are function calls.  That is a not
-> > particularly elegant way of getting both x and y to be evaluated and
-> > then combining the results using "and".  If such code is considered
-> > acceptable, then perhaps the sparse patch should be more complicated.
->
-> i tend to be of the opinion that the details in C source code should be
-> visually obvious and should be heavily simplified down from what is
-> 'possible' language-wise - with most deviations and complications that
-> depart from convention considered an error. I'd consider "!fn1() &
-> !fn2()" a borderline coding style violation in any case - and it costs
-> nothing to change it to "!fn1() && !fn2()".
+Yeah; it's not just the defines and whatnot in wireless.h; you probably
+also want to update wireless-tools too, then you have to update your
+driver as well.  It's not hugely complex, but it's going to be a lot of
+boring work :)
 
-!fn1() && !fn2() does not have the same semantics as !fn1() & !fn2().  In
-!fn1() & !fn2() both function calls are evaluated.  In !fn1() && !fn2(),
-if !fn1() returns false then !fn2() is not evaluated.  I haven't studied
-the particular instances of fn2(), though, to know whether it makes a
-difference.
+Dan
 
-One could instead do something like:
-
-x = fn1();
-y = fn2();
-if (!x && !y) ...
-
-It would certainly be clearer, but more verbose.
-
-julia
 
