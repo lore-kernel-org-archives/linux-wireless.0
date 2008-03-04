@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.231]:33821 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759748AbYCaOq7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 10:46:59 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so768974wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 07:46:58 -0700 (PDT)
-Message-ID: <c85cb4470803310746h36b20d0egce98f8cea3becb0b@mail.gmail.com> (sfid-20080331_154726_003392_C46030DA)
-Date: Mon, 31 Mar 2008 17:46:57 +0300
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: mac80211: holding sta_info for non associated stations
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:40717 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760193AbYCDCF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2008 21:05:27 -0500
+Subject: Re: hostapd with mac80211 progress
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jkmaline@cc.hut.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1204537945.3917.38.camel@johannes.berg>
+References: <1204190255.3090.165.camel@debian.sh.intel.com>
+	 <1204210453.6309.49.camel@johannes.berg>
+	 <1204266154.3090.182.camel@debian.sh.intel.com>
+	 <1204302356.3938.36.camel@johannes.berg>
+	 <1204528099.3087.15.camel@debian.sh.intel.com>
+	 (sfid-20080303_070851_717668_24B899FC)  <1204537945.3917.38.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 04 Mar 2008 10:03:48 +0800
+Message-Id: <1204596228.3087.113.camel@debian.sh.intel.com> (sfid-20080304_020600_444731_54418847)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks
 
-examining prints form the tear down of 11n session (see thread "Try to
-stop Tx aggregation on non active TID messages"), i found an
-interesting issue.
-If i associate to a random AP "x" (what happened automatically as i
-was configured by ifup scripts to do that), and then scan and
-associate to my desired AP "y", i notice that AP "x" was not removed
-from the mac80211 station table. Then, what happened was that during
-ieee80211_stop, when we reach
+On Mon, 2008-03-03 at 10:52 +0100, Johannes Berg wrote:
+> That's rather odd. ieee80211_channel_flags and HOSTAPD_CHAN_W_xx need
+> not be compatible because in driver_nl80211.c, phy_info_handler(),
+> they're translated into each other. What exactly is your setup?
 
-list_for_each_entry_rcu(sta, &local->sta_list, list) {
-    if (sta->sdata == sdata)
-    ieee80211_sta_tear_down_BA_sessions(dev, sta->addr);
-}
+Well, it (HOSTAPD_CHAN_W_SCAN) was removed somewhere after
+driver_nl80211.c set it. I think it's a hostapd bug. Please take a look
+at the hostapd_get_hw_features() function:
 
-we try to tear down sessions to irrelevant stations (AP "x" in my
-example), which leads to bugs.
 
-did i miss something, or is there really a problem in the state
-machine in the described scenario?
+if ((feature->mode == HOSTAPD_MODE_IEEE80211G ||
+     feature->mode == HOSTAPD_MODE_IEEE80211B) &&
+    feature->channels[j].chan >= 1 &&
+    feature->channels[j].chan <= 11) {
+        power_level = 20;
+        feature->channels[j].flag |=
+                HOSTAPD_CHAN_W_SCAN;
+} else
+        feature->channels[j].flag &=
+              ~HOSTAPD_CHAN_W_SCAN;
 
-Thanks
-Ron
+
+Apparently, A channels all have this flag removed. What does this flag
+stand for? I assume it stands for passive scan, right?
+
+Thanks,
+-yi
+
