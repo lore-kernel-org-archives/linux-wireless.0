@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:13129 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590AbYCRAIK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51918 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbYCDQzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 20:08:10 -0400
-Received: by py-out-1112.google.com with SMTP id u52so8075746pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 17:08:09 -0700 (PDT)
-Message-ID: <43e72e890803171708s3361e1bbxa949cfa27086c31f@mail.gmail.com> (sfid-20080318_000816_170211_1E5C5AA5)
-Date: Mon, 17 Mar 2008 20:08:08 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC PATCH] mac80211: use hardware flags for signal/noise units
-Cc: "bruno randolf" <bruno@thinktube.com>,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	jbenc@suse.cz, jirislaby@gmail.com, mickflemm@gmail.com,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1205094875.6387.48.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200803082101.24424.bruno@thinktube.com>
-	 <1205094875.6387.48.camel@johannes.berg>
+	Tue, 4 Mar 2008 11:55:18 -0500
+Subject: [PATCH] mac80211: fix hardware scan completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bill Moss <bmoss@CLEMSON.EDU>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 04 Mar 2008 17:54:35 +0100
+Message-Id: <1204649676.25502.12.camel@johannes.berg> (sfid-20080304_165549_783589_88DE95F7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 9, 2008 at 4:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  On Sat, 2008-03-08 at 21:01 +0900, bruno randolf wrote:
->  > RFC: trying to clean up the signal/noise mess - what do you think?
->  > (yep, my mailer probably messed up the linebreaks)
->  >
->  >     mac80211: use hardware flags for signal/noise units
->
->  No real opinion right now, on skiing vacation ;) Looks like an
->  improvement though.
+The mac80211 MLME requires restarting timers after a scan
+completes but this wasn't done when hardware scan offload
+was added, so add it now.
 
-I believe this counts as an ACK :) Not sure if this applies yet but it
-sure would be nice to get this in.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Tested-by: Bill Moss <bmoss@clemson.edu>
+---
+ net/mac80211/ieee80211_sta.c |   23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-  Luis
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-01 19:28:56.000000000 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-03-01 19:28:57.000000000 +0100
+@@ -3610,25 +3610,28 @@ void ieee80211_scan_completed(struct iee
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-
+ 		/* No need to wake the master device. */
+ 		if (sdata->dev == local->mdev)
+ 			continue;
+ 
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+-			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
+-				ieee80211_send_nullfunc(local, sdata, 0);
+-			ieee80211_sta_timer((unsigned long)sdata);
+-		}
+-
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
+-			ieee80211_sta_timer((unsigned long)sdata);
++		/* Tell AP we're back */
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
++		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
++			ieee80211_send_nullfunc(local, sdata, 0);
+ 
+ 		netif_wake_queue(sdata->dev);
+ 	}
++
++ done:
++	/* Restart STA timer for both SW and HW scan cases */
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
++		    ieee80211_vif_is_mesh(&sdata->vif))
++			ieee80211_sta_timer((unsigned long)sdata);
++	}
++
+ 	rcu_read_unlock();
+ 
+-done:
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+ 		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+
+
