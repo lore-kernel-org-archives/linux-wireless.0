@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:23981 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759093AbYCCUUn (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:52780 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754213AbYCDTZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 15:20:43 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so277416wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:42 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Fri, 29 Feb 2008 14:49:37 -0800
-Subject: [PATCH 06/10] mac80211: delete mesh_path timer on mesh_path removal
-Message-ID: <47cc5d9a.16bc720a.25a2.ffffac2c@mx.google.com> (sfid-20080303_202058_957426_CF4FBCC2)
+	Tue, 4 Mar 2008 14:25:32 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Ahmed Ammar" <b33fc0d3@gmail.com>
+Subject: Re: b43 (H/W 4306 Rev. 03)
+Date: Tue, 4 Mar 2008 20:24:58 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com> <200803042010.18134.mb@bu3sch.de> <84ac67910803041117t3ccdf6acr3da05596036ba918@mail.gmail.com>
+In-Reply-To: <84ac67910803041117t3ccdf6acr3da05596036ba918@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200803042024.58668.mb@bu3sch.de> (sfid-20080304_192535_836525_7BD1BB32)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This avoids dereferencing a no longer existing struct mesh_path.
+On Tuesday 04 March 2008 20:17:23 Ahmed Ammar wrote:
+> The _first_ email in this thread covers exactly that. I don't
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I'm not sure how often I have to reiterate this:
+I do _not_ understand your issue. Please _rephrase_ it.
+Also, the dmesg logs from the mail are far from being complete.
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index ab4d757..bd58849 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -301,6 +301,7 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
- 	struct ieee80211_sub_if_data *sdata =
- 		IEEE80211_DEV_TO_SUB_IF(node->mpath->dev);
- 
-+	del_timer_sync(&node->mpath->timer);
- 	atomic_dec(&sdata->u.sta.mpaths);
- 	kfree(node->mpath);
- 	kfree(node);
+Pointing to the same mails that I don't understand over and over again
+does not help at all. Rewrite them please and try to make it more clear
+what your problem is. And add complete dmesg output from _unmodified_
+drivers. (modified drivers/logs are ignored).
+
+> understand what else you need, the size of the entire thread is very
+> big because i was asked to get some packet dumps (which shouldn't have
+> been sent to the list). I find it pointless to copy and paste the
+> first e-mail to give you that information. If you don't want to fix
+> this bug then it's not a big problem for me.
+
+Ok. Don't want help -> don't get help. Your choice.
+
 -- 
-1.5.2.5
-
-
-
+Greetings Michael.
