@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.188]:19221 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbYCEHKB (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50494 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935353AbYCDX1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 02:10:01 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so950983gve.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 23:09:59 -0800 (PST)
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
-	use of ! and &
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Christopher Li <sparse@chrisli.org>, Julia Lawall <julia@diku.dk>,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Alexander Viro <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
-In-Reply-To: <20080305070201.GA32434@elte.hu>
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
-	 <20080305063842.GA24495@elte.hu>
-	 <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
-	 <20080305070201.GA32434@elte.hu>
-Content-Type: text/plain
-Date: Tue, 04 Mar 2008 23:09:55 -0800
-Message-Id: <1204700995.17484.7.camel@brick> (sfid-20080305_071010_247975_CBC89FE7)
-Mime-Version: 1.0
+	Tue, 4 Mar 2008 18:27:50 -0500
+Message-Id: <200803042326.m24NQ6jm003261@imap1.linux-foundation.org> (sfid-20080304_232755_016107_EF721C90)
+Subject: [patch 01/10] make b43_mac_{enable,suspend}() static
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	bunk@kernel.org, mb@bu3sch.de
+From: akpm@linux-foundation.org
+Date: Tue, 04 Mar 2008 15:26:06 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-05 at 08:02 +0100, Ingo Molnar wrote:
-> * Christopher Li <sparse@chrisli.org> wrote:
-> 
-> > I think Al Viro has sent a patch to linux-sparse with subject "[PATCH 
-> > 3/3] catch !x & y brainos" does exactly that.
-> 
-> ah - nice :-)
-> 
-> /me checks the linux-sparse archive
-> 
-> Al's patch is:
-> 
-> +                       if (op == '&' && expr->left->type == EXPR_PREOP &&
-> +                           expr->left->op == '!')
-> +                               warning(expr->pos, "dubious: !x & y");
-> 
-> i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
-> 
+From: Adrian Bunk <bunk@kernel.org>
 
-Well, (!x & y) and (!x | y) are probably the two that might have been
-intended otherwise.  (x & !y), (x | !y) are probably ok.
+b43_mac_{enable,suspend}() can now become static.
 
-Harvey
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Acked-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
+ drivers/net/wireless/b43/main.c |    4 ++--
+ drivers/net/wireless/b43/main.h |    3 ---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
+
+diff -puN drivers/net/wireless/b43/main.c~make-b43_mac_enablesuspend-static drivers/net/wireless/b43/main.c
+--- a/drivers/net/wireless/b43/main.c~make-b43_mac_enablesuspend-static
++++ a/drivers/net/wireless/b43/main.c
+@@ -2043,7 +2043,7 @@ static void b43_gpio_cleanup(struct b43_
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/EnableMac */
+-void b43_mac_enable(struct b43_wldev *dev)
++static void b43_mac_enable(struct b43_wldev *dev)
+ {
+ 	dev->mac_suspended--;
+ 	B43_WARN_ON(dev->mac_suspended < 0);
+@@ -2067,7 +2067,7 @@ void b43_mac_enable(struct b43_wldev *de
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/SuspendMAC */
+-void b43_mac_suspend(struct b43_wldev *dev)
++static void b43_mac_suspend(struct b43_wldev *dev)
+ {
+ 	int i;
+ 	u32 tmp;
+diff -puN drivers/net/wireless/b43/main.h~make-b43_mac_enablesuspend-static drivers/net/wireless/b43/main.h
+--- a/drivers/net/wireless/b43/main.h~make-b43_mac_enablesuspend-static
++++ a/drivers/net/wireless/b43/main.h
+@@ -102,9 +102,6 @@ void b43_dummy_transmission(struct b43_w
+ 
+ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
+ 
+-void b43_mac_suspend(struct b43_wldev *dev);
+-void b43_mac_enable(struct b43_wldev *dev);
+-
+ void b43_controller_restart(struct b43_wldev *dev, const char *reason);
+ 
+ #define B43_PS_ENABLED	(1 << 0)	/* Force enable hardware power saving */
+_
