@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:16846 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756292AbYCEJfZ (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37120 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753740AbYCDJTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:35:25 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 0/4] ath5k descriptor cleanup + ibss beacon fix
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 05 Mar 2008 18:34:51 +0900
-Message-ID: <20080305091347.5670.40944.stgit@one> (sfid-20080305_093530_551698_A8275AD0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 4 Mar 2008 04:19:41 -0500
+Date: Tue, 4 Mar 2008 01:19:05 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mips@linux-mips.org
+Subject: Re: drivers/net/wireless/b43legacy/ on mips
+Message-Id: <20080304011905.22e6e6d9.akpm@linux-foundation.org> (sfid-20080304_091944_636068_A217F165)
+In-Reply-To: <20080304090220.GA2875@linux-mips.org>
+References: <20080303233651.82c592a4.akpm@linux-foundation.org>
+	<20080304090220.GA2875@linux-mips.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello!
+On Tue, 4 Mar 2008 09:02:20 +0000 Ralf Baechle <ralf@linux-mips.org> wrote:
 
-here are some patches, some i have had lying around for a while.
+> On Mon, Mar 03, 2008 at 11:36:51PM -0800, Andrew Morton wrote:
+> 
+> > ERROR: "__ucmpdi2" [drivers/net/wireless/b43legacy/b43legacy.ko] undefined!
+> > ERROR: "__ucmpdi2" [drivers/net/wireless/b43/b43.ko] undefined!
+> > 
+> > int b43legacy_dma_init(struct b43legacy_wldev *dev)
+> > {
+> >         struct b43legacy_dma *dma = &dev->dma;
+> >         struct b43legacy_dmaring *ring;
+> >         int err;
+> >         u64 dmamask;
+> >         enum b43legacy_dmatype type;
+> > 
+> >         dmamask = supported_dma_mask(dev);
+> >         switch (dmamask) {
+> >         default:
+> >                 B43legacy_WARN_ON(1);
+> >         case DMA_30BIT_MASK:
+> >                 type = B43legacy_DMA_30BIT;
+> >                 break;
+> >         case DMA_32BIT_MASK:
+> >                 type = B43legacy_DMA_32BIT;
+> >                 break;
+> >         case DMA_64BIT_MASK:
+> >                 type = B43legacy_DMA_64BIT;
+> >                 break;
+> >         }
+> > 
+> > because some versions of gcc emit a __ucmpdi2 call for switch statements. 
+> 
+> Was this when optimizing for size btw?
 
-especially the first two touch the very core of the driver, so please review
-them. i have been careful and i don't think it creates a problem, but i have
-tested it only with ar5212 because i don't have a 5210 to test with
-unfortunately.
+mips allmodconfig.  So: yes.
 
-the other ones are just about rx timestamps and a workaround for some hardware
-bugs in ibss mode.
+>  It seems gcc is emitting alot more
+> calls to libgcc when optimizing for size.
+> 
+> > It might be fixable by switching to an open-coded if/compare/else sequence.
+> 
+> It was just a EXPORT_SYMBOL(__ucmpdi2) missing.
 
-Bruno Randolf (4):
-      ath5k: work around wrong beacon rx timestamp in IBSS mode
-      ath5k: add notes about rx timestamp
-      ath5k: move rx and tx status structures out of hardware descriptor
-      ath5k: struct ath5k_desc cleanups
+doh.
 
+> > Or maybe my mips compiler (gcc-3.4.5) is just too old..
+> 
+> I'm trying to keep the tools requirements the same as for x86.  So for
+> 32-bit kernels gcc 3.2 is the minimum but 3.2 is broken beyond recovery
+> for 64-bit code so there a minimum of 3.3 is required.
+> 
+> In practive it is ages that I've last seen a compiler older than gcc 3.4
+> being used to build a modern kernel for any architecture and 3.2 and 3.3
+> are a sufficient special case that maybe we should think about deprecating
+> 3.2 and 3.3?
 
- drivers/net/wireless/ath5k/ath5k.h |   35 ++--
- drivers/net/wireless/ath5k/base.c  |  144 ++++++++++------
- drivers/net/wireless/ath5k/debug.c |   31 ++-
- drivers/net/wireless/ath5k/debug.h |    6 -
- drivers/net/wireless/ath5k/hw.c    |  331 ++++++++++++++++++------------------
- drivers/net/wireless/ath5k/hw.h    |  150 ++++++++++------
- 6 files changed, 379 insertions(+), 318 deletions(-)
+That would make life easier for us.  I don't know what the downstream
+implications would be.  I'd need a new cross-compiler, for a start ;)
 
--- 
-Signature
