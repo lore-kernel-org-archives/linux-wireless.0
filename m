@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:12310 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275AbYCZJAm (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59419 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935360AbYCDX10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 05:00:42 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: remove CMD_802_11_PWR_CFG
-Date: Wed, 26 Mar 2008 09:57:45 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803260957.45917.hs4233@mail.mn-solutions.de> (sfid-20080326_090045_830439_EA6B0D99)
+	Tue, 4 Mar 2008 18:27:26 -0500
+Message-Id: <200803042326.m24NQ8FC003269@imap1.linux-foundation.org> (sfid-20080304_232734_066361_025DF13D)
+Subject: [patch 03/10] ipw2200: le*_add_cpu conversion
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	marcin.slusarz@gmail.com, yi.zhu@intel.com
+From: akpm@linux-foundation.org
+Date: Tue, 04 Mar 2008 15:26:08 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has nowhere been used. Note: in the firmware manual this was
-documented as CMD_802_11_PA_CFG. If we ever need it, we can/should
-re-implement it as a direct command.
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+replace all:
+little_endian_variable = cpu_to_leX(leX_to_cpu(little_endian_variable) +
+					expression_in_cpu_byteorder);
+with:
+	leX_add_cpu(&little_endian_variable, expression_in_cpu_byteorder);
+generated with semantic patch
 
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c
-@@ -1453,16 +1453,6 @@
- 			break;
+Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/net/wireless/ipw2200.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff -puN drivers/net/wireless/ipw2200.c~ipw2200-le_add_cpu-conversion drivers/net/wireless/ipw2200.c
+--- a/drivers/net/wireless/ipw2200.c~ipw2200-le_add_cpu-conversion
++++ a/drivers/net/wireless/ipw2200.c
+@@ -10326,9 +10326,7 @@ static int ipw_tx_skb(struct ipw_priv *p
+ 					 remaining_bytes,
+ 					 PCI_DMA_TODEVICE));
+ 
+-			tfd->u.data.num_chunks =
+-			    cpu_to_le32(le32_to_cpu(tfd->u.data.num_chunks) +
+-					1);
++			le32_add_cpu(&tfd->u.data.num_chunks, 1);
  		}
+ 	}
  
--	case CMD_802_11_PWR_CFG:
--		cmdptr->command = cpu_to_le16(CMD_802_11_PWR_CFG);
--		cmdptr->size =
--		    cpu_to_le16(sizeof(struct cmd_ds_802_11_pwr_cfg) +
--				     S_DS_GEN);
--		memmove(&cmdptr->params.pwrcfg, pdata_buf,
--			sizeof(struct cmd_ds_802_11_pwr_cfg));
--
--		ret = 0;
--		break;
- 	case CMD_BT_ACCESS:
- 		ret = lbs_cmd_bt_access(cmdptr, cmd_action, pdata_buf);
- 		break;
---- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c
-+++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-@@ -312,14 +312,6 @@
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
- 
--	case CMD_RET(CMD_802_11_PWR_CFG):
--		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.pwrcfg,
--			sizeof(struct cmd_ds_802_11_pwr_cfg));
--		spin_unlock_irqrestore(&priv->driver_lock, flags);
--
--		break;
--
- 	case CMD_RET(CMD_GET_TSF):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
- 		memcpy((void *)priv->cur_cmd->callback_arg,
---- wireless-testing.orig/drivers/net/wireless/libertas/host.h
-+++ wireless-testing/drivers/net/wireless/libertas/host.h
-@@ -84,7 +84,6 @@
- #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
- #define CMD_802_11_SLEEP_PERIOD			0x0068
- #define CMD_802_11_TPC_CFG			0x0072
--#define CMD_802_11_PWR_CFG			0x0073
- #define CMD_802_11_FW_WAKE_METHOD		0x0074
- #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
- #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
---- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h
-+++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-@@ -616,14 +616,6 @@
- 	u8 data[256];
- } __attribute__ ((packed));
- 
--struct cmd_ds_802_11_pwr_cfg {
--	__le16 action;
--	u8 enable;
--	s8 PA_P0;
--	s8 PA_P1;
--	s8 PA_P2;
--} __attribute__ ((packed));
--
- struct cmd_ds_802_11_afc {
- 	__le16 afc_auto;
- 	union {
-@@ -728,7 +720,6 @@
- 		struct cmd_ds_802_11d_domain_info domaininforesp;
- 
- 		struct cmd_ds_802_11_tpc_cfg tpccfg;
--		struct cmd_ds_802_11_pwr_cfg pwrcfg;
- 		struct cmd_ds_802_11_afc afc;
- 		struct cmd_ds_802_11_led_ctrl ledgpio;
- 
+_
