@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:17374 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbYCKLaT (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56063
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751120AbYCDVkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 07:30:19 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2800037wah.23
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 04:30:16 -0700 (PDT)
-Message-ID: <1ba2fa240803110430h5cabec18s5be16b586769dec@mail.gmail.com> (sfid-20080311_113042_501299_D1E62113)
-Date: Tue, 11 Mar 2008 13:30:16 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
-Subject: Re: Recent driver in linux kernel 2.6.25-rc2
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080311094236.GB4344@ics.muni.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080219153910.GA4303@ics.muni.cz>
-	 <D936D925018D154694D8A362EEB0892003AF3199@orsmsx416.amr.corp.intel.com>
-	 <20080219224418.GA20926@ics.muni.cz>
-	 <D936D925018D154694D8A362EEB0892003DB2DC5@orsmsx416.amr.corp.intel.com>
-	 <20080311094236.GB4344@ics.muni.cz>
+	Tue, 4 Mar 2008 16:40:13 -0500
+Date: Tue, 04 Mar 2008 13:40:03 -0800 (PST)
+Message-Id: <20080304.134003.223058560.davem@davemloft.net> (sfid-20080304_214017_843665_ABF16DB0)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-03-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080304212953.GB3158@tuxdriver.com>
+References: <20080304212953.GB3158@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/3/11 Lukas Hejtmanek <xhejtman@ics.muni.cz>:
-> On Mon, Mar 10, 2008 at 05:35:32PM -0700, Chatre, Reinette wrote:
->  > sorry for the delay - please do submit a bug at bughost.org to enable us
->  > to track this problem.
->  >
->  > The error you get is strange - the reason why the channel could not be
->  > set was because the device is not considered to be ready. Yet, from your
->  > debug log all the required steps appear to have completed successfully.
->  > Could you please add a print to the function
->  > iwl4965-base.c:iwl4965_is_ready to see what the value of priv->status
->  > is?
->
->  I don't have this problem in 2.6.25-rc3 and rc4. However, it seems that the
->  card does not associate with AP if I set iwcofnig wlan0 essid any. Is this
->  a bug or a feature? The AP does not use key and is visible.
->
-It looks more like mac80211 bug but frankly I would prefer if this
-'any' feature will be not supported.
-It has security implications. The decision about to which AP to
-associate should be left solely to user space.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 4 Mar 2008 16:29:53 -0500
 
-Tomas
+> Here is today's round of fixes for the 2.6.25 tree.  These are mostly
+> simple fixes, even one-liners.  The rc80211-pid patch is, of course, an
+> exception...
+
+Please don't just clone Linus's tree, pull net-2.6, and then stuff
+things on top of that and ask me to pull.  I end up being forced to
+end up with a merge of Linus's current tree as a result, and that's
+not how this is supposed to work.
+
+I keep net-2.6 stable for a reason.  Jeff did what you're doing right
+now the other week and now you're doing it too.
+
+There is zero point in my keeping net-2.6 clean and not rebasing it
+constantly if people are going to use it like this.
+
+You should just have a clone of net-2.6 sitting around as your
+wireless fixes tree, and you simply add wireless patches and ask me to
+pull whenever it is appropriate.
