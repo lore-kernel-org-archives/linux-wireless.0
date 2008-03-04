@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41088 "EHLO ciao.gmane.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4055 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753879AbYCYVaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 17:30:07 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JeGiY-0004cs-I6
-	for linux-wireless@vger.kernel.org; Tue, 25 Mar 2008 21:30:02 +0000
-Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 21:30:02 +0000
-Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 21:30:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Problems with RTL8187 USB device
-Date: Tue, 25 Mar 2008 13:31:23 -0700
-Message-ID: <pan.2008.03.25.20.31.22.955127@gimpelevich.san-francisco.ca.us> (sfid-20080325_213024_988095_21759BE6)
-References: <47C49D21.1030905@lwfinger.net> <20080227010732.GB3066@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1751227AbYCDWc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 17:32:29 -0500
+Date: Tue, 4 Mar 2008 17:16:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-03-04
+Message-ID: <20080304221641.GC3158@tuxdriver.com> (sfid-20080304_223234_512558_B355682B)
+References: <20080304212953.GB3158@tuxdriver.com> <20080304.134003.223058560.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080304.134003.223058560.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 26 Feb 2008 20:07:32 -0500, John W. Linville wrote:
-
-> As for rtl8187b support in general, I've been looking at porting
-> support for those devices form the vendor-provided driver.  But the
-> patch is incomplete ATM -- hopefully soon, depending on events. :-(
+On Tue, Mar 04, 2008 at 01:40:03PM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 4 Mar 2008 16:29:53 -0500
 > 
-> I'm sorry you are caught in the middle.  I'll try to get that b support
-> patch done soon -- hopefully we can get something working for you then.
+> > Here is today's round of fixes for the 2.6.25 tree.  These are mostly
+> > simple fixes, even one-liners.  The rc80211-pid patch is, of course, an
+> > exception...
+> 
+> Please don't just clone Linus's tree, pull net-2.6, and then stuff
+> things on top of that and ask me to pull.  I end up being forced to
+> end up with a merge of Linus's current tree as a result, and that's
+> not how this is supposed to work.
+> 
+> I keep net-2.6 stable for a reason.  Jeff did what you're doing right
+> now the other week and now you're doing it too.
 
-What's the current status of this patch? Thanx
+Sorry, Dave.  I'll fix it up and post a new request.
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
