@@ -1,90 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48715 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57283 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbYCQLkP (ORCPT
+	with ESMTP id S1754586AbYCDKVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 07:40:15 -0400
-Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request
-	a Phase 1 RX key
+	Tue, 4 Mar 2008 05:21:06 -0500
+Subject: Re: Problems with iwl3945, hard to connect to encrypted networks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com> (sfid-20080317_000435_916196_E071C229)
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
-	 <1205608293.15910.53.camel@johannes.berg>
-	 <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com>
-	 (sfid-20080317_000435_916196_E071C229)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r6N31VHNkqJPuUj7eBkf"
-Date: Mon, 17 Mar 2008 12:39:58 +0100
-Message-Id: <1205753998.1614.34.camel@johannes.berg> (sfid-20080317_114023_786677_7B6D058B)
+To: Helge Hafting <helge.hafting@aitel.hist.no>
+Cc: Antonio Quartulli <quartulli@atsystem.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47CD1245.5030709@aitel.hist.no> (sfid-20080304_091713_216063_5DC23AFB)
+References: <47CC1926.1090708@aitel.hist.no> <47CC1D54.7030302@atsystem.org>
+	 <47CD1245.5030709@aitel.hist.no> (sfid-20080304_091713_216063_5DC23AFB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/0Yf2raYwc4G8++OHDb2"
+Date: Tue, 04 Mar 2008 11:20:51 +0100
+Message-Id: <1204626051.3917.89.camel@johannes.berg> (sfid-20080304_102114_187460_0E05AAD5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-r6N31VHNkqJPuUj7eBkf
+--=-/0Yf2raYwc4G8++OHDb2
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> iwlwifi firmware also derive phase2 in RX path by itself since this is
-> not really possible to do in host level.=20
+On Tue, 2008-03-04 at 10:11 +0100, Helge Hafting wrote:
+> Antonio Quartulli wrote:
+> > try using the iwlwifi module in the compat-wireless-2.6
+> > It seems to work very well here.
+> > In past, I got same problem with kernel module.
 
-Right. I just wonder why then it needs the host to derive the phase 2
-key for TX, that seems pretty strange. Seems to me a bit like a "what
-can we do" design decision rather than "what makes sense".
+> Thank you for the tip!
+> I'll try the compat-wireless-2.6 driver.
+> I wonder though - if a beter driver exists,
+> why isn't it pushed into the latest kernel also?
 
-> However in case of non
-> matching iv32 such as wraparound it passes packet up unencrypted. =20
-
-That makes sense.
-
-> Therefore HW decryption
-> have to be always backed up by SW one.
-
-Obviously, yes.
-
-> Wraparound of Iv32 is reliable only if decryption of a the packet that
-> triggers it is correct. If this is not done and phase1 is advanced by
-> mistake it  breaks traffic till the next wraparound actually it will
-> effectively cause  disconnection.
-
-Good point. But let's not overload set_key() for it this way. This way,
-the driver needs to look up the key etc. and the semantics get quite
-mangled up. Also, your approach doesn't work for Broadcom hardware that
-only needs phase 1 keys for both RX and TX.
-
-How about instead we add a new "update_tkip_key()" callback that takes
-exactly the required parameters? It should also give the
-hardware-key-index so that the driver has less work to do.
+compat is taken *from* the latest kernel.
 
 johannes
 
---=-r6N31VHNkqJPuUj7eBkf
+--=-/0Yf2raYwc4G8++OHDb2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR95YjaVg1VMiehFYAQKVzw//dOagd4m6IO3DueP10u29BPz/tgzgzU0r
-MwZxkLkFu3aLvbIY3cZrhSPR4rtgj1LtFjHsEcWlSI9Qk76fcWGnPHON4ce87CvB
-RzK50wxXYtP/+UoQ6N/8EQlLTmJjJ4HtHZecjIL6sZ67WnLsr/rg7OlVLJhLt/4f
-Z4SeG19tJs+hu3wcuHqXsVmj1cWWsUEx810sZsPyJ7P9NrwVPFvXzYiTk95ZW+E5
-yuYzAayQJaD/TJZhdjKeypTvVVGnSDUSij5JGlrywfP2bBHV+YbVH3r/uEB/IJO8
-8+HSQMIjzhWXKq6G+XqOKbXCZ7piSu+5sM7UUGk+z7NCMcaPmSzCdfMJFBsgZJ4/
-rMvNCNL+d7zrpC0MLI0c4pLItRZFBzhxTUkwLusIYZZc/F8zEneq/6w8efNvHmZN
-c56YSLnQ8WAszkOAjdQVFs/bzOvONisFX8+4ArHnkIWO8KudpyRcFmI4VN1P55pe
-NWAVGLh0UjyTnJM3wq3VjsPyX7PR1QNmvoud25qGVll1yJMgj8PPzn3fi6WB8Qvo
-v/Ty5Zqe3hpxGcwmxOQisuvRLyySgckOd8Y+06i2afgNcFHJKmqQftr3a0SZ2Oc6
-mLH/QK34TJWNA/U2YqkI3hbNOyjuPPede4SI6/CqXSNrMX7ErzA6inAk6ow9gKdc
-T9W+2plD0eQ=
-=RAlQ
+iQIVAwUAR80igqVg1VMiehFYAQLyjRAAhr5sFDrOmi7Odi+2MuPJ6tkVW9ZrKPvE
+pSjtnSxjQt0NqilMfA/BpRmCAbgS4aoSUnHa9n9jk8blJMPzez0hZ251d7x9yuPo
+c64Z24rwgY4GlohkPZLVmY3cZPEY0NTxOXK9AQ+5LC5p7487zjAV0bhvDghCWqan
+/smed1gnAi+f/pfE3xUSUs8NjTtbIj0WR4+yIzGMp7mrmcK/ej9L9zdVLWcoEfM3
+/a0qdKFY1idvEu7tdAWrI6eqatKjmrSUKftS3tSIt3s9dtILb5z1un97/l4SOMk9
+pm6m/lLwgHu9XILARHZy9O1ab8Nie1Bt8diMIXr0EU7msgwLVWbusf7+q946xXSN
+1MF06FG0L2Kp6ooQI0siNdZk9e8NEj240EoBUwJW3d135iGlt7TSF1LeyN8jel8z
+mL+t8o+fikBn4j1XmOp9BzfMp8jU5Cp/V2sxNaYRNzA2Q0dPZi8MHjha4ncUq46H
+GBdpUkkIIdzmnPdLbUscyEe/NssUIMrQy5Pczsgp0bPfO+APclqO+2M6e+EmMWM2
+dEy7taEULBz55wXlsDdqSEuCbkADUvp2xHpYrvd4UUhs0nO8mhkRmjKzWhUL12Lw
+a4rOP9JRL5GoLIlq2AT9oRn+xX+vIWA6ih6YTxxoSqD7N9eUu1mBc+0tuZvGdz87
+vM8BlCm+mw0=
+=8gS3
 -----END PGP SIGNATURE-----
 
---=-r6N31VHNkqJPuUj7eBkf--
+--=-/0Yf2raYwc4G8++OHDb2--
 
