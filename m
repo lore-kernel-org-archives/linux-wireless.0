@@ -1,131 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40918 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752669AbYCXXXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 19:23:54 -0400
-Message-ID: <47E839BE.5030806@gmx.de> (sfid-20080324_232359_331778_8EC141EC)
-Date: Tue, 25 Mar 2008 00:31:10 +0100
-From: Florian Manschwetus <florianmanschwetus@gmx.de>
+Received: from rv-out-0910.google.com ([209.85.198.188]:27392 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbYCELKj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 06:10:39 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so857754rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 03:10:39 -0800 (PST)
+Message-ID: <b25c3fa70803050310i71023046gc3f40d4042038ba6@mail.gmail.com> (sfid-20080305_111043_433679_3BE9BF66)
+Date: Wed, 5 Mar 2008 20:10:39 +0900
+From: "Joonwoo Park" <joonwpark81@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1204710843.25502.50.camel@johannes.berg>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: gentoo ebuild for compat wireless (resend)
-References: <47E7A8DB.5020106@gmx.de> <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
-In-Reply-To: <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms050706090801060807070408"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
+	 <1204710843.25502.50.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+2008/3/5, Johannes Berg <johannes@sipsolutions.net>:
+>
+> On Wed, 2008-03-05 at 18:40 +0900, Joonwoo Park wrote:
+> > resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
+> >
+> > The function ieee80211_ioctl_siwencode shouldn't be called if
+> > authentication process is not completed.
+> > This patch makes the ieee80211_ioctl_siwessid to wait for authentication
+> > is completed.
+>
 
---------------ms050706090801060807070408
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Johannes,
+Thank you for reviewing this.
 
-Luis R. Rodriguez schrieb:
-> On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
-> <florianmanschwetus@gmx.de> wrote:
->> is it possible to get a version appendix on the tar.bz?
->>  so it should be easy to get a working ebuild fpr this.
-> 
-> The problem is there's two things to "version", compat-wireless itself
-> and Linux. I keep both version already as part of the tarball.
-> 
-> wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
-> 2.8-49-gfe0f268
-> 
-> wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
-> v2.6.25-rc5-2623-g7556b76
-> 
-> You can also just pull these from the directory that was used to
-> create the tarball:
-> 
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
-> 
-> Does this suffice?
-Not really but it gives a version hint, could you create a symlink or so?
-a url like that would be fine:
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.8-49.tar.bz2
+> This looks wrong. You could restart association when a key is set but
+> really the race is by design in WEXT so the only way to fix it is to set
+> the key first.
+>
 
-florian
-> 
->   Luis
-> 
+Do you mean fix iwconfig to always do set key before set essid?
+As you said, It could be a possible solution.
+But, doing It cannot solve a race from two seperated iwconfig process, I think.
+(eg: iwconfig essid ESSID; iwconfig enc ENC)
+Moreover, now we just wake auth request task up and return when setting essid.
+Don't we need to wait a moment until the task is scheduled to be
+polite to iwconifg? :)
 
-
---------------ms050706090801060807070408
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
-BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
-MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
-dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
-hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
-25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
-TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
-5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
-SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
-byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
-gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
-MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
-dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
-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
-Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
-cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
-MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQyMzMx
-MTBaMCMGCSqGSIb3DQEJBDEWBBSb/izoESf6ThqghCWoK1tINFsj6jBSBgkqhkiG9w0BCQ8x
-RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
-BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
-LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
-FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
-cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEAsH4Qbbm7QnHtzGC9HBdZBuzU1ytXrbGZjKgcasPX+hhW9Cjzk2wMCfSiiIQn
-y8MJDNhPr58BYCvAVKqrzLeWYHDZPstBvKQtO0DIp2ziG0bgmhV1kiA7QSYBu7m2s3KM9wdg
-lETfdixe5TcF3mW/nYywHuBWKuQW/yPNx4ilEdggYjHeItn5uSGvDO1xQwtA4FevEUN9b/P4
-kbaqCb3OZyN27/x49PddwernQBLsXdcL+dfGqTFHsAvRs+/u3TsVuQTdM7wUjNE/gUvC5stz
-KuHXRoo+QfXzMw3tDPOXtQcf2E00fvZWRI6M/f6CT9yvTb3hOlOICopJUroQbym8PQAAAAAA
-AA==
---------------ms050706090801060807070408--
+Thanks,
+Joonwoo
