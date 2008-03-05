@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:28810 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:18439 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751593AbYCKSLF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 14:11:05 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Compiler error when compile iwlwifi
-Date: Tue, 11 Mar 2008 11:10:04 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892003E01A7A@orsmsx416.amr.corp.intel.com> (sfid-20080311_181110_247727_510120BE)
-In-Reply-To: <c74ac3520803020638r68f3990ayf5910b3e002f76e2@mail.gmail.com>
-References: <c74ac3520802260339p7fd58501rbd967e755f4eaee6@mail.gmail.com> <D936D925018D154694D8A362EEB0892003C36C47@orsmsx416.amr.corp.intel.com> <c74ac3520802270146q697f3da8m238372c4c88ed691@mail.gmail.com> <D936D925018D154694D8A362EEB0892003C36D06@orsmsx416.amr.corp.intel.com> <c74ac3520802270638m7674c0fbh5f509fe0c5e5d566@mail.gmail.com> <D936D925018D154694D8A362EEB0892003C77505@orsmsx416.amr.corp.intel.com> <c74ac3520803020638r68f3990ayf5910b3e002f76e2@mail.gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Elyahou ITTAH" <ittah.elyahou@gmail.com>,
-	<linux-wireless@vger.kernel.org>
+	id S1752197AbYCEPnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 10:43:04 -0500
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, reinette.chatre@intel.com,
+	ipw3945-devel@lists.sourceforge.net,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: document IEEE80211_TXCTL_OFDM_HT
+Date: Wed,  5 Mar 2008 17:38:59 +0200
+Message-Id: <1204731539-3512-1-git-send-email-ron.rindjunsky@intel.com> (sfid-20080305_154332_528210_08A5C5A6)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, March 02, 2008 6:38 AM, Elyahou ITTAH  wrote:
+This patch clarifies the use of IEEE80211_TXCTL_OFDM_HT flag.
 
-> 2008/2/29, Chatre, Reinette <reinette.chatre@intel.com>:
->> On Wednesday, February 27, 2008 6:38 AM, Elyahou ITTAH  wrote:
->> 
->> 
->> 
->> 
->> What was the error?
->> 
->> 
->> 
->> 
->> These web pages are not accessible to me. Could you please include
->>  the error in your email? You can also submit a bug report at
->> bughost.org and  attach the logs there. 
->> 
->> 
->>  Reinette
-> 
-> I joined a file with the output of modprobe iwl3945 and dmesg... All
-> after installing the driver with the compat tool.
-> I also joined my compat config file...
+Can by united with patch "mac80211: adding mac80211_tx_control
+flags and HT flags"
 
-The problem is that the mac80211 module cannot find a required symbol
-when you try to load it ... the needed symbol can be found in module
-cfg80211, which you already compile. Can you try to load cfg80211 before
-mac80211? 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ include/net/mac80211.h |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-modprobe should have helped here ... can you also check if your kernel
-is built with KMOD (CONFIG_KMOD)?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a64f42d..53884cd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -224,7 +224,11 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TXCTL_EAPOL_FRAME: internal to mac80211
+  * @IEEE80211_TXCTL_SEND_AFTER_DTIM: send this frame after DTIM beacon
+  * @IEEE80211_TXCTL_AMPDU: this frame should be sent as part of an A-MPDU
+- * @IEEE80211_TXCTL_OFDM_HT: this frame can be sent in HT OFDM rates
++ * @IEEE80211_TXCTL_OFDM_HT: this frame can be sent in HT OFDM rates. number
++ * 			     of streams when this flag is on can be extracted
++ *			     from antenna_sel_tx, so if 1 antenna is marked
++ *			     use SISO, 2 antennas marked use MIMO, n antennas
++ *			     marked use MIMO_n.
+  * @IEEE80211_TXCTL_GREEN_FIELD: use green field protection for this frame
+  * @IEEE80211_TXCTL_40_MHZ_WIDTH: send this frame using 40 Mhz channel width
+  * @IEEE80211_TXCTL_DUP_DATA: duplicate data frame on both 20 Mhz channels
+-- 
+1.5.3.3
 
-Reinette
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
