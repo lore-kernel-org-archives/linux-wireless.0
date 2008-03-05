@@ -1,102 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:42979 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752148AbYCaGc4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:48251 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752739AbYCEPBh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 02:32:56 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: jt@hpl.hp.com
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Date: Mon, 31 Mar 2008 15:32:44 +0900
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>,
-	Haris Kremo <harisk@winlab.rutgers.edu>
-References: <20080326123042.11233.80949.stgit@localhost> <200803271147.56272.bruno@thinktube.com> <20080327165237.GA28553@bougret.hpl.hp.com>
-In-Reply-To: <20080327165237.GA28553@bougret.hpl.hp.com>
+	Wed, 5 Mar 2008 10:01:37 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1698849wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 07:01:35 -0800 (PST)
+Message-ID: <1ba2fa240803050701y57913de2s635eaf8b5e3b4f96@mail.gmail.com> (sfid-20080305_150208_681695_7CD759B7)
+Date: Wed, 5 Mar 2008 17:01:35 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Helge Hafting" <helge.hafting@aitel.hist.no>
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+Cc: "Joonwoo Park" <joonwpark81@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47CEA5CB.6040001@aitel.hist.no>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803311532.44969.bruno@thinktube.com> (sfid-20080331_073310_667404_1277AED1)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
+	 <20080305094859.GA10077@ehus.geninetworks.com>
+	 <47CEA5CB.6040001@aitel.hist.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 28 March 2008 01:52:37 Jean Tourrilhes wrote:
-> > can you explain why you think atheros HW is "relative"?
-> >
-> > in the past in madwifi RSSI was said to be measured against a fixed noise
-> > value of -95dBm (which should be expressed by using _SIGNAL_DB in my
-> > patch) but now we have a periodic noise floor calibration and we assume
-> > RSSI to be relative to that, so we believe to be able to provide dBm for
-> > both values. that's how it is currently reported in madwifi and ath5k and
-> > what we believe to be correct (without having much documentation from
-> > atheros, however) - if that's not correct we have to modify the drivers.
+On Wed, Mar 5, 2008 at 3:53 PM, Helge Hafting
+<helge.hafting@aitel.hist.no> wrote:
+> Joonwoo Park wrote:
+>  > On Wed, Mar 05, 2008 at 06:40:09PM +0900, Joonwoo Park wrote:
+>  >
+>  >> resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
+>  >>
+>  >> The function ieee80211_ioctl_siwencode shouldn't be called if
+>  >> authentication process is not completed.
+>  >> This patch makes the ieee80211_ioctl_siwessid to wait for authentication
+>  >> is completed.
+>  >>
+>  >> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+>  >>
+>  >
+>  > Helge,
+>  >
+>  > Can you please try this patch?
+>  > I believe this patch helps your problem.
+>  >
+>  I tried it, and still have problems. The messages may be slightly different:
 >
-> 	One of my coworkers was doing experiments on interference
-> measurements. For that, we need to measure the signal strength of
-> various packets. Those recalibrations throw havoc in our
-> measurements. In other words, the RSSI we measure is consistent
-> between recalibration points, but not across those recalibration.
-> 	This co-worker was using some NetBSD and not MadWifi, and I
-> don't know which version, so I can not say for sure if this affect the
-> current version of MadWifi.
+>  I first bring up the interface with "ifconfig wlan0 up"
+>  and then try "iwconfig wlan0 essid my_essid key s:password"
+>  over and over till it works. This gave me:
 >
-> 	You have to look at what the application wants. The
-> application wants consistent measurements. You can *NOT* define
-> properly APIs unless you understand how application will use it.
-> 	I don't understand enough about the Atheros hardware (I
-> haven't used it), but I don't see why you would need to recalibrate
-> the noise floor and how you could acheive that. Any "noise" you
-> measure on the channel would be subject to interference and
-> fading. The only way you could measure some noise with some certainty
-> would be to ground the antenna and measure.
-
-there are actually two types of noise calibration for atheros hardware: one is 
-for the internal circuit noise, which is done by detaching the antennas and 
-another one for the environment noise (interference) on the channel, which is 
-measured during silent times of the MAC protocol (SIFS for example). at least 
-that's my understanding of what is described in an atheros patent:
-
-http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=1&f=G&l=50&co1=AND&d=PTXT&s1=%22Method+system+noise+floor+calibration+receive+signal+strength+detection%22.TI.&OS=TTL/
-
-> 	If you calibrate your RSSI using the noise on the channel, I
-> believe you are measuring SNR, not signal strength. Of course, I may
-> be wrong.
-
-i think that's what is happening. that seems to be consistent with both your 
-collegues experimental results, the patent and the way we interpret 
-the "RSSI" as SNR in madwifi and ath5k.
-
-of course lacking any documentation from atheros this all mostly speculations.
-
-> > sorry jean, no offense, but the usage of these values in WE was really
-> > confusing and the lack of knowing what the values acutally mean made it
-> > really hard for applications to work with them.
+>  Initial auth_alg=0
+>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+>  wlan0: authentication with AP 00:14:1b:5e:13:40 timed out
 >
-> 	Everybody is entitled to their opinion. Those values were
-> clearly documenteed but nobody bothered to read the documentation.
-
-true. it's unfair to blame WE for that. the problems came mostly from the fact 
-that devices used completely different methods of reporting these values and 
-not much was know about the devices sometimes.
-
-now that have a mac80211 stack which unifies different drivers i would like to 
-improve that situation by also unifying the way we report signal and noise 
-across most devices. most modern cards support dBm so this is probably the 
-way to go for the future. 
-
-but the remaining question is how do we deal with devices where we don't know 
-how to map RSSI to dBm.
-
-i take your suggestion that we should remove the "linear" requirement from the 
-definition. do you think it would be feasible to require the drivers to 
-normalize their RSSI to a range of 0-100, so we would have at least some 
-consistency between devices? (of course their steps within this percentage 
-would be different and it would still be impossible to compare these values 
-across different devices).
-
-best regards,
-bruno
+>  A total of 5 tries went wrong. The sixth time it worked, with
+>  different messages and a different access point.
+>  (There are several access points at work.)
+>  Initial auth_alg=0
+>  wlan0: authenticate with AP 00:12:7f:ce:9c:e0
+>  wlan0: RX authentication from 00:12:7f:ce:9c:e0 (alg=0 transaction=2
+>  status=0)
+>  wlan0: authenticated
+>  wlan0: associate with AP 00:12:7f:ce:9c:e0 (capab=0x431 status=0 aid=242)
+>  wlan0: associated
+>  wlan0: CTS protection enabled (BSSID=00:12:7f:ce:9c:e0)
+>  wlan0: switched to long barker preamble (BSSID=BSSID=00:12:7f:ce:9c:e0)
+>  wlan0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 burst=0
+>  wlan0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 burst=0
+>  wlan0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 burst=30
+>  wlan0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 burst=15
+>  wlan0: link becomes ready
+>
+>
+>  Only 6 attempts is an improvement, if it stays that way.  Still, the
+>  old ipw3945 succeeded on first try. :-/
+>  I hope the testing can be of help.
+>
+>  Helge Hafting
+>
+>
+>
+Is this shared or open authentication?
+Do you happend to have a sniff capture of the association ?
+>
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
