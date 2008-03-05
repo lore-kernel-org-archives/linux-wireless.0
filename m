@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:36237 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbYCREIK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45190 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933656AbYCEXP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2008 00:08:10 -0400
-Received: by an-out-0708.google.com with SMTP id b6so1213661ana.37
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 21:08:08 -0700 (PDT)
-Message-ID: <97a0a9ac0803172107s2ac19268h3b297bb645011a3@mail.gmail.com> (sfid-20080318_040818_903442_88D245CA)
-Date: Mon, 17 Mar 2008 22:07:56 -0600
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-To: "Sam Ravnborg" <sam@ravnborg.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-In-Reply-To: <20080302115828.GA15820@uranus.ravnborg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080228014125.GI3078@tuxdriver.com>
-	 <20080229214240.GH3234@tuxdriver.com>
-	 <20080301130133.GA14250@uranus.ravnborg.org>
-	 <200803011651.13652.mb@bu3sch.de>
-	 <20080302115828.GA15820@uranus.ravnborg.org>
+	Wed, 5 Mar 2008 18:15:58 -0500
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Franz Apeltauer <franz.apeltauer@gmx.at>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47CF28F2.6050509@gmx.at> (sfid-20080305_231328_405485_4CF10539)
+References: <47CB3B5E.4020701@gmx.at>
+	 <1204504331.3917.31.camel@johannes.berg>
+	 <20080303035222.GP28995@ruslug.rutgers.edu>  <47CF28F2.6050509@gmx.at>
+	 (sfid-20080305_231328_405485_4CF10539)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-576OQarDevh8aa59Qgfv"
+Date: Thu, 06 Mar 2008 00:15:41 +0100
+Message-Id: <1204758941.25502.93.camel@johannes.berg> (sfid-20080305_231607_404257_8A38193C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sam
 
-On Sun, Mar 2, 2008 at 5:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
+--=-576OQarDevh8aa59Qgfv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->  So please let me know if this works and then I can push it upstrem
->  hopefully already by tomorrow.
->
->  Note: I decided to name the variable KBUILD_BUILDHOST as this is more
->  descriptive then SUBARCH. We can later clean up the naming and get rid
->  of SUBARCH but I refrained from this to make the pacht minimal.
 
-What is the status of this patch? Is there any chance that it will be
-included in 2.6.25?
+> a) Test on a PC with a Broadcom 4306 rev 03:
+> - Downloaded and installed the firmware.
+> - The module b43legacy loads without errors, but nothing else happens.
+>    ifconfig doesn't show any new interface, like eth0 or wlan0.
 
-Thanks.
+Well, yeah, you need b43...
 
-Gordon
+johannes
 
--- 
-Gordon Farquharson
-GnuPG Key ID: 32D6D676
+--=-576OQarDevh8aa59Qgfv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR88pm6Vg1VMiehFYAQKjThAAhq2KmmrQF3blkww2qngYrnI6xNzauO7X
+f88To/dWa1hboVDaxnZlre8OiZa6FHzAi/PX8wtVnXSpLqphxxGCmsG3P/NwuXnL
+8x+itqNkjeYnTXTy4RxjdosxnCQFtSQC0NYA4vba6Q0gs/u4/RnUIVoHZpRtjeOb
+BjWSdiMdZNq9xzb8Pk8pmSiEIHMcZvd3KiwFSoGkelLZlBUH1368O/E8xIeUSvJM
+/ZRUhsE6wI3qzGvykQOHpqfxUrHxkNkDjywlzY/jf6mzLODyWO+dFharGI3o8zGJ
+k3Yt45QWS4kKQF16qW3oh4oSTVCxe9knz11gICCbk4/YhAml5xy8Kqpc2sy2j56N
+TakxIpGpDKNrTTbQcg9ZfmRe6ycRFK03nYlOY/kbYkmxvjOGIgVGMJWkycwW4Yy/
+ct9bJ78zUD+RrCreXPtuChfCiHP84+O8Fs7XIaON6Cb39UUJVFUMGm/B3ouKZPo+
+25E+zfKfy0DD2WB2SVWU5isrk0UdSyN2N9Y+pgNqaD40cSJ3KsgAPs5DNp87jQMp
+cewNk7Job8L9rTKuMVddtE10OvJlJgnUexR2SSAKrORXRsx+vya5Hi7qYAHUXURm
+7ct9d1UkxY1qowzBXuJZCUdQGsKPhqqotqBDtV9ewHcvjywTLyYZVThBsKwhunhl
+ol5zeDwybVM=
+=WxZ8
+-----END PGP SIGNATURE-----
+
+--=-576OQarDevh8aa59Qgfv--
+
