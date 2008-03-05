@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:40230 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753098AbYCCLUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 06:20:05 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JW8iA-0008FT-5V
-	for linux-wireless@vger.kernel.org; Mon, 03 Mar 2008 11:20:02 +0000
-Received: from dsl081-096-236.den1.dsl.speakeasy.net ([64.81.96.236])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 11:20:02 +0000
-Received: from gmane by dsl081-096-236.den1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 11:20:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Joe Wise <gmane@joewise.com>
-Subject: Re: can't bring up wlan0
-Date: Mon, 3 Mar 2008 11:15:02 +0000 (UTC)
-Message-ID: <loom.20080303T110557-828@post.gmane.org> (sfid-20080303_112016_364851_4CBF48D9)
-References: <20080223153142.da9fc4e4.akpm@linux-foundation.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758550AbYCEJ7G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 04:59:06 -0500
+Subject: [PATCH (RFT 2)] mac80211: fix hardware scan completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Bill Moss <bmoss@CLEMSON.EDU>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 05 Mar 2008 10:58:40 +0100
+Message-Id: <1204711120.25502.56.camel@johannes.berg> (sfid-20080305_095910_425904_B53AD689)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Morton <akpm@...> writes:
+The mac80211 MLME requires restarting timers after a scan
+completes but this wasn't done when hardware scan offload
+was added, so add it now.
 
-> 
-> 
-> I've been noticing this for a week or two but hadn't paid it much attention
-> amongst the storm of other bugs.
-> 
-> This is on the t61p laptop, running FC8.
-snip
-> 
-> 
-> t61p:/home/akpm# ifconfig wlan0 up
-> SIOCSIFFLAGS: No such device
-> 
-> 
-> Any ideas?  Could be that it's some new Kconfig which was added post-2.6.24
-> and which defaults to broken-mode when one runs `make oldconfig'.  Which is
-> a rather unpleasing practice which happens quite a lot.
-> 
-> Thanks.
-> 
-> # Automatically generated make config: don't edit
-snip
-> CONFIG_HAS_IOPORT=y
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bill Moss <bmoss@clemson.edu>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+---
+This is version of the patch with correct locking. Bill, please test
+this. John, please merge if Bill says it's ok.
 
+Sorry, forgot to CC the mailing list.
 
+ net/mac80211/ieee80211_sta.c |   25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
 
-I have this identical problem, however I'm running kernel 2.6.23.15-137.fc8. 
-Although it's probably not noteworthy, I'm actually on a lenovo t61, not a t61p.
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-01 19:28:56.000000000 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-03-05 10:56:31.000000000 +0100
+@@ -3576,6 +3576,13 @@ static void ieee80211_send_nullfunc(stru
+ }
+ 
 
-Hope this helps somebody fix the problem.
-
--Joe
-
++static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
++{
++	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
++	    ieee80211_vif_is_mesh(&sdata->vif))
++		ieee80211_sta_timer((unsigned long)sdata);
++}
++
+ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -3589,6 +3596,12 @@ void ieee80211_scan_completed(struct iee
+ 
+ 	if (local->sta_hw_scanning) {
+ 		local->sta_hw_scanning = 0;
++		/* Restart STA timer for HW scan case */
++		rcu_read_lock();
++		list_for_each_entry_rcu(sdata, &local->interfaces, list)
++			ieee80211_restart_sta_timer(sdata);
++		rcu_read_unlock();
++
+ 		goto done;
+ 	}
+ 
+@@ -3615,14 +3628,12 @@ void ieee80211_scan_completed(struct iee
+ 		if (sdata->dev == local->mdev)
+ 			continue;
+ 
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+-			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
+-				ieee80211_send_nullfunc(local, sdata, 0);
+-			ieee80211_sta_timer((unsigned long)sdata);
+-		}
++		/* Tell AP we're back */
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
++		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
++			ieee80211_send_nullfunc(local, sdata, 0);
+ 
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
+-			ieee80211_sta_timer((unsigned long)sdata);
++		ieee80211_restart_sta_timer(sdata);
+ 
+ 		netif_wake_queue(sdata->dev);
+ 	}
 
 
