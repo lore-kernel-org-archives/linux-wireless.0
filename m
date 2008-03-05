@@ -1,540 +1,711 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:29230 "EHLO
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:12424 "EHLO
 	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698AbYCRMpm (ORCPT
+	with ESMTP id S1751566AbYCEHIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2008 08:45:42 -0400
+	Wed, 5 Mar 2008 02:08:36 -0500
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert RSSI to a direct command
-Date: Tue, 18 Mar 2008 13:42:42 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH, take 3] libertas: implement SSID scanning for SIOCSIWSCAN
+Date: Wed, 5 Mar 2008 07:05:32 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Dan Williams <dcbw@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <200803181342.42704.hs4233@mail.mn-solutions.de> (sfid-20080318_124553_517061_960A0D77)
+Message-Id: <200803050705.32248.hs4233@mail.mn-solutions.de> (sfid-20080305_070841_647851_7D5934A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[PATCH] libertas: convert RSSI to a direct command
+libertas: implement SSID scanning for SIOCSIWSCAN
 
-Besided the direct conversion of the CMD_802_11_RSSI command, this
-patch also changes the following things:
+After my bit scan re-writing the SIOCSIWSCAN wext ioctl no longer supported
+scanning for a specific SSID. However, wpa_supplicant is a possible user of
+this ioctl, so here is code that add's this.
 
-* calls CMD_802_11_RSSI either asynchronously (in the background)
-  when main.c thinks the firmware is hosed and just want's to
-  get a command through
-* calls CMD_802_11_RSSI synchronously when called to get wireless
-  statistics.
-* don't do in-driver averaging anymore, this and the previous point
-  eliminates the need for any "struct lbs_private" values
-* doesn't magically create a iwe.u.qual.level value in the adhoc
-  mode anymore. The old code access older SNR/NF values from
-  older RXPDs, but there that RXPDs could have been hours old.
+While passing, removed even more of the debugfs-based scanning. You can (and
+should) the SIOCSIWSCAN to ask for scans, so there is no need for
+proprietary interfaces for scanning. And, besides, the scan result couldn't
+be used further, e.g. not for associating.
 
 Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+---
+
+This code change allowed to association to an AP with a hidden SSID
+like this:
+
+$ ifconfig eth1 up
+$ cat wpa_supplicant.conf
+ctrl_interface=/var/run/wpa_supplicant
+network={
+        ssid="MNHS"
+        scan_ssid=1
+        key_mgmt=NONE
+        wep_key0="54321"
+        wep_tx_keyidx=0
+}
+$ wpa_supplicant -Dwext -ieth1 -cwpa_supplicant.conf
+
+Index: wireless-testing/drivers/net/wireless/libertas/dev.h
 ===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-18 11:55:57.000000000 +0100
-@@ -671,6 +671,44 @@ static int lbs_cmd_802_11_rate_adapt_rat
- 	return 0;
+--- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-03 11:58:28.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-03 11:58:47.000000000 +0100
+@@ -149,6 +149,8 @@ struct lbs_private {
+ 	struct work_struct sync_channel;
+ 	/* remember which channel was scanned last, != 0 if currently scanning */
+ 	int scan_channel;
++	u8 scan_ssid[IW_ESSID_MAX_SIZE + 1];
++	u8 scan_ssid_len;
+ 
+ 	/** Hardware access */
+ 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
+Index: wireless-testing/drivers/net/wireless/libertas/scan.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/scan.h	2008-03-03 11:58:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/scan.h	2008-03-03 11:59:36.000000000 +0100
+@@ -12,8 +12,6 @@
+ 
+ /**
+  *  @brief Maximum number of channels that can be sent in a setuserscan ioctl
+- *
+- *  @sa lbs_ioctl_user_scan_cfg
+  */
+ #define LBS_IOCTL_USER_SCAN_CHAN_MAX  50
+ 
+@@ -27,60 +25,6 @@
+ #define LBS_SCAN_BSS_TYPE_ANY         3
+ 
+ /**
+- *  @brief IOCTL channel sub-structure sent in lbs_ioctl_user_scan_cfg
+- *
+- *  Multiple instances of this structure are included in the IOCTL command
+- *   to configure a instance of a scan on the specific channel.
+- */
+-struct lbs_ioctl_user_scan_chan {
+-	u8 channumber;		//!< channel Number to scan
+-	u8 radiotype;		//!< Radio type: 'B/G' band = 0, 'A' band = 1
+-	u8 scantype;		//!< Scan type: Active = 0, Passive = 1
+-	u16 scantime;		//!< Scan duration in milliseconds; if 0 default used
+-};
+-
+-/**
+- *  @brief IOCTL input structure to configure an immediate scan cmd to firmware
+- *
+- *  Used in the setuserscan (LBS_SET_USER_SCAN) private ioctl.  Specifies
+- *   a number of parameters to be used in general for the scan as well
+- *   as a channel list (lbs_ioctl_user_scan_chan) for each scan period
+- *   desired.
+- *
+- *  @sa lbs_set_user_scan_ioctl
+- */
+-struct lbs_ioctl_user_scan_cfg {
+-    /**
+-     *  @brief BSS type to be sent in the firmware command
+-     *
+-     *  Field can be used to restrict the types of networks returned in the
+-     *    scan.  valid settings are:
+-     *
+-     *   - LBS_SCAN_BSS_TYPE_BSS  (infrastructure)
+-     *   - LBS_SCAN_BSS_TYPE_IBSS (adhoc)
+-     *   - LBS_SCAN_BSS_TYPE_ANY  (unrestricted, adhoc and infrastructure)
+-     */
+-	u8 bsstype;
+-
+-	/**
+-	 *  @brief BSSID filter sent in the firmware command to limit the results
+-	 */
+-	u8 bssid[ETH_ALEN];
+-
+-	/* Clear existing scan results matching this BSSID */
+-	u8 clear_bssid;
+-
+-	/**
+-	 *  @brief SSID filter sent in the firmware command to limit the results
+-	 */
+-	char ssid[IW_ESSID_MAX_SIZE];
+-	u8 ssid_len;
+-
+-	/* Clear existing scan results matching this SSID */
+-	u8 clear_ssid;
+-};
+-
+-/**
+  *  @brief Structure used to store information for each beacon/probe response
+  */
+ struct bss_descriptor {
+@@ -136,21 +80,12 @@ int lbs_find_best_network_ssid(struct lb
+ 			u8 *out_ssid_len, u8 preferred_mode, u8 *out_mode);
+ 
+ int lbs_send_specific_ssid_scan(struct lbs_private *priv, u8 *ssid,
+-				u8 ssid_len, u8 clear_ssid);
+-
+-int lbs_scan_networks(struct lbs_private *priv,
+-	const struct lbs_ioctl_user_scan_cfg *puserscanin,
+-                int full_scan);
+-
+-struct ifreq;
++				u8 ssid_len);
+ 
+-struct iw_point;
+-struct iw_param;
+-struct iw_request_info;
+ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
+ 			 struct iw_point *dwrq, char *extra);
+ int lbs_set_scan(struct net_device *dev, struct iw_request_info *info,
+-			 struct iw_param *vwrq, char *extra);
++			 union iwreq_data *wrqu, char *extra);
+ 
+ void lbs_scan_worker(struct work_struct *work);
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/scan.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-03 11:58:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-03 12:10:07.000000000 +0100
+@@ -260,24 +260,12 @@ done:
+ 
+ 
+ 
+-
+ /*********************************************************************/
+ /*                                                                   */
+ /*  Main scanning support                                            */
+ /*                                                                   */
+ /*********************************************************************/
+ 
+-void lbs_scan_worker(struct work_struct *work)
+-{
+-	struct lbs_private *priv =
+-		container_of(work, struct lbs_private, scan_work.work);
+-
+-	lbs_deb_enter(LBS_DEB_SCAN);
+-	lbs_scan_networks(priv, NULL, 0);
+-	lbs_deb_leave(LBS_DEB_SCAN);
+-}
+-
+-
+ /**
+  *  @brief Create a channel list for the driver to scan based on region info
+  *
+@@ -289,17 +277,11 @@ void lbs_scan_worker(struct work_struct 
+  *
+  *  @param priv          A pointer to struct lbs_private structure
+  *  @param scanchanlist  Output parameter: resulting channel list to scan
+- *  @param filteredscan  Flag indicating whether or not a BSSID or SSID filter
+- *                       is being sent in the command to firmware.  Used to
+- *                       increase the number of channels sent in a scan
+- *                       command and to disable the firmware channel scan
+- *                       filter.
+  *
+  *  @return              void
+  */
+ static int lbs_scan_create_channel_list(struct lbs_private *priv,
+-					struct chanscanparamset *scanchanlist,
+-					uint8_t filteredscan)
++					struct chanscanparamset *scanchanlist)
+ {
+ 	struct region_channel *scanregion;
+ 	struct chan_freq_power *cfp;
+@@ -354,9 +336,6 @@ static int lbs_scan_create_channel_list(
+ 			}
+ 
+ 			chan->channumber = cfp->channel;
+-
+-			if (filteredscan)
+-				chan->chanscanmode.disablechanfilt = 1;
+ 		}
+ 	}
+ 	return chanidx;
+@@ -370,15 +349,14 @@ static int lbs_scan_create_channel_list(
+  * length          06 00
+  * ssid            4d 4e 54 45 53 54
+  */
+-static int lbs_scan_add_ssid_tlv(uint8_t *tlv,
+-				 const struct lbs_ioctl_user_scan_cfg *user_cfg)
++static int lbs_scan_add_ssid_tlv(struct lbs_private *priv, u8 *tlv)
+ {
+ 	struct mrvlietypes_ssidparamset *ssid_tlv = (void *)tlv;
+ 
+ 	ssid_tlv->header.type = cpu_to_le16(TLV_TYPE_SSID);
+-	ssid_tlv->header.len = cpu_to_le16(user_cfg->ssid_len);
+-	memcpy(ssid_tlv->ssid, user_cfg->ssid, user_cfg->ssid_len);
+-	return sizeof(ssid_tlv->header) + user_cfg->ssid_len;
++	ssid_tlv->header.len = cpu_to_le16(priv->scan_ssid_len);
++	memcpy(ssid_tlv->ssid, priv->scan_ssid, priv->scan_ssid_len);
++	return sizeof(ssid_tlv->header) + priv->scan_ssid_len;
  }
  
-+int lbs_get_rssi(struct lbs_private *priv, u16 *snr, u16 *nf)
+ 
+@@ -461,8 +439,7 @@ static int lbs_scan_add_rates_tlv(uint8_
+  * for a bunch of channels.
+  */
+ static int lbs_do_scan(struct lbs_private *priv, uint8_t bsstype,
+-		       struct chanscanparamset *chan_list, int chan_count,
+-		       const struct lbs_ioctl_user_scan_cfg *user_cfg)
++		       struct chanscanparamset *chan_list, int chan_count)
+ {
+ 	int ret = -ENOMEM;
+ 	struct cmd_ds_802_11_scan *scan_cmd;
+@@ -477,13 +454,13 @@ static int lbs_do_scan(struct lbs_privat
+ 		goto out;
+ 
+ 	tlv = scan_cmd->tlvbuffer;
+-	if (user_cfg)
+-		memcpy(scan_cmd->bssid, user_cfg->bssid, ETH_ALEN);
++	/* TODO: do we need to scan for a specific BSSID?
++	memcpy(scan_cmd->bssid, priv->scan_bssid, ETH_ALEN); */
+ 	scan_cmd->bsstype = bsstype;
+ 
+ 	/* add TLVs */
+-	if (user_cfg && user_cfg->ssid_len)
+-		tlv += lbs_scan_add_ssid_tlv(tlv, user_cfg);
++	if (priv->scan_ssid_len)
++		tlv += lbs_scan_add_ssid_tlv(priv, tlv);
+ 	if (chan_list && chan_count)
+ 		tlv += lbs_scan_add_chanlist_tlv(tlv, chan_list, chan_count);
+ 	tlv += lbs_scan_add_rates_tlv(tlv);
+@@ -516,14 +493,11 @@ out:
+  *    update the internal driver scan table
+  *
+  *  @param priv          A pointer to struct lbs_private structure
+- *  @param puserscanin   Pointer to the input configuration for the requested
+- *                       scan.
++ *  @param full_scan     Do a full-scan (blocking)
+  *
+  *  @return              0 or < 0 if error
+  */
+-int lbs_scan_networks(struct lbs_private *priv,
+-		      const struct lbs_ioctl_user_scan_cfg *user_cfg,
+-		      int full_scan)
++static int lbs_scan_networks(struct lbs_private *priv, int full_scan)
+ {
+ 	int ret = -ENOMEM;
+ 	struct chanscanparamset *chan_list;
+@@ -531,7 +505,6 @@ int lbs_scan_networks(struct lbs_private
+ 	int chan_count;
+ 	uint8_t bsstype = CMD_BSS_TYPE_ANY;
+ 	int numchannels = MRVDRV_CHANNELS_PER_SCAN_CMD;
+-	int filteredscan = 0;
+ 	union iwreq_data wrqu;
+ #ifdef CONFIG_LIBERTAS_DEBUG
+ 	struct bss_descriptor *iter;
+@@ -547,17 +520,16 @@ int lbs_scan_networks(struct lbs_private
+ 	if (full_scan && delayed_work_pending(&priv->scan_work))
+ 		cancel_delayed_work(&priv->scan_work);
+ 
+-	/* Determine same scan parameters */
++	/* User-specified bsstype or channel list
++	TODO: this can be implemented if some user-space application
++	need the feature. Formerly, it was accessible from debugfs,
++	but then nowhere used.
+ 	if (user_cfg) {
+ 		if (user_cfg->bsstype)
+-			bsstype = user_cfg->bsstype;
+-		if (!is_zero_ether_addr(user_cfg->bssid)) {
+-			numchannels = MRVDRV_MAX_CHANNELS_PER_SCAN;
+-			filteredscan = 1;
+-		}
+-	}
+-	lbs_deb_scan("numchannels %d, bsstype %d, filteredscan %d\n",
+-		     numchannels, bsstype, filteredscan);
++		bsstype = user_cfg->bsstype;
++	} */
++
++	lbs_deb_scan("numchannels %d, bsstype %d\n", numchannels, bsstype);
+ 
+ 	/* Create list of channels to scan */
+ 	chan_list = kzalloc(sizeof(struct chanscanparamset) *
+@@ -568,7 +540,7 @@ int lbs_scan_networks(struct lbs_private
+ 	}
+ 
+ 	/* We want to scan all channels */
+-	chan_count = lbs_scan_create_channel_list(priv, chan_list, filteredscan);
++	chan_count = lbs_scan_create_channel_list(priv, chan_list);
+ 
+ 	netif_stop_queue(priv->dev);
+ 	netif_carrier_off(priv->dev);
+@@ -597,7 +569,7 @@ int lbs_scan_networks(struct lbs_private
+ 		lbs_deb_scan("scanning %d of %d channels\n",
+ 			     to_scan, chan_count);
+ 		ret = lbs_do_scan(priv, bsstype, curr_chans,
+-				  to_scan, user_cfg);
++				  to_scan);
+ 		if (ret) {
+ 			lbs_pr_err("SCAN_CMD failed\n");
+ 			goto out2;
+@@ -658,6 +630,17 @@ out:
+ 
+ 
+ 
++void lbs_scan_worker(struct work_struct *work)
 +{
-+	struct cmd_ds_802_11_rssi cmd;
-+	struct cmd_ds_802_11_rssi_rsp rsp;
-+	int ret;
-+	u16 _snr, _nf;
++	struct lbs_private *priv =
++		container_of(work, struct lbs_private, scan_work.work);
 +
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.avg_factor = cpu_to_le16(1);
-+	rsp.hdr.size = cpu_to_le16(sizeof(rsp));
-+
-+	/* main.c might have called us just to un-break a hanging firmware */
-+	if (!snr && !nf) {
-+		lbs_cmd_async(priv, CMD_802_11_RSSI, &cmd.hdr, sizeof(cmd));
-+		return 0;
-+	}
-+
-+	ret = lbs_cmd(priv, CMD_802_11_RSSI,
-+		&cmd, lbs_cmd_copyback, (unsigned long) &rsp);
-+
-+	if (!ret) {
-+		_snr = le16_to_cpu(rsp.SNR);
-+		_nf  = le16_to_cpu(rsp.NF);
-+	} else {
-+		_snr = 0;
-+		_nf  = abs(MRVDRV_NF_DEFAULT_SCAN_VALUE);
-+	}
-+
-+	if (*snr) *snr = _snr;
-+	if (*nf)  *nf  = _nf;
-+
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+
-+	return ret;
++	lbs_deb_enter(LBS_DEB_SCAN);
++	lbs_scan_networks(priv, 0);
++	lbs_deb_leave(LBS_DEB_SCAN);
 +}
 +
++
+ /*********************************************************************/
+ /*                                                                   */
+ /*  Result interpretation                                            */
+@@ -1068,7 +1051,7 @@ static struct bss_descriptor *lbs_find_b
+ }
+ 
  /**
-  *  @brief Get the current data rate
+- *  @brief Find the AP with specific ssid in the scan list
++ *  @brief Find the best AP
   *
-@@ -837,27 +875,6 @@ out:
+  *  Used from association worker.
+  *
+@@ -1086,7 +1069,8 @@ int lbs_find_best_network_ssid(struct lb
+ 
+ 	lbs_deb_enter(LBS_DEB_SCAN);
+ 
+-	lbs_scan_networks(priv, NULL, 1);
++	priv->scan_ssid_len = 0;
++	lbs_scan_networks(priv, 1);
+ 	if (priv->surpriseremoved)
+ 		goto out;
+ 
+@@ -1112,29 +1096,24 @@ out:
+  *  @param priv             A pointer to struct lbs_private structure
+  *  @param ssid             A pointer to the SSID to scan for
+  *  @param ssid_len         Length of the SSID
+- *  @param clear_ssid       Should existing scan results with this SSID
+- *                          be cleared?
+  *
+  *  @return                0-success, otherwise fail
+  */
+ int lbs_send_specific_ssid_scan(struct lbs_private *priv, uint8_t *ssid,
+-				uint8_t ssid_len, uint8_t clear_ssid)
++				uint8_t ssid_len)
+ {
+-	struct lbs_ioctl_user_scan_cfg scancfg;
+ 	int ret = 0;
+ 
+-	lbs_deb_enter_args(LBS_DEB_SCAN, "SSID '%s', clear %d",
+-			   escape_essid(ssid, ssid_len), clear_ssid);
++	lbs_deb_enter_args(LBS_DEB_SCAN, "SSID '%s'\n",
++			   escape_essid(ssid, ssid_len));
+ 
+ 	if (!ssid_len)
+ 		goto out;
+ 
+-	memset(&scancfg, 0x00, sizeof(scancfg));
+-	memcpy(scancfg.ssid, ssid, ssid_len);
+-	scancfg.ssid_len = ssid_len;
+-	scancfg.clear_ssid = clear_ssid;
++	memcpy(priv->scan_ssid, ssid, ssid_len);
++	priv->scan_ssid_len = ssid_len;
+ 
+-	lbs_scan_networks(priv, &scancfg, 1);
++	lbs_scan_networks(priv, 1);
+ 	if (priv->surpriseremoved) {
+ 		ret = -1;
+ 		goto out;
+@@ -1317,27 +1296,36 @@ out:
+  *  @return             0 --success, otherwise fail
+  */
+ int lbs_set_scan(struct net_device *dev, struct iw_request_info *info,
+-		 struct iw_param *wrqu, char *extra)
++		 union iwreq_data *wrqu, char *extra)
+ {
+ 	struct lbs_private *priv = dev->priv;
++	int ret = 0;
+ 
+-	lbs_deb_enter(LBS_DEB_SCAN);
++	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!netif_running(dev))
+-		return -ENETDOWN;
++	if (!netif_running(dev)) {
++		ret = -ENETDOWN;
++		goto out;
++	}
+ 
+ 	/* mac80211 does this:
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	if (sdata->type != IEEE80211_IF_TYPE_xxx)
+-		return -EOPNOTSUPP;
++	if (sdata->type != IEEE80211_IF_TYPE_xxx) {
++		ret = -EOPNOTSUPP;
++		goto out;
++	}
++	*/
+ 
+ 	if (wrqu->data.length == sizeof(struct iw_scan_req) &&
+ 	    wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+-		req = (struct iw_scan_req *)extra;
+-			ssid = req->essid;
+-		ssid_len = req->essid_len;
++		struct iw_scan_req *req = (struct iw_scan_req *)extra;
++		priv->scan_ssid_len = req->essid_len;
++		memcpy(priv->scan_ssid, req->essid, priv->scan_ssid_len);
++		lbs_deb_wext("set_scan, essid '%s'\n",
++			escape_essid(priv->scan_ssid, priv->scan_ssid_len));
++	} else {
++		priv->scan_ssid_len = 0;
+ 	}
+-	*/
+ 
+ 	if (!delayed_work_pending(&priv->scan_work))
+ 		queue_delayed_work(priv->work_thread, &priv->scan_work,
+@@ -1346,10 +1334,11 @@ int lbs_set_scan(struct net_device *dev,
+ 	priv->scan_channel = -1;
+ 
+ 	if (priv->surpriseremoved)
+-		return -EIO;
++		ret = -EIO;
+ 
+-	lbs_deb_leave(LBS_DEB_SCAN);
+-	return 0;
++out:
++	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
++	return ret;
+ }
+ 
+ 
+@@ -1374,7 +1363,7 @@ int lbs_get_scan(struct net_device *dev,
+ 	struct bss_descriptor *iter_bss;
+ 	struct bss_descriptor *safe;
+ 
+-	lbs_deb_enter(LBS_DEB_SCAN);
++	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+ 	/* iwlist should wait until the current scan is finished */
+ 	if (priv->scan_channel)
+@@ -1418,7 +1407,7 @@ int lbs_get_scan(struct net_device *dev,
+ 	dwrq->length = (ev - extra);
+ 	dwrq->flags = 0;
+ 
+-	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", err);
++	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", err);
+ 	return err;
+ }
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-03 11:58:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-03 11:58:47.000000000 +0100
+@@ -38,7 +38,7 @@ static int assoc_helper_essid(struct lbs
+ 	              escape_essid(assoc_req->ssid, assoc_req->ssid_len));
+ 	if (assoc_req->mode == IW_MODE_INFRA) {
+ 		lbs_send_specific_ssid_scan(priv, assoc_req->ssid,
+-			assoc_req->ssid_len, 0);
++			assoc_req->ssid_len);
+ 
+ 		bss = lbs_find_ssid_in_list(priv, assoc_req->ssid,
+ 				assoc_req->ssid_len, NULL, IW_MODE_INFRA, channel);
+@@ -53,7 +53,7 @@ static int assoc_helper_essid(struct lbs
+ 		 *   scan data will cause us to join a non-existant adhoc network
+ 		 */
+ 		lbs_send_specific_ssid_scan(priv, assoc_req->ssid,
+-			assoc_req->ssid_len, 1);
++			assoc_req->ssid_len);
+ 
+ 		/* Search for the requested SSID in the scan table */
+ 		bss = lbs_find_ssid_in_list(priv, assoc_req->ssid,
+Index: wireless-testing/drivers/net/wireless/libertas/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/debugfs.c	2008-03-03 11:58:28.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/debugfs.c	2008-03-03 11:58:47.000000000 +0100
+@@ -164,173 +164,6 @@ out_unlock:
  	return ret;
  }
  
--static int lbs_cmd_802_11_rssi(struct lbs_private *priv,
--				struct cmd_ds_command *cmd)
+-static ssize_t lbs_extscan(struct file *file, const char __user *userbuf,
+-				  size_t count, loff_t *ppos)
 -{
+-	struct lbs_private *priv = file->private_data;
+-	ssize_t res, buf_size;
+-	union iwreq_data wrqu;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *)addr;
 -
--	lbs_deb_enter(LBS_DEB_CMD);
--	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
--	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
--
--	/* reset Beacon SNR/NF/RSSI values */
--	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = 0;
--	priv->SNR[TYPE_BEACON][TYPE_AVG] = 0;
--	priv->NF[TYPE_BEACON][TYPE_NOAVG] = 0;
--	priv->NF[TYPE_BEACON][TYPE_AVG] = 0;
--	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] = 0;
--	priv->RSSI[TYPE_BEACON][TYPE_AVG] = 0;
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_cmd_reg_access(struct lbs_private *priv,
- 			       struct cmd_ds_command *cmdptr,
- 			       u8 cmd_action, void *pdata_buf)
-@@ -1413,10 +1430,6 @@ int lbs_prepare_and_send_command(struct 
- 		ret = lbs_cmd_80211_ad_hoc_join(priv, cmdptr, pdata_buf);
- 		break;
- 
--	case CMD_802_11_RSSI:
--		ret = lbs_cmd_802_11_rssi(priv, cmdptr);
--		break;
--
- 	case CMD_802_11_AD_HOC_STOP:
- 		ret = lbs_cmd_80211_ad_hoc_stop(priv, cmdptr);
- 		break;
-Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-18 11:52:42.000000000 +0100
-@@ -51,15 +51,6 @@ void lbs_mac_event_disconnected(struct l
- 	kfree_skb(priv->currenttxskb);
- 	priv->currenttxskb = NULL;
- 	priv->tx_pending_len = 0;
--
--	/* reset SNR/NF/RSSI values */
--	memset(priv->SNR, 0x00, sizeof(priv->SNR));
--	memset(priv->NF, 0x00, sizeof(priv->NF));
--	memset(priv->RSSI, 0x00, sizeof(priv->RSSI));
--	memset(priv->rawSNR, 0x00, sizeof(priv->rawSNR));
--	memset(priv->rawNF, 0x00, sizeof(priv->rawNF));
--	priv->nextSNRNF = 0;
--	priv->numSNRNF = 0;
- 	priv->connect_status = LBS_DISCONNECTED;
- 
- 	/* Clear out associated SSID and BSSID since connection is
-@@ -248,36 +239,6 @@ static int lbs_ret_802_11_rate_adapt_rat
- 	return 0;
- }
- 
--static int lbs_ret_802_11_rssi(struct lbs_private *priv,
--				struct cmd_ds_command *resp)
--{
--	struct cmd_ds_802_11_rssi_rsp *rssirsp = &resp->params.rssirsp;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	/* store the non average value */
--	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->SNR);
--	priv->NF[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->noisefloor);
--
--	priv->SNR[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgSNR);
--	priv->NF[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgnoisefloor);
--
--	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] =
--	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_NOAVG],
--		     priv->NF[TYPE_BEACON][TYPE_NOAVG]);
--
--	priv->RSSI[TYPE_BEACON][TYPE_AVG] =
--	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_AVG] / AVG_SCALE,
--		     priv->NF[TYPE_BEACON][TYPE_AVG] / AVG_SCALE);
--
--	lbs_deb_cmd("RSSI: beacon %d, avg %d\n",
--	       priv->RSSI[TYPE_BEACON][TYPE_NOAVG],
--	       priv->RSSI[TYPE_BEACON][TYPE_AVG]);
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_ret_802_11_eeprom_access(struct lbs_private *priv,
- 				  struct cmd_ds_command *resp)
- {
-@@ -385,10 +346,6 @@ static inline int handle_cmd_response(st
- 		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
- 		break;
- 
--	case CMD_RET(CMD_802_11_RSSI):
--		ret = lbs_ret_802_11_rssi(priv, resp);
--		break;
--
- 	case CMD_RET(CMD_802_11_MAC_ADDRESS):
- 		ret = lbs_ret_802_11_mac_address(priv, resp);
- 		break;
-Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-18 12:05:30.000000000 +0100
-@@ -411,19 +411,21 @@ struct cmd_ds_802_11_rf_channel {
- };
- 
- struct cmd_ds_802_11_rssi {
--	/* weighting factor */
--	__le16 N;
-+	struct cmd_header hdr;
- 
-+	__le16 avg_factor;
- 	__le16 reserved_0;
- 	__le16 reserved_1;
- 	__le16 reserved_2;
- };
- 
- struct cmd_ds_802_11_rssi_rsp {
-+	struct cmd_header hdr;
-+
- 	__le16 SNR;
--	__le16 noisefloor;
-+	__le16 NF;
- 	__le16 avgSNR;
--	__le16 avgnoisefloor;
-+	__le16 avgNF;
- };
- 
- struct cmd_ds_802_11_mac_address {
-@@ -713,8 +715,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_802_11_rate_adapt_rateset rateset;
- 		struct cmd_ds_mac_multicast_adr madr;
- 		struct cmd_ds_802_11_ad_hoc_join adj;
--		struct cmd_ds_802_11_rssi rssi;
--		struct cmd_ds_802_11_rssi_rsp rssirsp;
- 		struct cmd_ds_802_11_disassociate dassociate;
- 		struct cmd_ds_802_11_mac_address macadd;
- 		struct cmd_ds_mac_reg_access macreg;
-Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-18 11:47:16.000000000 +0100
-@@ -621,9 +621,6 @@ void lbs_association_worker(struct work_
- 		if (success) {
- 			lbs_deb_assoc("associated to %s\n",
- 				print_mac(mac, priv->curbssparams.bssid));
--			lbs_prepare_and_send_command(priv,
--				CMD_802_11_RSSI,
--				0, CMD_OPTION_WAITFORRSP, 0, NULL);
- 		} else {
- 			ret = -1;
- 		}
-Index: wireless-testing/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-18 11:47:16.000000000 +0100
-@@ -487,8 +487,7 @@ static void lbs_tx_timeout(struct net_de
- 	   firmware has crapped itself -- rather than just a very
- 	   busy medium. So send a harmless command, and if/when
- 	   _that_ times out, we'll kick it in the head. */
--	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
--				     0, 0, NULL);
-+	lbs_get_rssi(priv, NULL, NULL);
- 
- 	lbs_deb_leave(LBS_DEB_TX);
- }
-@@ -908,8 +907,7 @@ int lbs_resume(struct lbs_private *priv)
- 
- 	/* Firmware doesn't seem to give us RX packets any more
- 	   until we send it some command. Might as well update */
--	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
--				     0, 0, NULL);
-+	lbs_get_rssi(priv, NULL, NULL);
- 
- 	netif_device_attach(priv->dev);
- 	if (priv->mesh_dev)
-Index: wireless-testing/drivers/net/wireless/libertas/scan.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-18 12:10:40.000000000 +0100
-@@ -1194,25 +1194,7 @@ static inline char *lbs_translate_scan(s
- 	if (iwe.u.qual.qual > 100)
- 		iwe.u.qual.qual = 100;
- 
--	if (priv->NF[TYPE_BEACON][TYPE_NOAVG] == 0) {
--		iwe.u.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
--	} else {
--		iwe.u.qual.noise = CAL_NF(priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+-	buf_size = min(count, len - 1);
+-	if (copy_from_user(buf, userbuf, buf_size)) {
+-		res = -EFAULT;
+-		goto out_unlock;
 -	}
 -
--	/* Locally created ad-hoc BSSs won't have beacons if this is the
--	 * only station in the adhoc network; so get signal strength
--	 * from receive statistics.
--	 */
--	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate
--	    && !lbs_ssid_cmp(priv->curbssparams.ssid,
--			     priv->curbssparams.ssid_len,
--			     bss->ssid, bss->ssid_len)) {
--		int snr, nf;
--		snr = priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE;
--		nf = priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE;
--		iwe.u.qual.level = CAL_RSSI(snr, nf);
--	}
-+	iwe.u.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
- 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_QUAL_LEN);
- 
- 	/* Add encryption capability */
-@@ -1369,11 +1351,6 @@ int lbs_get_scan(struct net_device *dev,
- 	if (priv->scan_channel)
- 		return -EAGAIN;
- 
--	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
--	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate)
--		lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
--					     CMD_OPTION_WAITFORRSP, 0, NULL);
+-	lbs_send_specific_ssid_scan(priv, buf, strlen(buf)-1, 0);
 -
- 	mutex_lock(&priv->lock);
- 	list_for_each_entry_safe (iter_bss, safe, &priv->network_list, list) {
- 		char *next_ev;
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-18 11:47:16.000000000 +0100
-@@ -34,6 +34,8 @@ int lbs_update_hw_spec(struct lbs_privat
- int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
- 		    struct cmd_ds_mesh_access *cmd);
- 
-+int lbs_get_rssi(struct lbs_private *priv, u16 *snr, u16 *nf);
-+
- int lbs_get_data_rate(struct lbs_private *priv);
- int lbs_set_data_rate(struct lbs_private *priv, u8 rate);
- 
-Index: wireless-testing/drivers/net/wireless/libertas/dev.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-18 11:47:16.000000000 +0100
-@@ -288,15 +288,6 @@ struct lbs_private {
- 	u8 wpa_ie[MAX_WPA_IE_LEN];
- 	u8 wpa_ie_len;
- 
--	/** Requested Signal Strength*/
--	u16 SNR[MAX_TYPE_B][MAX_TYPE_AVG];
--	u16 NF[MAX_TYPE_B][MAX_TYPE_AVG];
--	u8 RSSI[MAX_TYPE_B][MAX_TYPE_AVG];
--	u8 rawSNR[DEFAULT_DATA_AVG_FACTOR];
--	u8 rawNF[DEFAULT_DATA_AVG_FACTOR];
--	u16 nextSNRNF;
--	u16 numSNRNF;
+-	memset(&wrqu, 0, sizeof(union iwreq_data));
+-	wireless_send_event(priv->dev, SIOCGIWSCAN, &wrqu, NULL);
 -
- 	u8 radioon;
- 	u32 preamble;
- 
-Index: wireless-testing/drivers/net/wireless/libertas/join.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/join.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/join.c	2008-03-18 11:52:45.000000000 +0100
-@@ -752,14 +752,6 @@ int lbs_ret_80211_associate(struct lbs_p
- 	priv->curbssparams.ssid_len = bss->ssid_len;
- 	memcpy(priv->curbssparams.bssid, bss->bssid, ETH_ALEN);
- 
--	priv->SNR[TYPE_RXPD][TYPE_AVG] = 0;
--	priv->NF[TYPE_RXPD][TYPE_AVG] = 0;
--
--	memset(priv->rawSNR, 0x00, sizeof(priv->rawSNR));
--	memset(priv->rawNF, 0x00, sizeof(priv->rawNF));
--	priv->nextSNRNF = 0;
--	priv->numSNRNF = 0;
--
- 	netif_carrier_on(priv->dev);
- 	if (!priv->tx_pending_len)
- 		netif_wake_queue(priv->dev);
-Index: wireless-testing/drivers/net/wireless/libertas/wext.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-18 12:34:39.000000000 +0100
-@@ -821,6 +821,7 @@ static struct iw_statistics *lbs_get_wir
- 	u8 rssi;
- 	u32 tx_retries;
- 	struct cmd_ds_802_11_get_log log;
-+	u16 snr, nf;
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
-@@ -831,17 +832,11 @@ static struct iw_statistics *lbs_get_wir
- 	    (priv->mesh_connect_status != LBS_CONNECTED))
- 		goto out;
- 
--	/* Quality by RSSI */
--	priv->wstats.qual.level =
--	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_NOAVG],
--	     priv->NF[TYPE_BEACON][TYPE_NOAVG]);
-+	lbs_get_rssi(priv, &snr, &nf);
- 
--	if (priv->NF[TYPE_BEACON][TYPE_NOAVG] == 0) {
--		priv->wstats.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
--	} else {
--		priv->wstats.qual.noise =
--		    CAL_NF(priv->NF[TYPE_BEACON][TYPE_NOAVG]);
--	}
-+	/* Quality by RSSI */
-+	priv->wstats.qual.level = CAL_RSSI(snr, nf);
-+	priv->wstats.qual.noise = CAL_NF(nf);
- 
- 	lbs_deb_wext("signal level %#x\n", priv->wstats.qual.level);
- 	lbs_deb_wext("noise %#x\n", priv->wstats.qual.noise);
-@@ -893,9 +888,6 @@ static struct iw_statistics *lbs_get_wir
- 	priv->wstats.qual.updated = IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
- 	stats_valid = 1;
- 
--	/* update stats asynchronously for future calls */
--	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
--					0, 0, NULL);
- out:
- 	if (!stats_valid) {
- 		priv->wstats.miss.beacon = 0;
-Index: wireless-testing/drivers/net/wireless/libertas/rx.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/rx.c	2008-03-18 11:38:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/rx.c	2008-03-18 12:37:04.000000000 +0100
-@@ -39,99 +39,6 @@ static int process_rxed_802_11_packet(st
- 	struct sk_buff *skb);
- 
- /**
-- *  @brief This function computes the avgSNR .
-- *
-- *  @param priv    A pointer to struct lbs_private structure
-- *  @return 	   avgSNR
-- */
--static u8 lbs_getavgsnr(struct lbs_private *priv)
--{
--	u8 i;
--	u16 temp = 0;
--	if (priv->numSNRNF == 0)
--		return 0;
--	for (i = 0; i < priv->numSNRNF; i++)
--		temp += priv->rawSNR[i];
--	return (u8) (temp / priv->numSNRNF);
--
+-out_unlock:
+-	free_page(addr);
+-	return count;
 -}
 -
--/**
-- *  @brief This function computes the AvgNF
-- *
-- *  @param priv    A pointer to struct lbs_private structure
-- *  @return 	   AvgNF
-- */
--static u8 lbs_getavgnf(struct lbs_private *priv)
+-static void lbs_parse_bssid(char *buf, size_t count,
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg)
 -{
--	u8 i;
--	u16 temp = 0;
--	if (priv->numSNRNF == 0)
--		return 0;
--	for (i = 0; i < priv->numSNRNF; i++)
--		temp += priv->rawNF[i];
--	return (u8) (temp / priv->numSNRNF);
+-	char *hold;
+-	unsigned int mac[ETH_ALEN];
 -
+-	hold = strstr(buf, "bssid=");
+-	if (!hold)
+-		return;
+-	hold += 6;
+-	sscanf(hold, "%02x:%02x:%02x:%02x:%02x:%02x",
+-	       mac, mac+1, mac+2, mac+3, mac+4, mac+5);
+-	memcpy(scan_cfg->bssid, mac, ETH_ALEN);
 -}
 -
--/**
-- *  @brief This function save the raw SNR/NF to our internel buffer
-- *
-- *  @param priv    A pointer to struct lbs_private structure
-- *  @param prxpd   A pointer to rxpd structure of received packet
-- *  @return 	   n/a
-- */
--static void lbs_save_rawSNRNF(struct lbs_private *priv, struct rxpd *p_rx_pd)
+-static void lbs_parse_ssid(char *buf, size_t count,
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg)
 -{
--	if (priv->numSNRNF < DEFAULT_DATA_AVG_FACTOR)
--		priv->numSNRNF++;
--	priv->rawSNR[priv->nextSNRNF] = p_rx_pd->snr;
--	priv->rawNF[priv->nextSNRNF] = p_rx_pd->nf;
--	priv->nextSNRNF++;
--	if (priv->nextSNRNF >= DEFAULT_DATA_AVG_FACTOR)
--		priv->nextSNRNF = 0;
+-	char *hold, *end;
+-	ssize_t size;
+-
+-	hold = strstr(buf, "ssid=");
+-	if (!hold)
+-		return;
+-	hold += 5;
+-	end = strchr(hold, ' ');
+-	if (!end)
+-		end = buf + count - 1;
+-
+-	size = min((size_t)IW_ESSID_MAX_SIZE, (size_t) (end - hold));
+-	strncpy(scan_cfg->ssid, hold, size);
+-
 -	return;
 -}
 -
--/**
-- *  @brief This function computes the RSSI in received packet.
-- *
-- *  @param priv    A pointer to struct lbs_private structure
-- *  @param prxpd   A pointer to rxpd structure of received packet
-- *  @return 	   n/a
-- */
--static void lbs_compute_rssi(struct lbs_private *priv, struct rxpd *p_rx_pd)
+-static int lbs_parse_clear(char *buf, size_t count, const char *tag)
 -{
+-	char *hold;
+-	int val;
 -
--	lbs_deb_enter(LBS_DEB_RX);
+-	hold = strstr(buf, tag);
+-	if (!hold)
+-		return 0;
+-	hold += strlen(tag);
+-	sscanf(hold, "%d", &val);
 -
--	lbs_deb_rx("rxpd: SNR %d, NF %d\n", p_rx_pd->snr, p_rx_pd->nf);
--	lbs_deb_rx("before computing SNR: SNR-avg = %d, NF-avg = %d\n",
--	       priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
--	       priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
+-	if (val != 0)
+-		val = 1;
 -
--	priv->SNR[TYPE_RXPD][TYPE_NOAVG] = p_rx_pd->snr;
--	priv->NF[TYPE_RXPD][TYPE_NOAVG] = p_rx_pd->nf;
--	lbs_save_rawSNRNF(priv, p_rx_pd);
--
--	priv->SNR[TYPE_RXPD][TYPE_AVG] = lbs_getavgsnr(priv) * AVG_SCALE;
--	priv->NF[TYPE_RXPD][TYPE_AVG] = lbs_getavgnf(priv) * AVG_SCALE;
--	lbs_deb_rx("after computing SNR: SNR-avg = %d, NF-avg = %d\n",
--	       priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
--	       priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
--
--	priv->RSSI[TYPE_RXPD][TYPE_NOAVG] =
--	    CAL_RSSI(priv->SNR[TYPE_RXPD][TYPE_NOAVG],
--		     priv->NF[TYPE_RXPD][TYPE_NOAVG]);
--
--	priv->RSSI[TYPE_RXPD][TYPE_AVG] =
--	    CAL_RSSI(priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
--		     priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
--
--	lbs_deb_leave(LBS_DEB_RX);
+-	return val;
 -}
 -
--/**
-  *  @brief This function processes received packet and forwards it
-  *  to kernel/upper layer
-  *
-@@ -240,8 +147,6 @@ int lbs_process_rxed_packet(struct lbs_p
- 	if (priv->auto_rate)
- 		priv->cur_rate = lbs_fw_index_to_data_rate(p_rx_pd->rx_rate);
- 
--	lbs_compute_rssi(priv, p_rx_pd);
+-static int lbs_parse_dur(char *buf, size_t count,
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg)
+-{
+-	char *hold;
+-	int val;
 -
- 	lbs_deb_rx("rx data: size of actual packet %d\n", skb->len);
- 	priv->stats.rx_bytes += skb->len;
- 	priv->stats.rx_packets++;
-@@ -359,7 +264,7 @@ static int process_rxed_802_11_packet(st
- 	/* known values */
- 	radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
- 	/* XXX must check no carryout */
--	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
-+	radiotap_hdr.antsignal = CAL_RSSI(prxpd->snr, prxpd->nf);
- 	radiotap_hdr.rx_flags = 0;
- 	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
- 		radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
-@@ -386,8 +291,6 @@ static int process_rxed_802_11_packet(st
- 	if (priv->auto_rate)
- 		priv->cur_rate = lbs_fw_index_to_data_rate(prxpd->rx_rate);
- 
--	lbs_compute_rssi(priv, prxpd);
+-	hold = strstr(buf, "dur=");
+-	if (!hold)
+-		return 0;
+-	hold += 4;
+-	sscanf(hold, "%d", &val);
 -
- 	lbs_deb_rx("rx data: size of actual packet %d\n", skb->len);
- 	priv->stats.rx_bytes += skb->len;
- 	priv->stats.rx_packets++;
+-	return val;
+-}
+-
+-static void lbs_parse_type(char *buf, size_t count,
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg)
+-{
+-	char *hold;
+-	int val;
+-
+-	hold = strstr(buf, "type=");
+-	if (!hold)
+-		return;
+-	hold += 5;
+-	sscanf(hold, "%d", &val);
+-
+-	/* type=1,2 or 3 */
+-	if (val < 1 || val > 3)
+-		return;
+-
+-	scan_cfg->bsstype = val;
+-
+-	return;
+-}
+-
+-static ssize_t lbs_setuserscan(struct file *file,
+-				    const char __user *userbuf,
+-				    size_t count, loff_t *ppos)
+-{
+-	struct lbs_private *priv = file->private_data;
+-	ssize_t res, buf_size;
+-	struct lbs_ioctl_user_scan_cfg *scan_cfg;
+-	union iwreq_data wrqu;
+-	int dur;
+-	char *buf = (char *)get_zeroed_page(GFP_KERNEL);
+-
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	buf_size = min(count, len - 1);
+-	if (copy_from_user(buf, userbuf, buf_size)) {
+-		res = -EFAULT;
+-		goto out_buf;
+-	}
+-
+-	scan_cfg = kzalloc(sizeof(struct lbs_ioctl_user_scan_cfg), GFP_KERNEL);
+-	if (!scan_cfg) {
+-		res = -ENOMEM;
+-		goto out_buf;
+-	}
+-	res = count;
+-
+-	scan_cfg->bsstype = LBS_SCAN_BSS_TYPE_ANY;
+-
+-	dur = lbs_parse_dur(buf, count, scan_cfg);
+-	lbs_parse_bssid(buf, count, scan_cfg);
+-	scan_cfg->clear_bssid = lbs_parse_clear(buf, count, "clear_bssid=");
+-	lbs_parse_ssid(buf, count, scan_cfg);
+-	scan_cfg->clear_ssid = lbs_parse_clear(buf, count, "clear_ssid=");
+-	lbs_parse_type(buf, count, scan_cfg);
+-
+-	lbs_scan_networks(priv, scan_cfg, 1);
+-	wait_event_interruptible(priv->cmd_pending,
+-				 priv->surpriseremoved || !priv->scan_channel);
+-
+-	if (priv->surpriseremoved)
+-		goto out_scan_cfg;
+-
+-	memset(&wrqu, 0x00, sizeof(union iwreq_data));
+-	wireless_send_event(priv->dev, SIOCGIWSCAN, &wrqu, NULL);
+-
+- out_scan_cfg:
+-	kfree(scan_cfg);
+- out_buf:
+-	free_page((unsigned long)buf);
+-	return res;
+-}
+-
+-
+ /*
+  * When calling CMD_802_11_SUBSCRIBE_EVENT with CMD_ACT_GET, me might
+  * get a bunch of vendor-specific TLVs (a.k.a. IEs) back from the
+@@ -857,8 +690,6 @@ static struct lbs_debugfs_files debugfs_
+ 					write_file_dummy), },
+ 	{ "sleepparams", 0644, FOPS(lbs_sleepparams_read,
+ 				lbs_sleepparams_write), },
+-	{ "extscan", 0600, FOPS(NULL, lbs_extscan), },
+-	{ "setuserscan", 0600, FOPS(NULL, lbs_setuserscan), },
+ };
+ 
+ static struct lbs_debugfs_files debugfs_events_files[] = {
+Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-03 11:58:28.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-03 11:58:47.000000000 +0100
+@@ -579,6 +579,9 @@ static int lbs_get_range(struct net_devi
+ 	       range->num_bitrates);
+ 
+ 	range->num_frequency = 0;
++
++	range->scan_capa = IW_SCAN_CAPA_ESSID;
++
+ 	if (priv->enable11d &&
+ 	    (priv->connect_status == LBS_CONNECTED ||
+ 	    priv->mesh_connect_status == LBS_CONNECTED)) {
