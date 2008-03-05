@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45745 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58617 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbYCRJSU (ORCPT
+	with ESMTP id S1760160AbYCEJXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2008 05:18:20 -0400
-Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
-	a Phase 2 key
+	Wed, 5 Mar 2008 04:23:14 -0500
+Subject: Re: [PATCH] mac80211: fix hardware scan completion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Tomas Winkler <tomasw@gmail.com>,
+To: John Linville <linville@tuxdriver.com>
+Cc: Bill Moss <bmoss@CLEMSON.EDU>,
 	Reinette Chatre <reinette.chatre@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20080318080435.GA5308@jm.kir.nu>
-References: <1205751455.1614.25.camel@johannes.berg>
-	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
-	 <1205758276.1614.45.camel@johannes.berg>
-	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
-	 <1205761758.1614.79.camel@johannes.berg>
-	 <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com>
-	 <1205781593.16475.20.camel@johannes.berg>
-	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
-	 <1205784255.16475.33.camel@johannes.berg>
-	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
-	 <20080318080435.GA5308@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I2wJr/A+oj7jmSyxKK30"
-Date: Tue, 18 Mar 2008 10:18:00 +0100
-Message-Id: <1205831880.16475.43.camel@johannes.berg> (sfid-20080318_091824_352112_70C2438B)
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1204649676.25502.12.camel@johannes.berg> (sfid-20080304_165549_783589_88DE95F7)
+References: <1204649676.25502.12.camel@johannes.berg>
+	 (sfid-20080304_165549_783589_88DE95F7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4xI11eKFqE7+1GlM4voL"
+Date: Wed, 05 Mar 2008 10:22:49 +0100
+Message-Id: <1204708969.25502.35.camel@johannes.berg> (sfid-20080305_092407_574459_9F149C7B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-I2wJr/A+oj7jmSyxKK30
+--=-4xI11eKFqE7+1GlM4voL
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> At least the original d80211 design supported multiple SSIDs per BSS and
-> yes, as far as kernel code is concerned, this was done in the identical
-> way for both multi-SSID and dynamic-VLAN (RADIUS assigned). A new
-> virtual interface is added for both cases and STAs are bound to the
-> specific virtual interface based on MLME/RADIUS results.
->=20
-> However, I do not think I ever merged multi-SSID support into the open
-> source version of hostapd, so it is quite possible that only the
-> RADIUS-based VLAN assignment is currently used since multi-SSID support
-> is inferior to multi-BSS support for number of reasons. Anyway, that
-> does not change what mac80211 would support should one ever really want
-> to enable multi-SSID support with a single BSS. I don't see much need
-> for that, though, if one can use virtual BSSes.
+On Tue, 2008-03-04 at 17:54 +0100, Johannes Berg wrote:
+> The mac80211 MLME requires restarting timers after a scan
+> completes but this wasn't done when hardware scan offload
+> was added, so add it now.
 
-Ah. I guess that requires hiding the SSID though?
+hold off on this, I just realized it has a locking error.
 
 johannes
 
---=-I2wJr/A+oj7jmSyxKK30
+--=-4xI11eKFqE7+1GlM4voL
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR9+Ix6Vg1VMiehFYAQKxyQ//cB+SCvYro1q/VBmegjZtvkjZgWFNaJgN
-PB4jNcDdhQqJHEQAJLXu29iWNi5jq2gakyvdpQhTGCisGXx7xN8YeJ9xZ1uGhoAF
-QgKSEer/lwL7T4OUtlAZcl9pohhssM7/36wkSuo9cdgStFdNP/hzxJoY7rh4Opv3
-c+L2aN7idn4JveA58a63nJ8D2JjGvbE4xRK8v5uCpJ7Dpk2wBt+F54WcYMvnQ3JK
-k/GhAiyxeZP9Eq5LVKb1jzg3NAPCrlNPv7C7g7iKHtEcgg6RqB49BOSand/lpzmt
-rGlBsr+NWkfbME5J7gjPcWZ70K9ZK5ffTrJ66tS4JcSh0JiEpmfkjKeK1wyvOevE
-FQ74gUbTAzNm8QmTBEDWFg0nkXD6BnaCxyZhRfpwnSfl9TzlfO4XENmjBcVeeffW
-sKfp45z769sKC4LuYIX58LWrOpD9ULwR6aCHoyIn0B/flXUAvU+/maFnj92/SXw+
-+QzTv3CGpfBm+JnoGZ+8kUQZllcalMOZLRy8itIsxEXr7TqJ0dHfdVFaUZ3ivucs
-q0P9K80ZY5cjqwtsrV/p07jG00n8HlKIxE7BN57xnzvYcdvyd+Lkx0c6nOsWpjCI
-Aya16PHNIDXXuLy8Ld6lEc5ayhNfBP2yhIuS/avHW/AV98SNgUeUfXghnDTS/Uok
-bJCrfdDY6yM=
-=c8QY
+iQIVAwUAR85maKVg1VMiehFYAQLJqA/7BnAwQZZ40+5cCYH+pSIzqJFv1jx9kc7O
+Tzd/z8j7RCPNUesimWQrDYw6qfyfAA6qkNRlecHHOPxciwuvglJHKCoe7inrNq3d
+puMRlrhS7NH9w0t31pSZZcZAVBVcxKjZ98Ym1YtB+JmcUcVpWujJm1ZqQfRD5uEP
+ual8R+vfpJZ33dwe9Z8KR1dy1HPNQmHy8lyEZAEXtcieI3XLP5Y+kncPdMfd2NfY
+dJ2peLU6yp43ejWp6rkOrtKWEekEmx2AeEQMUqaVg7NLpVB/0UsN7bFpHGvPhcSl
+7C0aDyJodQYjGN9Q5IuBJ6KG+/AGsAk/GEkdywk9F+f+KojmFwhk2ajXK1wE+pt3
+bnjeXPo1rnmbq1YcKxmN+eILDD0/BgXe+JYJshy9glTOvS+dcRdtDI5u1eVHbtcP
+vpS0+oiXBOW9qubc9Rl7Qh96Cp+q/H9nTp11nTVbgdmlJbI0ah1MV+4J1d5ht+p8
+izcRgy6o6D2iFSeHQMz4j5qwzusV/rBQv/IWI+a6tkQPfWLtp5Eusajt6P3vQKeW
+HpC0kM4+VyP7Bs4dMogTsEOQdqKMuaNPTo1eRe/7/WizTAQT5RxeV9B4ue6V5RCA
+IjASGjItGoAUV1zxJDbaGPUGudYJaB1fprJWxjHz1Jw3ibMvgTzP7LLiQZP/eVzO
+VhrEA9AL5Jg=
+=DAv5
 -----END PGP SIGNATURE-----
 
---=-I2wJr/A+oj7jmSyxKK30--
+--=-4xI11eKFqE7+1GlM4voL--
 
