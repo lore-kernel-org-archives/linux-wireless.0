@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:47843 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757855AbYCZRbY (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.225]:63427 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759391AbYCEKAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 13:31:24 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so2431110rnb.15
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2008 10:31:22 -0700 (PDT)
-Message-ID: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com> (sfid-20080326_173128_280926_47E6E231)
-Date: Wed, 26 Mar 2008 13:31:22 -0400
-From: "John Goulah" <jgoulah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: problem with iwl4965 and kernel 2.6.24.4
+	Wed, 5 Mar 2008 05:00:45 -0500
+Received: by wr-out-0506.google.com with SMTP id 50so2002772wra.13
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 02:00:44 -0800 (PST)
+Message-ID: <c85cb4470803050200w6d981525w11688f0921867d5a@mail.gmail.com> (sfid-20080305_100048_108238_DC144A90)
+Date: Wed, 5 Mar 2008 12:00:42 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 05/11] mac80211: adding mac80211_tx_control_flags and HT flags
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Tomas Winkler" <tomas.winkler@intel.com>
+In-Reply-To: <1204710116.25502.48.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-5-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-6-git-send-email-reinette.chatre@intel.com>
+	 <1204710116.25502.48.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've installed the compat-wireless-2008-03-25 source and I can get the
-module to load, but the network card is still not recognized under
-ifconfig/iwconfig.
+> > Tx command can be a combination of any of these flags, along with
+> > bitrate represented by ieee80211_rate. this will allow legacy drivers to
+> > switch easily to any 11n rate representation.
+>
+> Looks good, but I wonder if there's any chance we'll see a generic rate
+> control algorithm use these flags? I.e. one not tied to Intel HW and
+> hidden in the iwlwifi subdir.
+>
+I sure hope so. the problem with current use of ieee80211_rates is
+since it is targeted for ABG rates you can have all rates ready in
+advance in the ieee80211_rates vector, but as soon an algorithm will
+need to move those rates to siso/mimo, 40 mhz, ect. each combination
+will multiple this vector, ending in a very big one. using the flags
+will allow any rate scaling algorithm to keep using current
+ieee80211_rates vector method, with any flags combination suitable.
 
-or under lspci:
- 06:00.0 Network controller: Intel Corporation Unknown device 4229 (rev 61)
-
-
-dmesg output on loading the module shows a problem registering the device:
-
-iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.2.26k
-iwl4965: Copyright(c) 2003-2008 Intel Corporation
-ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 18 (level, low) -> IRQ 18
-PCI: Setting latency timer of device 0000:06:00.0 to 64
-iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-phy0: Selected rate control algorithm 'iwl-4965-rs'
-phy0: Failed to initialize wep
-iwl4965: Failed to register network device (error -12)
-ACPI: PCI interrupt for device 0000:06:00.0 disabled
-iwl4965: probe of 0000:06:00.0 failed with error -12
-
-
-
-
-As a side issue, I tried to grab the source from the repo but I am not
-sure what I have to do to get that into a compilable state:
-
-compat-wireless-2.6$ make
-cat: /home/jgoulah/wdir/compat-wireless-2.6/compat-release: No such
-file or directory
-cat: /home/jgoulah/wdir/compat-wireless-2.6/compat-release: No such
-file or directory
-make -C /lib/modules/2.6.24.4-custom/build
-M=/home/jgoulah/wdir/compat-wireless-2.6 modules
-make[1]: Entering directory `/usr/src/linux-2.6.24.4'
-scripts/Makefile.build:41:
-/home/jgoulah/wdir/compat-wireless-2.6/drivers/misc/Makefile: No such
-file or directory
-make[3]: *** No rule to make target
-`/home/jgoulah/wdir/compat-wireless-2.6/drivers/misc/Makefile'.  Stop.
-make[2]: *** [/home/jgoulah/wdir/compat-wireless-2.6/drivers/misc] Error 2
-make[1]: *** [_module_/home/jgoulah/wdir/compat-wireless-2.6] Error 2
-make[1]: Leaving directory `/usr/src/linux-2.6.24.4'
-make: *** [modules] Error 2
-
-
-
-Any help is appreciated, if you need more info just let me know.
+ron
