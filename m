@@ -1,113 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49108 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58685 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758083AbYCTSjw (ORCPT
+	with ESMTP id S1758374AbYCEJmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 14:39:52 -0400
-Subject: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
+	Wed, 5 Mar 2008 04:42:10 -0500
+Subject: Re: [PATCH 05/11] mac80211: adding mac80211_tx_control_flags and
+	HT flags
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <20080320181310.GA17884@uranus.ravnborg.org>
-References: <1206023695.16475.137.camel@johannes.berg>
-	 <20080320181310.GA17884@uranus.ravnborg.org>
-Content-Type: text/plain
-Date: Thu, 20 Mar 2008 19:39:33 +0100
-Message-Id: <1206038373.16475.150.camel@johannes.berg> (sfid-20080320_184054_747922_6A264AF6)
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1204682972-26004-6-git-send-email-reinette.chatre@intel.com> (sfid-20080305_021129_007196_3EDE4B3E)
+References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-5-git-send-email-reinette.chatre@intel.com>
+	 <1204682972-26004-6-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20080305_021129_007196_3EDE4B3E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NWQzElo2LL4mNOjQviJQ"
+Date: Wed, 05 Mar 2008 10:41:56 +0100
+Message-Id: <1204710116.25502.48.camel@johannes.berg> (sfid-20080305_094215_689554_11546A0C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In many cases, especially in networking, it can be beneficial to
-know at compile time whether the architecture can do unaligned
-accesses. This patch introduces a new Kconfig symbol
-	ARCH_CAN_UNALIGNED_ACCESS
-for that purpose and adds it to the powerpc and x86 architectures.
-Also add some documentation about alignment and networking, and
-especially one intended use of this symbol.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Fixes thanks to Sam and Will.
+--=-NWQzElo2LL4mNOjQviJQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Documentation/unaligned-memory-access.txt |   32 +++++++++++++++++++++++++++---
- arch/Kconfig                              |    3 ++
- arch/powerpc/Kconfig                      |    1 
- arch/x86/Kconfig                          |    1 
- 4 files changed, 34 insertions(+), 3 deletions(-)
 
---- everything.orig/Documentation/unaligned-memory-access.txt	2008-03-20 15:30:38.000000000 +0100
-+++ everything/Documentation/unaligned-memory-access.txt	2008-03-20 19:38:30.000000000 +0100
-@@ -218,9 +218,35 @@ If use of such macros is not convenient,
- where the source or destination (or both) are of type u8* or unsigned char*.
- Due to the byte-wise nature of this operation, unaligned accesses are avoided.
- 
-+
-+Alignment vs. Networking
-+========================
-+
-+On architectures that require aligned loads, networking requires that the IP
-+header is aligned on a four-byte boundary to optimise the IP stack. For
-+regular ethernet hardware, the constant NET_IP_ALIGN is used, on most
-+architectures this constant has the value 2 because the normal ethernet
-+header is 14 bytes long, so in order to get proper alignment one needs to
-+DMA to an address that is can be expressed as 4*n + 2. One notable exception
-+here is powerpc which defines NET_IP_ALIGN to 0 because DMA to unaligned
-+addresses can be very expensive and dwarf the cost of unaligned loads.
-+
-+For some ethernet hardware that cannot DMA to unaligned addresses like
-+4*n+2 or non-ethernet hardware, this can be a problem, and it is then
-+required to copy the incoming frame into an aligned buffer. Because this is
-+unnecessary on architectures that can do unaligned accesses, the code can be
-+made depend on CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT like so:
-+
-+#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
-+	skb = original skb
-+#else
-+	skb = copy skb
-+#endif
-+
- --
--Author: Daniel Drake <dsd@gentoo.org>
-+Authors: Daniel Drake <dsd@gentoo.org>,
-+         Johannes Berg <johannes@sipsolutions.net>
- With help from: Alan Cox, Avuton Olrich, Heikki Orsila, Jan Engelhardt,
--Johannes Berg, Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock,
--Uli Kunitz, Vadim Lobanov
-+Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock, Uli Kunitz,
-+Vadim Lobanov
- 
---- everything.orig/arch/powerpc/Kconfig	2008-03-20 15:30:38.000000000 +0100
-+++ everything/arch/powerpc/Kconfig	2008-03-20 19:37:22.000000000 +0100
-@@ -91,6 +91,7 @@ config PPC
- 	select HAVE_OPROFILE
- 	select HAVE_KPROBES
- 	select HAVE_KRETPROBES
-+	select HAVE_UNALIGNED_ACCESS_SUPPORT
- 
- config EARLY_PRINTK
- 	bool
---- everything.orig/arch/x86/Kconfig	2008-03-20 15:30:38.000000000 +0100
-+++ everything/arch/x86/Kconfig	2008-03-20 19:38:08.000000000 +0100
-@@ -23,6 +23,7 @@ config X86
- 	select HAVE_KPROBES
- 	select HAVE_KRETPROBES
- 	select HAVE_KVM if ((X86_32 && !X86_VOYAGER && !X86_VISWS && !X86_NUMAQ) || X86_64)
-+	select HAVE_UNALIGNED_ACCESS_SUPPORT
- 
- 
- config GENERIC_LOCKBREAK
---- everything.orig/arch/Kconfig	2008-03-20 19:37:26.000000000 +0100
-+++ everything/arch/Kconfig	2008-03-20 19:37:34.000000000 +0100
-@@ -36,3 +36,6 @@ config HAVE_KPROBES
- 
- config HAVE_KRETPROBES
- 	def_bool n
-+
-+config HAVE_UNALIGNED_ACCESS_SUPPORT
-+	def_bool n
+On Tue, 2008-03-04 at 18:09 -0800, Reinette Chatre wrote:
+> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>=20
+> This patch makes enum from the defines previously dwelled inside
+> ieee80211_tx_control for better readability.
+> The patch also addes HT flags, for 802.11n drivers:
+> - IEEE80211_TXCTL_OFDM_HT: request low-level driver to use HT OFDM rates
+> - IEEE80211_TXCTL_GREEN_FIELD: use green field protection
+> - IEEE80211_TXCTL_DUP_DATA: duplicate data on both 20 Mhz channels
+> - IEEE80211_TXCTL_40_MHZ_WIDTH: send this frame in 40Mhz width
+> - IEEE80211_TXCTL_SHORT_GI: send this frame with short guard interval
+>=20
+> Tx command can be a combination of any of these flags, along with
+> bitrate represented by ieee80211_rate. this will allow legacy drivers to
+> switch easily to any 11n rate representation.
 
+Looks good, but I wonder if there's any chance we'll see a generic rate
+control algorithm use these flags? I.e. one not tied to Intel HW and
+hidden in the iwlwifi subdir.
+
+johannes
+
+--=-NWQzElo2LL4mNOjQviJQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR85q46Vg1VMiehFYAQJGjRAAhOQuYHT3jV47XoWkwNl5qiCFaucgfBBt
+nICU+2Ayt+j9whhG9gB5Xl2ZViN7iupDTdbF6oB7HNl8SUH+l2Xo0eee4cjOfuiN
+hbAxaHYgh1d8VOJ577aJ9IijdKZpP3WHZUeidOlM3xGmQPswdjFBdnFtEZY8MURY
+bS5E9CUjAb4ujvbblWcf//7ox99JlsDNrmHFbIhfJ3V/2VzqrM3Cp6gLfC7OB5ve
+ivgRZGL6z3NOXIWHHAip0n9fC8lIPYuUVtcK1jpTCzpQs1Y33zVAsLxOdTVFinan
+OlyytsUzAbKG/fPO/ee5D+82M2DfADe3L/VCDm5VXaC16j/l4N9cDwpn2dex3MD4
+f7uk78U6zW1UOHi/MwhQh6mmcnNJMhSPi7m5YKzixEseAu2QYJu897lUB1D7PWzc
+Az0dMCJ8spVC5Pfy9KKx1gGK5X8o/2B7y8LfRzO3MtVwA1ZrIdAvq1Y7gaHsIeN3
+S5tXVHYx8tqmrs/NGLKHpwYYB4lgx+/18vM8bnQq23AW6vHKyp2uK3lXMiNdM3Iu
+MhC1UxacgxS5Sj2cfKV2KIAbDxqxJDjNzt9g610LTqFBbNkICxPzlHlJY7nBNT6/
+EM7frT/46EzPRapWbZLlFcYt9im9vM5M1kLhggnzwFWZ1O+rWRXu9eXbdp6k1F9h
+EC9ZuA0/FkE=
+=lMca
+-----END PGP SIGNATURE-----
+
+--=-NWQzElo2LL4mNOjQviJQ--
 
