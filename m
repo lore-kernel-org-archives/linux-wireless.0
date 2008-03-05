@@ -1,71 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53479 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbYCLOcs (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.182]:54222 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755305AbYCEUxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 10:32:48 -0400
-Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	Stefan Assmann <sassmann@suse.de>
-In-Reply-To: <1205329351.32049.8.camel@localhost.localdomain>
-References: <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
-	 <1205310310.6387.56.camel@johannes.berg>
-	 <20080312182438.0B1F.40F06B3A@sm.sony.co.jp>
-	 <1205329351.32049.8.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9W97beiP99GOcA2OHURW"
-Date: Wed, 12 Mar 2008 15:31:28 +0100
-Message-Id: <1205332288.6387.58.camel@johannes.berg> (sfid-20080312_143256_070309_3580CC5E)
-Mime-Version: 1.0
+	Wed, 5 Mar 2008 15:53:13 -0500
+Received: by el-out-1112.google.com with SMTP id v27so2370069ele.17
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 12:53:13 -0800 (PST)
+Message-ID: <84ac67910803051253p7906314asc3cbdb740af5ba1c@mail.gmail.com> (sfid-20080305_205320_285221_F935DEC4)
+Date: Wed, 5 Mar 2008 20:53:11 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: B43 will not associate
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <1204741000.9378.6.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+	 <200803042047.35710.mb@bu3sch.de>
+	 <84ac67910803041413s510c5513k25f77762b0e70d@mail.gmail.com>
+	 <200803051517.31919.mb@bu3sch.de>
+	 <84ac67910803050734t1386a8edx39eb7133c909d9bb@mail.gmail.com>
+	 <1204741000.9378.6.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-9W97beiP99GOcA2OHURW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> > >           Cell 02 - Address: 00:0A:79:A5:D2:E2
-> > >                     ESSID:""
-> > >                     Channel:0
-> > >                     Encryption key:on
-> > >                     Mode:Master
-> > >                     Signal level=3D100/100 =20
->=20
-> Ewww.  You're 100% correct; we certainly shouldn't be sending a scan
-> result like this to userspace.  Therefore:
-
-I agree. Can you, however, tell whether the firmware has been fixed and
-only skip these for broken firmware?
-
-johannes
-
---=-9W97beiP99GOcA2OHURW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9fpP6Vg1VMiehFYAQK9ig/+ICwAed1c+9oes0tlhenkeQRFMPfsm/QX
-5P8askZRLd9MUdIAHHRBH2ugrBRYoaGqqXhpdqPItHMnpF2hthVu44N7ULbRrYY7
-Qt9VNcu6QbIqnkJIdjnCQD+FocNer20GitmeKzNR3+Lf9p8MRb4mIw5gssoD7scG
-l+vv+ImcHtM5ltFhNXO545qCosvl64u/b25bnt0BJ7RiutlzqpEyZP1s90Aq7ibu
-8FeCBBB+6tAlLu+XJnztcqXYM6uHCR8yqZp1MMr1vG9k6/VoCExDDkmxmoQbQu4I
-ChPT4Lg+uBNgWzJCwEEld1WiUue+7CksX8BKG+zn+LeTaWcystxygfVDvz4csVq3
-SbxqiOvA3EJ8tcFsqsmgFWhBDG0a9Y3lpRl6ipmRsP/5KSOQTfb1MoNbJYn4xjWu
-svYNSW+/Z2Pw+GssEyFg89RCDn9hyp72FZ8wmqaj+2PSI5rykQFVYbYfepbt5PBZ
-Lbya55QnoK+UDbNIUaaXmfj0c3kp88K/GIYcYn5JU1baDCJ7AWRoWoSpildYAc5b
-3KGs/85W4vy0oGpuC/9yrFru0rI3tWucfW3bKrHVuzjkJQBzNmUMuMvElks+Fezf
-Re/PnXU5A6+t2r9bJnComTSX+KX+EXL7YMSY33mRVE4I81mb+QsRwNYFvWCSRPDN
-Uo1LUnBzaQ4=
-=VDaT
------END PGP SIGNATURE-----
-
---=-9W97beiP99GOcA2OHURW--
-
+>  1) What's your wlan0?  What driver is it using?
+rt61pci. connected to same AP as i'm trying to get wlan1 to connect to.
+>  2) What's your wlan1?  What driver is it using?
+b43.
+>  3) Which interface are you having problems on?
+wlan1.
