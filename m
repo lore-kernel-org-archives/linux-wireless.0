@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from embla.aitel.hist.no ([158.38.50.22]:54764 "EHLO
-	embla.aitel.hist.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbYCEN66 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 08:58:58 -0500
-Message-ID: <47CEA5CB.6040001@aitel.hist.no> (sfid-20080305_135901_259199_4EABA6FE)
-Date: Wed, 05 Mar 2008 14:53:15 +0100
-From: Helge Hafting <helge.hafting@aitel.hist.no>
+Received: from mx2.mail.elte.hu ([157.181.151.9]:46615 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753691AbYCEMhE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 07:37:04 -0500
+Date: Wed, 5 Mar 2008 13:36:42 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Julia Lawall <julia@diku.dk>, Christopher Li <sparse@chrisli.org>,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Harvey Harrison <harvey.harrison@gmail.com>,
+	Alexander Viro <viro@ftp.linux.org.uk>,
+	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
+Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
+	use of ! and &
+Message-ID: <20080305123641.GA2365@elte.hu> (sfid-20080305_123709_646888_DAE91D9B)
+References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com> <20080305070201.GA32434@elte.hu> <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk> <20080305122010.GA999@elte.hu> <e2e108260803050430o317d3e0dyed50e86cc4569746@mail.gmail.com>
 MIME-Version: 1.0
-To: Joonwoo Park <joonwpark81@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
-References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com> <20080305094859.GA10077@ehus.geninetworks.com>
-In-Reply-To: <20080305094859.GA10077@ehus.geninetworks.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e2e108260803050430o317d3e0dyed50e86cc4569746@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joonwoo Park wrote:
-> On Wed, Mar 05, 2008 at 06:40:09PM +0900, Joonwoo Park wrote:
->   
->> resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
->>
->> The function ieee80211_ioctl_siwencode shouldn't be called if
->> authentication process is not completed.
->> This patch makes the ieee80211_ioctl_siwessid to wait for authentication
->> is completed.
->>
->> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
->>     
->
-> Helge,
->
-> Can you please try this patch?
-> I believe this patch helps your problem.
->   
-I tried it, and still have problems. The messages may be slightly different:
 
-I first bring up the interface with "ifconfig wlan0 up"
-and then try "iwconfig wlan0 essid my_essid key s:password"
-over and over till it works. This gave me:
+* Bart Van Assche <bart.vanassche@gmail.com> wrote:
 
-Initial auth_alg=0
-wlan0: authenticate with AP 00:14:1b:5e:13:40
-wlan0: authenticate with AP 00:14:1b:5e:13:40
-wlan0: authenticate with AP 00:14:1b:5e:13:40
-wlan0: authentication with AP 00:14:1b:5e:13:40 timed out
+> If someone writes (!x & !y) instead of (!x && !y) because both x and y 
+> have to be evaluated, this means that both x and y have side effects.
+> Please keep in mind that the C language does not specify whether x or 
+> y has to be evaluated first, so if x and y have to be evaluated in 
+> that order, an expression like (!x & !y) can be the cause of very 
+> subtle bugs. I prefer readability above brevity.
 
-A total of 5 tries went wrong. The sixth time it worked, with
-different messages and a different access point.
-(There are several access points at work.)
-Initial auth_alg=0
-wlan0: authenticate with AP 00:12:7f:ce:9c:e0
-wlan0: RX authentication from 00:12:7f:ce:9c:e0 (alg=0 transaction=2 
-status=0)
-wlan0: authenticated
-wlan0: associate with AP 00:12:7f:ce:9c:e0 (capab=0x431 status=0 aid=242)
-wlan0: associated
-wlan0: CTS protection enabled (BSSID=00:12:7f:ce:9c:e0)
-wlan0: switched to long barker preamble (BSSID=BSSID=00:12:7f:ce:9c:e0)
-wlan0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 burst=0
-wlan0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 burst=0
-wlan0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 burst=30
-wlan0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 burst=15
-wlan0: link becomes ready
+such expressions _must_ be written as:
 
+  ret1 = x();
+  ret2 = y();
 
-Only 6 attempts is an improvement, if it stays that way.  Still, the
-old ipw3945 succeeded on first try. :-/
-I hope the testing can be of help.
+  if (ret1 && ret2)
+	...
 
-Helge Hafting
+any side-effects are totally un-obvious when they are in expressions and 
+someone doing cleanups later on could easily change the '&' to '&&' and 
+introduce a bug.
 
-
-
+	Ingo
