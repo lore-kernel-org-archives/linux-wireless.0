@@ -1,44 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48045 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934239AbYCDXaf (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:39282 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754707AbYCEUuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 18:30:35 -0500
-Message-Id: <200803042326.m24NQGtr003314@imap1.linux-foundation.org> (sfid-20080304_233043_616380_25A4B8B8)
-Subject: [patch 10/10] WDEV: ath5k, typecheck on nonDEBUG
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	jirislaby@gmail.com, mcgrof@gmail.com, mickflemm@gmail.com
-From: akpm@linux-foundation.org
-Date: Tue, 04 Mar 2008 15:26:15 -0800
+	Wed, 5 Mar 2008 15:50:20 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1877176wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 12:50:18 -0800 (PST)
+Message-ID: <1ba2fa240803051250g344977f3l6126a179d4504268@mail.gmail.com> (sfid-20080305_205030_837738_F20965DE)
+Date: Wed, 5 Mar 2008 22:50:17 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Joonwoo Park" <joonwpark81@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1204744764.9378.49.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
+	 <1204710843.25502.50.camel@johannes.berg>
+	 <b25c3fa70803050310i71023046gc3f40d4042038ba6@mail.gmail.com>
+	 <1204715825.25502.69.camel@johannes.berg>
+	 <1204741740.9378.19.camel@localhost.localdomain>
+	 <1ba2fa240803051053j961bf68m605ca3b72cbf1b7b@mail.gmail.com>
+	 <1204744764.9378.49.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Slaby <jirislaby@gmail.com>
+On Wed, Mar 5, 2008 at 9:19 PM, Dan Williams <dcbw@redhat.com> wrote:
+>
+> On Wed, 2008-03-05 at 20:53 +0200, Tomas Winkler wrote:
+>  > On Wed, Mar 5, 2008 at 8:29 PM, Dan Williams <dcbw@redhat.com> wrote:
+>  > > On Wed, 2008-03-05 at 12:17 +0100, Johannes Berg wrote:
+>  > >  > > > This looks wrong. You could restart association when a key is set but
+>  > >  > > > really the race is by design in WEXT so the only way to fix it is to set
+>  > >  > > > the key first.
+>  > >  > > >
+>  > >  > >
+>  > >  > > Do you mean fix iwconfig to always do set key before set essid?
+>  > >  >
+>  > >  > Well, no, I think it's more of a user error, I always do
+>  > >  >    iwconfig enc ENC; iwconfig essid SSID
+>  > >  > in that order.
+>  > >  >
+>  > >  > > But, doing It cannot solve a race from two seperated iwconfig process, I think.
+>  > >  > > (eg: iwconfig essid ESSID; iwconfig enc ENC)
+>  > >  >
+>  > >  > Yeah, that's pretty ugly to start with.
+>  > >
+>  > >  See below for a partial solution; but even with nl80211/cfg80211, if you
+>  > >  have more than one process trying to control the wireless card
+>  > >  concurrently you have already lost.  Don't Do That.
+>  > >
+>  > >
+>  > >  > > Moreover, now we just wake auth request task up and return when setting essid.
+>  > >  > > Don't we need to wait a moment until the task is scheduled to be
+>  > >  > > polite to iwconifg? :)
+>  > >  >
+>  > >  > I think the only way to properly handle it is to reset the association
+>  > >  > state machine when a key is added. Dan, what's the expected behaviour?
+>  > >
+>  > >  The best way to implement the WEXT stuff is to have a timeout of about
+>  > >  500ms - 700ms or so to batch WEXT stuff together.  Each new WEXT command
+>  > >  that comes in before the timeout pushes the timeout back.  When the
+>  > >  timeout triggers, all the new commands are executed in the driver in the
+>  > >  order the driver expects.  That fixes most issues with chaining WEXT
+>  > >  commands and makes all of these Just Work:
+>  > >
+>  > >  iwconfig wlan0 essid foo key 253325353 open channel 11
+>  > >  iwconfig wlan0 key 253325353 open essid foo channel 11
+>  > >  iwconfig wlan0 channel 11 key 253325353 open essid foo
+>  > >
+>  > >  Later on if you issue just 'iwconfig wlan0 channel 6' the driver waits
+>  > >  500ms, the timeout triggers, and the driver changes to channel 6 and
+>  > >  starts the association process all over with the current settings (keys,
+>  > >  BSSID/SSID, bitrate, etc), and issues the SIOCGIWBSSID association event
+>  > >  on both success and failure.
+>  > >
+>  > >  If you just do 'iwconfig wlan0 rate 11' then of course the driver
+>  > >  doesn't need to trigger reassociation after the WEXT command timeout, it
+>  > >  just needs to lock the bitrate.
+>  > >
+>  > >  The _explicit_ triggers for association/reassociation are setting the
+>  > >  BSSID or the SSID.
+>  >
+>  > Currently there is a quite a mess that both BSSID and SSID triggers
+>  > association.
+>  > iwconfig essid AP1
+>  > iwconfig ap "00:....." - (bssid of myap)
+>  > iwconfig essid AP2
+>  >
+>  > what will be result of this? will it try to associate with AP1:BSSID
+>  > but AP2 SSID
+>
+>  In the current, not-timeout situation, the driver would probably attempt
+>  to associate to AP1/any, and be interrupted by the BSSID lock of the
+>  second command, and then try to associate to AP1/00:..., then be
+>  interrupted by the third command.
+>
+>  Then, it should fail if there is no BSSID "00:..." with an SSID of
+>  "AP2".  The user must clear the BSSID lock by doing 'iwconfig ap any'
+>  and then the driver is free to use any BSSID in it's scan list that
+>  matches SSID AP2 and security settings currently configured in the
+>  driver.
+>
+>  Remember, WEXT commands are _cumulative_ unless cleared by the user.
 
-At least type check the ATH5K_TRACE paramter on !ATH5K_DEBUG configs.
+It's mac80211 decision when to start association. I suggest to
+associate only on SSID command
+if someone wants to trigger BSSID association it would call SSID ANY
+call explicitly. This will definitely reduce the mess
+I'm seeing now.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+I'm using Fedora 8 for development and I'm still cannot figure what
+services are trying to access wireless
+devices but association is always failing because SSID is switched
+between authentication and association frames.
+It started to work a bit when I've disabled avahi and disabled dhcp on
+the device. (dhcp running after association is fine)
 
- drivers/net/wireless/ath5k/debug.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/net/wireless/ath5k/debug.h~wdev-ath5k-typecheck-on-nondebug drivers/net/wireless/ath5k/debug.h
---- a/drivers/net/wireless/ath5k/debug.h~wdev-ath5k-typecheck-on-nondebug
-+++ a/drivers/net/wireless/ath5k/debug.h
-@@ -171,7 +171,9 @@ ath5k_debug_printtxbuf(struct ath5k_soft
- 
- #else /* no debugging */
- 
--#define ATH5K_TRACE(_sc) /* empty */
-+#include <linux/compiler.h>
-+
-+#define ATH5K_TRACE(_sc) typecheck(struct ath5k_softc *, (_sc))
- 
- static inline void __attribute__ ((format (printf, 3, 4)))
- ATH5K_DBG(struct ath5k_softc *sc, unsigned int m, const char *fmt, ...) {}
-_
+
+
+
+Thanks
+Tomas
+
+>  Dan
+>
+>
+>
