@@ -1,33 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33562 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752650AbYC3Qtt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2008 12:49:49 -0400
-Subject: Re: rt2500pci, infinite calls to rt2x00mc_configure_filter
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Bas Hulsken <bhulsken@hotmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Adam Baker <linux@baker-net.org.uk>,
+Received: from vs166246.vserver.de ([62.75.166.246]:51761 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbYCESbT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 13:31:19 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+Date: Wed, 5 Mar 2008 19:30:14 +0100
+Cc: Joonwoo Park <joonwpark81@gmail.com>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1206894742.6450.13.camel@Bas>
-References: <1206801246.24689.19.camel@Bas>
-	 <loom.20080329T232927-720@post.gmane.org> <1206882945.4973.5.camel@Bas>
-	 <200803301527.34583.IvDoorn@gmail.com>  <1206894742.6450.13.camel@Bas>
-Content-Type: text/plain
-Date: Sun, 30 Mar 2008 18:49:44 +0200
-Message-Id: <1206895784.7752.5.camel@localhost> (sfid-20080330_175000_807375_1718AB73)
-Mime-Version: 1.0
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com> <1204741351.9378.11.camel@localhost.localdomain>
+In-Reply-To: <1204741351.9378.11.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803051930.14693.mb@bu3sch.de> (sfid-20080305_183123_764009_90467717)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-03-30 at 18:32 +0200, Bas Hulsken wrote:
-> I've made the dumps you've asked for; at least I think so:
-> '/debug/ieee80211/phy2/rt2500pci/frame/dump' as mentioned in the rt2wtap
-> doc does not exist for me, so I've captured from:
-> '/debug/ieee80211/phy1/rt2500pci/queue/dump' is that the new name or
-> something?
+On Wednesday 05 March 2008 19:22:31 Dan Williams wrote:
+> On Wed, 2008-03-05 at 18:40 +0900, Joonwoo Park wrote:
+> > resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
+> > 
+> > The function ieee80211_ioctl_siwencode shouldn't be called if
+> > authentication process is not completed.
+> > This patch makes the ieee80211_ioctl_siwessid to wait for authentication
+> > is completed.
+> > 
+> > Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+> > ---
+> >  net/mac80211/ieee80211_ioctl.c |   10 +++++++++-
+> >  1 files changed, 9 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+> > index 5024d37..55a29f6 100644
+> > --- a/net/mac80211/ieee80211_ioctl.c
+> > +++ b/net/mac80211/ieee80211_ioctl.c
+> > @@ -391,6 +391,7 @@ static int ieee80211_ioctl_siwessid(struct net_device *dev,
+> >  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+> >  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+> >  		int ret;
+> > +		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+> >  		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
+> >  			if (len > IEEE80211_MAX_SSID_LEN)
+> >  				return -EINVAL;
+> > @@ -405,8 +406,15 @@ static int ieee80211_ioctl_siwessid(struct net_device *dev,
+> >  		ret = ieee80211_sta_set_ssid(dev, ssid, len);
+> >  		if (ret)
+> >  			return ret;
+> > +
+> > +		set_bit(IEEE80211_STA_REQ_RUN, &sdata->u.sta.request);
+> > +
+> >  		ieee80211_sta_req_auth(dev, &sdata->u.sta);
+> > -		return 0;
+> > +
+> > +		ret = wait_event_interruptible_timeout(wq,
+> > +			!test_bit(IEEE80211_STA_REQ_RUN, &sdata->u.sta.request),
+> > +				HZ);
+> > +		return (ret == HZ) ? 0 : ret;
+> 
+> NAK; setting the SSID should never block for long; it _certainly_
+> shouldn't block waiting on other WEXT calls.  The association process
+> needs to be asynchronous.
 
-Yes. I need to update the documentation :-)
+Doesn't this also cause a RTNL-lock deadlock?
 
-Mattias
-
+-- 
+Greetings Michael.
