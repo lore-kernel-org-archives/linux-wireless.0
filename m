@@ -1,70 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:9218 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762708AbYCSUxX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 16:53:23 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so565536rnb.15
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 13:53:22 -0700 (PDT)
-Subject: [PATCH 2/5] mac80211: tkip.c remove unused function, make function
-	static
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Received: from mail.clemson.edu ([130.127.28.87]:50242 "EHLO CLEMSON.EDU"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758562AbYCEMzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 07:55:20 -0500
+Message-ID: <47CE9787.2050609@clemson.edu> (sfid-20080305_125544_553200_13237E40)
+Date: Wed, 05 Mar 2008 07:52:23 -0500
+From: Bill Moss <bmoss@CLEMSON.EDU>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Tue, 18 Mar 2008 14:28:35 -0700
-Message-Id: <1205875715.17607.21.camel@brick> (sfid-20080319_205432_972551_94092E07)
-Mime-Version: 1.0
+CC: John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH (RFT 2)] mac80211: fix hardware scan completion
+References: <1204711120.25502.56.camel@johannes.berg>
+In-Reply-To: <1204711120.25502.56.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-make static void ieee80211_tkip_gen_rc4key static
-remove the unused ieee80211_tkip_gen_phase1key
+Johannes, this patch passed all tests. As you say below, John please merge.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |   10 +---------
- net/mac80211/tkip.h |    4 ----
- 2 files changed, 1 insertions(+), 13 deletions(-)
+Bill Moss
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index a5745c1..f4b0c85 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -184,15 +184,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 	return pos;
- }
- 
--
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key)
--{
--	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv32, phase1key);
--}
--
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
-+static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 			       u8 *rc4key)
- {
- 	/* Calculate per-packet key */
-diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
-index 73d8ef2..944d5fa 100644
---- a/net/mac80211/tkip.h
-+++ b/net/mac80211/tkip.h
-@@ -15,10 +15,6 @@
- 
- u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 			   u8 iv0, u8 iv1, u8 iv2);
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key);
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
--			       u8 *rc4key);
- void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta);
+Johannes Berg wrote:
+> The mac80211 MLME requires restarting timers after a scan
+> completes but this wasn't done when hardware scan offload
+> was added, so add it now.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Bill Moss <bmoss@clemson.edu>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+> This is version of the patch with correct locking. Bill, please test
+> this. John, please merge if Bill says it's ok.
+>
+> Sorry, forgot to CC the mailing list.
+>
+>  net/mac80211/ieee80211_sta.c |   25 ++++++++++++++++++-------
+>  1 file changed, 18 insertions(+), 7 deletions(-)
+>
+> --- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-01 19:28:56.000000000 +0100
+> +++ everything/net/mac80211/ieee80211_sta.c	2008-03-05 10:56:31.000000000 +0100
+> @@ -3576,6 +3576,13 @@ static void ieee80211_send_nullfunc(stru
+>  }
+>  
+>
+> +static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+> +	    ieee80211_vif_is_mesh(&sdata->vif))
+> +		ieee80211_sta_timer((unsigned long)sdata);
+> +}
+> +
+>  void ieee80211_scan_completed(struct ieee80211_hw *hw)
+>  {
+>  	struct ieee80211_local *local = hw_to_local(hw);
+> @@ -3589,6 +3596,12 @@ void ieee80211_scan_completed(struct iee
+>  
+>  	if (local->sta_hw_scanning) {
+>  		local->sta_hw_scanning = 0;
+> +		/* Restart STA timer for HW scan case */
+> +		rcu_read_lock();
+> +		list_for_each_entry_rcu(sdata, &local->interfaces, list)
+> +			ieee80211_restart_sta_timer(sdata);
+> +		rcu_read_unlock();
+> +
+>  		goto done;
+>  	}
+>  
+> @@ -3615,14 +3628,12 @@ void ieee80211_scan_completed(struct iee
+>  		if (sdata->dev == local->mdev)
+>  			continue;
+>  
+> -		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+> -			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
+> -				ieee80211_send_nullfunc(local, sdata, 0);
+> -			ieee80211_sta_timer((unsigned long)sdata);
+> -		}
+> +		/* Tell AP we're back */
+> +		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
+> +		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
+> +			ieee80211_send_nullfunc(local, sdata, 0);
+>  
+> -		if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
+> -			ieee80211_sta_timer((unsigned long)sdata);
+> +		ieee80211_restart_sta_timer(sdata);
+>  
+>  		netif_wake_queue(sdata->dev);
+>  	}
+>
+>
+>
+>   
+
 -- 
-1.5.4.4.684.g0e08
-
+Bill Moss
+Alumni Distinguished Professor
+Mathematical Sciences
+Clemson University
 
