@@ -1,103 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42715 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755080AbYC0McK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 08:32:10 -0400
-Message-ID: <47EB9594.6030209@gmx.de> (sfid-20080327_123213_726149_FA3DD347)
-Date: Thu, 27 Mar 2008 13:39:48 +0100
-From: Florian Manschwetus <florianmanschwetus@gmx.de>
+Received: from wr-out-0506.google.com ([64.233.184.239]:39058 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752231AbYCEPtZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 10:49:25 -0500
+Received: by wr-out-0506.google.com with SMTP id 50so2226507wra.13
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 07:49:24 -0800 (PST)
+Message-ID: <84ac67910803050749u9ba4918yed0b79c80b254415@mail.gmail.com> (sfid-20080305_154943_831024_6DAC15EC)
+Date: Wed, 5 Mar 2008 15:49:22 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: B43 will not associate
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200803051517.31919.mb@bu3sch.de>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi (ipw3945) in compat-wireless
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms070908080301000101050402"
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+	 <200803042047.35710.mb@bu3sch.de>
+	 <84ac67910803041413s510c5513k25f77762b0e70d@mail.gmail.com>
+	 <200803051517.31919.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+Also the wpa_supplicant (v0.6.3) output:
 
---------------ms070908080301000101050402
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-
-on my 2.6.24 kernel, the compat wireless versions of 26.03.2008 and 27. 
-leading to absoulutely unusable wireless (scanning is unavailable so no 
-authentication could be performed) followed by system hangs/crashes.
-
-Florian
-
---------------ms070908080301000101050402
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
-BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
-MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
-dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
-hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
-25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
-TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
-5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
-SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
-byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
-gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
-MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
-dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
-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
-Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
-cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
-MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjcxMjM5
-NDhaMCMGCSqGSIb3DQEJBDEWBBTPSGkCjGSsnTqiPAfJmxTqUTKY3DBSBgkqhkiG9w0BCQ8x
-RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
-BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
-LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
-FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
-cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEAYjebeSBYv1ct6qvxu1Y9AOBNP5RC69nwmyOd7UC+SEY/s7aZkhWs6EMgIXJy
-aNayJfeMpch6xkvatIpDbG6B/AxLZ8LyQKfEIXKW40r17gVnnaWVrnRkt2qgtwc23GKTKUZu
-s7MnwyzkgWv2U7JK0YtwLB6HEU/2bzgT8rJkomxTljRBYj4w9RlzwAJmWHI3XBa65qTzkUb1
-eQ9xqnTNRWJgR8h+UXqXBPhr1vkIQze1mX7Lca+9NafLaPMB/PZVBEWPFp9yoR9utv1slw+1
-X6eiJp9mh7ZxmK5BoohhhX1uy53e878T5fVDBw1GtnFG/71N4R0lrjRwnHBkvUB7pwAAAAAA
-AA==
---------------ms070908080301000101050402--
+wpa_supplicant -Dwext -iwlan1 -c /etc/wpa_supplicant/wpa_supplicant.conf -dd
+Initializing interface 'wlan1' conf
+'/etc/wpa_supplicant/wpa_supplicant.conf' driver 'wext' ctrl_interface
+'N/A' bridge 'N/A'
+Configuration file '/etc/wpa_supplicant/wpa_supplicant.conf' ->
+'/etc/wpa_supplicant/wpa_supplicant.conf'
+Reading configuration file '/etc/wpa_supplicant/wpa_supplicant.conf'
+Line: 1 - start of a new network block
+ssid - hexdump_ascii(len=16):
+     4f 32 77 69 72 65 6c 65 73 73 46 34 31 32 41 32   O2wirelessF412A2
+key_mgmt: 0x4
+wep_key0 - hexdump(len=5): [REMOVED]
+wep_tx_keyidx=0 (0x0)
+priority=5 (0x5)
+auth_alg: 0x2
+Priority group 5
+   id=0 ssid='O2wirelessF412A2'
+Initializing interface (2) 'wlan1'
+Interface wlan1 set UP - waiting a second for the driver to complete
+initialization
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
+  capabilities: key_mgmt 0xf enc 0xf
+WEXT: Operstate: linkmode=1, operstate=5
+Own MAC address: 00:40:05:a1:d9:09
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_countermeasures
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - wpa_driver_wext_set_drop_unencrypted
+RSN: flushing PMKID list in the driver
+Setting scan request: 0 sec 100000 usec
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+Added interface wlan1
+Ignore event for foreign ifindex 9
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan1' added
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b06 len=12
+State: DISCONNECTED -> SCANNING
+Starting AP scan (broadcast SSID)
+Trying to get current scan results first without requesting a new scan
+to speed up initial association
+Received 268 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 5
+Try to find WPA-enabled AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   selected non-WPA AP 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2'
+Trying to associate with 00:90:d0:f2:ad:7b (SSID='O2wirelessF412A2'
+freq=2412 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+Overriding auth_alg selection: 0x2
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: clearing own WPA/RSN IE
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_key: alg=1 key_idx=0 set_tx=1 seq_len=0 key_len=5
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - portControl=ForceAuthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b1a len=32
+EAPOL: disable timer tick
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Received 268 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 5
+Try to find WPA-enabled AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   selected non-WPA AP 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2'
+Already associated with the selected AP.
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b1a len=32
+Authentication with 00:90:d0:f2:ad:7b timed out.
+Added BSSID 00:90:d0:f2:ad:7b into blacklist
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Received 268 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 5
+Try to find WPA-enabled AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   selected non-WPA AP 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2'
+Trying to associate with 00:90:d0:f2:ad:7b (SSID='O2wirelessF412A2'
+freq=2412 MHz)
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+Overriding auth_alg selection: 0x2
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: clearing own WPA/RSN IE
+No keys have been configured - skip key clearing
+wpa_driver_wext_set_key: alg=1 key_idx=0 set_tx=1 seq_len=0 key_len=5
+wpa_driver_wext_set_drop_unencrypted
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+Setting authentication timeout: 10 sec 0 usec
+EAPOL: External notification - portControl=ForceAuthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b1a len=32
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Received 568 bytes of scan results (2 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 5
+Try to find WPA-enabled AP
+0: 00:14:6c:ab:90:5a ssid='SKY25726' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+1: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:14:6c:ab:90:5a ssid='SKY25726' wpa_ie_len=22 rsn_ie_len=0 caps=0x11
+   skip - SSID mismatch
+1: 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2' wpa_ie_len=0 rsn_ie_len=0 caps=0x11
+   selected non-WPA AP 00:90:d0:f2:ad:7b ssid='O2wirelessF412A2'
+Already associated with the selected AP.
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b06 len=12
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b04 len=16
+RTM_NEWLINK: operstate=0 ifi_flags=0x1803 ([UP])
+Wireless event: cmd=0x8b1a len=32
+CTRL-EVENT-TERMINATING - signal 2 received
+Removing interface wlan1
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+ioctl[SIOCSIWENCODEEXT]: No such file or directory
+Driver did not support SIOCSIWENCODEEXT
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_countermeasures
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - No keys have been configured - skip key clearing
+Removed BSSID 00:90:d0:f2:ad:7b from blacklist (clear)
+Cancelling scan request
+Cancelling authentication timeout
+WEXT: Operstate: linkmode=0, operstate=6
