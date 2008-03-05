@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4784 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:34311 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757968AbYCYSHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 14:07:00 -0400
-Date: Tue, 25 Mar 2008 13:36:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: silently accept deletion of non-existant key
-Message-ID: <20080325173628.GA3026@tuxdriver.com> (sfid-20080325_180708_792698_7A42DE90)
-References: <1206459795-18167-1-git-send-email-linville@tuxdriver.com> <1206462125.16475.303.camel@johannes.berg> <20080325163751.GA19318@tuxdriver.com> <200803251812.45916.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200803251812.45916.mb@bu3sch.de>
+	id S1757064AbYCEV0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 16:26:50 -0500
+Subject: Re: B43 will not associate
+From: Dan Williams <dcbw@redhat.com>
+To: Ahmed Ammar <b33fc0d3@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <84ac67910803051253p7906314asc3cbdb740af5ba1c@mail.gmail.com>
+References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+	 <200803042047.35710.mb@bu3sch.de>
+	 <84ac67910803041413s510c5513k25f77762b0e70d@mail.gmail.com>
+	 <200803051517.31919.mb@bu3sch.de>
+	 <84ac67910803050734t1386a8edx39eb7133c909d9bb@mail.gmail.com>
+	 <1204741000.9378.6.camel@localhost.localdomain>
+	 <84ac67910803051253p7906314asc3cbdb740af5ba1c@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 05 Mar 2008 16:23:37 -0500
+Message-Id: <1204752217.17696.14.camel@localhost.localdomain> (sfid-20080305_212655_421782_4EA33E05)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 06:12:45PM +0100, Michael Buesch wrote:
-> On Tuesday 25 March 2008 17:37:51 John W. Linville wrote:
-> > On Tue, Mar 25, 2008 at 05:22:05PM +0100, Johannes Berg wrote:
-> > > 
-> > > On Tue, 2008-03-25 at 11:43 -0400, John W. Linville wrote:
-> > > > From: John W. Linville <linville@linville-t41.local>
-> > > > 
-> > > > Otherwise, 'iwconfig wlan0 key off' with no key set results in:
-> > > > 
-> > > > 	Error for wireless request "Set Encode" (8B2A) :
-> > > > 	    SET failed on device wlan0 ; No such file or directory.
-> > > 
-> > > And what is the problem with us telling iwconfig that there was no key?
-> > > You should argue for iwconfig ignoring that particular problem, but I
-> > > don't think we should do so in the kernel.
-> > 
-> > Why is it a problem?  How does it hurt anything?  How is it useful
-> > to return an error?
-> > 
-> > FWIW, other drivers seem to accept it.  I don't see why we need to
-> > complain.
-> 
-> Well, it makes sense to return an error in this case, but if common
-> practice is to ignore it in old WE based drivers, we should adhere to that
-> to preserve userspace ABI compatibility.
-> 
-> So the real question is: Is there any userspace program that relies on
-> this ABI detail?
+On Wed, 2008-03-05 at 20:53 +0000, Ahmed Ammar wrote:
+> >  1) What's your wlan0?  What driver is it using?
+> rt61pci. connected to same AP as i'm trying to get wlan1 to connect to.
+> >  2) What's your wlan1?  What driver is it using?
+> b43.
+> >  3) Which interface are you having problems on?
+> wlan1.
 
-That seems unlikely.  The only times I recall seeing this reported
-is when a mac80211-based driver is used.  If there was something
-depending on it, other drivers would be doing it, and I/we would see
-this "error" reported elsewhere.
+Ok; and you are _never_ able to associate with the AP with with wlan1,
+correct?
 
-FWIW, the iwconfig semantic is "disabling encryption", not "deleting
-the key".  Disabling encryption that is already disabled should be
-treated as a no-op, not as an error.
+Dan
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
