@@ -1,81 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758374AbYCEJmK (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:17175 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679AbYCEGC2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:42:10 -0500
-Subject: Re: [PATCH 05/11] mac80211: adding mac80211_tx_control_flags and
-	HT flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1204682972-26004-6-git-send-email-reinette.chatre@intel.com> (sfid-20080305_021129_007196_3EDE4B3E)
-References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
-	 <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
-	 <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
-	 <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
-	 <1204682972-26004-5-git-send-email-reinette.chatre@intel.com>
-	 <1204682972-26004-6-git-send-email-reinette.chatre@intel.com>
-	 (sfid-20080305_021129_007196_3EDE4B3E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NWQzElo2LL4mNOjQviJQ"
-Date: Wed, 05 Mar 2008 10:41:56 +0100
-Message-Id: <1204710116.25502.48.camel@johannes.berg> (sfid-20080305_094215_689554_11546A0C)
+	Wed, 5 Mar 2008 01:02:28 -0500
+Date: Tue, 4 Mar 2008 22:00:29 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	Michael =?ISO-8859-1?Q?B=FCker?= <m.bueker@berlin.de>,
+	linux-kernel@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	linville@tuxdriver.com
+Subject: Re: [Rt2400-devel] [PATCH] wireless: rt2x00: fix driver menu
+ indenting
+Message-Id: <20080304220029.1f152f00.randy.dunlap@oracle.com> (sfid-20080305_060257_176659_C86E3C38)
+In-Reply-To: <200802102003.25392.IvDoorn@gmail.com>
+References: <200802091623.06504.m.bueker@berlin.de>
+	<20080210105252.e0a433ee.randy.dunlap@oracle.com>
+	<200802102003.25392.IvDoorn@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 10 Feb 2008 20:03:25 +0100 Ivo van Doorn wrote:
 
---=-NWQzElo2LL4mNOjQviJQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-On Tue, 2008-03-04 at 18:09 -0800, Reinette Chatre wrote:
-> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> On Sunday 10 February 2008, Randy Dunlap wrote:
+> > On Sat, 9 Feb 2008 16:23:06 +0100 Michael B=FCker wrote:
+> >=20
+> > > 2) When selecting "Ralink driver support" (CONFIG_RT2X00), the ac=
+companying=20
+> > > drivers (CONFIG_RT2400PCI, CONFIG_RT61PC, ...) appear unindented.=
+ They should=20
+> > > be indented by four spaces.
+> >=20
+> > Yes, patch is below.
+> >=20
+> > ---
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> >=20
+> > Michael B=FCker <m.bueker@berlin.de> reports that the RT2x00 driver=
+s
+> > are not indented as they should be, so use proper dependencies to m=
+ake
+> > them be indented as expected.
+> >=20
+> > Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 >=20
-> This patch makes enum from the defines previously dwelled inside
-> ieee80211_tx_control for better readability.
-> The patch also addes HT flags, for 802.11n drivers:
-> - IEEE80211_TXCTL_OFDM_HT: request low-level driver to use HT OFDM rates
-> - IEEE80211_TXCTL_GREEN_FIELD: use green field protection
-> - IEEE80211_TXCTL_DUP_DATA: duplicate data on both 20 Mhz channels
-> - IEEE80211_TXCTL_40_MHZ_WIDTH: send this frame in 40Mhz width
-> - IEEE80211_TXCTL_SHORT_GI: send this frame with short guard interval
+> Ack-by: Ivo van Doorn <IvDoorn@gmail.com>
 >=20
-> Tx command can be a combination of any of these flags, along with
-> bitrate represented by ieee80211_rate. this will allow legacy drivers to
-> switch easily to any 11n rate representation.
+> ---
+> John,
+> Could you push this directly into wireless-2.6 and probably upstream =
+as well.
+>=20
+> Thanks.
+>=20
+> Ivo
 
-Looks good, but I wonder if there's any chance we'll see a generic rate
-control algorithm use these flags? I.e. one not tied to Intel HW and
-hidden in the iwlwifi subdir.
+John, do you have this patch queued somewhere?
 
-johannes
 
---=-NWQzElo2LL4mNOjQviJQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > ---
+> >  drivers/net/wireless/rt2x00/Kconfig |   16 ++++++++--------
+> >  1 file changed, 8 insertions(+), 8 deletions(-)
+> >=20
+> > --- linux-2.6.24-git21.orig/drivers/net/wireless/rt2x00/Kconfig
+> > +++ linux-2.6.24-git21/drivers/net/wireless/rt2x00/Kconfig
+> > @@ -11,18 +11,17 @@ config RT2X00
+> >  	  will also be created. That library (when the driver is built as
+> >  	  a module) will be called "rt2x00lib.ko".
+> > =20
+> > +if RT2X00
+> > +
+> >  config RT2X00_LIB
+> >  	tristate
+> > -	depends on RT2X00
+> > =20
+> >  config RT2X00_LIB_PCI
+> >  	tristate
+> > -	depends on RT2X00
+> >  	select RT2X00_LIB
+> > =20
+> >  config RT2X00_LIB_USB
+> >  	tristate
+> > -	depends on RT2X00
+> >  	select RT2X00_LIB
+> > =20
+> >  config RT2X00_LIB_FIRMWARE
+> > @@ -39,7 +38,7 @@ config RT2X00_LIB_RFKILL
+> > =20
+> >  config RT2400PCI
+> >  	tristate "Ralink rt2400 pci/pcmcia support"
+> > -	depends on RT2X00 && PCI
+> > +	depends on PCI
+> >  	select RT2X00_LIB_PCI
+> >  	select EEPROM_93CX6
+> >  	---help---
+> > @@ -58,7 +57,7 @@ config RT2400PCI_RFKILL
+> > =20
+> >  config RT2500PCI
+> >  	tristate "Ralink rt2500 pci/pcmcia support"
+> > -	depends on RT2X00 && PCI
+> > +	depends on PCI
+> >  	select RT2X00_LIB_PCI
+> >  	select EEPROM_93CX6
+> >  	---help---
+> > @@ -77,7 +76,7 @@ config RT2500PCI_RFKILL
+> > =20
+> >  config RT61PCI
+> >  	tristate "Ralink rt61 pci/pcmcia support"
+> > -	depends on RT2X00 && PCI
+> > +	depends on PCI
+> >  	select RT2X00_LIB_PCI
+> >  	select RT2X00_LIB_FIRMWARE
+> >  	select EEPROM_93CX6
+> > @@ -97,7 +96,7 @@ config RT61PCI_RFKILL
+> > =20
+> >  config RT2500USB
+> >  	tristate "Ralink rt2500 usb support"
+> > -	depends on RT2X00 && USB
+> > +	depends on USB
+> >  	select RT2X00_LIB_USB
+> >  	---help---
+> >  	  This is an experimental driver for the Ralink rt2500 wireless c=
+hip.
+> > @@ -106,7 +105,7 @@ config RT2500USB
+> > =20
+> >  config RT73USB
+> >  	tristate "Ralink rt73 usb support"
+> > -	depends on RT2X00 && USB
+> > +	depends on USB
+> >  	select RT2X00_LIB_USB
+> >  	select RT2X00_LIB_FIRMWARE
+> >  	---help---
+> > @@ -128,3 +127,4 @@ config RT2X00_DEBUG
+> >  	---help---
+> >  	  Enable debugging output for all rt2x00 modules
+> > =20
+> > +endif
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR85q46Vg1VMiehFYAQJGjRAAhOQuYHT3jV47XoWkwNl5qiCFaucgfBBt
-nICU+2Ayt+j9whhG9gB5Xl2ZViN7iupDTdbF6oB7HNl8SUH+l2Xo0eee4cjOfuiN
-hbAxaHYgh1d8VOJ577aJ9IijdKZpP3WHZUeidOlM3xGmQPswdjFBdnFtEZY8MURY
-bS5E9CUjAb4ujvbblWcf//7ox99JlsDNrmHFbIhfJ3V/2VzqrM3Cp6gLfC7OB5ve
-ivgRZGL6z3NOXIWHHAip0n9fC8lIPYuUVtcK1jpTCzpQs1Y33zVAsLxOdTVFinan
-OlyytsUzAbKG/fPO/ee5D+82M2DfADe3L/VCDm5VXaC16j/l4N9cDwpn2dex3MD4
-f7uk78U6zW1UOHi/MwhQh6mmcnNJMhSPi7m5YKzixEseAu2QYJu897lUB1D7PWzc
-Az0dMCJ8spVC5Pfy9KKx1gGK5X8o/2B7y8LfRzO3MtVwA1ZrIdAvq1Y7gaHsIeN3
-S5tXVHYx8tqmrs/NGLKHpwYYB4lgx+/18vM8bnQq23AW6vHKyp2uK3lXMiNdM3Iu
-MhC1UxacgxS5Sj2cfKV2KIAbDxqxJDjNzt9g610LTqFBbNkICxPzlHlJY7nBNT6/
-EM7frT/46EzPRapWbZLlFcYt9im9vM5M1kLhggnzwFWZ1O+rWRXu9eXbdp6k1F9h
-EC9ZuA0/FkE=
-=lMca
------END PGP SIGNATURE-----
-
---=-NWQzElo2LL4mNOjQviJQ--
-
+---
+~Randy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
