@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55887 "EHLO mx1.redhat.com"
+Received: from mgw1.diku.dk ([130.225.96.91]:37555 "EHLO mgw1.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758173AbYCSTnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:43:42 -0400
-Subject: Re: [PATCH] libertas: fix spinlock recursion bug
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803191524.21866.hs4233@mail.mn-solutions.de>
-References: <200803191524.21866.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 19 Mar 2008 11:02:46 -0400
-Message-Id: <1205938966.26119.37.camel@localhost.localdomain> (sfid-20080319_194519_562531_6C81A9A4)
-Mime-Version: 1.0
+	id S1751843AbYCEIz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 03:55:59 -0500
+Date: Wed, 5 Mar 2008 09:55:49 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Christopher Li <sparse@chrisli.org>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Harvey Harrison <harvey.harrison@gmail.com>,
+	Alexander Viro <viro@ftp.linux.org.uk>,
+	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
+Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
+ use of ! and &
+In-Reply-To: <20080305070201.GA32434@elte.hu>
+Message-ID: <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk> (sfid-20080305_085609_607150_5CE4DB10)
+References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
+ <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
+ <20080305070201.GA32434@elte.hu>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-19 at 15:24 +0100, Holger Schurig wrote:
-> This fixes a bug detected by CONFIG_DEBUG_SPINLOCK:
-> 
-> if_cs_get_int_status() is only called from lbs_thread(), via
-> priv->hw_get_int_status. However, lbs_thread() has already taken the
-> priv->driver_lock. So it's a fault to take the same lock again here.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+There are some legitimate uses of !x & y which are actually of the form !x 
+& !y, where x and y are function calls.  That is a not particularly 
+elegant way of getting both x and y to be evaluated and then combining the 
+results using "and".  If such code is considered acceptable, then perhaps 
+the sparse patch should be more complicated.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+julia
 
-> CONFIG_DEBUG_SPINLOCK,
-> ---
+> Al's patch is:
 > 
-> John, this patch might also go into linux-2.6.25-rcX
+> +                       if (op == '&' && expr->left->type == EXPR_PREOP &&
+> +                           expr->left->op == '!')
+> +                               warning(expr->pos, "dubious: !x & y");
 > 
-> Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-03-19 13:46:47.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-03-19 13:46:53.000000000 +0100
-> @@ -677,9 +677,7 @@ sbi_get_int_status_exit:
->  
->  	/* Card has a command result for us */
->  	if (*ireg & IF_CS_C_S_CMD_UPLD_RDY) {
-> -		spin_lock(&priv->driver_lock);
->  		ret = if_cs_receive_cmdres(priv, priv->upld_buf, &priv->upld_len);
-> -		spin_unlock(&priv->driver_lock);
->  		if (ret < 0)
->  			lbs_pr_err("could not receive cmd from card\n");
->  	}
-
+> i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
+> 
+> 	Ingo
+> 
