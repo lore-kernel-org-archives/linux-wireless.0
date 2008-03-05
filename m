@@ -1,122 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:37398 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308AbYCHJXG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2008 04:23:06 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1079741wah.23
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 01:23:05 -0800 (PST)
-Subject: [PATCH 3/5] mac80211: replace Mk16 helper with le16_to_cpup
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 08 Mar 2008 01:23:07 -0800
-Message-Id: <1204968187.23455.39.camel@brick> (sfid-20080308_092339_300656_E96B3B6F)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:13185 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756150AbYCECKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 21:10:14 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Guy Cohen <guy.cohen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 04/11] iwlwifi: 802.11n spec removes AUTO offset for FAT channel
+Date: Tue,  4 Mar 2008 18:09:25 -0800
+Message-Id: <1204682972-26004-5-git-send-email-reinette.chatre@intel.com> (sfid-20080305_021033_536617_CBFAC823)
+In-Reply-To: <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
+References: <1204682972-26004-1-git-send-email-reinette.chatre@intel.com>
+ <1204682972-26004-2-git-send-email-reinette.chatre@intel.com>
+ <1204682972-26004-3-git-send-email-reinette.chatre@intel.com>
+ <1204682972-26004-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Opencoded byte-swapping could just use the kernel helper.
+From: Guy Cohen <guy.cohen@intel.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+This patch adapts to 802.11 patch and remove AUTO offset for FAT
+channel
+
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/tkip.c |   47 ++++++++++++++++++++++-------------------------
- 1 files changed, 22 insertions(+), 25 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 +++-----
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    9 ++++-----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 ++++++++--
+ 3 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 90c11e7..9a36e83 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -60,13 +60,6 @@ static const u16 tkip_sbox[256] =
- 	0x82C3, 0x29B0, 0x5A77, 0x1E11, 0x7BCB, 0xA8FC, 0x6DD6, 0x2C3A,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 8b9c419..bb8f002 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4416,7 +4416,7 @@ static u8 iwl4965_is_channel_extension(struct iwl4965_priv *priv,
+ 	if (!is_channel_valid(ch_info))
+ 		return 0;
  
--
--static inline u16 Mk16(u8 x, u8 y)
--{
--	return ((u16) x << 8) | (u16) y;
--}
--
--
- static inline u8 Hi8(u16 v)
- {
- 	return v >> 8;
-@@ -107,20 +100,22 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
- 			       u16 *p1k)
- {
- 	int i, j;
-+	__le16 *leptr = (__le16 *)ta;
+-	if (extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_AUTO)
++	if (extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_NONE)
+ 		return 0;
  
- 	p1k[0] = Lo16(tsc_IV32);
- 	p1k[1] = Hi16(tsc_IV32);
--	p1k[2] = Mk16(ta[1], ta[0]);
--	p1k[3] = Mk16(ta[3], ta[2]);
--	p1k[4] = Mk16(ta[5], ta[4]);
-+	p1k[2] = le16_to_cpup(leptr++);
-+	p1k[3] = le16_to_cpup(leptr++);
-+	p1k[4] = le16_to_cpup(leptr++);
+ 	if ((ch_info->fat_extension_channel == extension_chan_offset) ||
+@@ -4433,7 +4433,7 @@ static u8 iwl4965_is_fat_tx_allowed(struct iwl4965_priv *priv,
  
-+	leptr = (__le16 *)tk;
- 	for (i = 0; i < PHASE1_LOOP_COUNT; i++) {
--		j = 2 * (i & 1);
--		p1k[0] += tkip_S(p1k[4] ^ Mk16(tk[ 1 + j], tk[ 0 + j]));
--		p1k[1] += tkip_S(p1k[0] ^ Mk16(tk[ 5 + j], tk[ 4 + j]));
--		p1k[2] += tkip_S(p1k[1] ^ Mk16(tk[ 9 + j], tk[ 8 + j]));
--		p1k[3] += tkip_S(p1k[2] ^ Mk16(tk[13 + j], tk[12 + j]));
--		p1k[4] += tkip_S(p1k[3] ^ Mk16(tk[ 1 + j], tk[ 0 + j])) + i;
-+		j = (i & 1);
-+		p1k[0] += tkip_S(p1k[4] ^ le16_to_cpup(leptr + 0 + j));
-+		p1k[1] += tkip_S(p1k[0] ^ le16_to_cpup(leptr + 2 + j));
-+		p1k[2] += tkip_S(p1k[1] ^ le16_to_cpup(leptr + 4 + j));
-+		p1k[3] += tkip_S(p1k[2] ^ le16_to_cpup(leptr + 6 + j));
-+		p1k[4] += tkip_S(p1k[3] ^ le16_to_cpup(leptr + 0 + j)) + i;
- 	}
- }
+ 	if ((!iwl_ht_conf->is_ht) ||
+ 	   (iwl_ht_conf->supported_chan_width != IWL_CHANNEL_WIDTH_40MHZ) ||
+-	   (iwl_ht_conf->extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_AUTO))
++	   (iwl_ht_conf->extension_chan_offset == IWL_EXT_CHANNEL_OFFSET_NONE))
+ 		return 0;
  
-@@ -130,6 +125,7 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
- {
- 	u16 ppk[6];
- 	int i;
-+	__le16 *leptr = (__le16 *)tk;
+ 	if (sta_ht_inf) {
+@@ -4478,9 +4478,7 @@ void iwl4965_set_rxon_ht(struct iwl4965_priv *priv, struct iwl_ht_info *ht_info)
+ 	case IWL_EXT_CHANNEL_OFFSET_BELOW:
+ 		rxon->flags |= RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK;
+ 		break;
+-	case IWL_EXT_CHANNEL_OFFSET_AUTO:
+-		rxon->flags &= ~RXON_FLG_CHANNEL_MODE_MIXED_MSK;
+-		break;
++	case IWL_EXT_CHANNEL_OFFSET_NONE:
+ 	default:
+ 		rxon->flags &= ~RXON_FLG_CHANNEL_MODE_MIXED_MSK;
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 4b3def3..de79816 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -798,11 +798,10 @@ struct iwl4965_kw {
+ #define IWL_OPERATION_MODE_MIXED    2
+ #define IWL_OPERATION_MODE_20MHZ    3
  
- 	ppk[0] = p1k[0];
- 	ppk[1] = p1k[1];
-@@ -138,23 +134,24 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
- 	ppk[4] = p1k[4];
- 	ppk[5] = p1k[4] + tsc_IV16;
+-#define IWL_EXT_CHANNEL_OFFSET_AUTO   0
+-#define IWL_EXT_CHANNEL_OFFSET_ABOVE  1
+-#define IWL_EXT_CHANNEL_OFFSET_       2
+-#define IWL_EXT_CHANNEL_OFFSET_BELOW  3
+-#define IWL_EXT_CHANNEL_OFFSET_MAX    4
++#define IWL_EXT_CHANNEL_OFFSET_NONE      0
++#define IWL_EXT_CHANNEL_OFFSET_ABOVE     1
++#define IWL_EXT_CHANNEL_OFFSET_RESERVE1  2
++#define IWL_EXT_CHANNEL_OFFSET_BELOW     3
  
--	ppk[0] += tkip_S(ppk[5] ^ Mk16(tk[ 1], tk[ 0]));
--	ppk[1] += tkip_S(ppk[0] ^ Mk16(tk[ 3], tk[ 2]));
--	ppk[2] += tkip_S(ppk[1] ^ Mk16(tk[ 5], tk[ 4]));
--	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
--	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
--	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
--	ppk[0] += ror16(ppk[5] ^ Mk16(tk[13], tk[12]), 1);
--	ppk[1] += ror16(ppk[0] ^ Mk16(tk[15], tk[14]), 1);
-+	ppk[0] += tkip_S(ppk[5] ^ le16_to_cpup(leptr++));
-+	ppk[1] += tkip_S(ppk[0] ^ le16_to_cpup(leptr++));
-+	ppk[2] += tkip_S(ppk[1] ^ le16_to_cpup(leptr++));
-+	ppk[3] += tkip_S(ppk[2] ^ le16_to_cpup(leptr++));
-+	ppk[4] += tkip_S(ppk[3] ^ le16_to_cpup(leptr++));
-+	ppk[5] += tkip_S(ppk[4] ^ le16_to_cpup(leptr++));
-+	ppk[0] += ror16(ppk[5] ^ le16_to_cpup(leptr++), 1);
-+	ppk[1] += ror16(ppk[0] ^ le16_to_cpup(leptr++), 1);
- 	ppk[2] += ror16(ppk[1], 1);
- 	ppk[3] += ror16(ppk[2], 1);
- 	ppk[4] += ror16(ppk[3], 1);
- 	ppk[5] += ror16(ppk[4], 1);
+ #define NRG_NUM_PREV_STAT_L     20
+ #define NUM_RX_CHAINS           (3)
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 2ed6937..b0f6044 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -7957,15 +7957,21 @@ static void iwl4965_ht_info_fill(struct ieee80211_conf *conf,
+ 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
+ 	iwl_conf->max_amsdu_size =
+ 		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
++
+ 	iwl_conf->supported_chan_width =
+ 		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
++	iwl_conf->extension_chan_offset =
++		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
++	/* If no above or below channel supplied disable FAT channel */
++	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
++	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
++		iwl_conf->supported_chan_width = 0;
++
+ 	iwl_conf->tx_mimo_ps_mode =
+ 		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+ 	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
  
-+	leptr = (__le16 *)tk;
- 	rc4key[0] = Hi8(tsc_IV16);
- 	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
- 	rc4key[2] = Lo8(tsc_IV16);
--	rc4key[3] = Lo8((ppk[5] ^ Mk16(tk[1], tk[0])) >> 1);
-+	rc4key[3] = Lo8((ppk[5] ^ le16_to_cpup(leptr)) >> 1);
- 
- 	for (i = 0; i < 6; i++) {
- 		rc4key[4 + 2 * i] = Lo8(ppk[i]);
+ 	iwl_conf->control_channel = ht_bss_conf->primary_channel;
+-	iwl_conf->extension_chan_offset =
+-		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
+ 	iwl_conf->tx_chan_width =
+ 		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
+ 	iwl_conf->ht_protection =
 -- 
-1.5.4.GIT
-
+1.5.3.4
 
