@@ -1,114 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51821 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753014AbYCQVLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 17:11:30 -0400
-Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
-	a Phase 2 key
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205761758.1614.79.camel@johannes.berg>
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
-	 <1205591906.15910.44.camel@johannes.berg>
-	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
-	 <1205747912.1614.19.camel@johannes.berg>
-	 <1ba2fa240803170320i4805e055ofebbbd9928a59354@mail.gmail.com>
-	 <1205751455.1614.25.camel@johannes.berg>
-	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
-	 <1205758276.1614.45.camel@johannes.berg>
-	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
-	 (sfid-20080317_133616_002306_499F1E28)  <1205761758.1614.79.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 17 Mar 2008 17:06:45 -0400
-Message-Id: <1205788005.9583.4.camel@localhost.localdomain> (sfid-20080317_220527_197898_D890D13E)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.242]:29964 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754511AbYCEAdD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2008 19:33:03 -0500
+Received: by an-out-0708.google.com with SMTP id d31so225207and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 16:33:02 -0800 (PST)
+Reply-To: <cs010101@gmail.com>
+From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Q) what's difference between ../net/ieee80211 and ../net/mac80211 ? 
+Date: Wed, 5 Mar 2008 09:32:55 +0900
+Message-ID: <001201c87e58$76d98d90$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080305_003308_883756_CB6A9BEA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ks_c_5601-1987
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-17 at 14:49 +0100, Johannes Berg wrote:
-> > >  Huh ok. But how would the WEP legacy station be able to determine that?
-> > 
-> > Legacy user get the key written on 'positit' yellow paper :).
-> 
-> Heh yeah.
-> 
-> > >  Or does it just try to use WEP and succeed? TBH, I was unaware that this
-> > >  existed, this does make it a bit more of a problem than I thought then.
-> > >
-> > 
-> > >  >
-> > >  > On second thought is that AP has only TX group key while STA has only
-> > >  > RX group key so I
-> > >  > m not seeing here any need for flag.
-> > >
-> > >  Hm, well, I didn't really want to require the driver to keep track of
-> > >  the current operating mode, so that's why I used 00:...:00 vs. FF:...:FF
-> > >  for the group keys.
-> > 
-> > Isn't if on integer faster then comparing 6 bytes?
-> 
-> Probably. Does it matter though? Setting keys isn't going to be
-> performance critical in any way.
-> 
-> > >  Is that really done though? I mean, does wpa_supplicant not also use
-> > >  encodeext for WEP keys?
-> > >
-> > Unfortunately yes.
-> 
-> So that doesn't really help us either way, no?
-> 
-> > First of all we don't need 4 keys per station but for the whole
-> > system. 
-> 
-> Not sure I understand this. You need pairwise (per-station) keys as well
-> as four default keys, no?
-> 
-> > Even in AP mode with multiple SSID meaning multiple security
-> > setting you cannot distinguish between networks in static WEP key
-> > setting so 4 is enough.
-> 
-> Not sure I get what you're thinking here.
-> 
-> > Beside that you need place holder for group key. They might be
-> > multiple groups key in case of multiple SSIDs in AP mode, iwlwifi
-> > doesn't support it in HW but in general it is possible.
-> 
-> Well, no, because we can add multiple keys with a zeroed MAC address,
-> since we have the local MAC address in there as well. Also, in an AP,
-> these are only used for TX so it doesn't matter since mac80211 does the
-> key selection completely on its own.
-> 
-> > We need a flag in set_key which says whether the WEP key is static or not.
-> 
-> Let's actually try to gather all the cases first.
-> 
-> Is this it?
-> 
->  * TKIP/CCMP/WEP group or pairwise key
->  * WEP legacy ('static') key
+in my case, chipset is an atheros and it used by mac80211, cfg80211.
 
-So the problem with this is, how does Dynamic WEP work here?  Dynamic
-WEP uses 802.1x/EAP to rekey stations periodically just like
-WPA[2]-Enterprise, but of courses uses WEP only.  It's not "static" WEP
-as you guys have been talking about it (you could call static WEP
-"WEP-PSK" if you like).
+so... what is differ from '../net/ieee80211 driver?
 
-The problem here is that with WEXT, there's not a good way to
-distinguish between the two.  Both static & dynamic WEP might look the
-same to the driver when the call comes through SIWENCODE/SIWENCODEEXT.
-So you've got to be careful here classifying all WEP key requests as
-static.
 
-Dan
+*^_^*
 
-> where the first is completely covered by what we have now and the
-> assumption is that if only WEP keys are present then it'll be a legacy
-> WEP key?
-> 
-> johannes
 
+thanks~
+
+
+--
+--
+Have a Wonderful Day~~!!
+=B1=E8=BF=B5=C8=AF (James-Youngwhan Kim)
+yhkim@corebell.co.kr
+cs010101@gmail.com
++82-42-863-0340
++82-10-6753-0987
+HTVC 3106 KAIST, 373-1 Guseong-dong, Yuseong-gu,
+Daejon,  Republic of Korea
+305-701
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
