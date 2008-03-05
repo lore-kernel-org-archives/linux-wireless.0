@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:37555 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843AbYCEIz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 03:55:59 -0500
-Date: Wed, 5 Mar 2008 09:55:49 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Christopher Li <sparse@chrisli.org>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Harvey Harrison <harvey.harrison@gmail.com>,
-	Alexander Viro <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
- use of ! and &
-In-Reply-To: <20080305070201.GA32434@elte.hu>
-Message-ID: <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk> (sfid-20080305_085609_607150_5CE4DB10)
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
- <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
- <20080305070201.GA32434@elte.hu>
+Received: from mail.gmx.net ([213.165.64.20]:35773 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1765778AbYCEXNA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 18:13:00 -0500
+Message-ID: <47CF28F2.6050509@gmx.at> (sfid-20080305_231328_405485_4CF10539)
+Date: Thu, 06 Mar 2008 00:12:50 +0100
+From: Franz Apeltauer <franz.apeltauer@gmx.at>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+References: <47CB3B5E.4020701@gmx.at> <1204504331.3917.31.camel@johannes.berg> <20080303035222.GP28995@ruslug.rutgers.edu>
+In-Reply-To: <20080303035222.GP28995@ruslug.rutgers.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some legitimate uses of !x & y which are actually of the form !x 
-& !y, where x and y are function calls.  That is a not particularly 
-elegant way of getting both x and y to be evaluated and then combining the 
-results using "and".  If such code is considered acceptable, then perhaps 
-the sparse patch should be more complicated.
+Luis R. Rodriguez schrieb:
+> Forced a new tarball out with new changes applied, would appreciate
+> some testing on 2.6.21, 2.6.22. You can get the tarball from the
+> usual place:
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
 
-julia
+Thank you very much!
+Now everything compiles fine on 2.6.22.
 
-> Al's patch is:
-> 
-> +                       if (op == '&' && expr->left->type == EXPR_PREOP &&
-> +                           expr->left->op == '!')
-> +                               warning(expr->pos, "dubious: !x & y");
-> 
-> i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
-> 
-> 	Ingo
-> 
+I cannot send you test results yet. It looks like I have to read some 
+more documentation first. For now I can only tell you this:
+
+a) Test on a PC with a Broadcom 4306 rev 03:
+- Downloaded and installed the firmware.
+- The module b43legacy loads without errors, but nothing else happens.
+   ifconfig doesn't show any new interface, like eth0 or wlan0.
+# modprobe b43legacy
+=> messages: Mar  5 23:14:02 af-nb-3 kernel: [10519.728000] Broadcom 
+43xx driver loaded [ Features: PID, Firmware-ID: FW10 ]
+=> dmesg: [10519.728000] Broadcom 43xx driver loaded [ Features: PID, 
+Firmware-ID: FW10 ]
+
+Maybe this is important: dmesg says "Firmware-ID: FW10", but there is no 
+ucode10.fw in /lib/firmware/b43legacy, only 2, 4, 5, 11 (downloaded 
+today, as described in the wiki).
+
+# lsmod | grep 43
+b43legacy             102040  0
+ssb                    36484  1 b43legacy
+mac80211              220020  1 b43legacy
+
+# lspci
+00:00.0 Host bridge: VIA Technologies, Inc. VT8378 [KM400/A] Chipset 
+Host Bridge
+00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
+00:09.0 Network controller: Broadcom Corporation BCM4306 802.11b/g 
+Wireless LAN Controller (rev 03)
+...
+
+
+b) Test on a PC with MSI PC54G2 ... RaLink rt2500
+You wrote "For now I'll disable rt2x00 in compat-wireless."
+So, the result of this test seems to be unimportant (it tried to load 
+the old driver).
+
+
+If you would like to see the output of any test, that I can do for you, 
+just let me know.
+
+Greetings,
+Franz
