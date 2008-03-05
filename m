@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:23981 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758905AbYCCUUf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 15:20:35 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so277416wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:35 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Fri, 29 Feb 2008 12:32:46 -0800
-Subject: [PATCH 04/10] mac80211: breakdown mesh network attributes in different extra fields for wext
-Message-ID: <47cc5d92.26d7720a.13e8.ffffad1b@mx.google.com> (sfid-20080303_202058_137732_FFE21D73)
+Received: from mgw1.diku.dk ([130.225.96.91]:49441 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932238AbYCEMfd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2008 07:35:33 -0500
+Date: Wed, 5 Mar 2008 13:35:29 +0100 (MET)
+From: Julia Lawall <julia@diku.dk>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Christopher Li <sparse@chrisli.org>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Harvey Harrison <harvey.harrison@gmail.com>,
+	Alexander Viro <viro@ftp.linux.org.uk>,
+	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
+Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
+ use of ! and &
+In-Reply-To: <20080305122010.GA999@elte.hu>
+Message-ID: <Pine.LNX.4.58.0803051331550.1188@pc-041.diku.dk> (sfid-20080305_123606_537033_55F034A6)
+References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
+ <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
+ <20080305070201.GA32434@elte.hu> <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk>
+ <20080305122010.GA999@elte.hu>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 5 Mar 2008, Ingo Molnar wrote:
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/ieee80211_sta.c |   35 ++++++++++++++++++++++++++---------
- 1 files changed, 26 insertions(+), 9 deletions(-)
+>
+> * Julia Lawall <julia@diku.dk> wrote:
+>
+> > There are some legitimate uses of !x & y which are actually of the
+> > form !x & !y, where x and y are function calls.  That is a not
+> > particularly elegant way of getting both x and y to be evaluated and
+> > then combining the results using "and".  If such code is considered
+> > acceptable, then perhaps the sparse patch should be more complicated.
+>
+> i tend to be of the opinion that the details in C source code should be
+> visually obvious and should be heavily simplified down from what is
+> 'possible' language-wise - with most deviations and complications that
+> depart from convention considered an error. I'd consider "!fn1() &
+> !fn2()" a borderline coding style violation in any case - and it costs
+> nothing to change it to "!fn1() && !fn2()".
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index c9d0018..75ced9a 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3976,18 +3976,35 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 	if (bss_mesh_cfg(bss)) {
- 		char *buf;
- 		u8 *cfg = bss_mesh_cfg(bss);
--		buf = kmalloc(200, GFP_ATOMIC);
-+		buf = kmalloc(50, GFP_ATOMIC);
- 		if (buf) {
- 			memset(&iwe, 0, sizeof(iwe));
- 			iwe.cmd = IWEVCUSTOM;
--			sprintf(buf, "Mesh network (version %d)\n"
--			"\t\t\tPath Selection Protocol ID: 0x%02X%02X%02X%02X\n"
--			"\t\t\tPath Selection Metric ID: 0x%02X%02X%02X%02X\n"
--			"\t\t\tCongestion Control Mode ID: 0x%02X%02X%02X%02X\n"
--			"\t\t\tChannel Precedence: 0x%02X%02X%02X%02X",
--			cfg[0], cfg[1], cfg[2], cfg[3], cfg[4], cfg[5], cfg[6],
--			cfg[7], cfg[8], cfg[9], cfg[10], cfg[11], cfg[12],
--			cfg[13], cfg[14], cfg[15], cfg[16]);
-+			sprintf(buf, "Mesh network (version %d)", cfg[0]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(current_ev, end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Path Selection Protocol ID: "
-+				"0x%02X%02X%02X%02X", cfg[1], cfg[2], cfg[3],
-+							cfg[4]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(current_ev, end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Path Selection Metric ID: "
-+				"0x%02X%02X%02X%02X", cfg[5], cfg[6], cfg[7],
-+							cfg[8]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(current_ev, end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Congestion Control Mode ID: "
-+				"0x%02X%02X%02X%02X", cfg[9], cfg[10],
-+							cfg[11], cfg[12]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(current_ev, end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Channel Precedence: "
-+				"0x%02X%02X%02X%02X", cfg[13], cfg[14],
-+							cfg[15], cfg[16]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
--- 
-1.5.2.5
+!fn1() && !fn2() does not have the same semantics as !fn1() & !fn2().  In
+!fn1() & !fn2() both function calls are evaluated.  In !fn1() && !fn2(),
+if !fn1() returns false then !fn2() is not evaluated.  I haven't studied
+the particular instances of fn2(), though, to know whether it makes a
+difference.
 
+One could instead do something like:
 
+x = fn1();
+y = fn2();
+if (!x && !y) ...
+
+It would certainly be clearer, but more verbose.
+
+julia
 
