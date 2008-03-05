@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59908 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091AbYCBU02 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45779
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1760540AbYCEBCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 15:26:28 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Date: Sun, 2 Mar 2008 21:25:15 +0100
-Cc: "Sam Ravnborg" <sam@ravnborg.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-References: <20080228014125.GI3078@tuxdriver.com> <20080302115828.GA15820@uranus.ravnborg.org> <97a0a9ac0803021200v117379b6x1c4bc0f8ae580040@mail.gmail.com>
-In-Reply-To: <97a0a9ac0803021200v117379b6x1c4bc0f8ae580040@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803022125.15933.mb@bu3sch.de> (sfid-20080302_202632_619000_41E0E082)
+	Tue, 4 Mar 2008 20:02:05 -0500
+Date: Tue, 04 Mar 2008 17:02:04 -0800 (PST)
+Message-Id: <20080304.170204.67410642.davem@davemloft.net> (sfid-20080305_010212_931445_51B9EC3B)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request (2nd try): wireless-2.6 2008-03-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080305002309.GD3158@tuxdriver.com>
+References: <20080304221641.GC3158@tuxdriver.com>
+	<20080304.143820.73008906.davem@davemloft.net>
+	<20080305002309.GD3158@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 02 March 2008 21:00:23 Gordon Farquharson wrote:
-> Hi Sam
-> 
-> On Sun, Mar 2, 2008 at 4:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
-> 
-> >  Find below a patch that detect when we do a cross build and thus ignore
-> >  the check.
-> 
-> Works for me.
-> 
-> Tested-by: Gordon Farquharson <gordonfarquharson@gmail.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 4 Mar 2008 19:23:09 -0500
 
-The patch looks good. I suggest Andrew pull it for some time into
-the -mm tree and then pushes it forward to Linus for 2.6.25.
+> On Tue, Mar 04, 2008 at 02:38:20PM -0800, David Miller wrote:
+> > From: "John W. Linville" <linville@tuxdriver.com>
+> > Date: Tue, 4 Mar 2008 17:16:41 -0500
+> > 
+> > > I'll fix it up and post a new request.
+> > 
+> > Thank you.
+> 
+> 2nd attempt, same as before except for the base...sorry about the
+> confusion!
 
-You can add an Acked-by: Michael Buesch <mb@bu3sch.de>
-although I can not runtime test it here.
-
--- 
-Greetings Michael.
+Pulled and pushed back out to net-2.6, thanks John!
