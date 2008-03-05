@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42562 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752403AbYCaMGq (ORCPT
+Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:51890 "EHLO
+	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757442AbYCEM3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 08:06:46 -0400
-Subject: Re: [PATCH] b43: Add PIO support for PCMCIA devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200803311116.47928.hs4233@mail.mn-solutions.de> (sfid-20080331_101947_283793_A475F480)
-References: <200803292101.16696.mb@bu3sch.de>
-	 <200803311116.47928.hs4233@mail.mn-solutions.de>
-	 (sfid-20080331_101947_283793_A475F480)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-s5thH2S/Y9uCp7DhFBfe"
-Date: Mon, 31 Mar 2008 14:06:42 +0200
-Message-Id: <1206965202.5468.20.camel@johannes.berg> (sfid-20080331_130650_171070_6A0395A6)
-Mime-Version: 1.0
+	Wed, 5 Mar 2008 07:29:03 -0500
+Message-ID: <47CE8E68.5060701@knosof.co.uk> (sfid-20080305_122915_937019_EEBFF4E6)
+Date: Wed, 05 Mar 2008 12:13:28 +0000
+From: Derek M Jones <derek@knosof.co.uk>
+MIME-Version: 1.0
+To: Ingo Molnar <mingo@elte.hu>
+CC: Harvey Harrison <harvey.harrison@gmail.com>,
+	Christopher Li <sparse@chrisli.org>,
+	Julia Lawall <julia@diku.dk>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Alexander Viro <viro@ftp.linux.org.uk>,
+	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
+Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
+ use of ! and &
+References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com> <20080305070201.GA32434@elte.hu> <1204700995.17484.7.camel@brick> <20080305081904.GA17789@elte.hu>
+In-Reply-To: <20080305081904.GA17789@elte.hu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+All,
 
---=-s5thH2S/Y9uCp7DhFBfe
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+>>> i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
+>>>
+>> Well, (!x & y) and (!x | y) are probably the two that might have been 
+>> intended otherwise.  (x & !y), (x | !y) are probably ok.
+> 
+> i think the proper intention in the latter cases is (x & ~y) and
+> (x | ~y).
+> 
+> My strong bet is that in 99% of the cases they are real bugs and && or 
+> || was intended.
 
+Developer knowledge of operator precedence and the issue of what
+they intended to write are interesting topics.  Some experimental
+work is described in (binary operators only I'm afraid):
 
-On Mon, 2008-03-31 at 11:16 +0200, Holger Schurig wrote:
-> > PIO is needed for 16bit PCMCIA devices, as we really don't
-> > want to poke with the braindead DMA mechanisms on PCMCIA
-> > sockets. Additionally, not all PCMCIA sockets do actually
-> > support DMA in 16bit mode (mine doesn't).
->=20
-> Does this mean there are b43 based compact flash cards available?
+www.knosof.co.uk/cbook/accu06a.pdf
+www.knosof.co.uk/cbook/accu07a.pdf
 
-Yes, for example this one which we have a few
-of: =EF=BB=BFhttp://www.summitdatacom.com/specifications.htm#SDC-CF10G_802.=
-11g_Compact_Flash_Module_with_Antenna_Connectors
+The ACCU 2006 experiment provides evidence that developer knowledge
+is proportional to the number of occurrences of a construct in
+source code, it also shows a stunningly high percentage of incorrect
+answers.
 
-johannes
+The ACCU 2007 experiment provides evidence that the names of the
+operands has a significant impact on operator precedence choice.
 
---=-s5thH2S/Y9uCp7DhFBfe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I wonder what kind of names are used as the operand of unary
+operators?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I would expect the ~ operator to have a bitwise name, but the
+! operator might have an arithmetic or bitwise name.
 
-iQIVAwUAR/DT0aVg1VMiehFYAQKM8A//b71fPDHrVCDBDYQc7urq2lR4oRk0uova
-gnQQJss2dWltp+borzhIUNh3hmXI6LPR2CmwGsOwRok3CZ1Ptp62Dx97K3ND2x2C
-dneT68VHxVaZxDHl77QaY7puX/n4/maNit1r10z83d3FfhmPC3nORp36j/sa0Qjx
-bnIeP9bH2LfIA1cwxpMX6pmbAO6s0wSMORQuzkOgH+N4hMatteqetPtPk5Zshb0Q
-wq8WzoceoWDtb9CfmAlL92lABnrYozkqnrh4MN6xJx8RJt2aBGcku9DIP0q409Nj
-uvjwiDfL7aVxWS0715vAASZ+2MgEE/fzUc4d+71c04WLJYP6nzuonBPpmkp0a17E
-4TBr2KNBkwV3OiYI7UiEuW/Pwd45O++/KFGshASS3ARrEYeu/nzw4DSILdT94o/l
-ORvVyYxOP+7cs/Kjyjh/L/uiI3cwuxsO4hkMbc2ygZKq2nZXhjA2Fe25TL+v0Kee
-ClGERRHIiW8kK/0mdIPoL2jNH2uWI4WPpDr7EqMpQPAeUoOiWuOZBDEkZuHAkxWS
-zntp4nPrAp7cx/pQWlf2BtbFw2/7FGi5QmT5jvmG5nJlfnfC639y9Zhq+2AgFfLz
-OBFLmSGENd0GLdFij/uwqWWUviqSaR3zkHn39XJ5jjYtpMBIl6Xg3MbJmr/7x+ey
-gSwCB9wxx+g=
-=NNCQ
------END PGP SIGNATURE-----
-
---=-s5thH2S/Y9uCp7DhFBfe--
-
+-- 
+Derek M. Jones                              tel: +44 (0) 1252 520 667
+Knowledge Software Ltd                      mailto:derek@knosof.co.uk
+Applications Standards Conformance Testing    http://www.knosof.co.uk
