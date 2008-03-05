@@ -1,191 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbYCTNLZ (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:40221 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752134AbYCECcr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 09:11:25 -0400
-Subject: Re: [PATCH 4/7 V2] mac80211: get a TKIP phase key from skb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1206018403-8308-2-git-send-email-tomas.winkler@intel.com>
-References: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
-	 <1206018403-8308-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6p9/AyZgNjOQko2IdWVF"
-Date: Thu, 20 Mar 2008 14:11:07 +0100
-Message-Id: <1206018667.16475.107.camel@johannes.berg> (sfid-20080320_131129_125602_7246D1E8)
-Mime-Version: 1.0
+	Tue, 4 Mar 2008 21:32:47 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC] Linux central regulatory domain agent - next stage
+Date: Wed, 5 Mar 2008 11:32:23 +0900
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux kernel" <linux-kernel@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Jouni Malinen" <j@w1.fi>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Sam Leffler" <sam@errno.com>, "Dan Williams" <dcbw@redhat.com>,
+	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
+	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Jean Tourrilhes" <jt@hpl.hp.com>
+References: <43e72e890802261555i37d8f470q9ac16df8140740fe@mail.gmail.com>
+In-Reply-To: <43e72e890802261555i37d8f470q9ac16df8140740fe@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803051132.24020.bruno@thinktube.com> (sfid-20080305_023308_122139_53430875)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 27 February 2008 08:55:50 Luis R. Rodriguez wrote:
+> I'd like to request for review and advice for the central regulatory
+> domain agent (CRDA) we have been working towards in the Linux 802.11
+> subsystem. I'm including linux-kernel in hopes of a wider review.
+> Particularly I'd like advice on the best path we can take for the
+> userspace agent which *could* eventually be required upon userspace,
+> meaning *most* distributions will package it if they want decent
+> regulatory 802.11 support. But first let me begin with a brief
+> overview of the concept of a CRDA, the case for it, and patches
+> submitted and reviewed so far.
+>
+> * Central regulatory domain agents - a case for it
+>
+> Contrary to all other drivers in the different subsystems in the
+> kernel, 802.11 drivers have local regulatory laws to take into
+> consideration for operation. To this day, due mainly to certification
+> requirements, vendors have taken it upon themselves to make their
+> hardware adhere to all regulatory regions their devices will be sold
+> in. These requirements are now implemented in software on the host
+> driver or firmware of the device. The reason for this is to enable the
+> design of one 802.11 chipset with capabilities to operate in different
+> geographical regions to reduce the cost of manufacturing, bring down
+> the price of the products sold, and allow users to make use of their
+> 802.11 devices in different countries they may go to. Another shift in
+> market trends we are seeing is that of vendors moving away from a
+> FullMAC [1] design model to a SoftMAC [2] design model for most their
+> 802.11 chipsets; development-wise this means the drivers receive raw
+> 802.11 frames instead of Ethernet frames and hence the need for
+> mac80211, which provides a driver API to such type of devices and
+> implements a basic STA MLME [3] in-kernel. Some SoftMAC devices also
+> require complete regulatory control within the host driver. Some of
+> these drivers end up implementing their own regulatory domain control
+> and data structures. Except for the vendor-specific components of the
+> code, usually frequency, power values and sometimes regulatory domain
+> values, all of this code can instead be centralized as part of he
+> 802.11 subsystem and shared amongst all the 802.11 drivers. This code
+> sharing would provide a centralized regulatory domain control for
+> devices which require regulatory domain control on the host, and
+> additionally provide *enhanced effort* on our part in the operating
+> system for compliance to local regulatory laws for devices which may
+> have *out-of-date rules* or *buggy* regulatory domain control code.
+>
+> The above just addresses the present. What lies ahead for wireless
+> seems to be making wireless devices smarter, more interoperable, but
+> always compliant to local regulatory laws. Software Defined Radios
+> (SDRs) [4] are a breed of wireless devices which are under the horizon
+> and depending on the definition of an SDR used, can be considered to
+> already be used and sold in the 802.11 market. Regulatory laws on SDR
+> are relatively new and are still under review and vary depending upon
+> geographical region. For example, the "The Software Freedom Law Center
+> (SFLC) has examined the Federal Communication Commission's (FCC)
+> rules", which when into into effect on July 6, 2007, "governing
+> Software Defined Radio (SDR) devices and concluded that the rules do
+> not restrict the activities of independent developers and distributors
+> of Free and Open Source Software (FOSS) designed for use with SDR
+> devices." [5] It also found that the "FCC's SDR rules create an
+> opportunity for wireless hardware manufacturers, the FOSS community,
+> and the FCC to communicate openly and productively about the ability
+> of public disclosure and open standards to strengthen the security and
+> robustness of wireless devices." With this in mind I think it is
+> important to try to help the vendors achieve compliance with local
+> regulatory laws and still remain compliant by supporting FOSS. Its
+> arguable if this is possible or not, but let us please not get into
+> this now; what I believe is more important is that we pave the way for
+> the best technology possible for regulatory rules for 802.11 and also
+> SDRs. A strong CRDA goes hand-in-hand with advancing SDRs as the
+> attributes can be expanded as the technology does -- more modulations
+> supported, different bands added, and so forth. Additionally a
+> Frequency Broker [6] (note: this link is old and needs some updating
+> but has the general idea) can later be added to register frequencies,
+> power level, modulations which each wireless device present on a host
+> is using to help with interoperability.
+>
+> A CRDA together with a Frequency Broker can therefore eliminate
+> redundant regulatory domain code on host drivers, provide a convenient
+> mechanism to update regulatory rules, and enhance interoperability
+> between different type of wireless devices.
+>
+> * Implementation of the CRDA
+>
+> I posted my first series on October of 2006 [7] however the first
+> series stuffed everything into the kernel, the data structures were
+> overly complex, and no solid integration with mac80211 (d80211 then)
+> was provided [8]. The second series, posted on September of 2007 [9],
+> still left everything in the kernel, was more simplified and had
+> integration with mac80211 and cfg80211, additionally zd1211rw was
+> ported to the new framework and tested. After some discussion one the
+> lists and IRC it was determined we should just move the database of
+> regulatory domains into userspace and have just one regulatory domain
+> defined in kernel space at a time. Userspace can then pass to kernel
+> space a regulatory domain via the new nl80211. 802.11 devices can then
+> register with cfg80211 its hardware capabilities and only allowed
+> "channels" will be enabled, all others will be disabled. We can keep
+> two standard regulatory domains in kernel space, however: a world
+> regulatory domain which is a common denominator of all regulatory law
+> -- its basically FCC with relaxed power requirements and no 5 GHz
+> communication -- and a debug regulatory domain which enables
+> everything.
+>
+> The regulatory domain used on the 802.11 subsystem will reflect the
+> user's latest selected preference if one is set (this will override
+> all settings), an 802.11 card's EEPROM reading, or country defined by
+> an 802.11d country information element broadcast by a local access
+> point (depending upon configuration and preferences).
+>
+> * Request for advice:
+>
+> cfg80211 can take the "installed" regulatory domain and only enable
+> power settings / frequency settings dependent upon current defined
+> regulatory rules. But in order to install a regulatory domain into the
+> kernel we need userspace to upload it via nl80211. This is easily
+> accomplished once userspace has one defined via structures defined in
+> nl80211 for a regulatory domain. Regulatory domain rules vary,
+> however, and I expect users to contribute on expanding the rules to be
+> as accurate as possible. As such it *is* expected that as time goes by
+> userspace will have rules updated, attributes added (will go
+> hand-in-hand with nl80211 updates), or completely new regulatory
+> domains defined. We therefore need a way to keep a database of
+> regulatory domains, and a way to parse this database to finally hand
+> to the kernel the desired regulatory domain.
+>
+> My initial take on this was to use a berkely db or sqlite db for the
+> database and keep this local on hosts, however this would enforce
+> certain package requirements upon most installations and do not think
+> that's the best approach. Another approach is to keep the real
+> database only on some development machines and let people send updates
+> to it as well as view the database online. An output of the database
+> can then be dumped as a flat file to a host in some format. The
+> regulatory daemon would then parse this flat file and upon changes to
+> the file update its local database of regulatory domains. I'd like
+> feedback on suggestions for the file format used which would keep
+> distributions requirements at a minimal. If there is some extremely
+> light weight and acceptable database and database API most of us
+> wouldn't mind seeing on most installs please name them too (although I
+> don't think this is really a good idea).
+>
+> My preference is to keep the real database on a development box which
+> has some web interface which people can use to view. Ideally users can
+> then send updates to the database to provide updates to rules. The
+> database can then be dumped and an application used to generate some
+> flat file. Distributions can then pick this flat file up and propagate
+> it to users. A user's host would have the CRDA userspace daemon
+> running, and once a new file is downloaded the regulatory daemon is
+> informed about it. The reg daemon would then parse the flat file and
+> update its internal database and new regulatory rules would become
+> available to the kernel. What I am not sure on is the best format to
+> use for the flat file.
 
---=-6p9/AyZgNjOQko2IdWVF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+if at all, i'd suggest a simple binary format for that file. it's not that we 
+would have to do a lot of searching thru it, so i think something 
+database-like is not necessary. also it has to be included in embedded 
+systems so it should be quite small. a text-based approach would make it too 
+easy for users to change and override regulatory settings. i know the basic 
+idea is to put the liability to the user, but at the same time i think we 
+should not make it too easy to alter the regulatory rules.
 
+actually i think the best way to keep and update the regulatory table is as 
+part of a source tree! instead of building a huge new infrastructure - a 
+server with a db which users can upload regulatory changes to, a review 
+process for these changes, a file export for downloading the latest db, a 
+file format for keeping the db on the host and then parsing them into the 
+application - why not just maintain the regulatory rules as part of the 
+source tree and use the processes (version management, peer review) we 
+already have in place there?
 
-On Thu, 2008-03-20 at 15:06 +0200, Tomas Winkler wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->=20
-> This patch makes mac80211 able to compute a TKIP key from an skb.
-> The requested key can be a phase 1 or a phase 2 key.
-> This is useful for drivers who need to provide tkip key to their
-> HW to enable HW encryption.
->=20
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+well, which source tree? i don't really know. iw maybe? or would'nt it make 
+sense to make a library which can be used by iw, wpa_supplicant, hostapd and 
+other applications alike to access the wireless settings, including 
+regulatory domains?
 
-Looks good, thanks
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  include/net/mac80211.h |   30 +++++++++++++++++++++++++++
->  net/mac80211/tkip.c    |   53 ++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  2 files changed, 83 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 5ab6a35..2a13458 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -644,6 +644,21 @@ enum sta_notify_cmd {
->  };
-> =20
->  /**
-> + * enum ieee80211_tkip_key_type - get tkip key
-> + *
-> + * Used by drivers which need to get a tkip key for skb. Some drivers ne=
-ed a
-> + * phase 1 key, others need a phase 2 key. A single function allows the =
-driver
-> + * to get the key, this enum indicates what type of key is required.
-> + *
-> + * @IEEE80211_TKIP_P1_KEY: the driver needs a phase 1 key
-> + * @IEEE80211_TKIP_P2_KEY: the driver needs a phase 2 key
-> + */
-> +enum ieee80211_tkip_key_type {
-> +	IEEE80211_TKIP_P1_KEY,
-> +	IEEE80211_TKIP_P2_KEY,
-> +};
-> +
-> +/**
->   * enum ieee80211_hw_flags - hardware flags
->   *
->   * These flags are used to indicate hardware capabilities to
-> @@ -1472,6 +1487,21 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_=
-buff *skb);
->  int ieee80211_get_hdrlen(u16 fc);
-> =20
->  /**
-> + * ieee80211_get_tkip_key - get a TKIP rc4 for skb
-> + *
-> + * This function computes a TKIP rc4 key for an skb. It computes
-> + * a phase 1 key if needed (iv16 wraps around). This function is to
-> + * be used by drivers which can do HW encryption but need to compute
-> + * to phase 1/2 key in SW.
-> + *
-> + * @keyconf: the parameter passed with the set key
-> + * @skb: the skb for which the key is needed
-> + * @rc4key: a buffer to which the key will be written
-> + */
-> +void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-> +				struct sk_buff *skb,
-> +				enum ieee80211_tkip_key_type type, u8 *key);
-> +/**
->   * ieee80211_wake_queue - wake specific queue
->   * @hw: pointer as obtained from ieee80211_alloc_hw().
->   * @queue: queue number (counted from zero).
-> diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-> index 3abe194..5c36b2d 100644
-> --- a/net/mac80211/tkip.c
-> +++ b/net/mac80211/tkip.c
-> @@ -214,6 +214,59 @@ void ieee80211_tkip_gen_rc4key(struct ieee80211_key =
-*key, u8 *ta,
->  			   key->u.tkip.iv16, rc4key);
->  }
-> =20
-> +void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-> +			struct sk_buff *skb, enum ieee80211_tkip_key_type type,
-> +			u8 *outkey)
-> +{
-> +	struct ieee80211_key *key =3D (struct ieee80211_key *)
-> +			container_of(keyconf, struct ieee80211_key, conf);
-> +	struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *) skb->data;
-> +	u8 *data =3D (u8 *) hdr;
-> +	u16 fc =3D le16_to_cpu(hdr->frame_control);
-> +	int hdr_len =3D ieee80211_get_hdrlen(fc);
-> +	u8 *ta =3D hdr->addr2;
-> +	u16 iv16;
-> +	u32 iv32;
-> +
-> +	iv16 =3D data[hdr_len] << 8;
-> +	iv16 +=3D data[hdr_len + 2];
-> +	iv32 =3D data[hdr_len + 4] +
-> +		(data[hdr_len + 5] >> 8) +
-> +		(data[hdr_len + 6] >> 16) +
-> +		(data[hdr_len + 7] >> 24);
-> +
-> +#ifdef CONFIG_TKIP_DEBUG
-> +	printk(KERN_DEBUG "TKIP encrypt: iv16 =3D 0x%04x, iv32 =3D 0x%08x\n",
-> +			iv16, iv32);
-> +
-> +	if (iv32 !=3D key->u.tkip.iv32) {
-> +		printk(KERN_DEBUG "skb: iv32 =3D 0x%08x key: iv32 =3D 0x%08x\n",
-> +			iv32, key->u.tkip.iv32);
-> +		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
-> +			"fragmented packet\n");
-> +	}
-> +#endif /* CONFIG_TKIP_DEBUG */
-> +
-> +	/* Update the p1k only when the iv16 in the packet wraps around, this
-> +	 * might occur after the wrap around of iv16 in the key in case of
-> +	 * fragmented packets. */
-> +	if (iv16 =3D=3D 0 || !key->u.tkip.tx_initialized) {
-> +		/* IV16 wrapped around - perform TKIP phase 1 */
-> +		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
-> +			iv32, key->u.tkip.p1k);
-> +		key->u.tkip.tx_initialized =3D 1;
-> +	}
-> +
-> +	if (type =3D=3D IEEE80211_TKIP_P1_KEY) {
-> +		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
-> +		return;
-> +	}
-> +
-> +	tkip_mixing_phase2(key->u.tkip.p1k,
-> +		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
-> +}
-> +EXPORT_SYMBOL(ieee80211_get_tkip_key);
-> +
->  /* Encrypt packet payload with TKIP using @key. @pos is a pointer to the
->   * beginning of the buffer containing payload. This payload must include
->   * headroom of eight octets for IV and Ext. IV and taildroom of four oct=
-ets
-
---=-6p9/AyZgNjOQko2IdWVF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+JiaqVg1VMiehFYAQLK3xAAunz5IPma1KHQQ7wJQwmp2cz7M/2A3qMj
-RdtXwUFI/x27nFctmsex7Lpy8dEHSqRK+ArkQM/U/ABMTA8DM9FMBUMuSSSQjSu9
-hryiqJ8OQJTyzpegmltK4oza7EovAgIDEk+pCTq7Pb089rzy4JCDbOADXvD3SoHE
-vDWV78t+UOun5+bHYadWVbWALONai1HyfMgjn7rmpoRvo9QINGcjch9Q6g3o2nbM
-1ErZchj6SKX24ySNfZoe2ZccZFJ/vANDFX7+OIEvAEydaQ9N0XBKU3nvXZysOrQh
-l02ax6lBOSiCazGNcKp0JolJu6n1uPiT/eStjN1xvi8KUlcRlZKv0bXd3biH7mZQ
-JmaAKYC6sleukBEdLSBWnj3iVQtnAjOlllG7sGipmqQuhuYawgNp6+TTJnNEq3qg
-Tp3cGmq2l5YCSsxxmMylr+EcUnmICe2xMJICnVO1AAViLlsoNUVzVRUixMX3wT//
-f7CbAQWml3RBxF1gG8HQ06SiKIzpUTdUdHT/ug8gHOc3Nb+PY+TJ5hObP7ZI7Uut
-zjNRRg78YhFqWngwGjTLQCvQv5BFoLXHNjEH35P0BZTkaSRJIciapfm3/BuY8uox
-67/pN7PlEoiALguf+RnqIRt3MkiC11dZyRJ9YBeu7r/R2gPLTI/F7JPgdlzxDmSy
-y62wz72l4XU=
-=hAl/
------END PGP SIGNATURE-----
-
---=-6p9/AyZgNjOQko2IdWVF--
-
+bruno
