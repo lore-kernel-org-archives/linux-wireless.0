@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:43252 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754674AbYCANBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2008 08:01:22 -0500
-Date: Sat, 1 Mar 2008 14:01:33 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	David Miller <davem@davemloft.net>,
-	gordonfarquharson@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Message-ID: <20080301130133.GA14250@uranus.ravnborg.org> (sfid-20080301_130153_599457_864121E6)
-References: <20080228014125.GI3078@tuxdriver.com> <97a0a9ac0802281321h6f302865j38a55c6f761dc14b@mail.gmail.com> <20080228.133008.228590007.davem@davemloft.net> <200802291316.59738.mb@bu3sch.de> <20080229162629.GB3234@tuxdriver.com> <1204302853.3938.40.camel@johannes.berg> <20080229191058.GD3234@tuxdriver.com> <20080229214240.GH3234@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080229214240.GH3234@tuxdriver.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:52892 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336AbYCFRQ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2008 12:16:58 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: Re: [RFC] mac80211: handling Qdisc issues
+Date: Thu, 6 Mar 2008 18:15:30 +0100
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	root <root@localhost.localdomain>
+References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
+In-Reply-To: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803061815.31398.mb@bu3sch.de> (sfid-20080306_171710_461687_7242C021)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 29, 2008 at 04:42:40PM -0500, John W. Linville wrote:
-> On Fri, Feb 29, 2008 at 02:10:58PM -0500, John W. Linville wrote:
-> > On Fri, Feb 29, 2008 at 05:34:13PM +0100, Johannes Berg wrote:
-> > > 
-> > > On Fri, 2008-02-29 at 11:26 -0500, John W. Linville wrote:
-> > > > On Fri, Feb 29, 2008 at 01:16:59PM +0100, Michael Buesch wrote:
-> > > > 
-> > > > > I'm wondering if we can't simply pass a commandline parameter to file2alias
-> > > > > that tells it whether we are crosscompiling. It should simply omit the sanity check
-> > > > 
-> > > > Sounds reasonable to me.
-> > > 
-> > > In fact, file2alias shouldn't need a command line argument ...
-> > > 
-> > > > > in that case. Is there any easy and reliable way to find out whether we
-> > > > > are crosscompiling from a makefile (I don't know the makefile core that much)?
-> > > > 
-> > > > Non-empty CROSS_COMPILE definition?
-> > > 
-> > > ... it can just check whether CROSS_COMPILE is set in its environment.
-> > > No?
-> > 
-> > Not a bad idea...something like this?
-> 
-> That version didn't work -- it seems CROSS_COMPILE is always set,
-> even if it is empty.
-> 
-> This version seems to work, but it is a bit chatty when CROSS_COMPILE
-> is set and you build lots of modules...thoughts?
+On Thursday 06 March 2008 17:51:47 Ron Rindjunsky wrote:
+> diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+> index 3dfb28a..416a43e 100644
+> --- a/drivers/net/wireless/b43/dma.c
+> +++ b/drivers/net/wireless/b43/dma.c
+> @@ -1294,7 +1294,12 @@ int b43_dma_tx(struct b43_wldev *dev,
+>  		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+>  	} else {
+>  		/* Decide by priority where to put this frame. */
+> -		ring = priority_to_txring(dev, ctl->queue);
+> +#ifdef CONFIG_NETDEVICES_MULTIQUEUE
+> +		ring = priority_to_txring(dev, skb->queue_mapping);
+> +#else
+> +		/* XXX: b43 qos needs a lot of work */
+> +		ring = 1;
+> +#endif
+>  	}
 
-We cannot use CROSS_COMPILE to detect a cross build as CROSS_COMPILE
-is used used to select different gcc versions, cccache etc.
-The only relaiably way to detect a cross build is to check
-is ARCH != modified uname -m arch.
-So this check would have to be done in the top-level Makefile.
+ehm, this won't compile.
+And did you see the patches I recently submitted?
 
-And that for shaving 6 bytes of a structure..
+> diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
+> index e87b427..c8eeb27 100644
+> --- a/drivers/net/wireless/b43legacy/dma.c
+> +++ b/drivers/net/wireless/b43legacy/dma.c
+> @@ -1323,7 +1323,11 @@ int b43legacy_dma_tx(struct b43legacy_wldev *dev,
+>  	int err = 0;
+>  	unsigned long flags;
+>  
+> -	ring = priority_to_txring(dev, ctl->queue);
+> +#ifdef CONFIG_NETDEVICES_MULTIQUEUE
+> +	ring = priority_to_txring(dev, skb->queue_mapping);
+> +#else
+> +	ring = 1;
+> +#endif
 
-	Sam
+Won't compile.
+
+
+-- 
+Greetings Michael.
