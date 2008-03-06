@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3834 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755753AbYCYUGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 16:06:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: reinette.chatre@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: do not register bands with no supported channels
-Date: Tue, 25 Mar 2008 15:58:40 -0400
-Message-Id: <1206475120-10188-1-git-send-email-linville@tuxdriver.com> (sfid-20080325_200650_683523_DAAE3BF2)
+Received: from wf-out-1314.google.com ([209.85.200.171]:31689 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754747AbYCFWwr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2008 17:52:47 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so128396wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 14:52:46 -0800 (PST)
+Message-ID: <c4aed99f0803061452v59ccfbf9y40782856c45f7560@mail.gmail.com> (sfid-20080306_225251_725921_E9639C9B)
+Date: Thu, 6 Mar 2008 17:52:45 -0500
+From: "Chris Hallinan" <challinan@gmail.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: Re: iwl4965 on Compaq 8510p wireless speed very low, unusable
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <D936D925018D154694D8A362EEB0892003D74F74@orsmsx416.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4aed99f0803061220y40628cdxc8c2a4a0d2cac89f@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003D74F74@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Otherwise, b/g-only devices fail in wiphy_register.  Tested in Fedora
-kernels for the last week or so...
+On Thu, Mar 6, 2008 at 4:05 PM, Chatre, Reinette
+<reinette.chatre@intel.com> wrote:
+> On , Chris Hallinan  wrote:
+>
+>  >
+>  > After a couple days of searching (Google, bughost, etc) I've noticed
+>  > others with similar problems, but never came across a resolution.  Bug
+>  > 1481 is similar, though not exact.  Performance is acceptable under
+>  > WinXP (400KB+)
+>
+>  Please add information about your environment and test results to bug
+>  1481 if you think it is appropriate - otherwise, please do submit a new
+>  bug to enable us to track it.
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++++++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++++--
- 2 files changed, 12 insertions(+), 4 deletions(-)
+Bug 1623 has been submitted.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 093b863..4ba9591 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5136,8 +5136,12 @@ static int iwl3945_init_geos(struct iwl3945_priv *priv)
- 	       priv->bands[IEEE80211_BAND_2GHZ].n_channels,
- 	       priv->bands[IEEE80211_BAND_5GHZ].n_channels);
- 
--	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->bands[IEEE80211_BAND_2GHZ];
--	priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->bands[IEEE80211_BAND_5GHZ];
-+	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+			&priv->bands[IEEE80211_BAND_2GHZ];
-+	if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+			&priv->bands[IEEE80211_BAND_5GHZ];
- 
- 	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 44cfd02..9ae3d29 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5001,8 +5001,12 @@ int iwl4965_init_geos(struct iwl_priv *priv)
- 	       priv->bands[IEEE80211_BAND_2GHZ].n_channels,
- 	       priv->bands[IEEE80211_BAND_5GHZ].n_channels);
- 
--	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->bands[IEEE80211_BAND_2GHZ];
--	priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->bands[IEEE80211_BAND_5GHZ];
-+	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+			&priv->bands[IEEE80211_BAND_2GHZ];
-+	if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+			&priv->bands[IEEE80211_BAND_5GHZ];
- 
- 	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
- 
+In the mean time, is there anything I can do help isolate?
+
+Thanks,
+
+Chris
+>
+>  Reinette
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.5.3.3
-
+Life is like Linux - it never stands still.
