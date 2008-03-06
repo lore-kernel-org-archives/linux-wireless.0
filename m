@@ -1,131 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:49479 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754553AbYCHTzF (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.179]:16011 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbYCFAMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2008 14:55:05 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] b43: pull out helpers for writing noise table
-Date: Sat, 8 Mar 2008 20:54:23 +0100
-Cc: Harvey Harrison <harvey.harrison@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1204972838.23455.47.camel@brick> <200803081448.11670.mb@bu3sch.de> <1205005387.3335.2.camel@localhost.localdomain>
-In-Reply-To: <1205005387.3335.2.camel@localhost.localdomain>
+	Wed, 5 Mar 2008 19:12:50 -0500
+Received: by el-out-1112.google.com with SMTP id v27so2486284ele.17
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 16:12:49 -0800 (PST)
+Message-ID: <84ac67910803051612w15dd7247xf9d3c7b05330b7ff@mail.gmail.com> (sfid-20080306_001253_912651_FB60B2BE)
+Date: Thu, 6 Mar 2008 00:12:49 +0000
+From: "Ahmed Ammar" <b33fc0d3@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: B43 will not associate
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <1204752217.17696.14.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803082054.24197.mb@bu3sch.de> (sfid-20080308_195519_830492_C422E8BD)
+Content-Type: text/plain; charset=UTF-8
+References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+	 <200803042047.35710.mb@bu3sch.de>
+	 <84ac67910803041413s510c5513k25f77762b0e70d@mail.gmail.com>
+	 <200803051517.31919.mb@bu3sch.de>
+	 <84ac67910803050734t1386a8edx39eb7133c909d9bb@mail.gmail.com>
+	 <1204741000.9378.6.camel@localhost.localdomain>
+	 <84ac67910803051253p7906314asc3cbdb740af5ba1c@mail.gmail.com>
+	 <1204752217.17696.14.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 08 March 2008 20:43:07 Dan Williams wrote:
-> On Sat, 2008-03-08 at 14:48 +0100, Michael Buesch wrote:
-> > Uhm, well. Why? Any problems with that code?
-> 
-> It's a nice cleanup.  Nothing wrong with getting rid of the same code
-> duplicated 6 times.
+> Ok; and you are _never_ able to associate with the AP with with wlan1,
+>  correct?
 
-Yeah, well. Thing is that I really don't like messing with the PHY code. :)
-If we introduce a regression with one of these cleanups, it's really really hard
-to debug and fix.
-
-This one seems OK, though.
-
-But next time please contact me first before you want to to cleanups to
-the PHY code.
-
-Example: The patch that cleaned up the PHY workarounds code introduced
-a few really hard to debug regressions that took me weeks to fix.
-So I will rather NACK patches, that are only for the sake of "hey this
-looks nicer" or "this makes the code 3 bytes smaller".
-
-Anyway, thanks for the patch.
-
-> > On Saturday 08 March 2008 11:40:38 Harvey Harrison wrote:
-> > > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> > > ---
-> > >  drivers/net/wireless/b43/wa.c |   44 +++++++++++++++++++++-------------------
-> > >  1 files changed, 23 insertions(+), 21 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-> > > index e632125..eff35ad 100644
-> > > --- a/drivers/net/wireless/b43/wa.c
-> > > +++ b/drivers/net/wireless/b43/wa.c
-> > > @@ -204,6 +204,22 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
-> > >  		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
-> > >  }
-> > >  
-> > > +static void b43_write_null_nst(struct b43_wldev *dev)
-> > > +{
-> > > +	int i;
-> > > +
-> > > +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
-> > > +}
-> > > +
-> > > +static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
-> > > +{
-> > > +	int i;
-> > > +
-> > > +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, nst[i]);
-> > > +}
-> > > +
-> > >  static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
-> > >  {
-> > >  	struct b43_phy *phy = &dev->phy;
-> > > @@ -211,35 +227,21 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
-> > >  
-> > >  	if (phy->type == B43_PHYTYPE_A) {
-> > >  		if (phy->rev <= 1)
-> > > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -							i, 0);
-> > > +			b43_write_null_nst(dev);
-> > >  		else if (phy->rev == 2)
-> > > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -							i, b43_tab_noisescalea2[i]);
-> > > +			b43_write_nst(dev, b43_tab_noisescalea2);
-> > >  		else if (phy->rev == 3)
-> > > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -							i, b43_tab_noisescalea3[i]);
-> > > +			b43_write_nst(dev, b43_tab_noisescalea3);
-> > >  		else
-> > > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -							i, b43_tab_noisescaleg3[i]);
-> > > +			b43_write_nst(dev, b43_tab_noisescaleg3);
-> > >  	} else {
-> > >  		if (phy->rev >= 6) {
-> > >  			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
-> > > -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -						i, b43_tab_noisescaleg3[i]);
-> > > +				b43_write_nst(dev, b43_tab_noisescaleg3);
-> > >  			else
-> > > -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -						i, b43_tab_noisescaleg2[i]);
-> > > +				b43_write_nst(dev, b43_tab_noisescaleg2);
-> > >  		} else {
-> > > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> > > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> > > -							i, b43_tab_noisescaleg1[i]);
-> > > +			b43_write_nst(dev, b43_tab_noisescaleg1);
-> > >  		}
-> > >  	}
-> > >  }
-> > 
-> > 
-> > 
-> 
-> 
-> 
-
-
-
--- 
-Greetings Michael.
+Yes. WPA/WEP/Open. nothing works.
