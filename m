@@ -1,290 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3513 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36998 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755151AbYCNBve (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2008 21:51:34 -0400
-Date: Thu, 13 Mar 2008 21:26:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-2.6.26 2008-03-13
-Message-ID: <20080314012616.GB31964@tuxdriver.com> (sfid-20080314_015145_497061_A6D06D09)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754450AbYCFOjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2008 09:39:49 -0500
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+From: Dan Williams <dcbw@redhat.com>
+To: Helge Hafting <helgehaf@mail.aitel.hist.no>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Helge Hafting <helge.hafting@aitel.hist.no>,
+	Joonwoo Park <joonwpark81@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47CFF955.4010501@mail.aitel.hist.no>
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
+	 <20080305094859.GA10077@ehus.geninetworks.com>
+	 <47CEA5CB.6040001@aitel.hist.no>
+	 <1ba2fa240803050701y57913de2s635eaf8b5e3b4f96@mail.gmail.com>
+	 <47CFF955.4010501@mail.aitel.hist.no>
+Content-Type: text/plain
+Date: Thu, 06 Mar 2008 09:30:14 -0500
+Message-Id: <1204813814.29410.23.camel@localhost.localdomain> (sfid-20080306_143953_118744_74530AA4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David,
+On Thu, 2008-03-06 at 15:01 +0100, Helge Hafting wrote:
+> Tomas Winkler wrote:
+> > On Wed, Mar 5, 2008 at 3:53 PM, Helge Hafting
+> > <helge.hafting@aitel.hist.no> wrote:
+> >   
+> >> Joonwoo Park wrote:
+> >>  > On Wed, Mar 05, 2008 at 06:40:09PM +0900, Joonwoo Park wrote:
+> >>  >
+> >>  >> resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
+> >>  >>
+> >>  >> The function ieee80211_ioctl_siwencode shouldn't be called if
+> >>  >> authentication process is not completed.
+> >>  >> This patch makes the ieee80211_ioctl_siwessid to wait for authentication
+> >>  >> is completed.
+> >>  >>
+> >>  >> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+> >>  >>
+> >>  >
+> >>  > Helge,
+> >>  >
+> >>  > Can you please try this patch?
+> >>  > I believe this patch helps your problem.
+> >>  >
+> >>  I tried it, and still have problems. The messages may be slightly different:
+> >>
+> >>  I first bring up the interface with "ifconfig wlan0 up"
+> >>  and then try "iwconfig wlan0 essid my_essid key s:password"
+> >>  over and over till it works. This gave me:
+> >>
+> >>  Initial auth_alg=0
+> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
+> >>  wlan0: authentication with AP 00:14:1b:5e:13:40 timed out
+> >>
+> >>  A total of 5 tries went wrong. The sixth time it worked, with
+> >>  different messages and a different access point.
+> >>  (There are several access points at work.)
+> >>  Initial auth_alg=0
+> >>  wlan0: authenticate with AP 00:12:7f:ce:9c:e0
+> >>  wlan0: RX authentication from 00:12:7f:ce:9c:e0 (alg=0 transaction=2
+> >>  status=0)
+> >>  wlan0: authenticated
+> >>  wlan0: associate with AP 00:12:7f:ce:9c:e0 (capab=0x431 status=0 aid=242)
+> >>  wlan0: associated
+> >>  wlan0: CTS protection enabled (BSSID=00:12:7f:ce:9c:e0)
+> >>  wlan0: switched to long barker preamble (BSSID=BSSID=00:12:7f:ce:9c:e0)
+> >>  wlan0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 burst=0
+> >>  wlan0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 burst=0
+> >>  wlan0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 burst=30
+> >>  wlan0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 burst=15
+> >>  wlan0: link becomes ready
+> >>
+> >>
+> >>  Only 6 attempts is an improvement, if it stays that way.  Still, the
+> >>  old ipw3945 succeeded on first try. :-/
+> >>  I hope the testing can be of help.
+> >>
+> >>  Helge Hafting
+> >>
+> >>
+> >>
+> >>     
+> > Is this shared or open authentication?
+> > Do you happend to have a sniff capture of the association ?
+> I am not sure what you mean by the question.
+> This network uses WEP encryption (some users have older wireless equipment)
+> there is one essid and a single shared password that everybody uses.
+> Security is not that important, this is mostly to keep out outside bandwith
+> wasters/pirates.
 
-Here is another round of updates for 2.6.26.  Only 38 this week -- we
-must be slowing-down. :-)
+WEP has two authentication modes, "Shared Key" and "Open System".  He
+wants to know which method your access point is using.  During
+authentication, Open System is a simple two-frame request/response.  For
+Shared Key, there's an additional challenge/response where the AP sends
+a block of data, the client encrypts it with the WEP key, and sends it
+back to the AP where it's verified.  Only if it verifies does the AP
+complete association with the client.
 
-Along with the usual batch of driver updates there is also the
-removal of the old bcm43xx driver, the (now unused) ieee80211softmac
-component, and the old "simple" rate control algorithm for mac80211.
-Other than that, there is nothing particularly remarkable.  FWIW,
-the rt2x00 patches in particular fixed a lot of Fedora bugzillas...
+You need to ensure that the mode matches between clients and the AP.
+Some APs have an "Auto" option that just accepts both methods from the
+client.
 
-Let me know if there are problems!
+Dan
 
-Thanks,
+> I do not have a sniff of this association, but I can try to sniff the 
+> next time.
+> will wireshark be useful, or is some kind of wireless specific sniffer 
+> needed?
+> 
+> 
+> Helge Hafting
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-John
-
-P.S.  The rt2x00 patch I just sent you in the wireless-2.6 tree will
-conflict with your net-2.6.26 tree, and the resolution is not obvious
-when looking at the change markers alone.  I created a "merge-sample"
-branch in the wireless-2.6.26 tree to serve as a reference to show
-you how I resolved the conflict.  Hth!
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26/
-
----
-
-The following changes since commit ba73d4c84a7344f1b5635c2b4e96796e8c13a126:
-  David S. Miller (1):
-        Merge branch 'master' of master.kernel.org:/.../linville/wireless-2.6.26
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.26.git master
-
-Adam Baker (1):
-      rt2x00:correct rx packet length for USB devices
-
-Adrian Bunk (4):
-      make b43_mac_{enable,suspend}() static
-      the scheduled bcm43xx removal
-      the scheduled ieee80211 softmac removal
-      the scheduled rc80211-simple.c removal
-
-Assaf Krauss (1):
-      iwlwifi: Use eeprom form iwlcore
-
-Harvey Harrison (1):
-      b43: pull out helpers for writing noise table
-
-Holger Schurig (1):
-      libertas: implement SSID scanning for SIOCSIWSCAN
-
-Ivo van Doorn (16):
-      rt2x00: Align RX descriptor to 4 bytes
-      rt2x00: Don't use uninitialized desc_len
-      rt2x00: Use skbdesc fields for descriptor initialization
-      rt2x00: Only disable beaconing just before beacon update
-      rt2x00: Upgrade queue->lock to use irqsave
-      rt2x00: Move firmware checksumming to driver
-      rt2x00: Start bugging when rt2x00lib doesn't filter SW diversity
-      rt2x00: Check IEEE80211_TXCTL_SEND_AFTER_DTIM flag
-      rt2x00: Rename config_preamble() to config_erp()
-      rt2x00: Make rt2x00leds_register return void
-      rt2x00: Always enable TSF ticking
-      rt2x00: Fix basic rate initialization
-      rt2x00: Fix RX DMA ring initialization
-      rt2x00: Fix rt2400pci signal
-      rt2x00: Release rt2x00 2.1.4
-      rt2x00: Only strip preamble bit in rt2400pci
-
-Joe Perches (2):
-      drivers/net/wireless/ath5k - convert == (true|false) to simple logical tests
-      include/net/ieee80211.h - remove duplicate include
-
-Jussi Kivilinna (2):
-      rndis_wlan: cleanup, rename and reorder enums and structures
-      rndis_wlan: cleanup, rename structure members
-
-Luis Correia (1):
-      rt2x00: Fix trivial log message
-
-Mattias Nissler (3):
-      rt2x00: Initialize TX control field in data entries
-      rt2x00: Use the correct size when copying the control info in txdone
-      rt2x00: Don't use unitialized rxdesc->size
-
-Michael Buesch (1):
-      ssb: Add SPROM/invariants support for PCMCIA devices
-
-Reinette Chatre (2):
-      iwlwifi: update copyright year
-      iwlwifi: fix bug to show hidden APs during scan
-
-Tomas Winkler (3):
-      iwlwifi: Use sta_bcast_id variable instead of BROADCAST_ID constant
-      iwlwifi: Fix endianity in debug print
-      iwlwifi: change rate number to a constant
-
- Documentation/feature-removal-schedule.txt       |   27 -
- Documentation/laptops/acer-wmi.txt               |    2 +-
- Documentation/networking/bcm43xx.txt             |   89 -
- MAINTAINERS                                      |   15 -
- drivers/net/wireless/Kconfig                     |    1 -
- drivers/net/wireless/Makefile                    |    1 -
- drivers/net/wireless/ath5k/hw.c                  |   36 +-
- drivers/net/wireless/ath5k/phy.c                 |   10 +-
- drivers/net/wireless/b43/main.c                  |    4 +-
- drivers/net/wireless/b43/main.h                  |    3 -
- drivers/net/wireless/b43/wa.c                    |   45 +-
- drivers/net/wireless/bcm43xx/Kconfig             |   70 -
- drivers/net/wireless/bcm43xx/Makefile            |   12 -
- drivers/net/wireless/bcm43xx/bcm43xx.h           |  997 -----
- drivers/net/wireless/bcm43xx/bcm43xx_debugfs.c   |  556 ---
- drivers/net/wireless/bcm43xx/bcm43xx_debugfs.h   |  118 -
- drivers/net/wireless/bcm43xx/bcm43xx_dma.c       | 1263 -------
- drivers/net/wireless/bcm43xx/bcm43xx_dma.h       |  386 --
- drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c   |   50 -
- drivers/net/wireless/bcm43xx/bcm43xx_ethtool.h   |    8 -
- drivers/net/wireless/bcm43xx/bcm43xx_ilt.c       |  352 --
- drivers/net/wireless/bcm43xx/bcm43xx_ilt.h       |   33 -
- drivers/net/wireless/bcm43xx/bcm43xx_leds.c      |  307 --
- drivers/net/wireless/bcm43xx/bcm43xx_leds.h      |   62 -
- drivers/net/wireless/bcm43xx/bcm43xx_main.c      | 4281 ----------------------
- drivers/net/wireless/bcm43xx/bcm43xx_main.h      |  133 -
- drivers/net/wireless/bcm43xx/bcm43xx_phy.c       | 2346 ------------
- drivers/net/wireless/bcm43xx/bcm43xx_phy.h       |   78 -
- drivers/net/wireless/bcm43xx/bcm43xx_pio.c       |  674 ----
- drivers/net/wireless/bcm43xx/bcm43xx_pio.h       |  163 -
- drivers/net/wireless/bcm43xx/bcm43xx_power.c     |  393 --
- drivers/net/wireless/bcm43xx/bcm43xx_power.h     |   56 -
- drivers/net/wireless/bcm43xx/bcm43xx_radio.c     | 2170 -----------
- drivers/net/wireless/bcm43xx/bcm43xx_radio.h     |  115 -
- drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c     |  471 ---
- drivers/net/wireless/bcm43xx/bcm43xx_sysfs.h     |    9 -
- drivers/net/wireless/bcm43xx/bcm43xx_wx.c        | 1035 ------
- drivers/net/wireless/bcm43xx/bcm43xx_wx.h        |   36 -
- drivers/net/wireless/bcm43xx/bcm43xx_xmit.c      |  565 ---
- drivers/net/wireless/bcm43xx/bcm43xx_xmit.h      |  150 -
- drivers/net/wireless/iwlwifi/Makefile            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945-debug.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945-io.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c          |    6 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    4 +-
- drivers/net/wireless/iwlwifi/iwl-4965-debug.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h       |  314 +--
- drivers/net/wireless/iwlwifi/iwl-4965-io.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c          |   55 +-
- drivers/net/wireless/iwlwifi/iwl-4965.h          |    6 +-
- drivers/net/wireless/iwlwifi/iwl-core.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-core.h          |   10 +
- drivers/net/wireless/iwlwifi/iwl-csr.h           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c      |   25 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c      |  112 +-
- drivers/net/wireless/libertas/assoc.c            |    4 +-
- drivers/net/wireless/libertas/debugfs.c          |  169 -
- drivers/net/wireless/libertas/dev.h              |    2 +
- drivers/net/wireless/libertas/scan.c             |  145 +-
- drivers/net/wireless/libertas/scan.h             |   69 +-
- drivers/net/wireless/libertas/wext.c             |    3 +
- drivers/net/wireless/rndis_wlan.c                |  451 ++--
- drivers/net/wireless/rt2x00/Kconfig              |    4 +-
- drivers/net/wireless/rt2x00/rt2400pci.c          |   70 +-
- drivers/net/wireless/rt2x00/rt2400pci.h          |    6 +-
- drivers/net/wireless/rt2x00/rt2500pci.c          |   71 +-
- drivers/net/wireless/rt2x00/rt2500usb.c          |   97 +-
- drivers/net/wireless/rt2x00/rt2x00.h             |   27 +-
- drivers/net/wireless/rt2x00/rt2x00config.c       |   62 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c        |    5 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c          |   58 +-
- drivers/net/wireless/rt2x00/rt2x00firmware.c     |   34 +-
- drivers/net/wireless/rt2x00/rt2x00leds.c         |    7 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h          |   25 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c          |   22 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c          |    1 +
- drivers/net/wireless/rt2x00/rt2x00queue.c        |   17 +-
- drivers/net/wireless/rt2x00/rt2x00queue.h        |    3 +
- drivers/net/wireless/rt2x00/rt2x00usb.c          |   19 +-
- drivers/net/wireless/rt2x00/rt61pci.c            |  100 +-
- drivers/net/wireless/rt2x00/rt73usb.c            |  126 +-
- drivers/ssb/Kconfig                              |    6 +
- drivers/ssb/Makefile                             |    1 +
- drivers/ssb/main.c                               |   23 +-
- drivers/ssb/pci.c                                |  113 +-
- drivers/ssb/pcmcia.c                             |  518 +++-
- drivers/ssb/sprom.c                              |  133 +
- drivers/ssb/ssb_private.h                        |   17 +
- include/linux/ssb/ssb.h                          |    4 +-
- include/net/ieee80211.h                          |    1 -
- include/net/ieee80211softmac.h                   |  373 --
- include/net/ieee80211softmac_wx.h                |   99 -
- net/ieee80211/Kconfig                            |    1 -
- net/ieee80211/Makefile                           |    1 -
- net/ieee80211/softmac/Kconfig                    |   12 -
- net/ieee80211/softmac/Makefile                   |    9 -
- net/ieee80211/softmac/ieee80211softmac_assoc.c   |  489 ---
- net/ieee80211/softmac/ieee80211softmac_auth.c    |  413 ---
- net/ieee80211/softmac/ieee80211softmac_event.c   |  189 -
- net/ieee80211/softmac/ieee80211softmac_io.c      |  488 ---
- net/ieee80211/softmac/ieee80211softmac_module.c  |  568 ---
- net/ieee80211/softmac/ieee80211softmac_priv.h    |  244 --
- net/ieee80211/softmac/ieee80211softmac_scan.c    |  254 --
- net/ieee80211/softmac/ieee80211softmac_wx.c      |  508 ---
- net/mac80211/Kconfig                             |   19 -
- net/mac80211/Makefile                            |    2 -
- net/mac80211/ieee80211.c                         |    9 +-
- net/mac80211/ieee80211_rate.h                    |   15 -
- net/mac80211/rc80211_simple.c                    |  394 --
- 119 files changed, 1493 insertions(+), 22703 deletions(-)
- delete mode 100644 Documentation/networking/bcm43xx.txt
- delete mode 100644 drivers/net/wireless/bcm43xx/Kconfig
- delete mode 100644 drivers/net/wireless/bcm43xx/Makefile
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_debugfs.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_debugfs.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_dma.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_dma.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_ethtool.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_ilt.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_ilt.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_leds.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_leds.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_main.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_main.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_phy.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_phy.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_pio.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_pio.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_power.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_power.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_radio.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_radio.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_sysfs.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_wx.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_wx.h
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_xmit.c
- delete mode 100644 drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
- create mode 100644 drivers/ssb/sprom.c
- delete mode 100644 include/net/ieee80211softmac.h
- delete mode 100644 include/net/ieee80211softmac_wx.h
- delete mode 100644 net/ieee80211/softmac/Kconfig
- delete mode 100644 net/ieee80211/softmac/Makefile
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_assoc.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_auth.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_event.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_io.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_module.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_priv.h
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_scan.c
- delete mode 100644 net/ieee80211/softmac/ieee80211softmac_wx.c
- delete mode 100644 net/mac80211/rc80211_simple.c
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26-2008-03-13.patch.bz2
--- 
-John W. Linville
-linville@tuxdriver.com
