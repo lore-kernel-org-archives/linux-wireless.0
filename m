@@ -1,93 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53493 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935427AbYCDX1o (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:35332 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756167AbYCFKhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 18:27:44 -0500
-Message-Id: <200803042326.m24NQB9o003295@imap1.linux-foundation.org> (sfid-20080304_232753_096060_16957793)
-Subject: [patch 05/10] prism54: convert stats_sem in a mutex
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	matthias@kaehlcke.net, flamingice@sourmilk.net,
-	mcgrof@winlab.rutgers.edu
-From: akpm@linux-foundation.org
-Date: Tue, 04 Mar 2008 15:26:10 -0800
+	Thu, 6 Mar 2008 05:37:12 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3753266ugc.16
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 02:37:11 -0800 (PST)
+Message-ID: <95455e980803060237p40790e84w32004da91f5341e6@mail.gmail.com> (sfid-20080306_103719_202755_5DF73B85)
+Date: Thu, 6 Mar 2008 21:37:10 +1100
+From: hce <webmail.hce@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: Patch for linux wireless extension
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1204639101.7183.17.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <95455e980803031901x67360bffsca3794f1dfde586b@mail.gmail.com>
+	 <1204626369.3917.96.camel@johannes.berg>
+	 <1204639101.7183.17.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthias Kaehlcke <matthias@kaehlcke.net>
+On 3/5/08, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2008-03-04 at 11:26 +0100, Johannes Berg wrote:
+>  > Jim,
+>  >
+>  > > I am running a wifi device on kernel 2.6.11 and wireless extension
+>  > > version 17 for an ARM processor, it works fine with an open AP and
+>  > > wpa_supplicant 0.5.8.
+>  >
+>  > That's ancient.
+>  >
+>  > > Now I would like to support WEP and WPA. I know
+>  > > the best is to upgrade to latest kernel, but I am not in the position
+>  > > to do it as various reasons.
+>  >
+>  > Upgrade anyway.
+>  >
+>  > > An alternative as people suggested is to
+>  > > do a wireless extension patch which supports WEP and WPA on kernel
+>  > > 2.6.11. Any advice if it is feasible and where can I find the wireless
+>  > > extension patch for WEP and WPA on kernel 2.6.11 please?
+>  >
+>  > Hahaha. We'll you'll have to *make* that patch and invest a
+>  > *significant* amount of time into that.
+>
+>
+> Yeah; it's not just the defines and whatnot in wireless.h; you probably
+>  also want to update wireless-tools too, then you have to update your
+>  driver as well.  It's not hugely complex, but it's going to be a lot of
+>  boring work :)
+>
+>
+>  Dan
 
-The semaphore stats_sem is used as mutex, convert it to the mutex API
+I've just upgrade wireless extension version 18 which supports WPA (Is
+it for WEP as well?), with replaced two files of version 18 wireless.h
+and wireless.c in the kernel 2.6.11. Please correct me if I missed
+other source files in the kernel.
 
-Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+The wireless-tools we are using come from different sources, the
+iwconfig was from busybox 1.3 and wpa_supplicant 0.5.8 was compiled to
+our firmware. The initial test for WEP set up was not good, but I was
+told, the wireless extension vresion 18 only supports WPA not WEP,
+please advice.
 
- drivers/net/wireless/prism54/isl_ioctl.c  |    8 ++++----
- drivers/net/wireless/prism54/islpci_dev.c |    2 +-
- drivers/net/wireless/prism54/islpci_dev.h |    2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+Thank you.
 
-diff -puN drivers/net/wireless/prism54/isl_ioctl.c~convert-stats_sem-in-a-mutex drivers/net/wireless/prism54/isl_ioctl.c
---- a/drivers/net/wireless/prism54/isl_ioctl.c~convert-stats_sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -165,7 +165,7 @@ prism54_update_stats(struct work_struct 
- 	struct obj_bss bss, *bss2;
- 	union oid_res_t r;
- 
--	down(&priv->stats_sem);
-+	mutex_lock(&priv->stats_lock);
- 
- /* Noise floor.
-  * I'm not sure if the unit is dBm.
-@@ -207,7 +207,7 @@ prism54_update_stats(struct work_struct 
- 	mgt_get_request(priv, DOT11_OID_MPDUTXFAILED, 0, NULL, &r);
- 	priv->local_iwstatistics.discard.retries = r.u;
- 
--	up(&priv->stats_sem);
-+	mutex_unlock(&priv->stats_lock);
- 
- 	return;
- }
-@@ -218,12 +218,12 @@ prism54_get_wireless_stats(struct net_de
- 	islpci_private *priv = netdev_priv(ndev);
- 
- 	/* If the stats are being updated return old data */
--	if (down_trylock(&priv->stats_sem) == 0) {
-+	if (mutex_trylock(&priv->stats_lock) == 0) {
- 		memcpy(&priv->iwstatistics, &priv->local_iwstatistics,
- 		       sizeof (struct iw_statistics));
- 		/* They won't be marked updated for the next time */
- 		priv->local_iwstatistics.qual.updated = 0;
--		up(&priv->stats_sem);
-+		mutex_unlock(&priv->stats_lock);
- 	} else
- 		priv->iwstatistics.qual.updated = 0;
- 
-diff -puN drivers/net/wireless/prism54/islpci_dev.c~convert-stats_sem-in-a-mutex drivers/net/wireless/prism54/islpci_dev.c
---- a/drivers/net/wireless/prism54/islpci_dev.c~convert-stats_sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/islpci_dev.c
-@@ -864,7 +864,7 @@ islpci_setup(struct pci_dev *pdev)
- 	mutex_init(&priv->mgmt_lock);
- 	priv->mgmt_received = NULL;
- 	init_waitqueue_head(&priv->mgmt_wqueue);
--	sema_init(&priv->stats_sem, 1);
-+	mutex_init(&priv->stats_lock);
- 	spin_lock_init(&priv->slock);
- 
- 	/* init state machine with off#1 state */
-diff -puN drivers/net/wireless/prism54/islpci_dev.h~convert-stats_sem-in-a-mutex drivers/net/wireless/prism54/islpci_dev.h
---- a/drivers/net/wireless/prism54/islpci_dev.h~convert-stats_sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/islpci_dev.h
-@@ -88,7 +88,7 @@ typedef struct {
- 
- 	/* Take care of the wireless stats */
- 	struct work_struct stats_work;
--	struct semaphore stats_sem;
-+	struct mutex stats_lock;
- 	/* remember when we last updated the stats */
- 	unsigned long stats_timestamp;
- 	/* The first is accessed under semaphore locking.
-_
+Kind Regards,
+
+Jim
