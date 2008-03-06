@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:24068 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbYCEFhf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45377 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753971AbYCFRn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 00:37:35 -0500
-Received: by ti-out-0910.google.com with SMTP id 28so1649473tif.23
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 21:37:31 -0800 (PST)
-Message-ID: <445f43ac0803042137n6ce996f4radd58d3104fb49e1@mail.gmail.com> (sfid-20080305_053741_672338_F7DF76EA)
-Date: Tue, 4 Mar 2008 21:37:29 -0800
-From: "Javier Cardona" <javier@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mesh beaconing questions
-Cc: "Luis Carlos Cobo" <luisca@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1204034825.13162.233.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1204034825.13162.233.camel@johannes.berg>
+	Thu, 6 Mar 2008 12:43:58 -0500
+Subject: Re: [RFC] mac80211: handling Qdisc issues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com
+In-Reply-To: <200803061830.32316.mb@bu3sch.de> (sfid-20080306_173105_199273_D1060F8D)
+References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
+	 <200803061815.31398.mb@bu3sch.de>
+	 <1204824008.25502.123.camel@johannes.berg>
+	 <200803061830.32316.mb@bu3sch.de> (sfid-20080306_173105_199273_D1060F8D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pan7+cUyI1hPeFPqpl+k"
+Date: Thu, 06 Mar 2008 18:42:49 +0100
+Message-Id: <1204825369.25502.125.camel@johannes.berg> (sfid-20080306_174424_009905_AC3D26D3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
->  The Draft states that beacons may be sent either as defined for IBSS or
->  as defined for infrastructure mode.
->
->  I have a few questions, some of which are related to our implementation
->  and others which are related to the Draft.
->
->  1. Are we going to let drivers choose which mode to use? Should they
->  indicate that somehow so userspace knows? Or are we going to make this
->  configurable? Can all hardware support both modes? (the last question
->  probably ties in with the next)
+--=-pan7+cUyI1hPeFPqpl+k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Beaconing and synchronization are the two areas that are still
-actively debated at TGs, and they are somewhat dependent (
-http://odysseus.ieee.org/cs.html?charset=iso-8859-1&url=http%3A//mentor.ieee.org/802.11/public-file/07/11-07-2853-00-000s-functional-interdependences.ppt&qt=url%3Amentor.ieee.org/802.11+||+jarkko+kneckt&col=mentor&n=2&la=en
-). I would not invest much time in trying to support both modes at
-this time.
 
-That said, if things stay as they are now, we would have to make that
-configurable (only if the driver supports both beaconing modes, of
-course).
+> > That's my old patch, I think Ron doesn't know anything about b43 :) And
+> > my patch was based before your QoS support patches.
+>=20
+> Ah ok. You can just add this #ifdef to the already existing
+> dynamic condition on b43_modparam_qos in the new queue mapping function.
 
-> (...)
-> Hence, I think the draft needs to be expanded to modify 11.1.2.2 to
-> explain under which circumstances an MP shall cancel its beacon if it
-> opts to use IBSS-like beaconing.
+Yeah, but I wish we didn't actually need the #ifdef in all drivers.
+Since CONFIG_NETDEVICES_MULTIQUEUE is dirt cheap I think we should just
+make mac80211 depend on it, I think we'll end up requiring
+CONFIG_NET_SCHED too.
 
-Agreed.
 
-> I think the only useful thing is to require it to look at the mesh IEs,
+johannes
 
-... and path selection method and metric.
+--=-pan7+cUyI1hPeFPqpl+k
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> but that is not implementable with existing hardware, at least not
-> without firmware changes.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Needing firmware changes is a problem for o11s, but not for TGs:
-there will be other firmware (and maybe hardware) changes required to
-implement the standard.  o11s challenge is to do as much as possible
-with commodity hardware, and doing IBSS beaconing with null BSSID
-seems like an OK compromise.  Every once in a while and MP may cancel
-a beacon transmission because it receives a beacon from a different
-mesh:  that's not such a big deal.
+iQIVAwUAR9AtGKVg1VMiehFYAQJK2A//RX9Bf7NAlvnMiuu8w+nRm9SUPdnZFToL
+TiijqQaO5zHQo6h7tQCuvysPxewML12HGNl/5BeqdAucfEf4ZDuFXE3zKYX7yYst
+O+8Rl/EKsch8fI77zUSzrI/VXdt1zBSYpC2K2wlJQ1EnoifHcZInwaHMD157HahV
+jQGDuVxSIo0/aRv/q1H0rMcmaPd6Ef512xtZpNlCUB5VYPYXWmb8BSt0HJVhnZkt
+lDEq1cxEEsFS7egh6+eoaom+LpnBMFjd/TGbAENff+TINzxxIC3vXXvOWcJnT07B
+Y9Zx4ZPCBXSqWBgkd1ckFewFsWk4pJr0s0IbGvfRndPFRPh/IitDz7JqokH2NASI
+A+NxY+RwXYQfugLabux6577B4ckg1qDLB/eVAMs5o+SDe6Jl+8DjA2AsGNKZqvE9
+p0vEQSJWWMiNwWf0g/n1DT+BDaa/lYRrswANhikvGcQGH4D2WFr18OSizpGBFvw+
+Fn1lf5menkio3tHhv+f9/jzaIk7nq3xOu9thol2czpzEKD0akMR0J98HIUhnE9iv
+3F67xoUlC5ar8zqsmlS+omEZBkV8E8ZcIIP0UhBPQQ9W5w4FOc2/A/O4KwS7nmGm
+HNJqwXrsmKuCycM2qf2LCR6rKbNW7m2SveSDALfSLns2OpmYXWWEpJFnOBXo2/6d
+C8Uj4GFMCRQ=
+=R/Ll
+-----END PGP SIGNATURE-----
 
-Cheers,
+--=-pan7+cUyI1hPeFPqpl+k--
 
-Javier
-
-PS.  BTW, you should attend the IEEE meetings.  Really!
-
--- 
-Javier Cardona
-cozybit Inc.
