@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60379 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbYCQJbr (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:6033 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbYCFS1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 05:31:47 -0400
-Subject: Re: Intel 4965AGN and 802.11n
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Tanner \"Xero\" Ezell" <tanner.ezell@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47DE2517.9070601@gmail.com> (sfid-20080317_080045_786637_D26A2A52)
-References: <47DE2517.9070601@gmail.com>
-	 (sfid-20080317_080045_786637_D26A2A52)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G6qp31LCRPpPIUOqSrma"
-Date: Mon, 17 Mar 2008 10:31:36 +0100
-Message-Id: <1205746296.1614.9.camel@johannes.berg> (sfid-20080317_093151_618821_51A23E09)
-Mime-Version: 1.0
+	Thu, 6 Mar 2008 13:27:38 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3934064ugc.16
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 10:27:34 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: handling Qdisc issues
+Date: Thu, 6 Mar 2008 19:27:09 +0100
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com
+References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com> <200803061902.33865.IvDoorn@gmail.com> <1204826767.25502.135.camel@johannes.berg>
+In-Reply-To: <1204826767.25502.135.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803061927.09891.IvDoorn@gmail.com> (sfid-20080306_182742_939650_68D7DF0F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 06 March 2008, Johannes Berg wrote:
+> 
+> > > +#if TODO
+> > > +Is this correct??
+> > > +#endif
+> > > +	rt2x00lib_write_tx_desc(rt2x00dev, skb, control, queue->qid);
+> > 
+> > This is incorrect, even though it theoretically would work.
+> > The qid != queue number, for most TX queues the value will be the same,
+> > but the meaning of the field is different.
+> 
+> Hence my #if TODO which causes sparse to warn about the code :) I meant
+> to ask you but never had time to continue working on this patch.
+> 
+> > Resolving this issue will also be something I can fix relatively fast after this
+> > patch is accepted and applied to wireless-testing.
+> 
+> You could also just make a patch for exactly this and ask Ron to merge
+> it together with this?
 
---=-G6qp31LCRPpPIUOqSrma
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well that patch would then be completely untested (I code, but have hardly time
+to perform the testing myself).
+I can already say that the patch from Ron will work despite the my
+remark about the different meaning of the qid field.
+My patch that will clean it up, and will fix the issue, will be something
+that needs testing before it should be send upstream...
+I want to prevent messes like the rt2x00 2.1.0 release, which was broken
+in every possible way, from happening again in wireless-testing ;)
 
-
-> I've been trying for the last few days to get .11n support working on my
-> Thinkpad with the 4965 card to no avail, i have downloaded, compiled and
-> ran the kernel from wireless experimental git repo, and although i
-> enabled it in the configuration, when loaded, (modprobe iwl4965
-> qos_enable=3D1) dmesg reports "Tunable channels" to 802.11bg and 802.11a,
-> but no n. is there something special i must do? Is there a guide or
-> anything anywhere to get 11n support working at all? I'm using ubuntu
-> 7.10 and have tried the compat-wireless package to no avail.
->=20
-> Any help would be most appreciated!
-
-Get an 11n access point and just use it? There's absolutely nothing you
-have to do, the thought that tunable channels are b/g and a only and
-thus n is missing is rather odd if you know what the n spec actually
-is...
-
-johannes
-
---=-G6qp31LCRPpPIUOqSrma
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR946d6Vg1VMiehFYAQLw5Q/+MxfWMKyDf5AGa9Z/ldAWwHFP4PDv7TFt
-FCGe8hyAwcx6w828yLEwFkv3Jy948O1KixVPKxebkcishZwxQ9G0tqBq9hU8EV1V
-NCBMaPlPMkTn1sBI65cpwhBxOUWMowYJi1usSdfbiIgblAxYnjBpjTnGjVoGDhxi
-+Tcj6gKnnfX6JAq2bZHOvJwVg5aUYKCOGndIE9qZmRm6VA9emMhP2wgXTLM5yQzh
-O+u2wccj3F/1DSaOlZo024PBhFbywvL8ac0ye9x8YrA6krG4LihmKcvtQV07Nvg+
-RxxcZPAbXC7aE929fk+hJcHhF125gNrlG1fD1Zt4SlIgtE/yjmy4l49Ot4bvGH67
-M2dpWOKubhQU2cYQRT9vBIZjp3y00oqHHdFizMrK94Jpsq+Kc/i+JbjJitRvPXAs
-HYqru1qj0ak3xHZ5a7Pa2L6kpqVXDWcf1in9wItkF1WmxCVLsrwf+7Rpvv8QStyc
-NhdNXFvssHoVG0YeVWAbwfVXQhnMMAi7HQt2mEZ70ibnMhWBCxv/DeQ/9h6OTsb1
-i0nllh8tB1aoX/loMctgAtt0+pmSUSNKN3eTsOUQTu+aEkM2F7vTaX4+aWXBd8bO
-xqr+CdArbJTfe9cUXXNQ62dKtZ6GIBRz9VEEmlhz1ORuO5pn1JQFOjltqDdx9fsB
-t3N2Gyzdro0=
-=wbsr
------END PGP SIGNATURE-----
-
---=-G6qp31LCRPpPIUOqSrma--
-
+Ivo
