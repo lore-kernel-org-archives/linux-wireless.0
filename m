@@ -1,83 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:7778 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755616AbYCUNry (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.188]:42012 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077AbYCGDHm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2008 09:47:54 -0400
-Date: Fri, 21 Mar 2008 14:47:50 +0100
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	David Brownell <david-b@pacbell.net>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	netdev@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	video4linux-list@redhat.com,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	lm-sensors@lm-sensors.org
-Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
-Message-ID: <20080321134750.GB4128@osiris.boeblingen.de.ibm.com> (sfid-20080321_134801_367661_EFDB97A1)
-References: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org> <200803210236.52063.mb@bu3sch.de> <20080320192719.6a32386e.akpm@linux-foundation.org>
+	Thu, 6 Mar 2008 22:07:42 -0500
+Received: by rn-out-0910.google.com with SMTP id v46so473701rnb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 19:07:39 -0800 (PST)
+Message-ID: <43e72e890803061907j2dca57f1k6907e2942f8a70fc@mail.gmail.com> (sfid-20080307_030746_599029_B1DDD37D)
+Date: Thu, 6 Mar 2008 22:07:38 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/8] ath5k: latest revised patches
+Cc: ath5k-devel@lists.ath5k.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890802281456j22236cdegb4cf0c90d954af05@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080320192719.6a32386e.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890802281456j22236cdegb4cf0c90d954af05@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 20, 2008 at 07:27:19PM -0700, Andrew Morton wrote:
-> On Fri, 21 Mar 2008 02:36:51 +0100 Michael Buesch <mb@bu3sch.de> wrote:
-> > On Friday 21 March 2008 02:31:44 Alan Stern wrote:
-> > > On Thu, 20 Mar 2008, Andrew Morton wrote:
-> > > > On Thu, 20 Mar 2008 21:36:04 -0300 Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
-> > > > 
-> > > > > Well, so far so good for LEDs, but what about the other users of in_atomic
-> > > > > that apparently should not be doing it either?
-> > > > 
-> > > > Ho hum.  Lots of cc's added.
-> > > 
-> > > ...
-> > > 
-> > > > The usual pattern for most of the above is
-> > > > 
-> > > > 	if (!in_atomic())
-> > > > 		do_something_which_might_sleep();
-> > > > 
-> > > > problem is, in_atomic() returns false inside spinlock on non-preptible
-> > > > kernels.  So if anyone calls those functions inside spinlock they will
-> > > > incorrectly schedule and another task can then come in and try take the
-> > > > already-held lock.
-> > > > 
-> > > > Now, it happens that in_atomic() returns true on non-preemtible kernels
-> > > > when running in interrupt or softirq context.  But if the above code really
-> > > > is using in_atomic() to detect am-i-called-from-interrupt and NOT
-> > > > am-i-called-from-inside-spinlock, they should be using in_irq(),
-> > > > in_softirq() or in_interrupt().
-> > > 
-> > > Presumably most of these places are actually trying to detect 
-> > > am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
-> > 
-> > No, I think there is no such check in the kernel. Most likely for performance
-> > reasons, as it would require a global flag that is set on each spinlock.
-> 
-> Yup.  non-preemptible kernels avoid the inc/dec of
-> current_thread_info->preempt_count on spin_lock/spin_unlock
-> 
-> > You simply must always _know_, if you are allowed to sleep or not. This is
-> > done by defining an API. The call-context is part of any kernel API.
-> 
-> Yup.  99.99% of kernel code manages to do this...
+On Thu, Feb 28, 2008 at 5:56 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> The following are based on Nick's patches, they address checkpatch
+>  complaints, make use of pci_dev's is_pcie, and makes use of a helper
+>  instead on the 7th patch. These need testing on pci-e cards. I've
+>  tested it on AR5213 (MAC 0x56, PHY: 0x41), RF5211 (0x17) and RF2111
+>  (0x23).
 
-This is difficult for console drivers. They get called and are supposed to
-print something and don't have the slightest clue which context they are
-running in and if they are allowed to schedule.
-This is the problem with e.g. s390's sclp driver. If there are no write
-buffers available anymore it tries to allocate memory if schedule is allowed
-or otherwise has to wait until finally a request finished and memory is
-available again.
-And now we have to always busy wait if we are out of buffers, since we
-cannot tell which context we are in?
+Testing was done.
+
+>  You can also wget them from:
+>
+>  http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath5k/2008-02-28/
+
+We need to move forward with this. Any blockers?
+
+  Luis
