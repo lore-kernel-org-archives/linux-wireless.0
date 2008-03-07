@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:10098 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751596AbYC1Hn3 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:19884 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758995AbYCGSur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 03:43:29 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so162170wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 00:43:27 -0700 (PDT)
-Message-ID: <1ba2fa240803280043g7d0fea74vd76691d836900c15@mail.gmail.com> (sfid-20080328_074333_689751_15BFD2B0)
-Date: Fri, 28 Mar 2008 10:43:27 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: TKIP patches
-Cc: linux-wireless@vger.kernel.org,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-In-Reply-To: <20080328023336.GA10006@tuxdriver.com>
+	Fri, 7 Mar 2008 13:50:47 -0500
+Received: by an-out-0708.google.com with SMTP id d31so149010and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 10:50:46 -0800 (PST)
+Message-ID: <40f31dec0803071050h6b2766e0g8979499e100db46d@mail.gmail.com> (sfid-20080307_185050_741361_01A6E89D)
+Date: Fri, 7 Mar 2008 20:50:45 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 0/8] ath5k: latest revised patches
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080307180236.GS28995@ruslug.rutgers.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
-	 <20080328023336.GA10006@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890802281456j22236cdegb4cf0c90d954af05@mail.gmail.com>
+	 <43e72e890803061907j2dca57f1k6907e2942f8a70fc@mail.gmail.com>
+	 <40f31dec0803070432i2e313b32q68493f0af4a0105c@mail.gmail.com>
+	 <43e72e890803070915l35564f7ao1c25752b03a9531d@mail.gmail.com>
+	 <20080307180236.GS28995@ruslug.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2008 at 5:33 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
+2008/3/7, Luis R. Rodriguez <mcgrof@gmail.com>:
 >
-> On Fri, Mar 28, 2008 at 03:23:28AM +0200, Tomas Winkler wrote:
->  > John, what restraining you from applying TKIP patches to wireless-testing
->  > First of all they were acked by Johannes second they need to got into
->  > wider use, most of  the people don't pick up code from the mailing
->  > list but from git directory.
->  > Even TKIP is stupid encryption schema and everybody wants see it dead
->  > it's still used. From our testing our patches reduces significantly
->  > cpu utilization and throughput.
->  > If there are any other issues please let us know
+>  OK -- so just to re-cap, patches 1-6 remain the same, patch 7 was
+>  changed to not have the helper but still respect 80-char limit,
+>  and patch 8 modified to apply ontop of new patch 7.
 >
->  The only TKIP-related patches I have in my queue that haven't been
->  applied are some cleanups from Harvey Harrison.  What other patches
->  do you mean?  The ones from a week or so ago have already been applied.
+>  Now series can be wget'd from:
+>
+>  http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath5k/2008-03-07/
+>
+>
+>   Luis
+>
 
-Hmm, have to missed it somehow, my mistake.  I've seen only the revert
-patches before.
-Thanks
-Tomas
+
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
