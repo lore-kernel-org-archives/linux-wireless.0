@@ -1,38 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4743 "EHLO ra.tuxdriver.com"
+Received: from mga03.intel.com ([143.182.124.21]:43419 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754558AbYCYTIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 15:08:13 -0400
-Date: Tue, 25 Mar 2008 14:32:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?Uy7Dh2HEn2xhcg==?= Onur <caglar@pardus.org.tr>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] net/mac80211/: Use time_* macros
-Message-ID: <20080325183204.GA3646@tuxdriver.com> (sfid-20080325_190817_684948_96921899)
-References: <1205746593-24820-1-git-send-email-caglar@pardus.org.tr> <1205746593-24820-2-git-send-email-caglar@pardus.org.tr> <1205746593-24820-3-git-send-email-caglar@pardus.org.tr> <1205746593-24820-4-git-send-email-caglar@pardus.org.tr> <1205746593-24820-5-git-send-email-caglar@pardus.org.tr> <1205746593-24820-6-git-send-email-caglar@pardus.org.tr> <1205746593-24820-7-git-send-email-caglar@pardus.org.tr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1205746593-24820-7-git-send-email-caglar@pardus.org.tr>
+	id S1758071AbYCGBkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2008 20:40:19 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/4] iwlwifi driver updates
+Date: Thu,  6 Mar 2008 17:36:52 -0800
+Message-Id: <1204853816-8964-1-git-send-email-reinette.chatre@intel.com> (sfid-20080307_014027_883878_BF2A63A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 17, 2008 at 11:36:29AM +0200, S.=C3=87a=C4=9Flar Onur wrote=
-:
-> The functions time_before, time_before_eq, time_after, and time_after=
-_eq are more robust for comparing jiffies against other values.
->=20
-> So following patch implements usage of the time_after() macro, define=
-d at linux/jiffies.h, which deals with wrapping correctly
+These patches are mostly cleanup. One patch fixes rate scaling in 3945.
 
-These two patches are already queues for 2.6.26.
+[PATCH 1/4] iwlwifi: queue functions cleanup
+[PATCH 2/4] iwlwifi: Fix 3945 rate scaling
+[PATCH 3/4] iwlwifi: 3945 split tx_complete to command and packet function
+[PATCH 4/4] iwlwifi: grab NIC access when disabling aggregations
 
-John
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+
+Reinette
