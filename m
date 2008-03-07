@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54160 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756749AbYCYXdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 19:33:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 4/6] mac80211: fix wrong Rx A-MPDU control via debugfs
-Date: Tue, 25 Mar 2008 16:33:39 -0700
-Message-Id: <1206488021-4193-5-git-send-email-reinette.chatre@intel.com> (sfid-20080325_233413_275879_3F0B3910)
-In-Reply-To: <1206488021-4193-4-git-send-email-reinette.chatre@intel.com>
-References: <1206488021-4193-1-git-send-email-reinette.chatre@intel.com>
- <1206488021-4193-2-git-send-email-reinette.chatre@intel.com>
- <1206488021-4193-3-git-send-email-reinette.chatre@intel.com>
- <1206488021-4193-4-git-send-email-reinette.chatre@intel.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:25070 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755534AbYCGI5o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 03:57:44 -0500
+From: bruno randolf <bruno@thinktube.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC] RCPI support in radiotap and in our wireless subsystems
+Date: Fri, 7 Mar 2008 17:57:18 +0900
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	radiotap@mail.ojctech.com,
+	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
+	"Haris Kremo" <harisk@winlab.rutgers.edu>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Simon Barber" <simon@devicescape.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Luis Carlos Cobo" <luisca@cozybit.com>,
+	"Javier Cardona" <javier@cozybit.com>,
+	"Sam Leffler" <sam@errno.com>, "Jean Tourrilhes" <jt@hpl.hp.com>,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+References: <43e72e890803061238u50847f1fs587627c5fac028d6@mail.gmail.com> <200803070932.51396.bruno@thinktube.com> <43e72e890803061904h742df37fuaa12977c45e457a@mail.gmail.com>
+In-Reply-To: <43e72e890803061904h742df37fuaa12977c45e457a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803071757.19302.bruno@thinktube.com> (sfid-20080307_085750_256814_D6EDF4CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Friday 07 March 2008 12:04:24 Luis R. Rodriguez wrote:
+> >  it could be changed to something like:
+> >
+> >   * @signal: signal strength in dBm above noise or RCPI according to flag
+>
+> As it stands I don't think all drivers could populate this field under
+> that description. For example, ssi in b43 is set to some magical value
+> we have no clue what it means.
+>
+> We *could* test this stuff and see if it matches RCPI for each device,
+> or just try to figure out at least what RSSI is wrt to the observed
+> signal through a spectrum analyser (and even jssi is for b43) but I
+> wonder how this will change upon hw revisions.
+>
+> >   * @noise: PHY noise in dBm when receiving this frame
+> >   (remove ssi)
+>
+> Again, the problem in clarifying this also puts a restriction on what
+> driver developers may know about their hardware.
 
-This patch eliminate the use of buf_size as a trigger in favor of a new
-flag to control Rx A-MPDU sessions through debugfs
+yes, but you suggested RCPI which is even more difficult to deliver. well - i 
+don't know *any* device which could...
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/debugfs_sta.c |    6 ++++--
- net/mac80211/sta_info.h    |    1 +
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ok. what about 3 hw flags then?
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index fc2c1a1..62354de 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -230,11 +230,13 @@ static ssize_t sta_agg_status_write(struct file *file,
- 			strcpy(state, "off ");
- 			ieee80211_sta_stop_rx_ba_session(dev, da, tid_num, 0,
- 					WLAN_REASON_QSTA_REQUIRE_SETUP);
--			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0xFF;
-+			sta->ampdu_mlme.tid_rx[tid_num].state |=
-+					HT_AGG_STATE_DEBUGFS_CTL;
- 			tid_static_rx[tid_num] = 0;
- 		} else {
- 			strcpy(state, "on ");
--			sta->ampdu_mlme.tid_rx[tid_num].buf_size = 0x00;
-+			sta->ampdu_mlme.tid_rx[tid_num].state &=
-+					~HT_AGG_STATE_DEBUGFS_CTL;
- 			tid_static_rx[tid_num] = 1;
- 		}
- 		printk(KERN_DEBUG "debugfs - try switching tid %u %s\n",
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index f166c80..5d6b436 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -63,6 +63,7 @@ enum ieee80211_sta_info_flags {
- #define HT_AGG_STATE_OPERATIONAL	(HT_ADDBA_REQUESTED_MSK |	\
- 					 HT_ADDBA_DRV_READY_MSK |	\
- 					 HT_ADDBA_RECEIVED_MSK)
-+#define HT_AGG_STATE_DEBUGFS_CTL	BIT(7)
- 
- /**
-  * struct tid_ampdu_tx - TID aggregation information (Tx).
--- 
-1.5.3.4
+something like:
+_SIGNAL_RSSI_UNITLESS
+_SIGNAL_RSSI_DBM
+_SIGNAL_RCPI
 
+so mac80211 can fill in the right radiotap headers, and drivers can make it 
+clear what they support. it's clear that drivers should strive to deliver the 
+most exact when they can.
+
+we have the same problem with the rx timestamp. we made a definition and ath5k 
+for example can't deliver. but i think a clear definition and a clear note 
+where it cannot be delivered is better than no definition at all :)
+
+bruno
