@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:49757 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763441AbYCSVBB (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.228]:29996 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759185AbYCGTkm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 17:01:01 -0400
-Received: by ti-out-0910.google.com with SMTP id 28so300571tif.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 14:01:00 -0700 (PDT)
-Message-ID: <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com> (sfid-20080319_210208_269717_9C1D24C7)
-Date: Tue, 18 Mar 2008 22:46:45 +0100
-From: drago01 <drago01@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
+	Fri, 7 Mar 2008 14:40:42 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so586970qbe.15
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 11:40:41 -0800 (PST)
+Message-ID: <43e72e890803071140s1ad8571w8f2b06c6b9cb1c12@mail.gmail.com> (sfid-20080307_194047_383259_6AE505D9)
+Date: Fri, 7 Mar 2008 14:40:36 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: 2.6.24, mac80211 and b/g switching
+Cc: "Vladimir Koutny" <vlado@work.ksp.sk>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200803071916.28776.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
-	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
-	 <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-	 <47B29F63.6050605@gmail.com>
-	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain; charset=UTF-8
+References: <47D160E4.3040503@work.ksp.sk>
+	 <1204909966.6387.31.camel@johannes.berg>
+	 <47D17EDF.4010100@work.ksp.sk> <200803071916.28776.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  Please note that the driver loads/unloads the firmware during interface
->  up/down. That means that the host will not receive rfkill events while
->  the interface is down as there is no firmware to deal with these events.
+On Fri, Mar 7, 2008 at 1:16 PM, Michael Buesch <mb@bu3sch.de> wrote:
 >
->  Reinette
+> On Friday 07 March 2008 18:43:59 Vladimir Koutny wrote:
+>  > Johannes Berg wrote:
+>  > >> Is this a known issue? (I didn't manage to find anything in ml archives
+>  > >> so far) Or any hints on how to solve this?
+>  > >
+>  > > You want to develop against a non-ancient kernel that has all the HW
+>  > > mode foo removed.
+>  >
+>  > Well, the question is not what version I would like to develop for, but
+>  > what version I have to :( Stable kernel releases should be those
+>  > versions you want to base real products on, right?
+>  >
+>  > Do you think that taking mac80211 from wireless-2.6 (or -testing or
+>  > whatever) would cause way too many conflicts when merged back to 2.6.24?
+>  >   Or am I on my own to fix this somehow in 2.6.24?
 >
+>  OpenWRT ported a rather recent mac80211 back to 2.6.23. So it shouldn't be too hard.
 
-OK that makes sense.
-So a solution would be to not unload the firmware on down when the hw
-rfkill is on. Is this a acceptable one or are they other (better
-solutions).
-I can't think of any. And userspace cannot do anything because
-bringing the device up and down again to look for the rfkill status
-would be racy.
+If you want to work with the latest wireless subsystem on older
+kernels you can also use compat-wireless-2.6 package. It supports
+kernels >= 2.6.21. Only thing left to do on 2.6.21 is to test PCI and
+add any needed backports there.
+
+http://linuxwireless.org/en/users/Download
+
+  Luis
