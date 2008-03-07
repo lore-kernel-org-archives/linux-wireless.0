@@ -1,24 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13740 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754883AbYCZQi6 (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:44460 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbYCGSCj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 12:38:58 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: don't depend on IEEE80211
-Date: Wed, 26 Mar 2008 17:35:59 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200803261324.21938.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200803261324.21938.hs4233@mail.mn-solutions.de>
+	Fri, 7 Mar 2008 13:02:39 -0500
+Date: Fri, 7 Mar 2008 13:02:36 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org, Jiri Slaby <jirislaby@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/8] ath5k: latest revised patches
+Message-ID: <20080307180236.GS28995@ruslug.rutgers.edu> (sfid-20080307_180245_202665_1FF94C9C)
+References: <43e72e890802281456j22236cdegb4cf0c90d954af05@mail.gmail.com> <43e72e890803061907j2dca57f1k6907e2942f8a70fc@mail.gmail.com> <40f31dec0803070432i2e313b32q68493f0af4a0105c@mail.gmail.com> <43e72e890803070915l35564f7ao1c25752b03a9531d@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803261735.59235.hs4233@mail.mn-solutions.de> (sfid-20080326_163903_793127_B3ABE1D4)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890803070915l35564f7ao1c25752b03a9531d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, please wait with applying this. I just saw that 
-escape_essid is also used in debugfs.c, even when 
-CONFIG_LIBERTAS_DEBUG is off.
+
+OK -- so just to re-cap, patches 1-6 remain the same, patch 7 was
+changed to not have the helper but still respect 80-char limit, 
+and patch 8 modified to apply ontop of new patch 7.
+
+Now series can be wget'd from:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath5k/2008-03-07/
+
+  Luis
