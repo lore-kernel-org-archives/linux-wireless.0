@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56063
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751120AbYCDVkN (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.239]:10268 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188AbYCGRTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 16:40:13 -0500
-Date: Tue, 04 Mar 2008 13:40:03 -0800 (PST)
-Message-Id: <20080304.134003.223058560.davem@davemloft.net> (sfid-20080304_214017_843665_ABF16DB0)
+	Fri, 7 Mar 2008 12:19:41 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so504792qbe.15
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 09:19:39 -0800 (PST)
+Message-ID: <43e72e890803070919j3620d5few57573dd5289cf8af@mail.gmail.com> (sfid-20080307_171945_563442_7FADFAE9)
+Date: Fri, 7 Mar 2008 12:19:33 -0500
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
 To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-03-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080304212953.GB3158@tuxdriver.com>
-References: <20080304212953.GB3158@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: Re: [PATCH 8/8] ath5k: Add RF2413 name to srev_names
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, bruno@thinktube.com,
+	me@bobcopeland.com
+In-Reply-To: <aabf4c57da581c24f33181064d7a21eb5bfd556c.1204236793.git.mcgrof@winlab.rutgers.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu>
+	 <aabf4c57da581c24f33181064d7a21eb5bfd556c.1204236793.git.mcgrof@winlab.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 4 Mar 2008 16:29:53 -0500
+On Thu, Feb 28, 2008 at 6:01 PM, Luis R. Rodriguez
+<mcgrof@winlab.rutgers.edu> wrote:
+>  * Add 2413 to srev_names so that it shows up during module load
+>
+>  Changes-licensed-under: 3-clause-BSD
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>  Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-> Here is today's round of fixes for the 2.6.25 tree.  These are mostly
-> simple fixes, even one-liners.  The rc80211-pid patch is, of course, an
-> exception...
+I'll re-submit this based on new patch 7.
 
-Please don't just clone Linus's tree, pull net-2.6, and then stuff
-things on top of that and ask me to pull.  I end up being forced to
-end up with a merge of Linus's current tree as a result, and that's
-not how this is supposed to work.
-
-I keep net-2.6 stable for a reason.  Jeff did what you're doing right
-now the other week and now you're doing it too.
-
-There is zero point in my keeping net-2.6 clean and not rebasing it
-constantly if people are going to use it like this.
-
-You should just have a clone of net-2.6 sitting around as your
-wireless fixes tree, and you simply add wireless patches and ask me to
-pull whenever it is appropriate.
+  Luis
