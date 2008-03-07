@@ -1,107 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23144 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762134AbYCETbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 14:31:03 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: fix locking unbalance in 4965 rate scale
-Date: Wed,  5 Mar 2008 11:31:00 -0800
-Message-Id: <1204745460-9893-1-git-send-email-reinette.chatre@intel.com> (sfid-20080305_193137_156437_ABA8F993)
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:2319 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1756265AbYCGWV6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 17:21:58 -0500
+Subject: [PATCH] drivers/net/wireless/ath5k - convert == (true|false) to
+	simple logical tests
+From: Joe Perches <joe@perches.com>
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 07 Mar 2008 14:21:16 -0800
+Message-Id: <1204928476.5541.92.camel@localhost> (sfid-20080307_225415_140577_225BED5B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+(test == true) is not nice.
 
-This patch fixes locking unbalance after adding rcu locking
-for sta
+Signed-off-by: Joe Perches <joe@perches.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   25 ++++++++++++-------------
- 1 files changed, 12 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath5k/hw.c  |   42 +++++++++++++++++++-------------------
+ drivers/net/wireless/ath5k/phy.c |   10 ++++----
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 306fbdc..25e7386 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -852,19 +852,18 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index c2de2d9..e214a2f 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -1,4 +1,4 @@
+- /*
++/*
+  * Copyright (c) 2004-2007 Reyk Floeter <reyk@openbsd.org>
+  * Copyright (c) 2006-2007 Nick Kossifidis <mickflemm@gmail.com>
+  * Copyright (c) 2007 Matthew W. S. Bell  <mentor@madwifi.org>
+@@ -81,12 +81,12 @@ static int ath5k_hw_disable_pspoll(struct ath5k_hw *);
  
- 	sta = sta_info_get(local, hdr->addr1);
- 
--	if (!sta || !sta->rate_ctrl_priv) {
--		rcu_read_unlock();
--		return;
--	}
-+	if (!sta || !sta->rate_ctrl_priv)
-+		goto out;
-+
- 
- 	lq_sta = (struct iwl4965_lq_sta *)sta->rate_ctrl_priv;
- 
- 	if (!priv->lq_mngr.lq_ready)
--		return;
-+		goto out;
- 
- 	if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
- 	    !lq_sta->ibss_sta_added)
--		return;
-+		goto out;
- 
- 	table = &lq_sta->lq;
- 	active_index = lq_sta->active_tbl;
-@@ -915,8 +914,7 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 		tx_resp->control.tx_rate->bitrate)) {
- 		IWL_DEBUG_RATE("initial rate does not match 0x%x\n",
- 				tx_mcs.rate_n_flags);
--		rcu_read_unlock();
--		return;
-+		goto out;
- 	}
- 
- 	/* Update frame history window with "failure" for each Tx retry. */
-@@ -1025,6 +1023,7 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
- 
- 	/* See if there's a better rate or modulation mode to try. */
- 	rs_rate_scale_perform(priv, dev, hdr, sta);
-+out:
- 	rcu_read_unlock();
- 	return;
+ static inline unsigned int ath5k_hw_htoclock(unsigned int usec, bool turbo)
+ {
+-	return turbo == true ? (usec * 80) : (usec * 40);
++	return turbo ? (usec * 80) : (usec * 40);
  }
-@@ -2229,8 +2228,7 @@ static void rs_get_rate(void *priv_rate, struct net_device *dev,
- 	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
- 	    !sta || !sta->rate_ctrl_priv) {
- 		sel->rate = rate_lowest(local, sband, sta);
--		rcu_read_unlock();
--		return;
-+		goto out;
+ 
+ static inline unsigned int ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+ {
+-	return turbo == true ? (clock / 80) : (clock / 40);
++	return turbo ? (clock / 80) : (clock / 40);
+ }
+ 
+ /*
+@@ -100,7 +100,7 @@ int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
+ 
+ 	for (i = AR5K_TUNE_REGISTER_TIMEOUT; i > 0; i--) {
+ 		data = ath5k_hw_reg_read(ah, reg);
+-		if ((is_set == true) && (data & flag))
++		if (is_set && (data & flag))
+ 			break;
+ 		else if ((data & flag) == val)
+ 			break;
+@@ -358,7 +358,7 @@ static int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
  	}
  
- 	lq_sta = (struct iwl4965_lq_sta *)sta->rate_ctrl_priv;
-@@ -2257,14 +2255,15 @@ static void rs_get_rate(void *priv_rate, struct net_device *dev,
+ 	/* ...reset chipset and PCI device */
+-	if (ah->ah_single_chip == false && ath5k_hw_nic_reset(ah,
++	if (!ah->ah_single_chip && ath5k_hw_nic_reset(ah,
+ 				AR5K_RESET_CTL_CHIP | AR5K_RESET_CTL_PCI)) {
+ 		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip + PCI\n");
+ 		return -EIO;
+@@ -583,7 +583,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	 */
+ 	/*DCU/Antenna selection not available on 5210*/
+ 	if (ah->ah_version != AR5K_AR5210) {
+-		if (change_channel == true) {
++		if (change_channel) {
+ 			/* Seq number for queue 0 -do this for all queues ? */
+ 			s_seq = ath5k_hw_reg_read(ah,
+ 					AR5K_QUEUE_DFS_SEQNUM(0));
+@@ -597,7 +597,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	s_led[1] = ath5k_hw_reg_read(ah, AR5K_GPIOCR);
+ 	s_led[2] = ath5k_hw_reg_read(ah, AR5K_GPIODO);
+ 
+-	if (change_channel == true && ah->ah_rf_banks != NULL)
++	if (change_channel && ah->ah_rf_banks != NULL)
+ 		ath5k_hw_get_rf_gain(ah);
+ 
+ 
+@@ -1063,7 +1063,7 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		staid &= ~AR5K_STA_ID1_DEFAULT_ANTENNA;
+ 		/* fallthrough */
+ 	case AR5K_PM_NETWORK_SLEEP:
+-		if (set_chip == true)
++		if (set_chip)
+ 			ath5k_hw_reg_write(ah,
+ 				AR5K_SLEEP_CTL_SLE | sleep_duration,
+ 				AR5K_SLEEP_CTL);
+@@ -1072,7 +1072,7 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		break;
+ 
+ 	case AR5K_PM_FULL_SLEEP:
+-		if (set_chip == true)
++		if (set_chip)
+ 			ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_SLP,
+ 				AR5K_SLEEP_CTL);
+ 
+@@ -1080,7 +1080,7 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		break;
+ 
+ 	case AR5K_PM_AWAKE:
+-		if (set_chip == false)
++		if (!set_chip)
+ 			goto commit;
+ 
+ 		ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_WAKE,
+@@ -1387,7 +1387,7 @@ int ath5k_hw_update_tx_triglevel(struct ath5k_hw *ah, bool increase)
+ 	trigger_level = AR5K_REG_MS(ath5k_hw_reg_read(ah, AR5K_TXCFG),
+ 			AR5K_TXCFG_TXFULL);
+ 
+-	if (increase == false) {
++	if (!increase) {
+ 		if (--trigger_level < AR5K_TUNE_MIN_TX_FIFO_THRES)
  			goto done;
+ 	} else
+@@ -2051,7 +2051,7 @@ static bool ath5k_eeprom_regulation_domain(struct ath5k_hw *ah, bool write,
+ 	u16 ee_regdomain;
+ 
+ 	/* Read current value */
+-	if (write != true) {
++	if (!write) {
+ 		ee_regdomain = ah->ah_capabilities.cap_eeprom.ee_regdomain;
+ 		*regdomain = ath5k_regdom_to_ieee(ee_regdomain);
+ 		return true;
+@@ -2080,7 +2080,7 @@ int ath5k_hw_set_regdomain(struct ath5k_hw *ah, u16 regdomain)
+ 
+ 	ieee_regdomain = ath5k_regdom_to_ieee(regdomain);
+ 
+-	if (ath5k_eeprom_regulation_domain(ah, true, &ieee_regdomain) == true)
++	if (ath5k_eeprom_regulation_domain(ah, true, &ieee_regdomain))
+ 		return 0;
+ 
+ 	return -EIO;
+@@ -3184,19 +3184,19 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 			return 0;
+ 
+ 		/* Set Slot time */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			AR5K_INIT_SLOT_TIME_TURBO : AR5K_INIT_SLOT_TIME,
+ 			AR5K_SLOT_TIME);
+ 		/* Set ACK_CTS timeout */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			AR5K_INIT_ACK_CTS_TIMEOUT_TURBO :
+ 			AR5K_INIT_ACK_CTS_TIMEOUT, AR5K_SLOT_TIME);
+ 		/* Set Transmit Latency */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			AR5K_INIT_TRANSMIT_LATENCY_TURBO :
+ 			AR5K_INIT_TRANSMIT_LATENCY, AR5K_USEC_5210);
+ 		/* Set IFS0 */
+-		if (ah->ah_turbo == true)
++		if (ah->ah_turbo)
+ 			 ath5k_hw_reg_write(ah, ((AR5K_INIT_SIFS_TURBO +
+ 				(ah->ah_aifs + tq->tqi_aifs) *
+ 				AR5K_INIT_SLOT_TIME_TURBO) <<
+@@ -3209,16 +3209,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 				AR5K_INIT_SIFS, AR5K_IFS0);
+ 
+ 		/* Set IFS1 */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			AR5K_INIT_PROTO_TIME_CNTRL_TURBO :
+ 			AR5K_INIT_PROTO_TIME_CNTRL, AR5K_IFS1);
+ 		/* Set PHY register 0x9844 (??) */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			(ath5k_hw_reg_read(ah, AR5K_PHY(17)) & ~0x7F) | 0x38 :
+ 			(ath5k_hw_reg_read(ah, AR5K_PHY(17)) & ~0x7F) | 0x1C,
+ 			AR5K_PHY(17));
+ 		/* Set Frame Control Register */
+-		ath5k_hw_reg_write(ah, ah->ah_turbo == true ?
++		ath5k_hw_reg_write(ah, ah->ah_turbo ?
+ 			(AR5K_PHY_FRAME_CTL_INI | AR5K_PHY_TURBO_MODE |
+ 			AR5K_PHY_TURBO_SHORT | 0x2020) :
+ 			(AR5K_PHY_FRAME_CTL_INI | 0x1020),
+@@ -3257,7 +3257,7 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 	/*
+ 	 * Calculate and set retry limits
+ 	 */
+-	if (ah->ah_software_retry == true) {
++	if (ah->ah_software_retry) {
+ 		/* XXX Need to test this */
+ 		retry_lg = ah->ah_limit_tx_retries;
+ 		retry_sh = retry_lg = retry_lg > AR5K_DCU_RETRY_LMT_SH_RETRY ?
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index b959417..a0e4fdf 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -844,14 +844,14 @@ static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
+ 	entry = ((first - 1) / 8) + offset;
+ 	position = (first - 1) % 8;
+ 
+-	if (set == true)
++	if (set)
+ 		data = ath5k_hw_bitswap(reg, bits);
+ 
+ 	for (i = shift = 0, left = bits; left > 0; position = 0, entry++, i++) {
+ 		last = (position + left > 8) ? 8 : position + left;
+ 		mask = (((1 << last) - 1) ^ ((1 << position) - 1)) << (col * 8);
+ 
+-		if (set == true) {
++		if (set) {
+ 			rf[entry] &= ~mask;
+ 			rf[entry] |= ((data << position) << (col * 8)) & mask;
+ 			data >>= (8 - position);
+@@ -864,7 +864,7 @@ static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
+ 		left -= 8 - position;
  	}
  
-- done:
-+done:
- 	if ((i < 0) || (i > IWL_RATE_COUNT)) {
- 		sel->rate = rate_lowest(local, sband, sta);
--		return;
-+		goto out;
- 	}
--	rcu_read_unlock();
+-	data = set == true ? 1 : ath5k_hw_bitswap(data, bits);
++	data = set ? 1 : ath5k_hw_bitswap(data, bits);
  
- 	sel->rate = &priv->ieee_rates[i];
-+out:
-+	rcu_read_unlock();
+ 	return data;
  }
+@@ -1825,7 +1825,7 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 	s32 iq_corr, i_coff, i_coffd, q_coff, q_coffd;
+ 	ATH5K_TRACE(ah->ah_sc);
  
- static void *rs_alloc_sta(void *priv, gfp_t gfp)
--- 
-1.5.3.4
+-	if (ah->ah_calibration == false ||
++	if (!ah->ah_calibration ||
+ 			ath5k_hw_reg_read(ah, AR5K_PHY_IQ) & AR5K_PHY_IQ_RUN)
+ 		goto done;
+ 
+@@ -2048,7 +2048,7 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		AR5K_TXPOWER_CCK(13, 16) | AR5K_TXPOWER_CCK(12, 8) |
+ 		AR5K_TXPOWER_CCK(11, 0), AR5K_PHY_TXPOWER_RATE4);
+ 
+-	if (ah->ah_txpower.txp_tpc == true)
++	if (ah->ah_txpower.txp_tpc)
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_TXPOWER_RATE_MAX_TPC_ENABLE |
+ 			AR5K_TUNE_MAX_TXPOWER, AR5K_PHY_TXPOWER_RATE_MAX);
+ 	else
+
 
