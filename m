@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:36279 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbYCCUVD (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:38009 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755676AbYCGRXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 15:21:03 -0500
-Received: by el-out-1112.google.com with SMTP id v27so330530ele.17
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:21:02 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Fri, 29 Feb 2008 17:51:25 -0800
-Subject: [PATCH 10/10] mac80211: fix mesh_path and sta_info get_by_idx functions
-Message-ID: <47cc5dac.1bbd600a.20b9.ffff82b2@mx.google.com> (sfid-20080303_202142_687122_36D72F0F)
+	Fri, 7 Mar 2008 12:23:15 -0500
+Date: Fri, 7 Mar 2008 12:23:12 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, bruno@thinktube.com, me@bobcopeland.com
+Subject: Re: [PATCH 8/8] ath5k: Add RF2413 name to srev_names
+Message-ID: <20080307172312.GR28995@ruslug.rutgers.edu> (sfid-20080307_172317_279255_DA850463)
+References: <f6d5bb6d43d1ddfb60d5ed8b8d6ee472643eafd8.1204236793.git.mcgrof@winlab.rutgers.edu> <aabf4c57da581c24f33181064d7a21eb5bfd556c.1204236793.git.mcgrof@winlab.rutgers.edu> <43e72e890803070919j3620d5few57573dd5289cf8af@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890803070919j3620d5few57573dd5289cf8af@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Skip properly entries whose dev does not match.
+Add 2413 to srev_names so that it shows up during module load.
+This is based on the new patch 7 which did not introduce a helper
+on ath5k_hw_reset().
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+Changes-licensed-under: 3-clause-BSD
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 ---
- net/mac80211/mesh_pathtbl.c |    7 +++++--
- net/mac80211/sta_info.c     |    5 +++--
- 2 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath5k/base.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 135022d..5845dc2 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -98,7 +98,7 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct net_device *dev)
- /**
-  * mesh_path_lookup_by_idx - look up a path in the mesh path table by its index
-  * @idx: index
-- * @dev: local interface
-+ * @dev: local interface, or NULL for all entries
-  *
-  * Returns: pointer to the mesh path structure, or NULL if not found.
-  *
-@@ -111,7 +111,9 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct net_device *dev)
- 	int i;
- 	int j = 0;
- 
--	for_each_mesh_entry(mesh_paths, p, node, i)
-+	for_each_mesh_entry(mesh_paths, p, node, i) {
-+		if (dev && node->mpath->dev != dev)
-+			continue;
- 		if (j++ == idx) {
- 			if (MPATH_EXPIRED(node->mpath)) {
- 				spin_lock_bh(&node->mpath->state_lock);
-@@ -121,6 +123,7 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct net_device *dev)
- 			}
- 			return node->mpath;
- 		}
-+	}
- 
- 	return NULL;
- }
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index e27f896..3b84c16 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -115,12 +115,13 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int idx,
- 	int i = 0;
- 
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (dev && dev != sta->sdata->dev)
-+			continue;
- 		if (i < idx) {
- 			++i;
- 			continue;
--		} else if (!dev || dev == sta->sdata->dev) {
--			return sta;
- 		}
-+		return sta;
- 	}
- 
- 	return NULL;
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 393b5f3..fc4db88 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -118,6 +118,8 @@ static struct ath5k_srev_name srev_names[] = {
+ 	{ "5212",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5212 },
+ 	{ "5213",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213 },
+ 	{ "5213A",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5213A },
++	{ "2413",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2413 },
++	{ "2414",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2414 },
+ 	{ "2424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR2424 },
+ 	{ "5424",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5424 },
+ 	{ "5413",	AR5K_VERSION_VER,	AR5K_SREV_VER_AR5413 },
+@@ -132,6 +134,7 @@ static struct ath5k_srev_name srev_names[] = {
+ 	{ "5112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5112A },
+ 	{ "2112",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112 },
+ 	{ "2112A",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112A },
++	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC0 },
+ 	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC1 },
+ 	{ "SChip",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_SC2 },
+ 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
 -- 
 1.5.2.5
-
-
 
