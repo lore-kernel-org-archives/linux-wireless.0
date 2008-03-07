@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3784 "EHLO ra.tuxdriver.com"
+Received: from main.gmane.org ([80.91.229.2]:43063 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756205AbYCaVdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 17:33:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	id S1757245AbYCGL1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 06:27:11 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JXajA-0003qR-Sa
+	for linux-wireless@vger.kernel.org; Fri, 07 Mar 2008 11:27:05 +0000
+Received: from dsl081-096-236.den1.dsl.speakeasy.net ([64.81.96.236])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 11:27:04 +0000
+Received: from gmane by dsl081-096-236.den1.dsl.speakeasy.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 11:27:04 +0000
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Brian Morrison <bdm@fenrir.org.uk>
-Subject: [PATCH] cfg80211: add EU regulatory domain
-Date: Mon, 31 Mar 2008 17:01:55 -0400
-Message-Id: <1206997315-15878-1-git-send-email-linville@tuxdriver.com> (sfid-20080331_223338_206205_85548557)
+From: Joe Wise <gmane@joewise.com>
+Subject: Re: can't bring up wlan0
+Date: Fri, 7 Mar 2008 11:26:50 +0000 (UTC)
+Message-ID: <loom.20080307T112021-548@post.gmane.org> (sfid-20080307_112731_744348_CBD081F4)
+References: <20080223153142.da9fc4e4.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on initial footwork from Brian Morrison.
+Andrew Morton <akpm@...> writes:
 
-Cc: Brian Morrison <bdm@fenrir.org.uk>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Is this worth having?  I'm surprised no one has asked for it until
-recently...
+> 
+> 
+> I've been noticing this for a week or two but hadn't paid it much attention
+> amongst the storm of other bugs.
+> 
+> This is on the t61p laptop, running FC8.
+> 
 
-Are these values correct?  Including the power and gain values?  Does
-anyone know have a link to an authoritative source?
+Ok, I'm a little embarrassed to say this.  Ok, alot embarrassed.  I also have a
+t61 laptop with this same card in it and I messed around for hours and hours
+trying to get it working, consistently coming up with this same issue. 
+Ultimately, I gave up on it, hoping it would work in a later kernel.
 
- net/wireless/reg.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Well, turns out there's a wifi kill switch on the t61 laptops (and probably many
+others).  On the t61's, its a small slider switch on the left side of the front
+edge of the palm rest.  Right next to the firewire port.  When slid to the left,
+the internal wifi radio is turned off.  It's still detected by the kernel, and
+the iwl4695 module loads without issue, but with that switch slid to the left,
+ifconfig will fail as specified here.  I was not able to figure out how to get
+the switch to slide back to the right.  I had to remove the palmrest and mess
+with it internally to get it to slide back over.  Once that was done, ifconfig
+worked just find and I'm kismetting like crazy now, too.  Enjoy!
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8cc6037..998ceb6 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -80,6 +80,21 @@ static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
- 				     IEEE80211_CHAN_RADAR),
- };
- 
-+static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
-+	/* IEEE 802.11b/g, channels 1..13 */
-+	RANGE_PWR(2412, 2472, 27, 6, 0),
-+	/* IEEE 802.11a, channel 36*/
-+	RANGE_PWR(5180, 5180, 23, 6, 0),
-+	/* IEEE 802.11a, channel 40*/
-+	RANGE_PWR(5200, 5200, 23, 6, 0),
-+	/* IEEE 802.11a, channel 44*/
-+	RANGE_PWR(5220, 5220, 23, 6, 0),
-+	/* IEEE 802.11a, channels 48..64 */
-+	RANGE_PWR(5240, 5320, 23, 6, 0),
-+	/* IEEE 802.11a, channels 100..140 */
-+	RANGE_PWR(5500, 5700, 23, 6, 0),
-+};
-+
- #define REGDOM(_code)							\
- 	{								\
- 		.code = __stringify(_code),				\
-@@ -90,6 +105,7 @@ static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
- static const struct ieee80211_regdomain ieee80211_regdoms[] = {
- 	REGDOM(US),
- 	REGDOM(JP),
-+	REGDOM(EU),
- };
- 
- 
--- 
-1.5.3.3
+-Joe
 
