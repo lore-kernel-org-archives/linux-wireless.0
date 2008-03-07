@@ -1,267 +1,516 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:45596 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754729AbYCNRsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2008 13:48:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 3/5] iwlwifi: Packing all 4965 parameters
-Date: Fri, 14 Mar 2008 10:38:47 -0700
-Message-Id: <1205516329-22172-4-git-send-email-reinette.chatre@intel.com> (sfid-20080314_174958_090512_BC3C0AAE)
-In-Reply-To: <1205516329-22172-3-git-send-email-reinette.chatre@intel.com>
-References: <1205516329-22172-1-git-send-email-reinette.chatre@intel.com>
- <1205516329-22172-2-git-send-email-reinette.chatre@intel.com>
- <1205516329-22172-3-git-send-email-reinette.chatre@intel.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:47909 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbYCGXXB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 18:23:01 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/2] rndis_wlan: cleanup,
+	rename and reorder enums and structures
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Sat, 08 Mar 2008 01:23:17 +0200
+Message-ID: <20080307232317.15875.89491.stgit@localhost> (sfid-20080307_232309_164472_ABC72AAB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+Rename enums and structures to ndis_80211_* for greater readability. 
+Also change order so that enumerations are presented first.
 
-This patch defines a package struct for iwlwifi parameters, and uses a
-single instance of this struct to group all iwl4965 module parameters
-together.
-
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   14 ++++----
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 +--
- drivers/net/wireless/iwlwifi/iwl-core.h     |   12 +++++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   47 +++++++++++++--------------
- 4 files changed, 43 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b6b495e..f015780 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -320,7 +320,7 @@ static int iwl4965_rx_init(struct iwl_priv *priv, struct iwl4965_rx_queue *rxq)
- 		return rc;
- 	}
+ drivers/net/wireless/rndis_wlan.c |  213 ++++++++++++++++++-------------------
+ 1 files changed, 103 insertions(+), 110 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 10b776c..157c464 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -154,107 +154,100 @@ MODULE_PARM_DESC(workaround_interval,
+ #define NDIS_802_11_LENGTH_RATES 8
+ #define NDIS_802_11_LENGTH_RATES_EX 16
  
--	if (iwl4965_param_amsdu_size_8K)
-+	if (iwl4965_mod_params.amsdu_size_8K)
- 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K;
- 	else
- 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K;
-@@ -1845,8 +1845,8 @@ int iwl4965_hw_set_hw_setting(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
--	if ((iwl4965_param_queues_num > IWL_MAX_NUM_QUEUES) ||
--	    (iwl4965_param_queues_num < IWL_MIN_NUM_QUEUES)) {
-+	if ((iwl4965_mod_params.num_of_queues > IWL_MAX_NUM_QUEUES) ||
-+	    (iwl4965_mod_params.num_of_queues < IWL_MIN_NUM_QUEUES)) {
- 		IWL_ERROR("invalid queues_num, should be between %d and %d\n",
- 			  IWL_MIN_NUM_QUEUES, IWL_MAX_NUM_QUEUES);
- 		ret = -EINVAL;
-@@ -1866,11 +1866,11 @@ int iwl4965_hw_set_hw_setting(struct iwl_priv *priv)
- 
- 	memset(priv->hw_setting.shared_virt, 0, sizeof(struct iwl4965_shared));
- 
--	priv->hw_setting.max_txq_num = iwl4965_param_queues_num;
-+	priv->hw_setting.max_txq_num = iwl4965_mod_params.num_of_queues;
- 	priv->hw_setting.tx_cmd_len = sizeof(struct iwl4965_tx_cmd);
- 	priv->hw_setting.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_setting.max_rxq_log = RX_QUEUE_SIZE_LOG;
--	if (iwl4965_param_amsdu_size_8K)
-+	if (iwl4965_mod_params.amsdu_size_8K)
- 		priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE_8K;
- 	else
- 		priv->hw_setting.rx_buf_size = IWL_RX_BUF_SIZE_4K;
-@@ -3487,7 +3487,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
- 	stats->flag = 0;
- 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
- 
--	if (iwl4965_param_hwcrypto)
-+	if (iwl4965_mod_params.hw_crypto)
- 		iwl4965_set_decrypted_flag(priv, rxb->skb, ampdu_status, stats);
- 
- 	if (priv->add_radiotap)
-@@ -3627,7 +3627,7 @@ void iwl4965_init_ht_hw_capab(struct ieee80211_ht_info *ht_info,
- 	ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_20;
- 	ht_info->cap |= (u16)(IEEE80211_HT_CAP_MIMO_PS &
- 			     (IWL_MIMO_PS_NONE << 2));
--	if (iwl4965_param_amsdu_size_8K) {
-+	if (iwl4965_mod_params.amsdu_size_8K) {
- 		printk(KERN_DEBUG "iwl4965 in A-MSDU 8K support mode\n");
- 		ht_info->cap |= (u16)IEEE80211_HT_CAP_MAX_AMSDU;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index cec62ba..1480e1b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -67,9 +67,7 @@ extern struct pci_device_id iwl4965_hw_card_ids[];
- #define IWL_NOISE_MEAS_NOT_AVAILABLE (-127)
- 
- /* Module parameters accessible from iwl-*.c */
--extern int iwl4965_param_hwcrypto;
--extern int iwl4965_param_queues_num;
--extern int iwl4965_param_amsdu_size_8K;
-+extern struct iwl_mod_params iwl4965_mod_params;
- 
- enum iwl4965_antenna {
- 	IWL_ANTENNA_DIVERSITY,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 88fd49a..fb4ce08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -84,11 +84,23 @@ struct iwl_ops {
- 	const struct iwl_lib_ops *lib;
- };
- 
-+struct iwl_mod_params {
-+	int disable;		/* def: 0 = enable radio */
-+	int hw_crypto;		/* def: 0 = using software encryption */
-+	int debug;		/* def: 0 = minimal debug log messages */
-+	int disable_hw_scan;	/* def: 0 = use h/w scan */
-+	int num_of_queues;	/* def: HW dependent */
-+	int enable_qos;		/* def: 1 = use quality of service */
-+	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
-+	int antenna;  		/* def: 0 = both antennas (use diversity) */
+-struct NDIS_802_11_SSID {
++enum ndis_80211_net_type {
++	ndis_80211_type_freq_hop,
++	ndis_80211_type_direct_seq,
++	ndis_80211_type_ofdm_a,
++	ndis_80211_type_ofdm_g
 +};
 +
- struct iwl_cfg {
- 	const char *name;
- 	const char *fw_name;
- 	unsigned int sku;
- 	const struct iwl_ops *ops;
-+	const struct iwl_mod_params *mod_params;
- };
- 
- #endif /* __iwl_core_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9fb14a4..ebdf2d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -60,14 +60,12 @@ static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
-  ******************************************************************************/
- 
- /* module parameters */
--static int iwl4965_param_disable_hw_scan; /* def: 0 = use 4965's h/w scan */
--static int iwl4965_param_debug;    /* def: 0 = minimal debug log messages */
--static int iwl4965_param_disable;  /* def: enable radio */
--static int iwl4965_param_antenna;  /* def: 0 = both antennas (use diversity) */
--int iwl4965_param_hwcrypto;        /* def: using software encryption */
--static int iwl4965_param_qos_enable = 1; /* def: 1 = use quality of service */
--int iwl4965_param_queues_num = IWL_MAX_NUM_QUEUES; /* def: 16 Tx queues */
--int iwl4965_param_amsdu_size_8K;   /* def: enable 8K amsdu size */
-+struct iwl_mod_params iwl4965_mod_params = {
-+	.num_of_queues = IWL_MAX_NUM_QUEUES,
-+	.enable_qos = 1,
-+	.amsdu_size_8K = 1,
-+	/* the rest are 0 by default */
++enum ndis_80211_net_infra {
++	ndis_80211_infra_adhoc,
++	ndis_80211_infra_infra,
++	ndis_80211_infra_auto_unknown
 +};
++
++enum ndis_80211_auth_mode {
++	ndis_80211_auth_open,
++	ndis_80211_auth_shared,
++	ndis_80211_auth_auto_switch,
++	ndis_80211_auth_wpa,
++	ndis_80211_auth_wpa_psk,
++	ndis_80211_auth_wpa_none,
++	ndis_80211_auth_wpa2,
++	ndis_80211_auth_wpa2_psk
++};
++
++enum ndis_80211_encr_status {
++	ndis_80211_encr_wep_enabled,
++	ndis_80211_encr_disabled,
++	ndis_80211_encr_wep_key_absent,
++	ndis_80211_encr_not_supported,
++	ndis_80211_encr_tkip_enabled,
++	ndis_80211_encr_tkip_key_absent,
++	ndis_80211_encr_ccmp_enabled,
++	ndis_80211_encr_ccmp_key_absent
++};
++
++enum ndis_80211_priv_filter {
++	ndis_80211_priv_accept_all,
++	ndis_80211_priv_8021x_wep
++};
++
++struct ndis_80211_ssid {
+ 	__le32 SsidLength;
+ 	u8 Ssid[NDIS_802_11_LENGTH_SSID];
+ } __attribute__((packed));
  
- /*
-  * module name, copyright, version, etc.
-@@ -1191,7 +1189,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 		       le16_to_cpu(priv->staging_rxon.channel),
- 		       print_mac(mac, priv->staging_rxon.bssid_addr));
+-enum NDIS_802_11_NETWORK_TYPE {
+-	Ndis802_11FH,
+-	Ndis802_11DS,
+-	Ndis802_11OFDM5,
+-	Ndis802_11OFDM24,
+-	Ndis802_11NetworkTypeMax
+-};
+-
+-struct NDIS_802_11_CONFIGURATION_FH {
++struct ndis_80211_conf_freq_hop {
+ 	__le32 Length;
+ 	__le32 HopPattern;
+ 	__le32 HopSet;
+ 	__le32 DwellTime;
+ } __attribute__((packed));
  
--	iwl4965_set_rxon_hwcrypto(priv, iwl4965_param_hwcrypto);
-+	iwl4965_set_rxon_hwcrypto(priv, iwl4965_mod_params.hw_crypto);
- 	/* Apply the new configuration */
- 	rc = iwl4965_send_cmd_pdu(priv, REPLY_RXON,
- 			      sizeof(struct iwl4965_rxon_cmd), &priv->staging_rxon);
-@@ -7288,7 +7286,7 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
- 		goto out;
- 	}
+-struct NDIS_802_11_CONFIGURATION {
++struct ndis_80211_conf {
+ 	__le32 Length;
+ 	__le32 BeaconPeriod;
+ 	__le32 ATIMWindow;
+ 	__le32 DSConfig;
+-	struct NDIS_802_11_CONFIGURATION_FH FHConfig;
++	struct ndis_80211_conf_freq_hop FHConfig;
+ } __attribute__((packed));
  
--	if (unlikely(!iwl4965_param_disable_hw_scan &&
-+	if (unlikely(!iwl4965_mod_params.disable_hw_scan &&
- 		     test_bit(STATUS_SCANNING, &priv->status))) {
- 		IWL_DEBUG_MAC80211("leave - scanning\n");
- 		set_bit(STATUS_CONF_PENDING, &priv->status);
-@@ -7674,7 +7672,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+-enum NDIS_802_11_NETWORK_INFRASTRUCTURE {
+-	Ndis802_11IBSS,
+-	Ndis802_11Infrastructure,
+-	Ndis802_11AutoUnknown,
+-	Ndis802_11InfrastructureMax
+-};
+-
+-enum NDIS_802_11_AUTHENTICATION_MODE {
+-	Ndis802_11AuthModeOpen,
+-	Ndis802_11AuthModeShared,
+-	Ndis802_11AuthModeAutoSwitch,
+-	Ndis802_11AuthModeWPA,
+-	Ndis802_11AuthModeWPAPSK,
+-	Ndis802_11AuthModeWPANone,
+-	Ndis802_11AuthModeWPA2,
+-	Ndis802_11AuthModeWPA2PSK,
+-	Ndis802_11AuthModeMax
+-};
+-
+-enum NDIS_802_11_ENCRYPTION_STATUS {
+-	Ndis802_11WEPEnabled,
+-	Ndis802_11Encryption1Enabled = Ndis802_11WEPEnabled,
+-	Ndis802_11WEPDisabled,
+-	Ndis802_11EncryptionDisabled = Ndis802_11WEPDisabled,
+-	Ndis802_11WEPKeyAbsent,
+-	Ndis802_11Encryption1KeyAbsent = Ndis802_11WEPKeyAbsent,
+-	Ndis802_11WEPNotSupported,
+-	Ndis802_11EncryptionNotSupported = Ndis802_11WEPNotSupported,
+-	Ndis802_11Encryption2Enabled,
+-	Ndis802_11Encryption2KeyAbsent,
+-	Ndis802_11Encryption3Enabled,
+-	Ndis802_11Encryption3KeyAbsent
+-};
+-
+-enum NDIS_802_11_PRIVACY_FILTER {
+-	Ndis802_11PrivFilterAcceptAll,
+-	Ndis802_11PrivFilter8021xWEP
+-};
+-
+-struct NDIS_WLAN_BSSID_EX {
++struct ndis_80211_bssid_ex {
+ 	__le32 Length;
+ 	u8 MacAddress[6];
+ 	u8 Padding[2];
+-	struct NDIS_802_11_SSID Ssid;
++	struct ndis_80211_ssid Ssid;
+ 	__le32 Privacy;
+ 	__le32 Rssi;
+ 	__le32 NetworkTypeInUse;
+-	struct NDIS_802_11_CONFIGURATION Configuration;
++	struct ndis_80211_conf Configuration;
+ 	__le32 InfrastructureMode;
+ 	u8 SupportedRates[NDIS_802_11_LENGTH_RATES_EX];
+ 	__le32 IELength;
+ 	u8 IEs[0];
+ } __attribute__((packed));
  
- 	IWL_DEBUG_MAC80211("enter\n");
+-struct NDIS_802_11_BSSID_LIST_EX {
++struct ndis_80211_bssid_list_ex {
+ 	__le32 NumberOfItems;
+-	struct NDIS_WLAN_BSSID_EX Bssid[0];
++	struct ndis_80211_bssid_ex Bssid[0];
+ } __attribute__((packed));
  
--	if (!iwl4965_param_hwcrypto) {
-+	if (!iwl4965_mod_params.hw_crypto) {
- 		IWL_DEBUG_MAC80211("leave - hwcrypto disabled\n");
- 		return -EOPNOTSUPP;
- 	}
-@@ -8632,7 +8630,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+-struct NDIS_802_11_FIXED_IEs {
++struct ndis_80211_fixed_ies {
+ 	u8 Timestamp[8];
+ 	__le16 BeaconInterval;
+ 	__le16 Capabilities;
+ } __attribute__((packed));
  
- 	/* Disabling hardware scan means that mac80211 will perform scans
- 	 * "the hard way", rather than using device's scan. */
--	if (iwl4965_param_disable_hw_scan) {
-+	if (iwl4965_mod_params.disable_hw_scan) {
- 		IWL_DEBUG_INFO("Disabling hw_scan\n");
- 		iwl4965_hw_ops.hw_scan = NULL;
- 	}
-@@ -8655,7 +8653,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	priv->pci_dev = pdev;
+-struct NDIS_802_11_WEP {
++struct ndis_80211_wep_key {
+ 	__le32 Length;
+ 	__le32 KeyIndex;
+ 	__le32 KeyLength;
+ 	u8 KeyMaterial[32];
+ } __attribute__((packed));
  
- #ifdef CONFIG_IWLWIFI_DEBUG
--	iwl_debug_level = iwl4965_param_debug;
-+	iwl_debug_level = iwl4965_mod_params.debug;
- 	atomic_set(&priv->restrict_refcnt, 0);
- #endif
+-struct NDIS_802_11_KEY {
++struct ndis_80211_key {
+ 	__le32 Length;
+ 	__le32 KeyIndex;
+ 	__le32 KeyLength;
+@@ -264,13 +257,13 @@ struct NDIS_802_11_KEY {
+ 	u8 KeyMaterial[32];
+ } __attribute__((packed));
  
-@@ -8763,7 +8761,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- #endif /* CONFIG_IWL4965_HT */
+-struct NDIS_802_11_REMOVE_KEY {
++struct ndis_80211_remove_key {
+ 	__le32 Length;
+ 	__le32 KeyIndex;
+ 	u8 Bssid[6];
+ } __attribute__((packed));
  
- 	hw->rate_control_algorithm = "iwl-4965-rs";
--	priv->antenna = (enum iwl4965_antenna)iwl4965_param_antenna;
-+	priv->antenna = (enum iwl4965_antenna)iwl4965_mod_params.antenna;
- 	priv->retry_rate = 1;
- 	priv->ibss_beacon = NULL;
+-struct RNDIS_CONFIG_PARAMETER_INFOBUFFER {
++struct ndis_config_param {
+ 	__le32 ParameterNameOffset;
+ 	__le32 ParameterNameLength;
+ 	__le32 ParameterType;
+@@ -334,7 +327,7 @@ struct rndis_wext_private {
+ 	/* hardware state */
+ 	int radio_on;
+ 	int infra_mode;
+-	struct NDIS_802_11_SSID essid;
++	struct ndis_80211_ssid essid;
  
-@@ -8836,12 +8834,12 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	 **********************************/
+ 	/* encryption stuff */
+ 	int  encr_tx_key_index;
+@@ -484,7 +477,7 @@ static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
+ static int rndis_set_config_parameter(struct usbnet *dev, char *param,
+ 						int value_type, void *value)
+ {
+-	struct RNDIS_CONFIG_PARAMETER_INFOBUFFER *infobuf;
++	struct ndis_config_param *infobuf;
+ 	int value_len, info_len, param_len, ret, i;
+ 	__le16 *unibuf;
+ 	__le32 *dst_value;
+@@ -630,7 +623,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
+ static int
+ add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index);
  
- 	/* Disable radio (SW RF KILL) via parameter when loading driver */
--	if (iwl4965_param_disable) {
-+	if (iwl4965_mod_params.disable) {
- 		set_bit(STATUS_RF_KILL_SW, &priv->status);
- 		IWL_DEBUG_INFO("Radio disabled.\n");
- 	}
+-static int get_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
++static int get_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
+ {
+ 	int ret, len;
  
--	if (iwl4965_param_qos_enable)
-+	if (iwl4965_mod_params.enable_qos)
- 		priv->qos_data.qos_enable = 1;
- 
- 	/********************
-@@ -9036,25 +9034,26 @@ static void __exit iwl4965_exit(void)
- 	pci_unregister_driver(&iwl4965_driver);
+@@ -653,7 +646,7 @@ static int get_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
  }
  
--module_param_named(antenna, iwl4965_param_antenna, int, 0444);
-+module_param_named(antenna, iwl4965_mod_params.antenna, int, 0444);
- MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
--module_param_named(disable, iwl4965_param_disable, int, 0444);
-+module_param_named(disable, iwl4965_mod_params.disable, int, 0444);
- MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
--module_param_named(hwcrypto, iwl4965_param_hwcrypto, int, 0444);
-+module_param_named(hwcrypto, iwl4965_mod_params.hw_crypto, int, 0444);
- MODULE_PARM_DESC(hwcrypto,
- 		 "using hardware crypto engine (default 0 [software])\n");
--module_param_named(debug, iwl4965_param_debug, int, 0444);
-+module_param_named(debug, iwl4965_mod_params.debug, int, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
--module_param_named(disable_hw_scan, iwl4965_param_disable_hw_scan, int, 0444);
-+module_param_named(
-+	disable_hw_scan, iwl4965_mod_params.disable_hw_scan, int, 0444);
- MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
  
--module_param_named(queues_num, iwl4965_param_queues_num, int, 0444);
-+module_param_named(queues_num, iwl4965_mod_params.num_of_queues, int, 0444);
- MODULE_PARM_DESC(queues_num, "number of hw queues.");
+-static int set_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
++static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
+ {
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+ 	int ret;
+@@ -697,7 +690,7 @@ static int is_associated(struct usbnet *usbdev)
+ static int disassociate(struct usbnet *usbdev, int reset_ssid)
+ {
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-	struct NDIS_802_11_SSID ssid;
++	struct ndis_80211_ssid ssid;
+ 	int i, ret = 0;
  
- /* QoS */
--module_param_named(qos_enable, iwl4965_param_qos_enable, int, 0444);
-+module_param_named(qos_enable, iwl4965_mod_params.enable_qos, int, 0444);
- MODULE_PARM_DESC(qos_enable, "enable all QoS functionality");
--module_param_named(amsdu_size_8K, iwl4965_param_amsdu_size_8K, int, 0444);
-+module_param_named(amsdu_size_8K, iwl4965_mod_params.amsdu_size_8K, int, 0444);
- MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
+ 	if (priv->radio_on) {
+@@ -737,23 +730,23 @@ static int set_auth_mode(struct usbnet *usbdev, int wpa_version, int authalg)
  
- module_exit(iwl4965_exit);
--- 
-1.5.3.4
+ 	if (wpa_version & IW_AUTH_WPA_VERSION_WPA2) {
+ 		if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_802_1X)
+-			auth_mode = Ndis802_11AuthModeWPA2;
++			auth_mode = ndis_80211_auth_wpa2;
+ 		else
+-			auth_mode = Ndis802_11AuthModeWPA2PSK;
++			auth_mode = ndis_80211_auth_wpa2_psk;
+ 	} else if (wpa_version & IW_AUTH_WPA_VERSION_WPA) {
+ 		if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_802_1X)
+-			auth_mode = Ndis802_11AuthModeWPA;
++			auth_mode = ndis_80211_auth_wpa;
+ 		else if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_PSK)
+-			auth_mode = Ndis802_11AuthModeWPAPSK;
++			auth_mode = ndis_80211_auth_wpa_psk;
+ 		else
+-			auth_mode = Ndis802_11AuthModeWPANone;
++			auth_mode = ndis_80211_auth_wpa_none;
+ 	} else if (authalg & IW_AUTH_ALG_SHARED_KEY) {
+ 		if (authalg & IW_AUTH_ALG_OPEN_SYSTEM)
+-			auth_mode = Ndis802_11AuthModeAutoSwitch;
++			auth_mode = ndis_80211_auth_auto_switch;
+ 		else
+-			auth_mode = Ndis802_11AuthModeShared;
++			auth_mode = ndis_80211_auth_shared;
+ 	} else
+-		auth_mode = Ndis802_11AuthModeOpen;
++		auth_mode = ndis_80211_auth_open;
+ 
+ 	tmp = cpu_to_le32(auth_mode);
+ 	ret = rndis_set_oid(usbdev, OID_802_11_AUTHENTICATION_MODE, &tmp,
+@@ -778,9 +771,9 @@ static int set_priv_filter(struct usbnet *usbdev)
+ 
+ 	if (priv->wpa_version & IW_AUTH_WPA_VERSION_WPA2 ||
+ 	    priv->wpa_version & IW_AUTH_WPA_VERSION_WPA)
+-		tmp = cpu_to_le32(Ndis802_11PrivFilter8021xWEP);
++		tmp = cpu_to_le32(ndis_80211_priv_8021x_wep);
+ 	else
+-		tmp = cpu_to_le32(Ndis802_11PrivFilterAcceptAll);
++		tmp = cpu_to_le32(ndis_80211_priv_accept_all);
+ 
+ 	return rndis_set_oid(usbdev, OID_802_11_PRIVACY_FILTER, &tmp,
+ 								sizeof(tmp));
+@@ -798,18 +791,18 @@ static int set_encr_mode(struct usbnet *usbdev, int pairwise, int groupwise)
+ 		groupwise);
+ 
+ 	if (pairwise & IW_AUTH_CIPHER_CCMP)
+-		encr_mode = Ndis802_11Encryption3Enabled;
++		encr_mode = ndis_80211_encr_ccmp_enabled;
+ 	else if (pairwise & IW_AUTH_CIPHER_TKIP)
+-		encr_mode = Ndis802_11Encryption2Enabled;
++		encr_mode = ndis_80211_encr_tkip_enabled;
+ 	else if (pairwise &
+ 		 (IW_AUTH_CIPHER_WEP40 | IW_AUTH_CIPHER_WEP104))
+-		encr_mode = Ndis802_11Encryption1Enabled;
++		encr_mode = ndis_80211_encr_wep_enabled;
+ 	else if (groupwise & IW_AUTH_CIPHER_CCMP)
+-		encr_mode = Ndis802_11Encryption3Enabled;
++		encr_mode = ndis_80211_encr_ccmp_enabled;
+ 	else if (groupwise & IW_AUTH_CIPHER_TKIP)
+-		encr_mode = Ndis802_11Encryption2Enabled;
++		encr_mode = ndis_80211_encr_tkip_enabled;
+ 	else
+-		encr_mode = Ndis802_11EncryptionDisabled;
++		encr_mode = ndis_80211_encr_disabled;
+ 
+ 	tmp = cpu_to_le32(encr_mode);
+ 	ret = rndis_set_oid(usbdev, OID_802_11_ENCRYPTION_STATUS, &tmp,
+@@ -877,7 +870,7 @@ static void set_default_iw_params(struct usbnet *usbdev)
+ 	priv->wpa_keymgmt = 0;
+ 	priv->wpa_version = 0;
+ 
+-	set_infra_mode(usbdev, Ndis802_11Infrastructure);
++	set_infra_mode(usbdev, ndis_80211_infra_infra);
+ 	set_auth_mode(usbdev, IW_AUTH_WPA_VERSION_DISABLED,
+ 				IW_AUTH_ALG_OPEN_SYSTEM);
+ 	set_priv_filter(usbdev);
+@@ -899,7 +892,7 @@ static int deauthenticate(struct usbnet *usbdev)
+ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
+ {
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-	struct NDIS_802_11_WEP ndis_key;
++	struct ndis_80211_wep_key ndis_key;
+ 	int ret;
+ 
+ 	if (key_len <= 0 || key_len > 32 || index < 0 || index >= 4)
+@@ -940,7 +933,7 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
+ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
+ {
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-	struct NDIS_802_11_REMOVE_KEY remove_key;
++	struct ndis_80211_remove_key remove_key;
+ 	__le32 keyindex;
+ 	int ret;
+ 
+@@ -1184,7 +1177,7 @@ static int rndis_iw_get_name(struct net_device *dev,
+ static int rndis_iw_set_essid(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
+ {
+-	struct NDIS_802_11_SSID ssid;
++	struct ndis_80211_ssid ssid;
+ 	int length = wrqu->essid.length;
+ 	struct usbnet *usbdev = dev->priv;
+ 
+@@ -1212,7 +1205,7 @@ static int rndis_iw_set_essid(struct net_device *dev,
+ static int rndis_iw_get_essid(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
+ {
+-	struct NDIS_802_11_SSID ssid;
++	struct ndis_80211_ssid ssid;
+ 	struct usbnet *usbdev = dev->priv;
+ 	int ret;
+ 
+@@ -1398,13 +1391,13 @@ static int rndis_iw_get_mode(struct net_device *dev,
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+ 
+ 	switch (priv->infra_mode) {
+-	case Ndis802_11IBSS:
++	case ndis_80211_infra_adhoc:
+ 		wrqu->mode = IW_MODE_ADHOC;
+ 		break;
+-	case Ndis802_11Infrastructure:
++	case ndis_80211_infra_infra:
+ 		wrqu->mode = IW_MODE_INFRA;
+ 		break;
+-	/*case Ndis802_11AutoUnknown:*/
++	/*case ndis_80211_infra_auto_unknown:*/
+ 	default:
+ 		wrqu->mode = IW_MODE_AUTO;
+ 		break;
+@@ -1424,14 +1417,14 @@ static int rndis_iw_set_mode(struct net_device *dev,
+ 
+ 	switch (wrqu->mode) {
+ 	case IW_MODE_ADHOC:
+-		mode = Ndis802_11IBSS;
++		mode = ndis_80211_infra_adhoc;
+ 		break;
+ 	case IW_MODE_INFRA:
+-		mode = Ndis802_11Infrastructure;
++		mode = ndis_80211_infra_infra;
+ 		break;
+ 	/*case IW_MODE_AUTO:*/
+ 	default:
+-		mode = Ndis802_11AutoUnknown;
++		mode = ndis_80211_infra_auto_unknown;
+ 		break;
+ 	}
+ 
+@@ -1507,7 +1500,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+ 	struct usbnet *usbdev = dev->priv;
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-	struct NDIS_802_11_KEY ndis_key;
++	struct ndis_80211_key ndis_key;
+ 	int keyidx, ret;
+ 	u8 *addr;
+ 
+@@ -1550,7 +1543,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 	addr = ext->addr.sa_data;
+ 	if (ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) {
+ 		/* group key */
+-		if (priv->infra_mode == Ndis802_11IBSS)
++		if (priv->infra_mode == ndis_80211_infra_adhoc)
+ 			memset(ndis_key.Bssid, 0xff, ETH_ALEN);
+ 		else
+ 			get_bssid(usbdev, ndis_key.Bssid);
+@@ -1611,7 +1604,7 @@ static int rndis_iw_set_scan(struct net_device *dev,
+ 
+ 
+ static char *rndis_translate_scan(struct net_device *dev,
+-    char *cev, char *end_buf, struct NDIS_WLAN_BSSID_EX *bssid)
++    char *cev, char *end_buf, struct ndis_80211_bssid_ex *bssid)
+ {
+ #ifdef DEBUG
+ 	struct usbnet *usbdev = dev->priv;
+@@ -1645,13 +1638,13 @@ static char *rndis_translate_scan(struct net_device *dev,
+ 			le32_to_cpu(bssid->InfrastructureMode));
+ 	iwe.cmd = SIOCGIWMODE;
+ 	switch (le32_to_cpu(bssid->InfrastructureMode)) {
+-	case Ndis802_11IBSS:
++	case ndis_80211_infra_adhoc:
+ 		iwe.u.mode = IW_MODE_ADHOC;
+ 		break;
+-	case Ndis802_11Infrastructure:
++	case ndis_80211_infra_infra:
+ 		iwe.u.mode = IW_MODE_INFRA;
+ 		break;
+-	/*case Ndis802_11AutoUnknown:*/
++	/*case ndis_80211_infra_auto_unknown:*/
+ 	default:
+ 		iwe.u.mode = IW_MODE_AUTO;
+ 		break;
+@@ -1677,7 +1670,7 @@ static char *rndis_translate_scan(struct net_device *dev,
+ 	devdbg(usbdev, "ENCODE %d", le32_to_cpu(bssid->Privacy));
+ 	iwe.cmd = SIOCGIWENCODE;
+ 	iwe.u.data.length = 0;
+-	if (le32_to_cpu(bssid->Privacy) == Ndis802_11PrivFilterAcceptAll)
++	if (le32_to_cpu(bssid->Privacy) == ndis_80211_priv_accept_all)
+ 		iwe.u.data.flags = IW_ENCODE_DISABLED;
+ 	else
+ 		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
+@@ -1716,10 +1709,10 @@ static char *rndis_translate_scan(struct net_device *dev,
+ 	iwe.u.data.length = strlen(sbuf);
+ 	cev = iwe_stream_add_point(cev, end_buf, &iwe, sbuf);
+ 
+-	ie = (void *)(bssid->IEs + sizeof(struct NDIS_802_11_FIXED_IEs));
++	ie = (void *)(bssid->IEs + sizeof(struct ndis_80211_fixed_ies));
+ 	ie_len = min(bssid_len - (int)sizeof(*bssid),
+ 					(int)le32_to_cpu(bssid->IELength));
+-	ie_len -= sizeof(struct NDIS_802_11_FIXED_IEs);
++	ie_len -= sizeof(struct ndis_80211_fixed_ies);
+ 	while (ie_len >= sizeof(*ie) && sizeof(*ie) + ie->len <= ie_len) {
+ 		if ((ie->id == MFIE_TYPE_GENERIC && ie->len >= 4 &&
+ 				memcmp(ie->data, "\x00\x50\xf2\x01", 4) == 0) ||
+@@ -1746,8 +1739,8 @@ static int rndis_iw_get_scan(struct net_device *dev,
+ 	struct usbnet *usbdev = dev->priv;
+ 	void *buf = NULL;
+ 	char *cev = extra;
+-	struct NDIS_802_11_BSSID_LIST_EX *bssid_list;
+-	struct NDIS_WLAN_BSSID_EX *bssid;
++	struct ndis_80211_bssid_list_ex *bssid_list;
++	struct ndis_80211_bssid_ex *bssid;
+ 	int ret = -EINVAL, len, count, bssid_len;
+ 
+ 	devdbg(usbdev, "SIOCGIWSCAN");
+@@ -1948,7 +1941,7 @@ static int rndis_iw_set_freq(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+ {
+ 	struct usbnet *usbdev = dev->priv;
+-	struct NDIS_802_11_CONFIGURATION config;
++	struct ndis_80211_conf config;
+ 	unsigned int dsconfig;
+ 	int len, ret;
+ 
+@@ -1979,7 +1972,7 @@ static int rndis_iw_get_freq(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+ {
+ 	struct usbnet *usbdev = dev->priv;
+-	struct NDIS_802_11_CONFIGURATION config;
++	struct ndis_80211_conf config;
+ 	int len, ret;
+ 
+ 	len = sizeof(config);
+@@ -2266,14 +2259,14 @@ static int rndis_wext_get_caps(struct usbnet *dev)
+ 			n = 8;
+ 		for (i = 0; i < n; i++) {
+ 			switch (le32_to_cpu(networks_supported.items[i])) {
+-			case Ndis802_11FH:
+-			case Ndis802_11DS:
++			case ndis_80211_type_freq_hop:
++			case ndis_80211_type_direct_seq:
+ 				priv->caps |= CAP_MODE_80211B;
+ 				break;
+-			case Ndis802_11OFDM5:
++			case ndis_80211_type_ofdm_a:
+ 				priv->caps |= CAP_MODE_80211A;
+ 				break;
+-			case Ndis802_11OFDM24:
++			case ndis_80211_type_ofdm_g:
+ 				priv->caps |= CAP_MODE_80211G;
+ 				break;
+ 			}
 
