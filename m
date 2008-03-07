@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:11717 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755518AbYCEMaz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 07:30:55 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so1807105wff.4
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 04:30:54 -0800 (PST)
-Message-ID: <e2e108260803050430o317d3e0dyed50e86cc4569746@mail.gmail.com> (sfid-20080305_123100_137036_DF78A3C6)
-Date: Wed, 5 Mar 2008 13:30:54 +0100
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-To: "Ingo Molnar" <mingo@elte.hu>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct use of ! and &
-Cc: "Julia Lawall" <julia@diku.dk>,
-	"Christopher Li" <sparse@chrisli.org>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	"Harvey Harrison" <harvey.harrison@gmail.com>,
-	"Alexander Viro" <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org,
-	"Josh Triplett" <josh@freedesktop.org>
-In-Reply-To: <20080305122010.GA999@elte.hu>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4656 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754372AbYCGUDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 15:03:33 -0500
+Date: Fri, 7 Mar 2008 14:34:29 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Vladimir Koutny <vlado@work.ksp.sk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2.6.24, mac80211 and b/g switching
+Message-ID: <20080307193429.GA5561@tuxdriver.com> (sfid-20080307_200336_669157_CB067E05)
+References: <47D160E4.3040503@work.ksp.sk> <1204909966.6387.31.camel@johannes.berg> <47D17EDF.4010100@work.ksp.sk> <200803071916.28776.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk>
-	 <20080305063842.GA24495@elte.hu>
-	 <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
-	 <20080305070201.GA32434@elte.hu>
-	 <Pine.LNX.4.64.0803050951550.28021@ask.diku.dk>
-	 <20080305122010.GA999@elte.hu>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200803071916.28776.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 5, 2008 at 1:20 PM, Ingo Molnar <mingo@elte.hu> wrote:
->
->  * Julia Lawall <julia@diku.dk> wrote:
->
->  > There are some legitimate uses of !x & y which are actually of the
->  > form !x & !y, where x and y are function calls.  That is a not
->  > particularly elegant way of getting both x and y to be evaluated and
->  > then combining the results using "and".  If such code is considered
->  > acceptable, then perhaps the sparse patch should be more complicated.
->
->  i tend to be of the opinion that the details in C source code should be
->  visually obvious and should be heavily simplified down from what is
->  'possible' language-wise - with most deviations and complications that
->  depart from convention considered an error. I'd consider "!fn1() &
->  !fn2()" a borderline coding style violation in any case - and it costs
->  nothing to change it to "!fn1() && !fn2()".
+On Fri, Mar 07, 2008 at 07:16:28PM +0100, Michael Buesch wrote:
+> On Friday 07 March 2008 18:43:59 Vladimir Koutny wrote:
 
-If someone writes (!x & !y) instead of (!x && !y) because both x and y
-have to be evaluated, this means that both x and y have side effects.
-Please keep in mind that the C language does not specify whether x or
-y has to be evaluated first, so if x and y have to be evaluated in
-that order, an expression like (!x & !y) can be the cause of very
-subtle bugs. I prefer readability above brevity.
+> > Do you think that taking mac80211 from wireless-2.6 (or -testing or
+> > whatever) would cause way too many conflicts when merged back to 2.6.24?
+> >   Or am I on my own to fix this somehow in 2.6.24?
+> 
+> OpenWRT ported a rather recent mac80211 back to 2.6.23. So it shouldn't be too hard.
 
-Bart Van Assche.
+Current 2.6.24-based Fedora kernels take current mac80211 bits fairly easily.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
