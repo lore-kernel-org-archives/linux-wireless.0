@@ -1,36 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2131 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800AbYC3NXQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2008 09:23:16 -0400
-Date: Sun, 30 Mar 2008 09:13:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Received: from rv-out-0910.google.com ([209.85.198.188]:30175 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754288AbYCHDRj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2008 22:17:39 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so426607rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2008 19:17:38 -0800 (PST)
+Subject: [PATCH 1/2] tkip: remove unused function, other cleanups
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Jiri Benc <jbenc@suse.cz>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: "Try to stop Tx aggregation on non active TID" messages
-Message-ID: <20080330131347.GB3748@tuxdriver.com> (sfid-20080330_142318_287156_5CCD8032)
-References: <1206568750.22530.8.camel@johannes.berg> <c85cb4470803280145j42bcf1b5kfcfd220b5b6cf76a@mail.gmail.com> <c85cb4470803300456y75ced072ue89ea3f2dbbdce8b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c85cb4470803300456y75ced072ue89ea3f2dbbdce8b@mail.gmail.com>
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 07 Mar 2008 19:17:20 -0800
+Message-Id: <1204946240.23455.19.camel@brick> (sfid-20080308_031801_497090_6AF44334)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 30, 2008 at 02:56:27PM +0300, Ron Rindjunsky wrote:
-> > > we have a slew of messages saying
-> > >
-> > > [18131.640793] Stop a BA session requested for 00:1a:2a:2c:a2:c5 tid 13
-> > > [18131.640798] Try to stop Tx aggregation on non active TID
+tkip_S had an opencoded bswab16
+make static void ieee80211_tkip_gen_rc4key static
+remove the unused ieee80211_tkip_gen_phase1key
 
-> ok, i checked it. i think it is the same as the Rx issue we had. those
-> prints can be eliminated by .config file's MAC80211_HT_DEBUG. if we
-> don't use this flag what's the use of it? if we do use it, i would
-> like to insert the Rx prints back as well.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/tkip.c |   22 ++++------------------
+ net/mac80211/tkip.h |    4 ----
+ 2 files changed, 4 insertions(+), 22 deletions(-)
 
-Perhaps use MAC80211_VERBOSE_DEBUG?
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 3abe194..d08a6d8 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -10,8 +10,8 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+-
+ #include <net/mac80211.h>
++
+ #include "ieee80211_key.h"
+ #include "tkip.h"
+ #include "wep.h"
+@@ -98,15 +98,11 @@ static inline u16 RotR1(u16 v)
+ }
+ 
 
+-static inline u16 tkip_S(u16 val)
++static u16 tkip_S(u16 val)
+ {
+-	u16 a = tkip_sbox[Hi8(val)];
+-
+-	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
++	return tkip_sbox[val & 0xff] ^ __swab16(tkip_sbox[val >> 8]);
+ }
+ 
+-
+-
+ /* P1K := Phase1(TA, TK, TSC)
+  * TA = transmitter address (48 bits)
+  * TK = dot11DefaultKeyValue or dot11KeyMappingValue (128 bits)
+@@ -190,15 +186,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 	return pos;
+ }
+ 
+-
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key)
+-{
+-	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv32, phase1key);
+-}
+-
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
++static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+@@ -345,5 +333,3 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 
+ 	return res;
+ }
+-
+-
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index 73d8ef2..944d5fa 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -15,10 +15,6 @@
+ 
+ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2);
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key);
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+-			       u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.4.GIT
+
+
