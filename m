@@ -1,63 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:24089 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756586AbYCRBKy (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:41347 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753014AbYCHNsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 21:10:54 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so4262646wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 18:10:53 -0700 (PDT)
-Subject: Re: [PATCH 1/5] b43: Use the b43_phy_maskset where possible
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
+	Sat, 8 Mar 2008 08:48:36 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH] b43: pull out helpers for writing noise table
+Date: Sat, 8 Mar 2008 14:48:11 +0100
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200803180200.09331.mb@bu3sch.de>
-References: <1205801249.2329.49.camel@brick>
-	 <200803180200.09331.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Mon, 17 Mar 2008 18:10:51 -0700
-Message-Id: <1205802651.2329.59.camel@brick> (sfid-20080318_011105_271376_F5A30DD1)
-Mime-Version: 1.0
+References: <1204972838.23455.47.camel@brick>
+In-Reply-To: <1204972838.23455.47.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803081448.11670.mb@bu3sch.de> (sfid-20080308_134904_456987_390DC21B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-03-18 at 02:00 +0100, Michael Buesch wrote:
-> On Tuesday 18 March 2008 01:47:29 Harvey Harrison wrote:
-> > [lots of patches]
+Uhm, well. Why? Any problems with that code?
+
+On Saturday 08 March 2008 11:40:38 Harvey Harrison wrote:
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  drivers/net/wireless/b43/wa.c |   44 +++++++++++++++++++++-------------------
+>  1 files changed, 23 insertions(+), 21 deletions(-)
 > 
-> What do these patches actually fix?
-> I see they shuffle a _lot_ of code around, but what does that
-> actually fix? As I said, I won't apply any patch that just shuffles
-> code without fixing anything.
+> diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
+> index e632125..eff35ad 100644
+> --- a/drivers/net/wireless/b43/wa.c
+> +++ b/drivers/net/wireless/b43/wa.c
+> @@ -204,6 +204,22 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
+>  		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
+>  }
+>  
+> +static void b43_write_null_nst(struct b43_wldev *dev)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
+> +}
+> +
+> +static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, nst[i]);
+> +}
+> +
+>  static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
+>  {
+>  	struct b43_phy *phy = &dev->phy;
+> @@ -211,35 +227,21 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
+>  
+>  	if (phy->type == B43_PHYTYPE_A) {
+>  		if (phy->rev <= 1)
+> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -							i, 0);
+> +			b43_write_null_nst(dev);
+>  		else if (phy->rev == 2)
+> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -							i, b43_tab_noisescalea2[i]);
+> +			b43_write_nst(dev, b43_tab_noisescalea2);
+>  		else if (phy->rev == 3)
+> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -							i, b43_tab_noisescalea3[i]);
+> +			b43_write_nst(dev, b43_tab_noisescalea3);
+>  		else
+> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -							i, b43_tab_noisescaleg3[i]);
+> +			b43_write_nst(dev, b43_tab_noisescaleg3);
+>  	} else {
+>  		if (phy->rev >= 6) {
+>  			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
+> -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -						i, b43_tab_noisescaleg3[i]);
+> +				b43_write_nst(dev, b43_tab_noisescaleg3);
+>  			else
+> -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -						i, b43_tab_noisescaleg2[i]);
+> +				b43_write_nst(dev, b43_tab_noisescaleg2);
+>  		} else {
+> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> -							i, b43_tab_noisescaleg1[i]);
+> +			b43_write_nst(dev, b43_tab_noisescaleg1);
+>  		}
+>  	}
+>  }
 
-This was done as I checked through the remaining nested cases for
-mismatched registers being read/written to after sending the fix
-for the braces typo last week.  The easiest way I found to do that
-was convert them over as I checked them.
 
 
-> This shuffling has a _HUGE_ risk of introducing bugs that I am NOT
-> going to debug and fix afterwards.
-> The code works pretty well. There's absolutely no need to rewrite it.
-> 
-> And no, "this makes the code 200bytes smaller" doesn't count as a fix. :)
-> 
-
-Well, I think in some cases it looks a _lot_ better, but I understand
-your reluctance to mess with something lacking docs.
-
-> We do _not_ understand what this code does and it is a really really huge
-> pain in the ass to debug. So I am not going to risk bugs here.
-> 
-> Please search for another target, like the b43-MAC code (everything except
-> the PHY stuff).
-> Of course, if you found an actual bug in the PHY code, I'd like to know
-> and I'd like to have a patch that fixes it without shuffling hundreds
-> of lines of code.
-
-I'm done here, just thought as I had done the work while checking it
-I may as well make it available in case someone wanted it.
-
-Cheers,
-
-Harvey
-
+-- 
+Greetings Michael.
