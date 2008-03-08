@@ -1,387 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2613 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756500AbYCEAcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 19:32:32 -0500
-Date: Tue, 4 Mar 2008 19:23:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request (2nd try): wireless-2.6 2008-03-04
-Message-ID: <20080305002309.GD3158@tuxdriver.com> (sfid-20080305_003248_753896_468086D4)
-References: <20080304212953.GB3158@tuxdriver.com> <20080304.134003.223058560.davem@davemloft.net> <20080304221641.GC3158@tuxdriver.com> <20080304.143820.73008906.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080304.143820.73008906.davem@davemloft.net>
+Received: from wa-out-1112.google.com ([209.85.146.181]:37229 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbYCHJXC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Mar 2008 04:23:02 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1079716wah.23
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 01:23:02 -0800 (PST)
+Subject: [PATCH 1/5] mac80211: use kernel-provided bit rotation/byteordering
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 08 Mar 2008 01:22:54 -0800
+Message-Id: <1204968174.23455.36.camel@brick> (sfid-20080308_092337_530827_4C02EB9D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 04, 2008 at 02:38:20PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Tue, 4 Mar 2008 17:16:41 -0500
-> 
-> > I'll fix it up and post a new request.
-> 
-> Thank you.
-
-2nd attempt, same as before except for the base...sorry about the
-confusion!
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+Perhaps a bit too fine-grained of a patch series, but each one should
+be pretty easily reviewable.
 
-Dave,
+ include/linux/bitops.h |   40 ++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/michael.c |   28 ++++++----------------------
+ net/mac80211/tkip.c    |   20 ++++++--------------
+ 3 files changed, 52 insertions(+), 36 deletions(-)
 
-Here is today's round of fixes for the 2.6.25 tree.  These are mostly
-simple fixes, even one-liners.  The rc80211-pid patch is, of course, an
-exception...
-
-conflicts:
-
-net/mac80211/rc80211_pid_algo.c
-
-After pushing to Linus and pulling back into net-2.6.26, simply take
-all the _first_ blocks (i.e. between "<<<<" and "====") of conflicting
-lines.  This is due to commit "rc80211-pid: fix rate adjustment"
-being a backport of a change already in net-2.6.26 with the same title.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit ec9b6add7d81f902f6094e71f595da4a362f3348:
-  Jarek Poplawski (1):
-        [PPPOL2TP]: Add missing sock_put() in pppol2tp_tunnel_closeall()
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-David Woodhouse (1):
-      libertas: fix sanity check on sequence number in command response
-
-Johannes Berg (2):
-      p54: fix EEPROM structure endianness
-      p54: fix eeprom parser length sanity checks
-
-Jussi Kivilinna (1):
-      rndis_wlan: fix broken data copy
-
-Michael Buesch (1):
-      b43legacy: Fix module init message
-
-Sebastian Siewior (1):
-      libertas: compare the current command with response
-
-Stefano Brivio (1):
-      rc80211-pid: fix rate adjustment
-
-Yoichi Yuasa (1):
-      ssb: Add pcibios_enable_device() return value check
-
- drivers/net/wireless/b43legacy/main.c   |    2 +-
- drivers/net/wireless/libertas/cmdresp.c |    8 +--
- drivers/net/wireless/p54common.c        |   20 ++++---
- drivers/net/wireless/p54common.h        |    8 +-
- drivers/net/wireless/rndis_wlan.c       |    8 +--
- drivers/ssb/driver_pcicore.c            |    5 +-
- net/mac80211/rc80211_pid_algo.c         |   92 ++++++++++++++----------------
- 7 files changed, 70 insertions(+), 73 deletions(-)
-
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index c39de42..5f3f34e 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3829,7 +3829,7 @@ static void b43legacy_print_driverinfo(void)
- #ifdef CONFIG_B43LEGACY_DMA
- 	feat_dma = "D";
- #endif
--	printk(KERN_INFO "Broadcom 43xx driver loaded "
-+	printk(KERN_INFO "Broadcom 43xx-legacy driver loaded "
- 	       "[ Features: %s%s%s%s%s, Firmware-ID: "
- 	       B43legacy_SUPPORTED_FIRMWARE_ID " ]\n",
- 	       feat_pci, feat_leds, feat_rfkill, feat_pio, feat_dma);
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 159216a..bdc6a1c 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -562,9 +562,7 @@ int lbs_process_rx_command(struct lbs_private *priv)
- 	}
- 
- 	resp = (void *)priv->upld_buf;
--
--	curcmd = le16_to_cpu(resp->command);
--
-+	curcmd = le16_to_cpu(priv->cur_cmd->cmdbuf->command);
- 	respcmd = le16_to_cpu(resp->command);
- 	result = le16_to_cpu(resp->result);
- 
-@@ -572,9 +570,9 @@ int lbs_process_rx_command(struct lbs_private *priv)
- 		     respcmd, le16_to_cpu(resp->seqnum), priv->upld_len, jiffies);
- 	lbs_deb_hex(LBS_DEB_HOST, "CMD_RESP", (void *) resp, priv->upld_len);
- 
--	if (resp->seqnum != resp->seqnum) {
-+	if (resp->seqnum != priv->cur_cmd->cmdbuf->seqnum) {
- 		lbs_pr_info("Received CMD_RESP with invalid sequence %d (expected %d)\n",
--			    le16_to_cpu(resp->seqnum), le16_to_cpu(resp->seqnum));
-+			    le16_to_cpu(resp->seqnum), le16_to_cpu(priv->cur_cmd->cmdbuf->seqnum));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		ret = -1;
- 		goto done;
-diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
-index 5cda49a..d191e05 100644
---- a/drivers/net/wireless/p54common.c
-+++ b/drivers/net/wireless/p54common.c
-@@ -166,18 +166,23 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 	struct p54_common *priv = dev->priv;
- 	struct eeprom_pda_wrap *wrap = NULL;
- 	struct pda_entry *entry;
--	int i = 0;
- 	unsigned int data_len, entry_len;
- 	void *tmp;
- 	int err;
-+	u8 *end = (u8 *)eeprom + len;
- 
- 	wrap = (struct eeprom_pda_wrap *) eeprom;
--	entry = (void *)wrap->data + wrap->len;
--	i += 2;
--	i += le16_to_cpu(entry->len)*2;
--	while (i < len) {
-+	entry = (void *)wrap->data + le16_to_cpu(wrap->len);
-+
-+	/* verify that at least the entry length/code fits */
-+	while ((u8 *)entry <= end - sizeof(*entry)) {
- 		entry_len = le16_to_cpu(entry->len);
- 		data_len = ((entry_len - 1) << 1);
-+
-+		/* abort if entry exceeds whole structure */
-+		if ((u8 *)entry + sizeof(*entry) + data_len > end)
-+			break;
-+
- 		switch (le16_to_cpu(entry->code)) {
- 		case PDR_MAC_ADDRESS:
- 			SET_IEEE80211_PERM_ADDR(dev, entry->data);
-@@ -249,13 +254,12 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			priv->version = *(u8 *)(entry->data + 1);
- 			break;
- 		case PDR_END:
--			i = len;
-+			/* make it overrun */
-+			entry_len = len;
- 			break;
- 		}
- 
- 		entry = (void *)entry + (entry_len + 1)*2;
--		i += 2;
--		i += entry_len*2;
- 	}
- 
- 	if (!priv->iq_autocal || !priv->output_limit || !priv->curve_data) {
-diff --git a/drivers/net/wireless/p54common.h b/drivers/net/wireless/p54common.h
-index a721334..b67ff34 100644
---- a/drivers/net/wireless/p54common.h
-+++ b/drivers/net/wireless/p54common.h
-@@ -53,10 +53,10 @@ struct pda_entry {
- } __attribute__ ((packed));
- 
- struct eeprom_pda_wrap {
--	u32 magic;
--	u16 pad;
--	u16 len;
--	u32 arm_opcode;
-+	__le32 magic;
-+	__le16 pad;
-+	__le16 len;
-+	__le32 arm_opcode;
- 	u8 data[0];
- } __attribute__ ((packed));
- 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d9460ae..10b776c 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -260,7 +260,7 @@ struct NDIS_802_11_KEY {
- 	__le32 KeyLength;
- 	u8 Bssid[6];
- 	u8 Padding[6];
--	__le64 KeyRSC;
-+	u8 KeyRSC[8];
- 	u8 KeyMaterial[32];
- } __attribute__((packed));
- 
-@@ -1508,7 +1508,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	struct usbnet *usbdev = dev->priv;
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
- 	struct NDIS_802_11_KEY ndis_key;
--	int i, keyidx, ret;
-+	int keyidx, ret;
- 	u8 *addr;
- 
- 	keyidx = wrqu->encoding.flags & IW_ENCODE_INDEX;
-@@ -1543,9 +1543,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	ndis_key.KeyIndex = cpu_to_le32(keyidx);
- 
- 	if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID) {
--		for (i = 0; i < 6; i++)
--			ndis_key.KeyRSC |=
--				cpu_to_le64(ext->rx_seq[i] << (i * 8));
-+		memcpy(ndis_key.KeyRSC, ext->rx_seq, 6);
- 		ndis_key.KeyIndex |= cpu_to_le32(1 << 29);
- 	}
- 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 07ab48d..74b9a8a 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -111,7 +111,10 @@ static void __init ssb_fixup_pcibridge(struct pci_dev *dev)
- 
- 	/* Enable PCI bridge bus mastering and memory space */
- 	pci_set_master(dev);
--	pcibios_enable_device(dev, ~0);
-+	if (pcibios_enable_device(dev, ~0) < 0) {
-+		ssb_printk(KERN_ERR "PCI: SSB bridge enable failed\n");
-+		return;
-+	}
- 
- 	/* Enable PCI bridge BAR1 prefetch and burst */
- 	pci_write_config_dword(dev, SSB_BAR1_CONTROL, 3);
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index c339571..3b77410 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -2,7 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
-- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
-+ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -63,72 +63,66 @@
-  * RC_PID_ARITH_SHIFT.
-  */
- 
--
--/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
-- * a worse failed frames behaviour and we'll choose the highest rate whose
-- * failed frames behaviour is not worse than the one of the original rate
-- * target. While at it, check that the adjustment is within the ranges. Then,
-- * provide the new rate index. */
--static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
--					 int adj, int cur, int l)
--{
--	int i, j, k, tmp;
--
--	j = r[cur].rev_index;
--	i = j + adj;
--
--	if (i < 0)
--		return r[0].index;
--	if (i >= l - 1)
--		return r[l - 1].index;
--
--	tmp = i;
--
--	if (adj < 0) {
--		for (k = j; k >= i; k--)
--			if (r[k].diff <= r[j].diff)
--				tmp = k;
--	} else {
--		for (k = i + 1; k + i < l; k++)
--			if (r[k].diff <= r[i].diff)
--				tmp = k;
--	}
--
--	return r[tmp].index;
--}
--
-+/* Adjust the rate while ensuring that we won't switch to a lower rate if it
-+ * exhibited a worse failed frames behaviour and we'll choose the highest rate
-+ * whose failed frames behaviour is not worse than the one of the original rate
-+ * target. While at it, check that the new rate is valid. */
- static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
- 					 struct sta_info *sta, int adj,
- 					 struct rc_pid_rateinfo *rinfo)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hw_mode *mode;
--	int newidx;
--	int maxrate;
--	int back = (adj > 0) ? 1 : -1;
-+	int cur_sorted, new_sorted, probe, tmp, n_bitrates;
-+	int cur = sta->txrate;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
- 
- 	mode = local->oper_hw_mode;
--	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
-+	n_bitrates = mode->num_rates;
- 
--	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
--					       mode->num_rates);
-+	/* Map passed arguments to sorted values. */
-+	cur_sorted = rinfo[cur].rev_index;
-+	new_sorted = cur_sorted + adj;
- 
--	while (newidx != sta->txrate) {
--		if (rate_supported(sta, mode, newidx) &&
--		    (maxrate < 0 || newidx <= maxrate)) {
--			sta->txrate = newidx;
--			break;
--		}
-+	/* Check limits. */
-+	if (new_sorted < 0)
-+		new_sorted = rinfo[0].rev_index;
-+	else if (new_sorted >= n_bitrates)
-+		new_sorted = rinfo[n_bitrates - 1].rev_index;
- 
--		newidx += back;
-+	tmp = new_sorted;
-+
-+	if (adj < 0) {
-+		/* Ensure that the rate decrease isn't disadvantageous. */
-+		for (probe = cur_sorted; probe >= new_sorted; probe--)
-+			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
-+			    rate_supported(sta, mode, rinfo[probe].index))
-+				tmp = probe;
-+	} else {
-+		/* Look for rate increase with zero (or below) cost. */
-+		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
-+			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
-+			    rate_supported(sta, mode, rinfo[probe].index))
-+				tmp = probe;
- 	}
- 
-+	/* Fit the rate found to the nearest supported rate. */
-+	do {
-+		if (rate_supported(sta, mode, rinfo[tmp].index)) {
-+			sta->txrate = rinfo[tmp].index;
-+			break;
-+		}
-+		if (adj < 0)
-+			tmp--;
-+		else
-+			tmp++;
-+	} while (tmp < n_bitrates && tmp >= 0);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	rate_control_pid_event_rate_change(
- 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
--		newidx, mode->rates[newidx].rate);
-+		cur, mode->rates[cur].rate);
- #endif
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index 69c1edb..40d5473 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -65,6 +65,46 @@ static inline __u32 ror32(__u32 word, unsigned int shift)
+ 	return (word >> shift) | (word << (32 - shift));
  }
  
++/**
++ * rol16 - rotate a 16-bit value left
++ * @word: value to rotate
++ * @shift: bits to roll
++ */
++static inline __u16 rol16(__u16 word, unsigned int shift)
++{
++	return (word << shift) | (word >> (16 - shift));
++}
++
++/**
++ * ror16 - rotate a 16-bit value right
++ * @word: value to rotate
++ * @shift: bits to roll
++ */
++static inline __u16 ror16(__u16 word, unsigned int shift)
++{
++	return (word >> shift) | (word << (16 - shift));
++}
++
++/**
++ * rol8 - rotate an 8-bit value left
++ * @word: value to rotate
++ * @shift: bits to roll
++ */
++static inline __u8 rol8(__u8 word, unsigned int shift)
++{
++	return (word << shift) | (word >> (8 - shift));
++}
++
++/**
++ * ror8 - rotate an 8-bit value right
++ * @word: value to rotate
++ * @shift: bits to roll
++ */
++static inline __u8 ror8(__u8 word, unsigned int shift)
++{
++	return (word >> shift) | (word << (8 - shift));
++}
++
+ static inline unsigned fls_long(unsigned long l)
+ {
+ 	if (sizeof(l) == 4)
+diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
+index 0f844f7..1a1871f 100644
+--- a/net/mac80211/michael.c
++++ b/net/mac80211/michael.c
+@@ -7,53 +7,37 @@
+  * published by the Free Software Foundation.
+  */
+ 
+-#include <linux/types.h>
++#include <linux/kernel.h>
+ 
+ #include "michael.h"
+ 
+-static inline u32 rotr(u32 val, int bits)
+-{
+-	return (val >> bits) | (val << (32 - bits));
+-}
+-
+-
+-static inline u32 rotl(u32 val, int bits)
+-{
+-	return (val << bits) | (val >> (32 - bits));
+-}
+-
+-
+ static inline u32 xswap(u32 val)
+ {
+ 	return ((val & 0xff00ff00) >> 8) | ((val & 0x00ff00ff) << 8);
+ }
+ 
+-
+ #define michael_block(l, r) \
+ do { \
+-	r ^= rotl(l, 17); \
++	r ^= rol32(l, 17); \
+ 	l += r; \
+ 	r ^= xswap(l); \
+ 	l += r; \
+-	r ^= rotl(l, 3); \
++	r ^= rol32(l, 3); \
+ 	l += r; \
+-	r ^= rotr(l, 2); \
++	r ^= ror32(l, 2); \
+ 	l += r; \
+ } while (0)
+ 
+
+ static inline u32 michael_get32(u8 *data)
+ {
+-	return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
++	return le32_to_cpup((__le32 *)data);
+ }
+ 
+
+ static inline void michael_put32(u32 val, u8 *data)
+ {
+-	data[0] = val & 0xff;
+-	data[1] = (val >> 8) & 0xff;
+-	data[2] = (val >> 16) & 0xff;
+-	data[3] = (val >> 24) & 0xff;
++	*((u32 *)data) = cpu_to_le32(val);
+ }
+ 
+
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 3abe194..229b4b4 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -8,7 +8,6 @@
+  */
+ 
+ #include <linux/kernel.h>
+-#include <linux/types.h>
+ #include <linux/netdevice.h>
+ 
+ #include <net/mac80211.h>
+@@ -91,13 +90,6 @@ static inline u16 Lo16(u32 v)
+ 	return v & 0xffff;
+ }
+ 
+-
+-static inline u16 RotR1(u16 v)
+-{
+-	return (v >> 1) | ((v & 0x0001) << 15);
+-}
+-
+-
+ static inline u16 tkip_S(u16 val)
+ {
+ 	u16 a = tkip_sbox[Hi8(val)];
+@@ -154,12 +146,12 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+ 	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
+ 	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
+ 	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
+-	ppk[0] +=  RotR1(ppk[5] ^ Mk16(tk[13], tk[12]));
+-	ppk[1] +=  RotR1(ppk[0] ^ Mk16(tk[15], tk[14]));
+-	ppk[2] +=  RotR1(ppk[1]);
+-	ppk[3] +=  RotR1(ppk[2]);
+-	ppk[4] +=  RotR1(ppk[3]);
+-	ppk[5] +=  RotR1(ppk[4]);
++	ppk[0] += ror16(ppk[5] ^ Mk16(tk[13], tk[12]), 1);
++	ppk[1] += ror16(ppk[0] ^ Mk16(tk[15], tk[14]), 1);
++	ppk[2] += ror16(ppk[1], 1);
++	ppk[3] += ror16(ppk[2], 1);
++	ppk[4] += ror16(ppk[3], 1);
++	ppk[5] += ror16(ppk[4], 1);
+ 
+ 	rc4key[0] = Hi8(tsc_IV16);
+ 	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.4.GIT
+
+
