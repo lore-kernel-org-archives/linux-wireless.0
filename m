@@ -1,82 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:38885 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758766AbYCXO4Z (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:44989 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157AbYCHJXE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 10:56:25 -0400
-Received: by gv-out-0910.google.com with SMTP id s4so384481gve.37
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2008 07:56:23 -0700 (PDT)
-Message-ID: <1ba2fa240803240756k4c946158qe9d138e87278f06f@mail.gmail.com> (sfid-20080324_145632_472400_B38DFACC)
-Date: Mon, 24 Mar 2008 16:56:22 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH] mac80211: trigger ieee80211_sta_work after opening interface
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jan Niehusmann" <jan@gondor.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>, "Jiri Benc" <jbenc@suse.cz>
-In-Reply-To: <1206369154.23379.4.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080323192355.GA5773@x61s.gondor.com>
-	 <1206310595.16475.190.camel@johannes.berg>
-	 <1ba2fa240803231528i4fc38343ifb49d44f5072c882@mail.gmail.com>
-	 <1206369154.23379.4.camel@localhost.localdomain>
+	Sat, 8 Mar 2008 04:23:04 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so492983rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 01:23:03 -0800 (PST)
+Subject: [PATCH 2/5] tkip: remove unused function, other cleanups
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 08 Mar 2008 01:23:04 -0800
+Message-Id: <1204968185.23455.38.camel@brick> (sfid-20080308_092340_520643_C35AE989)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 24, 2008 at 4:32 PM, Dan Williams <dcbw@redhat.com> wrote:
->
-> On Mon, 2008-03-24 at 00:28 +0200, Tomas Winkler wrote:
->  > On Mon, Mar 24, 2008 at 12:16 AM, Johannes Berg
->  > <johannes@sipsolutions.net> wrote:
->  > >
->  > >  On Sun, 2008-03-23 at 20:23 +0100, Jan Niehusmann wrote:
->  > >  > ieee80211_sta_work is disabled while network interface
->  > >  > is down. Therefore, if you configure wireless parameters
->  > >  > before bringing the interface up, these configurations are
->  > >  > not yet effective and association fails.
->  > >  >
->  > >  > A workaround from userspace is calling a command like
->  > >  > 'iwconfig wlan0 ap any' after the interface is brought up.
->  > >  >
->  > >  > To fix this behaviour, trigger execution of ieee80211_sta_work from
->  > >  > ieee80211_open when in STA or IBSS mode.
->  > >
->  > >  What happens with this patch when you haven't set any configuration
->  > >  items before bringing the interface up? We want it to do nothing, if
->  > >  that behaviour is kept the patch should be fine.
->  >
->  > Why should be possible to configure device when it's not up. Shouldn't
->  > be there some order in which things are happening?
->
->  This was the way that wireless-tools/WEXT worked with older fullmac type
->  cards; the driver would usually cache the value until the device came up
->  (and then blast all cached values to the card and try to associate) or
->  the firmware would still accept commands while the interface was down
->  because the firmware was already on the card and didn't have to be
->  loaded at runtime.
+tkip_S had an opencoded swab16
+make ieee80211_tkip_gen_rc4key() static
+remove the unused ieee80211_tkip_gen_phase1key()
 
-I'm stopping to like the idea of having firmware loaded in open, there
-is conceptual
-problem with this as we've seen in rfkill and now the configuration.
-Probe is a problem because the filesystem is not available so there
-have to be something in between.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/tkip.c |   18 +++---------------
+ net/mac80211/tkip.h |    4 ----
+ 2 files changed, 3 insertions(+), 19 deletions(-)
+
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 229b4b4..90c11e7 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -90,11 +90,9 @@ static inline u16 Lo16(u32 v)
+ 	return v & 0xffff;
+ }
+ 
+-static inline u16 tkip_S(u16 val)
++static u16 tkip_S(u16 val)
+ {
+-	u16 a = tkip_sbox[Hi8(val)];
+-
+-	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
++	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
+ }
+ 
+
+@@ -182,15 +180,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 	return pos;
+ }
+ 
+-
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key)
+-{
+-	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv32, phase1key);
+-}
+-
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
++static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+@@ -337,5 +327,3 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 
+ 	return res;
+ }
+-
+-
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index 73d8ef2..944d5fa 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -15,10 +15,6 @@
+ 
+ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2);
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key);
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+-			       u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+-- 
+1.5.4.GIT
 
 
->  These days, of course, with cards that load firmware on open() (ex iwl
->  to save power, and others) this isn't possible unless the driver caches
->  the values until the device is brought up.
->
->  Personally, I don't really think this is an issue.  Things change, some
->  cards don't allow scanning when they are down, etc.  It's a lot of code
->  to cache the values in the driver that isn't really needed if people
->  just start setting the device up before configuring it.  I think the
->  tradeoff of having to modify userspace tool behavior versus having to
->  maintain more code in the drivers/stack is quite clear: less code in
->  mac80211/drivers.
-
-Aggree
-
-Tomas
