@@ -1,97 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13816 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759559AbYCZQ7Z (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:37398 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbYCHJXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 12:59:25 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 2] libertas: don't depend on IEEE80211
-Date: Wed, 26 Mar 2008 17:56:26 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200803261324.21938.hs4233@mail.mn-solutions.de> <200803261735.59235.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200803261735.59235.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803261756.27077.hs4233@mail.mn-solutions.de> (sfid-20080326_165947_397901_FBB85434)
+	Sat, 8 Mar 2008 04:23:06 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1079741wah.23
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 01:23:05 -0800 (PST)
+Subject: [PATCH 3/5] mac80211: replace Mk16 helper with le16_to_cpup
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 08 Mar 2008 01:23:07 -0800
+Message-Id: <1204968187.23455.39.camel@brick> (sfid-20080308_092339_300656_E96B3B6F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[PATCH] libertas: don't depend on IEEE80211
+Opencoded byte-swapping could just use the kernel helper.
 
-Runtime-wise we only need escape_ssid from the deprecated IEEE80211
-subsystem. However, it's easy to provide our own copy.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ net/mac80211/tkip.c |   47 ++++++++++++++++++++++-------------------------
+ 1 files changed, 22 insertions(+), 25 deletions(-)
 
-The previous patch also exported this as GPL. However, there is no
-need to to is. Actually there is no need to export this at all. It's
-only used inside libertas.ko.
-
-Index: wireless-testing/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Kconfig	2008-03-26 16:45:21.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/Kconfig	2008-03-26 16:46:43.000000000 +0100
-@@ -271,7 +271,6 @@ config LIBERTAS
- 	tristate "Marvell 8xxx Libertas WLAN driver support"
- 	depends on WLAN_80211
- 	select WIRELESS_EXT
--	select IEEE80211
- 	select FW_LOADER
- 	---help---
- 	  A library for Marvell Libertas 8xxx devices.
-Index: wireless-testing/drivers/net/wireless/libertas/decl.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-03-26 16:45:21.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-03-26 16:46:43.000000000 +0100
-@@ -71,4 +71,9 @@ int lbs_stop_card(struct lbs_private *pr
- void lbs_host_to_card_done(struct lbs_private *priv);
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 90c11e7..9a36e83 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -60,13 +60,6 @@ static const u16 tkip_sbox[256] =
+ 	0x82C3, 0x29B0, 0x5A77, 0x1E11, 0x7BCB, 0xA8FC, 0x6DD6, 0x2C3A,
+ };
  
- int lbs_update_channel(struct lbs_private *priv);
-+
-+#ifndef CONFIG_IEEE80211
-+const char *escape_essid(const char *essid, u8 essid_len);
-+#endif
-+
- #endif
-Index: wireless-testing/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-26 16:46:43.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-26 16:46:58.000000000 +0100
-@@ -1565,6 +1565,32 @@ out:
- 	return ret;
+-
+-static inline u16 Mk16(u8 x, u8 y)
+-{
+-	return ((u16) x << 8) | (u16) y;
+-}
+-
+-
+ static inline u8 Hi8(u16 v)
+ {
+ 	return v >> 8;
+@@ -107,20 +100,22 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+ 			       u16 *p1k)
+ {
+ 	int i, j;
++	__le16 *leptr = (__le16 *)ta;
+ 
+ 	p1k[0] = Lo16(tsc_IV32);
+ 	p1k[1] = Hi16(tsc_IV32);
+-	p1k[2] = Mk16(ta[1], ta[0]);
+-	p1k[3] = Mk16(ta[3], ta[2]);
+-	p1k[4] = Mk16(ta[5], ta[4]);
++	p1k[2] = le16_to_cpup(leptr++);
++	p1k[3] = le16_to_cpup(leptr++);
++	p1k[4] = le16_to_cpup(leptr++);
+ 
++	leptr = (__le16 *)tk;
+ 	for (i = 0; i < PHASE1_LOOP_COUNT; i++) {
+-		j = 2 * (i & 1);
+-		p1k[0] += tkip_S(p1k[4] ^ Mk16(tk[ 1 + j], tk[ 0 + j]));
+-		p1k[1] += tkip_S(p1k[0] ^ Mk16(tk[ 5 + j], tk[ 4 + j]));
+-		p1k[2] += tkip_S(p1k[1] ^ Mk16(tk[ 9 + j], tk[ 8 + j]));
+-		p1k[3] += tkip_S(p1k[2] ^ Mk16(tk[13 + j], tk[12 + j]));
+-		p1k[4] += tkip_S(p1k[3] ^ Mk16(tk[ 1 + j], tk[ 0 + j])) + i;
++		j = (i & 1);
++		p1k[0] += tkip_S(p1k[4] ^ le16_to_cpup(leptr + 0 + j));
++		p1k[1] += tkip_S(p1k[0] ^ le16_to_cpup(leptr + 2 + j));
++		p1k[2] += tkip_S(p1k[1] ^ le16_to_cpup(leptr + 4 + j));
++		p1k[3] += tkip_S(p1k[2] ^ le16_to_cpup(leptr + 6 + j));
++		p1k[4] += tkip_S(p1k[3] ^ le16_to_cpup(leptr + 0 + j)) + i;
+ 	}
  }
  
-+#ifndef CONFIG_IEEE80211
-+const char *escape_essid(const char *essid, u8 essid_len)
-+{
-+	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-+	const char *s = essid;
-+	char *d = escaped;
-+
-+	if (ieee80211_is_empty_essid(essid, essid_len)) {
-+		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
-+		return escaped;
-+	}
-+
-+	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
-+	while (essid_len--) {
-+		if (*s == '\0') {
-+			*d++ = '\\';
-+			*d++ = '0';
-+			s++;
-+		} else {
-+			*d++ = *s++;
-+		}
-+	}
-+	*d = '\0';
-+	return escaped;
-+}
-+#endif
+@@ -130,6 +125,7 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+ {
+ 	u16 ppk[6];
+ 	int i;
++	__le16 *leptr = (__le16 *)tk;
  
- module_init(lbs_init_module);
- module_exit(lbs_exit_module);
+ 	ppk[0] = p1k[0];
+ 	ppk[1] = p1k[1];
+@@ -138,23 +134,24 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+ 	ppk[4] = p1k[4];
+ 	ppk[5] = p1k[4] + tsc_IV16;
+ 
+-	ppk[0] += tkip_S(ppk[5] ^ Mk16(tk[ 1], tk[ 0]));
+-	ppk[1] += tkip_S(ppk[0] ^ Mk16(tk[ 3], tk[ 2]));
+-	ppk[2] += tkip_S(ppk[1] ^ Mk16(tk[ 5], tk[ 4]));
+-	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
+-	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
+-	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
+-	ppk[0] += ror16(ppk[5] ^ Mk16(tk[13], tk[12]), 1);
+-	ppk[1] += ror16(ppk[0] ^ Mk16(tk[15], tk[14]), 1);
++	ppk[0] += tkip_S(ppk[5] ^ le16_to_cpup(leptr++));
++	ppk[1] += tkip_S(ppk[0] ^ le16_to_cpup(leptr++));
++	ppk[2] += tkip_S(ppk[1] ^ le16_to_cpup(leptr++));
++	ppk[3] += tkip_S(ppk[2] ^ le16_to_cpup(leptr++));
++	ppk[4] += tkip_S(ppk[3] ^ le16_to_cpup(leptr++));
++	ppk[5] += tkip_S(ppk[4] ^ le16_to_cpup(leptr++));
++	ppk[0] += ror16(ppk[5] ^ le16_to_cpup(leptr++), 1);
++	ppk[1] += ror16(ppk[0] ^ le16_to_cpup(leptr++), 1);
+ 	ppk[2] += ror16(ppk[1], 1);
+ 	ppk[3] += ror16(ppk[2], 1);
+ 	ppk[4] += ror16(ppk[3], 1);
+ 	ppk[5] += ror16(ppk[4], 1);
+ 
++	leptr = (__le16 *)tk;
+ 	rc4key[0] = Hi8(tsc_IV16);
+ 	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
+ 	rc4key[2] = Lo8(tsc_IV16);
+-	rc4key[3] = Lo8((ppk[5] ^ Mk16(tk[1], tk[0])) >> 1);
++	rc4key[3] = Lo8((ppk[5] ^ le16_to_cpup(leptr)) >> 1);
+ 
+ 	for (i = 0; i < 6; i++) {
+ 		rc4key[4 + 2 * i] = Lo8(ppk[i]);
+-- 
+1.5.4.GIT
+
+
