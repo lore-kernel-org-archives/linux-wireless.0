@@ -1,197 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48509 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:33230 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259AbYCMBpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 21:45:04 -0400
-Subject: Re: libertas: rename packetfilter to mac_control
+	id S1754554AbYCHTqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Mar 2008 14:46:35 -0500
+Subject: Re: [PATCH] b43: pull out helpers for writing noise table
 From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803121606.43783.hs4233@mail.mn-solutions.de>
-References: <200803121606.43783.hs4233@mail.mn-solutions.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Harvey Harrison <harvey.harrison@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200803081448.11670.mb@bu3sch.de>
+References: <1204972838.23455.47.camel@brick>
+	 <200803081448.11670.mb@bu3sch.de>
 Content-Type: text/plain
-Date: Wed, 12 Mar 2008 21:40:04 -0400
-Message-Id: <1205372404.23943.10.camel@localhost.localdomain> (sfid-20080313_014508_295730_55BC8AF2)
+Date: Sat, 08 Mar 2008 14:43:07 -0500
+Message-Id: <1205005387.3335.2.camel@localhost.localdomain> (sfid-20080308_194640_467009_2AFFFE4B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-12 at 16:06 +0100, Holger Schurig wrote:
-> The CMD_MAC_CONTROL can be used for other things than just filtering
-> packets, e.g. to enable and disable WMM. This uses the same term mac_control
-> for the define, the function and the shadow value in struct lbs_private.
+On Sat, 2008-03-08 at 14:48 +0100, Michael Buesch wrote:
+> Uhm, well. Why? Any problems with that code?
+
+It's a nice cleanup.  Nothing wrong with getting rid of the same code
+duplicated 6 times.
+
+> On Saturday 08 March 2008 11:40:38 Harvey Harrison wrote:
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> > ---
+> >  drivers/net/wireless/b43/wa.c |   44 +++++++++++++++++++++-------------------
+> >  1 files changed, 23 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
+> > index e632125..eff35ad 100644
+> > --- a/drivers/net/wireless/b43/wa.c
+> > +++ b/drivers/net/wireless/b43/wa.c
+> > @@ -204,6 +204,22 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
+> >  		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
+> >  }
+> >  
+> > +static void b43_write_null_nst(struct b43_wldev *dev)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
+> > +}
+> > +
+> > +static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, nst[i]);
+> > +}
+> > +
+> >  static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
+> >  {
+> >  	struct b43_phy *phy = &dev->phy;
+> > @@ -211,35 +227,21 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
+> >  
+> >  	if (phy->type == B43_PHYTYPE_A) {
+> >  		if (phy->rev <= 1)
+> > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -							i, 0);
+> > +			b43_write_null_nst(dev);
+> >  		else if (phy->rev == 2)
+> > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -							i, b43_tab_noisescalea2[i]);
+> > +			b43_write_nst(dev, b43_tab_noisescalea2);
+> >  		else if (phy->rev == 3)
+> > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -							i, b43_tab_noisescalea3[i]);
+> > +			b43_write_nst(dev, b43_tab_noisescalea3);
+> >  		else
+> > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -							i, b43_tab_noisescaleg3[i]);
+> > +			b43_write_nst(dev, b43_tab_noisescaleg3);
+> >  	} else {
+> >  		if (phy->rev >= 6) {
+> >  			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
+> > -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -						i, b43_tab_noisescaleg3[i]);
+> > +				b43_write_nst(dev, b43_tab_noisescaleg3);
+> >  			else
+> > -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -						i, b43_tab_noisescaleg2[i]);
+> > +				b43_write_nst(dev, b43_tab_noisescaleg2);
+> >  		} else {
+> > -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
+> > -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
+> > -							i, b43_tab_noisescaleg1[i]);
+> > +			b43_write_nst(dev, b43_tab_noisescaleg1);
+> >  		}
+> >  	}
+> >  }
 > 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-
 > 
-> Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-12 14:59:41.000000000 +0100
-> @@ -268,11 +268,11 @@ static int assoc_helper_wep_keys(struct 
->  
->  	/* enable/disable the MAC's WEP packet filter */
->  	if (assoc_req->secinfo.wep_enabled)
-> -		priv->currentpacketfilter |= CMD_ACT_MAC_WEP_ENABLE;
-> +		priv->mac_control |= CMD_ACT_MAC_WEP_ENABLE;
->  	else
-> -		priv->currentpacketfilter &= ~CMD_ACT_MAC_WEP_ENABLE;
-> +		priv->mac_control &= ~CMD_ACT_MAC_WEP_ENABLE;
->  
-> -	ret = lbs_set_mac_packet_filter(priv);
-> +	ret = lbs_set_mac_control(priv);
->  	if (ret)
->  		goto out;
->  
-> @@ -304,7 +304,7 @@ static int assoc_helper_secinfo(struct l
->  	memcpy(&priv->secinfo, &assoc_req->secinfo,
->  		sizeof(struct lbs_802_11_security));
->  
-> -	ret = lbs_set_mac_packet_filter(priv);
-> +	ret = lbs_set_mac_control(priv);
->  	if (ret)
->  		goto out;
->  
-> Index: wireless-testing/drivers/net/wireless/libertas/dev.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-12 14:59:42.000000000 +0100
-> @@ -252,7 +252,7 @@ struct lbs_private {
->  	struct sk_buff *currenttxskb;
->  
->  	/** NIC Operation characteristics */
-> -	u16 currentpacketfilter;
-> +	u16 mac_control;
->  	u32 connect_status;
->  	u32 mesh_connect_status;
->  	u16 regioncode;
-> Index: wireless-testing/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-12 15:03:19.000000000 +0100
-> @@ -581,45 +581,45 @@ static int lbs_copy_multicast_address(st
->  static void lbs_set_multicast_list(struct net_device *dev)
->  {
->  	struct lbs_private *priv = dev->priv;
-> -	int oldpacketfilter;
-> +	int old_mac_control;
->  	DECLARE_MAC_BUF(mac);
->  
->  	lbs_deb_enter(LBS_DEB_NET);
->  
-> -	oldpacketfilter = priv->currentpacketfilter;
-> +	old_mac_control = priv->mac_control;
->  
->  	if (dev->flags & IFF_PROMISC) {
->  		lbs_deb_net("enable promiscuous mode\n");
-> -		priv->currentpacketfilter |=
-> +		priv->mac_control |=
->  		    CMD_ACT_MAC_PROMISCUOUS_ENABLE;
-> -		priv->currentpacketfilter &=
-> +		priv->mac_control &=
->  		    ~(CMD_ACT_MAC_ALL_MULTICAST_ENABLE |
->  		      CMD_ACT_MAC_MULTICAST_ENABLE);
->  	} else {
->  		/* Multicast */
-> -		priv->currentpacketfilter &=
-> +		priv->mac_control &=
->  		    ~CMD_ACT_MAC_PROMISCUOUS_ENABLE;
->  
->  		if (dev->flags & IFF_ALLMULTI || dev->mc_count >
->  		    MRVDRV_MAX_MULTICAST_LIST_SIZE) {
->  			lbs_deb_net( "enabling all multicast\n");
-> -			priv->currentpacketfilter |=
-> +			priv->mac_control |=
->  			    CMD_ACT_MAC_ALL_MULTICAST_ENABLE;
-> -			priv->currentpacketfilter &=
-> +			priv->mac_control &=
->  			    ~CMD_ACT_MAC_MULTICAST_ENABLE;
->  		} else {
-> -			priv->currentpacketfilter &=
-> +			priv->mac_control &=
->  			    ~CMD_ACT_MAC_ALL_MULTICAST_ENABLE;
->  
->  			if (!dev->mc_count) {
->  				lbs_deb_net("no multicast addresses, "
->  				       "disabling multicast\n");
-> -				priv->currentpacketfilter &=
-> +				priv->mac_control &=
->  				    ~CMD_ACT_MAC_MULTICAST_ENABLE;
->  			} else {
->  				int i;
->  
-> -				priv->currentpacketfilter |=
-> +				priv->mac_control |=
->  				    CMD_ACT_MAC_MULTICAST_ENABLE;
->  
->  				priv->nr_of_multicastmacaddr =
-> @@ -642,9 +642,8 @@ static void lbs_set_multicast_list(struc
->  		}
->  	}
->  
-> -	if (priv->currentpacketfilter != oldpacketfilter) {
-> -		lbs_set_mac_packet_filter(priv);
-> -	}
-> +	if (priv->mac_control != old_mac_control)
-> +		lbs_set_mac_control(priv);
->  
->  	lbs_deb_leave(LBS_DEB_NET);
->  }
-> @@ -945,7 +944,7 @@ static int lbs_setup_firmware(struct lbs
->  		goto done;
->  	}
->  
-> -	lbs_set_mac_packet_filter(priv);
-> +	lbs_set_mac_control(priv);
->  
->  	ret = lbs_get_data_rate(priv);
->  	if (ret < 0) {
-> @@ -1036,7 +1035,7 @@ static int lbs_init_adapter(struct lbs_p
->  	priv->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
->  	priv->mode = IW_MODE_INFRA;
->  	priv->curbssparams.channel = DEFAULT_AD_HOC_CHANNEL;
-> -	priv->currentpacketfilter = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
-> +	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
->  	priv->radioon = RADIO_ON;
->  	priv->auto_rate = 1;
->  	priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
-> Index: wireless-testing/drivers/net/wireless/libertas/decl.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-03-12 14:59:42.000000000 +0100
-> @@ -17,7 +17,7 @@ struct net_device;
->  struct cmd_ctrl_node;
->  struct cmd_ds_command;
->  
-> -int lbs_set_mac_packet_filter(struct lbs_private *priv);
-> +int lbs_set_mac_control(struct lbs_private *priv);
->  
->  void lbs_send_tx_feedback(struct lbs_private *priv);
->  
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:59:46.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-12 15:00:57.000000000 +0100
-> @@ -1286,7 +1286,7 @@ int lbs_set_radio_control(struct lbs_pri
->  	return ret;
->  }
->  
-> -int lbs_set_mac_packet_filter(struct lbs_private *priv)
-> +int lbs_set_mac_control(struct lbs_private *priv)
->  {
->  	int ret = 0;
->  	struct cmd_ds_mac_control cmd;
-> @@ -1294,7 +1294,7 @@ int lbs_set_mac_packet_filter(struct lbs
->  	lbs_deb_enter(LBS_DEB_CMD);
->  
->  	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> -	cmd.action = cpu_to_le16(priv->currentpacketfilter);
-> +	cmd.action = cpu_to_le16(priv->mac_control);
->  	cmd.reserved = 0;
->  
->  	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+> 
 
