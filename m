@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:19607 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708AbYCSTxX (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.188]:45056 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbYCHJXH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:53:23 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: fix spinlock recursion bug
-Date: Wed, 19 Mar 2008 15:24:21 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803191524.21866.hs4233@mail.mn-solutions.de> (sfid-20080319_195437_942150_AAA2A953)
+	Sat, 8 Mar 2008 04:23:07 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so492991rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 01:23:06 -0800 (PST)
+Subject: [PATCH 4/5] mac80211: remove Hi16, Lo16 helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 08 Mar 2008 01:23:08 -0800
+Message-Id: <1204968188.23455.40.camel@brick> (sfid-20080308_092338_480606_A4DDBE10)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a bug detected by CONFIG_DEBUG_SPINLOCK:
+They were only used in one place, just open-code it there.
 
-if_cs_get_int_status() is only called from lbs_thread(), via
-priv->hw_get_int_status. However, lbs_thread() has already taken the
-priv->driver_lock. So it's a fault to take the same lock again here.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-CONFIG_DEBUG_SPINLOCK,
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ net/mac80211/tkip.c |   19 ++-----------------
+ 1 files changed, 2 insertions(+), 17 deletions(-)
 
-John, this patch might also go into linux-2.6.25-rcX
-
-Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-03-19 13:46:47.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-03-19 13:46:53.000000000 +0100
-@@ -677,9 +677,7 @@ sbi_get_int_status_exit:
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 9a36e83..264e392 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -65,31 +65,16 @@ static inline u8 Hi8(u16 v)
+ 	return v >> 8;
+ }
  
- 	/* Card has a command result for us */
- 	if (*ireg & IF_CS_C_S_CMD_UPLD_RDY) {
--		spin_lock(&priv->driver_lock);
- 		ret = if_cs_receive_cmdres(priv, priv->upld_buf, &priv->upld_len);
--		spin_unlock(&priv->driver_lock);
- 		if (ret < 0)
- 			lbs_pr_err("could not receive cmd from card\n");
- 	}
+-
+ static inline u8 Lo8(u16 v)
+ {
+ 	return v & 0xff;
+ }
+ 
+-
+-static inline u16 Hi16(u32 v)
+-{
+-	return v >> 16;
+-}
+-
+-
+-static inline u16 Lo16(u32 v)
+-{
+-	return v & 0xffff;
+-}
+-
+ static u16 tkip_S(u16 val)
+ {
+ 	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
+ }
+ 
+-
+-
+ /* P1K := Phase1(TA, TK, TSC)
+  * TA = transmitter address (48 bits)
+  * TK = dot11DefaultKeyValue or dot11KeyMappingValue (128 bits)
+@@ -102,8 +87,8 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+ 	int i, j;
+ 	__le16 *leptr = (__le16 *)ta;
+ 
+-	p1k[0] = Lo16(tsc_IV32);
+-	p1k[1] = Hi16(tsc_IV32);
++	p1k[0] = tsc_IV32 & 0xffff;
++	p1k[1] = tsc_IV32 >> 16;
+ 	p1k[2] = le16_to_cpup(leptr++);
+ 	p1k[3] = le16_to_cpup(leptr++);
+ 	p1k[4] = le16_to_cpup(leptr++);
+-- 
+1.5.4.GIT
+
+
