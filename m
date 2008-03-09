@@ -1,60 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:64235 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755449AbYC0Tcv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 15:32:51 -0400
-Subject: Re: Question on Wireless NICs
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Balaji Rao <balajirrao@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080327155842.GA3624@tuxdriver.com>
-References: <200803260011.29045.balajirrao@gmail.com>
-	 <20080325193219.GC30587@tuxdriver.com> <1206498769.23595.6.camel@dv>
-	 <20080327155842.GA3624@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 27 Mar 2008 15:32:49 -0400
-Message-Id: <1206646369.6433.8.camel@dv> (sfid-20080327_193255_482618_6118BA06)
-Mime-Version: 1.0
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:44674 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991AbYCIQnN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Mar 2008 12:43:13 -0400
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/12] at76_usb mac80211 port
+References: <20080210145733.17592.61729.stgit@tikku>
+	<1202706345.20836.26.camel@dv>
+From: Kalle Valo <Kalle.Valo@iki.fi>
+Date: Sun, 09 Mar 2008 18:43:09 +0200
+In-Reply-To: <1202706345.20836.26.camel@dv> (Pavel Roskin's message of "Mon\, 11 Feb 2008 00\:05\:45 -0500")
+Message-ID: <87r6ejyhk2.fsf@litku.valot.fi> (sfid-20080309_164336_266541_08235AC4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-03-27 at 11:58 -0400, John W. Linville wrote:
-> On Tue, Mar 25, 2008 at 10:32:48PM -0400, Pavel Roskin wrote:
-> > On Tue, 2008-03-25 at 15:32 -0400, John W. Linville wrote:
-> > 
-> > > The gPXE (formerly etherboot) project seems to support PCI-based
-> > > (e.g. cardbus, but not PCMCIA) orinoco devices.  I cannot verify that,
-> > > since I have no such device (donations accepted!)...
-> > 
-> > Just to set the record straight, I'm unaware of any CardBus devices
-> > compatible with the orinoco driver, i.e. Prism 2-3, Symbol Trilogy or
-> > Hermes I based 802.11b device.
-> > 
-> > At the first glance, gPXE appears to support Prism chipset only, either
-> > native PCI or PCMCIA behind PLX9052 bridge.
-> 
-> I'm not sure where you are looking.  I have a git tree from here:
-> 
-> 	git://git.etherboot.org/scm/gpxe.git
+Pavel Roskin <proski@gnu.org> writes:
 
-That's where I was looking.
+> On Sun, 2008-02-10 at 16:59 +0200, Kalle Valo wrote:
+>> Here's a patch series of my at76_usb mac80211 port. I'm sending them now 
+>> for comments. Currently open mode and WEP authentication are supported.
+>
+> Kalle, thank you for your work!
+>
+> I've put your patches on http://git.80211libre.org/at76_usb.git so that
+> they can be tested by more users.  I gave no promise about continuity of
+> the branch, so I'm ready to replace the patches.
 
-> The gpxe source file src/drivers/net/prism2_pci.c claims to support
-> PCI ID 1260:3873 which is listed as a prism 2.5 device supported by
-> drivers/net/wireless/orinoco_pci.c in the linux tree.  Similarly the
-> gpxe src/drivers/net/prism2_plx.c claims to support all of the PCI IDs
-> listed in drivers/net/wireless/orinoco_plx.c from the linux tree as
-> well as one that is not listed there (126c:8030 -- perhaps we should
-> add it?).
+Thanks, but it seems that John already applied the patches to
+wireless-testing. I would prefer working directly with
+wireless-testing, because it's easier for me.
 
-126c:8030 is in orinoco_nortel.c, and I don't think it can be treated
-like plx9052 based bridges.
+> I haven't looked at the code yet, but here are some testing results.
 
-The code in prism2.c looks similar to linux-wlan-ng, which is
-Prism-only.  But on the other hand, the gpxe driver offers only very
-basic functionality, which doesn't even include WEP, so it's possible
-that non-Prism cards would work.
+What hardware and firmware did you use?
+
+> When trying to associate to an AP without security (MadWifi on a PC),
+> that's what I see in the logs:
+>
+> wlan3: Initial auth_alg=0
+> wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> wlan3: RX authentication from 00:0b:6b:56:01:bf (alg=0 transaction=2 status=0)
+> wlan3: authenticated
+> wlan3: associate with AP 00:0b:6b:56:01:bf
+> wlan3: authentication frame received from 00:0b:6b:56:01:bf, but not in authenticate state - ignored
+> wlan3: associate with AP 00:0b:6b:56:01:bf
+> wlan3: RX AssocResp from 00:0b:6b:56:01:bf (capab=0x421 status=0 aid=1)
+> wlan3: associated
+> wlan3: association frame received from 00:0b:6b:56:01:bf, but not in associate state - ignored
+>
+> No pings come through.  I see on the AP that the AP is receiving ARP
+> requests and sending ARP replies, so it must be the receiving side in
+> at76_usb that is broken.
+
+I'm looking at this. Sometimes I see very odd behaviour, for example
+AP not hearing our ACKs even though I can see them just fine with
+wireshark. The driver must be doing something wrong.
+
+> You forgot end of line in the message (that's patch 05/12).
+
+I see that you fixed this already, thanks.
+
+> I'm totally at loss why a positive value us printed. When trying to
+> set the key and ESSID again, I get this:
+>
+> wlan3: Initial auth_alg=0
+> wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> wlan3: authentication with AP 00:0b:6b:56:01:bf timed out
+>
+> Pings don't come through.  Everything is within one room.  Attenuation
+> shouldn't be an issue.
+
+Do you mean that all your tries failed? That's bad.
+
+> Another interesting problem - scan results show the channel two times
+> (not counting the "frequency" line).  Other mac80211 drivers do it once.
+> No idea why.
+
+Strange. I'll take a look at it as well.
 
 -- 
-Regards,
-Pavel Roskin
+Kalle Valo
