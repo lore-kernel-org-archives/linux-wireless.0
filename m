@@ -1,126 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:33668 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161471AbYCSWEf (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666AbYCIVvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 18:04:35 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so661596wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 15:04:34 -0700 (PDT)
-Subject: [PATCH-mm 1/5] mac80211: tkipc.c michael.c use kernel bit rotation
-	helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Tue, 18 Mar 2008 14:28:33 -0700
-Message-Id: <1205875713.17607.20.camel@brick> (sfid-20080319_220610_238682_18B7BABD)
-Mime-Version: 1.0
+	Sun, 9 Mar 2008 17:51:22 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:22 -0700 (PDT)
+To: "John W. Linville" <linville@redhat.com>
+Subject: [PATCH 19/24] rt2x00: Always enable TSF ticking
+Date: Sun, 9 Mar 2008 22:47:43 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200803092237.43451.IvDoorn@gmail.com>
+In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803092247.43406.IvDoorn@gmail.com> (sfid-20080309_215403_116275_43FFB016)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ror16, ror32, rol32 instead of a private helper.
+Whatever mode we are in, according to the legacy drivers
+we should always enable TSF ticking/counting.
+We should also always enable the TBCN/TBTT field,
+this field is only disabled during beacon regeneration.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-Depends on patch submitted to -mm adding the 8 bit/16 bit
-helpers.
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 ++
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 ++
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 ++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    2 ++
+ drivers/net/wireless/rt2x00/rt73usb.c   |    2 ++
+ 5 files changed, 10 insertions(+), 0 deletions(-)
 
- net/mac80211/michael.c |   20 ++++----------------
- net/mac80211/tkip.c    |   20 +++++++-------------
- 2 files changed, 11 insertions(+), 29 deletions(-)
-
-diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
-index 0f844f7..c2c10d3 100644
---- a/net/mac80211/michael.c
-+++ b/net/mac80211/michael.c
-@@ -8,36 +8,24 @@
-  */
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 70f711e..e2bb634 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -291,7 +291,9 @@ static void rt2400pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		 * Enable synchronisation.
+ 		 */
+ 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
++		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
+ 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
++		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
+ 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 	}
  
- #include <linux/types.h>
-+#include <linux/bitops.h>
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index a46206c..4e312cb 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -294,7 +294,9 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		 * Enable synchronisation.
+ 		 */
+ 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
++		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
+ 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
++		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
+ 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 	}
  
- #include "michael.h"
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 43da93a..8dfebfd 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -343,7 +343,9 @@ static void rt2500usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
  
--static inline u32 rotr(u32 val, int bits)
--{
--	return (val >> bits) | (val << (32 - bits));
--}
--
--
--static inline u32 rotl(u32 val, int bits)
--{
--	return (val << bits) | (val >> (32 - bits));
--}
--
--
- static inline u32 xswap(u32 val)
- {
- 	return ((val & 0xff00ff00) >> 8) | ((val & 0x00ff00ff) << 8);
- }
+ 		rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
++		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 1);
+ 		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, conf->sync);
++		rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 1);
+ 		rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
+ 	}
  
--
- #define michael_block(l, r) \
- do { \
--	r ^= rotl(l, 17); \
-+	r ^= rol32(l, 17); \
- 	l += r; \
- 	r ^= xswap(l); \
- 	l += r; \
--	r ^= rotl(l, 3); \
-+	r ^= rol32(l, 3); \
- 	l += r; \
--	r ^= rotr(l, 2); \
-+	r ^= ror32(l, 2); \
- 	l += r; \
- } while (0)
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 62eff52..d11d3e5 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -343,7 +343,9 @@ static void rt61pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		 * Enable synchronisation.
+ 		 */
+ 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
++		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
+ 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 	}
  
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 3abe194..a5745c1 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -8,6 +8,7 @@
-  */
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index e0dd3ad..03a72ce 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -355,7 +355,9 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		 * Enable synchronisation.
+ 		 */
+ 		rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
++		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
+ 		rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 	}
  
- #include <linux/kernel.h>
-+#include <linux/bitops.h>
- #include <linux/types.h>
- #include <linux/netdevice.h>
- 
-@@ -91,13 +92,6 @@ static inline u16 Lo16(u32 v)
- 	return v & 0xffff;
- }
- 
--
--static inline u16 RotR1(u16 v)
--{
--	return (v >> 1) | ((v & 0x0001) << 15);
--}
--
--
- static inline u16 tkip_S(u16 val)
- {
- 	u16 a = tkip_sbox[Hi8(val)];
-@@ -154,12 +148,12 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
- 	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
- 	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
- 	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
--	ppk[0] +=  RotR1(ppk[5] ^ Mk16(tk[13], tk[12]));
--	ppk[1] +=  RotR1(ppk[0] ^ Mk16(tk[15], tk[14]));
--	ppk[2] +=  RotR1(ppk[1]);
--	ppk[3] +=  RotR1(ppk[2]);
--	ppk[4] +=  RotR1(ppk[3]);
--	ppk[5] +=  RotR1(ppk[4]);
-+	ppk[0] +=  ror16(ppk[5] ^ Mk16(tk[13], tk[12]), 1);
-+	ppk[1] +=  ror16(ppk[0] ^ Mk16(tk[15], tk[14]), 1);
-+	ppk[2] +=  ror16(ppk[1], 1);
-+	ppk[3] +=  ror16(ppk[2], 1);
-+	ppk[4] +=  ror16(ppk[3], 1);
-+	ppk[5] +=  ror16(ppk[4], 1);
- 
- 	rc4key[0] = Hi8(tsc_IV16);
- 	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
 -- 
-1.5.4.4.684.g0e08
-
+1.5.4.3
 
