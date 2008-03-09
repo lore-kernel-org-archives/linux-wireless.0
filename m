@@ -1,117 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:19371 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751471AbYCLPIj (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbYCIVux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 11:08:39 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: libertas: convert CMD_MAC_CONTROL to a direct command
-Date: Wed, 12 Mar 2008 16:05:40 +0100
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+	Sun, 9 Mar 2008 17:50:53 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:50:53 -0700 (PDT)
+To: "John W. Linville" <linville@redhat.com>
+Subject: [PATCH 08/24] rt2x00: Add new D-Link USB ID
+Date: Sun, 9 Mar 2008 22:42:32 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200803092237.43451.IvDoorn@gmail.com>
+In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803121605.41013.hs4233@mail.mn-solutions.de> (sfid-20080312_150843_724880_5D303AD1)
+  charset="utf-8"
+Message-Id: <200803092242.32267.IvDoorn@gmail.com> (sfid-20080309_215103_916310_3B2F354D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-convert CMD_MAC_CONTROL to a direct command
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:51:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:56:12.000000000 +0100
-@@ -1200,24 +1200,6 @@ static void lbs_submit_command(struct lb
- 	lbs_deb_leave(LBS_DEB_HOST);
- }
- 
--static int lbs_cmd_mac_control(struct lbs_private *priv,
--				struct cmd_ds_command *cmd)
--{
--	struct cmd_ds_mac_control *mac = &cmd->params.macctrl;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	cmd->command = cpu_to_le16(CMD_MAC_CONTROL);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_mac_control) + S_DS_GEN);
--	mac->action = cpu_to_le16(priv->currentpacketfilter);
--
--	lbs_deb_cmd("MAC_CONTROL: action 0x%04x, size %d\n",
--		    le16_to_cpu(mac->action), le16_to_cpu(cmd->size));
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- /**
-  *  This function inserts command node to cmdfreeq
-  *  after cleans it. Requires priv->driver_lock held.
-@@ -1307,12 +1289,15 @@ int lbs_set_radio_control(struct lbs_pri
- int lbs_set_mac_packet_filter(struct lbs_private *priv)
- {
- 	int ret = 0;
-+	struct cmd_ds_mac_control cmd;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
--	/* Send MAC control command to station */
--	ret = lbs_prepare_and_send_command(priv,
--				    CMD_MAC_CONTROL, 0, 0, 0, NULL);
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(priv->currentpacketfilter);
-+	cmd.reserved = 0;
-+
-+	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
- 
- 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
- 	return ret;
-@@ -1382,10 +1367,6 @@ int lbs_prepare_and_send_command(struct 
- 		ret = lbs_cmd_802_11_ps_mode(priv, cmdptr, cmd_action);
- 		break;
- 
--	case CMD_MAC_CONTROL:
--		ret = lbs_cmd_mac_control(priv, cmdptr);
--		break;
--
- 	case CMD_802_11_ASSOCIATE:
- 	case CMD_802_11_REASSOCIATE:
- 		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
-Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:51:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:55:30.000000000 +0100
-@@ -394,7 +394,6 @@ static inline int handle_cmd_response(st
- 		break;
- 
- 	case CMD_RET(CMD_MAC_MULTICAST_ADR):
--	case CMD_RET(CMD_MAC_CONTROL):
- 	case CMD_RET(CMD_802_11_RESET):
- 	case CMD_RET(CMD_802_11_AUTHENTICATE):
- 	case CMD_RET(CMD_802_11_BEACON_STOP):
-Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:51:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:55:30.000000000 +0100
-@@ -211,8 +211,9 @@ struct cmd_ds_802_11_get_log {
- };
- 
- struct cmd_ds_mac_control {
-+	struct cmd_header hdr;
- 	__le16 action;
--	__le16 reserved;
-+	u16 reserved;
- };
- 
- struct cmd_ds_mac_multicast_adr {
-@@ -695,7 +696,6 @@ struct cmd_ds_command {
- 	/* command Body */
- 	union {
- 		struct cmd_ds_802_11_ps_mode psmode;
--		struct cmd_ds_mac_control macctrl;
- 		struct cmd_ds_802_11_associate associate;
- 		struct cmd_ds_802_11_deauthenticate deauth;
- 		struct cmd_ds_802_11_ad_hoc_start ads;
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 9b4feb3..4506423 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2137,6 +2137,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x07d1, 0x3c03), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c04), USB_DEVICE_DATA(&rt73usb_ops) },
++	{ USB_DEVICE(0x07d1, 0x3c07), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Gemtek */
+ 	{ USB_DEVICE(0x15a9, 0x0004), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Gigabyte */
+-- 
+1.5.4.3
+
