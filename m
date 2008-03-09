@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37043 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757960AbYCEXfI (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:42303 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbYCILnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 18:35:08 -0500
-Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Franz Apeltauer <franz.apeltauer@gmx.at>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <47CF2BE1.2020305@gmx.at> (sfid-20080305_232553_041904_D869E5E2)
-References: <47CB3B5E.4020701@gmx.at>
-	 <1204504331.3917.31.camel@johannes.berg>
-	 <20080303035222.GP28995@ruslug.rutgers.edu>  <47CF28F2.6050509@gmx.at>
-	 (sfid-20080305_231328_405485_4CF10539) <1204758941.25502.93.camel@johannes.berg>
-	 <47CF2BE1.2020305@gmx.at> (sfid-20080305_232553_041904_D869E5E2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AUFLB/AN6O0JBqM2a0+b"
-Date: Thu, 06 Mar 2008 00:34:49 +0100
-Message-Id: <1204760089.25502.95.camel@johannes.berg> (sfid-20080305_233511_889096_F0B9C44A)
-Mime-Version: 1.0
+	Sun, 9 Mar 2008 07:43:35 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so794545rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 04:43:33 -0700 (PDT)
+Message-ID: <c85cb4470803090443v3748a986vfc909c984369a4a7@mail.gmail.com> (sfid-20080309_114343_065367_1D6D761B)
+Date: Sun, 9 Mar 2008 13:43:33 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com, "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: handling Qdisc issues
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <1204829243.25502.137.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
+	 <200803061902.33865.IvDoorn@gmail.com>
+	 <1204826767.25502.135.camel@johannes.berg>
+	 <200803061927.09891.IvDoorn@gmail.com>
+	 <1204829243.25502.137.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > > You could also just make a patch for exactly this and ask Ron to merge
+> > > it together with this?
+> >
+> > Well that patch would then be completely untested (I code, but have hardly time
+> > to perform the testing myself).
+>
+> Heh ok.
+>
+> > I can already say that the patch from Ron will work despite the my
+> > remark about the different meaning of the qid field.
+>
+> Oh if my (I'm to blame for the rt2x00 changes, not Ron) changes will not
+> totally break it that's fine then.
+>
+> johannes
+>
 
---=-AUFLB/AN6O0JBqM2a0+b
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> I'm sorry, almost the same result:
-> # rmmod b43legacy
-> # modprobe b43
-> =3D> messages: Mar  6 00:18:36 af-nb-3 kernel: [14393.692000] Broadcom=20
-> 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
-> =3D> dmesg: [14393.692000] Broadcom 43xx driver loaded [ Features: PML,=20
-> Firmware-ID: FW13 ]
-
-Huh, ok, I see.
-
-Edit compat's compat.mk and add
-
-SSB_B43_PCI_BRIDGE=3Dy
-
-to the end and rebuild.
-
-johannes
-
---=-AUFLB/AN6O0JBqM2a0+b
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR88uGKVg1VMiehFYAQKBuhAAqdGhn5Wyl4hzdUxMS3uVgOatFRrXXVC7
-phGQsCZRxv6InW6pPa+R9hzkCVe39u2cyE4Ms5XBUFuOefdtNhrG+0WZmyvLRe2D
-7EXGF7rqN6wW7FTaCCrwiDW2VSP3iFuDvB4xkw2LPi1O12TkdikFWbTWfMtqLVnU
-4FBXhSgIJCEJF4XFSQbj5feMdV1WVGqZIMH089r9s6yOHZ3o7gMds6RErsHASf/t
-nE3KKKh3pczYRm/KwnZBkZq2Q6uxgHkL32cf6ZzsVpfZEjB7Ccp2e1F2O1iFnmZ3
-B43rL/jtSsyuGZYT/Jo2LEIrHZgLVXZ90hro1SbtZ3GUVYL0qZKYo5qkMndkOSva
-ehrC30C0Bd0mSIBqsk1ZtqtboCfbglEZ6fgRRgZmvL7sK4lQX7r60Oa3hRVOnZWu
-ZDTdo+nG4FR8H3K/t88A9S0WBt9FlZ/sb4tQIpOiGmhqFwAvRBiGJjOn55FG/WBP
-uDn3+bRgxthnaVgNViAYMnl+0bi+3uLR1zGYQDlNWmz2lGrBwB8Hqm/rOgzTVolf
-OXorX/vxpQJsuFDsamRn9QYk8/tsu7+8/JWzcqGYm8ttxvbyd63hn/czpOANNVv/
-zgCh+kajDNv5/FfC8PCvntxg14CtxiYUBzi89iAjIlLwXFyCz0ceMcpldq2PdQAK
-Gcl4sjDCNsI=
-=mDzT
------END PGP SIGNATURE-----
-
---=-AUFLB/AN6O0JBqM2a0+b--
-
+John, Johannes, what will be the preferred way to continue? it seems
+that Ivo and Michael agree that the adjustments needed can be inserted
+quite fast. would you like to re-base and merge the current RFC as a
+patch and fix things on top of it, or to merge all the fixes and push
+it at once?
