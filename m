@@ -1,413 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52622 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbYC2XNz (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbYCIVv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2008 19:13:55 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Turn suspend/resume upside down
-Date: Sun, 30 Mar 2008 00:10:50 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Sun, 9 Mar 2008 17:51:27 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:26 -0700 (PDT)
+To: "John W. Linville" <linville@redhat.com>
+Subject: [PATCH 21/24] rt2x00: Fix compile error when rfkill is disabled
+Date: Sun, 9 Mar 2008 22:48:28 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200803092237.43451.IvDoorn@gmail.com>
+In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803300010.51166.mb@bu3sch.de> (sfid-20080329_231410_443004_732FC83C)
+  charset="utf-8"
+Message-Id: <200803092248.29080.IvDoorn@gmail.com> (sfid-20080309_222528_349645_482EEF70)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Turn the SSB bus suspend mechanism upside down.
-Instead of deciding by an internal reference count when to suspend/resume,
-let the parent bus call us in their suspend/resume routine.
+Fix obvious error that prevented compilation while rfkill
+was disabled.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
+ drivers/net/wireless/rt2x00/rt2x00lib.h |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-John, this is for 2.6.26
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index fd25797..64fae7e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -171,8 +171,13 @@ static inline void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
+ {
+ }
+ 
+-static inline void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev);
+-static inline void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev);
++static inline void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev)
++{
++}
++
++static inline void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev)
++{
++}
+ #endif /* CONFIG_RT2X00_LIB_RFKILL */
+ 
+ /*
+-- 
+1.5.4.3
 
-
-Index: wireless-testing/drivers/ssb/main.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/main.c	2008-03-29 20:09:09.000000000 +0100
-+++ wireless-testing/drivers/ssb/main.c	2008-03-29 23:52:26.000000000 +0100
-@@ -117,93 +117,80 @@ static struct ssb_device *ssb_device_get
- static void ssb_device_put(struct ssb_device *dev)
- {
- 	if (dev)
- 		put_device(dev->dev);
- }
- 
--static int ssb_bus_resume(struct ssb_bus *bus)
--{
--	int err;
--
--	ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 1);
--	err = ssb_pcmcia_init(bus);
--	if (err) {
--		/* No need to disable XTAL, as we don't have one on PCMCIA. */
--		return err;
--	}
--	ssb_chipco_resume(&bus->chipco);
--
--	return 0;
--}
--
- static int ssb_device_resume(struct device *dev)
- {
- 	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
- 	struct ssb_driver *ssb_drv;
--	struct ssb_bus *bus;
- 	int err = 0;
- 
--	bus = ssb_dev->bus;
--	if (bus->suspend_cnt == bus->nr_devices) {
--		err = ssb_bus_resume(bus);
--		if (err)
--			return err;
--	}
--	bus->suspend_cnt--;
- 	if (dev->driver) {
- 		ssb_drv = drv_to_ssb_drv(dev->driver);
- 		if (ssb_drv && ssb_drv->resume)
- 			err = ssb_drv->resume(ssb_dev);
- 		if (err)
- 			goto out;
- 	}
- out:
- 	return err;
- }
- 
--static void ssb_bus_suspend(struct ssb_bus *bus, pm_message_t state)
--{
--	ssb_chipco_suspend(&bus->chipco, state);
--	ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 0);
--
--	/* Reset HW state information in memory, so that HW is
--	 * completely reinitialized on resume. */
--	bus->mapped_device = NULL;
--#ifdef CONFIG_SSB_DRIVER_PCICORE
--	bus->pcicore.setup_done = 0;
--#endif
--#ifdef CONFIG_SSB_DEBUG
--	bus->powered_up = 0;
--#endif
--}
--
- static int ssb_device_suspend(struct device *dev, pm_message_t state)
- {
- 	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
- 	struct ssb_driver *ssb_drv;
--	struct ssb_bus *bus;
- 	int err = 0;
- 
- 	if (dev->driver) {
- 		ssb_drv = drv_to_ssb_drv(dev->driver);
- 		if (ssb_drv && ssb_drv->suspend)
- 			err = ssb_drv->suspend(ssb_dev, state);
- 		if (err)
- 			goto out;
- 	}
-+out:
-+	return err;
-+}
-+
-+int ssb_bus_resume(struct ssb_bus *bus)
-+{
-+	int err;
-+
-+	/* Reset HW state information in memory, so that HW is
-+	 * completely reinitialized. */
-+	bus->mapped_device = NULL;
-+#ifdef CONFIG_SSB_DRIVER_PCICORE
-+	bus->pcicore.setup_done = 0;
-+#endif
- 
--	bus = ssb_dev->bus;
--	bus->suspend_cnt++;
--	if (bus->suspend_cnt == bus->nr_devices) {
--		/* All devices suspended. Shutdown the bus. */
--		ssb_bus_suspend(bus, state);
-+	err = ssb_bus_powerup(bus, 0);
-+	if (err)
-+		return err;
-+	err = ssb_pcmcia_hardware_setup(bus);
-+	if (err) {
-+		ssb_bus_may_powerdown(bus);
-+		return err;
- 	}
-+	ssb_chipco_resume(&bus->chipco);
-+	ssb_bus_may_powerdown(bus);
- 
--out:
--	return err;
-+	return 0;
-+}
-+EXPORT_SYMBOL(ssb_bus_resume);
-+
-+int ssb_bus_suspend(struct ssb_bus *bus)
-+{
-+	ssb_chipco_suspend(&bus->chipco);
-+	ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 0);
-+
-+	return 0;
- }
-+EXPORT_SYMBOL(ssb_bus_suspend);
- 
- #ifdef CONFIG_SSB_PCIHOST
- int ssb_devices_freeze(struct ssb_bus *bus)
- {
- 	struct ssb_device *dev;
- 	struct ssb_driver *drv;
-Index: wireless-testing/drivers/ssb/pcmcia.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pcmcia.c	2008-03-29 20:09:09.000000000 +0100
-+++ wireless-testing/drivers/ssb/pcmcia.c	2008-03-29 22:37:46.000000000 +0100
-@@ -681,12 +681,35 @@ static int ssb_pcmcia_cor_setup(struct s
- 		return err;
- 	msleep(40);
- 
- 	return 0;
- }
- 
-+/* Initialize the PCMCIA hardware. This is called on Init and Resume. */
-+int ssb_pcmcia_hardware_setup(struct ssb_bus *bus)
-+{
-+	int err;
-+
-+	if (bus->bustype != SSB_BUSTYPE_PCMCIA)
-+		return 0;
-+
-+	/* Switch segment to a known state and sync
-+	 * bus->mapped_pcmcia_seg with hardware state. */
-+	ssb_pcmcia_switch_segment(bus, 0);
-+	/* Init the COR register. */
-+	err = ssb_pcmcia_cor_setup(bus, CISREG_COR);
-+	if (err)
-+		return err;
-+	/* Some cards also need this register to get poked. */
-+	err = ssb_pcmcia_cor_setup(bus, CISREG_COR + 0x80);
-+	if (err)
-+		return err;
-+
-+	return 0;
-+}
-+
- void ssb_pcmcia_exit(struct ssb_bus *bus)
- {
- 	if (bus->bustype != SSB_BUSTYPE_PCMCIA)
- 		return;
- 
- 	device_remove_file(&bus->host_pcmcia->dev, &dev_attr_ssb_sprom);
-@@ -696,22 +719,13 @@ int ssb_pcmcia_init(struct ssb_bus *bus)
- {
- 	int err;
- 
- 	if (bus->bustype != SSB_BUSTYPE_PCMCIA)
- 		return 0;
- 
--	/* Switch segment to a known state and sync
--	 * bus->mapped_pcmcia_seg with hardware state. */
--	ssb_pcmcia_switch_segment(bus, 0);
--
--	/* Init the COR register. */
--	err = ssb_pcmcia_cor_setup(bus, CISREG_COR);
--	if (err)
--		goto error;
--	/* Some cards also need this register to get poked. */
--	err = ssb_pcmcia_cor_setup(bus, CISREG_COR + 0x80);
-+	err = ssb_pcmcia_hardware_setup(bus);
- 	if (err)
- 		goto error;
- 
- 	bus->sprom_size = SSB_PCMCIA_SPROM_SIZE;
- 	mutex_init(&bus->sprom_mutex);
- 	err = device_create_file(&bus->host_pcmcia->dev, &dev_attr_ssb_sprom);
-Index: wireless-testing/drivers/ssb/ssb_private.h
-===================================================================
---- wireless-testing.orig/drivers/ssb/ssb_private.h	2008-03-22 17:51:22.000000000 +0100
-+++ wireless-testing/drivers/ssb/ssb_private.h	2008-03-29 22:37:20.000000000 +0100
-@@ -78,12 +78,13 @@ extern int ssb_pcmcia_switch_core(struct
- extern int ssb_pcmcia_switch_coreidx(struct ssb_bus *bus,
- 				     u8 coreidx);
- extern int ssb_pcmcia_switch_segment(struct ssb_bus *bus,
- 				     u8 seg);
- extern int ssb_pcmcia_get_invariants(struct ssb_bus *bus,
- 				     struct ssb_init_invariants *iv);
-+extern int ssb_pcmcia_hardware_setup(struct ssb_bus *bus);
- extern void ssb_pcmcia_exit(struct ssb_bus *bus);
- extern int ssb_pcmcia_init(struct ssb_bus *bus);
- extern const struct ssb_bus_ops ssb_pcmcia_ops;
- #else /* CONFIG_SSB_PCMCIAHOST */
- static inline int ssb_pcmcia_switch_core(struct ssb_bus *bus,
- 					 struct ssb_device *dev)
-@@ -97,12 +98,16 @@ static inline int ssb_pcmcia_switch_core
- }
- static inline int ssb_pcmcia_switch_segment(struct ssb_bus *bus,
- 					    u8 seg)
- {
- 	return 0;
- }
-+static inline int ssb_pcmcia_hardware_setup(struct ssb_bus *bus)
-+{
-+	return 0;
-+}
- static inline void ssb_pcmcia_exit(struct ssb_bus *bus)
- {
- }
- static inline int ssb_pcmcia_init(struct ssb_bus *bus)
- {
- 	return 0;
-Index: wireless-testing/drivers/ssb/driver_chipcommon.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_chipcommon.c	2008-02-29 11:56:41.000000000 +0100
-+++ wireless-testing/drivers/ssb/driver_chipcommon.c	2008-03-29 23:35:29.000000000 +0100
-@@ -248,13 +248,13 @@ void ssb_chipcommon_init(struct ssb_chip
- 		return; /* We don't have a ChipCommon */
- 	chipco_powercontrol_init(cc);
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
- 	calc_fast_powerup_delay(cc);
- }
- 
--void ssb_chipco_suspend(struct ssb_chipcommon *cc, pm_message_t state)
-+void ssb_chipco_suspend(struct ssb_chipcommon *cc)
- {
- 	if (!cc->dev)
- 		return;
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_SLOW);
- }
- 
-Index: wireless-testing/drivers/ssb/pcihost_wrapper.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pcihost_wrapper.c	2008-02-15 21:39:59.000000000 +0100
-+++ wireless-testing/drivers/ssb/pcihost_wrapper.c	2008-03-29 23:39:48.000000000 +0100
-@@ -15,28 +15,38 @@
- #include <linux/ssb/ssb.h>
- 
- 
- #ifdef CONFIG_PM
- static int ssb_pcihost_suspend(struct pci_dev *dev, pm_message_t state)
- {
-+	struct ssb_bus *ssb = pci_get_drvdata(dev);
-+	int err;
-+
-+	err = ssb_bus_suspend(ssb);
-+	if (err)
-+		return err;
- 	pci_save_state(dev);
- 	pci_disable_device(dev);
- 	pci_set_power_state(dev, pci_choose_state(dev, state));
- 
- 	return 0;
- }
- 
- static int ssb_pcihost_resume(struct pci_dev *dev)
- {
-+	struct ssb_bus *ssb = pci_get_drvdata(dev);
- 	int err;
- 
- 	pci_set_power_state(dev, 0);
- 	err = pci_enable_device(dev);
- 	if (err)
- 		return err;
- 	pci_restore_state(dev);
-+	err = ssb_bus_resume(ssb);
-+	if (err)
-+		return err;
- 
- 	return 0;
- }
- #else /* CONFIG_PM */
- # define ssb_pcihost_suspend	NULL
- # define ssb_pcihost_resume	NULL
-Index: wireless-testing/include/linux/ssb/ssb.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb.h	2008-03-22 17:51:22.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb.h	2008-03-29 23:32:37.000000000 +0100
-@@ -257,15 +257,12 @@ struct ssb_bus {
- 	u8 chip_package;
- 
- 	/* List of devices (cores) on the backplane. */
- 	struct ssb_device devices[SSB_MAX_NR_CORES];
- 	u8 nr_devices;
- 
--	/* Reference count. Number of suspended devices. */
--	u8 suspend_cnt;
--
- 	/* Software ID number for this bus. */
- 	unsigned int busnumber;
- 
- 	/* The ChipCommon device (if available). */
- 	struct ssb_chipcommon chipco;
- 	/* The PCI-core device (if available). */
-@@ -331,12 +328,19 @@ extern int ssb_bus_pcmciabus_register(st
- 				      struct pcmcia_device *pcmcia_dev,
- 				      unsigned long baseaddr);
- #endif /* CONFIG_SSB_PCMCIAHOST */
- 
- extern void ssb_bus_unregister(struct ssb_bus *bus);
- 
-+/* Suspend a SSB bus.
-+ * Call this from the parent bus suspend routine. */
-+extern int ssb_bus_suspend(struct ssb_bus *bus);
-+/* Resume a SSB bus.
-+ * Call this from the parent bus resume routine. */
-+extern int ssb_bus_resume(struct ssb_bus *bus);
-+
- extern u32 ssb_clockspeed(struct ssb_bus *bus);
- 
- /* Is the device enabled in hardware? */
- int ssb_device_is_enabled(struct ssb_device *dev);
- /* Enable a device and pass device-specific SSB_TMSLOW flags.
-  * If no device-specific flags are available, use 0. */
-Index: wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb_driver_chipcommon.h	2008-02-29 11:56:43.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h	2008-03-29 23:35:47.000000000 +0100
-@@ -364,14 +364,13 @@ static inline bool ssb_chipco_available(
- {
- 	return (cc->dev != NULL);
- }
- 
- extern void ssb_chipcommon_init(struct ssb_chipcommon *cc);
- 
--#include <linux/pm.h>
--extern void ssb_chipco_suspend(struct ssb_chipcommon *cc, pm_message_t state);
-+extern void ssb_chipco_suspend(struct ssb_chipcommon *cc);
- extern void ssb_chipco_resume(struct ssb_chipcommon *cc);
- 
- extern void ssb_chipco_get_clockcpu(struct ssb_chipcommon *cc,
-                                     u32 *plltype, u32 *n, u32 *m);
- extern void ssb_chipco_get_clockcontrol(struct ssb_chipcommon *cc,
- 					u32 *plltype, u32 *n, u32 *m);
-Index: wireless-testing/drivers/net/wireless/b43/pcmcia.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/pcmcia.c	2008-03-29 20:09:09.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/pcmcia.c	2008-03-29 23:40:58.000000000 +0100
-@@ -40,20 +40,22 @@ static /*const */ struct pcmcia_device_i
- 
- MODULE_DEVICE_TABLE(pcmcia, b43_pcmcia_tbl);
- 
- #ifdef CONFIG_PM
- static int b43_pcmcia_suspend(struct pcmcia_device *dev)
- {
--	//TODO
--	return 0;
-+	struct ssb_bus *ssb = dev->priv;
-+
-+	return ssb_bus_suspend(ssb);
- }
- 
- static int b43_pcmcia_resume(struct pcmcia_device *dev)
- {
--	//TODO
--	return 0;
-+	struct ssb_bus *ssb = dev->priv;
-+
-+	return ssb_bus_resume(ssb);
- }
- #else /* CONFIG_PM */
- # define b43_pcmcia_suspend		NULL
- # define b43_pcmcia_resume		NULL
- #endif /* CONFIG_PM */
- 
