@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34703 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756647AbYCTTMX (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbYCIVv3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 15:12:23 -0400
-Subject: Re: [PATCH/RFC v3] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
-	symbol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1206040151.17059.10.camel@brick> (sfid-20080320_190919_345083_ADEC461D)
-References: <1206023695.16475.137.camel@johannes.berg>
-	 <20080320181310.GA17884@uranus.ravnborg.org>
-	 <1206038373.16475.150.camel@johannes.berg>
-	 (sfid-20080320_184016_333600_B74BDE6D)  <1206038734.16475.153.camel@johannes.berg>
-	 <1206040151.17059.10.camel@brick> (sfid-20080320_190919_345083_ADEC461D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F6/Ia8Jp6T+uxIw2Ii5u"
-Date: Thu, 20 Mar 2008 20:12:03 +0100
-Message-Id: <1206040323.16475.155.camel@johannes.berg> (sfid-20080320_191227_594512_EDD5C96D)
-Mime-Version: 1.0
+	Sun, 9 Mar 2008 17:51:29 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:28 -0700 (PDT)
+To: "John W. Linville" <linville@redhat.com>
+Subject: [PATCH 22/24] rt2x00: Fix RX DMA ring initialization
+Date: Sun, 9 Mar 2008 22:48:46 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200803092237.43451.IvDoorn@gmail.com>
+In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803092248.46660.IvDoorn@gmail.com> (sfid-20080309_215518_537632_FF1D11C5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Due to a terrible typo the RX DMA base address
+was initialized to the beacon base address.
+Obviously bad things happen with bugs like that....
 
---=-F6/Ia8Jp6T+uxIw2Ii5u
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> > +#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
-> > +	skb =3D original skb
-> > +#else
-> > +	skb =3D copy skb
-> > +#endif
-> > +
->=20
-> Couldn't this just be made an inline in a networking header somewhere,
-> instead of ifdefs in the code?
-
-That was just an example, you might want to do other things too. If it
-turns out that a similar code pattern will be used all over the place we
-can then consolidate that.
-
-johannes
-
---=-F6/Ia8Jp6T+uxIw2Ii5u
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+K3AaVg1VMiehFYAQJ10BAAlBko/4ZkLj6LW9/NGelh1GaS7iqtvvFt
-M2y3cZtYTTYmAMbENKxK7WzAsOaqmv+CJyPMIulGhNwZDSeyYWEbI/g5oVjwECNo
-qcd30R82k15WMBaqE56tHo4zmQ1dviQKse6UYLtyoOUDDCUTXF2pmyIwsWM+VHL0
-6fuxMohW97BvP6AKxABhw7AKXykqI4/DMGcFNE3TWkHLtEivLc5MNfDx5TQAyHQO
-elUpuf+B8V3W93TYwKOeTqkq+C+Xr624O9470bPytLOY6HtEpH6nLhcOeXoqJaX3
-QP2MonJjMXOdmcDJEPMG4LdcExph2ZWn+rjHbCV2amABSHxLf3icxxFsTEX91FOk
-rYacV/UHCF2PvSbAECW7vXMEFHnBsKpXUXTN4h6rcBWcbyaQv581z8nHiBTuCbNG
-/r0fma8prIBLYo5XBmm9Lva4Q1lwPvVKaVsa97Y4I5jwWuI0sRKBqWCqx9clzs4I
-vDK2d2i8zoQobBFarprybNvrxC3dvGNaVM5PT9jJfLZ4YRSYLAtQNL7cp/g/mooS
-q1mUtnn5bNIrQRG5Alqeg0nBHhCZl+vCADBbHwmsi20jYxVUlBDjDIBWMluz4UtM
-MJKLMQw5ziR9B9ivZ5+iN0GAJ2ffHiA2zdv1FGVDzxQhisSc2rrdBz87wYCD4Cga
-KOQP31TaAxU=
-=VGR/
------END PGP SIGNATURE-----
-
---=-F6/Ia8Jp6T+uxIw2Ii5u--
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index e2bb634..a92626b 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -669,7 +669,7 @@ static int rt2400pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ 
+ 	priv_rx = rt2x00dev->rx->entries[0].priv_data;
+ 	rt2x00pci_register_read(rt2x00dev, RXCSR2, &reg);
+-	rt2x00_set_field32(&reg, RXCSR2_RX_RING_REGISTER, priv_tx->desc_dma);
++	rt2x00_set_field32(&reg, RXCSR2_RX_RING_REGISTER, priv_rx->desc_dma);
+ 	rt2x00pci_register_write(rt2x00dev, RXCSR2, reg);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 4e312cb..4ae09b4 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -751,7 +751,7 @@ static int rt2500pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ 
+ 	priv_rx = rt2x00dev->rx->entries[0].priv_data;
+ 	rt2x00pci_register_read(rt2x00dev, RXCSR2, &reg);
+-	rt2x00_set_field32(&reg, RXCSR2_RX_RING_REGISTER, priv_tx->desc_dma);
++	rt2x00_set_field32(&reg, RXCSR2_RX_RING_REGISTER, priv_rx->desc_dma);
+ 	rt2x00pci_register_write(rt2x00dev, RXCSR2, reg);
+ 
+ 	return 0;
+-- 
+1.5.4.3
 
