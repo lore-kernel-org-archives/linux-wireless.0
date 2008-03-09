@@ -1,22 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:28790 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbYCLQJx (ORCPT
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:4376 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754028AbYCIX55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 12:09:53 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert CMD_MAC_CONTROL to a direct command
-Date: Wed, 12 Mar 2008 17:06:57 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200803121605.41013.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200803121605.41013.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803121706.57675.hs4233@mail.mn-solutions.de> (sfid-20080312_160955_796902_97C852E0)
+	Sun, 9 Mar 2008 19:57:57 -0400
+Subject: [PATCH] include/net/ieee80211.h - remove duplicate include
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 09 Mar 2008 16:55:10 -0700
+Message-Id: <1205106910.656.99.camel@localhost> (sfid-20080309_235825_551903_43F6CD5E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ahh, I forgot the [PATCH] :-(
+Signed-off-by: Joe Perches <joe@perches.com>
+
+ include/net/ieee80211.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
+index 285b2ad..529816b 100644
+--- a/include/net/ieee80211.h
++++ b/include/net/ieee80211.h
+@@ -183,7 +183,6 @@ const char *escape_essid(const char *essid, u8 essid_len);
+ #define IEEE80211_DEBUG_RX(f, a...)  IEEE80211_DEBUG(IEEE80211_DL_RX, f, ## a)
+ #define IEEE80211_DEBUG_QOS(f, a...)  IEEE80211_DEBUG(IEEE80211_DL_QOS, f, ## a)
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <linux/if_arp.h>	/* ARPHRD_ETHER */
+ 
+ #ifndef WIRELESS_SPY
+
+
