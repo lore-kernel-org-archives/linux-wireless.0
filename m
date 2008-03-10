@@ -1,126 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:35639 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755337AbYCWAKT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2008 20:10:19 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Remove irqs_disabled() sanity checks
-Date: Sun, 23 Mar 2008 01:08:22 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803230108.22652.mb@bu3sch.de> (sfid-20080323_001030_358476_A182F9A2)
+Received: from mx1.redhat.com ([66.187.233.31]:46411 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750735AbYCJPHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2008 11:07:33 -0400
+Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
+From: Dan Williams <dcbw@redhat.com>
+To: Helge Hafting <helgehaf@mail.aitel.hist.no>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Helge Hafting <helge.hafting@aitel.hist.no>,
+	Joonwoo Park <joonwpark81@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47D3CF6B.8080703@mail.aitel.hist.no>
+References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
+	 <20080305094859.GA10077@ehus.geninetworks.com>
+	 <47CEA5CB.6040001@aitel.hist.no>
+	 <1ba2fa240803050701y57913de2s635eaf8b5e3b4f96@mail.gmail.com>
+	 <47CFF955.4010501@mail.aitel.hist.no>
+	 <1204813814.29410.23.camel@localhost.localdomain>
+	 <47D3CF6B.8080703@mail.aitel.hist.no>
+Content-Type: text/plain
+Date: Mon, 10 Mar 2008 11:02:50 -0400
+Message-Id: <1205161370.3347.42.camel@localhost.localdomain> (sfid-20080310_150738_033011_CC497F1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove all irqs_disabled() sanity checks, as they are not safe on
-a RT-enabled kernel and will trigger bogus warnings.
+On Sun, 2008-03-09 at 12:52 +0100, Helge Hafting wrote:
+> Dan Williams wrote:
+> >> I am not sure what you mean by the question.
+> >> This network uses WEP encryption (some users have older wireless equipment)
+> >> there is one essid and a single shared password that everybody uses.
+> >> Security is not that important, this is mostly to keep out outside bandwith
+> >> wasters/pirates.
+> >>     
+> >
+> > WEP has two authentication modes, "Shared Key" and "Open System".  He
+> > wants to know which method your access point is using.  During
+> > authentication, Open System is a simple two-frame request/response.  For
+> > Shared Key, there's an additional challenge/response where the AP sends
+> > a block of data, the client encrypts it with the WEP key, and sends it
+> > back to the AP where it's verified.  Only if it verifies does the AP
+> > complete association with the client.
+> >   
+> Well, how can I know? The access point at home is set to support
+> WEP and WPA, and of course I can specify the key. There doesn't
+> seem to be much more than that. I have no control over the
+> access points at work, although I could ask the people involved.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+With WEP, you can't know what authentication mode the AP is set to.
+It's not broadcast in the beacons or probe responses.  You also can't
+know whether the key length is 40 or 104 bits either.  WEP sucks.  You
+just have to know what parameters your admin is using, or try a couple
+times.
 
----
+> > You need to ensure that the mode matches between clients and the AP.
+> > Some APs have an "Auto" option that just accepts both methods from the
+> > client.
+> >   
+> I have to ensure this? I thought this was a driver-internal thing, I 
+> have not
+> seen any mention of this in wireless documentation before.
+> 'man iwconfig' doesn't seem to mention this, and it used to be sufficient
+> to get a connection before.
 
-John, please apply to 2.6.25
+You simply have to know what WEP authentication your wireless network is
+using.
+
+> If this is debug stuff, please tell how I can get the information. I can
+> add debugging options to the kernel command line if need be. (The driver
+> is compiled-in, modules tend to cause bootup delays.)
+
+The way to associate with Shared Key is:
+
+iwconfig wlan0 key xxxxxxx restricted essid foobar
+
+Open System is:
+
+iwconfig wlan0 key xxxxxxx open essid foobar
+
+> I tried to sniff wlan0 with wireshark. I did not get anything there until
+> after the association completed. Then I got normal stuff like dhcp
+> and other traffic. So I don't have any sniff of the association itself.
+> Is there some special options for enabling this, or do I need a 
+> different tool?
+
+You might need another machine that can sniff the traffic between your
+first one and the AP.  I'm not completely up on the monitor mode/rtap
+stuff.
+
+> The siwencode/siwessid patch has helped a lot. The machine sometimes
+> succeed to connect at first try (during bootup) and almost
+> always at the second try.  The driver is not perfect yet, but it improved
+> a _lot_ for me.  Thanks - and I hope this gets into the next regular 
+> linux kernel. :-)
+
+That's nice, but the patch is still wrong.  It's not going to go into
+the next kernel release until it's right.  I'm certainly going to give
+it a big fat NAK if it shows up again in its current form.  No driver
+should ever block in the SIWESSID or SIWBSSID handlers; they have to
+handle the options correctly.
+
+> Another problem is that going out of range for an hour means I have to
+> do something to get a net connection again. This does not seem to
+> happen automatic, although I have not yet checked if it merely is
+> a dhcp timeout problem.
+
+The driver isn't supposed to contain a ton of logic and policy about
+what networks you connect to and what ones you don't.  That's what
+userspace does.  You'll likely need some userspace program
+(NetworkManager, wpa_supplicant, etc) that stores that policy and
+controls what you connect to, including reconnecting to your last used
+networks.
+
+Dan
 
 
-Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-02-15 21:39:56.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-03-23 01:00:40.000000000 +0100
-@@ -615,25 +615,25 @@ void b43_debugfs_remove_device(struct b4
- 
- 	debugfs_remove(e->subdir);
- 	kfree(e->txstatlog.log);
- 	kfree(e);
- }
- 
-+/* Called with IRQs disabled. */
- void b43_debugfs_log_txstat(struct b43_wldev *dev,
- 			    const struct b43_txstatus *status)
- {
- 	struct b43_dfsentry *e = dev->dfsentry;
- 	struct b43_txstatus_log *log;
- 	struct b43_txstatus *cur;
- 	int i;
- 
- 	if (!e)
- 		return;
- 	log = &e->txstatlog;
--	B43_WARN_ON(!irqs_disabled());
--	spin_lock(&log->lock);
-+	spin_lock(&log->lock); /* IRQs are already disabled. */
- 	i = log->end + 1;
- 	if (i == B43_NR_LOGGED_TXSTATUS)
- 		i = 0;
- 	log->end = i;
- 	cur = &(log->log[i]);
- 	memcpy(cur, status, sizeof(*cur));
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-23 00:54:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-23 01:01:14.000000000 +0100
-@@ -1343,26 +1343,27 @@ static void b43_fill_txstatus_report(str
- 			ring->nr_succeed_tx_packets++;
- 		ring->nr_total_packet_tries += status->frame_count;
- #endif /* DEBUG */
- 	}
- }
- 
-+/* Called with IRQs disabled. */
- void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 			     const struct b43_txstatus *status)
- {
- 	const struct b43_dma_ops *ops;
- 	struct b43_dmaring *ring;
- 	struct b43_dmadesc_generic *desc;
- 	struct b43_dmadesc_meta *meta;
- 	int slot;
- 
- 	ring = parse_cookie(dev, status->cookie, &slot);
- 	if (unlikely(!ring))
- 		return;
--	B43_WARN_ON(!irqs_disabled());
--	spin_lock(&ring->lock);
-+
-+	spin_lock(&ring->lock); /* IRQs are already disabled. */
- 
- 	B43_WARN_ON(!ring->tx);
- 	ops = ring->ops;
- 	while (1) {
- 		B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
- 		desc = ops->idx2desc(ring, slot, &meta);
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-22 21:50:35.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-03-23 00:59:05.000000000 +0100
-@@ -2155,13 +2155,12 @@ static void b43_gpio_cleanup(struct b43_
- 
- /* http://bcm-specs.sipsolutions.net/EnableMac */
- static void b43_mac_enable(struct b43_wldev *dev)
- {
- 	dev->mac_suspended--;
- 	B43_WARN_ON(dev->mac_suspended < 0);
--	B43_WARN_ON(irqs_disabled());
- 	if (dev->mac_suspended == 0) {
- 		b43_write32(dev, B43_MMIO_MACCTL,
- 			    b43_read32(dev, B43_MMIO_MACCTL)
- 			    | B43_MACCTL_ENABLED);
- 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON,
- 			    B43_IRQ_MAC_SUSPENDED);
-@@ -2181,13 +2180,12 @@ static void b43_mac_enable(struct b43_wl
- static void b43_mac_suspend(struct b43_wldev *dev)
- {
- 	int i;
- 	u32 tmp;
- 
- 	might_sleep();
--	B43_WARN_ON(irqs_disabled());
- 	B43_WARN_ON(dev->mac_suspended < 0);
- 
- 	if (dev->mac_suspended == 0) {
- 		/* Mask IRQs before suspending MAC. Otherwise
- 		 * the MAC stays busy and won't suspend. */
- 		spin_lock_irq(&dev->wl->irq_lock);
