@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51698 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754168AbYCaTGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 15:06:35 -0400
-Subject: Re: [PATCH] [PATCH] prism54: set carrier flags correctly
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	Roy Marples <uberlord@gentoo.org>
-In-Reply-To: <1206988135-12309-1-git-send-email-linville@tuxdriver.com>
-References: <1206988135-12309-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 31 Mar 2008 14:59:50 -0400
-Message-Id: <1206989990.12973.9.camel@localhost.localdomain> (sfid-20080331_200639_536572_8083F257)
-Mime-Version: 1.0
+Received: from qb-out-0506.google.com ([72.14.204.237]:17693 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbYCJWWI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2008 18:22:08 -0400
+Received: by qb-out-0506.google.com with SMTP id o24so135635qba.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2008 15:22:05 -0700 (PDT)
+To: Franz Apeltauer <franz.apeltauer@gmx.at>
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+Date: Mon, 10 Mar 2008 23:21:35 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <47CB3B5E.4020701@gmx.at> <43e72e890803071859r2788075cp12272cad0920d2b0@mail.gmail.com> <47D5AAFC.80401@gmx.at>
+In-Reply-To: <47D5AAFC.80401@gmx.at>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803102321.35909.IvDoorn@gmail.com> (sfid-20080310_222529_445463_C9853DA0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-31 at 14:28 -0400, John W. Linville wrote:
-> From: Roy Marples <uberlord@gentoo.org>
+On Monday 10 March 2008, Franz Apeltauer wrote:
+> Luis R. Rodriguez schrieb:
+> >>  b) Test on a PC with MSI PC54G2 ... RaLink rt2500
+> > 
+> > You can test this now, I've enabled rt2x00 drivers by fixing
+> > dependencies on config.mk. Forced re-generation of new tarball based
+> > on latest updates too.
+> > 
+> >   Luis
 > 
-> prism54 should set the carrier flags correctly when it thinks the
-> link can be used.
+> Loaded today's tarball (10.3.).
+> The "redefinition of rt2x00lib_load_firmware" error is back.
 > 
-> Signed-off-by: Roy Marples <uberlord@gentoo.org>
-> ---
-> I found this in my pile from a long time back.  Anyone have any
-> comments on it?
+> I believe, that there should be 2 additional lines in rt2x00firmware.c:
+> a) line #115, before "int rt2x00lib_load_firmware":
+>      #ifdef CONFIG_RT2X00_LIB_FIRMWARE
+> b) at the end of the file:
+>      #endif /* CONFIG_RT2X00_LIB_FIRMWARE */
+> to be consistent with #ifdef/#else/#endif in rt2x00lib.h lines 124, 127, 
+> 135.
+> Then it compiles fine. install, unload, load.
+> ... and now I see wlan0 and wmaster0!  Yippee!
 
-Other than the fact that the carrier flag on wireless devices is kind of
-useless, it's fine.  I guess it would be somewhat useful if we could
-ensure that the carrier would be on _only_ when the card was
-successfully associated and authenticated to the requested AP, but until
-every driver was converted properly it would be useless because you
-couldn't depend on it.
+How about not linking rt2x00firmware.c at all when RT2X00_LIB_FIRMWARE
+is not set? That should be a clean solution that can be made in the Makefile...
 
-Dan
-
->  drivers/net/wireless/prism54/isl_ioctl.c  |    5 ++++-
->  drivers/net/wireless/prism54/islpci_dev.c |    4 +++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> index 838d510..25d42ac 100644
-> --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> @@ -2093,8 +2093,11 @@ link_changed(struct net_device *ndev, u32 bitrate)
->  		} else
->  			send_simple_event(netdev_priv(ndev),
->  					  "Link established");
-> -	} else
-> +		netif_carrier_on(ndev);
-> +	} else {
->  		send_simple_event(netdev_priv(ndev), "Link lost");
-> +		netif_carrier_off(ndev);
-> +	}
->  }
->  
->  /* Beacon/ProbeResp payload header */
-> diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-> index f057fd9..9c8c6f2 100644
-> --- a/drivers/net/wireless/prism54/islpci_dev.c
-> +++ b/drivers/net/wireless/prism54/islpci_dev.c
-> @@ -386,7 +386,9 @@ islpci_open(struct net_device *ndev)
->  	}
->  
->  	netif_start_queue(ndev);
-> -/*      netif_mark_up( ndev ); */
-> +
-> +	/* Turn off carrier unless we know we have associated */
-> +	netif_carrier_off(ndev);
->  
->  	return 0;
->  }
-
+Ivo
