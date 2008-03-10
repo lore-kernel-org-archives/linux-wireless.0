@@ -1,62 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13453 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625AbYCZOor (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 10:44:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: fix spinlock recursion bug
-Date: Wed, 26 Mar 2008 15:41:48 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200803191524.21866.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200803191524.21866.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803261541.48877.hs4233@mail.mn-solutions.de> (sfid-20080326_144452_888276_D75C0149)
+Received: from mga11.intel.com ([192.55.52.93]:38734 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751323AbYCJSlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2008 14:41:24 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/7] iwlwifi: fix bug to show hidden APs during scan
+Date: Mon, 10 Mar 2008 11:35:07 -0700
+Message-Id: <1205174112-18962-3-git-send-email-reinette.chatre@intel.com> (sfid-20080310_184129_815707_42743238)
+In-Reply-To: <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
+References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
+ <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm, that isn't the end of my spinlock problems. When I'm 
-associated and ping, I get another recursion:
+Indirect scanning ('iwlist scan') should report information about
+hidden APs. When an AP is hidden it does not respond to active scanning,
+we thus have to use passive scanning to locate these APs.
 
-libertas assoc: associated to 00:13:19:80:da:30
-BUG: spinlock recursion on CPU#0, lbs_main/5566
- lock: f58b58d8, .magic: dead4ead, .owner: 
-lbs_main/5566, .owner_cpu: 0
-Pid: 5566, comm: lbs_main Not tainted 2.6.25-rc5-wl #19
- [<c01ccdb7>] spin_bug+0x76/0xb1
- [<c01ccecb>] _raw_spin_lock+0x34/0xc9
- [<c0306984>] _spin_lock_irqsave+0x17/0x1c
- [<f8c33cdf>] lbs_hard_start_xmit+0x61/0x4e2 [libertas]
- [<c0306bef>] ? _spin_unlock+0x8/0x1f
- [<c014f497>] ? cache_alloc_refill+0x18c/0x439
- [<c02b449b>] dev_hard_start_xmit+0x16f/0x1dc
- [<c02c0f8b>] __qdisc_run+0x7a/0x14e
- [<c02b67ba>] dev_queue_xmit+0x119/0x23b
- [<c02bb187>] neigh_resolve_output+0x20a/0x236
- [<c02b978e>] neigh_update+0x2c0/0x36a
- [<c02c04e3>] ? eth_header_cache_update+0x0/0x12
- [<c02e4331>] arp_process+0x4d6/0x50e
- [<c02afc6d>] ? skb_release_data+0x84/0x89
- [<c02afb6d>] ? __kfree_skb+0x61/0x64
- [<c02e440c>] arp_rcv+0xa3/0xb3
- [<c02b4021>] netif_receive_skb+0x1f7/0x26a
- [<c02b643c>] process_backlog+0x5b/0xa5
- [<c02b5fa3>] net_rx_action+0x7f/0x142
- [<c011befe>] __do_softirq+0x38/0x70
- [<c011bf5b>] do_softirq+0x25/0x2a
- [<c02b5ea4>] netif_rx_ni+0x24/0x3e
- [<f8c33b59>] lbs_process_rxed_packet+0x755/0x7c0 [libertas]
- [<c02b024c>] ? __alloc_skb+0x4c/0xf8
- [<f88f9096>] if_cs_get_int_status+0x22a/0x3d8 [libertas_cs]
- [<f8c2ef5e>] lbs_thread+0x2fe/0x745 [libertas]
- [<c0114edd>] ? default_wake_function+0x0/0xd
- [<f8c2ec60>] ? lbs_thread+0x0/0x745 [libertas]
- [<c0126f91>] kthread+0x39/0x60
- [<c0126f58>] ? kthread+0x0/0x60
- [<c01043c3>] kernel_thread_helper+0x7/0x10
- =======================
+This fixes http://bughost.org/bugzilla/show_bug.cgi?id=1499
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Tested-by: Bill Moss <bmoss@clemson.edu>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   21 +++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   21 +++++++++++++--------
+ 2 files changed, 26 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c3c21ab..e791fa6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6316,18 +6316,23 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+-	if (direct_mask)
++	if (direct_mask) {
+ 		IWL_DEBUG_SCAN
+ 		    ("Initiating direct scan for %s.\n",
+ 		     iwl3945_escape_essid(priv->essid, priv->essid_len));
+-	else
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(
++				priv, band, 1, /* active */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	} else {
+ 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
+-
+-	scan->channel_count =
+-		iwl3945_get_channels_for_scan(
+-			priv, band, 1, /* active */
+-			direct_mask,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(
++				priv, band, 0, /* passive */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+ 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 029556e..b3bafef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6829,18 +6829,23 @@ static void iwl4965_bg_request_scan(struct work_struct *data)
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+-	if (direct_mask)
++	if (direct_mask) {
+ 		IWL_DEBUG_SCAN
+ 		    ("Initiating direct scan for %s.\n",
+ 		     iwl4965_escape_essid(priv->essid, priv->essid_len));
+-	else
++		scan->channel_count =
++			iwl4965_get_channels_for_scan(
++				priv, band, 1, /* active */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	} else {
+ 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
+-
+-	scan->channel_count =
+-		iwl4965_get_channels_for_scan(
+-			priv, band, 1, /* active */
+-			direct_mask,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++		scan->channel_count =
++			iwl4965_get_channels_for_scan(
++				priv, band, 0, /* passive */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+ 	    scan->channel_count * sizeof(struct iwl4965_scan_channel);
+-- 
+1.5.3.4
 
