@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59083 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbYCYPbM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 11:31:12 -0400
-Subject: mac80211 mesh code - not checking mesh config validity?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eRnnG88n/2XSyTSLoYcy"
-Date: Tue, 25 Mar 2008 15:37:54 +0100
-Message-Id: <1206455874.16475.283.camel@johannes.berg> (sfid-20080325_153116_319477_F12F4561)
+Received: from c60.cesmail.net ([216.154.195.49]:46950 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237AbYCJBAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Mar 2008 21:00:45 -0400
+Subject: Re: [PATCH 00/12] at76_usb mac80211 port
+From: Pavel Roskin <proski@gnu.org>
+To: Kalle Valo <Kalle.Valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87r6ejyhk2.fsf@litku.valot.fi>
+References: <20080210145733.17592.61729.stgit@tikku>
+	 <1202706345.20836.26.camel@dv>  <87r6ejyhk2.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Sun, 09 Mar 2008 21:00:43 -0400
+Message-Id: <1205110843.2142.37.camel@dv> (sfid-20080310_010049_419061_5ED17C30)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2008-03-09 at 18:43 +0200, Kalle Valo wrote:
+> >
+> > I've put your patches on http://git.80211libre.org/at76_usb.git so that
+> > they can be tested by more users.  I gave no promise about continuity of
+> > the branch, so I'm ready to replace the patches.
+> 
+> Thanks, but it seems that John already applied the patches to
+> wireless-testing. I would prefer working directly with
+> wireless-testing, because it's easier for me.
 
---=-eRnnG88n/2XSyTSLoYcy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's easier for me too, as 80211libre.org domain is expiring soon.
 
-Hi,
+> > I haven't looked at the code yet, but here are some testing results.
+> 
+> What hardware and firmware did you use?
 
-Just looked at some MLME stuff and noticed that apparently the
-mesh-config IE is never checked for having a correct length so if it is
-less than 17 bytes long we could even overrun the SKB when memcpy'ing
-the data into bss->mesh_cfg.
+The firmware is the latest we support from at76_usb-firmware-0.1.tar.gz
+But I don't remember which hardware I was using, as I have several
+different devices.  I can test again and provide more details.
 
-Maybe a (packed) structure should be used for the bss->mesh_cfg member
-so access to it is easier?
+> > I'm totally at loss why a positive value us printed. When trying to
+> > set the key and ESSID again, I get this:
+> >
+> > wlan3: Initial auth_alg=0
+> > wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> > wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> > wlan3: authenticate with AP 00:0b:6b:56:01:bf
+> > wlan3: authentication with AP 00:0b:6b:56:01:bf timed out
+> >
+> > Pings don't come through.  Everything is within one room.
+> Attenuation
+> > shouldn't be an issue.
+> 
+> Do you mean that all your tries failed? That's bad.
 
-Could you take a look and fix this if necessary?
+Yes.
 
-johannes
+> > Another interesting problem - scan results show the channel two
+> times
+> > (not counting the "frequency" line).  Other mac80211 drivers do it
+> once.
+> > No idea why.
+> 
+> Strange. I'll take a look at it as well.
 
---=-eRnnG88n/2XSyTSLoYcy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thanks.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+kOQaVg1VMiehFYAQIuVQ/+Ph/Mx97FnZW1R3I8re+ToswzmVKVJFFX
-0OwRmb8FSdeGwpMmMUX3424HE5BNcVKwlxxymYE+5kr4Vxh6sH4AobkJkqkIpsbU
-5zKnUMHzEsaDPobAnSghDySUOM93EFYy0PU/owkJHI5ROYfaP3p+IyO+IT8ncQnx
-Cg3sG226dLT6dQtRX1P7CzdZnOfaSEl/HoJy0Y7CFb9nsg9/E1Gqh5ETCcFr8g/9
-zh40zRIBdcI2YZu91nSiSWj5oVaogHpJ9mIkqrqf8lIqfYhYUF2ybd4celR4B4DP
-ktUzpB270xci3nrP83ztc9QIQzMe8AKmN/PwBtj32J8Nuf//pIqRoIjN7ccR0R5M
-oTog3ZDduu62BfGdY4/PVaxrz6f6w+guuhAciCTtLDlcv6wOWTM1252nQ4adrilu
-jIEaul1XaapGTaj7K2drN7W7kQPiXRsHpjQnfp5Ea33IDAoTWPEs9SzphV/wLn7+
-BtzM6VmBnCxnaoOYu1m3fmMsYIjqnZ35ityBUK3wBQZuFPqOTIonrmZ47SDLUnJW
-mzs7Van7kb0hcyr3DTThBaNZuCsbmy2LXBue83nEUrLdc5JIvV5soxCeJTMJqY1I
-MU7l16ZZlFLOos5u9DeRfqjcy143N/YiT3BlCCj9wydfWMGGHTJH8ak4faun4swS
-wf7HKfsZQns=
-=J4Ce
------END PGP SIGNATURE-----
-
---=-eRnnG88n/2XSyTSLoYcy--
-
+-- 
+Regards,
+Pavel Roskin
