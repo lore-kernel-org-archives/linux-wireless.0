@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:36467 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755914AbYCTOjK (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:17400 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757AbYCJTf5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 10:39:10 -0400
-Received: by py-out-1112.google.com with SMTP id u52so1269689pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Mar 2008 07:39:08 -0700 (PDT)
-Message-ID: <87a5b0800803200739v6d222afck850f221eae1edd70@mail.gmail.com> (sfid-20080320_143915_124685_4EA0E077)
-Date: Thu, 20 Mar 2008 14:39:08 +0000
-From: "Will Newton" <will.newton@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH/RFC] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
-Cc: "Daniel Drake" <dsd@gentoo.org>,
-	"Linux Kernel list" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1206023695.16475.137.camel@johannes.berg>
+	Mon, 10 Mar 2008 15:35:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1206023695.16475.137.camel@johannes.berg>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] [PATCH 1/7] iwlwifi: Add led support
+Date: Mon, 10 Mar 2008 12:35:01 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892003DB285C@orsmsx416.amr.corp.intel.com> (sfid-20080310_193808_799902_E90D8364)
+In-Reply-To: <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
+References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com> <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	<linville@tuxdriver.com>
+Cc: "Abbas, Mohamed" <mohamed.abbas@intel.com>, <ischram@telenet.be>,
+	<linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 20, 2008 at 2:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On , Reinette Chatre wrote:
 
->  +For some ethernet hardware that cannot DMA to unaligned addresses like
->  +4*n+2 or non-ethernet hardware, this can be a problem, and it is then
->  +required to copy the incoming frame into an aligned buffer. Because this is
->  +unnecessary on architectures that can do unaligned accesses, the code can be
->  +made depend on CONFIG_ARCH_CAN_UNALIGNED_ACCESS like so:
->  +
->  +#ifdef CONFIG_ARCH_CAN_UNALIGNED_ACCESS
->  +       skb = copy skb
->  +#else
->  +       skb = original skb
->  +#endif
+> Signed-off-by: Ian Schram<ischram@gmane.org>
 
-Is this logic reversed?
+This email address is not valid - it just bounced when I pushed the
+patch.
+John, could you please use ischram@telenet.be instead?
+
+Please let me know if you need a new patch to fix this problem.
+
+Thank you very much
+
+Reinette
