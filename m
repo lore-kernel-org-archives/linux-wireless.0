@@ -1,227 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753283AbYCIVvY (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.179]:35320 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758043AbYCKVMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:51:24 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:24 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 20/24] rt2x00: Fix basic rate initialization
-Date: Sun, 9 Mar 2008 22:48:08 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200803092237.43451.IvDoorn@gmail.com>
-In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803092248.08862.IvDoorn@gmail.com> (sfid-20080309_222544_984904_263B40F1)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 11 Mar 2008 17:12:06 -0400
+Received: by el-out-1112.google.com with SMTP id v27so1617040ele.17
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 14:12:06 -0700 (PDT)
+Subject: [PATCH 6/6] b43legacy: use clamp_val macro instead of limit_value
+	macro
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 11 Mar 2008 14:12:02 -0700
+Message-Id: <1205269922.22317.38.camel@brick> (sfid-20080311_211234_609658_8B0F82A6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The basic rate which is configured in the register
-should not match all supported rates, but only the _basic_ rates.
+Use the kernel-provided clamp_val macro as it is identical to the
+b43legacy-specific limit_value macro.
 
-Fix this by adding a new flag to the rt2x00_rate structure
-and whenever the mode is changed, loop over all available rates
-for that band to get the basic rate mask.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h       |    4 +-
- drivers/net/wireless/rt2x00/rt2x00config.c |   19 +++++++++++--
- drivers/net/wireless/rt2x00/rt2x00dev.c    |   38 ++++++++++++++--------------
- drivers/net/wireless/rt2x00/rt2x00lib.h    |   14 +---------
- 4 files changed, 38 insertions(+), 37 deletions(-)
+ drivers/net/wireless/b43legacy/b43legacy.h |   17 -----------------
+ drivers/net/wireless/b43legacy/main.c      |    8 ++++----
+ drivers/net/wireless/b43legacy/phy.c       |   14 +++++++-------
+ drivers/net/wireless/b43legacy/radio.c     |   12 ++++++------
+ 4 files changed, 17 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index d71b3c4..c9fa613 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -441,8 +441,8 @@ struct rt2x00lib_conf {
+diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
+index 93d45b7..378b9ff 100644
+--- a/drivers/net/wireless/b43legacy/b43legacy.h
++++ b/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -814,23 +814,6 @@ void b43legacydbg(struct b43legacy_wl *wl, const char *fmt, ...)
+ # define b43legacydbg(wl, fmt...) do { /* nothing */ } while (0)
+ #endif /* DEBUG */
  
- 	enum ieee80211_band band;
- 
--	int basic_rates;
--	int slot_time;
-+	u32 basic_rates;
-+	u32 slot_time;
- 
- 	short sifs;
- 	short pifs;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 7211169..5e2d81a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -145,12 +145,26 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
- }
- 
-+static u32 rt2x00lib_get_basic_rates(struct ieee80211_supported_band *band)
-+{
-+	const struct rt2x00_rate *rate;
-+	unsigned int i;
-+	u32 mask = 0;
-+
-+	for (i = 0; i < band->n_bitrates; i++) {
-+		rate = rt2x00_get_rate(band->bitrates[i].hw_value);
-+		if (rate->flags & DEV_RATE_BASIC)
-+			mask |= rate->ratemask;
-+	}
-+
-+	return mask;
-+}
-+
- void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		      struct ieee80211_conf *conf, const int force_config)
- {
- 	struct rt2x00lib_conf libconf;
- 	struct ieee80211_supported_band *band;
--	struct ieee80211_rate *rate;
- 	struct antenna_setup *default_ant = &rt2x00dev->default_ant;
- 	struct antenna_setup *active_ant = &rt2x00dev->link.ant.active;
- 	int flags = 0;
-@@ -227,10 +241,9 @@ config:
- 
- 	if (flags & CONFIG_UPDATE_PHYMODE) {
- 		band = &rt2x00dev->bands[conf->channel->band];
--		rate = &band->bitrates[band->n_bitrates - 1];
- 
- 		libconf.band = conf->channel->band;
--		libconf.basic_rates = rt2x00_get_rate(rate->hw_value)->ratemask;
-+		libconf.basic_rates = rt2x00lib_get_basic_rates(band);
- 	}
- 
- 	if (flags & CONFIG_UPDATE_CHANNEL) {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index eeb39e8..18abf65 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -766,75 +766,75 @@ EXPORT_SYMBOL_GPL(rt2x00lib_write_tx_desc);
-  */
- const struct rt2x00_rate rt2x00_supported_rates[12] = {
- 	{
--		.flags = DEV_RATE_CCK,
-+		.flags = DEV_RATE_CCK | DEV_RATE_BASIC,
- 		.bitrate = 10,
--		.ratemask = DEV_RATEMASK_1MB,
-+		.ratemask = BIT(0),
- 		.plcp = 0x00,
- 	},
- 	{
--		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
-+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
- 		.bitrate = 20,
--		.ratemask = DEV_RATEMASK_2MB,
-+		.ratemask = BIT(1),
- 		.plcp = 0x01,
- 	},
- 	{
--		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
-+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
- 		.bitrate = 55,
--		.ratemask = DEV_RATEMASK_5_5MB,
-+		.ratemask = BIT(2),
- 		.plcp = 0x02,
- 	},
- 	{
--		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE,
-+		.flags = DEV_RATE_CCK | DEV_RATE_SHORT_PREAMBLE | DEV_RATE_BASIC,
- 		.bitrate = 110,
--		.ratemask = DEV_RATEMASK_11MB,
-+		.ratemask = BIT(3),
- 		.plcp = 0x03,
- 	},
- 	{
--		.flags = DEV_RATE_OFDM,
-+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
- 		.bitrate = 60,
--		.ratemask = DEV_RATEMASK_6MB,
-+		.ratemask = BIT(4),
- 		.plcp = 0x0b,
- 	},
- 	{
- 		.flags = DEV_RATE_OFDM,
- 		.bitrate = 90,
--		.ratemask = DEV_RATEMASK_9MB,
-+		.ratemask = BIT(5),
- 		.plcp = 0x0f,
- 	},
- 	{
--		.flags = DEV_RATE_OFDM,
-+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
- 		.bitrate = 120,
--		.ratemask = DEV_RATEMASK_12MB,
-+		.ratemask = BIT(6),
- 		.plcp = 0x0a,
- 	},
- 	{
- 		.flags = DEV_RATE_OFDM,
- 		.bitrate = 180,
--		.ratemask = DEV_RATEMASK_18MB,
-+		.ratemask = BIT(7),
- 		.plcp = 0x0e,
- 	},
- 	{
--		.flags = DEV_RATE_OFDM,
-+		.flags = DEV_RATE_OFDM | DEV_RATE_BASIC,
- 		.bitrate = 240,
--		.ratemask = DEV_RATEMASK_24MB,
-+		.ratemask = BIT(8),
- 		.plcp = 0x09,
- 	},
- 	{
- 		.flags = DEV_RATE_OFDM,
- 		.bitrate = 360,
--		.ratemask = DEV_RATEMASK_36MB,
-+		.ratemask = BIT(9),
- 		.plcp = 0x0d,
- 	},
- 	{
- 		.flags = DEV_RATE_OFDM,
- 		.bitrate = 480,
--		.ratemask = DEV_RATEMASK_48MB,
-+		.ratemask = BIT(10),
- 		.plcp = 0x08,
- 	},
- 	{
- 		.flags = DEV_RATE_OFDM,
- 		.bitrate = 540,
--		.ratemask = DEV_RATEMASK_54MB,
-+		.ratemask = BIT(11),
- 		.plcp = 0x0c,
- 	},
- };
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 1596aa3..fd25797 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -41,22 +41,10 @@ struct rt2x00_rate {
- #define DEV_RATE_CCK			0x0001
- #define DEV_RATE_OFDM			0x0002
- #define DEV_RATE_SHORT_PREAMBLE		0x0004
-+#define DEV_RATE_BASIC			0x0008
- 
- 	unsigned short bitrate; /* In 100kbit/s */
 -
- 	unsigned short ratemask;
--#define DEV_RATEMASK_1MB	( (1 << 1) - 1 )
--#define DEV_RATEMASK_2MB	( (1 << 2) - 1 )
--#define DEV_RATEMASK_5_5MB	( (1 << 3) - 1 )
--#define DEV_RATEMASK_11MB	( (1 << 4) - 1 )
--#define DEV_RATEMASK_6MB	( (1 << 5) - 1 )
--#define DEV_RATEMASK_9MB	( (1 << 6) - 1 )
--#define DEV_RATEMASK_12MB	( (1 << 7) - 1 )
--#define DEV_RATEMASK_18MB	( (1 << 8) - 1 )
--#define DEV_RATEMASK_24MB	( (1 << 9) - 1 )
--#define DEV_RATEMASK_36MB	( (1 << 10) - 1 )
--#define DEV_RATEMASK_48MB	( (1 << 11) - 1 )
--#define DEV_RATEMASK_54MB	( (1 << 12) - 1 )
+-/** Limit a value between two limits */
+-#ifdef limit_value
+-# undef limit_value
+-#endif
+-#define limit_value(value, min, max)  \
+-	({						\
+-		typeof(value) __value = (value);	\
+-		typeof(value) __min = (min);		\
+-		typeof(value) __max = (max);		\
+-		if (__value < __min)			\
+-			__value = __min;		\
+-		else if (__value > __max)		\
+-			__value = __max;		\
+-		__value;				\
+-	})
+-
+ /* Macros for printing a value in Q5.2 format */
+ #define Q52_FMT		"%u.%u"
+ #define Q52_ARG(q52)	((q52) / 4), (((q52) & 3) * 100 / 4)
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 5f3f34e..d55c101 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -839,10 +839,10 @@ static void handle_irq_noise(struct b43legacy_wldev *dev)
+ 	/* Get the noise samples. */
+ 	B43legacy_WARN_ON(dev->noisecalc.nr_samples >= 8);
+ 	i = dev->noisecalc.nr_samples;
+-	noise[0] = limit_value(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[1] = limit_value(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[2] = limit_value(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[3] = limit_value(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[0] = clamp_val(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[1] = clamp_val(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[2] = clamp_val(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[3] = clamp_val(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+ 	dev->noisecalc.samples[i][0] = phy->nrssi_lt[noise[0]];
+ 	dev->noisecalc.samples[i][1] = phy->nrssi_lt[noise[1]];
+ 	dev->noisecalc.samples[i][2] = phy->nrssi_lt[noise[2]];
+diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
+index 8e5c09b..768cccb 100644
+--- a/drivers/net/wireless/b43legacy/phy.c
++++ b/drivers/net/wireless/b43legacy/phy.c
+@@ -1088,7 +1088,7 @@ static void b43legacy_phy_initg(struct b43legacy_wldev *dev)
+ 		 * the value 0x7FFFFFFF here. I think that is some weird
+ 		 * compiler optimization in the original driver.
+ 		 * Essentially, what we do here is resetting all NRSSI LT
+-		 * entries to -32 (see the limit_value() in nrssi_hw_update())
++		 * entries to -32 (see the clamp_val() in nrssi_hw_update())
+ 		 */
+ 		b43legacy_nrssi_hw_update(dev, 0xFFFF);
+ 		b43legacy_calc_nrssi_threshold(dev);
+@@ -1756,7 +1756,7 @@ static s8 b43legacy_phy_estimate_power_out(struct b43legacy_wldev *dev, s8 tssi)
+ 	switch (phy->type) {
+ 	case B43legacy_PHYTYPE_B:
+ 	case B43legacy_PHYTYPE_G:
+-		tmp = limit_value(tmp, 0x00, 0x3F);
++		tmp = clamp_val(tmp, 0x00, 0x3F);
+ 		dbm = phy->tssi2dbm[tmp];
+ 		break;
+ 	default:
+@@ -1859,7 +1859,7 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
  
- 	unsigned short plcp;
- };
+ 	/* find the desired power in Q5.2 - power_level is in dBm
+ 	 * and limit it - max_pwr is already in Q5.2 */
+-	desired_pwr = limit_value(phy->power_level << 2, 0, max_pwr);
++	desired_pwr = clamp_val(phy->power_level << 2, 0, max_pwr);
+ 	if (b43legacy_debug(dev, B43legacy_DBG_XMITPOWER))
+ 		b43legacydbg(dev->wl, "Current TX power output: " Q52_FMT
+ 		       " dBm, Desired TX power output: " Q52_FMT
+@@ -1905,7 +1905,7 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
+ 			radio_attenuation++;
+ 		}
+ 	}
+-	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
++	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
+ 
+ 	txpower = phy->txctl1;
+ 	if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
+@@ -1933,8 +1933,8 @@ void b43legacy_phy_xmitpower(struct b43legacy_wldev *dev)
+ 	}
+ 	/* Save the control values */
+ 	phy->txctl1 = txpower;
+-	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
+-	radio_attenuation = limit_value(radio_attenuation, 0, 9);
++	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
++	radio_attenuation = clamp_val(radio_attenuation, 0, 9);
+ 	phy->rfatt = radio_attenuation;
+ 	phy->bbatt = baseband_attenuation;
+ 
+@@ -1979,7 +1979,7 @@ s8 b43legacy_tssi2dbm_entry(s8 entry [], u8 index, s16 pab0, s16 pab1, s16 pab2)
+ 		f = q;
+ 		i++;
+ 	} while (delta >= 2);
+-	entry[index] = limit_value(b43legacy_tssi2dbm_ad(m1 * f, 8192),
++	entry[index] = clamp_val(b43legacy_tssi2dbm_ad(m1 * f, 8192),
+ 				   -127, 128);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
+index 955832e..2df545c 100644
+--- a/drivers/net/wireless/b43legacy/radio.c
++++ b/drivers/net/wireless/b43legacy/radio.c
+@@ -357,7 +357,7 @@ void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val)
+ 	for (i = 0; i < 64; i++) {
+ 		tmp = b43legacy_nrssi_hw_read(dev, i);
+ 		tmp -= val;
+-		tmp = limit_value(tmp, -32, 31);
++		tmp = clamp_val(tmp, -32, 31);
+ 		b43legacy_nrssi_hw_write(dev, i, tmp);
+ 	}
+ }
+@@ -375,7 +375,7 @@ void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev)
+ 		tmp = (i - delta) * phy->nrssislope;
+ 		tmp /= 0x10000;
+ 		tmp += 0x3A;
+-		tmp = limit_value(tmp, 0, 0x3F);
++		tmp = clamp_val(tmp, 0, 0x3F);
+ 		phy->nrssi_lt[i] = tmp;
+ 	}
+ }
+@@ -839,7 +839,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
+ 		} else
+ 			threshold = phy->nrssi[1] - 5;
+ 
+-		threshold = limit_value(threshold, 0, 0x3E);
++		threshold = clamp_val(threshold, 0, 0x3E);
+ 		b43legacy_phy_read(dev, 0x0020); /* dummy read */
+ 		b43legacy_phy_write(dev, 0x0020, (((u16)threshold) << 8)
+ 				    | 0x001C);
+@@ -892,7 +892,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
+ 			else
+ 				a += 32;
+ 			a = a >> 6;
+-			a = limit_value(a, -31, 31);
++			a = clamp_val(a, -31, 31);
+ 
+ 			b = b * (phy->nrssi[1] - phy->nrssi[0]);
+ 			b += (phy->nrssi[0] << 6);
+@@ -901,7 +901,7 @@ void b43legacy_calc_nrssi_threshold(struct b43legacy_wldev *dev)
+ 			else
+ 				b += 32;
+ 			b = b >> 6;
+-			b = limit_value(b, -31, 31);
++			b = clamp_val(b, -31, 31);
+ 
+ 			tmp_u16 = b43legacy_phy_read(dev, 0x048A) & 0xF000;
+ 			tmp_u16 |= ((u32)b & 0x0000003F);
+@@ -1905,7 +1905,7 @@ void b43legacy_radio_set_txpower_a(struct b43legacy_wldev *dev, u16 txpower)
+ 	u16 dac;
+ 	u16 ilt;
+ 
+-	txpower = limit_value(txpower, 0, 63);
++	txpower = clamp_val(txpower, 0, 63);
+ 
+ 	pamp = b43legacy_get_txgain_freq_power_amp(txpower);
+ 	pamp <<= 5;
 -- 
-1.5.4.3
+1.5.4.4.592.g32d4c
 
