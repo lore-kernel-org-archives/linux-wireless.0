@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:54019 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764694AbYCSVLo (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:26188 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974AbYCKAg2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 17:11:44 -0400
-Received: by el-out-1112.google.com with SMTP id v27so495729ele.17
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 14:11:43 -0700 (PDT)
-Subject: [PATCH 3/5] mac80211: tkip.c remove opencoded swab16 in tkip_S
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Tue, 18 Mar 2008 14:28:36 -0700
-Message-Id: <1205875716.17607.22.camel@brick> (sfid-20080319_211155_812370_9C7DE112)
-Mime-Version: 1.0
+	Mon, 10 Mar 2008 20:36:28 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: Recent driver in linux kernel 2.6.25-rc2
+Date: Mon, 10 Mar 2008 17:35:32 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892003DB2DC5@orsmsx416.amr.corp.intel.com> (sfid-20080311_003635_315130_5284B8F4)
+In-Reply-To: <20080219224418.GA20926@ics.muni.cz>
+References: <20080219153910.GA4303@ics.muni.cz> <D936D925018D154694D8A362EEB0892003AF3199@orsmsx416.amr.corp.intel.com> <20080219224418.GA20926@ics.muni.cz>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
+Cc: <ipw3945-devel@lists.sourceforge.net>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Opencode the Hi8/Lo8 and eliminate the temporary variable in
-tkip_S().
+On Tuesday, February 19, 2008 2:44 PM, Lukas Hejtmanek  wrote:
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+> On Tue, Feb 19, 2008 at 02:28:58PM -0800, Chatre, Reinette wrote:
+>>> as of pre 2.6.25 kernels, kismet monitoring tool does not work with
+>>> the message: # kismet Launching kismet_server:
+>>> //usr/bin/kismet_server 
+>>> Suid priv-dropping disabled.  This may not be secure.
+>>> No specific sources given to be enabled, all will be enabled.
+>>> Non-RFMon VAPs will be destroyed on multi-vap interfaces (ie,
+>>> madwifi-ng) Enabling channel hopping.
+>>> Enabling channel splitting.
+>>> Source 0 (iwl4965): Enabling monitor mode for iwl4965 source
+>>> interface wlan0 channel 6... FATAL: Failed to set channel 6
+>>> 5:Input/output error 
+>> 
+>> Please load the driver with debugging enabled (debug=0x43fff) and
+>> send us the log capturing during this kismet startup.
+> 
+> the log is attached.
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index f4b0c85..d5f8d11 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -94,13 +94,9 @@ static inline u16 Lo16(u32 v)
- 
- static inline u16 tkip_S(u16 val)
- {
--	u16 a = tkip_sbox[Hi8(val)];
--
--	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
-+	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
- }
- 
--
--
- /* P1K := Phase1(TA, TK, TSC)
-  * TA = transmitter address (48 bits)
-  * TK = dot11DefaultKeyValue or dot11KeyMappingValue (128 bits)
--- 
-1.5.4.4.684.g0e08
+sorry for the delay - please do submit a bug at bughost.org to enable us
+to track this problem.
 
+The error you get is strange - the reason why the channel could not be
+set was because the device is not considered to be ready. Yet, from your
+debug log all the required steps appear to have completed successfully.
+Could you please add a print to the function
+iwl4965-base.c:iwl4965_is_ready to see what the value of priv->status
+is?
 
+Thanks
+
+Reinette
