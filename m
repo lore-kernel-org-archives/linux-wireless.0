@@ -1,35 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:20633 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbYCZN4M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 09:56:12 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so3334154wff.4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2008 06:56:11 -0700 (PDT)
-Message-ID: <1ba2fa240803260656vcfd681r4f1599bc31220b87@mail.gmail.com> (sfid-20080326_135642_936507_2847395A)
-Date: Wed, 26 Mar 2008 15:56:11 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: IBSS RTNL assertion
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1206533179.16475.313.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
-	 <1206533179.16475.313.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:41682 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153AbYCKXSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 19:18:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/6] iwlwifi: fix bug to show hidden APs during scan
+Date: Tue, 11 Mar 2008 16:17:15 -0700
+Message-Id: <1205277440-14323-2-git-send-email-reinette.chatre@intel.com> (sfid-20080311_231824_273307_6271A609)
+In-Reply-To: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
+References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBNYXIgMjYsIDIwMDggYXQgMjowNiBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgT24gTW9uLCAyMDA4LTAzLTI0IGF0IDE4OjIx
-ICswMjAwLCBUb21hcyBXaW5rbGVyIHdyb3RlOgo+ICA+IEhhcyBhbnlib2R5IGV4cGVyaWVuY2Ug
-dGhlIG9uZSBiZWxsb3c/IEFueSBpbnNpZ2h0cz8KPgo+Cj4gPiBSVE5MOiBhc3NlcnRpb24gZmFp
-bGVkIGF0IG5ldC9tYWM4MDIxMS9zdGFfaW5mby5jICgxNDApCj4KPiAgSSB0aGluayB0aGF0IGNh
-biBiZSBmaXhlZCBieSBtYWtpbmcgaWVlZTgwMjExX3N0YV9qb2luX2lic3MoKSBsb2NrIHRoZQo+
-ICBydG5sIGFyb3VuZCBzdGFfaW5mb19mbHVzaCgpLiBQbGVhc2UgdHJ5IHRoYXQuCgpXaWxsIGRv
-Cj4gID4g77u/TG9va3MgbGlrZSB0aGVyZSBpcyBhIHF1aXRlIGxvY2sgbWVzcyBpbiB3aXJlbGVz
-cy10ZXN0aW5nLgo+Cj4gIFRoYXQgaXMgYSBncm9zcyBleGFnZ2VyYXRpb24uCk1heWJlLiBJIHNj
-YW5uZWQgaXQgdmVyeSBxdWlja2x5IGJ1dCBJIHRoaW5rIHRoZXJlIGFyZSBtb3JlIHByb2JsZW1z
-CnRoYW4gdGhpcyBvbmUuIEkgd2lsbCBjaGVjayBpdCBvbmNlIGFnYWluLgoKVGhhbmtzClRvbWFz
-Cg==
+Indirect scanning ('iwlist scan') should report information about
+hidden APs. When an AP is hidden it does not respond to active scanning,
+we thus have to use passive scanning to locate these APs.
+
+This fixes http://bughost.org/bugzilla/show_bug.cgi?id=1499
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Tested-by: Bill Moss <bmoss@clemson.edu>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   21 +++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   21 +++++++++++++--------
+ 2 files changed, 26 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index ecf749c..ed48134 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6309,18 +6309,23 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+-	if (direct_mask)
++	if (direct_mask) {
+ 		IWL_DEBUG_SCAN
+ 		    ("Initiating direct scan for %s.\n",
+ 		     iwl3945_escape_essid(priv->essid, priv->essid_len));
+-	else
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(
++				priv, band, 1, /* active */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	} else {
+ 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
+-
+-	scan->channel_count =
+-		iwl3945_get_channels_for_scan(
+-			priv, band, 1, /* active */
+-			direct_mask,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(
++				priv, band, 0, /* passive */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+ 	    scan->channel_count * sizeof(struct iwl3945_scan_channel);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 28c64c3..74b06b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6821,18 +6821,23 @@ static void iwl4965_bg_request_scan(struct work_struct *data)
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR)
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+-	if (direct_mask)
++	if (direct_mask) {
+ 		IWL_DEBUG_SCAN
+ 		    ("Initiating direct scan for %s.\n",
+ 		     iwl4965_escape_essid(priv->essid, priv->essid_len));
+-	else
++		scan->channel_count =
++			iwl4965_get_channels_for_scan(
++				priv, band, 1, /* active */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	} else {
+ 		IWL_DEBUG_SCAN("Initiating indirect scan.\n");
+-
+-	scan->channel_count =
+-		iwl4965_get_channels_for_scan(
+-			priv, band, 1, /* active */
+-			direct_mask,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++		scan->channel_count =
++			iwl4965_get_channels_for_scan(
++				priv, band, 0, /* passive */
++				direct_mask,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
++	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+ 	    scan->channel_count * sizeof(struct iwl4965_scan_channel);
+-- 
+1.5.3.4
+
