@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49747 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:61044 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761225AbYCDRQj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 12:16:39 -0500
-Subject: Re: [PATCH] libertas: fix sanity check on sequence number in
-	command response
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803031220.12420.hs4233@mail.mn-solutions.de>
-References: <200803031220.12420.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 04 Mar 2008 12:12:44 -0500
-Message-Id: <1204650764.30024.8.camel@localhost.localdomain> (sfid-20080304_171701_160083_BCAF9234)
-Mime-Version: 1.0
+	id S1751147AbYCKXSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 19:18:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 6/6] iwlwifi: change rate number to a constant
+Date: Tue, 11 Mar 2008 16:17:20 -0700
+Message-Id: <1205277440-14323-7-git-send-email-reinette.chatre@intel.com> (sfid-20080311_231821_623174_2C4F4D22)
+In-Reply-To: <1205277440-14323-6-git-send-email-reinette.chatre@intel.com>
+References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-3-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-4-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-5-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-03 at 12:20 +0100, Holger Schurig wrote:
-> From: David Woodhouse <dwmw2@infradead.org>
-> 
-> Slightly more useful if we compare it against the sequence number of the
-> command we have outstanding, rather than comparing the reply with itself.
->     
-> Doh. Pointed out by Sebastian Siewior
->     
-> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+This patch moves a number to an understandable define
 
-> diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-> index e6b4b23..52d02f3 100644
-> --- a/drivers/net/wireless/libertas/cmdresp.c
-> +++ b/drivers/net/wireless/libertas/cmdresp.c
-> @@ -509,9 +509,9 @@ int lbs_process_rx_command(struct lbs_private *priv)
->  		     respcmd, le16_to_cpu(resp->seqnum), priv->upld_len, jiffies);
->  	lbs_deb_hex(LBS_DEB_CMD, "CMD_RESP", (void *) resp, priv->upld_len);
->  
-> -	if (resp->seqnum != resp->seqnum) {
-> +	if (resp->seqnum != priv->cur_cmd->cmdbuf->seqnum) {
->  		lbs_pr_info("Received CMD_RESP with invalid sequence %d (expected %d)\n",
-> -			    le16_to_cpu(resp->seqnum), le16_to_cpu(resp->seqnum));
-> +			    le16_to_cpu(resp->seqnum), le16_to_cpu(priv->cur_cmd->cmdbuf->seqnum));
->  		spin_unlock_irqrestore(&priv->driver_lock, flags);
->  		ret = -1;
->  		goto done;
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 7dd1548..0b73351 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -5450,8 +5450,9 @@ static void iwl4965_init_hw_rates(struct iwl4965_priv *priv,
+ 			/*
+ 			 * If CCK != 1M then set short preamble rate flag.
+ 			 */
+-			rates[i].flags |= (iwl4965_rates[i].plcp == 10) ?
+-				0 : IEEE80211_RATE_SHORT_PREAMBLE;
++			rates[i].flags |=
++				(iwl4965_rates[i].plcp == IWL_RATE_1M_PLCP) ?
++					0 : IEEE80211_RATE_SHORT_PREAMBLE;
+ 		}
+ 	}
+ }
+-- 
+1.5.3.4
 
