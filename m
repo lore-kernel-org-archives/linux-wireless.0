@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:2667 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044AbYCMIva (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:17374 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbYCKLaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2008 04:51:30 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert GET_LOG to a direct command
-Date: Thu, 13 Mar 2008 09:48:36 +0100
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+	Tue, 11 Mar 2008 07:30:19 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2800037wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 04:30:16 -0700 (PDT)
+Message-ID: <1ba2fa240803110430h5cabec18s5be16b586769dec@mail.gmail.com> (sfid-20080311_113042_501299_D1E62113)
+Date: Tue, 11 Mar 2008 13:30:16 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
+Subject: Re: Recent driver in linux kernel 2.6.25-rc2
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080311094236.GB4344@ics.muni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803130948.36528.hs4233@mail.mn-solutions.de> (sfid-20080313_085135_117602_FB294047)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080219153910.GA4303@ics.muni.cz>
+	 <D936D925018D154694D8A362EEB0892003AF3199@orsmsx416.amr.corp.intel.com>
+	 <20080219224418.GA20926@ics.muni.cz>
+	 <D936D925018D154694D8A362EEB0892003DB2DC5@orsmsx416.amr.corp.intel.com>
+	 <20080311094236.GB4344@ics.muni.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now uses __lbs_cmd() to get the "log" (it's actually more a
-snapshot of various counters, not a sequential log).
+2008/3/11 Lukas Hejtmanek <xhejtman@ics.muni.cz>:
+> On Mon, Mar 10, 2008 at 05:35:32PM -0700, Chatre, Reinette wrote:
+>  > sorry for the delay - please do submit a bug at bughost.org to enable us
+>  > to track this problem.
+>  >
+>  > The error you get is strange - the reason why the channel could not be
+>  > set was because the device is not considered to be ready. Yet, from your
+>  > debug log all the required steps appear to have completed successfully.
+>  > Could you please add a print to the function
+>  > iwl4965-base.c:iwl4965_is_ready to see what the value of priv->status
+>  > is?
+>
+>  I don't have this problem in 2.6.25-rc3 and rc4. However, it seems that the
+>  card does not associate with AP if I set iwcofnig wlan0 essid any. Is this
+>  a bug or a feature? The AP does not use key and is visible.
+>
+It looks more like mac80211 bug but frankly I would prefer if this
+'any' feature will be not supported.
+It has security implications. The decision about to which AP to
+associate should be left solely to user space.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-----
-
-While looking here, I saw that that there is an imbalance on
-populating priv->logmsg (via lbs_get_log() and it's usage.
-
-lbs_get_log() is called twice:
-
-* in assoc.c after a successful association
-* in wext.c, lbs_get_wireless_stats()
-
-however, priv->logmsg is only used once:
-
-* in wext.c, lbs_get_wireless_stats(), to populate
-  priv->wstats.discard.*
-
-However, the usage in wext.c happens BEFORE the call to 
-lbs_get_log(), so lbs_get_wireless_stats() actually works with 
-old data. This seems strange ...
-
-Does anybody know if this was intended behavior?  If not, I'd 
-kill the calls to lbs_get_log() in assoc.c and move the other 
-one to line 882 of wext.c.
+Tomas
