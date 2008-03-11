@@ -1,39 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:50812 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753452AbYCBLQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 06:16:55 -0500
-Date: Sun, 2 Mar 2008 12:04:41 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "Ray Lee" <ray-lk@madrabbit.org>
-Cc: "kernel list" <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-Subject: Re: Oops in mac80211:rate_control_pid_tx_status
-Message-ID: <20080302120441.26c1b8a3@morte> (sfid-20080302_111737_953629_F4A9C7E8)
-In-Reply-To: <2c0942db0803011705j260186bbgb02dcd8f9842e52b@mail.gmail.com>
-References: <2c0942db0803011705j260186bbgb02dcd8f9842e52b@mail.gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60734 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbYCKQML (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 12:12:11 -0400
+Subject: Re: [PATCH 1/5] mac80211: use kernel-provided bit
+	rotation/byteordering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1204968174.23455.36.camel@brick> (sfid-20080308_092337_530827_4C02EB9D)
+References: <1204968174.23455.36.camel@brick>
+	 (sfid-20080308_092337_530827_4C02EB9D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H7MMho036sxHloie3X4b"
+Date: Tue, 11 Mar 2008 17:11:43 +0100
+Message-Id: <1205251904.6387.50.camel@johannes.berg> (sfid-20080311_161236_770105_CE245F8B)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 1 Mar 2008 17:05:50 -0800
-"Ray Lee" <ray-lk@madrabbit.org> wrote:
 
-> Kernel version 2.6.24+ a little (but pre-rc1).
-> 
-> I have a wireless base station that I switched from B/G mixed mode to
-> purely B to try to debug a separate issue with a different device on
-> my network. As soon as I did that (and on every subsequent boot), the
-> system oopses as soon as it tries to associate. Switching the base
-> station back to "mixed" avoids the oops.
-
-Known and fixed. The fix is in the wireless-testing tree, and I just sent
-it rebased against 2.6.25-rc3. Please test:
-http://marc.info/?l=linux-wireless&m=120445495012387&w=2
+--=-H7MMho036sxHloie3X4b
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
---
-Ciao
-Stefano
+>  include/linux/bitops.h |   40 ++++++++++++++++++++++++++++++++++++++++
+
+> +++ b/include/linux/bitops.h
+> @@ -65,6 +65,46 @@ static inline __u32 ror32(__u32 word, unsigned int shi=
+ft)
+>  	return (word >> shift) | (word << (32 - shift));
+>  }
+> =20
+> +/**
+> + * rol16 - rotate a 16-bit value left
+> + * @word: value to rotate
+> + * @shift: bits to roll
+> + */
+> +static inline __u16 rol16(__u16 word, unsigned int shift)
+
+I don't think we can take that via wireless, and I think architectures
+should be able to override this if they can optimise it (though the
+compiler might be good enough...)
+
+johannes
+
+--=-H7MMho036sxHloie3X4b
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR9avPqVg1VMiehFYAQIp7hAAsbC2kVXh8yo/PbMhAbOn1uI/5wwseKX+
+mCOXl0s/IJ07EzwWy3aOclWy21w7ZlVWLZDkQN7pKtoXhh2LuoiBmxh4Ji2UVL4/
+0OMnEi+utceLDb4HtkZDpri0/IDbW4OMNjxOWFnpgYjvf3dEIKs/jbepotoTrIVc
+NS5BR03S0IG68H+Y8DBe/yOeebByZ6LOTqbgHLK0m1oIpWPhiS+xBHE53DjD/L9Y
+rr37ogJTywIWFVYDB3YOceA7sFFj+bAfjXoa2DpN0mMz192m5gVpedDG+2mci0wO
+DHw6n/oFIVeTN/SKcUuD2W1+MD7jGCEJfLW/PZXhuCtcdvEikYoHqXgNPSKVKpnC
+ZC1B9j3qlAqp5Fq0KlT6z/96NTFkx9YsGAuyP79ZR3yxFStyB2vXKfQbBpRFiK2c
+bY/4dSymt16WnLJcyV+DKP+cKvDZl8fLyTovRr5cB9LLvig0R3+JiuGm4mZx9bbH
+LA/xHfpkdi1UJ6PA7xrmbJI/ngoSUfjJsc07InI1m9svqzq58DTN/3pLjW5K7QFK
+Wtm9foW+WPWXEyR3Wc/Lnb76ENt6mElvroYULXotoTYmP8IN+do4aSy4DZvXPfF0
+yOPSLapRZSEx14X0w8e1BkVWj9OvRL44FqCL7BXfVXZPBOdqnnTNXvqO5r7CA1X7
+n16KkISBgss=
+=MCVZ
+-----END PGP SIGNATURE-----
+
+--=-H7MMho036sxHloie3X4b--
+
