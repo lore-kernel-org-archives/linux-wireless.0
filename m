@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:38464 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754255AbYCFSre (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 13:47:34 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 2/2] iwlwifi: Moving EEPROM handling in iwlcore module
-Date: Thu, 6 Mar 2008 19:46:36 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-References: <1204828820-11768-1-git-send-email-reinette.chatre@intel.com> <1204828820-11768-2-git-send-email-reinette.chatre@intel.com> <1204828820-11768-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1204828820-11768-3-git-send-email-reinette.chatre@intel.com>
+Received: from mail.gmx.net ([213.165.64.20]:50389 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750800AbYCKXCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 19:02:05 -0400
+Message-ID: <47D70F5C.7020208@gmx.at> (sfid-20080311_230225_223084_8BBFE05A)
+Date: Wed, 12 Mar 2008 00:01:48 +0100
+From: Franz Apeltauer <franz.apeltauer@gmx.at>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803061946.36591.mb@bu3sch.de> (sfid-20080306_184745_296920_403E2622)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+References: <47CB3B5E.4020701@gmx.at> <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com> <47D70459.7000703@gmx.at> <200803112322.45274.IvDoorn@gmail.com>
+In-Reply-To: <200803112322.45274.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 06 March 2008 19:40:20 Reinette Chatre wrote:
-> +/*
-> + * 4965 EEPROM map
-> + */
-> +struct iwl4965_eeprom {
-> +	u8 reserved0[16];
-> +#define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
+Ivo van Doorn schrieb:
+> rt2500pci should work with adhoc and master mode, I have to note that
+> with versions up to 2.6.25 this is disabled due to lack of testing.
+> I don't know which rt2x00 version is packaged in the tarball, but if it
+> is older then 2.1.0 then adhoc and master mode is disabled in the driver.
+> 
+> Also note that although it is currently enabled, I still have not
+> received test reports about it, so I cannot claim that it is working.
+> 
+> Ivo
+> 
+Found in rt2x00.h: #define DRV_VERSION    "2.1.3"
 
-offsetof() does this stuff automagically for you.
+I am far away from being a wlan expert or kernel hacker.
+But if that helps, I am willing to run any test you want on
+Ubuntu gutsy, kernel 2.6.22.
 
-> +	u16 device_id;		/* abs.ofs: 16 */
-> +	u8 reserved1[2];
-> +#define EEPROM_PMC                          (2*0x0A)	/* 2 bytes */
-
-...
-
-> +	u16 pmc;		/* abs.ofs: 20 */
-> +	u8 reserved2[20];
-> +#define EEPROM_MAC_ADDRESS                  (2*0x15)	/* 6  bytes */
-
-.. and so on.
-
-> +	u8 mac_address[6];	/* abs.ofs: 42 */
-> +	u8 reserved3[58];
-> +#define EEPROM_BOARD_REVISION               (2*0x35)	/* 2  bytes */
-> +	u16 board_revision;	/* abs.ofs: 106 */
-> +	u8 reserved4[11];
-> +#define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
-> +	u8 board_pba_number[9];	/* abs.ofs: 119 */
-> +	u8 reserved5[8];
-
--- 
-Greetings Michael.
+Franz
