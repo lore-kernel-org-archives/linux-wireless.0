@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from claritin.media.mit.edu ([18.85.2.133]:3426 "EHLO
-	claritin.media.mit.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761598AbYCSUnm (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.177]:51059 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbYCKQr0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 16:43:42 -0400
-In-Reply-To: <200803191650.53769.hs4233@mail.mn-solutions.de>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
-	libertas-dev-bounces@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] libertas: change quality calculation
-MIME-Version: 1.0
-Message-ID: <OFB867E8CF.D152FA3E-ON85257411.0057A540-85257411.005929B7@notes-mail.media.mit.edu> (sfid-20080319_204432_074704_BA21424A)
-From: Michail Bletsas <mbletsas@laptop.org>
-Date: Wed, 19 Mar 2008 12:13:51 -0400
-Content-Type: text/plain; charset="US-ASCII"
+	Tue, 11 Mar 2008 12:47:26 -0400
+Received: by el-out-1112.google.com with SMTP id v27so1494989ele.17
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 09:47:25 -0700 (PDT)
+Subject: Re: [PATCH 1/5] mac80211: use kernel-provided bit
+	rotation/byteordering
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1205251904.6387.50.camel@johannes.berg>
+References: <1204968174.23455.36.camel@brick>
+	 (sfid-20080308_092337_530827_4C02EB9D)  <1205251904.6387.50.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 11 Mar 2008 09:17:16 -0700
+Message-Id: <1205252236.22317.0.camel@brick> (sfid-20080311_164731_443630_AC9D261B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-libertas-dev-bounces@lists.infradead.org wrote on 03/19/2008 11:50:53 AM:
-
-> > RSSI can be derived by adding Noise Floor to SNR value
+On Tue, 2008-03-11 at 17:11 +0100, Johannes Berg wrote:
+> >  include/linux/bitops.h |   40 ++++++++++++++++++++++++++++++++++++++++
 > 
-> I saw that, and it's actually like this coded. However, I was 
-> wondering if it is allowed to add "dBm" to "dB". Those are the 
-> documented units for "noisefloor" and "SNR", respectively.
+> > +++ b/include/linux/bitops.h
+> > @@ -65,6 +65,46 @@ static inline __u32 ror32(__u32 word, unsigned int shift)
+> >  	return (word >> shift) | (word << (32 - shift));
+> >  }
+> >  
+> > +/**
+> > + * rol16 - rotate a 16-bit value left
+> > + * @word: value to rotate
+> > + * @shift: bits to roll
+> > + */
+> > +static inline __u16 rol16(__u16 word, unsigned int shift)
 > 
-Yes, you can add dB to dBm and you will end up with dBm
+> I don't think we can take that via wireless, and I think architectures
+> should be able to override this if they can optimise it (though the
+> compiler might be good enough...)
 
- 0 dBm = 1mW
+OK, I'll get the common parts through Andrew and once that's in I'll
+resubmit the wireless parts.
 
-So the Noise Floor is given as an absolute value (dBm)  and adding the SNR 
-to it ( just a ratio in dB) will tell you what the Signal level is (in 
-dBm)
-
-If the noise floor is reported as -86dBm, that means that the received 
-noise power is about 2.5pW.
-An SNR of 36 means that the received signal power is  -86dbm + 36dB = 
--50dbm ( i.e. 2^12 times higher - 10nW)
-
-Wikipedia has a nice article explaining that: 
-http://en.wikipedia.org/wiki/DBm
-
-M.
-
+Harvey
 
