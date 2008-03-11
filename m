@@ -1,109 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882AbYCQU7R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 16:59:17 -0400
-Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
-	a Phase 2 key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com> (sfid-20080317_202759_492040_74BFA2FD)
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205751455.1614.25.camel@johannes.berg>
-	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
-	 <1205758276.1614.45.camel@johannes.berg>
-	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
-	 <1205761758.1614.79.camel@johannes.berg>
-	 <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com>
-	 <1205781593.16475.20.camel@johannes.berg>
-	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
-	 <1205784255.16475.33.camel@johannes.berg>
-	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
-	 (sfid-20080317_202759_492040_74BFA2FD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v55DBw2296JkpnQpi8By"
-Date: Mon, 17 Mar 2008 21:59:01 +0100
-Message-Id: <1205787541.16475.40.camel@johannes.berg> (sfid-20080317_205922_303025_EFB38191)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57443 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751085AbYCKUGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 16:06:53 -0400
+Message-ID: <47D6E649.3010309@hauke-m.de> (sfid-20080311_200658_148145_120B8243)
+Date: Tue, 11 Mar 2008 21:06:33 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Franz Apeltauer <franz.apeltauer@gmx.at>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+References: <47CB3B5E.4020701@gmx.at>	 <43e72e890803071859r2788075cp12272cad0920d2b0@mail.gmail.com>	 <47D5AAFC.80401@gmx.at> <200803102321.35909.IvDoorn@gmail.com>	 <20080310233307.GT28995@ruslug.rutgers.edu> <47D5CD59.5050400@gmx.at> <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com>
+In-Reply-To: <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigB046C7E2E25F33ECE5D1B05B"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-v55DBw2296JkpnQpi8By
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB046C7E2E25F33ECE5D1B05B
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
+Luis R. Rodriguez schrieb:
+> On Mon, Mar 10, 2008 at 8:07 PM, Franz Apeltauer
+<franz.apeltauer@gmx.at> wrote:
+>> Luis R. Rodriguez schrieb:
+>>
+>>> Frankz, I generated a new tarball with this applied. You can either
+>>  > patch your local tarball with this patch or just download the
+>>  > tarball again.
+>>  >
+>>  >   Luis
+>>  >
+>>  > commit d4097ab3593a721fc1d99823d2442464debf7f09
+>>  > Author: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+>>  > Date:   Mon Mar 10 19:20:33 2008 -0400
+>>
+>>  Loaded the new tarball.
+>>  It compiles fine.
+>
+> And it works too I hope? :)
+>
+>   Luis
 
-> >  Well, you were suggesting the use of multiple SSIDs, which we don't
-> >  support, we only support VLANs within a BSS/single SSID. Not that I've
-> >  been able to test it, hostapd needs radius stuff set up for VLANs...
->=20
-> I think it's transparent since it's handled by MLME in hostapd so
-> multiple SSID is supported
-> Maybe we did some minor changes in mac to support that.. Will check again=
-.
-> I think it's always done by means of VLANs
+On my system the tarball is compiling now, on Sunday it does not so,
+with the error mentioned here.
 
-Oh, hm, could be true.
+It tries to find the .config for the kernel at /lib/modules/`uname
+-r`/.config, but it is only at /lib/modules/`uname -r`/build/.config on
+Ubuntu and Fedora systems.
 
-> >  Right. I was just saying that the way it currently is I think you coul=
-d
-> >  detect it that way. b43 simply assumes WEP keys are always 'static'
-> >  which seems to mostly work well in practice.
-> >  I suppose then set_key needs a new argument key_type:
-> >
-> >  enum ieee80211_key_type {
-> >         KEY_TYPE_PAIRWISE,
-> >         KEY_TYPE_GROUP,
-> >         KEY_TYPE_TXONLY,        /* group key in an AP */
->=20
-> Can we drop it? Hm still not sure why you like it so much.
+--
+Hauke Mehrtens
 
-Well, we don't want an AP to actually decrypt things, so we need to
-distinguish between these things so that the driver doesn't somehow try
-to use that key for decryption.
 
-> >         KEY_TYPE_STATIC,
-> >  }
-> >
-> >  where the MAC address pointer would only be non-NULL when the key type
-> >  is PAIRWISE, and STATIC can only be used for WEP keys.
-> >
->=20
->=20
-> Do you know anything about mesh security are we breaking here anything?
-
-No, Javier, any comments? I think basically you have peer links that are
-encrypted, which is just pairwise keys.
-
-johannes
-
---=-v55DBw2296JkpnQpi8By
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--------------enigB046C7E2E25F33ECE5D1B05B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIVAwUAR97blKVg1VMiehFYAQJNyxAAhbM6wkfnA8NU1U+Yozahos1J4yRiiyOn
-LqKRcjFcQpWasfr9NadJsLT7QA+aar/mLpuFJeL6qU870AwLuK3KxdSnSEyXnFYw
-iapq+0k6WFkg9Irs4OYJiy0cTa85V36CdTh2etzn190DlT0ZiM3zzoyuQe1pNJzJ
-pQbwgp4PjmWBLTEfRF0oXHCcp4KXsE/uwmDoPgE989tGauO2bgQw0eQDI4mXfOIV
-i8PxF28xV0b5ZcchbsLyQfsvBkezGCjK9ddsH8vSXmaX/z94sB6NolhYdPhD65+a
-W/rgIB8WKROoE3YfRzZZ7NmMxfAF8nqi6Pqm9iyJNrtFd8BwmT3LLlldBXAWYMjn
-io+HKMSA9NtCvsm5FHquZ8UBFtL71bdOkUj1G+v7qI3pVGejs1M5KqKSM130Z5kN
-JIqDcdItoU0vNO62i6iIQ3UDX3gNyUFvqZNakoBdqmUuuIm4l7HCuL8TDpaDve4e
-w65Vpzonwi9bfMlffJjqvidwqcYsdCNqQXaf5gxQuV2FkirsQSgnYnSWoTLmBLy+
-NwziNDFuSyTzfH9+BAQrVrAKtmLVsRrjlqLcok/0lxX64uxZpnxHUh/jkuu4Ls00
-bO5fByppSRCbSp8Sz9MFDM7EnfBdL3iPZnmr/00Dq3cJfnI9xczoHhB0MAasfhka
-PZBij48SDQY=
-=yVCp
+iQIVAwUBR9bmTYZ0px9YPRMyAQJJfA/9H8yspcTUBYyiEVJ/Pz5Ari5MoBj6f5UE
+z/FLQm4x+KOkOF32pmsb8C0WLRB9N9zZbb6B+UoZB0LnaaW+vp3e+QFpo+T/iVs7
+jnAyeElhvYFiK0nlXIF7fp6qBzx+wHbh+ZGWpdLwslOWcokzzQKE50ClK3+PJ1C7
+Q+h536gQC0sgoflwVk3bekSlwrmVWLbp87UtyTUTt8yu6B0UGe47C68zIDv4xRO2
+/2Zq6m1e7gBloysrFtNzUG3/gXJqLXrrq7RTEYvr74wc71mcelKnKBky7QcT/D1J
+Vc2ktcA4Xt65opmiXeymvKX0Olu/nIhjC5EUph8g7ReaunjJqnkcItai4cWShQPs
+Tv/cVzjdi0oiL3ok4/NU2q3ap3x7mPyQnuYg96DVB42ekJGPqLCjUlU5zvfNV8F3
+BVT+x32xm08nt302nDmZTK+Y0Lq7VheXUeOlTFateMKEJgxgwQjUy7Pm0BCPYxt0
+dllvIs18cq8pcHF9WUAGC/HdnkebpcTFKYXaM1C7wFVnlKVBgQZrnNIu0M9XzCKR
+I1LHeK6lsYTXDSfMclczPSBuhEzckb+RYYssvzgwCHtAfPuiTSUt0Dd1hm8fvI+1
+6bfqfyx6UIvm5tPuLaaN7wSdA+X+68Fj1ZSYAA8VfttOMzpkqAtpRb6tEQhdRIlc
+dh1sUtummvA=
+=0tdI
 -----END PGP SIGNATURE-----
 
---=-v55DBw2296JkpnQpi8By--
-
+--------------enigB046C7E2E25F33ECE5D1B05B--
