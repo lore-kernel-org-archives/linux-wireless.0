@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53837 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421AbYC1Kug (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 06:50:36 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix PCMCIA IRQ routing
-Date: Fri, 28 Mar 2008 11:48:53 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803281148.53300.mb@bu3sch.de> (sfid-20080328_105040_686445_9AC9BF2D)
+Received: from mx1.redhat.com ([66.187.233.31]:39349 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751969AbYCKQ7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 12:59:12 -0400
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <1205252287.6387.54.camel@johannes.berg>
+References: <20080311130630.0AF0.40F06B3A@sm.sony.co.jp>
+	 (sfid-20080311_051712_368863_0E0A4ECC)  <1205252287.6387.54.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 11 Mar 2008 12:50:37 -0400
+Message-Id: <1205254237.8774.0.camel@localhost.localdomain> (sfid-20080311_165919_163294_FB56907D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the IRQ routing on PCMCIA devices.
-With this patch the card will finally be able to receive IRQs.
+On Tue, 2008-03-11 at 17:18 +0100, Johannes Berg wrote:
+> On Tue, 2008-03-11 at 13:15 +0900, Masakazu Mokuno wrote:
+> > Some implementations of the hidden SSID APs emit beacons which have the zero
+> > length SSID information element instead of SSID padded by null (\0) characters.
+> > If the firmware of the PS3 wireless hardware meets these beacons, it abandons parsing
+> > IEs. Thus guest OSes get the invalid scan information for the AP.
+> > 
+> > To work around this, ignore these scan informations from the list.
+> 
+> I'm not sure this is a good idea. Is there any way to get at decent
+> information from those beacons?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Yeah, there are quite a few of these out there.  Ideally the firmware
+wouldn't puke on it...
 
----
+Dan
 
-Please queue for 2.6.25
 
-Index: wireless-testing/drivers/net/wireless/b43/pcmcia.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/pcmcia.c	2008-03-28 11:35:25.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/pcmcia.c	2008-03-28 11:38:14.000000000 +0100
-@@ -88,12 +88,14 @@ static int __devinit b43_pcmcia_probe(st
- 	res = pcmcia_parse_tuple(dev, &tuple, &parse);
- 	if (res != CS_SUCCESS)
- 		goto err_kfree_ssb;
- 
- 	dev->conf.ConfigBase = parse.config.base;
- 	dev->conf.Present = parse.config.rmask[0];
-+	dev->conf.Attributes = CONF_ENABLE_IRQ;
-+	dev->conf.IntType = INT_MEMORY_AND_IO;
- 
- 	dev->io.BasePort2 = 0;
- 	dev->io.NumPorts2 = 0;
- 	dev->io.Attributes2 = 0;
- 
- 	win.Attributes = WIN_ADDR_SPACE_MEM | WIN_MEMORY_TYPE_CM |
-@@ -109,14 +111,14 @@ static int __devinit b43_pcmcia_probe(st
- 	mem.CardOffset = 0;
- 	mem.Page = 0;
- 	res = pcmcia_map_mem_page(dev->win, &mem);
- 	if (res != CS_SUCCESS)
- 		goto err_disable;
- 
--	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING | IRQ_FIRST_SHARED;
--	dev->irq.IRQInfo1 = IRQ_LEVEL_ID | IRQ_SHARE_ID;
-+	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
-+	dev->irq.IRQInfo1 = IRQ_LEVEL_ID;
- 	dev->irq.Handler = NULL; /* The handler is registered later. */
- 	dev->irq.Instance = NULL;
- 	res = pcmcia_request_irq(dev, &dev->irq);
- 	if (res != CS_SUCCESS)
- 		goto err_disable;
- 
