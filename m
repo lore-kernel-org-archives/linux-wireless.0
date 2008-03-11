@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:6632 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034AbYC0IUr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60846 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbYCKQOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 04:20:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: fix spinlock recursion bug
-Date: Thu, 27 Mar 2008 09:17:46 +0100
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
-References: <200803191524.21866.hs4233@mail.mn-solutions.de> <200803261637.45549.hs4233@mail.mn-solutions.de> <1206552791.31383.99.camel@localhost.localdomain>
-In-Reply-To: <1206552791.31383.99.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803270917.46334.hs4233@mail.mn-solutions.de> (sfid-20080327_082050_583371_9C141D15)
+	Tue, 11 Mar 2008 12:14:44 -0400
+Subject: Re: [PATCH 3/5] mac80211: replace Mk16 helper with le16_to_cpup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1204968187.23455.39.camel@brick> (sfid-20080308_092339_300656_E96B3B6F)
+References: <1204968187.23455.39.camel@brick>
+	 (sfid-20080308_092339_300656_E96B3B6F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bYcVv4EQR6QGcNfZeZD7"
+Date: Tue, 11 Mar 2008 17:14:29 +0100
+Message-Id: <1205252069.6387.52.camel@johannes.berg> (sfid-20080311_161446_830126_617FD3FD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan !
 
-I like most of your proposition. A few things:
-
-
-> struct lbs_event {
-> 	u32 event;  /* MACREG_INT_CODE_xxxxx */
-> 	u32 len;
-> 	u8 buf[LBS_UPLD_SIZE];
-> };
-
-Ugh, as LBS_UPLD_SIZE equals to to 2312, this looks ugly. I'm not 
-sure if accessing the cmd_ctrl_node list directly would be a 
-good idea, thought.
+--=-bYcVv4EQR6QGcNfZeZD7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-> Seems better than what's there.
+On Sat, 2008-03-08 at 01:23 -0800, Harvey Harrison wrote:
+> Opencoded byte-swapping could just use the kernel helper.
 
-Definitely. Maybe David Woodhouse can give his opinion as well.
+> +	p1k[2] =3D le16_to_cpup(leptr++);
 
+I'm ok with this if architectures guarantee that these operations work
+on unaligned values, but I don't think that is the case.
 
-> I might take a stab at this if people think it seems sane
-> enough.
+johannes
 
-Do you have time for such a thing?  I see that you don't ack some 
-of my patches, probably because you don't even have time to 
-check them. What time frame do you have in mind?
+--=-bYcVv4EQR6QGcNfZeZD7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> The memory hit over what's there now would be ~15K of allocated
-> memory at driver load per card.
+iQIVAwUAR9av5KVg1VMiehFYAQLJHw//VDlSDLBDgwwBQqecGxvBgB7ycJpgiKNj
+AmX9cox+DXmVo75W+yEx3BZkypHTPtkuklhevPzCq1JFJiDw0c0iAd6fbxaEnxGW
+nMo/269N2MzM2oeAjZrHJup7MhzdGe6ZYtxerQTKg2OQEVrGHitIj/Pte3RfqF5d
+D5utlknfNR4A2TCRBvczxQth7vtgJ9Twrza8WRQLdTndcve7CVHEsIrkvqwcENTi
+N6xBNjCfIre5q7CA+/Rrb3XcQwZpcfJODCzm+AjvTCR8+FZ0eYRIVbxhyss/GYvT
+ims6dIi5oUqi6dmZwoLKaLzOIGdjOIC5M6XwJNv9wzeESw+HgB8bQbiAkyBpgVBo
+pkT8Zq9xylKPBVUHKZL2aEprCYYONquwvTO7oRQlzJdnSrvMSz9c9JTbQC2fipF1
+3r77CrakfBj1ooDE3HZecqFfTJigoR3puGu9Ozq4tHVEl2dT2ti4RKMlStsxpgWE
+vMTO9RGVfgterEMHi3araNxr28lZ9WkDR0UNKHsZMmddtnC1zWv25lesMmc/dINw
+BfoFll7fTFE+iF9aKemZL+rlo18rhacSpSyPKjYlQaSNKpw2o/+Z6egLw8TVq4VQ
+7hpLDVqD43OtnurvF+Ic+MfQXg7cTyp/PsjECmbBm0VPG3a4lQQgaUhPweU7rHE6
+UTXKqOIQMtg=
+=Y/m6
+-----END PGP SIGNATURE-----
 
-The memory hit won't be nice for embedded devices. But maybe it's 
-better to try this solution first, to see if it's working. Then 
-we have all the time for optimizations, e.g. with two lists.
+--=-bYcVv4EQR6QGcNfZeZD7--
+
