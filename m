@@ -1,23 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38737 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:41682 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751684AbYCJSl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2008 14:41:29 -0400
+	id S1750987AbYCKXSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 19:18:13 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
 	Assaf Krauss <assaf.krauss@intel.com>,
 	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 5/7] iwlwifi: Use eeprom form iwlcore
-Date: Mon, 10 Mar 2008 11:35:10 -0700
-Message-Id: <1205174112-18962-6-git-send-email-reinette.chatre@intel.com> (sfid-20080310_184142_195731_34FAA154)
-In-Reply-To: <1205174112-18962-5-git-send-email-reinette.chatre@intel.com>
-References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-3-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-4-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-5-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: Use eeprom form iwlcore
+Date: Tue, 11 Mar 2008 16:17:18 -0700
+Message-Id: <1205277440-14323-5-git-send-email-reinette.chatre@intel.com> (sfid-20080311_231833_075671_34F86358)
+In-Reply-To: <1205277440-14323-4-git-send-email-reinette.chatre@intel.com>
+References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-3-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -38,7 +37,7 @@ Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
  7 files changed, 30 insertions(+), 426 deletions(-)
 
 diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index abcfdbf..8a0a0c8 100644
+index 6b85cca..59d9c90 100644
 --- a/drivers/net/wireless/iwlwifi/Makefile
 +++ b/drivers/net/wireless/iwlwifi/Makefile
 @@ -1,5 +1,5 @@
@@ -370,7 +369,7 @@ index 4a29b44..c66993e 100644
  #include "iwl-4965-commands.h"
  
 diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 5140a16..b3bf7c1 100644
+index a79e8c3..dc55ff2 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
 @@ -38,6 +38,7 @@
@@ -381,7 +380,7 @@ index 5140a16..b3bf7c1 100644
  #include "iwl-core.h"
  #include "iwl-4965.h"
  #include "iwl-helpers.h"
-@@ -4826,10 +4827,23 @@ void iwl4965_hw_cancel_deferred_work(struct iwl4965_priv *priv)
+@@ -4824,10 +4825,23 @@ void iwl4965_hw_cancel_deferred_work(struct iwl4965_priv *priv)
  	cancel_delayed_work(&priv->init_alive_start);
  }
  
@@ -405,7 +404,7 @@ index 5140a16..b3bf7c1 100644
  };
  
  struct pci_device_id iwl4965_hw_card_ids[] = {
-@@ -4838,35 +4852,4 @@ struct pci_device_id iwl4965_hw_card_ids[] = {
+@@ -4836,35 +4850,4 @@ struct pci_device_id iwl4965_hw_card_ids[] = {
  	{0}
  };
  
@@ -442,7 +441,7 @@ index 5140a16..b3bf7c1 100644
 -
  MODULE_DEVICE_TABLE(pci, iwl4965_hw_card_ids);
 diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index 0895af6..6e38ac2 100644
+index 6ce4081..f4e395f 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-4965.h
 +++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
 @@ -40,6 +40,7 @@
@@ -453,7 +452,7 @@ index 0895af6..6e38ac2 100644
  #include "iwl-4965-hw.h"
  #include "iwl-csr.h"
  #include "iwl-prph.h"
-@@ -641,7 +642,6 @@ extern u8 iwl4965_add_station_flags(struct iwl4965_priv *priv, const u8 *addr,
+@@ -640,7 +641,6 @@ extern u8 iwl4965_add_station_flags(struct iwl4965_priv *priv, const u8 *addr,
  extern int iwl4965_is_network_packet(struct iwl4965_priv *priv,
  				 struct ieee80211_hdr *header);
  extern int iwl4965_power_init_handle(struct iwl4965_priv *priv);
@@ -461,7 +460,7 @@ index 0895af6..6e38ac2 100644
  extern void iwl4965_handle_data_packet_monitor(struct iwl4965_priv *priv,
  					   struct iwl4965_rx_mem_buffer *rxb,
  					   void *data, short len,
-@@ -747,8 +747,6 @@ struct iwl4965_priv;
+@@ -746,8 +746,6 @@ struct iwl4965_priv;
  /*
   * Forward declare iwl-4965.c functions for iwl-base.c
   */
@@ -508,7 +507,7 @@ index bdd32f8..88fd49a 100644
  
  #endif /* __iwl_core_h__ */
 diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 324b66f..49041e9 100644
+index 090df36..7dd1548 100644
 --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
 +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
 @@ -45,6 +45,7 @@
@@ -605,7 +604,7 @@ index 324b66f..49041e9 100644
   * Misc. internal state and helper functions
   *
   ******************************************************************************/
-@@ -8778,13 +8700,13 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+@@ -8770,13 +8692,13 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
  		goto out_remove_sysfs;
          }
  	/* Read the EEPROM */
