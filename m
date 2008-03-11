@@ -1,102 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:41785 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756717AbYCXMfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 08:35:20 -0400
-Message-ID: <47E7A1BF.80308@gmx.de> (sfid-20080324_123524_926188_0B0077D7)
-Date: Mon, 24 Mar 2008 13:42:39 +0100
-From: Florian Manschwetus <florianmanschwetus@gmx.de>
+Received: from minas.ics.muni.cz ([147.251.4.40]:37613 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751702AbYCKJnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 05:43:09 -0400
+Date: Tue, 11 Mar 2008 10:42:36 +0100
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Recent driver in linux kernel 2.6.25-rc2
+Message-ID: <20080311094236.GB4344@ics.muni.cz> (sfid-20080311_094317_362876_01E877D6)
+References: <20080219153910.GA4303@ics.muni.cz> <D936D925018D154694D8A362EEB0892003AF3199@orsmsx416.amr.corp.intel.com> <20080219224418.GA20926@ics.muni.cz> <D936D925018D154694D8A362EEB0892003DB2DC5@orsmsx416.amr.corp.intel.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: gentoo ebuild for compat wireless
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms040300080702000201020507"
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <D936D925018D154694D8A362EEB0892003DB2DC5@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+On Mon, Mar 10, 2008 at 05:35:32PM -0700, Chatre, Reinette wrote:
+> sorry for the delay - please do submit a bug at bughost.org to enable=
+ us
+> to track this problem.
+>=20
+> The error you get is strange - the reason why the channel could not b=
+e
+> set was because the device is not considered to be ready. Yet, from y=
+our
+> debug log all the required steps appear to have completed successfull=
+y.
+> Could you please add a print to the function
+> iwl4965-base.c:iwl4965_is_ready to see what the value of priv->status
+> is?
 
---------------ms040300080702000201020507
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+I don't have this problem in 2.6.25-rc3 and rc4. However, it seems that=
+ the
+card does not associate with AP if I set iwcofnig wlan0 essid any. Is t=
+his=20
+a bug or a feature? The AP does not use key and is visible.
 
-is it possible to get a version appendix on the tar.bz?
-so it should be easy to get a working ebuild fpr this.
-
-florian
-
---------------ms040300080702000201020507
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
-BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
-MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
-dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
-hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
-25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
-TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
-5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
-SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
-byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
-gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
-MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
-dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
-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
-Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
-cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
-MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQxMjQy
-MzlaMCMGCSqGSIb3DQEJBDEWBBQTXP5kekqTJWkAIPUehY4M+1V4sDBSBgkqhkiG9w0BCQ8x
-RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
-BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
-LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
-FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
-cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEADJgFqhs+UIa32uMHDkvfHoNeoMjsO92l4NT8YdwErZxP55D1hHvQrlKl2SBX
-CN9MPv98axCVHvwQhM5KsOBB6fWhWfvG8sB0DfOQJ6kI1fG0kyoFe9B71RCwj/c1bfT+UKmV
-BLteAnAc1T39NiRaGkkZLSdRSDQ37n3RHt5x46IXqDpQc+8I6Xks5vkbxYS+z/tcqseTjmh6
-eJVz9xfro/vxR6uw9xjxrJdDpdSn9vn+jizbI4TBK65XQmkzo7MMU/AVWHars0N3AKRLv497
-LR9kuileROlS+DMG8WO+C5d7520FZGOEV6cnR/EGLmikxuqg5i6oET4E957tqyuEewAAAAAA
-AA==
---------------ms040300080702000201020507--
+--=20
+Luk=E1=B9 Hejtm=E1nek
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
