@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:10763 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbYCKQzD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 12:55:03 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1510619rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 09:54:59 -0700 (PDT)
-Message-ID: <43e72e890803110954m2eb4ee07x8eedcec7e263da45@mail.gmail.com> (sfid-20080311_165507_193250_13E65AF1)
-Date: Tue, 11 Mar 2008 12:54:59 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: handling Qdisc issues
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <1205094818.6387.46.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
-	 <200803061902.33865.IvDoorn@gmail.com>
-	 <1204826767.25502.135.camel@johannes.berg>
-	 <200803061927.09891.IvDoorn@gmail.com>
-	 <1204829243.25502.137.camel@johannes.berg>
-	 <c85cb4470803090443v3748a986vfc909c984369a4a7@mail.gmail.com>
-	 <1205094818.6387.46.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:61044 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750868AbYCKXSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 19:18:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/6] iwlwifi: Use sta_bcast_id variable instead of BROADCAST_ID constant
+Date: Tue, 11 Mar 2008 16:17:16 -0700
+Message-Id: <1205277440-14323-3-git-send-email-reinette.chatre@intel.com> (sfid-20080311_231827_663383_7EA58FE9)
+In-Reply-To: <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
+References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
+ <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 9, 2008 at 4:33 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  > John, Johannes, what will be the preferred way to continue? it seems
->  > that Ivo and Michael agree that the adjustments needed can be inserted
->  > quite fast. would you like to re-base and merge the current RFC as a
->  > patch and fix things on top of it, or to merge all the fixes and push
->  > it at once?
->
->  I'd like to take a look at it first, though if you tested it and it
->  works we can just as well put it into -testing, it can't really be worse
->  than what we have now.
->
->  What I'd like to do though is just make mac80211 depend on
->  NETDEVICES_MULTIQUEUE (or select it if possible?) so we don't have to
->  bother with all the ifdefs. OTOH that'll totally break compat so Luis?NETDEVICES_MULTIQUEUE
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-I've been reviewing this for a bit now and I think if we make mac80211
-depend on NETDEVICES_MULTIQUEUE and just have compat.diff patch the
-sources with ifdefs where needed. The file include/linux/netdevice.h
-already provides hints as to how to port over some calls but won't be
-sure until we test this. Seems we need a new patch for this anyway.
-Once posted I can try to port on compat-wireless.
+This patch removes iwlYYY_BROADCAST_ID from run time usage.
+hw_setting.sta_bcast_id is used instead.
 
-  Luis
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 50a641c..9a9918e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -980,7 +980,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl3945_priv *priv,
+ 	priv->stations[sta_id].current_rate.rate_n_flags = rate;
+ 
+ 	if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
+-	    (sta_id != IWL3945_BROADCAST_ID) &&
++	    (sta_id != priv->hw_setting.bcast_sta_id) &&
+ 		(sta_id != IWL_MULTICAST_ID))
+ 		priv->stations[IWL_STA_ID].current_rate.rate_n_flags = rate;
+ 
+@@ -2595,7 +2595,7 @@ unsigned int iwl3945_hw_get_beacon_cmd(struct iwl3945_priv *priv,
+ 	tx_beacon_cmd = (struct iwl3945_tx_beacon_cmd *)&frame->u;
+ 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
+ 
+-	tx_beacon_cmd->tx.sta_id = IWL3945_BROADCAST_ID;
++	tx_beacon_cmd->tx.sta_id = priv->hw_setting.bcast_sta_id;
+ 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+ 
+ 	frame_size = iwl3945_fill_beacon_frame(priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 2f01a49..1fe8cc4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -254,7 +254,7 @@ u8 iwl4965_hw_find_station(struct iwl4965_priv *priv, const u8 *addr)
+ 		start = IWL_STA_ID;
+ 
+ 	if (is_broadcast_ether_addr(addr))
+-		return IWL4965_BROADCAST_ID;
++		return priv->hw_setting.bcast_sta_id;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 	for (i = start; i < priv->hw_setting.max_stations; i++)
+@@ -2836,7 +2836,7 @@ unsigned int iwl4965_hw_get_beacon_cmd(struct iwl4965_priv *priv,
+ 	tx_beacon_cmd = &frame->u.beacon;
+ 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
+ 
+-	tx_beacon_cmd->tx.sta_id = IWL4965_BROADCAST_ID;
++	tx_beacon_cmd->tx.sta_id = priv->hw_setting.bcast_sta_id;
+ 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+ 
+ 	frame_size = iwl4965_fill_beacon_frame(priv,
+@@ -4436,7 +4436,7 @@ void iwl4965_add_station(struct iwl4965_priv *priv, const u8 *addr, int is_ap)
+ 	link_cmd.agg_params.agg_time_limit = cpu_to_le16(4000);
+ 
+ 	/* Update the rate scaling for control frame Tx to AP */
+-	link_cmd.sta_id = is_ap ? IWL_AP_ID : IWL4965_BROADCAST_ID;
++	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_setting.bcast_sta_id;
+ 
+ 	iwl4965_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD, sizeof(link_cmd),
+ 			 &link_cmd);
+-- 
+1.5.3.4
+
