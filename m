@@ -1,79 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755094AbYCTO6g (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:30315 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbYCKQr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 10:58:36 -0400
-Subject: Re: [PATCH/RFC] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Newton <will.newton@gmail.com>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <87a5b0800803200739v6d222afck850f221eae1edd70@mail.gmail.com> (sfid-20080320_143913_214765_488C899F)
-References: <1206023695.16475.137.camel@johannes.berg>
-	 <87a5b0800803200739v6d222afck850f221eae1edd70@mail.gmail.com>
-	 (sfid-20080320_143913_214765_488C899F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HXUuBJ2INb6D0oeDiMrA"
-Date: Thu, 20 Mar 2008 15:58:17 +0100
-Message-Id: <1206025097.16475.139.camel@johannes.berg> (sfid-20080320_145840_892072_E8E0FC1B)
+	Tue, 11 Mar 2008 12:47:58 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2928291wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 09:47:56 -0700 (PDT)
+Subject: Re: [PATCH 3/5] mac80211: replace Mk16 helper with le16_to_cpup
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1205252069.6387.52.camel@johannes.berg>
+References: <1204968187.23455.39.camel@brick>
+	 (sfid-20080308_092339_300656_E96B3B6F)  <1205252069.6387.52.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 11 Mar 2008 09:21:33 -0700
+Message-Id: <1205252493.22317.3.camel@brick> (sfid-20080311_164801_253585_9BB4366D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-03-11 at 17:14 +0100, Johannes Berg wrote:
+> On Sat, 2008-03-08 at 01:23 -0800, Harvey Harrison wrote:
+> > Opencoded byte-swapping could just use the kernel helper.
+> 
+> > +	p1k[2] = le16_to_cpup(leptr++);
+> 
+> I'm ok with this if architectures guarantee that these operations work
+> on unaligned values, but I don't think that is the case.
+> 
 
---=-HXUuBJ2INb6D0oeDiMrA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm looking into this, but I'm pretty sure this isn't right as-is.
 
+I wasn't thinking about alignment at the time, just ignore this.
 
-On Thu, 2008-03-20 at 14:39 +0000, Will Newton wrote:
-> On Thu, Mar 20, 2008 at 2:34 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->=20
-> >  +For some ethernet hardware that cannot DMA to unaligned addresses lik=
-e
-> >  +4*n+2 or non-ethernet hardware, this can be a problem, and it is then
-> >  +required to copy the incoming frame into an aligned buffer. Because t=
-his is
-> >  +unnecessary on architectures that can do unaligned accesses, the code=
- can be
-> >  +made depend on CONFIG_ARCH_CAN_UNALIGNED_ACCESS like so:
-> >  +
-> >  +#ifdef CONFIG_ARCH_CAN_UNALIGNED_ACCESS
-> >  +       skb =3D copy skb
-> >  +#else
-> >  +       skb =3D original skb
-> >  +#endif
->=20
-> Is this logic reversed?
-
-Euh, indeed, thanks. Will repost after having more comments.
-
-johannes
-
---=-HXUuBJ2INb6D0oeDiMrA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+J7iKVg1VMiehFYAQJybRAAqGr095wjFY1emELqFL2BspwuyWkX9CKW
-Hs3p/z3GdakkP0WvH8x80ZIZZSJg09ijazjOHdiqcOXGsSSIMDlK4S2dHOiswhpM
-qa9+MwBxy1wxql9YXHfMUpyesdNzQyNVZ39/PrNyMGnn6oAUNSy/lWLVmhjhTzqE
-v9GdpOrKGJuDtGaI6NoEqpMf6/jcDWA0D8CCZDUjtuBgE0HsAnQRRL4uwuT+pMrG
-Sc3CIE8gR1M+skJrxE7NOPMoeoBLc7byA4SKVzJ0a3fuIDwCSRAYsx5FIzllSUo3
-RsgO87UtmUzCn+JNwEZXL9b0f1PpyFHuVgvZ144iEcxDcQrJ5pRJaghG3g+Gm6ZD
-Fjl3F1kRenPqvjwEH8bxu3q1UA+osoXIIi8/HKCoLkVIRJmX3nPkMZgZwKHoBgR5
-x0FwEH2hoZZf/pjsJGTGCmJPeg6km+S4Kkt0aCxWUCNntmuot6Dwf844O02M8JqA
-knsigj3UDMqGvUUe4BjVTRvg4neLn4AVAxEna9T0AYhj1P0MoKLqTShO/CMeiEjo
-PVNT3XVsIEPeMzhUC7bGZiZxgdDpPuUBhZ5Z5k98Lm2aL/WMoehcbF/kr1PZRmfO
-6+m6oj3W70tSK+d2fGOQUzWH6JOH+L+bPv3M2umah4Ski6XOrffR0OLE7x1bmd6q
-zjqj3AdY7s8=
-=aVm4
------END PGP SIGNATURE-----
-
---=-HXUuBJ2INb6D0oeDiMrA--
+Harvey
 
