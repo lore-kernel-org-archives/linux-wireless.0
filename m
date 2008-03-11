@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:45147 "EHLO ms5.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259AbYCLK5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 06:57:00 -0400
-Date: Wed, 12 Mar 2008 19:57:48 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [PATCH] PS3: gelic: change the prefix of the net interface for wireless
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kay.sievers@vrfy.org,
-	sassmann@suse.de, Geoff Levand <geoffrey.levand@am.sony.com>
-In-Reply-To: <Pine.LNX.4.64.0803121125150.15905@vixen.sonytel.be>
-References: <20080312162152.0B14.40F06B3A@sm.sony.co.jp> <Pine.LNX.4.64.0803121125150.15905@vixen.sonytel.be>
-Message-Id: <20080312194039.255F.40F06B3A@sm.sony.co.jp> (sfid-20080312_105709_760474_2DBC1EAE)
+Received: from ruslug.rutgers.edu ([165.230.139.146]:45969 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbYCKVYR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 17:24:17 -0400
+Date: Tue, 11 Mar 2008 17:24:13 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Franz Apeltauer <franz.apeltauer@gmx.at>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
+Message-ID: <20080311212413.GA4810@ruslug.rutgers.edu> (sfid-20080311_212422_246934_8DDBCDDF)
+References: <47CB3B5E.4020701@gmx.at> <43e72e890803071859r2788075cp12272cad0920d2b0@mail.gmail.com> <47D5AAFC.80401@gmx.at> <200803102321.35909.IvDoorn@gmail.com> <20080310233307.GT28995@ruslug.rutgers.edu> <47D5CD59.5050400@gmx.at> <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com> <47D6E649.3010309@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47D6E649.3010309@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Wed, 12 Mar 2008 11:26:54 +0100 (CET)
-Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com> wrote:
-
-> On Wed, 12 Mar 2008, Masakazu Mokuno wrote:
-> > The gelic driver uses two net interfaces, one for ethernet and the
-> > other for wireless. They share same MAC address and use 'eth' prefix
-> > for the name.
-> > As udev uses the MAC address to check uniqueness, this is
-> > somewhat problematic.  So change the prefix of the network interface
-> > name for the wireless so that udev can have an easy way to distinguish
-> > interfaces.
+On Tue, Mar 11, 2008 at 09:06:33PM +0100, Hauke Mehrtens wrote:
+> Luis R. Rodriguez schrieb:
+> > On Mon, Mar 10, 2008 at 8:07 PM, Franz Apeltauer
+> <franz.apeltauer@gmx.at> wrote:
+> >> Luis R. Rodriguez schrieb:
+> >>
+> >>> Frankz, I generated a new tarball with this applied. You can either
+> >>  > patch your local tarball with this patch or just download the
+> >>  > tarball again.
+> >>  >
+> >>  >   Luis
+> >>  >
+> >>  > commit d4097ab3593a721fc1d99823d2442464debf7f09
+> >>  > Author: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+> >>  > Date:   Mon Mar 10 19:20:33 2008 -0400
+> >>
+> >>  Loaded the new tarball.
+> >>  It compiles fine.
+> >
+> > And it works too I hope? :)
+> >
+> >   Luis
 > 
-> Now my PS3 has `eth0' and `wlan0_rename'.
-> I assume we still need changes to udev?
+> On my system the tarball is compiling now, on Sunday it does not so,
+> with the error mentioned here.
+> 
+> It tries to find the .config for the kernel at /lib/modules/`uname
+> -r`/.config, but it is only at /lib/modules/`uname -r`/build/.config on
+> Ubuntu and Fedora systems.
 
-The patch just gives a clue to write nicer rule in udev.
-My previous fix for this issue was to add an exception to udev like:
+Fixed, you can either apply this patch or download the new tarball
+which I just regenerated.
 
---- 75-persistent-net-generator.rules.orig	2008-03-04 14:17:07.000000000 +0900
-+++ 75-persistent-net-generator.rules	2008-03-04 14:03:23.000000000 +0900
-@@ -23,6 +23,9 @@
- # ignore Xen virtual interfaces
- SUBSYSTEMS=="xen", GOTO="persistent_net_generator_end"
+	Luis
+
+diff --git a/config.mk b/config.mk
+index b9d537d..f6121e9 100644
+--- a/config.mk
++++ b/config.mk
+@@ -4,13 +4,13 @@ export
+ ## Make sure to have each variable declaration start
+ ## in the first column, no whitespace allowed.
  
-+# ignore PS3 gelic interfaces; they share a mac address
-+DRIVERS=="ps3_gelic_driver", GOTO="persistent_net_generator_end"
-+
- # read MAC address
- ENV{MATCHADDR}="$attr{address}"
+-ifeq ($(wildcard $(KLIB)/.config),)
++ifeq ($(wildcard $(KLIB_BUILD)/.config),)
+ # These will be ignored by compat autoconf
+  CONFIG_PCI=y
+  CONFIG_USB=y
+  CONFIG_PCMCIA=y
+ else
+-include $(KLIB)/.config
++include $(KLIB_BUILD)/.config
+ endif
  
-But Kay Sievers <kay.seivers@vrfy.org> told that he could add a nicer
-rule if the wireless interface has the distinct prefix like 'wlan'.  So
-I made this patch.
-
--- 
-Masakazu MOKUNO
-
+ # Wireless subsystem stuff
