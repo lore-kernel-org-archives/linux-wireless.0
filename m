@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4585 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754589AbYCaUeY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 16:34:24 -0400
-Date: Mon, 31 Mar 2008 16:05:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Bill Moss <bmoss@CLEMSON.EDU>, Daniel Drake <dsd@gentoo.org>,
-	Dan Williams <dcbw@redhat.com>, Vladimir Koutny <vlado@ksp.sk>,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: mac80211 MLME scanning - BSS list trouble
-Message-ID: <20080331200536.GA13799@tuxdriver.com> (sfid-20080331_213426_952103_78087899)
-References: <1206865999.22530.187.camel@johannes.berg>
-MIME-Version: 1.0
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:58676 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752206AbYCLVfT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 17:35:19 -0400
+Received: from c83-252-237-4.bredband.comhem.se ([83.252.237.4]:53917 helo=tippex.mynet.homeunix.org)
+	by ch-smtp02.sth.basefarm.net with esmtp (Exim 4.68)
+	(envelope-from <aeriksson@fastmail.fm>)
+	id 1JZYbW-0000zM-7g
+	for linux-wireless@vger.kernel.org; Wed, 12 Mar 2008 22:35:18 +0100
+Received: from tippex (localhost [127.0.0.1])
+	by tippex.mynet.homeunix.org (Postfix) with ESMTP id 3C1A62DC045
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2008 22:35:15 +0100 (CET)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: bulk vs. interactive bandwidth
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1206865999.22530.187.camel@johannes.berg>
+Date: Wed, 12 Mar 2008 22:35:15 +0100
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Message-Id: <20080312213515.3C1A62DC045@tippex.mynet.homeunix.org> (sfid-20080312_213524_037255_9B6BEC6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 30, 2008 at 10:33:19AM +0200, Johannes Berg wrote:
 
-> The first one is that there is no actual expiration of BSS structs. Each
-> BSS struct has a 'last_update' member that contains (in jiffies) the
-> time this item was last updated. This means that we accumulate BSS
-> information forever, but due to the 'last_update' only the last few
-> items will be returned to the user on asking for a scan result. This
-> obviously has problems since a rogue station could bombard us with fake
-> probe responses and cause us to build a huge BSS list which is never
-> again freed until the hardware is deregistered. This will need to be
-> fixed, of course.
+Hi,
 
-Assuming this was fixed, does the rest of this issue go away?
-It seems like it would.
+I have an issue which I can't really narrow down and it might be wlan related. 
+It occurs both from a couple of PCs sharing a rt2500 to the internet, and a 
+iwl3945 (no sharing) to the net.
 
-> In any case, the problem then is that last_update is updated only along
-> with the remaining information in a BSS struct, which is quite correct.
-> The question, however, is: why are beacons not allowed to override probe
-> response information? That is, why does this piece of code exist:
-> 
->         if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
->             bss->probe_resp && beacon) {
->                 /* STA mode:
->                  * Do not allow beacon to override data from Probe Response. */
->                 ieee80211_rx_bss_put(dev, bss);
->                 return;
->         }  
+The thing is that, normal sufing works ok. But, whenever there is a big 
+download going on (say grabbing a kernel tarball), the interactive performace 
+drops to pretty much nothing. Getting a prompt from ssh can take close to a 
+minute. I'm thinking tha, tperhaps, there is someting buffer related which makes 
+the wlan buffers "deeper than normal" and thus makes it hard for the 
+interactive tcp's to crate room for themselves in the transmission queues or 
+somehting.
 
-Should we consider allowing the beacon to update the info if
-last_update is old enough to keep the BSS out of the scan results?
+I can't recall seeing this phenomenon over a wired connection (with roughly 
+the same link bandwidths.)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Dows this sound at all familiar? If so, what's the cure? (I'd rather not go 
+into traffic shaping...)
+
+/Anders
+
