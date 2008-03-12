@@ -1,151 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:38069 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754960AbYCSTzC (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbYCLOoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:55:02 -0400
-Received: by ti-out-0910.google.com with SMTP id 28so278640tif.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 12:55:01 -0700 (PDT)
-Message-ID: <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com> (sfid-20080319_195600_512020_66012D22)
-Date: Tue, 18 Mar 2008 20:32:29 +0100
-From: drago01 <drago01@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB35@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221212k709f04dbx1f81cab4c724996a@mail.gmail.com>
-	 <C07C4589BE74A34981C3C3525EE1F8010338CB49@hasmsx412.ger.corp.intel.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
-	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
-	 <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-	 <47B29F63.6050605@gmail.com>
-	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
+	Wed, 12 Mar 2008 10:44:16 -0400
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <1205332288.6387.58.camel@johannes.berg> (sfid-20080312_143256_070309_3580CC5E)
+References: <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
+	 <1205310310.6387.56.camel@johannes.berg>
+	 <20080312182438.0B1F.40F06B3A@sm.sony.co.jp>
+	 <1205329351.32049.8.camel@localhost.localdomain>
+	 <1205332288.6387.58.camel@johannes.berg>
+	 (sfid-20080312_143256_070309_3580CC5E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AXQgo+RpmGBPgQNPaWG/"
+Date: Wed, 12 Mar 2008 15:43:11 +0100
+Message-Id: <1205332991.15910.0.camel@johannes.berg> (sfid-20080312_144502_579674_68C62D28)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 13, 2008 at 5:48 PM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
->
-> On Tuesday, February 12, 2008 11:42 PM, drago01  wrote:
->
->  > Tomas Winkler wrote:
->  >> On Jan 26, 2008 9:00 PM, drago01 <drago01@gmail.com> wrote:
->  >>
->  >>> On Jan 22, 2008 9:24 PM, drago01 <drago01@gmail.com> wrote:
->  >>>
->  >>>> On Jan 22, 2008 9:21 PM, Winkler, Tomas
->  > <tomas.winkler@intel.com> wrote:
->  >>>>
->  >>>>>
->  >>>>>> -----Original Message-----
->  >>>>>> From: drago01 [mailto:drago01@gmail.com]
->  >>>>>> Sent: Tuesday, January 22, 2008 10:12 PM
->  >>>>>> To: Winkler, Tomas
->  >>>>>>
->  >>>>>> Cc: ipw3945-devel; Cahill, Ben M; Zhu, Yi; linux-wireless
->  >>>>>> Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
->  >>>>>>
->  >>>>>> On Jan 22, 2008 9:07 PM, Winkler, Tomas <tomas.winkler@intel.com>
->  >>>>>>
->  >>>>> wrote:
->  >>>>>
->  >>>>>>> I believe it's delaying uCode load to mac_start - still need to
->  >>>>>>> be polished.
->  >>>>>>>
->  >>>>>> ok, thx for the quick reply.
->  >>>>>> If you have any potential fixes I would be happy to test them ;)
->  >>>>>>
->  >>>>> Can you get me the sequence it is happening? RF kill switch is off
->  >>>>> before you power up the laptop or after, during association or in
->  >>>>> unassociated state..etc Thanks
->  >>>>>
->  >>>> I boot with rf kill off = device on
->  >>>> acciotate using NM
->  >>>> kill the card by pressing the rfkill (ie. setting it to on)
->  >>>> card is dead (like described in my first mail), until I relaod the
->  >>>> module the rfkill switch  does not have any effect at this time.
->  >>>>
->  >>>>
->  >>> OK, I investigated a bit and it seems to be the "disable interrupt
->  >>> when device goes down" is the problem.
->  >>> In my case NetworkManager detected the rfkill and brought the device
->  >>> down, which caused the interrupt to be disabled. Now after pressing
->  >>> the rfkill again nothing happend. But if I bring the device back up
->  >>> the interrupt is enabled again and rfkill and the card is back to
->  >>> live. So in short disabling the interrupt in mac_stop breaks the hw
->  >>> rfkill while the interface is down.
->  >>>
->  >>>
->  >>
->  >> Thanks for investigating this, still didn't have to time to dig into
->  >> it.
->  >>
->  >>
->  > ping?
->
->  We are working on this.
->
->  Reinette
->
 
-OK, it seems not to be the irq (only) seems to be something else too.
-I tryed the attached patch (not to disable the irq in down when hw
-rfkill is set) but it was still the same.
-The driver does not update the sysfs file when the rfkill is back off
-(device on), so hal and NM still think that the rfkill is on while its
-off.
+--=-AXQgo+RpmGBPgQNPaWG/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Patch (hack) tested:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 093b863..70e5e25 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6545,6 +6545,9 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
+On Wed, 2008-03-12 at 15:31 +0100, Johannes Berg wrote:
+> > > >           Cell 02 - Address: 00:0A:79:A5:D2:E2
+> > > >                     ESSID:""
+> > > >                     Channel:0
+> > > >                     Encryption key:on
+> > > >                     Mode:Master
+> > > >                     Signal level=3D100/100 =20
+> >=20
+> > Ewww.  You're 100% correct; we certainly shouldn't be sending a scan
+> > result like this to userspace.  Therefore:
+>=20
+> I agree. Can you, however, tell whether the firmware has been fixed and
+> only skip these for broken firmware?
 
- 	IWL_DEBUG_MAC80211("enter\n");
+Oh, never mind, the patch will already do that. I agree with that
+completely :)
 
-+	if(!atomic_read(&priv->pci_dev->enable_cnt))
-+		goto device_open;
-+
- 	if (pci_enable_device(priv->pci_dev)) {
- 		IWL_ERROR("Fail to pci_enable_device\n");
- 		return -ENODEV;
-@@ -6559,6 +6562,7 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
- 		goto out_disable_msi;
- 	}
+johannes
 
-+device_open:
- 	/* we should be verifying the device is ready to be opened */
- 	mutex_lock(&priv->mutex);
+--=-AXQgo+RpmGBPgQNPaWG/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-@@ -6640,11 +6644,13 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
- 	iwl3945_down(priv);
+iQIVAwUAR9fr/qVg1VMiehFYAQKcbw/+KOt3sLR0xnWWIYTjDsaREHz+KqkyTefb
+y63wlnH4A7Zr7/g2FEfkofRtDyOodIa5nruk6HO4nl3XgaKSv/CpUVbAEsNvQefK
+RtJSaTX0q7sQxSi8cYiNb6FI3y94/IRvhL0wD7xWfKUWbrJjP9OIeTzQ2V2H1hpX
+PV6X7WZAlAf0jsl3j4GetOtrnsLGLnQgY9rmCnTKr/iAHl5le+rY6bnUi0FAziAY
+aYeRXgktgBgeyas2AqqaspcP80S6BvvGkz1i2eCpcS10aDnFV4Wi9dqaAsJdnvm9
+QJcTzPVrJjFJ3McdUVsDLdrmq/JYMWHBS2vUmtMgcGqDuNNnMJSpeJhctCv7k5Uy
+emOqC/wH5CzZ01eXUXCEmTZix+GtyvKizh0oeBBq+yh9b86M89WZqzpyb1d2KmgR
+np2Dem+7cZrBNvGosVMeQcX7o05HDPBbC4KGW4xGNq5Auosn/2D2pjEmBTabsvAe
+nlbm0YhnRyjlSS4IfB6zKtIvUCr6idqWUEsmxhXkH/KCMrEj7UcN4wzHalK5YGyU
+L9EspGPUFoKRMC8kdVX+lpRbQM2n5GzlDGZ2I8VALYlssXsUQGj9TtzhCuxaXfvg
+plsmlFCeNsvMvQc2XjvmzfgF1cAy0+vNuaePJf3rh/Erqw1urkCsx5SFiFP844uC
+Zc+0wm53SU8=
+=dfRy
+-----END PGP SIGNATURE-----
 
--	flush_workqueue(priv->workqueue);
--	free_irq(priv->pci_dev->irq, priv);
--	pci_disable_msi(priv->pci_dev);
--	pci_save_state(priv->pci_dev);
--	pci_disable_device(priv->pci_dev);
-+	if(!test_bit(STATUS_RF_KILL_HW, &priv->status) &&
-!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
-+		flush_workqueue(priv->workqueue);
-+		free_irq(priv->pci_dev->irq, priv);
-+		pci_disable_msi(priv->pci_dev);
-+		pci_save_state(priv->pci_dev);
-+		pci_disable_device(priv->pci_dev);
-+	}
+--=-AXQgo+RpmGBPgQNPaWG/--
 
- 	IWL_DEBUG_MAC80211("leave\n");
- }
