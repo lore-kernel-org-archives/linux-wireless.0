@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46663 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4420 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753017AbYCES0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 13:26:32 -0500
-Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
-From: Dan Williams <dcbw@redhat.com>
-To: Joonwoo Park <joonwpark81@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
-References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
-Content-Type: text/plain
-Date: Wed, 05 Mar 2008 13:22:31 -0500
-Message-Id: <1204741351.9378.11.camel@localhost.localdomain> (sfid-20080305_182636_537204_0260252D)
-Mime-Version: 1.0
+	id S1751944AbYCLBXH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 21:23:07 -0400
+Date: Tue, 11 Mar 2008 20:47:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/6] iwlwifi driver updates
+Message-ID: <20080312004752.GB11612@tuxdriver.com> (sfid-20080312_012312_951560_75B4AE15)
+References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-05 at 18:40 +0900, Joonwoo Park wrote:
-> resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
+On Tue, Mar 11, 2008 at 04:17:14PM -0700, Reinette Chatre wrote:
+> Series contains some fixes as well as changes to move to a shared library
+> design.
 > 
-> The function ieee80211_ioctl_siwencode shouldn't be called if
-> authentication process is not completed.
-> This patch makes the ieee80211_ioctl_siwessid to wait for authentication
-> is completed.
-> 
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> ---
->  net/mac80211/ieee80211_ioctl.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-> index 5024d37..55a29f6 100644
-> --- a/net/mac80211/ieee80211_ioctl.c
-> +++ b/net/mac80211/ieee80211_ioctl.c
-> @@ -391,6 +391,7 @@ static int ieee80211_ioctl_siwessid(struct net_device *dev,
->  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
->  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
->  		int ret;
-> +		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
->  		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
->  			if (len > IEEE80211_MAX_SSID_LEN)
->  				return -EINVAL;
-> @@ -405,8 +406,15 @@ static int ieee80211_ioctl_siwessid(struct net_device *dev,
->  		ret = ieee80211_sta_set_ssid(dev, ssid, len);
->  		if (ret)
->  			return ret;
-> +
-> +		set_bit(IEEE80211_STA_REQ_RUN, &sdata->u.sta.request);
-> +
->  		ieee80211_sta_req_auth(dev, &sdata->u.sta);
-> -		return 0;
-> +
-> +		ret = wait_event_interruptible_timeout(wq,
-> +			!test_bit(IEEE80211_STA_REQ_RUN, &sdata->u.sta.request),
-> +				HZ);
-> +		return (ret == HZ) ? 0 : ret;
+> [PATCH 1/6] iwlwifi: fix bug to show hidden APs during scan
+> [PATCH 2/6] iwlwifi: Use sta_bcast_id variable instead of BROADCAST_ID constant
+> [PATCH 3/6] iwlwifi: update copyright year
+> [PATCH 4/6] iwlwifi: Use eeprom form iwlcore
+> [PATCH 5/6] iwlwifi: Fix endianity in debug print
+> [PATCH 6/6] iwlwifi: change rate number to a constant
 
-NAK; setting the SSID should never block for long; it _certainly_
-shouldn't block waiting on other WEXT calls.  The association process
-needs to be asynchronous.
+The LED support disappeared again?!?!?
 
-Dan
+Surely it is time to get _something_ in place to support LEDs on
+these devices?
 
->  	}
->  
->  	if (sdata->vif.type == IEEE80211_IF_TYPE_AP) {
-
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
