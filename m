@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from element.ksp.sk ([158.195.16.154]:56117 "EHLO element.ksp.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751992AbYCaPFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 11:05:16 -0400
-Message-ID: <47F0FDA6.3000609@work.ksp.sk> (sfid-20080331_160527_968711_C78127FB)
-Date: Mon, 31 Mar 2008 17:05:10 +0200
-From: Vladimir Koutny <vlado@work.ksp.sk>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:35366 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750875AbYCLK05 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 06:26:57 -0400
+Date: Wed, 12 Mar 2008 11:26:54 +0100 (CET)
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kay.sievers@vrfy.org,
+	sassmann@suse.de, Geoff Levand <geoffrey.levand@am.sony.com>,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH] PS3: gelic: change the prefix of the net interface for
+ wireless
+In-Reply-To: <20080312162152.0B14.40F06B3A@sm.sony.co.jp>
+Message-ID: <Pine.LNX.4.64.0803121125150.15905@vixen.sonytel.be> (sfid-20080312_102706_056172_1C18D432)
+References: <20080312162152.0B14.40F06B3A@sm.sony.co.jp>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH 2/2] mac80211: use short_preamble mode from capability if
- ERP IE not present
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-506907180-1205317614=:15905"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When associating to a b-only AP where there is no ERP IE, short preamble
-mode is left at previous state (probably also protection mode). In this
-case, disable protection and use short preamble mode as specified in
-capability field. The same is done if capability field is changed on-the-fly.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
+---584349381-506907180-1205317614=:15905
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
----
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 6fb179a..2b49852 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -353,14 +353,12 @@ static void ieee80211_sta_wmm_params(struct net_device *dev,
- 	}
- }
+On Wed, 12 Mar 2008, Masakazu Mokuno wrote:
+> The gelic driver uses two net interfaces, one for ethernet and the
+> other for wireless. They share same MAC address and use 'eth' prefix
+> for the name.
+> As udev uses the MAC address to check uniqueness, this is
+> somewhat problematic.  So change the prefix of the network interface
+> name for the wireless so that udev can have an easy way to distinguish
+> interfaces.
 
--
--static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
--				   u8 erp_value)
-+static u32 ieee80211_handle_protect_preamb(struct ieee80211_sub_if_data *sdata,
-+					   bool use_protection,
-+					   bool use_short_preamble)
- {
- 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
- 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
--	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
--	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
- 	DECLARE_MAC_BUF(mac);
- 	u32 changed = 0;
+Now my PS3 has `eth0' and `wlan0_rename'.
+I assume we still need changes to udev?
 
-@@ -391,6 +389,32 @@ static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
- 	return changed;
- }
+With kind regards,
 
-+static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
-+				   u8 erp_value)
-+{
-+	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
-+	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
-+
-+	return ieee80211_handle_protect_preamb(sdata,
-+			use_protection, use_short_preamble);
-+}
-+
-+static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-+					   struct ieee80211_sta_bss *bss)
-+{
-+	u32 changed = 0;
-+
-+	if (bss->has_erp_value)
-+		changed |= ieee80211_handle_erp_ie(sdata, bss->erp_value);
-+	else {
-+		u16 capab = bss->capability;
-+		changed |= ieee80211_handle_protect_preamb(sdata, false,
-+				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
-+	}
-+
-+	return changed;
-+}
-+
- int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
- 				   struct ieee80211_ht_info *ht_info)
- {
-@@ -509,9 +533,7 @@ static void ieee80211_set_associated(struct net_device *dev,
- 					   local->hw.conf.channel->center_freq,
- 					   ifsta->ssid, ifsta->ssid_len);
- 		if (bss) {
--			if (bss->has_erp_value)
--				changed |= ieee80211_handle_erp_ie(
--						sdata, bss->erp_value);
-+			changed |= ieee80211_handle_bss_capability(sdata, bss);
- 			ieee80211_rx_bss_put(dev, bss);
- 		}
+Geert Uytterhoeven
+Software Architect
 
-@@ -2756,6 +2778,11 @@ static void ieee80211_rx_mgmt_beacon(struct net_device *dev,
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
- 	if (elems.erp_info && elems.erp_info_len >= 1)
- 		changed |= ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
-+	else {
-+		u16 capab = le16_to_cpu(mgmt->u.beacon.capab_info);
-+		changed |= ieee80211_handle_protect_preamb(sdata, false,
-+				(capab & WLAN_CAPABILITY_SHORT_PREAMBLE) != 0);
-+	}
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
 
- 	if (elems.ht_cap_elem && elems.ht_info_elem &&
- 	    elems.wmm_param && local->ops->conf_ht &&
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-506907180-1205317614=:15905--
