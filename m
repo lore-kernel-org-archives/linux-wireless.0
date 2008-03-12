@@ -1,129 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2334 "EHLO ra.tuxdriver.com"
+Received: from ms6.Sony.CO.JP ([211.125.136.204]:56277 "EHLO ms6.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757511AbYC0VUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 17:20:34 -0400
-Date: Thu, 27 Mar 2008 16:55:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-2.6.26 2008-03-27
-Message-ID: <20080327205525.GB17267@tuxdriver.com> (sfid-20080327_212037_848670_7AD923B3)
+	id S1751086AbYCLK1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 06:27:25 -0400
+Date: Wed, 12 Mar 2008 19:26:38 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <1205310310.6387.56.camel@johannes.berg>
+References: <20080312102148.0B08.40F06B3A@sm.sony.co.jp> <1205310310.6387.56.camel@johannes.berg>
+Message-Id: <20080312182438.0B1F.40F06B3A@sm.sony.co.jp> (sfid-20080312_102727_266285_B7626FE7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-Here is another quick round of patches intended for 2.6.26.  Included
-are libertas and iwlwifi updates, including the long-awaited LED support
-for the iwlwifi drivers.  Also included is the fix for the
-ieee80211_get_channel symbol conflict currently in the net-2.6.26 tree.
+On Wed, 12 Mar 2008 09:25:10 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Please let me know if there are problems!
+> 
+> > > Does this problem apply to probe responses as well?  (Do probe
+> > > responses from hidden SSID APs still exclude the SSID?  I would
+> > > guess not.)
+> > 
+> > There has been a problem in parsing IEs, so if the received probe
+> > responses include zero length IEs, they also suffer this bug.
+> > 
+> > > As long as you can still associate w/ hidden SSID APs, I don't see
+> > > a big problem.  Even if you can't, no information for those APs is
+> > > probably better than bad information, no?
+> > 
+> > I was anxious that the userland apps or the users may get confused.  Any
+> > other thing harmful is not found.
+> > OK, I withdraw this patch.
+> 
+> I think John actually meant that it would be better to have the patch
+> in. How does a "bad" scan result look like?
 
-Thanks,
+Usually the zero length IE, the SSID element, is the first one of IE
+list, all information in the successor elements is lost. What we can see
+is bssid.
 
-John
+The current firmware gives the following result.  The Corega (00:0A:79)
+AP was the one which sent zero length SSID if it was in hidden SSID mode.
 
----
+> iwlist wlan0 scanning
+> wlan0     Scan completed :
+>           Cell 01 - Address: 00:06:25:C6:B9:A7
+>                     ESSID:"planexuser"
+>                     Channel=1
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+>                               11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+>                               48 Mb/s; 54 Mb/s
+>                     Encryption key:on
+>                     Mode:Master
+>                     Signal level=100/100  
+>                     IE: IEEE 802.11i/WPA2 Version 1
+>                         Group Cipher : CCMP
+>                         Pairwise Ciphers (1) : CCMP
+>                         Authentication Suites (1) : PSK
+>           Cell 02 - Address: 00:0A:79:A5:D2:E2
+>                     ESSID:""
+>                     Channel:0
+>                     Encryption key:on
+>                     Mode:Master
+>                     Signal level=100/100  
 
-Individual patches are available here:
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26/
+With fixed firmware:
 
----
+> wlan0     Scan completed :
+>           Cell 01 - Address: 00:06:25:C6:B9:A7
+>                     ESSID:"planexuser"
+>                     Channel=1
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+>                               11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+>                               48 Mb/s; 54 Mb/s
+>                     Encryption key:on
+>                     Mode:Master
+>                     Signal level=100/100  
+>                     IE: IEEE 802.11i/WPA2 Version 1
+>                         Group Cipher : CCMP
+>                         Pairwise Ciphers (1) : CCMP
+>                         Authentication Suites (1) : PSK
+>           Cell 02 - Address: 00:0A:79:A5:D2:E2
+>                     ESSID:""
+>                     Channel:1
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+>                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+>                               48 Mb/s; 54 Mb/s
+>                     Encryption key:on
+>                     Mode:Master
+>                     Signal level=100/100  
+>                     IE: IEEE 802.11i/WPA2 Version 1
+>                         Group Cipher : CCMP
+>                         Pairwise Ciphers (1) : CCMP
+>                         Authentication Suites (1) : PSK
+> 
 
-The following changes since commit 5983a3dff0036d7ef6a2139473564f4f3e7b2a11:
-  Benjamin Thery (1):
-        [NETNS][IPV6] flowlabels - make proc per namespace
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.26.git master
-
-Emmanuel Grumbach (1):
-      iwlwifi: allow a default callback for ASYNC host commands
-
-Holger Schurig (4):
-      libertas: kill useless #define LBS_MONITOR_OFF 0
-      libertas: remove CMD_802_11_PWR_CFG
-      libertas: the compact flash driver is no longer experimental
-      libertas: reduce debug output
-
-Johannes Berg (2):
-      cfg80211: don't export ieee80211_get_channel
-      mac80211: reorder fields to make some structures smaller
-
-John W. Linville (3):
-      mac80211: silently accept deletion of non-existant key
-      iwlwifi: do not register bands with no supported channels
-      prism54: correct thinko in "prism54: Convert stats_sem in a mutex"
-
-Mohamed Abbas (1):
-      iwlwifi: Add led support
-
-Ron Rindjunsky (2):
-      mac80211: fix wrong Rx A-MPDU control via debugfs
-      mac80211: A-MPDU MLME use dynamic allocation
-
-Tomas Winkler (3):
-      iwlwifi: rename iwl-4965-io.h to iwl-io.h
-      iwlwifi: improve NIC i/o debug prints information
-      iwlwifi: iwl_priv - clean up in types of members
-
- drivers/net/wireless/Kconfig                |    2 +-
- drivers/net/wireless/iwlwifi/Kconfig        |   20 ++
- drivers/net/wireless/iwlwifi/Makefile       |   10 +
- drivers/net/wireless/iwlwifi/iwl-3945-led.c |  433 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-3945-led.h |   73 +++++
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 +
- drivers/net/wireless/iwlwifi/iwl-3945.h     |   17 +-
- drivers/net/wireless/iwlwifi/iwl-4965-io.h  |  426 -------------------------
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |  221 +++++++-------
- drivers/net/wireless/iwlwifi/iwl-4965.h     |   17 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h      |    6 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    8 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   26 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |   30 ++-
- drivers/net/wireless/iwlwifi/iwl-io.h       |  429 +++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-led.c      |  447 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-led.h      |   82 +++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   22 ++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |  253 ++++++++-------
- drivers/net/wireless/libertas/cmd.c         |   14 +-
- drivers/net/wireless/libertas/cmdresp.c     |   12 +-
- drivers/net/wireless/libertas/defs.h        |   10 +-
- drivers/net/wireless/libertas/host.h        |    1 -
- drivers/net/wireless/libertas/hostcmd.h     |    9 -
- drivers/net/wireless/libertas/main.c        |   12 +-
- drivers/net/wireless/libertas/rx.c          |    2 +-
- drivers/net/wireless/libertas/tx.c          |    5 +-
- drivers/net/wireless/libertas/wext.h        |    2 -
- drivers/net/wireless/prism54/isl_ioctl.c    |    2 +-
- include/net/wireless.h                      |   18 +-
- net/mac80211/debugfs_sta.c                  |   19 +-
- net/mac80211/ieee80211.c                    |   64 +++--
- net/mac80211/ieee80211_i.h                  |   50 ++--
- net/mac80211/ieee80211_ioctl.c              |    3 -
- net/mac80211/ieee80211_sta.c                |   84 ++++--
- net/mac80211/rx.c                           |   10 +-
- net/mac80211/sta_info.c                     |   30 +-
- net/mac80211/sta_info.h                     |   49 ++--
- net/wireless/util.c                         |    6 +-
- 40 files changed, 2052 insertions(+), 880 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-4965-io.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-io.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-led.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-led.h
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26-2008-03-27.patch.bz2
 -- 
-John W. Linville
-linville@tuxdriver.com
+Masakazu MOKUNO
+
