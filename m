@@ -1,67 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971AbYCFRn6 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:19371 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471AbYCLPIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 12:43:58 -0500
-Subject: Re: [RFC] mac80211: handling Qdisc issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com
-In-Reply-To: <200803061830.32316.mb@bu3sch.de> (sfid-20080306_173105_199273_D1060F8D)
-References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
-	 <200803061815.31398.mb@bu3sch.de>
-	 <1204824008.25502.123.camel@johannes.berg>
-	 <200803061830.32316.mb@bu3sch.de> (sfid-20080306_173105_199273_D1060F8D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pan7+cUyI1hPeFPqpl+k"
-Date: Thu, 06 Mar 2008 18:42:49 +0100
-Message-Id: <1204825369.25502.125.camel@johannes.berg> (sfid-20080306_174424_009905_AC3D26D3)
-Mime-Version: 1.0
+	Wed, 12 Mar 2008 11:08:39 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: libertas: convert CMD_MAC_CONTROL to a direct command
+Date: Wed, 12 Mar 2008 16:05:40 +0100
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803121605.41013.hs4233@mail.mn-solutions.de> (sfid-20080312_150843_724880_5D303AD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+convert CMD_MAC_CONTROL to a direct command
 
---=-pan7+cUyI1hPeFPqpl+k
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-
-> > That's my old patch, I think Ron doesn't know anything about b43 :) And
-> > my patch was based before your QoS support patches.
->=20
-> Ah ok. You can just add this #ifdef to the already existing
-> dynamic condition on b43_modparam_qos in the new queue mapping function.
-
-Yeah, but I wish we didn't actually need the #ifdef in all drivers.
-Since CONFIG_NETDEVICES_MULTIQUEUE is dirt cheap I think we should just
-make mac80211 depend on it, I think we'll end up requiring
-CONFIG_NET_SCHED too.
-
-
-johannes
-
---=-pan7+cUyI1hPeFPqpl+k
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9AtGKVg1VMiehFYAQJK2A//RX9Bf7NAlvnMiuu8w+nRm9SUPdnZFToL
-TiijqQaO5zHQo6h7tQCuvysPxewML12HGNl/5BeqdAucfEf4ZDuFXE3zKYX7yYst
-O+8Rl/EKsch8fI77zUSzrI/VXdt1zBSYpC2K2wlJQ1EnoifHcZInwaHMD157HahV
-jQGDuVxSIo0/aRv/q1H0rMcmaPd6Ef512xtZpNlCUB5VYPYXWmb8BSt0HJVhnZkt
-lDEq1cxEEsFS7egh6+eoaom+LpnBMFjd/TGbAENff+TINzxxIC3vXXvOWcJnT07B
-Y9Zx4ZPCBXSqWBgkd1ckFewFsWk4pJr0s0IbGvfRndPFRPh/IitDz7JqokH2NASI
-A+NxY+RwXYQfugLabux6577B4ckg1qDLB/eVAMs5o+SDe6Jl+8DjA2AsGNKZqvE9
-p0vEQSJWWMiNwWf0g/n1DT+BDaa/lYRrswANhikvGcQGH4D2WFr18OSizpGBFvw+
-Fn1lf5menkio3tHhv+f9/jzaIk7nq3xOu9thol2czpzEKD0akMR0J98HIUhnE9iv
-3F67xoUlC5ar8zqsmlS+omEZBkV8E8ZcIIP0UhBPQQ9W5w4FOc2/A/O4KwS7nmGm
-HNJqwXrsmKuCycM2qf2LCR6rKbNW7m2SveSDALfSLns2OpmYXWWEpJFnOBXo2/6d
-C8Uj4GFMCRQ=
-=R/Ll
------END PGP SIGNATURE-----
-
---=-pan7+cUyI1hPeFPqpl+k--
-
+Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:51:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:56:12.000000000 +0100
+@@ -1200,24 +1200,6 @@ static void lbs_submit_command(struct lb
+ 	lbs_deb_leave(LBS_DEB_HOST);
+ }
+ 
+-static int lbs_cmd_mac_control(struct lbs_private *priv,
+-				struct cmd_ds_command *cmd)
+-{
+-	struct cmd_ds_mac_control *mac = &cmd->params.macctrl;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-
+-	cmd->command = cpu_to_le16(CMD_MAC_CONTROL);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_mac_control) + S_DS_GEN);
+-	mac->action = cpu_to_le16(priv->currentpacketfilter);
+-
+-	lbs_deb_cmd("MAC_CONTROL: action 0x%04x, size %d\n",
+-		    le16_to_cpu(mac->action), le16_to_cpu(cmd->size));
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ /**
+  *  This function inserts command node to cmdfreeq
+  *  after cleans it. Requires priv->driver_lock held.
+@@ -1307,12 +1289,15 @@ int lbs_set_radio_control(struct lbs_pri
+ int lbs_set_mac_packet_filter(struct lbs_private *priv)
+ {
+ 	int ret = 0;
++	struct cmd_ds_mac_control cmd;
+ 
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 
+-	/* Send MAC control command to station */
+-	ret = lbs_prepare_and_send_command(priv,
+-				    CMD_MAC_CONTROL, 0, 0, 0, NULL);
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(priv->currentpacketfilter);
++	cmd.reserved = 0;
++
++	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+ 	return ret;
+@@ -1382,10 +1367,6 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = lbs_cmd_802_11_ps_mode(priv, cmdptr, cmd_action);
+ 		break;
+ 
+-	case CMD_MAC_CONTROL:
+-		ret = lbs_cmd_mac_control(priv, cmdptr);
+-		break;
+-
+ 	case CMD_802_11_ASSOCIATE:
+ 	case CMD_802_11_REASSOCIATE:
+ 		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
+Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:51:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:55:30.000000000 +0100
+@@ -394,7 +394,6 @@ static inline int handle_cmd_response(st
+ 		break;
+ 
+ 	case CMD_RET(CMD_MAC_MULTICAST_ADR):
+-	case CMD_RET(CMD_MAC_CONTROL):
+ 	case CMD_RET(CMD_802_11_RESET):
+ 	case CMD_RET(CMD_802_11_AUTHENTICATE):
+ 	case CMD_RET(CMD_802_11_BEACON_STOP):
+Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:51:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:55:30.000000000 +0100
+@@ -211,8 +211,9 @@ struct cmd_ds_802_11_get_log {
+ };
+ 
+ struct cmd_ds_mac_control {
++	struct cmd_header hdr;
+ 	__le16 action;
+-	__le16 reserved;
++	u16 reserved;
+ };
+ 
+ struct cmd_ds_mac_multicast_adr {
+@@ -695,7 +696,6 @@ struct cmd_ds_command {
+ 	/* command Body */
+ 	union {
+ 		struct cmd_ds_802_11_ps_mode psmode;
+-		struct cmd_ds_mac_control macctrl;
+ 		struct cmd_ds_802_11_associate associate;
+ 		struct cmd_ds_802_11_deauthenticate deauth;
+ 		struct cmd_ds_802_11_ad_hoc_start ads;
