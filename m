@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6676 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S939026AbYCSXpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 19:45:03 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: prevent tuning during scanning
-Date: Wed, 19 Mar 2008 16:43:21 -0700
-Message-Id: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_234534_228497_EC4DD4E8)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53479 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbYCLOcs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 10:32:48 -0400
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <1205329351.32049.8.camel@localhost.localdomain>
+References: <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
+	 <1205310310.6387.56.camel@johannes.berg>
+	 <20080312182438.0B1F.40F06B3A@sm.sony.co.jp>
+	 <1205329351.32049.8.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9W97beiP99GOcA2OHURW"
+Date: Wed, 12 Mar 2008 15:31:28 +0100
+Message-Id: <1205332288.6387.58.camel@johannes.berg> (sfid-20080312_143256_070309_3580CC5E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-Postpone calling ieee80211_hw_config if hardware scanning is active.
-This is similar to solution for software scanning where channel setting
-is delayed until scan complete.
+--=-9W97beiP99GOcA2OHURW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- net/mac80211/ieee80211_ioctl.c |    2 +-
- net/mac80211/ieee80211_sta.c   |    3 +++
- 2 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 1d91575..83b79c9 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -308,7 +308,7 @@ int ieee80211_set_freq(struct ieee80211_local *local, int freqMHz)
- 	}
- 
- 	if (set) {
--		if (local->sta_sw_scanning)
-+		if (local->sta_sw_scanning || local->sta_hw_scanning)
- 			ret = 0;
- 		else
- 			ret = ieee80211_hw_config(local);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 4255ec4..1e9650e 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3609,6 +3609,9 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 
- 	if (local->sta_hw_scanning) {
- 		local->sta_hw_scanning = 0;
-+		if (ieee80211_hw_config(local))
-+			printk(KERN_DEBUG "%s: failed to restore operational "
-+			       "channel after scan\n", dev->name);
- 		/* Restart STA timer for HW scan case */
- 		rcu_read_lock();
- 		list_for_each_entry_rcu(sdata, &local->interfaces, list)
--- 
-1.5.3.4
+> > >           Cell 02 - Address: 00:0A:79:A5:D2:E2
+> > >                     ESSID:""
+> > >                     Channel:0
+> > >                     Encryption key:on
+> > >                     Mode:Master
+> > >                     Signal level=3D100/100 =20
+>=20
+> Ewww.  You're 100% correct; we certainly shouldn't be sending a scan
+> result like this to userspace.  Therefore:
+
+I agree. Can you, however, tell whether the firmware has been fixed and
+only skip these for broken firmware?
+
+johannes
+
+--=-9W97beiP99GOcA2OHURW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR9fpP6Vg1VMiehFYAQK9ig/+ICwAed1c+9oes0tlhenkeQRFMPfsm/QX
+5P8askZRLd9MUdIAHHRBH2ugrBRYoaGqqXhpdqPItHMnpF2hthVu44N7ULbRrYY7
+Qt9VNcu6QbIqnkJIdjnCQD+FocNer20GitmeKzNR3+Lf9p8MRb4mIw5gssoD7scG
+l+vv+ImcHtM5ltFhNXO545qCosvl64u/b25bnt0BJ7RiutlzqpEyZP1s90Aq7ibu
+8FeCBBB+6tAlLu+XJnztcqXYM6uHCR8yqZp1MMr1vG9k6/VoCExDDkmxmoQbQu4I
+ChPT4Lg+uBNgWzJCwEEld1WiUue+7CksX8BKG+zn+LeTaWcystxygfVDvz4csVq3
+SbxqiOvA3EJ8tcFsqsmgFWhBDG0a9Y3lpRl6ipmRsP/5KSOQTfb1MoNbJYn4xjWu
+svYNSW+/Z2Pw+GssEyFg89RCDn9hyp72FZ8wmqaj+2PSI5rykQFVYbYfepbt5PBZ
+Lbya55QnoK+UDbNIUaaXmfj0c3kp88K/GIYcYn5JU1baDCJ7AWRoWoSpildYAc5b
+3KGs/85W4vy0oGpuC/9yrFru0rI3tWucfW3bKrHVuzjkJQBzNmUMuMvElks+Fezf
+Re/PnXU5A6+t2r9bJnComTSX+KX+EXL7YMSY33mRVE4I81mb+QsRwNYFvWCSRPDN
+Uo1LUnBzaQ4=
+=VDaT
+-----END PGP SIGNATURE-----
+
+--=-9W97beiP99GOcA2OHURW--
 
