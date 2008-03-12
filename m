@@ -1,126 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:24940 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbYCQTMs (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53316 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbYCLI0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 15:12:48 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so6513281wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 12:12:47 -0700 (PDT)
-Message-ID: <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com> (sfid-20080317_191251_410798_1F966AFB)
-Date: Mon, 17 Mar 2008 21:12:47 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
-Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205761758.1614.79.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205591906.15910.44.camel@johannes.berg>
-	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
-	 <1205747912.1614.19.camel@johannes.berg>
-	 <1ba2fa240803170320i4805e055ofebbbd9928a59354@mail.gmail.com>
-	 <1205751455.1614.25.camel@johannes.berg>
-	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
-	 <1205758276.1614.45.camel@johannes.berg>
-	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
-	 <1205761758.1614.79.camel@johannes.berg>
+	Wed, 12 Mar 2008 04:26:35 -0400
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
+References: <1205254237.8774.0.camel@localhost.localdomain>
+	 <20080311171024.GA18562@tuxdriver.com>
+	 <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R7jApoHaL8pBD2oJNceg"
+Date: Wed, 12 Mar 2008 09:25:10 +0100
+Message-Id: <1205310310.6387.56.camel@johannes.berg> (sfid-20080312_082639_900284_882B8D6C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  >
->  > Isn't if on integer faster then comparing 6 bytes?
->
->  Probably. Does it matter though? Setting keys isn't going to be
->  performance critical in any way.
 
-Yes but at least you do IF on something that is real not hacking with address.
->
->  > >  Is that really done though? I mean, does wpa_supplicant not also use
->  > >  encodeext for WEP keys?
->  > >
->  > Unfortunately yes.
->
->  So that doesn't really help us either way, no?
-
-What is happening in case of static WEP is that IW_AUTH_CIPHER_NONE
-IW_ENCODE_ALG_WEP are set.
-Which is enough.
-
->
->  > First of all we don't need 4 keys per station but for the whole
->  > system.
->
->  Not sure I understand this. You need pairwise (per-station) keys as well
->  as four default keys, no?
-
-You need only one unicast key for pairwise key.  4 keys are used only
-for static WEP key.
-For pairwise/dynamic WEP and TKIP you use key index in the packet but
-it changes only when supplicant change the key it self. You don't have
-the key alive in driver.
+--=-R7jApoHaL8pBD2oJNceg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> > Does this problem apply to probe responses as well?  (Do probe
+> > responses from hidden SSID APs still exclude the SSID?  I would
+> > guess not.)
+>=20
+> There has been a problem in parsing IEs, so if the received probe
+> responses include zero length IEs, they also suffer this bug.
+>=20
+> > As long as you can still associate w/ hidden SSID APs, I don't see
+> > a big problem.  Even if you can't, no information for those APs is
+> > probably better than bad information, no?
+>=20
+> I was anxious that the userland apps or the users may get confused.  Any
+> other thing harmful is not found.
+> OK, I withdraw this patch.
 
->
->  > Even in AP mode with multiple SSID meaning multiple security
->  > setting you cannot distinguish between networks in static WEP key
->  > setting so 4 is enough.
->
->  Not sure I get what you're thinking here.
+I think John actually meant that it would be better to have the patch
+in. How does a "bad" scan result look like?
 
-BSS defines security setting which  defined by key management for
-pairwise and group key + cipher method for both .
-You can run multiple SSIDs over single single BSSID. This is done
-using VLANs So you can maintain multiple security settings in for one
-AP.  However this is not possible when using static WEP since the key
-is global and the key is not attached to any address.
+johannes
 
-There are more details into it I'm sorry if I'm not 100 clear here.
-The bottom line is that you don't need more 4 WEP keys both in AP and
-station mod. Same you need to maintain only one pairwise key for
-station both in AP and STA mode. In AP mode you need to maintain also
-one group key for each station because of the case of multiple SSIDs.
+--=-R7jApoHaL8pBD2oJNceg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
->
->  > Beside that you need place holder for group key. They might be
->  > multiple groups key in case of multiple SSIDs in AP mode, iwlwifi
->  > doesn't support it in HW but in general it is possible.
->
->  Well, no, because we can add multiple keys with a zeroed MAC address,
->  since we have the local MAC address in there as well. Also, in an AP,
->  these are only used for TX so it doesn't matter since mac80211 does the
->  key selection completely on its own.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-See above. anyhow still don't like the trick with invalid address.
+iQIVAwUAR9eTZKVg1VMiehFYAQIKZQ/9HOTKoxDMxWIwXUR80slXjo8R18zF4nCR
+zI3Nb7oKwu8YUyx7ASOfYS7hTFOAOoQlRoV+FSHa7CLCmod/RkyrBd7vK/bxS0gs
+XHGd7Rv1ZxI4wLOWgCQ3dozb+Hm674UfgIWe8gnYHM96abyfhhITMQHbZo5Jhm5W
+SQ2IYzxJWZ4BYDgu/WdqXWrV4qeJzaQ141qhHDV/WpRfWDAYeLFzVLlmSLUYhtdu
+9Z6vng1olRzuR/iTSQXK3dd3PlPOeLeXtkRlYhb2ec/aUshA5Mqs3OqM5y2X9+MM
+dbVWNBt96P5ioAfvM9j0lr2h/dP9KvYeIQa+VTztVlBCesrAKT2PB81NOvjbW5jd
+vY7gQVC5klVmtneyU0d17ke1ctnTif6tYkC8Ke/g7yuPltJfHbUKVkFH2ARplmd/
+wIrBXP8T495O0+9uqf/AK9cs0xAsUSFZ/74a+2kBsi8dMArxb8trGM3ElQMxbyXl
+tFgHj3xG34Nun1/RD81QM4zQ55BSE2wwb+HC0w1BQgi59Ekz1ge9NAPMIc8Xq9Xe
+zur0hNW9M908zAsczS8XPzA20BLfRfPM0WeH8iw6r9028f0vsD/GwutF9HbWVIJg
+f8LQOHJl/FCyk6I4tHpkFWYfVgRNbmitqo6Q6x43moypOYGndHgoB398PqAy/qJO
+gngEZWICg/Q=
+=+Xjt
+-----END PGP SIGNATURE-----
 
->
->  > We need a flag in set_key which says whether the WEP key is static or not.
->
->  Let's actually try to gather all the cases first.
->
->  Is this it?
->
->   * TKIP/CCMP/WEP group or pairwise key
->   * WEP legacy ('static') key
+--=-R7jApoHaL8pBD2oJNceg--
 
-That's correct
-
->  where the first is completely covered by what we have now
-Yes
-and the
->  assumption is that if only WEP keys are present then it'll be a legacy
->  WEP key?
-Nop. Still you  can have <WEP, WEP>  for <pairwise,group key> valid
-setting - This is not static key. The two keys may differ. Under your
-assumption the group key will override pairwise key
-
-Tomas
-
-
-
-
->  johannes
->
