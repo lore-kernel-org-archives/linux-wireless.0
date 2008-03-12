@@ -1,102 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50028 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1760235AbYCXPFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 11:05:53 -0400
-Message-ID: <47E7C507.7050502@gmx.de> (sfid-20080324_150557_012452_C71BCE1A)
-Date: Mon, 24 Mar 2008 16:13:11 +0100
-From: Florian Manschwetus <florianmanschwetus@gmx.de>
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:41063 "EHLO ms5.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751338AbYCLCTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2008 22:19:52 -0400
+Date: Wed, 12 Mar 2008 11:18:54 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <20080311171024.GA18562@tuxdriver.com>
+References: <1205254237.8774.0.camel@localhost.localdomain> <20080311171024.GA18562@tuxdriver.com>
+Message-Id: <20080312102148.0B08.40F06B3A@sm.sony.co.jp> (sfid-20080312_021957_563782_FFEC598A)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: update patches
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms060201080503060306070704"
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
 
---------------ms060201080503060306070704
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, 11 Mar 2008 13:10:24 -0400
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-is it possible to get update patches for current 2.6.24 kernel sources?
-So the in kernel wireless stuff could be upgraded easily?
+> On Tue, Mar 11, 2008 at 12:50:37PM -0400, Dan Williams wrote:
+> > On Tue, 2008-03-11 at 17:18 +0100, Johannes Berg wrote:
+> > > On Tue, 2008-03-11 at 13:15 +0900, Masakazu Mokuno wrote:
+> > > > Some implementations of the hidden SSID APs emit beacons which have the zero
+> > > > length SSID information element instead of SSID padded by null (\0) characters.
+> > > > If the firmware of the PS3 wireless hardware meets these beacons, it abandons parsing
+> > > > IEs. Thus guest OSes get the invalid scan information for the AP.
+> > > > 
+> > > > To work around this, ignore these scan informations from the list.
+> > > 
+> > > I'm not sure this is a good idea. Is there any way to get at decent
+> > > information from those beacons?
+> > 
+> > Yeah, there are quite a few of these out there.  Ideally the firmware
+> > wouldn't puke on it...
+> 
+> Is a firmware update a possibility?  We've had these discussions
+> before.  I doubt Sony is any more excited about a firmware spin than
+> Intel has been.
 
-Florian
+The fix is already scheduled and is under testing. The future update of
+the system software for PS3 should have the fix.
 
---------------ms060201080503060306070704
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+> Does this problem apply to probe responses as well?  (Do probe
+> responses from hidden SSID APs still exclude the SSID?  I would
+> guess not.)
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
-BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
-MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
-dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
-hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
-25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
-TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
-5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
-SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
-byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
-gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
-MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
-dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
-VwGqug6HGAz3EOHMEyfHc6YiGeNFXzCju5Iu9UJ8tTmlKlzOOs/39of574kkdyJNbk2epTuE
-xN4PE8i66uUAVO4O4MpYcdjx1yniuKYoiOj/p/qMCFRCIYT3aWWvugJnpUh7jE5B1tGYA2r9
-caLsqUeA28i14Ee3EJA554eKptywsjlXp0JuOi/HKSyxDL1lwk9kTN17e8P+ajUy3qA3S4o0
-+EJO+K3Y709M941ZnT5nkyCDqXfJk8ilKtcGQOw8Kw6h15kaTxoOiZnEXRGY9uovv9HTJSzI
-9hzwNZuE6GCPoz3+PDRBZzSvMQInEHn6O81HN7uEEljVsvTAxnc4GqK3idmDfn93X5BghYUS
-urdoAsJk/qK+Me0PNbobis2dqwu8mZJo57v7lkeEg/b7rMuVWYWkGvBb++M+RKLVDdZWupLG
-RkJe+H3j4x2NodQuaj7PoFgWOshVMMbgtmL6SETg9k/s5rm3HYlrTShPhTdwj8QzGJ+r0WIn
-MnUhT2pyhsF+l3kmfoSJM1veprvp0k/FrjhPBHZz1LI0e003tj1JpBmSv+aHJQAIqs8k3TIr
-xTr7tZ+SHnw9Z24OnOoAayZte9DyCjYkYNd4yzeMFnblmngsjTwV9bP/O5tq9yHJVg9SThQT
-bEQwggVGMIIDLqADAgECAgMELFwwDQYJKoZIhvcNAQEFBQAweTEQMA4GA1UEChMHUm9vdCBD
-QTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNp
-Z25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcwHhcN
-MDcxMDE4MTgzMzI0WhcNMDkxMDE3MTgzMzI0WjBIMRwwGgYDVQQDExNGbG9yaWFuIE1hbnNj
-aHdldHVzMSgwJgYJKoZIhvcNAQkBFhlGbG9yaWFuTWFuc2Nod2V0dXNAZ214LmRlMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAthp0yOeLoxBjx7u/+S91Hjx0+m8nVEAFrHJP
-X+OMHIVEZsj8TTG9tvMKZCBGljqbJ8QmGyn8Vu5yItMz+3kgIRoV4iPY8iz4CeDaRtThU9hM
-s45JH9uQrQtTTvWWzGnFYnl4w8OHsz5Lib0sobA3BQFBEQlhvQ0++LTHT/QA3TMyPIf3l47+
-o+H5c0w9lgLA3tYX3Uk5Mwext0jAbQbuieOgmOqfd3qWorP8dQsxZMwybIdK+3YdLRxoVQhp
-EdWzdeUgdkISHQkd/iYtRdVvP+7oGpOrrURFM+C8WD8P8H4iEWlR01T46OWMHw9II3Fkl8du
-YFn9iUhFQcflQ696NQIDAQABo4IBBjCCAQIwDAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0E
-SRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIGZvciBGUkVFIGhlYWQgb3ZlciB0byBo
-dHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYIKwYBBQUHAwQGCCsGAQUFBwMCBgor
-BgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYIKwYBBQUHAQEEJjAkMCIGCCsG
-AQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMCQGA1UdEQQdMBuBGUZsb3JpYW5NYW5z
-Y2h3ZXR1c0BnbXguZGUwDQYJKoZIhvcNAQEFBQADggIBADOoYfW9h3oUNfwTfQlR4f07heBH
-pLU7hFcBqroOhxgM9xDhzBMnx3OmIhnjRV8wo7uSLvVCfLU5pSpczjrP9/aH+e+JJHciTW5N
-nqU7hMTeDxPIuurlAFTuDuDKWHHY8dcp4rimKIjo/6f6jAhUQiGE92llr7oCZ6VIe4xOQdbR
-mANq/XGi7KlHgNvIteBHtxCQOeeHiqbcsLI5V6dCbjovxykssQy9ZcJPZEzde3vD/mo1Mt6g
-N0uKNPhCTvit2O9PTPeNWZ0+Z5Mgg6l3yZPIpSrXBkDsPCsOodeZGk8aDomZxF0RmPbqL7/R
-0yUsyPYc8DWbhOhgj6M9/jw0QWc0rzECJxB5+jvNRze7hBJY1bL0wMZ3OBqit4nZg35/d1+Q
-YIWFErq3aALCZP6ivjHtDzW6G4rNnasLvJmSaOe7+5ZHhIP2+6zLlVmFpBrwW/vjPkSi1Q3W
-VrqSxkZCXvh94+MdjaHULmo+z6BYFjrIVTDG4LZi+khE4PZP7Oa5tx2Ja00oT4U3cI/EMxif
-q9FiJzJ1IU9qcobBfpd5Jn6EiTNb3qa76dJPxa44TwR2c9SyNHtNN7Y9SaQZkr/mhyUACKrP
-JN0yK8U6+7Wfkh58PWduDpzqAGsmbXvQ8go2JGDXeMs3jBZ25Zp4LI08FfWz/zubavchyVYP
-Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
-cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
-MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQxNTEz
-MTFaMCMGCSqGSIb3DQEJBDEWBBTrz1nby8LlOnI/EpEHzxYWqE4TVDBSBgkqhkiG9w0BCQ8x
-RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
-BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
-LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
-FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
-cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEAYXXjXeZYIW/3DGVhEI7MXQK/6AtPdjaWyb62Ur+tV3vlu5Se/6H6H/RE4bGR
-ZfLhm6jBKHKZwpCBJYT2XYQJcOEeB3k/nW7f4BJyVowvic829CI7bUiSaHdrzmnhZNfk2JJA
-UfjT4aaTMkuakruYPNqBkc+tfoEk/FKqAZdYFjU59PB6TADn+lyiACy7UTqT1O+DcXXueykx
-yCZABeYvb4BrYuxvufS/UpTEWchBXNaRfzzcvhhHxV5xMNA1MbD0v0vRoWfyjHa+j1THWCoJ
-38jUodlbMR2vly03f+0Xy4cRc5NWR2H5SKFeTCk8J39Ppzlq2zU70nm0fiqyQDJJhgAAAAAA
-AA==
---------------ms060201080503060306070704--
+There has been a problem in parsing IEs, so if the received probe
+responses include zero length IEs, they also suffer this bug.
+
+> As long as you can still associate w/ hidden SSID APs, I don't see
+> a big problem.  Even if you can't, no information for those APs is
+> probably better than bad information, no?
+
+I was anxious that the userland apps or the users may get confused.  Any
+other thing harmful is not found.
+OK, I withdraw this patch.
+
+Thanks for the reviews.
+
+-- 
+Masakazu MOKUNO
+
