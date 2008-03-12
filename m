@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29146 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751206AbYCAX2B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2008 18:28:01 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwifi: removing unused priv->config
-Date: Sun,  2 Mar 2008 01:25:59 +0200
-Message-Id: <1204413959-12282-1-git-send-email-tomas.winkler@intel.com> (sfid-20080301_232828_198139_6405BF5D)
-Content-Type: text/plain; charset="us-ascii"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbYCLO4v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 10:56:51 -0400
+Subject: Re: [PATCH 2/5] tkip: remove unused function, other cleanups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1204968185.23455.38.camel@brick> (sfid-20080308_092340_520643_C35AE989)
+References: <1204968185.23455.38.camel@brick>
+	 (sfid-20080308_092340_520643_C35AE989)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vk+BNO+rclGyYTL+SW2P"
+Date: Wed, 12 Mar 2008 15:56:34 +0100
+Message-Id: <1205333794.15910.12.camel@johannes.berg> (sfid-20080312_145700_808103_8DA61689)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused variable in iwlYYYY_priv
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +--
- 4 files changed, 2 insertions(+), 6 deletions(-)
+--=-vk+BNO+rclGyYTL+SW2P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index dde389d..d36ae00 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -800,7 +800,6 @@ struct iwl3945_priv {
- 	struct iwl3945_tx_queue txq[IWL_MAX_NUM_QUEUES];
- 
- 	unsigned long status;
--	u32 config;
- 
- 	int last_rx_rssi;	/* From Rx packet statisitics */
- 	int last_rx_noise;	/* From beacon statistics */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index ce17e4f..cc0745b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -1104,7 +1104,6 @@ struct iwl4965_priv {
- 	u32 scd_base_addr;	/* scheduler sram base address */
- 
- 	unsigned long status;
--	u32 config;
- 
- 	int last_rx_rssi;	/* From Rx packet statisitics */
- 	int last_rx_noise;	/* From beacon statistics */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 0fab832..139a4a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4506,8 +4506,7 @@ static void iwl3945_dump_nic_error_log(struct iwl3945_priv *priv)
- 
- 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
- 		IWL_ERROR("Start IWL Error Log Dump:\n");
--		IWL_ERROR("Status: 0x%08lX, Config: %08X count: %d\n",
--			  priv->status, priv->config, count);
-+		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
- 	}
- 
- 	IWL_ERROR("Desc       Time       asrtPC  blink2 "
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 20d012d..99a9f82 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4886,8 +4886,7 @@ static void iwl4965_dump_nic_error_log(struct iwl4965_priv *priv)
- 
- 	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
- 		IWL_ERROR("Start IWL Error Log Dump:\n");
--		IWL_ERROR("Status: 0x%08lX, Config: %08X count: %d\n",
--			  priv->status, priv->config, count);
-+		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
- 	}
- 
- 	desc = iwl4965_read_targ_mem(priv, base + 1 * sizeof(u32));
--- 
-1.5.4.1
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+On Sat, 2008-03-08 at 01:23 -0800, Harvey Harrison wrote:
+> tkip_S had an opencoded swab16
+> make ieee80211_tkip_gen_rc4key() static
+> remove the unused ieee80211_tkip_gen_phase1key()
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+This seems fine. Does it depend on 1/5?
+
+johannes
+
+--=-vk+BNO+rclGyYTL+SW2P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR9fvIaVg1VMiehFYAQJVdRAAljaC0ASDKN+jjpuHPFSTJy7/36WCGDdv
+DagzBtCNl+Sm37uAttgBLGWILyk1R2ow1ahSR5//6krS4Jc+SVndG2BmiUybWm92
+gbTLy35eUA49EzyU2rW/yoIof7KjR7D642L6xO74M0gVWFc+is8tWLZn6y1acwfz
+BOY8Fck1TTXjT0e/AOf2rAGmo0gsj5FQTHEbeZr8p8wrD45csaZVDEFKpGK2kd0M
+mSMywDI+3E4wZReZlavqDRvYrpCgoUOcekoo0MGGcaXeYGnjoNz+NW+D0zUainSq
+bKPXDvs+vhAQqAs2qaCC44Fp7RL43TfBayPeUHC49K8ZhwhOAKQ1asZX2ISuqxin
+TO/Bf5bfgxu/SHeex5K8paiPF2917tY24rTa5k0SkH3/oMeIfB+SGjQkzMoMp1dQ
+PLN/PgaydpGHjRtN2uj6AwynI2lzP+BnYkFEhY2irzeuD9jcWPNExFxufqTJURFH
+w9zOaCLcOnfHmL01RcgAb3GuxlhVS+RI+5an3nFyZmP4JUZimf/dOojKl/awRqd+
+mUe19fqH4mK28S6P8GW7pjKHaW8YbxfN0kq8+iUXJt+lKjUXwXMVmA/RmRlG/1ya
+8tiIDF7Poqs3ujhA85Aq7QtFAhWuH8HEP1tsfGtsoR4Coj/apoAk5U4VXF2xoQ5X
+lqrYhTfAzTY=
+=2OTR
+-----END PGP SIGNATURE-----
+
+--=-vk+BNO+rclGyYTL+SW2P--
 
