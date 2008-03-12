@@ -1,134 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:33933 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbYCBWBf (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.236]:10243 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbYCLVPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 17:01:35 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so8538978wra.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 14:01:34 -0800 (PST)
-Message-ID: <646765f40803021401i65e31e16v5efd0784bffcc177@mail.gmail.com> (sfid-20080302_220141_560110_0EF0C314)
-Date: Mon, 3 Mar 2008 09:01:28 +1100
-From: "Julian Calaby" <julian.calaby@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: Netgear WG311v3 - Marvell 88w8355 "Libertas"
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1204472016.13121.27.camel@localhost.localdomain>
+	Wed, 12 Mar 2008 17:15:44 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so3333201wxd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2008 14:15:44 -0700 (PDT)
+Message-ID: <40f31dec0803121415uede5e60k4ac6829349436680@mail.gmail.com> (sfid-20080312_211548_825387_80BAAE1F)
+Date: Wed, 12 Mar 2008 23:15:30 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable irq handling in ath5k_hw_detach()
+Cc: ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1205352811.5557.2.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com>
-	 <1204472016.13121.27.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
+References: <1205352811.5557.2.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 3, 2008 at 2:33 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Sun, 2008-03-02 at 22:19 +1100, Julian Calaby wrote:
->  > Hi,
->  >
->  > I'm not sure if this is the correct place to ask this, but here goes.
->  >
->  > I have recently obtained a Netgear WG311v3 card, under the
->  > misunderstanding that it was an atheros card. (though I have no idea
->  > how I managed to do that)
->  >
->  > Following some random FAQ, I have this card working reliably, for the
->  > moment, using ndiswrapper, which is more than suitable for my needs.
->  >
->  > However I yearn for more.
->  >
->  > I have discovered here:
->  > http://users.linpro.no/janl/hardware/wifi.html
->  > that this card appears to use a Marvel 88w8355 "Libertas" chipset.
->  > However I have not yet confirmed the exact chip used on my card.
+2008/3/12, Pavel Roskin <proski@gnu.org>:
+> Once ah has been freed, it may not be accessed.  Set ATH_STAT_INVALID
+>  bit to make the interrupt handler return IRQ_NONE without accessing ah.
 >
->  I think you mean "88w8335" actually.  The Netgear WG311v3 uses the
->  Marvell 88w8335 chipset.
-
-Oh, ok, I stand corrected, I stupidly didn't read the chip (apart from
-noticing the stylised M) before thwacking it into my machine.
-
->  > I believe variants of this chip, are supported on SDIO, (8385, 8686)
->  > USB (8388) and CompactFlash (8385) using the libertas driver.
+>  This fixes oops on unload with CONFIG_DEBUG_SHIRQ enabled.
 >
->  Correct; the existing Libertas driver (perhaps somewhat mis-named)
->  supports only the FullMAC variants of the libertas family.
+>  Signed-off-by: Pavel Roskin <proski@gnu.org>
+>  ---
 >
->  The other, lower-numbered chips in the libertas family (8335, 8310, etc)
->  are all more softmac parts and not supported by the existing libertas
+>   drivers/net/wireless/ath5k/hw.c |    2 ++
+>   1 files changed, 2 insertions(+), 0 deletions(-)
 >
-> driver.
-
-Oh.
-
-That sucks, I'd thought that this was just another Libertas part,
-given the website mentioned above.
-
-Well, that explains why the "Libertas" parts supported by the current
-kernel require firmware and why the ndiswrapper driver I'm using
-doesn't.
-
->  > I can also find no information on a pci version of the libertas
->  > driver, only a proposal which appeared to go nowhere due to lack of
->  > documentation. I also cannot find any information on any linux support
->  > for this card outside of using ndiswrapper.
 >
->  There's an existing vendor net80211-based driver for the 8335 here:
+>  diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+>  index 677600b..ff579a2 100644
+>  --- a/drivers/net/wireless/ath5k/hw.c
+>  +++ b/drivers/net/wireless/ath5k/hw.c
+>  @@ -458,6 +458,8 @@ void ath5k_hw_detach(struct ath5k_hw *ah)
+>   {
+>         ATH5K_TRACE(ah->ah_sc);
 >
->  http://git.infradead.org/?p=users/dwmw2/marvell-db64660-2.6.12.6.git;a=tree;f=drivers/net/wireless/marvell_softap;h=566585b308d53a7006814c77dedae73cc919cbef;hb=HEAD
+>  +       __set_bit(ATH_STAT_INVALID, ah->ah_sc->status);
+>  +
+>         if (ah->ah_rf_banks != NULL)
+>                 kfree(ah->ah_rf_banks);
 >
->  There's also some reverse-engineered bits here:
 >
->  http://www.saillard.org/linux/mrv8k/
 >
->  and the mac80211 port of mrv8k here:
->
->  http://david.woodhou.se/mrv.tar.gz
->
->  though the last one here panic-ed in the interrupt handler when I tried
->  it last on 2.6.22.
+>  --
+>  Regards,
+>  Pavel Roskin
 
-Cool! =)
-
->  > As such, I am considering reverse engineering the pci interface for
->  > this chipset, and hopefully linking it up with the existing libertas
->  > driver.
->
->  Don't link up with the existing libertas driver, they are just too
->  different (softmac vs. fullmac).
-
-Fair enough, I'll leave that be then.
-
->  > I was hoping to use the ndiswrapper driver as a starting point, using
->  > it as a black box to see how it talks to the PCI card. (possibly
->  > hacking together a OS level PCI sniffer) and hopefully, what I'll see
->  > will match up to what's going on in the libertas driver for similar
->  > tasks, and then I should be able to write the necessary code (or
->  > specifications) to do this.
->  >
->  > I am also concerned about any possible legal ramifications of this
->  > reverse engineering. Is it all right for me to do this, providing that
->  > I treat the ndiswrapper driver as a black box? or am I too close to
->  > non-free code to have my code be untainted?
->
->  I'd say first, try to whip the existing mrv8k-mac80211 port into shape
->  and you probably won't have to worry much about the legal ramifications.
->  You can look at the GPL-ed vendor driver (from the git I posted) for
->  pointers about hardware-specific stuff, but after the 8388 driver
->  experience, I'd strongly advocate writing a driver from scratch (or
->  basing off mrv8k) and not using existing Marvell vendor drivers as a
->  starting point.
-
-Ok, will do. I'm not sure I'm up to writing a full driver, so I'll try
-to get mvr8k working on my box, then probably call back here for help.
-
-Either way though, thanks for all the info and pointers. I'll check
-them out tonight.
-
->  Dan
-
-Thanks,
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
