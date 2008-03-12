@@ -1,65 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:14052 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936388AbYCSVKK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 17:10:10 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so639856wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 14:10:07 -0700 (PDT)
-Message-ID: <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com> (sfid-20080319_211051_183597_735DD226)
-Date: Wed, 19 Mar 2008 01:07:46 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: drago01 <drago01@gmail.com>, "Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <f6ca9fed0801221224u7ddf1569qa29860466ac27d86@mail.gmail.com>
-	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
-	 <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-	 <47B29F63.6050605@gmail.com>
-	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
+Received: from mx1.redhat.com ([66.187.233.31]:39016 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751252AbYCLNsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 09:48:41 -0400
+Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
+From: Dan Williams <dcbw@redhat.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Stefan Assmann <sassmann@suse.de>
+In-Reply-To: <20080312182438.0B1F.40F06B3A@sm.sony.co.jp>
+References: <20080312102148.0B08.40F06B3A@sm.sony.co.jp>
+	 <1205310310.6387.56.camel@johannes.berg>
+	 <20080312182438.0B1F.40F06B3A@sm.sony.co.jp>
+Content-Type: text/plain
+Date: Wed, 12 Mar 2008 09:42:31 -0400
+Message-Id: <1205329351.32049.8.camel@localhost.localdomain> (sfid-20080312_134855_676007_8DA28B50)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2008 at 12:06 AM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
->
-> On Tuesday, March 18, 2008 2:47 PM, drago01  wrote:
->
->  >>  Please note that the driver loads/unloads the firmware during
->  >>  interface up/down. That means that the host will not receive rfkill
->  >>  events while the interface is down as there is no firmware to deal
->  >> with these events.
->  >>
->  >>  Reinette
->  >>
->  >
->  > OK that makes sense.
->  > So a solution would be to not unload the firmware on down when the hw
->  > rfkill is on. Is this a acceptable one or are they other (better
->  > solutions). I can't think of any. And userspace cannot do anything
->  > because bringing the device up and down again to look for the rfkill
->  > status would be racy.
->
->  Having the firmware unloaded when the interface is down is a requirement
->  for powersaving. We do not want the device to consume power when it is
->  not used. The rfkill status should always be reported accurately when
->  the interface is up. If it is not then it is a bug.
+On Wed, 2008-03-12 at 19:26 +0900, Masakazu Mokuno wrote:
+> On Wed, 12 Mar 2008 09:25:10 +0100
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > 
+> > > > Does this problem apply to probe responses as well?  (Do probe
+> > > > responses from hidden SSID APs still exclude the SSID?  I would
+> > > > guess not.)
+> > > 
+> > > There has been a problem in parsing IEs, so if the received probe
+> > > responses include zero length IEs, they also suffer this bug.
+> > > 
+> > > > As long as you can still associate w/ hidden SSID APs, I don't see
+> > > > a big problem.  Even if you can't, no information for those APs is
+> > > > probably better than bad information, no?
+> > > 
+> > > I was anxious that the userland apps or the users may get confused.  Any
+> > > other thing harmful is not found.
+> > > OK, I withdraw this patch.
+> > 
+> > I think John actually meant that it would be better to have the patch
+> > in. How does a "bad" scan result look like?
+> 
+> Usually the zero length IE, the SSID element, is the first one of IE
+> list, all information in the successor elements is lost. What we can see
+> is bssid.
+> 
+> The current firmware gives the following result.  The Corega (00:0A:79)
+> AP was the one which sent zero length SSID if it was in hidden SSID mode.
+> 
+> > iwlist wlan0 scanning
+> > wlan0     Scan completed :
+> >           Cell 01 - Address: 00:06:25:C6:B9:A7
+> >                     ESSID:"planexuser"
+> >                     Channel=1
+> >                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+> >                               11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+> >                               48 Mb/s; 54 Mb/s
+> >                     Encryption key:on
+> >                     Mode:Master
+> >                     Signal level=100/100  
+> >                     IE: IEEE 802.11i/WPA2 Version 1
+> >                         Group Cipher : CCMP
+> >                         Pairwise Ciphers (1) : CCMP
+> >                         Authentication Suites (1) : PSK
+> >           Cell 02 - Address: 00:0A:79:A5:D2:E2
+> >                     ESSID:""
+> >                     Channel:0
+> >                     Encryption key:on
+> >                     Mode:Master
+> >                     Signal level=100/100  
 
-We will catch the HW rfkill event after loading the uCode so there is
-no problem with this.
-Not sure where should be the SW rfkill state stored.
+Ewww.  You're 100% correct; we certainly shouldn't be sending a scan
+result like this to userspace.  Therefore:
 
->  Reinette
->
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> 
+> With fixed firmware:
+> 
+> > wlan0     Scan completed :
+> >           Cell 01 - Address: 00:06:25:C6:B9:A7
+> >                     ESSID:"planexuser"
+> >                     Channel=1
+> >                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+> >                               11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+> >                               48 Mb/s; 54 Mb/s
+> >                     Encryption key:on
+> >                     Mode:Master
+> >                     Signal level=100/100  
+> >                     IE: IEEE 802.11i/WPA2 Version 1
+> >                         Group Cipher : CCMP
+> >                         Pairwise Ciphers (1) : CCMP
+> >                         Authentication Suites (1) : PSK
+> >           Cell 02 - Address: 00:0A:79:A5:D2:E2
+> >                     ESSID:""
+> >                     Channel:1
+> >                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+> >                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+> >                               48 Mb/s; 54 Mb/s
+> >                     Encryption key:on
+> >                     Mode:Master
+> >                     Signal level=100/100  
+> >                     IE: IEEE 802.11i/WPA2 Version 1
+> >                         Group Cipher : CCMP
+> >                         Pairwise Ciphers (1) : CCMP
+> >                         Authentication Suites (1) : PSK
+> > 
+> 
+> 
+
