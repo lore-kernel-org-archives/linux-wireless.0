@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:48111 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754420AbYCZCcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 22:32:52 -0400
-Subject: Re: Question on Wireless NICs
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Balaji Rao <balajirrao@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080325193219.GC30587@tuxdriver.com>
-References: <200803260011.29045.balajirrao@gmail.com>
-	 <20080325193219.GC30587@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 25 Mar 2008 22:32:48 -0400
-Message-Id: <1206498769.23595.6.camel@dv> (sfid-20080326_023255_256958_44662760)
-Mime-Version: 1.0
+Received: from vs166246.vserver.de ([62.75.166.246]:34975 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337AbYCLQwF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 12:52:05 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: phy.c fix typo in register write
+Date: Wed, 12 Mar 2008 17:51:04 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Harvey Harrison <harvey.harrison@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200803121751.04560.mb@bu3sch.de> (sfid-20080312_165230_360936_88DDB000)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-03-25 at 15:32 -0400, John W. Linville wrote:
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-> The gPXE (formerly etherboot) project seems to support PCI-based
-> (e.g. cardbus, but not PCMCIA) orinoco devices.  I cannot verify that,
-> since I have no such device (donations accepted!)...
+Commit 61bca6eb85c863603d6054530e2f65c3b9aba85b b43: rewrite A PHY initialization
+has a typo, the result of the register read should be masked, not the
+register offset.
 
-Just to set the record straight, I'm unaware of any CardBus devices
-compatible with the orinoco driver, i.e. Prism 2-3, Symbol Trilogy or
-Hermes I based 802.11b device.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-At the first glance, gPXE appears to support Prism chipset only, either
-native PCI or PCMCIA behind PLX9052 bridge.
+---
+
+Can be applied for 2.6.25, although this is A-PHY only.
+
+
+ drivers/net/wireless/b43/phy.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
+index 71507b2..575c543 100644
+--- a/drivers/net/wireless/b43/phy.c
++++ b/drivers/net/wireless/b43/phy.c
+@@ -860,7 +860,7 @@ static void b43_phy_ww(struct b43_wldev *dev)
+ 	b43_phy_write(dev, B43_PHY_OFDM(0xBB),
+ 		(b43_phy_read(dev, B43_PHY_OFDM(0xBB)) & 0xF000) | 0x0053);
+ 	b43_phy_write(dev, B43_PHY_OFDM61,
+-		(b43_phy_read(dev, B43_PHY_OFDM61 & 0xFE1F)) | 0x0120);
++		(b43_phy_read(dev, B43_PHY_OFDM61) & 0xFE1F) | 0x0120);
+ 	b43_phy_write(dev, B43_PHY_OFDM(0x13),
+ 		(b43_phy_read(dev, B43_PHY_OFDM(0x13)) & 0x0FFF) | 0x3000);
+ 	b43_phy_write(dev, B43_PHY_OFDM(0x14),
+-- 
+1.5.4.4.592.g32d4c
+
+
+
+
+
+-------------------------------------------------------
 
 -- 
-Regards,
-Pavel Roskin
+Greetings Michael.
