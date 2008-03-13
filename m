@@ -1,49 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:36573 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbYCDRJd (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10885 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbYCMIwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 12:09:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Ahmed Ammar" <b33fc0d3@gmail.com>
-Subject: Re: b43 (H/W 4306 Rev. 03)
-Date: Tue, 4 Mar 2008 18:08:45 +0100
-Cc: "Ivo Van Doorn" <ivdoorn@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Adam Baker" <linux@baker-net.org.uk>
-References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com> <a32f33a40802251427w678d57c1g1b85d7e72830a89e@mail.gmail.com> <84ac67910803040855x74d75412x424e220d61d459cb@mail.gmail.com>
-In-Reply-To: <84ac67910803040855x74d75412x424e220d61d459cb@mail.gmail.com>
+	Thu, 13 Mar 2008 04:52:43 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: convert GET_LOG to a direct command
+Date: Thu, 13 Mar 2008 09:49:48 +0100
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200803130948.36528.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200803130948.36528.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803041808.45710.mb@bu3sch.de> (sfid-20080304_170938_320011_1ADA5E02)
+  charset="ansi_x3.4-1968"
+Message-Id: <200803130949.48715.hs4233@mail.mn-solutions.de> (sfid-20080313_085251_519747_5B825268)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 March 2008 17:55:07 Ahmed Ammar wrote:
-> > Yes, rt61pci is known to be buggy in monitor mode, there seem
-> >  to be some inconsistencies regarding frame filtering inside the device
-> >  which causes rt61pci to incorrectly filter some frames out.
-> >
-> >  It is an issue being looked into, and I believe Adam Baker already has
-> >  some patches he will send in for rt2x00 soon (First some other TX/RX
-> >  bugs needed to be fixed).
-> >
-> 
-> Ok, well on that note I have updated my sources with latest
-> wireless-testing.git and rt2x00.git (as of today). I think I have a
-> better dump. But very few packets fom b43 are ever seen (I can only
-> guess the tx code for my revision is borked?). b43legacy seems to show
-> full output, but i might be wrong. Attached.
+Now uses __lbs_cmd() to get the "log" (it's actually more a
+snapshot of various counters, not a sequential log).
 
-I don't know what you are doing, but we certainly don't support
-hacking b43 to work on legacy devices or hacking b43legacy
-to work on new devices, which it seems you did, right?
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-If you have some actual problem with some unmodified driver
-version, please show us the problem and we will address it.
-
--- 
-Greetings Michael.
+Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-13 08:41:22.000000000 +0100
+@@ -34,6 +34,8 @@ int lbs_cmd_copyback(struct lbs_private 
+ 
+ int lbs_update_hw_spec(struct lbs_private *priv);
+ 
++int lbs_get_log(struct lbs_private *priv);
++
+ int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+ 		    struct cmd_ds_mesh_access *cmd);
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-13 08:41:22.000000000 +0100
+@@ -892,8 +892,7 @@ static struct iw_statistics *lbs_get_wir
+ 	/* update stats asynchronously for future calls */
+ 	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+ 					0, 0, NULL);
+-	lbs_prepare_and_send_command(priv, CMD_802_11_GET_LOG, 0,
+-					0, 0, NULL);
++	lbs_get_log(priv);
+ out:
+ 	if (!stats_valid) {
+ 		priv->wstats.miss.beacon = 0;
+Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-13 08:41:22.000000000 +0100
+@@ -629,9 +629,7 @@ void lbs_association_worker(struct work_
+ 				CMD_802_11_RSSI,
+ 				0, CMD_OPTION_WAITFORRSP, 0, NULL);
+ 
+-			lbs_prepare_and_send_command(priv,
+-				CMD_802_11_GET_LOG,
+-				0, CMD_OPTION_WAITFORRSP, 0, NULL);
++			lbs_get_log(priv);
+ 		} else {
+ 			ret = -1;
+ 		}
+Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-13 08:41:22.000000000 +0100
+@@ -454,18 +454,37 @@ static int lbs_cmd_802_11_reset(struct l
+ 	return 0;
+ }
+ 
+-static int lbs_cmd_802_11_get_log(struct lbs_private *priv,
+-				   struct cmd_ds_command *cmd)
++static int lbs_get_log_callback(struct lbs_private *priv, unsigned long dummy,
++	struct cmd_header *resp)
+ {
++	int ret;
++	struct cmd_ds_802_11_get_log_resp *logresp = (void *) resp;
++
+ 	lbs_deb_enter(LBS_DEB_CMD);
+-	cmd->command = cpu_to_le16(CMD_802_11_GET_LOG);
+-	cmd->size =
+-		cpu_to_le16(sizeof(struct cmd_ds_802_11_get_log) + S_DS_GEN);
++	ret = le16_to_cpu(logresp->hdr.result);
++	if (!ret)
++		memcpy(&priv->logmsg, &logresp->log, sizeof(logresp->log));
+ 
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
++	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
++	return ret;
+ }
+ 
++int lbs_get_log(struct lbs_private *priv)
++{
++	struct cmd_header cmd;
++	int ret;
++
++	lbs_deb_enter_args(LBS_DEB_CMD, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
++
++	cmd.size = cpu_to_le16(sizeof(cmd));
++	ret = __lbs_cmd(priv, CMD_802_11_GET_LOG, &cmd,
++		sizeof(struct cmd_ds_802_11_get_log_rsp),
++		lbs_get_log_callback, 0);
++	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
++	return ret;
++}
++
++
+ static int lbs_cmd_802_11_get_stat(struct lbs_private *priv,
+ 				    struct cmd_ds_command *cmd)
+ {
+@@ -1384,10 +1403,6 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = lbs_cmd_802_11_reset(priv, cmdptr, cmd_action);
+ 		break;
+ 
+-	case CMD_802_11_GET_LOG:
+-		ret = lbs_cmd_802_11_get_log(priv, cmdptr);
+-		break;
+-
+ 	case CMD_802_11_AUTHENTICATE:
+ 		ret = lbs_cmd_80211_authenticate(priv, cmdptr, pdata_buf);
+ 		break;
+Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-13 08:41:22.000000000 +0100
+@@ -303,20 +303,6 @@ static int lbs_ret_802_11_eeprom_access(
+ 	return 0;
+ }
+ 
+-static int lbs_ret_get_log(struct lbs_private *priv,
+-			    struct cmd_ds_command *resp)
+-{
+-	struct cmd_ds_802_11_get_log *logmessage = &resp->params.glog;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-
+-	/* Stored little-endian */
+-	memcpy(&priv->logmsg, logmessage, sizeof(struct cmd_ds_802_11_get_log));
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int lbs_ret_802_11_bcn_ctrl(struct lbs_private * priv,
+ 					struct cmd_ds_command *resp)
+ {
+@@ -352,10 +338,6 @@ static inline int handle_cmd_response(st
+ 		ret = lbs_ret_reg_access(priv, respcmd, resp);
+ 		break;
+ 
+-	case CMD_RET(CMD_802_11_GET_LOG):
+-		ret = lbs_ret_get_log(priv, resp);
+-		break;
+-
+ 	case CMD_RET_802_11_ASSOCIATE:
+ 	case CMD_RET(CMD_802_11_ASSOCIATE):
+ 	case CMD_RET(CMD_802_11_REASSOCIATE):
+Index: wireless-testing/drivers/net/wireless/libertas/types.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/types.h	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/types.h	2008-03-13 08:41:22.000000000 +0100
+@@ -252,4 +252,22 @@ struct mrvlietypes_ledbhv {
+ 	struct led_bhv ledbhv[1];
+ } __attribute__ ((packed));
+ 
++/** This is the same structure as used in the CMD_802_11_GET_LOG
++ *  commands. Used in struct lbs_private and the get_log command */
++struct lbs_log {
++	__le32 mcasttxframe;
++	__le32 failed;
++	__le32 retry;
++	__le32 multiretry;
++	__le32 framedup;
++	__le32 rtssuccess;
++	__le32 rtsfailure;
++	__le32 ackfailure;
++	__le32 rxfrag;
++	__le32 mcastrxframe;
++	__le32 fcserror;
++	__le32 txframe;
++	__le32 wepundecryptable;
++};
++
+ #endif
+Index: wireless-testing/drivers/net/wireless/libertas/dev.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-13 08:41:22.000000000 +0100
+@@ -323,7 +323,7 @@ struct lbs_private {
+ 	u8 *prdeeprom;
+ 	struct lbs_offset_value offsetvalue;
+ 
+-	struct cmd_ds_802_11_get_log logmsg;
++	struct lbs_log logmsg;
+ 
+ 	u32 monitormode;
+ 	u8 fw_ready;
+Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-13 08:38:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-13 08:41:22.000000000 +0100
+@@ -194,20 +194,9 @@ struct cmd_ds_802_11_scan_rsp {
+ 	uint8_t bssdesc_and_tlvbuffer[0];
+ };
+ 
+-struct cmd_ds_802_11_get_log {
+-	__le32 mcasttxframe;
+-	__le32 failed;
+-	__le32 retry;
+-	__le32 multiretry;
+-	__le32 framedup;
+-	__le32 rtssuccess;
+-	__le32 rtsfailure;
+-	__le32 ackfailure;
+-	__le32 rxfrag;
+-	__le32 mcastrxframe;
+-	__le32 fcserror;
+-	__le32 txframe;
+-	__le32 wepundecryptable;
++struct cmd_ds_802_11_get_log_rsp {
++	struct cmd_header hdr;
++	struct lbs_log log;
+ };
+ 
+ struct cmd_ds_mac_control {
+@@ -701,7 +690,6 @@ struct cmd_ds_command {
+ 		struct cmd_ds_802_11_ad_hoc_start ads;
+ 		struct cmd_ds_802_11_reset reset;
+ 		struct cmd_ds_802_11_ad_hoc_result result;
+-		struct cmd_ds_802_11_get_log glog;
+ 		struct cmd_ds_802_11_authenticate auth;
+ 		struct cmd_ds_802_11_get_stat gstat;
+ 		struct cmd_ds_802_3_get_stat gstat_8023;
