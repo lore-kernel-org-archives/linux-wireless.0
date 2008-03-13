@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39735 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933590AbYCABT0 (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:10048 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751756AbYCMUYJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Feb 2008 20:19:26 -0500
-Date: Fri, 29 Feb 2008 16:29:19 -0800
-From: Greg KH <greg@kroah.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	Alexey Zaytsev <alexey.zaytsev@gmail.com>
-Subject: Re: [PATCH stable] b43: Backport bcm4311 fix
-Message-ID: <20080301002919.GA17761@kroah.com> (sfid-20080301_012004_777084_34FE65E8)
-References: <200802291255.41906.mb@bu3sch.de>
+	Thu, 13 Mar 2008 16:24:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200802291255.41906.mb@bu3sch.de>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH] iwlwifi: Update git URL
+Date: Thu, 13 Mar 2008 13:21:10 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892003E8D25A@orsmsx416.amr.corp.intel.com> (sfid-20080313_202416_183170_947B2C60)
+In-Reply-To: <1205432413.1469.3.camel@plop>
+References: <1205432413.1469.3.camel@plop>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Pascal Terjan" <pterjan@mandriva.com>, <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, "Zhu, Yi" <yi.zhu@intel.com>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 29, 2008 at 12:55:41PM +0100, Michael Buesch wrote:
->     The changes include the following:
->     
->     (1) Add the 802.11 rev 13 device to the ssb_device_id table to load b43.
->     (2) Add PHY revision 9 to the supported list.
->     (3) Change the 2-bit routing code for address extensions to 0b10 rather
->         than the 0b01 used for the 32-bit case.
->     (4) Remove some magic numbers in the DMA setup.
->     
->     The DMA implementation for this chip supports full 64-bit addressing with
->     one exception. Whenever the Descriptor Ring Buffer is in high memory, a
->     fatal DMA error occurs. This problem was not present in 2.6.24-rc2 due
->     to code to "Bias the placement of kernel pages at lower PFNs". When
->     commit 44048d70 reverted that code, the DMA error appeared. As a "fix",
->     use the GFP_DMA flag when allocating the buffer for 64-bit DMA. At present,
->     this problem is thought to arise from a hardware error.
+On Thursday, March 13, 2008 11:20 AM, Pascal Terjan  wrote:
 
-Is this logic upstream in 2.6.25-rcX already?  If so, do you have a git
-id for it so that I can match them up?
+> Signed-off-by: Pascal Terjan <pterjan@mandriva.com> ---
+> MAINTAINERS |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8391b0c..f895d98 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -2125,7 +2125,7 @@ M:	reinette.chatre@intel.com
+> L:	linux-wireless@vger.kernel.org
+> L:	ipw3945-devel@lists.sourceforge.net
+> W:	http://intellinuxwireless.org
+> -T:	git git://intellinuxwireless.org/repos/iwlwifi
+> +T:	git
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless
+> -testing.git S:	Supported
+> 
+> IOC3 ETHERNET DRIVER
+> --
+> 1.5.4.3
 
-thanks,
+We are actually working on a iwlwifi specific repository on
+git.kernel.org. This URL should point there instead. I will submit a
+patch for this when the repo is up and running.
 
-greg k-h
+Thanks
+
+Reinette
