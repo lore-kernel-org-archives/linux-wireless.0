@@ -1,516 +1,317 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:47909 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbYCGXXB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 18:23:01 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/2] rndis_wlan: cleanup,
-	rename and reorder enums and structures
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Date: Sat, 08 Mar 2008 01:23:17 +0200
-Message-ID: <20080307232317.15875.89491.stgit@localhost> (sfid-20080307_232309_164472_ABC72AAB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([66.187.233.31]:47466 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752536AbYCMOzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Mar 2008 10:55:38 -0400
+Subject: Re: [PATCH] libertas: convert RSSI to a direct command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803131059.44330.hs4233@mail.mn-solutions.de>
+References: <200803131059.44330.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 13 Mar 2008 10:50:30 -0400
+Message-Id: <1205419830.23812.14.camel@localhost.localdomain> (sfid-20080313_145544_534969_49890409)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename enums and structures to ndis_80211_* for greater readability. 
-Also change order so that enumerations are presented first.
+On Thu, 2008-03-13 at 10:59 +0100, Holger Schurig wrote:
+> Use __lbs_cmd() to get the RSSI values.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+Good patch; one thing we might want to do in the near future is cut the
+whole RSSI/NF/SNR mess in half by killing all the TYPE_BEACON bits of
+it.  The only places that TYPE_BEACON seem to be used are when getting
+stats for 'iwconfig' and when returning scanned BSSs for the noise
+value.  The noise value can certainly be cached _on its own_ in priv->
+since it's useful, but I think the rest of it is pretty pointless and we
+could just grab it locally in lbs_get_wireless_stats() which is the only
+place it's really used.  That cleanup can come later of course.
 
- drivers/net/wireless/rndis_wlan.c |  213 ++++++++++++++++++-------------------
- 1 files changed, 103 insertions(+), 110 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 10b776c..157c464 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -154,107 +154,100 @@ MODULE_PARM_DESC(workaround_interval,
- #define NDIS_802_11_LENGTH_RATES 8
- #define NDIS_802_11_LENGTH_RATES_EX 16
- 
--struct NDIS_802_11_SSID {
-+enum ndis_80211_net_type {
-+	ndis_80211_type_freq_hop,
-+	ndis_80211_type_direct_seq,
-+	ndis_80211_type_ofdm_a,
-+	ndis_80211_type_ofdm_g
-+};
-+
-+enum ndis_80211_net_infra {
-+	ndis_80211_infra_adhoc,
-+	ndis_80211_infra_infra,
-+	ndis_80211_infra_auto_unknown
-+};
-+
-+enum ndis_80211_auth_mode {
-+	ndis_80211_auth_open,
-+	ndis_80211_auth_shared,
-+	ndis_80211_auth_auto_switch,
-+	ndis_80211_auth_wpa,
-+	ndis_80211_auth_wpa_psk,
-+	ndis_80211_auth_wpa_none,
-+	ndis_80211_auth_wpa2,
-+	ndis_80211_auth_wpa2_psk
-+};
-+
-+enum ndis_80211_encr_status {
-+	ndis_80211_encr_wep_enabled,
-+	ndis_80211_encr_disabled,
-+	ndis_80211_encr_wep_key_absent,
-+	ndis_80211_encr_not_supported,
-+	ndis_80211_encr_tkip_enabled,
-+	ndis_80211_encr_tkip_key_absent,
-+	ndis_80211_encr_ccmp_enabled,
-+	ndis_80211_encr_ccmp_key_absent
-+};
-+
-+enum ndis_80211_priv_filter {
-+	ndis_80211_priv_accept_all,
-+	ndis_80211_priv_8021x_wep
-+};
-+
-+struct ndis_80211_ssid {
- 	__le32 SsidLength;
- 	u8 Ssid[NDIS_802_11_LENGTH_SSID];
- } __attribute__((packed));
- 
--enum NDIS_802_11_NETWORK_TYPE {
--	Ndis802_11FH,
--	Ndis802_11DS,
--	Ndis802_11OFDM5,
--	Ndis802_11OFDM24,
--	Ndis802_11NetworkTypeMax
--};
--
--struct NDIS_802_11_CONFIGURATION_FH {
-+struct ndis_80211_conf_freq_hop {
- 	__le32 Length;
- 	__le32 HopPattern;
- 	__le32 HopSet;
- 	__le32 DwellTime;
- } __attribute__((packed));
- 
--struct NDIS_802_11_CONFIGURATION {
-+struct ndis_80211_conf {
- 	__le32 Length;
- 	__le32 BeaconPeriod;
- 	__le32 ATIMWindow;
- 	__le32 DSConfig;
--	struct NDIS_802_11_CONFIGURATION_FH FHConfig;
-+	struct ndis_80211_conf_freq_hop FHConfig;
- } __attribute__((packed));
- 
--enum NDIS_802_11_NETWORK_INFRASTRUCTURE {
--	Ndis802_11IBSS,
--	Ndis802_11Infrastructure,
--	Ndis802_11AutoUnknown,
--	Ndis802_11InfrastructureMax
--};
--
--enum NDIS_802_11_AUTHENTICATION_MODE {
--	Ndis802_11AuthModeOpen,
--	Ndis802_11AuthModeShared,
--	Ndis802_11AuthModeAutoSwitch,
--	Ndis802_11AuthModeWPA,
--	Ndis802_11AuthModeWPAPSK,
--	Ndis802_11AuthModeWPANone,
--	Ndis802_11AuthModeWPA2,
--	Ndis802_11AuthModeWPA2PSK,
--	Ndis802_11AuthModeMax
--};
--
--enum NDIS_802_11_ENCRYPTION_STATUS {
--	Ndis802_11WEPEnabled,
--	Ndis802_11Encryption1Enabled = Ndis802_11WEPEnabled,
--	Ndis802_11WEPDisabled,
--	Ndis802_11EncryptionDisabled = Ndis802_11WEPDisabled,
--	Ndis802_11WEPKeyAbsent,
--	Ndis802_11Encryption1KeyAbsent = Ndis802_11WEPKeyAbsent,
--	Ndis802_11WEPNotSupported,
--	Ndis802_11EncryptionNotSupported = Ndis802_11WEPNotSupported,
--	Ndis802_11Encryption2Enabled,
--	Ndis802_11Encryption2KeyAbsent,
--	Ndis802_11Encryption3Enabled,
--	Ndis802_11Encryption3KeyAbsent
--};
--
--enum NDIS_802_11_PRIVACY_FILTER {
--	Ndis802_11PrivFilterAcceptAll,
--	Ndis802_11PrivFilter8021xWEP
--};
--
--struct NDIS_WLAN_BSSID_EX {
-+struct ndis_80211_bssid_ex {
- 	__le32 Length;
- 	u8 MacAddress[6];
- 	u8 Padding[2];
--	struct NDIS_802_11_SSID Ssid;
-+	struct ndis_80211_ssid Ssid;
- 	__le32 Privacy;
- 	__le32 Rssi;
- 	__le32 NetworkTypeInUse;
--	struct NDIS_802_11_CONFIGURATION Configuration;
-+	struct ndis_80211_conf Configuration;
- 	__le32 InfrastructureMode;
- 	u8 SupportedRates[NDIS_802_11_LENGTH_RATES_EX];
- 	__le32 IELength;
- 	u8 IEs[0];
- } __attribute__((packed));
- 
--struct NDIS_802_11_BSSID_LIST_EX {
-+struct ndis_80211_bssid_list_ex {
- 	__le32 NumberOfItems;
--	struct NDIS_WLAN_BSSID_EX Bssid[0];
-+	struct ndis_80211_bssid_ex Bssid[0];
- } __attribute__((packed));
- 
--struct NDIS_802_11_FIXED_IEs {
-+struct ndis_80211_fixed_ies {
- 	u8 Timestamp[8];
- 	__le16 BeaconInterval;
- 	__le16 Capabilities;
- } __attribute__((packed));
- 
--struct NDIS_802_11_WEP {
-+struct ndis_80211_wep_key {
- 	__le32 Length;
- 	__le32 KeyIndex;
- 	__le32 KeyLength;
- 	u8 KeyMaterial[32];
- } __attribute__((packed));
- 
--struct NDIS_802_11_KEY {
-+struct ndis_80211_key {
- 	__le32 Length;
- 	__le32 KeyIndex;
- 	__le32 KeyLength;
-@@ -264,13 +257,13 @@ struct NDIS_802_11_KEY {
- 	u8 KeyMaterial[32];
- } __attribute__((packed));
- 
--struct NDIS_802_11_REMOVE_KEY {
-+struct ndis_80211_remove_key {
- 	__le32 Length;
- 	__le32 KeyIndex;
- 	u8 Bssid[6];
- } __attribute__((packed));
- 
--struct RNDIS_CONFIG_PARAMETER_INFOBUFFER {
-+struct ndis_config_param {
- 	__le32 ParameterNameOffset;
- 	__le32 ParameterNameLength;
- 	__le32 ParameterType;
-@@ -334,7 +327,7 @@ struct rndis_wext_private {
- 	/* hardware state */
- 	int radio_on;
- 	int infra_mode;
--	struct NDIS_802_11_SSID essid;
-+	struct ndis_80211_ssid essid;
- 
- 	/* encryption stuff */
- 	int  encr_tx_key_index;
-@@ -484,7 +477,7 @@ static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
- static int rndis_set_config_parameter(struct usbnet *dev, char *param,
- 						int value_type, void *value)
- {
--	struct RNDIS_CONFIG_PARAMETER_INFOBUFFER *infobuf;
-+	struct ndis_config_param *infobuf;
- 	int value_len, info_len, param_len, ret, i;
- 	__le16 *unibuf;
- 	__le32 *dst_value;
-@@ -630,7 +623,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
- static int
- add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index);
- 
--static int get_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
-+static int get_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
- {
- 	int ret, len;
- 
-@@ -653,7 +646,7 @@ static int get_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
- }
- 
- 
--static int set_essid(struct usbnet *usbdev, struct NDIS_802_11_SSID *ssid)
-+static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
- {
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
- 	int ret;
-@@ -697,7 +690,7 @@ static int is_associated(struct usbnet *usbdev)
- static int disassociate(struct usbnet *usbdev, int reset_ssid)
- {
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
--	struct NDIS_802_11_SSID ssid;
-+	struct ndis_80211_ssid ssid;
- 	int i, ret = 0;
- 
- 	if (priv->radio_on) {
-@@ -737,23 +730,23 @@ static int set_auth_mode(struct usbnet *usbdev, int wpa_version, int authalg)
- 
- 	if (wpa_version & IW_AUTH_WPA_VERSION_WPA2) {
- 		if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_802_1X)
--			auth_mode = Ndis802_11AuthModeWPA2;
-+			auth_mode = ndis_80211_auth_wpa2;
- 		else
--			auth_mode = Ndis802_11AuthModeWPA2PSK;
-+			auth_mode = ndis_80211_auth_wpa2_psk;
- 	} else if (wpa_version & IW_AUTH_WPA_VERSION_WPA) {
- 		if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_802_1X)
--			auth_mode = Ndis802_11AuthModeWPA;
-+			auth_mode = ndis_80211_auth_wpa;
- 		else if (priv->wpa_keymgmt & IW_AUTH_KEY_MGMT_PSK)
--			auth_mode = Ndis802_11AuthModeWPAPSK;
-+			auth_mode = ndis_80211_auth_wpa_psk;
- 		else
--			auth_mode = Ndis802_11AuthModeWPANone;
-+			auth_mode = ndis_80211_auth_wpa_none;
- 	} else if (authalg & IW_AUTH_ALG_SHARED_KEY) {
- 		if (authalg & IW_AUTH_ALG_OPEN_SYSTEM)
--			auth_mode = Ndis802_11AuthModeAutoSwitch;
-+			auth_mode = ndis_80211_auth_auto_switch;
- 		else
--			auth_mode = Ndis802_11AuthModeShared;
-+			auth_mode = ndis_80211_auth_shared;
- 	} else
--		auth_mode = Ndis802_11AuthModeOpen;
-+		auth_mode = ndis_80211_auth_open;
- 
- 	tmp = cpu_to_le32(auth_mode);
- 	ret = rndis_set_oid(usbdev, OID_802_11_AUTHENTICATION_MODE, &tmp,
-@@ -778,9 +771,9 @@ static int set_priv_filter(struct usbnet *usbdev)
- 
- 	if (priv->wpa_version & IW_AUTH_WPA_VERSION_WPA2 ||
- 	    priv->wpa_version & IW_AUTH_WPA_VERSION_WPA)
--		tmp = cpu_to_le32(Ndis802_11PrivFilter8021xWEP);
-+		tmp = cpu_to_le32(ndis_80211_priv_8021x_wep);
- 	else
--		tmp = cpu_to_le32(Ndis802_11PrivFilterAcceptAll);
-+		tmp = cpu_to_le32(ndis_80211_priv_accept_all);
- 
- 	return rndis_set_oid(usbdev, OID_802_11_PRIVACY_FILTER, &tmp,
- 								sizeof(tmp));
-@@ -798,18 +791,18 @@ static int set_encr_mode(struct usbnet *usbdev, int pairwise, int groupwise)
- 		groupwise);
- 
- 	if (pairwise & IW_AUTH_CIPHER_CCMP)
--		encr_mode = Ndis802_11Encryption3Enabled;
-+		encr_mode = ndis_80211_encr_ccmp_enabled;
- 	else if (pairwise & IW_AUTH_CIPHER_TKIP)
--		encr_mode = Ndis802_11Encryption2Enabled;
-+		encr_mode = ndis_80211_encr_tkip_enabled;
- 	else if (pairwise &
- 		 (IW_AUTH_CIPHER_WEP40 | IW_AUTH_CIPHER_WEP104))
--		encr_mode = Ndis802_11Encryption1Enabled;
-+		encr_mode = ndis_80211_encr_wep_enabled;
- 	else if (groupwise & IW_AUTH_CIPHER_CCMP)
--		encr_mode = Ndis802_11Encryption3Enabled;
-+		encr_mode = ndis_80211_encr_ccmp_enabled;
- 	else if (groupwise & IW_AUTH_CIPHER_TKIP)
--		encr_mode = Ndis802_11Encryption2Enabled;
-+		encr_mode = ndis_80211_encr_tkip_enabled;
- 	else
--		encr_mode = Ndis802_11EncryptionDisabled;
-+		encr_mode = ndis_80211_encr_disabled;
- 
- 	tmp = cpu_to_le32(encr_mode);
- 	ret = rndis_set_oid(usbdev, OID_802_11_ENCRYPTION_STATUS, &tmp,
-@@ -877,7 +870,7 @@ static void set_default_iw_params(struct usbnet *usbdev)
- 	priv->wpa_keymgmt = 0;
- 	priv->wpa_version = 0;
- 
--	set_infra_mode(usbdev, Ndis802_11Infrastructure);
-+	set_infra_mode(usbdev, ndis_80211_infra_infra);
- 	set_auth_mode(usbdev, IW_AUTH_WPA_VERSION_DISABLED,
- 				IW_AUTH_ALG_OPEN_SYSTEM);
- 	set_priv_filter(usbdev);
-@@ -899,7 +892,7 @@ static int deauthenticate(struct usbnet *usbdev)
- static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
- {
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
--	struct NDIS_802_11_WEP ndis_key;
-+	struct ndis_80211_wep_key ndis_key;
- 	int ret;
- 
- 	if (key_len <= 0 || key_len > 32 || index < 0 || index >= 4)
-@@ -940,7 +933,7 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
- static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
- {
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
--	struct NDIS_802_11_REMOVE_KEY remove_key;
-+	struct ndis_80211_remove_key remove_key;
- 	__le32 keyindex;
- 	int ret;
- 
-@@ -1184,7 +1177,7 @@ static int rndis_iw_get_name(struct net_device *dev,
- static int rndis_iw_set_essid(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
- {
--	struct NDIS_802_11_SSID ssid;
-+	struct ndis_80211_ssid ssid;
- 	int length = wrqu->essid.length;
- 	struct usbnet *usbdev = dev->priv;
- 
-@@ -1212,7 +1205,7 @@ static int rndis_iw_set_essid(struct net_device *dev,
- static int rndis_iw_get_essid(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
- {
--	struct NDIS_802_11_SSID ssid;
-+	struct ndis_80211_ssid ssid;
- 	struct usbnet *usbdev = dev->priv;
- 	int ret;
- 
-@@ -1398,13 +1391,13 @@ static int rndis_iw_get_mode(struct net_device *dev,
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
- 
- 	switch (priv->infra_mode) {
--	case Ndis802_11IBSS:
-+	case ndis_80211_infra_adhoc:
- 		wrqu->mode = IW_MODE_ADHOC;
- 		break;
--	case Ndis802_11Infrastructure:
-+	case ndis_80211_infra_infra:
- 		wrqu->mode = IW_MODE_INFRA;
- 		break;
--	/*case Ndis802_11AutoUnknown:*/
-+	/*case ndis_80211_infra_auto_unknown:*/
- 	default:
- 		wrqu->mode = IW_MODE_AUTO;
- 		break;
-@@ -1424,14 +1417,14 @@ static int rndis_iw_set_mode(struct net_device *dev,
- 
- 	switch (wrqu->mode) {
- 	case IW_MODE_ADHOC:
--		mode = Ndis802_11IBSS;
-+		mode = ndis_80211_infra_adhoc;
- 		break;
- 	case IW_MODE_INFRA:
--		mode = Ndis802_11Infrastructure;
-+		mode = ndis_80211_infra_infra;
- 		break;
- 	/*case IW_MODE_AUTO:*/
- 	default:
--		mode = Ndis802_11AutoUnknown;
-+		mode = ndis_80211_infra_auto_unknown;
- 		break;
- 	}
- 
-@@ -1507,7 +1500,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
- 	struct usbnet *usbdev = dev->priv;
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
--	struct NDIS_802_11_KEY ndis_key;
-+	struct ndis_80211_key ndis_key;
- 	int keyidx, ret;
- 	u8 *addr;
- 
-@@ -1550,7 +1543,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	addr = ext->addr.sa_data;
- 	if (ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY) {
- 		/* group key */
--		if (priv->infra_mode == Ndis802_11IBSS)
-+		if (priv->infra_mode == ndis_80211_infra_adhoc)
- 			memset(ndis_key.Bssid, 0xff, ETH_ALEN);
- 		else
- 			get_bssid(usbdev, ndis_key.Bssid);
-@@ -1611,7 +1604,7 @@ static int rndis_iw_set_scan(struct net_device *dev,
- 
- 
- static char *rndis_translate_scan(struct net_device *dev,
--    char *cev, char *end_buf, struct NDIS_WLAN_BSSID_EX *bssid)
-+    char *cev, char *end_buf, struct ndis_80211_bssid_ex *bssid)
- {
- #ifdef DEBUG
- 	struct usbnet *usbdev = dev->priv;
-@@ -1645,13 +1638,13 @@ static char *rndis_translate_scan(struct net_device *dev,
- 			le32_to_cpu(bssid->InfrastructureMode));
- 	iwe.cmd = SIOCGIWMODE;
- 	switch (le32_to_cpu(bssid->InfrastructureMode)) {
--	case Ndis802_11IBSS:
-+	case ndis_80211_infra_adhoc:
- 		iwe.u.mode = IW_MODE_ADHOC;
- 		break;
--	case Ndis802_11Infrastructure:
-+	case ndis_80211_infra_infra:
- 		iwe.u.mode = IW_MODE_INFRA;
- 		break;
--	/*case Ndis802_11AutoUnknown:*/
-+	/*case ndis_80211_infra_auto_unknown:*/
- 	default:
- 		iwe.u.mode = IW_MODE_AUTO;
- 		break;
-@@ -1677,7 +1670,7 @@ static char *rndis_translate_scan(struct net_device *dev,
- 	devdbg(usbdev, "ENCODE %d", le32_to_cpu(bssid->Privacy));
- 	iwe.cmd = SIOCGIWENCODE;
- 	iwe.u.data.length = 0;
--	if (le32_to_cpu(bssid->Privacy) == Ndis802_11PrivFilterAcceptAll)
-+	if (le32_to_cpu(bssid->Privacy) == ndis_80211_priv_accept_all)
- 		iwe.u.data.flags = IW_ENCODE_DISABLED;
- 	else
- 		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
-@@ -1716,10 +1709,10 @@ static char *rndis_translate_scan(struct net_device *dev,
- 	iwe.u.data.length = strlen(sbuf);
- 	cev = iwe_stream_add_point(cev, end_buf, &iwe, sbuf);
- 
--	ie = (void *)(bssid->IEs + sizeof(struct NDIS_802_11_FIXED_IEs));
-+	ie = (void *)(bssid->IEs + sizeof(struct ndis_80211_fixed_ies));
- 	ie_len = min(bssid_len - (int)sizeof(*bssid),
- 					(int)le32_to_cpu(bssid->IELength));
--	ie_len -= sizeof(struct NDIS_802_11_FIXED_IEs);
-+	ie_len -= sizeof(struct ndis_80211_fixed_ies);
- 	while (ie_len >= sizeof(*ie) && sizeof(*ie) + ie->len <= ie_len) {
- 		if ((ie->id == MFIE_TYPE_GENERIC && ie->len >= 4 &&
- 				memcmp(ie->data, "\x00\x50\xf2\x01", 4) == 0) ||
-@@ -1746,8 +1739,8 @@ static int rndis_iw_get_scan(struct net_device *dev,
- 	struct usbnet *usbdev = dev->priv;
- 	void *buf = NULL;
- 	char *cev = extra;
--	struct NDIS_802_11_BSSID_LIST_EX *bssid_list;
--	struct NDIS_WLAN_BSSID_EX *bssid;
-+	struct ndis_80211_bssid_list_ex *bssid_list;
-+	struct ndis_80211_bssid_ex *bssid;
- 	int ret = -EINVAL, len, count, bssid_len;
- 
- 	devdbg(usbdev, "SIOCGIWSCAN");
-@@ -1948,7 +1941,7 @@ static int rndis_iw_set_freq(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
- {
- 	struct usbnet *usbdev = dev->priv;
--	struct NDIS_802_11_CONFIGURATION config;
-+	struct ndis_80211_conf config;
- 	unsigned int dsconfig;
- 	int len, ret;
- 
-@@ -1979,7 +1972,7 @@ static int rndis_iw_get_freq(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
- {
- 	struct usbnet *usbdev = dev->priv;
--	struct NDIS_802_11_CONFIGURATION config;
-+	struct ndis_80211_conf config;
- 	int len, ret;
- 
- 	len = sizeof(config);
-@@ -2266,14 +2259,14 @@ static int rndis_wext_get_caps(struct usbnet *dev)
- 			n = 8;
- 		for (i = 0; i < n; i++) {
- 			switch (le32_to_cpu(networks_supported.items[i])) {
--			case Ndis802_11FH:
--			case Ndis802_11DS:
-+			case ndis_80211_type_freq_hop:
-+			case ndis_80211_type_direct_seq:
- 				priv->caps |= CAP_MODE_80211B;
- 				break;
--			case Ndis802_11OFDM5:
-+			case ndis_80211_type_ofdm_a:
- 				priv->caps |= CAP_MODE_80211A;
- 				break;
--			case Ndis802_11OFDM24:
-+			case ndis_80211_type_ofdm_g:
- 				priv->caps |= CAP_MODE_80211G;
- 				break;
- 			}
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-13 09:50:26.000000000 +0100
+> @@ -454,6 +454,65 @@ static int lbs_cmd_802_11_reset(struct l
+>  	return 0;
+>  }
+>  
+> +static int lbs_get_rssi_callback(struct lbs_private *priv,
+> +	unsigned long dummy, struct cmd_header *resp)
+> +{
+> +	int ret;
+> +	struct cmd_ds_802_11_rssi_rsp *rssirsp = (void *) resp;
+> +
+> +	ret = le16_to_cpu(rssirsp->hdr.result);
+> +
+> +	/* store the non average value */
+> +	if (!ret) {
+> +		priv->SNR[TYPE_BEACON][TYPE_NOAVG] =
+> +			le16_to_cpu(rssirsp->SNR);
+> +		priv->NF[TYPE_BEACON][TYPE_NOAVG] =
+> +			le16_to_cpu(rssirsp->noisefloor);
+> +		priv->SNR[TYPE_BEACON][TYPE_AVG] =
+> +			le16_to_cpu(rssirsp->avgSNR);
+> +		priv->NF[TYPE_BEACON][TYPE_AVG] =
+> +			le16_to_cpu(rssirsp->avgnoisefloor);
+> +		priv->RSSI[TYPE_BEACON][TYPE_NOAVG] = CAL_RSSI(
+> +			priv->SNR[TYPE_BEACON][TYPE_NOAVG],
+> +			priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+> +		priv->RSSI[TYPE_BEACON][TYPE_AVG] = CAL_RSSI(
+> +			priv->SNR[TYPE_BEACON][TYPE_AVG] / AVG_SCALE,
+> +			priv->NF[TYPE_BEACON][TYPE_AVG] / AVG_SCALE);
+> +		lbs_deb_cmd("RSSI: beacon %d, avg %d\n",
+> +			priv->RSSI[TYPE_BEACON][TYPE_NOAVG],
+> +			priv->RSSI[TYPE_BEACON][TYPE_AVG]);
+> +	}
+> +
+> +	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+> +	return ret;
+> +}
+> +
+> +int lbs_get_rssi(struct lbs_private *priv)
+> +{
+> +	struct cmd_ds_802_11_rssi cmd;
+> +	int ret;
+> +
+> +	lbs_deb_enter(LBS_DEB_CMD);
+> +
+> +	memset(&cmd, sizeof(cmd), 0);
+> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+> +	cmd.N        = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
+> +
+> +	/* reset Beacon SNR/NF/RSSI values */
+> +	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = 0;
+> +	priv->SNR[TYPE_BEACON][TYPE_AVG] = 0;
+> +	priv->NF[TYPE_BEACON][TYPE_NOAVG] = 0;
+> +	priv->NF[TYPE_BEACON][TYPE_AVG] = 0;
+> +	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] = 0;
+> +	priv->RSSI[TYPE_BEACON][TYPE_AVG] = 0;
+> +
+> +	ret = __lbs_cmd(priv, CMD_802_11_RSSI, &cmd.hdr,
+> +		sizeof(struct cmd_ds_802_11_rssi_rsp),
+> +		lbs_get_rssi_callback, 0);
+> +	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+> +	return ret;
+> +}
+> +
+>  static int lbs_get_log_callback(struct lbs_private *priv, unsigned long dummy,
+>  	struct cmd_header *resp)
+>  {
+> @@ -484,7 +543,6 @@ int lbs_get_log(struct lbs_private *priv
+>  	return ret;
+>  }
+>  
+> -
+>  static int lbs_cmd_802_11_get_stat(struct lbs_private *priv,
+>  				    struct cmd_ds_command *cmd)
+>  {
+> @@ -868,27 +926,6 @@ out:
+>  	return ret;
+>  }
+>  
+> -static int lbs_cmd_802_11_rssi(struct lbs_private *priv,
+> -				struct cmd_ds_command *cmd)
+> -{
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
+> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
+> -	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
+> -
+> -	/* reset Beacon SNR/NF/RSSI values */
+> -	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = 0;
+> -	priv->SNR[TYPE_BEACON][TYPE_AVG] = 0;
+> -	priv->NF[TYPE_BEACON][TYPE_NOAVG] = 0;
+> -	priv->NF[TYPE_BEACON][TYPE_AVG] = 0;
+> -	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] = 0;
+> -	priv->RSSI[TYPE_BEACON][TYPE_AVG] = 0;
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_cmd_reg_access(struct lbs_private *priv,
+>  			       struct cmd_ds_command *cmdptr,
+>  			       u8 cmd_action, void *pdata_buf)
+> @@ -1445,10 +1482,6 @@ int lbs_prepare_and_send_command(struct 
+>  		ret = lbs_cmd_80211_ad_hoc_join(priv, cmdptr, pdata_buf);
+>  		break;
+>  
+> -	case CMD_802_11_RSSI:
+> -		ret = lbs_cmd_802_11_rssi(priv, cmdptr);
+> -		break;
+> -
+>  	case CMD_802_11_AD_HOC_STOP:
+>  		ret = lbs_cmd_80211_ad_hoc_stop(priv, cmdptr);
+>  		break;
+> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-13 09:49:57.000000000 +0100
+> @@ -248,36 +248,6 @@ static int lbs_ret_802_11_rate_adapt_rat
+>  	return 0;
+>  }
+>  
+> -static int lbs_ret_802_11_rssi(struct lbs_private *priv,
+> -				struct cmd_ds_command *resp)
+> -{
+> -	struct cmd_ds_802_11_rssi_rsp *rssirsp = &resp->params.rssirsp;
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	/* store the non average value */
+> -	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->SNR);
+> -	priv->NF[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->noisefloor);
+> -
+> -	priv->SNR[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgSNR);
+> -	priv->NF[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgnoisefloor);
+> -
+> -	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] =
+> -	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_NOAVG],
+> -		     priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+> -
+> -	priv->RSSI[TYPE_BEACON][TYPE_AVG] =
+> -	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_AVG] / AVG_SCALE,
+> -		     priv->NF[TYPE_BEACON][TYPE_AVG] / AVG_SCALE);
+> -
+> -	lbs_deb_cmd("RSSI: beacon %d, avg %d\n",
+> -	       priv->RSSI[TYPE_BEACON][TYPE_NOAVG],
+> -	       priv->RSSI[TYPE_BEACON][TYPE_AVG]);
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_ret_802_11_eeprom_access(struct lbs_private *priv,
+>  				  struct cmd_ds_command *resp)
+>  {
+> @@ -385,10 +355,6 @@ static inline int handle_cmd_response(st
+>  		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
+>  		break;
+>  
+> -	case CMD_RET(CMD_802_11_RSSI):
+> -		ret = lbs_ret_802_11_rssi(priv, resp);
+> -		break;
+> -
+>  	case CMD_RET(CMD_802_11_MAC_ADDRESS):
+>  		ret = lbs_ret_802_11_mac_address(priv, resp);
+>  		break;
+> Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-13 09:49:57.000000000 +0100
+> @@ -625,10 +625,7 @@ void lbs_association_worker(struct work_
+>  		if (success) {
+>  			lbs_deb_assoc("associated to %s\n",
+>  				print_mac(mac, priv->curbssparams.bssid));
+> -			lbs_prepare_and_send_command(priv,
+> -				CMD_802_11_RSSI,
+> -				0, CMD_OPTION_WAITFORRSP, 0, NULL);
+> -
+> +			lbs_get_rssi(priv);
+>  			lbs_get_log(priv);
+>  		} else {
+>  			ret = -1;
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-13 09:49:57.000000000 +0100
+> @@ -34,6 +34,7 @@ int lbs_cmd_copyback(struct lbs_private 
+>  
+>  int lbs_update_hw_spec(struct lbs_private *priv);
+>  
+> +int lbs_get_rssi(struct lbs_private *priv);
+>  int lbs_get_log(struct lbs_private *priv);
+>  
+>  int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+> Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-13 09:49:57.000000000 +0100
+> @@ -398,6 +398,8 @@ struct cmd_ds_802_11_rf_channel {
+>  };
+>  
+>  struct cmd_ds_802_11_rssi {
+> +	struct cmd_header hdr;
+> +
+>  	/* weighting factor */
+>  	__le16 N;
+>  
+> @@ -407,6 +409,8 @@ struct cmd_ds_802_11_rssi {
+>  };
+>  
+>  struct cmd_ds_802_11_rssi_rsp {
+> +	struct cmd_header hdr;
+> +
+>  	__le16 SNR;
+>  	__le16 noisefloor;
+>  	__le16 avgSNR;
+> @@ -700,8 +704,6 @@ struct cmd_ds_command {
+>  		struct cmd_ds_802_11_rate_adapt_rateset rateset;
+>  		struct cmd_ds_mac_multicast_adr madr;
+>  		struct cmd_ds_802_11_ad_hoc_join adj;
+> -		struct cmd_ds_802_11_rssi rssi;
+> -		struct cmd_ds_802_11_rssi_rsp rssirsp;
+>  		struct cmd_ds_802_11_disassociate dassociate;
+>  		struct cmd_ds_802_11_mac_address macadd;
+>  		struct cmd_ds_mac_reg_access macreg;
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-13 09:49:57.000000000 +0100
+> @@ -487,9 +487,7 @@ static void lbs_tx_timeout(struct net_de
+>  	   firmware has crapped itself -- rather than just a very
+>  	   busy medium. So send a harmless command, and if/when
+>  	   _that_ times out, we'll kick it in the head. */
+> -	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+> -				     0, 0, NULL);
+> -
+> +	lbs_get_rssi(priv);
+>  	lbs_deb_leave(LBS_DEB_TX);
+>  }
+>  
+> @@ -908,8 +906,7 @@ int lbs_resume(struct lbs_private *priv)
+>  
+>  	/* Firmware doesn't seem to give us RX packets any more
+>  	   until we send it some command. Might as well update */
+> -	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+> -				     0, 0, NULL);
+> +	lbs_get_rssi(priv);
+>  
+>  	netif_device_attach(priv->dev);
+>  	if (priv->mesh_dev)
+> Index: wireless-testing/drivers/net/wireless/libertas/scan.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-13 09:49:57.000000000 +0100
+> @@ -1371,8 +1371,7 @@ int lbs_get_scan(struct net_device *dev,
+>  
+>  	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
+>  	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate)
+> -		lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+> -					     CMD_OPTION_WAITFORRSP, 0, NULL);
+> +		lbs_get_rssi(priv);
+>  
+>  	mutex_lock(&priv->lock);
+>  	list_for_each_entry_safe (iter_bss, safe, &priv->network_list, list) {
+> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-13 09:48:49.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-13 09:49:57.000000000 +0100
+> @@ -890,8 +890,7 @@ static struct iw_statistics *lbs_get_wir
+>  	stats_valid = 1;
+>  
+>  	/* update stats asynchronously for future calls */
+> -	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+> -					0, 0, NULL);
+> +	lbs_get_rssi(priv);
+>  	lbs_get_log(priv);
+>  out:
+>  	if (!stats_valid) {
 
