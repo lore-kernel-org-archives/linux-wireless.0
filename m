@@ -1,102 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2628 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:48474 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755044AbYC1Ux2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 16:53:28 -0400
-Date: Fri, 28 Mar 2008 16:32:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless mini-summit agenda proposals?
-Message-ID: <20080328203246.GB810@tuxdriver.com> (sfid-20080328_205330_701058_DBCD9FFA)
-References: <20080131162514.GC6413@tuxdriver.com> <1201801923.3000.13.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1201801923.3000.13.camel@localhost.localdomain>
+	id S1750985AbYCMBn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 21:43:57 -0400
+Subject: Re: libertas: convert CMD_MAC_CONTROL to a direct command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803121605.41013.hs4233@mail.mn-solutions.de>
+References: <200803121605.41013.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 12 Mar 2008 21:38:51 -0400
+Message-Id: <1205372331.23943.8.camel@localhost.localdomain> (sfid-20080313_014359_900005_6B428B36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Excuse the top-posting...this isn't really a reply to Dan, but I
-wanted to remind everyone of his agenda suggestions...)
+On Wed, 2008-03-12 at 16:05 +0100, Holger Schurig wrote:
+> convert CMD_MAC_CONTROL to a direct command
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I'm sorry I didn't find-out sooner (apparently there was an email
-delivery problem of some sort), but we got approved for a mini-summit
-just before OLS in July:
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-	http://www.linuxsymposium.org/2008/minisummits.php
-
-This location is reasonably convenient for both North America and
-Europe, and many people attend the OLS event anyway.  Are there any
-major objections to this venue?
-
-I'm sure some people will need some help with funds for attending.
-I don't have any budget for such things, but if you are in need of
-assistance and believe your attendance to be necessary or beneficial
-then let me know -- I'll see if I can scratch-up some funds from
-somewhere.
-
-Any comments?
-
-John
-
-On Thu, Jan 31, 2008 at 12:52:03PM -0500, Dan Williams wrote:
-> On Thu, 2008-01-31 at 11:25 -0500, John W. Linville wrote:
-> > Greetings,
-> > 
-> > It looks as if we have a few venue options for a third wireless summit.
-> > While this may seem like a luxury, none of the options are perfect
-> > for everyone and each has it's own potential drawbacks.  So rather
-> > than move blindly forward with any given venue, I think it would be
-> > good to discuss some potential agenda points.
-> > 
-> > This will serve both to determine who is most interested in attending
-> > a summit and who might most need to be there.  This will also serve
-> > to justify the trouble of having a summit at all.  So, I'd like to
-> > open the 'floor' to discussion proposals.
-> > 
-> > What discussions pertinent to Linux wireless development do
-> > you want to see?  What can you contribute to those discussions?
-> > How would a face-to-face discussion of that issue be better than an
-> > online discussion?
 > 
-> cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
-> because email isn't optimal for this.  I haven't had enough time to jump
-> into it yet, but the fact that Johannes is the vast majority of the
-> effort here is worrisome.  Having a reference implementation (airo,
-> atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
-> probably be very useful, even just to get a sense of how the API works.
-> 
-> rfkill - how to clean up the mess, including how it's all supposed to
-> work from userspace with kernel bits, ACPI bits, vendor modules like
-> asus_acpi and dellWirelessCtl, input-only buttons, etc
-> 
-> WiMAX - what hardware is coming, what the APIs should look like (OMA-DM
-> is likely to be part of Sprint's stack for XOHM), what the driver
-> situation is, and how to fend off a repeat of the 802.11 regulatory
-> situation for WiMAX (most parts are apparently fullmac right now, but
-> softmac will surely come).
-> 
-> 802.11s - nail down issues that Javier/Luis/others might have and try to
-> push the 802.11s mesh stack forward (driver issues, API issues, etc)
-> 
-> 802.11n - do we need any discussion here or is it just a question of
-> executing on the current plan?
-> 
-> Userspace MLME - what's going on here?  Noise around this seems to be
-> quieter these days.  Is stuff going according to plan/schedule or are
-> there roadblocks?
-> 
-> lib80211/fullmac - maybe this just needs to be picked up and done by
-> somebody and doesn't need any discussion or whatever
-> 
-> Dan
-> 
-> 
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:51:41.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:56:12.000000000 +0100
+> @@ -1200,24 +1200,6 @@ static void lbs_submit_command(struct lb
+>  	lbs_deb_leave(LBS_DEB_HOST);
+>  }
+>  
+> -static int lbs_cmd_mac_control(struct lbs_private *priv,
+> -				struct cmd_ds_command *cmd)
+> -{
+> -	struct cmd_ds_mac_control *mac = &cmd->params.macctrl;
 > -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	cmd->command = cpu_to_le16(CMD_MAC_CONTROL);
+> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_mac_control) + S_DS_GEN);
+> -	mac->action = cpu_to_le16(priv->currentpacketfilter);
+> -
+> -	lbs_deb_cmd("MAC_CONTROL: action 0x%04x, size %d\n",
+> -		    le16_to_cpu(mac->action), le16_to_cpu(cmd->size));
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  /**
+>   *  This function inserts command node to cmdfreeq
+>   *  after cleans it. Requires priv->driver_lock held.
+> @@ -1307,12 +1289,15 @@ int lbs_set_radio_control(struct lbs_pri
+>  int lbs_set_mac_packet_filter(struct lbs_private *priv)
+>  {
+>  	int ret = 0;
+> +	struct cmd_ds_mac_control cmd;
+>  
+>  	lbs_deb_enter(LBS_DEB_CMD);
+>  
+> -	/* Send MAC control command to station */
+> -	ret = lbs_prepare_and_send_command(priv,
+> -				    CMD_MAC_CONTROL, 0, 0, 0, NULL);
+> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+> +	cmd.action = cpu_to_le16(priv->currentpacketfilter);
+> +	cmd.reserved = 0;
+> +
+> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+>  
+>  	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+>  	return ret;
+> @@ -1382,10 +1367,6 @@ int lbs_prepare_and_send_command(struct 
+>  		ret = lbs_cmd_802_11_ps_mode(priv, cmdptr, cmd_action);
+>  		break;
+>  
+> -	case CMD_MAC_CONTROL:
+> -		ret = lbs_cmd_mac_control(priv, cmdptr);
+> -		break;
+> -
+>  	case CMD_802_11_ASSOCIATE:
+>  	case CMD_802_11_REASSOCIATE:
+>  		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
+> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:51:41.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:55:30.000000000 +0100
+> @@ -394,7 +394,6 @@ static inline int handle_cmd_response(st
+>  		break;
+>  
+>  	case CMD_RET(CMD_MAC_MULTICAST_ADR):
+> -	case CMD_RET(CMD_MAC_CONTROL):
+>  	case CMD_RET(CMD_802_11_RESET):
+>  	case CMD_RET(CMD_802_11_AUTHENTICATE):
+>  	case CMD_RET(CMD_802_11_BEACON_STOP):
+> Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:51:41.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:55:30.000000000 +0100
+> @@ -211,8 +211,9 @@ struct cmd_ds_802_11_get_log {
+>  };
+>  
+>  struct cmd_ds_mac_control {
+> +	struct cmd_header hdr;
+>  	__le16 action;
+> -	__le16 reserved;
+> +	u16 reserved;
+>  };
+>  
+>  struct cmd_ds_mac_multicast_adr {
+> @@ -695,7 +696,6 @@ struct cmd_ds_command {
+>  	/* command Body */
+>  	union {
+>  		struct cmd_ds_802_11_ps_mode psmode;
+> -		struct cmd_ds_mac_control macctrl;
+>  		struct cmd_ds_802_11_associate associate;
+>  		struct cmd_ds_802_11_deauthenticate deauth;
+>  		struct cmd_ds_802_11_ad_hoc_start ads;
+> --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-John W. Linville
-linville@tuxdriver.com
