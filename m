@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54419 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:51674 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753830AbYC0PYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 11:24:39 -0400
-Subject: Re: [PATCH] libertas: the compact flash driver is no longer
-	experimental
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803261326.55437.hs4233@mail.mn-solutions.de>
-References: <200803261326.55437.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 27 Mar 2008 11:23:19 -0400
-Message-Id: <1206631399.23336.45.camel@localhost.localdomain> (sfid-20080327_152443_879038_B9DA1CC7)
-Mime-Version: 1.0
+	id S1753901AbYCMSGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Mar 2008 14:06:16 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: Tkip fix sparse endianity complain in tkip code
+Date: Thu, 13 Mar 2008 20:05:53 +0200
+Message-Id: <1205431553-20567-1-git-send-email-tomas.winkler@intel.com> (sfid-20080313_180623_712651_6B75C784)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-26 at 13:26 +0100, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+This patch fix wrong cast in tkip code
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/tkip.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-It works better than some other drivers already :)
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index f61f1dd..0ce2a84 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -118,7 +118,7 @@ static u8 *set_ext_iv(u8 *pos, u16 iv16)
+ 
+ static u8 *set_tkip_iv(u8 *pos, u32 iv32)
+ {
+-	*((u32 *)pos) = cpu_to_le32(iv32);
++	*((__le32 *)pos) = cpu_to_le32(iv32);
+ 	return pos + 4;
+ }
+ 
+-- 
+1.5.4.1
 
-> Index: wireless-testing/drivers/net/wireless/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/Kconfig	2008-03-26 12:25:36.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/Kconfig	2008-03-26 12:25:44.000000000 +0100
-> @@ -283,7 +283,7 @@ config LIBERTAS_USB
->  
->  config LIBERTAS_CS
->  	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
-> -	depends on LIBERTAS && PCMCIA && EXPERIMENTAL
-> +	depends on LIBERTAS && PCMCIA
->  	select FW_LOADER
->  	---help---
->  	  A driver for Marvell Libertas 8385 CompactFlash devices.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
