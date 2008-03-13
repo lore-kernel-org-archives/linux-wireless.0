@@ -1,122 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36998 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:52771 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754450AbYCFOjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 09:39:49 -0500
-Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
-From: Dan Williams <dcbw@redhat.com>
-To: Helge Hafting <helgehaf@mail.aitel.hist.no>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Helge Hafting <helge.hafting@aitel.hist.no>,
-	Joonwoo Park <joonwpark81@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <47CFF955.4010501@mail.aitel.hist.no>
-References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
-	 <20080305094859.GA10077@ehus.geninetworks.com>
-	 <47CEA5CB.6040001@aitel.hist.no>
-	 <1ba2fa240803050701y57913de2s635eaf8b5e3b4f96@mail.gmail.com>
-	 <47CFF955.4010501@mail.aitel.hist.no>
-Content-Type: text/plain
-Date: Thu, 06 Mar 2008 09:30:14 -0500
-Message-Id: <1204813814.29410.23.camel@localhost.localdomain> (sfid-20080306_143953_118744_74530AA4)
-Mime-Version: 1.0
+	id S1752682AbYCMAIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2008 20:08:48 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
+Date: Wed, 12 Mar 2008 17:05:59 -0700
+Message-Id: <1205366762-12828-3-git-send-email-reinette.chatre@intel.com> (sfid-20080313_000852_304539_6DAF2BDF)
+In-Reply-To: <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+ <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-03-06 at 15:01 +0100, Helge Hafting wrote:
-> Tomas Winkler wrote:
-> > On Wed, Mar 5, 2008 at 3:53 PM, Helge Hafting
-> > <helge.hafting@aitel.hist.no> wrote:
-> >   
-> >> Joonwoo Park wrote:
-> >>  > On Wed, Mar 05, 2008 at 06:40:09PM +0900, Joonwoo Park wrote:
-> >>  >
-> >>  >> resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
-> >>  >>
-> >>  >> The function ieee80211_ioctl_siwencode shouldn't be called if
-> >>  >> authentication process is not completed.
-> >>  >> This patch makes the ieee80211_ioctl_siwessid to wait for authentication
-> >>  >> is completed.
-> >>  >>
-> >>  >> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> >>  >>
-> >>  >
-> >>  > Helge,
-> >>  >
-> >>  > Can you please try this patch?
-> >>  > I believe this patch helps your problem.
-> >>  >
-> >>  I tried it, and still have problems. The messages may be slightly different:
-> >>
-> >>  I first bring up the interface with "ifconfig wlan0 up"
-> >>  and then try "iwconfig wlan0 essid my_essid key s:password"
-> >>  over and over till it works. This gave me:
-> >>
-> >>  Initial auth_alg=0
-> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
-> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
-> >>  wlan0: authenticate with AP 00:14:1b:5e:13:40
-> >>  wlan0: authentication with AP 00:14:1b:5e:13:40 timed out
-> >>
-> >>  A total of 5 tries went wrong. The sixth time it worked, with
-> >>  different messages and a different access point.
-> >>  (There are several access points at work.)
-> >>  Initial auth_alg=0
-> >>  wlan0: authenticate with AP 00:12:7f:ce:9c:e0
-> >>  wlan0: RX authentication from 00:12:7f:ce:9c:e0 (alg=0 transaction=2
-> >>  status=0)
-> >>  wlan0: authenticated
-> >>  wlan0: associate with AP 00:12:7f:ce:9c:e0 (capab=0x431 status=0 aid=242)
-> >>  wlan0: associated
-> >>  wlan0: CTS protection enabled (BSSID=00:12:7f:ce:9c:e0)
-> >>  wlan0: switched to long barker preamble (BSSID=BSSID=00:12:7f:ce:9c:e0)
-> >>  wlan0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 burst=0
-> >>  wlan0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 burst=0
-> >>  wlan0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 burst=30
-> >>  wlan0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 burst=15
-> >>  wlan0: link becomes ready
-> >>
-> >>
-> >>  Only 6 attempts is an improvement, if it stays that way.  Still, the
-> >>  old ipw3945 succeeded on first try. :-/
-> >>  I hope the testing can be of help.
-> >>
-> >>  Helge Hafting
-> >>
-> >>
-> >>
-> >>     
-> > Is this shared or open authentication?
-> > Do you happend to have a sniff capture of the association ?
-> I am not sure what you mean by the question.
-> This network uses WEP encryption (some users have older wireless equipment)
-> there is one essid and a single shared password that everybody uses.
-> Security is not that important, this is mostly to keep out outside bandwith
-> wasters/pirates.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-WEP has two authentication modes, "Shared Key" and "Open System".  He
-wants to know which method your access point is using.  During
-authentication, Open System is a simple two-frame request/response.  For
-Shared Key, there's an additional challenge/response where the AP sends
-a block of data, the client encrypts it with the WEP key, and sends it
-back to the AP where it's verified.  Only if it verifies does the AP
-complete association with the client.
+This patch makes mac80211 able to send a phase1 key for TKIP decryption.
+This is needed for drivers that don't do the rekeying by themselves
+(i.e. iwlwifi). Upon IV16 wrap around, the packet is decrypted in SW, if
+decryption is ok, mac80211 calls to set_key with a new phase 1 RX key.
 
-You need to ensure that the mode matches between clients and the AP.
-Some APs have an "Auto" option that just accepts both methods from the
-client.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h |   10 ++++++++++
+ net/mac80211/tkip.c    |   19 +++++++++++++++++--
+ net/mac80211/tkip.h    |    1 +
+ net/mac80211/wpa.c     |   12 ++++++++++++
+ 4 files changed, 40 insertions(+), 2 deletions(-)
 
-Dan
-
-> I do not have a sniff of this association, but I can try to sniff the 
-> next time.
-> will wireshark be useful, or is some kind of wireless specific sniffer 
-> needed?
-> 
-> 
-> Helge Hafting
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a0c7cd7..3b5d57c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -590,12 +590,20 @@ enum ieee80211_key_alg {
+  * @IEEE80211_KEY_FLAG_TKIP_REQ_TX_P2_KEY: This flag should be set by
+  *	the driver for a TKIP key if it requires a phase2 TX key generation
+  *	in SW. The key will be attached to each packet.
++ * @IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY: This flag should be set by the driver
++ *	for a TKIP key if it requires phase 1 key generation in software.
++ *	The phase 1 key will be sent in the same context as Rx.
++ * @IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID: Set by mac80211, valid only when
++ *	IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY was set. When set, the phase 1
++ *	fields (tkip_p1k and tkip_iv32) in ieee80211_key_conf are valid.
+  */
+ enum ieee80211_key_flags {
+ 	IEEE80211_KEY_FLAG_WMM_STA	= 1<<0,
+ 	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+ 	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
+ 	IEEE80211_KEY_FLAG_TKIP_REQ_TX_P2_KEY = 1<<3,
++	IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY = 1<<4,
++	IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID = 1<<5,
+ };
+ 
+ /**
+@@ -619,6 +627,8 @@ struct ieee80211_key_conf {
+ 	u8 flags;
+ 	s8 keyidx;
+ 	u8 keylen;
++	u16 tkip_p1k[5];
++	u8 tkip_iv32;
+ 	u8 key[0];
+ };
+ 
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 18a3fb0..f61f1dd 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -171,7 +171,7 @@ u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key)
+ 	return pos;
+ }
+ 
+-static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
++void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+@@ -263,7 +263,8 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 		return TKIP_DECRYPT_REPLAY;
+ 	}
+ 
+-	if (only_iv) {
++	if (only_iv &&
++		!(key->conf.flags & IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY)) {
+ 		res = TKIP_DECRYPT_OK;
+ 		key->u.tkip.rx_initialized[queue] = 1;
+ 		goto done;
+@@ -275,6 +276,14 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+ 				   iv32, key->u.tkip.p1k_rx[queue]);
++		if (key->conf.flags & IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY) {
++			/* The driver needs a phase 1 key, provide it */
++			memcpy(&key->conf.tkip_p1k,
++				&key->u.tkip.p1k_rx[queue],
++				sizeof(key->conf.tkip_p1k));
++			key->conf.tkip_iv32 = iv32;
++			key->conf.flags |= IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID;
++		}
+ #ifdef CONFIG_TKIP_DEBUG
+ 		{
+ 			int i;
+@@ -294,6 +303,12 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ #endif /* CONFIG_TKIP_DEBUG */
+ 	}
+ 
++	if (only_iv) {
++		res = TKIP_DECRYPT_OK;
++		key->u.tkip.rx_initialized[queue] = 1;
++		goto done;
++	}
++
+ 	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
+ 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+ 			   iv16, rc4key);
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index 662354b..9a07102 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -14,6 +14,7 @@
+ #include "ieee80211_key.h"
+ 
+ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key);
++void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta, u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index ee9c5cf..478251b 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -324,6 +324,18 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_UNUSABLE;
+ 	}
+ 
++	if (key->conf.flags & IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID) {
++		u8 bcast[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++		u8 *sta_addr = rx->sta->addr;
++
++		if (is_multicast_ether_addr(hdr->addr1))
++			sta_addr = bcast;
++
++		rx->local->ops->set_key(local_to_hw(rx->local),
++			SET_KEY, rx->dev->dev_addr, sta_addr, &key->conf);
++		key->conf.flags &= ~IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID;
++	}
++
+ 	/* Trim ICV */
+ 	skb_trim(skb, skb->len - TKIP_ICV_LEN);
+ 
+-- 
+1.5.3.4
 
