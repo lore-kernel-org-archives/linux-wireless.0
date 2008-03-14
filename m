@@ -1,103 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:9855 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937477AbYCSVbo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 17:31:44 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so648638wah.23
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 14:31:43 -0700 (PDT)
-Message-ID: <1ba2fa240803181656g70fb65bbk64cc0238949524fa@mail.gmail.com> (sfid-20080319_213211_746673_4EBA35CB)
-Date: Wed, 19 Mar 2008 01:56:48 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0803181640t23893f1ew3b08b851a7ab1a38@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
-	 <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com>
-	 <f6ca9fed0803181610v10b533e9n267540e1b00d004f@mail.gmail.com>
-	 <1ba2fa240803181635o6cc264f4s578bbca7e4561c0e@mail.gmail.com>
-	 <f6ca9fed0803181640t23893f1ew3b08b851a7ab1a38@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:45596 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbYCNRsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Mar 2008 13:48:40 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Assaf Krauss <assaf.krauss@intel.com>
+Subject: [PATCH 1/5] iwlwifi: remove macros containing offsets from eeprom struct
+Date: Fri, 14 Mar 2008 10:38:45 -0700
+Message-Id: <1205516329-22172-2-git-send-email-reinette.chatre@intel.com> (sfid-20080314_174956_516774_A02EF0D4)
+In-Reply-To: <1205516329-22172-1-git-send-email-reinette.chatre@intel.com>
+References: <1205516329-22172-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2008 at 1:40 AM, drago01 <drago01@gmail.com> wrote:
->
-> On Wed, Mar 19, 2008 at 12:35 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->  >
->  > On Wed, Mar 19, 2008 at 1:10 AM, drago01 <drago01@gmail.com> wrote:
->  >  >
->  >  > On Wed, Mar 19, 2008 at 12:07 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->  >  >  > On Wed, Mar 19, 2008 at 12:06 AM, Chatre, Reinette
->  >  >  >
->  >  >  > <reinette.chatre@intel.com> wrote:
->  >  >  >  >
->  >  >  >
->  >  >  >
->  >  >  > > On Tuesday, March 18, 2008 2:47 PM, drago01  wrote:
->  >  >  >  >
->  >  >  >  >  >>  Please note that the driver loads/unloads the firmware during
->  >  >  >  >  >>  interface up/down. That means that the host will not receive rfkill
->  >  >  >  >  >>  events while the interface is down as there is no firmware to deal
->  >  >  >  >  >> with these events.
->  >  >  >  >  >>
->  >  >  >  >  >>  Reinette
->  >  >  >  >  >>
->  >  >  >  >  >
->  >  >  >  >  > OK that makes sense.
->  >  >  >  >  > So a solution would be to not unload the firmware on down when the hw
->  >  >  >  >  > rfkill is on. Is this a acceptable one or are they other (better
->  >  >  >  >  > solutions). I can't think of any. And userspace cannot do anything
->  >  >  >  >  > because bringing the device up and down again to look for the rfkill
->  >  >  >  >  > status would be racy.
->  >  >  >  >
->  >  >  >  >  Having the firmware unloaded when the interface is down is a requirement
->  >  >  >  >  for powersaving. We do not want the device to consume power when it is
->  >  >  >  >  not used. The rfkill status should always be reported accurately when
->  >  >  >  >  the interface is up. If it is not then it is a bug.
->  >  >  >
->  >  >  >  We will catch the HW rfkill event after loading the uCode so there is
->  >  >  >  no problem with this.
->  >  >  >  Not sure where should be the SW rfkill state stored.
->  >  >
->  >  >  yeah, but the ucode will be loaded when the device is brought back up,
->  >  >  which does not happen in NM's case.
->  >  >
->  >
->  >  You mean that NM doesn't have any notification that the radio was enabled again?
->  yes
->
->
->  >  This one is tricky with 3945...the trivial question is why NM disables
->  >  the device?
->  Thats a question for Dan, maybe other devices/drivers just send an
->  event to userspace "please disable the radio" ?
->
->
->  >  In 4965 there is an interrupt announcing rkfil, in 3965 it's event
->  >  from firmware. There was portably a good reason why the interrupt was
->  >  added :)
->
->  OK, but aren't the interrupts disabled too on down? (don't have any
->  4965 hw to test with)
+A user needing to access these fields can use offsetof() for
+access. The comments still contain the offset to assist with
+debugging.
 
-Should not be.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h |   32 ----------------------------
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h  |   32 ----------------------------
+ 2 files changed, 0 insertions(+), 64 deletions(-)
 
->
->  >  Sorry no solution for now.
->
->  ok, might be a way to solve it in userspace (not bringing down the device)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index 1ca6fa4..368da98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -198,43 +198,27 @@ struct iwl3945_eeprom_temperature_corr {
+  */
+ struct iwl3945_eeprom {
+ 	u8 reserved0[16];
+-#define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
+ 	u16 device_id;	/* abs.ofs: 16 */
+ 	u8 reserved1[2];
+-#define EEPROM_PMC                          (2*0x0A)	/* 2 bytes */
+ 	u16 pmc;		/* abs.ofs: 20 */
+ 	u8 reserved2[20];
+-#define EEPROM_MAC_ADDRESS                  (2*0x15)	/* 6  bytes */
+ 	u8 mac_address[6];	/* abs.ofs: 42 */
+ 	u8 reserved3[58];
+-#define EEPROM_BOARD_REVISION               (2*0x35)	/* 2  bytes */
+ 	u16 board_revision;	/* abs.ofs: 106 */
+ 	u8 reserved4[11];
+-#define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
+ 	u8 board_pba_number[9];	/* abs.ofs: 119 */
+ 	u8 reserved5[8];
+-#define EEPROM_VERSION                      (2*0x44)	/* 2  bytes */
+ 	u16 version;		/* abs.ofs: 136 */
+-#define EEPROM_SKU_CAP                      (2*0x45)	/* 1  bytes */
+ 	u8 sku_cap;		/* abs.ofs: 138 */
+-#define EEPROM_LEDS_MODE                    (2*0x45+1)	/* 1  bytes */
+ 	u8 leds_mode;		/* abs.ofs: 139 */
+-#define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
+ 	u16 oem_mode;
+-#define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
+ 	u16 wowlan_mode;	/* abs.ofs: 142 */
+-#define EEPROM_LEDS_TIME_INTERVAL           (2*0x48)	/* 2  bytes */
+ 	u16 leds_time_interval;	/* abs.ofs: 144 */
+-#define EEPROM_LEDS_OFF_TIME                (2*0x49)	/* 1  bytes */
+ 	u8 leds_off_time;	/* abs.ofs: 146 */
+-#define EEPROM_LEDS_ON_TIME                 (2*0x49+1)	/* 1  bytes */
+ 	u8 leds_on_time;	/* abs.ofs: 147 */
+-#define EEPROM_ALMGOR_M_VERSION             (2*0x4A)	/* 1  bytes */
+ 	u8 almgor_m_version;	/* abs.ofs: 148 */
+-#define EEPROM_ANTENNA_SWITCH_TYPE          (2*0x4A+1)	/* 1  bytes */
+ 	u8 antenna_switch_type;	/* abs.ofs: 149 */
+ 	u8 reserved6[42];
+-#define EEPROM_REGULATORY_SKU_ID            (2*0x60)	/* 4  bytes */
+ 	u8 sku_id[4];		/* abs.ofs: 192 */
+ 
+ /*
+@@ -249,9 +233,7 @@ struct iwl3945_eeprom {
+  *
+  * 2.4 GHz channels 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+  */
+-#define EEPROM_REGULATORY_BAND_1            (2*0x62)	/* 2  bytes */
+ 	u16 band_1_count;	/* abs.ofs: 196 */
+-#define EEPROM_REGULATORY_BAND_1_CHANNELS   (2*0x63)	/* 28 bytes */
+ 	struct iwl3945_eeprom_channel band_1_channels[14];  /* abs.ofs: 196 */
+ 
+ /*
+@@ -259,36 +241,28 @@ struct iwl3945_eeprom {
+  * 5.0 GHz channels 7, 8, 11, 12, 16
+  * (4915-5080MHz) (none of these is ever supported)
+  */
+-#define EEPROM_REGULATORY_BAND_2            (2*0x71)	/* 2  bytes */
+ 	u16 band_2_count;	/* abs.ofs: 226 */
+-#define EEPROM_REGULATORY_BAND_2_CHANNELS   (2*0x72)	/* 26 bytes */
+ 	struct iwl3945_eeprom_channel band_2_channels[13];  /* abs.ofs: 228 */
+ 
+ /*
+  * 5.2 GHz channels 34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
+  * (5170-5320MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_3            (2*0x7F)	/* 2  bytes */
+ 	u16 band_3_count;	/* abs.ofs: 254 */
+-#define EEPROM_REGULATORY_BAND_3_CHANNELS   (2*0x80)	/* 24 bytes */
+ 	struct iwl3945_eeprom_channel band_3_channels[12];  /* abs.ofs: 256 */
+ 
+ /*
+  * 5.5 GHz channels 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
+  * (5500-5700MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_4            (2*0x8C)	/* 2  bytes */
+ 	u16 band_4_count;	/* abs.ofs: 280 */
+-#define EEPROM_REGULATORY_BAND_4_CHANNELS   (2*0x8D)	/* 22 bytes */
+ 	struct iwl3945_eeprom_channel band_4_channels[11];  /* abs.ofs: 282 */
+ 
+ /*
+  * 5.7 GHz channels 145, 149, 153, 157, 161, 165
+  * (5725-5825MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_5            (2*0x98)	/* 2  bytes */
+ 	u16 band_5_count;	/* abs.ofs: 304 */
+-#define EEPROM_REGULATORY_BAND_5_CHANNELS   (2*0x99)	/* 12 bytes */
+ 	struct iwl3945_eeprom_channel band_5_channels[6];  /* abs.ofs: 306 */
+ 
+ 	u8 reserved9[194];
+@@ -296,15 +270,9 @@ struct iwl3945_eeprom {
+ /*
+  * 3945 Txpower calibration data.
+  */
+-#define EEPROM_TXPOWER_CALIB_GROUP0 0x200
+-#define EEPROM_TXPOWER_CALIB_GROUP1 0x240
+-#define EEPROM_TXPOWER_CALIB_GROUP2 0x280
+-#define EEPROM_TXPOWER_CALIB_GROUP3 0x2c0
+-#define EEPROM_TXPOWER_CALIB_GROUP4 0x300
+ #define IWL_NUM_TX_CALIB_GROUPS 5
+ 	struct iwl3945_eeprom_txpower_group groups[IWL_NUM_TX_CALIB_GROUPS];
+ /* abs.ofs: 512 */
+-#define EEPROM_CALIB_TEMPERATURE_CORRECT 0x340
+ 	struct iwl3945_eeprom_temperature_corr corrections;  /* abs.ofs: 832 */
+ 	u8 reserved16[172];	/* fill out to full 1024 byte block */
+ } __attribute__ ((packed));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index ad486fe..404c700 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -228,49 +228,31 @@ struct iwl4965_eeprom_calib_info {
+  */
+ struct iwl4965_eeprom {
+ 	u8 reserved0[16];
+-#define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
+ 	u16 device_id;		/* abs.ofs: 16 */
+ 	u8 reserved1[2];
+-#define EEPROM_PMC                          (2*0x0A)	/* 2 bytes */
+ 	u16 pmc;		/* abs.ofs: 20 */
+ 	u8 reserved2[20];
+-#define EEPROM_MAC_ADDRESS                  (2*0x15)	/* 6  bytes */
+ 	u8 mac_address[6];	/* abs.ofs: 42 */
+ 	u8 reserved3[58];
+-#define EEPROM_BOARD_REVISION               (2*0x35)	/* 2  bytes */
+ 	u16 board_revision;	/* abs.ofs: 106 */
+ 	u8 reserved4[11];
+-#define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
+ 	u8 board_pba_number[9];	/* abs.ofs: 119 */
+ 	u8 reserved5[8];
+-#define EEPROM_VERSION                      (2*0x44)	/* 2  bytes */
+ 	u16 version;		/* abs.ofs: 136 */
+-#define EEPROM_SKU_CAP                      (2*0x45)	/* 1  bytes */
+ 	u8 sku_cap;		/* abs.ofs: 138 */
+-#define EEPROM_LEDS_MODE                    (2*0x45+1)	/* 1  bytes */
+ 	u8 leds_mode;		/* abs.ofs: 139 */
+-#define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
+ 	u16 oem_mode;
+-#define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
+ 	u16 wowlan_mode;	/* abs.ofs: 142 */
+-#define EEPROM_LEDS_TIME_INTERVAL           (2*0x48)	/* 2  bytes */
+ 	u16 leds_time_interval;	/* abs.ofs: 144 */
+-#define EEPROM_LEDS_OFF_TIME                (2*0x49)	/* 1  bytes */
+ 	u8 leds_off_time;	/* abs.ofs: 146 */
+-#define EEPROM_LEDS_ON_TIME                 (2*0x49+1)	/* 1  bytes */
+ 	u8 leds_on_time;	/* abs.ofs: 147 */
+-#define EEPROM_ALMGOR_M_VERSION             (2*0x4A)	/* 1  bytes */
+ 	u8 almgor_m_version;	/* abs.ofs: 148 */
+-#define EEPROM_ANTENNA_SWITCH_TYPE          (2*0x4A+1)	/* 1  bytes */
+ 	u8 antenna_switch_type;	/* abs.ofs: 149 */
+ 	u8 reserved6[8];
+-#define EEPROM_4965_BOARD_REVISION          (2*0x4F)	/* 2 bytes */
+ 	u16 board_revision_4965;	/* abs.ofs: 158 */
+ 	u8 reserved7[13];
+-#define EEPROM_4965_BOARD_PBA               (2*0x56+1)	/* 9 bytes */
+ 	u8 board_pba_number_4965[9];	/* abs.ofs: 173 */
+ 	u8 reserved8[10];
+-#define EEPROM_REGULATORY_SKU_ID            (2*0x60)	/* 4  bytes */
+ 	u8 sku_id[4];		/* abs.ofs: 192 */
+ 
+ /*
+@@ -285,9 +267,7 @@ struct iwl4965_eeprom {
+  *
+  * 2.4 GHz channels 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
+  */
+-#define EEPROM_REGULATORY_BAND_1            (2*0x62)	/* 2  bytes */
+ 	u16 band_1_count;	/* abs.ofs: 196 */
+-#define EEPROM_REGULATORY_BAND_1_CHANNELS   (2*0x63)	/* 28 bytes */
+ 	struct iwl4965_eeprom_channel band_1_channels[14]; /* abs.ofs: 196 */
+ 
+ /*
+@@ -295,36 +275,28 @@ struct iwl4965_eeprom {
+  * 5.0 GHz channels 7, 8, 11, 12, 16
+  * (4915-5080MHz) (none of these is ever supported)
+  */
+-#define EEPROM_REGULATORY_BAND_2            (2*0x71)	/* 2  bytes */
+ 	u16 band_2_count;	/* abs.ofs: 226 */
+-#define EEPROM_REGULATORY_BAND_2_CHANNELS   (2*0x72)	/* 26 bytes */
+ 	struct iwl4965_eeprom_channel band_2_channels[13]; /* abs.ofs: 228 */
+ 
+ /*
+  * 5.2 GHz channels 34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
+  * (5170-5320MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_3            (2*0x7F)	/* 2  bytes */
+ 	u16 band_3_count;	/* abs.ofs: 254 */
+-#define EEPROM_REGULATORY_BAND_3_CHANNELS   (2*0x80)	/* 24 bytes */
+ 	struct iwl4965_eeprom_channel band_3_channels[12]; /* abs.ofs: 256 */
+ 
+ /*
+  * 5.5 GHz channels 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
+  * (5500-5700MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_4            (2*0x8C)	/* 2  bytes */
+ 	u16 band_4_count;	/* abs.ofs: 280 */
+-#define EEPROM_REGULATORY_BAND_4_CHANNELS   (2*0x8D)	/* 22 bytes */
+ 	struct iwl4965_eeprom_channel band_4_channels[11]; /* abs.ofs: 282 */
+ 
+ /*
+  * 5.7 GHz channels 145, 149, 153, 157, 161, 165
+  * (5725-5825MHz)
+  */
+-#define EEPROM_REGULATORY_BAND_5            (2*0x98)	/* 2  bytes */
+ 	u16 band_5_count;	/* abs.ofs: 304 */
+-#define EEPROM_REGULATORY_BAND_5_CHANNELS   (2*0x99)	/* 12 bytes */
+ 	struct iwl4965_eeprom_channel band_5_channels[6]; /* abs.ofs: 306 */
+ 
+ 	u8 reserved10[2];
+@@ -345,7 +317,6 @@ struct iwl4965_eeprom {
+  *
+  * NOTE:  4965 does not support FAT channels on 2.4 GHz.
+  */
+-#define EEPROM_REGULATORY_BAND_24_FAT_CHANNELS (2*0xA0)	/* 14 bytes */
+ 	struct iwl4965_eeprom_channel band_24_channels[7]; /* abs.ofs: 320 */
+ 	u8 reserved11[2];
+ 
+@@ -353,7 +324,6 @@ struct iwl4965_eeprom {
+  * 5.2 GHz FAT channels 36 (40), 44 (48), 52 (56), 60 (64),
+  * 100 (104), 108 (112), 116 (120), 124 (128), 132 (136), 149 (153), 157 (161)
+  */
+-#define EEPROM_REGULATORY_BAND_52_FAT_CHANNELS (2*0xA8)	/* 22 bytes */
+ 	struct iwl4965_eeprom_channel band_52_channels[11]; /* abs.ofs: 336 */
+ 	u8 reserved12[6];
+ 
+@@ -362,7 +332,6 @@ struct iwl4965_eeprom {
+  * Driver does not work with txpower calibration version < 5.
+  * This value is simply a 16-bit number, no major/minor versions here.
+  */
+-#define EEPROM_CALIB_VERSION_OFFSET            (2*0xB6)	/* 2 bytes */
+ 	u16 calib_version;	/* abs.ofs: 364 */
+ 	u8 reserved13[2];
+ 	u8 reserved14[96];	/* abs.ofs: 368 */
+@@ -370,7 +339,6 @@ struct iwl4965_eeprom {
+ /*
+  * 4965 Txpower calibration data.
+  */
+-#define EEPROM_IWL_CALIB_TXPOWER_OFFSET        (2*0xE8)	/* 48  bytes */
+ 	struct iwl4965_eeprom_calib_info calib_info;	/* abs.ofs: 464 */
+ 
+ 	u8 reserved16[140];	/* fill out to full 1024 byte block */
+-- 
+1.5.3.4
 
-That  will probably work.. still need more investigation.
