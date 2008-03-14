@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:25070 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755534AbYCGI5o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 03:57:44 -0500
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC] RCPI support in radiotap and in our wireless subsystems
-Date: Fri, 7 Mar 2008 17:57:18 +0900
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	radiotap@mail.ojctech.com,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
-	"Haris Kremo" <harisk@winlab.rutgers.edu>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Simon Barber" <simon@devicescape.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>,
-	"Javier Cardona" <javier@cozybit.com>,
-	"Sam Leffler" <sam@errno.com>, "Jean Tourrilhes" <jt@hpl.hp.com>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <43e72e890803061238u50847f1fs587627c5fac028d6@mail.gmail.com> <200803070932.51396.bruno@thinktube.com> <43e72e890803061904h742df37fuaa12977c45e457a@mail.gmail.com>
-In-Reply-To: <43e72e890803061904h742df37fuaa12977c45e457a@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3517 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752642AbYCNBwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Mar 2008 21:52:47 -0400
+Date: Thu, 13 Mar 2008 21:29:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] mac80211: Tkip fix sparse endianity complain in
+	tkip code
+Message-ID: <20080314012900.GC31964@tuxdriver.com> (sfid-20080314_015249_748899_204C84FE)
+References: <1205431553-20567-1-git-send-email-tomas.winkler@intel.com> <1205442130.15910.18.camel@johannes.berg> <1ba2fa240803131657o3858f12ey1b55d0f23a216f7f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803071757.19302.bruno@thinktube.com> (sfid-20080307_085750_256814_D6EDF4CD)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803131657o3858f12ey1b55d0f23a216f7f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 March 2008 12:04:24 Luis R. Rodriguez wrote:
-> >  it could be changed to something like:
-> >
-> >   * @signal: signal strength in dBm above noise or RCPI according to flag
->
-> As it stands I don't think all drivers could populate this field under
-> that description. For example, ssi in b43 is set to some magical value
-> we have no clue what it means.
->
-> We *could* test this stuff and see if it matches RCPI for each device,
-> or just try to figure out at least what RSSI is wrt to the observed
-> signal through a spectrum analyser (and even jssi is for b43) but I
-> wonder how this will change upon hw revisions.
->
-> >   * @noise: PHY noise in dBm when receiving this frame
-> >   (remove ssi)
->
-> Again, the problem in clarifying this also puts a restriction on what
-> driver developers may know about their hardware.
+On Fri, Mar 14, 2008 at 01:57:39AM +0200, Tomas Winkler wrote:
+> On Thu, Mar 13, 2008 at 11:02 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
 
-yes, but you suggested RCPI which is even more difficult to deliver. well - i 
-don't know *any* device which could...
+> >  The patch introducing this code will be reverted because this is also
+> >  rather bad code since it's not known that "pos" is aligned to a
+> >  four-byte boundary.
+> 
+> Agree, actually I was puzzled it was even merged in after all these
+> discussions. Anyhow it sparsed into my eye so I put a patch on it.
 
-ok. what about 3 hw flags then?
+The beauty of the wireless-testing tree is it gives me more freedom
+to merge patches without being married to them. :-)
 
-something like:
-_SIGNAL_RSSI_UNITLESS
-_SIGNAL_RSSI_DBM
-_SIGNAL_RCPI
-
-so mac80211 can fill in the right radiotap headers, and drivers can make it 
-clear what they support. it's clear that drivers should strive to deliver the 
-most exact when they can.
-
-we have the same problem with the rx timestamp. we made a definition and ath5k 
-for example can't deliver. but i think a clear definition and a clear note 
-where it cannot be delivered is better than no definition at all :)
-
-bruno
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
