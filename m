@@ -1,202 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55887 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758149AbYCSTni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:43:38 -0400
-Subject: Re: [PATCH, take 2] libertas: make a handy lbs_cmd_async() command
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803191011.00430.hs4233@mail.mn-solutions.de>
-References: <200803181119.22293.hs4233@mail.mn-solutions.de>
-	 <200803191011.00430.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 19 Mar 2008 11:27:49 -0400
-Message-Id: <1205940469.4169.12.camel@localhost.localdomain> (sfid-20080319_194449_302162_0D58E552)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55808 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbYCPAQ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Mar 2008 20:16:58 -0400
+Subject: Re: [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CAcR6z96gBIaHHiRsOaC"
+Date: Sat, 15 Mar 2008 15:38:26 +0100
+Message-Id: <1205591906.15910.44.camel@johannes.berg> (sfid-20080316_001711_875836_4E6A0682)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-19 at 10:11 +0100, Holger Schurig wrote:
-> This uses a static lbs_cmd_async_callback function, which is a
-> noop. Just setting the callback argument to __lbs_cmd_async()
-> to NULL won't work, because then the cmdnode wouldn't be
-> released.
-> 
-> This also makes __lbs_cmd_async() a static method, which is
-> now only used by lbs_cmd() and lbs_cmd_async().
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+--=-CAcR6z96gBIaHHiRsOaC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> ---
-> 
-> This patch is needed to fix the CMD_MAC_CONTROL bug correcly.
-> 
-> Compared with "take 1", this patch doesn't leak cmd_ctrl_node's
-> anymore.
-> 
-> 
-> [PATCH] libertas: make a handy lbs_cmd_async() command
-> 
-> This uses a static lbs_cmd_async_callback function, which is a noop. Just
-> setting the callback argument to __lbs_cmd_async() to NULL won't work,
-> because then the cmdnode wouldn't be released.
-> 
-> This also makes __lbs_cmd_async() a static method, which is now only used by
-> lbs_cmd() and lbs_cmd_async().
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
-> ---
-> 
-> This patch is needed to fix the CMD_MAC_CONTROL bug correcly. Patch for this
-> follows in the next mail.
-> 
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:04:44.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:05:25.000000000 +0100
-> @@ -20,6 +20,46 @@ static void lbs_set_cmd_ctrl_node(struct
->  
-> 
->  /**
-> + *  @brief Simple callback that copies response back into command
-> + *
-> + *  @param priv    	A pointer to struct lbs_private structure
-> + *  @param extra  	A pointer to the original command structure for which
-> + *                      'resp' is a response
-> + *  @param resp         A pointer to the command response
-> + *
-> + *  @return 	   	0 on success, error on failure
-> + */
-> +int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
-> +		     struct cmd_header *resp)
-> +{
-> +	struct cmd_header *buf = (void *)extra;
-> +	uint16_t copy_len;
-> +
-> +	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
-> +	memcpy(buf, resp, copy_len);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
-> +
-> +/**
-> + *  @brief Simple callback that ignores the result. Use this if
-> + *  you just want to send a command to the hardware, but don't
-> + *  care for the result.
-> + *
-> + *  @param priv         ignored
-> + *  @param extra        ignored
-> + *  @param resp         ignored
-> + *
-> + *  @return 	   	0 for success
-> + */
-> +static int lbs_cmd_async_callback(struct lbs_private *priv, unsigned long extra,
-> +		     struct cmd_header *resp)
-> +{
-> +	return 0;
-> +}
-> +
-> +
-> +/**
->   *  @brief Checks whether a command is allowed in Power Save mode
->   *
->   *  @param command the command ID
-> @@ -1242,7 +1282,7 @@ void lbs_complete_command(struct lbs_pri
->  	cmd->cmdwaitqwoken = 1;
->  	wake_up_interruptible(&cmd->cmdwait_q);
->  
-> -	if (!cmd->callback)
-> +	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
->  		__lbs_cleanup_and_insert_cmd(priv, cmd);
->  	priv->cur_cmd = NULL;
->  }
-> @@ -2018,32 +2058,10 @@ void lbs_ps_confirm_sleep(struct lbs_pri
->  }
->  
-> 
-> -/**
-> - *  @brief Simple callback that copies response back into command
-> - *
-> - *  @param priv    	A pointer to struct lbs_private structure
-> - *  @param extra  	A pointer to the original command structure for which
-> - *                      'resp' is a response
-> - *  @param resp         A pointer to the command response
-> - *
-> - *  @return 	   	0 on success, error on failure
-> - */
-> -int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
-> -		     struct cmd_header *resp)
-> -{
-> -	struct cmd_header *buf = (void *)extra;
-> -	uint16_t copy_len;
-> -
-> -	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
-> -	memcpy(buf, resp, copy_len);
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
-> -
-> -struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-> -				      struct cmd_header *in_cmd, int in_cmd_size,
-> -				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> -				      unsigned long callback_arg)
-> +static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
-> +	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
-> +	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> +	unsigned long callback_arg)
->  {
->  	struct cmd_ctrl_node *cmdnode;
->  
-> @@ -2080,9 +2098,6 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
->  
->  	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
->  
-> -	/* here was the big old switch() statement, which is now obsolete,
-> -	 * because the caller of lbs_cmd() sets up all of *cmd for us. */
-> -
->  	cmdnode->cmdwaitqwoken = 0;
->  	lbs_queue_cmd(priv, cmdnode);
->  	wake_up_interruptible(&priv->waitq);
-> @@ -2092,6 +2107,15 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
->  	return cmdnode;
->  }
->  
-> +void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-> +	struct cmd_header *in_cmd, int in_cmd_size)
-> +{
-> +	lbs_deb_enter(LBS_DEB_CMD);
-> +	__lbs_cmd_async(priv, command, in_cmd, in_cmd_size,
-> +		lbs_cmd_async_callback, 0);
-> +	lbs_deb_leave(LBS_DEB_CMD);
-> +}
-> +
->  int __lbs_cmd(struct lbs_private *priv, uint16_t command,
->  	      struct cmd_header *in_cmd, int in_cmd_size,
->  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:44.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:46.000000000 +0100
-> @@ -18,12 +18,9 @@
->  #define lbs_cmd_with_response(priv, cmdnr, cmd)	\
->  	lbs_cmd(priv, cmdnr, cmd, lbs_cmd_copyback, (unsigned long) (cmd))
->  
-> -/* __lbs_cmd() will free the cmdnode and return success/failure.
-> -   __lbs_cmd_async() requires that the callback free the cmdnode */
-> -struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-> -				      struct cmd_header *in_cmd, int in_cmd_size,
-> -				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-> -				      unsigned long callback_arg);
-> +void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-> +	struct cmd_header *in_cmd, int in_cmd_size);
-> +
->  int __lbs_cmd(struct lbs_private *priv, uint16_t command,
->  	      struct cmd_header *in_cmd, int in_cmd_size,
->  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+
+On Wed, 2008-03-12 at 17:05 -0700, Reinette Chatre wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>=20
+> This patch makes the mac80211 able to send a ready phase2 key to the low
+> level driver for TKIP encryption. Iwlwifi needs to get a phase2 key to
+> encrypt TX packets in HW.
+
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -287,6 +287,7 @@ struct ieee80211_tx_control {
+>  	u8 iv_len;		/* length of the IV field in octets */
+>  	u8 queue;		/* hardware queue to use for this frame;
+>  				 * 0 =3D highest, hw->queues-1 =3D lowest */
+> +	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
+
+I have to admit that I'm rather uncomfortable with adding this code to
+the stack. Not only because that is a rather large field that most other
+drivers will not use, but also because it doesn't cover the use case the
+Broadcom driver needs (only phase 1 key generated). Also, I don't think
+we should take the "push" model to the extreme, that will just
+complicate things in the future.
+
+As for the transmit path here, we can trivially export
+ieee80211_tkip_gen_rc4key() and, because key_conf is embedded in struct
+ieee80211_key, give it a key_conf parameter that the driver knows about
+from set_key(). That way, the driver can call that function for each
+packet instead of having the stack do that, it only has to keep track of
+the keys which it will most likely anyway.
+
+Also, looking at what you do here, I found this comment:
+        /* FIXME: need to differenciate between static and dynamic key
+         * in the level of mac80211 */
+        static_key =3D !iwl4965_is_associated(priv);
+
+I think that is pretty bogus because there isn't really a distinction
+between dynamic and static keys, what's the reason for differentiating
+in the driver? Also, the driver will do rather odd things when
+ * associate
+ * set a key
+ * disassociate
+ * delete the key
+
+johannes
+
+--=-CAcR6z96gBIaHHiRsOaC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR9vfYaVg1VMiehFYAQLJKQ//ZOLay5Ry58kWRmGGLcbCGHdnLdDvCqeZ
+U4ANj4+wGOKF1o88f82fnpFq/cLop2FCPfxLerEzVN/xDlFp+Yo0udUsz418Ec2H
+qI9s+ZGkSCbqMUzpQ0NgMPXQxjWHZ1C1S8YzdgkDQ+1GYp87kdietUp9hTdM7ZPR
+SLnbba9LWkI2ECalW5U+CRAApn8ZdGb2aDspoGGoFkLCjM8Te4lyf9FqUTXQTQIV
+SGAYsspGDYAxjPCJk806cELZ/xNTuqZlcMdASg6rxzt0Z+Fu09kegcSU5QJGxpWq
+kyCnBmePhqtEH/+SZqxZv8ODSIUam5l1cQg5XLlV1xI+sjkbpYEfqTkbbZOz4IOt
+4+dqkgUee/9i593rsS0haDUvrvlT+gz4kuzeX6J4Toa0qi4MUHihWme+DL/9bqXQ
+E3eLWniQccz2JXvqZ5gmYvxb2cz32y9wZSOFdc45nsKJ1FPTaGbyUY9+tl7oLkzY
+tjGAu6uPmIBxFEYaXuRWpYPe4blIStbsVdgTG6N2LCnm74d8aVO08GL9DI7hY6yG
+gbRW276unj/CeDRaMvwvJHSSiyl4WgaB1Quj1cUVMZx7osb8e2wuRPeDmVZjtseC
+9r8EmsIQEfYwqLARMIWl5nG0VcE3/qC6zW004b3SEABDS9FsAC49/pbzx+KKKddK
+N51Lf4gOkCU=
+=/Djx
+-----END PGP SIGNATURE-----
+
+--=-CAcR6z96gBIaHHiRsOaC--
 
