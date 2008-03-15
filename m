@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41511 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653AbYCZMuy (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:53354 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbYCOUjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 08:50:54 -0400
-Subject: Re: IBSS RTNL assertion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com> (sfid-20080324_162156_026330_E1B802F6)
-References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
-	 (sfid-20080324_162156_026330_E1B802F6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Csr4Z3iGttI+sKBe6AlF"
-Date: Wed, 26 Mar 2008 13:06:19 +0100
-Message-Id: <1206533179.16475.313.camel@johannes.berg> (sfid-20080326_125110_310515_D473A698)
-Mime-Version: 1.0
+	Sat, 15 Mar 2008 16:39:02 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so857676fgb.17
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2008 13:39:01 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: PATCH 2/2] rt2x00: Add id for Corega CG-WLUSB2GPX
+Date: Sat, 15 Mar 2008 21:38:29 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200803152137.51308.IvDoorn@gmail.com>
+In-Reply-To: <200803152137.51308.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803152138.29450.IvDoorn@gmail.com> (sfid-20080315_203919_821872_D085EF13)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
---=-Csr4Z3iGttI+sKBe6AlF
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+This adds the id for Corega CG-WLUSB2GPX.
 
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-On Mon, 2008-03-24 at 18:21 +0200, Tomas Winkler wrote:
-> Has anybody experience the one bellow? Any insights?
-
-> RTNL: assertion failed at net/mac80211/sta_info.c (140)
-
-I think that can be fixed by making ieee80211_sta_join_ibss() lock the
-rtnl around sta_info_flush(). Please try that.
-
-> =EF=BB=BFLooks like there is a quite lock mess in wireless-testing.
-
-That is a gross exaggeration.
-
-johannes
-
---=-Csr4Z3iGttI+sKBe6AlF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+o8OqVg1VMiehFYAQLLsQ/+Ir0BxMwWKYMXss7Xi2JHiWux2yBTsltk
-/mp5rv+BU1Wb/a1xERMTXKlgjgQ+MkzSWu3JqoT+Rt1ECPqMKLtMr/J1clcumhW9
-mYM2DE8J9aKy2e7fsnFJ3H0MvBVfhw3Pce0rHOfFnp4XyLG+CYV61yGRqeB7pLPV
-0saNCp0HcBqdw2vUjw4UniMvVkfSIsNLLqJfZv6FykYVv+b8WNQutZsj3n1hPI0K
-K/AT7OOZxX9vzs1jv8aWuafQqeKj3ogHRi9rVQP/Pw6B9STvQUHvFMpXtzwiv6xy
-naDeWIlZwxDtqPAwdWFKTOrJRUQP+9xSUHrHptUKrMclNMZFPa3c5KLfdK760Dfd
-H6psWw0HUc1Vf/UdalHvVSO74PdgjGRyQxznSXp/d5ILaM+M+TK8WX/mqiPdmKwE
-LYpx9pqLwNeYBfJ9A1NQtTeSuSNlDEpf9v3KVzB0nJeGV2P6+A8oeybYvhM07KCW
-Ozo5+0MYIytcPxHQgWrUGu5fTJCf3zuU1MBeSsoyltIR8GcE0NcgDql4IClp7Io+
-x800MUvTHZf0KQz9+N033WCIYBJIKiIIh+j+G8Qwe5TtIcPVP40ySThycEwXRvnA
-B7qhif1XZ+7ISDdb8zIsSb3H/I2teKNKkbNEaRJVLz7Wdp6t/WY/XUH32WeCgwtq
-Um/nvhmSHww=
-=92Sy
------END PGP SIGNATURE-----
-
---=-Csr4Z3iGttI+sKBe6AlF--
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index b50f476..83f8287 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2163,6 +2163,8 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	{ USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Conceptronic */
+ 	{ USB_DEVICE(0x14b2, 0x3c22), USB_DEVICE_DATA(&rt73usb_ops) },
++	/* Corega */
++	{ USB_DEVICE(0x07aa, 0x002e), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x07d1, 0x3c03), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c04), USB_DEVICE_DATA(&rt73usb_ops) },
+-- 
+1.5.4.3
 
