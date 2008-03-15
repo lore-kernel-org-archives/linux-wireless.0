@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from embla.aitel.hist.no ([158.38.50.22]:58279 "EHLO
-	embla.aitel.hist.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933585AbYCEMVB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 07:21:01 -0500
-Message-ID: <47CE8ED6.7030302@aitel.hist.no> (sfid-20080305_122119_741216_EF442F9F)
-Date: Wed, 05 Mar 2008 13:15:18 +0100
-From: Helge Hafting <helge.hafting@aitel.hist.no>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwl3945 associated and _worked_ with a *wrong* essid!
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mfe1.polimi.it ([131.175.12.23]:46671 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752043AbYCOSDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Mar 2008 14:03:12 -0400
+Date: Sat, 15 Mar 2008 19:01:21 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] [RFT] b43legacy: fix bcm4303 crash
+Message-ID: <20080315190121.70edbfcd@morte> (sfid-20080315_180322_259738_23BEB717)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I recently wrote about my iwl3945 problems - I usually
-have to try 20-50 times before I can use a wep-encrypted access point.
-Once the link goes up - no more problems. But getting the first
-connection takes time.
+This should fix an hard crash which happened upon driver loading on bcm4303
+rev. 2 devices. The bug was originally reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=384981.
+Please test.
 
-Yesterday something weird happened.
-I run the same iwconfig command over and over. Then a wild guess:
-Perhaps the driver or linux is clever enough to see that I
-just set the same essid and key as last time, and optimize the
-operation away completely? I have no idea if this actually happens,
-but I changed the essid (added a few garbage characters)
-in order to force a difference. I was about to run iwconfig again
-with the correct essid, when I noticed that the link was up!
-
-An "iwconfig" without parameters showed that the PC indeed
-had associated to the usual access point, and the essid was wrong one 
-indeed.
-I then ran "dhclient", got an IP address, and used my home network
-for a few hours. No problems, but the essid was wrong all the time.
-
-I thought this ought to be impossible - so I can only guess that
-the essid is stored in several places - one place used by "iwconfig"
-to display the current essid, and somewhere else used to program
-the radio. And the latter place is not necessarily updated when
-"iwconfig essid <something>" is run - and therefore the link
-worked anyway. This could possibly explain why things fail
-so much - perhaps the essid is set correctly only occationally?
-
-Kernel: 2.6.25-rc3, SMP 64-bit. Other sw from debian testing.
-
-Helge Hafting
+This won't make bcm4303 rev. 2 devices working anyway, there still are some
+issues with initial values which I'm trying to fix.
 
 
+-- 
+Ciao
+Stefano
