@@ -1,37 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4065 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754673AbYC1CuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 22:50:15 -0400
-Date: Thu, 27 Mar 2008 22:33:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: TKIP patches
-Message-ID: <20080328023336.GA10006@tuxdriver.com> (sfid-20080328_025020_004121_FF23E8F7)
-References: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
+Received: from mfe1.polimi.it ([131.175.12.23]:42421 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752075AbYCOSKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Mar 2008 14:10:07 -0400
+Date: Sat, 15 Mar 2008 19:08:36 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] [RFT] b43legacy: fix bcm4303 crash
+Message-ID: <20080315190836.5020b884@morte> (sfid-20080315_182427_160097_F716B310)
+In-Reply-To: <20080315190121.70edbfcd@morte>
+References: <20080315190121.70edbfcd@morte>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2008 at 03:23:28AM +0200, Tomas Winkler wrote:
-> John, what restraining you from applying TKIP patches to wireless-testing
-> First of all they were acked by Johannes second they need to got into
-> wider use, most of  the people don't pick up code from the mailing
-> list but from git directory.
-> Even TKIP is stupid encryption schema and everybody wants see it dead
-> it's still used. From our testing our patches reduces significantly
-> cpu utilization and throughput.
-> If there are any other issues please let us know
+On Sat, 15 Mar 2008 19:01:21 +0100
+Stefano Brivio <stefano.brivio@polimi.it> wrote:
 
-The only TKIP-related patches I have in my queue that haven't been
-applied are some cleanups from Harvey Harrison.  What other patches
-do you mean?  The ones from a week or so ago have already been applied.
+> This should fix an hard crash which happened upon driver loading on bcm4303
+> rev. 2 devices. The bug was originally reported here:
+> https://bugzilla.redhat.com/show_bug.cgi?id=384981.
+> Please test.
 
-John
+Ehr, sure. :/ Here it comes:
+
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c
+@@ -3047,7 +3047,6 @@ static void b43legacy_wireless_core_exit
+ 	}
+ 
+ 	ssb_device_disable(dev->dev, 0);
+-	ssb_bus_may_powerdown(dev->dev->bus);
+ }
+ 
+ static void prepare_phy_data_for_init(struct b43legacy_wldev *dev)
+@@ -3214,7 +3213,6 @@ err_kfree_tssitbl:
+ err_kfree_lo_control:
+ 	kfree(phy->lo_control);
+ 	phy->lo_control = NULL;
+-	ssb_bus_may_powerdown(bus);
+ 	B43legacy_WARN_ON(b43legacy_status(dev) != B43legacy_STAT_UNINIT);
+ 	return err;
+ }
+@@ -3534,7 +3532,7 @@ static int b43legacy_wireless_core_attac
+ 
+ 	err = b43legacy_phy_versioning(dev);
+ 	if (err)
+-		goto err_powerdown;
++		goto out;
+ 	/* Check if this device supports multiband. */
+ 	if (!pdev ||
+ 	    (pdev->device != 0x4312 &&
+@@ -3560,10 +3558,10 @@ static int b43legacy_wireless_core_attac
+ 
+ 	err = b43legacy_validate_chipaccess(dev);
+ 	if (err)
+-		goto err_powerdown;
++		goto out;
+ 	err = b43legacy_setup_modes(dev, have_bphy, have_gphy);
+ 	if (err)
+-		goto err_powerdown;
++		goto out;
+ 
+ 	/* Now set some default "current_dev" */
+ 	if (!wl->current_dev)
+@@ -3573,14 +3571,9 @@ static int b43legacy_wireless_core_attac
+ 	b43legacy_radio_turn_off(dev, 1);
+ 	b43legacy_switch_analog(dev, 0);
+ 	ssb_device_disable(dev->dev, 0);
+-	ssb_bus_may_powerdown(bus);
+ 
+ out:
+ 	return err;
+-
+-err_powerdown:
+-	ssb_bus_may_powerdown(bus);
+-	return err;
+ }
+ 
+ static void b43legacy_one_core_detach(struct ssb_device *dev)
+Index: wireless-testing/drivers/ssb/main.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/main.c
++++ wireless-testing/drivers/ssb/main.c
+@@ -1082,6 +1082,10 @@ int ssb_bus_may_powerdown(struct ssb_bus
+ 		goto out;
+ 
+ 	cc = &bus->chipco;
++
++	if (cc->dev->id.revision < 5)
++		goto out;
++
+ 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_SLOW);
+ 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 0);
+ 	if (err)
+
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Ciao
+Stefano
