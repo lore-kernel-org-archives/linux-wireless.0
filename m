@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4447 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757384AbYC0QUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 12:20:36 -0400
-Date: Thu, 27 Mar 2008 11:58:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Balaji Rao <balajirrao@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Question on Wireless NICs
-Message-ID: <20080327155842.GA3624@tuxdriver.com> (sfid-20080327_162057_809248_C324590E)
-References: <200803260011.29045.balajirrao@gmail.com> <20080325193219.GC30587@tuxdriver.com> <1206498769.23595.6.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1206498769.23595.6.camel@dv>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54112 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676AbYCPRgN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Mar 2008 13:36:13 -0400
+Subject: [PATCH] mac80211: use ieee80211_get_channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 16 Mar 2008 18:35:56 +0100
+Message-Id: <1205688956.3878.5.camel@johannes.berg> (sfid-20080316_173616_682891_8D289BD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 10:32:48PM -0400, Pavel Roskin wrote:
-> On Tue, 2008-03-25 at 15:32 -0400, John W. Linville wrote:
-> 
-> > The gPXE (formerly etherboot) project seems to support PCI-based
-> > (e.g. cardbus, but not PCMCIA) orinoco devices.  I cannot verify that,
-> > since I have no such device (donations accepted!)...
-> 
-> Just to set the record straight, I'm unaware of any CardBus devices
-> compatible with the orinoco driver, i.e. Prism 2-3, Symbol Trilogy or
-> Hermes I based 802.11b device.
-> 
-> At the first glance, gPXE appears to support Prism chipset only, either
-> native PCI or PCMCIA behind PLX9052 bridge.
+Use the new ieee80211_get_channel() function instead of open-coding it.
 
-I'm not sure where you are looking.  I have a git tree from here:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_ioctl.c |   29 ++++-------------------------
+ 1 file changed, 4 insertions(+), 25 deletions(-)
 
-	git://git.etherboot.org/scm/gpxe.git
+--- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-03-16 18:24:36.000000000 +0100
++++ everything/net/mac80211/ieee80211_ioctl.c	2008-03-16 18:26:41.000000000 +0100
+@@ -282,35 +282,14 @@ static int ieee80211_ioctl_giwmode(struc
+ 
+ int ieee80211_set_freq(struct ieee80211_local *local, int freqMHz)
+ {
+-	int set = 0;
+ 	int ret = -EINVAL;
+-	enum ieee80211_band band;
+-	struct ieee80211_supported_band *sband;
+-	int i;
+-
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
+-		sband = local->hw.wiphy->bands[band];
+-
+-		if (!sband)
+-			continue;
++	struct ieee80211_channel *chan;
+ 
+-		for (i = 0; i < sband->n_channels; i++) {
+-			struct ieee80211_channel *chan = &sband->channels[i];
++	chan = ieee80211_get_channel(&local->hw.wiphy, freqMHz);
+ 
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
+-				continue;
+-
+-			if (chan->center_freq == freqMHz) {
+-				set = 1;
+-				local->oper_channel = chan;
+-				break;
+-			}
+-		}
+-		if (set)
+-			break;
+-	}
++	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
++		local->oper_channel = chan;
+ 
+-	if (set) {
+ 		if (local->sta_sw_scanning)
+ 			ret = 0;
+ 		else
 
-The gpxe source file src/drivers/net/prism2_pci.c claims to support
-PCI ID 1260:3873 which is listed as a prism 2.5 device supported by
-drivers/net/wireless/orinoco_pci.c in the linux tree.  Similarly the
-gpxe src/drivers/net/prism2_plx.c claims to support all of the PCI IDs
-listed in drivers/net/wireless/orinoco_plx.c from the linux tree as
-well as one that is not listed there (126c:8030 -- perhaps we should
-add it?).
 
-As I said, I do not have _any_ pci-based prism2-3 hardware (donations
-welcome!), so I can not verify whether or not the gpxe code (or for
-that matter the linux code) actually works -- YMMV.  I'm just going
-by what information I have.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
