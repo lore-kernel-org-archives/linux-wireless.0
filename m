@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32940 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60552 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbYCASc3 (ORCPT
+	with ESMTP id S1752010AbYCPRnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2008 13:32:29 -0500
-Subject: [PATCH] mac80211: always insert key into list
+	Sun, 16 Mar 2008 13:43:00 -0400
+Subject: [PATCH] mac80211: filter scan results on unusable channels
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jes Sorensen <jes@trained-monkey.org>
 Content-Type: text/plain
-Date: Sat, 01 Mar 2008 19:32:18 +0100
-Message-Id: <1204396338.3917.9.camel@johannes.berg> (sfid-20080301_183233_001973_574DF809)
+Date: Sun, 16 Mar 2008 18:42:44 +0100
+Message-Id: <1205689364.3878.9.camel@johannes.berg> (sfid-20080316_174323_828972_9EC216B1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Today I hit one of my new WARN_ONs in the mac80211 code because
-a key wasn't being freed correctly. After wondering for a while
-I finally tracked it to the fact that STA keys aren't added to
-the per-sdata key list correctly, they are supposed to always be
-on that list, not just for default keys. This patch fixes that.
+When you have an AP on channel 13, it will currently often enough
+be listed in scan results even when the regulatory domain restricts
+to channels 1-11. This is due to channel overlap. To avoid getting
+very strange failures, don't show such APs in the scan results. The
+failure mode will now go from "I can see the AP but not associate"
+to "I can't see the AP although I know it's there" which is easier
+to debug.
+
+This problem was first really noticed by Jes Sorensen.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jes Sorensen <jes@trained-monkey.org>
 ---
-John, please merge soon, the ultimate consequence of this bug is that
-when trying to delete everything mac80211 segfaults with an access to
-already freed memory because the key is freed but still thought to
-belong to a STA.
+Depends on the previous patch adding the ieee80211_get_channel function.
 
- net/mac80211/key.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/ieee80211_sta.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
---- everything.orig/net/mac80211/key.c	2008-03-01 19:28:56.000000000 +0100
-+++ everything/net/mac80211/key.c	2008-03-01 19:29:00.000000000 +0100
-@@ -174,6 +174,9 @@ static void __ieee80211_key_replace(stru
- {
- 	int idx, defkey;
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-16 18:17:24.000000000 +0100
++++ everything/net/mac80211/ieee80211_sta.c	2008-03-16 18:37:27.000000000 +0100
+@@ -2356,6 +2356,7 @@ static void ieee80211_rx_bss_info(struct
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	u64 beacon_timestamp, rx_timestamp;
++	struct ieee80211_channel *channel;
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
  
-+	if (new)
-+		list_add(&new->list, &sdata->key_list);
+@@ -2420,6 +2421,11 @@ static void ieee80211_rx_bss_info(struct
+ 	else
+ 		freq = rx_status->freq;
+ 
++	channel = ieee80211_get_channel(local->hw.wiphy, freq);
 +
- 	if (sta) {
- 		rcu_assign_pointer(sta->key, new);
- 	} else {
-@@ -190,9 +193,6 @@ static void __ieee80211_key_replace(stru
- 			ieee80211_set_default_key(sdata, -1);
- 
- 		rcu_assign_pointer(sdata->keys[idx], new);
--		if (new)
--			list_add(&new->list, &sdata->key_list);
--
- 		if (defkey && new)
- 			ieee80211_set_default_key(sdata, new->conf.keyidx);
- 	}
++	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
++		return;
++
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (elems.mesh_config)
+ 		bss = ieee80211_rx_mesh_bss_get(dev, elems.mesh_id,
 
 
