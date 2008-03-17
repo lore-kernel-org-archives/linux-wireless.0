@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:30787 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755630AbYCYPkz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49997 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbYCQU7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 11:40:55 -0400
-Received: by py-out-1112.google.com with SMTP id u52so5004924pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 08:40:54 -0700 (PDT)
-Message-ID: <43e72e890803250840v4b09c9faia0373f639b688a4d@mail.gmail.com> (sfid-20080325_154057_327699_8991A583)
-Date: Tue, 25 Mar 2008 11:40:53 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: gentoo ebuild for compat wireless (resend)
-Cc: "Florian Manschwetus" <florianmanschwetus@gmx.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1206458946.16475.285.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47E7A8DB.5020106@gmx.de>
-	 <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
-	 <47E839BE.5030806@gmx.de>
-	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>
-	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de>
-	 <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
-	 <47E919BF.4010308@gmx.de> <1206458946.16475.285.camel@johannes.berg>
+	Mon, 17 Mar 2008 16:59:17 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
+	a Phase 2 key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com> (sfid-20080317_202759_492040_74BFA2FD)
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205751455.1614.25.camel@johannes.berg>
+	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
+	 <1205758276.1614.45.camel@johannes.berg>
+	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
+	 <1205761758.1614.79.camel@johannes.berg>
+	 <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com>
+	 <1205781593.16475.20.camel@johannes.berg>
+	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
+	 <1205784255.16475.33.camel@johannes.berg>
+	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
+	 (sfid-20080317_202759_492040_74BFA2FD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v55DBw2296JkpnQpi8By"
+Date: Mon, 17 Mar 2008 21:59:01 +0100
+Message-Id: <1205787541.16475.40.camel@johannes.berg> (sfid-20080317_205922_303025_EFB38191)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 11:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  > but this is a problem, when i distribute a ebuild it is useful to have a
->  > locked version, so that i get reproducible results.
->  > My problem, is that i have currently no resources to rehost this
->  > tar-ball. (no official gentoo-dev, no reliable webserver)
->  >
->  > But, i see currently no other solution than rehosting.
->
->  We can keep a few around, but definitely not forever, so you'll have to
->  find somewhere else to host your "known good" versions. While I could do
->  it resource-wise, I don't want the admin overhead of having various
->  distros tell us which ones are known-good for them.
->
->  You could simply get a gentoo dev to help you out.
 
-I can probably get a historic archive of the tarballs hosted on orbit
-or winlab site. Give me a few and I'll start something. Let me remind
-you now that compat-wireless-2.6.tar.bz2 tarball has anti-hotlinking
-enabled but the compat-wireless-2008-* tarballs won't. Anti-hotlinking
-disables people from linking to the tarball externally, this will
-force them to read the Download page if redirected from a separate
-page, once they go there they can download the tarball. The dated
-tarballs don't have this anti-hotlinking enabled now (Johannes just
-set this up) so the ebuild/wget'ing should work directly for the dated
-tarballs.
+--=-v55DBw2296JkpnQpi8By
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+
+> >  Well, you were suggesting the use of multiple SSIDs, which we don't
+> >  support, we only support VLANs within a BSS/single SSID. Not that I've
+> >  been able to test it, hostapd needs radius stuff set up for VLANs...
+>=20
+> I think it's transparent since it's handled by MLME in hostapd so
+> multiple SSID is supported
+> Maybe we did some minor changes in mac to support that.. Will check again=
+.
+> I think it's always done by means of VLANs
+
+Oh, hm, could be true.
+
+> >  Right. I was just saying that the way it currently is I think you coul=
+d
+> >  detect it that way. b43 simply assumes WEP keys are always 'static'
+> >  which seems to mostly work well in practice.
+> >  I suppose then set_key needs a new argument key_type:
+> >
+> >  enum ieee80211_key_type {
+> >         KEY_TYPE_PAIRWISE,
+> >         KEY_TYPE_GROUP,
+> >         KEY_TYPE_TXONLY,        /* group key in an AP */
+>=20
+> Can we drop it? Hm still not sure why you like it so much.
+
+Well, we don't want an AP to actually decrypt things, so we need to
+distinguish between these things so that the driver doesn't somehow try
+to use that key for decryption.
+
+> >         KEY_TYPE_STATIC,
+> >  }
+> >
+> >  where the MAC address pointer would only be non-NULL when the key type
+> >  is PAIRWISE, and STATIC can only be used for WEP keys.
+> >
+>=20
+>=20
+> Do you know anything about mesh security are we breaking here anything?
+
+No, Javier, any comments? I think basically you have peer links that are
+encrypted, which is just pairwise keys.
+
+johannes
+
+--=-v55DBw2296JkpnQpi8By
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR97blKVg1VMiehFYAQJNyxAAhbM6wkfnA8NU1U+Yozahos1J4yRiiyOn
+LqKRcjFcQpWasfr9NadJsLT7QA+aar/mLpuFJeL6qU870AwLuK3KxdSnSEyXnFYw
+iapq+0k6WFkg9Irs4OYJiy0cTa85V36CdTh2etzn190DlT0ZiM3zzoyuQe1pNJzJ
+pQbwgp4PjmWBLTEfRF0oXHCcp4KXsE/uwmDoPgE989tGauO2bgQw0eQDI4mXfOIV
+i8PxF28xV0b5ZcchbsLyQfsvBkezGCjK9ddsH8vSXmaX/z94sB6NolhYdPhD65+a
+W/rgIB8WKROoE3YfRzZZ7NmMxfAF8nqi6Pqm9iyJNrtFd8BwmT3LLlldBXAWYMjn
+io+HKMSA9NtCvsm5FHquZ8UBFtL71bdOkUj1G+v7qI3pVGejs1M5KqKSM130Z5kN
+JIqDcdItoU0vNO62i6iIQ3UDX3gNyUFvqZNakoBdqmUuuIm4l7HCuL8TDpaDve4e
+w65Vpzonwi9bfMlffJjqvidwqcYsdCNqQXaf5gxQuV2FkirsQSgnYnSWoTLmBLy+
+NwziNDFuSyTzfH9+BAQrVrAKtmLVsRrjlqLcok/0lxX64uxZpnxHUh/jkuu4Ls00
+bO5fByppSRCbSp8Sz9MFDM7EnfBdL3iPZnmr/00Dq3cJfnI9xczoHhB0MAasfhka
+PZBij48SDQY=
+=yVCp
+-----END PGP SIGNATURE-----
+
+--=-v55DBw2296JkpnQpi8By--
+
