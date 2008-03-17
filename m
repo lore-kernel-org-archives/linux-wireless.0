@@ -1,103 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:41347 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014AbYCHNsg (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:6685 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbYCQOpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2008 08:48:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH] b43: pull out helpers for writing noise table
-Date: Sat, 8 Mar 2008 14:48:11 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1204972838.23455.47.camel@brick>
-In-Reply-To: <1204972838.23455.47.camel@brick>
+	Mon, 17 Mar 2008 10:45:16 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so615223ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 07:45:15 -0700 (PDT)
+Message-ID: <1ba2fa240803170745x4d70cc0esd4b49ebf85d68267@mail.gmail.com> (sfid-20080317_144525_242138_4107A5DC)
+Date: Mon, 17 Mar 2008 16:45:11 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1205759599.1614.69.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803081448.11670.mb@bu3sch.de> (sfid-20080308_134904_456987_390DC21B)
+Content-Type: text/plain; charset=UTF-8
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
+	 <1205608293.15910.53.camel@johannes.berg>
+	 <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com>
+	 <1205753998.1614.34.camel@johannes.berg>
+	 <1ba2fa240803170603g58cd5378n4e8e58b62c41c37c@mail.gmail.com>
+	 <1205759599.1614.69.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uhm, well. Why? Any problems with that code?
-
-On Saturday 08 March 2008 11:40:38 Harvey Harrison wrote:
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
->  drivers/net/wireless/b43/wa.c |   44 +++++++++++++++++++++-------------------
->  1 files changed, 23 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-> index e632125..eff35ad 100644
-> --- a/drivers/net/wireless/b43/wa.c
-> +++ b/drivers/net/wireless/b43/wa.c
-> @@ -204,6 +204,22 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
->  		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
->  }
->  
-> +static void b43_write_null_nst(struct b43_wldev *dev)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
-> +}
-> +
-> +static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> +		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, nst[i]);
-> +}
-> +
->  static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
->  {
->  	struct b43_phy *phy = &dev->phy;
-> @@ -211,35 +227,21 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
->  
->  	if (phy->type == B43_PHYTYPE_A) {
->  		if (phy->rev <= 1)
-> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -							i, 0);
-> +			b43_write_null_nst(dev);
->  		else if (phy->rev == 2)
-> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -							i, b43_tab_noisescalea2[i]);
-> +			b43_write_nst(dev, b43_tab_noisescalea2);
->  		else if (phy->rev == 3)
-> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -							i, b43_tab_noisescalea3[i]);
-> +			b43_write_nst(dev, b43_tab_noisescalea3);
->  		else
-> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -							i, b43_tab_noisescaleg3[i]);
-> +			b43_write_nst(dev, b43_tab_noisescaleg3);
->  	} else {
->  		if (phy->rev >= 6) {
->  			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
-> -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -						i, b43_tab_noisescaleg3[i]);
-> +				b43_write_nst(dev, b43_tab_noisescaleg3);
->  			else
-> -				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -						i, b43_tab_noisescaleg2[i]);
-> +				b43_write_nst(dev, b43_tab_noisescaleg2);
->  		} else {
-> -			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-> -				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
-> -							i, b43_tab_noisescaleg1[i]);
-> +			b43_write_nst(dev, b43_tab_noisescaleg1);
->  		}
->  	}
->  }
-
-
-
--- 
-Greetings Michael.
+T24gTW9uLCBNYXIgMTcsIDIwMDggYXQgMzoxMyBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgPiA+ICBHb29kIHBvaW50LiBCdXQgbGV0J3Mg
+bm90IG92ZXJsb2FkIHNldF9rZXkoKSBmb3IgaXQgdGhpcyB3YXkuIFRoaXMgd2F5LAo+ICA+ID4g
+IHRoZSBkcml2ZXIgbmVlZHMgdG8gbG9vayB1cCB0aGUga2V5IGV0Yy4gYW5kIHRoZSBzZW1hbnRp
+Y3MgZ2V0IHF1aXRlCj4gID4gPiAgbWFuZ2xlZCB1cC4gQWxzbywgeW91ciBhcHByb2FjaCBkb2Vz
+bid0IHdvcmsgZm9yIEJyb2FkY29tIGhhcmR3YXJlIHRoYXQKPiAgPiA+ICBvbmx5IG5lZWRzIHBo
+YXNlIDEga2V5cyBmb3IgYm90aCBSWCBhbmQgVFguCj4gID4KPiAgPiBDYW4geW91IGVsYWJvcmF0
+ZSB3aHkgaXQgZG9lc24ndCBjb3ZlciBiY29tIGNhc2U/Cj4KPiAgSSBkb24ndCBxdWl0ZSB1bmRl
+cnN0YW5kIHRoZSBwaGFzZSAxIGtleSBkZXJpdmF0aW9uIGFuZCB3aHkgaXQgaXMgZG9uZQo+ICBm
+b3IgZWFjaCBETUEgcXVldWUsClRoaXMgaXMgb25seSBpbiBSWCBzaWRlLiBFYWNoIEFDIChhY2Nl
+c3MgY2F0ZWdvcnkpIHF1ZXVlIHRyYW5zbWl0IGluCml0J3Mgb3duIHJhdGUuIEZvciBleGFtcGxl
+IFZPIHRyYXNtaXR0cyBtb3JlIHBhY2tldHMgdGhlbiBCRS4gU28geW91Cm1pZ2h0IGdldCBpbnRv
+IGNhc2UgaW4gcmVjZWl2ZSBzaXRlIHRoYXQgVk8gcGFja2V0cyBhcmUgYWxyZWFkeSBvbgp3cmFw
+YXJvdW5kIHNpZGUgd2hpbGUgQkUgYXJlIHN0aWxsIHVzaW5nICdvbGQnIHBoYXNlMS4KQmVzdCBy
+ZW1lZHkgaXMgdG8ga2VlcCBwaGFzZTEgcGVyIGVhY2ggQUMuCgpidXQgSSB0aGluayB0aGlzIGlz
+IG5vdCB0b28gaW1wb3J0YW50IGFzCj4gIG5vbi1tYXRjaGluZyB3aWxsIGp1c3QgYmUgZG9uZSBp
+biBzb2Z0d2FyZS4KCkNvcnJlY3QsIHRoaXMgc2hvdWxkIGhhcHBlbiBvbmx5IGZvciBzaG9ydCBw
+ZXJpb2Qgb2YgdGltZSB0aGF0IHBoMQpkb2Vzbid0IG1hdGNoIGZvciBlYWNoIEFDIHF1ZXVlLgoK
+IEhvd2V2ZXIsIGJjb20gZmlybXdhcmUgd2FudHMKPiAgdG8gaGF2ZSBqdXN0IHRoZSBwaGFzZSAx
+IGtleSwgYW5kIGFzIGZhciBhcyBJIGNhbiB0ZWxsIHRoZSBkcml2ZXIgY2FuJ3QsCj4gIGV2ZW4g
+d2l0aCB5b3VyIHBhdGNoZXMsIG9idGFpbiBhIHBoYXNlIDEga2V5IGZvciBUWC4KCk5vdCBzdXJl
+IHRoZXNlIGNhc2VzIGFyZSBzeW1tZXRyaWMuIFlvdSBoYXZlIHRvIGhhdmUgcGhhc2UxIHJlYWR5
+IGluCkhXIGJlZm9yZSB5b3UgdHJhbnNtaXQgdGhlIHBhY2tldApQaGFzZTEgbmVlZCB0byBiZSBh
+ZGhlcmVkIHRvIGEgcGFja2V0IHRoYXQgY2F1c2VzIHdyYXBhcm91bmQgdW5saWtlIFJYCnRoYXQg
+eW91IGNhbiBmYWxsIGJhY2sgdG8gU1cgZGVjcnlwdGlvbgpJbiBUWCB0aGVyZSBpcyBubyB3YXkg
+YmFjay4KCj4KPiAgPiA+ICBIb3cgYWJvdXQgaW5zdGVhZCB3ZSBhZGQgYSBuZXcgInVwZGF0ZV90
+a2lwX2tleSgpIiBjYWxsYmFjayB0aGF0IHRha2VzCj4gID4gPiAgZXhhY3RseSB0aGUgcmVxdWly
+ZWQgcGFyYW1ldGVycz8gSXQgc2hvdWxkIGFsc28gZ2l2ZSB0aGUKPiAgPiA+ICBoYXJkd2FyZS1r
+ZXktaW5kZXggc28gdGhhdCB0aGUgZHJpdmVyIGhhcyBsZXNzIHdvcmsgdG8gZG8uCj4gID4KPiAg
+PiBJdCdzIHZpYWJsZSBidXQgSSBhY3R1YWxseSBwcmVmZXIgbm90IG9wZW5pbmcgdG9vIG1hbnkg
+aW50ZXJmYWNlcy4KPiAgPiBQbGVhc2UgZ2l2ZSBtZSBzb21lIG1vcmUgZGV0YWlsZWQgc2tldGNo
+IGhvdyBkbyB5b3Ugc2VlIHRoYXQgYW5kIHdlCj4gID4gc3VyZSBnZXQgdG8gc29tZSBhY2NlcHRh
+YmxlIHNvbHV0aW9uLgo+Cj4gIFllcywgSSB3b3VsZCBwcmVmZXIgbm90IGhhdmluZyB0aGF0IG1h
+bnkgaW50ZXJmYWNlcyBhcyB3ZWxsLCBidXQgSSBkb24ndAo+ICB0aGluayBzaG9laG9ybmluZyBp
+dCBpbnRvIHRoZSBzZXRfa2V5KCkgY2FsbGJhY2sgaXMgYSBnb29kIGlkZWEgYmVjYXVzZQo+ICAg
+KGEpIHlvdSBhZGQgZmllbGRzIHRvIHRoZSBrZXkgY29uZiBzdHJ1Y3R1cmUgdGhhdCBhcmUgb25s
+eSB1c2VkIGZvcgo+ICAgICAgdGhlIHRraXAgc3R1ZmYgYW5kIG9ubHkgdmFsaWQgaW4gc29tZSBj
+YWxscwo+ICAgKGIpIHRoZSBwYXRjaCBicmVha3MgdGhlIHNldF9rZXkoKSBpbnRlcmZhY2UncyBz
+eW1tZXRyeQo+Cj4gIEEgbmV3IGNhbGxiYWNrIHVwZGF0ZV90a2lwX2tleSBjb3VsZCBsb29rIGxp
+a2UgdGhpczoKPgo+ICB2b2lkIHVwZGF0ZV90a2lwX3BoYXNlMWtleShodywga2V5Y29uZiwgaXYz
+MiwgcDFrZXkpCgpXaGF0IGFib3V0CmVudW0gdGtpcF91cGRhdGVfZmxhZ3MgewogICBUS0lQX1BI
+MV9UWF9LRVkKICAgVEtJUF9QSDFfUlhfS0VZCiAgIFRLSVBfUEgyX1RYX0tFWQogICBUS0lQX1BI
+Ml9SWF9LRVkgLS0gYWN0dWFsbHkgbm8gbmVlZCBmb3IgYW55IGRyaXZlci4KfQogIHVwZGF0ZV90
+a2lwX2tleShodywga2V5Y29uZiAsIGl2MzIsICBmbGFnLCBrZXkpCgpCdXQgSSdtIG5vdCBzdXJl
+IGFib3V0IHRoaXMuLi4gc2VlIGFib3ZlL2JlbG92ZQoKPiAgVGhlIO+7v0lFRUU4MDIxMV9LRVlf
+RkxBR19US0lQX1BIQVNFMV9WQUxJRCBmbGFnIHdvdWxkIGdvIGF3YXksIGFuZCB0aGUKPiAgbmV3
+IGNhbGxiYWNrIHdvdWxkIGJlIGludm9rZWQgcmlnaHQgZnJvbSB3aGVyZSB0aGUgcGhhc2UxIGtl
+eSBpcwo+ICBjYWxjdWxhdGVkLgoKU3VyZSBhZ2FpbiBJJ20gbm90IHN1cmUgdGhpcyBpcyBzeW1t
+ZXRyaWMgLSBGb3IgVFggaXQgd291bGQgYmUgc2FmZXIKdG8gZG8gcHVsbCBtb2RlIG90aGVyd2lz
+ZSBpdCBjYW4gZ2V0IG91dCBvZiBzeW5jLgoKPiAgSSdtIG5vdCBleGFjdGx5IHN1cmUgd2hldGhl
+ciBvbmUgbmVlZHMgYSBwaGFzZTEga2V5IGZvciBSWCBhbmQgb25lIGZvcgo+ICBUWCByaWdodCBu
+b3csIGJ1dCBpZiBzbyBhIGRpcmVjdGlvbiBmbGFnIHNob3VsZCBiZSBhZGRlZD8KClBoYXNlMSBm
+b3IgVFggYW5kIFJYIGFyZSBub3QgdGhlIHNhbWUsIGFnYWluIGJlY2F1c2Ugb2YgdGhlIHNpbXBs
+ZQpyZWFzb25lIHRoYXQgbnVtYmVyIG9mIHRyYW5zbWl0dGVkIGFuZCByZWNlaXZlZCBwYWNrZXQg
+aXMgbm90IHRoZQpzYW1lLgoKPiAgam9oYW5uZXMKPgo=
