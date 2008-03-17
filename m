@@ -1,160 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:18336 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1763989AbYCEJgu (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52264 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbYCQJ6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:36:50 -0500
-From: Bruno Randolf <bruno@thinktube.com>
-Subject: [PATCH 4/4] ath5k: work around wrong beacon rx timestamp in IBSS mode
-To: ath5k-devel@lists.ath5k.org
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 05 Mar 2008 18:36:26 +0900
-Message-ID: <20080305093626.5670.51643.stgit@one> (sfid-20080305_093711_652055_B4FFF805)
-In-Reply-To: <20080305091347.5670.40944.stgit@one>
-References: <20080305091347.5670.40944.stgit@one>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 17 Mar 2008 05:58:46 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
+	a Phase 2 key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com> (sfid-20080317_002118_132302_5D857FBC)
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+	 <1205591906.15910.44.camel@johannes.berg>
+	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
+	 (sfid-20080317_002118_132302_5D857FBC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Biig7xyp0UbZhAyl8Ean"
+Date: Mon, 17 Mar 2008 10:58:32 +0100
+Message-Id: <1205747912.1614.19.camel@johannes.berg> (sfid-20080317_095849_842520_1C348FE5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-atheros hardware has a problem with the rx timestamp of some IBSS beacons when
-they caused a TSF update (they have the same BSSID).
 
-the rx timestamp is wrong especially if the beacon frames get bigger than 78
-byte (at least on AR5213 and AR5414 hardware). in that case ath5k_extend_tsf()
-will assume a rs_tstamp overflow and give us a timestamp too far in the past
-which will cause mac80211 to merge IBSS on every beacon (which is not necessary
-since the BSSID already matches). but in this case we know that the HW must
-have synced to the beacons TSF and the rx timestamp must be later than that so
-we can adjust mactime accordingly.
-
-also rename the function to ath5k_check_ibss_tsf() and change comments, since
-"hw merge" is better described as a TSF update.
-
-drivers/net/wireless/ath5k/base.c:      Changes-licensed-under: 3-Clause-BSD
-
-Signed-off-by: Bruno Randolf <bruno@thinktube.com>
----
-
- drivers/net/wireless/ath5k/base.c |   59 ++++++++++++++++++++++++++++---------
- 1 files changed, 45 insertions(+), 14 deletions(-)
+--=-Biig7xyp0UbZhAyl8Ean
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 03e05fe..5139217 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1712,8 +1712,10 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 
- 
- static void
--ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
-+ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
-+		     struct ieee80211_rx_status *rxs)
- {
-+	u64 tsf, bc_tstamp;
- 	u32 hw_tu;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
- 
-@@ -1724,16 +1726,45 @@ ath5k_check_ibss_hw_merge(struct ath5k_softc *sc, struct sk_buff *skb)
- 	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
- 	    memcmp(mgmt->bssid, sc->ah->ah_bssid, ETH_ALEN) == 0) {
- 		/*
--		 * Received an IBSS beacon with the same BSSID. Hardware might
--		 * have updated the TSF, check if we need to update timers.
-+		 * Received an IBSS beacon with the same BSSID. Hardware *must*
-+		 * have updated the local TSF. We have to work around various
-+		 * hardware bugs, though...
- 		 */
--		hw_tu = TSF_TO_TU(ath5k_hw_get_tsf64(sc->ah));
--		if (hw_tu >= sc->nexttbtt) {
--			ath5k_beacon_update_timers(sc,
--				le64_to_cpu(mgmt->u.beacon.timestamp));
-+		tsf = ath5k_hw_get_tsf64(sc->ah);
-+		bc_tstamp = le64_to_cpu(mgmt->u.beacon.timestamp);
-+		hw_tu = TSF_TO_TU(tsf);
-+
-+		ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
-+			"beacon %llx mactime %llx (diff %lld) tsf now %llx\n",
-+			bc_tstamp, rxs->mactime,
-+			(rxs->mactime - bc_tstamp), tsf);
-+
-+		/*
-+		 * Sometimes the HW will give us a wrong tstamp in the rx
-+		 * status, causing the timestamp extension to go wrong.
-+		 * (This seems to happen especially with beacon frames bigger
-+		 * than 78 byte (incl. FCS))
-+		 * But we know that the receive timestamp must be later than the
-+		 * timestamp of the beacon since HW must have synced to that.
-+		 *
-+		 * NOTE: here we assume mactime to be after the frame was
-+		 * received, not like mac80211 which defines it at the start.
-+		 */
-+		if (bc_tstamp > rxs->mactime) {
- 			ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
--				"detected HW merge from received beacon\n");
-+				"fixing mactime from %llx to %llx\n",
-+				rxs->mactime, tsf);
-+			rxs->mactime = tsf;
- 		}
-+
-+		/*
-+		 * Local TSF might have moved higher than our beacon timers,
-+		 * in that case we have to update them to continue sending
-+		 * beacons. This also takes care of synchronizing beacon sending
-+		 * times with other stations.
-+		 */
-+		if (hw_tu >= sc->nexttbtt)
-+			ath5k_beacon_update_timers(sc, bc_tstamp);
- 	}
- }
- 
-@@ -1882,7 +1913,7 @@ accept:
- 
- 		/* check beacons in IBSS mode */
- 		if (sc->opmode == IEEE80211_IF_TYPE_IBSS)
--			ath5k_check_ibss_hw_merge(sc, skb);
-+			ath5k_check_ibss_tsf(sc, skb, &rxs);
- 
- 		__ieee80211_rx(sc->hw, skb, &rxs);
- 		sc->led_rxrate = rs.rs_rate;
-@@ -2115,7 +2146,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
-  * beacon timer registers.
-  *
-  * This is called in a variety of situations, e.g. when a beacon is received,
-- * when a HW merge has been detected, but also when an new IBSS is created or
-+ * when a TSF update has been detected, but also when an new IBSS is created or
-  * when we otherwise know we have to update the timers, but we keep it in this
-  * function to have it all together in one place.
-  */
-@@ -2215,7 +2246,7 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
-  * another AP to associate with.
-  *
-  * In IBSS mode we use a self-linked tx descriptor if possible. We enable SWBA
-- * interrupts to detect HW merges only.
-+ * interrupts to detect TSF updates only.
-  *
-  * AP mode is missing.
-  */
-@@ -2235,7 +2266,7 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 		 * hardware send the beacons automatically. We have to load it
- 		 * only once here.
- 		 * We use the SWBA interrupt only to keep track of the beacon
--		 * timers in order to detect HW merges (automatic TSF updates).
-+		 * timers in order to detect automatic TSF updates.
- 		 */
- 		ath5k_beaconq_config(sc);
- 
-@@ -2448,8 +2479,8 @@ ath5k_intr(int irq, void *dev_id)
- 				*
- 				* In IBSS mode we use this interrupt just to
- 				* keep track of the next TBTT (target beacon
--				* transmission time) in order to detect hardware
--				* merges (TSF updates).
-+				* transmission time) in order to detect wether
-+				* automatic TSF updates happened.
- 				*/
- 				if (sc->opmode == IEEE80211_IF_TYPE_IBSS) {
- 					 /* XXX: only if VEOL suppported */
+> >  Also, looking at what you do here, I found this comment:
+> >         /* FIXME: need to differenciate between static and dynamic key
+> >          * in the level of mac80211 */
+> >         static_key =3D !iwl4965_is_associated(priv);
+> >
+> >  I think that is pretty bogus because there isn't really a distinction
+> >  between dynamic and static keys, what's the reason for differentiating
+> >  in the driver? Also, the driver will do rather odd things when
+> >   * associate
+> >   * set a key
+> >   * disassociate
+> >   * delete the key
+> >
+>=20
+> This is actually quite a bug in mac80211. There is substantial
+> difference between dynamic and static key.
+> While static key  is used for crypto of all stations in BSS. Dynamic
+> key is also called pairwise key and is generated for 'pair'
+
+Gee, can you then please stick to terminology used in the spec so other
+people can understand it?
+
+> Currently mac80211 set static key with broadcast address which iis
+> wrong cause driver cannot distinguish whether this key is
+> multicast/broadcast dynamic key or a static key. Shell it use it for
+> all traffic or only for mcast/bcast? Who can tell?
+
+Actually, you're making it look like a much larger problem than it is.
+If you assume anything WEP is a "static key" and everything else is a
+"dynamic key" (using your terminology), the only problem will be with
+dynamic WEP, and even then it's not really a problem because as far as I
+understand even dynamic WEP doesn't distinguish between group and
+pairwise keys.
+
+> Other difference while there can be 4 static key installed that the
+> same time possible switching between indexes  There can be only one
+> dynamic key per station if you also consider mcast/bcast station to be
+> an entity. (TKIP actally uses different  key index for bcast but
+> that's just little execption)
+> The terminology which is used is also wrong and I guess this is just
+> wrong interpretation of  old implementation - 'default key' is used
+> for static key. Key mapping key is used for dynamic keys.
+
+I don't think I understand the last paragraph?
+
+In any case, actual TX key selection is done by mac80211 anyway, so
+you're never interested in that. Only RX key selection is interesting to
+the driver, and as far as I can tell it ought to work if you simply
+always use the broadcast address key when it's WEP, and otherwise the
+pairwise keys and/or the broadcast key for bc/mc frames.
+
+Note that there's another case in AP mode where bc/mc keys are TX-only,
+those are added with a zeroed MAC address.
+
+johannes
+
+--=-Biig7xyp0UbZhAyl8Ean
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR95Ax6Vg1VMiehFYAQKdyhAAoULV7qhmrzL519kebb8peVoSohtKwCgu
+/86mwbkobyt5py0DG5SZ7sYI9XVkfx9dJRecJ8662aNKVofGoNCvUalJnL3USDWf
+EUZRVwUmcdwahF1T8JByopT7BEpR5pnmBHRxGxU1sa0El1zefJJ8BvttDbCBrbj9
+X1xsDgwvKg4Uje5Zk1JB2r9uf9/XyXhSJGQk6pQX1wj6SHj97SX4T97xfu7jMbuL
+hUsttgzc+jHq/xb8AGJRV2McGCjk+aQj2oz4Hcq/5rm7Bcyo6JyfBw3ZSRo2Dcwn
+9BtQp8CK3EL8knpt27laaaXQFpCekVU8Og0BUCweLDT6SYXRWjvw8HpitP1/XCMw
+ml9tQVeDo3LAbtvkQswMQnyvj1tVWhENYMEOu3mi5iMg1vYZhNo+Q7w8+ccAwIKq
+bZE3oRZUuWrEnyB7SdoFi5Zy/a5617y4a1gXGYLGnBiKqeUbx2xa7BX7QX1Ht030
+dCA38JKxeiHZubZ7U35yyyag3VNQ6fhJPkRklDfqdHzimZH8bvV7ATjINW4S5beL
+W97V477uf6GDwcZJHKiBF9MVT6/vTuBG1/MX2HR+oqJWjSXEl1gYLqOI6Q7VvZml
+4r0ahCXspOsTVVAxchV3d+1sy/jDD5AsuGRLwXxnAdCDf89xn32ndG/iipXbg3A4
+ODla6YROvmY=
+=TEg0
+-----END PGP SIGNATURE-----
+
+--=-Biig7xyp0UbZhAyl8Ean--
 
