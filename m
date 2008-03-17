@@ -1,193 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4756 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753732AbYCYVhC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 17:37:02 -0400
-Date: Tue, 25 Mar 2008 17:15:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-2.6.26 2008-03-25
-Message-ID: <20080325211557.GA20488@tuxdriver.com> (sfid-20080325_213707_080134_EBC1307A)
+Received: from rn-out-0910.google.com ([64.233.170.191]:52746 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753483AbYCQTyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2008 15:54:22 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so3330071rnb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 12:54:21 -0700 (PDT)
+Message-ID: <1ba2fa240803171254j2709011ax7522bb05ded04aeb@mail.gmail.com> (sfid-20080317_195431_519430_A67C2821)
+Date: Mon, 17 Mar 2008 21:54:20 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1205766247.1614.111.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
+	 <1205608293.15910.53.camel@johannes.berg>
+	 <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com>
+	 <1205753998.1614.34.camel@johannes.berg>
+	 <1ba2fa240803170603g58cd5378n4e8e58b62c41c37c@mail.gmail.com>
+	 <1205759599.1614.69.camel@johannes.berg>
+	 <1ba2fa240803170745x4d70cc0esd4b49ebf85d68267@mail.gmail.com>
+	 <1205766247.1614.111.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
-
-Here is the latest package of wireless changes for 2.6.26.  Included are
-libertas and iwlwifi driver updates, some mac80211 updates, a few rt2x00
-driver updates, and a handful of odds and ends.
-
-There will be one minor merge conflict in drivers/net/wireless/b43/dma.c
-when you merge this with the 2.6.25 fixes I posted yesterday.  Just
-take both sets of changes -- it is pretty obvious.
-
-Please let me know if there are any problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org//pub/linux/kernel/people/linville/wireless-2.6.26
-
----
-
-The following changes since commit 06802a819a0a2d31c952c0624cea6cd00e4e50da:
-  David S. Miller (1):
-        Merge branch 'master' of ../net-2.6/
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.26.git master
-
-Al Viro (1):
-      ipw2200 annotations and fixes
-
-Assaf Krauss (6):
-      iwlwifi: Re-ordering probe flow (4965)
-      iwlwifi: Packing all 4965 parameters
-      iwlwifi: Probe Flow - Performing allocation in a separate function
-      iwlwifi: Probe Flow - Extracting hw and priv init
-      iwlwifi: rename iwl4965_get_channel_info to iwl_get_channel_info
-      iwlwifi: Completing the parameter packaging
-
-Emmanuel Grumbach (6):
-      iwlwifi-2.6: Cleans up set_key flow
-      iwlwifi-2.6: RX status translation to old scheme
-      mac80211: get a TKIP phase key from skb
-      mac80211: allows driver to request a Phase 1 RX key
-      iwlwifi-2.6: enables HW TKIP encryption
-      iwlwifi-2.6: enables RX TKIP decryption in HW
-
-Holger Schurig (9):
-      libertas: convert CMD_MAC_CONTROL to a direct command
-      libertas: rename packetfilter to mac_control
-      libertas: remove some unused commands
-      libertas: make a handy lbs_cmd_async() command
-      libertas: fix scheduling while atomic bug in CMD_MAC_CONTROL
-      libertas: convert GET_LOG to a direct command
-      libertas: misc power saving adjusts
-      libertas: remove lots of unused stuff
-      libertas: store rssi as an u32
-
-Ivo van Doorn (3):
-      rt2x00: Add dev_flags to rx descriptor
-      rt2x00: Fix rate detection for invalid signals
-      rt2x00: Fix in_atomic() usage
-
-Johannes Berg (3):
-      wireless: add wiphy channel freq to channel struct lookup helper
-      mac80211: use ieee80211_get_channel
-      mac80211: filter scan results on unusable channels
-
-Masakazu Mokuno (1):
-      PS3: gelic: Add support for separate cipher selection
-
-Max Stepanov (1):
-      iwlwifi: Bug fix, CCMP with HW encryption with AGG
-
-Michael Buesch (1):
-      b43: Don't compile N-PHY code when N-PHY is disabled
-
-Mohamed Abbas (1):
-      mac80211: prevent tuning during scanning
-
-Reinette Chatre (1):
-      iwlwifi: remove macros containing offsets from eeprom struct
-
-Ron Rindjunsky (3):
-      mac80211: fixing delba debug print
-      mac80211: fixing debug prints for AddBA request
-      mac80211: tear down of block ack sessions
-
-Tomas Winkler (6):
-      iwlwifi: rename iwl-4965-debug.h back to iwl-debug.h
-      iwlwifi: rename struct iwl4965_priv to struct iwl_priv
-      iwlwifi: Add TX/RX statistcs to driver
-      iwlwifi: Add debugfs to iwl core
-      iwlwifi: iwl3945 remove 4965 commands
-      iwlwifi: move host command sending functions to core module
-
-Vladimir Koutny (1):
-      mac80211: configure default wmm params correctly
-
- drivers/net/ps3_gelic_wireless.c                   |    2 +-
- drivers/net/wireless/b43/Makefile                  |    4 +-
- drivers/net/wireless/b43/nphy.h                    |   40 +
- drivers/net/wireless/ipw2200.c                     |   12 +-
- drivers/net/wireless/ipw2200.h                     |  112 +-
- drivers/net/wireless/iwlwifi/Kconfig               |    8 +-
- drivers/net/wireless/iwlwifi/Makefile              |    6 +-
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h   |   39 -
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h         |   32 -
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h   |   28 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h         |    3 -
- drivers/net/wireless/iwlwifi/iwl-4965-io.h         |   94 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c         |   53 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c            |  560 ++++---
- drivers/net/wireless/iwlwifi/iwl-4965.h            |  210 ++--
- drivers/net/wireless/iwlwifi/iwl-core.c            |  216 +++-
- drivers/net/wireless/iwlwifi/iwl-core.h            |   55 +
- .../iwlwifi/{iwl-4965-debug.h => iwl-debug.h}      |   55 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c         |  319 ++++
- drivers/net/wireless/iwlwifi/iwl-eeprom.c          |  368 ++++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h          |   58 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c            |  251 +++
- drivers/net/wireless/iwlwifi/iwl4965-base.c        | 1729 +++++++-------------
- drivers/net/wireless/libertas/11d.c                |   16 +-
- drivers/net/wireless/libertas/11d.h                |    5 +-
- drivers/net/wireless/libertas/assoc.c              |   16 +-
- drivers/net/wireless/libertas/cmd.c                |  254 +--
- drivers/net/wireless/libertas/cmd.h                |    9 +-
- drivers/net/wireless/libertas/cmdresp.c            |   66 +-
- drivers/net/wireless/libertas/debugfs.c            |    8 +-
- drivers/net/wireless/libertas/decl.h               |    5 +-
- drivers/net/wireless/libertas/dev.h                |    4 +-
- drivers/net/wireless/libertas/host.h               |    3 -
- drivers/net/wireless/libertas/hostcmd.h            |    7 +-
- drivers/net/wireless/libertas/if_cs.c              |    3 +
- drivers/net/wireless/libertas/join.c               |    9 +-
- drivers/net/wireless/libertas/join.h               |    9 +-
- drivers/net/wireless/libertas/main.c               |   35 +-
- drivers/net/wireless/libertas/scan.c               |    4 +-
- drivers/net/wireless/libertas/scan.h               |    7 +-
- drivers/net/wireless/libertas/wext.c               |   40 +-
- drivers/net/wireless/rt2x00/Kconfig                |    4 +-
- drivers/net/wireless/rt2x00/rt2400pci.c            |   99 +-
- drivers/net/wireless/rt2x00/rt2500pci.c            |  110 +-
- drivers/net/wireless/rt2x00/rt2500usb.c            |  127 +-
- drivers/net/wireless/rt2x00/rt2x00.h               |   11 +-
- drivers/net/wireless/rt2x00/rt2x00config.c         |   10 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c            |   15 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c            |   57 +-
- drivers/net/wireless/rt2x00/rt2x00queue.h          |   22 +-
- drivers/net/wireless/rt2x00/rt61pci.c              |  114 +-
- drivers/net/wireless/rt2x00/rt73usb.c              |  131 +-
- include/net/mac80211.h                             |   47 +
- include/net/wireless.h                             |    6 +
- net/mac80211/ieee80211.c                           |    7 +-
- net/mac80211/ieee80211_i.h                         |    2 +
- net/mac80211/ieee80211_ioctl.c                     |   31 +-
- net/mac80211/ieee80211_sta.c                       |  125 +-
- net/mac80211/tkip.c                                |   68 +-
- net/mac80211/tkip.h                                |    2 +-
- net/mac80211/wpa.c                                 |    2 +-
- net/wireless/util.c                                |   23 +
- 62 files changed, 3199 insertions(+), 2568 deletions(-)
- rename drivers/net/wireless/iwlwifi/{iwl-4965-debug.h => iwl-debug.h} (82%)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-debugfs.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-hcmd.c
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26-2008-03-25.patch.bz2
-
--- 
-John W. Linville
-linville@tuxdriver.com
+T24gTW9uLCBNYXIgMTcsIDIwMDggYXQgNTowNCBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgPiBUaGlzIGlzIG9ubHkgaW4gUlggc2lkZS4g
+RWFjaCBBQyAoYWNjZXNzIGNhdGVnb3J5KSBxdWV1ZSB0cmFuc21pdCBpbgo+ICA+IGl0J3Mgb3du
+IHJhdGUuIEZvciBleGFtcGxlIFZPIHRyYXNtaXR0cyBtb3JlIHBhY2tldHMgdGhlbiBCRS4gU28g
+eW91Cj4gID4gbWlnaHQgZ2V0IGludG8gY2FzZSBpbiByZWNlaXZlIHNpdGUgdGhhdCBWTyBwYWNr
+ZXRzIGFyZSBhbHJlYWR5IG9uCj4gID4gd3JhcGFyb3VuZCBzaWRlIHdoaWxlIEJFIGFyZSBzdGls
+bCB1c2luZyAnb2xkJyBwaGFzZTEuCj4gID4gQmVzdCByZW1lZHkgaXMgdG8ga2VlcCBwaGFzZTEg
+cGVyIGVhY2ggQUMuCj4gID4KPiAgPiA+ICBidXQgSSB0aGluayB0aGlzIGlzIG5vdCB0b28gaW1w
+b3J0YW50IGFzCj4gID4gPiAgbm9uLW1hdGNoaW5nIHdpbGwganVzdCBiZSBkb25lIGluIHNvZnR3
+YXJlLgo+ICA+Cj4gID4gQ29ycmVjdCwgdGhpcyBzaG91bGQgaGFwcGVuIG9ubHkgZm9yIHNob3J0
+IHBlcmlvZCBvZiB0aW1lIHRoYXQgcGgxCj4gID4gZG9lc24ndCBtYXRjaCBmb3IgZWFjaCBBQyBx
+dWV1ZS4KPgo+ICBSaWdodCwgaW4gc29mdHdhcmUgd2UgY2FuIGtlZXAgYSBwaGFzZTEgcGVyIEFD
+IGJ1dCB3ZSBkb24ndCBuZWVkIHRvIGluCj4gIGhhcmR3YXJlIHNpbmNlIHRoYXQncyBqdXN0IHRo
+ZSBvcHRpbWlzYXRpb24uCgpDb3JyZWN0LCBJJ20ganVzdCBub3Qgc3VyZSBob3cgaXQncyBkb25l
+IGZvciBiY29tIGNhcmRzLgo+Cj4gID4gPiAgSG93ZXZlciwgYmNvbSBmaXJtd2FyZSB3YW50cwo+
+ICA+ID4gIHRvIGhhdmUganVzdCB0aGUgcGhhc2UgMSBrZXksIGFuZCBhcyBmYXIgYXMgSSBjYW4g
+dGVsbCB0aGUgZHJpdmVyIGNhbid0LAo+ICA+ID4gIGV2ZW4gd2l0aCB5b3VyIHBhdGNoZXMsIG9i
+dGFpbiBhIHBoYXNlIDEga2V5IGZvciBUWC4KPiAgPgo+ICA+IE5vdCBzdXJlIHRoZXNlIGNhc2Vz
+IGFyZSBzeW1tZXRyaWMuIFlvdSBoYXZlIHRvIGhhdmUgcGhhc2UxIHJlYWR5IGluCj4gID4gSFcg
+YmVmb3JlIHlvdSB0cmFuc21pdCB0aGUgcGFja2V0Cj4gID4gUGhhc2UxIG5lZWQgdG8gYmUgYWRo
+ZXJlZCB0byBhIHBhY2tldCB0aGF0IGNhdXNlcyB3cmFwYXJvdW5kIHVubGlrZSBSWAo+ICA+IHRo
+YXQgeW91IGNhbiBmYWxsIGJhY2sgdG8gU1cgZGVjcnlwdGlvbgo+ICA+IEluIFRYIHRoZXJlIGlz
+IG5vIHdheSBiYWNrLgo+Cj4gIEdvb2QgcG9pbnQuIFNvIHRoZW4gZm9yIEJyb2FkY29tIHdlIGFj
+dHVhbGx5IG5lZWQgdG8gdXBkYXRlIHBoYXNlMSBpbgo+ICBoYXJkd2FyZSB3aGVuIGl0IGNoYW5n
+ZXMgb24gVFggYW5kIG5vdCBib3RoZXIgd2l0aCBSWCBhdCBhbGwsIHdlJ2xsIGZhbGwKPiAgYmFj
+ayB0byBzb2Z0d2FyZSBpbiB0aGF0IGNhc2UuCgpFdmVudHVhbGx5IHlvdSB3YW50IHRvIHVwZGF0
+ZSBSWCBwaGFzZTEga2V5IGludG8gSFcgc28geW91IGdldCB5b3VyCkNQVSB1dGlsaXphdGlvbiB3
+aGVyZSBpdCBoYXZlIHRvIGJlLCByaWdodD8KCj4KPiAgPiA+ICA+ID4gIEhvdyBhYm91dCBpbnN0
+ZWFkIHdlIGFkZCBhIG5ldyAidXBkYXRlX3RraXBfa2V5KCkiIGNhbGxiYWNrIHRoYXQgdGFrZXMK
+PiAgPiA+ICA+ID4gIGV4YWN0bHkgdGhlIHJlcXVpcmVkIHBhcmFtZXRlcnM/IEl0IHNob3VsZCBh
+bHNvIGdpdmUgdGhlCj4gID4gPiAgPiA+ICBoYXJkd2FyZS1rZXktaW5kZXggc28gdGhhdCB0aGUg
+ZHJpdmVyIGhhcyBsZXNzIHdvcmsgdG8gZG8uCj4gID4gPiAgPgo+ICA+ID4gID4gSXQncyB2aWFi
+bGUgYnV0IEkgYWN0dWFsbHkgcHJlZmVyIG5vdCBvcGVuaW5nIHRvbyBtYW55IGludGVyZmFjZXMu
+Cj4gID4gPiAgPiBQbGVhc2UgZ2l2ZSBtZSBzb21lIG1vcmUgZGV0YWlsZWQgc2tldGNoIGhvdyBk
+byB5b3Ugc2VlIHRoYXQgYW5kIHdlCj4gID4gPiAgPiBzdXJlIGdldCB0byBzb21lIGFjY2VwdGFi
+bGUgc29sdXRpb24uCj4gID4gPgo+ICA+ID4gIFllcywgSSB3b3VsZCBwcmVmZXIgbm90IGhhdmlu
+ZyB0aGF0IG1hbnkgaW50ZXJmYWNlcyBhcyB3ZWxsLCBidXQgSSBkb24ndAo+ICA+ID4gIHRoaW5r
+IHNob2Vob3JuaW5nIGl0IGludG8gdGhlIHNldF9rZXkoKSBjYWxsYmFjayBpcyBhIGdvb2QgaWRl
+YSBiZWNhdXNlCj4gID4gPiAgIChhKSB5b3UgYWRkIGZpZWxkcyB0byB0aGUga2V5IGNvbmYgc3Ry
+dWN0dXJlIHRoYXQgYXJlIG9ubHkgdXNlZCBmb3IKPiAgPiA+ICAgICAgdGhlIHRraXAgc3R1ZmYg
+YW5kIG9ubHkgdmFsaWQgaW4gc29tZSBjYWxscwo+ICA+ID4gICAoYikgdGhlIHBhdGNoIGJyZWFr
+cyB0aGUgc2V0X2tleSgpIGludGVyZmFjZSdzIHN5bW1ldHJ5Cj4gID4gPgo+ICA+ID4gIEEgbmV3
+IGNhbGxiYWNrIHVwZGF0ZV90a2lwX2tleSBjb3VsZCBsb29rIGxpa2UgdGhpczoKPiAgPiA+Cj4g
+ID4gPiAgdm9pZCB1cGRhdGVfdGtpcF9waGFzZTFrZXkoaHcsIGtleWNvbmYsIGl2MzIsIHAxa2V5
+KQo+ICA+Cj4gID4gV2hhdCBhYm91dAo+ICA+IGVudW0gdGtpcF91cGRhdGVfZmxhZ3Mgewo+ICA+
+ICAgIFRLSVBfUEgxX1RYX0tFWQo+ICA+ICAgIFRLSVBfUEgxX1JYX0tFWQo+ICA+ICAgIFRLSVBf
+UEgyX1RYX0tFWQo+ICA+ICAgIFRLSVBfUEgyX1JYX0tFWSAtLSBhY3R1YWxseSBubyBuZWVkIGZv
+ciBhbnkgZHJpdmVyLgo+ICA+IH0KPiAgPiAgIHVwZGF0ZV90a2lwX2tleShodywga2V5Y29uZiAs
+IGl2MzIsICBmbGFnLCBrZXkpCj4gID4KPiAgPiBCdXQgSSdtIG5vdCBzdXJlIGFib3V0IHRoaXMu
+Li4gc2VlIGFib3ZlL2JlbG92ZQo+ICA+Cj4gID4gPiAgVGhlIO+7v0lFRUU4MDIxMV9LRVlfRkxB
+R19US0lQX1BIQVNFMV9WQUxJRCBmbGFnIHdvdWxkIGdvIGF3YXksIGFuZCB0aGUKPiAgPiA+ICBu
+ZXcgY2FsbGJhY2sgd291bGQgYmUgaW52b2tlZCByaWdodCBmcm9tIHdoZXJlIHRoZSBwaGFzZTEg
+a2V5IGlzCj4gID4gPiAgY2FsY3VsYXRlZC4KPiAgPgo+ICA+IFN1cmUgYWdhaW4gSSdtIG5vdCBz
+dXJlIHRoaXMgaXMgc3ltbWV0cmljIC0gRm9yIFRYIGl0IHdvdWxkIGJlIHNhZmVyCj4gID4gdG8g
+ZG8gcHVsbCBtb2RlIG90aGVyd2lzZSBpdCBjYW4gZ2V0IG91dCBvZiBzeW5jLgo+Cj4gIFRydWUu
+IEhlbmNlLCBzaW5jZSBwaGFzZTJyeCBpcyBub3QgcmVhbGx5IHVzZWZ1bCwgd2UgZG9uJ3QgYWN0
+dWFsbHkgbmVlZAo+ICBhbnkgc29ydCBvZiB1cGRhdGUgZmxhZ3Mgd2hlbiB3ZSBkbyB0aGUgVFgg
+a2V5cyBpbiBwdWxsIG1vZGUsIHdoaWNoIEkKPiAgcHJlZmVyIGFueXdheS4KPgo+Cj4gID4gPiAg
+SSdtIG5vdCBleGFjdGx5IHN1cmUgd2hldGhlciBvbmUgbmVlZHMgYSBwaGFzZTEga2V5IGZvciBS
+WCBhbmQgb25lIGZvcgo+ICA+ID4gIFRYIHJpZ2h0IG5vdywgYnV0IGlmIHNvIGEgZGlyZWN0aW9u
+IGZsYWcgc2hvdWxkIGJlIGFkZGVkPwo+ICA+Cj4gID4gUGhhc2UxIGZvciBUWCBhbmQgUlggYXJl
+IG5vdCB0aGUgc2FtZSwgYWdhaW4gYmVjYXVzZSBvZiB0aGUgc2ltcGxlCj4gID4gcmVhc29uZSB0
+aGF0IG51bWJlciBvZiB0cmFuc21pdHRlZCBhbmQgcmVjZWl2ZWQgcGFja2V0IGlzIG5vdCB0aGUK
+PiAgPiBzYW1lLgo+Cj4gIEhtLCByaWdodC4gQnV0IGlmIHdlIGdvIGZvciBwdWxsIG1vZGUgZm9y
+IFRYLCB3ZSBvbmx5IG5lZWQgdG8gaGF2ZSBwdXNoCj4gIG1vZGUgZm9yIHRoZSBwaGFzZTEgcngg
+a2V5IHdoZW4gdGhhdCBjaGFuZ2VzLCBubz8KCkVtbWFudWVsIGhhcyBwcmVwYXJlZCBwYXRjaGVz
+IGZvciBUWCBwdWxsIG1vZGUgIChwaGFzZTIgb25seSBmb3Igbm93KSAuCklmIHRoaXMgT0sgd2lp
+dGggSSB3aWxsIHJlc2VuZCB0aGUgd2hvbGUgVEtJUCBzZXJpZXMgd2l0aCB0aGlzIGNoYW5nZSwK
+bGVhdmluZyBSWCBpbiBwdWxsIG1vZGUuCldlIGNhbiBkbyBsaXR0bGUgZWZmb3J0IHRvIGFkZCBw
+dWxsaW5nIHBoYXNlMSBvbmx5IGJ1dCB3ZSBjYW5ub3QgcmVhbGx5IHRlc3QgaXQuCgpUaGFua3MK
+VG9tYXMK
