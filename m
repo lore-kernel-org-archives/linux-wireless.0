@@ -1,156 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19665 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:34393 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753322AbYCTNIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 09:08:43 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/7 V2] mac80211: get a TKIP phase key from skb
-Date: Thu, 20 Mar 2008 15:06:41 +0200
-Message-Id: <1206018403-8308-2-git-send-email-tomas.winkler@intel.com> (sfid-20080320_130852_705463_46443FC0)
-In-Reply-To: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
-References: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752694AbYCQVi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2008 17:38:28 -0400
+Subject: Re: [PATCH, take 2] libertas: convert GET_LOG to a direct command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803171245.58490.hs4233@mail.mn-solutions.de>
+References: <200803131010.32763.hs4233@mail.mn-solutions.de>
+	 <1205419021.23812.8.camel@localhost.localdomain>
+	 <200803171245.58490.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 17 Mar 2008 17:32:54 -0400
+Message-Id: <1205789574.9583.13.camel@localhost.localdomain> (sfid-20080317_220641_555978_1B6BED03)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, 2008-03-17 at 12:45 +0100, Holger Schurig wrote:
+> [PATCH] libertas: convert GET_LOG to a direct command
+> 
+> Now uses __lbs_cmd() to get the "log" (it's actually more a snapshot of
+> various counters, not a sequential log). Besides the "mechanical" convertion
+> the patch add the following logical changes:
+> 
+> * Removes the priv->logmsg variable, it was only used in one place anyway,
+>   also don't blindly get the counters when associating. Getting the
+>   counters then the user asks via WEXT for them is good enought.
+> * don't set wstats.discard.fragment with log.rxfrag, because the latter is
+>   a counter for successfully received packets, not for fragmented packets.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-This patch makes mac80211 able to compute a TKIP key from an skb.
-The requested key can be a phase 1 or a phase 2 key.
-This is useful for drivers who need to provide tkip key to their
-HW to enable HW encryption.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/net/mac80211.h |   30 +++++++++++++++++++++++++++
- net/mac80211/tkip.c    |   53 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 83 insertions(+), 0 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5ab6a35..2a13458 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -644,6 +644,21 @@ enum sta_notify_cmd {
- };
- 
- /**
-+ * enum ieee80211_tkip_key_type - get tkip key
-+ *
-+ * Used by drivers which need to get a tkip key for skb. Some drivers need a
-+ * phase 1 key, others need a phase 2 key. A single function allows the driver
-+ * to get the key, this enum indicates what type of key is required.
-+ *
-+ * @IEEE80211_TKIP_P1_KEY: the driver needs a phase 1 key
-+ * @IEEE80211_TKIP_P2_KEY: the driver needs a phase 2 key
-+ */
-+enum ieee80211_tkip_key_type {
-+	IEEE80211_TKIP_P1_KEY,
-+	IEEE80211_TKIP_P2_KEY,
-+};
-+
-+/**
-  * enum ieee80211_hw_flags - hardware flags
-  *
-  * These flags are used to indicate hardware capabilities to
-@@ -1472,6 +1487,21 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
- int ieee80211_get_hdrlen(u16 fc);
- 
- /**
-+ * ieee80211_get_tkip_key - get a TKIP rc4 for skb
-+ *
-+ * This function computes a TKIP rc4 key for an skb. It computes
-+ * a phase 1 key if needed (iv16 wraps around). This function is to
-+ * be used by drivers which can do HW encryption but need to compute
-+ * to phase 1/2 key in SW.
-+ *
-+ * @keyconf: the parameter passed with the set key
-+ * @skb: the skb for which the key is needed
-+ * @rc4key: a buffer to which the key will be written
-+ */
-+void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-+				struct sk_buff *skb,
-+				enum ieee80211_tkip_key_type type, u8 *key);
-+/**
-  * ieee80211_wake_queue - wake specific queue
-  * @hw: pointer as obtained from ieee80211_alloc_hw().
-  * @queue: queue number (counted from zero).
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 3abe194..5c36b2d 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -214,6 +214,59 @@ void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 			   key->u.tkip.iv16, rc4key);
- }
- 
-+void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-+			struct sk_buff *skb, enum ieee80211_tkip_key_type type,
-+			u8 *outkey)
-+{
-+	struct ieee80211_key *key = (struct ieee80211_key *)
-+			container_of(keyconf, struct ieee80211_key, conf);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	u8 *data = (u8 *) hdr;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	int hdr_len = ieee80211_get_hdrlen(fc);
-+	u8 *ta = hdr->addr2;
-+	u16 iv16;
-+	u32 iv32;
-+
-+	iv16 = data[hdr_len] << 8;
-+	iv16 += data[hdr_len + 2];
-+	iv32 = data[hdr_len + 4] +
-+		(data[hdr_len + 5] >> 8) +
-+		(data[hdr_len + 6] >> 16) +
-+		(data[hdr_len + 7] >> 24);
-+
-+#ifdef CONFIG_TKIP_DEBUG
-+	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
-+			iv16, iv32);
-+
-+	if (iv32 != key->u.tkip.iv32) {
-+		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
-+			iv32, key->u.tkip.iv32);
-+		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
-+			"fragmented packet\n");
-+	}
-+#endif /* CONFIG_TKIP_DEBUG */
-+
-+	/* Update the p1k only when the iv16 in the packet wraps around, this
-+	 * might occur after the wrap around of iv16 in the key in case of
-+	 * fragmented packets. */
-+	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
-+		/* IV16 wrapped around - perform TKIP phase 1 */
-+		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
-+			iv32, key->u.tkip.p1k);
-+		key->u.tkip.tx_initialized = 1;
-+	}
-+
-+	if (type == IEEE80211_TKIP_P1_KEY) {
-+		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
-+		return;
-+	}
-+
-+	tkip_mixing_phase2(key->u.tkip.p1k,
-+		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
-+}
-+EXPORT_SYMBOL(ieee80211_get_tkip_key);
-+
- /* Encrypt packet payload with TKIP using @key. @pos is a pointer to the
-  * beginning of the buffer containing payload. This payload must include
-  * headroom of eight octets for IV and Ext. IV and taildroom of four octets
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-17 11:38:04.000000000 +0100
+> @@ -820,6 +821,7 @@ static struct iw_statistics *lbs_get_wir
+>  	int stats_valid = 0;
+>  	u8 rssi;
+>  	u32 tx_retries;
+> +	struct cmd_ds_802_11_get_log log;
+>  
+>  	lbs_deb_enter(LBS_DEB_WEXT);
+>  
+> @@ -863,7 +865,11 @@ static struct iw_statistics *lbs_get_wir
+>  	/* Quality by TX errors */
+>  	priv->wstats.discard.retries = priv->stats.tx_errors;
+>  
+> -	tx_retries = le32_to_cpu(priv->logmsg.retry);
+> +	memset(&log, 0, sizeof(log));
+> +	log.hdr.size = cpu_to_le16(sizeof(log));
+> +	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
+> +
+> +	tx_retries = le32_to_cpu(log.retry);
+>  
+>  	if (tx_retries > 75)
+>  		tx_qual = (90 - tx_retries) * POOR / 15;
+> @@ -879,10 +885,9 @@ static struct iw_statistics *lbs_get_wir
+>  		    (PERFECT - VERY_GOOD) / 50 + VERY_GOOD;
+>  	quality = min(quality, tx_qual);
+>  
+> -	priv->wstats.discard.code = le32_to_cpu(priv->logmsg.wepundecryptable);
+> -	priv->wstats.discard.fragment = le32_to_cpu(priv->logmsg.rxfrag);
+> +	priv->wstats.discard.code = le32_to_cpu(log.wepundecryptable);
+>  	priv->wstats.discard.retries = tx_retries;
+> -	priv->wstats.discard.misc = le32_to_cpu(priv->logmsg.ackfailure);
+> +	priv->wstats.discard.misc = le32_to_cpu(log.ackfailure);
+>  
+>  	/* Calculate quality */
+>  	priv->wstats.qual.qual = min_t(u8, quality, 100);
+> @@ -892,8 +897,6 @@ static struct iw_statistics *lbs_get_wir
+>  	/* update stats asynchronously for future calls */
+>  	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+>  					0, 0, NULL);
+> -	lbs_prepare_and_send_command(priv, CMD_802_11_GET_LOG, 0,
+> -					0, 0, NULL);
+>  out:
+>  	if (!stats_valid) {
+>  		priv->wstats.miss.beacon = 0;
+> Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-17 11:21:29.000000000 +0100
+> @@ -628,10 +628,6 @@ void lbs_association_worker(struct work_
+>  			lbs_prepare_and_send_command(priv,
+>  				CMD_802_11_RSSI,
+>  				0, CMD_OPTION_WAITFORRSP, 0, NULL);
+> -
+> -			lbs_prepare_and_send_command(priv,
+> -				CMD_802_11_GET_LOG,
+> -				0, CMD_OPTION_WAITFORRSP, 0, NULL);
+>  		} else {
+>  			ret = -1;
+>  		}
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-17 11:22:06.000000000 +0100
+> @@ -454,18 +454,6 @@ static int lbs_cmd_802_11_reset(struct l
+>  	return 0;
+>  }
+>  
+> -static int lbs_cmd_802_11_get_log(struct lbs_private *priv,
+> -				   struct cmd_ds_command *cmd)
+> -{
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -	cmd->command = cpu_to_le16(CMD_802_11_GET_LOG);
+> -	cmd->size =
+> -		cpu_to_le16(sizeof(struct cmd_ds_802_11_get_log) + S_DS_GEN);
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_cmd_802_11_get_stat(struct lbs_private *priv,
+>  				    struct cmd_ds_command *cmd)
+>  {
+> @@ -1384,10 +1372,6 @@ int lbs_prepare_and_send_command(struct 
+>  		ret = lbs_cmd_802_11_reset(priv, cmdptr, cmd_action);
+>  		break;
+>  
+> -	case CMD_802_11_GET_LOG:
+> -		ret = lbs_cmd_802_11_get_log(priv, cmdptr);
+> -		break;
+> -
+>  	case CMD_802_11_AUTHENTICATE:
+>  		ret = lbs_cmd_80211_authenticate(priv, cmdptr, pdata_buf);
+>  		break;
+> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-17 11:21:29.000000000 +0100
+> @@ -303,20 +303,6 @@ static int lbs_ret_802_11_eeprom_access(
+>  	return 0;
+>  }
+>  
+> -static int lbs_ret_get_log(struct lbs_private *priv,
+> -			    struct cmd_ds_command *resp)
+> -{
+> -	struct cmd_ds_802_11_get_log *logmessage = &resp->params.glog;
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	/* Stored little-endian */
+> -	memcpy(&priv->logmsg, logmessage, sizeof(struct cmd_ds_802_11_get_log));
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_ret_802_11_bcn_ctrl(struct lbs_private * priv,
+>  					struct cmd_ds_command *resp)
+>  {
+> @@ -352,10 +338,6 @@ static inline int handle_cmd_response(st
+>  		ret = lbs_ret_reg_access(priv, respcmd, resp);
+>  		break;
+>  
+> -	case CMD_RET(CMD_802_11_GET_LOG):
+> -		ret = lbs_ret_get_log(priv, resp);
+> -		break;
+> -
+>  	case CMD_RET_802_11_ASSOCIATE:
+>  	case CMD_RET(CMD_802_11_ASSOCIATE):
+>  	case CMD_RET(CMD_802_11_REASSOCIATE):
+> Index: wireless-testing/drivers/net/wireless/libertas/dev.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-17 11:21:29.000000000 +0100
+> @@ -323,8 +323,6 @@ struct lbs_private {
+>  	u8 *prdeeprom;
+>  	struct lbs_offset_value offsetvalue;
+>  
+> -	struct cmd_ds_802_11_get_log logmsg;
+> -
+>  	u32 monitormode;
+>  	u8 fw_ready;
+>  };
+> Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-17 11:21:02.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-17 11:21:29.000000000 +0100
+> @@ -195,6 +195,8 @@ struct cmd_ds_802_11_scan_rsp {
+>  };
+>  
+>  struct cmd_ds_802_11_get_log {
+> +	struct cmd_header hdr;
+> +
+>  	__le32 mcasttxframe;
+>  	__le32 failed;
+>  	__le32 retry;
+> @@ -701,7 +703,6 @@ struct cmd_ds_command {
+>  		struct cmd_ds_802_11_ad_hoc_start ads;
+>  		struct cmd_ds_802_11_reset reset;
+>  		struct cmd_ds_802_11_ad_hoc_result result;
+> -		struct cmd_ds_802_11_get_log glog;
+>  		struct cmd_ds_802_11_authenticate auth;
+>  		struct cmd_ds_802_11_get_stat gstat;
+>  		struct cmd_ds_802_3_get_stat gstat_8023;
+> 
 
