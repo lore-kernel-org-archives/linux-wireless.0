@@ -1,79 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from element.ksp.sk ([158.195.16.154]:34919 "EHLO element.ksp.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753980AbYCGQng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 11:43:36 -0500
-Received: from 92-60-53-2.rev.bonet.sk ([92.60.53.2] helo=[192.168.1.2])
-	by element.ksp.sk with esmtpa (Exim 4.69)
-	(envelope-from <vlado@work.ksp.sk>)
-	id 1JXec8-0005zW-I2
-	for linux-wireless@vger.kernel.org; Fri, 07 Mar 2008 16:36:04 +0100
-Message-ID: <47D160E4.3040503@work.ksp.sk> (sfid-20080307_165126_594708_1A6A8040)
-Date: Fri, 07 Mar 2008 16:36:04 +0100
-From: Vladimir Koutny <vlado@work.ksp.sk>
+Received: from rn-out-0910.google.com ([64.233.170.188]:43792 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753157AbYCQU15 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2008 16:27:57 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so3352158rnb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 13:27:56 -0700 (PDT)
+Message-ID: <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com> (sfid-20080317_202802_852198_F23DE3E7)
+Date: Mon, 17 Mar 2008 22:27:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1205784255.16475.33.camel@johannes.berg>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 2.6.24, mac80211 and b/g switching
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig86CEE8EECC190AA8F3DC28A5"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205751455.1614.25.camel@johannes.berg>
+	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
+	 <1205758276.1614.45.camel@johannes.berg>
+	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
+	 <1205761758.1614.79.camel@johannes.berg>
+	 <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com>
+	 <1205781593.16475.20.camel@johannes.berg>
+	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
+	 <1205784255.16475.33.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig86CEE8EECC190AA8F3DC28A5
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, Mar 17, 2008 at 10:04 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>  > >
+>  > >  > BSS defines security setting which  defined by key management for
+>  > >  > pairwise and group key + cipher method for both .
+>  > >  > You can run multiple SSIDs over single single BSSID. This is done
+>  > >  > using VLANs
+>  > >
+>  > >  Actually, we don't support that in mac80211.
+>  > Last time I worked on AP project it worked. It was older mac hopefully
+>  > it's not totally broken
+>  >
+>  >  And the way I understand
+>  > >  VLANs they are simply done by negotiating different group keys with
+>  > >  different groups of stations each forming a VLAN.
+>  >
+>  > We are saying the same. That's okay.
+>
+>  Well, you were suggesting the use of multiple SSIDs, which we don't
+>  support, we only support VLANs within a BSS/single SSID. Not that I've
+>  been able to test it, hostapd needs radius stuff set up for VLANs...
 
-Hi,
-
-I'm writing a driver using mac80211 under 2.6.24.x kernels (some custom
-hw, and very small chance of using anything newer than 2.6.24.x), and it
-seems that switching between 11b and 11g in mac80211 doesn't work at all.=
-
-
-I'm registering 2 hwmodes - MODE_IEEE80211B and MODE_IEEE80211G; only
-STA mode (no ap, no ad-hoc (yet)).
-
-Depending on the order of hwmodes registration, mac80211 sticks to
-either b or g mode, with several implications:
- - unable to set all g-rates when connected to g-AP in MODE_IEEE80211B
- - able to set g-rates when connected to b-AP in MODE_IEEE80211G
- - wrong cw_min set via conf_tx (the code which sets this looks fine,
-   just the phymode is not set correctly)
-
-It doesn't matter if I set the phymode to b or g for received frames,
-the behaviour is always the same.
-
-I did some tests with iwl3945 (and rt2500usb, but that wasn't able to
-associate), under 2.6.24.3 and 2.6.25-rc4; the same behaviour as for my
-driver. Non-mac80211 drivers (like ipw3945 on somewhat older kernel)
-behave as one would expect.
-
-I didn't do a test with latest dev tree; based on list traffic quite a
-lot is happening here, so maybe this is fixed already. However, chance
-of being able to move to anything more recent than 2.6.25-rc is very
-close to zero :(
-
-Is this a known issue? (I didn't manage to find anything in ml archives
-so far) Or any hints on how to solve this?
-
-Thanks,
-  Vlado
+I think it's transparent since it's handled by MLME in hostapd so
+multiple SSID is supported
+Maybe we did some minor changes in mac to support that.. Will check again.
+I think it's always done by means of VLANs
 
 
---------------enig86CEE8EECC190AA8F3DC28A5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+>  Right. I was just saying that the way it currently is I think you could
+>  detect it that way. b43 simply assumes WEP keys are always 'static'
+>  which seems to mostly work well in practice.
+>  I suppose then set_key needs a new argument key_type:
+>
+>  enum ieee80211_key_type {
+>         KEY_TYPE_PAIRWISE,
+>         KEY_TYPE_GROUP,
+>         KEY_TYPE_TXONLY,        /* group key in an AP */
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Can we drop it? Hm still not sure why you like it so much.
 
-iD8DBQFH0WDke5Z0y47EufgRAlUFAJ45LSuQV9XwiUGqWWKku8OokhtipACggaGB
-Lzt8jPvMlz/NJpCwsQkIJUY=
-=XsaV
------END PGP SIGNATURE-----
+>         KEY_TYPE_STATIC,
+>  }
+>
+>  where the MAC address pointer would only be non-NULL when the key type
+>  is PAIRWISE, and STATIC can only be used for WEP keys.
+>
 
---------------enig86CEE8EECC190AA8F3DC28A5--
+
+Do you know anything about mesh security are we breaking here anything?
+
+Thanks
+Tomas
+>  johannes
+>
