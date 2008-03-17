@@ -1,214 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:2083 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423AbYCZMZK (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:24940 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555AbYCQTMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 08:25:10 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert sleep/wake config direct commands
-Date: Wed, 26 Mar 2008 13:22:11 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+	Mon, 17 Mar 2008 15:12:48 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so6513281wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 12:12:47 -0700 (PDT)
+Message-ID: <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com> (sfid-20080317_191251_410798_1F966AFB)
+Date: Mon, 17 Mar 2008 21:12:47 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1205761758.1614.79.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803261322.11647.hs4233@mail.mn-solutions.de> (sfid-20080326_122515_330176_DF8BD493)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205591906.15910.44.camel@johannes.berg>
+	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
+	 <1205747912.1614.19.camel@johannes.berg>
+	 <1ba2fa240803170320i4805e055ofebbbd9928a59354@mail.gmail.com>
+	 <1205751455.1614.25.camel@johannes.berg>
+	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
+	 <1205758276.1614.45.camel@johannes.berg>
+	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
+	 <1205761758.1614.79.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Confirm sleep event: they come very regularly, eventually several times per
-second. Therefore we want to send the config command as fast as possible.
-The old code pre-set the command in priv->lbs_ps_confirm_sleep. However, the
-byte sequence to be sent to the hardware is the same for all interfaces. So
-this patch make this an extern structure, initialized at module load time.
+>  >
+>  > Isn't if on integer faster then comparing 6 bytes?
+>
+>  Probably. Does it matter though? Setting keys isn't going to be
+>  performance critical in any way.
 
-Config wake event: normal conversion to a direct command. However, I don't know
-how to trigger a "HOST AWAKE" event from the firmware, so this part is
-untested.
+Yes but at least you do IF on something that is real not hacking with address.
+>
+>  > >  Is that really done though? I mean, does wpa_supplicant not also use
+>  > >  encodeext for WEP keys?
+>  > >
+>  > Unfortunately yes.
+>
+>  So that doesn't really help us either way, no?
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+What is happening in case of static WEP is that IW_AUTH_CIPHER_NONE
+IW_ENCODE_ALG_WEP are set.
+Which is enough.
 
-Index: wireless-testing/drivers/net/wireless/libertas/dev.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-26 09:48:57.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-26 10:34:15.000000000 +0100
-@@ -267,9 +267,6 @@ struct lbs_private {
- 	char ps_supported;
- 	u8 needtowakeup;
- 
--	struct PS_CMD_ConfirmSleep lbs_ps_confirm_sleep;
--	struct cmd_header lbs_ps_confirm_wake;
--
- 	struct assoc_request * pending_assoc_req;
- 	struct assoc_request * in_progress_assoc_req;
- 
-@@ -326,6 +323,8 @@ struct lbs_private {
- 	u8 fw_ready;
- };
- 
-+extern struct cmd_confirm_sleep confirm_sleep;
-+
- /** Association request
-  *
-  * Encapsulates all the options that describe a specific assocation request
-Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-26 09:50:36.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-26 10:43:03.000000000 +0100
-@@ -548,21 +548,20 @@ done:
- 
- static int lbs_send_confirmwake(struct lbs_private *priv)
- {
--	struct cmd_header *cmd = &priv->lbs_ps_confirm_wake;
-+	struct cmd_header cmd;
- 	int ret = 0;
- 
- 	lbs_deb_enter(LBS_DEB_HOST);
- 
--	cmd->command = cpu_to_le16(CMD_802_11_WAKEUP_CONFIRM);
--	cmd->size = cpu_to_le16(sizeof(*cmd));
--	cmd->seqnum = cpu_to_le16(++priv->seqnum);
--	cmd->result = 0;
--
--	lbs_deb_host("SEND_WAKEC_CMD: before download\n");
-+	cmd.command = cpu_to_le16(CMD_802_11_WAKEUP_CONFIRM);
-+	cmd.size = cpu_to_le16(sizeof(cmd));
-+	cmd.seqnum = cpu_to_le16(++priv->seqnum);
-+	cmd.result = 0;
- 
--	lbs_deb_hex(LBS_DEB_HOST, "wake confirm command", (void *)cmd, sizeof(*cmd));
-+	lbs_deb_hex(LBS_DEB_HOST, "wake confirm", (u8 *) &cmd,
-+		sizeof(cmd));
- 
--	ret = priv->hw_host_to_card(priv, MVMS_CMD, (void *)cmd, sizeof(*cmd));
-+	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) &cmd, sizeof(cmd));
- 	if (ret)
- 		lbs_pr_alert("SEND_WAKEC_CMD: Host to Card failed for Confirm Wake\n");
- 
-Index: wireless-testing/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-26 09:54:52.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-26 10:31:56.000000000 +0100
-@@ -37,6 +37,11 @@ EXPORT_SYMBOL_GPL(lbs_debug);
- module_param_named(libertas_debug, lbs_debug, int, 0644);
- 
- 
-+/* This global structure is used to send the confirm_sleep command as
-+ * fast as possible down to the firmware. */
-+struct cmd_confirm_sleep confirm_sleep;
-+
-+
- #define LBS_TX_PWR_DEFAULT		20	/*100mW */
- #define LBS_TX_PWR_US_DEFAULT		20	/*100mW */
- #define LBS_TX_PWR_JP_DEFAULT		16	/*50mW */
-@@ -1013,14 +1018,6 @@ static int lbs_init_adapter(struct lbs_p
- 			      &priv->network_free_list);
- 	}
- 
--	priv->lbs_ps_confirm_sleep.seqnum = cpu_to_le16(++priv->seqnum);
--	priv->lbs_ps_confirm_sleep.command =
--	    cpu_to_le16(CMD_802_11_PS_MODE);
--	priv->lbs_ps_confirm_sleep.size =
--	    cpu_to_le16(sizeof(struct PS_CMD_ConfirmSleep));
--	priv->lbs_ps_confirm_sleep.action =
--	    cpu_to_le16(CMD_SUBCMD_SLEEP_CONFIRMED);
--
- 	memset(priv->current_addr, 0xff, ETH_ALEN);
- 
- 	priv->connect_status = LBS_DISCONNECTED;
-@@ -1462,6 +1459,10 @@ EXPORT_SYMBOL_GPL(lbs_interrupt);
- static int __init lbs_init_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_MAIN);
-+	memset(&confirm_sleep, 0, sizeof(confirm_sleep));
-+	confirm_sleep.hdr.command = cpu_to_le16(CMD_802_11_PS_MODE);
-+	confirm_sleep.hdr.size = cpu_to_le16(sizeof(confirm_sleep));
-+	confirm_sleep.action = cpu_to_le16(CMD_SUBCMD_SLEEP_CONFIRMED);
- 	lbs_debugfs_init();
- 	lbs_deb_leave(LBS_DEB_MAIN);
- 	return 0;
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-26 09:55:48.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-26 10:38:09.000000000 +0100
-@@ -1802,38 +1802,27 @@ void lbs_send_iwevcustom_event(struct lb
- 	lbs_deb_leave(LBS_DEB_WEXT);
- }
- 
--static int sendconfirmsleep(struct lbs_private *priv, u8 *cmdptr, u16 size)
-+static void lbs_send_confirmsleep(struct lbs_private *priv)
- {
- 	unsigned long flags;
--	int ret = 0;
-+	int ret;
- 
- 	lbs_deb_enter(LBS_DEB_HOST);
--	lbs_deb_hex(LBS_DEB_HOST, "sleep confirm command", cmdptr, size);
--
--	ret = priv->hw_host_to_card(priv, MVMS_CMD, cmdptr, size);
-+	lbs_deb_hex(LBS_DEB_HOST, "sleep confirm", (u8 *) &confirm_sleep,
-+		sizeof(confirm_sleep));
- 
--	spin_lock_irqsave(&priv->driver_lock, flags);
--	if (priv->intcounter || priv->currenttxskb)
--		lbs_deb_host("SEND_SLEEPC_CMD: intcounter %d, currenttxskb %p\n",
--		       priv->intcounter, priv->currenttxskb);
--	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+	ret = priv->hw_host_to_card(priv, MVMS_CMD, (u8 *) &confirm_sleep,
-+		sizeof(confirm_sleep));
- 
- 	if (ret) {
--		lbs_pr_alert(
--		       "SEND_SLEEPC_CMD: Host to Card failed for Confirm Sleep\n");
-+		lbs_pr_alert("confirm_sleep failed\n");
- 	} else {
- 		spin_lock_irqsave(&priv->driver_lock, flags);
--		if (!priv->intcounter) {
-+		if (!priv->intcounter)
- 			priv->psstate = PS_STATE_SLEEP;
--		} else {
--			lbs_deb_host("SEND_SLEEPC_CMD: after sent, intcounter %d\n",
--			       priv->intcounter);
--		}
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 	}
--
--	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
--	return ret;
-+	lbs_deb_leave(LBS_DEB_HOST);
- }
- 
- void lbs_ps_sleep(struct lbs_private *priv, int wait_option)
-@@ -1906,8 +1895,7 @@ void lbs_ps_confirm_sleep(struct lbs_pri
- 
- 	if (allowed) {
- 		lbs_deb_host("sending lbs_ps_confirm_sleep\n");
--		sendconfirmsleep(priv, (u8 *) & priv->lbs_ps_confirm_sleep,
--				 sizeof(struct PS_CMD_ConfirmSleep));
-+		lbs_send_confirmsleep(priv);
- 	} else {
- 		lbs_deb_host("sleep confirm has been delayed\n");
- 	}
-Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-26 10:02:54.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-26 10:05:20.000000000 +0100
-@@ -480,14 +480,11 @@ struct cmd_ds_802_11_ps_mode {
- 	__le16 locallisteninterval;
- };
- 
--struct PS_CMD_ConfirmSleep {
--	__le16 command;
--	__le16 size;
--	__le16 seqnum;
--	__le16 result;
-+struct cmd_confirm_sleep {
-+	struct cmd_header hdr;
- 
- 	__le16 action;
--	__le16 reserved1;
-+	__le16 nullpktinterval;
- 	__le16 multipledtim;
- 	__le16 reserved;
- 	__le16 locallisteninterval;
+>
+>  > First of all we don't need 4 keys per station but for the whole
+>  > system.
+>
+>  Not sure I understand this. You need pairwise (per-station) keys as well
+>  as four default keys, no?
+
+You need only one unicast key for pairwise key.  4 keys are used only
+for static WEP key.
+For pairwise/dynamic WEP and TKIP you use key index in the packet but
+it changes only when supplicant change the key it self. You don't have
+the key alive in driver.
+
+
+
+>
+>  > Even in AP mode with multiple SSID meaning multiple security
+>  > setting you cannot distinguish between networks in static WEP key
+>  > setting so 4 is enough.
+>
+>  Not sure I get what you're thinking here.
+
+BSS defines security setting which  defined by key management for
+pairwise and group key + cipher method for both .
+You can run multiple SSIDs over single single BSSID. This is done
+using VLANs So you can maintain multiple security settings in for one
+AP.  However this is not possible when using static WEP since the key
+is global and the key is not attached to any address.
+
+There are more details into it I'm sorry if I'm not 100 clear here.
+The bottom line is that you don't need more 4 WEP keys both in AP and
+station mod. Same you need to maintain only one pairwise key for
+station both in AP and STA mode. In AP mode you need to maintain also
+one group key for each station because of the case of multiple SSIDs.
+
+>
+>  > Beside that you need place holder for group key. They might be
+>  > multiple groups key in case of multiple SSIDs in AP mode, iwlwifi
+>  > doesn't support it in HW but in general it is possible.
+>
+>  Well, no, because we can add multiple keys with a zeroed MAC address,
+>  since we have the local MAC address in there as well. Also, in an AP,
+>  these are only used for TX so it doesn't matter since mac80211 does the
+>  key selection completely on its own.
+
+See above. anyhow still don't like the trick with invalid address.
+
+>
+>  > We need a flag in set_key which says whether the WEP key is static or not.
+>
+>  Let's actually try to gather all the cases first.
+>
+>  Is this it?
+>
+>   * TKIP/CCMP/WEP group or pairwise key
+>   * WEP legacy ('static') key
+
+That's correct
+
+>  where the first is completely covered by what we have now
+Yes
+and the
+>  assumption is that if only WEP keys are present then it'll be a legacy
+>  WEP key?
+Nop. Still you  can have <WEP, WEP>  for <pairwise,group key> valid
+setting - This is not static key. The two keys may differ. Under your
+assumption the group key will override pairwise key
+
+Tomas
+
+
+
+
+>  johannes
+>
