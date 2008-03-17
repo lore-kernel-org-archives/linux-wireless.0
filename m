@@ -1,183 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:41823 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291AbYCVVH2 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:9957 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbYCQXfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2008 17:07:28 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix DMA mapping leakage
-Date: Sat, 22 Mar 2008 22:04:45 +0100
-Cc: Christian Casteyde <casteyde.christian@free.fr>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Mon, 17 Mar 2008 19:35:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so6618644wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 16:35:44 -0700 (PDT)
+Message-ID: <1ba2fa240803171635l703f2fdcu9c51150e7a9b0405@mail.gmail.com> (sfid-20080317_233555_745077_46AA981C)
+Date: Tue, 18 Mar 2008 01:35:44 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1205789008.9583.12.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803222204.45919.mb@bu3sch.de> (sfid-20080322_210733_407649_E61BB399)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
+	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
+	 <1205591906.15910.44.camel@johannes.berg>
+	 <1ba2fa240803161721q5d01bve2292f99d3fe9eb8@mail.gmail.com>
+	 <1205747912.1614.19.camel@johannes.berg>
+	 <1ba2fa240803170320i4805e055ofebbbd9928a59354@mail.gmail.com>
+	 <1205789008.9583.12.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a DMA mapping leakage in the case where we reject a DMA
-buffer because of its address.
+>  Also sort of wrong; there are plenty of situations where the AP can be
+>  put into essentially Dynamic WEP mode (I actually test this quite often
+>  since there are a lot of people who use it) where it is still backed by
+>  RADIUS but uses only WEP as the cipher and does _NOT_ broadcast WPA/RSN
+>  information elements at all.
+>
+>  The _only_ guarantee you have for Dynamic WEP is that the privacy bit is
+>  set to 1.  Here's an iwlist dump for such a configuration, taken with an
+>  ipw2200, so it would be reporting WPA/RSN IEs if there were any, but
+>  there aren't:
+>
+>           Cell 30 - Address: 00:1A:xx:xx:xx:xx
+>                     ESSID:"foobar"
+>                     Protocol:IEEE 802.11bg
+>                     Mode:Master
+>                     Frequency:2.422 GHz (Channel 3)
+>                     Encryption key:on
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+>                               11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+>                               48 Mb/s; 54 Mb/s
+>                     Quality=82/100  Signal level=-16 dBm
+>                     Extra: Last beacon: 35ms ago
+>
+>  Looks like static WEP, but it's actually a Cisco AIR-AP1131AG backed by
+>  RADIUS using EAP-TLS.
+>
+>  Unfortunately for dynamic WEP, as a user you simply have to _know_ that
+>  the AP is using one of:
+>
+>  - Open System auth
+>  - Shared Key auth
+>  - WEP 104
+>  - WEP 40
+>  - LEAP
+>  - Dynamic WEP
+>
+>  since it doesn't beacon, you're just fucked unless your sysadmin tells
+>  you what the AP is doing.  Yay for WEP.
+>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Christian Casteyde <casteyde.christian@free.fr>
+I think we are addressing different problems. First of all our focus
+is on mac80211 interpretation of WEP setting through WEXT rather then
+how use know what security setting to chose.  Currently even when user
+now how to configure the security setting a driver under mac80211 was
+not able to distinguish what is static and what is dynamic WEP it was
+blurred by mac80211.
 
----
+The problem of distributing and guessing wireless profiles is a
+different problem.  Unfortunately the whole wireleess stack is burden
+by coexistence with legacy systems.
 
-John, this is a fix for 2.6.25.
+Tomas
 
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-22 21:50:35.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-22 21:57:53.000000000 +0100
-@@ -512,34 +512,40 @@ static int b43_dmacontroller_tx_reset(st
- 	return 0;
- }
- 
- /* Check if a DMA mapping address is invalid. */
- static bool b43_dma_mapping_error(struct b43_dmaring *ring,
- 				  dma_addr_t addr,
--				  size_t buffersize)
-+				  size_t buffersize, bool dma_to_device)
- {
- 	if (unlikely(dma_mapping_error(addr)))
- 		return 1;
- 
- 	switch (ring->type) {
- 	case B43_DMA_30BIT:
- 		if ((u64)addr + buffersize > (1ULL << 30))
--			return 1;
-+			goto address_error;
- 		break;
- 	case B43_DMA_32BIT:
- 		if ((u64)addr + buffersize > (1ULL << 32))
--			return 1;
-+			goto address_error;
- 		break;
- 	case B43_DMA_64BIT:
- 		/* Currently we can't have addresses beyond
- 		 * 64bit in the kernel. */
- 		break;
- 	}
- 
- 	/* The address is OK. */
- 	return 0;
-+
-+address_error:
-+	/* We can't support this address. Unmap it again. */
-+	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
-+
-+	return 1;
- }
- 
- static int setup_rx_descbuffer(struct b43_dmaring *ring,
- 			       struct b43_dmadesc_generic *desc,
- 			       struct b43_dmadesc_meta *meta, gfp_t gfp_flags)
- {
-@@ -551,26 +557,26 @@ static int setup_rx_descbuffer(struct b4
- 	B43_WARN_ON(ring->tx);
- 
- 	skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
- 	if (unlikely(!skb))
- 		return -ENOMEM;
- 	dmaaddr = map_descbuffer(ring, skb->data, ring->rx_buffersize, 0);
--	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
-+	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		/* ugh. try to realloc in zone_dma */
- 		gfp_flags |= GFP_DMA;
- 
- 		dev_kfree_skb_any(skb);
- 
- 		skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
- 		if (unlikely(!skb))
- 			return -ENOMEM;
- 		dmaaddr = map_descbuffer(ring, skb->data,
- 					 ring->rx_buffersize, 0);
- 	}
- 
--	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
-+	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		dev_kfree_skb_any(skb);
- 		return -EIO;
- 	}
- 
- 	meta->skb = skb;
- 	meta->dmaaddr = dmaaddr;
-@@ -804,13 +810,14 @@ struct b43_dmaring *b43_setup_dmaring(st
- 		/* test for ability to dma to txhdr_cache */
- 		dma_test = dma_map_single(dev->dev->dev,
- 					  ring->txhdr_cache,
- 					  b43_txhdr_size(dev),
- 					  DMA_TO_DEVICE);
- 
--		if (b43_dma_mapping_error(ring, dma_test, b43_txhdr_size(dev))) {
-+		if (b43_dma_mapping_error(ring, dma_test,
-+					  b43_txhdr_size(dev), 1)) {
- 			/* ugh realloc */
- 			kfree(ring->txhdr_cache);
- 			ring->txhdr_cache = kcalloc(nr_slots,
- 						    b43_txhdr_size(dev),
- 						    GFP_KERNEL | GFP_DMA);
- 			if (!ring->txhdr_cache)
-@@ -819,13 +826,13 @@ struct b43_dmaring *b43_setup_dmaring(st
- 			dma_test = dma_map_single(dev->dev->dev,
- 						  ring->txhdr_cache,
- 						  b43_txhdr_size(dev),
- 						  DMA_TO_DEVICE);
- 
- 			if (b43_dma_mapping_error(ring, dma_test,
--						  b43_txhdr_size(dev)))
-+						  b43_txhdr_size(dev), 1))
- 				goto err_kfree_txhdr_cache;
- 		}
- 
- 		dma_unmap_single(dev->dev->dev,
- 				 dma_test, b43_txhdr_size(dev),
- 				 DMA_TO_DEVICE);
-@@ -1120,13 +1127,13 @@ static int dma_tx_fragment(struct b43_dm
- 		ring->used_slots = old_used_slots;
- 		return err;
- 	}
- 
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 					   hdrsize, 1);
--	if (b43_dma_mapping_error(ring, meta_hdr->dmaaddr, hdrsize)) {
-+	if (b43_dma_mapping_error(ring, meta_hdr->dmaaddr, hdrsize, 1)) {
- 		ring->current_slot = old_top_slot;
- 		ring->used_slots = old_used_slots;
- 		return -EIO;
- 	}
- 	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
- 			     hdrsize, 1, 0, 0);
-@@ -1139,13 +1146,13 @@ static int dma_tx_fragment(struct b43_dm
- 	memcpy(&meta->txstat.control, ctl, sizeof(*ctl));
- 	meta->skb = skb;
- 	meta->is_last_fragment = 1;
- 
- 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 	/* create a bounce buffer in zone_dma on mapping failure. */
--	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
-+	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
- 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
- 		if (!bounce_skb) {
- 			ring->current_slot = old_top_slot;
- 			ring->used_slots = old_used_slots;
- 			err = -ENOMEM;
- 			goto out_unmap_hdr;
-@@ -1153,13 +1160,13 @@ static int dma_tx_fragment(struct b43_dm
- 
- 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
- 		dev_kfree_skb_any(skb);
- 		skb = bounce_skb;
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
--		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
-+		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
- 			ring->current_slot = old_top_slot;
- 			ring->used_slots = old_used_slots;
- 			err = -EIO;
- 			goto out_free_bounce;
- 		}
- 	}
+>  Dan
+>
+>
+>  >
+>  > >
+>  > >  > Other difference while there can be 4 static key installed that the
+>  > >  > same time possible switching between indexes  There can be only one
+>  > >  > dynamic key per station if you also consider mcast/bcast station to be
+>  > >  > an entity. (TKIP actally uses different  key index for bcast but
+>  > >  > that's just little execption)
+>  > >  > The terminology which is used is also wrong and I guess this is just
+>  > >  > wrong interpretation of  old implementation - 'default key' is used
+>  > >  > for static key. Key mapping key is used for dynamic keys.
+>  > >
+>  > >  I don't think I understand the last paragraph?
+>  >
+>  > Nothing imporatant just that term 'default key' is used usually on in
+>  > context of static/legacy WEP key
+>  > while term 'key mapping key' is used for what I call dynamic key.
+>  >
+>  > >
+>  > >  In any case, actual TX key selection is done by mac80211 anyway, so
+>  > >  you're never interested in that. Only RX key selection is interesting to
+>  > >  the driver, and as far as I can tell it ought to work if you simply
+>  > >  always use the broadcast address key when it's WEP, and otherwise the
+>  > >  pairwise keys and/or the broadcast key for bc/mc frames.
+>  >
+>  > Nothing to add to just that the assumption about WEP and broadcast is wrong.
+>  >
+>  > >  Note that there's another case in AP mode where bc/mc keys are TX-only,
+>  > >  those are added with a zeroed MAC address.
+>  >
+>  > I would prefer also in this case a clear flag rather then playing with
+>  > ambiguity of destination address.
+>  >
+>  > >  johannes
+>  > >
+>  > --
+>  > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  > the body of a message to majordomo@vger.kernel.org
+>  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
