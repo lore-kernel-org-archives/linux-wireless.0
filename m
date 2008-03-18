@@ -1,111 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57759 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757976AbYCEJgM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:36:12 -0500
-Subject: Re: [linux-wireless] [RFC PATCH]iwlwifi: Fix for monitor mode
-	captures management frames only.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BD524EA7912ED5469DFD0BAEF6BC752F035C2DAD@orsmsx411.amr.corp.intel.com>
-References: <BD524EA7912ED5469DFD0BAEF6BC752F035C2DAD@orsmsx411.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GB0PHlSbv4gooa3OD8w1"
-Date: Wed, 05 Mar 2008 10:35:59 +0100
-Message-Id: <1204709759.25502.46.camel@johannes.berg> (sfid-20080305_093645_581937_71F86936)
-Mime-Version: 1.0
+Received: from element.ksp.sk ([158.195.16.154]:34532 "EHLO element.ksp.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752536AbYCTBxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 21:53:10 -0400
+Message-ID: <47E01816.6050004@work.ksp.sk> (sfid-20080320_015329_133640_06EC0C17)
+Date: Tue, 18 Mar 2008 20:29:26 +0100
+From: Vladimir Koutny <vlado@work.ksp.sk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH v2] mac80211: configure default wmm params correctly
+References: <47DFBA13.3060508@work.ksp.sk>	 <1205846472.16475.46.camel@johannes.berg>  <47DFC762.10307@work.ksp.sk> <1205849813.16475.48.camel@johannes.berg>
+In-Reply-To: <1205849813.16475.48.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Default WMM params have to be set according to beacon/probe response
+information prior to authentication (or IBSS start/join); beacon queue
+is configured only in IBSS. This does not affect the use of 'real' WMM
+params as reported by AP.
 
---=-GB0PHlSbv4gooa3OD8w1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
+---
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 8b991eb..14d80e0 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -220,6 +220,61 @@ static int ecw2cw(int ecw)
+ 	return (1 << ecw) - 1;
+ }
 
++
++static void ieee80211_sta_def_wmm_params(struct net_device *dev,
++					 struct ieee80211_sta_bss *bss,
++					 int ibss)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int i, have_higher_than_11mbit = 0;
++
++
++	/* cf. IEEE 802.11 9.2.12 */
++	for (i = 0; i < bss->supp_rates_len; i++)
++		if ((bss->supp_rates[i] & 0x7f) * 5 > 110)
++			have_higher_than_11mbit = 1;
++
++	if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
++		have_higher_than_11mbit)
++		sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
++	else
++		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
++
++
++	if (local->ops->conf_tx) {
++		struct ieee80211_tx_queue_params qparam;
++		int i;
++
++		memset(&qparam, 0, sizeof(qparam));
++
++		qparam.aifs = 2;
++
++		if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
++		    !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE))
++			qparam.cw_min = 31;
++		else
++			qparam.cw_min = 15;
++
++		qparam.cw_max = 1023;
++		qparam.txop = 0;
++
++		for (i = IEEE80211_TX_QUEUE_DATA0; i < NUM_TX_DATA_QUEUES; i++)
++			local->ops->conf_tx(local_to_hw(local),
++					   i + IEEE80211_TX_QUEUE_DATA0,
++					   &qparam);
++
++		if (ibss) {
++			/* IBSS uses different parameters for Beacon sending */
++			qparam.cw_min++;
++			qparam.cw_min *= 2;
++			qparam.cw_min--;
++			local->ops->conf_tx(local_to_hw(local),
++					   IEEE80211_TX_QUEUE_BEACON, &qparam);
++		}
++	}
++}
++
+ static void ieee80211_sta_wmm_params(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta,
+ 				     u8 *wmm_param, size_t wmm_param_len)
+@@ -2289,6 +2344,8 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 					rates |= BIT(j);
+ 		}
+ 		ifsta->supp_rates_bits[local->hw.conf.channel->band] = rates;
++
++		ieee80211_sta_def_wmm_params(dev, bss, 1);
+ 	} while (0);
 
-On Tue, 2008-03-04 at 19:43 -0800, Kolekar, Abhijeet wrote:
-> If monitor mode is set then mac80211 stack now passes the information to
-> driver.
->=20
-> >From 1e21ee62c88c5defacf49a4044d26677b8a79032 Mon Sep 17 00:00:00 2001
-> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> Date: Tue, 4 Mar 2008 17:04:56 -0800
-> Subject: [PATCH] Monitor mode bug fix.
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-4965.c |    5 +++++
->  net/mac80211/ieee80211.c                |   10 ++++++++++
->  2 files changed, 15 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 3e122a9..5ed75aa 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -3822,6 +3822,11 @@ static void iwl4965_rx_reply_rx(struct
-> iwl4965_priv *priv,
->  	/* Find max signal strength (dBm) among 3 antenna/receiver
-> chains */
->  	rx_status.ssi =3D iwl4965_calc_rssi(rx_start);
-> =20
-> +	if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> +		iwl4965_handle_data_packet(priv, 1, include_phy, rxb,
-> &rx_status);
-> +		return;
-> +	}
-> +
->  	/* Meaningful noise values are available only from beacon
-> statistics,
->  	 *   which are gathered only when associated, and indicate noise
->  	 *   only for the associated network channel ...
-> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-> index 484b063..85e37c8 100644
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -327,6 +327,16 @@ static int ieee80211_open(struct net_device *dev)
->  		netif_tx_lock_bh(local->mdev);
->  		ieee80211_configure_filter(local);
->  		netif_tx_unlock_bh(local->mdev);
-> +
-> +		conf.vif =3D &sdata->vif;
-> +		conf.type =3D sdata->vif.type;
-> +		conf.mac_addr =3D dev->dev_addr;
-> +		res =3D local->ops->add_interface(local_to_hw(local),
-> &conf);
-> +		if (res && !local->open_count && local->ops->stop)
-> +			local->ops->stop(local_to_hw(local));
-> +		if (res)
-> +			return res;
-> +
->  		break;
+ 	if (skb) {
+@@ -3274,6 +3331,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 			ieee80211_sta_set_ssid(dev, selected->ssid,
+ 					       selected->ssid_len);
+ 		ieee80211_sta_set_bssid(dev, selected->bssid);
++		ieee80211_sta_def_wmm_params(dev, selected, 0);
+ 		ieee80211_rx_bss_put(dev, selected);
+ 		ifsta->state = IEEE80211_AUTHENTICATE;
+ 		ieee80211_sta_reset_auth(dev, ifsta);
+@@ -3448,43 +3506,10 @@ int ieee80211_sta_set_ssid(struct net_device *dev, char *ssid, size_t len)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_if_sta *ifsta;
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
 
-NACK. Not passing this to the driver is intentional. There's the
-radiotap flag (that really indicates "have monitors") to use.
+ 	if (len > IEEE80211_MAX_SSID_LEN)
+ 		return -EINVAL;
 
-johannes
+-	/* TODO: This should always be done for IBSS, even if IEEE80211_QOS is
+-	 * not defined. */
+-	if (local->ops->conf_tx) {
+-		struct ieee80211_tx_queue_params qparam;
+-		int i;
+-
+-		memset(&qparam, 0, sizeof(qparam));
+-
+-		qparam.aifs = 2;
+-
+-		if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
+-		    !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE))
+-			qparam.cw_min = 31;
+-		else
+-			qparam.cw_min = 15;
+-
+-		qparam.cw_max = 1023;
+-		qparam.txop = 0;
+-
+-		for (i = IEEE80211_TX_QUEUE_DATA0; i < NUM_TX_DATA_QUEUES; i++)
+-			local->ops->conf_tx(local_to_hw(local),
+-					   i + IEEE80211_TX_QUEUE_DATA0,
+-					   &qparam);
+-
+-		/* IBSS uses different parameters for Beacon sending */
+-		qparam.cw_min++;
+-		qparam.cw_min *= 2;
+-		qparam.cw_min--;
+-		local->ops->conf_tx(local_to_hw(local),
+-				   IEEE80211_TX_QUEUE_BEACON, &qparam);
+-	}
+-
+ 	ifsta = &sdata->u.sta;
 
---=-GB0PHlSbv4gooa3OD8w1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR85pfaVg1VMiehFYAQL21Q/9E5RNsZEnU4Arv33/NWLX2e7cOz92wp72
-G0KhyCoegy41f+8HZ1mYkZ0IcegIGFdUm/QNLiRsqeVAPrB5OU57vEHIg4YHg7Lr
-IacIageyelYWsnA2kMng/99FBKZyBrCMOTkU4T7zfKPdvqRSJS3h//b2g68mK35j
-lHm6LBmn0seWY5Gn+szj7C/ei+//9J0SuRdGE9omtt4jqAq7Skvx7R9Qycy1jYqp
-3McFFekxPUVQORlWykouauPRem3NnWshWoI+6q/0zu29h/DYPgSS9v7KsfPC9Aie
-nBMilmvuo9ZPD4jZRPfXr/gxoLIG1GGjT+c38zpmBfm0wxBgMU5mf91+79H8SpSV
-1XrMlLMM1B9OdonaykgfLHmbPfcZa+uH9fyAISjpQNThK8ZyAQyFNKZl3ePNseq2
-1ZLNK/LgQiM67c5m3mr+t4lidYzlnOYqPWtuXqEYB3DQzaaoI4844ImpzycrwxId
-8evAts3Ca0EsaUwke3OePTcaPrCfGdz3p3hMoygdVaXlqqEeIwOIhd3qdRpcHNvN
-8FHPojTYSqQhmBhFQF/SOw2riIUgEc6Rs7n87kPmUG6JYZiW7/VZDLN6MTD3GN/b
-lYbnhO5e73Npyme1c1q1vlI93jnfXl9lT6CJ1xKrFP6FSr5VGD3+w9TpjH3JNS6l
-pgZ4wBbrxpo=
-=tM1c
------END PGP SIGNATURE-----
-
---=-GB0PHlSbv4gooa3OD8w1--
+ 	if (ifsta->ssid_len != len || memcmp(ifsta->ssid, ssid, len) != 0)
 
