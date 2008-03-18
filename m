@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:27392 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbYCELKj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53031 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758627AbYCSTp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 06:10:39 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so857754rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 03:10:39 -0800 (PST)
-Message-ID: <b25c3fa70803050310i71023046gc3f40d4042038ba6@mail.gmail.com> (sfid-20080305_111043_433679_3BE9BF66)
-Date: Wed, 5 Mar 2008 20:10:39 +0900
-From: "Joonwoo Park" <joonwpark81@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1204710843.25502.50.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
-	 <1204710843.25502.50.camel@johannes.berg>
+	Wed, 19 Mar 2008 15:45:57 -0400
+Subject: Re: [PATCH v2] mac80211: configure default wmm params correctly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Koutny <vlado@work.ksp.sk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <47E01816.6050004@work.ksp.sk>
+References: <47DFBA13.3060508@work.ksp.sk>
+	 <1205846472.16475.46.camel@johannes.berg>  <47DFC762.10307@work.ksp.sk>
+	 <1205849813.16475.48.camel@johannes.berg>  <47E01816.6050004@work.ksp.sk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IkipEodqbHLOLIvprTJp"
+Date: Tue, 18 Mar 2008 20:38:15 +0100
+Message-Id: <1205869095.16475.54.camel@johannes.berg> (sfid-20080319_194723_972069_95B917E0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/3/5, Johannes Berg <johannes@sipsolutions.net>:
->
-> On Wed, 2008-03-05 at 18:40 +0900, Joonwoo Park wrote:
-> > resolve: http://bughost.org/bugzilla/show_bug.cgi?id=1522
-> >
-> > The function ieee80211_ioctl_siwencode shouldn't be called if
-> > authentication process is not completed.
-> > This patch makes the ieee80211_ioctl_siwessid to wait for authentication
-> > is completed.
->
 
-Johannes,
-Thank you for reviewing this.
+--=-IkipEodqbHLOLIvprTJp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> This looks wrong. You could restart association when a key is set but
-> really the race is by design in WEXT so the only way to fix it is to set
-> the key first.
->
 
-Do you mean fix iwconfig to always do set key before set essid?
-As you said, It could be a possible solution.
-But, doing It cannot solve a race from two seperated iwconfig process, I think.
-(eg: iwconfig essid ESSID; iwconfig enc ENC)
-Moreover, now we just wake auth request task up and return when setting essid.
-Don't we need to wait a moment until the task is scheduled to be
-polite to iwconifg? :)
+> +	if (local->hw.conf.channel->band =3D=3D IEEE80211_BAND_2GHZ &&
+> +		have_higher_than_11mbit)
+> +		sdata->flags |=3D IEEE80211_SDATA_OPERATING_GMODE;
 
-Thanks,
-Joonwoo
+I don't know what CodingStyle says, but I very much prefer
+
+if (local->hw..... &&
+    have_higher_than_11mbit)
+	sdata->flags |=3D ...
+
+since that visually puts the continuation of the condition together with
+the start of it. Mind changing that?
+
+johannes
+
+--=-IkipEodqbHLOLIvprTJp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+AaJqVg1VMiehFYAQK3Ww//Wlz2/B0qVM0Y6I/X2RZAUbM7TPb2hNA9
+OJxHnPbDnLP0Q4d0+wHuobpu2KB7JVa9BWmZA761YVKxl1AeRojSGmtzwdFmf+M+
+qMOqnE1HEgOom6Rk/qpFy/kVJbez3wQI4ed44Abs4U5vkUX8MqDeBMdYhEmDvPQd
+gEP3FzzfhU6QFp6hrEDeJyJmg3tvzbBXLU5pjUMSWCKp1Hy8uwbv8MPqXM1+DpJh
+h3PmKeJ5MxUS9/RxGDRYJbuXFJYJkSem+bDbaWHyNGtTJ6sCTa2CtBqtELI1le3f
+T2RDOS0Nbvoa7ZzOboNAZlUNe4ig8bESqRWJgH+MfBP3zdCiqtLjxNfCWnrH1TnF
++1NLDfMEg4IFHsJ7dr0VBP8oUby53PQYNhTOjGDbniW3ceFqrFnEeEEkQZBLtKQ7
+S5dC6NrhCHPoisBbfHl10Rdg3EQYJfKOmYj2DX57M+U0FKzuBR6TPvBhbqoMv7Dq
+LPXYjp6/8U1+rTwFNu8tw7TG0vw6j+TvLodWnOSbLbw0q0pPKO0a+IhmA9GL5gLn
+eQOUCh0itr2Q96xEqntd/m3JwH+eokTZXwJe+B3UqFwC+57yKo8AH7/7reyh7N4l
+Hkr7kSmI8eOcYZGgqYsrs0/PT9YPSH6XNmCPWhc4/ruiMtkHDI4BCq4AFV1C8yts
+feyRYSrG+Zg=
+=Fu1G
+-----END PGP SIGNATURE-----
+
+--=-IkipEodqbHLOLIvprTJp--
+
