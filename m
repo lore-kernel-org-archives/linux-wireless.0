@@ -1,53 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38734 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751526AbYCJSl1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2008 14:41:27 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/7] iwlwifi: Fix endianity in debug print
-Date: Mon, 10 Mar 2008 11:35:11 -0700
-Message-Id: <1205174112-18962-7-git-send-email-reinette.chatre@intel.com> (sfid-20080310_184150_035363_C6BC420B)
-In-Reply-To: <1205174112-18962-6-git-send-email-reinette.chatre@intel.com>
-References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-2-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-3-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-4-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-5-git-send-email-reinette.chatre@intel.com>
- <1205174112-18962-6-git-send-email-reinette.chatre@intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.178]:58061 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756239AbYCRArn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2008 20:47:43 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so6645297wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 17:47:43 -0700 (PDT)
+Subject: [PATCH 4/5] b43: Organize cases in radio2050_rfover_val
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 17 Mar 2008 17:47:30 -0700
+Message-Id: <1205801250.2329.53.camel@brick> (sfid-20080318_004802_183738_B5239890)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+This function has three independant states that are looked at
 
-This patch fix debug print out endianity issue for bitmap
-Since u64 and le64 variables are casted to unsigned long long,
-after patch 'wireless: correct warnings from using '%llx' for type 'u64'
-also bitmaps need to be converted to native endianity
+phy_register: B43_PHY_RFOVER, B43_PHY_RFOVERVAL
+lb_gain: has_loopback_gain(phy)
+phy_lna: (phy->rev < 7) || !(sprom->boardflags_lo & B43_BFL_EXTLNA)
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+The B43_PHY_RFOVER case depends only on the phy_lna value, make this
+test explicit.
+
+The B43_PHY_RFOVERVAL case depends on both lb_gain and phy_lna.
+
+Move the calculation of extlna before the if blocks and pull up an
+adjustment that depends on phy_lna out of the switch statements.
+
+Consolidate the switch statements using a conditional on phy_lna.
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/b43/phy.c |  133 ++++++++++++++--------------------------
+ 1 files changed, 46 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b3bf7c1..67091b8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -4265,7 +4265,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl4965_priv *priv,
- 			   "%d, scd_ssn = %d\n",
- 			   ba_resp->tid,
- 			   ba_resp->seq_ctl,
--			   (unsigned long long)ba_resp->bitmap,
-+			   (unsigned long long)le64_to_cpu(ba_resp->bitmap),
- 			   ba_resp->scd_flow,
- 			   ba_resp->scd_ssn);
- 	IWL_DEBUG_TX_REPLY("DAT start_idx = %d, bitmap = 0x%llx \n",
+diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
+index bac54bb..0e2b065 100644
+--- a/drivers/net/wireless/b43/phy.c
++++ b/drivers/net/wireless/b43/phy.c
+@@ -3329,22 +3329,28 @@ static void radio2050_rfover_val(struct b43_wldev *dev,
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct ssb_sprom *sprom = &(dev->dev->bus->sprom);
++	int lb_gain;
++	int phy_lna;
+ 	u16 data = 0;
++	u16 extlna;
+ 
+ 	if (!phy->gmode) {
+ 		data = 0;
+ 		goto writereg;
+ 	}
+ 
+-	if (has_loopback_gain(phy)) {
++	phy_lna = (phy->rev < 7) || !(sprom->boardflags_lo & B43_BFL_EXTLNA);
++
++	lb_gain = has_loopback_gain(phy);
++	if (lb_gain) {
+ 		int max_lb_gain = phy->max_lb_gain;
+-		u16 extlna;
+ 		u16 i;
+ 
+ 		if (phy->radio_rev == 8)
+ 			max_lb_gain += 0x3E;
+ 		else
+ 			max_lb_gain += 0x26;
++
+ 		if (max_lb_gain >= 0x46) {
+ 			extlna = 0x3000;
+ 			max_lb_gain -= 0x46;
+@@ -3365,101 +3371,54 @@ static void radio2050_rfover_val(struct b43_wldev *dev,
+ 				break;
+ 		}
+ 
+-		if ((phy->rev < 7) ||
+-		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
+-			if (phy_register == B43_PHY_RFOVER) {
+-				data = 0x1B3;
++		if (!phy_lna && extlna)
++			extlna |= 0x8000;
++		extlna |= (i << 8);
++	}
++
++	if (phy_register == B43_PHY_RFOVER) {
++		if (phy_lna)
++			data = 0x01B3;
++		else
++			data = 0x09B3;
++		goto writereg;
++	} else if (phy_register == B43_PHY_RFOVERVAL) {
++		if (lb_gain) {
++			switch (lpd) {
++			case LPD(0, 1, 1):
++				data = (phy_lna ? 0x0F92 : 0x8F92);
+ 				goto writereg;
+-			} else if (phy_register == B43_PHY_RFOVERVAL) {
+-				extlna |= (i << 8);
+-				switch (lpd) {
+-				case LPD(0, 1, 1):
+-					data = 0x0F92;
+-					goto writereg;
+-				case LPD(0, 0, 1):
+-				case LPD(1, 0, 1):
+-					data = (0x0092 | extlna);
+-					goto writereg;
+-				case LPD(1, 0, 0):
+-					data = (0x0093 | extlna);
+-					goto writereg;
+-				}
+-				B43_WARN_ON(1);
+-			}
+-			B43_WARN_ON(1);
+-		} else {
+-			if (phy_register == B43_PHY_RFOVER) {
+-				data = 0x9B3;
++			case LPD(0, 0, 1):
++				data = (phy_lna ? 0x0092 : 0x8092) | extlna;
+ 				goto writereg;
+-			} else if (phy_register == B43_PHY_RFOVERVAL) {
+-				if (extlna)
+-					extlna |= 0x8000;
+-				extlna |= (i << 8);
+-				switch (lpd) {
+-				case LPD(0, 1, 1):
+-					data = 0x8F92;
+-					goto writereg;
+-				case LPD(0, 0, 1):
+-					data = (0x8092 | extlna);
+-					goto writereg;
+-				case LPD(1, 0, 1):
+-					data = (0x2092 | extlna);
+-					goto writereg;
+-				case LPD(1, 0, 0):
+-					data = (0x2093 | extlna);
+-					goto writereg;
+-				}
+-				B43_WARN_ON(1);
+-			}
+-			B43_WARN_ON(1);
+-		}
+-	} else {
+-		if ((phy->rev < 7) ||
+-		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
+-			if (phy_register == B43_PHY_RFOVER) {
+-				data = 0x1B3;
++			case LPD(1, 0, 1):
++				data = (phy_lna ? 0x0092 : 0x2092) | extlna;
++				goto writereg;
++			case LPD(1, 0, 0):
++				data = (phy_lna ? 0x0093 : 0x2093) | extlna;
+ 				goto writereg;
+-			} else if (phy_register == B43_PHY_RFOVERVAL) {
+-				switch (lpd) {
+-				case LPD(0, 1, 1):
+-					data = 0x0FB2;
+-					goto writereg;
+-				case LPD(0, 0, 1):
+-					data = 0x00B2;
+-					goto writereg;
+-				case LPD(1, 0, 1):
+-					data = 0x30B2;
+-					goto writereg;
+-				case LPD(1, 0, 0):
+-					data = 0x30B3;
+-					goto writereg;
+-				}
+-				B43_WARN_ON(1);
+ 			}
+ 			B43_WARN_ON(1);
+ 		} else {
+-			if (phy_register == B43_PHY_RFOVER) {
+-				data = 0x9B3;
++			switch (lpd) {
++			case LPD(0, 1, 1):
++				data = phy_lna ? 0x0FB2 : 0x8FB2;
++				goto writereg;
++			case LPD(0, 0, 1):
++				data = phy_lna ? 0x00B2 : 0x80B2;
++				goto writereg;
++			case LPD(1, 0, 1):
++				data = phy_lna ? 0x30B2 : 0x20B2;
++				goto writereg;
++			case LPD(1, 0, 0):
++				data = phy_lna ? 0x30B3 : 0x20B3;
+ 				goto writereg;
+-			} else if (phy_register == B43_PHY_RFOVERVAL) {
+-				switch (lpd) {
+-				case LPD(0, 1, 1):
+-					data = 0x8FB2;
+-					goto writereg;
+-				case LPD(0, 0, 1):
+-					data = 0x80B2;
+-					goto writereg;
+-				case LPD(1, 0, 1):
+-					data = 0x20B2;
+-					goto writereg;
+-				case LPD(1, 0, 0):
+-					data = 0x20B3;
+-					goto writereg;
+-				}
+-				B43_WARN_ON(1);
+ 			}
+ 			B43_WARN_ON(1);
+ 		}
++	} else {
++		/* B43_PHY_RFOVER, B43_PHY_RFOVERVAL are the only valid args */
++		B43_WARN_ON(1);
+ 	}
+ 
+ writereg:
 -- 
-1.5.3.4
+1.5.4.4.684.g0e08
+
 
