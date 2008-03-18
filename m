@@ -1,66 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38909 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753919AbYC1GjM (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751530AbYCRJSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 02:39:12 -0400
-Date: Thu, 27 Mar 2008 23:38:16 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: Re: [PATCH 13/18] mac80211: mesh statistics and config through
- debugfs
-Message-Id: <20080327233816.f6cb207e.akpm@linux-foundation.org> (sfid-20080328_063918_018308_8CA3DA72)
-In-Reply-To: <20080223142015.478371000@sipsolutions.net>
-References: <20080223141703.194775000@sipsolutions.net>
-	<20080223142015.478371000@sipsolutions.net>
+	Tue, 18 Mar 2008 05:18:20 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
+	a Phase 2 key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080318080435.GA5308@jm.kir.nu>
+References: <1205751455.1614.25.camel@johannes.berg>
+	 <1ba2fa240803170540n2e6fb398p84abfb34e4124042@mail.gmail.com>
+	 <1205758276.1614.45.camel@johannes.berg>
+	 <1ba2fa240803170636t6158c0a8vb180f71352208548@mail.gmail.com>
+	 <1205761758.1614.79.camel@johannes.berg>
+	 <1ba2fa240803171212s36f85306i6f47ed9fa725b90@mail.gmail.com>
+	 <1205781593.16475.20.camel@johannes.berg>
+	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
+	 <1205784255.16475.33.camel@johannes.berg>
+	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
+	 <20080318080435.GA5308@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I2wJr/A+oj7jmSyxKK30"
+Date: Tue, 18 Mar 2008 10:18:00 +0100
+Message-Id: <1205831880.16475.43.camel@johannes.berg> (sfid-20080318_091824_352112_70C2438B)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Feb 2008 15:17:16 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> 
-> This patch contains the debugfs code for mesh statistics and configuration
-> parameters. Please note that generic support for r/w debugfs attributes has been
-> added.
+--=-I2wJr/A+oj7jmSyxKK30
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Would it be OK if we do this?
+> At least the original d80211 design supported multiple SSIDs per BSS and
+> yes, as far as kernel code is concerned, this was done in the identical
+> way for both multi-SSID and dynamic-VLAN (RADIUS assigned). A new
+> virtual interface is added for both cases and STAs are bound to the
+> specific virtual interface based on MLME/RADIUS results.
+>=20
+> However, I do not think I ever merged multi-SSID support into the open
+> source version of hostapd, so it is quite possible that only the
+> RADIUS-based VLAN assignment is currently used since multi-SSID support
+> is inferior to multi-BSS support for number of reasons. Anyway, that
+> does not change what mac80211 would support should one ever really want
+> to enable multi-SSID support with a single BSS. I don't see much need
+> for that, though, if one can use virtual BSSes.
 
-From: Andrew Morton <akpm@linux-foundation.org>
+Ah. I guess that requires hiding the SSID though?
 
-This bool causes my gcc-4.1.0 alpha cross compiler to go into an infinite
-loop.  Switching it to u8 works around that.
+johannes
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>
-Cc: Luis Carlos Cobo <luisca@cozybit.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+--=-I2wJr/A+oj7jmSyxKK30
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- net/mac80211/debugfs_netdev.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-diff -puN net/mac80211/debugfs_netdev.c~net-mac80211-debugfs_netdevc-use-of-bool-triggers-a-gcc-bug net/mac80211/debugfs_netdev.c
---- a/net/mac80211/debugfs_netdev.c~net-mac80211-debugfs_netdevc-use-of-bool-triggers-a-gcc-bug
-+++ a/net/mac80211/debugfs_netdev.c
-@@ -222,7 +222,7 @@ IEEE80211_IF_WFILE(dot11MeshConfirmTimeo
- IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
- 		u.sta.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
- IEEE80211_IF_WFILE(dot11MeshTTL, u.sta.mshcfg.dot11MeshTTL, DEC, u8);
--IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, bool);
-+IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, u8);
- IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
- 		u.sta.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
- IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
-_
+iQIVAwUAR9+Ix6Vg1VMiehFYAQKxyQ//cB+SCvYro1q/VBmegjZtvkjZgWFNaJgN
+PB4jNcDdhQqJHEQAJLXu29iWNi5jq2gakyvdpQhTGCisGXx7xN8YeJ9xZ1uGhoAF
+QgKSEer/lwL7T4OUtlAZcl9pohhssM7/36wkSuo9cdgStFdNP/hzxJoY7rh4Opv3
+c+L2aN7idn4JveA58a63nJ8D2JjGvbE4xRK8v5uCpJ7Dpk2wBt+F54WcYMvnQ3JK
+k/GhAiyxeZP9Eq5LVKb1jzg3NAPCrlNPv7C7g7iKHtEcgg6RqB49BOSand/lpzmt
+rGlBsr+NWkfbME5J7gjPcWZ70K9ZK5ffTrJ66tS4JcSh0JiEpmfkjKeK1wyvOevE
+FQ74gUbTAzNm8QmTBEDWFg0nkXD6BnaCxyZhRfpwnSfl9TzlfO4XENmjBcVeeffW
+sKfp45z769sKC4LuYIX58LWrOpD9ULwR6aCHoyIn0B/flXUAvU+/maFnj92/SXw+
++QzTv3CGpfBm+JnoGZ+8kUQZllcalMOZLRy8itIsxEXr7TqJ0dHfdVFaUZ3ivucs
+q0P9K80ZY5cjqwtsrV/p07jG00n8HlKIxE7BN57xnzvYcdvyd+Lkx0c6nOsWpjCI
+Aya16PHNIDXXuLy8Ld6lEc5ayhNfBP2yhIuS/avHW/AV98SNgUeUfXghnDTS/Uok
+bJCrfdDY6yM=
+=c8QY
+-----END PGP SIGNATURE-----
 
-
-quite a few people are (hopefully) using the alpha cross-compiler from
-http://userweb.kernel.org/~akpm/cross-compilers/, and this is rather an
-inconvenience.
+--=-I2wJr/A+oj7jmSyxKK30--
 
