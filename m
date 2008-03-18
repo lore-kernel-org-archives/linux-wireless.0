@@ -1,103 +1,540 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50124 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754859AbYC1TPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 15:15:07 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JfK2Y-0007Gc-Dw
-	for linux-wireless@vger.kernel.org; Fri, 28 Mar 2008 19:15:02 +0000
-Received: from pro75-5-88-162-203-35.fbx.proxad.net ([88.162.203.35])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 19:15:02 +0000
-Received: from tobutaz+kernel by pro75-5-88-162-203-35.fbx.proxad.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 19:15:02 +0000
-To: linux-wireless@vger.kernel.org
-From: TK <tobutaz+kernel@gmail.com>
-Subject: 2.6.24 panic in rt2x00lib_txdone / ieee80211_tx_status_irqsafe
-Date: Fri, 28 Mar 2008 19:09:56 +0000 (UTC)
-Message-ID: <fsjfq1$vl8$1@ger.gmane.org> (sfid-20080328_191526_646591_B5775166)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:29230 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698AbYCRMpm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2008 08:45:42 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: convert RSSI to a direct command
+Date: Tue, 18 Mar 2008 13:42:42 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803181342.42704.hs4233@mail.mn-solutions.de> (sfid-20080318_124553_517061_960A0D77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I get this panic with rt2x00 2.0.10 (2.6.24-12-server kernel
-shipped by ubuntu). It can crash quite regularly given the
-right amount of wireless activity and system load.
+[PATCH] libertas: convert RSSI to a direct command
 
-The instruction that crashes seems to be the assignment to
-skb->dev when skb is null (in ieee80211_tx_status_irqsafe);
-skb can be set to null in the caller, rt2x00lib_txdone.
+Besided the direct conversion of the CMD_802_11_RSSI command, this
+patch also changes the following things:
 
-I'm not really sure what is the right fix, but I can try a patch.
+* calls CMD_802_11_RSSI either asynchronously (in the background)
+  when main.c thinks the firmware is hosed and just want's to
+  get a command through
+* calls CMD_802_11_RSSI synchronously when called to get wireless
+  statistics.
+* don't do in-driver averaging anymore, this and the previous point
+  eliminates the need for any "struct lbs_private" values
+* doesn't magically create a iwe.u.qual.level value in the adhoc
+  mode anymore. The old code access older SNR/NF values from
+  older RXPDs, but there that RXPDs could have been hours old.
 
-Logs:
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-[  655.701275] BUG: unable to handle kernel NULL pointer dereference at virtual address 00000014
-[  655.701369] printing eip: d0b96c72 *pdpt = 000000000ed22001 *pde = 0000000000000000 
-[  655.701444] Oops: 0002 [#1] SMP 
-[  655.701485] Modules linked in: aes_i586 geode_aes aes_generic nls_iso8859_1 nls_cp437 vfat fat loop netconsole configfs ip6table_filter iptable_raw ipt_ULOG ipt_TTL ipt_ttl ipt_TOS ipt_tos ipt_SAME ipt_REJECT ipt_REDIRECT ipt_recent ipt_owner ipt_NETMAP ipt_MASQUERADE ipt_LOG ipt_iprange ipt_ECN ipt_ecn ipt_CLUSTERIP ipt_ah ipt_addrtype nf_nat_tftp nf_nat_snmp_basic nf_nat_sip nf_nat_pptp nf_nat_proto_gre nf_nat_irc nf_nat_h323 nf_nat_ftp nf_nat_amanda ts_kmp nf_conntrack_amanda nf_conntrack_tftp nf_conntrack_sip nf_conntrack_proto_sctp nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_netlink nf_conntrack_netbios_ns nf_conntrack_irc nf_conntrack_h323 nf_conntrack_ftp xt_tcpmss xt_pkttype xt_physdev xt_NFQUEUE xt_NFLOG xt_multiport xt_MARK xt_mark xt_mac xt_limit xt_length xt_helper xt_hashlimit ip6_tables xt_dccp xt_conntrack xt_CONNMARK xt_connmark xt_CLASSIFY xt_tcpudp xt_state iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack iptable_mangle nfnetlink iptable_filter ip_tables x_tables ext3 jbd mbcache ac lp af_packet ipv6 evdev snd_via82xx snd_cmipci snd_ac97_codec gameport ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm snd_opl3_lib snd_hwdep snd_page_alloc snd_mpu401_uart arc4 ecb blkcipher snd_seq_dummy psmouse serio_raw rt2x00lib snd_rawmidi snd_seq_midi_event snd_timer snd_seq_device shpchp snd via_agp agpgart pci_hotplug via686a parport_pc parport soundcore reiserfs sg r8169 raid10 raid456 md_mod tileblit bitblit softcursor fuse
-[  655.703375] 
-[  655.703400] Pid: 0, comm: swapper Not tainted (2.6.24-12-server #1)
-[  655.703436] EIP: 0060:[<d0b96c72>] EFLAGS: 00010086 CPU: 0
-[  655.703545] EIP is at ieee80211_tx_status_irqsafe+0x12/0x120 [mac80211]
-[  655.703581] EAX: ce945000 EBX: cf543a58 ECX: cf543a58 EDX: 00000000
-[  655.703616] ESI: cd485e80 EDI: 00000000 EBP: cd485180 ESP: c0439e00
-[  655.703651]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[  655.703684] Process swapper (pid: 0, ti=c0438000 task=c04043a0 task.ti=c0438000)
-[  655.703719] Stack: c1207240 c12071b8 00000000 ce088280 cf543a4c cd485e80 00000000 00000801 
-[  655.703812]        d0b843f4 ce8cb438 cf543aa0 006c000a d0b8e41f 00000000 00000000 cd485e80 
-[  655.703902]        00000000 ced10200 ccccc4a0 00000000 00000000 0000000a c016da50 c042d380 
-[  655.703994] Call Trace:
-[  655.704082]  [<d0b843f4>] rt2x00lib_txdone+0x84/0xb0 [rt2x00lib]
-[  655.704164]  [<d0b8e41f>] rt61pci_interrupt+0x13f/0x220 [rt61pci]
-[  655.704349]  [<c016da50>] handle_IRQ_event+0x30/0x60
-[  655.704414]  [<c016f3ec>] handle_level_irq+0x7c/0xf0
-[  655.704473]  [<c010a93b>] do_IRQ+0x3b/0x70
-[  655.704545]  [<c0108dff>] common_interrupt+0x23/0x28
-[  655.704648]  [<c033041d>] _spin_unlock_irqrestore+0xd/0x20
-[  655.704706]  [<d0958f18>] ata_interrupt+0xe8/0x200 [libata]
-[  655.704902]  [<c016da50>] handle_IRQ_event+0x30/0x60
-[  655.704959]  [<c016f3ec>] handle_level_irq+0x7c/0xf0
-[  655.705016]  [<c010a93b>] do_IRQ+0x3b/0x70
-[  655.705086]  [<c0108dff>] common_interrupt+0x23/0x28
-[  655.705184]  [<d08595b0>] acpi_idle_enter_simple+0x159/0x1c5 [processor]
-[  655.705291]  [<c02a4afc>] cpuidle_idle_call+0x7c/0xb0
-[  655.705351]  [<c01066c3>] cpu_idle+0x73/0xd0
-[  655.705404]  [<c043ea8f>] start_kernel+0x31f/0x3b0
-[  655.705451]  [<c043e150>] unknown_bootoption+0x0/0x1f0
-[  655.705539]  =======================
-[  655.705566] Code: fe 0f 0b eb fe 8d 74 26 00 0f 0b eb fe 8d b6 00 00 00 00 8d bf 00 00 00 00 55 89 c5 57 56 53 89 cb 83 ec 10 89 54 24 08 8b 40 58 <89> 42 
-
-objdump disassembly:
-00000c60 <ieee80211_tx_status_irqsafe>:
-     c60:       55                      push   %ebp
-     c61:       89 c5                   mov    %eax,%ebp
-     c63:       57                      push   %edi
-     c64:       56                      push   %esi
-     c65:       53                      push   %ebx
-     c66:       89 cb                   mov    %ecx,%ebx
-     c68:       83 ec 10                sub    $0x10,%esp
-call convention boilerplate
-     c6b:       89 54 24 08             mov    %edx,0x8(%esp)
-struct ieee80211_local *local = hw_to_local(hw);
-     c6f:       8b 40 58                mov    0x58(%eax),%eax
-x = local->mdev;
-     c72:       89 42 14                mov    %eax,0x14(%edx)
-skb->dev = x;
-
-Source:
-void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
-                                 struct sk_buff *skb,
-                                 struct ieee80211_tx_status *status)
-{
-        struct ieee80211_local *local = hw_to_local(hw);
-        struct ieee80211_tx_status *saved;
-        int tmp;
-
-        skb->dev = local->mdev;
-        saved = kmalloc(sizeof(struct ieee80211_tx_status), GFP_ATOMIC);
-
-
+Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-18 11:55:57.000000000 +0100
+@@ -671,6 +671,44 @@ static int lbs_cmd_802_11_rate_adapt_rat
+ 	return 0;
+ }
+ 
++int lbs_get_rssi(struct lbs_private *priv, u16 *snr, u16 *nf)
++{
++	struct cmd_ds_802_11_rssi cmd;
++	struct cmd_ds_802_11_rssi_rsp rsp;
++	int ret;
++	u16 _snr, _nf;
++
++	lbs_deb_enter(LBS_DEB_CMD);
++
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.avg_factor = cpu_to_le16(1);
++	rsp.hdr.size = cpu_to_le16(sizeof(rsp));
++
++	/* main.c might have called us just to un-break a hanging firmware */
++	if (!snr && !nf) {
++		lbs_cmd_async(priv, CMD_802_11_RSSI, &cmd.hdr, sizeof(cmd));
++		return 0;
++	}
++
++	ret = lbs_cmd(priv, CMD_802_11_RSSI,
++		&cmd, lbs_cmd_copyback, (unsigned long) &rsp);
++
++	if (!ret) {
++		_snr = le16_to_cpu(rsp.SNR);
++		_nf  = le16_to_cpu(rsp.NF);
++	} else {
++		_snr = 0;
++		_nf  = abs(MRVDRV_NF_DEFAULT_SCAN_VALUE);
++	}
++
++	if (*snr) *snr = _snr;
++	if (*nf)  *nf  = _nf;
++
++	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
++
++	return ret;
++}
++
+ /**
+  *  @brief Get the current data rate
+  *
+@@ -837,27 +875,6 @@ out:
+ 	return ret;
+ }
+ 
+-static int lbs_cmd_802_11_rssi(struct lbs_private *priv,
+-				struct cmd_ds_command *cmd)
+-{
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
+-	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
+-
+-	/* reset Beacon SNR/NF/RSSI values */
+-	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = 0;
+-	priv->SNR[TYPE_BEACON][TYPE_AVG] = 0;
+-	priv->NF[TYPE_BEACON][TYPE_NOAVG] = 0;
+-	priv->NF[TYPE_BEACON][TYPE_AVG] = 0;
+-	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] = 0;
+-	priv->RSSI[TYPE_BEACON][TYPE_AVG] = 0;
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int lbs_cmd_reg_access(struct lbs_private *priv,
+ 			       struct cmd_ds_command *cmdptr,
+ 			       u8 cmd_action, void *pdata_buf)
+@@ -1413,10 +1430,6 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = lbs_cmd_80211_ad_hoc_join(priv, cmdptr, pdata_buf);
+ 		break;
+ 
+-	case CMD_802_11_RSSI:
+-		ret = lbs_cmd_802_11_rssi(priv, cmdptr);
+-		break;
+-
+ 	case CMD_802_11_AD_HOC_STOP:
+ 		ret = lbs_cmd_80211_ad_hoc_stop(priv, cmdptr);
+ 		break;
+Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-18 11:52:42.000000000 +0100
+@@ -51,15 +51,6 @@ void lbs_mac_event_disconnected(struct l
+ 	kfree_skb(priv->currenttxskb);
+ 	priv->currenttxskb = NULL;
+ 	priv->tx_pending_len = 0;
+-
+-	/* reset SNR/NF/RSSI values */
+-	memset(priv->SNR, 0x00, sizeof(priv->SNR));
+-	memset(priv->NF, 0x00, sizeof(priv->NF));
+-	memset(priv->RSSI, 0x00, sizeof(priv->RSSI));
+-	memset(priv->rawSNR, 0x00, sizeof(priv->rawSNR));
+-	memset(priv->rawNF, 0x00, sizeof(priv->rawNF));
+-	priv->nextSNRNF = 0;
+-	priv->numSNRNF = 0;
+ 	priv->connect_status = LBS_DISCONNECTED;
+ 
+ 	/* Clear out associated SSID and BSSID since connection is
+@@ -248,36 +239,6 @@ static int lbs_ret_802_11_rate_adapt_rat
+ 	return 0;
+ }
+ 
+-static int lbs_ret_802_11_rssi(struct lbs_private *priv,
+-				struct cmd_ds_command *resp)
+-{
+-	struct cmd_ds_802_11_rssi_rsp *rssirsp = &resp->params.rssirsp;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-
+-	/* store the non average value */
+-	priv->SNR[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->SNR);
+-	priv->NF[TYPE_BEACON][TYPE_NOAVG] = le16_to_cpu(rssirsp->noisefloor);
+-
+-	priv->SNR[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgSNR);
+-	priv->NF[TYPE_BEACON][TYPE_AVG] = le16_to_cpu(rssirsp->avgnoisefloor);
+-
+-	priv->RSSI[TYPE_BEACON][TYPE_NOAVG] =
+-	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_NOAVG],
+-		     priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+-
+-	priv->RSSI[TYPE_BEACON][TYPE_AVG] =
+-	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_AVG] / AVG_SCALE,
+-		     priv->NF[TYPE_BEACON][TYPE_AVG] / AVG_SCALE);
+-
+-	lbs_deb_cmd("RSSI: beacon %d, avg %d\n",
+-	       priv->RSSI[TYPE_BEACON][TYPE_NOAVG],
+-	       priv->RSSI[TYPE_BEACON][TYPE_AVG]);
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int lbs_ret_802_11_eeprom_access(struct lbs_private *priv,
+ 				  struct cmd_ds_command *resp)
+ {
+@@ -385,10 +346,6 @@ static inline int handle_cmd_response(st
+ 		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
+ 		break;
+ 
+-	case CMD_RET(CMD_802_11_RSSI):
+-		ret = lbs_ret_802_11_rssi(priv, resp);
+-		break;
+-
+ 	case CMD_RET(CMD_802_11_MAC_ADDRESS):
+ 		ret = lbs_ret_802_11_mac_address(priv, resp);
+ 		break;
+Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-18 12:05:30.000000000 +0100
+@@ -411,19 +411,21 @@ struct cmd_ds_802_11_rf_channel {
+ };
+ 
+ struct cmd_ds_802_11_rssi {
+-	/* weighting factor */
+-	__le16 N;
++	struct cmd_header hdr;
+ 
++	__le16 avg_factor;
+ 	__le16 reserved_0;
+ 	__le16 reserved_1;
+ 	__le16 reserved_2;
+ };
+ 
+ struct cmd_ds_802_11_rssi_rsp {
++	struct cmd_header hdr;
++
+ 	__le16 SNR;
+-	__le16 noisefloor;
++	__le16 NF;
+ 	__le16 avgSNR;
+-	__le16 avgnoisefloor;
++	__le16 avgNF;
+ };
+ 
+ struct cmd_ds_802_11_mac_address {
+@@ -713,8 +715,6 @@ struct cmd_ds_command {
+ 		struct cmd_ds_802_11_rate_adapt_rateset rateset;
+ 		struct cmd_ds_mac_multicast_adr madr;
+ 		struct cmd_ds_802_11_ad_hoc_join adj;
+-		struct cmd_ds_802_11_rssi rssi;
+-		struct cmd_ds_802_11_rssi_rsp rssirsp;
+ 		struct cmd_ds_802_11_disassociate dassociate;
+ 		struct cmd_ds_802_11_mac_address macadd;
+ 		struct cmd_ds_mac_reg_access macreg;
+Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-18 11:47:16.000000000 +0100
+@@ -621,9 +621,6 @@ void lbs_association_worker(struct work_
+ 		if (success) {
+ 			lbs_deb_assoc("associated to %s\n",
+ 				print_mac(mac, priv->curbssparams.bssid));
+-			lbs_prepare_and_send_command(priv,
+-				CMD_802_11_RSSI,
+-				0, CMD_OPTION_WAITFORRSP, 0, NULL);
+ 		} else {
+ 			ret = -1;
+ 		}
+Index: wireless-testing/drivers/net/wireless/libertas/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-18 11:47:16.000000000 +0100
+@@ -487,8 +487,7 @@ static void lbs_tx_timeout(struct net_de
+ 	   firmware has crapped itself -- rather than just a very
+ 	   busy medium. So send a harmless command, and if/when
+ 	   _that_ times out, we'll kick it in the head. */
+-	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+-				     0, 0, NULL);
++	lbs_get_rssi(priv, NULL, NULL);
+ 
+ 	lbs_deb_leave(LBS_DEB_TX);
+ }
+@@ -908,8 +907,7 @@ int lbs_resume(struct lbs_private *priv)
+ 
+ 	/* Firmware doesn't seem to give us RX packets any more
+ 	   until we send it some command. Might as well update */
+-	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+-				     0, 0, NULL);
++	lbs_get_rssi(priv, NULL, NULL);
+ 
+ 	netif_device_attach(priv->dev);
+ 	if (priv->mesh_dev)
+Index: wireless-testing/drivers/net/wireless/libertas/scan.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-18 12:10:40.000000000 +0100
+@@ -1194,25 +1194,7 @@ static inline char *lbs_translate_scan(s
+ 	if (iwe.u.qual.qual > 100)
+ 		iwe.u.qual.qual = 100;
+ 
+-	if (priv->NF[TYPE_BEACON][TYPE_NOAVG] == 0) {
+-		iwe.u.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
+-	} else {
+-		iwe.u.qual.noise = CAL_NF(priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+-	}
+-
+-	/* Locally created ad-hoc BSSs won't have beacons if this is the
+-	 * only station in the adhoc network; so get signal strength
+-	 * from receive statistics.
+-	 */
+-	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate
+-	    && !lbs_ssid_cmp(priv->curbssparams.ssid,
+-			     priv->curbssparams.ssid_len,
+-			     bss->ssid, bss->ssid_len)) {
+-		int snr, nf;
+-		snr = priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE;
+-		nf = priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE;
+-		iwe.u.qual.level = CAL_RSSI(snr, nf);
+-	}
++	iwe.u.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
+ 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_QUAL_LEN);
+ 
+ 	/* Add encryption capability */
+@@ -1369,11 +1351,6 @@ int lbs_get_scan(struct net_device *dev,
+ 	if (priv->scan_channel)
+ 		return -EAGAIN;
+ 
+-	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
+-	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate)
+-		lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+-					     CMD_OPTION_WAITFORRSP, 0, NULL);
+-
+ 	mutex_lock(&priv->lock);
+ 	list_for_each_entry_safe (iter_bss, safe, &priv->network_list, list) {
+ 		char *next_ev;
+Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-18 11:47:16.000000000 +0100
+@@ -34,6 +34,8 @@ int lbs_update_hw_spec(struct lbs_privat
+ int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+ 		    struct cmd_ds_mesh_access *cmd);
+ 
++int lbs_get_rssi(struct lbs_private *priv, u16 *snr, u16 *nf);
++
+ int lbs_get_data_rate(struct lbs_private *priv);
+ int lbs_set_data_rate(struct lbs_private *priv, u8 rate);
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/dev.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-18 11:47:16.000000000 +0100
+@@ -288,15 +288,6 @@ struct lbs_private {
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	u8 wpa_ie_len;
+ 
+-	/** Requested Signal Strength*/
+-	u16 SNR[MAX_TYPE_B][MAX_TYPE_AVG];
+-	u16 NF[MAX_TYPE_B][MAX_TYPE_AVG];
+-	u8 RSSI[MAX_TYPE_B][MAX_TYPE_AVG];
+-	u8 rawSNR[DEFAULT_DATA_AVG_FACTOR];
+-	u8 rawNF[DEFAULT_DATA_AVG_FACTOR];
+-	u16 nextSNRNF;
+-	u16 numSNRNF;
+-
+ 	u8 radioon;
+ 	u32 preamble;
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/join.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/join.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/join.c	2008-03-18 11:52:45.000000000 +0100
+@@ -752,14 +752,6 @@ int lbs_ret_80211_associate(struct lbs_p
+ 	priv->curbssparams.ssid_len = bss->ssid_len;
+ 	memcpy(priv->curbssparams.bssid, bss->bssid, ETH_ALEN);
+ 
+-	priv->SNR[TYPE_RXPD][TYPE_AVG] = 0;
+-	priv->NF[TYPE_RXPD][TYPE_AVG] = 0;
+-
+-	memset(priv->rawSNR, 0x00, sizeof(priv->rawSNR));
+-	memset(priv->rawNF, 0x00, sizeof(priv->rawNF));
+-	priv->nextSNRNF = 0;
+-	priv->numSNRNF = 0;
+-
+ 	netif_carrier_on(priv->dev);
+ 	if (!priv->tx_pending_len)
+ 		netif_wake_queue(priv->dev);
+Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-18 12:34:39.000000000 +0100
+@@ -821,6 +821,7 @@ static struct iw_statistics *lbs_get_wir
+ 	u8 rssi;
+ 	u32 tx_retries;
+ 	struct cmd_ds_802_11_get_log log;
++	u16 snr, nf;
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+@@ -831,17 +832,11 @@ static struct iw_statistics *lbs_get_wir
+ 	    (priv->mesh_connect_status != LBS_CONNECTED))
+ 		goto out;
+ 
+-	/* Quality by RSSI */
+-	priv->wstats.qual.level =
+-	    CAL_RSSI(priv->SNR[TYPE_BEACON][TYPE_NOAVG],
+-	     priv->NF[TYPE_BEACON][TYPE_NOAVG]);
++	lbs_get_rssi(priv, &snr, &nf);
+ 
+-	if (priv->NF[TYPE_BEACON][TYPE_NOAVG] == 0) {
+-		priv->wstats.qual.noise = MRVDRV_NF_DEFAULT_SCAN_VALUE;
+-	} else {
+-		priv->wstats.qual.noise =
+-		    CAL_NF(priv->NF[TYPE_BEACON][TYPE_NOAVG]);
+-	}
++	/* Quality by RSSI */
++	priv->wstats.qual.level = CAL_RSSI(snr, nf);
++	priv->wstats.qual.noise = CAL_NF(nf);
+ 
+ 	lbs_deb_wext("signal level %#x\n", priv->wstats.qual.level);
+ 	lbs_deb_wext("noise %#x\n", priv->wstats.qual.noise);
+@@ -893,9 +888,6 @@ static struct iw_statistics *lbs_get_wir
+ 	priv->wstats.qual.updated = IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
+ 	stats_valid = 1;
+ 
+-	/* update stats asynchronously for future calls */
+-	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
+-					0, 0, NULL);
+ out:
+ 	if (!stats_valid) {
+ 		priv->wstats.miss.beacon = 0;
+Index: wireless-testing/drivers/net/wireless/libertas/rx.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/rx.c	2008-03-18 11:38:41.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/rx.c	2008-03-18 12:37:04.000000000 +0100
+@@ -39,99 +39,6 @@ static int process_rxed_802_11_packet(st
+ 	struct sk_buff *skb);
+ 
+ /**
+- *  @brief This function computes the avgSNR .
+- *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @return 	   avgSNR
+- */
+-static u8 lbs_getavgsnr(struct lbs_private *priv)
+-{
+-	u8 i;
+-	u16 temp = 0;
+-	if (priv->numSNRNF == 0)
+-		return 0;
+-	for (i = 0; i < priv->numSNRNF; i++)
+-		temp += priv->rawSNR[i];
+-	return (u8) (temp / priv->numSNRNF);
+-
+-}
+-
+-/**
+- *  @brief This function computes the AvgNF
+- *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @return 	   AvgNF
+- */
+-static u8 lbs_getavgnf(struct lbs_private *priv)
+-{
+-	u8 i;
+-	u16 temp = 0;
+-	if (priv->numSNRNF == 0)
+-		return 0;
+-	for (i = 0; i < priv->numSNRNF; i++)
+-		temp += priv->rawNF[i];
+-	return (u8) (temp / priv->numSNRNF);
+-
+-}
+-
+-/**
+- *  @brief This function save the raw SNR/NF to our internel buffer
+- *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @param prxpd   A pointer to rxpd structure of received packet
+- *  @return 	   n/a
+- */
+-static void lbs_save_rawSNRNF(struct lbs_private *priv, struct rxpd *p_rx_pd)
+-{
+-	if (priv->numSNRNF < DEFAULT_DATA_AVG_FACTOR)
+-		priv->numSNRNF++;
+-	priv->rawSNR[priv->nextSNRNF] = p_rx_pd->snr;
+-	priv->rawNF[priv->nextSNRNF] = p_rx_pd->nf;
+-	priv->nextSNRNF++;
+-	if (priv->nextSNRNF >= DEFAULT_DATA_AVG_FACTOR)
+-		priv->nextSNRNF = 0;
+-	return;
+-}
+-
+-/**
+- *  @brief This function computes the RSSI in received packet.
+- *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @param prxpd   A pointer to rxpd structure of received packet
+- *  @return 	   n/a
+- */
+-static void lbs_compute_rssi(struct lbs_private *priv, struct rxpd *p_rx_pd)
+-{
+-
+-	lbs_deb_enter(LBS_DEB_RX);
+-
+-	lbs_deb_rx("rxpd: SNR %d, NF %d\n", p_rx_pd->snr, p_rx_pd->nf);
+-	lbs_deb_rx("before computing SNR: SNR-avg = %d, NF-avg = %d\n",
+-	       priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
+-	       priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
+-
+-	priv->SNR[TYPE_RXPD][TYPE_NOAVG] = p_rx_pd->snr;
+-	priv->NF[TYPE_RXPD][TYPE_NOAVG] = p_rx_pd->nf;
+-	lbs_save_rawSNRNF(priv, p_rx_pd);
+-
+-	priv->SNR[TYPE_RXPD][TYPE_AVG] = lbs_getavgsnr(priv) * AVG_SCALE;
+-	priv->NF[TYPE_RXPD][TYPE_AVG] = lbs_getavgnf(priv) * AVG_SCALE;
+-	lbs_deb_rx("after computing SNR: SNR-avg = %d, NF-avg = %d\n",
+-	       priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
+-	       priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
+-
+-	priv->RSSI[TYPE_RXPD][TYPE_NOAVG] =
+-	    CAL_RSSI(priv->SNR[TYPE_RXPD][TYPE_NOAVG],
+-		     priv->NF[TYPE_RXPD][TYPE_NOAVG]);
+-
+-	priv->RSSI[TYPE_RXPD][TYPE_AVG] =
+-	    CAL_RSSI(priv->SNR[TYPE_RXPD][TYPE_AVG] / AVG_SCALE,
+-		     priv->NF[TYPE_RXPD][TYPE_AVG] / AVG_SCALE);
+-
+-	lbs_deb_leave(LBS_DEB_RX);
+-}
+-
+-/**
+  *  @brief This function processes received packet and forwards it
+  *  to kernel/upper layer
+  *
+@@ -240,8 +147,6 @@ int lbs_process_rxed_packet(struct lbs_p
+ 	if (priv->auto_rate)
+ 		priv->cur_rate = lbs_fw_index_to_data_rate(p_rx_pd->rx_rate);
+ 
+-	lbs_compute_rssi(priv, p_rx_pd);
+-
+ 	lbs_deb_rx("rx data: size of actual packet %d\n", skb->len);
+ 	priv->stats.rx_bytes += skb->len;
+ 	priv->stats.rx_packets++;
+@@ -359,7 +264,7 @@ static int process_rxed_802_11_packet(st
+ 	/* known values */
+ 	radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
+ 	/* XXX must check no carryout */
+-	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
++	radiotap_hdr.antsignal = CAL_RSSI(prxpd->snr, prxpd->nf);
+ 	radiotap_hdr.rx_flags = 0;
+ 	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
+ 		radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
+@@ -386,8 +291,6 @@ static int process_rxed_802_11_packet(st
+ 	if (priv->auto_rate)
+ 		priv->cur_rate = lbs_fw_index_to_data_rate(prxpd->rx_rate);
+ 
+-	lbs_compute_rssi(priv, prxpd);
+-
+ 	lbs_deb_rx("rx data: size of actual packet %d\n", skb->len);
+ 	priv->stats.rx_bytes += skb->len;
+ 	priv->stats.rx_packets++;
