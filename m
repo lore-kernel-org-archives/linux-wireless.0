@@ -1,48 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:28511 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbYCYUWV (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:11675 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbYCRONu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 16:22:21 -0400
-Received: by py-out-1112.google.com with SMTP id u52so5157417pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 13:22:20 -0700 (PDT)
-Message-ID: <43e72e890803251322pd6d3216m56c4617a0ad13875@mail.gmail.com> (sfid-20080325_202232_423260_BE41AAFE)
-Date: Tue, 25 Mar 2008 16:22:19 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: gentoo ebuild for compat wireless (resend)
-Cc: "Florian Manschwetus" <florianmanschwetus@gmx.de>,
-	linux-wireless@vger.kernel.org, "H. Peter Anvin" <hpa@kernel.org>
-In-Reply-To: <43e72e890803251003mcc8779bwc687b64573bedc39@mail.gmail.com>
+	Tue, 18 Mar 2008 10:13:50 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: [RFC] libertas: change quality calculation
+Date: Tue, 18 Mar 2008 15:10:52 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47E7A8DB.5020106@gmx.de> <47E839BE.5030806@gmx.de>
-	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>
-	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de>
-	 <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
-	 <47E919BF.4010308@gmx.de> <1206458946.16475.285.camel@johannes.berg>
-	 <43e72e890803250840v4b09c9faia0373f639b688a4d@mail.gmail.com>
-	 <43e72e890803251003mcc8779bwc687b64573bedc39@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803181510.52726.hs4233@mail.mn-solutions.de> (sfid-20080318_141359_821631_D52A4322)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 1:03 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+I wasn't really satisfied with a graphical program that displayed
+the link quality, the display was bit erratically. While changing
+this, I noticed some other things which this and the next patch
+addresses.
 
->  OK so now you have:
->
->
->  http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2008-03-25.tar.bz2
->
->  You can wget this. The compat-wireless-2.6.tar.bz2 is now just a
->  symlink to the latest tarball. When untar'd you'll get a dated
->  directory.
->
->  I'm still working on a place to put the archive.
+However, for this patch I'm not sure if it goes into the right
+direction.
 
-Archive issue resolved. It'll be hosted by Orbit [1].  The
-compat-wireless-2.6 archive [2] will host all daily tarballs.
 
-[1] http://www.orbit-lab.org/
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6/
+This changes the quality calculation for wireless statistics to
+only consider signal & noise, but not number of tx-retries.
+Also changes a the rather complicated formular for quality to be
+more like http://www.ces.clemson.edu/linux/signal_quality.shtml.
 
-  Luis
+Note that tx_retries are no longer used for the quality number. I
+don't know of any other driver that does it, and tx_retries is
+only increasing, so the quality would become smaller and 
+smaller ...  which wouldn't reflect reality.
+
+Questionable things:
+
+I also found that the average noise floor is -86 dBm, not -96
+dBm. So I changed this constant. Maybe this is wrong, what values 
+do your cards report?
+
+The wireless stats have SNR and noise floor to calcutate the
+quality. However, the scanning logic (for "iwlist XXX scan") only
+has a not-really-described dimensionless RSSI value. So the 
+quality display for both outputs are a bit different, althought 
+not too much. I don't know any good method, not even from above 
+website, that would make both calculation results identical. 
+However, this was also not the case with the old code.
+
+
+Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	
+2008-03-18 13:42:42.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/wext.c	
+2008-03-18 13:42:55.000000000 +0100
+@@ -805,21 +805,8 @@ out:
+ 
+ static struct iw_statistics *lbs_get_wireless_stats(struct 
+net_device *dev)
+ {
+-	enum {
+-		POOR = 30,
+-		FAIR = 60,
+-		GOOD = 80,
+-		VERY_GOOD = 90,
+-		EXCELLENT = 95,
+-		PERFECT = 100
+-	};
+ 	struct lbs_private *priv = dev->priv;
+-	u32 rssi_qual;
+-	u32 tx_qual;
+-	u32 quality = 0;
+ 	int stats_valid = 0;
+-	u8 rssi;
+-	u32 tx_retries;
+ 	struct cmd_ds_802_11_get_log log;
+ 	u16 snr, nf;
+ 
+@@ -838,24 +825,6 @@ static struct iw_statistics *lbs_get_wir
+ 	priv->wstats.qual.level = CAL_RSSI(snr, nf);
+ 	priv->wstats.qual.noise = CAL_NF(nf);
+ 
+-	lbs_deb_wext("signal level %#x\n", priv->wstats.qual.level);
+-	lbs_deb_wext("noise %#x\n", priv->wstats.qual.noise);
+-
+-	rssi = priv->wstats.qual.level - priv->wstats.qual.noise;
+-	if (rssi < 15)
+-		rssi_qual = rssi * POOR / 10;
+-	else if (rssi < 20)
+-		rssi_qual = (rssi - 15) * (FAIR - POOR) / 5 + POOR;
+-	else if (rssi < 30)
+-		rssi_qual = (rssi - 20) * (GOOD - FAIR) / 5 + FAIR;
+-	else if (rssi < 40)
+-		rssi_qual = (rssi - 30) * (VERY_GOOD - GOOD) /
+-		    10 + GOOD;
+-	else
+-		rssi_qual = (rssi - 40) * (PERFECT - VERY_GOOD) /
+-		    10 + VERY_GOOD;
+-	quality = rssi_qual;
+-
+ 	/* Quality by TX errors */
+ 	priv->wstats.discard.retries = priv->stats.tx_errors;
+ 
+@@ -863,28 +832,19 @@ static struct iw_statistics *lbs_get_wir
+ 	log.hdr.size = cpu_to_le16(sizeof(log));
+ 	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
+ 
+-	tx_retries = le32_to_cpu(log.retry);
+-
+-	if (tx_retries > 75)
+-		tx_qual = (90 - tx_retries) * POOR / 15;
+-	else if (tx_retries > 70)
+-		tx_qual = (75 - tx_retries) * (FAIR - POOR) / 5 + POOR;
+-	else if (tx_retries > 65)
+-		tx_qual = (70 - tx_retries) * (GOOD - FAIR) / 5 + FAIR;
+-	else if (tx_retries > 50)
+-		tx_qual = (65 - tx_retries) * (VERY_GOOD - GOOD) /
+-		    15 + GOOD;
+-	else
+-		tx_qual = (50 - tx_retries) *
+-		    (PERFECT - VERY_GOOD) / 50 + VERY_GOOD;
+-	quality = min(quality, tx_qual);
+-
+ 	priv->wstats.discard.code = le32_to_cpu(log.wepundecryptable);
+-	priv->wstats.discard.retries = tx_retries;
++	priv->wstats.discard.retries = le32_to_cpu(log.retry);
+ 	priv->wstats.discard.misc = le32_to_cpu(log.ackfailure);
+ 
+ 	/* Calculate quality */
+-	priv->wstats.qual.qual = min_t(u8, quality, 100);
++	/* see http://www.ces.clemson.edu/linux/signal_quality.shtml */
++	snr = priv->wstats.qual.level  - priv->wstats.qual.noise;
++	if (snr <= 0)
++		priv->wstats.qual.qual = 0;
++	else if (snr >= 40)
++		priv->wstats.qual.qual = 100;
++	else
++		priv->wstats.qual.qual = 5*snr/2;
+ 	priv->wstats.qual.updated = IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
+ 	stats_valid = 1;
+ 
+Index: wireless-testing/drivers/net/wireless/libertas/defs.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/defs.h	
+2008-03-18 13:42:42.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/defs.h	
+2008-03-18 13:42:55.000000000 +0100
+@@ -208,12 +208,9 @@ static inline void lbs_deb_hex(unsigned 
+ #define RxPD_MESH_FRAME RxPD_CONTROL_WDS_FRAME
+ 
+ /** RSSI-related defines */
+-/*	RSSI constants are used to implement 802.11 RSSI threshold
+-*	indication. if the Rx packet signal got too weak for 5 
+consecutive
+-*	times, miniport driver (driver) will report this event to 
+wrapper
+-*/
+ 
+-#define MRVDRV_NF_DEFAULT_SCAN_VALUE		(-96)
++/* This is the average noise level */
++#define MRVDRV_NF_DEFAULT_SCAN_VALUE		(-86)
+ 
+ /** RTS/FRAG related defines */
+ #define MRVDRV_RTS_MIN_VALUE		0
