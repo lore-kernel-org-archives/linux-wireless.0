@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:34745 "EHLO
-	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752343AbYCHLFW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2008 06:05:22 -0500
-To: "Tomas Winkler" <tomasw@gmail.com>
-cc: "Helge Hafting" <helge.hafting@aitel.hist.no>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 associated and _worked_ with a *wrong* essid! 
-In-reply-to: <1ba2fa240803050749j8bb291ajb8a0451504a0b905@mail.gmail.com> 
-References: <47CE8ED6.7030302@aitel.hist.no> <1ba2fa240803050749j8bb291ajb8a0451504a0b905@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Date: Sat, 08 Mar 2008 11:38:30 +0100
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Message-Id: <20080308103831.0CBFE93C070@tippex.mynet.homeunix.org> (sfid-20080308_110525_811177_960F1B86)
+Received: from mga02.intel.com ([134.134.136.20]:16661 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754660AbYCSTiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 15:38:04 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Rick Farrington <rickdic@hotmail.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] iwlwifi: mac start synchronization issue
+Date: Tue, 18 Mar 2008 14:57:49 -0700
+Message-Id: <1205877470-11525-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_193942_547304_3F96E078)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I recently wrote about my iwl3945 problems - I usually
->  have to try 20-50 times before I can use a wep-encrypted access point.
->  Once the link goes up - no more problems. But getting the first
->  connection takes time.
+From: Rick Farrington <rickdic@hotmail.com>
 
-I can testify that I have the same issue with w2k. I'm not sure how intel 
-wired up their drivers package, but I usually have to wait about 1-2 minutes 
-to get _any_ package back from the AP (judging from the network icon). Once I 
-get the first package back (I'd guess it's a dhcp resp), i can start using the 
-network.
+This patch fixes a synchronization problem on the 4965 and 3945 with the
+mac start callback routine.  The problem is that this function exits BEFORE the
+'xxx_alive_start' has completed.  This can lead to a problem if a
+subsequent MAC callback attempts to issue a firmware command.
 
-I once picked up somehwere that this wa an issue with wither this intel chip 
-of the broadcom chip I have in the Linksys AP. Either one of them was picky 
-on the nitial handshake and the speed/rate used for that handshake. Waiting a 
-while both ends agree to do it at 1Mbps or something and it all works from 
-there.
+Signed-off-by: Rick Farrington <rickdic@hotmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-hth,
-/Anders
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 093b863..7b6517f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5844,11 +5844,11 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
+ 
+ 	/* At this point, the NIC is initialized and operational */
+ 	priv->notif_missed_beacons = 0;
+-	set_bit(STATUS_READY, &priv->status);
+ 
+ 	iwl3945_reg_txpower_periodic(priv);
+ 
+ 	IWL_DEBUG_INFO("ALIVE processing complete.\n");
++	set_bit(STATUS_READY, &priv->status);
+ 	wake_up_interruptible(&priv->wait_command_queue);
+ 
+ 	if (priv->error_recovering)
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 64595ac..97db4eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -5938,11 +5938,11 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
+ 
+ 	/* At this point, the NIC is initialized and operational */
+ 	priv->notif_missed_beacons = 0;
+-	set_bit(STATUS_READY, &priv->status);
+ 
+ 	iwl4965_rf_kill_ct_config(priv);
+ 
+ 	IWL_DEBUG_INFO("ALIVE processing complete.\n");
++	set_bit(STATUS_READY, &priv->status);
+ 	wake_up_interruptible(&priv->wait_command_queue);
+ 
+ 	if (priv->error_recovering)
+-- 
+1.5.3.4
 
