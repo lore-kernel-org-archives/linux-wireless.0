@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from element.ksp.sk ([158.195.16.154]:44647 "EHLO element.ksp.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750963AbYCGRoB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 12:44:01 -0500
-Message-ID: <47D17EDF.4010100@work.ksp.sk> (sfid-20080307_174412_943761_C005D657)
-Date: Fri, 07 Mar 2008 18:43:59 +0100
-From: Vladimir Koutny <vlado@work.ksp.sk>
+Received: from an-out-0708.google.com ([209.85.132.246]:36237 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbYCREIK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2008 00:08:10 -0400
+Received: by an-out-0708.google.com with SMTP id b6so1213661ana.37
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 21:08:08 -0700 (PDT)
+Message-ID: <97a0a9ac0803172107s2ac19268h3b297bb645011a3@mail.gmail.com> (sfid-20080318_040818_903442_88D245CA)
+Date: Mon, 17 Mar 2008 22:07:56 -0600
+From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+To: "Sam Ravnborg" <sam@ravnborg.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"Andrew Morton" <akpm@linux-foundation.org>
+In-Reply-To: <20080302115828.GA15820@uranus.ravnborg.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 2.6.24, mac80211 and b/g switching
-References: <47D160E4.3040503@work.ksp.sk>	 (sfid-20080307_165126_594708_1A6A8040) <1204909966.6387.31.camel@johannes.berg>
-In-Reply-To: <1204909966.6387.31.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig2ABB2E1E9756C3DD12EA1F40"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080228014125.GI3078@tuxdriver.com>
+	 <20080229214240.GH3234@tuxdriver.com>
+	 <20080301130133.GA14250@uranus.ravnborg.org>
+	 <200803011651.13652.mb@bu3sch.de>
+	 <20080302115828.GA15820@uranus.ravnborg.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2ABB2E1E9756C3DD12EA1F40
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Hi Sam
 
-Johannes Berg wrote:
->> Is this a known issue? (I didn't manage to find anything in ml archive=
-s
->> so far) Or any hints on how to solve this?
->=20
-> You want to develop against a non-ancient kernel that has all the HW
-> mode foo removed.
+On Sun, Mar 2, 2008 at 5:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
 
-Well, the question is not what version I would like to develop for, but
-what version I have to :( Stable kernel releases should be those
-versions you want to base real products on, right?
+>  So please let me know if this works and then I can push it upstrem
+>  hopefully already by tomorrow.
+>
+>  Note: I decided to name the variable KBUILD_BUILDHOST as this is more
+>  descriptive then SUBARCH. We can later clean up the naming and get rid
+>  of SUBARCH but I refrained from this to make the pacht minimal.
 
-Do you think that taking mac80211 from wireless-2.6 (or -testing or
-whatever) would cause way too many conflicts when merged back to 2.6.24?
-  Or am I on my own to fix this somehow in 2.6.24?
+What is the status of this patch? Is there any chance that it will be
+included in 2.6.25?
 
-Regards,
-  Vlado
+Thanks.
 
->=20
-> johannes
+Gordon
 
-
-
---------------enig2ABB2E1E9756C3DD12EA1F40
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFH0X7fe5Z0y47EufgRAnfVAKCA9UD9Tz/mMYQb6rX72eT7pqASzACeMS2T
-quXDv1yeMelzYO5J4iBYDq0=
-=7CuP
------END PGP SIGNATURE-----
-
---------------enig2ABB2E1E9756C3DD12EA1F40--
+-- 
+Gordon Farquharson
+GnuPG Key ID: 32D6D676
