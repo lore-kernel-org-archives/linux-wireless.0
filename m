@@ -1,104 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34672 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756445AbYCTPgl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 11:36:41 -0400
-Subject: Re: [PATCH] mac80211: prevent tuning during scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-In-Reply-To: <1206026069-6841-1-git-send-email-reinette.chatre@intel.com>
-References: <1206026069-6841-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MsRyFToFleBEM0/fjoHt"
-Date: Thu, 20 Mar 2008 16:36:23 +0100
-Message-Id: <1206027383.16475.146.camel@johannes.berg> (sfid-20080320_153643_559547_0DD5B625)
-Mime-Version: 1.0
+Received: from element.ksp.sk ([158.195.16.154]:58497 "EHLO element.ksp.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752696AbYCRNp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2008 09:45:29 -0400
+Message-ID: <47DFC762.10307@work.ksp.sk> (sfid-20080318_134533_744652_499437AB)
+Date: Tue, 18 Mar 2008 14:45:06 +0100
+From: Vladimir Koutny <vlado@work.ksp.sk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: configure default wmm params correctly
+References: <47DFBA13.3060508@work.ksp.sk> <1205846472.16475.46.camel@johannes.berg>
+In-Reply-To: <1205846472.16475.46.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigC662D3C02057D877D778D713"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-MsRyFToFleBEM0/fjoHt
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigC662D3C02057D877D778D713
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-
-On Thu, 2008-03-20 at 08:14 -0700, Reinette Chatre wrote:
-> From: Mohamed Abbas <mohamed.abbas@intel.com>
 >=20
-> Postpone calling ieee80211_hw_config if hardware scanning is active.
-> This is similar to solution for software scanning where channel setting
-> is delayed until scan complete.
+> There is lots of trailing whitespace (use scripts/checkpatch.pl)
 >=20
-> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Fine with me.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
-> Resend of patch "iwlwifi: prevent tuning during scanning" with
-> corrected title.
+>> +	if (local->hw.conf.channel->band =3D=3D IEEE80211_BAND_2GHZ &&
+>> +    	have_higher_than_11mbit)
 >=20
->  net/mac80211/ieee80211_ioctl.c |    2 +-
->  net/mac80211/ieee80211_sta.c   |    3 +++
->  2 files changed, 4 insertions(+), 1 deletions(-)
+> and that really needs to be indented differently.
 >=20
-> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioct=
-l.c
-> index 1d91575..83b79c9 100644
-> --- a/net/mac80211/ieee80211_ioctl.c
-> +++ b/net/mac80211/ieee80211_ioctl.c
-> @@ -308,7 +308,7 @@ int ieee80211_set_freq(struct ieee80211_local *local,=
- int freqMHz)
->  	}
-> =20
->  	if (set) {
-> -		if (local->sta_sw_scanning)
-> +		if (local->sta_sw_scanning || local->sta_hw_scanning)
->  			ret =3D 0;
->  		else
->  			ret =3D ieee80211_hw_config(local);
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index 4255ec4..1e9650e 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -3609,6 +3609,9 @@ void ieee80211_scan_completed(struct ieee80211_hw *=
-hw)
-> =20
->  	if (local->sta_hw_scanning) {
->  		local->sta_hw_scanning =3D 0;
-> +		if (ieee80211_hw_config(local))
-> +			printk(KERN_DEBUG "%s: failed to restore operational "
-> +			       "channel after scan\n", dev->name);
->  		/* Restart STA timer for HW scan case */
->  		rcu_read_lock();
->  		list_for_each_entry_rcu(sdata, &local->interfaces, list)
+Oops, sorry for that :(
 
---=-MsRyFToFleBEM0/fjoHt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+>> +		/* IBSS uses different parameters for Beacon sending */
+>> +		qparam.cw_min++;
+>> +		qparam.cw_min *=3D 2;
+>> +		qparam.cw_min--;
+>> +		local->ops->conf_tx(local_to_hw(local),
+>> +				   IEEE80211_TX_QUEUE_BEACON, &qparam);
+>=20
+> And shouldn't we do that only for IBSS? I'm in favour of removing it
+> completely, however, since the beacon queue is a way to construct
+> hardware, not do things in software...
+
+Good question; I've just moved this part of code out of
+ieee80211_sta_set_ssid as that is not the best place for it. I don't
+object to removing that code completely; seems that noone uses
+IEEE80211_TX_QUEUE_BEACON anyway. On the other hand, it can be a good
+hint for those implementing beaconing on hw where it has to be set
+explicitly..
+
+Vlado
+
+
+--------------enigC662D3C02057D877D778D713
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIVAwUAR+KEdqVg1VMiehFYAQKAthAAtfiKUZ/+/VHWUMfI41JcFcY09kuZhdqX
-Uxxk5aM3ibilg0vOW0EB2IuNbU6X1hd7d1hz/5F7VLfp4y+2b8L1fjs6VCaVsJ6l
-txbi+Ss3Oqr86xd9ZIrvOoknirhRR/+63gg0aD6AhaJ4v2TDjg8Adf2db8IUDvSj
-7FZ40S5NA0hFKqSiYosj94gn78/pv8AyOyFTUIfGArEK9s9NYdVHIe2zL3+DT3pm
-IJSjL9QokWmSfKdUJXqmDNlcilhaIPHxEuUTbvSGmVRVVVV/tQ8J/kUCOJGgH160
-IgL9QLdZYPdUQFRps00YBwCEMhAuhV9DljdiuwcFeVSWmONeFVlTDMkyZJ1ofJJN
-7M+jT8GYaIPLlrIeF095zr5scofFHkTCIDltxziixVHKEHJb9tmWmK52LCZXy6sh
-j+SGT9BmH+VO+iWehjkPajfS3psoiZUwjvh0dQTwumKhN2e7HJk0hjCHZq/PuojF
-Tx5VYQMXJZVwVHfehcmiYUbyrZV/o9qtnoNQ7Fth7CcSkBQtkMGfXcbmvGILPza6
-oq87WRlMtr/M1E+mJgB6Xoi8TBaj/v+Fks11hhvRlZJbPbplzuGvIcO+nsfVzuLE
-Tp3BsRwbgU0GkqWNr7LbAcVGxjp5qHt124Z3Mf0cvU2oIxnqCsjjeSJiQuAq7tmo
-pX57axpftoY=
-=/eld
+iD8DBQFH38dje5Z0y47EufgRAvFIAJ9ZexKr3oFssRf1oJeGi+ZZWi3I7gCgiFKm
+DjyY4zGTrto5ht9pK/v6qx4=
+=9jIS
 -----END PGP SIGNATURE-----
 
---=-MsRyFToFleBEM0/fjoHt--
-
+--------------enigC662D3C02057D877D778D713--
