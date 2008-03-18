@@ -1,209 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:33128 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbYCBPL4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:9855 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937477AbYCSVbo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 10:11:56 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so3038589nfb.21
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 07:11:54 -0800 (PST)
-Message-ID: <c6b1100b0803020711m52bcbba3re1b673e734ef629a@mail.gmail.com> (sfid-20080302_151243_477962_02C74156)
-Date: Sun, 2 Mar 2008 15:11:54 +0000
-From: "Chris Clayton" <chris2553@googlemail.com>
-To: "Stefano Brivio" <stefano.brivio@polimi.it>
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Cc: "John W. Linville" <linville@tuxdriver.com>, ivdoorn@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net,
-	"Mattias Nissler" <mattias.nissler@gmx.de>,
-	"Mike Kelly" <pioto@pioto.org>
-In-Reply-To: <20080302113310.7acbe9b3@morte>
+	Wed, 19 Mar 2008 17:31:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so648638wah.23
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 14:31:43 -0700 (PDT)
+Message-ID: <1ba2fa240803181656g70fb65bbk64cc0238949524fa@mail.gmail.com> (sfid-20080319_213211_746673_4EBA35CB)
+Date: Wed, 19 Mar 2008 01:56:48 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: drago01 <drago01@gmail.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <f6ca9fed0803181640t23893f1ew3b08b851a7ab1a38@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	 <200802261911.39577.chris2553@googlemail.com>
-	 <20080226194838.GD3013@tuxdriver.com>
-	 <c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com>
-	 <20080226223814.4ef2b435@morte>
-	 <c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
-	 <20080227082642.218b8014@morte> <20080227155111.GB3078@tuxdriver.com>
-	 <20080227172546.GD3078@tuxdriver.com> <20080302113310.7acbe9b3@morte>
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
+	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
+	 <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
+	 <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com>
+	 <f6ca9fed0803181610v10b533e9n267540e1b00d004f@mail.gmail.com>
+	 <1ba2fa240803181635o6cc264f4s578bbca7e4561c0e@mail.gmail.com>
+	 <f6ca9fed0803181640t23893f1ew3b08b851a7ab1a38@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/03/2008, Stefano Brivio <stefano.brivio@polimi.it> wrote:
-> On Wed, 27 Feb 2008 12:25:46 -0500
->  "John W. Linville" <linville@tuxdriver.com> wrote:
+On Wed, Mar 19, 2008 at 1:40 AM, drago01 <drago01@gmail.com> wrote:
 >
->  > That might be easier said than done.  It looks like that patch depends
->  > on the big cfg80211 API change queued for 2.6.26.
+> On Wed, Mar 19, 2008 at 12:35 AM, Tomas Winkler <tomasw@gmail.com> wrote:
 >  >
->  > Stefano offered to rebase that on 2.6.25.  Stefano, could you post
->  > that as part of this thread?
+>  > On Wed, Mar 19, 2008 at 1:10 AM, drago01 <drago01@gmail.com> wrote:
+>  >  >
+>  >  > On Wed, Mar 19, 2008 at 12:07 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>  >  >  > On Wed, Mar 19, 2008 at 12:06 AM, Chatre, Reinette
+>  >  >  >
+>  >  >  > <reinette.chatre@intel.com> wrote:
+>  >  >  >  >
+>  >  >  >
+>  >  >  >
+>  >  >  > > On Tuesday, March 18, 2008 2:47 PM, drago01  wrote:
+>  >  >  >  >
+>  >  >  >  >  >>  Please note that the driver loads/unloads the firmware during
+>  >  >  >  >  >>  interface up/down. That means that the host will not receive rfkill
+>  >  >  >  >  >>  events while the interface is down as there is no firmware to deal
+>  >  >  >  >  >> with these events.
+>  >  >  >  >  >>
+>  >  >  >  >  >>  Reinette
+>  >  >  >  >  >>
+>  >  >  >  >  >
+>  >  >  >  >  > OK that makes sense.
+>  >  >  >  >  > So a solution would be to not unload the firmware on down when the hw
+>  >  >  >  >  > rfkill is on. Is this a acceptable one or are they other (better
+>  >  >  >  >  > solutions). I can't think of any. And userspace cannot do anything
+>  >  >  >  >  > because bringing the device up and down again to look for the rfkill
+>  >  >  >  >  > status would be racy.
+>  >  >  >  >
+>  >  >  >  >  Having the firmware unloaded when the interface is down is a requirement
+>  >  >  >  >  for powersaving. We do not want the device to consume power when it is
+>  >  >  >  >  not used. The rfkill status should always be reported accurately when
+>  >  >  >  >  the interface is up. If it is not then it is a bug.
+>  >  >  >
+>  >  >  >  We will catch the HW rfkill event after loading the uCode so there is
+>  >  >  >  no problem with this.
+>  >  >  >  Not sure where should be the SW rfkill state stored.
+>  >  >
+>  >  >  yeah, but the ucode will be loaded when the device is brought back up,
+>  >  >  which does not happen in NM's case.
+>  >  >
+>  >
+>  >  You mean that NM doesn't have any notification that the radio was enabled again?
+>  yes
 >
 >
-> Sorry for the delay. This is based on 2.6.25-rc3. Please test.
+>  >  This one is tricky with 3945...the trivial question is why NM disables
+>  >  the device?
+>  Thats a question for Dan, maybe other devices/drivers just send an
+>  event to userspace "please disable the radio" ?
 >
+>
+>  >  In 4965 there is an interrupt announcing rkfil, in 3965 it's event
+>  >  from firmware. There was portably a good reason why the interrupt was
+>  >  added :)
+>
+>  OK, but aren't the interrupts disabled too on down? (don't have any
+>  4965 hw to test with)
 
-I've tested this with the pid algorithm selected and my wireless
-network connection is reliable. In a loop, I repeatedly ftp'd a kernel
-source tarball from another box on my network for 40 minutes with no
-failure, whilst at the same time, pinging my gateway. Without the
-patch, that activity would have led to network failure in seconds. The
-tests were with the patch applied to 2.6.25-rc3-git3, so that Ivo's
-rt2x00 patches for 2.6.25 are also applied.
+Should not be.
 
-Thanks to everyone who has helped fix this.
+>
+>  >  Sorry no solution for now.
+>
+>  ok, might be a way to solve it in userspace (not bringing down the device)
 
->  ---
->
->  Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
->  in order to make the learning algorithm aware of constraints on rates. Also
->  add some comments and rename variables.
->
->  This fixes a bug which prevented 802.11b/g non-AP STAs from working with
->  802.11b only AP STAs.
->
->  Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-
-Tested-by: Chris Clayton <chris2553@googlemail.com>
-
->  ---
->  Index: linux-2.6.24/net/mac80211/rc80211_pid_algo.c
->  ===================================================================
->  --- linux-2.6.24.orig/net/mac80211/rc80211_pid_algo.c
->  +++ linux-2.6.24/net/mac80211/rc80211_pid_algo.c
->  @@ -2,7 +2,7 @@
->   * Copyright 2002-2005, Instant802 Networks, Inc.
->   * Copyright 2005, Devicescape Software, Inc.
->   * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
->  - * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
->  + * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
->   *
->   * This program is free software; you can redistribute it and/or modify
->   * it under the terms of the GNU General Public License version 2 as
->  @@ -63,72 +63,66 @@
->   * RC_PID_ARITH_SHIFT.
->   */
->
->  -
->  -/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
->  - * a worse failed frames behaviour and we'll choose the highest rate whose
->  - * failed frames behaviour is not worse than the one of the original rate
->  - * target. While at it, check that the adjustment is within the ranges. Then,
->  - * provide the new rate index. */
->  -static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
->  -                                        int adj, int cur, int l)
->  -{
->  -       int i, j, k, tmp;
->  -
->  -       j = r[cur].rev_index;
->  -       i = j + adj;
->  -
->  -       if (i < 0)
->  -               return r[0].index;
->  -       if (i >= l - 1)
->  -               return r[l - 1].index;
->  -
->  -       tmp = i;
->  -
->  -       if (adj < 0) {
->  -               for (k = j; k >= i; k--)
->  -                       if (r[k].diff <= r[j].diff)
->  -                               tmp = k;
->  -       } else {
->  -               for (k = i + 1; k + i < l; k++)
->  -                       if (r[k].diff <= r[i].diff)
->  -                               tmp = k;
->  -       }
->  -
->  -       return r[tmp].index;
->  -}
->  -
->  +/* Adjust the rate while ensuring that we won't switch to a lower rate if it
->  + * exhibited a worse failed frames behaviour and we'll choose the highest rate
->  + * whose failed frames behaviour is not worse than the one of the original rate
->  + * target. While at it, check that the new rate is valid. */
->   static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
->                                          struct sta_info *sta, int adj,
->                                          struct rc_pid_rateinfo *rinfo)
->   {
->         struct ieee80211_sub_if_data *sdata;
->         struct ieee80211_hw_mode *mode;
->  -       int newidx;
->  -       int maxrate;
->  -       int back = (adj > 0) ? 1 : -1;
->  +       int cur_sorted, new_sorted, probe, tmp, n_bitrates;
->  +       int cur = sta->txrate;
->
->         sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
->
->         mode = local->oper_hw_mode;
->  -       maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
->  +       n_bitrates = mode->num_rates;
->
->  -       newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
->  -                                              mode->num_rates);
->  +       /* Map passed arguments to sorted values. */
->  +       cur_sorted = rinfo[cur].rev_index;
->  +       new_sorted = cur_sorted + adj;
->  +
->  +       /* Check limits. */
->  +       if (new_sorted < 0)
->  +               new_sorted = rinfo[0].rev_index;
->  +       else if (new_sorted >= n_bitrates)
->  +               new_sorted = rinfo[n_bitrates - 1].rev_index;
->
->  -       while (newidx != sta->txrate) {
->  -               if (rate_supported(sta, mode, newidx) &&
->  -                   (maxrate < 0 || newidx <= maxrate)) {
->  -                       sta->txrate = newidx;
->  -                       break;
->  -               }
->  +       tmp = new_sorted;
->
->  -               newidx += back;
->  +       if (adj < 0) {
->  +               /* Ensure that the rate decrease isn't disadvantageous. */
->  +               for (probe = cur_sorted; probe >= new_sorted; probe--)
->  +                       if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
->  +                           rate_supported(sta, mode, rinfo[probe].index))
->  +                               tmp = probe;
->  +       } else {
->  +               /* Look for rate increase with zero (or below) cost. */
->  +               for (probe = new_sorted + 1; probe < n_bitrates; probe++)
->  +                       if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
->  +                           rate_supported(sta, mode, rinfo[probe].index))
->  +                               tmp = probe;
->         }
->
->  +       /* Fit the rate found to the nearest supported rate. */
->  +       do {
->  +               if (rate_supported(sta, mode, rinfo[tmp].index)) {
->  +                       sta->txrate = rinfo[tmp].index;
->  +                       break;
->  +               }
->  +               if (adj < 0)
->  +                       tmp--;
->  +               else
->  +                       tmp++;
->  +       } while (tmp < n_bitrates && tmp >= 0);
->  +
->   #ifdef CONFIG_MAC80211_DEBUGFS
->         rate_control_pid_event_rate_change(
->                 &((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
->  -               newidx, mode->rates[newidx].rate);
->  +               cur, mode->rates[cur].rate);
->   #endif
->   }
->
->
->
->  --
->  Ciao
->
-> Stefano
->
-
-
--- 
-Beauty is in the eye of the beerholder.
+That  will probably work.. still need more investigation.
