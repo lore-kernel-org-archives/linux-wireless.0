@@ -1,134 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:46310 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbYCBOiJ (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.186]:1384 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755459AbYCSTbo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 09:38:09 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6174226wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 06:38:08 -0800 (PST)
-Message-ID: <c74ac3520803020638r68f3990ayf5910b3e002f76e2@mail.gmail.com> (sfid-20080302_150232_958096_3FDC7B13)
-Date: Sun, 2 Mar 2008 16:38:08 +0200
-From: "Elyahou ITTAH" <ittah.elyahou@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Compiler error when compile iwlwifi
-In-Reply-To: <D936D925018D154694D8A362EEB0892003C77505@orsmsx416.amr.corp.intel.com>
+	Wed, 19 Mar 2008 15:31:44 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so512161rnb.15
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 12:31:43 -0700 (PDT)
+Message-ID: <1ba2fa240803181635o6cc264f4s578bbca7e4561c0e@mail.gmail.com> (sfid-20080319_193515_307673_211BFC99)
+Date: Wed, 19 Mar 2008 01:35:11 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: drago01 <drago01@gmail.com>
+Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <f6ca9fed0803181610v10b533e9n267540e1b00d004f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_20780_12946765.1204468688681"
-References: <c74ac3520802260339p7fd58501rbd967e755f4eaee6@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003C36C47@orsmsx416.amr.corp.intel.com>
-	 <c74ac3520802270146q697f3da8m238372c4c88ed691@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003C36D06@orsmsx416.amr.corp.intel.com>
-	 <c74ac3520802270638m7674c0fbh5f509fe0c5e5d566@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003C77505@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
+	 <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
+	 <47B29F63.6050605@gmail.com>
+	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
+	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
+	 <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
+	 <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com>
+	 <f6ca9fed0803181610v10b533e9n267540e1b00d004f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_20780_12946765.1204468688681
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Wed, Mar 19, 2008 at 1:10 AM, drago01 <drago01@gmail.com> wrote:
+>
+> On Wed, Mar 19, 2008 at 12:07 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>  > On Wed, Mar 19, 2008 at 12:06 AM, Chatre, Reinette
+>  >
+>  > <reinette.chatre@intel.com> wrote:
+>  >  >
+>  >
+>  >
+>  > > On Tuesday, March 18, 2008 2:47 PM, drago01  wrote:
+>  >  >
+>  >  >  >>  Please note that the driver loads/unloads the firmware during
+>  >  >  >>  interface up/down. That means that the host will not receive rfkill
+>  >  >  >>  events while the interface is down as there is no firmware to deal
+>  >  >  >> with these events.
+>  >  >  >>
+>  >  >  >>  Reinette
+>  >  >  >>
+>  >  >  >
+>  >  >  > OK that makes sense.
+>  >  >  > So a solution would be to not unload the firmware on down when the hw
+>  >  >  > rfkill is on. Is this a acceptable one or are they other (better
+>  >  >  > solutions). I can't think of any. And userspace cannot do anything
+>  >  >  > because bringing the device up and down again to look for the rfkill
+>  >  >  > status would be racy.
+>  >  >
+>  >  >  Having the firmware unloaded when the interface is down is a requirement
+>  >  >  for powersaving. We do not want the device to consume power when it is
+>  >  >  not used. The rfkill status should always be reported accurately when
+>  >  >  the interface is up. If it is not then it is a bug.
+>  >
+>  >  We will catch the HW rfkill event after loading the uCode so there is
+>  >  no problem with this.
+>  >  Not sure where should be the SW rfkill state stored.
+>
+>  yeah, but the ucode will be loaded when the device is brought back up,
+>  which does not happen in NM's case.
+>
 
-2008/2/29, Chatre, Reinette <reinette.chatre@intel.com>:
-> On Wednesday, February 27, 2008 6:38 AM, Elyahou ITTAH  wrote:
->
->
->
->
-> What was the error?
->
->
->
->
-> These web pages are not accessible to me. Could you please include the
->  error in your email? You can also submit a bug report at bughost.org and
->  attach the logs there.
->
->
->  Reinette
+You mean that NM doesn't have any notification that the radio was enabled again?
+This one is tricky with 3945...the trivial question is why NM disables
+the device?
+In 4965 there is an interrupt announcing rkfil, in 3965 it's event
+from firmware. There was portably a good reason why the interrupt was
+added :)
 
-I joined a file with the output of modprobe iwl3945 and dmesg... All
-after installing the driver with the compat tool.
-I also joined my compat config file...
+Sorry no solution for now.
 
-------=_Part_20780_12946765.1204468688681
-Content-Type: application/octet-stream; name=iwl3945
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fdbpgj8s
-Content-Disposition: attachment; filename=iwl3945
-
-CgoKIyBtb2Rwcm9iZSBpd2wzOTQ1CldBUk5JTkc6IEVycm9yIGluc2VydGluZyBtYWM4MDIxMSAo
-L2xpYi9tb2R1bGVzLzIuNi4yNC1nZW50b28tcjMvdXBkYXRlcy9uZXQvbWFjODAyMTEvbWFjODAy
-MTEua28pOiBVbmtub3duIHN5bWJvbCBpbiBtb2R1bGUsIG9yIHVua25vd24gcGFyYW1ldGVyIChz
-ZWUgZG1lc2cpCkZBVEFMOiBFcnJvciBpbnNlcnRpbmcgaXdsMzk0NSAoL2xpYi9tb2R1bGVzLzIu
-Ni4yNC1nZW50b28tcjMvdXBkYXRlcy9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDM5
-NDUua28pOiBVbmtub3duIHN5bWJvbCBpbiBtb2R1bGUsIG9yIHVua25vd24gcGFyYW1ldGVyIChz
-ZWUgZG1lc2cpCgpJbiBkbWVzZzogCm1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBpZWVlODAyMTFf
-Y2hhbm5lbF90b19mcmVxdWVuY3kKbWFjODAyMTE6IFVua25vd24gc3ltYm9sIGllZWU4MDIxMV9m
-cmVxdWVuY3lfdG9fY2hhbm5lbAppd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBzdGFfaW5mb19wdXQK
-aXdsMzk0NTogVW5rbm93biBzeW1ib2wgaWVlZTgwMjExX2ZyZWVfaHcKaXdsMzk0NTogVW5rbm93
-biBzeW1ib2wgaWVlZTgwMjExX2FsbG9jX2h3Cml3bDM5NDU6IFVua25vd24gc3ltYm9sIGllZWU4
-MDIxMV9yZWdpc3Rlcl9odwppd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpZWVlODAyMTFfcmF0ZV9j
-b250cm9sX3VucmVnaXN0ZXIKaXdsMzk0NTogVW5rbm93biBzeW1ib2wgaWVlZTgwMjExX3dha2Vf
-cXVldWUKaXdsMzk0NTogVW5rbm93biBzeW1ib2wgaWVlZTgwMjExX3R4X3N0YXR1c19pcnFzYWZl
-Cml3bDM5NDU6IFVua25vd24gc3ltYm9sIGllZWU4MDIxMV9yYXRlX2NvbnRyb2xfcmVnaXN0ZXIK
-aXdsMzk0NTogVW5rbm93biBzeW1ib2wgc3RhX2luZm9fZ2V0Cml3bDM5NDU6IFVua25vd24gc3lt
-Ym9sIGllZWU4MDIxMV9zdGFydF9xdWV1ZXMKaXdsMzk0NTogVW5rbm93biBzeW1ib2wgaWVlZTgw
-MjExX3R4X3N0YXR1cwppd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpZWVlODAyMTFfc3RvcF9xdWV1
-ZQppd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpZWVlODAyMTFfc3RvcF9xdWV1ZXMKaXdsMzk0NTog
-VW5rbm93biBzeW1ib2wgaWVlZTgwMjExX2dldF9oZHJsZW4KaXdsMzk0NTogVW5rbm93biBzeW1i
-b2wgaWVlZTgwMjExX3NjYW5fY29tcGxldGVkCml3bDM5NDU6IFVua25vd24gc3ltYm9sIGllZWU4
-MDIxMV91bnJlZ2lzdGVyX2h3Cml3bDM5NDU6IFVua25vd24gc3ltYm9sIGllZWU4MDIxMV9iZWFj
-b25fZ2V0Cml3bDM5NDU6IFVua25vd24gc3ltYm9sIGllZWU4MDIxMV9yeF9pcnFzYWZlCgojIGNh
-dCBjb21wYXQtd2lyZWxlc3MtMi42L2NvbmZpZy5tawoKZXhwb3J0CiMgWFhYOiBhZGQgYSBtYWtl
-IG1lbnVjb25maWcgb3B0aW9uIHRvIGdlbmVyYXRlIHRoaXMKCiMgV2lyZWxlc3Mgc3Vic3lzdGVt
-IHN0dWZmCkNPTkZJR19NQUM4MDIxMT1tCgpDT05GSUdfTUFDODAyMTFfUkNfREVGQVVMVD1waWQK
-Q09ORklHX01BQzgwMjExX1JDX1BJRD15CiMgQ29tbWVudCBhYm92ZSBhbmQgdW5jb21tZW50IGJl
-bG93IGlmIHlvdSBhcmUgaGF2aW5nIGlzc3VlcyB3aXRoCiMgdGhlIHJhdGUgcGlkIGNvbnRyb2wg
-YWxnb3JpdGhtLgojQ09ORklHX01BQzgwMjExX1JDX0RFRkFVTFQ9c2ltcGxlCiNDT05GSUdfTUFD
-ODAyMTFfUkNfU0lNUExFPXkKCkNPTkZJR19DRkc4MDIxMT1tCkNPTkZJR19OTDgwMjExPXkKCiMg
-RHJpdmVycwpDT05GSUdfQVRINUs9bgpDT05GSUdfQVRINUtfREVCVUc9bgpDT05GSUdfSVdMMzk0
-NT1tCkNPTkZJR19JV0w0OTY1PW4KQ09ORklHX1pEMTIxMVJXPW4KQ09ORklHX0I0Mz1uCiMgQjQz
-IHVzZXMgUENNQ0lBIG9ubHkgZm9yIENvbXBhY3QgRmxhc2guIFRoZSBDYXJkYnVzIGNhcmRzIHVz
-ZXMgUENJCiMgRXhhbXBsZSwgYmNtNDMxODoKIyBodHRwOi8vd3d3Lm11bHRpY2FwLmJpei93aXJl
-bGVzcy1sYW4vaW5kb29yLXdsYW4taGFyZHdhcmUvc2RjLWNmMTBnLTgwMjExZy1jb21wYWN0LWZs
-YXNoLW1vZHVsZQpDT05GSUdfQjQzX1BDTUNJQT1uCkNPTkZJR19CNDNfRE1BPW4KQ09ORklHX0I0
-M19QSU89bgpDT05GSUdfQjQzX0RNQV9BTkRfUElPX01PREU9bgpDT05GSUdfQjQzX1BDSV9BVVRP
-U0VMRUNUPW4KQ09ORklHX0I0M19QQ0lDT1JFX0FVVE9TRUxFQ1Q9bgojQ09ORklHX0I0M19SRktJ
-TEw9bgpDT05GSUdfQjQzX0xFRFM9bgojIENPTkZJR19CNDNfREVCVUcgaXMgbm90IHNldAoKQ09O
-RklHX0I0M0xFR0FDWT1uCkNPTkZJR19CNDNMRUdBQ1lfUENJX0FVVE9TRUxFQ1Q9bgpDT05GSUdf
-QjQzTEVHQUNZX1BDSUNPUkVfQVVUT1NFTEVDVD1uCkNPTkZJR19CNDNMRUdBQ1lfRE1BPW4KQ09O
-RklHX0I0M0xFR0FDWV9QSU89bgpDT05GSUdfQjQzTEVHQUNZX0RNQV9BTkRfUElPX01PREU9bgoK
-IyBUaGlzIGlzIHJlcXVpcmVkIGZvciBzb21lIGNhcmRzCkNPTkZJR19FRVBST01fOTNDWDY9bgoK
-IyBXaXJlbGVzcyBSTkRJUyBVU0Igc3VwcG9ydCAoUlRMODE4NSA4MDIuMTFnKSBBLUxpbmsgV0w1
-NFBDCiMgQWxsIG9mIHRoZXNlIGRldmljZXMgYXJlIGJhc2VkIG9uIEJyb2FkY29tIDQzMjAgY2hp
-cCB3aGljaAojIGlzIG9ubHkgd2lyZWxlc3MgUk5ESVMgY2hpcCBrbm93biB0byBkYXRlLgojIE5v
-dGU6IHRoaXMgZGVwZW5kcyBvbiBDT05GSUdfVVNCX05FVF9STkRJU19IT1NUIGFuZCBDT05GSUdf
-VVNCX05FVF9DRENFVEhFUgojIGl0IGFsc28gcmVxdWlyZXMgYSBuZXcgUk5ESVNfSE9TVCBtb2R1
-bGUgd2hpY2ggd2UgYWRkCkNPTkZJR19VU0JfTkVUX1JORElTX0hPU1Q9bgpDT05GSUdfVVNCX05F
-VF9STkRJU19XTEFOPW4KCiMgUmVhbHRlawpDT05GSUdfUlRMODE4MD1uCkNPTkZJR19SVEw4MTg3
-PW4KQ09ORklHX0FETTgyMTE9bgoKIyBydDJ4MDAKQ09ORklHX1JUMlgwMD1uCkNPTkZJR19SVDJY
-MDBfTElCPW4KQ09ORklHX1JUMlgwMF9MSUJfUENJPW4KQ09ORklHX1JUMlgwMF9MSUJfVVNCPW4K
-Q09ORklHX1JUMlgwMF9MSUJfRklSTVdBUkU9bgpDT05GSUdfUlQyNDAwUENJPW4KIyBDT05GSUdf
-UlQyNDAwUENJX1JGS0lMTCBpcyBub3Qgc2V0CkNPTkZJR19SVDI1MDBQQ0k9bgojIENPTkZJR19S
-VDI1MDBQQ0lfUkZLSUxMIGlzIG5vdCBzZXQKQ09ORklHX1JUNjFQQ0k9bgojIENPTkZJR19SVDYx
-UENJX1JGS0lMTCBpcyBub3Qgc2V0CkNPTkZJR19SVDI1MDBVU0I9bgpDT05GSUdfUlQ3M1VTQj1u
-CiMgQ09ORklHX1JUMlgwMF9MSUJfREVCVUdGUyBpcyBub3Qgc2V0CiMgQ09ORklHX1JUMlgwMF9E
-RUJVRyBpcyBub3Qgc2UKCiMgcDU0CkNPTkZJR19QNTRfQ09NTU9OPW4KQ09ORklHX1A1NF9VU0I9
-bgpDT05GSUdfUDU0X1BDST1uCgojIFNvbmljcyBTaWxpY29uIEJhY2twbGFuZQpDT05GSUdfU1NC
-X1BPU1NJQkxFPW4KQ09ORklHX1NTQj1uCkNPTkZJR19TU0JfUENJSE9TVF9QT1NTSUJMRT1uCkNP
-TkZJR19TU0JfUENJSE9TVD1uCkNPTkZJR19TU0JfUENNQ0lBSE9TVD1uCkNPTkZJR19TU0JfRFJJ
-VkVSX1BDSUNPUkVfUE9TU0lCTEU9bgpDT05GSUdfU1NCX0RSSVZFUl9QQ0lDT1JFPW4KIyBUaGVz
-ZSB0d28gYXJlIGZvciBtaXBzCkNPTkZJR19TU0JfRFJJVkVSX01JUFM9bgpDT05GSUdfU1NCX1BD
-SUNPUkVfSE9TVE1PREU9bgojIENPTkZJR19TU0JfREVCVUcgaXMgbm90IHNldAojIENPTkZJR19T
-U0JfRFJJVkVSX0VYVElGPXkKCiMgT2xkIGllZWU4MDIxMSAic3RhY2siCiMgTm90ZTogb2xkIHNv
-ZnRtYWMgaXMgc2NoZWR1bGVkIGZvciByZW1vdmFsIHNvIHdlCiMgaWdub3JlIHRoYXQgc3R1ZmYK
-Q09ORklHX0lFRUU4MDIxMT15CkNPTkZJR19JRUVFODAyMTFfQ1JZUFRfQ0NNUD15CkNPTkZJR19J
-RUVFODAyMTFfQ1JZUFRfVEtJUD15CkNPTkZJR19JRUVFODAyMTFfQ1JZUFRfV0VQPXkKQ09ORklH
-X0lFRUU4MDIxMV9TT0ZUTUFDPXkKIyBPbGQgZHJpdmVycyB3aGljaCB1c2UgdGhlIG9sZCBzdGFj
-awoKIyBUaGUgSW50ZWwgaXB3cwpDT05GSUdfSVBXMjEwMD1uCkNPTkZJR19JUFcyMjAwPW4KIyBM
-aWJlcnRhcyB1c2VzIHRoZSBvbGQgc3RhY2sgYnV0IG5vdCBmdWxseSwgaXQgd2lsbCBzb29uIAoj
-IGJlIGNsZWFuZWQuCkNPTkZJR19MSUJFUlRBUz1uCkNPTkZJR19MSUJFUlRBU19VU0I9bgpDT05G
-SUdfTElCRVJUQVNfQ1M9bgoK
-------=_Part_20780_12946765.1204468688681--
+Tomas
