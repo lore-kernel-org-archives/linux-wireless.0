@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:17580 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755131AbYCaV4D (ORCPT
+Received: from bugs.comnets.uni-bremen.de ([134.102.186.10]:58591 "EHLO
+	bugs.comnets.uni-bremen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1764063AbYCSVFq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 17:56:03 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2250938wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 14:55:58 -0700 (PDT)
-Subject: Re: [PATCH 13/18] mac80211: mesh statistics and config through
-	debugfs
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080327231639.fd1264b9.akpm@linux-foundation.org>
-References: <20080223141703.194775000@sipsolutions.net>
-	 <20080223142015.478371000@sipsolutions.net>
-	 <20080327231639.fd1264b9.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 31 Mar 2008 14:55:56 -0700
-Message-Id: <1207000556.7792.35.camel@localhost> (sfid-20080331_225607_179853_A4D41AE5)
-Mime-Version: 1.0
+	Wed, 19 Mar 2008 17:05:46 -0400
+Date: Wed, 19 Mar 2008 11:00:53 +0100 (CET)
+From: Markus Becker <mab@comnets.uni-bremen.de>
+To: linux-wireless@vger.kernel.org
+cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	julian.calaby@gmail.com, david@woodhou.se, dwmw2@infradead.org,
+	andreamrl@tiscali.it
+Subject: Marvell 88w8335 [Libertas]
+Message-ID: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de> (sfid-20080319_210623_129378_7B284F29)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-03-27 at 23:16 -0700, Andrew Morton wrote:
-> - then fix the obvious, trivial, instantly-detectable, very-deadlocka=
-ble
->   bug in this patch.  There is just no longer any excuse for this:
->=20
-> +	read_lock(&dev_base_lock);
-> +	if (copy_from_user(buf, userbuf, buf_size))
+Dear all,
 
-=EF=BB=BFAs the author of the patch, I would like to apologize about th=
-is.=20
+I am trying to use the WLAN part of an Option Fusion+ UMTS and WLAN card. 
+UMTS is working fine, WLAN works OK with ndiswrapper. Seen the emails on 
+infradead and linuxwireless from 2007 and beginning of March, I was trying 
+to get it natively supported.
 
-Regarding review quality, I would like to point out that the function
-just above this one, ieee80211_if_read(), which has been for a while in
-the stable releases, suffers the same problem. That does not excuse
-myself though, I should have spotted and fixed it and then implement
-ieee80211_if_write() properly. I will send a patch fixing both issues
-today.
+I modified the mac80211 port of mrv8k from 
+http://david.woodhou.se/mrv.tar.gz so that it compiles against 2.6.24 
+Debian kernel.
 
-Again sorry for the mess and thank you for spotting the problem.
+It is available here:
+https://www.comnets.uni-bremen.de/~mab/mrv8k/mrv8kng-mab.tgz
 
---=20
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+The firmware I am using is extracted from Mrvw123.sys from the CD of the 
+UMTS/WLAN card using mrv8k_extract_fw.
 
+The module loads (does not bail out in the interrupt handler) and 
+creates the devices:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mar 19 09:55:07 shelbyville kernel: d80211 Marvell Libertas PCI driver
+Mar 19 09:55:07 shelbyville kernel: Andrea Merello <andreamrl *at* tiscali.it>
+Mar 19 09:55:20 shelbyville kernel: pccard: CardBus card inserted into slot 0
+Mar 19 09:55:20 shelbyville kernel: PCI: Enabling device 0000:16:00.0 (0000 -> 0002)
+Mar 19 09:55:20 shelbyville kernel: ACPI: PCI Interrupt 0000:16:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+Mar 19 09:55:20 shelbyville kernel: PCI: Setting latency timer of device 0000:16:00.0 to 64
+Mar 19 09:55:20 shelbyville kernel: Bootstrap loaded OK, jumping in..
+Mar 19 09:55:22 shelbyville kernel: Firmware load successfully
+Mar 19 09:55:22 shelbyville kernel: Card mac address is xx:xx:xx:xx:xx:xx
+Mar 19 09:55:22 shelbyville kernel: Fw V 3020007, Hw V 3, Anennas: 2, Region code 48
+Mar 19 09:55:22 shelbyville kernel: phy7: Selected rate control algorithm 'simple'
+[Snipped out nozomi UMTS driver.]
+
+It is not yet fully working, however. The card does not seem to react on 
+the scanning/set_channel commands:
+
+Mar 19 09:55:48 shelbyville kernel: Command timeout
+Mar 19 09:55:48 shelbyville kernel: Could not set channel
+Mar 19 09:55:48 shelbyville kernel: Failed to set channel
+Mar 19 09:55:48 shelbyville kernel: wlan1: failed to set channel 2 (2417 MHz) for scan
+Mar 19 09:55:50 shelbyville kernel: Command timeout
+Mar 19 09:55:50 shelbyville kernel: Could not set channel
+Mar 19 09:55:50 shelbyville kernel: Failed to set channel
+Mar 19 09:55:50 shelbyville kernel: wlan1: failed to set channel 3 (2422 MHz) for scan
+[...]
+
+If someone is interested in helping (I am not very familiar with linux 
+wireless development), please contact me.
+
+Best regards,
+Markus
+
+------------------------------------------------
+| Dipl.-Ing. Markus Becker
+| Communication Networks
+| Mobile Research Center
+| TZI - Center for Computing Technologies
+| University Bremen
+| Germany
+------------------------------------------------
+| web: http://www.comnets.uni-bremen.de/~mab/
+| mailto: mab@comnets.uni-bremen.de
+| telephone: +49 421 218 2287
+| building: NW1 room: N2260
+------------------------------------------------
