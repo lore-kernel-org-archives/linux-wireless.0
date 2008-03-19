@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:55508 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097AbYCDTsd (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:19705 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760581AbYCSTxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 14:48:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Ahmed Ammar" <b33fc0d3@gmail.com>
-Subject: Re: B43 will not associate
-Date: Tue, 4 Mar 2008 20:47:35 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
-In-Reply-To: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
+	Wed, 19 Mar 2008 15:53:25 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [RFC] libertas: change quality calculation
+Date: Wed, 19 Mar 2008 16:25:39 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200803181510.52726.hs4233@mail.mn-solutions.de> <1205937928.26119.29.camel@localhost.localdomain>
+In-Reply-To: <1205937928.26119.29.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803042047.35710.mb@bu3sch.de> (sfid-20080304_194838_889589_89F8370F)
+  charset="iso-8859-1"
+Message-Id: <200803191625.39210.hs4233@mail.mn-solutions.de> (sfid-20080319_195437_332201_91FFA1D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 March 2008 20:43:12 Ahmed Ammar wrote:
-> b43 driver will never associate to my AP.
+> > I also found that the average noise floor is -86 dBm, not
+> > -96 dBm. So I changed this constant. Maybe this is wrong,
+> > what values do your cards report?
+>
+> When possible, we should use a window-ed average of the cards
+> reported noise from beacons or received frames instead of a
+> constant, that's a further improvement though.
 
-You are wrong:
+The changed value of MRVDRV_NF_DEFAULT_SCAN_VALUE is only used to 
+magically conjure the missing noise value for scan results, see 
+my other mail about this.
 
-wlan0: Initial auth_alg=1
-wlan0: authenticate with AP 00:90:d0:f2:ad:7b
-wlan0: RX authentication from 00:90:d0:f2:ad:7b (alg=1 transaction=2 status=0)
-wlan0: replying to auth challenge
-wlan0: RX authentication from 00:90:d0:f2:ad:7b (alg=1 transaction=4 status=0)
-wlan0: authenticated
-wlan0: associate with AP 00:90:d0:f2:ad:7b
-wlan0: RX AssocResp from 00:90:d0:f2:ad:7b (capab=0x411 status=0 aid=1)
-wlan0: associated
+Okay, it's also used in the case of a failed GET_RSSI command :-)
 
-> below is the full dmesg 
-> output. Also attached is the wireless capture from another card.
+> Well, when we had the (badly) averaged array values in there,
+> the noise floor was available to the scan reporting.
 
-Can you try disabling bonding? It seems to have problems:
+Something might have been available for scan reporting, but if 
+this "something" made sense is a different question. See my 
+other mail :-)
 
-bonding: bond0: link status definitely up for interface wlan0.
-bonding: bond0: Interface wlan0 is already enslaved!
+> There are tables to map RSSI -> dBm for each part which should
+> be in the firmware spec or seen in the driver code.
 
--- 
-Greetings Michael.
+I didn't see such a table so far, where is it?
