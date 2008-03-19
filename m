@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51674 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753901AbYCMSGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2008 14:06:16 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: Tkip fix sparse endianity complain in tkip code
-Date: Thu, 13 Mar 2008 20:05:53 +0200
-Message-Id: <1205431553-20567-1-git-send-email-tomas.winkler@intel.com> (sfid-20080313_180623_712651_6B75C784)
-Content-Type: text/plain; charset="us-ascii"
+Received: from el-out-1112.google.com ([209.85.162.178]:31922 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763084AbYCSU44 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 16:56:56 -0400
+Received: by el-out-1112.google.com with SMTP id v27so489027ele.17
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 13:56:53 -0700 (PDT)
+Message-ID: <1ba2fa240803191356h5f1b132bkd0ca6f718e76a0e1@mail.gmail.com> (sfid-20080319_205733_595381_919A873F)
+Date: Wed, 19 Mar 2008 22:56:53 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+Cc: "Emmanuel Grumbach" <egrumbach@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080319201004.GC5308@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1205781593.16475.20.camel@johannes.berg>
+	 <1205784255.16475.33.camel@johannes.berg>
+	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
+	 <20080318080435.GA5308@jm.kir.nu>
+	 <1205831880.16475.43.camel@johannes.berg>
+	 <20080318102344.GG5308@jm.kir.nu>
+	 <8704f27d0803190942h19b5a9ebjd3b27537c30ef719@mail.gmail.com>
+	 <20080319173922.GB5308@jm.kir.nu>
+	 <1ba2fa240803191141y7feae800g607432f2e9628e37@mail.gmail.com>
+	 <20080319201004.GC5308@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix wrong cast in tkip code
+On Wed, Mar 19, 2008 at 10:10 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Mar 19, 2008 at 08:41:22PM +0200, Tomas Winkler wrote:
+>
+>  > So how do you call WEP key that is used for both unicast and broadcast
+>  > i.e the old WEP key.
+>
+>  The IEEE 802.11 name for this would be "default key". IEEE 802.1X (or
+>  well, RFC 3580 is the authoritative specification for this) calls it
+>  "broadcast (default key)". Please note that this is not really a key
+>  that is always used both for unicast and broadcast. If there is a
+>  key-mapping key (unicast/individual) for the matching
+>  transmitter/receiver addresses, that key will be used instead. The "old
+>  WEP key" way of using only statically configured default keys just does
+>  not set the key-mapping key and because of that, the default key ends up
+>  being used for all frames (or well, one of the possible four default
+>  keys).
+>
+>
+>  > What mac80211 currently does it's attach it to broadcast address. If
+>  > there is a group key re keying you don't know whether also unicast key
+>  > have to be overridden or not since you don't know if this is a
+>  > 'static/global; key or  dynamic group key
+>
+>  I haven't looked at what the current implementation does, but as far as
+>  WEXT and SIOCSIWENCODEEXT is concerned, IW_ENCODE_EXT_GROUP_KEY flag
+>  should be used to select which key is being configured. There is no
+>  difference between "static/global" and "dynamic group" keys. The only
+>  difference is between default and key-mapping (individual) keys.
+>
+>  Sure, the terminology here can be quite confusing, but as far as I can
+>  tell, that IW_ENCODE_EXT_GROUP_KEY flag is all that is needed to
+>  distinguish which key is being configured and configuring a single key
+>  should not automatically change another one (even if the key index is
+>  same which could, at least in theory, happen with key index 0 that can
+>  be used both with default and key-mapping keys).
+>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/tkip.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Just trying to translate it to configuration flow: To determine if the
+key is old-WEP would be
+Use group key as default key for all traffic unless and key-mapping key was set
+Is that correct?
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index f61f1dd..0ce2a84 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -118,7 +118,7 @@ static u8 *set_ext_iv(u8 *pos, u16 iv16)
- 
- static u8 *set_tkip_iv(u8 *pos, u32 iv32)
- {
--	*((u32 *)pos) = cpu_to_le32(iv32);
-+	*((__le32 *)pos) = cpu_to_le32(iv32);
- 	return pos + 4;
- }
- 
--- 
-1.5.4.1
+I will check how difficult is to do that implementation wise
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Thanks
+Tomas
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+>
+>  --
+>  Jouni Malinen                                            PGP id EFC895FA
+>
