@@ -1,98 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:22056 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbYCQAEb (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:55352 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764272AbYCSUKp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2008 20:04:31 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so6054207wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Mar 2008 17:04:31 -0700 (PDT)
-Message-ID: <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com> (sfid-20080317_000437_017164_3A3B53D3)
-Date: Mon, 17 Mar 2008 02:04:31 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
-Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	Wed, 19 Mar 2008 16:10:45 -0400
+Date: Wed, 19 Mar 2008 22:10:04 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205608293.15910.53.camel@johannes.berg>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
+	a Phase 2 key
+Message-ID: <20080319201004.GC5308@jm.kir.nu> (sfid-20080319_201130_188680_339221DC)
+References: <1205781593.16475.20.camel@johannes.berg> <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com> <1205784255.16475.33.camel@johannes.berg> <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com> <20080318080435.GA5308@jm.kir.nu> <1205831880.16475.43.camel@johannes.berg> <20080318102344.GG5308@jm.kir.nu> <8704f27d0803190942h19b5a9ebjd3b27537c30ef719@mail.gmail.com> <20080319173922.GB5308@jm.kir.nu> <1ba2fa240803191141y7feae800g607432f2e9628e37@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
-	 <1205608293.15910.53.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803191141y7feae800g607432f2e9628e37@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 15, 2008 at 9:11 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  On Wed, 2008-03-12 at 17:05 -0700, Reinette Chatre wrote:
->  > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->  >
->  > This patch makes mac80211 able to send a phase1 key for TKIP decryption.
->  > This is needed for drivers that don't do the rekeying by themselves
->  > (i.e. iwlwifi). Upon IV16 wrap around, the packet is decrypted in SW, if
->  > decryption is ok, mac80211 calls to set_key with a new phase 1 RX key.
->
->
-> > --- a/include/net/mac80211.h
->  > +++ b/include/net/mac80211.h
->  > @@ -590,12 +590,20 @@ enum ieee80211_key_alg {
->  >   * @IEEE80211_KEY_FLAG_TKIP_REQ_TX_P2_KEY: This flag should be set by
->  >   *   the driver for a TKIP key if it requires a phase2 TX key generation
->  >   *   in SW. The key will be attached to each packet.
->  > + * @IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY: This flag should be set by the driver
->  > + *   for a TKIP key if it requires phase 1 key generation in software.
->  > + *   The phase 1 key will be sent in the same context as Rx.
->  > + * @IEEE80211_KEY_FLAG_TKIP_PHASE1_VALID: Set by mac80211, valid only when
->  > + *   IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY was set. When set, the phase 1
->  > + *   fields (tkip_p1k and tkip_iv32) in ieee80211_key_conf are valid.
->
->  This really breaks the set_key() model of having always one set_key()
->  call to add the key and another one to remove it again.
->
->  I think it would be much more appropriate to handle this in the driver
->  by exporting an appropriate phase1 mixing function that takes the
->  key_conf, iv16, RX vs. TX flag, and for RX the queue number as
->  arguments. The RX vs. TX flag could be used by the b43 driver since that
->  hardware can actually derive the phase2 key by itself.
+On Wed, Mar 19, 2008 at 08:41:22PM +0200, Tomas Winkler wrote:
 
-iwlwifi firmware also derive phase2 in RX path by itself since this is
-not really possible to do in host level. However in case of non
-matching iv32 such as wraparound it passes packet up unencrypted.  And
-there are some more esoteric cases when packet when SW decryption is
-more efficient such as very short packets. Therefore HW decryption
-have to be always backed up by SW one.
-Wraparound of Iv32 is reliable only if decryption of a the packet that
-triggers it is correct. If this is not done and phase1 is advanced by
-mistake it  breaks traffic till the next wraparound actually it will
-effectively cause  disconnection. Your suggestion will requires to
-move also decryption into driver levelm not only phase1 generation. So
-it's rather no go solution
+> So how do you call WEP key that is used for both unicast and broadcast
+> i.e the old WEP key.
 
+The IEEE 802.11 name for this would be "default key". IEEE 802.1X (or
+well, RFC 3580 is the authoritative specification for this) calls it
+"broadcast (default key)". Please note that this is not really a key
+that is always used both for unicast and broadcast. If there is a
+key-mapping key (unicast/individual) for the matching
+transmitter/receiver addresses, that key will be used instead. The "old
+WEP key" way of using only statically configured default keys just does
+not set the key-mapping key and because of that, the default key ends up
+being used for all frames (or well, one of the possible four default
+keys).
 
->  I think for advanced features like crypto hardware acceleration or
->  similar we should deviate from the "push" model mac80211 has for most
->  things (and which you also implemented here) so we don't end up creating
->  special flags for all possible different hardware. A "pull" model is
->  much more scalable here.
+> What mac80211 currently does it's attach it to broadcast address. If
+> there is a group key re keying you don't know whether also unicast key
+> have to be overridden or not since you don't know if this is a
+> 'static/global; key or  dynamic group key
 
-I agree in general but in this specific case this will cause much more
-data movement than few flags.
+I haven't looked at what the current implementation does, but as far as
+WEXT and SIOCSIWENCODEEXT is concerned, IW_ENCODE_EXT_GROUP_KEY flag
+should be used to select which key is being configured. There is no
+difference between "static/global" and "dynamic group" keys. The only
+difference is between default and key-mapping (individual) keys.
 
-Thanks
-Tomas
+Sure, the terminology here can be quite confusing, but as far as I can
+tell, that IW_ENCODE_EXT_GROUP_KEY flag is all that is needed to
+distinguish which key is being configured and configuring a single key
+should not automatically change another one (even if the key index is
+same which could, at least in theory, happen with key index 0 that can
+be used both with default and key-mapping keys).
 
->  johannes
->
-> -------------------------------------------------------------------------
->  This SF.net email is sponsored by: Microsoft
->  Defy all challenges. Microsoft(R) Visual Studio 2008.
->  http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-> _______________________________________________
->  Ipw3945-devel mailing list
->  Ipw3945-devel@lists.sourceforge.net
->  https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
->
+-- 
+Jouni Malinen                                            PGP id EFC895FA
