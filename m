@@ -1,99 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:40958 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbYCGDA6 (ORCPT
+Received: from mamut.efuzja.net.pl ([193.93.204.8]:56159 "EHLO efuzja.net.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936708AbYCSVjO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 22:00:58 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so4150341ugc.16
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 19:00:56 -0800 (PST)
-Message-ID: <95455e980803061900g5890a860n5c000a974cdf30b0@mail.gmail.com> (sfid-20080307_030103_518886_F07700A8)
-Date: Fri, 7 Mar 2008 14:00:56 +1100
-From: hce <webmail.hce@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: Patch for linux wireless extension
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1204812001.29057.21.camel@localhost.localdomain>
+	Wed, 19 Mar 2008 17:39:14 -0400
+From: Kamil =?utf-8?q?Seroczy=C5=84ski?= <serkamil@serkamil.org.pl>
+To: mb@bu3sch.de, stefano.brivio@polimi.it
+Subject: b43 and latest compat-wireless ( 2.8-48-g7a95475 ) - don't work
+Date: Wed, 19 Mar 2008 22:08:01 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <95455e980803031901x67360bffsca3794f1dfde586b@mail.gmail.com>
-	 <1204626369.3917.96.camel@johannes.berg>
-	 <1204639101.7183.17.camel@localhost.localdomain>
-	 <95455e980803060237p40790e84w32004da91f5341e6@mail.gmail.com>
-	 <1204812001.29057.21.camel@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200803192208.01318.serkamil@serkamil.org.pl> (sfid-20080319_213947_072441_D4C8F629)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 7, 2008 at 1:00 AM, Dan Williams <dcbw@redhat.com> wrote:
->
-> On Thu, 2008-03-06 at 21:37 +1100, hce wrote:
->  > On 3/5/08, Dan Williams <dcbw@redhat.com> wrote:
->  > > On Tue, 2008-03-04 at 11:26 +0100, Johannes Berg wrote:
->  > >  > Jim,
->  > >  >
->  > >  > > I am running a wifi device on kernel 2.6.11 and wireless extension
->  > >  > > version 17 for an ARM processor, it works fine with an open AP and
->  > >  > > wpa_supplicant 0.5.8.
->  > >  >
->  > >  > That's ancient.
->  > >  >
->  > >  > > Now I would like to support WEP and WPA. I know
->  > >  > > the best is to upgrade to latest kernel, but I am not in the position
->  > >  > > to do it as various reasons.
->  > >  >
->  > >  > Upgrade anyway.
->  > >  >
->  > >  > > An alternative as people suggested is to
->  > >  > > do a wireless extension patch which supports WEP and WPA on kernel
->  > >  > > 2.6.11. Any advice if it is feasible and where can I find the wireless
->  > >  > > extension patch for WEP and WPA on kernel 2.6.11 please?
->  > >  >
->  > >  > Hahaha. We'll you'll have to *make* that patch and invest a
->  > >  > *significant* amount of time into that.
->  > >
->  > >
->  > > Yeah; it's not just the defines and whatnot in wireless.h; you probably
->  > >  also want to update wireless-tools too, then you have to update your
->  > >  driver as well.  It's not hugely complex, but it's going to be a lot of
->  > >  boring work :)
->  > >
->  > >
->  > >  Dan
->  >
->  > I've just upgrade wireless extension version 18 which supports WPA (Is
->  > it for WEP as well?), with replaced two files of version 18 wireless.h
->  > and wireless.c in the kernel 2.6.11. Please correct me if I missed
->  > other source files in the kernel.
->  >
->  > The wireless-tools we are using come from different sources, the
->  > iwconfig was from busybox 1.3 and wpa_supplicant 0.5.8 was compiled to
->  > our firmware. The initial test for WEP set up was not good, but I was
->  > told, the wireless extension vresion 18 only supports WPA not WEP,
->  > please advice.
->
->  Incorrect.  WE-18 _added_ support for WPA ioctls but did not remove
->  support for WEP.  You'll just have to debug stuff and find out what's
->  going wrong.
+Hi
 
-Thanks Dan.
+i have problem with compat-wireless ... i try tell you what hapend, and=
+ i hope=20
+you ( meybe we ;) ) find problem and fix them ...
 
-There was an error of "ioctl[SIOCSIWENCODEEXT]: Input/output error". I
-looked at wireless.h and wireless.c of WE18, that the
-"SIOCSIWENCODEEXT" is defined and it also defines following in the
-static const struct iw_ioctl_description standard_ioctl[]
+I have hp compaq 6715b ( GC049ES; links, if you want to know some more =
+on the=20
+bottom the mail ) witch broadcom 4311 rev. 2 ( Network controller: Broa=
+dcom=20
+Corporation BCM94311MCG wlan mini-PCI (rev 02); 14e4:4311 (rev 02) ) wi=
+tch=20
+linux kernel 2.6.22-2 ( # uname -a Linux serkamil 2.6.22-2-amd64 #1 SMP=
+ Thu=20
+Aug 30 23:43:59 UTC 2007 x86_64 GNU/Linux ).
 
-[SIOCSIWENCODEEXT - SIOCIWFIRST] = {
-        .header_type    = IW_HEADER_TYPE_POINT,
-        .token_size = 1,
-        .min_tokens = sizeof(struct iw_encode_ext),
-        .max_tokens = sizeof(struct iw_encode_ext) +
-                IW_ENCODING_TOKEN_MAX,
-    },
+This device work fine witch compat-wireless-2.6 where in the file=20
+compat-release is string '2.8-12-g0270147'.
+The same device, on the same OS and Kernel don't working witch latest=20
+comat-wireless-2.6 where in the file compat-release is=20
+string '2.8-48-g7a95475'.
 
-What could I be missing for that ioctl[SIOCSIWENCODEEXT] in the kernel?
+1. where i can find what changeing? I thing in=20
+http://git.kernel.org/?p=3Dlinux/kernel/git/mcgrof/compat-wireless-2.6.=
+git;a=3Dtree;hb=3DHEAD=20
+but i don't know how to find it there.
+2. it is important ( helping ) information for developers?
+3. how i can help developers makeing working/good software/driver? what=
+ i can=20
+do? if you want something, tell me, and i try help you.
 
-Thank you Dan.
+[links]
 
-Kind Regards,
+HP Compaq 6715b and 6715s Notebook PC and HP Compaq 6710b and 6710s Not=
+ebook=20
+PC Maintenance and Service Guide:=20
+http://h20000.www2.hp.com/bc/docs/support/SupportManual/c01039189/c0103=
+9189.pdf
 
-Jim
+QuickSpecs HP Compaq 6715b Notebook PC:=20
+http://h18000.www1.hp.com/products/quickspecs/12686_na/12686_na.PDF
+
+best wishes and greetings
+and <b>realy big thanks</b> for your working, with makeing driver for l=
+inux
+
+sorry for my english ... it ( my english ) is terrible !!
+--=20
+Kamil Seroczy=C5=84ski
+e-mail: serkamil(at)serkamil(dot)org(dot)pl
+skype:  serkamil
+sip:	serkamil(at)ekiga(dot)net
+jabber: serkamil(at)jabber(dot)org
+gadu:   3002410
+yahoo:  serkamil
+aim:    serkamil
+icq:	381905938
+tlen:	serkamil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
