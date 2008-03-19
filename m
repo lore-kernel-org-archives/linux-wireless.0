@@ -1,38 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:18833 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755636AbYCYPwg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 11:52:36 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so2330305wra.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 08:52:29 -0700 (PDT)
-Message-ID: <b6c5339f0803250852k6217a793w81321b3ca5605de8@mail.gmail.com> (sfid-20080325_155239_336193_5E5DE765)
-Date: Tue, 25 Mar 2008 11:52:28 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: ath5k aborts wireless connections
-Cc: "Helge Deller" <deller@gmx.de>, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com, mickflemm@gmail.com
-In-Reply-To: <20080324194443.GA16065@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200803221129.59090.deller@gmx.de>
-	 <20080324194443.GA16065@tuxdriver.com>
+Received: from mx1.redhat.com ([66.187.233.31]:55887 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758149AbYCSTni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 15:43:38 -0400
+Subject: Re: [PATCH, take 2] libertas: make a handy lbs_cmd_async() command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803191011.00430.hs4233@mail.mn-solutions.de>
+References: <200803181119.22293.hs4233@mail.mn-solutions.de>
+	 <200803191011.00430.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 19 Mar 2008 11:27:49 -0400
+Message-Id: <1205940469.4169.12.camel@localhost.localdomain> (sfid-20080319_194449_302162_0D58E552)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  > wlan1: RX disassociation from 00:50:18:3b:2b:04 (reason=1)
->  > wlan1: disassociated
->  > wlan1: deauthenticate(reason=14)
->
->  "Message integrity field (MIC) failure" -- doesn't look good.
->
->  I've seen a few reports of data corruption with ath5k.  Maybe it is
->  clobbering its own frames too?
+On Wed, 2008-03-19 at 10:11 +0100, Holger Schurig wrote:
+> This uses a static lbs_cmd_async_callback function, which is a
+> noop. Just setting the callback argument to __lbs_cmd_async()
+> to NULL won't work, because then the cmdnode wouldn't be
+> released.
+> 
+> This also makes __lbs_cmd_async() a static method, which is
+> now only used by lbs_cmd() and lbs_cmd_async().
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I get exactly this symptom as well, but with the 5424 and the changes
-queued for 2.6.26.  I had just assumed it was because the 5424
-calibration etc. isn't fully understood yet.  This appears to be a
-5212 though, so perhaps fixing it here would fix it for both.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
--Bob
+> 
+> ---
+> 
+> This patch is needed to fix the CMD_MAC_CONTROL bug correcly.
+> 
+> Compared with "take 1", this patch doesn't leak cmd_ctrl_node's
+> anymore.
+> 
+> 
+> [PATCH] libertas: make a handy lbs_cmd_async() command
+> 
+> This uses a static lbs_cmd_async_callback function, which is a noop. Just
+> setting the callback argument to __lbs_cmd_async() to NULL won't work,
+> because then the cmdnode wouldn't be released.
+> 
+> This also makes __lbs_cmd_async() a static method, which is now only used by
+> lbs_cmd() and lbs_cmd_async().
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> 
+> ---
+> 
+> This patch is needed to fix the CMD_MAC_CONTROL bug correcly. Patch for this
+> follows in the next mail.
+> 
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:04:44.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:05:25.000000000 +0100
+> @@ -20,6 +20,46 @@ static void lbs_set_cmd_ctrl_node(struct
+>  
+> 
+>  /**
+> + *  @brief Simple callback that copies response back into command
+> + *
+> + *  @param priv    	A pointer to struct lbs_private structure
+> + *  @param extra  	A pointer to the original command structure for which
+> + *                      'resp' is a response
+> + *  @param resp         A pointer to the command response
+> + *
+> + *  @return 	   	0 on success, error on failure
+> + */
+> +int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
+> +		     struct cmd_header *resp)
+> +{
+> +	struct cmd_header *buf = (void *)extra;
+> +	uint16_t copy_len;
+> +
+> +	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
+> +	memcpy(buf, resp, copy_len);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
+> +
+> +/**
+> + *  @brief Simple callback that ignores the result. Use this if
+> + *  you just want to send a command to the hardware, but don't
+> + *  care for the result.
+> + *
+> + *  @param priv         ignored
+> + *  @param extra        ignored
+> + *  @param resp         ignored
+> + *
+> + *  @return 	   	0 for success
+> + */
+> +static int lbs_cmd_async_callback(struct lbs_private *priv, unsigned long extra,
+> +		     struct cmd_header *resp)
+> +{
+> +	return 0;
+> +}
+> +
+> +
+> +/**
+>   *  @brief Checks whether a command is allowed in Power Save mode
+>   *
+>   *  @param command the command ID
+> @@ -1242,7 +1282,7 @@ void lbs_complete_command(struct lbs_pri
+>  	cmd->cmdwaitqwoken = 1;
+>  	wake_up_interruptible(&cmd->cmdwait_q);
+>  
+> -	if (!cmd->callback)
+> +	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
+>  		__lbs_cleanup_and_insert_cmd(priv, cmd);
+>  	priv->cur_cmd = NULL;
+>  }
+> @@ -2018,32 +2058,10 @@ void lbs_ps_confirm_sleep(struct lbs_pri
+>  }
+>  
+> 
+> -/**
+> - *  @brief Simple callback that copies response back into command
+> - *
+> - *  @param priv    	A pointer to struct lbs_private structure
+> - *  @param extra  	A pointer to the original command structure for which
+> - *                      'resp' is a response
+> - *  @param resp         A pointer to the command response
+> - *
+> - *  @return 	   	0 on success, error on failure
+> - */
+> -int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
+> -		     struct cmd_header *resp)
+> -{
+> -	struct cmd_header *buf = (void *)extra;
+> -	uint16_t copy_len;
+> -
+> -	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
+> -	memcpy(buf, resp, copy_len);
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
+> -
+> -struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
+> -				      struct cmd_header *in_cmd, int in_cmd_size,
+> -				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+> -				      unsigned long callback_arg)
+> +static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+> +	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
+> +	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+> +	unsigned long callback_arg)
+>  {
+>  	struct cmd_ctrl_node *cmdnode;
+>  
+> @@ -2080,9 +2098,6 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
+>  
+>  	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
+>  
+> -	/* here was the big old switch() statement, which is now obsolete,
+> -	 * because the caller of lbs_cmd() sets up all of *cmd for us. */
+> -
+>  	cmdnode->cmdwaitqwoken = 0;
+>  	lbs_queue_cmd(priv, cmdnode);
+>  	wake_up_interruptible(&priv->waitq);
+> @@ -2092,6 +2107,15 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
+>  	return cmdnode;
+>  }
+>  
+> +void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
+> +	struct cmd_header *in_cmd, int in_cmd_size)
+> +{
+> +	lbs_deb_enter(LBS_DEB_CMD);
+> +	__lbs_cmd_async(priv, command, in_cmd, in_cmd_size,
+> +		lbs_cmd_async_callback, 0);
+> +	lbs_deb_leave(LBS_DEB_CMD);
+> +}
+> +
+>  int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+>  	      struct cmd_header *in_cmd, int in_cmd_size,
+>  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:44.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:46.000000000 +0100
+> @@ -18,12 +18,9 @@
+>  #define lbs_cmd_with_response(priv, cmdnr, cmd)	\
+>  	lbs_cmd(priv, cmdnr, cmd, lbs_cmd_copyback, (unsigned long) (cmd))
+>  
+> -/* __lbs_cmd() will free the cmdnode and return success/failure.
+> -   __lbs_cmd_async() requires that the callback free the cmdnode */
+> -struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
+> -				      struct cmd_header *in_cmd, int in_cmd_size,
+> -				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+> -				      unsigned long callback_arg);
+> +void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
+> +	struct cmd_header *in_cmd, int in_cmd_size);
+> +
+>  int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+>  	      struct cmd_header *in_cmd, int in_cmd_size,
+>  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+
