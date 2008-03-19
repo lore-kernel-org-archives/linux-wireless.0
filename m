@@ -1,145 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50234 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752458AbYCUBKG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 21:10:06 -0400
-Date: Thu, 20 Mar 2008 18:08:02 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: David Brownell <david-b@pacbell.net>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	netdev@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	video4linux-list@redhat.com,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	lm-sensors@lm-sensors.org
-Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
-Message-Id: <20080320180802.426ad2d1.akpm@linux-foundation.org> (sfid-20080321_011045_247741_C1E21364)
-In-Reply-To: <20080321003604.GC20788@khazad-dum.debian.net>
-References: <20080316184349.GA28543@khazad-dum.debian.net>
-	<200803161246.23909.david-b@pacbell.net>
-	<20080318001429.896acf51.akpm@linux-foundation.org>
-	<20080320225612.GB20788@khazad-dum.debian.net>
-	<20080320164741.734e838c.akpm@linux-foundation.org>
-	<20080321003604.GC20788@khazad-dum.debian.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga03.intel.com ([143.182.124.21]:54315 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161146AbYCSXtw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 19:49:52 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/7] iwlwifi and mac80211 updates (TKIP)
+Date: Wed, 19 Mar 2008 16:41:39 -0700
+Message-Id: <1205970106-22196-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_235024_728555_AF2B2651)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 20 Mar 2008 21:36:04 -0300 Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
+This series reverts the previous TKIP related patches to mac80211
+and iwlwifi and addresses the issues discussed on the mailing list.
 
-> Well, so far so good for LEDs, but what about the other users of in_atomic
-> that apparently should not be doing it either?
-
-Ho hum.  Lots of cc's added.
-
-
-
-./arch/x86/mm/pageattr.c
-
-  Looks wrong.
-
-./arch/m68k/atari/time.c
-
-  Possibly buggy: deadlockable
-
-./sound/core/seq/seq_virmidi.c
-
-  Possibly buggy
-
-./net/iucv/iucv.c
-./kernel/power/process.c
-
-  Just a debug check.
-
-./drivers/s390/char/sclp_tty.c
-
-  Possibly buggy: deadlockable
-  
-./drivers/s390/char/sclp_vt220.c
-
-  Possibly buggy: deadlockable
-
-./drivers/s390/net/netiucv.c
-
-  Possibly buggy: deadlockable
-
-./drivers/char/isicom.c
-
-  Possibly buggy: deadlockable
-
-./drivers/usb/misc/sisusbvga/sisusb_con.c
-
-  Possibly buggy: deadlockable
-
-./drivers/net/usb/pegasus.c
-
-  Possibly buggy: deadlockable (I assume)
-
-./drivers/net/wireless/airo.c
-
-  Possibly buggy: deadlockable
-
-./drivers/net/wireless/rt2x00/rt73usb.c
-
-  Possibly buggy: deadlockable (I assume)
-
-./drivers/net/wireless/rt2x00/rt2500usb.c
-
-  Possibly buggy: deadlockable (I assume)
-
-./drivers/net/wireless/hostap/hostap_ioctl.c
-
-  Possibly buggy: deadlockable (I assume)
-
-./drivers/net/wireless/zd1211rw/zd_usb.c
-
-  Possibly buggy: deadlockable (I assume)
-
-./drivers/net/irda/sir_dev.c
-
-  Possibly buggy: deadlockable
-
-./drivers/net/netxen/netxen_nic_niu.c
-
-  Possibly buggy: deadlockable
-
-./drivers/net/netxen/netxen_nic_init.c
-
-  Possibly buggy: deadlockable
-
-./drivers/ieee1394/ieee1394_transactions.c
-
-  Possibly buggy: deadlockable
-
-./drivers/video/amba-clcd.c
-
-  Possibly buggy: deadlockable
-
-./drivers/i2c/i2c-core.c
-
-  Possibly buggy: deadlockable
+[PATCH 1/7] tkip: revert TKIP patches
+[PATCH 2/7] iwlwifi-2.6: Cleans up set_key flow
+[PATCH 3/7] iwlwifi-2.6: RX status translation to old scheme
+[PATCH 4/7] mac80211: get a TKIP phase key from skb
+[PATCH 5/7] mac80211: allows driver to request a Phase 1 RX key
+[PATCH 6/7] iwlwifi-2.6: enables HW TKIP encryption
+[PATCH 7/7] iwlwifi-2.6: enables RX TKIP decryption in HW
 
 
-The usual pattern for most of the above is
+Thanks
 
-	if (!in_atomic())
-		do_something_which_might_sleep();
-
-problem is, in_atomic() returns false inside spinlock on non-preptible
-kernels.  So if anyone calls those functions inside spinlock they will
-incorrectly schedule and another task can then come in and try take the
-already-held lock.
-
-Now, it happens that in_atomic() returns true on non-preemtible kernels
-when running in interrupt or softirq context.  But if the above code really
-is using in_atomic() to detect am-i-called-from-interrupt and NOT
-am-i-called-from-inside-spinlock, they should be using in_irq(),
-in_softirq() or in_interrupt().
-
+Reinette
