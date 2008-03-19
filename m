@@ -1,84 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37568 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754751AbYCCAcY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 19:32:24 -0500
-Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Franz Apeltauer <franz.apeltauer@gmx.at>
+Received: from mga03.intel.com ([143.182.124.21]:54341 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161145AbYCSXtx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 19:49:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <47CB3B5E.4020701@gmx.at> (sfid-20080302_234250_620354_B59BDB8D)
-References: <47CB3B5E.4020701@gmx.at> (sfid-20080302_234250_620354_B59BDB8D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-shCcVmxPfzywrz41eYsl"
-Date: Mon, 03 Mar 2008 01:32:11 +0100
-Message-Id: <1204504331.3917.31.camel@johannes.berg> (sfid-20080303_003229_419436_C4300101)
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 5/7] mac80211: allows driver to request a Phase 1 RX key
+Date: Wed, 19 Mar 2008 16:41:44 -0700
+Message-Id: <1205970106-22196-6-git-send-email-reinette.chatre@intel.com> (sfid-20080319_235024_178688_DCE9AFA5)
+In-Reply-To: <1205970106-22196-5-git-send-email-reinette.chatre@intel.com>
+References: <1205970106-22196-1-git-send-email-reinette.chatre@intel.com>
+ <1205970106-22196-2-git-send-email-reinette.chatre@intel.com>
+ <1205970106-22196-3-git-send-email-reinette.chatre@intel.com>
+ <1205970106-22196-4-git-send-email-reinette.chatre@intel.com>
+ <1205970106-22196-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-shCcVmxPfzywrz41eYsl
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+This patch makes mac80211 able to send a phase1 key for TKIP
+decryption.
+This is needed for drivers that don't do the rekeying by themselves
+(i.e. iwlwifi). Upon IV16 wrap around, the packet is decrypted in SW,
+if decryption is ok, mac80211 calls to update_tkip_key  with a new
+phase 1 RX key.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h |   27 ++++++++++++++++++++++++---
+ net/mac80211/tkip.c    |   16 +++++++++++++++-
+ net/mac80211/tkip.h    |    2 +-
+ net/mac80211/wpa.c     |    2 +-
+ 4 files changed, 41 insertions(+), 6 deletions(-)
 
->    CC [M]
-> .../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.o
-> .../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.c:116:
-> Fehler: Redefinition von =C2=BBrt2x00lib_load_firmware=C2=AB
-> =3D Error: redefiniton of  =C2=BBrt2x00lib_load_firmware=C2=AB
->=20
-> When I tried to "export CONFIG_CRC_ITU_T=3Dy" before "make",=20
-> rt2x00firmware.c compiled fine. (Probably this is not a good idea. I=20
-> just wanted to see, if it compiles then.)
-
-That's odd because the latest config.mk should check for CRC_ITU_T
-before... Ivo could there be a problem with rt2x00 when crc-itu-t isn't
-available?
-
-> In /usr/src/linux-headers-2.6.22-14/include/linux/slab.h I found:
->     struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
-> 		unsigned long,
-> 		void (*)(void *, struct kmem_cache *, unsigned long),
-> 		void (*)(void *, struct kmem_cache *, unsigned long));
-> i.e. the old, 6-parameter version.
->=20
-> So, IMHO the #define kmem_cache_create in
-> - compat-wireless-2.6/include/net/compat.h, line 120 and
-> - compat-wireless-2.6/compat/compat.h, line 120
-> should be moved 2 lines downwards into the block named
-> /* Compat work for 2.6.22 and 2.6.23 */
-> Then it compiles fine.
-
-Ok, indeed, it should be moved then, I was working on .21 when I noticed
-that needed to be done.
-
-johannes
-
---=-shCcVmxPfzywrz41eYsl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8tHCqVg1VMiehFYAQKoDA/+NPsruLBN1hvKMA79eKGFuGy6rYvYx1gy
-twlW7ImYBPPKVYj6uwifKymNXKayuIY0XLs5dWWf8Run2Q5AzcEqOJwvGInHmwVt
-eltymNZf0/7wEFB765rZRx76aHo4Wk00ADzrTq1rkdtKBW1ynr9PXUS5daZhGlB7
-4bORsqG+j7m87WQlv7hiDUtqpotwnzhjNk+VtndhS1zfO3E9zTOydP5xDHxT5Wft
-dDr83CMTwi8ljdfUlti+pOC2Ez7EvjFiQk1LB34R81PsuR1DjSo2D7k4FZcGMXJJ
-l/i9cXgMgUSuiCI+a9HqLy1ffTaCQ1AV52MXqfphP5JwcZP+9WtWonM/MmkSPPOe
-olO40ANTU5y6iMIqqSuUHUoL2RvBI8QoSuWhWYLWGjhy7wc4v8vhjoAE2TdvqyKA
-CSmRGcN1LHvDQHxyfwMv6iRJzYsAIoZ7ijbLt9H9g2ZgXXZmTk/U2pDXwlDiEeiw
-tnN/GMIE2rhdBN1ZSj6eqt8qGUSg81wUdfqv9pxGcStRjho7k/sKgXn4RuwJWGNF
-pOAZP8NEFIQzHa5WWBXeqWK3zWrosLO50ZA6SOC4BRBYPSP3eTBtKqhGJM7Ov1MV
-CJVX4R7GaY9w8R51ERkMCcC3r52UZbbcr+YUVk3wRH34UtJ2Gg67q6jsAyzDjxSc
-luC+3tkAfQ0=
-=iKaL
------END PGP SIGNATURE-----
-
---=-shCcVmxPfzywrz41eYsl--
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4b35f64..d3e2337 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -586,11 +586,15 @@ enum ieee80211_key_alg {
+  * @IEEE80211_KEY_FLAG_GENERATE_MMIC: This flag should be set by
+  *	the driver for a TKIP key if it requires Michael MIC
+  *	generation in software.
++ * @IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY: This flag should bet by
++ * 	the driver for a TKIP key if it requires phase 1 key generation
++ * 	in SW.
+  */
+ enum ieee80211_key_flags {
+-	IEEE80211_KEY_FLAG_WMM_STA	= 1<<0,
+-	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+-	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
++	IEEE80211_KEY_FLAG_WMM_STA		= 1<<0,
++	IEEE80211_KEY_FLAG_GENERATE_IV		= 1<<1,
++	IEEE80211_KEY_FLAG_GENERATE_MMIC	= 1<<2,
++	IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY	= 1<<3,
+ };
+ 
+ /**
+@@ -827,6 +831,16 @@ static inline void SET_IEEE80211_PERM_ADDR(struct ieee80211_hw *hw, u8 *addr)
+  * parameter is guaranteed to be valid until another call to set_key()
+  * removes it, but it can only be used as a cookie to differentiate
+  * keys.
++ *
++ * In TKIP some HW need to be provided a phase 1 key, for RX decryption
++ * acceleration (i.e. iwlwifi). Those drivers should set
++ * IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
++ * The update_tkip_key() call updates the driver with the new phase 1 key.
++ * This happens everytime the iv16 wraps around (every 65536 packets). The
++ * set_key() call will happen only once during a rekeying session, it will not
++ * include a valid phase 1 key. The valid phase 1 key is provided by
++ * udpate_tkip_key only. The trigger that makes mac80211 call this handler is
++ * software decryption with wrap around of iv16.
+  */
+ 
+ /**
+@@ -1003,6 +1017,10 @@ enum ieee80211_ampdu_mlme_action {
+  *	and remove_interface calls, i.e. while the interface with the
+  *	given local_address is enabled.
+  *
++ * @update_tkip_key: See the section "Hardware crypto acceleration"
++ * 	This callback will be called in the context of Rx. Called for drivers
++ * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
++ *
+  * @hw_scan: Ask the hardware to service the scan request, no need to start
+  *	the scan state machine in stack. The scan must honour the channel
+  *	configuration done by the regulatory agent in the wiphy's registered
+@@ -1094,6 +1112,9 @@ struct ieee80211_ops {
+ 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		       const u8 *local_address, const u8 *address,
+ 		       struct ieee80211_key_conf *key);
++	void (*update_tkip_key)(struct ieee80211_hw *hw,
++			struct ieee80211_key_conf *conf, const u8 *address,
++			u32 iv32, u16 *phase1key);
+ 	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
+ 	int (*get_stats)(struct ieee80211_hw *hw,
+ 			 struct ieee80211_low_level_stats *stats);
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 5c36b2d..94d4f1b 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -291,7 +291,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 				struct ieee80211_key *key,
+ 				u8 *payload, size_t payload_len, u8 *ta,
+-				int only_iv, int queue,
++				u8 *ra, int only_iv, int queue,
+ 				u32 *out_iv32, u16 *out_iv16)
+ {
+ 	u32 iv32;
+@@ -368,6 +368,20 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 			printk("\n");
+ 		}
+ #endif /* CONFIG_TKIP_DEBUG */
++		if (key->conf.flags & IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY) {
++			u8 bcast[ETH_ALEN] =
++				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++			u8 *sta_addr = key->sta->addr;
++
++			BUG_ON(!key->local->ops->update_tkip_key);
++
++			if (is_multicast_ether_addr(ra))
++				sta_addr = bcast;
++
++			key->local->ops->update_tkip_key(
++				local_to_hw(key->local), &key->conf,
++				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
++		}
+ 	}
+ 
+ 	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index 73d8ef2..ffaee32 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -31,7 +31,7 @@ enum {
+ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 				struct ieee80211_key *key,
+ 				u8 *payload, size_t payload_len, u8 *ta,
+-				int only_iv, int queue,
++				u8 *ra, int only_iv, int queue,
+ 				u32 *out_iv32, u16 *out_iv16);
+ 
+ #endif /* TKIP_H */
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index df0b734..45709ad 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -312,7 +312,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ 	res = ieee80211_tkip_decrypt_data(rx->local->wep_rx_tfm,
+ 					  key, skb->data + hdrlen,
+ 					  skb->len - hdrlen, rx->sta->addr,
+-					  hwaccel, rx->queue,
++					  hdr->addr1, hwaccel, rx->queue,
+ 					  &rx->tkip_iv32,
+ 					  &rx->tkip_iv16);
+ 	if (res != TKIP_DECRYPT_OK || wpa_test) {
+-- 
+1.5.3.4
 
