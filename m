@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41176 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757663AbYCGRNI (ORCPT
+Received: from mail9.dslextreme.com ([66.51.199.94]:38923 "HELO
+	mail9.dslextreme.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S935910AbYCSWnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 12:13:08 -0500
-Subject: Re: 2.6.24, mac80211 and b/g switching
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Koutny <vlado@work.ksp.sk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47D160E4.3040503@work.ksp.sk> (sfid-20080307_165126_594708_1A6A8040)
-References: <47D160E4.3040503@work.ksp.sk>
-	 (sfid-20080307_165126_594708_1A6A8040)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yd5D/JYsHIk78ZkZ2DKH"
-Date: Fri, 07 Mar 2008 18:12:46 +0100
-Message-Id: <1204909966.6387.31.camel@johannes.berg> (sfid-20080307_171327_402083_853BE35F)
-Mime-Version: 1.0
+	Wed, 19 Mar 2008 18:43:53 -0400
+Message-ID: <47E1953F.9020202@gawab.com> (sfid-20080319_224423_840403_A82B5EE5)
+Date: Wed, 19 Mar 2008 15:35:43 -0700
+From: Justin Madru <jdm64@gawab.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, linux@vger.kernel.org
+Subject: [regression: 2.6.25-rc6: iwl3945]
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-Yd5D/JYsHIk78ZkZ2DKH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I've been testing out the 2.6.25-rc kernel, and I've run into a possible
+regression.
 
+When I connect to my University's wireless network, I get the following
+in my system logs
+(This is just in one min. and it continues until I turn the computer off):
 
-> Is this a known issue? (I didn't manage to find anything in ml archives
-> so far) Or any hints on how to solve this?
+Mar 18 11:00:02 dell kernel: printk: 1 messages suppressed.
+Mar 18 11:00:02 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:06 dell kernel: printk: 1 messages suppressed.
+Mar 18 11:00:06 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:12 dell kernel: printk: 3 messages suppressed.
+Mar 18 11:00:12 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:17 dell kernel: printk: 2 messages suppressed.
+Mar 18 11:00:17 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:20 dell kernel: printk: 4 messages suppressed.
+Mar 18 11:00:20 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:26 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:32 dell kernel: printk: 3 messages suppressed.
+Mar 18 11:00:32 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:36 dell kernel: printk: 3 messages suppressed.
+Mar 18 11:00:36 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:42 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:46 dell kernel: printk: 1 messages suppressed.
+Mar 18 11:00:46 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:51 dell kernel: printk: 2 messages suppressed.
+Mar 18 11:00:51 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:00:56 dell kernel: printk: 5 messages suppressed.
+Mar 18 11:00:56 dell kernel: wlan0_rename: RX too short data frame payload
+Mar 18 11:01:02 dell kernel: printk: 5 messages suppressed.
 
-You want to develop against a non-ancient kernel that has all the HW
-mode foo removed.
+This didn't happen when I was using the 2.6.23 or 2.6.24 kernels. Also
+it only _(or almost only)_ happens on the Uni. network. At home (where
+the problem doesn't happen) my wireless router is a Hawking HWR54G. I
+have no idea what the Uni. router is. On both, I connect to an
+unencrypted network, but at the Uni. it redirects to a login page where
+I have to log on before I can actually use the Internet. Also, even
+though I get this flood of kernel messages, I can still use the Internet.
 
-johannes
+My network card is a Intel 3945ABG.
 
---=-Yd5D/JYsHIk78ZkZ2DKH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I was told by another developer (related to another regression I've
+found) that the problem could be something about "pipe programming timing".
+(see: http://lkml.org/lkml/2008/3/12/290 and
+http://lkml.org/lkml/2008/3/14/201)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+A 1-min Wireshark network dump (my address was 10.68.1.211):
+    http://jdserver.homelinux.org/linux/wireshark-1min
+My config file:
+    http://jdserver.homelinux.org/linux/config-2.6.25-rc6
+Detailed system information:
+    http://jdserver.homelinux.org/linux/sysinfo-2.6.25-rc6.txt
 
-iQIVAwUAR9F3jKVg1VMiehFYAQJCaA//V3PiyJEFrRyWWmpqqLgp7lM2l3Q5l/gB
-2xmiFvfJCvXNHmgEdcBJozltT1/gby9r7OxLYFiF20YEG/GYt0+6dM0wLfEdmDPD
-g20V+P+zzPQfYx9YQhkKOw3f65Yp+hSsidI+02bLjX6vdNkWqLdXWVpG9bJ6uoc8
-+fpFXWHUSMNboYiHywSxhBnLgR4LvNfjLOAe/Y7Piu2HHnbz+usaKFTsj6ZbHS6D
-cVgEZ6OtiBiN0fXbqfU/GP9JVPLuihQ1Ma16RoN12UUyststPI5p0jzHsM1G6LAt
-mAPZusDn0dUIeb40ySY9UWhIHFNlio2NwtweyzSGA7btAhW3nON6adBAtm0cCFoo
-0RgVO4lK4hNaBnIvAam5t07DuMmOIWpMSMH+X0hUe1Vz8gW9gfiJ0N7dj6BaDNbS
-3I2PG+tljg5b2pR81oepfArKZg3mF4kKBSTLhMWtnUiB0GtkMttMCkbU+ISI0k1v
-semJvqE+jjCedz4QnmsNiKiO/Nwszmlm/PAmOPdylItHN6IFFkU+EXa0VyepCwc2
-t8snfBpBu4gYSMKEvMjvidZwXgwy9p0j0tcnK3gG7WG5yvVBKTadBfMHxqJxss5e
-SX+mnSJPaVcbaXZKv4G88E9kB5/8DaYkOyf8GM0mK5Q0JAPGCm/i0iGo+Q3JsvkP
-mc6qtCwq1bQ=
-=fHjf
------END PGP SIGNATURE-----
-
---=-Yd5D/JYsHIk78ZkZ2DKH--
+Justin
 
