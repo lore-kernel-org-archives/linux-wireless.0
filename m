@@ -1,57 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:26852 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756996AbYCCUUa (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:19798 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754427AbYCSTxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 15:20:30 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so348509wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 12:20:28 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Fri, 29 Feb 2008 12:20:39 -0800
-Subject: [PATCH 03/10] mac80211: move comment to better location
-Message-ID: <47cc5d8a.1d078e0a.5902.ffffee7a@mx.google.com> (sfid-20080303_202057_073655_02638FB3)
+	Wed, 19 Mar 2008 15:53:54 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH, take 2] libertas: store rssi as an u32
+Date: Wed, 19 Mar 2008 17:08:32 +0100
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+References: <200803181515.15584.hs4233@mail.mn-solutions.de> <200803191620.18554.hs4233@mail.mn-solutions.de> <1205941183.4169.26.camel@localhost.localdomain>
+In-Reply-To: <1205941183.4169.26.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803191708.32595.hs4233@mail.mn-solutions.de> (sfid-20080319_195438_841936_78E6C993)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[PATCH] store rssi as an int
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/mesh.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+Don't store an (hardware base) u8 value in bss_descriptor, but just an
+unsigned int (RSSI is really unsigned). Compilers generate more efficent
+code for ints than for bytes.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9de1ccc..54d5ced 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -48,11 +48,6 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct net_device *dev)
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_if_sta *sta = &sdata->u.sta;
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+Index: wireless-testing/drivers/net/wireless/libertas/scan.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/scan.h	2008-03-19 09:04:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/scan.h	2008-03-19 09:05:53.000000000 +0100
+@@ -34,14 +34,9 @@ struct bss_descriptor {
+ 	u8 ssid_len;
  
--	if (sta->mesh_id_len == ie->mesh_id_len &&
--		memcmp(sta->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
--		memcmp(sta->mesh_pp_id, ie->mesh_config + PP_OFFSET, 4) == 0 &&
--		memcmp(sta->mesh_pm_id, ie->mesh_config + PM_OFFSET, 4) == 0 &&
--		memcmp(sta->mesh_cc_id, ie->mesh_config + CC_OFFSET, 4) == 0)
- 	/*
- 	 * As support for each feature is added, check for matching
- 	 * - On mesh config capabilities
-@@ -63,6 +58,11 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct net_device *dev)
- 	 *   - MDA enabled
- 	 * - Power management control on fc
- 	 */
-+	if (sta->mesh_id_len == ie->mesh_id_len &&
-+		memcmp(sta->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
-+		memcmp(sta->mesh_pp_id, ie->mesh_config + PP_OFFSET, 4) == 0 &&
-+		memcmp(sta->mesh_pm_id, ie->mesh_config + PM_OFFSET, 4) == 0 &&
-+		memcmp(sta->mesh_cc_id, ie->mesh_config + CC_OFFSET, 4) == 0)
- 		return true;
+ 	u16 capability;
+-
+-	/* receive signal strength in dBm */
+-	long rssi;
+-
++	u32 rssi;
+ 	u32 channel;
+-
+ 	u16 beaconperiod;
+-
+ 	u32 atimwindow;
  
- 	return false;
--- 
-1.5.2.5
-
-
-
+ 	/* IW_MODE_AUTO, IW_MODE_ADHOC, IW_MODE_INFRA */
+Index: wireless-testing/drivers/net/wireless/libertas/scan.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-19 09:05:48.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-19 09:27:55.000000000 +0100
+@@ -602,7 +602,7 @@ static int lbs_scan_networks(struct lbs_
+ 	lbs_deb_scan("scan table:\n");
+ 	list_for_each_entry(iter, &priv->network_list, list)
+ 		lbs_deb_scan("%02d: BSSID %s, RSSI %d, SSID '%s'\n",
+-			     i++, print_mac(mac, iter->bssid), (int)iter->rssi,
++			     i++, print_mac(mac, iter->bssid), iter->rssi,
+ 			     escape_essid(iter->ssid, iter->ssid_len));
+ 	mutex_unlock(&priv->lock);
+ #endif
+@@ -948,7 +948,7 @@ struct bss_descriptor *lbs_find_ssid_in_
+ 					     uint8_t *bssid, uint8_t mode,
+ 					     int channel)
+ {
+-	uint8_t bestrssi = 0;
++	u32 bestrssi = 0;
+ 	struct bss_descriptor * iter_bss = NULL;
+ 	struct bss_descriptor * found_bss = NULL;
+ 	struct bss_descriptor * tmp_oldest = NULL;
+Index: wireless-testing/drivers/net/wireless/libertas/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/debugfs.c	2008-03-19 09:04:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/debugfs.c	2008-03-19 09:05:53.000000000 +0100
+@@ -78,7 +78,7 @@ static ssize_t lbs_getscantable(struct f
+ 		u16 spectrum_mgmt = (iter_bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT);
+ 
+ 		pos += snprintf(buf+pos, len-pos,
+-			"%02u| %03d | %04ld | %s |",
++			"%02u| %03d | %04d | %s |",
+ 			numscansdone, iter_bss->channel, iter_bss->rssi,
+ 			print_mac(mac, iter_bss->bssid));
+ 		pos += snprintf(buf+pos, len-pos, " %04x-", iter_bss->capability);
