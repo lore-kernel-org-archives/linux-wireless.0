@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:27130 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbYC1BXc (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:19821 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760634AbYCSTx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 21:23:32 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so662rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2008 18:23:30 -0700 (PDT)
-Message-ID: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com> (sfid-20080328_012334_939996_D9E51EC1)
-Date: Fri, 28 Mar 2008 03:23:28 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: TKIP patches
+	Wed, 19 Mar 2008 15:53:56 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [RFC] libertas: change quality calculation
+Date: Wed, 19 Mar 2008 16:50:53 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200803181510.52726.hs4233@mail.mn-solutions.de> <200803191625.39210.hs4233@mail.mn-solutions.de> <1205941097.4169.23.camel@localhost.localdomain>
+In-Reply-To: <1205941097.4169.23.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803191650.53769.hs4233@mail.mn-solutions.de> (sfid-20080319_195443_351901_1E7D9229)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, what restraining you from applying TKIP patches to wireless-testing
-First of all they were acked by Johannes second they need to got into
-wider use, most of  the people don't pick up code from the mailing
-list but from git directory.
-Even TKIP is stupid encryption schema and everybody wants see it dead
-it's still used. From our testing our patches reduces significantly
-cpu utilization and throughput.
-If there are any other issues please let us know
+> RSSI can be derived by adding Noise Floor to SNR value
 
-Thanks
-Tomas
+I saw that, and it's actually like this coded. However, I was 
+wondering if it is allowed to add "dBm" to "dB". Those are the 
+documented units for "noisefloor" and "SNR", respectively.
+
+See my question about this with the subject "Re: [RFC PATCH] 
+mac80211: use hardware flags for signal/noise units".
+
+
+
+Anyway, the reported quality from scan is similar (not identical) 
+to the reported quality for iwconfig, so for my purpose it's 
+good enought (BTW: it wasn't identical before my patches).
