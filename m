@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Date: Wed, 5 Mar 2008 16:11:09 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Fwd: Re: hostapd with mac80211 progress]
-Message-ID: <20080305141109.GB8788@jm.kir.nu> (sfid-20080305_141850_226940_E2B1490B)
-References: <1204680021.3087.132.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1204680021.3087.132.camel@debian.sh.intel.com>
+Received: from mga11.intel.com ([192.55.52.93]:6676 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S939026AbYCSXpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 19:45:03 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] iwlwifi: prevent tuning during scanning
+Date: Wed, 19 Mar 2008 16:43:21 -0700
+Message-Id: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_234534_228497_EC4DD4E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 05, 2008 at 09:20:20AM +0800, Zhu Yi wrote:
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-> Does hostpad disable 5GHz channels intentionally? For regulation reason?
+Postpone calling ieee80211_hw_config if hardware scanning is active.
+This is similar to solution for software scanning where channel setting
+is delayed until scan complete.
 
-The hw_feature/channel selection code was originally using a regulatory
-domain database within hostapd and that information was used to select
-which channels are to be enabled. However, that code was never cleaned
-up and not merged into the open source version.
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/mac80211/ieee80211_ioctl.c |    2 +-
+ net/mac80211/ieee80211_sta.c   |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-I don't remember all the details anymore, but it looks like I just left
-it to hardcoded 802.11g channels 1-11 only configuration. In other
-words, yes, I would say that 5 GHz channels were disabled intentionally
-for the time being. This will obviously need to be changed once more
-suitable mechanism for regulatory domain information becomes available
-(the TODO comment in the hostapd function that was mentioned in this
-thread..).
-
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 1d91575..83b79c9 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -308,7 +308,7 @@ int ieee80211_set_freq(struct ieee80211_local *local, int freqMHz)
+ 	}
+ 
+ 	if (set) {
+-		if (local->sta_sw_scanning)
++		if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 			ret = 0;
+ 		else
+ 			ret = ieee80211_hw_config(local);
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 4255ec4..1e9650e 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -3609,6 +3609,9 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 
+ 	if (local->sta_hw_scanning) {
+ 		local->sta_hw_scanning = 0;
++		if (ieee80211_hw_config(local))
++			printk(KERN_DEBUG "%s: failed to restore operational "
++			       "channel after scan\n", dev->name);
+ 		/* Restart STA timer for HW scan case */
+ 		rcu_read_lock();
+ 		list_for_each_entry_rcu(sdata, &local->interfaces, list)
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.3.4
+
