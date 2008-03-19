@@ -1,150 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:44357 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757295AbYCFUit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 15:38:49 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so70779wxd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2008 12:38:46 -0800 (PST)
-Message-ID: <43e72e890803061238u50847f1fs587627c5fac028d6@mail.gmail.com> (sfid-20080306_203853_977656_3EF4B3C6)
-Date: Thu, 6 Mar 2008 15:38:45 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	radiotap@mail.ojctech.com
-Subject: [RFC] RCPI support in radiotap and in our wireless subsystems
-Cc: "Ivan Seskar" <Seskar@winlab.rutgers.edu>,
-	"Haris Kremo" <harisk@winlab.rutgers.edu>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Simon Barber" <simon@devicescape.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>,
-	"Javier Cardona" <javier@cozybit.com>,
-	"Sam Leffler" <sam@errno.com>, "Jean Tourrilhes" <jt@hpl.hp.com>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([66.187.233.31]:55887 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758159AbYCSTnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2008 15:43:40 -0400
+Subject: Re: [RFC] libertas: change quality calculation
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200803181510.52726.hs4233@mail.mn-solutions.de>
+References: <200803181510.52726.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 19 Mar 2008 10:45:28 -0400
+Message-Id: <1205937928.26119.29.camel@localhost.localdomain> (sfid-20080319_194451_261947_293B7B64)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been reviewing use or RSSI value, signal strength and noise on
-several Linux drivers, namely MadWifi, ath5k, ipw2200 and b43, and how
-these are populated using radiotap headers. It quickly became clear we
-should probably abandon RSSI's use in radiotap and slowly move to
-using RCPI [1] for both radiotap and for later use on our wireless
-subsystems. Reasons for doing so is:
+On Tue, 2008-03-18 at 15:10 +0100, Holger Schurig wrote:
+> I wasn't really satisfied with a graphical program that displayed
+> the link quality, the display was bit erratically. While changing
+> this, I noticed some other things which this and the next patch
+> addresses.
+> 
+> However, for this patch I'm not sure if it goes into the right
+> direction.
+> 
+> 
+> This changes the quality calculation for wireless statistics to
+> only consider signal & noise, but not number of tx-retries.
+> Also changes a the rather complicated formular for quality to be
+> more like http://www.ces.clemson.edu/linux/signal_quality.shtml.
+> 
+> Note that tx_retries are no longer used for the quality number. I
+> don't know of any other driver that does it, and tx_retries is
+> only increasing, so the quality would become smaller and 
+> smaller ...  which wouldn't reflect reality.
 
-a. Currently Radiotap's definition and use of
-IEEE80211_RADIOTAP_DB_ANTSIGNAL and IEEE80211_RADIOTAP_DBM_ANTSIGNAL
-is not so clear and it seems different drivers set it to different
-values. MadWifi uses DB_ANTSIGNAL for RSSI, ath5k uses DB_ANTSIGNAL as
-RSSI + noise, ipw2200 doesn't set it despite it having a value which
-can be used for it. The b43 driver, although like ath5k is a mac80211
-driver, uses DB_ANTSIGNAL as:
+I actually tried to emulate the ipw2200 quality calculations, and of
+course may have made some mistakes.  The ipw2200 uses a combination of
+things to indicate quality, txretries being one of them.  I still think
+txretries is a good thing to include, because if you have to keep
+retrying then something is definitely wrong.  However, it should
+probably be a running average of the retries over the last 20 or 30
+seconds or something, which was my mistake.
 
-        status.ssi = b43_rssi_postprocess(dev, jssi,
-                                          (phystat0 & B43_RX_PHYST0_OFDM),
-                                          (phystat0 & B43_RX_PHYST0_GAINCTL),
-                                          (phystat3 & B43_RX_PHYST3_TRSTATE));
+> Questionable things:
+> 
+> I also found that the average noise floor is -86 dBm, not -96
+> dBm. So I changed this constant. Maybe this is wrong, what values 
+> do your cards report?
 
-We have no clue what jssi is, nor what this yields, yet we use it.
+When possible, we should use a window-ed average of the cards reported
+noise from beacons or received frames instead of a constant, that's a
+further improvement though.
 
-b. For roaming purposes we need to standardize on a value so that the
-upper layers can reliably count on for signal strength and I believe
-RCPI was defined for just that purpose
+> The wireless stats have SNR and noise floor to calcutate the
+> quality. However, the scanning logic (for "iwlist XXX scan") only
+> has a not-really-described dimensionless RSSI value. So the 
 
-c. For strong subsystem rate control algorithms we need to count on
-reliable signal strength values. Right now mac80211's PID rate control
-algorithm [2] doesn't make use of signal strength, it just uses
-non-acked frames and re-transmission counters. I would think using
-signal strength here might help somehow.
+Well, when we had the (badly) averaged array values in there, the noise
+floor was available to the scan reporting.  There are tables to map RSSI
+-> dBm for each part which should be in the firmware spec or seen in the
+driver code.  We should definitely be using averaged noise floor and the
+RSSI converted to dBm/SNR in the scan function.
 
-However, to support RCPI it seems you need to rely on a way to
-accurately compute signal strength, but more accurately "received RF
-power in the selected channel for a received frame. This parameter
-shall be a measure by the PHY sublayer of the received RF power in the
-channel measured over the entire received frame or by other equivalent
-means which meet the specified accuracy". I've tried reviewing RSSI
-value for a few hardware out there to see if we can easily start
-adding support for this in our drivers but I am not confident in the
-exact value that RSSI represents as it varies on hardware and there is
-an obvious the lack of documentation in that area.
+> quality display for both outputs are a bit different, althought 
+> not too much. I don't know any good method, not even from above 
+> website, that would make both calculation results identical. 
+> However, this was also not the case with the old code.
 
----
+We can't really make the identical since we can't use the received
+frames quality indicators when doing scan results, but we could as I
+said above use the converted RSSI and the averaged noise floor.
 
-For Atheros hardware:
+Dan
 
-RSSI is defined to be equivalent to the Signal To Noise (SNR) [3] and
+> 
+> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	
+> 2008-03-18 13:42:42.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	
+> 2008-03-18 13:42:55.000000000 +0100
+> @@ -805,21 +805,8 @@ out:
+>  
+>  static struct iw_statistics *lbs_get_wireless_stats(struct 
+> net_device *dev)
+>  {
+> -	enum {
+> -		POOR = 30,
+> -		FAIR = 60,
+> -		GOOD = 80,
+> -		VERY_GOOD = 90,
+> -		EXCELLENT = 95,
+> -		PERFECT = 100
+> -	};
+>  	struct lbs_private *priv = dev->priv;
+> -	u32 rssi_qual;
+> -	u32 tx_qual;
+> -	u32 quality = 0;
+>  	int stats_valid = 0;
+> -	u8 rssi;
+> -	u32 tx_retries;
+>  	struct cmd_ds_802_11_get_log log;
+>  	u16 snr, nf;
+>  
+> @@ -838,24 +825,6 @@ static struct iw_statistics *lbs_get_wir
+>  	priv->wstats.qual.level = CAL_RSSI(snr, nf);
+>  	priv->wstats.qual.noise = CAL_NF(nf);
+>  
+> -	lbs_deb_wext("signal level %#x\n", priv->wstats.qual.level);
+> -	lbs_deb_wext("noise %#x\n", priv->wstats.qual.noise);
+> -
+> -	rssi = priv->wstats.qual.level - priv->wstats.qual.noise;
+> -	if (rssi < 15)
+> -		rssi_qual = rssi * POOR / 10;
+> -	else if (rssi < 20)
+> -		rssi_qual = (rssi - 15) * (FAIR - POOR) / 5 + POOR;
+> -	else if (rssi < 30)
+> -		rssi_qual = (rssi - 20) * (GOOD - FAIR) / 5 + FAIR;
+> -	else if (rssi < 40)
+> -		rssi_qual = (rssi - 30) * (VERY_GOOD - GOOD) /
+> -		    10 + GOOD;
+> -	else
+> -		rssi_qual = (rssi - 40) * (PERFECT - VERY_GOOD) /
+> -		    10 + VERY_GOOD;
+> -	quality = rssi_qual;
+> -
+>  	/* Quality by TX errors */
+>  	priv->wstats.discard.retries = priv->stats.tx_errors;
+>  
+> @@ -863,28 +832,19 @@ static struct iw_statistics *lbs_get_wir
+>  	log.hdr.size = cpu_to_le16(sizeof(log));
+>  	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
+>  
+> -	tx_retries = le32_to_cpu(log.retry);
+> -
+> -	if (tx_retries > 75)
+> -		tx_qual = (90 - tx_retries) * POOR / 15;
+> -	else if (tx_retries > 70)
+> -		tx_qual = (75 - tx_retries) * (FAIR - POOR) / 5 + POOR;
+> -	else if (tx_retries > 65)
+> -		tx_qual = (70 - tx_retries) * (GOOD - FAIR) / 5 + FAIR;
+> -	else if (tx_retries > 50)
+> -		tx_qual = (65 - tx_retries) * (VERY_GOOD - GOOD) /
+> -		    15 + GOOD;
+> -	else
+> -		tx_qual = (50 - tx_retries) *
+> -		    (PERFECT - VERY_GOOD) / 50 + VERY_GOOD;
+> -	quality = min(quality, tx_qual);
+> -
+>  	priv->wstats.discard.code = le32_to_cpu(log.wepundecryptable);
+> -	priv->wstats.discard.retries = tx_retries;
+> +	priv->wstats.discard.retries = le32_to_cpu(log.retry);
+>  	priv->wstats.discard.misc = le32_to_cpu(log.ackfailure);
+>  
+>  	/* Calculate quality */
+> -	priv->wstats.qual.qual = min_t(u8, quality, 100);
+> +	/* see http://www.ces.clemson.edu/linux/signal_quality.shtml */
+> +	snr = priv->wstats.qual.level  - priv->wstats.qual.noise;
+> +	if (snr <= 0)
+> +		priv->wstats.qual.qual = 0;
+> +	else if (snr >= 40)
+> +		priv->wstats.qual.qual = 100;
+> +	else
+> +		priv->wstats.qual.qual = 5*snr/2;
+>  	priv->wstats.qual.updated = IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
+>  	stats_valid = 1;
+>  
+> Index: wireless-testing/drivers/net/wireless/libertas/defs.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/defs.h	
+> 2008-03-18 13:42:42.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas/defs.h	
+> 2008-03-18 13:42:55.000000000 +0100
+> @@ -208,12 +208,9 @@ static inline void lbs_deb_hex(unsigned 
+>  #define RxPD_MESH_FRAME RxPD_CONTROL_WDS_FRAME
+>  
+>  /** RSSI-related defines */
+> -/*	RSSI constants are used to implement 802.11 RSSI threshold
+> -*	indication. if the Rx packet signal got too weak for 5 
+> consecutive
+> -*	times, miniport driver (driver) will report this event to 
+> wrapper
+> -*/
+>  
+> -#define MRVDRV_NF_DEFAULT_SCAN_VALUE		(-96)
+> +/* This is the average noise level */
+> +#define MRVDRV_NF_DEFAULT_SCAN_VALUE		(-86)
+>  
+>  /** RTS/FRAG related defines */
+>  #define MRVDRV_RTS_MIN_VALUE		0
 
-SNR = Signal - Noise
-
-Now, this is great, however the next question is what Signal is and
-what Noise is. Is Signal or SNR here the "measure by the PHY sublayer
-of the received RF power in the channel measured over the entire
-received frame"? Noise is computed upon noise calibration time, and I
-think its computed during SIFS time, but I haven't yet finished
-reading the patent that describes this stuff yet [4] so not too sure.
-I guess its not important as long as we can rely on the value.
-
----
-
-For ipw2200:
-
-s8 antsignal = frame->rssi_dbm - IPW_RSSI_TO_DBM;
-
-and IPW_RSSI_TO_DBM is set to 112.
-
-Is antsignal above the "measure by the PHY sublayer of the received RF
-power in the channel measured over the entire received frame"?
-
-----
-
-For Broadcom:
-
-We have something called jssi and then get what we think is an RSSI
-value. We don't know what either of them are.
-
-        status.ssi = b43_rssi_postprocess(dev, jssi,
-                                          (phystat0 & B43_RX_PHYST0_OFDM),
-                                          (phystat0 & B43_RX_PHYST0_GAINCTL),
-                                          (phystat3 & B43_RX_PHYST3_TRSTATE));
-
----
-
-At least RCPI seems to be well defined, and I think we can add it to
-radiotap for those drivers that can reliably compute this value.
-
-Quoting from Simon's post:
-
-"The allowed values for the Received Channel Power Indicator (RCPI) parameter
-shall be an 8 bit value in the range from 0 through 220, with indicated
-values rounded to the nearest 0.5 dB as follows:
-
-0: Power < -110 dBm
-1: Power = -109.5 dBm
-2: Power = -109.0 dBm
-
-and so on where
-
-RCPI = int{(Power in dBm +110)*2} for 0dbm > Power > -110dBm
-
-220: Power > -0 dBm
-221-254: reserved
-255: Measurement not available
-
-RCPI shall equal the received RF power within an accuracy of +/-5 dB
-(95% confidence interval) within the specified dynamic range of the
-receiver. The received RF power shall be determined assuming a receiver
-noise equivalent bandwidth equal to the channel bandwidth multiplied by
-1.1."
-
-So I propose IEEE80211_RADIOTAP_RCPI, defined as above, and hopefully
-we can start figuring out what exactly RSSI values are in the
-different cards we support to compute this. Comments?
-
-  Luis
-
-[1] http://www.mail-archive.com/netdev@vger.kernel.org/msg19487.html
-[2] http://linuxwireless.org/en/developers/Documentation/mac80211/RateControl/PID
-[3] http://madwifi.org/wiki/UserDocs/RSSI
-[4] http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1&Sect2=HITOFF&d=PALL&p=1&u=%2Fnetahtml%2FPTO%2Fsrchnum.htm&r=1&f=G&l=50&s1=7245893.PN.&OS=PN/7
