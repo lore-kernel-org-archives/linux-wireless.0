@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:10475 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797AbYC2X3K (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58627 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765536AbYCSUPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2008 19:29:10 -0400
-Received: by an-out-0708.google.com with SMTP id d31so240557and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 16:29:09 -0700 (PDT)
-Message-ID: <40f31dec0803291629v540badd2xb31ab92d860d9ea2@mail.gmail.com> (sfid-20080329_232920_386131_9CDC1D51)
-Date: Sun, 30 Mar 2008 01:29:09 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Helge Deller" <deller@gmx.de>
-Subject: Re: ath5k aborts wireless connections
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, mcgrof@gmail.com
-In-Reply-To: <200803272017.50126.deller@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200803221129.59090.deller@gmx.de>
-	 <200803252111.05726.deller@gmx.de>
-	 <20080327115125.GA10265@hash.localnet>
-	 <200803272017.50126.deller@gmx.de>
+	Wed, 19 Mar 2008 16:15:53 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request
+	a Phase 2 key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080319201004.GC5308@jm.kir.nu>
+References: <1205781593.16475.20.camel@johannes.berg>
+	 <1ba2fa240803171239l6b07ba4ch2b2aaca5e7fa0506@mail.gmail.com>
+	 <1205784255.16475.33.camel@johannes.berg>
+	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
+	 <20080318080435.GA5308@jm.kir.nu> <1205831880.16475.43.camel@johannes.berg>
+	 <20080318102344.GG5308@jm.kir.nu>
+	 <8704f27d0803190942h19b5a9ebjd3b27537c30ef719@mail.gmail.com>
+	 <20080319173922.GB5308@jm.kir.nu>
+	 <1ba2fa240803191141y7feae800g607432f2e9628e37@mail.gmail.com>
+	 <20080319201004.GC5308@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mBmBaRuZFahPwLmnxC5y"
+Date: Wed, 19 Mar 2008 21:15:27 +0100
+Message-Id: <1205957728.16475.72.camel@johannes.berg> (sfid-20080319_201645_216986_ABA016DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/3/27, Helge Deller <deller@gmx.de>:
-> On Thursday 27 March 2008, Bob Copeland wrote:
->  > On Tue, Mar 25, 2008 at 09:11:05PM +0100, Helge Deller wrote:
->  > > On Tuesday 25 March 2008, Bob Copeland wrote:
->  > > > On Tue, Mar 25, 2008 at 2:16 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->  > > > > Hello ppl, sory for the delay ;-)
->  > > > >
->  > > > >  Are you using encryption ? I haven't got such errors on my tests (it
->  > > > >  might be that my setup is really simple) so far...
->  > > >
->  > > > I can't speak for Helge, but in my case yes - WPA-TKIP.
->  > >
->  > > Same here. WPA-PSK & TKIP.
->  >
->  > So, I turned off encryption here and did not get any "invalid Michael
->  > MIC" messages while doing a large apt-get upgrade overnight.  I do get
->  > random pauses but nothing else in my dmesg.
->  >
->  > Helge, can you confirm disabling encryption makes the reset go away?
->
->
-> Yes, I can confirm this.
->
->  Without encryption everything worked pretty OK.
->
->  I only faced one very small hickup, but ath5k reconnected immediately again, so I don't think this is a real problem:
->
->
->  wlan1: authenticated
->  wlan1: associate with AP 00:50:18:3b:2b:04
->
-> wlan1: RX AssocResp from 00:50:18:3b:2b:04 (capab=0x461 status=0 aid=1)
->  wlan1: associated
->  wlan1: No ProbeResp from current AP 00:50:18:3b:2b:04 - assume out of range
->
-> wlan1: Initial auth_alg=0
->  wlan1: authenticate with AP 00:50:18:3b:2b:04
->  wlan1: RX authentication from 00:50:18:3b:2b:04 (alg=0 transaction=2 status=0)
->  wlan1: authenticated
->
->
-> Helge
->
 
-Since we use software encryption for now we 'll need to trace this
-inside base.c or higher on the stack. Anyone with similar problems
-with other drivers that use software encryption ???
+--=-mBmBaRuZFahPwLmnxC5y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+
+> The IEEE 802.11 name for this would be "default key". IEEE 802.1X (or
+> well, RFC 3580 is the authoritative specification for this) calls it
+> "broadcast (default key)". Please note that this is not really a key
+> that is always used both for unicast and broadcast. If there is a
+> key-mapping key (unicast/individual) for the matching
+> transmitter/receiver addresses, that key will be used instead. The "old
+> WEP key" way of using only statically configured default keys just does
+> not set the key-mapping key and because of that, the default key ends up
+> being used for all frames (or well, one of the possible four default
+> keys).
+
+That agrees with what I did in mac80211, but not with Intel's hardware.
+
+johannes
+
+--=-mBmBaRuZFahPwLmnxC5y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+F0XqVg1VMiehFYAQIa5Q//dsJBwboxj3BqyO+vlDoVccAG3aM3IpwE
+OH95mR67PUJXeSrDqTvfOe09jen3EoRkoin71mId4IwhlNKIl3pzI8uQGiUN+K5c
+yud4uzBNfqJ7Fp33YOBF0sRy49ooYJLSxnx/kjrdEpZxS43uUIlsKzdi1i2FZOjS
+bzBdQWbxbzaQzqrtiuIZ8OmPXFR+GEXtD3whJmnyoVChKMx8aYZwSewXz1z8dh5Y
+RhhDF4zL7AdidfqKmpuREM27w+2i2omkhIfp0dQBBOWhD5JO1If+stxNwcIZBrT+
+/KjX8oGvn9LcXVPbyCVOrSnoLvvFdfTdaq7MUONUi3K13i2kAKQ37WO0QEJ7zOYH
+TTIQ+bgiEDgvqGQRO2VoVbROcy3ijKwX4ruVmP+ropru9HNmEGHra60/XpXpdV4Z
+NBnUI0dDc+67Rt7hjqiP38oICMVE41YjSq8FIUz1iYWvD7RCiz2s9wd9ZIhbP906
+CTRtX2fc11Y/NlnzYWmS9IcAWFz9Kb2wyorbZSiA9p5e64sNR+1TBTznBodWhNkn
+qnJ/W5ByN0DtnHZSJMhe4P72GsIjIRlE5wGmGXa2sDazhy79xKQ6Iyd8AoimPF60
+YUJNJGNHxTTuRbBgJqAcqZ25WRz8a+m+WEJ1LR7LDVUYr78HqIeOtP2cCmhSTFRP
+TOYgdMyStuU=
+=hm/3
+-----END PGP SIGNATURE-----
+
+--=-mBmBaRuZFahPwLmnxC5y--
+
