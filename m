@@ -1,187 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:46108 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752087AbYCBKsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 05:48:03 -0500
-Date: Sun, 2 Mar 2008 11:33:10 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Chris Clayton <chris2553@googlemail.com>, ivdoorn@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mike Kelly <pioto@pioto.org>
-Subject: Re: 2.6.25-rc2 regression in rt61pci wireless driver
-Message-ID: <20080302113310.7acbe9b3@morte> (sfid-20080302_104851_585945_9D0DA400)
-In-Reply-To: <20080227172546.GD3078@tuxdriver.com>
-References: <c6b1100b0802160406l24fed9dcje1dbfc8907fd7a16@mail.gmail.com>
-	<200802252104.32416.chris2553@googlemail.com>
-	<a32f33a40802251409ofbdab60w4a95c8aaefaad70a@mail.gmail.com>
-	<200802261911.39577.chris2553@googlemail.com>
-	<20080226194838.GD3013@tuxdriver.com>
-	<c6b1100b0802261313v12fb9cd5j6501e80f6d071019@mail.gmail.com>
-	<20080226223814.4ef2b435@morte>
-	<c6b1100b0802261436i7c5a4136j753501933037187@mail.gmail.com>
-	<20080227082642.218b8014@morte>
-	<20080227155111.GB3078@tuxdriver.com>
-	<20080227172546.GD3078@tuxdriver.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036AbYCTKMJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 06:12:09 -0400
+Subject: RE: [PATCH] iwlwifi: prevent tuning during scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Abbas, Mohamed" <mohamed.abbas@intel.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <33E1C72C74DBE747B7B59C1740F7443702FFB902@orsmsx417.amr.corp.intel.com>
+References: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20080319_234534_228497_EC4DD4E8) <1205971612.16475.87.camel@johannes.berg>
+	 <33E1C72C74DBE747B7B59C1740F7443702FFB902@orsmsx417.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qcV5gKtTuLAPye82eQdX"
+Date: Thu, 20 Mar 2008 11:11:44 +0100
+Message-Id: <1206007904.16475.97.camel@johannes.berg> (sfid-20080320_101216_601687_B1E90AFF)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 27 Feb 2008 12:25:46 -0500
-"John W. Linville" <linville@tuxdriver.com> wrote:
 
-> That might be easier said than done.  It looks like that patch depends
-> on the big cfg80211 API change queued for 2.6.26.
-> 
-> Stefano offered to rebase that on 2.6.25.  Stefano, could you post
-> that as part of this thread?
-
-Sorry for the delay. This is based on 2.6.25-rc3. Please test.
-
----
-
-Merge rate_control_pid_shift_adjust() to rate_control_pid_adjust_rate()
-in order to make the learning algorithm aware of constraints on rates. Also
-add some comments and rename variables.
-
-This fixes a bug which prevented 802.11b/g non-AP STAs from working with
-802.11b only AP STAs.
-
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-Index: linux-2.6.24/net/mac80211/rc80211_pid_algo.c
-===================================================================
---- linux-2.6.24.orig/net/mac80211/rc80211_pid_algo.c
-+++ linux-2.6.24/net/mac80211/rc80211_pid_algo.c
-@@ -2,7 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
-- * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
-+ * Copyright 2007-2008, Stefano Brivio <stefano.brivio@polimi.it>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -63,72 +63,66 @@
-  * RC_PID_ARITH_SHIFT.
-  */
- 
--
--/* Shift the adjustment so that we won't switch to a lower rate if it exhibited
-- * a worse failed frames behaviour and we'll choose the highest rate whose
-- * failed frames behaviour is not worse than the one of the original rate
-- * target. While at it, check that the adjustment is within the ranges. Then,
-- * provide the new rate index. */
--static int rate_control_pid_shift_adjust(struct rc_pid_rateinfo *r,
--					 int adj, int cur, int l)
--{
--	int i, j, k, tmp;
--
--	j = r[cur].rev_index;
--	i = j + adj;
--
--	if (i < 0)
--		return r[0].index;
--	if (i >= l - 1)
--		return r[l - 1].index;
--
--	tmp = i;
--
--	if (adj < 0) {
--		for (k = j; k >= i; k--)
--			if (r[k].diff <= r[j].diff)
--				tmp = k;
--	} else {
--		for (k = i + 1; k + i < l; k++)
--			if (r[k].diff <= r[i].diff)
--				tmp = k;
--	}
--
--	return r[tmp].index;
--}
--
-+/* Adjust the rate while ensuring that we won't switch to a lower rate if it
-+ * exhibited a worse failed frames behaviour and we'll choose the highest rate
-+ * whose failed frames behaviour is not worse than the one of the original rate
-+ * target. While at it, check that the new rate is valid. */
- static void rate_control_pid_adjust_rate(struct ieee80211_local *local,
- 					 struct sta_info *sta, int adj,
- 					 struct rc_pid_rateinfo *rinfo)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hw_mode *mode;
--	int newidx;
--	int maxrate;
--	int back = (adj > 0) ? 1 : -1;
-+	int cur_sorted, new_sorted, probe, tmp, n_bitrates;
-+	int cur = sta->txrate;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
- 
- 	mode = local->oper_hw_mode;
--	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
-+	n_bitrates = mode->num_rates;
- 
--	newidx = rate_control_pid_shift_adjust(rinfo, adj, sta->txrate,
--					       mode->num_rates);
-+	/* Map passed arguments to sorted values. */
-+	cur_sorted = rinfo[cur].rev_index;
-+	new_sorted = cur_sorted + adj;
-+
-+	/* Check limits. */
-+	if (new_sorted < 0)
-+		new_sorted = rinfo[0].rev_index;
-+	else if (new_sorted >= n_bitrates)
-+		new_sorted = rinfo[n_bitrates - 1].rev_index;
- 
--	while (newidx != sta->txrate) {
--		if (rate_supported(sta, mode, newidx) &&
--		    (maxrate < 0 || newidx <= maxrate)) {
--			sta->txrate = newidx;
--			break;
--		}
-+	tmp = new_sorted;
- 
--		newidx += back;
-+	if (adj < 0) {
-+		/* Ensure that the rate decrease isn't disadvantageous. */
-+		for (probe = cur_sorted; probe >= new_sorted; probe--)
-+			if (rinfo[probe].diff <= rinfo[cur_sorted].diff &&
-+			    rate_supported(sta, mode, rinfo[probe].index))
-+				tmp = probe;
-+	} else {
-+		/* Look for rate increase with zero (or below) cost. */
-+		for (probe = new_sorted + 1; probe < n_bitrates; probe++)
-+			if (rinfo[probe].diff <= rinfo[new_sorted].diff &&
-+			    rate_supported(sta, mode, rinfo[probe].index))
-+				tmp = probe;
- 	}
- 
-+	/* Fit the rate found to the nearest supported rate. */
-+	do {
-+		if (rate_supported(sta, mode, rinfo[tmp].index)) {
-+			sta->txrate = rinfo[tmp].index;
-+			break;
-+		}
-+		if (adj < 0)
-+			tmp--;
-+		else
-+			tmp++;
-+	} while (tmp < n_bitrates && tmp >= 0);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	rate_control_pid_event_rate_change(
- 		&((struct rc_pid_sta_info *)sta->rate_ctrl_priv)->events,
--		newidx, mode->rates[newidx].rate);
-+		cur, mode->rates[cur].rate);
- #endif
- }
- 
+--=-qcV5gKtTuLAPye82eQdX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Ciao
-Stefano
+On Wed, 2008-03-19 at 20:46 -0700, Abbas, Mohamed wrote:
+> We can not call any host command that change active channel during
+> scanning. Actually we do cancel scan if config callback was called
+> during scanning. So if a user tried to change channel while scanning
+> this patch will delay the channel change until scan finish, this is the
+> same behavior as sw scan.
+
+Ok, nothing against the patch, but please resend it with a proper
+subject.
+
+johannes
+
+--=-qcV5gKtTuLAPye82eQdX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+I4X6Vg1VMiehFYAQJHjxAAkEnhdkcvJwy/gVjJawK64ZDIrT8BlYF9
+RnOeCMPjPjaL4lbwPkQFuo54F7mWXz+cSIJjCGHOn4cOqZ0NaBy1W/u9dn2TQa/J
+cDJUd8ZOhdxzbZJXCSYM5WS5eSFhyrFcd3pZ6r9bldxjdz8hpEPzZ9lzyUcq3YhE
+UpbIJ9qzbEbCNT1MexGgZN8yS57HKHWOIACG/2AosJaxdjFytrcUTOzTZ/SxbTPA
+yqCo1YFFidkJ0Iz5KPE1ShCa+BAzHTDEnKG6vLst/rXoG5Prro15Sibq4ARQ9cxa
+ZwcVulTid3ULxqotuLq5gnmdKzUdhV+3gMWSqLjKr7xCWtJdrVwxLmAZe5GFznZ+
+qjn8C7uiKHK11//d+yPRaIlp2pKGLUdqWR7os3jy9ACfFGDSW9lbreDZSgx6Jq+Z
+irMOTNciaLz361Dpt2g/AFm1Notf2lk76ea6ulW/+xU1ne/lGbUVtocNatqcBsr+
+K4WIYJJ1p3e/ssJS0EEJrpwSQHN9qxrR90pG+v8lj5gYl9aCHyz7FSNmcUtjCOjZ
+iOmb6UyErF4Bm+lgrFBM4leY3HqxFIxm0YGR4NEdHqaWKXDVPqiuXjhtLc0IZzuK
+xhEwyu52Qxn66LDu9GzuX8pbA9yFlRyKSpWNTNRvG9B3/hsiMGNQN3iEC7C7JmnP
+Qu01MJXdyPE=
+=XhWb
+-----END PGP SIGNATURE-----
+
+--=-qcV5gKtTuLAPye82eQdX--
+
