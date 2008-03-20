@@ -1,206 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34393 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752694AbYCQVi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 17:38:28 -0400
-Subject: Re: [PATCH, take 2] libertas: convert GET_LOG to a direct command
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803171245.58490.hs4233@mail.mn-solutions.de>
-References: <200803131010.32763.hs4233@mail.mn-solutions.de>
-	 <1205419021.23812.8.camel@localhost.localdomain>
-	 <200803171245.58490.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 17 Mar 2008 17:32:54 -0400
-Message-Id: <1205789574.9583.13.camel@localhost.localdomain> (sfid-20080317_220641_555978_1B6BED03)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60828
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754982AbYCTVMv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 17:12:51 -0400
+Date: Thu, 20 Mar 2008 14:13:07 -0700 (PDT)
+Message-Id: <20080320.141307.173590705.davem@davemloft.net> (sfid-20080320_211256_479866_CD9380A7)
+To: johannes@sipsolutions.net
+Cc: sam@ravnborg.org, dsd@gentoo.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
+ symbol
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1206038373.16475.150.camel@johannes.berg>
+References: <1206023695.16475.137.camel@johannes.berg>
+	<20080320181310.GA17884@uranus.ravnborg.org>
+	<1206038373.16475.150.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-17 at 12:45 +0100, Holger Schurig wrote:
-> [PATCH] libertas: convert GET_LOG to a direct command
-> 
-> Now uses __lbs_cmd() to get the "log" (it's actually more a snapshot of
-> various counters, not a sequential log). Besides the "mechanical" convertion
-> the patch add the following logical changes:
-> 
-> * Removes the priv->logmsg variable, it was only used in one place anyway,
->   also don't blindly get the counters when associating. Getting the
->   counters then the user asks via WEXT for them is good enought.
-> * don't set wstats.discard.fragment with log.rxfrag, because the latter is
->   a counter for successfully received packets, not for fragmented packets.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 20 Mar 2008 19:39:33 +0100
 
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-17 11:38:04.000000000 +0100
-> @@ -820,6 +821,7 @@ static struct iw_statistics *lbs_get_wir
->  	int stats_valid = 0;
->  	u8 rssi;
->  	u32 tx_retries;
-> +	struct cmd_ds_802_11_get_log log;
->  
->  	lbs_deb_enter(LBS_DEB_WEXT);
->  
-> @@ -863,7 +865,11 @@ static struct iw_statistics *lbs_get_wir
->  	/* Quality by TX errors */
->  	priv->wstats.discard.retries = priv->stats.tx_errors;
->  
-> -	tx_retries = le32_to_cpu(priv->logmsg.retry);
-> +	memset(&log, 0, sizeof(log));
-> +	log.hdr.size = cpu_to_le16(sizeof(log));
-> +	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
-> +
-> +	tx_retries = le32_to_cpu(log.retry);
->  
->  	if (tx_retries > 75)
->  		tx_qual = (90 - tx_retries) * POOR / 15;
-> @@ -879,10 +885,9 @@ static struct iw_statistics *lbs_get_wir
->  		    (PERFECT - VERY_GOOD) / 50 + VERY_GOOD;
->  	quality = min(quality, tx_qual);
->  
-> -	priv->wstats.discard.code = le32_to_cpu(priv->logmsg.wepundecryptable);
-> -	priv->wstats.discard.fragment = le32_to_cpu(priv->logmsg.rxfrag);
-> +	priv->wstats.discard.code = le32_to_cpu(log.wepundecryptable);
->  	priv->wstats.discard.retries = tx_retries;
-> -	priv->wstats.discard.misc = le32_to_cpu(priv->logmsg.ackfailure);
-> +	priv->wstats.discard.misc = le32_to_cpu(log.ackfailure);
->  
->  	/* Calculate quality */
->  	priv->wstats.qual.qual = min_t(u8, quality, 100);
-> @@ -892,8 +897,6 @@ static struct iw_statistics *lbs_get_wir
->  	/* update stats asynchronously for future calls */
->  	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
->  					0, 0, NULL);
-> -	lbs_prepare_and_send_command(priv, CMD_802_11_GET_LOG, 0,
-> -					0, 0, NULL);
->  out:
->  	if (!stats_valid) {
->  		priv->wstats.miss.beacon = 0;
-> Index: wireless-testing/drivers/net/wireless/libertas/assoc.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/assoc.c	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/assoc.c	2008-03-17 11:21:29.000000000 +0100
-> @@ -628,10 +628,6 @@ void lbs_association_worker(struct work_
->  			lbs_prepare_and_send_command(priv,
->  				CMD_802_11_RSSI,
->  				0, CMD_OPTION_WAITFORRSP, 0, NULL);
-> -
-> -			lbs_prepare_and_send_command(priv,
-> -				CMD_802_11_GET_LOG,
-> -				0, CMD_OPTION_WAITFORRSP, 0, NULL);
->  		} else {
->  			ret = -1;
->  		}
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-17 11:22:06.000000000 +0100
-> @@ -454,18 +454,6 @@ static int lbs_cmd_802_11_reset(struct l
->  	return 0;
->  }
->  
-> -static int lbs_cmd_802_11_get_log(struct lbs_private *priv,
-> -				   struct cmd_ds_command *cmd)
-> -{
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -	cmd->command = cpu_to_le16(CMD_802_11_GET_LOG);
-> -	cmd->size =
-> -		cpu_to_le16(sizeof(struct cmd_ds_802_11_get_log) + S_DS_GEN);
-> -
-> -	lbs_deb_leave(LBS_DEB_CMD);
-> -	return 0;
-> -}
-> -
->  static int lbs_cmd_802_11_get_stat(struct lbs_private *priv,
->  				    struct cmd_ds_command *cmd)
->  {
-> @@ -1384,10 +1372,6 @@ int lbs_prepare_and_send_command(struct 
->  		ret = lbs_cmd_802_11_reset(priv, cmdptr, cmd_action);
->  		break;
->  
-> -	case CMD_802_11_GET_LOG:
-> -		ret = lbs_cmd_802_11_get_log(priv, cmdptr);
-> -		break;
-> -
->  	case CMD_802_11_AUTHENTICATE:
->  		ret = lbs_cmd_80211_authenticate(priv, cmdptr, pdata_buf);
->  		break;
-> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-17 11:21:29.000000000 +0100
-> @@ -303,20 +303,6 @@ static int lbs_ret_802_11_eeprom_access(
->  	return 0;
->  }
->  
-> -static int lbs_ret_get_log(struct lbs_private *priv,
-> -			    struct cmd_ds_command *resp)
-> -{
-> -	struct cmd_ds_802_11_get_log *logmessage = &resp->params.glog;
-> -
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -
-> -	/* Stored little-endian */
-> -	memcpy(&priv->logmsg, logmessage, sizeof(struct cmd_ds_802_11_get_log));
-> -
-> -	lbs_deb_leave(LBS_DEB_CMD);
-> -	return 0;
-> -}
-> -
->  static int lbs_ret_802_11_bcn_ctrl(struct lbs_private * priv,
->  					struct cmd_ds_command *resp)
->  {
-> @@ -352,10 +338,6 @@ static inline int handle_cmd_response(st
->  		ret = lbs_ret_reg_access(priv, respcmd, resp);
->  		break;
->  
-> -	case CMD_RET(CMD_802_11_GET_LOG):
-> -		ret = lbs_ret_get_log(priv, resp);
-> -		break;
-> -
->  	case CMD_RET_802_11_ASSOCIATE:
->  	case CMD_RET(CMD_802_11_ASSOCIATE):
->  	case CMD_RET(CMD_802_11_REASSOCIATE):
-> Index: wireless-testing/drivers/net/wireless/libertas/dev.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/dev.h	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/dev.h	2008-03-17 11:21:29.000000000 +0100
-> @@ -323,8 +323,6 @@ struct lbs_private {
->  	u8 *prdeeprom;
->  	struct lbs_offset_value offsetvalue;
->  
-> -	struct cmd_ds_802_11_get_log logmsg;
-> -
->  	u32 monitormode;
->  	u8 fw_ready;
->  };
-> Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-17 11:21:02.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-17 11:21:29.000000000 +0100
-> @@ -195,6 +195,8 @@ struct cmd_ds_802_11_scan_rsp {
->  };
->  
->  struct cmd_ds_802_11_get_log {
-> +	struct cmd_header hdr;
-> +
->  	__le32 mcasttxframe;
->  	__le32 failed;
->  	__le32 retry;
-> @@ -701,7 +703,6 @@ struct cmd_ds_command {
->  		struct cmd_ds_802_11_ad_hoc_start ads;
->  		struct cmd_ds_802_11_reset reset;
->  		struct cmd_ds_802_11_ad_hoc_result result;
-> -		struct cmd_ds_802_11_get_log glog;
->  		struct cmd_ds_802_11_authenticate auth;
->  		struct cmd_ds_802_11_get_stat gstat;
->  		struct cmd_ds_802_3_get_stat gstat_8023;
+> In many cases, especially in networking, it can be beneficial to
+> know at compile time whether the architecture can do unaligned
+> accesses. This patch introduces a new Kconfig symbol
+> 	ARCH_CAN_UNALIGNED_ACCESS
+> for that purpose and adds it to the powerpc and x86 architectures.
+> Also add some documentation about alignment and networking, and
+> especially one intended use of this symbol.
 > 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
+I think you're semantically testing the wrong thing.
+
+It's not if unaligned accesses are supported, it's if they are
+efficient enough or not.
+
+For example, sparc64 fully handles unaligned accesses but taking the
+trap to fix it up is slow.  So sparc64 "can" handle unaligned
+accesses, but whether we want to set this symbol or not is another
+matter.
