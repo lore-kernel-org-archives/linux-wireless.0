@@ -1,222 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55887 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:19665 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758159AbYCSTnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:43:43 -0400
-Subject: Re: [PATCH] libertas: misc power saving adjusts
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803191425.18653.hs4233@mail.mn-solutions.de>
-References: <200803191425.18653.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 19 Mar 2008 10:58:43 -0400
-Message-Id: <1205938723.26119.35.camel@localhost.localdomain> (sfid-20080319_194526_462472_19AB2FF6)
-Mime-Version: 1.0
+	id S1752822AbYCTNIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 09:08:40 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 5/7 V2] mac80211: allows driver to request a Phase 1 RX key
+Date: Thu, 20 Mar 2008 15:06:42 +0200
+Message-Id: <1206018403-8308-3-git-send-email-tomas.winkler@intel.com> (sfid-20080320_130851_573343_7D692F74)
+In-Reply-To: <1206018403-8308-2-git-send-email-tomas.winkler@intel.com>
+References: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
+ <1206018403-8308-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-19 at 14:25 +0100, Holger Schurig wrote:
-> * firmware for the CF card supports power saving
-> * the driver currenly only accept "iwconfig ethX power on|off", so
->   I fixed what the range wext ioctl reports.
-> * initialize value/flags in lbs_get_power()
-> * get rid of unused parameter psmode in lbs_ps_confirm_sleep()
-> * some minor debug output tweaks
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+This patch makes mac80211 able to send a phase1 key for TKIP
+decryption.
+This is needed for drivers that don't do the rekeying by themselves
+(i.e. iwlwifi). Upon IV16 wrap around, the packet is decrypted in SW,
+if decryption is ok, mac80211 calls to update_tkip_key  with a new
+phase 1 RX key.
 
-> Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-03-19 12:44:06.000000000 +0100
-> @@ -882,6 +882,9 @@ static int if_cs_probe(struct pcmcia_dev
->  		goto out3;
->  	}
->  
-> +	/* The firmware for the CF card supports powersave */
-> +	priv->ps_supported = 1;
-> +
->  	ret = 0;
->  	goto out;
->  
-> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-03-19 12:44:06.000000000 +0100
-> @@ -656,13 +656,10 @@ static int lbs_get_range(struct net_devi
->  	range->num_encoding_sizes = 2;
->  	range->max_encoding_tokens = 4;
->  
-> -	range->min_pmp = 1000000;
-> -	range->max_pmp = 120000000;
-> -	range->min_pmt = 1000;
-> -	range->max_pmt = 1000000;
-> -	range->pmp_flags = IW_POWER_PERIOD;
-> -	range->pmt_flags = IW_POWER_TIMEOUT;
-> -	range->pm_capa = IW_POWER_PERIOD | IW_POWER_TIMEOUT | IW_POWER_ALL_R;
-> +	/*
-> + 	 * Right now we support only "iwconfig ethX power on|off"
-> +	 */
-> +	range->pm_capa = IW_POWER_ON;
->  
->  	/*
->  	 * Minimum version we recommend
-> @@ -784,21 +781,14 @@ static int lbs_get_power(struct net_devi
->  			  struct iw_param *vwrq, char *extra)
->  {
->  	struct lbs_private *priv = dev->priv;
-> -	int mode;
->  
->  	lbs_deb_enter(LBS_DEB_WEXT);
->  
-> -	mode = priv->psmode;
-> -
-> -	if ((vwrq->disabled = (mode == LBS802_11POWERMODECAM))
-> -	    || priv->connect_status == LBS_DISCONNECTED)
-> -	{
-> -		goto out;
-> -	}
-> -
->  	vwrq->value = 0;
-> +	vwrq->flags = 0;
-> +	vwrq->disabled = priv->psmode == LBS802_11POWERMODECAM
-> +		|| priv->connect_status == LBS_DISCONNECTED;
->  
-> -out:
->  	lbs_deb_leave(LBS_DEB_WEXT);
->  	return 0;
->  }
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-19 12:44:06.000000000 +0100
-> @@ -1940,10 +1940,6 @@ static int sendconfirmsleep(struct lbs_p
->  	int ret = 0;
->  
->  	lbs_deb_enter(LBS_DEB_HOST);
-> -
-> -	lbs_deb_host("SEND_SLEEPC_CMD: before download, cmd size %d\n",
-> -	       size);
-> -
->  	lbs_deb_hex(LBS_DEB_HOST, "sleep confirm command", cmdptr, size);
->  
->  	ret = priv->hw_host_to_card(priv, MVMS_CMD, cmdptr, size);
-> @@ -1966,8 +1962,6 @@ static int sendconfirmsleep(struct lbs_p
->  			       priv->intcounter);
->  		}
->  		spin_unlock_irqrestore(&priv->driver_lock, flags);
-> -
-> -		lbs_deb_host("SEND_SLEEPC_CMD: sent confirm sleep\n");
->  	}
->  
->  	lbs_deb_leave_args(LBS_DEB_HOST, "ret %d", ret);
-> @@ -2019,10 +2013,10 @@ void lbs_ps_wakeup(struct lbs_private *p
->   *  @param psmode  	Power Saving mode
->   *  @return 	   	n/a
->   */
-> -void lbs_ps_confirm_sleep(struct lbs_private *priv, u16 psmode)
-> +void lbs_ps_confirm_sleep(struct lbs_private *priv)
->  {
->  	unsigned long flags =0;
-> -	u8 allowed = 1;
-> +	int allowed = 1;
->  
->  	lbs_deb_enter(LBS_DEB_HOST);
->  
-> Index: wireless-testing/drivers/net/wireless/libertas/decl.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-03-19 12:44:06.000000000 +0100
-> @@ -49,7 +49,7 @@ int lbs_set_regiontable(struct lbs_priva
->  int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
->  
->  void lbs_ps_sleep(struct lbs_private *priv, int wait_option);
-> -void lbs_ps_confirm_sleep(struct lbs_private *priv, u16 psmode);
-> +void lbs_ps_confirm_sleep(struct lbs_private *priv);
->  void lbs_ps_wakeup(struct lbs_private *priv, int wait_option);
->  
->  struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
-> Index: wireless-testing/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-19 12:44:06.000000000 +0100
-> @@ -802,7 +802,7 @@ static int lbs_thread(void *data)
->  				lbs_deb_thread("main_thread: PRE_SLEEP--intcounter=%d currenttxskb=%p dnld_sent=%d cur_cmd=%p, confirm now\n",
->  					       priv->intcounter, priv->currenttxskb, priv->dnld_sent, priv->cur_cmd);
->  
-> -				lbs_ps_confirm_sleep(priv, (u16) priv->psmode);
-> +				lbs_ps_confirm_sleep(priv);
->  			} else {
->  				/* workaround for firmware sending
->  				 * deauth/linkloss event immediately
-> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-19 12:42:12.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-19 12:44:06.000000000 +0100
-> @@ -613,11 +613,9 @@ int lbs_process_event(struct lbs_private
->  	eventcause = priv->eventcause >> SBI_EVENT_CAUSE_SHIFT;
->  	spin_unlock_irq(&priv->driver_lock);
->  
-> -	lbs_deb_cmd("event cause %d\n", eventcause);
-> -
->  	switch (eventcause) {
->  	case MACREG_INT_CODE_LINK_SENSED:
-> -		lbs_deb_cmd("EVENT: MACREG_INT_CODE_LINK_SENSED\n");
-> +		lbs_deb_cmd("EVENT: link sensed\n");
->  		break;
->  
->  	case MACREG_INT_CODE_DEAUTHENTICATED:
-> @@ -636,7 +634,7 @@ int lbs_process_event(struct lbs_private
->  		break;
->  
->  	case MACREG_INT_CODE_PS_SLEEP:
-> -		lbs_deb_cmd("EVENT: sleep\n");
-> +		lbs_deb_cmd("EVENT: ps sleep\n");
->  
->  		/* handle unexpected PS SLEEP event */
->  		if (priv->psstate == PS_STATE_FULL_POWER) {
-> @@ -646,17 +644,17 @@ int lbs_process_event(struct lbs_private
->  		}
->  		priv->psstate = PS_STATE_PRE_SLEEP;
->  
-> -		lbs_ps_confirm_sleep(priv, (u16) priv->psmode);
-> +		lbs_ps_confirm_sleep(priv);
->  
->  		break;
->  
->  	case MACREG_INT_CODE_HOST_AWAKE:
-> -		lbs_deb_cmd("EVENT: HOST_AWAKE\n");
-> +		lbs_deb_cmd("EVENT: host awake\n");
->  		lbs_send_confirmwake(priv);
->  		break;
->  
->  	case MACREG_INT_CODE_PS_AWAKE:
-> -		lbs_deb_cmd("EVENT: awake\n");
-> +		lbs_deb_cmd("EVENT: ps awake\n");
->  		/* handle unexpected PS AWAKE event */
->  		if (priv->psstate == PS_STATE_FULL_POWER) {
->  			lbs_deb_cmd(
-> @@ -687,14 +685,16 @@ int lbs_process_event(struct lbs_private
->  		lbs_deb_cmd("EVENT: MULTICAST MIC ERROR\n");
->  		handle_mic_failureevent(priv, MACREG_INT_CODE_MIC_ERR_MULTICAST);
->  		break;
-> +
->  	case MACREG_INT_CODE_MIB_CHANGED:
-> +		lbs_deb_cmd("EVENT: MIB CHANGED\n");
-> +		break;
->  	case MACREG_INT_CODE_INIT_DONE:
-> +		lbs_deb_cmd("EVENT: INIT DONE\n");
->  		break;
-> -
->  	case MACREG_INT_CODE_ADHOC_BCN_LOST:
->  		lbs_deb_cmd("EVENT: ADHOC beacon lost\n");
->  		break;
-> -
->  	case MACREG_INT_CODE_RSSI_LOW:
->  		lbs_pr_alert("EVENT: rssi low\n");
->  		break;
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h |   17 +++++++++++++++++
+ net/mac80211/tkip.c    |   15 ++++++++++++++-
+ net/mac80211/tkip.h    |    2 +-
+ net/mac80211/wpa.c     |    2 +-
+ 4 files changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2a13458..48428a6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -827,6 +827,16 @@ static inline void SET_IEEE80211_PERM_ADDR(struct ieee80211_hw *hw, u8 *addr)
+  * parameter is guaranteed to be valid until another call to set_key()
+  * removes it, but it can only be used as a cookie to differentiate
+  * keys.
++ *
++ * In TKIP some HW need to be provided a phase 1 key, for RX decryption
++ * acceleration (i.e. iwlwifi). Those drivers should provide update_tkip_key
++ * handler.
++ * The update_tkip_key() call updates the driver with the new phase 1 key.
++ * This happens everytime the iv16 wraps around (every 65536 packets). The
++ * set_key() call will happen only once for each key (unless the AP did
++ * rekeying), it will not include a valid phase 1 key. The valid phase 1 key is
++ * provided by udpate_tkip_key only. The trigger that makes mac80211 call this
++ * handler is software decryption with wrap around of iv16.
+  */
+ 
+ /**
+@@ -1003,6 +1013,10 @@ enum ieee80211_ampdu_mlme_action {
+  *	and remove_interface calls, i.e. while the interface with the
+  *	given local_address is enabled.
+  *
++ * @update_tkip_key: See the section "Hardware crypto acceleration"
++ * 	This callback will be called in the context of Rx. Called for drivers
++ * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
++ *
+  * @hw_scan: Ask the hardware to service the scan request, no need to start
+  *	the scan state machine in stack. The scan must honour the channel
+  *	configuration done by the regulatory agent in the wiphy's registered
+@@ -1094,6 +1108,9 @@ struct ieee80211_ops {
+ 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		       const u8 *local_address, const u8 *address,
+ 		       struct ieee80211_key_conf *key);
++	void (*update_tkip_key)(struct ieee80211_hw *hw,
++			struct ieee80211_key_conf *conf, const u8 *address,
++			u32 iv32, u16 *phase1key);
+ 	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
+ 	int (*get_stats)(struct ieee80211_hw *hw,
+ 			 struct ieee80211_low_level_stats *stats);
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 5c36b2d..45d59f1 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -291,7 +291,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 				struct ieee80211_key *key,
+ 				u8 *payload, size_t payload_len, u8 *ta,
+-				int only_iv, int queue,
++				u8 *ra, int only_iv, int queue,
+ 				u32 *out_iv32, u16 *out_iv16)
+ {
+ 	u32 iv32;
+@@ -368,6 +368,19 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 			printk("\n");
+ 		}
+ #endif /* CONFIG_TKIP_DEBUG */
++		if (key->local->ops->update_tkip_key &&
++			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
++			u8 bcast[ETH_ALEN] =
++				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++			u8 *sta_addr = key->sta->addr;
++
++			if (is_multicast_ether_addr(ra))
++				sta_addr = bcast;
++
++			key->local->ops->update_tkip_key(
++				local_to_hw(key->local), &key->conf,
++				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
++		}
+ 	}
+ 
+ 	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index 73d8ef2..ffaee32 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -31,7 +31,7 @@ enum {
+ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 				struct ieee80211_key *key,
+ 				u8 *payload, size_t payload_len, u8 *ta,
+-				int only_iv, int queue,
++				u8 *ra, int only_iv, int queue,
+ 				u32 *out_iv32, u16 *out_iv16);
+ 
+ #endif /* TKIP_H */
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index df0b734..45709ad 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -312,7 +312,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ 	res = ieee80211_tkip_decrypt_data(rx->local->wep_rx_tfm,
+ 					  key, skb->data + hdrlen,
+ 					  skb->len - hdrlen, rx->sta->addr,
+-					  hwaccel, rx->queue,
++					  hdr->addr1, hwaccel, rx->queue,
+ 					  &rx->tkip_iv32,
+ 					  &rx->tkip_iv16);
+ 	if (res != TKIP_DECRYPT_OK || wpa_test) {
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
