@@ -1,102 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:8226 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbYCZWPP (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58929 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423AbYCTTvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 18:15:15 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so3020559wra.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2008 15:15:13 -0700 (PDT)
-Message-ID: <183c1cc10803261515t5589e656w3e3e248dd516cc6e@mail.gmail.com> (sfid-20080326_221521_951151_E403C130)
-Date: Wed, 26 Mar 2008 18:15:12 -0400
-From: "John Goulah" <jgoulah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: problem with iwl4965 and kernel 2.6.24.4
-In-Reply-To: <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com>
-	 <183c1cc10803261149r2f518772j2ea3a1b5df55b2cc@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
+	Thu, 20 Mar 2008 15:51:17 -0400
+Subject: [PATCH/RFC v4] introduce HAVE_UNALIGNED_ACCESS_SUPPORT Kconfig
+	symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <20080320194101.GC17884@uranus.ravnborg.org>
+References: <1206023695.16475.137.camel@johannes.berg>
+	 <20080320181310.GA17884@uranus.ravnborg.org>
+	 <1206038373.16475.150.camel@johannes.berg>
+	 <1206038734.16475.153.camel@johannes.berg>
+	 <20080320194101.GC17884@uranus.ravnborg.org>
+Content-Type: text/plain
+Date: Thu, 20 Mar 2008 20:50:58 +0100
+Message-Id: <1206042658.16475.158.camel@johannes.berg> (sfid-20080320_195124_079785_DFC45D8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 26, 2008 at 5:04 PM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
-> On Wednesday, March 26, 2008 11:49 AM, John Goulah  wrote:
->
->  >
->  > $ iwconfig
->  > lo        no wireless extensions.
->  >
->  > eth1      no wireless extensions.
->  >
->  > sit0      no wireless extensions.
->  >
->  > wmaster0  no wireless extensions.
->  >
->  > Warning: Driver for device wlan0 has been compiled with version 22
->  > of Wireless Extension, while this program supports up to version 20.
->  > Some things may be broken...
->  >
->  > wlan0     IEEE 802.11  ESSID:"goulahnet"
->  >          Mode:Managed  Frequency:2.412 GHz  Access Point:
->  >          Not-Associated Tx-Power=0 dBm
->  >          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->  >          Link Quality:0  Signal level:0  Noise level:0
->  >          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->  >          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->  >
->  >
->  >
->  > Is this warning a problem?  Does this mean I need to get a newer
->  > iwconfig (I'm on debian etch, Wireless-Tools version 28)
->
->  I don't know if it is necessary. In the above iwconfig output it does
->  not look as though you are associated though.
->
->
+In many cases, especially in networking, it can be beneficial to
+know at compile time whether the architecture can do unaligned
+accesses. This patch introduces a new Kconfig symbol
+	HAVE_UNALIGNED_ACCESS_SUPPORT
+for that purpose and adds it to the powerpc and x86 architectures.
+Also add some documentation about alignment and networking, and
+especially one intended use of this symbol.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
+---
+Didn't I say I was going to fix the subject? Sorry.
+
+ Documentation/unaligned-memory-access.txt |   32 +++++++++++++++++++++++++++---
+ arch/Kconfig                              |    3 ++
+ arch/powerpc/Kconfig                      |    1 
+ arch/x86/Kconfig                          |    1 
+ 4 files changed, 34 insertions(+), 3 deletions(-)
+
+--- everything.orig/Documentation/unaligned-memory-access.txt	2008-03-20 15:30:38.000000000 +0100
++++ everything/Documentation/unaligned-memory-access.txt	2008-03-20 19:38:30.000000000 +0100
+@@ -218,9 +218,35 @@ If use of such macros is not convenient,
+ where the source or destination (or both) are of type u8* or unsigned char*.
+ Due to the byte-wise nature of this operation, unaligned accesses are avoided.
+ 
++
++Alignment vs. Networking
++========================
++
++On architectures that require aligned loads, networking requires that the IP
++header is aligned on a four-byte boundary to optimise the IP stack. For
++regular ethernet hardware, the constant NET_IP_ALIGN is used, on most
++architectures this constant has the value 2 because the normal ethernet
++header is 14 bytes long, so in order to get proper alignment one needs to
++DMA to an address that is can be expressed as 4*n + 2. One notable exception
++here is powerpc which defines NET_IP_ALIGN to 0 because DMA to unaligned
++addresses can be very expensive and dwarf the cost of unaligned loads.
++
++For some ethernet hardware that cannot DMA to unaligned addresses like
++4*n+2 or non-ethernet hardware, this can be a problem, and it is then
++required to copy the incoming frame into an aligned buffer. Because this is
++unnecessary on architectures that can do unaligned accesses, the code can be
++made depend on CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT like so:
++
++#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
++	skb = original skb
++#else
++	skb = copy skb
++#endif
++
+ --
+-Author: Daniel Drake <dsd@gentoo.org>
++Authors: Daniel Drake <dsd@gentoo.org>,
++         Johannes Berg <johannes@sipsolutions.net>
+ With help from: Alan Cox, Avuton Olrich, Heikki Orsila, Jan Engelhardt,
+-Johannes Berg, Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock,
+-Uli Kunitz, Vadim Lobanov
++Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock, Uli Kunitz,
++Vadim Lobanov
+ 
+--- everything.orig/arch/powerpc/Kconfig	2008-03-20 15:30:38.000000000 +0100
++++ everything/arch/powerpc/Kconfig	2008-03-20 19:37:22.000000000 +0100
+@@ -91,6 +91,7 @@ config PPC
+ 	select HAVE_OPROFILE
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
++	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 
+ config EARLY_PRINTK
+ 	bool
+--- everything.orig/arch/x86/Kconfig	2008-03-20 15:30:38.000000000 +0100
++++ everything/arch/x86/Kconfig	2008-03-20 19:38:08.000000000 +0100
+@@ -23,6 +23,7 @@ config X86
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
+ 	select HAVE_KVM if ((X86_32 && !X86_VOYAGER && !X86_VISWS && !X86_NUMAQ) || X86_64)
++	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 
+ 
+ config GENERIC_LOCKBREAK
+--- everything.orig/arch/Kconfig	2008-03-20 19:37:26.000000000 +0100
++++ everything/arch/Kconfig	2008-03-20 19:37:34.000000000 +0100
+@@ -36,3 +36,6 @@ config HAVE_KPROBES
+ 
+ config HAVE_KRETPROBES
+ 	def_bool n
++
++config HAVE_UNALIGNED_ACCESS_SUPPORT
++	def_bool n
 
 
-
-For some reason this helped with the association problem:
-
- sudo iwconfig wlan0 ap any
-
-
-
->
->
->  >
->  > Also, is this driver known to work with wpa_supplicant?
->
->  yes
->
->
-
-
-great, wpa_supplicant is also working fine now, I did get a few
-warnings and I wasn't sure if this was ok to ignore, fixable, or would
-need to go to their list with it:
-
-sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf
-ioctl[SIOCSIWENCODEEXT]: No such file or directory
-ioctl[SIOCSIWENCODEEXT]: No such file or directory
-ioctl[SIOCSIWENCODEEXT]: No such file or directory
-ioctl[SIOCSIWENCODEEXT]: No such file or directory
-ioctl[SIOCSIWAUTH]: Operation not supported
-WEXT auth param 4 value 0x0 - Trying to associate with
-00:15:e9:fa:e2:db (SSID='goulahnet' freq=2462 MHz)
-Associated with 00:15:e9:fa:e2:db
-WPA: Key negotiation completed with 00:15:e9:fa:e2:db [PTK=CCMP GTK=CCMP]
-CTRL-EVENT-CONNECTED - Connection to 00:15:e9:fa:e2:db completed
-(auth) [id=0 id_str=]
-
-
-
-
-
-In any case, my wirless card is now working!
-
-Thanks so much,
-John
