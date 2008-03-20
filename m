@@ -1,309 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:5105 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756234AbYCRArm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 20:47:42 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so4253173wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 17:47:41 -0700 (PDT)
-Subject: [PATCH 3/5] b43: fold register write into radio2050_rfover_val
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 17 Mar 2008 17:47:30 -0700
-Message-Id: <1205801250.2329.51.camel@brick> (sfid-20080318_004801_833780_2A86B580)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:19665 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753322AbYCTNIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 09:08:43 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/7 V2] mac80211: get a TKIP phase key from skb
+Date: Thu, 20 Mar 2008 15:06:41 +0200
+Message-Id: <1206018403-8308-2-git-send-email-tomas.winkler@intel.com> (sfid-20080320_130852_705463_46443FC0)
+In-Reply-To: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
+References: <1206018403-8308-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-radio2050_rfover_val was always nested within a b43_phy_write
-to the same register.  Fold the b43_phy_write into radio_rfover_val
-and change all of the returns to gotos.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+This patch makes mac80211 able to compute a TKIP key from an skb.
+The requested key can be a phase 1 or a phase 2 key.
+This is useful for drivers who need to provide tkip key to their
+HW to enable HW encryption.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/b43/phy.c |  153 +++++++++++++++++----------------------
- 1 files changed, 67 insertions(+), 86 deletions(-)
+ include/net/mac80211.h |   30 +++++++++++++++++++++++++++
+ net/mac80211/tkip.c    |   53 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-index b3e369c..bac54bb 100644
---- a/drivers/net/wireless/b43/phy.c
-+++ b/drivers/net/wireless/b43/phy.c
-@@ -3324,14 +3324,17 @@ static u16 b43_radio_core_calibration_value(struct b43_wldev *dev)
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5ab6a35..2a13458 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -644,6 +644,21 @@ enum sta_notify_cmd {
+ };
  
- #define LPD(L, P, D)	(((L) << 2) | ((P) << 1) | ((D) << 0))
--static u16 radio2050_rfover_val(struct b43_wldev *dev,
-+static void radio2050_rfover_val(struct b43_wldev *dev,
- 				u16 phy_register, unsigned int lpd)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	struct ssb_sprom *sprom = &(dev->dev->bus->sprom);
-+	u16 data = 0;
- 
--	if (!phy->gmode)
--		return 0;
-+	if (!phy->gmode) {
-+		data = 0;
-+		goto writereg;
-+	}
- 
- 	if (has_loopback_gain(phy)) {
- 		int max_lb_gain = phy->max_lb_gain;
-@@ -3365,37 +3368,46 @@ static u16 radio2050_rfover_val(struct b43_wldev *dev,
- 		if ((phy->rev < 7) ||
- 		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
- 			if (phy_register == B43_PHY_RFOVER) {
--				return 0x1B3;
-+				data = 0x1B3;
-+				goto writereg;
- 			} else if (phy_register == B43_PHY_RFOVERVAL) {
- 				extlna |= (i << 8);
- 				switch (lpd) {
- 				case LPD(0, 1, 1):
--					return 0x0F92;
-+					data = 0x0F92;
-+					goto writereg;
- 				case LPD(0, 0, 1):
- 				case LPD(1, 0, 1):
--					return (0x0092 | extlna);
-+					data = (0x0092 | extlna);
-+					goto writereg;
- 				case LPD(1, 0, 0):
--					return (0x0093 | extlna);
-+					data = (0x0093 | extlna);
-+					goto writereg;
- 				}
- 				B43_WARN_ON(1);
- 			}
- 			B43_WARN_ON(1);
- 		} else {
- 			if (phy_register == B43_PHY_RFOVER) {
--				return 0x9B3;
-+				data = 0x9B3;
-+				goto writereg;
- 			} else if (phy_register == B43_PHY_RFOVERVAL) {
- 				if (extlna)
- 					extlna |= 0x8000;
- 				extlna |= (i << 8);
- 				switch (lpd) {
- 				case LPD(0, 1, 1):
--					return 0x8F92;
-+					data = 0x8F92;
-+					goto writereg;
- 				case LPD(0, 0, 1):
--					return (0x8092 | extlna);
-+					data = (0x8092 | extlna);
-+					goto writereg;
- 				case LPD(1, 0, 1):
--					return (0x2092 | extlna);
-+					data = (0x2092 | extlna);
-+					goto writereg;
- 				case LPD(1, 0, 0):
--					return (0x2093 | extlna);
-+					data = (0x2093 | extlna);
-+					goto writereg;
- 				}
- 				B43_WARN_ON(1);
- 			}
-@@ -3405,41 +3417,53 @@ static u16 radio2050_rfover_val(struct b43_wldev *dev,
- 		if ((phy->rev < 7) ||
- 		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
- 			if (phy_register == B43_PHY_RFOVER) {
--				return 0x1B3;
-+				data = 0x1B3;
-+				goto writereg;
- 			} else if (phy_register == B43_PHY_RFOVERVAL) {
- 				switch (lpd) {
- 				case LPD(0, 1, 1):
--					return 0x0FB2;
-+					data = 0x0FB2;
-+					goto writereg;
- 				case LPD(0, 0, 1):
--					return 0x00B2;
-+					data = 0x00B2;
-+					goto writereg;
- 				case LPD(1, 0, 1):
--					return 0x30B2;
-+					data = 0x30B2;
-+					goto writereg;
- 				case LPD(1, 0, 0):
--					return 0x30B3;
-+					data = 0x30B3;
-+					goto writereg;
- 				}
- 				B43_WARN_ON(1);
- 			}
- 			B43_WARN_ON(1);
- 		} else {
- 			if (phy_register == B43_PHY_RFOVER) {
--				return 0x9B3;
-+				data = 0x9B3;
-+				goto writereg;
- 			} else if (phy_register == B43_PHY_RFOVERVAL) {
- 				switch (lpd) {
- 				case LPD(0, 1, 1):
--					return 0x8FB2;
-+					data = 0x8FB2;
-+					goto writereg;
- 				case LPD(0, 0, 1):
--					return 0x80B2;
-+					data = 0x80B2;
-+					goto writereg;
- 				case LPD(1, 0, 1):
--					return 0x20B2;
-+					data = 0x20B2;
-+					goto writereg;
- 				case LPD(1, 0, 0):
--					return 0x20B3;
-+					data = 0x20B3;
-+					goto writereg;
- 				}
- 				B43_WARN_ON(1);
- 			}
- 			B43_WARN_ON(1);
- 		}
- 	}
--	return 0;
+ /**
++ * enum ieee80211_tkip_key_type - get tkip key
++ *
++ * Used by drivers which need to get a tkip key for skb. Some drivers need a
++ * phase 1 key, others need a phase 2 key. A single function allows the driver
++ * to get the key, this enum indicates what type of key is required.
++ *
++ * @IEEE80211_TKIP_P1_KEY: the driver needs a phase 1 key
++ * @IEEE80211_TKIP_P2_KEY: the driver needs a phase 2 key
++ */
++enum ieee80211_tkip_key_type {
++	IEEE80211_TKIP_P1_KEY,
++	IEEE80211_TKIP_P2_KEY,
++};
 +
-+writereg:
-+	b43_phy_write(dev, phy_register, data);
++/**
+  * enum ieee80211_hw_flags - hardware flags
+  *
+  * These flags are used to indicate hardware capabilities to
+@@ -1472,6 +1487,21 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
+ int ieee80211_get_hdrlen(u16 fc);
+ 
+ /**
++ * ieee80211_get_tkip_key - get a TKIP rc4 for skb
++ *
++ * This function computes a TKIP rc4 key for an skb. It computes
++ * a phase 1 key if needed (iv16 wraps around). This function is to
++ * be used by drivers which can do HW encryption but need to compute
++ * to phase 1/2 key in SW.
++ *
++ * @keyconf: the parameter passed with the set key
++ * @skb: the skb for which the key is needed
++ * @rc4key: a buffer to which the key will be written
++ */
++void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
++				struct sk_buff *skb,
++				enum ieee80211_tkip_key_type type, u8 *key);
++/**
+  * ieee80211_wake_queue - wake specific queue
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @queue: queue number (counted from zero).
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 3abe194..5c36b2d 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -214,6 +214,59 @@ void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			   key->u.tkip.iv16, rc4key);
  }
  
- struct init2050_saved_values {
-@@ -3525,11 +3549,8 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
- 			b43_phy_write(dev, B43_PHY_LO_CTL, 0);
- 		}
- 
--		b43_phy_write(dev, B43_PHY_RFOVERVAL,
--			      radio2050_rfover_val(dev, B43_PHY_RFOVERVAL,
--						   LPD(0, 1, 1)));
--		b43_phy_write(dev, B43_PHY_RFOVER,
--			      radio2050_rfover_val(dev, B43_PHY_RFOVER, 0));
-+		radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(0, 1, 1));
-+		radio2050_rfover_val(dev, B43_PHY_RFOVER, 0);
- 	}
- 	b43_write16(dev, 0x3E2, b43_read16(dev, 0x3E2) | 0x8000);
- 
-@@ -3554,16 +3575,12 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
- 	if (phy->type == B43_PHYTYPE_B)
- 		b43_radio_write16(dev, 0x78, 0x26);
- 	if (phy->gmode || phy->rev >= 2) {
--		b43_phy_write(dev, B43_PHY_RFOVERVAL,
--			      radio2050_rfover_val(dev, B43_PHY_RFOVERVAL,
--						   LPD(0, 1, 1)));
-+		radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(0, 1, 1));
- 	}
- 	b43_phy_write(dev, B43_PHY_PGACTL, 0xBFAF);
- 	b43_phy_write(dev, B43_PHY_CCK(0x2B), 0x1403);
- 	if (phy->gmode || phy->rev >= 2) {
--		b43_phy_write(dev, B43_PHY_RFOVERVAL,
--			      radio2050_rfover_val(dev, B43_PHY_RFOVERVAL,
--						   LPD(0, 0, 1)));
-+		radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(0, 0, 1));
- 	}
- 	b43_phy_write(dev, B43_PHY_PGACTL, 0xBFA0);
- 	b43_radio_write16(dev, 0x51, b43_radio_read16(dev, 0x51)
-@@ -3581,38 +3598,22 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
- 		b43_phy_write(dev, B43_PHY_CCK(0x5A), 0x0480);
- 		b43_phy_write(dev, B43_PHY_CCK(0x59), 0xC810);
- 		b43_phy_write(dev, B43_PHY_CCK(0x58), 0x000D);
--		if (phy->gmode || phy->rev >= 2) {
--			b43_phy_write(dev, B43_PHY_RFOVERVAL,
--				      radio2050_rfover_val(dev,
--							   B43_PHY_RFOVERVAL,
--							   LPD(1, 0, 1)));
--		}
-+		if (phy->gmode || phy->rev >= 2) 
-+			radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 		b43_phy_write(dev, B43_PHY_PGACTL, 0xAFB0);
- 		udelay(10);
--		if (phy->gmode || phy->rev >= 2) {
--			b43_phy_write(dev, B43_PHY_RFOVERVAL,
--				      radio2050_rfover_val(dev,
--							   B43_PHY_RFOVERVAL,
--							   LPD(1, 0, 1)));
--		}
-+		if (phy->gmode || phy->rev >= 2)
-+			radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 		b43_phy_write(dev, B43_PHY_PGACTL, 0xEFB0);
- 		udelay(10);
--		if (phy->gmode || phy->rev >= 2) {
--			b43_phy_write(dev, B43_PHY_RFOVERVAL,
--				      radio2050_rfover_val(dev,
--							   B43_PHY_RFOVERVAL,
--							   LPD(1, 0, 0)));
--		}
-+		if (phy->gmode || phy->rev >= 2)
-+			radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 0));
- 		b43_phy_write(dev, B43_PHY_PGACTL, 0xFFF0);
- 		udelay(20);
- 		tmp1 += b43_phy_read(dev, B43_PHY_LO_LEAKAGE);
- 		b43_phy_write(dev, B43_PHY_CCK(0x58), 0);
--		if (phy->gmode || phy->rev >= 2) {
--			b43_phy_write(dev, B43_PHY_RFOVERVAL,
--				      radio2050_rfover_val(dev,
--							   B43_PHY_RFOVERVAL,
--							   LPD(1, 0, 1)));
--		}
-+		if (phy->gmode || phy->rev >= 2)
-+			radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 		b43_phy_write(dev, B43_PHY_PGACTL, 0xAFB0);
- 	}
- 	udelay(10);
-@@ -3629,42 +3630,22 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
- 			b43_phy_write(dev, B43_PHY_CCK(0x5A), 0x0D80);
- 			b43_phy_write(dev, B43_PHY_CCK(0x59), 0xC810);
- 			b43_phy_write(dev, B43_PHY_CCK(0x58), 0x000D);
--			if (phy->gmode || phy->rev >= 2) {
--				b43_phy_write(dev, B43_PHY_RFOVERVAL,
--					      radio2050_rfover_val(dev,
--								   B43_PHY_RFOVERVAL,
--								   LPD(1, 0,
--								       1)));
--			}
-+			if (phy->gmode || phy->rev >= 2)
-+				radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 			b43_phy_write(dev, B43_PHY_PGACTL, 0xAFB0);
- 			udelay(10);
--			if (phy->gmode || phy->rev >= 2) {
--				b43_phy_write(dev, B43_PHY_RFOVERVAL,
--					      radio2050_rfover_val(dev,
--								   B43_PHY_RFOVERVAL,
--								   LPD(1, 0,
--								       1)));
--			}
-+			if (phy->gmode || phy->rev >= 2)
-+				radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 			b43_phy_write(dev, B43_PHY_PGACTL, 0xEFB0);
- 			udelay(10);
--			if (phy->gmode || phy->rev >= 2) {
--				b43_phy_write(dev, B43_PHY_RFOVERVAL,
--					      radio2050_rfover_val(dev,
--								   B43_PHY_RFOVERVAL,
--								   LPD(1, 0,
--								       0)));
--			}
-+			if (phy->gmode || phy->rev >= 2)
-+				radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 0));
- 			b43_phy_write(dev, B43_PHY_PGACTL, 0xFFF0);
- 			udelay(10);
- 			tmp2 += b43_phy_read(dev, B43_PHY_LO_LEAKAGE);
- 			b43_phy_write(dev, B43_PHY_CCK(0x58), 0);
--			if (phy->gmode || phy->rev >= 2) {
--				b43_phy_write(dev, B43_PHY_RFOVERVAL,
--					      radio2050_rfover_val(dev,
--								   B43_PHY_RFOVERVAL,
--								   LPD(1, 0,
--								       1)));
--			}
-+			if (phy->gmode || phy->rev >= 2)
-+				radio2050_rfover_val(dev, B43_PHY_RFOVERVAL, LPD(1, 0, 1));
- 			b43_phy_write(dev, B43_PHY_PGACTL, 0xAFB0);
- 		}
- 		tmp2++;
++void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
++			struct sk_buff *skb, enum ieee80211_tkip_key_type type,
++			u8 *outkey)
++{
++	struct ieee80211_key *key = (struct ieee80211_key *)
++			container_of(keyconf, struct ieee80211_key, conf);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	u8 *data = (u8 *) hdr;
++	u16 fc = le16_to_cpu(hdr->frame_control);
++	int hdr_len = ieee80211_get_hdrlen(fc);
++	u8 *ta = hdr->addr2;
++	u16 iv16;
++	u32 iv32;
++
++	iv16 = data[hdr_len] << 8;
++	iv16 += data[hdr_len + 2];
++	iv32 = data[hdr_len + 4] +
++		(data[hdr_len + 5] >> 8) +
++		(data[hdr_len + 6] >> 16) +
++		(data[hdr_len + 7] >> 24);
++
++#ifdef CONFIG_TKIP_DEBUG
++	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
++			iv16, iv32);
++
++	if (iv32 != key->u.tkip.iv32) {
++		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
++			iv32, key->u.tkip.iv32);
++		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
++			"fragmented packet\n");
++	}
++#endif /* CONFIG_TKIP_DEBUG */
++
++	/* Update the p1k only when the iv16 in the packet wraps around, this
++	 * might occur after the wrap around of iv16 in the key in case of
++	 * fragmented packets. */
++	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
++		/* IV16 wrapped around - perform TKIP phase 1 */
++		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
++			iv32, key->u.tkip.p1k);
++		key->u.tkip.tx_initialized = 1;
++	}
++
++	if (type == IEEE80211_TKIP_P1_KEY) {
++		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
++		return;
++	}
++
++	tkip_mixing_phase2(key->u.tkip.p1k,
++		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
++}
++EXPORT_SYMBOL(ieee80211_get_tkip_key);
++
+ /* Encrypt packet payload with TKIP using @key. @pos is a pointer to the
+  * beginning of the buffer containing payload. This payload must include
+  * headroom of eight octets for IV and Ext. IV and taildroom of four octets
 -- 
-1.5.4.4.684.g0e08
+1.5.4.1
 
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
