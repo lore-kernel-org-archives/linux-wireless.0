@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:1342 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277AbYCCVcV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45628 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S939917AbYCTANn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2008 16:32:21 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so361081wxd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2008 13:32:19 -0800 (PST)
-Message-ID: <646765f40803031332o2edc9eecm807bc974ac17dc2@mail.gmail.com> (sfid-20080303_213225_643802_1E6CE957)
-Date: Tue, 4 Mar 2008 08:32:18 +1100
-From: "Julian Calaby" <julian.calaby@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: Netgear WG311v3 - Marvell 88w8355 "Libertas"
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1204558117.3155.1.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com>
-	 <1204472016.13121.27.camel@localhost.localdomain>
-	 <646765f40803021401i65e31e16v5efd0784bffcc177@mail.gmail.com>
-	 <1204505713.3070.0.camel@localhost.localdomain>
-	 <646765f40803022006h39ec0c43uf9af99924dedc29@mail.gmail.com>
-	 <1204558117.3155.1.camel@localhost.localdomain>
+	Wed, 19 Mar 2008 20:13:43 -0400
+Subject: Re: [PATCH] iwlwifi: prevent tuning during scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+In-Reply-To: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com> (sfid-20080319_234534_228497_EC4DD4E8)
+References: <1205970201-22241-1-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20080319_234534_228497_EC4DD4E8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4rRIIQbXyO2JRD4DskME"
+Date: Thu, 20 Mar 2008 01:13:27 +0100
+Message-Id: <1205972007.16475.90.camel@johannes.berg> (sfid-20080320_001348_402965_30C198B8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 4, 2008 at 2:28 AM, Dan Williams <dcbw@redhat.com> wrote:
->
-> On Mon, 2008-03-03 at 15:06 +1100, Julian Calaby wrote:
->  > On Mon, Mar 3, 2008 at 11:55 AM, Dan Williams <dcbw@redhat.com> wrote:
->  > >
->  > > On Mon, 2008-03-03 at 09:01 +1100, Julian Calaby wrote:
->  > >  > Well, that explains why the "Libertas" parts supported by the current
->  > >  > kernel require firmware and why the ndiswrapper driver I'm using
->  > >  > doesn't.
->  > >
->  > >  The 8335 still requires firmware.  Lots of the windows drivers embed the
->  > >  firmware into the .sys or .dll files, whereas on Linux embedding
->  > >  firmware into the driver is quite frowned upon.
->  >
->  > Yeah, I discovered that the mrv8k driver still requires firmware,
->  > despite there being no actual file in the windows driver that I can
->  > point to as being the firmware image.
->
->  It's likely embedded into the sys file, try:
->
->  http://www.saillard.org/linux/mrv8k/files/mrv8k_extract_fw.c
->
->  to extract the firmware from a supported driver file.  At least one
->  versoin of WG311v3 driver seems to be supported there ("NETGEAR
->  WG311v3", "3.1.1.7") for extracting the firmware from.
 
-Thought as much, I've already downloaded it, and will be trying it out tonight.
+--=-4rRIIQbXyO2JRD4DskME
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
 
-(sorry for the dupe, hit the wrong button)
+> +		if (ieee80211_hw_config(local))
+> +			printk(KERN_DEBUG "%s: failed to restore operational "
+> +			       "channel after scan\n", dev->name);
 
--- 
+Also, the message is wrong, it's correct for the sw scan case where we
+in software leave the 'operational channel', but in hw scan case this
+can really only ever make a difference when the channel was changed by
+the user during a scan.
 
-Julian Calaby
+Maybe a better solution would be to make the ioctls wait for the scan to
+finish?
 
-Email: julian.calaby@gmail.com
+johannes
+
+--=-4rRIIQbXyO2JRD4DskME
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+GsJqVg1VMiehFYAQLrvA/+M8K8LQbvPqZTdmw9YqahvhTeXe9F/gBX
+vWOMJzRDVnK4amAuYKNPn6lVzrZWh+SF8Clvwee5zbInmhYddAOoiCco1+BP68on
+N8zMs3f5wrhHgR/TZLif0AXfchPYMXg9c9+/wyPD61Y9MTDodYyv9H35JmIeKJNp
+9FkXvzOk8jgFjVkmsVanluR4BBElg7IcwrJZiVwjOUNm64nyB+AVbntRLsw+JxgM
+iM83wMnMj5T6Uyy/dRFuvib7IGteJtGubp3e0gUbr775YEkGeXmRbabMbNtOvgyp
+Ml89roP2Y+45ZXKaSI+TPAgzW8qmVvn7AvGDcVgzu0VexG0jlMUnJuHpRTZAUc17
+P9Tq/DPTQnWxGPBbDvGZcoNPITft4h2JmYN9hdUiF+qkoLd6/zPG2NA/25crzc8B
+nz0jjFkZCWjbbX+goMvhX9E0Az9zivzqH5p3hAXOnMnr9g3pW/VG6f+e3aOcs+ih
+iu3tQCC9zopfRUQT/bbHw/pBYcsYCH61akli0P/rpemHURQ68XAmKicQx802Gmkm
+X6dIPN334HtDjBsckP5dEGD7v6jHhioSVgfegKrPrPWtpsezpr7RHJU0PsdTXbcI
+g5ZLVqav3uCeqb6dBiamcAZ9M8PXFEvymRK9zfxF8wSTXaf4WjfYGYZDgWeWcS7R
+Ei0kQiBeDac=
+=rsUJ
+-----END PGP SIGNATURE-----
+
+--=-4rRIIQbXyO2JRD4DskME--
+
