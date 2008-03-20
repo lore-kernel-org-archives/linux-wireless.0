@@ -1,166 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:41361 "EHLO
-	sous-sol.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763410AbYCUWx0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2008 18:53:26 -0400
-Message-Id: <20080321224421.540314761@sous-sol.org> (sfid-20080321_225337_864790_87AD5AD6)
-References: <20080321224250.144333319@sous-sol.org>
-Date: Fri, 21 Mar 2008 15:43:37 -0700
-From: Chris Wright <chrisw@sous-sol.org>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Michael Buesch <mb@bu3sch.de>,
-	Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, alexey.zaytsev@gmail.com,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [patch 47/76] b43: Backport bcm4311 fix
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38780 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbYCTSfx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 14:35:53 -0400
+Subject: Re: [PATCH/RFC] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <20080320181310.GA17884@uranus.ravnborg.org>
+References: <1206023695.16475.137.camel@johannes.berg>
+	 <20080320181310.GA17884@uranus.ravnborg.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0FES/eduH35huO1gJhWo"
+Date: Thu, 20 Mar 2008 19:35:35 +0100
+Message-Id: <1206038135.16475.148.camel@johannes.berg> (sfid-20080320_183557_874203_1EE7D4EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--stable review patch.  If anyone has any objections, please let us know.
----------------------
 
-From: Michael Buesch <mb@bu3sch.de>
+--=-0FES/eduH35huO1gJhWo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This is a backport of upstream commit 013978b6 ("b43: Changes to enable
-BCM4311 rev 02 with wireless core revision 13") and the changes include
-the following:
 
-(1) Add the 802.11 rev 13 device to the ssb_device_id table to load b43.
-(2) Add PHY revision 9 to the supported list.
-(3) Change the 2-bit routing code for address extensions to 0b10 rather
-    than the 0b01 used for the 32-bit case.
-(4) Remove some magic numbers in the DMA setup.
+On Thu, 2008-03-20 at 19:13 +0100, Sam Ravnborg wrote:
+> On Thu, Mar 20, 2008 at 03:34:55PM +0100, Johannes Berg wrote:
+> > In many cases, especially in networking, it can be beneficial to
+> > know at compile time whether the architecture can do unaligned
+> > accesses. This patch introduces a new Kconfig symbol
+> > 	ARCH_CAN_UNALIGNED_ACCESS
+>=20
+> Can we please have a single symbol defined and name it:
+> HAVE_*
+>=20
+> Then the architectures that HAVE this feature can select the symbol.
 
-The DMA implementation for this chip supports full 64-bit addressing with
-one exception. Whenever the Descriptor Ring Buffer is in high memory, a
-fatal DMA error occurs. This problem was not present in 2.6.24-rc2 due
-to code to "Bias the placement of kernel pages at lower PFNs". When
-commit 44048d70 reverted that code, the DMA error appeared. As a "fix",
-use the GFP_DMA flag when allocating the buffer for 64-bit DMA. At present,
-this problem is thought to arise from a hardware error.
+Sure. Where should it be defined? arch/Kconfig?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Alexey Zaytsev <alexey.zaytsev@gmail.com>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> This follows the suggestion as available in
+> Documentation/kbuild/kconfig-language.txt
 
----
- drivers/net/wireless/b43/dma.c  |   30 ++++++++++++++++++++++--------
- drivers/net/wireless/b43/main.c |    3 ++-
- 2 files changed, 24 insertions(+), 9 deletions(-)
+Guess I haven't read that in a while.
 
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -165,7 +165,7 @@ static void op64_fill_descriptor(struct 
- 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
- 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
- 	    >> SSB_DMA_TRANSLATION_SHIFT;
--	addrhi |= ssb_dma_translation(ring->dev->dev);
-+	addrhi |= (ssb_dma_translation(ring->dev->dev) << 1);
- 	if (slot == ring->nr_slots - 1)
- 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
- 	if (start)
-@@ -426,9 +426,21 @@ static inline
- static int alloc_ringmemory(struct b43_dmaring *ring)
- {
- 	struct device *dev = ring->dev->dev->dev;
-+	gfp_t flags = GFP_KERNEL;
- 
-+	/* The specs call for 4K buffers for 30- and 32-bit DMA with 4K
-+	 * alignment and 8K buffers for 64-bit DMA with 8K alignment. Testing
-+	 * has shown that 4K is sufficient for the latter as long as the buffer
-+	 * does not cross an 8K boundary.
-+	 *
-+	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
-+	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
-+	 * which accounts for the GFP_DMA flag below.
-+	 */
-+	if (ring->dma64)
-+		flags |= GFP_DMA;
- 	ring->descbase = dma_alloc_coherent(dev, B43_DMA_RINGMEMSIZE,
--					    &(ring->dmabase), GFP_KERNEL);
-+					    &(ring->dmabase), flags);
- 	if (!ring->descbase) {
- 		b43err(ring->dev->wl, "DMA ringmemory allocation failed\n");
- 		return -ENOMEM;
-@@ -483,7 +495,7 @@ int b43_dmacontroller_rx_reset(struct b4
- 	return 0;
- }
- 
--/* Reset the RX DMA channel */
-+/* Reset the TX DMA channel */
- int b43_dmacontroller_tx_reset(struct b43_wldev *dev, u16 mmio_base, int dma64)
- {
- 	int i;
-@@ -647,7 +659,7 @@ static int dmacontroller_setup(struct b4
- 			b43_dma_write(ring, B43_DMA64_TXRINGHI,
- 				      ((ringbase >> 32) &
- 				       ~SSB_DMA_TRANSLATION_MASK)
--				      | trans);
-+				      | (trans << 1));
- 		} else {
- 			u32 ringbase = (u32) (ring->dmabase);
- 
-@@ -680,8 +692,9 @@ static int dmacontroller_setup(struct b4
- 			b43_dma_write(ring, B43_DMA64_RXRINGHI,
- 				      ((ringbase >> 32) &
- 				       ~SSB_DMA_TRANSLATION_MASK)
--				      | trans);
--			b43_dma_write(ring, B43_DMA64_RXINDEX, 200);
-+				      | (trans << 1));
-+			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
-+				      sizeof(struct b43_dmadesc64));
- 		} else {
- 			u32 ringbase = (u32) (ring->dmabase);
- 
-@@ -695,11 +708,12 @@ static int dmacontroller_setup(struct b4
- 			b43_dma_write(ring, B43_DMA32_RXRING,
- 				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
- 				      | trans);
--			b43_dma_write(ring, B43_DMA32_RXINDEX, 200);
-+			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
-+				      sizeof(struct b43_dmadesc32));
- 		}
- 	}
- 
--      out:
-+out:
- 	return err;
- }
- 
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -101,6 +101,7 @@ static const struct ssb_device_id b43_ss
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 7),
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
-+	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 13),
- 	SSB_DEVTABLE_END
- };
- 
-@@ -3079,7 +3080,7 @@ static int b43_phy_versioning(struct b43
- 			unsupported = 1;
- 		break;
- 	case B43_PHYTYPE_G:
--		if (phy_rev > 8)
-+		if (phy_rev > 9)
- 			unsupported = 1;
- 		break;
- 	default:
+johannes
 
--- 
+--=-0FES/eduH35huO1gJhWo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+KudaVg1VMiehFYAQJ7ig//byJi8CKfE/7515uLj4GdSidKrvL6LGt4
+QcEahi7hVp4CIXnD0l8bIvWQEiqjjSrkVMMetC8aQxtUa6hqh02BLIJsqLZxpomv
+/gKtks9bRK5JsABLejd+Q+OTjQL7zPlaaN1Rawj2XvJu+OkjdbHwzkIroEswnHzJ
+9SzCZwAfuoVh6DYsgxfeWxPEbCUrOLy1gqRQTUau4fR2Tv1qA0Wdlfy3z18AzkZQ
+/dULBvQPqsdoEt8/4V0iw36oKdaCPFCKDKhTurEZRKDTiuJM04enMPCXz8S8cfzY
+Cz+L8a7jHNHfqMEAlw15Tut+STjK5F+wIPTSiBdunhsEMmHkc3D5ggnY+yLiqbT1
+jXXONx52+Fk8wk9iHkppQEzIUTou/vkBXa0RQR/sEXk7SiAZQaerND5QWL6UyHtR
+grdGFIZ1VIq2Ug8ld5RkVLuHW0loAlLoR5W3+q5T3/apE6jgCBvZtfKURmbnKeaQ
+gLEynMdfHGh67LQvkt9smfh2ejWr5EALKepDwBlSrknX7ar2KxyeFv6RoeWG0EAN
+vZTaIlQgYTKmfGA5oB4FW/HJ+6Ha4H9qxPMOmyVQ7vNxVCBT7YxldqzPnAx6i1gp
+XQ1JdJ4FkUrLkrXvx4l5mmlZALPkpWhdmrvvaUYdQTydN5i9zUyLCeuAXa2uGbw1
+LTCPv2yD58Q=
+=fWRa
+-----END PGP SIGNATURE-----
+
+--=-0FES/eduH35huO1gJhWo--
+
