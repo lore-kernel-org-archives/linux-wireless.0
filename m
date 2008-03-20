@@ -1,113 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57249 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbYCOSPO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbYCTBeG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Mar 2008 14:15:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] [RFT] b43legacy: fix bcm4303 crash
-Date: Sat, 15 Mar 2008 19:14:51 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20080315190121.70edbfcd@morte> <20080315190836.5020b884@morte>
-In-Reply-To: <20080315190836.5020b884@morte>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803151914.51620.mb@bu3sch.de> (sfid-20080315_181608_465429_3025FE5B)
+	Wed, 19 Mar 2008 21:34:06 -0400
+Subject: Re: 2.6.25-rc6, rausb0 or wlan0 or both???
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adam Turk <bofh1234@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BAY101-W2F265A1ACEEAD6E11D953C8000@phx.gbl> (sfid-20080320_011109_826246_EC8219A9)
+References: <BAY101-W2F265A1ACEEAD6E11D953C8000@phx.gbl>
+	 (sfid-20080320_011109_826246_EC8219A9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9yysIdG3kPntewVIppmz"
+Date: Thu, 20 Mar 2008 02:33:48 +0100
+Message-Id: <1205976828.16475.92.camel@johannes.berg> (sfid-20080320_013411_142060_17D94BD4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 15 March 2008 19:08:36 Stefano Brivio wrote:
-> On Sat, 15 Mar 2008 19:01:21 +0100
-> Stefano Brivio <stefano.brivio@polimi.it> wrote:
-> 
-> > This should fix an hard crash which happened upon driver loading on bcm4303
-> > rev. 2 devices. The bug was originally reported here:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=384981.
-> > Please test.
-> 
-> Ehr, sure. :/ Here it comes:
-> 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-> ---
-> Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
-> +++ wireless-testing/drivers/net/wireless/b43legacy/main.c
-> @@ -3047,7 +3047,6 @@ static void b43legacy_wireless_core_exit
->  	}
->  
->  	ssb_device_disable(dev->dev, 0);
-> -	ssb_bus_may_powerdown(dev->dev->bus);
->  }
->  
->  static void prepare_phy_data_for_init(struct b43legacy_wldev *dev)
-> @@ -3214,7 +3213,6 @@ err_kfree_tssitbl:
->  err_kfree_lo_control:
->  	kfree(phy->lo_control);
->  	phy->lo_control = NULL;
-> -	ssb_bus_may_powerdown(bus);
->  	B43legacy_WARN_ON(b43legacy_status(dev) != B43legacy_STAT_UNINIT);
->  	return err;
->  }
-> @@ -3534,7 +3532,7 @@ static int b43legacy_wireless_core_attac
->  
->  	err = b43legacy_phy_versioning(dev);
->  	if (err)
-> -		goto err_powerdown;
-> +		goto out;
->  	/* Check if this device supports multiband. */
->  	if (!pdev ||
->  	    (pdev->device != 0x4312 &&
-> @@ -3560,10 +3558,10 @@ static int b43legacy_wireless_core_attac
->  
->  	err = b43legacy_validate_chipaccess(dev);
->  	if (err)
-> -		goto err_powerdown;
-> +		goto out;
->  	err = b43legacy_setup_modes(dev, have_bphy, have_gphy);
->  	if (err)
-> -		goto err_powerdown;
-> +		goto out;
->  
->  	/* Now set some default "current_dev" */
->  	if (!wl->current_dev)
-> @@ -3573,14 +3571,9 @@ static int b43legacy_wireless_core_attac
->  	b43legacy_radio_turn_off(dev, 1);
->  	b43legacy_switch_analog(dev, 0);
->  	ssb_device_disable(dev->dev, 0);
-> -	ssb_bus_may_powerdown(bus);
->  
->  out:
->  	return err;
-> -
-> -err_powerdown:
-> -	ssb_bus_may_powerdown(bus);
-> -	return err;
->  }
->  
->  static void b43legacy_one_core_detach(struct ssb_device *dev)
-> Index: wireless-testing/drivers/ssb/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/main.c
-> +++ wireless-testing/drivers/ssb/main.c
-> @@ -1082,6 +1082,10 @@ int ssb_bus_may_powerdown(struct ssb_bus
->  		goto out;
->  
->  	cc = &bus->chipco;
-> +
-> +	if (cc->dev->id.revision < 5)
-> +		goto out;
-> +
->  	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_SLOW);
->  	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 0);
->  	if (err)
-> 
 
-Note that this is not the final patch, yet. So please just test,
-but not apply it to the tree.
+--=-9yysIdG3kPntewVIppmz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+
+> When I do the airmon-ng start wlan0 I get the following error message:
+> Interface       Chipset         Driver
+> wlan0           Ralink 2573 USB rt73usb - [phy0]
+>=20
+> ERROR: Neither the sysfs interface links nor the iw command is available.
+> Please download and install iw from http://git.sipsolutions.net/iw.git
+>=20
+> If I do a airmon-ng start rausb0 I don't get the error, but the packet
+> injection test doesn't succeed.  I am using aircrack beta 2 version
+> 1007
+>=20
+> Can this please get fixed for 2.6.25?
+
+Have you considered reading the error message?
+
+johannes
+
+--=-9yysIdG3kPntewVIppmz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+G++6Vg1VMiehFYAQL09Q//UgZKM1+fsqbuyAcpcsusHMutOTbpK5Vg
+xKuwE5PprcKHvrtJa6+Rorha7m5Lj+5cszg7LIQMYEedZtz0WsmepzvJYHDs5JFz
+U+QGCkniRbiD2aZQPsKNPHGDmiF2ZpNSXrA4qmouhHnQvo6BVQgHbwNsZrzj4T29
+OE/TFZpI1H0wfa5rvEsTqa/3WjQ7DmXko3K/JwU77HS2ARJLlSTRilO4wOlMGCCa
+2OVsy0aGZVR+a3i3+LKGTWp045hwCjPLXt1wtbzM0MZ8GWONybYlj0KCthxMXPA8
+pSRS33Icl2SxKTx/GhZn9eiqiG8SRSBAR1uvy+xxraNhQC+1DYEDfaTUyR3NC5OR
+vHJWWt7kzTSbkHM2D48uJeiFe/Gaegb2ehqdSlOe4SXrnKIAWjIh3v7ukns7SwYK
+84HHbYu/irnyh9yIKaaF31khi1DYErXG41sSPb68Te/tR8GhEAuIve12gN08jZmV
+8q7kw1KbzldPlqb0mNWOsAcc7bnyD9I5zVlRjnP6QyGj5ichGXXBpYADDWDfIoyJ
+XUylYG3xrfDpj4oHXSt7Pr+X35W5DKao05vmGuxyizio4kPclJkKyg5vtKApveX6
+ZCkoSFAFazu1M1Vz7M9JhIAJ6Dh0DbWuxOoIJ3I8LSUOtDE2CY/uGy+hkZCgDOcA
+e76atprfWGM=
+=C0Mk
+-----END PGP SIGNATURE-----
+
+--=-9yysIdG3kPntewVIppmz--
+
