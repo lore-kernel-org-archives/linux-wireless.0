@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:24599 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755708AbYCaSmS (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50520
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753774AbYCTWKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 14:42:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: adm8211 crypto bug?
-Date: Mon, 31 Mar 2008 14:43:51 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1206452558.16475.265.camel@johannes.berg>
-In-Reply-To: <1206452558.16475.265.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart10323211.r7mkBdfDbI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200803311443.51453.flamingice@sourmilk.net> (sfid-20080331_194221_425541_F4B4F88F)
+	Thu, 20 Mar 2008 18:10:38 -0400
+Date: Thu, 20 Mar 2008 15:10:54 -0700 (PDT)
+Message-Id: <20080320.151054.41532763.davem@davemloft.net> (sfid-20080320_221042_909507_907574BA)
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, sam@ravnborg.org, dsd@gentoo.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
+ symbol
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080320220348.GC1330@tuxdriver.com>
+References: <20080320.141307.173590705.davem@davemloft.net>
+	<1206048106.16475.161.camel@johannes.berg>
+	<20080320220348.GC1330@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart10323211.r7mkBdfDbI
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 20 Mar 2008 18:03:48 -0400
 
-On Tuesday 25 March 2008 09:42:38 Johannes Berg wrote:
-> static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
->                       struct ieee80211_tx_control *control)
->
-> [...]
->         fc =3D le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTE=
-D;
-> [...]
->         len =3D hdrlen + payload_len + FCS_LEN;
->         if (fc & IEEE80211_FCTL_PROTECTED)
->                 len +=3D 8;
-> [...]
->
-Nope. It's just a cheap hack to disable hw crypto support. I was planning t=
-o=20
-add hw crypto support back at some point so I just added the |&=20
-~IEEE80211_FCTL_PROTECTED| part to disable it without removing the code.
+> While I think Dave has a point, I don't think you should labor the word
+> choice too much.  Try to document it as clearly as possible and hope
+> for the best -- I hear that the arch maintainers are top notch! :-)
 
-=2DMichael Wu
+I think the name of the macro is very important.
 
---nextPart10323211.r7mkBdfDbI
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBH8TDnT3Oqt9AH4aERAgytAJ0WDbTiKHo6ja8JdQzPCmXjSQR/HgCfaR/J
-xFv1pEiZuJsZ3k92SH4dlh0=
-=9RDR
------END PGP SIGNATURE-----
-
---nextPart10323211.r7mkBdfDbI--
+Non-arch people will see this thing and wonder what in the
+world it means.  You can document something with kerneldoc
+foo as much as you like, still the initial impression the
+reader gets from the name is of utmost importance.
