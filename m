@@ -1,121 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:1322 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753699AbYCaRs4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49108 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758083AbYCTSjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 13:48:56 -0400
-Date: Mon, 31 Mar 2008 10:47:56 -0700
-To: bruno randolf <bruno@thinktube.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>,
-	Haris Kremo <harisk@winlab.rutgers.edu>
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Message-ID: <20080331174756.GA9882@bougret.hpl.hp.com> (sfid-20080331_184900_635078_5B34E7A5)
-Reply-To: jt@hpl.hp.com
-References: <20080326123042.11233.80949.stgit@localhost> <200803271147.56272.bruno@thinktube.com> <20080327165237.GA28553@bougret.hpl.hp.com> <200803311532.44969.bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200803311532.44969.bruno@thinktube.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	Thu, 20 Mar 2008 14:39:52 -0400
+Subject: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <20080320181310.GA17884@uranus.ravnborg.org>
+References: <1206023695.16475.137.camel@johannes.berg>
+	 <20080320181310.GA17884@uranus.ravnborg.org>
+Content-Type: text/plain
+Date: Thu, 20 Mar 2008 19:39:33 +0100
+Message-Id: <1206038373.16475.150.camel@johannes.berg> (sfid-20080320_184054_747922_6A264AF6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 31, 2008 at 03:32:44PM +0900, bruno randolf wrote:
-> 
-> there are actually two types of noise calibration for atheros hardware: one is 
-> for the internal circuit noise, which is done by detaching the antennas and 
-> another one for the environment noise (interference) on the channel, which is 
-> measured during silent times of the MAC protocol (SIFS for example). at least 
-> that's my understanding of what is described in an atheros patent:
-> 
-> http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=1&f=G&l=50&co1=AND&d=PTXT&s1=%22Method+system+noise+floor+calibration+receive+signal+strength+detection%22.TI.&OS=TTL/
-> 
+In many cases, especially in networking, it can be beneficial to
+know at compile time whether the architecture can do unaligned
+accesses. This patch introduces a new Kconfig symbol
+	ARCH_CAN_UNALIGNED_ACCESS
+for that purpose and adds it to the powerpc and x86 architectures.
+Also add some documentation about alignment and networking, and
+especially one intended use of this symbol.
 
-	Patents are hard to read. And you don't even know if the
-patent apply to the current hardware.
-	Reading the patent, the intention is good. They want to
-calculate dBm. Because their hardware does not have a fixed offset,
-they do all kind of tricks to calibrate the offset.
-	Now, the problem of their method is that they need to
-determine the channel noise floor. And this is where it falls apart,
-as there is no guarantee that you can measure the noise floor, because
-there is no guarantee that you can measure a time where there is no
-transmission and no interference. With all the cordless phones,
-BlueTooth, adjacent cell, channel overlap and so on, the 2.4 GHz band
-tend to be quite busy.
-	What the patent seem to advocate is to measure the noise over
-a long period of time and use the lowest measurement. The patent seems
-to say that this channel noise vary little by temperature, so you
-could actually measure it once and store it. They also seem to say
-that it could be the same for all units.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Fixes thanks to Sam and Will.
 
-> i think that's what is happening. that seems to be consistent with both your 
-> collegues experimental results, the patent and the way we interpret 
-> the "RSSI" as SNR in madwifi and ath5k.
-> 
-> of course lacking any documentation from atheros this all mostly
-> speculations.
+ Documentation/unaligned-memory-access.txt |   32 +++++++++++++++++++++++++++---
+ arch/Kconfig                              |    3 ++
+ arch/powerpc/Kconfig                      |    1 
+ arch/x86/Kconfig                          |    1 
+ 4 files changed, 34 insertions(+), 3 deletions(-)
 
-	Yes, I don't want to claim anything, because I've not used
-this hardware, we have only hearsay and I belive those kind of things
-need to be verified in details.
-	From the patent, it looks like you could measure dBm this way
-but you would need more care in managing the channel noise
-measurement.
+--- everything.orig/Documentation/unaligned-memory-access.txt	2008-03-20 15:30:38.000000000 +0100
++++ everything/Documentation/unaligned-memory-access.txt	2008-03-20 19:38:30.000000000 +0100
+@@ -218,9 +218,35 @@ If use of such macros is not convenient,
+ where the source or destination (or both) are of type u8* or unsigned char*.
+ Due to the byte-wise nature of this operation, unaligned accesses are avoided.
+ 
++
++Alignment vs. Networking
++========================
++
++On architectures that require aligned loads, networking requires that the IP
++header is aligned on a four-byte boundary to optimise the IP stack. For
++regular ethernet hardware, the constant NET_IP_ALIGN is used, on most
++architectures this constant has the value 2 because the normal ethernet
++header is 14 bytes long, so in order to get proper alignment one needs to
++DMA to an address that is can be expressed as 4*n + 2. One notable exception
++here is powerpc which defines NET_IP_ALIGN to 0 because DMA to unaligned
++addresses can be very expensive and dwarf the cost of unaligned loads.
++
++For some ethernet hardware that cannot DMA to unaligned addresses like
++4*n+2 or non-ethernet hardware, this can be a problem, and it is then
++required to copy the incoming frame into an aligned buffer. Because this is
++unnecessary on architectures that can do unaligned accesses, the code can be
++made depend on CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT like so:
++
++#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
++	skb = original skb
++#else
++	skb = copy skb
++#endif
++
+ --
+-Author: Daniel Drake <dsd@gentoo.org>
++Authors: Daniel Drake <dsd@gentoo.org>,
++         Johannes Berg <johannes@sipsolutions.net>
+ With help from: Alan Cox, Avuton Olrich, Heikki Orsila, Jan Engelhardt,
+-Johannes Berg, Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock,
+-Uli Kunitz, Vadim Lobanov
++Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock, Uli Kunitz,
++Vadim Lobanov
+ 
+--- everything.orig/arch/powerpc/Kconfig	2008-03-20 15:30:38.000000000 +0100
++++ everything/arch/powerpc/Kconfig	2008-03-20 19:37:22.000000000 +0100
+@@ -91,6 +91,7 @@ config PPC
+ 	select HAVE_OPROFILE
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
++	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 
+ config EARLY_PRINTK
+ 	bool
+--- everything.orig/arch/x86/Kconfig	2008-03-20 15:30:38.000000000 +0100
++++ everything/arch/x86/Kconfig	2008-03-20 19:38:08.000000000 +0100
+@@ -23,6 +23,7 @@ config X86
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
+ 	select HAVE_KVM if ((X86_32 && !X86_VOYAGER && !X86_VISWS && !X86_NUMAQ) || X86_64)
++	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 
+ 
+ config GENERIC_LOCKBREAK
+--- everything.orig/arch/Kconfig	2008-03-20 19:37:26.000000000 +0100
++++ everything/arch/Kconfig	2008-03-20 19:37:34.000000000 +0100
+@@ -36,3 +36,6 @@ config HAVE_KPROBES
+ 
+ config HAVE_KRETPROBES
+ 	def_bool n
++
++config HAVE_UNALIGNED_ACCESS_SUPPORT
++	def_bool n
 
-	Note that's the trouble with doing things bottom up. Very
-often, hardware does it some specific way because it was easier to
-implement or because the designer made some choices. Unfortunately,
-applications may have other needs.
-	I've also seen Atheros based AP where the Tx power is relative
-(dB to max) instead of absolute (dBm). And in the case, the max did
-depend on various things, such as the band (2.4 GHx vs. 5GHz) and the
-type of antenna (internal/external). Very messy.
 
-> The problems came mostly from the fact 
-> that devices used completely different methods of reporting these values and 
-> not much was know about the devices sometimes.
-> 
-> now that have a mac80211 stack which unifies different drivers i would like to 
-> improve that situation by also unifying the way we report signal and noise 
-> across most devices. most modern cards support dBm so this is probably the 
-> way to go for the future. 
-
-	I think you are in a way better position. We now have 10 year
-of experience, there are way more people concerned about it and
-application are finally starting to pay attention to those APIs.
-
-> but the remaining question is how do we deal with devices where we
-> don't know how to map RSSI to dBm.
-> 
-> i take your suggestion that we should remove the "linear"
-> requirement from the definition.
-
-	I believe most devices will have a "sort of dBm" measurement
-(i.e. log scale), because that's what you need to perform CSMA-CA,
-roaming and bit-rate adaptation.
-
-> do you think it would be feasible
-> to require the drivers to normalize their RSSI to a range of 0-100,
-> so we would have at least some consistency between devices? (of
-> course their steps within this percentage would be different and it
-> would still be impossible to compare these values across different
-> devices).
-
-	If the measurement is not linear or log, it does not make
-sense mandating the 0-100, because 50 won't be the mid-point. And we
-assume that devices are not consistent to start with...
-	Anyway, to avoid quantisation errors, I prefer to defer
-normalisation to the end software. For example, if the app use a 64
-pixel window to show the RSSI, it wants a value 0-63, not 0-100.
-
-> best regards,
-> bruno
-
-	Have fun...
-
-	Jean
