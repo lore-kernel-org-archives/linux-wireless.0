@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:58979 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753673AbYCIVvN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756647AbYCTTMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:51:13 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1362530fkz.5
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:13 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 15/24] rt2x00: Check IEEE80211_TXCTL_SEND_AFTER_DTIM flag
-Date: Sun, 9 Mar 2008 22:45:47 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200803092237.43451.IvDoorn@gmail.com>
-In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803092245.47294.IvDoorn@gmail.com> (sfid-20080309_215422_426190_CE72516A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 20 Mar 2008 15:12:23 -0400
+Subject: Re: [PATCH/RFC v3] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
+	symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1206040151.17059.10.camel@brick> (sfid-20080320_190919_345083_ADEC461D)
+References: <1206023695.16475.137.camel@johannes.berg>
+	 <20080320181310.GA17884@uranus.ravnborg.org>
+	 <1206038373.16475.150.camel@johannes.berg>
+	 (sfid-20080320_184016_333600_B74BDE6D)  <1206038734.16475.153.camel@johannes.berg>
+	 <1206040151.17059.10.camel@brick> (sfid-20080320_190919_345083_ADEC461D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F6/Ia8Jp6T+uxIw2Ii5u"
+Date: Thu, 20 Mar 2008 20:12:03 +0100
+Message-Id: <1206040323.16475.155.camel@johannes.berg> (sfid-20080320_191227_594512_EDD5C96D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac sets the IEEE80211_TXCTL_SEND_AFTER_DTIM flag, we should
-check if the ATIM queue is available in the driver and put the
-frame in that queue for proper behavior (send frame after beacon interval).
-Unfortunately not all drivers have this ATIM queue, and will lack
-this feature for now.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+--=-F6/Ia8Jp6T+uxIw2Ii5u
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index a54f687..76a2a7c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -99,7 +99,11 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	/*
- 	 * Determine which queue to put packet on.
- 	 */
--	queue = rt2x00queue_get_queue(rt2x00dev, control->queue);
-+	if (control->flags & IEEE80211_TXCTL_SEND_AFTER_DTIM &&
-+	    test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
-+		queue = rt2x00queue_get_queue(rt2x00dev, RT2X00_BCN_QUEUE_ATIM);
-+	else
-+		queue = rt2x00queue_get_queue(rt2x00dev, control->queue);
- 	if (unlikely(!queue)) {
- 		ERROR(rt2x00dev,
- 		      "Attempt to send packet over invalid queue %d.\n"
--- 
-1.5.4.3
+> > +#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
+> > +	skb =3D original skb
+> > +#else
+> > +	skb =3D copy skb
+> > +#endif
+> > +
+>=20
+> Couldn't this just be made an inline in a networking header somewhere,
+> instead of ifdefs in the code?
+
+That was just an example, you might want to do other things too. If it
+turns out that a similar code pattern will be used all over the place we
+can then consolidate that.
+
+johannes
+
+--=-F6/Ia8Jp6T+uxIw2Ii5u
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+K3AaVg1VMiehFYAQJ10BAAlBko/4ZkLj6LW9/NGelh1GaS7iqtvvFt
+M2y3cZtYTTYmAMbENKxK7WzAsOaqmv+CJyPMIulGhNwZDSeyYWEbI/g5oVjwECNo
+qcd30R82k15WMBaqE56tHo4zmQ1dviQKse6UYLtyoOUDDCUTXF2pmyIwsWM+VHL0
+6fuxMohW97BvP6AKxABhw7AKXykqI4/DMGcFNE3TWkHLtEivLc5MNfDx5TQAyHQO
+elUpuf+B8V3W93TYwKOeTqkq+C+Xr624O9470bPytLOY6HtEpH6nLhcOeXoqJaX3
+QP2MonJjMXOdmcDJEPMG4LdcExph2ZWn+rjHbCV2amABSHxLf3icxxFsTEX91FOk
+rYacV/UHCF2PvSbAECW7vXMEFHnBsKpXUXTN4h6rcBWcbyaQv581z8nHiBTuCbNG
+/r0fma8prIBLYo5XBmm9Lva4Q1lwPvVKaVsa97Y4I5jwWuI0sRKBqWCqx9clzs4I
+vDK2d2i8zoQobBFarprybNvrxC3dvGNaVM5PT9jJfLZ4YRSYLAtQNL7cp/g/mooS
+q1mUtnn5bNIrQRG5Alqeg0nBHhCZl+vCADBbHwmsi20jYxVUlBDjDIBWMluz4UtM
+MJKLMQw5ziR9B9ivZ5+iN0GAJ2ffHiA2zdv1FGVDzxQhisSc2rrdBz87wYCD4Cga
+KOQP31TaAxU=
+=VGR/
+-----END PGP SIGNATURE-----
+
+--=-F6/Ia8Jp6T+uxIw2Ii5u--
 
