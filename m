@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:62823 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755156AbYCDKGH (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:36467 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755914AbYCTOjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 05:06:07 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so430781rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2008 02:06:06 -0800 (PST)
-Message-ID: <c85cb4470803040206t5bac2d42r9507ebc83bce0761@mail.gmail.com> (sfid-20080304_100613_018321_A918212C)
-Date: Tue, 4 Mar 2008 12:06:06 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+	Thu, 20 Mar 2008 10:39:10 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1269689pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Mar 2008 07:39:08 -0700 (PDT)
+Message-ID: <87a5b0800803200739v6d222afck850f221eae1edd70@mail.gmail.com> (sfid-20080320_143915_124685_4EA0E077)
+Date: Thu, 20 Mar 2008 14:39:08 +0000
+From: "Will Newton" <will.newton@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: STA info size
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Felix Fietkau" <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1203693353.7082.28.camel@johannes.berg>
+Subject: Re: [PATCH/RFC] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
+Cc: "Daniel Drake" <dsd@gentoo.org>,
+	"Linux Kernel list" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1206023695.16475.137.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1203675307.26341.29.camel@johannes.berg>
-	 <20080222143409.GA3067@tuxdriver.com>
-	 <1203693353.7082.28.camel@johannes.berg>
+References: <1206023695.16475.137.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > STA info struct currently (after my reorg) takes 2432 bytes. Almost 2000
-> > > of those are in struct sta_ampdu_mlme which is most likely not used for
-> > > most STAs.
-> > >
-> > > Do you think that is too much memory per station? It'd probably be
-> > > possible to allocate the sta_ampdu_mlme dynamically when needed, no?
-> >
-> > My count was closer to 1.5k, but I may have missed something.
->
+On Thu, Mar 20, 2008 at 2:34 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 
-I did the check myself and your numbers are correct. i also think
-dynamic allocation is the way to go. unless something i skipped will
-pop up i'll do the changes.
+>  +For some ethernet hardware that cannot DMA to unaligned addresses like
+>  +4*n+2 or non-ethernet hardware, this can be a problem, and it is then
+>  +required to copy the incoming frame into an aligned buffer. Because this is
+>  +unnecessary on architectures that can do unaligned accesses, the code can be
+>  +made depend on CONFIG_ARCH_CAN_UNALIGNED_ACCESS like so:
+>  +
+>  +#ifdef CONFIG_ARCH_CAN_UNALIGNED_ACCESS
+>  +       skb = copy skb
+>  +#else
+>  +       skb = original skb
+>  +#endif
 
-Ron
+Is this logic reversed?
