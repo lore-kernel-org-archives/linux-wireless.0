@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50052 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753898AbYCAKQT (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:52325 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753006AbYCTStJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2008 05:16:19 -0500
-Subject: Re: [PATCH 01/13 v2] o11s: (nl80211/cfg80211) support for mesh
-	interfaces and mesh paths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1204335110.7735.30.camel@localhost> (sfid-20080301_013020_804923_984AFACD)
-References: <47be7703.20f8720a.1044.6474@mx.google.com>
-	 (sfid-20080222_071730_424685_4330467A)  <1203695866.7082.49.camel@johannes.berg>
-	 (sfid-20080222_155831_933711_8528D283)  <1203955392.13162.111.camel@johannes.berg>
-	 <1204335110.7735.30.camel@localhost> (sfid-20080301_013020_804923_984AFACD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u00O3zrfAsjRBh04Rzzq"
-Date: Sat, 01 Mar 2008 11:16:10 +0100
-Message-Id: <1204366570.3938.72.camel@johannes.berg> (sfid-20080301_101641_097242_570E22DB)
-Mime-Version: 1.0
+	Thu, 20 Mar 2008 14:49:09 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [regression: 2.6.25-rc6: iwl3945]
+Date: Thu, 20 Mar 2008 11:44:33 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892003F6F7A4@orsmsx416.amr.corp.intel.com> (sfid-20080320_184914_648040_284A23AD)
+In-Reply-To: <47E1953F.9020202@gawab.com>
+References: <47E1953F.9020202@gawab.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Justin Madru" <jdm64@gawab.com>, <linux-wireless@vger.kernel.org>,
+	<linux@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday, March 19, 2008 3:36 PM, Justin Madru  wrote:
 
---=-u00O3zrfAsjRBh04Rzzq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Mar 18 11:00:02 dell kernel: printk: 1 messages suppressed.
+> Mar 18 11:00:02 dell kernel: wlan0_rename: RX too short data
+> frame payload
 
+These messages are printed by the mac80211 stack when it receives little
+more than a 802.11 header ...
+ 
+> A 1-min Wireshark network dump (my address was 10.68.1.211):
+>    http://jdserver.homelinux.org/linux/wireshark-1min
 
-On Fri, 2008-02-29 at 17:31 -0800, Luis Carlos Cobo wrote:
-> On Mon, 2008-02-25 at 17:03 +0100, Johannes Berg wrote:
-> > Can you do that in both nl80211 and mac80211 for both STAs and paths?
-> > Look at net/netlink/genetlink.c ctrl_dumpfamily() for an example.
->=20
-> I'm not sure I completely get what changes are necessary.
+This capture does not show the 802.11 headers ... the frames start with
+their 802.3 (Ethernet) headers. Did you take this capture on the host
+self? If so, the capture will only show frames received by this host,
+but unfortunately the frames that cause the message to be displayed have
+already been dropped at this point. Is it possible to get a capture of
+everything that goes over the air? You will need a second wireless
+device that is in monitor mode in order to see this traffic. 
 
-Actually, none are. I was totally wrong about all the stuff. Sorry.
+Thanks!
 
-> What I understand is that I should acquire (if idx =3D=3D 0) and release
-> (just before returning -ENOENT) the rtnl_lock() from within (mac80211 or
-> equivalent) dump_station function instead of from nl80211_dump_station.
-> Is this the whole idea?
-
-That was completely wrong, I was trying to guarantee a consistent dump
-but that is impossible.
-
-johannes
-
---=-u00O3zrfAsjRBh04Rzzq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8ks6aVg1VMiehFYAQICwRAAoq5GsWAh4yJBEQJnxn17Z6GcBxhBqKlG
-hNzcMZNyzCYFPEA6WY21l8WnTgO+dBJKneqEmU3rPxEL/yLB/AuHf6+1VEF9kcP5
-M6dJxloxL7SDHsn+pafvPzCoG5olbR/0ppgqhXvJ54QXjo2FD2uSPkkDETZ6/TPn
-DDYj0gP2UW/qYArVkx8lLNrsjX0A8tQpwUjwwjgiagolptQaf1rNQ4vLgkXO7lwA
-5/AoA/eny4kaI8QbxreJwOG1v6Wrn50k4IqFB+HUBtRq3v0D/hcZSzlalp7FAMsm
-orJeAQgcI8trVlU+6aY+5s9BJhiWFHNsniSlsI2yo04Trv4mZ53OnUzxIe3SIBE9
-8eQWm32RrX3G+W/s7jCcAUTPiK28lGk2SUvR6Pg8ymhasENM4JSyyxPHgwV4YNJu
-nVwhkFe408LfjeaFrKo0BwrArf95kgHWvTA9+eexhrsdSR0jIA2vNoR9jyVWEzDZ
-iJtL/BbwC3yb2TG2g3YELDJMKjJwAGC4omt1gKC6vqpWp1tNWQDmvLb9d9wuDtt9
-gKza1cyEsCwfthx3N+gLdizUEKEcQ/UENOaur8QgfiF4Yvr52Cy+LmfaQuR4k2gH
-2sTO4HQxJ/ziUk6ybNtVl9fsoFlvaeVD6vksZUxrnirUVKv5AqRgJRmWxoHtYJZc
-43u0paFMfiE=
-=GtRB
------END PGP SIGNATURE-----
-
---=-u00O3zrfAsjRBh04Rzzq--
-
+Reinette
