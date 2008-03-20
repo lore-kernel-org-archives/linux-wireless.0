@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60846 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbYCKQOo (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:10284 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592AbYCTHJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 12:14:44 -0400
-Subject: Re: [PATCH 3/5] mac80211: replace Mk16 helper with le16_to_cpup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1204968187.23455.39.camel@brick> (sfid-20080308_092339_300656_E96B3B6F)
-References: <1204968187.23455.39.camel@brick>
-	 (sfid-20080308_092339_300656_E96B3B6F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bYcVv4EQR6QGcNfZeZD7"
-Date: Tue, 11 Mar 2008 17:14:29 +0100
-Message-Id: <1205252069.6387.52.camel@johannes.berg> (sfid-20080311_161446_830126_617FD3FD)
-Mime-Version: 1.0
+	Thu, 20 Mar 2008 03:09:18 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so710132fgb.17
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Mar 2008 00:09:16 -0700 (PDT)
+Message-ID: <8704f27d0803200009q81922fcja6b769b8cc7194ae@mail.gmail.com> (sfid-20080320_070920_537300_A5630C2A)
+Date: Thu, 20 Mar 2008 09:09:16 +0200
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [ipw3945-devel] [PATCH 1/5] mac80211: allows driver to request a Phase 2 key
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080319201004.GC5308@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1205781593.16475.20.camel@johannes.berg>
+	 <1205784255.16475.33.camel@johannes.berg>
+	 <1ba2fa240803171327r4c817228kc4f248abf0a0cea@mail.gmail.com>
+	 <20080318080435.GA5308@jm.kir.nu>
+	 <1205831880.16475.43.camel@johannes.berg>
+	 <20080318102344.GG5308@jm.kir.nu>
+	 <8704f27d0803190942h19b5a9ebjd3b27537c30ef719@mail.gmail.com>
+	 <20080319173922.GB5308@jm.kir.nu>
+	 <1ba2fa240803191141y7feae800g607432f2e9628e37@mail.gmail.com>
+	 <20080319201004.GC5308@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>  I haven't looked at what the current implementation does, but as far as
+>  WEXT and SIOCSIWENCODEEXT is concerned, IW_ENCODE_EXT_GROUP_KEY flag
+>  should be used to select which key is being configured. There is no
+>  difference between "static/global" and "dynamic group" keys. The only
+>  difference is between default and key-mapping (individual) keys.
+>
+>  Sure, the terminology here can be quite confusing, but as far as I can
+>  tell, that IW_ENCODE_EXT_GROUP_KEY flag is all that is needed to
+>  distinguish which key is being configured and configuring a single key
+>  should not automatically change another one (even if the key index is
+>  same which could, at least in theory, happen with key index 0 that can
+>  be used both with default and key-mapping keys).
+>
 
---=-bYcVv4EQR6QGcNfZeZD7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok, I tested this flag, this will be enough (AFAIK for the moment) to
+distinguish
+which key is being configured.
+Regarding SIOCSIWENCODE, I understand that there is no need to support it
+(at least wrt wpa_supplicant) since mac80211 supports SIOCSIWENCODEEXT
+and wpa_supplicant won't send SIOCSIWENCODE if SIOCSIWENCODEEXT
+call succeeds right ?
+
+iwconfig sends SIOCSIWENCODE but AFAIK, iwconfig configs only default keys (or
+broadcast (default key) as RFC 3580 calls it), so no possibility to be
+mistaken here...
+
+Thanks for you help !
+
+>
+>
+>  --
+>  Jouni Malinen                                            PGP id EFC895FA
+>
 
 
-On Sat, 2008-03-08 at 01:23 -0800, Harvey Harrison wrote:
-> Opencoded byte-swapping could just use the kernel helper.
 
-> +	p1k[2] =3D le16_to_cpup(leptr++);
-
-I'm ok with this if architectures guarantee that these operations work
-on unaligned values, but I don't think that is the case.
-
-johannes
-
---=-bYcVv4EQR6QGcNfZeZD7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9av5KVg1VMiehFYAQLJHw//VDlSDLBDgwwBQqecGxvBgB7ycJpgiKNj
-AmX9cox+DXmVo75W+yEx3BZkypHTPtkuklhevPzCq1JFJiDw0c0iAd6fbxaEnxGW
-nMo/269N2MzM2oeAjZrHJup7MhzdGe6ZYtxerQTKg2OQEVrGHitIj/Pte3RfqF5d
-D5utlknfNR4A2TCRBvczxQth7vtgJ9Twrza8WRQLdTndcve7CVHEsIrkvqwcENTi
-N6xBNjCfIre5q7CA+/Rrb3XcQwZpcfJODCzm+AjvTCR8+FZ0eYRIVbxhyss/GYvT
-ims6dIi5oUqi6dmZwoLKaLzOIGdjOIC5M6XwJNv9wzeESw+HgB8bQbiAkyBpgVBo
-pkT8Zq9xylKPBVUHKZL2aEprCYYONquwvTO7oRQlzJdnSrvMSz9c9JTbQC2fipF1
-3r77CrakfBj1ooDE3HZecqFfTJigoR3puGu9Ozq4tHVEl2dT2ti4RKMlStsxpgWE
-vMTO9RGVfgterEMHi3araNxr28lZ9WkDR0UNKHsZMmddtnC1zWv25lesMmc/dINw
-BfoFll7fTFE+iF9aKemZL+rlo18rhacSpSyPKjYlQaSNKpw2o/+Z6egLw8TVq4VQ
-7hpLDVqD43OtnurvF+Ic+MfQXg7cTyp/PsjECmbBm0VPG3a4lQQgaUhPweU7rHE6
-UTXKqOIQMtg=
-=Y/m6
------END PGP SIGNATURE-----
-
---=-bYcVv4EQR6QGcNfZeZD7--
-
+-- 
+Emmanuel Grumbach
+egrumbach@gmail.com
