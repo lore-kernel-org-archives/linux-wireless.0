@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53115 "EHLO mx1.redhat.com"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:58466 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754171AbYCZRjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 13:39:02 -0400
-Subject: Re: [PATCH] libertas: don't depend on IEEE80211
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803261735.59235.hs4233@mail.mn-solutions.de>
-References: <200803261324.21938.hs4233@mail.mn-solutions.de>
-	 <200803261735.59235.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 26 Mar 2008 13:37:54 -0400
-Message-Id: <1206553074.31383.104.camel@localhost.localdomain> (sfid-20080326_173907_217001_7AB5671D)
+	id S1752800AbYCTTlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 15:41:06 -0400
+Date: Thu, 20 Mar 2008 20:41:01 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH/RFC v3] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
+Message-ID: <20080320194101.GC17884@uranus.ravnborg.org> (sfid-20080320_194116_298435_F84850A5)
+References: <1206023695.16475.137.camel@johannes.berg> <20080320181310.GA17884@uranus.ravnborg.org> <1206038373.16475.150.camel@johannes.berg> <1206038734.16475.153.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1206038734.16475.153.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-26 at 17:35 +0100, Holger Schurig wrote:
-> John, please wait with applying this. I just saw that 
-> escape_essid is also used in debugfs.c, even when 
-> CONFIG_LIBERTAS_DEBUG is off.
+On Thu, Mar 20, 2008 at 07:45:34PM +0100, Johannes Berg wrote:
+> Subject: introduce HAVE_UNALIGNED_ACCESS_SUPPORT Kconfig symbol
+> 
+> In many cases, especially in networking, it can be beneficial to
+> know at compile time whether the architecture can do unaligned
+> accesses. This patch introduces a new Kconfig symbol
+> 	HAVE_UNALIGNED_ACCESS_SUPPORT
+> for that purpose and adds it to the powerpc and x86 architectures.
+> Also add some documentation about alignment and networking, and
+> especially one intended use of this symbol.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
 
-Yeah, but from lbs_getscantable() which is utterly pointless since the
-only thing it provides beyond 'iwlist eth1 scan' is CAP_SPECTRUM_MGMT,
-which if people really care, we can shove out in custom WEXT scan result
-tags.   I'd just kill lbs_getscantable() completely.
-
-Dan
+	Sam
 
