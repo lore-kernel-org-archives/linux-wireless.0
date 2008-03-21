@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7643 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754598AbYC0CIG (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53434 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753024AbYCUDTr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 22:08:06 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Date: Thu, 27 Mar 2008 11:07:54 +0900
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
-	"Jean Tourrilhes" <jt@hpl.hp.com>,
-	"Haris Kremo" <harisk@winlab.rutgers.edu>
-References: <20080326123042.11233.80949.stgit@localhost> <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com>
-In-Reply-To: <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803271107.54208.bruno@thinktube.com> (sfid-20080327_020813_454870_ACED71DE)
+	Thu, 20 Mar 2008 23:19:47 -0400
+Date: Thu, 20 Mar 2008 20:17:23 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	<linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<netdev@vger.kernel.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	<linux-usb@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<video4linux-list@redhat.com>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	<lm-sensors@lm-sensors.org>
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+Message-Id: <20080320201723.b87b3732.akpm@linux-foundation.org> (sfid-20080321_032025_834351_0CE21F83)
+In-Reply-To: <Pine.LNX.4.44L0.0803202301140.16520-100000@netrider.rowland.org>
+References: <20080320192719.6a32386e.akpm@linux-foundation.org>
+	<Pine.LNX.4.44L0.0803202301140.16520-100000@netrider.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 27 March 2008 07:59:11 Luis R. Rodriguez wrote:
-> >  + * @IEEE80211_HW_SIGNAL_UNSPEC:
-> >  + *     Hardware can provide signal values but we don't know its units.
-> > To be + *     able to standardize between different devices we would like
-> > linear + *     values from 0-100. If possible please provide dB or dBm
-> > instead. + *
-> >  + * @IEEE80211_HW_SIGNAL_DB:
-> >  + *     Hardware gives signal values in dB, decibel difference from an
-> >  + *     arbitrary, fixed reference. If possible please provide dBm
-> > instead. + *
->
-> Signal should given in either be in dBm or an unspecified value. Since
-> we have "unspecified" not sure why we would have the "db" value. Can
-> you clarify what the difference between "unspecified" and "db" would
-> be? I don't think it makes sense to refer to signal with a "db" value,
-> unless we want "singal" here to be able to mean SNR.
+On Thu, 20 Mar 2008 23:07:16 -0400 (EDT) Alan Stern <stern@rowland.harvard.edu> wrote:
 
-the best thing to specify is dBm and all drivers should try to do that. it's 
-the only absolute value which makes sense and can be compared between 
-different drivers and devices.
+> On Thu, 20 Mar 2008, Andrew Morton wrote:
+> 
+> > > > > Now, it happens that in_atomic() returns true on non-preemtible kernels
+> > > > > when running in interrupt or softirq context.  But if the above code really
+> > > > > is using in_atomic() to detect am-i-called-from-interrupt and NOT
+> > > > > am-i-called-from-inside-spinlock, they should be using in_irq(),
+> > > > > in_softirq() or in_interrupt().
+> > > > 
+> > > > Presumably most of these places are actually trying to detect 
+> > > > am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
+> > > 
+> > > No, I think there is no such check in the kernel. Most likely for performance
+> > > reasons, as it would require a global flag that is set on each spinlock.
+> > 
+> > Yup.  non-preemptible kernels avoid the inc/dec of
+> > current_thread_info->preempt_count on spin_lock/spin_unlock
+> 
+> So then what's the point of having in_atomic() at all?  Is it nothing 
+> more than a shorthand form of (in_irq() | in_softirq() | 
+> in_interrupt())?
 
-however as we know some drivers simply cannot provide that. instead they have 
-some form of RSSI - RSSI in general meaning nothing more than "received 
-signal strength indication", which could be *anything*: voltage, any numbers, 
-in dB or linear or whatever. RSSI does *not* in general mean SNR! for example 
-you might remember the values of prism54, they were somewhere around 200. or 
-prism2 cards which had something around 100 (it's been a while since i've 
-touched them, so that might have changed). as jean noted the values don't 
-even have to be linear - so i think we should remove that from the 
-definition.
+in_atomic() is for core kernel use only.  Because in special circumstances
+(ie: kmap_atomic()) we run inc_preempt_count() even on non-preemptible
+kernels to tell the per-arch fault handler that it was invoked by
+copy_*_user() inside kmap_atomic(), and it must fail.
 
-so in the "unspecified" case we really don't know much about the units, in the 
-worst case we can't even assume that 1/2 the value will mean 1/2 of the 
-received signal strength. it's very hard to work with this values, but it's 
-better than nothing.
+> In short, you are saying that there is _no_ reliable way to determine
+> am-i-called-from-inside-spinlock.
 
-other cards might not have noise, so no absolute (dBm) measurement, but a form 
-of RSSI which is measured in dB (that is a logarithmic difference). in this 
-case we might not know which reference point the measurement is taken to, but 
-we know how it behaves: -3 dB means half of the signal strength. if you add a 
-6dB gain antenna you can expect to see the signal reading to increase by 6dB. 
-it's not strictly SNR (because we don't know the noise) but quite close to 
-it.
+That's correct.
 
-i think it's important to know the difference between this 3 cases i order to 
-make some sense of the values in userspace gui, roaming agents, mesh link 
-metrics, etc...
+>  Well, why isn't there?
 
-bruno
+The reasons I identified: it adds additional overhead and it encourages
+poorly-thought-out design.
+
+Now we _could_ change kernel design principles from
+caller-knows-whats-going-on over to callee-works-out-whats-going-on.  But
+that would affect more than this particular thing.
+
+>  Would it be 
+> so terrible if non-preemptible kernels did adjust preempt_count on 
+> spin_lock/unlock?
+
+The vast, vast majority of kernel code has managed to get through life
+without needing this hidden-argument-passing.  The handful of errant
+callsites should be able to do so as well...
+
