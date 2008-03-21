@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:55926 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758104AbYCEHCj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 02:02:39 -0500
-Date: Wed, 5 Mar 2008 08:02:02 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: Christopher Li <sparse@chrisli.org>
-Cc: Julia Lawall <julia@diku.dk>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Harvey Harrison <harvey.harrison@gmail.com>,
-	Alexander Viro <viro@ftp.linux.org.uk>,
-	linux-sparse@vger.kernel.org, Josh Triplett <josh@freedesktop.org>
-Subject: Re: [PATCH 6/9] drivers/net/wireless/iwlwifi/iwl-4965.c: Correct
-	use of ! and &
-Message-ID: <20080305070201.GA32434@elte.hu> (sfid-20080305_070244_040082_B433877E)
-References: <Pine.LNX.4.64.0802262143570.18200@ask.diku.dk> <20080305063842.GA24495@elte.hu> <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
+Received: from netrider.rowland.org ([192.131.102.5]:4852 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752858AbYCUDHR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2008 23:07:17 -0400
+Date: Thu, 20 Mar 2008 23:07:16 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Andrew Morton <akpm@linux-foundation.org>
+cc: Michael Buesch <mb@bu3sch.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	<linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<netdev@vger.kernel.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	<linux-usb@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<video4linux-list@redhat.com>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	<lm-sensors@lm-sensors.org>
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+In-Reply-To: <20080320192719.6a32386e.akpm@linux-foundation.org>
+Message-ID: <Pine.LNX.4.44L0.0803202301140.16520-100000@netrider.rowland.org> (sfid-20080321_030723_648820_60866D2B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <70318cbf0803042249j57d7f3a3j7666961a9132b10b@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 20 Mar 2008, Andrew Morton wrote:
 
-* Christopher Li <sparse@chrisli.org> wrote:
+> > > > Now, it happens that in_atomic() returns true on non-preemtible kernels
+> > > > when running in interrupt or softirq context.  But if the above code really
+> > > > is using in_atomic() to detect am-i-called-from-interrupt and NOT
+> > > > am-i-called-from-inside-spinlock, they should be using in_irq(),
+> > > > in_softirq() or in_interrupt().
+> > > 
+> > > Presumably most of these places are actually trying to detect 
+> > > am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
+> > 
+> > No, I think there is no such check in the kernel. Most likely for performance
+> > reasons, as it would require a global flag that is set on each spinlock.
+> 
+> Yup.  non-preemptible kernels avoid the inc/dec of
+> current_thread_info->preempt_count on spin_lock/spin_unlock
 
-> I think Al Viro has sent a patch to linux-sparse with subject "[PATCH 
-> 3/3] catch !x & y brainos" does exactly that.
+So then what's the point of having in_atomic() at all?  Is it nothing 
+more than a shorthand form of (in_irq() | in_softirq() | 
+in_interrupt())?
 
-ah - nice :-)
+In short, you are saying that there is _no_ reliable way to determine
+am-i-called-from-inside-spinlock.  Well, why isn't there?  Would it be 
+so terrible if non-preemptible kernels did adjust preempt_count on 
+spin_lock/unlock?
 
-/me checks the linux-sparse archive
+Alan Stern
 
-Al's patch is:
-
-+                       if (op == '&' && expr->left->type == EXPR_PREOP &&
-+                           expr->left->op == '!')
-+                               warning(expr->pos, "dubious: !x & y");
-
-i think there might be similar patterns: "x & !y", "!x | y", "x | !y" ?
-
-	Ingo
