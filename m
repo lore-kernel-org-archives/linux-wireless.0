@@ -1,84 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:21111 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758585AbYCEQCs (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:39583 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbYCUBhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 11:02:48 -0500
-Received: by ti-out-0910.google.com with SMTP id 28so1970563tif.23
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 08:02:46 -0800 (PST)
-Message-ID: <40f31dec0803050802y702bd648ub53a1f8e5453f661@mail.gmail.com> (sfid-20080305_160328_326649_570A5278)
-Date: Wed, 5 Mar 2008 18:02:44 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jerry Quinn" <jlquinn@optonline.net>
-Subject: Re: [Fwd: ath5k not working on 5212 mini-pci card]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47CE89B1.3050405@optonline.net>
+	Thu, 20 Mar 2008 21:37:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+Date: Fri, 21 Mar 2008 02:36:51 +0100
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	netdev@vger.kernel.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	video4linux-list@redhat.com,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	lm-sensors@lm-sensors.org
+References: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47CE89B1.3050405@optonline.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803210236.52063.mb@bu3sch.de> (sfid-20080321_013738_256572_3A7E7429)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/3/5, Jerry Quinn <jlquinn@optonline.net>:
-> Hi.  I just downloaded the wireless compat package (2008-03-04) to try
->  out ath5k on my thinkpad T60p.  I'm running Debian testing with the
->  Debian 2.6.22 kernel with uname
->     Linux naga 2.6.22-3-686 #1 SMP Mon Nov 12 08:32:57 UTC 2007 i686
->  GNU/Linux
->
->  When I try to load ath5k, I get the following kernel output:
->
->  Mar  5 00:03:42 naga kernel: PCI: Enabling device 0000:03:00.0 (0000 ->
->  0002)
->  Mar  5 00:03:42 naga kernel: ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI
->  17 (level, low) -> IRQ 21
->  Mar  5 00:03:42 naga kernel: PCI: Setting latency timer of device
->  0000:03:00.0 to 64
->  Mar  5 00:03:42 naga kernel: ath5k_pci 0000:03:00.0: registered as 'phy1'
->  Mar  5 00:03:43 naga kernel: ath5k phy1: failed to wakeup the MAC Chip
->  Mar  5 00:03:43 naga kernel: ACPI: PCI interrupt for device 0000:03:00.0
->  disabled
->  Mar  5 00:03:43 naga kernel: ath5k_pci: probe of 0000:03:00.0 failed
->  with error -5
->
->
->  lspci -vnn gives this for the wireless device:
->
->  03:00.0 Ethernet controller [0200]: Atheros Communications, Inc. AR5212
->  802.11abg NIC [168c:1014] (rev 01)
->     Subsystem: IBM ThinkPad 11a/b/g Wireless LAN Mini Express Adapter
->  (AR5BXB6) [1014:058a]
->     Flags: fast devsel, IRQ 21
->     Memory at edf00000 (64-bit, non-prefetchable) [size=64K]
->     Capabilities: [40] Power Management version 2
->     Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
->  Queue=0/0 Enable-
->     Capabilities: [60] Express Legacy Endpoint, MSI 00
->     Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
->     Capabilities: [100] Advanced Error Reporting <?>
->     Capabilities: [140] Virtual Channel <?>
->     Kernel modules: ath5k
->
->  I know the driver is still under development, but thought it might work
->  since 168c:0014 is listed as likely working.
->
->
->  Thanks,
->  Jerry Quinn
->
->  </div>
->
+On Friday 21 March 2008 02:31:44 Alan Stern wrote:
+> On Thu, 20 Mar 2008, Andrew Morton wrote:
+> 
+> > On Thu, 20 Mar 2008 21:36:04 -0300 Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
+> > 
+> > > Well, so far so good for LEDs, but what about the other users of in_atomic
+> > > that apparently should not be doing it either?
+> > 
+> > Ho hum.  Lots of cc's added.
+> 
+> ...
+> 
+> > The usual pattern for most of the above is
+> > 
+> > 	if (!in_atomic())
+> > 		do_something_which_might_sleep();
+> > 
+> > problem is, in_atomic() returns false inside spinlock on non-preptible
+> > kernels.  So if anyone calls those functions inside spinlock they will
+> > incorrectly schedule and another task can then come in and try take the
+> > already-held lock.
+> > 
+> > Now, it happens that in_atomic() returns true on non-preemtible kernels
+> > when running in interrupt or softirq context.  But if the above code really
+> > is using in_atomic() to detect am-i-called-from-interrupt and NOT
+> > am-i-called-from-inside-spinlock, they should be using in_irq(),
+> > in_softirq() or in_interrupt().
+> 
+> Presumably most of these places are actually trying to detect 
+> am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
 
-Yup, it's a known problem with pci-e cards (at least we think it's for
-all pci-e cards for now, we are sure it affects 2424/5424 and 2425).
-It's being fixed so expect a patch on wireless-testing soon. Have in
-mind that your card is not a 5212 (else your card should work), newer
-thinkpads have a 5424 card but for some reason IBM uses the same pci
-id.
-
-
+No, I think there is no such check in the kernel. Most likely for performance
+reasons, as it would require a global flag that is set on each spinlock.
+You simply must always _know_, if you are allowed to sleep or not. This is
+done by defining an API. The call-context is part of any kernel API.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Greetings Michael.
