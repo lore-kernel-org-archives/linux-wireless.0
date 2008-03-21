@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751524AbYCLOxz (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51752 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817AbYCUJ3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 10:53:55 -0400
-Subject: Re: 2.6.24, mac80211 and b/g switching
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Koutny <vlado@work.ksp.sk>
-Cc: "John W. Linville" <linville@tuxdriver.com>, mcgrof@gmail.com,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <47D6B3BC.9010000@work.ksp.sk> (sfid-20080311_163109_016617_2F17F012)
-References: <47D160E4.3040503@work.ksp.sk>
-	 <1204909966.6387.31.camel@johannes.berg> <47D17EDF.4010100@work.ksp.sk>
-	 <200803071916.28776.mb@bu3sch.de> <20080307193429.GA5561@tuxdriver.com>
-	 <47D1A7AC.6010307@work.ksp.sk>  <47D6B3BC.9010000@work.ksp.sk>
-	 (sfid-20080311_163109_016617_2F17F012)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v2qY3X1A1I0IoAD3+Mpu"
-Date: Wed, 12 Mar 2008 15:53:21 +0100
-Message-Id: <1205333601.15910.6.camel@johannes.berg> (sfid-20080312_145400_969786_E093AF21)
-Mime-Version: 1.0
+	Fri, 21 Mar 2008 05:29:09 -0400
+Message-ID: <47E37F86.2080804@s5r6.in-berlin.de> (sfid-20080321_092915_495416_C676DD79)
+Date: Fri, 21 Mar 2008 10:27:34 +0100
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+MIME-Version: 1.0
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	netdev@vger.kernel.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	video4linux-list@redhat.com, lm-sensors@lm-sensors.org
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+References: <20080316184349.GA28543@khazad-dum.debian.net>	<200803161246.23909.david-b@pacbell.net>	<20080318001429.896acf51.akpm@linux-foundation.org>	<20080320225612.GB20788@khazad-dum.debian.net>	<20080320164741.734e838c.akpm@linux-foundation.org>	<20080321003604.GC20788@khazad-dum.debian.net> <20080320180802.426ad2d1.akpm@linux-foundation.org> <47E37E04.3080303@s5r6.in-berlin.de>
+In-Reply-To: <47E37E04.3080303@s5r6.in-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I wrote:
+> Andrew Morton wrote:
+>> ./drivers/ieee1394/ieee1394_transactions.c
+>>
+>>   Possibly buggy: deadlockable
+> 
+> That's in hpsb_get_tlabel(), an exported symbol of the ieee1394 core.
+> 
+> The in_atomic() there didn't cause problems yet and is unlikely to do so 
+> in the future, because there are no plans for substantial changes to the 
+> whole drivers/ieee1394/ anymore (because of drivers/firewire/).
+> 
+> Nevertheless I shall look into replacing the in_atomic() by in_softirq() 
+> or something like that.
 
---=-v2qY3X1A1I0IoAD3+Mpu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Or extend the API to have separate calls for callers which can sleep and 
+callers which can't.  But that may be thwarted by deep call chains.
 
-Hi Vladimir,
-
-> So I've opted for compat-wireless-2.6 way, and as my first concern was
-> to see if cw_min is being set correctly I've immediately come across an
-> issue here:
->=20
-> conf_tx (called from ieee80211_sta_set_ssid) is being called before
-> IEEE80211_SDATA_OPERATING_GMODE flag is set/cleared (which is done in
-> ieee80211_rx_mgmt_assoc_resp). That means conf_tx will use cw_min
-> parameters from previous association, so when you switch between B and G
-> APs, you will end up with wrong cw_min.
->=20
-> Shouldn't conf_tx better be called only/also after association finishes?
->  Or should the IEEE80211_SDATA_OPERATING_GMODE flag be set prior to
-> auth/assoc based on previous beacon/probe response info?
-
-Good question. I think it should probably be set once we have decided
-which network we will associate with as, in theory, we could send out
-management frames with RTS/CTS protection too.
-
-johannes
-
---=-v2qY3X1A1I0IoAD3+Mpu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9fuYKVg1VMiehFYAQL+5hAAtnVDm8lmXAyk0ZvHNJEudNv+ztojYNN0
-1ZgT6HeaS7rwLlvB6UcuyhEVGAYIvh+u0NH9OMCA71l/01+94+rncit2yo3RAQsK
-NftseCrkgxVRGj6oeF7n+sG8Y5dOHRUVAFwUYDJDhWKKIGEgXoys8Q4NRQDfwcp6
-ds/TaMXkSvYqOEZ8wn6Nhb74N3xNGFLCR5W+btf1LEldUllE5jwaZk5NX6+PVKpm
-Bxz7w+cVxvqbciEAHH/VQqnqjoGsdQ3zRQ25jjBtINeODJZ97K7R+SCqnGyUIhTk
-PJujWqQK/kW+ki5U7OxkYSshO/+JbzFzjH1YyfljUI9O4np9OubzQiNHcfjqu3LX
-+lBjrwLWRCaw1SBSgnovwUm/13IqCYlnppB2IjDHczumZsZr8AklYp67/Y9MXS2f
-X3Ki+lmWSzEnWjTUsNRMoUI8G4bthdayN5mqBuE1uIBmLbYkEEOqSgMa15OyJuLc
-7bZw0V+DlwfSjGdXIAVE3Xkz3GJan7nXZO1rz4LRpfeRRIPxbfSWlzd1LYa43/Lg
-jUxCoFnfvIqhrDZPoKGq3+iumMeAsnZira+JhZ7TW7uTlTFpeIxBjPsYxF5dLLt8
-vw1VX6M/2GQN7wt4ZTuy+FYVnFPmU/IjibGTXW6qqGIe/i7IxXLHMXbvJrdHbIBx
-HOCCMlfld0o=
-=7xVB
------END PGP SIGNATURE-----
-
---=-v2qY3X1A1I0IoAD3+Mpu--
-
+> Touching this legacy code is dangerous though.
+-- 
+Stefan Richter
+-=====-==--- --== =-=-=
+http://arcgraph.de/sr/
