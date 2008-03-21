@@ -1,88 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61044 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868AbYCKXSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 19:18:12 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/6] iwlwifi: Use sta_bcast_id variable instead of BROADCAST_ID constant
-Date: Tue, 11 Mar 2008 16:17:16 -0700
-Message-Id: <1205277440-14323-3-git-send-email-reinette.chatre@intel.com> (sfid-20080311_231827_663383_7EA58FE9)
-In-Reply-To: <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
-References: <1205277440-14323-1-git-send-email-reinette.chatre@intel.com>
- <1205277440-14323-2-git-send-email-reinette.chatre@intel.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34416 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754629AbYCUUCL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2008 16:02:11 -0400
+Date: Fri, 21 Mar 2008 12:59:50 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Greg KH <greg@kroah.com>
+Cc: heiko.carstens@de.ibm.com, mb@bu3sch.de, stern@rowland.harvard.edu,
+	hmh@hmh.eng.br, david-b@pacbell.net, rpurdie@rpsys.net,
+	linux-kernel@vger.kernel.org, mingo@elte.hu, geert@linux-m68k.org,
+	netdev@vger.kernel.org, schwidefsky@de.ibm.com,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	video4linux-list@redhat.com, stefanr@s5r6.in-berlin.de,
+	lm-sensors@lm-sensors.org
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+Message-Id: <20080321125950.a5b38bda.akpm@linux-foundation.org> (sfid-20080321_200219_839834_693CE531)
+In-Reply-To: <20080321165405.GC5766@kroah.com>
+References: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org>
+	<200803210236.52063.mb@bu3sch.de>
+	<20080320192719.6a32386e.akpm@linux-foundation.org>
+	<20080321134750.GB4128@osiris.boeblingen.de.ibm.com>
+	<20080321165405.GC5766@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Fri, 21 Mar 2008 09:54:05 -0700 Greg KH <greg@kroah.com> wrote:
 
-This patch removes iwlYYY_BROADCAST_ID from run time usage.
-hw_setting.sta_bcast_id is used instead.
+> > > > You simply must always _know_, if you are allowed to sleep or not. This is
+> > > > done by defining an API. The call-context is part of any kernel API.
+> > > 
+> > > Yup.  99.99% of kernel code manages to do this...
+> > 
+> > This is difficult for console drivers. They get called and are supposed to
+> > print something and don't have the slightest clue which context they are
+> > running in and if they are allowed to schedule.
+> > This is the problem with e.g. s390's sclp driver. If there are no write
+> > buffers available anymore it tries to allocate memory if schedule is allowed
+> > or otherwise has to wait until finally a request finished and memory is
+> > available again.
+> > And now we have to always busy wait if we are out of buffers, since we
+> > cannot tell which context we are in?
+> 
+> This is the reason why the drivers/usb/misc/sisusbvga driver is trying
+> to test for in_atomic:
+>         /* We can't handle console calls in non-schedulable
+>          * context due to our locks and the USB transport.
+>          * So we simply ignore them. This should only affect
+>          * some calls to printk.
+>          */
+>         if (in_atomic())
+>                 return NULL;
+> 
+> 
+> So how should this be "fixed" if in_atomic() is not a valid test?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-4965.c |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Well.  The kernel has traditionally assumed that console writes are atomic.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 50a641c..9a9918e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -980,7 +980,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl3945_priv *priv,
- 	priv->stations[sta_id].current_rate.rate_n_flags = rate;
- 
- 	if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
--	    (sta_id != IWL3945_BROADCAST_ID) &&
-+	    (sta_id != priv->hw_setting.bcast_sta_id) &&
- 		(sta_id != IWL_MULTICAST_ID))
- 		priv->stations[IWL_STA_ID].current_rate.rate_n_flags = rate;
- 
-@@ -2595,7 +2595,7 @@ unsigned int iwl3945_hw_get_beacon_cmd(struct iwl3945_priv *priv,
- 	tx_beacon_cmd = (struct iwl3945_tx_beacon_cmd *)&frame->u;
- 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
- 
--	tx_beacon_cmd->tx.sta_id = IWL3945_BROADCAST_ID;
-+	tx_beacon_cmd->tx.sta_id = priv->hw_setting.bcast_sta_id;
- 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
- 
- 	frame_size = iwl3945_fill_beacon_frame(priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 2f01a49..1fe8cc4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -254,7 +254,7 @@ u8 iwl4965_hw_find_station(struct iwl4965_priv *priv, const u8 *addr)
- 		start = IWL_STA_ID;
- 
- 	if (is_broadcast_ether_addr(addr))
--		return IWL4965_BROADCAST_ID;
-+		return priv->hw_setting.bcast_sta_id;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	for (i = start; i < priv->hw_setting.max_stations; i++)
-@@ -2836,7 +2836,7 @@ unsigned int iwl4965_hw_get_beacon_cmd(struct iwl4965_priv *priv,
- 	tx_beacon_cmd = &frame->u.beacon;
- 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
- 
--	tx_beacon_cmd->tx.sta_id = IWL4965_BROADCAST_ID;
-+	tx_beacon_cmd->tx.sta_id = priv->hw_setting.bcast_sta_id;
- 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
- 
- 	frame_size = iwl4965_fill_beacon_frame(priv,
-@@ -4436,7 +4436,7 @@ void iwl4965_add_station(struct iwl4965_priv *priv, const u8 *addr, int is_ap)
- 	link_cmd.agg_params.agg_time_limit = cpu_to_le16(4000);
- 
- 	/* Update the rate scaling for control frame Tx to AP */
--	link_cmd.sta_id = is_ap ? IWL_AP_ID : IWL4965_BROADCAST_ID;
-+	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_setting.bcast_sta_id;
- 
- 	iwl4965_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD, sizeof(link_cmd),
- 			 &link_cmd);
--- 
-1.5.3.4
+But we now have complex sleepy drivers acting as consoles.  Presumably this
+means that large amounts of device driver code, page allocator code, etc
+cannot have printks in them without going recursive.  Except printk itself
+internally handles that, due to its need to be able to handle
+printk-from-interrupt-when-this-cpu-is-already-running-printk.
+
+The typical fix is for these console drivers to just assume that they
+cannot sleep: pass GFP_ATOMIC down into the device driver code.  But I bet
+the device driver code was designed assuming that it could sleep,
+oops-bad-we-lose.
+
+And it's not just sleep-in-spinlock.  If any of that device driver code
+uses alloc_pages(GFP_KERNEL) then it can deadlock if we do a printk from
+within the page allocator (and hence a lot of the block and storage layer).
+Because in those code paths we must use GFP_NOFS or GFP_NOIO to allocate
+memory.
+
+So I think the right fix here is to switch those drivers to being
+unconditionally atomic: don't schedule, don't take mutexes, don't use
+__GFP_WAIT allocations.
+
+They could of course be switched to using
+kmalloc(GFP_ATOMIC)+memcpy()+schedule_task().  That's rather slow, but this
+is not a performance-sensitive area.  But more seriously, this could lead
+to messages getting lost from a dying machine.
+
+One possibility would be to do current->called_for_console_output=1 and
+then test that in various places.  But a) ugh and b) that's only useful for
+memory allocations - it doesn't help if sleeping locks need to be taken.
+
+Another possibility might be:
+
+	if (current->called_for_console_output == false) {
+		mutex_lock(lock);
+	} else {
+		if (!mutex_trylock(lock))
+			return -EAGAIN;
+	}
+
+and then teach the console-calling code to requeue the message for later. 
+But that's hard, because the straightforward implementation would result in
+the output being queued for _all_ the currently active consoles, but some
+of them might already have displayed this output - there's only one
+log_buf.
+
+
+An interesting problem ;)
 
