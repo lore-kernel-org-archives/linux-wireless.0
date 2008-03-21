@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:22607 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbYCZM3v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 08:29:51 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: the compact flash driver is no longer experimental
-Date: Wed, 26 Mar 2008 13:26:55 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803261326.55437.hs4233@mail.mn-solutions.de> (sfid-20080326_122955_394033_18FC244F)
+Received: from mga02.intel.com ([134.134.136.20]:25958 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760503AbYCUU6b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2008 16:58:31 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/5] iwlwifi driver updates
+Date: Fri, 21 Mar 2008 13:53:39 -0700
+Message-Id: <1206132824-20558-1-git-send-email-reinette.chatre@intel.com> (sfid-20080321_205958_671412_5D572313)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+This series contains a few iwlwifi driver updates and one bugfix.
 
-Index: wireless-testing/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Kconfig	2008-03-26 12:25:36.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/Kconfig	2008-03-26 12:25:44.000000000 +0100
-@@ -283,7 +283,7 @@ config LIBERTAS_USB
- 
- config LIBERTAS_CS
- 	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
--	depends on LIBERTAS && PCMCIA && EXPERIMENTAL
-+	depends on LIBERTAS && PCMCIA
- 	select FW_LOADER
- 	---help---
- 	  A driver for Marvell Libertas 8385 CompactFlash devices.
+The fix "iwlwifi: fix __devexit_p points to __devexit functions" was
+created based on a report for 2.6.25-rc6. Is it enough of a bugfix to
+make it into 2.6.25?
+
+Most changes in this series are cleanup and movement of code to
+a central library.
+
+[PATCH 1/5] MAINTAINERS: update iwlwifi git url
+[PATCH 2/5] iwlwifi: fix __devexit_p points to __devexit functions
+[PATCH 3/5] iwlwifi: iwl3945 remove 4965 commands
+[PATCH 4/5] iwlwifi: rename iwl4965_get_channel_info to iwl_get_channel_info
+[PATCH 5/5] iwlwifi: move host command sending functions to core module
+
+
+Thanks
+
+Reinette
+
