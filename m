@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mamut.efuzja.net.pl ([193.93.204.8]:56159 "EHLO efuzja.net.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936708AbYCSVjO convert rfc822-to-8bit (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51709 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbYCUJXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 17:39:14 -0400
-From: Kamil =?utf-8?q?Seroczy=C5=84ski?= <serkamil@serkamil.org.pl>
-To: mb@bu3sch.de, stefano.brivio@polimi.it
-Subject: b43 and latest compat-wireless ( 2.8-48-g7a95475 ) - don't work
-Date: Wed, 19 Mar 2008 22:08:01 +0100
-Cc: linux-wireless@vger.kernel.org
+	Fri, 21 Mar 2008 05:23:16 -0400
+Message-ID: <47E37E04.3080303@s5r6.in-berlin.de> (sfid-20080321_092323_661974_B17ED86A)
+Date: Fri, 21 Mar 2008 10:21:08 +0100
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200803192208.01318.serkamil@serkamil.org.pl> (sfid-20080319_213947_072441_D4C8F629)
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	netdev@vger.kernel.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	video4linux-list@redhat.com, lm-sensors@lm-sensors.org
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+References: <20080316184349.GA28543@khazad-dum.debian.net>	<200803161246.23909.david-b@pacbell.net>	<20080318001429.896acf51.akpm@linux-foundation.org>	<20080320225612.GB20788@khazad-dum.debian.net>	<20080320164741.734e838c.akpm@linux-foundation.org>	<20080321003604.GC20788@khazad-dum.debian.net> <20080320180802.426ad2d1.akpm@linux-foundation.org>
+In-Reply-To: <20080320180802.426ad2d1.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Andrew Morton wrote:
+> ./drivers/ieee1394/ieee1394_transactions.c
+> 
+>   Possibly buggy: deadlockable
 
-i have problem with compat-wireless ... i try tell you what hapend, and=
- i hope=20
-you ( meybe we ;) ) find problem and fix them ...
+That's in hpsb_get_tlabel(), an exported symbol of the ieee1394 core.
 
-I have hp compaq 6715b ( GC049ES; links, if you want to know some more =
-on the=20
-bottom the mail ) witch broadcom 4311 rev. 2 ( Network controller: Broa=
-dcom=20
-Corporation BCM94311MCG wlan mini-PCI (rev 02); 14e4:4311 (rev 02) ) wi=
-tch=20
-linux kernel 2.6.22-2 ( # uname -a Linux serkamil 2.6.22-2-amd64 #1 SMP=
- Thu=20
-Aug 30 23:43:59 UTC 2007 x86_64 GNU/Linux ).
+The in_atomic() there didn't cause problems yet and is unlikely to do so 
+in the future, because there are no plans for substantial changes to the 
+whole drivers/ieee1394/ anymore (because of drivers/firewire/).
 
-This device work fine witch compat-wireless-2.6 where in the file=20
-compat-release is string '2.8-12-g0270147'.
-The same device, on the same OS and Kernel don't working witch latest=20
-comat-wireless-2.6 where in the file compat-release is=20
-string '2.8-48-g7a95475'.
+Nevertheless I shall look into replacing the in_atomic() by in_softirq() 
+or something like that.  Touching this legacy code is dangerous though.
 
-1. where i can find what changeing? I thing in=20
-http://git.kernel.org/?p=3Dlinux/kernel/git/mcgrof/compat-wireless-2.6.=
-git;a=3Dtree;hb=3DHEAD=20
-but i don't know how to find it there.
-2. it is important ( helping ) information for developers?
-3. how i can help developers makeing working/good software/driver? what=
- i can=20
-do? if you want something, tell me, and i try help you.
 
-[links]
+Some background:
 
-HP Compaq 6715b and 6715s Notebook PC and HP Compaq 6710b and 6710s Not=
-ebook=20
-PC Maintenance and Service Guide:=20
-http://h20000.www2.hp.com/bc/docs/support/SupportManual/c01039189/c0103=
-9189.pdf
+This in_atomic() is just one symptom of one of the fundamental design 
+flaws of the ieee1394 stack:  The "tlabels" (transaction labels, a 
+limited resource) are acquired not only in process context but also in 
+soft IRQ context --- but they are released only in process context. 
+Unsurprisingly (in hindsight), the stack used to run out of tlabels 
+simply because the tlabel consumers were scheduled more frequently than 
+the tlabel recycler.  This resulted in IO failures in sbp2 and eth1394.
 
-QuickSpecs HP Compaq 6715b Notebook PC:=20
-http://h18000.www1.hp.com/products/quickspecs/12686_na/12686_na.PDF
+This is one of the design problems which inspired the submission of a 
+new alternative driver stack.  (Though this particular one of the 
+ieee1394 stack's problems could of course also be solved by a rework of 
+the stack --- with a respective need of resources for testing and some 
+danger of regressions.)
 
-best wishes and greetings
-and <b>realy big thanks</b> for your working, with makeing driver for l=
-inux
+In the meantime (Linux 2.6.19 and 2.6.22) I added workarounds in sbp2 
+and eth1394 to deal with temporary lack of of tlabels.  Alas I just 
+recently received a report that eth1394's workaround is unsuccessful on 
+non-preemptible uniprocessor kernels.  I suspect the same issue exists 
+with sbp2's workaround, it just isn't as likely to happen there.
 
-sorry for my english ... it ( my english ) is terrible !!
---=20
-Kamil Seroczy=C5=84ski
-e-mail: serkamil(at)serkamil(dot)org(dot)pl
-skype:  serkamil
-sip:	serkamil(at)ekiga(dot)net
-jabber: serkamil(at)jabber(dot)org
-gadu:   3002410
-yahoo:  serkamil
-aim:    serkamil
-icq:	381905938
-tlen:	serkamil
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The new drivers/firewire/ recycle tlabels in bottom halves context and 
+in timer context, which is the appropriate approach.  Alas 
+drivers/firewire/ don't have an eth1394 equivalent yet...
+-- 
+Stefan Richter
+-=====-==--- --== =-=-=
+http://arcgraph.de/sr/
