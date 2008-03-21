@@ -1,77 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.176]:53129 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757056AbYCYS7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 14:59:54 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1075327ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 11:59:51 -0700 (PDT)
-Message-ID: <1ba2fa240803251159p70de1d51jc739b9d141922da3@mail.gmail.com> (sfid-20080325_190000_207026_3FE410AE)
-Date: Tue, 25 Mar 2008 20:59:49 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Subject: Re: [PATCH][RESEND] wireless: convert !X & Y to !(X & Y) iniwl4965_is_fat_tx_allowed()
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Roel Kluin" <12o3l@tiscali.nl>, "Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-In-Reply-To: <D936D925018D154694D8A362EEB08920040372DB@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <47E9226C.7090403@tiscali.nl>
-	 <D936D925018D154694D8A362EEB08920040370C5@orsmsx416.amr.corp.intel.com>
-	 <20080325174227.GB3026@tuxdriver.com>
-	 <D936D925018D154694D8A362EEB08920040372DB@orsmsx416.amr.corp.intel.com>
+Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:41361 "EHLO
+	sous-sol.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763410AbYCUWx0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2008 18:53:26 -0400
+Message-Id: <20080321224421.540314761@sous-sol.org> (sfid-20080321_225337_864790_87AD5AD6)
+References: <20080321224250.144333319@sous-sol.org>
+Date: Fri, 21 Mar 2008 15:43:37 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, Michael Buesch <mb@bu3sch.de>,
+	Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, alexey.zaytsev@gmail.com,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [patch 47/76] b43: Backport bcm4311 fix
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 8:26 PM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
->
-> On Tuesday, March 25, 2008 10:42 AM, John W. Linville  wrote:
->
->  > On Tue, Mar 25, 2008 at 09:30:58AM -0700, Chatre, Reinette wrote:
->  >> On Tuesday, March 25, 2008 9:04 AM, Roel Kluin  wrote:
->  >>
->  >>> from include/linux/ieee80211.h:274:
->  >>> #define IEEE80211_HT_CAP_SUP_WIDTH              0x0002 ---
->  >>> ! has a higher priority than &
->  >>>
->  >>> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
->  >>> ---
->  >>> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c
->  >>> b/drivers/net/wireless/iwlwifi/iwl-4965.c
->  >>> index d727de8..6576757 100644
->  >>> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
->  >>> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
->  >>> @@ -4589,7 +4589,7 @@ static u8
->  >>> iwl4965_is_fat_tx_allowed(struct iwl4965_priv *priv,
->  >>>
->  >>>     if (sta_ht_inf) {
->  >>>             if ((!sta_ht_inf->ht_supported) ||
->  >>> -              (!sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH))
->  >>> +              (!(sta_ht_inf->cap & IEEE80211_HT_CAP_SUP_WIDTH)))
->  return 0;
->  >>>     }
->  >>
->  >> This patch has already been acked and merged into wireless-testing,
->  >> and afaik already pushed further upstream.
->  >
->  > Yes, but FWIW the problem exists in the 2.6.25 stream as well.
->  > I've been holding-back a patch to fix it there, trying to decide if it
->  > is worth creating the merge conflict to fix it there.  I'm inclined
->  > to think it is better to let things lay as they are and send that
->  > patch for the -stable series once 2.6.25 ships.
->  >
->  > Any thoughts on that?
->
->  I see. The patch is small and I thus assume a merge conflict will be
->  easy to resolve. Yet ... I do not know what is really involved in the
->  upstream code movements, while I know that you do. If you say it is
->  better to wait until stable then I am ok with it.
+-stable review patch.  If anyone has any objections, please let us know.
+---------------------
 
-I have to find the patch but I believe we've published a fix for this
-long before this particular patch was born.
-Anyhow if HT is enabled in 2.6.25 I would prefer  a conflict then a bug.
+From: Michael Buesch <mb@bu3sch.de>
 
-Thanks
-Tomas
+This is a backport of upstream commit 013978b6 ("b43: Changes to enable
+BCM4311 rev 02 with wireless core revision 13") and the changes include
+the following:
+
+(1) Add the 802.11 rev 13 device to the ssb_device_id table to load b43.
+(2) Add PHY revision 9 to the supported list.
+(3) Change the 2-bit routing code for address extensions to 0b10 rather
+    than the 0b01 used for the 32-bit case.
+(4) Remove some magic numbers in the DMA setup.
+
+The DMA implementation for this chip supports full 64-bit addressing with
+one exception. Whenever the Descriptor Ring Buffer is in high memory, a
+fatal DMA error occurs. This problem was not present in 2.6.24-rc2 due
+to code to "Bias the placement of kernel pages at lower PFNs". When
+commit 44048d70 reverted that code, the DMA error appeared. As a "fix",
+use the GFP_DMA flag when allocating the buffer for 64-bit DMA. At present,
+this problem is thought to arise from a hardware error.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/b43/dma.c  |   30 ++++++++++++++++++++++--------
+ drivers/net/wireless/b43/main.c |    3 ++-
+ 2 files changed, 24 insertions(+), 9 deletions(-)
+
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -165,7 +165,7 @@ static void op64_fill_descriptor(struct 
+ 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+ 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+ 	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addrhi |= ssb_dma_translation(ring->dev->dev);
++	addrhi |= (ssb_dma_translation(ring->dev->dev) << 1);
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+ 	if (start)
+@@ -426,9 +426,21 @@ static inline
+ static int alloc_ringmemory(struct b43_dmaring *ring)
+ {
+ 	struct device *dev = ring->dev->dev->dev;
++	gfp_t flags = GFP_KERNEL;
+ 
++	/* The specs call for 4K buffers for 30- and 32-bit DMA with 4K
++	 * alignment and 8K buffers for 64-bit DMA with 8K alignment. Testing
++	 * has shown that 4K is sufficient for the latter as long as the buffer
++	 * does not cross an 8K boundary.
++	 *
++	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
++	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
++	 * which accounts for the GFP_DMA flag below.
++	 */
++	if (ring->dma64)
++		flags |= GFP_DMA;
+ 	ring->descbase = dma_alloc_coherent(dev, B43_DMA_RINGMEMSIZE,
+-					    &(ring->dmabase), GFP_KERNEL);
++					    &(ring->dmabase), flags);
+ 	if (!ring->descbase) {
+ 		b43err(ring->dev->wl, "DMA ringmemory allocation failed\n");
+ 		return -ENOMEM;
+@@ -483,7 +495,7 @@ int b43_dmacontroller_rx_reset(struct b4
+ 	return 0;
+ }
+ 
+-/* Reset the RX DMA channel */
++/* Reset the TX DMA channel */
+ int b43_dmacontroller_tx_reset(struct b43_wldev *dev, u16 mmio_base, int dma64)
+ {
+ 	int i;
+@@ -647,7 +659,7 @@ static int dmacontroller_setup(struct b4
+ 			b43_dma_write(ring, B43_DMA64_TXRINGHI,
+ 				      ((ringbase >> 32) &
+ 				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++				      | (trans << 1));
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 
+@@ -680,8 +692,9 @@ static int dmacontroller_setup(struct b4
+ 			b43_dma_write(ring, B43_DMA64_RXRINGHI,
+ 				      ((ringbase >> 32) &
+ 				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
+-			b43_dma_write(ring, B43_DMA64_RXINDEX, 200);
++				      | (trans << 1));
++			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
++				      sizeof(struct b43_dmadesc64));
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 
+@@ -695,11 +708,12 @@ static int dmacontroller_setup(struct b4
+ 			b43_dma_write(ring, B43_DMA32_RXRING,
+ 				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+ 				      | trans);
+-			b43_dma_write(ring, B43_DMA32_RXINDEX, 200);
++			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
++				      sizeof(struct b43_dmadesc32));
+ 		}
+ 	}
+ 
+-      out:
++out:
+ 	return err;
+ }
+ 
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -101,6 +101,7 @@ static const struct ssb_device_id b43_ss
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 7),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
++	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 13),
+ 	SSB_DEVTABLE_END
+ };
+ 
+@@ -3079,7 +3080,7 @@ static int b43_phy_versioning(struct b43
+ 			unsupported = 1;
+ 		break;
+ 	case B43_PHYTYPE_G:
+-		if (phy_rev > 8)
++		if (phy_rev > 9)
+ 			unsupported = 1;
+ 		break;
+ 	default:
+
+-- 
