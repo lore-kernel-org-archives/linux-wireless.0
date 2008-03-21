@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1545 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752149AbYCKRQh convert rfc822-to-8bit (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43722 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754481AbYCUMhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 13:16:37 -0400
+	Fri, 21 Mar 2008 08:37:14 -0400
+Date: Fri, 21 Mar 2008 09:37:08 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Brownell <david-b@pacbell.net>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	netdev@vger.kernel.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	video4linux-list@redhat.com, lm-sensors@lm-sensors.org
+Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
+Message-ID: <20080321123708.GE5586@khazad-dum.debian.net> (sfid-20080321_123720_305766_4C338C7B)
+References: <20080316184349.GA28543@khazad-dum.debian.net> <200803161246.23909.david-b@pacbell.net> <20080318001429.896acf51.akpm@linux-foundation.org> <20080320225612.GB20788@khazad-dum.debian.net> <20080320164741.734e838c.akpm@linux-foundation.org> <20080321003604.GC20788@khazad-dum.debian.net> <20080320180802.426ad2d1.akpm@linux-foundation.org> <47E37E04.3080303@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 0/7] iwlwifi driver updates
-Date: Tue, 11 Mar 2008 10:12:37 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892003E01929@orsmsx416.amr.corp.intel.com> (sfid-20080311_171641_529895_726BF20C)
-In-Reply-To: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
-References: <1205174112-18962-1-git-send-email-reinette.chatre@intel.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	<linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47E37E04.3080303@s5r6.in-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, March 10, 2008 11:35 AM, Chatre, Reinette  wrote:
+On Fri, 21 Mar 2008, Stefan Richter wrote:
+> and eth1394 to deal with temporary lack of of tlabels.  Alas I just  
+> recently received a report that eth1394's workaround is unsuccessful on  
+> non-preemptible uniprocessor kernels.  I suspect the same issue exists  
 
-> Series contains LED support as a new feature, some fixes, as well as
-> changes to move to a shared library design.
-> 
-> [PATCH 1/7] iwlwifi: Add led support
-> [PATCH 2/7] iwlwifi: fix bug to show hidden APs during scan
-> [PATCH 3/7] iwlwifi: Use sta_bcast_id variable instead of
-> BROADCAST_ID constant [PATCH 4/7] iwlwifi: update copyright year
-> [PATCH 5/7] iwlwifi: Use eeprom form iwlcore
-> [PATCH 6/7] iwlwifi: Fix endianity in debug print
-> [PATCH 7/7] iwlwifi: change rate number to a constant
-> 
-> 
-> Reinette
+Which, I think, is exactly the config where in_atomic() can't be used to
+mean "in_scheduleable_context()" ?
 
-John,
-
-Could you please ignore this series - I will resend it later.
-
-Sorry for the inconvenience.
-
-Reinette
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
