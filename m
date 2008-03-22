@@ -1,66 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51999 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:41823 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbYCRBVH (ORCPT
+	with ESMTP id S1753291AbYCVVH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 21:21:07 -0400
+	Sat, 22 Mar 2008 17:07:28 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 1/5] b43: Use the b43_phy_maskset where possible
-Date: Tue, 18 Mar 2008 02:20:44 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1205801249.2329.49.camel@brick> <200803180200.09331.mb@bu3sch.de> <1205802651.2329.59.camel@brick>
-In-Reply-To: <1205802651.2329.59.camel@brick>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix DMA mapping leakage
+Date: Sat, 22 Mar 2008 22:04:45 +0100
+Cc: Christian Casteyde <casteyde.christian@free.fr>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200803180220.44825.mb@bu3sch.de> (sfid-20080318_012111_119418_B4DFFE79)
+  charset="us-ascii"
+Message-Id: <200803222204.45919.mb@bu3sch.de> (sfid-20080322_210733_407649_E61BB399)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 18 March 2008 02:10:51 Harvey Harrison wrote:
-> On Tue, 2008-03-18 at 02:00 +0100, Michael Buesch wrote:
-> > On Tuesday 18 March 2008 01:47:29 Harvey Harrison wrote:
-> > > [lots of patches]
-> > 
-> > What do these patches actually fix?
-> > I see they shuffle a _lot_ of code around, but what does that
-> > actually fix? As I said, I won't apply any patch that just shuffles
-> > code without fixing anything.
-> 
-> This was done as I checked through the remaining nested cases for
-> mismatched registers being read/written to after sending the fix
-> for the braces typo last week.  The easiest way I found to do that
-> was convert them over as I checked them.
+This fixes a DMA mapping leakage in the case where we reject a DMA
+buffer because of its address.
 
-Ok nice.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Casteyde <casteyde.christian@free.fr>
 
-> > This shuffling has a _HUGE_ risk of introducing bugs that I am NOT
-> > going to debug and fix afterwards.
-> > The code works pretty well. There's absolutely no need to rewrite it.
-> > 
-> > And no, "this makes the code 200bytes smaller" doesn't count as a fix. :)
-> > 
-> 
-> Well, I think in some cases it looks a _lot_ better,
+---
 
-I _completely_ agree with you. That was the reason I introduced the functions
-in the first place.
+John, this is a fix for 2.6.25.
 
-> but I understand 
-> your reluctance to mess with something lacking docs.
 
-Yep. These functions were never meant to replace the old G-PHY code.
-They were only meant to be used in _new_ code, like the N-PHY and
-possibly LP-PHY code.
-
-> I'm done here, just thought as I had done the work while checking it
-> I may as well make it available in case someone wanted it.
-
-Yeah, cool. Thanks a lot for checking. I really appreciate that a lot.
-While I still reject the patches, the actual review-work is a _lot_ more
-valueable anyway.
-Thanks a lot. Nice work.
-
--- 
-Greetings Michael.
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-22 21:50:35.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-22 21:57:53.000000000 +0100
+@@ -512,34 +512,40 @@ static int b43_dmacontroller_tx_reset(st
+ 	return 0;
+ }
+ 
+ /* Check if a DMA mapping address is invalid. */
+ static bool b43_dma_mapping_error(struct b43_dmaring *ring,
+ 				  dma_addr_t addr,
+-				  size_t buffersize)
++				  size_t buffersize, bool dma_to_device)
+ {
+ 	if (unlikely(dma_mapping_error(addr)))
+ 		return 1;
+ 
+ 	switch (ring->type) {
+ 	case B43_DMA_30BIT:
+ 		if ((u64)addr + buffersize > (1ULL << 30))
+-			return 1;
++			goto address_error;
+ 		break;
+ 	case B43_DMA_32BIT:
+ 		if ((u64)addr + buffersize > (1ULL << 32))
+-			return 1;
++			goto address_error;
+ 		break;
+ 	case B43_DMA_64BIT:
+ 		/* Currently we can't have addresses beyond
+ 		 * 64bit in the kernel. */
+ 		break;
+ 	}
+ 
+ 	/* The address is OK. */
+ 	return 0;
++
++address_error:
++	/* We can't support this address. Unmap it again. */
++	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
++
++	return 1;
+ }
+ 
+ static int setup_rx_descbuffer(struct b43_dmaring *ring,
+ 			       struct b43_dmadesc_generic *desc,
+ 			       struct b43_dmadesc_meta *meta, gfp_t gfp_flags)
+ {
+@@ -551,26 +557,26 @@ static int setup_rx_descbuffer(struct b4
+ 	B43_WARN_ON(ring->tx);
+ 
+ 	skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
+ 	if (unlikely(!skb))
+ 		return -ENOMEM;
+ 	dmaaddr = map_descbuffer(ring, skb->data, ring->rx_buffersize, 0);
+-	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
++	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+ 		/* ugh. try to realloc in zone_dma */
+ 		gfp_flags |= GFP_DMA;
+ 
+ 		dev_kfree_skb_any(skb);
+ 
+ 		skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
+ 		if (unlikely(!skb))
+ 			return -ENOMEM;
+ 		dmaaddr = map_descbuffer(ring, skb->data,
+ 					 ring->rx_buffersize, 0);
+ 	}
+ 
+-	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
++	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+ 		dev_kfree_skb_any(skb);
+ 		return -EIO;
+ 	}
+ 
+ 	meta->skb = skb;
+ 	meta->dmaaddr = dmaaddr;
+@@ -804,13 +810,14 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 		/* test for ability to dma to txhdr_cache */
+ 		dma_test = dma_map_single(dev->dev->dev,
+ 					  ring->txhdr_cache,
+ 					  b43_txhdr_size(dev),
+ 					  DMA_TO_DEVICE);
+ 
+-		if (b43_dma_mapping_error(ring, dma_test, b43_txhdr_size(dev))) {
++		if (b43_dma_mapping_error(ring, dma_test,
++					  b43_txhdr_size(dev), 1)) {
+ 			/* ugh realloc */
+ 			kfree(ring->txhdr_cache);
+ 			ring->txhdr_cache = kcalloc(nr_slots,
+ 						    b43_txhdr_size(dev),
+ 						    GFP_KERNEL | GFP_DMA);
+ 			if (!ring->txhdr_cache)
+@@ -819,13 +826,13 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 			dma_test = dma_map_single(dev->dev->dev,
+ 						  ring->txhdr_cache,
+ 						  b43_txhdr_size(dev),
+ 						  DMA_TO_DEVICE);
+ 
+ 			if (b43_dma_mapping_error(ring, dma_test,
+-						  b43_txhdr_size(dev)))
++						  b43_txhdr_size(dev), 1))
+ 				goto err_kfree_txhdr_cache;
+ 		}
+ 
+ 		dma_unmap_single(dev->dev->dev,
+ 				 dma_test, b43_txhdr_size(dev),
+ 				 DMA_TO_DEVICE);
+@@ -1120,13 +1127,13 @@ static int dma_tx_fragment(struct b43_dm
+ 		ring->used_slots = old_used_slots;
+ 		return err;
+ 	}
+ 
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 					   hdrsize, 1);
+-	if (b43_dma_mapping_error(ring, meta_hdr->dmaaddr, hdrsize)) {
++	if (b43_dma_mapping_error(ring, meta_hdr->dmaaddr, hdrsize, 1)) {
+ 		ring->current_slot = old_top_slot;
+ 		ring->used_slots = old_used_slots;
+ 		return -EIO;
+ 	}
+ 	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
+ 			     hdrsize, 1, 0, 0);
+@@ -1139,13 +1146,13 @@ static int dma_tx_fragment(struct b43_dm
+ 	memcpy(&meta->txstat.control, ctl, sizeof(*ctl));
+ 	meta->skb = skb;
+ 	meta->is_last_fragment = 1;
+ 
+ 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 	/* create a bounce buffer in zone_dma on mapping failure. */
+-	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
++	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+ 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+ 		if (!bounce_skb) {
+ 			ring->current_slot = old_top_slot;
+ 			ring->used_slots = old_used_slots;
+ 			err = -ENOMEM;
+ 			goto out_unmap_hdr;
+@@ -1153,13 +1160,13 @@ static int dma_tx_fragment(struct b43_dm
+ 
+ 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
+ 		dev_kfree_skb_any(skb);
+ 		skb = bounce_skb;
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+-		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
++		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+ 			ring->current_slot = old_top_slot;
+ 			ring->used_slots = old_used_slots;
+ 			err = -EIO;
+ 			goto out_free_bounce;
+ 		}
+ 	}
