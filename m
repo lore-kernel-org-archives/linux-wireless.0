@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:58639 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751709AbYCBUAY (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:40714 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbYCVU7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 15:00:24 -0500
-Received: by an-out-0708.google.com with SMTP id d31so1143961and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2008 12:00:23 -0800 (PST)
-Message-ID: <97a0a9ac0803021200v117379b6x1c4bc0f8ae580040@mail.gmail.com> (sfid-20080302_200030_706274_3F54D04C)
-Date: Sun, 2 Mar 2008 13:00:23 -0700
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-To: "Sam Ravnborg" <sam@ravnborg.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-In-Reply-To: <20080302115828.GA15820@uranus.ravnborg.org>
+	Sat, 22 Mar 2008 16:59:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Christian Casteyde <casteyde.christian@free.fr>
+Subject: Re: [PATCH 2.6.25-rc6] b43/dma.c: fix DMA unmapping in DMA ring error path
+Date: Sat, 22 Mar 2008 21:59:08 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <200803221832.18285.casteyde.christian@free.fr>
+In-Reply-To: <200803221832.18285.casteyde.christian@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080228014125.GI3078@tuxdriver.com>
-	 <20080229214240.GH3234@tuxdriver.com>
-	 <20080301130133.GA14250@uranus.ravnborg.org>
-	 <200803011651.13652.mb@bu3sch.de>
-	 <20080302115828.GA15820@uranus.ravnborg.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803222159.08293.mb@bu3sch.de> (sfid-20080322_205940_089126_E19BA108)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sam
+On Saturday 22 March 2008 18:32:18 Christian Casteyde wrote:
+> This fixes a DMA mapping leak in error path of the b43_setup_dmaring function.
+> When DMA mapping fails because of device mask preventing the allocated DMA
+> zone from being used, the mapping should be reversed before the second try with GFP_DMA.
 
-On Sun, Mar 2, 2008 at 4:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
+This doesn't fix all occurences of the bug.
+I'll send a fixed patch later.
 
->  Find below a patch that detect when we do a cross build and thus ignore
->  the check.
+> Signed-off-by: Christian Casteyde <casteyde.christian@free.fr>
+> 
+> ---
+> --- linux-2.6.25.old/drivers/net/wireless/b43/dma.c	2008-03-22 17:28:52.000000000 +0100
+> +++ linux-2.6.25/drivers/net/wireless/b43/dma.c	2008-03-22 17:57:44.000000000 +0100
+> @@ -854,6 +854,10 @@
+>  
+>  		if (b43_dma_mapping_error(ring, dma_test, b43_txhdr_size(dev))) {
+>  			/* ugh realloc */
+> +			if (!dma_mapping_error(dma_test))
+> +				dma_unmap_single(dev->dev->dev,
+> +						 dma_test, b43_txhdr_size(dev),
+> +						 DMA_TO_DEVICE);
+>  			kfree(ring->txhdr_cache);
+>  			ring->txhdr_cache = kcalloc(nr_slots,
+>  						    b43_txhdr_size(dev),
+> @@ -867,8 +871,13 @@
+>  						  DMA_TO_DEVICE);
+>  
+>  			if (b43_dma_mapping_error(ring, dma_test,
+> -						  b43_txhdr_size(dev)))
+> +						  b43_txhdr_size(dev))) {
+> +				if (!dma_mapping_error(dma_test))
+> +					dma_unmap_single(dev->dev->dev,
+> +							 dma_test, b43_txhdr_size(dev),
+> +							 DMA_TO_DEVICE);
+>  				goto err_kfree_txhdr_cache;
+> +			}
+>  		}
+>  
+>  		dma_unmap_single(dev->dev->dev,
+> 
+> 
 
-Works for me.
 
-Tested-by: Gordon Farquharson <gordonfarquharson@gmail.com>
-
-Thanks, Sam.
-
-Gordon
 
 -- 
-Gordon Farquharson
-GnuPG Key ID: 32D6D676
+Greetings Michael.
