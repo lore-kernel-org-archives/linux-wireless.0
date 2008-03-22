@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39349 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751969AbYCKQ7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 12:59:12 -0400
-Subject: Re: [PATCH] PS3: gelic: ignore scan info from zero SSID beacons
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, cbe-oss-dev@ozlabs.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	Stefan Assmann <sassmann@suse.de>
-In-Reply-To: <1205252287.6387.54.camel@johannes.berg>
-References: <20080311130630.0AF0.40F06B3A@sm.sony.co.jp>
-	 (sfid-20080311_051712_368863_0E0A4ECC)  <1205252287.6387.54.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 11 Mar 2008 12:50:37 -0400
-Message-Id: <1205254237.8774.0.camel@localhost.localdomain> (sfid-20080311_165919_163294_FB56907D)
-Mime-Version: 1.0
+Received: from mailfe02.tele2.fr ([212.247.154.44]:55314 "EHLO swip.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757821AbYCVScq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Mar 2008 14:32:46 -0400
+From: Christian Casteyde <casteyde.christian@free.fr>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.25-rc6] b43/dma.c: fix DMA unmapping in DMA ring error path
+Date: Sat, 22 Mar 2008 18:32:18 +0100
+Cc: linville@tuxdriver.com, mb@bu3sch.de
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803221832.18285.casteyde.christian@free.fr> (sfid-20080322_183259_132994_069C19F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-03-11 at 17:18 +0100, Johannes Berg wrote:
-> On Tue, 2008-03-11 at 13:15 +0900, Masakazu Mokuno wrote:
-> > Some implementations of the hidden SSID APs emit beacons which have the zero
-> > length SSID information element instead of SSID padded by null (\0) characters.
-> > If the firmware of the PS3 wireless hardware meets these beacons, it abandons parsing
-> > IEs. Thus guest OSes get the invalid scan information for the AP.
-> > 
-> > To work around this, ignore these scan informations from the list.
-> 
-> I'm not sure this is a good idea. Is there any way to get at decent
-> information from those beacons?
+This fixes a DMA mapping leak in error path of the b43_setup_dmaring function.
+When DMA mapping fails because of device mask preventing the allocated DMA
+zone from being used, the mapping should be reversed before the second try with GFP_DMA.
 
-Yeah, there are quite a few of these out there.  Ideally the firmware
-wouldn't puke on it...
+Signed-off-by: Christian Casteyde <casteyde.christian@free.fr>
 
-Dan
-
-
+---
+--- linux-2.6.25.old/drivers/net/wireless/b43/dma.c	2008-03-22 17:28:52.000000000 +0100
++++ linux-2.6.25/drivers/net/wireless/b43/dma.c	2008-03-22 17:57:44.000000000 +0100
+@@ -854,6 +854,10 @@
+ 
+ 		if (b43_dma_mapping_error(ring, dma_test, b43_txhdr_size(dev))) {
+ 			/* ugh realloc */
++			if (!dma_mapping_error(dma_test))
++				dma_unmap_single(dev->dev->dev,
++						 dma_test, b43_txhdr_size(dev),
++						 DMA_TO_DEVICE);
+ 			kfree(ring->txhdr_cache);
+ 			ring->txhdr_cache = kcalloc(nr_slots,
+ 						    b43_txhdr_size(dev),
+@@ -867,8 +871,13 @@
+ 						  DMA_TO_DEVICE);
+ 
+ 			if (b43_dma_mapping_error(ring, dma_test,
+-						  b43_txhdr_size(dev)))
++						  b43_txhdr_size(dev))) {
++				if (!dma_mapping_error(dma_test))
++					dma_unmap_single(dev->dev->dev,
++							 dma_test, b43_txhdr_size(dev),
++							 DMA_TO_DEVICE);
+ 				goto err_kfree_txhdr_cache;
++			}
+ 		}
+ 
+ 		dma_unmap_single(dev->dev->dev,
