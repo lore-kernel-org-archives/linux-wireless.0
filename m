@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:10131 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755597AbYC0KLZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 06:11:25 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: fix spinlock recursion bug
-Date: Thu, 27 Mar 2008 11:08:23 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <200803191524.21866.hs4233@mail.mn-solutions.de> <200803261637.45549.hs4233@mail.mn-solutions.de> <1206552791.31383.99.camel@localhost.localdomain>
-In-Reply-To: <1206552791.31383.99.camel@localhost.localdomain>
+Received: from venema.h4ckr.net ([217.24.1.135]:48396 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757467AbYCWLQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 07:16:08 -0400
+Message-ID: <51945.213.10.206.148.1206269365.squirrel@webmail.madwifi.org> (sfid-20080323_111613_614608_4A920077)
+In-Reply-To: <43e72e890803061755x17b2a626xddd7dd71a92a80c5@mail.gmail.com>
+References: <43e72e890802261555i37d8f470q9ac16df8140740fe@mail.gmail.com>
+    <200803051132.24020.bruno@thinktube.com>
+    <43e72e890803061755x17b2a626xddd7dd71a92a80c5@mail.gmail.com>
+Date: Sun, 23 Mar 2008 11:49:25 +0100 (CET)
+Subject: Re: [RFC] Linux central regulatory domain agent - next stage
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "bruno randolf" <bruno@thinktube.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"linux kernel" <linux-kernel@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Jouni Malinen" <j@w1.fi>,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	"Sam Leffler" <sam@errno.com>, "Dan Williams" <dcbw@redhat.com>,
+	"Ivan Seskar" <seskar@winlab.rutgers.edu>,
+	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Jean Tourrilhes" <jt@hpl.hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803271108.23635.hs4233@mail.mn-solutions.de> (sfid-20080327_101128_127959_5EE7C4E7)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> struct lbs_event {
+Hi all.
 
-add "struct list_head list;"
+> Well the whole notion of using a db was for the purpose of
+> presentation and for easy review. I'd like to make it easy for
+> non-developers to contribute changes to the regulatory db.
 
-> 	u32 event;  /* MACREG_INT_CODE_xxxxx */
-> 	u32 len;
-> 	u8 buf[LBS_UPLD_SIZE];
-> };
+How about keeping the master file in a yet-to-be-defined XML format?
 
-Hmm, buf is LBS_UPLD_SIZE (2312 bytes). However, if_cs.c, 
-if_sdio.c and if_usb.c use LBS_CMD_BUFFER_SIZE, which is 2048.
+It's not too hard to make the webserver display it (via XSLT, some
+server-side script or whatever). Even without the webserver being
+available it's possible for a human to make sense of the content of the
+master file.
 
+Being a text file it can be managed with virtually any version control
+system. It's possible to make sense of and understand all recorded changes
+without additional tools.
 
-> void lbs_interrupt(struct lbs_private *priv, u32 event, u8
-> *resp_data, u32 resp_len) {
+Users of the file could decide to compile the master file from XML into
+whatever format their tools prefer. For Linux it would be some binary
+format, for the reasons stated earlier in this thread. Other OS/users
+might decide on something else, even on using the master file as is.
 
-With this approach, the driver would have copy the date from the 
-hardware into local buffer. Then it would call lbs_interrupt() 
-with a pointer to this local buffer. Then lbs_interrupt() would 
-memcpy() this. Then something in main.c and/or cmd.c would again 
-memcpy() this.
+The compiler could use a standard XML library, making it easy for
+distributors to satisfy the dependencies. If necessary it could fall back
+on it's own simple XML parser. Support for various output formats could be
+implemented as modules or even as plugins.
 
-Let's split lbs_interrupt() into two functions:
+Just my 2 cents.
 
-struct lbs_event *lbs_get_free_event(struct lbs_private *priv);
-
-void lbs_handle_event(struct lbs_private *priv, struct lbs_event 
-*event);
-
-Then the hardware driver can do:
-
-  struct lbs_event *event = lbs_get_free_event(priv);
-  if (!event)
-     ...
-  if_cs_receive_cmdres(priv, &event->buf, &event->len);
-  lbs_handle_event(priv, event);
+Bye, Mike
