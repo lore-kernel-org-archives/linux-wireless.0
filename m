@@ -1,90 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55930 "EHLO mx1.redhat.com"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:34671 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S940453AbYCSWTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 18:19:03 -0400
-Subject: Re: [PATCH, take 2] libertas: store rssi as an u32
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
+	id S1753978AbYCWUvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 16:51:04 -0400
+Date: Sun, 23 Mar 2008 21:51:26 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Gordon Farquharson <gordonfarquharson@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <200803191708.32595.hs4233@mail.mn-solutions.de>
-References: <200803181515.15584.hs4233@mail.mn-solutions.de>
-	 <200803191620.18554.hs4233@mail.mn-solutions.de>
-	 <1205941183.4169.26.camel@localhost.localdomain>
-	 <200803191708.32595.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 19 Mar 2008 18:17:58 -0400
-Message-Id: <1205965078.18683.4.camel@localhost.localdomain> (sfid-20080319_221926_744103_9B856F41)
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: pull request: wireless-2.6 2008-02-27
+Message-ID: <20080323205126.GB5087@uranus.ravnborg.org> (sfid-20080323_205110_224364_810C0462)
+References: <20080228014125.GI3078@tuxdriver.com> <20080229214240.GH3234@tuxdriver.com> <20080301130133.GA14250@uranus.ravnborg.org> <200803011651.13652.mb@bu3sch.de> <20080302115828.GA15820@uranus.ravnborg.org> <97a0a9ac0803172107s2ac19268h3b297bb645011a3@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <97a0a9ac0803172107s2ac19268h3b297bb645011a3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-19 at 17:08 +0100, Holger Schurig wrote:
-> [PATCH] store rssi as an int
+On Mon, Mar 17, 2008 at 10:07:56PM -0600, Gordon Farquharson wrote:
+> Hi Sam
 > 
-> Don't store an (hardware base) u8 value in bss_descriptor, but just an
-> unsigned int (RSSI is really unsigned). Compilers generate more efficent
-> code for ints than for bytes.
+> On Sun, Mar 2, 2008 at 5:58 AM, Sam Ravnborg <sam@ravnborg.org> wrote:
 > 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> >  So please let me know if this works and then I can push it upstrem
+> >  hopefully already by tomorrow.
+> >
+> >  Note: I decided to name the variable KBUILD_BUILDHOST as this is more
+> >  descriptive then SUBARCH. We can later clean up the naming and get rid
+> >  of SUBARCH but I refrained from this to make the pacht minimal.
+> 
+> What is the status of this patch? Is there any chance that it will be
+> included in 2.6.25?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Thanks for your paitience.
+I have been outright busy so I never came around to this.
+It is pushed for inclusion in 2.6.25 now.
 
-> Index: wireless-testing/drivers/net/wireless/libertas/scan.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/scan.h	2008-03-19 09:04:43.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/scan.h	2008-03-19 09:05:53.000000000 +0100
-> @@ -34,14 +34,9 @@ struct bss_descriptor {
->  	u8 ssid_len;
->  
->  	u16 capability;
-> -
-> -	/* receive signal strength in dBm */
-> -	long rssi;
-> -
-> +	u32 rssi;
->  	u32 channel;
-> -
->  	u16 beaconperiod;
-> -
->  	u32 atimwindow;
->  
->  	/* IW_MODE_AUTO, IW_MODE_ADHOC, IW_MODE_INFRA */
-> Index: wireless-testing/drivers/net/wireless/libertas/scan.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-03-19 09:05:48.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-03-19 09:27:55.000000000 +0100
-> @@ -602,7 +602,7 @@ static int lbs_scan_networks(struct lbs_
->  	lbs_deb_scan("scan table:\n");
->  	list_for_each_entry(iter, &priv->network_list, list)
->  		lbs_deb_scan("%02d: BSSID %s, RSSI %d, SSID '%s'\n",
-> -			     i++, print_mac(mac, iter->bssid), (int)iter->rssi,
-> +			     i++, print_mac(mac, iter->bssid), iter->rssi,
->  			     escape_essid(iter->ssid, iter->ssid_len));
->  	mutex_unlock(&priv->lock);
->  #endif
-> @@ -948,7 +948,7 @@ struct bss_descriptor *lbs_find_ssid_in_
->  					     uint8_t *bssid, uint8_t mode,
->  					     int channel)
->  {
-> -	uint8_t bestrssi = 0;
-> +	u32 bestrssi = 0;
->  	struct bss_descriptor * iter_bss = NULL;
->  	struct bss_descriptor * found_bss = NULL;
->  	struct bss_descriptor * tmp_oldest = NULL;
-> Index: wireless-testing/drivers/net/wireless/libertas/debugfs.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/debugfs.c	2008-03-19 09:04:43.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/debugfs.c	2008-03-19 09:05:53.000000000 +0100
-> @@ -78,7 +78,7 @@ static ssize_t lbs_getscantable(struct f
->  		u16 spectrum_mgmt = (iter_bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT);
->  
->  		pos += snprintf(buf+pos, len-pos,
-> -			"%02u| %03d | %04ld | %s |",
-> +			"%02u| %03d | %04d | %s |",
->  			numscansdone, iter_bss->channel, iter_bss->rssi,
->  			print_mac(mac, iter_bss->bssid));
->  		pos += snprintf(buf+pos, len-pos, " %04x-", iter_bss->capability);
-
+	Sam
