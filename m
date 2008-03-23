@@ -1,42 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52780 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:35639 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754213AbYCDTZc (ORCPT
+	with ESMTP id S1755337AbYCWAKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 14:25:32 -0500
+	Sat, 22 Mar 2008 20:10:19 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: "Ahmed Ammar" <b33fc0d3@gmail.com>
-Subject: Re: b43 (H/W 4306 Rev. 03)
-Date: Tue, 4 Mar 2008 20:24:58 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <84ac67910802210444q4da4f02bo2d172493ef2c7158@mail.gmail.com> <200803042010.18134.mb@bu3sch.de> <84ac67910803041117t3ccdf6acr3da05596036ba918@mail.gmail.com>
-In-Reply-To: <84ac67910803041117t3ccdf6acr3da05596036ba918@mail.gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Remove irqs_disabled() sanity checks
+Date: Sun, 23 Mar 2008 01:08:22 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Message-Id: <200803042024.58668.mb@bu3sch.de> (sfid-20080304_192535_836525_7BD1BB32)
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="us-ascii"
+Message-Id: <200803230108.22652.mb@bu3sch.de> (sfid-20080323_001030_358476_A182F9A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 March 2008 20:17:23 Ahmed Ammar wrote:
-> The _first_ email in this thread covers exactly that. I don't
+Remove all irqs_disabled() sanity checks, as they are not safe on
+a RT-enabled kernel and will trigger bogus warnings.
 
-I'm not sure how often I have to reiterate this:
-I do _not_ understand your issue. Please _rephrase_ it.
-Also, the dmesg logs from the mail are far from being complete.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Pointing to the same mails that I don't understand over and over again
-does not help at all. Rewrite them please and try to make it more clear
-what your problem is. And add complete dmesg output from _unmodified_
-drivers. (modified drivers/logs are ignored).
+---
 
-> understand what else you need, the size of the entire thread is very
-> big because i was asked to get some packet dumps (which shouldn't have
-> been sent to the list). I find it pointless to copy and paste the
-> first e-mail to give you that information. If you don't want to fix
-> this bug then it's not a big problem for me.
+John, please apply to 2.6.25
 
-Ok. Don't want help -> don't get help. Your choice.
 
--- 
-Greetings Michael.
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-02-15 21:39:56.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-03-23 01:00:40.000000000 +0100
+@@ -615,25 +615,25 @@ void b43_debugfs_remove_device(struct b4
+ 
+ 	debugfs_remove(e->subdir);
+ 	kfree(e->txstatlog.log);
+ 	kfree(e);
+ }
+ 
++/* Called with IRQs disabled. */
+ void b43_debugfs_log_txstat(struct b43_wldev *dev,
+ 			    const struct b43_txstatus *status)
+ {
+ 	struct b43_dfsentry *e = dev->dfsentry;
+ 	struct b43_txstatus_log *log;
+ 	struct b43_txstatus *cur;
+ 	int i;
+ 
+ 	if (!e)
+ 		return;
+ 	log = &e->txstatlog;
+-	B43_WARN_ON(!irqs_disabled());
+-	spin_lock(&log->lock);
++	spin_lock(&log->lock); /* IRQs are already disabled. */
+ 	i = log->end + 1;
+ 	if (i == B43_NR_LOGGED_TXSTATUS)
+ 		i = 0;
+ 	log->end = i;
+ 	cur = &(log->log[i]);
+ 	memcpy(cur, status, sizeof(*cur));
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-23 00:54:27.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-23 01:01:14.000000000 +0100
+@@ -1343,26 +1343,27 @@ static void b43_fill_txstatus_report(str
+ 			ring->nr_succeed_tx_packets++;
+ 		ring->nr_total_packet_tries += status->frame_count;
+ #endif /* DEBUG */
+ 	}
+ }
+ 
++/* Called with IRQs disabled. */
+ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 			     const struct b43_txstatus *status)
+ {
+ 	const struct b43_dma_ops *ops;
+ 	struct b43_dmaring *ring;
+ 	struct b43_dmadesc_generic *desc;
+ 	struct b43_dmadesc_meta *meta;
+ 	int slot;
+ 
+ 	ring = parse_cookie(dev, status->cookie, &slot);
+ 	if (unlikely(!ring))
+ 		return;
+-	B43_WARN_ON(!irqs_disabled());
+-	spin_lock(&ring->lock);
++
++	spin_lock(&ring->lock); /* IRQs are already disabled. */
+ 
+ 	B43_WARN_ON(!ring->tx);
+ 	ops = ring->ops;
+ 	while (1) {
+ 		B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+ 		desc = ops->idx2desc(ring, slot, &meta);
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-22 21:50:35.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-03-23 00:59:05.000000000 +0100
+@@ -2155,13 +2155,12 @@ static void b43_gpio_cleanup(struct b43_
+ 
+ /* http://bcm-specs.sipsolutions.net/EnableMac */
+ static void b43_mac_enable(struct b43_wldev *dev)
+ {
+ 	dev->mac_suspended--;
+ 	B43_WARN_ON(dev->mac_suspended < 0);
+-	B43_WARN_ON(irqs_disabled());
+ 	if (dev->mac_suspended == 0) {
+ 		b43_write32(dev, B43_MMIO_MACCTL,
+ 			    b43_read32(dev, B43_MMIO_MACCTL)
+ 			    | B43_MACCTL_ENABLED);
+ 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON,
+ 			    B43_IRQ_MAC_SUSPENDED);
+@@ -2181,13 +2180,12 @@ static void b43_mac_enable(struct b43_wl
+ static void b43_mac_suspend(struct b43_wldev *dev)
+ {
+ 	int i;
+ 	u32 tmp;
+ 
+ 	might_sleep();
+-	B43_WARN_ON(irqs_disabled());
+ 	B43_WARN_ON(dev->mac_suspended < 0);
+ 
+ 	if (dev->mac_suspended == 0) {
+ 		/* Mask IRQs before suspending MAC. Otherwise
+ 		 * the MAC stays busy and won't suspend. */
+ 		spin_lock_irq(&dev->wl->irq_lock);
