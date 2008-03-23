@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37318 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34063 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756186AbYC0My5 (ORCPT
+	with ESMTP id S1755931AbYCWMMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 08:54:57 -0400
-Subject: Re: IBSS RTNL assertion
+	Sun, 23 Mar 2008 08:12:50 -0400
+Subject: Re: hostapd with mac80211 and rt2500pci: hostapd doesn't receive
+	clients EAPOL keys unless mon.wlan1 is promiscuous
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240803261624ja282affw88eeab09e5514407@mail.gmail.com> (sfid-20080326_232407_856692_150376A1)
-References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
-	 <1206533179.16475.313.camel@johannes.berg>
-	 <1ba2fa240803260656vcfd681r4f1599bc31220b87@mail.gmail.com>
-	 <1ba2fa240803261624ja282affw88eeab09e5514407@mail.gmail.com>
-	 (sfid-20080326_232407_856692_150376A1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vuVJ1UyG6Tmpn4nh0kZh"
-Date: Thu, 27 Mar 2008 13:54:48 +0100
-Message-Id: <1206622488.22530.32.camel@johannes.berg> (sfid-20080327_125500_893817_8CA3F333)
+To: Bas Hulsken <bhulsken@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1206271458.2902.27.camel@Bas> (sfid-20080323_113430_380950_98BCE00E)
+References: <1206271458.2902.27.camel@Bas>
+	 (sfid-20080323_113430_380950_98BCE00E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5PQRE+ucaJhyupHAZsVN"
+Date: Sun, 23 Mar 2008 13:12:21 +0100
+Message-Id: <1206274341.16475.185.camel@johannes.berg> (sfid-20080323_121259_283402_9A458369)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vuVJ1UyG6Tmpn4nh0kZh
+--=-5PQRE+ucaJhyupHAZsVN
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> >  Maybe. I scanned it very quickly but I think there are more problems
-> >  than this one. I will check it once again.
+> Ok, to summarize: hostapd doesn't seem to work at the moment with
+> rt2500pci and lates git.wireless-testing. The cause seems to be that
+> EOPOL key send from the client does not arrive at hostapd. This can be
+> 'fixed' by running tethereal on the monitor interface. Any thoughts on
+> what might cause this?
 
-Thanks!
+Can you stick a printk into the driver to print out
+ * the configured MAC address
+ * the filter flags configuration?
 
-> ieee80211_add_station - LOCKED by rcu_read_lock
-
-That's actually also locked by rtnl, and shouldn't be locked by rcu, the
-two statements have to be reordered.
-
-> ieee80211_del_station - this one is NOT LOCKED by rcu (it's locked by rtn=
-l)
-
-That's the way it should be as explained in "STA information lifetime
-rules" in sta_info.c
-
-> ieee80211_open - NOT LOCKED
-
-actually locked by rtnl as most netdev callbacks, so fine.
-
-> ieee80211_associated - NOT-LOCKED by rcu
-
-not supposed to be, is under rtnl
-
-> ieee80211_ibss_add_sta - NOT LOCKED (not locked at all)
-
-That's a bit of a corner case, maybe we should allow this, or maybe this
-is a bug in that it should lock the rtnl although the STA never went
-live. The rtnl locking requirement comes from key management so this
-can't actually cause problems (since mac80211's ibss code can't do
-encryption) but it should still be fixed.
-
-> sta_info_debugfs_add_work - NOT LOCKED
-
-that probably needs locking.
-
-I'll look at making patches, thanks for the review.
+Whenever either changes.
 
 johannes
 
---=-vuVJ1UyG6Tmpn4nh0kZh
+--=-5PQRE+ucaJhyupHAZsVN
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR+uZF6Vg1VMiehFYAQKlNxAAtSIeU+R5ebtuGJNGyhwDXkppDS6R38v8
-8hBGp6JBjcL7KCHmj5GPaXZ90m5uqM27SZkZ8omO/QYj9BNPyShzzC5mKZB1FyZr
-vdv+gmRyN/KGQA8jR8ty5D2yV4b97EpKPc+Ej5UrsvHonOcUfj/NeBHKftULQuam
-weRoeUk0H4TL44+BrMiI/2ucXSNHxGLEmWn9cLsz/H7UF4fUfmpG0jIDeip7E0i1
-AwVueocuoR7qs9WOR7xZjEmRb7fkLqBdgwGmQFD4Jl9tnVLn0E+rCc70Jdg6kxOz
-Sq3jthlAM41NWrdzbY8Th59+ue9yqMLobszAkb/mP98RSyLfvGru8pQVi4e0/N15
-qYLdgrmqX00D039gOZaoEbLCOX8ZgMa5o5oDmKEHB3xzJ2IB5Vv+w2v9jKGxq5ZQ
-EJFKs200v0Mus+npwhmU+RZDPXuADdPKpZqMMvDcEtoduyYBXIqQo1DH+LHCCwuq
-Ji3B3wyyhUk32s8tmDCFMdPHFJ/ViJ+1zwi15g/eVMVvaYImRDBawNDoCn/mNRiq
-uFeXjwvgFvP2qMwqGc4CTe+b+FxBZYvzevwjxgYSuFeGiBtc0zPFFSLF5kiVq6YQ
-uLunGMRspk615y3R8RShciR+LSg3jeyiPgfWbH1SirPfC5ii4vK5ccUB9SkxK5vC
-spVf3QkrTMM=
-=szR9
+iQIVAwUAR+ZJJKVg1VMiehFYAQI3qw//RmMgIsOvP2Cs/J7GEUY1T3LUUv+SFXmW
+tL5+1yZEFm6cWvXFoyap9ScmGFG/rhN5cXlubXfM/1ITYmck/Fo6n85JxOlwftt6
+04LXf3qyiTEnz24ODXrVCY61JYH0rM/8o52PgQ3cTnC0rU8oFxGzBBDVIiXOKbT1
+WikhRbpNKPB5zdEJNJO0B8HECsGAtHfxLoyfdtyaIicAug7l9iB1lio6gz1yoAJ5
+4V+kVSggU8PaqvmYLidyzT9mX8Aba/d5JV/m6fdjyTxUQIadjkeaIZybgLI98kAZ
+HS81nhBJfXX/C+/HqANiTUcaCUzcYhkjr3160v9wy/Y/qBFmLro2u1wlpetI5eig
+QSS47KduIJjBrzP3JgK6345w0aF58LF2sJ35Uy7LZztOLEZ0UGBU3xGSMOg2yarn
+IqeaHogfPTsDKc3K+Ftpw/aIdTXEySTrQ59LR/fGKyj9/qTPTXPXcJJVHngz5YGT
+1t7jylAWSN8gXi+rBsTuPqaSxzvIBPIMAVKKBKXmnqnJ/bDuPw96hCJY3OlC9GF4
+ww4ATkjyQkPIaX0e2jKWnLTVI88u9h+rUzKHxojNfNiq3VhYxLlHDUV4lsGvR6Mt
+Dv3VbMy0LM/AMxxtLWrvbJNZCWaQGBcJp6xLuXVL40GS4L/Hp04PzGHzGZ2e2/hf
+BF9Fu9ezucg=
+=K+ik
 -----END PGP SIGNATURE-----
 
---=-vuVJ1UyG6Tmpn4nh0kZh--
+--=-5PQRE+ucaJhyupHAZsVN--
 
