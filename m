@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34820 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752001AbYCKWPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 18:15:03 -0400
-Message-ID: <47D70459.7000703@gmx.at> (sfid-20080311_221510_826407_92905A74)
-Date: Tue, 11 Mar 2008 23:14:49 +0100
-From: Franz Apeltauer <franz.apeltauer@gmx.at>
+Received: from rv-out-0910.google.com ([209.85.198.185]:1051 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754952AbYCWJ0t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 05:26:49 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1195242rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Mar 2008 02:26:48 -0700 (PDT)
+Message-ID: <c85cb4470803230226h1269c193v3574da0736a4ec5e@mail.gmail.com> (sfid-20080323_092656_967644_892C913B)
+Date: Sun, 23 Mar 2008 11:26:48 +0200
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: handling Qdisc issues
+Cc: linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <43e72e890803110954m2eb4ee07x8eedcec7e263da45@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
-References: <47CB3B5E.4020701@gmx.at>	 <43e72e890803071859r2788075cp12272cad0920d2b0@mail.gmail.com>	 <47D5AAFC.80401@gmx.at> <200803102321.35909.IvDoorn@gmail.com>	 <20080310233307.GT28995@ruslug.rutgers.edu> <47D5CD59.5050400@gmx.at> <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com>
-In-Reply-To: <43e72e890803101826m5b7cd55ao9f521a786a36c07@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
+	 <200803061902.33865.IvDoorn@gmail.com>
+	 <1204826767.25502.135.camel@johannes.berg>
+	 <200803061927.09891.IvDoorn@gmail.com>
+	 <1204829243.25502.137.camel@johannes.berg>
+	 <c85cb4470803090443v3748a986vfc909c984369a4a7@mail.gmail.com>
+	 <1205094818.6387.46.camel@johannes.berg>
+	 <43e72e890803110954m2eb4ee07x8eedcec7e263da45@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez schrieb:
->>  Loaded the new tarball.
->>  It compiles fine.
-> 
-> And it works too I hope? :)
-> 
->   Luis
-> 
-Unfortunately not. I am still trying to find out, if it is my fault or not.
+> >  > John, Johannes, what will be the preferred way to continue? it seems
+> >  > that Ivo and Michael agree that the adjustments needed can be inserted
+> >  > quite fast. would you like to re-base and merge the current RFC as a
+> >  > patch and fix things on top of it, or to merge all the fixes and push
+> >  > it at once?
+> >
+> >  I'd like to take a look at it first, though if you tested it and it
+> >  works we can just as well put it into -testing, it can't really be worse
+> >  than what we have now.
+> >
+> >  What I'd like to do though is just make mac80211 depend on
+> >  NETDEVICES_MULTIQUEUE (or select it if possible?) so we don't have to
+> >  bother with all the ifdefs. OTOH that'll totally break compat so Luis?NETDEVICES_MULTIQUEUE
+>
+> I've been reviewing this for a bit now and I think if we make mac80211
+> depend on NETDEVICES_MULTIQUEUE and just have compat.diff patch the
+> sources with ifdefs where needed. The file include/linux/netdevice.h
+> already provides hints as to how to port over some calls but won't be
+> sure until we test this. Seems we need a new patch for this anyway.
+> Once posted I can try to port on compat-wireless.
+>
+>  Luis
 
-It seems, that it only allows Managed mode.
-"iwconfig wlan0 mode Ad-Hoc" and "iwconfig wlan0 mode Master" both give 
-me this error:
-Error for wireless request "Set Mode" (8B06) :
-     SET failed on device wlan0 ; Invalid argument.
-
-I intended to use an ad-hoc connection between 2 PCs.
-Since I have no access point I cannot test much at the moment.
-
-Is it supposed to provide ad-hoc and master mode on rt2500 (pci)?
-Probably not yet, because it is not in the list 
-(http://linuxwireless.org/en/users/Drivers). Right?
-
-Franz
+thanks Luis.
+Johannes, i guess it's back to previous mail - should we put this into
+testing and let us all patch on top of it (with a heads-up notice of
+course to everyone) ?
+Ron
