@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53360 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784AbYC1Kr5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 06:47:57 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add DMA mapping failure messages
-Date: Fri, 28 Mar 2008 11:46:58 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from bay0-omc3-s17.bay0.hotmail.com ([65.54.246.217]:43002 "EHLO
+	bay0-omc3-s17.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750884AbYCWQnD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 12:43:03 -0400
+Message-ID: <BAY101-W143CDEC5E4B7194B35601EC8030@phx.gbl> (sfid-20080323_164318_707281_1C58F84E)
+From: Adam Turk <bofh1234@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: 
+Date: Sun, 23 Mar 2008 12:43:02 -0400
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803281146.59217.mb@bu3sch.de> (sfid-20080328_104800_650008_8F41E0A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds messages for some DMA mapping failures.
-These are useful for debugging DMA address problems, as they appear
-on x86_64 machines with IOMMU enabled.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Hello, 
 
----
+I just compiled 2.6.25-rc6 and got a bunch of warnings when I did make modules_install. I am using a PC not a laptop so I don't bother compiling PCMCIA support.
 
-Please queue for 2.6.25
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_skb_return
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_suspend
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_generic_cdc_bind
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_disconnect
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_cdc_unbind
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_probe
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/usb/rndis_host.ko needs unknown symbol usbnet_resume
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_disable_device
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_unregister_driver
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_map_mem_page
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pccard_get_first_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_request_window
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_request_configuration
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pccard_get_tuple_data
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_register_driver
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pccard_parse_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/b43/b43.ko needs unknown symbol pcmcia_request_irq
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas.ko needs unknown symbol debugfs_remove
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas.ko needs unknown symbol debugfs_create_file
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas.ko needs unknown symbol debugfs_create_dir
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_disable_device
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_unregister_driver
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pccard_get_first_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_request_io
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_request_configuration
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pccard_get_tuple_data
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_register_driver
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pccard_parse_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/net/wireless/libertas/libertas_cs.ko needs unknown symbol pcmcia_request_irq
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/ssb/ssb.ko needs unknown symbol pccard_get_first_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/ssb/ssb.ko needs unknown symbol pcmcia_access_configuration_register
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/ssb/ssb.ko needs unknown symbol pccard_get_tuple_data
+WARNING: /lib/modules/2.6.25-rc6/updates/drivers/ssb/ssb.ko needs unknown symbol pccard_get_next_tuple
+WARNING: /lib/modules/2.6.25-rc6/updates/net/wireless/cfg80211.ko needs unknown symbol debugfs_remove
+WARNING: /lib/modules/2.6.25-rc6/updates/net/wireless/cfg80211.ko needs unknown symbol debugfs_rename
+WARNING: /lib/modules/2.6.25-rc6/updates/net/wireless/cfg80211.ko needs unknown symbol debugfs_create_dir
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-28 11:33:52.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-28 11:34:12.000000000 +0100
-@@ -571,12 +571,13 @@ static int setup_rx_descbuffer(struct b4
- 			return -ENOMEM;
- 		dmaaddr = map_descbuffer(ring, skb->data,
- 					 ring->rx_buffersize, 0);
- 	}
- 
- 	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
-+		b43err(ring->dev->wl, "RX DMA buffer allocation failed\n");
- 		dev_kfree_skb_any(skb);
- 		return -EIO;
- 	}
- 
- 	meta->skb = skb;
- 	meta->dmaaddr = dmaaddr;
-@@ -826,14 +827,18 @@ struct b43_dmaring *b43_setup_dmaring(st
- 			dma_test = dma_map_single(dev->dev->dev,
- 						  ring->txhdr_cache,
- 						  b43_txhdr_size(dev),
- 						  DMA_TO_DEVICE);
- 
- 			if (b43_dma_mapping_error(ring, dma_test,
--						  b43_txhdr_size(dev), 1))
-+						  b43_txhdr_size(dev), 1)) {
-+
-+				b43err(dev->wl,
-+				       "TXHDR DMA allocation failed\n");
- 				goto err_kfree_txhdr_cache;
-+			}
- 		}
- 
- 		dma_unmap_single(dev->dev->dev,
- 				 dma_test, b43_txhdr_size(dev),
- 				 DMA_TO_DEVICE);
- 	}
+Just an FYI,
+_________________________________________________________________
+Test your Star IQ
+http://club.live.com/red_carpet_reveal.aspx?icid=redcarpet_HMTAGMAR
