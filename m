@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout4-sn1.fre.skanova.net ([81.228.11.168]:38798 "EHLO
-	pne-smtpout4-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752609AbYCQU5a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 16:57:30 -0400
-Message-ID: <20080317225724.th0d46jpsc0o48o8@hayate.ip6> (sfid-20080317_205735_232273_F568BCAA)
-Date: Mon, 17 Mar 2008 22:57:24 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Dmitri Monakhov <dmonakhov@openvz.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix error handling logic in generic_rndis_bind
-References: <20080317161007.GA32154@dmon-lap.sw.ru>
-In-Reply-To: <20080317161007.GA32154@dmon-lap.sw.ru>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Received: from smtp4.versatel.nl ([62.58.50.91]:34342 "EHLO smtp4.versatel.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753976AbYCWOZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 10:25:01 -0400
+Subject: Re: hostapd with mac80211 and rt2500pci: hostapd doesn't receive
+	clients EAPOL keys unless mon.wlan1 is promiscuous
+From: Bas Hulsken <bhulsken@zonnet.nl>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1206277237.2902.37.camel@Bas>
+References: <1206271458.2902.27.camel@Bas>
+	 (sfid-20080323_113430_380950_98BCE00E)  <1206274341.16475.185.camel@johannes.berg>
+	 <1206277237.2902.37.camel@Bas>
+Content-Type: text/plain
+Date: Sun, 23 Mar 2008 15:14:13 +0100
+Message-Id: <1206281653.2902.45.camel@Bas> (sfid-20080323_142507_798343_627B957B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Dmitri Monakhov <dmonakhov@openvz.org>:
+Hi Johannes,
 
-> Hi,
-> Today after i've plugged usbdevice to my notebook i've got OOPS
-> which was caused by generic_rndis_bind() probe function.
-> BUG LOG:
-  ...
->
-> BUGGY PLACE:
->
-> generic_rndis_bind(struct usbnet *dev, struct usb_interface *intf, int flags)
-  ...
->
-> Bug was introduced by following commit:
-> commit 039ee17d1baabaa21783a0d5ab3e8c6d8c794bdf
-> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Date:   Sun Jan 27 23:34:33 2008 +0200
->
+On Sun, 2008-03-23 at 14:00 +0100, Bas Hulsken wrote:
 
-Thanks for noticing this. Problem is that when rndis_query fails  
-'phym' pointer is not set. That rndis_query was add for wireless  
-device support, it's known that wired devices may fail that query, and  
-shouldn't fail out from generic_rndis_bind. Correct fix is to either  
-point 'phym' to zero u32 or prevent  use when rndis_query fails. I'll  
-send patch very soon.
+> before I blow up the system, I guess this should do the trick?
+> (remember, I'm not a kernel hacker ;-):
 
-  - Jussi Kivilinna
+ok.. so I decided to just give it a try.. seems to work, this is dmesg
+upon ifupping the interface:
 
+phy0: Selected rate control algorithm 'pid'
+Registered led device: rt2500pci-phy0:radio
+rt2500pci MAC changed: 00:0c:f6:14:05:19
+rt2500pci filter_flags: 2
+ADDRCONF(NETDEV_UP): wlan1: link is not ready
+
+when I run hostapd, this is in dmesg:
+
+rt2500pci MAC changed: 00:00:00:00:00:00
+rt2500pci MAC changed: 00:0c:f6:14:05:19
+rt2500pci MAC changed: 00:00:00:00:00:00
+rt2500pci MAC changed: 00:0c:f6:14:05:19
+rt2500pci filter_flags: 2
+rt2500pci filter_flags: 0
+rt2500pci MAC changed: 00:00:00:00:00:00
+rt2500pci MAC changed: 00:0c:f6:14:05:19
+rt2500pci filter_flags: 2
+
+this is immediately on startup of hostapd, after that filter and MAC
+remain unchanged (at least if my printk catches everything).
+
+thanks,
+Bas
 
 
