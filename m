@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57231 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758523AbYCGSxJ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386AbYCWWQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2008 13:53:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix failed frames status report typo
-Date: Fri, 7 Mar 2008 19:52:24 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803071952.24332.mb@bu3sch.de> (sfid-20080307_185314_231063_79299687)
+	Sun, 23 Mar 2008 18:16:53 -0400
+Subject: Re: [PATCH] mac80211: trigger ieee80211_sta_work after opening
+	interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jan Niehusmann <jan@gondor.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20080323192355.GA5773@x61s.gondor.com>
+References: <20080323192355.GA5773@x61s.gondor.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nOdsBPcAlRt/o3Ha3dJH"
+Date: Sun, 23 Mar 2008 23:16:35 +0100
+Message-Id: <1206310595.16475.190.camel@johannes.berg> (sfid-20080323_221704_399354_5C61192B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a typo in the status report.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-For 2.6.26
+--=-nOdsBPcAlRt/o3Ha3dJH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-03-07 19:48:55.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-03-07 19:49:23.000000000 +0100
-@@ -914,13 +914,13 @@ static void b43_destroy_dmaring(struct b
- 		       "Used slots %d/%d, Failed frames %llu/%llu = %llu.%01llu%%, "
- 		       "Average tries %llu.%02llu\n",
- 		       (unsigned int)(ring->type), ringname,
- 		       ring->max_used_slots,
- 		       ring->nr_slots,
- 		       (unsigned long long)failed_packets,
--		       (unsigned long long)succeed_packets,
-+		       (unsigned long long)nr_packets,
- 		       (unsigned long long)divide(permille_failed, 10),
- 		       (unsigned long long)modulo(permille_failed, 10),
- 		       (unsigned long long)divide(average_tries, 100),
- 		       (unsigned long long)modulo(average_tries, 100));
- 	}
- #endif /* DEBUG */
+On Sun, 2008-03-23 at 20:23 +0100, Jan Niehusmann wrote:
+> ieee80211_sta_work is disabled while network interface
+> is down. Therefore, if you configure wireless parameters
+> before bringing the interface up, these configurations are
+> not yet effective and association fails.
+>=20
+> A workaround from userspace is calling a command like
+> 'iwconfig wlan0 ap any' after the interface is brought up.
+>=20
+> To fix this behaviour, trigger execution of ieee80211_sta_work from
+> ieee80211_open when in STA or IBSS mode.
+
+What happens with this patch when you haven't set any configuration
+items before bringing the interface up? We want it to do nothing, if
+that behaviour is kept the patch should be fine.
+
+johannes
+
+--=-nOdsBPcAlRt/o3Ha3dJH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+bWwqVg1VMiehFYAQKCzQ/8D/XwxThpjvpGZY9iDamOXczNO3+4b278
+GbIRSvP2pJphV8L4lKeZ5+HpG7bvBpSMGoSIGIjzG12nqA4g5BCgjml+oKuntHdo
+wYrq2F02MQVOMU26vAQF+FUJAzdh2rwFPCl64asyxQLPP7mnPwJgpsDYDnTpE5Mf
+HnF7xbJaVxhzSYm+ct5pqrNN9iHaW4OM1EIT9JVYE/NE0TCtN29JNYnsFol8s4FB
+p73JLjg/Uyj69oLJM/ZtAnHUzo/9BKi/94AzEsAC1hzAJYLDKYK/rOrltcYSVyOo
+vGgtdlyyoGj2KMHFgMiM0h0KZIUTKWQyffwm9OCEND+5F7AZ36iEad5nxnHsmgoH
+n27plreK6f4yPUqRDMozoAHNquI57nZjUimroir6eMvIOIbZyoGukGST2YRBc/Yk
+MBwhW+xx0cBQCt4xSCop5BKJzLIedSn4Qq5XsclNH9+EWiqHgfA4ImMcujkOfIhp
+zWsYuPsVwkp5dENdUxl5tcZpBkDBe1/Q6u2QR58KD4FQwo1U7dhWo4X4seaeBKGf
+RGBFL5ta7SgnqbaP2PDJKv8ZfP8AQUaHKCyBxfGMXWs6fOOKJDMriMPIkmF7xraB
+Uz/wWH05hr3Q4sJGKX6E7oW/QegSiv1xY+BubEH1mx3CwLBaJ3Cwww3WJOm0Waku
+Id92z6PEi1c=
+=QRhw
+-----END PGP SIGNATURE-----
+
+--=-nOdsBPcAlRt/o3Ha3dJH--
+
