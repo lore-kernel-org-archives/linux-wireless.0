@@ -1,105 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:55196 "EHLO
+Received: from rn-out-0910.google.com ([64.233.170.190]:9073 "EHLO
 	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbYCaOKV (ORCPT
+	with ESMTP id S1753852AbYCXQVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 10:10:21 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so504318rng.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 07:10:17 -0700 (PDT)
-Message-ID: <1ba2fa240803310710w24a057j7687411cb20985db@mail.gmail.com> (sfid-20080331_151026_429622_9C7F6AC1)
-Date: Mon, 31 Mar 2008 17:10:14 +0300
+	Mon, 24 Mar 2008 12:21:53 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so1347024rnb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2008 09:21:52 -0700 (PDT)
+Message-ID: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com> (sfid-20080324_162156_026330_E1B802F6)
+Date: Mon, 24 Mar 2008 18:21:51 +0200
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 MLME scanning - BSS list trouble
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>,
-	"Javier Cardona" <javier@cozybit.com>, "Jiri Benc" <jbenc@suse.cz>,
-	"Michael Wu" <flamingice@sourmilk.net>, "Jouni Malinen" <j@w1.fi>,
-	"Bill Moss" <bmoss@clemson.edu>, "Daniel Drake" <dsd@gentoo.org>,
-	"Dan Williams" <dcbw@redhat.com>, "Vladimir Koutny" <vlado@ksp.sk>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1206865999.22530.187.camel@johannes.berg>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: IBSS RTNL assertion
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1206865999.22530.187.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU3VuLCBNYXIgMzAsIDIwMDggYXQgMTE6MzMgQU0sIEpvaGFubmVzIEJlcmcKPGpvaGFubmVz
-QHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOgo+IEhpLAo+Cj4gIEFwb2xvZ2llcyBmb3IgdGhlIGxv
-bmcgQ0MgbGlzdCwgaXQgc2VlbXMgbG90cyBvZiBwZW9wbGUgd2VyZSBlaXRoZXIKPiAgaW52b2x2
-ZWQgd2l0aCB0aGUgc2Nhbm5pbmcgY29kZSBvciBjb3VsZCBrbm93IGhvdyBpdCBzaG91bGQgd29y
-ayA6KQo+Cj4gIEFmdGVyIGhhdmluZyB0d28gYnVnIHJlcG9ydHMgYWJvdXQgdGhlIEJTUyBsaXN0
-L3Byb2JlX3Jlc3AgdmFyaWFibGUgaW4KPiAgbWFjODAyMTEgYW5kIGEgdmVyeSBkZXRhaWxlZCBh
-bmFseXNpcyBvZiB0aGUgcHJvYmxlbSBmcm9tIEJpbGwgTW9zcywgSQo+ICB0aGluayBJJ3ZlIHVu
-ZGVyc3Rvb2QgdGhlIHByb2JsZW0gbm93IGJ1dCBJJ20gbm90IHN1cmUgaG93IHRvIHByb2NlZWQK
-PiAgYmVjYXVzZSBJIGRvIG5vdCB1bmRlcnN0YW5kIHRoZSByZWFzb24gZm9yICJEbyBub3QgYWxs
-b3cgYmVhY29ucyB0bwo+ICBvdmVycmlkZSBkYXRhIGZyb20gcHJvYmUgcmVzcG9uc2VzIi4KPgo+
-ICBJJ2xsIGdldCBpbnRvIG1vcmUgZGV0YWlsIG9mIHRoYXQgY29kZSBpbiBhIGJpdCwgYnV0IGxl
-dCBtZSBnaXZlIGEKPiAgZ2xvYmFsIG92ZXJ2aWV3IGZpcnN0IGZvciB0aG9zZSBub3QgaW50aW1h
-dGVseSBmYW1pbGlhciB3aXRoIHRoZSBjb2RlLgo+Cj4gIEluIHRoZSBNTE1FL3NjYW4gY29kZSwg
-bWFjODAyMTEga2VlcHMgYSBsaXN0IG9mIEJTUyBpbmZvIHN0cnVjdHVyZXMgKGZvcgo+ICBlYWNo
-IGhhcmR3YXJlIHRoYXQgaXMgcmVnaXN0ZXJlZCB0byB0aGUgc3lzdGVtKSwgZWFjaCBvZiB0aGUg
-c3RydWN0dXJlcwo+ICBjb250YWluaW5nIGluZm9ybWF0aW9uIG9uIHRoZSBCU1MsIHNlZSBzdHJ1
-Y3QgaWVlZTgwMjExX3N0YV9ic3MgaW4KPiAgaWVlZTgwMjExX2kuaC4KPgo+ICBXaGVuIHdlIHNj
-YW4sIHdlIHdpbGwgYWx3YXlzIHRyeSB0byBrZWVwIGVhY2ggb2YgdGhlIEJTUyBzdHJ1Y3RzIHdl
-IGhhdmUKPiAgdXBkYXRlZCB3aXRoIHRoZSBsYXN0IGluZm9ybWF0aW9uIHJlY2VpdmVkLCBidXQg
-dGhlcmUgaXMgY29kZSB0byBwcmV2ZW50Cj4gIHVwZGF0aW5nIGl0IGZyb20gYSBiZWFjb24gd2hl
-biB3ZSBoYXZlIHByZXZpb3VzbHkgcmVjZWl2ZWQgcHJvYmUKPiAgcmVzcG9uc2VzLgo+Cj4gIE5v
-dywgdGhpcyBjb2RlIGhhcyB0d28gbW9zdGx5IG9ydGhvZ29uYWwgcHJvYmxlbXMuCj4KPiAgVGhl
-IGZpcnN0IG9uZSBpcyB0aGF0IHRoZXJlIGlzIG5vIGFjdHVhbCBleHBpcmF0aW9uIG9mIEJTUyBz
-dHJ1Y3RzLiBFYWNoCj4gIEJTUyBzdHJ1Y3QgaGFzIGEgJ2xhc3RfdXBkYXRlJyBtZW1iZXIgdGhh
-dCBjb250YWlucyAoaW4gamlmZmllcykgdGhlCj4gIHRpbWUgdGhpcyBpdGVtIHdhcyBsYXN0IHVw
-ZGF0ZWQuIFRoaXMgbWVhbnMgdGhhdCB3ZSBhY2N1bXVsYXRlIEJTUwo+ICBpbmZvcm1hdGlvbiBm
-b3JldmVyLCBidXQgZHVlIHRvIHRoZSAnbGFzdF91cGRhdGUnIG9ubHkgdGhlIGxhc3QgZmV3Cj4g
-IGl0ZW1zIHdpbGwgYmUgcmV0dXJuZWQgdG8gdGhlIHVzZXIgb24gYXNraW5nIGZvciBhIHNjYW4g
-cmVzdWx0LiBUaGlzCj4gIG9idmlvdXNseSBoYXMgcHJvYmxlbXMgc2luY2UgYSByb2d1ZSBzdGF0
-aW9uIGNvdWxkIGJvbWJhcmQgdXMgd2l0aCBmYWtlCj4gIHByb2JlIHJlc3BvbnNlcyBhbmQgY2F1
-c2UgdXMgdG8gYnVpbGQgYSBodWdlIEJTUyBsaXN0IHdoaWNoIGlzIG5ldmVyCj4gIGFnYWluIGZy
-ZWVkIHVudGlsIHRoZSBoYXJkd2FyZSBpcyBkZXJlZ2lzdGVyZWQuIFRoaXMgd2lsbCBuZWVkIHRv
-IGJlCj4gIGZpeGVkLCBvZiBjb3Vyc2UuCj4KPiAgVGhlIHNlY29uZCBwcm9ibGVtIGlzIHRoZSBv
-bmUgQmlsbCBNb3NzIGFuZCBWbGFkaW1pciBLb3V0bnkgd2VyZSBydW5uaW5nCj4gIGludG8uIEFz
-IHNvb24gYXMgd2UgcmVjZWl2ZSBhIHByb2JlIHJlc3BvbnNlIGZyb20gYSBCU1MsIHdlIG5ldmVy
-IGFnYWluCj4gIHVwZGF0ZSBpdCBmcm9tIGJlYWNvbnMsIGhlbmNlIHVzZXJzcGFjZSBjYW4gbmV2
-ZXIgZmluZCBhbiBBUCBkdXJpbmcKPiAgcGFzc2l2ZSBzY2FubmluZyBpZiB3ZSd2ZSBzZWVuIHRo
-YXQgQlNTSUQgYmVmb3JlIGR1cmluZyBhbiBhY3RpdmUgc2Nhbi4KPiAgSW4gVmxhZGltaXIgS291
-dG55J3MgY2FzZSB0aGlzIGlzIGR1ZSB0byBhIGhhcmR3YXJlIGJ1ZyAodGhvdWdoIEkgY2FuJ3QK
-PiAgc2VlIHdoeSBhbnkgaGFyZHdhcmUgd291bGQgYmVoYXZlIHRoYXQgd2F5KSwgaW4gQmlsbCBN
-b3NzJ3MgY2FzZSBJJ20gbm90Cj4gIGVudGlyZWx5IHN1cmUgd2h5IGhlJ3Mgbm90IGdldHRpbmcg
-cHJvYmUgcmVzcG9uc2VzLCBtYXliZSB0aGUgQVAgaXMganVzdAo+ICBub3QgcXVpY2sgZW5vdWdo
-Lgo+ICBJbiBhbnkgY2FzZSwgdGhlIHByb2JsZW0gdGhlbiBpcyB0aGF0IGxhc3RfdXBkYXRlIGlz
-IHVwZGF0ZWQgb25seSBhbG9uZwo+ICB3aXRoIHRoZSByZW1haW5pbmcgaW5mb3JtYXRpb24gaW4g
-YSBCU1Mgc3RydWN0LCB3aGljaCBpcyBxdWl0ZSBjb3JyZWN0Lgo+ICBUaGUgcXVlc3Rpb24sIGhv
-d2V2ZXIsIGlzOiB3aHkgYXJlIGJlYWNvbnMgbm90IGFsbG93ZWQgdG8gb3ZlcnJpZGUgcHJvYmUK
-PiAgcmVzcG9uc2UgaW5mb3JtYXRpb24/IFRoYXQgaXMsIHdoeSBkb2VzIHRoaXMgcGllY2Ugb2Yg
-Y29kZSBleGlzdDoKPgo+ICAgICAgICAgaWYgKHNkYXRhLT52aWYudHlwZSAhPSBJRUVFODAyMTFf
-SUZfVFlQRV9JQlNTICYmCj4gICAgICAgICAgICAgYnNzLT5wcm9iZV9yZXNwICYmIGJlYWNvbikg
-ewo+ICAgICAgICAgICAgICAgICAvKiBTVEEgbW9kZToKPiAgICAgICAgICAgICAgICAgICogRG8g
-bm90IGFsbG93IGJlYWNvbiB0byBvdmVycmlkZSBkYXRhIGZyb20gUHJvYmUgUmVzcG9uc2UuICov
-Cj4gICAgICAgICAgICAgICAgIGllZWU4MDIxMV9yeF9ic3NfcHV0KGRldiwgYnNzKTsKPiAgICAg
-ICAgICAgICAgICAgcmV0dXJuOwo+ICAgICAgICAgfQo+Cj4gIEkgZmFpbGVkIHRvIGZpbmQgYW55
-IGV4cGxhbmF0aW9uIGZvciBpdCBpbiB0aGUgZ2l0IGFyY2hpdmUgKGl0IHdhcyBwYXJ0Cj4gIG9m
-IHRoZSBmaXJzdCBjb2RlIGRyb3AgZnJvbSBKaXJpIHRoYXQgbWFkZSBpdCBpbnRvIGEgd2lyZWxl
-c3MgdHJlZSBhbmQgSQo+ICBkb24ndCBoYXZlIGFueSBvbGRlciBnaXQgYXJjaGl2ZXMgaGFuZHkp
-IG5vciBpbiBteSBlbWFpbCB0aG91Z2ggSQo+ICB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJlIHdhcyBh
-IHJlYXNvbiBmb3IgaXQgKG9yIEkgbWF5IGhhdmUgbWFkZSBpdCB1cCkuCj4KPiAgQmlsbCBNb3Nz
-IHJlcG9ydHMgdGhhdCByZW1vdmluZyB0aGlzIHBpZWNlIG9mIGNvZGUgKGFuZCB0aGVuIHRoZQo+
-ICBwcm9iZV9yZXNwIHZhcmlhYmxlIO+7v2NvbXBsZXRlbHkgc2luY2UgaXQnbGwgYmUgd3JpdGUt
-b25seSkgZml4ZXMgdGhlCj4gIHByb2JsZW0sIGFuZCBpdCdzIG9idmlvdXMgd2h5Lgo+Cj4gIFRo
-ZSBvbmx5IHRoaW5nIEknbSBub3Qgc3VyZSBhYm91dCBpcyB3aGV0aGVyIHRoYXQgd2lsbCBpbnRy
-b2R1Y2UKPiAgcmVncmVzc2lvbnMgYmVjYXVzZSBwcm9iZSByZXNwb25zZXMgY2FuIGNvbnRhaW4g
-YmV0dGVyIGluZm9ybWF0aW9uIHRoYW4KPiAgYmVhY29ucy4gVGhlIG9ubHkgcmVhc29uIEkgY2Fu
-IGZpbmQgZm9yIHRoaXMgd291bGQgYmUgYW4gQVAgdGhhdCBoYXMKPiAgbXVsdGlwbGUgU1NJRHMg
-d2l0aCBkaWZmZXJlbnQgc2VjdXJpdHkgc2V0dGluZ3Mgb24gZWFjaCBhbmQgYW5ub3VuY2VzCj4g
-IHRob3NlIG9ubHkgaW4gdGhlIHByb2JlIHJlc3BvbnNlcyAoYW5kIG90aGVyd2lzZSB1c2VzIGEg
-aGlkZGVuIFNTSUQpLAo+ICBidXQgd2Ugb25seSBoYW5kbGUgdGhhdCBub3csIG11Y2ggbGF0ZXIg
-dGhhbiB0aGUgY29kZSB0aGVyZSB0aGF0IHdhcwo+ICBhbHJlYWR5IHByZXNlbnQuCj4KPiAgSG93
-ZXZlciwgdGhhdCBhY3R1YWxseSBzZWVtcyB0byBoYXZlIGFub3RoZXIgYnVnLCBpZiB5b3UgaGF2
-ZSBzdWNoIGFuIEFQCj4gIHdpbGwgeW91IGZpbmQgdHdvIEJTU2VzLCBvbmUgd2l0aCBhIGhpZGRl
-biBhbmQgb25lIHdpdGggYSB2aXNpYmxlIFNTSUQ/Cj4KPiAgQW55IGhpbnRzIGFib3V0IHRoaXMg
-Y29kZSBvciB0aGUgZGVzaXJlZCBiZWhhdmlvdXIgd291bGQgYmUgZ3JlYXRseQo+ICBhcHByZWNp
-YXRlZC4KCkZvciBleGFtcGxlIFdNTSBwYXJhbWV0ZXJzIGFyZSBub3QgcHJlc2VudCBpbiBiZWFj
-b24gYnV0IGFyZSBwcmVzZW50CmluIHByb2JlIHJlc3BvbnNlLgpXaGF0IGlzIG5lZWRlZCBoZXJl
-IGlzIGJlaW5nIHNlbGVjdGl2ZSB3aGF0IGlzIHVwZGF0ZWQgYW5kIHdoYXQgbm90LgpXaGF0IGlz
-IGZvciBzdXJlIHlvdSBuZWVkIGF0IGxlYXN0IG9uZSBwcm9iZSByZXNwb25zZSBiZWZvcmUgeW91
-IGNhbiBhc3NvY2lhdGUuCgpUb21hcwoKPgo+ICBUaGFua3MsCj4gIGpvaGFubmVzCj4K
+Has anybody experience the one bellow? Any insights?
+
+Thanks
+Tomas
+
+wl4965: U iwl4965_mac_reset_tsf enter
+iwl4965: U iwl4965_mac_reset_tsf leave
+iwl4965: U iwl4965_mac_config_interface bssid: 02:0e:35:20:5a:48
+iwl4965: U iwl4965_mac_config_interface leave
+iwl4965: U iwl4965_mac_config enter to channel 1
+iwl4965: U iwl4965_mac_config leave
+iwl4965: U iwl4965_mac_beacon_update enter
+iwl4965: U iwl4965_mac_beacon_update leave
+wlan0: Configured IBSS beacon template
+phy2: Adding new IBSS station 00:0e:35:24:c1:32 (dev=wlan0)
+RTNL: assertion failed at net/mac80211/sta_info.c (140)
+Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
+ [<f8a74427>] sta_info_destroy+0x30/0xf4 [mac80211]
+ [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
+ [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
+ [<c042fc92>] __queue_work+0x1c/0x28
+ [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
+ [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
+ [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
+ [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<c0426d6a>] irq_exit+0x50/0x67
+ [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
+ [<c046be74>] add_partial+0x23/0x33
+ [<c046cfdf>] __slab_free+0x60/0x1db
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<c046d95e>] kmem_cache_free+0x60/0x69
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
+ [<c04d9e80>] __next_cpu+0x12/0x21
+ [<c04198a3>] find_busiest_group+0x210/0x605
+ [<c047f0b7>] d_alloc+0x1b/0x16e
+ [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+ [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
+ [<c041e864>] hrtick_set+0x7a/0xd8
+ [<c0601229>] schedule+0x6df/0x711
+ [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+ [<c042f919>] run_workqueue+0x6b/0xe0
+ [<c042ffe9>] worker_thread+0x0/0xbd
+ [<c043009c>] worker_thread+0xb3/0xbd
+ [<c04321ec>] autoremove_wake_function+0x0/0x2d
+ [<c0432128>] kthread+0x38/0x60
+ [<c04320f0>] kthread+0x0/0x60
+ [<c0405527>] kernel_thread_helper+0x7/0x10
+ =======================
+RTNL: assertion failed at net/mac80211/key.c (275)
+Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
+ [<f8a82d79>] ieee80211_key_free+0x2b/0x97 [mac80211]
+ [<f8ab02ad>] rs_remove_debugfs+0x0/0x25 [iwl4965]
+ [<f8a74461>] sta_info_destroy+0x6a/0xf4 [mac80211]
+ [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
+ [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
+ [<c042fc92>] __queue_work+0x1c/0x28
+ [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
+ [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
+ [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
+ [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<c0426d6a>] irq_exit+0x50/0x67
+ [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
+ [<c046be74>] add_partial+0x23/0x33
+ [<c046cfdf>] __slab_free+0x60/0x1db
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<c046d95e>] kmem_cache_free+0x60/0x69
+ [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+ [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
+ [<c04d9e80>] __next_cpu+0x12/0x21
+ [<c04198a3>] find_busiest_group+0x210/0x605
+ [<c047f0b7>] d_alloc+0x1b/0x16e
+ [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+ [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
+ [<c041e864>] hrtick_set+0x7a/0xd8
+ [<c0601229>] schedule+0x6df/0x711
+ [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+ [<c042f919>] run_workqueue+0x6b/0xe0
+ [<c042ffe9>] worker_thread+0x0/0xbd
+ [<c043009c>] worker_thread+0xb3/0xbd
+ [<c04321ec>] autoremove_wake_function+0x0/0x2d
+ [<c0432128>] kthread+0x38/0x60
+ [<c04320f0>] kthread+0x0/0x60
+ [<c0405527>] kernel_thread_helper+0x7/0x10
+ =======================
