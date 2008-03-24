@@ -1,74 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39084 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935080AbYCFSG1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2008 13:06:27 -0500
-Subject: Re: [RFC] mac80211: handling Qdisc issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	root <root@localhost.localdomain>
-In-Reply-To: <200803061902.33865.IvDoorn@gmail.com> (sfid-20080306_180316_223106_0E5FAF45)
-References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
-	 <200803061902.33865.IvDoorn@gmail.com>
-	 (sfid-20080306_180316_223106_0E5FAF45)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xHipbYxXs5RoZ1eVJvBP"
-Date: Thu, 06 Mar 2008 19:06:07 +0100
-Message-Id: <1204826767.25502.135.camel@johannes.berg> (sfid-20080306_180701_932464_1111A603)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:34008 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756400AbYCXNFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2008 09:05:40 -0400
+Message-ID: <47E7A8DB.5020106@gmx.de> (sfid-20080324_130547_822894_33502CA3)
+Date: Mon, 24 Mar 2008 14:12:59 +0100
+From: Florian Manschwetus <florianmanschwetus@gmx.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: gentoo ebuild for compat wireless (resend)
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms050509080906050602040907"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a cryptographically signed message in MIME format.
 
---=-xHipbYxXs5RoZ1eVJvBP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--------------ms050509080906050602040907
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
+is it possible to get a version appendix on the tar.bz?
+so it should be easy to get a working ebuild fpr this.
 
-> > +#if TODO
-> > +Is this correct??
-> > +#endif
-> > +	rt2x00lib_write_tx_desc(rt2x00dev, skb, control, queue->qid);
->=20
-> This is incorrect, even though it theoretically would work.
-> The qid !=3D queue number, for most TX queues the value will be the same,
-> but the meaning of the field is different.
+florian
 
-Hence my #if TODO which causes sparse to warn about the code :) I meant
-to ask you but never had time to continue working on this patch.
+this is a resend of the message, caused if subscribtion problems
 
-> Resolving this issue will also be something I can fix relatively fast aft=
-er this
-> patch is accepted and applied to wireless-testing.
+--------------ms050509080906050602040907
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-You could also just make a patch for exactly this and ask Ron to merge
-it together with this?
-
-johannes
-
---=-xHipbYxXs5RoZ1eVJvBP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9AyjqVg1VMiehFYAQLt8w//URBcDDx+aC9uHZ7acQX7N+/PVoDGI0W1
-Gr7LuAOChGZYH0LlpzQrgHqvWkWVH2O1OMVE9ekUwD+ZHdQK7vjVemjuv2duWkD8
-Gs+oJNJsuhWhpLLfciJiOfqwwtM8/w/7URRjzEw8kIq5xanzuefzM5CV4aIW+RCn
-fGN1vYvrAv/68InEq2pnVwCp0SKHoMRiYkvD8OeGH/kyjuVhO5Kbq4JGPN+XVjQI
-6OLLOswYDNe3xtdjcsAvGiOi/v18EkQNjNswa480x6FTep7yXh2NWESa3aNs4NGy
-FHECjDkGPXYkKrBFkBpvI2I8OSkunnSq14K7yGPtnIxvwfZSUiwiXAAi5V8dxbEo
-VcdkthCHGnP8bh7HkvCPJkgoI1AzAEdi946nmm1tpC1ZCbTFN1hA97Q0VfKrRitx
-Nht7HNd5+WHh8ZcXMT4X76eBNjDMUFkeXTcjGCS26VH1InweLLEDW9nylsn+6rHT
-qxKLjSzydOseTnKL6dGIpBG1OtA6quuKHyaO2y6RZwLaeKNCl2gVW2TaFrbbPDEq
-YN/aNTd+UVZz1Im3UFBkyZGI/ctImZU+hLdIBhS4GJzIDHDXwuYRWuoI/nnIt8e0
-ErWzvNszm1M5TvI5CeYNY/6Os1h+mt/25dYr11AUdQYElz8oKwN4JgOpqCKhelZB
-GmmjUUZntTA=
-=WQEU
------END PGP SIGNATURE-----
-
---=-xHipbYxXs5RoZ1eVJvBP--
-
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
+BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
+HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
+ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
+MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
+dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
+hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
+25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
+TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
+5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
+SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
+byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
+gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
+MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
+dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
+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
+Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
+cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
+MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
+2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQxMzEy
+NTlaMCMGCSqGSIb3DQEJBDEWBBQHGxlgYNJeU1qBd2IIcJV9c32pVzBSBgkqhkiG9w0BCQ8x
+RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
+BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
+Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
+aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
+LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
+FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
+cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
+AQEBBQAEggEAgbs2L4mK7jxx95fGzyTCS5tOsIgazasCUoId4rsurZNNe/VACvoFWIgIIivd
+MioB+wUQh/j1CBlyRiQB6ul0A9zdA4rz6MVj48bvfgNbIubq5DEEglADB7VerqPNaWILb0AV
+/4SLIPWs47+/UtWoW/DJ7oU3/l/S7KMHuBS5lkjPZAfnR3GQDaITTAUyj3r0JoplF9dOxx5z
+pST06UU5CoDk5THBH+1LHb5dRDXmHr2lLSCW9NahEGESTgxD//EnypCocmwk3Hfmr8Jmnmc2
+AEqdBNO76rqzxh8CfqEgeWBPLFtEB2y+F8/oREi+h8/E4nmd77Nq8R3d3WfEAn3pNwAAAAAA
+AA==
+--------------ms050509080906050602040907--
