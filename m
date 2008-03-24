@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:64840 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753285AbYCYVQA (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.180]:16565 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbYCXUEo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 17:16:00 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so2521595ugc.16
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 14:15:58 -0700 (PDT)
-To: Balaji Rao <balajirrao@gmail.com>
-Subject: Re: Question on Wireless NICs
-Date: Tue, 25 Mar 2008 22:15:08 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200803260011.29045.balajirrao@gmail.com> <20080325193219.GC30587@tuxdriver.com>
-In-Reply-To: <20080325193219.GC30587@tuxdriver.com>
+	Mon, 24 Mar 2008 16:04:44 -0400
+Received: by el-out-1112.google.com with SMTP id v27so1410533ele.17
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2008 13:04:42 -0700 (PDT)
+Message-ID: <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com> (sfid-20080324_200448_274973_11753771)
+Date: Mon, 24 Mar 2008 16:04:42 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Florian Manschwetus" <florianmanschwetus@gmx.de>
+Subject: Re: gentoo ebuild for compat wireless (resend)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47E7A8DB.5020106@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803252215.09057.IvDoorn@gmail.com> (sfid-20080325_211607_333142_A66CD66A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <47E7A8DB.5020106@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 25 March 2008, John W. Linville wrote:
-> On Wed, Mar 26, 2008 at 12:11:28AM +0530, Balaji Rao wrote:
-> 
-> > My question is, are there any wireless NICs that don't require a firmware to be loaded into them to work ?
-> 
-> There are some, although many of them are old:  adm8211, airo, ath5k,
-> rtl8180, rtl8187, and some of the rt2x00 devices.
+On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
+<florianmanschwetus@gmx.de> wrote:
+> is it possible to get a version appendix on the tar.bz?
+>  so it should be easy to get a working ebuild fpr this.
 
-For rt2x00 the following:
-rt2400pci, rt2500pci and rt2500usb
+The problem is there's two things to "version", compat-wireless itself
+and Linux. I keep both version already as part of the tarball.
 
-> > I was planning to boot off a wireless NIC through PXE. Is it possible ??
-> 
-> The gPXE (formerly etherboot) project seems to support PCI-based
-> (e.g. cardbus, but not PCMCIA) orinoco devices.  I cannot verify that,
-> since I have no such device (donations accepted!)...
-> 
-> Hth!
-> 
-> John
+wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
+2.8-49-gfe0f268
 
+wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
+v2.6.25-rc5-2623-g7556b76
 
+You can also just pull these from the directory that was used to
+create the tarball:
+
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
+
+Does this suffice?
+
+  Luis
