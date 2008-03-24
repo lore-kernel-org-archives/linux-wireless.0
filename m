@@ -1,32 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34008 "HELO mail.gmx.net"
+Received: from mail.gmx.net ([213.165.64.20]:40918 "HELO mail.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756400AbYCXNFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 09:05:40 -0400
-Message-ID: <47E7A8DB.5020106@gmx.de> (sfid-20080324_130547_822894_33502CA3)
-Date: Mon, 24 Mar 2008 14:12:59 +0100
+	id S1752669AbYCXXXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2008 19:23:54 -0400
+Message-ID: <47E839BE.5030806@gmx.de> (sfid-20080324_232359_331778_8EC141EC)
+Date: Tue, 25 Mar 2008 00:31:10 +0100
 From: Florian Manschwetus <florianmanschwetus@gmx.de>
 MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Subject: gentoo ebuild for compat wireless (resend)
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms050509080906050602040907"
+Subject: Re: gentoo ebuild for compat wireless (resend)
+References: <47E7A8DB.5020106@gmx.de> <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
+In-Reply-To: <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms050706090801060807070408"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 This is a cryptographically signed message in MIME format.
 
---------------ms050509080906050602040907
+--------------ms050706090801060807070408
 Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 
-is it possible to get a version appendix on the tar.bz?
-so it should be easy to get a working ebuild fpr this.
+Luis R. Rodriguez schrieb:
+> On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
+> <florianmanschwetus@gmx.de> wrote:
+>> is it possible to get a version appendix on the tar.bz?
+>>  so it should be easy to get a working ebuild fpr this.
+> 
+> The problem is there's two things to "version", compat-wireless itself
+> and Linux. I keep both version already as part of the tarball.
+> 
+> wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
+> 2.8-49-gfe0f268
+> 
+> wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
+> v2.6.25-rc5-2623-g7556b76
+> 
+> You can also just pull these from the directory that was used to
+> create the tarball:
+> 
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
+> 
+> Does this suffice?
+Not really but it gives a version hint, could you create a symlink or so?
+a url like that would be fine:
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.8-49.tar.bz2
 
 florian
+> 
+>   Luis
+> 
 
-this is a resend of the message, caused if subscribtion problems
 
---------------ms050509080906050602040907
+--------------ms050706090801060807070408
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -86,8 +113,8 @@ JN0yK8U6+7Wfkh58PWduDpzqAGsmbXvQ8go2JGDXeMs3jBZ25Zp4LI08FfWz/zubavchyVYP
 Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
 cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
 MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQxMzEy
-NTlaMCMGCSqGSIb3DQEJBDEWBBQHGxlgYNJeU1qBd2IIcJV9c32pVzBSBgkqhkiG9w0BCQ8x
+2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjQyMzMx
+MTBaMCMGCSqGSIb3DQEJBDEWBBSb/izoESf6ThqghCWoK1tINFsj6jBSBgkqhkiG9w0BCQ8x
 RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
 BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
 Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
@@ -95,10 +122,10 @@ aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
 LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
 FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
 cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEAgbs2L4mK7jxx95fGzyTCS5tOsIgazasCUoId4rsurZNNe/VACvoFWIgIIivd
-MioB+wUQh/j1CBlyRiQB6ul0A9zdA4rz6MVj48bvfgNbIubq5DEEglADB7VerqPNaWILb0AV
-/4SLIPWs47+/UtWoW/DJ7oU3/l/S7KMHuBS5lkjPZAfnR3GQDaITTAUyj3r0JoplF9dOxx5z
-pST06UU5CoDk5THBH+1LHb5dRDXmHr2lLSCW9NahEGESTgxD//EnypCocmwk3Hfmr8Jmnmc2
-AEqdBNO76rqzxh8CfqEgeWBPLFtEB2y+F8/oREi+h8/E4nmd77Nq8R3d3WfEAn3pNwAAAAAA
+AQEBBQAEggEAsH4Qbbm7QnHtzGC9HBdZBuzU1ytXrbGZjKgcasPX+hhW9Cjzk2wMCfSiiIQn
+y8MJDNhPr58BYCvAVKqrzLeWYHDZPstBvKQtO0DIp2ziG0bgmhV1kiA7QSYBu7m2s3KM9wdg
+lETfdixe5TcF3mW/nYywHuBWKuQW/yPNx4ilEdggYjHeItn5uSGvDO1xQwtA4FevEUN9b/P4
+kbaqCb3OZyN27/x49PddwernQBLsXdcL+dfGqTFHsAvRs+/u3TsVuQTdM7wUjNE/gUvC5stz
+KuHXRoo+QfXzMw3tDPOXtQcf2E00fvZWRI6M/f6CT9yvTb3hOlOICopJUroQbym8PQAAAAAA
 AA==
---------------ms050509080906050602040907--
+--------------ms050706090801060807070408--
