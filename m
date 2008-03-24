@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46616 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751969AbYCDHhb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 02:37:31 -0500
-Date: Mon, 3 Mar 2008 23:36:51 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Subject: drivers/net/wireless/b43legacy/ on mips
-Message-Id: <20080303233651.82c592a4.akpm@linux-foundation.org> (sfid-20080304_073737_102293_6856A900)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.gondor.com ([212.117.64.182]:4682 "EHLO moria.gondor.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757239AbYCXANN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Mar 2008 20:13:13 -0400
+Date: Mon, 24 Mar 2008 01:10:44 +0100
+From: Jan Niehusmann <jan@gondor.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: trigger ieee80211_sta_work after opening
+	interface
+Message-ID: <20080324001043.GB5389@x61s.gondor.com> (sfid-20080324_001324_537312_4703B6D4)
+References: <20080323192355.GA5773@x61s.gondor.com> <1206310595.16475.190.camel@johannes.berg> <1ba2fa240803231528i4fc38343ifb49d44f5072c882@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803231528i4fc38343ifb49d44f5072c882@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 24, 2008 at 12:28:07AM +0200, Tomas Winkler wrote:
+> Why should be possible to configure device when it's not up. Shouldn't
+> be there some order in which things are happening?
 
-ERROR: "__ucmpdi2" [drivers/net/wireless/b43legacy/b43legacy.ko] undefined!
-ERROR: "__ucmpdi2" [drivers/net/wireless/b43/b43.ko] undefined!
+I don't know if it should be possible, but the debian ifup scripts seem to
+do it that way. I just configured the interface in /etc/network/interfaces
+using the wireless_* config options, and 'ifup wlan0' fails to start the
+network as the interface doesn't associate. It does work if I manually
+call 'iwconfig wlan0 ap any' after the scripts brought the interface up.
 
-int b43legacy_dma_init(struct b43legacy_wldev *dev)
-{
-        struct b43legacy_dma *dma = &dev->dma;
-        struct b43legacy_dmaring *ring;
-        int err;
-        u64 dmamask;
-        enum b43legacy_dmatype type;
+With the patch, 'ifup wlan0' works perfectly for me.
 
-        dmamask = supported_dma_mask(dev);
-        switch (dmamask) {
-        default:
-                B43legacy_WARN_ON(1);
-        case DMA_30BIT_MASK:
-                type = B43legacy_DMA_30BIT;
-                break;
-        case DMA_32BIT_MASK:
-                type = B43legacy_DMA_32BIT;
-                break;
-        case DMA_64BIT_MASK:
-                type = B43legacy_DMA_64BIT;
-                break;
-        }
+Also, I'm not the only one with this problem, as I found exactly the
+same hint with google:
+http://bayleshanks.com/tips-computer-lenovoX61t-gnuLinuxSetup
+"I found that I have to do "iwconfig wlan0 ap any" before it will
+associate with my router. Dunno if that's a general problem or if I did
+something wrong in /etc/network/interfaces."
 
-because some versions of gcc emit a __ucmpdi2 call for switch statements. 
-It might be fixable by switching to an open-coded if/compare/else sequence.
+(Please not that I'm using a Lenovo x61s, and the mentioned link talks
+about an x61t, which are quite similar. So it may be that this behaviour
+is only visible with some hardware configurations.)
 
-Or maybe my mips compiler (gcc-3.4.5) is just too old..
+Jan
+
