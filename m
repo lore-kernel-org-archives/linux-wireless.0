@@ -1,131 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:41468 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758797AbYC0QeG (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:64158 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbYCYNNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 12:34:06 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so4705068wxd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2008 09:34:05 -0700 (PDT)
-Message-ID: <183c1cc10803270934t7c8dff64j9e737b74b830fa10@mail.gmail.com> (sfid-20080327_163410_749081_037BCE7F)
-Date: Thu, 27 Mar 2008 12:34:05 -0400
-From: "John Goulah" <jgoulah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: problem with iwl4965 and kernel 2.6.24.4
-In-Reply-To: <D936D925018D154694D8A362EEB08920040BC0B8@orsmsx416.amr.corp.intel.com>
+	Tue, 25 Mar 2008 09:13:55 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so2372169ugc.16
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 06:13:52 -0700 (PDT)
+To: "John W. Linville" <linville@redhat.com>
+Subject: [PATCH 1/2] rt2x00: Fix rate detection for invalid signals
+Date: Tue, 25 Mar 2008 14:12:45 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com>
-	 <183c1cc10803261149r2f518772j2ea3a1b5df55b2cc@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
-	 <183c1cc10803262027k4c40386v767b2f9c79945deb@mail.gmail.com>
-	 <183c1cc10803270741r66896d88q15614af05a4142e6@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB08920040BC0B8@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803251412.45853.IvDoorn@gmail.com> (sfid-20080325_131402_709609_13720E4A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 27, 2008 at 12:27 PM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
->
-> On Thursday, March 27, 2008 7:41 AM, John Goulah  wrote:
->
->  >>  It appears I am still having some issues here with associating.
->  >>  Could this be on the driver end of things?  It doesn't happen with
->  >> another  box (other drivers)
->  >>
->  >>  I can disassociate:
->  >>  $ sudo iwconfig wlan0 ap off
->  >>  $ iwconfig
->  >>
->  >> wlan0     IEEE 802.11  ESSID:"goulahnet"
->  >>           Mode:Managed  Frequency:2.412 GHz  Access Point:
->  >> Not-Associated           Tx-Power=14 dBm
->  >>
->  >>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->  >>           Link Quality:0  Signal level:0  Noise level:0
->  >>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->  >>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->  >>
->  >>
->  >>
->  >>  What I was doing before is showing Invalid:
->  >>
->  >>
->  >>  $ sudo iwconfig wlan0 ap any  (same for auto here)  $ iwconfig
->  >>
->  >> wlan0     IEEE 802.11  ESSID:"goulahnet"
->  >>           Mode:Managed  Frequency:2.412 GHz  Access Point: Invalid
->  >> Tx-Power=14 dBm
->  >>
->  >>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->  >>           Link Quality:0  Signal level:0  Noise level:0
->  >>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->  >>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->  >>
->  >>
->  >>
->  >>
->  >>  It does seem a bit random, and I did have it working there for a
->  >>  while, but it looked like if issue ctrl-C to wpa_supplicant  it got
->  >>  into this state, or a reboot.
->  >>
->  >>  Anything I can try here?
->  >>
->  >>
->  >>
->  >
->  >
->  > Quick followup, one thing I've found is that I can scan as root and
->  > see my access point in the list:
->  >
->  >          Cell 09 - Address: 00:15:E9:FA:E2:DB
->  >                    ESSID:"goulahnet"
->  >                    Mode:Master
->  >                    Frequency:2.462 GHz (Channel 11)
->  >                    Channel:11 Quality=84/100  Signal level=-50 dBm
->  > Noise level=-127 dBm
->  >                    Encryption key:on
->  >                    IE: WPA Version 1
->  >                        Group Cipher : CCMP
->  >                        Pairwise Ciphers (1) : CCMP
->  >                        Authentication Suites (1) : PSK
->  >                    IE: IEEE 802.11i/WPA2 Version 1
->  >                        Group Cipher : CCMP
->  >                        Pairwise Ciphers (1) : CCMP
->  >                        Authentication Suites (1) : PSK
->  >                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
->  >                              11 Mb/s; 12 Mb/s; 18 Mb/s; 24
->  > Mb/s; 36 Mb/s
->  >                              48 Mb/s; 54 Mb/s
->  >                    Extra:tsf=00000208dd78c752
->  >
->  >
->  >
->  >
->  > One time, that even got me associated.  But after removing the module
->  > and trying again to be sure, I'm still showing "Invalid"
->  >
->  > This seems a bit odd to me-  Ideas are appreciated, I'm happy to
->  > debug where appropriate -
->
->  The driver and wpa_supplicant is able to provide more debugging
->  information. Could you please capture debugging from both and submit a
->  bug to http://www.intellinuxwireless.org/bugzilla/?
->
->  wpa_supplicant debugging is obtained by running it with -ddt option
->  driver debugging is obtained by loading driver with debugging enabled
->  (modprobe iwl4965 debug=0x43fff)
->
->  If possible, please annotate logs to indicate what you did at the time.
->
+It has been observed on rt2500pci hardware that some
+frames received with signal 0x0C do not have the OFDM
+flag set.
 
+Signals can have 2 meanings:
+ 1) The PLCP value
+ 2) The bitrate * 10
 
-Sure, I'd be glad to do this.  I will note, if I explicitely define my
-AP it works fine:
- sudo iwconfig wlan0 ap 00:15:E9:FA:E2:DB
+For rt2500pci (1) is for frames received with a OFDM rate,
+and (2) is for frames received with a CCK rate.
+But 0x0C is a invalid bitrate value but is a valid PLCP
+value for 54Mbs (obvious OFDM rate).
+This means that it is possible that the hardware does not
+set the OFDM bit correctly under all circumstances.
+This results in rt2x00 failing to detect the rate and
+mac80211 triggering a WARN_ON() and dropping the frame.
 
+To bypass this, print a warning when such a frame is received,
+and reset the rate to the lowest supported rate for the current band.
 
-I'll get some more debug info tonight,
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Thanks!
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 566f707..d2c0967 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -589,6 +589,13 @@ void rt2x00lib_rxdone(struct queue_entry *entry,
+ 		}
+ 	}
+ 
++	if (idx < 0) {
++		WARNING(rt2x00dev, "Frame received with unrecognized signal,"
++			"signal=0x%.2x, plcp=%d.\n", rxdesc->signal,
++			!!(rxdesc->dev_flags & RXDONE_SIGNAL_PLCP));
++		idx = 0;
++	}
++
+ 	/*
+ 	 * Only update link status if this is a beacon frame carrying our bssid.
+ 	 */
+-- 
+1.5.4.4
+
