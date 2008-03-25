@@ -1,166 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34327 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756742AbYCEV1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 16:27:15 -0500
-Subject: Re: [PATCH] mac80211: fix races between siwessid and siwencode
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Joonwoo Park <joonwpark81@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240803051250g344977f3l6126a179d4504268@mail.gmail.com>
-References: <1204710009-10040-1-git-send-email-joonwpark81@gmail.com>
-	 <1204710843.25502.50.camel@johannes.berg>
-	 <b25c3fa70803050310i71023046gc3f40d4042038ba6@mail.gmail.com>
-	 <1204715825.25502.69.camel@johannes.berg>
-	 <1204741740.9378.19.camel@localhost.localdomain>
-	 <1ba2fa240803051053j961bf68m605ca3b72cbf1b7b@mail.gmail.com>
-	 <1204744764.9378.49.camel@localhost.localdomain>
-	 <1ba2fa240803051250g344977f3l6126a179d4504268@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 05 Mar 2008 16:23:01 -0500
-Message-Id: <1204752181.17696.12.camel@localhost.localdomain> (sfid-20080305_212720_122076_AEBCD03A)
+Received: from fg-out-1718.google.com ([72.14.220.154]:9752 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861AbYCYNfZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 09:35:25 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so3498003fgb.17
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 06:35:23 -0700 (PDT)
+Date: Tue, 25 Mar 2008 13:12:50 +0100
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org, IvDoorn@gmail.com
+Subject: Spammed logs again rt2500pci 2.6.25-rc6-00268-gd2532dd
+Message-ID: <20080325131250.5167e311@Varda> (sfid-20080325_133531_973076_6416682B)
+In-Reply-To: <20080117225744.29aa214c@Varda>
+References: <20080117225744.29aa214c@Varda>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-05 at 22:50 +0200, Tomas Winkler wrote:
-> On Wed, Mar 5, 2008 at 9:19 PM, Dan Williams <dcbw@redhat.com> wrote:
-> >
-> > On Wed, 2008-03-05 at 20:53 +0200, Tomas Winkler wrote:
-> >  > On Wed, Mar 5, 2008 at 8:29 PM, Dan Williams <dcbw@redhat.com> wrote:
-> >  > > On Wed, 2008-03-05 at 12:17 +0100, Johannes Berg wrote:
-> >  > >  > > > This looks wrong. You could restart association when a key is set but
-> >  > >  > > > really the race is by design in WEXT so the only way to fix it is to set
-> >  > >  > > > the key first.
-> >  > >  > > >
-> >  > >  > >
-> >  > >  > > Do you mean fix iwconfig to always do set key before set essid?
-> >  > >  >
-> >  > >  > Well, no, I think it's more of a user error, I always do
-> >  > >  >    iwconfig enc ENC; iwconfig essid SSID
-> >  > >  > in that order.
-> >  > >  >
-> >  > >  > > But, doing It cannot solve a race from two seperated iwconfig process, I think.
-> >  > >  > > (eg: iwconfig essid ESSID; iwconfig enc ENC)
-> >  > >  >
-> >  > >  > Yeah, that's pretty ugly to start with.
-> >  > >
-> >  > >  See below for a partial solution; but even with nl80211/cfg80211, if you
-> >  > >  have more than one process trying to control the wireless card
-> >  > >  concurrently you have already lost.  Don't Do That.
-> >  > >
-> >  > >
-> >  > >  > > Moreover, now we just wake auth request task up and return when setting essid.
-> >  > >  > > Don't we need to wait a moment until the task is scheduled to be
-> >  > >  > > polite to iwconifg? :)
-> >  > >  >
-> >  > >  > I think the only way to properly handle it is to reset the association
-> >  > >  > state machine when a key is added. Dan, what's the expected behaviour?
-> >  > >
-> >  > >  The best way to implement the WEXT stuff is to have a timeout of about
-> >  > >  500ms - 700ms or so to batch WEXT stuff together.  Each new WEXT command
-> >  > >  that comes in before the timeout pushes the timeout back.  When the
-> >  > >  timeout triggers, all the new commands are executed in the driver in the
-> >  > >  order the driver expects.  That fixes most issues with chaining WEXT
-> >  > >  commands and makes all of these Just Work:
-> >  > >
-> >  > >  iwconfig wlan0 essid foo key 253325353 open channel 11
-> >  > >  iwconfig wlan0 key 253325353 open essid foo channel 11
-> >  > >  iwconfig wlan0 channel 11 key 253325353 open essid foo
-> >  > >
-> >  > >  Later on if you issue just 'iwconfig wlan0 channel 6' the driver waits
-> >  > >  500ms, the timeout triggers, and the driver changes to channel 6 and
-> >  > >  starts the association process all over with the current settings (keys,
-> >  > >  BSSID/SSID, bitrate, etc), and issues the SIOCGIWBSSID association event
-> >  > >  on both success and failure.
-> >  > >
-> >  > >  If you just do 'iwconfig wlan0 rate 11' then of course the driver
-> >  > >  doesn't need to trigger reassociation after the WEXT command timeout, it
-> >  > >  just needs to lock the bitrate.
-> >  > >
-> >  > >  The _explicit_ triggers for association/reassociation are setting the
-> >  > >  BSSID or the SSID.
-> >  >
-> >  > Currently there is a quite a mess that both BSSID and SSID triggers
-> >  > association.
-> >  > iwconfig essid AP1
-> >  > iwconfig ap "00:....." - (bssid of myap)
-> >  > iwconfig essid AP2
-> >  >
-> >  > what will be result of this? will it try to associate with AP1:BSSID
-> >  > but AP2 SSID
-> >
-> >  In the current, not-timeout situation, the driver would probably attempt
-> >  to associate to AP1/any, and be interrupted by the BSSID lock of the
-> >  second command, and then try to associate to AP1/00:..., then be
-> >  interrupted by the third command.
-> >
-> >  Then, it should fail if there is no BSSID "00:..." with an SSID of
-> >  "AP2".  The user must clear the BSSID lock by doing 'iwconfig ap any'
-> >  and then the driver is free to use any BSSID in it's scan list that
-> >  matches SSID AP2 and security settings currently configured in the
-> >  driver.
-> >
-> >  Remember, WEXT commands are _cumulative_ unless cleared by the user.
-> 
-> It's mac80211 decision when to start association. I suggest to
 
-Ultimately, yes the driver controls association, but in WEXT association
-is triggered by setting the SSID or the BSSID.  Outside of SSID/BSSID,
-the driver should trigger reassociation when it needs to.  But BSSID and
-SSID MUST always trigger a new association.
+ Running
+ 
+ Linux Varda 2.6.25-rc6-00268-gd2532dd #1 SMP PREEMPT Mon Mar 24 14:44:13 CET
+2008 x86_64 GNU/Linux
 
-> associate only on SSID command
-> if someone wants to trigger BSSID association it would call SSID ANY
-> call explicitly. This will definitely reduce the mess
-> I'm seeing now.
 
-No, that's not enough for implementing WEXT.  I don't really see what
-the problem is here?  Why is it currently a mess (other than that WEXT
-is a mess)?  It's pretty clear to me; if you ever execute an 'iwconfig'
-call that is not 'any' or '0', that attribute is locked in the driver
-until you unlock it.  End of story.
+ As the last time the thing is triggered with a p2p app making a lot of
+ connections deluge
+ 
+ My logs are spammed with the same msgs as other reports.
+ If you need more info just ask.
 
-That's the conformant case; not all drivers implement it that way.
-
-If you do:
-
-iwconfig wlan0 essid "foobar"
-iwconfig wlan0 bssid 12:34:56:78:90:12
-iwconfig wlan0 essid "baz"
-
-and there is no AP of SSID=baz and BSSID=12:34:56:78:90:12, then the
-association MUST fail because both the SSID and BSSID attributes are
-locked in the driver.  They MUST be locked in the driver until one or
-more of them is cleared or changed, at which point another association
-must occur.
-
-> I'm using Fedora 8 for development and I'm still cannot figure what
-> services are trying to access wireless
-> devices but association is always failing because SSID is switched
-> between authentication and association frames.
-> It started to work a bit when I've disabled avahi and disabled dhcp on
-> the device. (dhcp running after association is fine)
-
-How about:
-
-/sbin/service NetworkManager stop
-
-and:
-
-killall -TERM wpa_supplicant
-
-If either NM or wpa_supplicant are running, commands from iwconfig will
-likely fail because there are two things trying to drive the wireless
-device.  Just don't do that; because during driver development you need
-to control the environment obviously.
-
-another problem is drivers that do autoassociation; like ipw2200's
-'associate=x' parameter.  That allows the driver to automatically
-associate to anything it can find, which causes no end of problems.
-That's wrong.
-
-Dan
+ PS: i will not bother to make a report in the web forums becouse the last time
+i was ignored. (Someone may want to change the web forums pointer in the logs to
+the linux-wireless mailing list)
+ 
+ 
+[75175.740835] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75175.740838] Please file bug report to http://rt2x00.serialmonkey.com.
+[75175.743362] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75175.743362] Please file bug report to http://rt2x00.serialmonkey.com.
+[75179.886171] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75179.886174] Please file bug report to http://rt2x00.serialmonkey.com.
+[75180.324393] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75180.324396] Please file bug report to http://rt2x00.serialmonkey.com.
+[75182.986416] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75182.986419] Please file bug report to http://rt2x00.serialmonkey.com.
+[75184.014045] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75184.014048] Please file bug report to http://rt2x00.serialmonkey.com.
+[75185.044942] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75185.044945] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.251861] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.251864] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.252971] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.252974] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.253623] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.253625] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.254623] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.254626] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.256770] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.256773] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.257924] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.257927] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.258634] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.258637] Please file bug report to http://rt2x00.serialmonkey.com.
+[75192.258725] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75192.258728] Please file bug report to http://rt2x00.serialmonkey.com.
+[75193.278872] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75193.278875] Please file bug report to http://rt2x00.serialmonkey.com.
+[75193.280526] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75193.280529] Please file bug report to http://rt2x00.serialmonkey.com.
+[75193.282594] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75193.282597] Please file bug report to http://rt2x00.serialmonkey.com.
+[75193.282664] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75193.282667] Please file bug report to http://rt2x00.serialmonkey.com.
+[75193.283844] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75193.283847] Please file bug report to http://rt2x00.serialmonkey.com.
+[75196.364655] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75196.364658] Please file bug report to http://rt2x00.serialmonkey.com.
+[75196.365814] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75196.365817] Please file bug report to http://rt2x00.serialmonkey.com.
+[75200.477524] phy0 -> rt2x00pci_write_tx_data: Error - Arrived at non-free entry in the non-full queue 1.
+[75200.477527] Please file bug report to http://rt2x00.serialmonkey.com.
 
