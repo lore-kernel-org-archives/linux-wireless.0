@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.180]:16565 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbYCXUEo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 16:04:44 -0400
-Received: by el-out-1112.google.com with SMTP id v27so1410533ele.17
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2008 13:04:42 -0700 (PDT)
-Message-ID: <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com> (sfid-20080324_200448_274973_11753771)
-Date: Mon, 24 Mar 2008 16:04:42 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Florian Manschwetus" <florianmanschwetus@gmx.de>
-Subject: Re: gentoo ebuild for compat wireless (resend)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47E7A8DB.5020106@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47E7A8DB.5020106@gmx.de>
+Received: from mga02.intel.com ([134.134.136.20]:42941 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754712AbYCYXdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 19:33:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/6] iwlwifi driver updates and mac80211 change
+Date: Tue, 25 Mar 2008 16:33:35 -0700
+Message-Id: <1206488021-4193-1-git-send-email-reinette.chatre@intel.com> (sfid-20080325_233350_743478_EF107C67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
-<florianmanschwetus@gmx.de> wrote:
-> is it possible to get a version appendix on the tar.bz?
->  so it should be easy to get a working ebuild fpr this.
+This series contains LED support as well as more organization
+and cleanup for iwlwifi.
 
-The problem is there's two things to "version", compat-wireless itself
-and Linux. I keep both version already as part of the tarball.
+There is one patch specific to mac80211.
 
-wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
-2.8-49-gfe0f268
+[PATCH 1/6] iwlwifi: Add led support
+[PATCH 2/6] iwlwifi: rename iwl-4965-io.h to iwl-io.h
+[PATCH 3/6] iwlwifi: improve NIC i/o debug prints information
+[PATCH 4/6] mac80211: fix wrong Rx A-MPDU control via debugfs
+[PATCH 5/6] iwlwifi: allow a default callback for ASYNC host commands
+[PATCH 6/6] iwlwifi: iwl_priv - clean up in types of members
 
-wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
-v2.6.25-rc5-2623-g7556b76
+Thank you
 
-You can also just pull these from the directory that was used to
-create the tarball:
-
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
-
-Does this suffice?
-
-  Luis
+Reinette
