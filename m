@@ -1,105 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35764 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554AbYCZOSB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 10:18:01 -0400
-Subject: Re: [PATCH] libertas: kill useless #define LBS_MONITOR_OFF 0
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803260957.14966.hs4233@mail.mn-solutions.de>
-References: <200803260957.14966.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 26 Mar 2008 10:16:57 -0400
-Message-Id: <1206541017.30998.9.camel@localhost.localdomain> (sfid-20080326_141807_223332_8854E5C7)
-Mime-Version: 1.0
+Received: from rn-out-0910.google.com ([64.233.170.189]:35810 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223AbYCYTQr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 15:16:47 -0400
+Received: by rn-out-0910.google.com with SMTP id v46so2029989rnb.15
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 12:16:45 -0700 (PDT)
+Message-ID: <b6c5339f0803251216pd355868n90c845c01a8aa84e@mail.gmail.com> (sfid-20080325_191650_814921_8CD0E47F)
+Date: Tue, 25 Mar 2008 15:16:44 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: ath5k aborts wireless connections
+Cc: "Helge Deller" <deller@gmx.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com
+In-Reply-To: <40f31dec0803251116s4b39b1dagfa9c3941b706a52f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200803221129.59090.deller@gmx.de>
+	 <20080324194443.GA16065@tuxdriver.com>
+	 <b6c5339f0803250852k6217a793w81321b3ca5605de8@mail.gmail.com>
+	 <40f31dec0803251116s4b39b1dagfa9c3941b706a52f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-26 at 09:57 +0100, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Tue, Mar 25, 2008 at 2:16 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> Hello ppl, sory for the delay ;-)
+>
+>  Are you using encryption ? I haven't got such errors on my tests (it
+>  might be that my setup is really simple) so far...
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+I can't speak for Helge, but in my case yes - WPA-TKIP.  I can test
+tonight without encryption and let you know if it makes a difference.
 
-> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.h
-> +++ wireless-testing/drivers/net/wireless/libertas/wext.h
-> @@ -15,8 +15,6 @@
->  	u32 value;
->  };
->  
-> -#define LBS_MONITOR_OFF			0
-> -
->  extern struct iw_handler_def lbs_handler_def;
->  extern struct iw_handler_def mesh_handler_def;
->  
-> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c
-> @@ -277,10 +277,10 @@
->  	struct lbs_private *priv = to_net_dev(dev)->priv;
->  
->  	sscanf(buf, "%x", &monitor_mode);
-> -	if (monitor_mode != LBS_MONITOR_OFF) {
-> -		if(priv->monitormode == monitor_mode)
-> +	if (monitor_mode) {
-> +		if (priv->monitormode == monitor_mode)
->  			return strlen(buf);
-> -		if (priv->monitormode == LBS_MONITOR_OFF) {
-> +		if (!priv->monitormode) {
->  			if (priv->infra_open || priv->mesh_open)
->  				return -EBUSY;
->  			if (priv->mode == IW_MODE_INFRA)
-> @@ -293,9 +293,9 @@
->  	}
->  
->  	else {
-> -		if (priv->monitormode == LBS_MONITOR_OFF)
-> +		if (!priv->monitormode)
->  			return strlen(buf);
-> -		priv->monitormode = LBS_MONITOR_OFF;
-> +		priv->monitormode = 0;
->  		lbs_remove_rtap(priv);
->  
->  		if (priv->currenttxskb) {
-> @@ -392,7 +392,7 @@
->  
->  	spin_lock_irq(&priv->driver_lock);
->  
-> -	if (priv->monitormode != LBS_MONITOR_OFF) {
-> +	if (priv->monitormode) {
->  		ret = -EBUSY;
->  		goto out;
->  	}
-> --- wireless-testing.orig/drivers/net/wireless/libertas/rx.c
-> +++ wireless-testing/drivers/net/wireless/libertas/rx.c
-> @@ -155,7 +155,7 @@
->  
->  	skb->ip_summed = CHECKSUM_NONE;
->  
-> -	if (priv->monitormode != LBS_MONITOR_OFF)
-> +	if (priv->monitormode)
->  		return process_rxed_802_11_packet(priv, skb);
->  
->  	p_rx_pkt = (struct rxpackethdr *) skb->data;
-> --- wireless-testing.orig/drivers/net/wireless/libertas/tx.c
-> +++ wireless-testing/drivers/net/wireless/libertas/tx.c
-> @@ -151,7 +151,7 @@
->  
->  	dev->trans_start = jiffies;
->  
-> -	if (priv->monitormode != LBS_MONITOR_OFF) {
-> +	if (priv->monitormode) {
->  		/* Keep the skb to echo it back once Tx feedback is
->  		   received from FW */
->  		skb_orphan(skb);
-> @@ -186,8 +186,7 @@
->  	int txfail;
->  	int try_count;
->  
-> -	if (priv->monitormode == LBS_MONITOR_OFF ||
-> -	    priv->currenttxskb == NULL)
-> +	if (!priv->monitormode || priv->currenttxskb == NULL)
->  		return;
->  
->  	radiotap_hdr = (struct tx_radiotap_hdr *)priv->currenttxskb->data;
-
+-- 
+Bob Copeland %% www.bobcopeland.com
