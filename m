@@ -1,116 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36589 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934398AbYCDX1u (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:15476 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715AbYCYRD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 18:27:50 -0500
-Message-Id: <200803042326.m24NQ7Fa003264@imap1.linux-foundation.org> (sfid-20080304_232755_626162_664D43A5)
-Subject: [patch 02/10] wireless: rt2x00: fix driver menu indenting
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	randy.dunlap@oracle.com, IvDoorn@gmail.com, m.bueker@berlin.de
-From: akpm@linux-foundation.org
-Date: Tue, 04 Mar 2008 15:26:07 -0800
+	Tue, 25 Mar 2008 13:03:57 -0400
+Received: by py-out-1112.google.com with SMTP id u52so5056255pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 10:03:51 -0700 (PDT)
+Message-ID: <43e72e890803251003mcc8779bwc687b64573bedc39@mail.gmail.com> (sfid-20080325_170418_445061_8C101E23)
+Date: Tue, 25 Mar 2008 13:03:49 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: gentoo ebuild for compat wireless (resend)
+Cc: "Florian Manschwetus" <florianmanschwetus@gmx.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890803250840v4b09c9faia0373f639b688a4d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <47E7A8DB.5020106@gmx.de>
+	 <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
+	 <47E839BE.5030806@gmx.de>
+	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>
+	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de>
+	 <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
+	 <47E919BF.4010308@gmx.de> <1206458946.16475.285.camel@johannes.berg>
+	 <43e72e890803250840v4b09c9faia0373f639b688a4d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46rom: Randy Dunlap <randy.dunlap@oracle.com>
+On Tue, Mar 25, 2008 at 11:40 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+> On Tue, Mar 25, 2008 at 11:29 AM, Johannes Berg
+>  <johannes@sipsolutions.net> wrote:
+>  >
+>  >  > but this is a problem, when i distribute a ebuild it is useful to have a
+>  >  > locked version, so that i get reproducible results.
+>  >  > My problem, is that i have currently no resources to rehost this
+>  >  > tar-ball. (no official gentoo-dev, no reliable webserver)
+>  >  >
+>  >  > But, i see currently no other solution than rehosting.
+>  >
+>  >  We can keep a few around, but definitely not forever, so you'll have to
+>  >  find somewhere else to host your "known good" versions. While I could do
+>  >  it resource-wise, I don't want the admin overhead of having various
+>  >  distros tell us which ones are known-good for them.
+>  >
+>  >  You could simply get a gentoo dev to help you out.
+>
+>  I can probably get a historic archive of the tarballs hosted on orbit
+>  or winlab site. Give me a few and I'll start something. Let me remind
+>  you now that compat-wireless-2.6.tar.bz2 tarball has anti-hotlinking
+>  enabled but the compat-wireless-2008-* tarballs won't. Anti-hotlinking
+>  disables people from linking to the tarball externally, this will
+>  force them to read the Download page if redirected from a separate
+>  page, once they go there they can download the tarball. The dated
+>  tarballs don't have this anti-hotlinking enabled now (Johannes just
+>  set this up) so the ebuild/wget'ing should work directly for the dated
+>  tarballs.
 
-Michael B=FCker reports that the RT2x00 drivers are not indented as the=
-y
-should be, so use proper dependencies to make them be indented as expec=
-ted.
+OK so now you have:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Michael B=FCker <m.bueker@berlin.de>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2008-03-25.tar.bz2
 
- drivers/net/wireless/rt2x00/Kconfig |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+You can wget this. The compat-wireless-2.6.tar.bz2 is now just a
+symlink to the latest tarball. When untar'd you'll get a dated
+directory.
 
-diff -puN drivers/net/wireless/rt2x00/Kconfig~wireless-rt2x00-fix-drive=
-r-menu-indenting drivers/net/wireless/rt2x00/Kconfig
---- a/drivers/net/wireless/rt2x00/Kconfig~wireless-rt2x00-fix-driver-me=
-nu-indenting
-+++ a/drivers/net/wireless/rt2x00/Kconfig
-@@ -11,18 +11,17 @@ config RT2X00
- 	  will also be created. That library (when the driver is built as
- 	  a module) will be called "rt2x00lib.ko".
-=20
-+if RT2X00
-+
- config RT2X00_LIB
- 	tristate
--	depends on RT2X00
-=20
- config RT2X00_LIB_PCI
- 	tristate
--	depends on RT2X00
- 	select RT2X00_LIB
-=20
- config RT2X00_LIB_USB
- 	tristate
--	depends on RT2X00
- 	select RT2X00_LIB
-=20
- config RT2X00_LIB_FIRMWARE
-@@ -39,7 +38,7 @@ config RT2X00_LIB_RFKILL
-=20
- config RT2400PCI
- 	tristate "Ralink rt2400 pci/pcmcia support"
--	depends on RT2X00 && PCI
-+	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select EEPROM_93CX6
- 	---help---
-@@ -58,7 +57,7 @@ config RT2400PCI_RFKILL
-=20
- config RT2500PCI
- 	tristate "Ralink rt2500 pci/pcmcia support"
--	depends on RT2X00 && PCI
-+	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select EEPROM_93CX6
- 	---help---
-@@ -77,7 +76,7 @@ config RT2500PCI_RFKILL
-=20
- config RT61PCI
- 	tristate "Ralink rt61 pci/pcmcia support"
--	depends on RT2X00 && PCI
-+	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select RT2X00_LIB_FIRMWARE
- 	select EEPROM_93CX6
-@@ -97,7 +96,7 @@ config RT61PCI_RFKILL
-=20
- config RT2500USB
- 	tristate "Ralink rt2500 usb support"
--	depends on RT2X00 && USB
-+	depends on USB
- 	select RT2X00_LIB_USB
- 	---help---
- 	  This is an experimental driver for the Ralink rt2500 wireless chip.
-@@ -106,7 +105,7 @@ config RT2500USB
-=20
- config RT73USB
- 	tristate "Ralink rt73 usb support"
--	depends on RT2X00 && USB
-+	depends on USB
- 	select RT2X00_LIB_USB
- 	select RT2X00_LIB_FIRMWARE
- 	---help---
-@@ -128,3 +127,4 @@ config RT2X00_DEBUG
- 	---help---
- 	  Enable debugging output for all rt2x00 modules
-=20
-+endif
-_
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm still working on a place to put the archive.
+
+  Luis
