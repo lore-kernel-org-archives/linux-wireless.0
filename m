@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3517 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752642AbYCNBwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2008 21:52:47 -0400
-Date: Thu, 13 Mar 2008 21:29:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] mac80211: Tkip fix sparse endianity complain in
-	tkip code
-Message-ID: <20080314012900.GC31964@tuxdriver.com> (sfid-20080314_015249_748899_204C84FE)
-References: <1205431553-20567-1-git-send-email-tomas.winkler@intel.com> <1205442130.15910.18.camel@johannes.berg> <1ba2fa240803131657o3858f12ey1b55d0f23a216f7f@mail.gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.178]:28511 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbYCYUWV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 16:22:21 -0400
+Received: by py-out-1112.google.com with SMTP id u52so5157417pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 13:22:20 -0700 (PDT)
+Message-ID: <43e72e890803251322pd6d3216m56c4617a0ad13875@mail.gmail.com> (sfid-20080325_202232_423260_BE41AAFE)
+Date: Tue, 25 Mar 2008 16:22:19 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: gentoo ebuild for compat wireless (resend)
+Cc: "Florian Manschwetus" <florianmanschwetus@gmx.de>,
+	linux-wireless@vger.kernel.org, "H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <43e72e890803251003mcc8779bwc687b64573bedc39@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240803131657o3858f12ey1b55d0f23a216f7f@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <47E7A8DB.5020106@gmx.de> <47E839BE.5030806@gmx.de>
+	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>
+	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de>
+	 <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
+	 <47E919BF.4010308@gmx.de> <1206458946.16475.285.camel@johannes.berg>
+	 <43e72e890803250840v4b09c9faia0373f639b688a4d@mail.gmail.com>
+	 <43e72e890803251003mcc8779bwc687b64573bedc39@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 14, 2008 at 01:57:39AM +0200, Tomas Winkler wrote:
-> On Thu, Mar 13, 2008 at 11:02 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
+On Tue, Mar 25, 2008 at 1:03 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-> >  The patch introducing this code will be reverted because this is also
-> >  rather bad code since it's not known that "pos" is aligned to a
-> >  four-byte boundary.
-> 
-> Agree, actually I was puzzled it was even merged in after all these
-> discussions. Anyhow it sparsed into my eye so I put a patch on it.
+>  OK so now you have:
+>
+>
+>  http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2008-03-25.tar.bz2
+>
+>  You can wget this. The compat-wireless-2.6.tar.bz2 is now just a
+>  symlink to the latest tarball. When untar'd you'll get a dated
+>  directory.
+>
+>  I'm still working on a place to put the archive.
 
-The beauty of the wireless-testing tree is it gives me more freedom
-to merge patches without being married to them. :-)
+Archive issue resolved. It'll be hosted by Orbit [1].  The
+compat-wireless-2.6 archive [2] will host all daily tarballs.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+[1] http://www.orbit-lab.org/
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6/
+
+  Luis
