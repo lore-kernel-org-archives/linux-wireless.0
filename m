@@ -1,86 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:36865 "HELO mail.gmx.net"
+Received: from mail.gmx.net ([213.165.64.20]:43754 "HELO mail.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751814AbYCBXmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 18:42:33 -0500
-Message-ID: <47CB3B5E.4020701@gmx.at> (sfid-20080302_234250_620354_B59BDB8D)
-Date: Mon, 03 Mar 2008 00:42:22 +0100
-From: Franz Apeltauer <franz.apeltauer@gmx.at>
+	id S1755256AbYCYPTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 11:19:37 -0400
+Message-ID: <47E919BF.4010308@gmx.de> (sfid-20080325_151945_910675_316C3D59)
+Date: Tue, 25 Mar 2008 16:26:55 +0100
+From: Florian Manschwetus <florianmanschwetus@gmx.de>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 2 compile errors: rt2x00firmware.c and mesh.c
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: gentoo ebuild for compat wireless (resend)
+References: <47E7A8DB.5020106@gmx.de>	 <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>	 <47E839BE.5030806@gmx.de>	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de> <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
+In-Reply-To: <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com>
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms060408080707060708010607"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a cryptographically signed message in MIME format.
 
-after downloading the latest
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2=
-=2E6.tar.bz2
-today (2.3.2008) I got these errors during make:
+--------------ms060408080707060708010607
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-   CC [M]
-=2E../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.o
-=2E../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.c:=
-116:
-=46ehler: Redefinition von =BBrt2x00lib_load_firmware=AB
-=3D Error: redefiniton of  =BBrt2x00lib_load_firmware=AB
-=2E../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00lib.h:129:
-=46ehler: Vorherige Definition von =BBrt2x00lib_load_firmware=AB war hi=
-er
-=3D Error: previous definition of  =BBrt2x00lib_load_firmware=AB was he=
-re
-=2E../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.c:=
-138:
-=46ehler: Redefinition von =BBrt2x00lib_free_firmware=AB
-=2E../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00lib.h:133:
-=46ehler: Vorherige Definition von =BBrt2x00lib_free_firmware=AB war hi=
-er
-make[4]: ***
-[.../compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00firmware.o]
-=46ehler 1
+Luis R. Rodriguez schrieb:
+> On Tue, Mar 25, 2008 at 7:14 AM, Florian Manschwetus
+> <florianmanschwetus@gmx.de> wrote:
+>> Florian Manschwetus schrieb:
+>>
+>>
+>>> Luis R. Rodriguez schrieb:
+>>  >> On Mon, Mar 24, 2008 at 7:31 PM, Florian Manschwetus
+>>  >> <florianmanschwetus@gmx.de> wrote:
+>>  >>> Luis R. Rodriguez schrieb:
+>>  >>>
+>>  >>>
+>>  >>>> On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
+>>  >>>  > <florianmanschwetus@gmx.de> wrote:
+>>  >>>  >> is it possible to get a version appendix on the tar.bz?
+>>  >>>  >>  so it should be easy to get a working ebuild fpr this.
+>>  >>>  >
+>>  >>>  > The problem is there's two things to "version", compat-wireless
+>>  >>> itself
+>>  >>>  > and Linux. I keep both version already as part of the tarball.
+>>  >>>  >
+>>  >>>  > wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
+>>  >>>  > 2.8-49-gfe0f268
+>>  >>>  >
+>>  >>>  > wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
+>>  >>>  > v2.6.25-rc5-2623-g7556b76
+>>  >>>  >
+>>  >>>  > You can also just pull these from the directory that was used to
+>>  >>>  > create the tarball:
+>>  >>>  >
+>>  >>>  >
+>>  >>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
+>>  >>>
+>>  >>>  >
+>>  >>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
+>>  >>>
+>>  >>>  >
+>>  >>>  > Does this suffice?
+>>  >>>
+>>  >>>
+>>  >>> Not really but it gives a version hint, could you create a symlink or
+>>  >>> so?
+>>  >>>  a url like that would be fine:
+>>  >>>  http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.8-49.tar.bz2
+>>  >>>
+>>  >>
+>>  >> The problem is that does not reflect changes to Linux so there may be
+>>  >> a lot of great code added and yet this wouldn't reflect it. And if we
+>>  >> go with git-describe for Linux we could get updates on compat-wireless
+>>  >> itself during no code changes on Linux. I could use date (date -I),
+>>  >> that might work best but will it work for you?
+>>  > a date would be perfect (f.e. -20080325)
+>>  > florian
+>>  Ok, i got a working ebuild, no i need an regular accessible download
+>>  source with "solid" filenames e.g. the date appendix, then i could
+>>  publish it as testing package.
+> 
+> Does this work for you?
+> 
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2008-03-25.tar.bz2
+Yes,
+> 
+> Note that I'll delete all old tarballs when generating a new one for
+> the new date. This happens at 05:10am UTC.
+but this is a problem, when i distribute a ebuild it is useful to have a 
+locked version, so that i get reproducible results.
+My problem, is that i have currently no resources to rehost this 
+tar-ball. (no official gentoo-dev, no reliable webserver)
 
-My environment (Ubuntu gutsy):
-kernel: 2.6.22-14-generic #1 SMP Tue Feb 12 07:42:25 UTC 2008 i686 GNU/=
-Linux
-cc: gcc-Version 4.1.3 20070929 (prerelease) (Ubuntu 4.1.2-16ubuntu2)
-wlan card: MSI PC54G2 ... RaLink rt2500 chip
+But, i see currently no other solution than rehosting.
+Normally gentoo uses official upstream src locations, and mirrors all 
+stuff present in portage to reduce load on official websites.
+(portage first looks on gentoo-mirrors for tar-ball if unavailable it 
+loads from official download page).
+
+florian
+
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-When I tried to "export CONFIG_CRC_ITU_T=3Dy" before "make",=20
-rt2x00firmware.c compiled fine. (Probably this is not a good idea. I=20
-just wanted to see, if it compiles then.)
+--------------ms060408080707060708010607
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
------------------
-=2E.. but a bit later I got this error:
-
-   CC [M]  .../compat-wireless-2.6/net/mac80211/mesh.o
-=2E../compat-wireless-2.6/net/mac80211/mesh.c: In Funktion =BBieee80211=
-s_init=AB:
-=2E../compat-wireless-2.6/net/mac80211/mesh.c:28:
-=46ehler: Zu wenige Argumente f=FCr Funktion =BBkmem_cache_create=AB
-=3D Error: Not enough arguments for function =BBkmem_cache_create=AB
-
-In /usr/src/linux-headers-2.6.22-14/include/linux/slab.h I found:
-    struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
-		unsigned long,
-		void (*)(void *, struct kmem_cache *, unsigned long),
-		void (*)(void *, struct kmem_cache *, unsigned long));
-i.e. the old, 6-parameter version.
-
-So, IMHO the #define kmem_cache_create in
-- compat-wireless-2.6/include/net/compat.h, line 120 and
-- compat-wireless-2.6/compat/compat.h, line 120
-should be moved 2 lines downwards into the block named
-/* Compat work for 2.6.22 and 2.6.23 */
-Then it compiles fine.
-
-Best regards,
-=46ranz
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
+BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
+HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
+ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
+MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
+dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
+hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
+25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
+TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
+5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
+SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
+byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
+gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
+MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
+dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
+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
+Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
+cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
+MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
+2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODAzMjUxNTI2
+NTVaMCMGCSqGSIb3DQEJBDEWBBSHogunGD8SxgTir4Cophqd+BR+wTBSBgkqhkiG9w0BCQ8x
+RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
+BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
+Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
+aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
+LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
+FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
+cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
+AQEBBQAEggEAcI3a0kIn18zAg0UGy3mmRf7TBR7fM31N0mf7fDET2FFj+hP3qdTf7skq7/Lk
+tUUHCI6W8ufa81MfeMUOPTzLoe5Cye5OTO+jt/ypAQfbl1YjA40MdlFujtj54EzDYyvpL6/V
+VyXr5S1WWzNdklF2RL6+8/Xse/Ncerx5FOFgTKrEWQH3RA9WJ55tnwe3vsH56Y8fF/vqC/KK
+EEwPp4lgXhehISqhdgq3XWgJp+pYpVd7hS+8o1PeJZ+zYfr2bKeQAKBTzohxfWbfqQ2ki29R
+aEe+cd/M6/S0cQk/VvPZ0WFmqreiVhEZKsMVMkHiAQEtxYankXup2fYJJuNexLTepwAAAAAA
+AA==
+--------------ms060408080707060708010607--
