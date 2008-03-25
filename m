@@ -1,65 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.184]:53720 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537AbYCSUCh (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:62619 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755570AbYCYPnk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 16:02:37 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so531765rnb.15
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 13:02:35 -0700 (PDT)
-Subject: [PATCH 4/5] mac80211: tkip.c eliminate the Hi16, Lo16 functions
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Tue, 18 Mar 2008 14:28:36 -0700
-Message-Id: <1205875716.17607.23.camel@brick> (sfid-20080319_200348_745228_D481C5CD)
-Mime-Version: 1.0
+	Tue, 25 Mar 2008 11:43:40 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so2420445ugc.16
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 08:43:36 -0700 (PDT)
+To: Alejandro Riveira =?utf-8?q?Fern=C3=A1ndez?= <ariveira@gmail.com>
+Subject: Re: Spammed logs again rt2500pci 2.6.25-rc6-00268-gd2532dd
+Date: Tue, 25 Mar 2008 16:35:36 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org
+References: <20080117225744.29aa214c@Varda> <200803251441.22394.IvDoorn@gmail.com> <20080325160848.6dc3584f@Varda>
+In-Reply-To: <20080325160848.6dc3584f@Varda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200803251635.36857.IvDoorn@gmail.com> (sfid-20080325_154344_936274_3D47A2BC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Opencode them at their one callsite.
+On Tuesday 25 March 2008, Alejandro Riveira Fern=C3=A1ndez wrote:
+> El Tue, 25 Mar 2008 14:41:22 +0100
+> Ivo van Doorn <ivdoorn@gmail.com> escribi=C3=B3:
+>=20
+> > Hi,
+> >=20
+> > >  Linux Varda 2.6.25-rc6-00268-gd2532dd #1 SMP PREEMPT Mon Mar 24 =
+14:44:13 CET
+> > > 2008 x86_64 GNU/Linux
+> > >=20
+> > >=20
+> > >  As the last time the thing is triggered with a p2p app making a =
+lot of
+> > >  connections deluge
+> > > =20
+> > >  My logs are spammed with the same msgs as other reports.
+> > >  If you need more info just ask.
+> >=20
+> > This issue has been resolved for 2.6.26. The fix for this bug is of=
+ such a scale
+> > that it could not easily be merged for 2.6.25.
+> >=20
+> > >  PS: i will not bother to make a report in the web forums becouse=
+ the last time
+> > > i was ignored.
+> >=20
+> > You mean http://rt2x00.serialmonkey.com/phpBB2/index.php?
+> > 'ignored' is not the right word, more likely overlooked.
+>=20
+>  Fair enough; english is not my mother tongue so maybe i sounded
+> harsher than intended. If that's the case my apologies
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |   16 ++--------------
- 1 files changed, 2 insertions(+), 14 deletions(-)
+Ok.
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index d5f8d11..a3dfa67 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -80,18 +80,6 @@ static inline u8 Lo8(u16 v)
- 	return v & 0xff;
- }
- 
--
--static inline u16 Hi16(u32 v)
--{
--	return v >> 16;
--}
--
--
--static inline u16 Lo16(u32 v)
--{
--	return v & 0xffff;
--}
--
- static inline u16 tkip_S(u16 val)
- {
- 	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
-@@ -108,8 +96,8 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
- {
- 	int i, j;
- 
--	p1k[0] = Lo16(tsc_IV32);
--	p1k[1] = Hi16(tsc_IV32);
-+	p1k[0] = tsc_IV32 & 0xFFFF;
-+	p1k[1] = tsc_IV32 >> 16;
- 	p1k[2] = Mk16(ta[1], ta[0]);
- 	p1k[3] = Mk16(ta[3], ta[2]);
- 	p1k[4] = Mk16(ta[5], ta[4]);
--- 
-1.5.4.4.684.g0e08
+> > There are quite a lot of messages and I don't always have time to a=
+nswer them all.
+> > So there is no need to be upset about such thing, simply posting a =
+reminder is usually
+> > enough to make it noticed by me...
+> >=20
+> > > (Someone may want to change the web forums pointer in the logs to=
+=20
+> > > the linux-wireless mailing list)
+> >=20
+> > What pointer? And rt2400-devel is the mailinglist for rt2x00...
+> > The MAINTAINERS file in the kernel tree indicates 2 mailinglists fo=
+r rt2x00:
+> > 	rt2400-devel@lists.sourceforge.net
+> > 	linux-wireless@vger.kernel.org
+>=20
+>  Well my opinion is that instead of the webpage the mailing list shou=
+ld be the
+> one being logged. Something like this (maybe use another define becou=
+se
+> DRV_PROJECT may be used elsewhere i havn't checked):
 
+Well DRV_PROJECT is the link to the website, that contains more informa=
+tion
+about the project. When people want to report bugs they can choose to
+use the bugzilla, forum or mailinglist.
+So I don't see a big point in replacing the link.
 
+Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
