@@ -1,102 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39727 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757763AbYCUQzT (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59043 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755299AbYCYPaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2008 12:55:19 -0400
-Date: Fri, 21 Mar 2008 09:54:05 -0700
-From: Greg KH <greg@kroah.com>
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	David Brownell <david-b@pacbell.net>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	netdev@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	video4linux-list@redhat.com,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	lm-sensors@lm-sensors.org
-Subject: Re: use of preempt_count instead of in_atomic() at leds-gpio.c
-Message-ID: <20080321165405.GC5766@kroah.com> (sfid-20080321_165526_872332_E9CA62E7)
-References: <Pine.LNX.4.44L0.0803202126240.11234-100000@netrider.rowland.org> <200803210236.52063.mb@bu3sch.de> <20080320192719.6a32386e.akpm@linux-foundation.org> <20080321134750.GB4128@osiris.boeblingen.de.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080321134750.GB4128@osiris.boeblingen.de.ibm.com>
+	Tue, 25 Mar 2008 11:30:13 -0400
+Subject: [PATCH/RFC v5] introduce HAVE_EFFICIENT_UNALIGNED_ACCESS Kconfig
+	symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: sam@ravnborg.org, dsd@gentoo.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Ingo Molnar <mingo@elte.hu>,
+	David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <20080320.141307.173590705.davem@davemloft.net>
+References: <1206023695.16475.137.camel@johannes.berg>
+	 <20080320181310.GA17884@uranus.ravnborg.org>
+	 <1206038373.16475.150.camel@johannes.berg>
+	 <20080320.141307.173590705.davem@davemloft.net>
+Content-Type: text/plain
+Date: Tue, 25 Mar 2008 15:11:42 +0100
+Message-Id: <1206454302.16475.269.camel@johannes.berg> (sfid-20080325_153024_058452_6A80F7A6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 21, 2008 at 02:47:50PM +0100, Heiko Carstens wrote:
-> On Thu, Mar 20, 2008 at 07:27:19PM -0700, Andrew Morton wrote:
-> > On Fri, 21 Mar 2008 02:36:51 +0100 Michael Buesch <mb@bu3sch.de> wrote:
-> > > On Friday 21 March 2008 02:31:44 Alan Stern wrote:
-> > > > On Thu, 20 Mar 2008, Andrew Morton wrote:
-> > > > > On Thu, 20 Mar 2008 21:36:04 -0300 Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
-> > > > > 
-> > > > > > Well, so far so good for LEDs, but what about the other users of in_atomic
-> > > > > > that apparently should not be doing it either?
-> > > > > 
-> > > > > Ho hum.  Lots of cc's added.
-> > > > 
-> > > > ...
-> > > > 
-> > > > > The usual pattern for most of the above is
-> > > > > 
-> > > > > 	if (!in_atomic())
-> > > > > 		do_something_which_might_sleep();
-> > > > > 
-> > > > > problem is, in_atomic() returns false inside spinlock on non-preptible
-> > > > > kernels.  So if anyone calls those functions inside spinlock they will
-> > > > > incorrectly schedule and another task can then come in and try take the
-> > > > > already-held lock.
-> > > > > 
-> > > > > Now, it happens that in_atomic() returns true on non-preemtible kernels
-> > > > > when running in interrupt or softirq context.  But if the above code really
-> > > > > is using in_atomic() to detect am-i-called-from-interrupt and NOT
-> > > > > am-i-called-from-inside-spinlock, they should be using in_irq(),
-> > > > > in_softirq() or in_interrupt().
-> > > > 
-> > > > Presumably most of these places are actually trying to detect 
-> > > > am-i-allowed-to-sleep.  Isn't that what in_atomic() is supposed to do?  
-> > > 
-> > > No, I think there is no such check in the kernel. Most likely for performance
-> > > reasons, as it would require a global flag that is set on each spinlock.
-> > 
-> > Yup.  non-preemptible kernels avoid the inc/dec of
-> > current_thread_info->preempt_count on spin_lock/spin_unlock
-> > 
-> > > You simply must always _know_, if you are allowed to sleep or not. This is
-> > > done by defining an API. The call-context is part of any kernel API.
-> > 
-> > Yup.  99.99% of kernel code manages to do this...
-> 
-> This is difficult for console drivers. They get called and are supposed to
-> print something and don't have the slightest clue which context they are
-> running in and if they are allowed to schedule.
-> This is the problem with e.g. s390's sclp driver. If there are no write
-> buffers available anymore it tries to allocate memory if schedule is allowed
-> or otherwise has to wait until finally a request finished and memory is
-> available again.
-> And now we have to always busy wait if we are out of buffers, since we
-> cannot tell which context we are in?
+In many cases, especially in networking, it can be beneficial to
+know at compile time whether the architecture can do unaligned
+accesses efficiently. This patch introduces a new Kconfig symbol
+	HAVE_EFFICIENT_UNALIGNED_ACCESS
+for that purpose and adds it to the powerpc and x86 architectures.
+Also add some documentation about alignment and networking, and
+especially one intended use of this symbol.
 
-This is the reason why the drivers/usb/misc/sisusbvga driver is trying
-to test for in_atomic:
-        /* We can't handle console calls in non-schedulable
-         * context due to our locks and the USB transport.
-         * So we simply ignore them. This should only affect
-         * some calls to printk.
-         */
-        if (in_atomic())
-                return NULL;
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
+Acked-by: Ingo Molnar <mingo@elte.hu> [x86 architecture part]
+---
+v5: rename to HAVE_EFFICIENT_UNALIGNED_ACCESS
+
+I have opted to not introduce any symbol associated with the cost
+of unaligned accesses, David Woodhouse once suggested that such a
+cost should be combined with a probability of (un-)alignment even
+in the get_unaligned/put_unaligned macros and I think this should
+be combined with a patch introducing a global cost constant.
+
+Also, this would require architecture changes because if some code
+knew the likelyhood of unaligned accesses was small enough over
+the cost of them, architectures that complain in the trap handle
+would still complain in that unlikely case although the code
+explicitly made a trade-off based on the cost/probability.
+
+ Documentation/unaligned-memory-access.txt |   32 +++++++++++++++++++++++++++---
+ arch/Kconfig                              |   19 +++++++++++++++++
+ arch/powerpc/Kconfig                      |    1 
+ arch/x86/Kconfig                          |    1 
+ 4 files changed, 50 insertions(+), 3 deletions(-)
+
+--- everything.orig/Documentation/unaligned-memory-access.txt	2008-03-25 14:54:11.000000000 +0100
++++ everything/Documentation/unaligned-memory-access.txt	2008-03-25 14:58:57.000000000 +0100
+@@ -218,9 +218,35 @@ If use of such macros is not convenient,
+ where the source or destination (or both) are of type u8* or unsigned char*.
+ Due to the byte-wise nature of this operation, unaligned accesses are avoided.
+ 
++
++Alignment vs. Networking
++========================
++
++On architectures that require aligned loads, networking requires that the IP
++header is aligned on a four-byte boundary to optimise the IP stack. For
++regular ethernet hardware, the constant NET_IP_ALIGN is used, on most
++architectures this constant has the value 2 because the normal ethernet
++header is 14 bytes long, so in order to get proper alignment one needs to
++DMA to an address that is can be expressed as 4*n + 2. One notable exception
++here is powerpc which defines NET_IP_ALIGN to 0 because DMA to unaligned
++addresses can be very expensive and dwarf the cost of unaligned loads.
++
++For some ethernet hardware that cannot DMA to unaligned addresses like
++4*n+2 or non-ethernet hardware, this can be a problem, and it is then
++required to copy the incoming frame into an aligned buffer. Because this is
++unnecessary on architectures that can do unaligned accesses, the code can be
++made depend on CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS like so:
++
++#ifdef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
++	skb = original skb
++#else
++	skb = copy skb
++#endif
++
+ --
+-Author: Daniel Drake <dsd@gentoo.org>
++Authors: Daniel Drake <dsd@gentoo.org>,
++         Johannes Berg <johannes@sipsolutions.net>
+ With help from: Alan Cox, Avuton Olrich, Heikki Orsila, Jan Engelhardt,
+-Johannes Berg, Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock,
+-Uli Kunitz, Vadim Lobanov
++Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock, Uli Kunitz,
++Vadim Lobanov
+ 
+--- everything.orig/arch/powerpc/Kconfig	2008-03-25 14:54:10.000000000 +0100
++++ everything/arch/powerpc/Kconfig	2008-03-25 14:58:30.000000000 +0100
+@@ -91,6 +91,7 @@ config PPC
+ 	select HAVE_OPROFILE
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
++	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+ 
+ config EARLY_PRINTK
+ 	bool
+--- everything.orig/arch/x86/Kconfig	2008-03-25 14:54:10.000000000 +0100
++++ everything/arch/x86/Kconfig	2008-03-25 14:58:38.000000000 +0100
+@@ -23,6 +23,7 @@ config X86
+ 	select HAVE_KPROBES
+ 	select HAVE_KRETPROBES
+ 	select HAVE_KVM if ((X86_32 && !X86_VOYAGER && !X86_VISWS && !X86_NUMAQ) || X86_64)
++	select HAVE_EFFICIENT_UNALIGNED_ACCESS
+ 
+ 
+ config GENERIC_LOCKBREAK
+--- everything.orig/arch/Kconfig	2008-03-25 14:54:10.000000000 +0100
++++ everything/arch/Kconfig	2008-03-25 15:08:06.000000000 +0100
+@@ -36,3 +36,22 @@ config HAVE_KPROBES
+ 
+ config HAVE_KRETPROBES
+ 	def_bool n
++
++config HAVE_EFFICIENT_UNALIGNED_ACCESS
++	def_bool n
++	help
++	  Some architectures are unable to perform unaligned accesses
++	  without the use of get_unaligned/put_unaligned. Others are
++	  unable to perform such accesses efficiently (e.g. trap on
++	  unaligned access and require fixing it up in the exception
++	  handler.)
++
++	  This symbol should be selected by an architecture if it can
++	  perform unaligned accesses efficiently to allow different
++	  code paths to be selected for these cases. Some network
++	  drivers, for example, could opt to not fix up alignment
++	  problems with received packets if doing so would not help
++	  much.
++
++	  See Documentation/unaligned-memory-access.txt for more
++	  information on the topic of unaligned memory accesses.
 
 
-So how should this be "fixed" if in_atomic() is not a valid test?
-
-thanks,
-
-greg k-h
