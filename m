@@ -1,97 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S943996AbYCTAEu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 20:04:50 -0400
-Subject: Re: [PATCH 5/7] mac80211: allows driver to request a Phase 1 RX key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1205970106-22196-6-git-send-email-reinette.chatre@intel.com>
-References: <1205970106-22196-1-git-send-email-reinette.chatre@intel.com>
-	 <1205970106-22196-2-git-send-email-reinette.chatre@intel.com>
-	 <1205970106-22196-3-git-send-email-reinette.chatre@intel.com>
-	 <1205970106-22196-4-git-send-email-reinette.chatre@intel.com>
-	 <1205970106-22196-5-git-send-email-reinette.chatre@intel.com>
-	 <1205970106-22196-6-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2pGrE4Lyk9+FSzULXFt7"
-Date: Thu, 20 Mar 2008 01:04:34 +0100
-Message-Id: <1205971474.16475.84.camel@johannes.berg> (sfid-20080320_000512_418815_AAA0DA86)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4754 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752487AbYCYVgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 17:36:35 -0400
+Date: Tue, 25 Mar 2008 17:24:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+Subject: Re: [PATCH] iwlwifi: do not register bands with no supported
+	channels
+Message-ID: <20080325212407.GB20488@tuxdriver.com> (sfid-20080325_213638_320067_E91CA364)
+References: <1206475120-10188-1-git-send-email-linville@tuxdriver.com> <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 25, 2008 at 10:31:27PM +0200, Tomas Winkler wrote:
+> On Tue, Mar 25, 2008 at 9:58 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> >  ---
+> >  Otherwise, b/g-only devices fail in wiphy_register.  Tested in Fedora
+> >  kernels for the last week or so...
+> >
+> >   drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++++++--
+> >   drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++++--
+> >   2 files changed, 12 insertions(+), 4 deletions(-)
 
---=-2pGrE4Lyk9+FSzULXFt7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> >  diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >  index 44cfd02..9ae3d29 100644
+> >  --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >  +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >  @@ -5001,8 +5001,12 @@ int iwl4965_init_geos(struct iwl_priv *priv)
+> >                priv->bands[IEEE80211_BAND_2GHZ].n_channels,
+> >                priv->bands[IEEE80211_BAND_5GHZ].n_channels);
+> >
+> >  -       priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->bands[IEEE80211_BAND_2GHZ];
+> >  -       priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->bands[IEEE80211_BAND_5GHZ];
+> >  +       if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
+> >  +               priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+> >  +                       &priv->bands[IEEE80211_BAND_2GHZ];
+> >  +       if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
+> >  +               priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+> >  +                       &priv->bands[IEEE80211_BAND_5GHZ];
+> >
+> >         set_bit(STATUS_GEO_CONFIGURED, &priv->status);
+> >
+> 
+> As there already exists condition testing this I would prefer
+> something like this
 
+I don't think it is the same -- yours is checking IWL_SKU_A.
 
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -586,11 +586,15 @@ enum ieee80211_key_alg {
->   * @IEEE80211_KEY_FLAG_GENERATE_MMIC: This flag should be set by
->   *	the driver for a TKIP key if it requires Michael MIC
->   *	generation in software.
-> + * @IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY: This flag should bet by
-> + * 	the driver for a TKIP key if it requires phase 1 key generation
-> + * 	in SW.
+> if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
+> 	     priv->cfg->sku & IWL_SKU_A) {
+> 		printk(KERN_INFO DRV_NAME
+> 		       ": Incorrectly detected BG card as ABG.  Please send "
+> 		       "your PCI ID 0x%04X:0x%04X to maintainer.\n",
+> 		       priv->pci_dev->device, priv->pci_dev->subsystem_device);
+> 		priv->cfg->sku &= ~IWL_SKU_A;
+>                 priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+> }
 
-Please get rid of the flag and just use a condition like
+A clause just like this exists a few lines above, yet it does not
+fire for the device that prompted this patch:
 
-	if (ops->update_tkip_callback &&
-	    key->conf.flags & UPLOADED_TO_HARDWARE)
+	https://bugzilla.redhat.com/attachment.cgi?id=298613
 
-I cannot imagine hardware that wants this callback for some keys but not
-for others.
+> else
+>    priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+> &priv->bands[IEEE80211_BAND_5GHZ];
 
-> + *
-> + * In TKIP some HW need to be provided a phase 1 key, for RX decryption
-> + * acceleration (i.e. iwlwifi). Those drivers should set
-> + * IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
-> + * The update_tkip_key() call updates the driver with the new phase 1 ke=
-y.
-> + * This happens everytime the iv16 wraps around (every 65536 packets). T=
-he
-> + * set_key() call will happen only once during a rekeying session, it wi=
-ll not
+I don't think your version will resolve the issue.  Am I missing
+something?
 
-I would say "The set_key() call will still happen only once for each
-key, ..."
-
-> + * include a valid phase 1 key. The valid phase 1 key is provided by
-> + * udpate_tkip_key only. The trigger that makes mac80211 call this handl=
-er is
-
-typo: update_tkip_key
-
-johannes
-
---=-2pGrE4Lyk9+FSzULXFt7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+GqEaVg1VMiehFYAQI1og//Vj/dU3+EU4fCeumURx1JG2pazusMOhN8
-16RWEO+uDUqpOyIPSbKooBTe1SwUHjdBfLhmr6U9NGHycUxdC6RbvevvU372ZuJG
-3vCDbPcQJ371iBDeeyBlkKx79jMUdQupcW+8VCYA50kbWGDO4NMnc6aImbw668Xh
-e8fJ48n7Pn/1uItan+2c41WnTc5t8o1tOuZx00DNHeGtVAmSjCpTF3vAdnDAhwe5
-Og7G6V/FHoo7iiN8oo/NI32JaJ43IQ8yV96TLr5lIt39LWqGzFpNSd3Ds4vqWHRj
-yncvL4nXR8WSOuJV/tU7bkV8Fr81uqOlBcLCS/Yx8b+JPr9QMRclUdfbGr8G2GGm
-vtNf/Y/qw9s3jwpvcCYcqkhaj5zhJRz7UndrZ+lyW78XJF7HxyuLiqRaxpv8hbOQ
-d9MoxJcdveEF2gJ9RiT/lKr4p3uVLH+k8pspvxKl4zYxWXOpl7Co995X73NiO9+H
-U6AWL0+uuNH4KLF4bnhje96EG7dQa6m3Kzf+fnobT4C1BNprzM19pdOuZCBz+nHm
-nucWOwU6yyKQSqmvUcVz6pOS5vknmuy5ELyHXilbk+YLvnj4pQIY4M2gTISOZbQC
-z5cB4D1d9YxeOshkdfAnQV9Epdje3BUnk9fWjGgUGAoLIgfe9921zLZZftihaZX8
-p7ECFx+lWig=
-=X4yT
------END PGP SIGNATURE-----
-
---=-2pGrE4Lyk9+FSzULXFt7--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
