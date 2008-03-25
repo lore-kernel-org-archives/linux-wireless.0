@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3402 "EHLO ra.tuxdriver.com"
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:58443 "EHLO ms5.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754842AbYCTVHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 17:07:38 -0400
-Date: Thu, 20 Mar 2008 16:31:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Adam Turk <bofh1234@hotmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: 2.6.25-rc6, rausb0 or wlan0 or both???
-Message-ID: <20080320203124.GB30762@tuxdriver.com> (sfid-20080320_210742_972862_3C950758)
-References: <BAY101-W2F265A1ACEEAD6E11D953C8000@phx.gbl> <1205976828.16475.92.camel@johannes.berg> <BAY101-W21790F71EFEF146FF9E2AC8000@phx.gbl> <1205982479.16475.94.camel@johannes.berg> <BAY101-W232F4828EE4528854F6860C8000@phx.gbl>
+	id S1750745AbYCYHVW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 03:21:22 -0400
+Date: Tue, 25 Mar 2008 16:21:08 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] PS3: gelic: Add support for separate cipher selection
+Cc: cbe-oss-dev@ozlabs.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Message-Id: <20080325152404.0F15.40F06B3A@sm.sony.co.jp> (sfid-20080325_072126_222807_6239956D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BAY101-W232F4828EE4528854F6860C8000@phx.gbl>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 20, 2008 at 11:02:59AM -0400, Adam Turk wrote:
-> 
-> > Subject: RE: 2.6.25-rc6, rausb0 or wlan0 or both???
-> > From: johannes@sipsolutions.net
-> >
-> > The kernel works fine, airmon-ng relies on iw.
-> >
-> > johannes
-> 
-> OK.  I wasn't aware that airmon-ng relies on iw now.  Is there a tar.gz that I can download?
-> 
-> However this still doesn't explain why rausb0 still works when it should be wlan0.
+>From version 2.20 of the PS3 system software, the hypervisor allows the guest OSes
+to specify separate cipher for group and pairwise.
 
-This is probably due to udev.  Look for a file with a name like
-"/etc/udev/rules.d/70-persistent-net.rules" -- the actual name may
-vary by distribution.
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+---
+ drivers/net/ps3_gelic_wireless.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hth!
-
-John
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -87,7 +87,7 @@ static inline int wpa2_capable(void)
+ 
+ static inline int precise_ie(void)
+ {
+-	return 0; /* FIXME */
++	return (0 <= ps3_compare_firmware_version(2, 2, 0));
+ }
+ /*
+  * post_eurus_cmd helpers
 -- 
-John W. Linville
-linville@tuxdriver.com
+Masakazu Mokuno
+
