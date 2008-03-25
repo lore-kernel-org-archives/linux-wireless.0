@@ -1,340 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555AbYCIVu4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:17663 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbYCYJlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:50:56 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:50:55 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 09/24] rt2x00: Only disable beaconing just before beacon update
-Date: Sun, 9 Mar 2008 22:42:59 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200803092237.43451.IvDoorn@gmail.com>
-In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
+	Tue, 25 Mar 2008 05:41:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3916083wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 02:41:08 -0700 (PDT)
+Message-ID: <1ba2fa240803250241q7a1e9f4eta9565371d83772c9@mail.gmail.com> (sfid-20080325_094116_014823_D34D3F40)
+Date: Tue, 25 Mar 2008 11:41:08 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: IBSS RTNL assertion
+In-Reply-To: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803092242.59261.IvDoorn@gmail.com> (sfid-20080309_215130_180718_D1B6D7D7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not write 0 to the beacon sync register during
-config_intf() since that will clear out the beacon interval
-and forces the beacon to be send out at the lowest interval.
-(reported by Mattias Nissler).
+On Mon, Mar 24, 2008 at 6:21 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> Has anybody experience the one bellow? Any insights?
+>
+>  Thanks
+>  Tomas
+>
 
-The side effect of the same bug was that while working with
-multiple virtual AP interfaces a change for any of those
-interfaces would disable beaconing untill an beacon update
-was provided.
+Looks like there is number of places in the code where
+sta_info_destroy(sta); is not called under rtnl_lock nether under rcu
+lock...
+Looks like there is a quite lock mess in wireless-testing.
 
-This is resolved by only updating the TSF_SYNC value during
-config_intf(). In update_beacon() we disable beaconing
-temporarily to prevent fake beacons to be transmitted.
-Finally kick_tx_queue() will enable beaconing again.
+Thanks
+Tomas
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   20 +++++++++++++-------
- drivers/net/wireless/rt2x00/rt2500pci.c |   19 +++++++++++++------
- drivers/net/wireless/rt2x00/rt2500usb.c |   19 +++++++++++++------
- drivers/net/wireless/rt2x00/rt61pci.c   |   18 +++++++++++++-----
- drivers/net/wireless/rt2x00/rt73usb.c   |   18 +++++++++++++-----
- 5 files changed, 65 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 460ef2f..a1c38a1 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -279,8 +279,6 @@ static void rt2400pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
--		rt2x00pci_register_write(rt2x00dev, CSR14, 0);
--
- 		/*
- 		 * Enable beacon config
- 		 */
-@@ -293,10 +291,6 @@ static void rt2400pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
--		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--		rt2x00_set_field32(&reg, CSR14_TBCN,
--				   (conf->sync == TSF_SYNC_BEACON));
--		rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
- 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 	}
-@@ -1040,6 +1034,8 @@ static void rt2400pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
- 	if (queue == RT2X00_BCN_QUEUE_BEACON) {
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 		if (!rt2x00_get_field32(reg, CSR14_BEACON_GEN)) {
-+			rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
-+			rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 			rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
- 			rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 		}
-@@ -1517,10 +1513,10 @@ static int rt2400pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
- 	struct queue_entry_priv_pci_tx *priv_tx;
- 	struct skb_frame_desc *skbdesc;
-+	u32 reg;
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
--
- 	priv_tx = intf->beacon->priv_data;
- 
- 	/*
-@@ -1536,6 +1532,16 @@ static int rt2400pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
-+	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
-+	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-+
-+	/*
- 	 * mac80211 doesn't provide the control->queue variable
- 	 * for beacons. Set our own queue identification so
- 	 * it can be used during descriptor initialization.
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index ffcd996..0962327 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -281,8 +281,6 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
--		rt2x00pci_register_write(rt2x00dev, CSR14, 0);
--
- 		/*
- 		 * Enable beacon config
- 		 */
-@@ -296,10 +294,6 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
--		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--		rt2x00_set_field32(&reg, CSR14_TBCN,
--				   (conf->sync == TSF_SYNC_BEACON));
--		rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
- 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 	}
-@@ -1193,6 +1187,8 @@ static void rt2500pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
- 	if (queue == RT2X00_BCN_QUEUE_BEACON) {
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 		if (!rt2x00_get_field32(reg, CSR14_BEACON_GEN)) {
-+			rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
-+			rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 			rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
- 			rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 		}
-@@ -1828,6 +1824,7 @@ static int rt2500pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
- 	struct queue_entry_priv_pci_tx *priv_tx;
- 	struct skb_frame_desc *skbdesc;
-+	u32 reg;
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
-@@ -1847,6 +1844,16 @@ static int rt2500pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
-+	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
-+	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-+
-+	/*
- 	 * mac80211 doesn't provide the control->queue variable
- 	 * for beacons. Set our own queue identification so
- 	 * it can be used during descriptor initialization.
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 559131f..b6c6f7d 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -324,8 +324,6 @@ static void rt2500usb_config_intf(struct rt2x00_dev *rt2x00dev,
- 	u16 reg;
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
--		rt2500usb_register_write(rt2x00dev, TXRX_CSR19, 0);
--
- 		/*
- 		 * Enable beacon config
- 		 */
-@@ -344,10 +342,6 @@ static void rt2500usb_config_intf(struct rt2x00_dev *rt2x00dev,
- 		rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
- 
- 		rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
--		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 1);
--		rt2x00_set_field16(&reg, TXRX_CSR19_TBCN,
--				   (conf->sync == TSF_SYNC_BEACON));
--		rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 0);
- 		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, conf->sync);
- 		rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
- 	}
-@@ -1092,6 +1086,8 @@ static void rt2500usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
- 	if (!rt2x00_get_field16(reg, TXRX_CSR19_BEACON_GEN)) {
-+		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 1);
-+		rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 1);
- 		rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 1);
- 		/*
- 		 * Beacon generation will fail initially.
-@@ -1740,6 +1736,7 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
- 	struct skb_frame_desc *skbdesc;
- 	int pipe = usb_sndbulkpipe(usb_dev, 1);
- 	int length;
-+	u16 reg;
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
-@@ -1765,6 +1762,16 @@ static int rt2500usb_beacon_update(struct ieee80211_hw *hw,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 0);
-+	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
-+
-+	/*
- 	 * mac80211 doesn't provide the control->queue variable
- 	 * for beacons. Set our own queue identification so
- 	 * it can be used during descriptor initialization.
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 9ff7e60..9d8d096 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -336,17 +336,12 @@ static void rt61pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * bits which (when set to 0) will invalidate the entire beacon.
- 		 */
- 		beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
--		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, 0);
- 		rt2x00pci_register_write(rt2x00dev, beacon_base, 0);
- 
- 		/*
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE,
--				  (conf->sync == TSF_SYNC_BEACON));
--		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
- 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 	}
-@@ -1562,6 +1557,8 @@ static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
- 
- 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 		if (!rt2x00_get_field32(reg, TXRX_CSR9_BEACON_GEN)) {
-+			rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
-+			rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 			rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
- 			rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 		}
-@@ -2373,6 +2370,7 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
- 	struct skb_frame_desc *skbdesc;
- 	unsigned int beacon_base;
-+	u32 reg;
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
-@@ -2408,6 +2406,16 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
-+	/*
- 	 * mac80211 doesn't provide the control->queue variable
- 	 * for beacons. Set our own queue identification so
- 	 * it can be used during descriptor initialization.
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 4506423..d0c0fde 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -347,17 +347,12 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * bits which (when set to 0) will invalidate the entire beacon.
- 		 */
- 		beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
--		rt73usb_register_write(rt2x00dev, TXRX_CSR9, 0);
- 		rt73usb_register_write(rt2x00dev, beacon_base, 0);
- 
- 		/*
- 		 * Enable synchronisation.
- 		 */
- 		rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE,
--				  (conf->sync == TSF_SYNC_BEACON));
--		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
- 		rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 	}
-@@ -1312,6 +1307,8 @@ static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
- 
- 	rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 	if (!rt2x00_get_field32(reg, TXRX_CSR9_BEACON_GEN)) {
-+		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
-+		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
- 		rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 	}
-@@ -1987,6 +1984,7 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct skb_frame_desc *skbdesc;
- 	unsigned int beacon_base;
- 	unsigned int timeout;
-+	u32 reg;
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
-@@ -2010,6 +2008,16 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
-+	/*
- 	 * mac80211 doesn't provide the control->queue variable
- 	 * for beacons. Set our own queue identification so
- 	 * it can be used during descriptor initialization.
--- 
-1.5.4.3
 
+
+>  wl4965: U iwl4965_mac_reset_tsf enter
+>  iwl4965: U iwl4965_mac_reset_tsf leave
+>  iwl4965: U iwl4965_mac_config_interface bssid: 02:0e:35:20:5a:48
+>  iwl4965: U iwl4965_mac_config_interface leave
+>  iwl4965: U iwl4965_mac_config enter to channel 1
+>  iwl4965: U iwl4965_mac_config leave
+>  iwl4965: U iwl4965_mac_beacon_update enter
+>  iwl4965: U iwl4965_mac_beacon_update leave
+>  wlan0: Configured IBSS beacon template
+>  phy2: Adding new IBSS station 00:0e:35:24:c1:32 (dev=wlan0)
+>  RTNL: assertion failed at net/mac80211/sta_info.c (140)
+>  Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
+>   [<f8a74427>] sta_info_destroy+0x30/0xf4 [mac80211]
+>   [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
+>   [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
+>   [<c042fc92>] __queue_work+0x1c/0x28
+>   [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
+>   [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
+>   [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
+>   [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<c0426d6a>] irq_exit+0x50/0x67
+>   [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
+>   [<c046be74>] add_partial+0x23/0x33
+>   [<c046cfdf>] __slab_free+0x60/0x1db
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<c046d95e>] kmem_cache_free+0x60/0x69
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
+>   [<c04d9e80>] __next_cpu+0x12/0x21
+>   [<c04198a3>] find_busiest_group+0x210/0x605
+>   [<c047f0b7>] d_alloc+0x1b/0x16e
+>   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+>   [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
+>   [<c041e864>] hrtick_set+0x7a/0xd8
+>   [<c0601229>] schedule+0x6df/0x711
+>   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+>   [<c042f919>] run_workqueue+0x6b/0xe0
+>   [<c042ffe9>] worker_thread+0x0/0xbd
+>   [<c043009c>] worker_thread+0xb3/0xbd
+>   [<c04321ec>] autoremove_wake_function+0x0/0x2d
+>   [<c0432128>] kthread+0x38/0x60
+>   [<c04320f0>] kthread+0x0/0x60
+>   [<c0405527>] kernel_thread_helper+0x7/0x10
+>   =======================
+>  RTNL: assertion failed at net/mac80211/key.c (275)
+>  Pid: 4177, comm: iwl4965 Not tainted 2.6.25-rc4-wl #6
+>   [<f8a82d79>] ieee80211_key_free+0x2b/0x97 [mac80211]
+>   [<f8ab02ad>] rs_remove_debugfs+0x0/0x25 [iwl4965]
+>   [<f8a74461>] sta_info_destroy+0x6a/0xf4 [mac80211]
+>   [<f8a7459c>] sta_info_flush+0xb1/0xcd [mac80211]
+>   [<f8a7726e>] ieee80211_sta_join_ibss+0x4f/0x58d [mac80211]
+>   [<c042fc92>] __queue_work+0x1c/0x28
+>   [<f8a778ab>] ieee80211_rx_bss_add+0xff/0x109 [mac80211]
+>   [<f8a78126>] ieee80211_rx_bss_info+0x6e9/0x716 [mac80211]
+>   [<f8a78191>] ieee80211_rx_mgmt_beacon+0x3e/0x165 [mac80211]
+>   [<c0434ea8>] hrtimer_interrupt+0x127/0x14f
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<c0426d6a>] irq_exit+0x50/0x67
+>   [<c0412bd5>] smp_apic_timer_interrupt+0x6e/0x79
+>   [<c046be74>] add_partial+0x23/0x33
+>   [<c046cfdf>] __slab_free+0x60/0x1db
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<c046d95e>] kmem_cache_free+0x60/0x69
+>   [<f8a7b416>] ieee80211_sta_rx_queued_mgmt+0xb77/0xb97 [mac80211]
+>   [<f8a7aacb>] ieee80211_sta_rx_queued_mgmt+0x22c/0xb97 [mac80211]
+>   [<c04d9e80>] __next_cpu+0x12/0x21
+>   [<c04198a3>] find_busiest_group+0x210/0x605
+>   [<c047f0b7>] d_alloc+0x1b/0x16e
+>   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+>   [<f8a7b9ba>] ieee80211_sta_work+0x82/0x54a [mac80211]
+>   [<c041e864>] hrtick_set+0x7a/0xd8
+>   [<c0601229>] schedule+0x6df/0x711
+>   [<f8a7b938>] ieee80211_sta_work+0x0/0x54a [mac80211]
+>   [<c042f919>] run_workqueue+0x6b/0xe0
+>   [<c042ffe9>] worker_thread+0x0/0xbd
+>   [<c043009c>] worker_thread+0xb3/0xbd
+>   [<c04321ec>] autoremove_wake_function+0x0/0x2d
+>   [<c0432128>] kthread+0x38/0x60
+>   [<c04320f0>] kthread+0x0/0x60
+>   [<c0405527>] kernel_thread_helper+0x7/0x10
+>   =======================
+>
