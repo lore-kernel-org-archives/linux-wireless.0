@@ -1,70 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:5496 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756249AbYCSTer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:34:47 -0400
-Received: by gv-out-0910.google.com with SMTP id s4so208314gve.37
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2008 12:34:46 -0700 (PDT)
-Message-ID: <f6ca9fed0803181610v10b533e9n267540e1b00d004f@mail.gmail.com> (sfid-20080319_193525_826806_D1B46AC2)
-Date: Wed, 19 Mar 2008 00:10:04 +0100
-From: drago01 <drago01@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [ipw3945-devel] iwl3945 rfkill regression
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:46397 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752038AbYCYULK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 16:11:10 -0400
+From: Helge Deller <deller@gmx.de>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: ath5k aborts wireless connections
+Date: Tue, 25 Mar 2008 21:11:05 +0100
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com
+References: <200803221129.59090.deller@gmx.de> <40f31dec0803251116s4b39b1dagfa9c3941b706a52f@mail.gmail.com> <b6c5339f0803251216pd355868n90c845c01a8aa84e@mail.gmail.com>
+In-Reply-To: <b6c5339f0803251216pd355868n90c845c01a8aa84e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0801221204j71ad2137l19555363e46a7e45@mail.gmail.com>
-	 <f6ca9fed0801261100j7939056dke661a422ec507fce@mail.gmail.com>
-	 <1ba2fa240801261411x7bb437c9s31aea593537afeba@mail.gmail.com>
-	 <47B29F63.6050605@gmail.com>
-	 <D936D925018D154694D8A362EEB0892003A7F599@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181232n4ac188ev5d10e7c68aad57aa@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D487@orsmsx416.amr.corp.intel.com>
-	 <f6ca9fed0803181446v139b688ek958ce29cf7d98457@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892003F2D574@orsmsx416.amr.corp.intel.com>
-	 <1ba2fa240803181607n3556955ar39eebdeebacffb7b@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803252111.05726.deller@gmx.de> (sfid-20080325_201113_593449_1ABD8A6E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2008 at 12:07 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Wed, Mar 19, 2008 at 12:06 AM, Chatre, Reinette
->
-> <reinette.chatre@intel.com> wrote:
->  >
->
->
-> > On Tuesday, March 18, 2008 2:47 PM, drago01  wrote:
->  >
->  >  >>  Please note that the driver loads/unloads the firmware during
->  >  >>  interface up/down. That means that the host will not receive rfkill
->  >  >>  events while the interface is down as there is no firmware to deal
->  >  >> with these events.
->  >  >>
->  >  >>  Reinette
->  >  >>
->  >  >
->  >  > OK that makes sense.
->  >  > So a solution would be to not unload the firmware on down when the hw
->  >  > rfkill is on. Is this a acceptable one or are they other (better
->  >  > solutions). I can't think of any. And userspace cannot do anything
->  >  > because bringing the device up and down again to look for the rfkill
->  >  > status would be racy.
->  >
->  >  Having the firmware unloaded when the interface is down is a requirement
->  >  for powersaving. We do not want the device to consume power when it is
->  >  not used. The rfkill status should always be reported accurately when
->  >  the interface is up. If it is not then it is a bug.
->
->  We will catch the HW rfkill event after loading the uCode so there is
->  no problem with this.
->  Not sure where should be the SW rfkill state stored.
+On Tuesday 25 March 2008, Bob Copeland wrote:
+> On Tue, Mar 25, 2008 at 2:16 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > Hello ppl, sory for the delay ;-)
+> >
+> >  Are you using encryption ? I haven't got such errors on my tests (it
+> >  might be that my setup is really simple) so far...
+> 
+> I can't speak for Helge, but in my case yes - WPA-TKIP.
 
-yeah, but the ucode will be loaded when the device is brought back up,
-which does not happen in NM's case.
+Same here. WPA-PSK & TKIP.
+
+Helge
