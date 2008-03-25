@@ -1,170 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55289 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756047AbYC0VY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 17:24:58 -0400
-Subject: Re: [PATCH] libertas: convert CMD_802_11_MAC_ADDRESS to a direct
-	command
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803260958.32270.hs4233@mail.mn-solutions.de>
-References: <200803260958.32270.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 27 Mar 2008 17:23:38 -0400
-Message-Id: <1206653018.21106.6.camel@localhost.localdomain> (sfid-20080327_212504_872533_4CA628FE)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.169]:34852 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753557AbYCYXpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2008 19:45:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so3036797wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 16:45:03 -0700 (PDT)
+Message-ID: <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com> (sfid-20080325_234515_882130_E7E0BAC3)
+Date: Wed, 26 Mar 2008 01:45:03 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwlwifi: do not register bands with no supported channels
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+In-Reply-To: <20080325212407.GB20488@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1206475120-10188-1-git-send-email-linville@tuxdriver.com>
+	 <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com>
+	 <20080325212407.GB20488@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-26 at 09:58 +0100, Holger Schurig wrote:
-> * directly call lbs_cmd_with_response()
-> * only overwrite priv->current_addr once the firmware call succeeded
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Tue, Mar 25, 2008 at 11:24 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Tue, Mar 25, 2008 at 10:31:27PM +0200, Tomas Winkler wrote:
+>  > On Tue, Mar 25, 2008 at 9:58 PM, John W. Linville
+>  > <linville@tuxdriver.com> wrote:
+>  > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>  > >  ---
+>  > >  Otherwise, b/g-only devices fail in wiphy_register.  Tested in Fedora
+>  > >  kernels for the last week or so...
+>  > >
+>  > >   drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++++++--
+>  > >   drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++++--
+>  > >   2 files changed, 12 insertions(+), 4 deletions(-)
+>
+>
+> > >  diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+>  > >  index 44cfd02..9ae3d29 100644
+>  > >  --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+>  > >  +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+>  > >  @@ -5001,8 +5001,12 @@ int iwl4965_init_geos(struct iwl_priv *priv)
+>  > >                priv->bands[IEEE80211_BAND_2GHZ].n_channels,
+>  > >                priv->bands[IEEE80211_BAND_5GHZ].n_channels);
+>  > >
+>  > >  -       priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->bands[IEEE80211_BAND_2GHZ];
+>  > >  -       priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->bands[IEEE80211_BAND_5GHZ];
+>  > >  +       if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
+>  > >  +               priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+>  > >  +                       &priv->bands[IEEE80211_BAND_2GHZ];
+>  > >  +       if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
+>  > >  +               priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+>  > >  +                       &priv->bands[IEEE80211_BAND_5GHZ];
+>  > >
+>  > >         set_bit(STATUS_GEO_CONFIGURED, &priv->status);
+>  > >
+>  >
+>  > As there already exists condition testing this I would prefer
+>  > something like this
+>
+>  I don't think it is the same -- yours is checking IWL_SKU_A.
+>
+>
+>  > if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
+>  >            priv->cfg->sku & IWL_SKU_A) {
+>  >               printk(KERN_INFO DRV_NAME
+>  >                      ": Incorrectly detected BG card as ABG.  Please send "
+>  >                      "your PCI ID 0x%04X:0x%04X to maintainer.\n",
+>  >                      priv->pci_dev->device, priv->pci_dev->subsystem_device);
+>  >               priv->cfg->sku &= ~IWL_SKU_A;
+>  >                 priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+>  > }
+>
+>  A clause just like this exists a few lines above, yet it does not
+>  fire for the device that prompted this patch:
+>
+>         https://bugzilla.redhat.com/attachment.cgi?id=298613
+>
+>
+>  > else
+>  >    priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+>  > &priv->bands[IEEE80211_BAND_5GHZ];
+>
+>  I don't think your version will resolve the issue.  Am I missing
+>  something?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Yep I was a bit snappy. my suggestion doesn't resolve the problem.
+Anyhow, let me look at this tomorrow if we have other SKU issues so it
+can be rolled in together.
 
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c
-> @@ -970,29 +970,6 @@
->  	return 0;
->  }
->  
-> -static int lbs_cmd_802_11_mac_address(struct lbs_private *priv,
-> -				       struct cmd_ds_command *cmd,
-> -				       u16 cmd_action)
-> -{
-> -
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -	cmd->command = cpu_to_le16(CMD_802_11_MAC_ADDRESS);
-> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_mac_address) +
-> -			     S_DS_GEN);
-> -	cmd->result = 0;
-> -
-> -	cmd->params.macadd.action = cpu_to_le16(cmd_action);
-> -
-> -	if (cmd_action == CMD_ACT_SET) {
-> -		memcpy(cmd->params.macadd.macadd,
-> -		       priv->current_addr, ETH_ALEN);
-> -		lbs_deb_hex(LBS_DEB_CMD, "SET_CMD: MAC addr", priv->current_addr, 6);
-> -	}
-> -
-> -	lbs_deb_leave(LBS_DEB_CMD);
-> -	return 0;
-> -}
-> -
->  static int lbs_cmd_802_11_eeprom_access(struct cmd_ds_command *cmd,
->  					void *pdata_buf)
->  {
-> @@ -1448,10 +1425,6 @@
->  		ret = lbs_cmd_80211_ad_hoc_stop(cmdptr);
->  		break;
->  
-> -	case CMD_802_11_MAC_ADDRESS:
-> -		ret = lbs_cmd_802_11_mac_address(priv, cmdptr, cmd_action);
-> -		break;
-> -
->  	case CMD_802_11_EEPROM_ACCESS:
->  		ret = lbs_cmd_802_11_eeprom_access(cmdptr, pdata_buf);
->  		break;
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c
-> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-> @@ -179,19 +179,6 @@
->  	return 0;
->  }
->  
-> -static int lbs_ret_802_11_mac_address(struct lbs_private *priv,
-> -				       struct cmd_ds_command *resp)
-> -{
-> -	struct cmd_ds_802_11_mac_address *macadd = &resp->params.macadd;
-> -
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -
-> -	memcpy(priv->current_addr, macadd->macadd, ETH_ALEN);
-> -
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -	return 0;
-> -}
-> -
->  static int lbs_ret_802_11_rf_tx_power(struct lbs_private *priv,
->  				       struct cmd_ds_command *resp)
->  {
-> @@ -325,10 +312,6 @@
->  		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
->  		break;
->  
-> -	case CMD_RET(CMD_802_11_MAC_ADDRESS):
-> -		ret = lbs_ret_802_11_mac_address(priv, resp);
-> -		break;
-> -
->  	case CMD_RET(CMD_802_11_AD_HOC_STOP):
->  		ret = lbs_ret_80211_ad_hoc_stop(priv);
->  		break;
-> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h
-> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-> @@ -429,6 +429,8 @@
->  };
->  
->  struct cmd_ds_802_11_mac_address {
-> +	struct cmd_header hdr;
-> +
->  	__le16 action;
->  	u8 macadd[ETH_ALEN];
->  };
-> @@ -716,7 +718,6 @@
->  		struct cmd_ds_mac_multicast_adr madr;
->  		struct cmd_ds_802_11_ad_hoc_join adj;
->  		struct cmd_ds_802_11_disassociate dassociate;
-> -		struct cmd_ds_802_11_mac_address macadd;
->  		struct cmd_ds_mac_reg_access macreg;
->  		struct cmd_ds_bbp_reg_access bbpreg;
->  		struct cmd_ds_rf_reg_access rfreg;
-> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c
-> @@ -530,34 +530,27 @@
->  	int ret = 0;
->  	struct lbs_private *priv = (struct lbs_private *) dev->priv;
->  	struct sockaddr *phwaddr = addr;
-> +	struct cmd_ds_802_11_mac_address cmd;
->  
->  	lbs_deb_enter(LBS_DEB_NET);
->  
->  	/* In case it was called from the mesh device */
-> -	dev = priv->dev ;
-> -
-> -	memset(priv->current_addr, 0, ETH_ALEN);
-> -
-> -	/* dev->dev_addr is 8 bytes */
-> -	lbs_deb_hex(LBS_DEB_NET, "dev->dev_addr", dev->dev_addr, ETH_ALEN);
-> -
-> -	lbs_deb_hex(LBS_DEB_NET, "addr", phwaddr->sa_data, ETH_ALEN);
-> -	memcpy(priv->current_addr, phwaddr->sa_data, ETH_ALEN);
-> +	dev = priv->dev;
->  
-> -	ret = lbs_prepare_and_send_command(priv, CMD_802_11_MAC_ADDRESS,
-> -				    CMD_ACT_SET,
-> -				    CMD_OPTION_WAITFORRSP, 0, NULL);
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	memcpy(cmd.macadd, phwaddr->sa_data, ETH_ALEN);
->  
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS, &cmd);
->  	if (ret) {
->  		lbs_deb_net("set MAC address failed\n");
-> -		ret = -1;
->  		goto done;
->  	}
->  
-> -	lbs_deb_hex(LBS_DEB_NET, "priv->macaddr", priv->current_addr, ETH_ALEN);
-> -	memcpy(dev->dev_addr, priv->current_addr, ETH_ALEN);
-> +	memcpy(priv->current_addr, phwaddr->sa_data, ETH_ALEN);
-> +	memcpy(dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
->  	if (priv->mesh_dev)
-> -		memcpy(priv->mesh_dev->dev_addr, priv->current_addr, ETH_ALEN);
-> +		memcpy(priv->mesh_dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
->  
->  done:
->  	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
+Thanks
+TOmas
 
+>  John
+>  --
+>
+>
+> John W. Linville
+>  linville@tuxdriver.com
+>
