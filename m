@@ -1,174 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42941 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:54160 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755572AbYCYXdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	id S1757015AbYCYXdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
 	Tue, 25 Mar 2008 19:33:44 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
 	Tomas Winkler <tomas.winkler@intel.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 3/6] iwlwifi: improve NIC i/o debug prints information
-Date: Tue, 25 Mar 2008 16:33:38 -0700
-Message-Id: <1206488021-4193-4-git-send-email-reinette.chatre@intel.com> (sfid-20080325_233412_756531_39D822B9)
-In-Reply-To: <1206488021-4193-3-git-send-email-reinette.chatre@intel.com>
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/6] iwlwifi: iwl_priv - clean up in types of members
+Date: Tue, 25 Mar 2008 16:33:41 -0700
+Message-Id: <1206488021-4193-7-git-send-email-reinette.chatre@intel.com> (sfid-20080325_233413_656000_3DE08C66)
+In-Reply-To: <1206488021-4193-6-git-send-email-reinette.chatre@intel.com>
 References: <1206488021-4193-1-git-send-email-reinette.chatre@intel.com>
  <1206488021-4193-2-git-send-email-reinette.chatre@intel.com>
  <1206488021-4193-3-git-send-email-reinette.chatre@intel.com>
+ <1206488021-4193-4-git-send-email-reinette.chatre@intel.com>
+ <1206488021-4193-5-git-send-email-reinette.chatre@intel.com>
+ <1206488021-4193-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch gives the function's caller name in case NIC
-access reference count was not used by it.
+This patch fix types of is_open and iw_mode members
+of iwl_priv sturct
 
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-io.h |   47 +++++++++++++++++---------------
- 1 files changed, 25 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++++
+ 4 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index 09cc094..5bc3df4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -42,10 +42,12 @@
-  * check or debug information is printed when that function is called.
-  *
-  * A double __ prefix before an access function means that state is checked
-- * and the current line number is printed in addition to any other debug output.
-+ * and the current line number and caller function name are printed in addition
-+ * to any other debug output.
-  *
-  * The non-prefixed name is the #define that maps the caller into a
-- * #define that provides the caller's __LINE__ to the double prefix version.
-+ * #define that provides the caller's name and __LINE__ to the double
-+ * prefix version.
-  *
-  * If you wish to call the function without any debug or state checking,
-  * you should use the single _ prefix version (as is used by dependent IO
-@@ -197,8 +199,7 @@ static inline int __iwl_grab_nic_access(const char *f, u32 l,
- 					       struct iwl_priv *priv)
- {
- 	if (atomic_read(&priv->restrict_refcnt))
--		IWL_DEBUG_INFO("Grabbing access while already held at "
--			       "line %d.\n", l);
-+		IWL_ERROR("Grabbing access while already held %s %d.\n", f, l);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index e0655b9..d7ccf13 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -830,7 +830,7 @@ struct iwl3945_priv {
+ 	struct iwl3945_station_entry stations[IWL_STATION_COUNT];
  
- 	IWL_DEBUG_IO("grabbing nic access - %s %d\n", f, l);
- 	return _iwl_grab_nic_access(priv);
-@@ -223,7 +224,7 @@ static inline void __iwl_release_nic_access(const char *f, u32 l,
- 					    struct iwl_priv *priv)
- {
- 	if (atomic_read(&priv->restrict_refcnt) <= 0)
--		IWL_ERROR("Release unheld nic access at line %d.\n", l);
-+		IWL_ERROR("Release unheld nic access at line %s %d.\n", f, l);
+ 	/* Indication if ieee80211_ops->open has been called */
+-	int is_open;
++	u8 is_open;
  
- 	IWL_DEBUG_IO("releasing nic access - %s %d\n", f, l);
- 	_iwl_release_nic_access(priv);
-@@ -262,15 +263,15 @@ static inline void _iwl_write_direct32(struct iwl_priv *priv,
- 	_iwl_write32(priv, reg, value);
- }
- #ifdef CONFIG_IWLWIFI_DEBUG
--static void __iwl_write_direct32(u32 line,
-+static void __iwl_write_direct32(const char *f , u32 line,
- 				   struct iwl_priv *priv, u32 reg, u32 value)
- {
- 	if (!atomic_read(&priv->restrict_refcnt))
--		IWL_ERROR("Nic access not held from line %d\n", line);
-+		IWL_ERROR("Nic access not held from %s line %d\n", f, line);
- 	_iwl_write_direct32(priv, reg, value);
- }
- #define iwl_write_direct32(priv, reg, value) \
--	__iwl_write_direct32(__LINE__, priv, reg, value)
-+	__iwl_write_direct32(__func__, __LINE__, priv, reg, value)
- #else
- #define iwl_write_direct32 _iwl_write_direct32
- #endif
-@@ -328,15 +329,16 @@ static inline u32 _iwl_read_prph(struct iwl_priv *priv, u32 reg)
- 	return _iwl_read_direct32(priv, HBUS_TARG_PRPH_RDAT);
- }
- #ifdef CONFIG_IWLWIFI_DEBUG
--static inline u32 __iwl_read_prph(u32 line, struct iwl_priv *priv, u32 reg)
-+static inline u32 __iwl_read_prph(const char *f, u32 line,
-+				  struct iwl_priv *priv, u32 reg)
- {
- 	if (!atomic_read(&priv->restrict_refcnt))
--		IWL_ERROR("Nic access not held from line %d\n", line);
-+		IWL_ERROR("Nic access not held from %s line %d\n", f, line);
- 	return _iwl_read_prph(priv, reg);
- }
+ 	u8 mac80211_registered;
  
- #define iwl_read_prph(priv, reg) \
--	__iwl_read_prph(__LINE__, priv, reg)
-+	__iwl_read_prph(__func__, __LINE__, priv, reg)
- #else
- #define iwl_read_prph _iwl_read_prph
- #endif
-@@ -349,16 +351,16 @@ static inline void _iwl_write_prph(struct iwl_priv *priv,
- 	_iwl_write_direct32(priv, HBUS_TARG_PRPH_WDAT, val);
- }
- #ifdef CONFIG_IWLWIFI_DEBUG
--static inline void __iwl_write_prph(u32 line, struct iwl_priv *priv,
--					      u32 addr, u32 val)
-+static inline void __iwl_write_prph(const char *f, u32 line,
-+				    struct iwl_priv *priv, u32 addr, u32 val)
- {
- 	if (!atomic_read(&priv->restrict_refcnt))
--		IWL_ERROR("Nic access from line %d\n", line);
-+		IWL_ERROR("Nic access not held from %s line %d\n", f, line);
- 	_iwl_write_prph(priv, addr, val);
- }
+@@ -851,7 +851,7 @@ struct iwl3945_priv {
+ 	/* eeprom */
+ 	struct iwl3945_eeprom eeprom;
  
- #define iwl_write_prph(priv, addr, val) \
--	__iwl_write_prph(__LINE__, priv, addr, val);
-+	__iwl_write_prph(__func__, __LINE__, priv, addr, val);
- #else
- #define iwl_write_prph _iwl_write_prph
- #endif
-@@ -366,16 +368,17 @@ static inline void __iwl_write_prph(u32 line, struct iwl_priv *priv,
- #define _iwl_set_bits_prph(priv, reg, mask) \
- 	_iwl_write_prph(priv, reg, (_iwl_read_prph(priv, reg) | mask))
- #ifdef CONFIG_IWLWIFI_DEBUG
--static inline void __iwl_set_bits_prph(u32 line, struct iwl_priv *priv,
--					u32 reg, u32 mask)
-+static inline void __iwl_set_bits_prph(const char *f, u32 line,
-+				       struct iwl_priv *priv,
-+				       u32 reg, u32 mask)
- {
- 	if (!atomic_read(&priv->restrict_refcnt))
--		IWL_ERROR("Nic access not held from line %d\n", line);
-+		IWL_ERROR("Nic access not held from %s line %d\n", f, line);
+-	int iw_mode;
++	enum ieee80211_if_types iw_mode;
  
- 	_iwl_set_bits_prph(priv, reg, mask);
- }
- #define iwl_set_bits_prph(priv, reg, mask) \
--	__iwl_set_bits_prph(__LINE__, priv, reg, mask)
-+	__iwl_set_bits_prph(__func__, __LINE__, priv, reg, mask)
- #else
- #define iwl_set_bits_prph _iwl_set_bits_prph
- #endif
-@@ -384,15 +387,15 @@ static inline void __iwl_set_bits_prph(u32 line, struct iwl_priv *priv,
- 	_iwl_write_prph(priv, reg, ((_iwl_read_prph(priv, reg) & mask) | bits))
+ 	struct sk_buff *ibss_beacon;
  
- #ifdef CONFIG_IWLWIFI_DEBUG
--static inline void __iwl_set_bits_mask_prph(u32 line,
-+static inline void __iwl_set_bits_mask_prph(const char *f, u32 line,
- 		struct iwl_priv *priv, u32 reg, u32 bits, u32 mask)
- {
- 	if (!atomic_read(&priv->restrict_refcnt))
--		IWL_ERROR("Nic access not held from line %d\n", line);
-+		IWL_ERROR("Nic access not held from %s line %d\n", f, line);
- 	_iwl_set_bits_mask_prph(priv, reg, bits, mask);
- }
- #define iwl_set_bits_mask_prph(priv, reg, bits, mask) \
--	__iwl_set_bits_mask_prph(__LINE__, priv, reg, bits, mask)
-+	__iwl_set_bits_mask_prph(__func__, __LINE__, priv, reg, bits, mask)
- #else
- #define iwl_set_bits_mask_prph _iwl_set_bits_mask_prph
- #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 98644d9..069e591 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -1129,7 +1129,7 @@ struct iwl_priv {
+ 	struct iwl4965_station_entry stations[IWL_STATION_COUNT];
+ 
+ 	/* Indication if ieee80211_ops->open has been called */
+-	int is_open;
++	u8 is_open;
+ 
+ 	u8 mac80211_registered;
+ 
+@@ -1150,7 +1150,7 @@ struct iwl_priv {
+ 	/* eeprom */
+ 	struct iwl4965_eeprom eeprom;
+ 
+-	int iw_mode;
++	enum ieee80211_if_types iw_mode;
+ 
+ 	struct sk_buff *ibss_beacon;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index e979a5c..3cc9b3d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2058,6 +2058,8 @@ int iwl3945_is_network_packet(struct iwl3945_priv *priv, struct ieee80211_hdr *h
+ 			return !compare_ether_addr(header->addr2, priv->bssid);
+ 		/* packets to our adapter go through */
+ 		return !compare_ether_addr(header->addr1, priv->mac_addr);
++	default:
++		return 1;
+ 	}
+ 
+ 	return 1;
+@@ -2302,6 +2304,9 @@ static void iwl3945_connection_init_rx_config(struct iwl3945_priv *priv)
+ 		priv->staging_rxon.filter_flags = RXON_FILTER_PROMISC_MSK |
+ 		    RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_ACCEPT_GRP_MSK;
+ 		break;
++	default:
++		IWL_ERROR("Unsupported interface type %d\n", priv->iw_mode);
++		break;
+ 	}
+ 
+ #if 0
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index b424137..a920109 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1793,6 +1793,8 @@ int iwl4965_is_network_packet(struct iwl_priv *priv, struct ieee80211_hdr *heade
+ 			return !compare_ether_addr(header->addr2, priv->bssid);
+ 		/* packets to our adapter go through */
+ 		return !compare_ether_addr(header->addr1, priv->mac_addr);
++	default:
++		break;
+ 	}
+ 
+ 	return 1;
+@@ -2054,6 +2056,9 @@ static void iwl4965_connection_init_rx_config(struct iwl_priv *priv)
+ 		priv->staging_rxon.filter_flags = RXON_FILTER_PROMISC_MSK |
+ 		    RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_ACCEPT_GRP_MSK;
+ 		break;
++	default:
++		IWL_ERROR("Unsupported interface type %d\n", priv->iw_mode);
++		break;
+ 	}
+ 
+ #if 0
 -- 
 1.5.3.4
 
