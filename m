@@ -1,104 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:41053 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653AbYC0D1h (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13816 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759559AbYCZQ7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 23:27:37 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so2212786rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2008 20:27:32 -0700 (PDT)
-Message-ID: <183c1cc10803262027k4c40386v767b2f9c79945deb@mail.gmail.com> (sfid-20080327_032741_381088_72ABB851)
-Date: Wed, 26 Mar 2008 23:27:32 -0400
-From: "John Goulah" <jgoulah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: problem with iwl4965 and kernel 2.6.24.4
-In-Reply-To: <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
+	Wed, 26 Mar 2008 12:59:25 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH, take 2] libertas: don't depend on IEEE80211
+Date: Wed, 26 Mar 2008 17:56:26 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200803261324.21938.hs4233@mail.mn-solutions.de> <200803261735.59235.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200803261735.59235.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com>
-	 <183c1cc10803261149r2f518772j2ea3a1b5df55b2cc@mail.gmail.com>
-	 <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803261756.27077.hs4233@mail.mn-solutions.de> (sfid-20080326_165947_397901_FBB85434)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 26, 2008 at 5:04 PM, Chatre, Reinette
-<reinette.chatre@intel.com> wrote:
->
-> On Wednesday, March 26, 2008 11:49 AM, John Goulah  wrote:
->
-> >
-> > $ iwconfig
-> > lo        no wireless extensions.
-> >
-> > eth1      no wireless extensions.
-> >
-> > sit0      no wireless extensions.
-> >
-> > wmaster0  no wireless extensions.
-> >
-> > Warning: Driver for device wlan0 has been compiled with version 22
-> > of Wireless Extension, while this program supports up to version 20.
-> > Some things may be broken...
-> >
-> > wlan0     IEEE 802.11  ESSID:"goulahnet"
-> >          Mode:Managed  Frequency:2.412 GHz  Access Point:
-> >          Not-Associated Tx-Power=0 dBm
-> >          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-> >          Link Quality:0  Signal level:0  Noise level:0
-> >          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-> >          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> >
-> >
-> >
-> > Is this warning a problem?  Does this mean I need to get a newer
-> > iwconfig (I'm on debian etch, Wireless-Tools version 28)
->
-> I don't know if it is necessary. In the above iwconfig output it does
-> not look as though you are associated though.
->
+[PATCH] libertas: don't depend on IEEE80211
 
+Runtime-wise we only need escape_ssid from the deprecated IEEE80211
+subsystem. However, it's easy to provide our own copy.
 
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-It appears I am still having some issues here with associating.  Could
-this be on the driver end of things?  It doesn't happen with another
-box (other drivers)
+---
 
-I can disassociate:
-$ sudo iwconfig wlan0 ap off
-$ iwconfig
-wlan0     IEEE 802.11  ESSID:"goulahnet"
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
-          Tx-Power=14 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+The previous patch also exported this as GPL. However, there is no
+need to to is. Actually there is no need to export this at all. It's
+only used inside libertas.ko.
 
-
-
-What I was doing before is showing Invalid:
-
-
-$ sudo iwconfig wlan0 ap any  (same for auto here)
-$ iwconfig
-wlan0     IEEE 802.11  ESSID:"goulahnet"
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Invalid
-          Tx-Power=14 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
-
-
-It does seem a bit random, and I did have it working there for a
-while, but it looked like if issue ctrl-C to wpa_supplicant  it got
-into this state, or a reboot.
-
-Anything I can try here?
-
-
-
-Thanks!
-John
+Index: wireless-testing/drivers/net/wireless/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/Kconfig	2008-03-26 16:45:21.000000000 +0100
++++ wireless-testing/drivers/net/wireless/Kconfig	2008-03-26 16:46:43.000000000 +0100
+@@ -271,7 +271,6 @@ config LIBERTAS
+ 	tristate "Marvell 8xxx Libertas WLAN driver support"
+ 	depends on WLAN_80211
+ 	select WIRELESS_EXT
+-	select IEEE80211
+ 	select FW_LOADER
+ 	---help---
+ 	  A library for Marvell Libertas 8xxx devices.
+Index: wireless-testing/drivers/net/wireless/libertas/decl.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-03-26 16:45:21.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-03-26 16:46:43.000000000 +0100
+@@ -71,4 +71,9 @@ int lbs_stop_card(struct lbs_private *pr
+ void lbs_host_to_card_done(struct lbs_private *priv);
+ 
+ int lbs_update_channel(struct lbs_private *priv);
++
++#ifndef CONFIG_IEEE80211
++const char *escape_essid(const char *essid, u8 essid_len);
++#endif
++
+ #endif
+Index: wireless-testing/drivers/net/wireless/libertas/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-03-26 16:46:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-03-26 16:46:58.000000000 +0100
+@@ -1565,6 +1565,32 @@ out:
+ 	return ret;
+ }
+ 
++#ifndef CONFIG_IEEE80211
++const char *escape_essid(const char *essid, u8 essid_len)
++{
++	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
++	const char *s = essid;
++	char *d = escaped;
++
++	if (ieee80211_is_empty_essid(essid, essid_len)) {
++		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
++		return escaped;
++	}
++
++	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
++	while (essid_len--) {
++		if (*s == '\0') {
++			*d++ = '\\';
++			*d++ = '0';
++			s++;
++		} else {
++			*d++ = *s++;
++		}
++	}
++	*d = '\0';
++	return escaped;
++}
++#endif
+ 
+ module_init(lbs_init_module);
+ module_exit(lbs_exit_module);
