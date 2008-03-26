@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:51341 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751952AbYCMAED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 20:04:03 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Max Stepanov <max.stepanov@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/5] iwlwifi: Bug fix, CCMP with HW encryption with AGG
-Date: Wed, 12 Mar 2008 16:58:48 -0700
-Message-Id: <1205366332-12652-2-git-send-email-reinette.chatre@intel.com> (sfid-20080313_000411_584000_A38F6037)
-In-Reply-To: <1205366332-12652-1-git-send-email-reinette.chatre@intel.com>
-References: <1205366332-12652-1-git-send-email-reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:20633 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964AbYCZN4M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Mar 2008 09:56:12 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so3334154wff.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2008 06:56:11 -0700 (PDT)
+Message-ID: <1ba2fa240803260656vcfd681r4f1599bc31220b87@mail.gmail.com> (sfid-20080326_135642_936507_2847395A)
+Date: Wed, 26 Mar 2008 15:56:11 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: IBSS RTNL assertion
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1206533179.16475.313.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1ba2fa240803240921h44321705s923ecac89427196e@mail.gmail.com>
+	 <1206533179.16475.313.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Max Stepanov <max.stepanov@intel.com>
-
-This patch fixes a bug in security. Enables CCMP HW encryption with
-aggregations.
-
-Signed-off-by: Max Stepanov <max.stepanov@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    4 ++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c      |    2 ++
- 2 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index 35f592d..1025ffe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -1045,6 +1045,10 @@ struct iwl4965_rx_mpdu_res_start {
-  * MAC header) to DWORD boundary. */
- #define TX_CMD_FLG_MH_PAD_MSK __constant_cpu_to_le32(1 << 20)
- 
-+/* accelerate aggregation support
-+ * 0 - no CCMP encryption; 1 - CCMP encryption */
-+#define TX_CMD_FLG_AGG_CCMP_MSK __constant_cpu_to_le32(1 << 22)
-+
- /* HCCA-AP - disable duration overwriting. */
- #define TX_CMD_FLG_DUR_MSK __constant_cpu_to_le32(1 << 25)
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 0b73351..d0cb36b 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2427,6 +2427,8 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl4965_priv *priv,
- 	case ALG_CCMP:
- 		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_CCM;
- 		memcpy(cmd->cmd.tx.key, keyinfo->key, keyinfo->keylen);
-+		if (ctl->flags & IEEE80211_TXCTL_AMPDU)
-+			cmd->cmd.tx.tx_flags |= TX_CMD_FLG_AGG_CCMP_MSK;
- 		IWL_DEBUG_TX("tx_cmd with aes hwcrypto\n");
- 		break;
- 
--- 
-1.5.3.4
-
+T24gV2VkLCBNYXIgMjYsIDIwMDggYXQgMjowNiBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgT24gTW9uLCAyMDA4LTAzLTI0IGF0IDE4OjIx
+ICswMjAwLCBUb21hcyBXaW5rbGVyIHdyb3RlOgo+ICA+IEhhcyBhbnlib2R5IGV4cGVyaWVuY2Ug
+dGhlIG9uZSBiZWxsb3c/IEFueSBpbnNpZ2h0cz8KPgo+Cj4gPiBSVE5MOiBhc3NlcnRpb24gZmFp
+bGVkIGF0IG5ldC9tYWM4MDIxMS9zdGFfaW5mby5jICgxNDApCj4KPiAgSSB0aGluayB0aGF0IGNh
+biBiZSBmaXhlZCBieSBtYWtpbmcgaWVlZTgwMjExX3N0YV9qb2luX2lic3MoKSBsb2NrIHRoZQo+
+ICBydG5sIGFyb3VuZCBzdGFfaW5mb19mbHVzaCgpLiBQbGVhc2UgdHJ5IHRoYXQuCgpXaWxsIGRv
+Cj4gID4g77u/TG9va3MgbGlrZSB0aGVyZSBpcyBhIHF1aXRlIGxvY2sgbWVzcyBpbiB3aXJlbGVz
+cy10ZXN0aW5nLgo+Cj4gIFRoYXQgaXMgYSBncm9zcyBleGFnZ2VyYXRpb24uCk1heWJlLiBJIHNj
+YW5uZWQgaXQgdmVyeSBxdWlja2x5IGJ1dCBJIHRoaW5rIHRoZXJlIGFyZSBtb3JlIHByb2JsZW1z
+CnRoYW4gdGhpcyBvbmUuIEkgd2lsbCBjaGVjayBpdCBvbmNlIGFnYWluLgoKVGhhbmtzClRvbWFz
+Cg==
