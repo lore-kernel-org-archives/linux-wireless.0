@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:42303 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbYCILnf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56514 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585AbYC0Msm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 07:43:35 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so794545rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 04:43:33 -0700 (PDT)
-Message-ID: <c85cb4470803090443v3748a986vfc909c984369a4a7@mail.gmail.com> (sfid-20080309_114343_065367_1D6D761B)
-Date: Sun, 9 Mar 2008 13:43:33 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com, "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: handling Qdisc issues
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <1204829243.25502.137.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1204822307-5111-1-git-send-email-ron.rindjunsky@intel.com>
-	 <200803061902.33865.IvDoorn@gmail.com>
-	 <1204826767.25502.135.camel@johannes.berg>
-	 <200803061927.09891.IvDoorn@gmail.com>
-	 <1204829243.25502.137.camel@johannes.berg>
+	Thu, 27 Mar 2008 08:48:42 -0400
+Subject: "Try to stop Tx aggregation on non active TID" messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K6UtYpBppXR55E2ypXlW"
+Date: Wed, 26 Mar 2008 22:59:10 +0100
+Message-Id: <1206568750.22530.8.camel@johannes.berg> (sfid-20080327_124855_672815_CC6DF277)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > You could also just make a patch for exactly this and ask Ron to merge
-> > > it together with this?
-> >
-> > Well that patch would then be completely untested (I code, but have hardly time
-> > to perform the testing myself).
->
-> Heh ok.
->
-> > I can already say that the patch from Ron will work despite the my
-> > remark about the different meaning of the qid field.
->
-> Oh if my (I'm to blame for the rt2x00 changes, not Ron) changes will not
-> totally break it that's fine then.
->
-> johannes
->
 
-John, Johannes, what will be the preferred way to continue? it seems
-that Ivo and Michael agree that the adjustments needed can be inserted
-quite fast. would you like to re-base and merge the current RFC as a
-patch and fix things on top of it, or to merge all the fixes and push
-it at once?
+--=-K6UtYpBppXR55E2ypXlW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Hi Ron,
+
+It seems that after commit b4b5e1f49e9982a1ea0b3408e0df6adee49dad54
+
+    mac80211: tear down of block ack sessions
+   =20
+    This patch adds a clean tear down for all block ack sessions if interfa=
+ce
+    goes down or if a deauthentication is done.
+   =20
+    Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+    Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+we have a slew of messages saying
+
+[18131.640793] Stop a BA session requested for 00:1a:2a:2c:a2:c5 tid 13
+[18131.640798] Try to stop Tx aggregation on non active TID
+
+just like we had for the RX case before.
+
+Please decide once and for all decide whether it is valid to call those
+functions, now especially ieee80211_stop_tx_ba_session() when no session
+was created.
+
+As indicated by this message rate control algorithms shouldn't call this
+function when no TX BA session is present. Therefore the stack itself
+shouldn't do so either. The same holds for RX BA sessions.
+
+Please make sure the stack itself always uses the functions only as
+specified by their API. Feel free to change the API to allow calling a
+function without as session in progress, but in that case please don't
+print out anything at all.
+
+Thanks,
+johannes
+
+--=-K6UtYpBppXR55E2ypXlW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+rHLaVg1VMiehFYAQKfJBAAsZz8R1FmONmHbpjKX3JExpHPz3Nxk80f
+ASQ0vNXxwBf7jgq2NOdH3vGsqidvxUGB8nlNqpxbFEdPgjuvQMTgoaI7ySXBscL+
+9QwDQGNpLqOU9P6BzJdJgqi7+n3pb461x4VO+OrACm5Xdggv320QrpqAkqQPW33b
+D92AGWnqLOOfyID45BaMpgJ7UhP6lylguaEH2KDkkjHBW3uSmdzA5CP7Oj38hyIo
+Fyzd0Qo+1sGWKGtVooy8w23D9exBHoirZMOtmKz8CnhBQ+cYVtwqwy5DZw5Hjz+F
+1kZrRljsGxoO13nXLJ7ULZC4PtLCjKmO96G9tKkgG5T9Ra2SUFzG1WWmeKgeW2yn
+uMJlksZvYbT9psRZsnyNZxizdwcezX65T5GxaV05eAvFrgrNjuUNGzQdlIgPGGXi
+FuUs8PeKBlwmbJzc6Vk8v7orYszvFNV9Vq14BK9uVRl+RKHysnhD81gNdbb7R6ci
+LFyVSPBG/N4BzsYw223jaimN2SL08h8av6404uvrBDSdq7Ij92iEqNIGTe4xig48
+s3tFSPJSkkKav2diH6efn2o4X7XPup7jTh/6e3e9VhDyxmypDTJiwEbJ1xeEPMa0
+lZEmdGL1o2MpZKD+tdBKShgbr/MbKwN5DFvGJbIh8j9U3GVhvGVsq9tLnb82tv0H
+UK5Rks0CDdg=
+=ZVOT
+-----END PGP SIGNATURE-----
+
+--=-K6UtYpBppXR55E2ypXlW--
+
