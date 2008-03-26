@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:55181 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbYCXXaD (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:64321 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752485AbYCZSUP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2008 19:30:03 -0400
-Received: by py-out-1112.google.com with SMTP id u52so4539611pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2008 16:30:01 -0700 (PDT)
-Message-ID: <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com> (sfid-20080324_233036_492315_C0A128FB)
-Date: Mon, 24 Mar 2008 19:30:00 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Florian Manschwetus" <florianmanschwetus@gmx.de>
-Subject: Re: gentoo ebuild for compat wireless (resend)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47E839BE.5030806@gmx.de>
+	Wed, 26 Mar 2008 14:20:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47E7A8DB.5020106@gmx.de>
-	 <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
-	 <47E839BE.5030806@gmx.de>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: problem with iwl4965 and kernel 2.6.24.4
+Date: Wed, 26 Mar 2008 11:16:26 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com> (sfid-20080326_182022_939832_D08934D3)
+In-Reply-To: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
+References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "John Goulah" <jgoulah@gmail.com>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 24, 2008 at 7:31 PM, Florian Manschwetus
-<florianmanschwetus@gmx.de> wrote:
-> Luis R. Rodriguez schrieb:
->
->
-> > On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
->  > <florianmanschwetus@gmx.de> wrote:
->  >> is it possible to get a version appendix on the tar.bz?
->  >>  so it should be easy to get a working ebuild fpr this.
->  >
->  > The problem is there's two things to "version", compat-wireless itself
->  > and Linux. I keep both version already as part of the tarball.
->  >
->  > wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
->  > 2.8-49-gfe0f268
->  >
->  > wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
->  > v2.6.25-rc5-2623-g7556b76
->  >
->  > You can also just pull these from the directory that was used to
->  > create the tarball:
->  >
->  > http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
->  > http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
->  >
->  > Does this suffice?
->
->
-> Not really but it gives a version hint, could you create a symlink or so?
->  a url like that would be fine:
->  http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.8-49.tar.bz2
+On Wednesday, March 26, 2008 10:31 AM, John Goulah  wrote:
 
-The problem is that does not reflect changes to Linux so there may be
-a lot of great code added and yet this wouldn't reflect it. And if we
-go with git-describe for Linux we could get updates on compat-wireless
-itself during no code changes on Linux. I could use date (date -I),
-that might work best but will it work for you?
+> iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.2.26k
+> iwl4965: Copyright(c) 2003-2008 Intel Corporation
+> ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 18 (level, low) -> IRQ 18
+> PCI: Setting latency timer of device 0000:06:00.0 to 64
+> iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+> iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
+> phy0: Selected rate control algorithm 'iwl-4965-rs'
+> phy0: Failed to initialize wep
+> iwl4965: Failed to register network device (error -12)
+> ACPI: PCI interrupt for device 0000:06:00.0 disabled
+> iwl4965: probe of 0000:06:00.0 failed with error -12
 
-  Luis
+Everything looks good here ... apart from the initializing wep failure.
+This error causes the interface not to show up. For this to succeed you
+need to ensure that some crypto modules are loaded. If your kernel is
+configured with KMOD then modprobe should take care of this for you. If
+not, then you can try loading the following modules manually before
+loading the driver: blkcipher aes arc4 ecb cryptomgr crypto_algapi
+
+Reinette
