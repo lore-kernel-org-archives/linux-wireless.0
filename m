@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64321 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4447 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485AbYCZSUP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 14:20:15 -0400
+	id S1757384AbYC0QUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 12:20:36 -0400
+Date: Thu, 27 Mar 2008 11:58:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Balaji Rao <balajirrao@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Question on Wireless NICs
+Message-ID: <20080327155842.GA3624@tuxdriver.com> (sfid-20080327_162057_809248_C324590E)
+References: <200803260011.29045.balajirrao@gmail.com> <20080325193219.GC30587@tuxdriver.com> <1206498769.23595.6.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: problem with iwl4965 and kernel 2.6.24.4
-Date: Wed, 26 Mar 2008 11:16:26 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com> (sfid-20080326_182022_939832_D08934D3)
-In-Reply-To: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
-References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "John Goulah" <jgoulah@gmail.com>, <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1206498769.23595.6.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, March 26, 2008 10:31 AM, John Goulah  wrote:
+On Tue, Mar 25, 2008 at 10:32:48PM -0400, Pavel Roskin wrote:
+> On Tue, 2008-03-25 at 15:32 -0400, John W. Linville wrote:
+> 
+> > The gPXE (formerly etherboot) project seems to support PCI-based
+> > (e.g. cardbus, but not PCMCIA) orinoco devices.  I cannot verify that,
+> > since I have no such device (donations accepted!)...
+> 
+> Just to set the record straight, I'm unaware of any CardBus devices
+> compatible with the orinoco driver, i.e. Prism 2-3, Symbol Trilogy or
+> Hermes I based 802.11b device.
+> 
+> At the first glance, gPXE appears to support Prism chipset only, either
+> native PCI or PCMCIA behind PLX9052 bridge.
 
-> iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.2.26k
-> iwl4965: Copyright(c) 2003-2008 Intel Corporation
-> ACPI: PCI Interrupt 0000:06:00.0[A] -> GSI 18 (level, low) -> IRQ 18
-> PCI: Setting latency timer of device 0000:06:00.0 to 64
-> iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-> iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-> phy0: Selected rate control algorithm 'iwl-4965-rs'
-> phy0: Failed to initialize wep
-> iwl4965: Failed to register network device (error -12)
-> ACPI: PCI interrupt for device 0000:06:00.0 disabled
-> iwl4965: probe of 0000:06:00.0 failed with error -12
+I'm not sure where you are looking.  I have a git tree from here:
 
-Everything looks good here ... apart from the initializing wep failure.
-This error causes the interface not to show up. For this to succeed you
-need to ensure that some crypto modules are loaded. If your kernel is
-configured with KMOD then modprobe should take care of this for you. If
-not, then you can try loading the following modules manually before
-loading the driver: blkcipher aes arc4 ecb cryptomgr crypto_algapi
+	git://git.etherboot.org/scm/gpxe.git
 
-Reinette
+The gpxe source file src/drivers/net/prism2_pci.c claims to support
+PCI ID 1260:3873 which is listed as a prism 2.5 device supported by
+drivers/net/wireless/orinoco_pci.c in the linux tree.  Similarly the
+gpxe src/drivers/net/prism2_plx.c claims to support all of the PCI IDs
+listed in drivers/net/wireless/orinoco_plx.c from the linux tree as
+well as one that is not listed there (126c:8030 -- perhaps we should
+add it?).
+
+As I said, I do not have _any_ pci-based prism2-3 hardware (donations
+welcome!), so I can not verify whether or not the gpxe code (or for
+that matter the linux code) actually works -- YMMV.  I'm just going
+by what information I have.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
