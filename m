@@ -1,78 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12643 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:55296 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbYCEDnQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 22:43:16 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: [linux-wireless] [RFC PATCH]iwlwifi: Fix for monitor mode captures management frames only.
-Date: Tue, 4 Mar 2008 19:43:12 -0800
-Message-ID: <BD524EA7912ED5469DFD0BAEF6BC752F035C2DAD@orsmsx411.amr.corp.intel.com> (sfid-20080305_034341_900060_BC7745CF)
-From: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
-To: <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
+	id S1761502AbYC0VZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 17:25:06 -0400
+Subject: Re: [PATCH] libertas: convert CMD_802_11_EEPROM_ACCESS to a direct
+	command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803261003.48250.hs4233@mail.mn-solutions.de>
+References: <200803261003.48250.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 27 Mar 2008 17:23:50 -0400
+Message-Id: <1206653030.21106.8.camel@localhost.localdomain> (sfid-20080327_212521_202179_6D3B043B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If monitor mode is set then mac80211 stack now passes the information to
-driver.
+On Wed, 2008-03-26 at 10:03 +0100, Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
->From 1e21ee62c88c5defacf49a4044d26677b8a79032 Mon Sep 17 00:00:00 2001
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Date: Tue, 4 Mar 2008 17:04:56 -0800
-Subject: [PATCH] Monitor mode bug fix.
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    5 +++++
- net/mac80211/ieee80211.c                |   10 ++++++++++
- 2 files changed, 15 insertions(+), 0 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c
-b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 3e122a9..5ed75aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3822,6 +3822,11 @@ static void iwl4965_rx_reply_rx(struct
-iwl4965_priv *priv,
- 	/* Find max signal strength (dBm) among 3 antenna/receiver
-chains */
- 	rx_status.ssi = iwl4965_calc_rssi(rx_start);
- 
-+	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
-+		iwl4965_handle_data_packet(priv, 1, include_phy, rxb,
-&rx_status);
-+		return;
-+	}
-+
- 	/* Meaningful noise values are available only from beacon
-statistics,
- 	 *   which are gathered only when associated, and indicate noise
- 	 *   only for the associated network channel ...
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 484b063..85e37c8 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -327,6 +327,16 @@ static int ieee80211_open(struct net_device *dev)
- 		netif_tx_lock_bh(local->mdev);
- 		ieee80211_configure_filter(local);
- 		netif_tx_unlock_bh(local->mdev);
-+
-+		conf.vif = &sdata->vif;
-+		conf.type = sdata->vif.type;
-+		conf.mac_addr = dev->dev_addr;
-+		res = local->ops->add_interface(local_to_hw(local),
-&conf);
-+		if (res && !local->open_count && local->ops->stop)
-+			local->ops->stop(local_to_hw(local));
-+		if (res)
-+			return res;
-+
- 		break;
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
--- 
-1.5.2.5
-
+> ---
+> 
+> Side note: on http://wiki.laptop.org/go/88W8388#Gross_EEPROM_map is
+> a little shell script that uses "ethtool" to get the dump. I used
+> this script before and after the patch to check it's sanity. While
+> I was doing this, I noticed that our new "direct command" thingy
+> is way faster than it used to be:
+> 
+> Before this patch:
+> 
+> # time lbs_eeprom >a
+> 
+> real    0m11.635s
+> user    0m0.540s
+> sys     0m11.053s
+> 
+> 
+> After this patch:
+> 
+> # time lbs_eeprom >b
+> 
+> real    0m1.478s
+> user    0m0.476s
+> sys     0m0.912s
+> 
+> Thats a nice, unexpected side effect :-)
+> 
+> 
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c
+> @@ -970,27 +970,6 @@
+>  	return 0;
+>  }
+>  
+> -static int lbs_cmd_802_11_eeprom_access(struct cmd_ds_command *cmd,
+> -					void *pdata_buf)
+> -{
+> -	struct lbs_ioctl_regrdwr *ea = pdata_buf;
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	cmd->command = cpu_to_le16(CMD_802_11_EEPROM_ACCESS);
+> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_eeprom_access) +
+> -				S_DS_GEN);
+> -	cmd->result = 0;
+> -
+> -	cmd->params.rdeeprom.action = cpu_to_le16(ea->action);
+> -	cmd->params.rdeeprom.offset = cpu_to_le16(ea->offset);
+> -	cmd->params.rdeeprom.bytecount = cpu_to_le16(ea->NOB);
+> -	cmd->params.rdeeprom.value = 0;
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
+>  			       u16 cmd_action, void *pdata_buf)
+>  {
+> @@ -1421,10 +1400,6 @@
+>  		ret = lbs_cmd_80211_ad_hoc_stop(cmdptr);
+>  		break;
+>  
+> -	case CMD_802_11_EEPROM_ACCESS:
+> -		ret = lbs_cmd_802_11_eeprom_access(cmdptr, pdata_buf);
+> -		break;
+> -
+>  	case CMD_802_11_SET_AFC:
+>  	case CMD_802_11_GET_AFC:
+>  
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c
+> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+> @@ -210,31 +210,6 @@
+>  	return 0;
+>  }
+>  
+> -static int lbs_ret_802_11_eeprom_access(struct lbs_private *priv,
+> -				  struct cmd_ds_command *resp)
+> -{
+> -	struct lbs_ioctl_regrdwr *pbuf;
+> -	pbuf = (struct lbs_ioctl_regrdwr *) priv->prdeeprom;
+> -
+> -	lbs_deb_enter_args(LBS_DEB_CMD, "len %d",
+> -	       le16_to_cpu(resp->params.rdeeprom.bytecount));
+> -	if (pbuf->NOB < le16_to_cpu(resp->params.rdeeprom.bytecount)) {
+> -		pbuf->NOB = 0;
+> -		lbs_deb_cmd("EEPROM read length too big\n");
+> -		return -1;
+> -	}
+> -	pbuf->NOB = le16_to_cpu(resp->params.rdeeprom.bytecount);
+> -	if (pbuf->NOB > 0) {
+> -
+> -		memcpy(&pbuf->value, (u8 *) & resp->params.rdeeprom.value,
+> -		       le16_to_cpu(resp->params.rdeeprom.bytecount));
+> -		lbs_deb_hex(LBS_DEB_CMD, "EEPROM", (char *)&pbuf->value,
+> -			le16_to_cpu(resp->params.rdeeprom.bytecount));
+> -	}
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_ret_802_11_bcn_ctrl(struct lbs_private * priv,
+>  					struct cmd_ds_command *resp)
+>  {
+> @@ -320,10 +295,6 @@
+>  		ret = lbs_ret_80211_ad_hoc_stop(priv);
+>  		break;
+>  
+> -	case CMD_RET(CMD_802_11_EEPROM_ACCESS):
+> -		ret = lbs_ret_802_11_eeprom_access(priv, resp);
+> -		break;
+> -
+>  	case CMD_RET(CMD_802_11D_DOMAIN_INFO):
+>  		ret = lbs_ret_802_11d_domain_info(resp);
+>  		break;
+> --- wireless-testing.orig/drivers/net/wireless/libertas/ethtool.c
+> +++ wireless-testing/drivers/net/wireless/libertas/ethtool.c
+> @@ -48,61 +48,28 @@
+>                                    struct ethtool_eeprom *eeprom, u8 * bytes)
+>  {
+>  	struct lbs_private *priv = (struct lbs_private *) dev->priv;
+> -	struct lbs_ioctl_regrdwr regctrl;
+> -	char *ptr;
+> +	struct cmd_ds_802_11_eeprom_access cmd;
+>  	int ret;
+>  
+> -	regctrl.action = 0;
+> -	regctrl.offset = eeprom->offset;
+> -	regctrl.NOB = eeprom->len;
+> -
+> -	if (eeprom->offset + eeprom->len > LBS_EEPROM_LEN)
+> -		return -EINVAL;
+> -
+> -//      mutex_lock(&priv->mutex);
+> -
+> -	priv->prdeeprom = kmalloc(eeprom->len+sizeof(regctrl), GFP_KERNEL);
+> -	if (!priv->prdeeprom)
+> -		return -ENOMEM;
+> -	memcpy(priv->prdeeprom, &regctrl, sizeof(regctrl));
+> -
+> -	/* +14 is for action, offset, and NOB in
+> -	 * response */
+> -	lbs_deb_ethtool("action:%d offset: %x NOB: %02x\n",
+> -	       regctrl.action, regctrl.offset, regctrl.NOB);
+> -
+> -	ret = lbs_prepare_and_send_command(priv,
+> -				    CMD_802_11_EEPROM_ACCESS,
+> -				    regctrl.action,
+> -				    CMD_OPTION_WAITFORRSP, 0,
+> -				    &regctrl);
+> +	lbs_deb_enter(LBS_DEB_ETHTOOL);
+>  
+> -	if (ret) {
+> -		if (priv->prdeeprom)
+> -			kfree(priv->prdeeprom);
+> -		goto done;
+> +	if (eeprom->offset + eeprom->len > LBS_EEPROM_LEN ||
+> +	    eeprom->len > LBS_EEPROM_READ_LEN) {
+> +		ret = -EINVAL;
+> +		goto out;
+>  	}
+>  
+> -	mdelay(10);
+> -
+> -	ptr = (char *)priv->prdeeprom;
+> -
+> -	/* skip the command header, but include the "value" u32 variable */
+> -	ptr = ptr + sizeof(struct lbs_ioctl_regrdwr) - 4;
+> -
+> -	/*
+> -	 * Return the result back to the user
+> -	 */
+> -	memcpy(bytes, ptr, eeprom->len);
+> -
+> -	if (priv->prdeeprom)
+> -		kfree(priv->prdeeprom);
+> -//	mutex_unlock(&priv->mutex);
+> -
+> -	ret = 0;
+> +	cmd.hdr.size = cpu_to_le16(sizeof(struct cmd_ds_802_11_eeprom_access) -
+> +		LBS_EEPROM_READ_LEN + eeprom->len);
+> +	cmd.action = cpu_to_le16(CMD_ACT_GET);
+> +	cmd.offset = cpu_to_le16(eeprom->offset);
+> +	cmd.len    = cpu_to_le16(eeprom->len);
+> +	ret = lbs_cmd_with_response(priv, CMD_802_11_EEPROM_ACCESS, &cmd);
+> +	if (!ret)
+> +		memcpy(bytes, cmd.value, eeprom->len);
+>  
+> -done:
+> -	lbs_deb_enter_args(LBS_DEB_ETHTOOL, "ret %d", ret);
+> +out:
+> +	lbs_deb_leave_args(LBS_DEB_ETHTOOL, "ret %d", ret);
+>          return ret;
+>  }
+>  
+> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h
+> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+> @@ -592,12 +592,13 @@
+>  } __attribute__ ((packed));
+>  
+>  struct cmd_ds_802_11_eeprom_access {
+> +	struct cmd_header hdr;
+>  	__le16 action;
+> -
+> -	/* multiple 4 */
+>  	__le16 offset;
+> -	__le16 bytecount;
+> -	u8 value;
+> +	__le16 len;
+> +	/* firmware says it returns a maximum of 20 bytes */
+> +#define LBS_EEPROM_READ_LEN 20
+> +	u8 value[LBS_EEPROM_READ_LEN];
+>  } __attribute__ ((packed));
+>  
+>  struct cmd_ds_802_11_tpc_cfg {
+> @@ -722,7 +723,6 @@
+>  		struct cmd_ds_mac_reg_access macreg;
+>  		struct cmd_ds_bbp_reg_access bbpreg;
+>  		struct cmd_ds_rf_reg_access rfreg;
+> -		struct cmd_ds_802_11_eeprom_access rdeeprom;
+>  
+>  		struct cmd_ds_802_11d_domain_info domaininfo;
+>  		struct cmd_ds_802_11d_domain_info domaininforesp;
+> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.h
+> +++ wireless-testing/drivers/net/wireless/libertas/wext.h
+> @@ -4,17 +4,6 @@
+>  #ifndef	_LBS_WEXT_H_
+>  #define	_LBS_WEXT_H_
+>  
+> -/** lbs_ioctl_regrdwr */
+> -struct lbs_ioctl_regrdwr {
+> -	/** Which register to access */
+> -	u16 whichreg;
+> -	/** Read or Write */
+> -	u16 action;
+> -	u32 offset;
+> -	u16 NOB;
+> -	u32 value;
+> -};
+> -
+>  extern struct iw_handler_def lbs_handler_def;
+>  extern struct iw_handler_def mesh_handler_def;
+>  
+> --- wireless-testing.orig/drivers/net/wireless/libertas/dev.h
+> +++ wireless-testing/drivers/net/wireless/libertas/dev.h
+> @@ -310,7 +310,6 @@
+>  	u32 enable11d;
+>  
+>  	/**	MISCELLANEOUS */
+> -	u8 *prdeeprom;
+>  	struct lbs_offset_value offsetvalue;
+>  
+>  	u32 monitormode;
 
