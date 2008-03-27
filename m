@@ -1,86 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758550AbYCEJ7G (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7643 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754598AbYC0CIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:59:06 -0500
-Subject: [PATCH (RFT 2)] mac80211: fix hardware scan completion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Bill Moss <bmoss@CLEMSON.EDU>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 05 Mar 2008 10:58:40 +0100
-Message-Id: <1204711120.25502.56.camel@johannes.berg> (sfid-20080305_095910_425904_B53AD689)
-Mime-Version: 1.0
+	Wed, 26 Mar 2008 22:08:06 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
+Date: Thu, 27 Mar 2008 11:07:54 +0900
+Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	flamingice@sourmilk.net, jbenc@suse.cz,
+	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
+	"Jean Tourrilhes" <jt@hpl.hp.com>,
+	"Haris Kremo" <harisk@winlab.rutgers.edu>
+References: <20080326123042.11233.80949.stgit@localhost> <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com>
+In-Reply-To: <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200803271107.54208.bruno@thinktube.com> (sfid-20080327_020813_454870_ACED71DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211 MLME requires restarting timers after a scan
-completes but this wasn't done when hardware scan offload
-was added, so add it now.
+On Thursday 27 March 2008 07:59:11 Luis R. Rodriguez wrote:
+> >  + * @IEEE80211_HW_SIGNAL_UNSPEC:
+> >  + *     Hardware can provide signal values but we don't know its units.
+> > To be + *     able to standardize between different devices we would like
+> > linear + *     values from 0-100. If possible please provide dB or dBm
+> > instead. + *
+> >  + * @IEEE80211_HW_SIGNAL_DB:
+> >  + *     Hardware gives signal values in dB, decibel difference from an
+> >  + *     arbitrary, fixed reference. If possible please provide dBm
+> > instead. + *
+>
+> Signal should given in either be in dBm or an unspecified value. Since
+> we have "unspecified" not sure why we would have the "db" value. Can
+> you clarify what the difference between "unspecified" and "db" would
+> be? I don't think it makes sense to refer to signal with a "db" value,
+> unless we want "singal" here to be able to mean SNR.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bill Moss <bmoss@clemson.edu>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
----
-This is version of the patch with correct locking. Bill, please test
-this. John, please merge if Bill says it's ok.
+the best thing to specify is dBm and all drivers should try to do that. it's 
+the only absolute value which makes sense and can be compared between 
+different drivers and devices.
 
-Sorry, forgot to CC the mailing list.
+however as we know some drivers simply cannot provide that. instead they have 
+some form of RSSI - RSSI in general meaning nothing more than "received 
+signal strength indication", which could be *anything*: voltage, any numbers, 
+in dB or linear or whatever. RSSI does *not* in general mean SNR! for example 
+you might remember the values of prism54, they were somewhere around 200. or 
+prism2 cards which had something around 100 (it's been a while since i've 
+touched them, so that might have changed). as jean noted the values don't 
+even have to be linear - so i think we should remove that from the 
+definition.
 
- net/mac80211/ieee80211_sta.c |   25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+so in the "unspecified" case we really don't know much about the units, in the 
+worst case we can't even assume that 1/2 the value will mean 1/2 of the 
+received signal strength. it's very hard to work with this values, but it's 
+better than nothing.
 
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-01 19:28:56.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-03-05 10:56:31.000000000 +0100
-@@ -3576,6 +3576,13 @@ static void ieee80211_send_nullfunc(stru
- }
- 
+other cards might not have noise, so no absolute (dBm) measurement, but a form 
+of RSSI which is measured in dB (that is a logarithmic difference). in this 
+case we might not know which reference point the measurement is taken to, but 
+we know how it behaves: -3 dB means half of the signal strength. if you add a 
+6dB gain antenna you can expect to see the signal reading to increase by 6dB. 
+it's not strictly SNR (because we don't know the noise) but quite close to 
+it.
 
-+static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
-+	    ieee80211_vif_is_mesh(&sdata->vif))
-+		ieee80211_sta_timer((unsigned long)sdata);
-+}
-+
- void ieee80211_scan_completed(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-@@ -3589,6 +3596,12 @@ void ieee80211_scan_completed(struct iee
- 
- 	if (local->sta_hw_scanning) {
- 		local->sta_hw_scanning = 0;
-+		/* Restart STA timer for HW scan case */
-+		rcu_read_lock();
-+		list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+			ieee80211_restart_sta_timer(sdata);
-+		rcu_read_unlock();
-+
- 		goto done;
- 	}
- 
-@@ -3615,14 +3628,12 @@ void ieee80211_scan_completed(struct iee
- 		if (sdata->dev == local->mdev)
- 			continue;
- 
--		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
--			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
--				ieee80211_send_nullfunc(local, sdata, 0);
--			ieee80211_sta_timer((unsigned long)sdata);
--		}
-+		/* Tell AP we're back */
-+		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
-+		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
-+			ieee80211_send_nullfunc(local, sdata, 0);
- 
--		if (sdata->vif.type == IEEE80211_IF_TYPE_MESH_POINT)
--			ieee80211_sta_timer((unsigned long)sdata);
-+		ieee80211_restart_sta_timer(sdata);
- 
- 		netif_wake_queue(sdata->dev);
- 	}
+i think it's important to know the difference between this 3 cases i order to 
+make some sense of the values in userspace gui, roaming agents, mesh link 
+metrics, etc...
 
-
+bruno
