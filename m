@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:6685 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070AbYCQOpQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 10:45:16 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so615223ugc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 07:45:15 -0700 (PDT)
-Message-ID: <1ba2fa240803170745x4d70cc0esd4b49ebf85d68267@mail.gmail.com> (sfid-20080317_144525_242138_4107A5DC)
-Date: Mon, 17 Mar 2008 16:45:11 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
-Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205759599.1614.69.camel@johannes.berg>
+Received: from mail.gmx.net ([213.165.64.20]:43399 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755893AbYC0TRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 15:17:54 -0400
+From: Helge Deller <deller@gmx.de>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: ath5k aborts wireless connections
+Date: Thu, 27 Mar 2008 20:17:49 +0100
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com
+References: <200803221129.59090.deller@gmx.de> <200803252111.05726.deller@gmx.de> <20080327115125.GA10265@hash.localnet>
+In-Reply-To: <20080327115125.GA10265@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
-	 <1205608293.15910.53.camel@johannes.berg>
-	 <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com>
-	 <1205753998.1614.34.camel@johannes.berg>
-	 <1ba2fa240803170603g58cd5378n4e8e58b62c41c37c@mail.gmail.com>
-	 <1205759599.1614.69.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803272017.50126.deller@gmx.de> (sfid-20080327_191758_316136_B0FD4B0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBNYXIgMTcsIDIwMDggYXQgMzoxMyBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgPiA+ICBHb29kIHBvaW50LiBCdXQgbGV0J3Mg
-bm90IG92ZXJsb2FkIHNldF9rZXkoKSBmb3IgaXQgdGhpcyB3YXkuIFRoaXMgd2F5LAo+ICA+ID4g
-IHRoZSBkcml2ZXIgbmVlZHMgdG8gbG9vayB1cCB0aGUga2V5IGV0Yy4gYW5kIHRoZSBzZW1hbnRp
-Y3MgZ2V0IHF1aXRlCj4gID4gPiAgbWFuZ2xlZCB1cC4gQWxzbywgeW91ciBhcHByb2FjaCBkb2Vz
-bid0IHdvcmsgZm9yIEJyb2FkY29tIGhhcmR3YXJlIHRoYXQKPiAgPiA+ICBvbmx5IG5lZWRzIHBo
-YXNlIDEga2V5cyBmb3IgYm90aCBSWCBhbmQgVFguCj4gID4KPiAgPiBDYW4geW91IGVsYWJvcmF0
-ZSB3aHkgaXQgZG9lc24ndCBjb3ZlciBiY29tIGNhc2U/Cj4KPiAgSSBkb24ndCBxdWl0ZSB1bmRl
-cnN0YW5kIHRoZSBwaGFzZSAxIGtleSBkZXJpdmF0aW9uIGFuZCB3aHkgaXQgaXMgZG9uZQo+ICBm
-b3IgZWFjaCBETUEgcXVldWUsClRoaXMgaXMgb25seSBpbiBSWCBzaWRlLiBFYWNoIEFDIChhY2Nl
-c3MgY2F0ZWdvcnkpIHF1ZXVlIHRyYW5zbWl0IGluCml0J3Mgb3duIHJhdGUuIEZvciBleGFtcGxl
-IFZPIHRyYXNtaXR0cyBtb3JlIHBhY2tldHMgdGhlbiBCRS4gU28geW91Cm1pZ2h0IGdldCBpbnRv
-IGNhc2UgaW4gcmVjZWl2ZSBzaXRlIHRoYXQgVk8gcGFja2V0cyBhcmUgYWxyZWFkeSBvbgp3cmFw
-YXJvdW5kIHNpZGUgd2hpbGUgQkUgYXJlIHN0aWxsIHVzaW5nICdvbGQnIHBoYXNlMS4KQmVzdCBy
-ZW1lZHkgaXMgdG8ga2VlcCBwaGFzZTEgcGVyIGVhY2ggQUMuCgpidXQgSSB0aGluayB0aGlzIGlz
-IG5vdCB0b28gaW1wb3J0YW50IGFzCj4gIG5vbi1tYXRjaGluZyB3aWxsIGp1c3QgYmUgZG9uZSBp
-biBzb2Z0d2FyZS4KCkNvcnJlY3QsIHRoaXMgc2hvdWxkIGhhcHBlbiBvbmx5IGZvciBzaG9ydCBw
-ZXJpb2Qgb2YgdGltZSB0aGF0IHBoMQpkb2Vzbid0IG1hdGNoIGZvciBlYWNoIEFDIHF1ZXVlLgoK
-IEhvd2V2ZXIsIGJjb20gZmlybXdhcmUgd2FudHMKPiAgdG8gaGF2ZSBqdXN0IHRoZSBwaGFzZSAx
-IGtleSwgYW5kIGFzIGZhciBhcyBJIGNhbiB0ZWxsIHRoZSBkcml2ZXIgY2FuJ3QsCj4gIGV2ZW4g
-d2l0aCB5b3VyIHBhdGNoZXMsIG9idGFpbiBhIHBoYXNlIDEga2V5IGZvciBUWC4KCk5vdCBzdXJl
-IHRoZXNlIGNhc2VzIGFyZSBzeW1tZXRyaWMuIFlvdSBoYXZlIHRvIGhhdmUgcGhhc2UxIHJlYWR5
-IGluCkhXIGJlZm9yZSB5b3UgdHJhbnNtaXQgdGhlIHBhY2tldApQaGFzZTEgbmVlZCB0byBiZSBh
-ZGhlcmVkIHRvIGEgcGFja2V0IHRoYXQgY2F1c2VzIHdyYXBhcm91bmQgdW5saWtlIFJYCnRoYXQg
-eW91IGNhbiBmYWxsIGJhY2sgdG8gU1cgZGVjcnlwdGlvbgpJbiBUWCB0aGVyZSBpcyBubyB3YXkg
-YmFjay4KCj4KPiAgPiA+ICBIb3cgYWJvdXQgaW5zdGVhZCB3ZSBhZGQgYSBuZXcgInVwZGF0ZV90
-a2lwX2tleSgpIiBjYWxsYmFjayB0aGF0IHRha2VzCj4gID4gPiAgZXhhY3RseSB0aGUgcmVxdWly
-ZWQgcGFyYW1ldGVycz8gSXQgc2hvdWxkIGFsc28gZ2l2ZSB0aGUKPiAgPiA+ICBoYXJkd2FyZS1r
-ZXktaW5kZXggc28gdGhhdCB0aGUgZHJpdmVyIGhhcyBsZXNzIHdvcmsgdG8gZG8uCj4gID4KPiAg
-PiBJdCdzIHZpYWJsZSBidXQgSSBhY3R1YWxseSBwcmVmZXIgbm90IG9wZW5pbmcgdG9vIG1hbnkg
-aW50ZXJmYWNlcy4KPiAgPiBQbGVhc2UgZ2l2ZSBtZSBzb21lIG1vcmUgZGV0YWlsZWQgc2tldGNo
-IGhvdyBkbyB5b3Ugc2VlIHRoYXQgYW5kIHdlCj4gID4gc3VyZSBnZXQgdG8gc29tZSBhY2NlcHRh
-YmxlIHNvbHV0aW9uLgo+Cj4gIFllcywgSSB3b3VsZCBwcmVmZXIgbm90IGhhdmluZyB0aGF0IG1h
-bnkgaW50ZXJmYWNlcyBhcyB3ZWxsLCBidXQgSSBkb24ndAo+ICB0aGluayBzaG9laG9ybmluZyBp
-dCBpbnRvIHRoZSBzZXRfa2V5KCkgY2FsbGJhY2sgaXMgYSBnb29kIGlkZWEgYmVjYXVzZQo+ICAg
-KGEpIHlvdSBhZGQgZmllbGRzIHRvIHRoZSBrZXkgY29uZiBzdHJ1Y3R1cmUgdGhhdCBhcmUgb25s
-eSB1c2VkIGZvcgo+ICAgICAgdGhlIHRraXAgc3R1ZmYgYW5kIG9ubHkgdmFsaWQgaW4gc29tZSBj
-YWxscwo+ICAgKGIpIHRoZSBwYXRjaCBicmVha3MgdGhlIHNldF9rZXkoKSBpbnRlcmZhY2UncyBz
-eW1tZXRyeQo+Cj4gIEEgbmV3IGNhbGxiYWNrIHVwZGF0ZV90a2lwX2tleSBjb3VsZCBsb29rIGxp
-a2UgdGhpczoKPgo+ICB2b2lkIHVwZGF0ZV90a2lwX3BoYXNlMWtleShodywga2V5Y29uZiwgaXYz
-MiwgcDFrZXkpCgpXaGF0IGFib3V0CmVudW0gdGtpcF91cGRhdGVfZmxhZ3MgewogICBUS0lQX1BI
-MV9UWF9LRVkKICAgVEtJUF9QSDFfUlhfS0VZCiAgIFRLSVBfUEgyX1RYX0tFWQogICBUS0lQX1BI
-Ml9SWF9LRVkgLS0gYWN0dWFsbHkgbm8gbmVlZCBmb3IgYW55IGRyaXZlci4KfQogIHVwZGF0ZV90
-a2lwX2tleShodywga2V5Y29uZiAsIGl2MzIsICBmbGFnLCBrZXkpCgpCdXQgSSdtIG5vdCBzdXJl
-IGFib3V0IHRoaXMuLi4gc2VlIGFib3ZlL2JlbG92ZQoKPiAgVGhlIO+7v0lFRUU4MDIxMV9LRVlf
-RkxBR19US0lQX1BIQVNFMV9WQUxJRCBmbGFnIHdvdWxkIGdvIGF3YXksIGFuZCB0aGUKPiAgbmV3
-IGNhbGxiYWNrIHdvdWxkIGJlIGludm9rZWQgcmlnaHQgZnJvbSB3aGVyZSB0aGUgcGhhc2UxIGtl
-eSBpcwo+ICBjYWxjdWxhdGVkLgoKU3VyZSBhZ2FpbiBJJ20gbm90IHN1cmUgdGhpcyBpcyBzeW1t
-ZXRyaWMgLSBGb3IgVFggaXQgd291bGQgYmUgc2FmZXIKdG8gZG8gcHVsbCBtb2RlIG90aGVyd2lz
-ZSBpdCBjYW4gZ2V0IG91dCBvZiBzeW5jLgoKPiAgSSdtIG5vdCBleGFjdGx5IHN1cmUgd2hldGhl
-ciBvbmUgbmVlZHMgYSBwaGFzZTEga2V5IGZvciBSWCBhbmQgb25lIGZvcgo+ICBUWCByaWdodCBu
-b3csIGJ1dCBpZiBzbyBhIGRpcmVjdGlvbiBmbGFnIHNob3VsZCBiZSBhZGRlZD8KClBoYXNlMSBm
-b3IgVFggYW5kIFJYIGFyZSBub3QgdGhlIHNhbWUsIGFnYWluIGJlY2F1c2Ugb2YgdGhlIHNpbXBs
-ZQpyZWFzb25lIHRoYXQgbnVtYmVyIG9mIHRyYW5zbWl0dGVkIGFuZCByZWNlaXZlZCBwYWNrZXQg
-aXMgbm90IHRoZQpzYW1lLgoKPiAgam9oYW5uZXMKPgo=
+On Thursday 27 March 2008, Bob Copeland wrote:
+> On Tue, Mar 25, 2008 at 09:11:05PM +0100, Helge Deller wrote:
+> > On Tuesday 25 March 2008, Bob Copeland wrote:
+> > > On Tue, Mar 25, 2008 at 2:16 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > > Hello ppl, sory for the delay ;-)
+> > > >
+> > > >  Are you using encryption ? I haven't got such errors on my tests (it
+> > > >  might be that my setup is really simple) so far...
+> > > 
+> > > I can't speak for Helge, but in my case yes - WPA-TKIP.
+> > 
+> > Same here. WPA-PSK & TKIP.
+> 
+> So, I turned off encryption here and did not get any "invalid Michael
+> MIC" messages while doing a large apt-get upgrade overnight.  I do get 
+> random pauses but nothing else in my dmesg.
+> 
+> Helge, can you confirm disabling encryption makes the reset go away?
+
+Yes, I can confirm this.
+
+Without encryption everything worked pretty OK.
+
+I only faced one very small hickup, but ath5k reconnected immediately again, so I don't think this is a real problem:
+
+wlan1: authenticated
+wlan1: associate with AP 00:50:18:3b:2b:04
+wlan1: RX AssocResp from 00:50:18:3b:2b:04 (capab=0x461 status=0 aid=1)
+wlan1: associated
+wlan1: No ProbeResp from current AP 00:50:18:3b:2b:04 - assume out of range
+wlan1: Initial auth_alg=0
+wlan1: authenticate with AP 00:50:18:3b:2b:04
+wlan1: RX authentication from 00:50:18:3b:2b:04 (alg=0 transaction=2 status=0)
+wlan1: authenticated
+
+Helge
