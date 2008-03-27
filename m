@@ -1,48 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:51059 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbYCKQr0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2008 12:47:26 -0400
-Received: by el-out-1112.google.com with SMTP id v27so1494989ele.17
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2008 09:47:25 -0700 (PDT)
-Subject: Re: [PATCH 1/5] mac80211: use kernel-provided bit
-	rotation/byteordering
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1205251904.6387.50.camel@johannes.berg>
-References: <1204968174.23455.36.camel@brick>
-	 (sfid-20080308_092337_530827_4C02EB9D)  <1205251904.6387.50.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:55289 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756047AbYC0VY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 17:24:58 -0400
+Subject: Re: [PATCH] libertas: convert CMD_802_11_MAC_ADDRESS to a direct
+	command
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200803260958.32270.hs4233@mail.mn-solutions.de>
+References: <200803260958.32270.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Tue, 11 Mar 2008 09:17:16 -0700
-Message-Id: <1205252236.22317.0.camel@brick> (sfid-20080311_164731_443630_AC9D261B)
+Date: Thu, 27 Mar 2008 17:23:38 -0400
+Message-Id: <1206653018.21106.6.camel@localhost.localdomain> (sfid-20080327_212504_872533_4CA628FE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-03-11 at 17:11 +0100, Johannes Berg wrote:
-> >  include/linux/bitops.h |   40 ++++++++++++++++++++++++++++++++++++++++
+On Wed, 2008-03-26 at 09:58 +0100, Holger Schurig wrote:
+> * directly call lbs_cmd_with_response()
+> * only overwrite priv->current_addr once the firmware call succeeded
 > 
-> > +++ b/include/linux/bitops.h
-> > @@ -65,6 +65,46 @@ static inline __u32 ror32(__u32 word, unsigned int shift)
-> >  	return (word >> shift) | (word << (32 - shift));
-> >  }
-> >  
-> > +/**
-> > + * rol16 - rotate a 16-bit value left
-> > + * @word: value to rotate
-> > + * @shift: bits to roll
-> > + */
-> > +static inline __u16 rol16(__u16 word, unsigned int shift)
-> 
-> I don't think we can take that via wireless, and I think architectures
-> should be able to override this if they can optimise it (though the
-> compiler might be good enough...)
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-OK, I'll get the common parts through Andrew and once that's in I'll
-resubmit the wireless parts.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Harvey
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c
+> @@ -970,29 +970,6 @@
+>  	return 0;
+>  }
+>  
+> -static int lbs_cmd_802_11_mac_address(struct lbs_private *priv,
+> -				       struct cmd_ds_command *cmd,
+> -				       u16 cmd_action)
+> -{
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -	cmd->command = cpu_to_le16(CMD_802_11_MAC_ADDRESS);
+> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_mac_address) +
+> -			     S_DS_GEN);
+> -	cmd->result = 0;
+> -
+> -	cmd->params.macadd.action = cpu_to_le16(cmd_action);
+> -
+> -	if (cmd_action == CMD_ACT_SET) {
+> -		memcpy(cmd->params.macadd.macadd,
+> -		       priv->current_addr, ETH_ALEN);
+> -		lbs_deb_hex(LBS_DEB_CMD, "SET_CMD: MAC addr", priv->current_addr, 6);
+> -	}
+> -
+> -	lbs_deb_leave(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_cmd_802_11_eeprom_access(struct cmd_ds_command *cmd,
+>  					void *pdata_buf)
+>  {
+> @@ -1448,10 +1425,6 @@
+>  		ret = lbs_cmd_80211_ad_hoc_stop(cmdptr);
+>  		break;
+>  
+> -	case CMD_802_11_MAC_ADDRESS:
+> -		ret = lbs_cmd_802_11_mac_address(priv, cmdptr, cmd_action);
+> -		break;
+> -
+>  	case CMD_802_11_EEPROM_ACCESS:
+>  		ret = lbs_cmd_802_11_eeprom_access(cmdptr, pdata_buf);
+>  		break;
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c
+> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c
+> @@ -179,19 +179,6 @@
+>  	return 0;
+>  }
+>  
+> -static int lbs_ret_802_11_mac_address(struct lbs_private *priv,
+> -				       struct cmd_ds_command *resp)
+> -{
+> -	struct cmd_ds_802_11_mac_address *macadd = &resp->params.macadd;
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	memcpy(priv->current_addr, macadd->macadd, ETH_ALEN);
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -	return 0;
+> -}
+> -
+>  static int lbs_ret_802_11_rf_tx_power(struct lbs_private *priv,
+>  				       struct cmd_ds_command *resp)
+>  {
+> @@ -325,10 +312,6 @@
+>  		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
+>  		break;
+>  
+> -	case CMD_RET(CMD_802_11_MAC_ADDRESS):
+> -		ret = lbs_ret_802_11_mac_address(priv, resp);
+> -		break;
+> -
+>  	case CMD_RET(CMD_802_11_AD_HOC_STOP):
+>  		ret = lbs_ret_80211_ad_hoc_stop(priv);
+>  		break;
+> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h
+> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h
+> @@ -429,6 +429,8 @@
+>  };
+>  
+>  struct cmd_ds_802_11_mac_address {
+> +	struct cmd_header hdr;
+> +
+>  	__le16 action;
+>  	u8 macadd[ETH_ALEN];
+>  };
+> @@ -716,7 +718,6 @@
+>  		struct cmd_ds_mac_multicast_adr madr;
+>  		struct cmd_ds_802_11_ad_hoc_join adj;
+>  		struct cmd_ds_802_11_disassociate dassociate;
+> -		struct cmd_ds_802_11_mac_address macadd;
+>  		struct cmd_ds_mac_reg_access macreg;
+>  		struct cmd_ds_bbp_reg_access bbpreg;
+>  		struct cmd_ds_rf_reg_access rfreg;
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c
+> @@ -530,34 +530,27 @@
+>  	int ret = 0;
+>  	struct lbs_private *priv = (struct lbs_private *) dev->priv;
+>  	struct sockaddr *phwaddr = addr;
+> +	struct cmd_ds_802_11_mac_address cmd;
+>  
+>  	lbs_deb_enter(LBS_DEB_NET);
+>  
+>  	/* In case it was called from the mesh device */
+> -	dev = priv->dev ;
+> -
+> -	memset(priv->current_addr, 0, ETH_ALEN);
+> -
+> -	/* dev->dev_addr is 8 bytes */
+> -	lbs_deb_hex(LBS_DEB_NET, "dev->dev_addr", dev->dev_addr, ETH_ALEN);
+> -
+> -	lbs_deb_hex(LBS_DEB_NET, "addr", phwaddr->sa_data, ETH_ALEN);
+> -	memcpy(priv->current_addr, phwaddr->sa_data, ETH_ALEN);
+> +	dev = priv->dev;
+>  
+> -	ret = lbs_prepare_and_send_command(priv, CMD_802_11_MAC_ADDRESS,
+> -				    CMD_ACT_SET,
+> -				    CMD_OPTION_WAITFORRSP, 0, NULL);
+> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+> +	cmd.action = cpu_to_le16(CMD_ACT_SET);
+> +	memcpy(cmd.macadd, phwaddr->sa_data, ETH_ALEN);
+>  
+> +	ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS, &cmd);
+>  	if (ret) {
+>  		lbs_deb_net("set MAC address failed\n");
+> -		ret = -1;
+>  		goto done;
+>  	}
+>  
+> -	lbs_deb_hex(LBS_DEB_NET, "priv->macaddr", priv->current_addr, ETH_ALEN);
+> -	memcpy(dev->dev_addr, priv->current_addr, ETH_ALEN);
+> +	memcpy(priv->current_addr, phwaddr->sa_data, ETH_ALEN);
+> +	memcpy(dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
+>  	if (priv->mesh_dev)
+> -		memcpy(priv->mesh_dev->dev_addr, priv->current_addr, ETH_ALEN);
+> +		memcpy(priv->mesh_dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
+>  
+>  done:
+>  	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
 
