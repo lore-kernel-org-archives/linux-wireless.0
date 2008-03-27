@@ -1,131 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:43235 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757088AbYC0CsH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43742 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbYC0NHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 22:48:07 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: jt@hpl.hp.com
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Date: Thu, 27 Mar 2008 11:47:56 +0900
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>,
-	Haris Kremo <harisk@winlab.rutgers.edu>
-References: <20080326123042.11233.80949.stgit@localhost> <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com> <20080327001909.GA17555@bougret.hpl.hp.com>
-In-Reply-To: <20080327001909.GA17555@bougret.hpl.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803271147.56272.bruno@thinktube.com> (sfid-20080327_024830_793176_7079F825)
+	Thu, 27 Mar 2008 09:07:03 -0400
+Subject: Re: [PATCH 1/1] mac80211: A-MPDU MLME use dynamic allocation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1206556563-17390-1-git-send-email-tomas.winkler@intel.com>
+References: <1206556563-17390-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-viAJYTnHYXhNUfXUXUwU"
+Date: Thu, 27 Mar 2008 14:06:58 +0100
+Message-Id: <1206623218.22530.42.camel@johannes.berg> (sfid-20080327_130723_019189_91F8341D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi jean!
 
-i really appreciate your input based on your experiences with the wireless 
-extensions!
+--=-viAJYTnHYXhNUfXUXUwU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Thursday 27 March 2008 09:19:09 Jean Tourrilhes wrote:
-> 	Now, we would like all hardware to report RSSI in dBm, and get
-> done with it. 
 
-i definetly agree with that. dBm is what we want!
+> This patch alters the A-MPDU MLME in sta_info to use dynamic allocation,
+> thus drastically improving memory usage - from a constant ~2 Kbyte in
+> the previous (static) allocation to a lower limit of ~200 Byte and an upp=
+er
+> limit of ~2 Kbyte.
 
-> However, some hardware (Atheros) can not do it, because 
-> their RSSI hardware is uncalibrated. So, what do you do with those
-> hardware ? Reporting a "relative" signal strength is probably better
-> than nothing.
+Cool. This will definitely clash with the locking rework and struct
+reordering I did, but I can redo those after comments and after this
+patch.
 
-can you explain why you think atheros HW is "relative"? 
+>  	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
+> -	state =3D sta->ampdu_mlme.tid_tx[tid].state;
+> +	state =3D sta->ampdu_mlme.tid_state_tx[tid];
+>  	spin_unlock_bh(&sta->ampdu_mlme.ampdu_tx);
 
-in the past in madwifi RSSI was said to be measured against a fixed noise 
-value of -95dBm (which should be expressed by using _SIGNAL_DB in my patch) 
-but now we have a periodic noise floor calibration and we assume RSSI to be 
-relative to that, so we believe to be able to provide dBm for both values. 
-that's how it is currently reported in madwifi and ath5k and what we believe  
-to be correct (without having much documentation from atheros, however) - if 
-that's not correct we have to modify the drivers.
+In fact, I forgot those locks anyway so the patch I posted won't work.
 
-> 	Note also that many hardware are not truly calibrated, but
-> "sort of" calibrated (Orinoco, HostAP). Good measurement is expensive,
-> that's why most implementation do measurement on the cheap. It means
-> the value will be correct within some few percents for a large part
-> range. Up to now, we pretented that those devices report dBm
-> properly. That's why RCPTI talk of expected accuracy of measurement.
+johannes
 
-hmm, accuracy is another question. i think at the moment as long as the device 
-tries to report dBm i would say it's dBm no matter what the accuracy is. in 
-the future, when we know more about the devices we can add some hw flags or 
-variables which can state that accuracy of the signal/noise measurements.
+--=-viAJYTnHYXhNUfXUXUwU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> 	Clearly, you have to think hard and define is the reference is
-> fixed (as stated above) or variable (Atheros). The fixed reference
-> could be more useful to apps, but I don't know how many HW would fit
-> that definition. The variable reference would accomodate the Atheros
-> nicely.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-again, please tell us more about atheros. we believe RSSI to be relative to 
-the noise floor, which we can measure. therefore we have dBm for both.
+iQIVAwUAR+ub8aVg1VMiehFYAQIKUg/9FdmBnxj3hCqpro2x5yt4iNvJtOFmnnuE
+gGWSfJX8DOda91wmN+mVMJ6QIR9vsC6V0Qbwu6ujo80dWXz+wK038JSQQZhfZ9y2
+rGr9tt93wuG5J0Gi89JCa9Ld000s6xfYX7/zU/SILNhoEMnQVgYO/5KGD/UoXeKh
+9l8MDYGBAS8aaM8y5FILdN2Y0fZZ8WzJWOuEcfwNIC15CcuEGEne/1eSFFR0HOjw
+bA+hL1xjzDcGUJKVUex+06rsapsp0fM3P9aljlcqt+Zs9aVPt17+Bx177pbAobTZ
+q/oP6iMUG1RCa+4ARpJ507pzz0yvYoLAWfG0qc26kWkBsmVdp4deBGjX2oPzQZC2
+TDelQeLTJsyRR6zlEBpA3ZiBANLrNYcGJgPGfFJTa6jzsBXbXDVjavp+wWICNVr8
+wrUC0eXKc524LRwlXcVnqP6Du8ZiMF1fvgN9+jnt6oGIHGwt5wONepo8aOWyXXJh
+JsgHEp8oNRMTCULx79Oic/ADuzSQQqGFqh5ZN75ccfBjoY3rb29lx4zjvb6GcZ/e
+bFiKkPte1Hvok2hE12m8l8wsH5AorTZn+ycmx7T0K44JRPJ8Ld0isCjQGdgexDLU
+jMTcQt8zy63PCQ9MaEiW/qFJhB3IwJGspfoLFDdA1OmzSc0VpAW8kDrraAPQVBPD
+OKRzYmX6sqw=
+=HU2T
+-----END PGP SIGNATURE-----
 
-> 	And of course, the main question to ask is, is this extra
-> functionality worth the additional complexity of the API, and the
-> potential confusion to users. I don't know, but for WE the answer was
-> no.
+--=-viAJYTnHYXhNUfXUXUwU--
 
-sorry jean, no offense, but the usage of these values in WE was really 
-confusing and the lack of knowing what the values acutally mean made it 
-really hard for applications to work with them. i think it is worth the 
-effort to make that clearer and explicity state the HW capabilities instead 
-of using implicit mechanisms so applications can know more exactly what to 
-expect. applications which would have benefits from that would include 
-NetworkManager, roaming agents, link metric calculations for mesh 
-networks,...
-
-> 	Note also that you may need an agregate measure of how good
-> the link is, but that would be best generated by the stack itself. I
-> guess for most devices, the bitrate in use will tell you that kind of
-> information.
-
-once we have the signal units properly specified by the HW we can and should 
-do things like this in mac80211 - i think we should move the "qual" link 
-quality calculation up into mac80211 so it will be the same for all devices.
-
-> > >  + *
-> > >  + * @IEEE80211_HW_SIGNAL_UNSPEC:
-> > >  + *     Hardware can provide signal values but we don't know its
-> > > units. To be + *     able to standardize between different devices we
-> > > would like linear + *     values from 0-100. If possible please provide
-> > > dB or dBm instead.
->
-> 	Note that for some hardware, you can not get liner values (see
-> above). 
-
-ok, good point! i think we should remove that from the definition then.
-
-> Anyway, what does linear means, is it linear on a log/dBm 
-> scale or on a power/mW scale ?
-
-linear would mean linar on whatever units the device uses (might be a power/mW 
-scale). log/dBM i would call "logarithmic". but anyhow, as you said not all 
-devices can do linear, so i would tend to remove that from the definition and 
-just say "totally unspecified".
-
-if the need arises we could invent 2 different flags like 
-IEEE80211_HW_SIGNAL_UNSPEC_LOG and IEEE80211_HW_SIGNAL_UNSPEC_LINEAR but i 
-think that would be overkill right now.
-
-> > >  + * @IEEE80211_HW_NOISE_DBM:
-> > >  + *     Hardware can provide noise floor values in units dBm, decibel
-> > > difference + *     from one milliwatt.
->
-> 	Noise only defined in dBm ? Some older devices have noise in
-> "unspec". I also don't know what Atheros does here.
-
-so far as far as i can see drivers either know the noise in dBm or don't know 
-it at all. if there is HW which has "unspec" we can add that.
-
-bruno
