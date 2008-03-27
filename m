@@ -1,92 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59920 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935429AbYCDX1p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 18:27:45 -0500
-Message-Id: <200803042326.m24NQBYe003300@imap1.linux-foundation.org> (sfid-20080304_232754_376046_2F8BF1DA)
-Subject: [patch 06/10] prism54: convert wpa_sem in a mutex
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	matthias@kaehlcke.net, flamingice@sourmilk.net,
-	mcgrof@winlab.rutgers.edu
-From: akpm@linux-foundation.org
-Date: Tue, 04 Mar 2008 15:26:11 -0800
+Received: from mx1.redhat.com ([66.187.233.31]:33736 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755337AbYC0Ocz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 10:32:55 -0400
+Subject: Re: [PATCH] libertas: fix spinlock recursion bug
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200803271257.26820.hs4233@mail.mn-solutions.de>
+References: <200803191524.21866.hs4233@mail.mn-solutions.de>
+	 <200803271108.23635.hs4233@mail.mn-solutions.de>
+	 <1206617646.6368.31.camel@localhost.localdomain>
+	 <200803271257.26820.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 27 Mar 2008 10:31:54 -0400
+Message-Id: <1206628314.23336.11.camel@localhost.localdomain> (sfid-20080327_143302_029096_C78E9E7B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthias Kaehlcke <matthias@kaehlcke.net>
+On Thu, 2008-03-27 at 12:57 +0100, Holger Schurig wrote:
+> > The problem with using upld_buf (and therefore zero-copy in
+> > the CF driver) is that you have no idea how long a read from
+> > the card will really take, and what errors might happen during
+> > the read from the card.
+> 
+> Yes, this can take a long time. And, BTW, I don't want to use 
+> upld_buf.
+> 
+> 
+> My idea is this:
+> 
+> > > struct lbs_event *lbs_get_free_event(struct lbs_private
+> > > *priv);
+> 
+> This will take out an lbs_event from the event_free_list and 
+> return it.
+> Taking out has to be done under spinlock, but this is very fast.
+> 
+> Once the lbs_event is no longer in any of the two event list, 
+> we "own" it and can handle it as long as we want, without the 
+> need of an additional spinlock.
+> 
+> Then
+> 
+> > > void lbs_handle_event(struct lbs_private *priv, struct
+> > > lbs_event *event);
+> 
+> would again take the spinlock, insert the event in the 
+> event_list, and release the spinlock. Which again takes only a 
+> short time.
 
-The semaphore wpa_sem is used as mutex, convert it to the mutex API
+well, if this is being done in lbs_thread() then the call from
+lbs_get_free_event() is going to be right above lbs_handle_event()
+anyway, so you might as well hold the spinlock over both, right?  I'm
+just basing that assumption off the existing structure of lbs_thread(),
+maybe you've re-ordered it a lot or something.
 
-Signed-off-by: Matthias Kaehlcke <matthias@kaehlcke.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+But it sounds OK.
 
- drivers/net/wireless/prism54/isl_ioctl.c  |   10 +++++-----
- drivers/net/wireless/prism54/islpci_dev.h |    2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Dan
 
-diff -puN drivers/net/wireless/prism54/isl_ioctl.c~convert-wpa_sem-in-a-mutex drivers/net/wireless/prism54/isl_ioctl.c
---- a/drivers/net/wireless/prism54/isl_ioctl.c~convert-wpa_sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -2114,7 +2114,7 @@ prism54_wpa_bss_ie_add(islpci_private *p
- 	if (wpa_ie_len > MAX_WPA_IE_LEN)
- 		wpa_ie_len = MAX_WPA_IE_LEN;
- 
--	down(&priv->wpa_sem);
-+	mutex_lock(&priv->wpa_lock);
- 
- 	/* try to use existing entry */
- 	list_for_each(ptr, &priv->bss_wpa_list) {
-@@ -2165,7 +2165,7 @@ prism54_wpa_bss_ie_add(islpci_private *p
- 		kfree(bss);
- 	}
- 
--	up(&priv->wpa_sem);
-+	mutex_unlock(&priv->wpa_lock);
- }
- 
- static size_t
-@@ -2175,7 +2175,7 @@ prism54_wpa_bss_ie_get(islpci_private *p
- 	struct islpci_bss_wpa_ie *bss = NULL;
- 	size_t len = 0;
- 
--	down(&priv->wpa_sem);
-+	mutex_lock(&priv->wpa_lock);
- 
- 	list_for_each(ptr, &priv->bss_wpa_list) {
- 		bss = list_entry(ptr, struct islpci_bss_wpa_ie, list);
-@@ -2187,7 +2187,7 @@ prism54_wpa_bss_ie_get(islpci_private *p
- 		len = bss->wpa_ie_len;
- 		memcpy(wpa_ie, bss->wpa_ie, len);
- 	}
--	up(&priv->wpa_sem);
-+	mutex_unlock(&priv->wpa_lock);
- 
- 	return len;
- }
-@@ -2196,7 +2196,7 @@ void
- prism54_wpa_bss_ie_init(islpci_private *priv)
- {
- 	INIT_LIST_HEAD(&priv->bss_wpa_list);
--	sema_init(&priv->wpa_sem, 1);
-+	mutex_init(&priv->wpa_lock);
- }
- 
- void
-diff -puN drivers/net/wireless/prism54/islpci_dev.h~convert-wpa_sem-in-a-mutex drivers/net/wireless/prism54/islpci_dev.h
---- a/drivers/net/wireless/prism54/islpci_dev.h~convert-wpa_sem-in-a-mutex
-+++ a/drivers/net/wireless/prism54/islpci_dev.h
-@@ -178,7 +178,7 @@ typedef struct {
- 	int wpa; /* WPA mode enabled */
- 	struct list_head bss_wpa_list;
- 	int num_bss_wpa;
--	struct semaphore wpa_sem;
-+	struct mutex wpa_lock;
- 	u8 wpa_ie[MAX_WPA_IE_LEN];
- 	size_t wpa_ie_len;
- 
-_
+> This approach can make receiption of command responses from card 
+> zero-copy like, at least insofar the event processing is 
+> considered. 
+> 
+> 
+> 
+> > I'd argue that the CF driver should also have an internal
+> > buffer like the SDIO and USB drivers do, and then there's still
+> > only one copy.
+> 
+> Yeah, but I can reduce easily to a 0-copy-scheme.
+> 
+> 
+> I hope all of this sounds sane.
+> 
+
