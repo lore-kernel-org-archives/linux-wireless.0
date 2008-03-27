@@ -1,212 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15212 "EHLO mga02.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2334 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756081AbYC1Xdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2008 19:33:55 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 2/4] iwlwifi: eliminate conf_ht
-Date: Fri, 28 Mar 2008 16:33:33 -0700
-Message-Id: <1206747215-10640-3-git-send-email-reinette.chatre@intel.com> (sfid-20080328_233358_528267_289843F3)
-In-Reply-To: <1206747215-10640-2-git-send-email-reinette.chatre@intel.com>
-References: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
- <1206747215-10640-2-git-send-email-reinette.chatre@intel.com>
+	id S1757511AbYC0VUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 17:20:34 -0400
+Date: Thu, 27 Mar 2008 16:55:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-2.6.26 2008-03-27
+Message-ID: <20080327205525.GB17267@tuxdriver.com> (sfid-20080327_212037_848670_7AD923B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Dave,
 
-This patch eliminates the use of conf_ht in iwlwifi driver, replacing it
-with bss_info_changed.
+Here is another quick round of patches intended for 2.6.26.  Included
+are libertas and iwlwifi updates, including the long-awaited LED support
+for the iwlwifi drivers.  Also included is the fix for the
+ieee80211_get_channel symbol conflict currently in the net-2.6.26 tree.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |  146 ++++++++++++---------------
- 1 files changed, 63 insertions(+), 83 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 6b69429..8f4d2aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6942,6 +6942,64 @@ static void iwl4965_mac_remove_interface(struct ieee80211_hw *hw,
- 
- }
- 
-+
-+#ifdef CONFIG_IWL4965_HT
-+static void iwl4965_ht_conf(struct iwl_priv *priv,
-+			    struct ieee80211_bss_conf *bss_conf)
-+{
-+	struct ieee80211_ht_info *ht_conf = bss_conf->ht_conf;
-+	struct ieee80211_ht_bss_info *ht_bss_conf = bss_conf->ht_bss_conf;
-+	struct iwl_ht_info *iwl_conf = &priv->current_ht_config;
-+
-+	IWL_DEBUG_MAC80211("enter: \n");
-+
-+	iwl_conf->is_ht = bss_conf->assoc_ht;
-+
-+	if (!iwl_conf->is_ht)
-+		return;
-+
-+	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
-+
-+	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
-+		iwl_conf->sgf |= 0x1;
-+	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
-+		iwl_conf->sgf |= 0x2;
-+
-+	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
-+	iwl_conf->max_amsdu_size =
-+		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
-+
-+	iwl_conf->supported_chan_width =
-+		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
-+	iwl_conf->extension_chan_offset =
-+		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
-+	/* If no above or below channel supplied disable FAT channel */
-+	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
-+	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
-+		iwl_conf->supported_chan_width = 0;
-+
-+	iwl_conf->tx_mimo_ps_mode =
-+		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
-+	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
-+
-+	iwl_conf->control_channel = ht_bss_conf->primary_channel;
-+	iwl_conf->tx_chan_width =
-+		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
-+	iwl_conf->ht_protection =
-+		ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_HT_PROTECTION;
-+	iwl_conf->non_GF_STA_present =
-+		!!(ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_NON_GF_STA_PRSNT);
-+
-+	IWL_DEBUG_MAC80211("control channel %d\n", iwl_conf->control_channel);
-+	IWL_DEBUG_MAC80211("leave\n");
-+}
-+#else
-+static inline void iwl4965_ht_conf(struct iwl_priv *priv,
-+				   struct ieee80211_bss_conf *bss_conf)
-+{
-+}
-+#endif
-+
- static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_bss_conf *bss_conf,
-@@ -6963,6 +7021,11 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
- 	}
- 
-+	if (changes & BSS_CHANGED_HT) {
-+		iwl4965_ht_conf(priv, bss_conf);
-+		iwl4965_set_rxon_chain(priv);
-+	}
-+
- 	if (changes & BSS_CHANGED_ASSOC) {
- 		/*
- 		 * TODO:
-@@ -7359,88 +7422,6 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
- 	return 0;
- }
- 
--#ifdef CONFIG_IWL4965_HT
--
--static void iwl4965_ht_info_fill(struct ieee80211_conf *conf,
--				 struct iwl_priv *priv)
--{
--	struct iwl_ht_info *iwl_conf = &priv->current_ht_config;
--	struct ieee80211_ht_info *ht_conf = &conf->ht_conf;
--	struct ieee80211_ht_bss_info *ht_bss_conf = &conf->ht_bss_conf;
--
--	IWL_DEBUG_MAC80211("enter: \n");
--
--	if (!(conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE)) {
--		iwl_conf->is_ht = 0;
--		return;
--	}
--
--	iwl_conf->is_ht = 1;
--	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
--
--	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
--		iwl_conf->sgf |= 0x1;
--	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
--		iwl_conf->sgf |= 0x2;
--
--	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
--	iwl_conf->max_amsdu_size =
--		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
--
--	iwl_conf->supported_chan_width =
--		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
--	iwl_conf->extension_chan_offset =
--		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
--	/* If no above or below channel supplied disable FAT channel */
--	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
--	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
--		iwl_conf->supported_chan_width = 0;
--
--	iwl_conf->tx_mimo_ps_mode =
--		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
--	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
--
--	iwl_conf->control_channel = ht_bss_conf->primary_channel;
--	iwl_conf->tx_chan_width =
--		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
--	iwl_conf->ht_protection =
--		ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_HT_PROTECTION;
--	iwl_conf->non_GF_STA_present =
--		!!(ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_NON_GF_STA_PRSNT);
--
--	IWL_DEBUG_MAC80211("control channel %d\n",
--		iwl_conf->control_channel);
--	IWL_DEBUG_MAC80211("leave\n");
--}
--
--static int iwl4965_mac_conf_ht(struct ieee80211_hw *hw,
--			       struct ieee80211_conf *conf)
--{
--	struct iwl_priv *priv = hw->priv;
--
--	IWL_DEBUG_MAC80211("enter: \n");
--
--	iwl4965_ht_info_fill(conf, priv);
--	iwl4965_set_rxon_chain(priv);
--
--	if (priv && priv->assoc_id &&
--	    (priv->iw_mode == IEEE80211_IF_TYPE_STA)) {
--		unsigned long flags;
--
--		spin_lock_irqsave(&priv->lock, flags);
--		if (priv->beacon_int)
--			queue_work(priv->workqueue, &priv->post_associate.work);
--		else
--			priv->call_post_assoc_from_beacon = 1;
--		spin_unlock_irqrestore(&priv->lock, flags);
--	}
--
--	IWL_DEBUG_MAC80211("leave:\n");
--	return 0;
--}
--
--#endif /*CONFIG_IWL4965_HT*/
--
- /*****************************************************************************
-  *
-  * sysfs attributes
-@@ -8000,7 +7981,6 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- 	.beacon_update = iwl4965_mac_beacon_update,
- 	.bss_info_changed = iwl4965_bss_info_changed,
- #ifdef CONFIG_IWL4965_HT
--	.conf_ht = iwl4965_mac_conf_ht,
- 	.ampdu_action = iwl4965_mac_ampdu_action,
- #endif  /* CONFIG_IWL4965_HT */
- 	.hw_scan = iwl4965_mac_hw_scan
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26/
+
+---
+
+The following changes since commit 5983a3dff0036d7ef6a2139473564f4f3e7b2a11:
+  Benjamin Thery (1):
+        [NETNS][IPV6] flowlabels - make proc per namespace
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.26.git master
+
+Emmanuel Grumbach (1):
+      iwlwifi: allow a default callback for ASYNC host commands
+
+Holger Schurig (4):
+      libertas: kill useless #define LBS_MONITOR_OFF 0
+      libertas: remove CMD_802_11_PWR_CFG
+      libertas: the compact flash driver is no longer experimental
+      libertas: reduce debug output
+
+Johannes Berg (2):
+      cfg80211: don't export ieee80211_get_channel
+      mac80211: reorder fields to make some structures smaller
+
+John W. Linville (3):
+      mac80211: silently accept deletion of non-existant key
+      iwlwifi: do not register bands with no supported channels
+      prism54: correct thinko in "prism54: Convert stats_sem in a mutex"
+
+Mohamed Abbas (1):
+      iwlwifi: Add led support
+
+Ron Rindjunsky (2):
+      mac80211: fix wrong Rx A-MPDU control via debugfs
+      mac80211: A-MPDU MLME use dynamic allocation
+
+Tomas Winkler (3):
+      iwlwifi: rename iwl-4965-io.h to iwl-io.h
+      iwlwifi: improve NIC i/o debug prints information
+      iwlwifi: iwl_priv - clean up in types of members
+
+ drivers/net/wireless/Kconfig                |    2 +-
+ drivers/net/wireless/iwlwifi/Kconfig        |   20 ++
+ drivers/net/wireless/iwlwifi/Makefile       |   10 +
+ drivers/net/wireless/iwlwifi/iwl-3945-led.c |  433 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-3945-led.h |   73 +++++
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 +
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |   17 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-io.h  |  426 -------------------------
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |  221 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |   17 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h      |    6 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |   30 ++-
+ drivers/net/wireless/iwlwifi/iwl-io.h       |  429 +++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-led.c      |  447 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-led.h      |   82 +++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   22 ++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |  253 ++++++++-------
+ drivers/net/wireless/libertas/cmd.c         |   14 +-
+ drivers/net/wireless/libertas/cmdresp.c     |   12 +-
+ drivers/net/wireless/libertas/defs.h        |   10 +-
+ drivers/net/wireless/libertas/host.h        |    1 -
+ drivers/net/wireless/libertas/hostcmd.h     |    9 -
+ drivers/net/wireless/libertas/main.c        |   12 +-
+ drivers/net/wireless/libertas/rx.c          |    2 +-
+ drivers/net/wireless/libertas/tx.c          |    5 +-
+ drivers/net/wireless/libertas/wext.h        |    2 -
+ drivers/net/wireless/prism54/isl_ioctl.c    |    2 +-
+ include/net/wireless.h                      |   18 +-
+ net/mac80211/debugfs_sta.c                  |   19 +-
+ net/mac80211/ieee80211.c                    |   64 +++--
+ net/mac80211/ieee80211_i.h                  |   50 ++--
+ net/mac80211/ieee80211_ioctl.c              |    3 -
+ net/mac80211/ieee80211_sta.c                |   84 ++++--
+ net/mac80211/rx.c                           |   10 +-
+ net/mac80211/sta_info.c                     |   30 +-
+ net/mac80211/sta_info.h                     |   49 ++--
+ net/wireless/util.c                         |    6 +-
+ 40 files changed, 2052 insertions(+), 880 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-4965-io.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-io.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-led.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-led.h
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6.26-2008-03-27.patch.bz2
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
