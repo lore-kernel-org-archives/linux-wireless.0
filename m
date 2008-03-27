@@ -1,95 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:53844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753703AbYCIVvU (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:23604 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760399AbYC0QQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:51:20 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1676623fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 14:51:19 -0700 (PDT)
-To: "John W. Linville" <linville@redhat.com>
-Subject: [PATCH 18/24] rt2x00: Make rt2x00leds_register return void
-Date: Sun, 9 Mar 2008 22:47:08 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200803092237.43451.IvDoorn@gmail.com>
-In-Reply-To: <200803092237.43451.IvDoorn@gmail.com>
+	Thu, 27 Mar 2008 12:16:29 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1673912nfb.21
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2008 09:16:27 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Ignore set_state(STATE_SLEEP) failure
+Date: Thu, 27 Mar 2008 17:15:24 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200803092247.08308.IvDoorn@gmail.com> (sfid-20080309_222527_839693_6A87458B)
+Message-Id: <200803271715.25247.IvDoorn@gmail.com> (sfid-20080327_161652_834144_B80766EB)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00dev isn't interested in the rt2x00leds_register() value
-anyway. So lets make it return void to even prevent people from
-assuming there is anybody interested in the returnvalue.
+Some hardware never seem to accept the "goto sleep" command, since the legacy
+drivers don't have suspend and resume handlers the entire code for it was
+basically a educated guess (based on the "enable radio" code).
+This patch will only print a warning when the "goto sleep" command fails, and
+just continues as usual. Perhaps that means the device will not reach a sleep
+state and consumes more power then it should, but it is equally possible it
+simply needs some seconds longer to sleep. Anyway, by making the command
+non-fatal it will not block the rest of the suspend procedure.
 
 Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00leds.c |    7 +++----
- drivers/net/wireless/rt2x00/rt2x00lib.h  |    5 ++---
- 2 files changed, 5 insertions(+), 7 deletions(-)
+John, this is a (partial) solution to kernel bugreport:
+	[Bug 9428] panic in rt2x00 driver when resuming after hibernate
+please push it to both 2.6.25 and 2.6.26 trees.
+It should apply safely to the 2.6.25 with a minor fuzz warning only.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-index 9c29d17..ca2d282 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-@@ -109,7 +109,7 @@ static int rt2x00leds_register_led(struct rt2x00_dev *rt2x00dev,
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 62b58a6..50ea7bd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1252,11 +1252,20 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
+ 
+ exit:
+ 	/*
+-	 * Set device mode to sleep for power management.
++	 * Set device mode to sleep for power management,
++	 * on some hardware this call seems to consistently fail.
++	 * From the specifications it is hard to tell why it fails,
++	 * and if this is a "bad thing".
++	 * Overall it is safe to just ignore the failure and
++	 * continue suspending. The only downside is that the
++	 * device will not be in optimal power save mode, but with
++	 * the radio and the other components already disabled the
++	 * device is as good as disabled.
+ 	 */
+ 	retval = rt2x00dev->ops->lib->set_device_state(rt2x00dev, STATE_SLEEP);
+ 	if (retval)
+-		return retval;
++		WARNING(rt2x00dev, "Device failed to enter sleep state, "
++			"continue suspending.\n");
+ 
  	return 0;
  }
- 
--int rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
-+void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- {
- 	char *trigger;
- 	char dev_name[16];
-@@ -117,7 +117,7 @@ int rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 	int retval;
- 
- 	if (!rt2x00dev->ops->lib->led_brightness)
--		return 0;
-+		return;
- 
- 	snprintf(dev_name, sizeof(dev_name), "%s-%s",
- 		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
-@@ -161,11 +161,10 @@ int rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 			goto exit_fail;
- 	}
- 
--	return 0;
-+	return;
- 
- exit_fail:
- 	rt2x00leds_unregister(rt2x00dev);
--	return retval;
- }
- 
- static void rt2x00leds_unregister_trigger(struct rt2x00_trigger *trigger)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index b9d7e0e..1596aa3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -192,7 +192,7 @@ static inline void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev);
-  */
- #ifdef CONFIG_RT2X00_LIB_LEDS
- void rt2x00leds_led_quality(struct rt2x00_dev *rt2x00dev, int rssi);
--int rt2x00leds_register(struct rt2x00_dev *rt2x00dev);
-+void rt2x00leds_register(struct rt2x00_dev *rt2x00dev);
- void rt2x00leds_unregister(struct rt2x00_dev *rt2x00dev);
- void rt2x00leds_suspend(struct rt2x00_dev *rt2x00dev);
- void rt2x00leds_resume(struct rt2x00_dev *rt2x00dev);
-@@ -202,9 +202,8 @@ static inline void rt2x00leds_led_quality(struct rt2x00_dev *rt2x00dev,
- {
- }
- 
--static inline int rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
-+static inline void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- {
--	return 0;
- }
- 
- static inline void rt2x00leds_unregister(struct rt2x00_dev *rt2x00dev)
 -- 
-1.5.4.3
+1.5.4.4
 
