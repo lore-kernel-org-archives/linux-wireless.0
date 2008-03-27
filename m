@@ -1,69 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35773 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1765778AbYCEXNA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 18:13:00 -0500
-Message-ID: <47CF28F2.6050509@gmx.at> (sfid-20080305_231328_405485_4CF10539)
-Date: Thu, 06 Mar 2008 00:12:50 +0100
-From: Franz Apeltauer <franz.apeltauer@gmx.at>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2331 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758798AbYC0VU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 17:20:28 -0400
+Date: Thu, 27 Mar 2008 16:53:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+Subject: Re: [PATCH] iwlwifi: do not register bands with no supported
+	channels
+Message-ID: <20080327205359.GA17267@tuxdriver.com> (sfid-20080327_212033_114035_138E5A5D)
+References: <1206475120-10188-1-git-send-email-linville@tuxdriver.com> <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com> <20080325212407.GB20488@tuxdriver.com> <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
-References: <47CB3B5E.4020701@gmx.at> <1204504331.3917.31.camel@johannes.berg> <20080303035222.GP28995@ruslug.rutgers.edu>
-In-Reply-To: <20080303035222.GP28995@ruslug.rutgers.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez schrieb:
-> Forced a new tarball out with new changes applied, would appreciate
-> some testing on 2.6.21, 2.6.22. You can get the tarball from the
-> usual place:
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+On Wed, Mar 26, 2008 at 01:45:03AM +0200, Tomas Winkler wrote:
 
-Thank you very much!
-Now everything compiles fine on 2.6.22.
+> >  I don't think your version will resolve the issue.  Am I missing
+> >  something?
+> 
+> Yep I was a bit snappy. my suggestion doesn't resolve the problem.
+> Anyhow, let me look at this tomorrow if we have other SKU issues so it
+> can be rolled in together.
 
-I cannot send you test results yet. It looks like I have to read some 
-more documentation first. For now I can only tell you this:
+I'm going to go ahead and push mine with todays patches.  Feel free
+to correct it later if there is some more appropriate test.
 
-a) Test on a PC with a Broadcom 4306 rev 03:
-- Downloaded and installed the firmware.
-- The module b43legacy loads without errors, but nothing else happens.
-   ifconfig doesn't show any new interface, like eth0 or wlan0.
-# modprobe b43legacy
-=> messages: Mar  5 23:14:02 af-nb-3 kernel: [10519.728000] Broadcom 
-43xx driver loaded [ Features: PID, Firmware-ID: FW10 ]
-=> dmesg: [10519.728000] Broadcom 43xx driver loaded [ Features: PID, 
-Firmware-ID: FW10 ]
+Thanks,
 
-Maybe this is important: dmesg says "Firmware-ID: FW10", but there is no 
-ucode10.fw in /lib/firmware/b43legacy, only 2, 4, 5, 11 (downloaded 
-today, as described in the wiki).
-
-# lsmod | grep 43
-b43legacy             102040  0
-ssb                    36484  1 b43legacy
-mac80211              220020  1 b43legacy
-
-# lspci
-00:00.0 Host bridge: VIA Technologies, Inc. VT8378 [KM400/A] Chipset 
-Host Bridge
-00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
-00:09.0 Network controller: Broadcom Corporation BCM4306 802.11b/g 
-Wireless LAN Controller (rev 03)
-...
-
-
-b) Test on a PC with MSI PC54G2 ... RaLink rt2500
-You wrote "For now I'll disable rt2x00 in compat-wireless."
-So, the result of this test seems to be unimportant (it tried to load 
-the old driver).
-
-
-If you would like to see the output of any test, that I can do for you, 
-just let me know.
-
-Greetings,
-Franz
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
