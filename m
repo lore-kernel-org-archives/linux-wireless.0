@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:15622 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbYCJANb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2008 20:13:31 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1970718wah.23
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2008 17:13:28 -0700 (PDT)
-Subject: Re: [PATCH 1/2] tkip: remove unused function, other cleanups
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1204959156.6387.34.camel@johannes.berg>
-References: <1204946240.23455.19.camel@brick>
-	 (sfid-20080308_031744_226744_CE5F76EA)  <1204959156.6387.34.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sun, 09 Mar 2008 17:03:46 -0700
-Message-Id: <1205107431.6474.1.camel@brick> (sfid-20080310_001353_659799_0728BFDE)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4065 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754673AbYC1CuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 22:50:15 -0400
+Date: Thu, 27 Mar 2008 22:33:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: Re: TKIP patches
+Message-ID: <20080328023336.GA10006@tuxdriver.com> (sfid-20080328_025020_004121_FF23E8F7)
+References: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-03-08 at 07:52 +0100, Johannes Berg wrote:
-> > -static inline u16 tkip_S(u16 val)
-> > +static u16 tkip_S(u16 val)
-> >  {
-> > -	u16 a = tkip_sbox[Hi8(val)];
-> > -
-> > -	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
-> > +	return tkip_sbox[val & 0xff] ^ __swab16(tkip_sbox[val >> 8]);
-> 
-> What's wrong with using the non-underscored versions? This is pure
-> kernel code...
+On Fri, Mar 28, 2008 at 03:23:28AM +0200, Tomas Winkler wrote:
+> John, what restraining you from applying TKIP patches to wireless-testing
+> First of all they were acked by Johannes second they need to got into
+> wider use, most of  the people don't pick up code from the mailing
+> list but from git directory.
+> Even TKIP is stupid encryption schema and everybody wants see it dead
+> it's still used. From our testing our patches reduces significantly
+> cpu utilization and throughput.
+> If there are any other issues please let us know
 
-That was a thinko on my part, I resent this in a 5-patch series shortly
-thereafter without the underscores (the alignment problems you noted in
-2/2 still remain).
+The only TKIP-related patches I have in my queue that haven't been
+applied are some cleanups from Harvey Harrison.  What other patches
+do you mean?  The ones from a week or so ago have already been applied.
 
-Thanks for the comments.
-
-Harvey
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
