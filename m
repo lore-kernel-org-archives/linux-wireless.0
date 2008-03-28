@@ -1,150 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:17175 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbYCEGC2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 01:02:28 -0500
-Date: Tue, 4 Mar 2008 22:00:29 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
-	Michael =?ISO-8859-1?Q?B=FCker?= <m.bueker@berlin.de>,
-	linux-kernel@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	linville@tuxdriver.com
-Subject: Re: [Rt2400-devel] [PATCH] wireless: rt2x00: fix driver menu
- indenting
-Message-Id: <20080304220029.1f152f00.randy.dunlap@oracle.com> (sfid-20080305_060257_176659_C86E3C38)
-In-Reply-To: <200802102003.25392.IvDoorn@gmail.com>
-References: <200802091623.06504.m.bueker@berlin.de>
-	<20080210105252.e0a433ee.randy.dunlap@oracle.com>
-	<200802102003.25392.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:43140 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755238AbYC1XZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 19:25:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Yi Zhu <yi.zhu@intel.com>
+Subject: [PATCH 8/8] iwlwifi: Fix synchronous host command
+Date: Fri, 28 Mar 2008 16:21:12 -0700
+Message-Id: <1206746472-10443-9-git-send-email-reinette.chatre@intel.com> (sfid-20080328_232540_258278_312DA99F)
+In-Reply-To: <1206746472-10443-8-git-send-email-reinette.chatre@intel.com>
+References: <1206746472-10443-1-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-2-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-4-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-5-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-6-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-7-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 10 Feb 2008 20:03:25 +0100 Ivo van Doorn wrote:
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> On Sunday 10 February 2008, Randy Dunlap wrote:
-> > On Sat, 9 Feb 2008 16:23:06 +0100 Michael B=FCker wrote:
-> >=20
-> > > 2) When selecting "Ralink driver support" (CONFIG_RT2X00), the ac=
-companying=20
-> > > drivers (CONFIG_RT2400PCI, CONFIG_RT61PC, ...) appear unindented.=
- They should=20
-> > > be indented by four spaces.
-> >=20
-> > Yes, patch is below.
-> >=20
-> > ---
-> > From: Randy Dunlap <randy.dunlap@oracle.com>
-> >=20
-> > Michael B=FCker <m.bueker@berlin.de> reports that the RT2x00 driver=
-s
-> > are not indented as they should be, so use proper dependencies to m=
-ake
-> > them be indented as expected.
-> >=20
-> > Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->=20
-> Ack-by: Ivo van Doorn <IvDoorn@gmail.com>
->=20
-> ---
-> John,
-> Could you push this directly into wireless-2.6 and probably upstream =
-as well.
->=20
-> Thanks.
->=20
-> Ivo
+This patch replaces static variable from send_cmd_sync
+with flag in priv->status. It was used for reentrance protection
+but clearly made it impossible to stuck more cards into the same machine
 
-John, do you have this patch queued somewhere?
+In addition it force check of return values of synchronous commands
+commands that doesn't requires return value async commands have to be used
 
-
-> > ---
-> >  drivers/net/wireless/rt2x00/Kconfig |   16 ++++++++--------
-> >  1 file changed, 8 insertions(+), 8 deletions(-)
-> >=20
-> > --- linux-2.6.24-git21.orig/drivers/net/wireless/rt2x00/Kconfig
-> > +++ linux-2.6.24-git21/drivers/net/wireless/rt2x00/Kconfig
-> > @@ -11,18 +11,17 @@ config RT2X00
-> >  	  will also be created. That library (when the driver is built as
-> >  	  a module) will be called "rt2x00lib.ko".
-> > =20
-> > +if RT2X00
-> > +
-> >  config RT2X00_LIB
-> >  	tristate
-> > -	depends on RT2X00
-> > =20
-> >  config RT2X00_LIB_PCI
-> >  	tristate
-> > -	depends on RT2X00
-> >  	select RT2X00_LIB
-> > =20
-> >  config RT2X00_LIB_USB
-> >  	tristate
-> > -	depends on RT2X00
-> >  	select RT2X00_LIB
-> > =20
-> >  config RT2X00_LIB_FIRMWARE
-> > @@ -39,7 +38,7 @@ config RT2X00_LIB_RFKILL
-> > =20
-> >  config RT2400PCI
-> >  	tristate "Ralink rt2400 pci/pcmcia support"
-> > -	depends on RT2X00 && PCI
-> > +	depends on PCI
-> >  	select RT2X00_LIB_PCI
-> >  	select EEPROM_93CX6
-> >  	---help---
-> > @@ -58,7 +57,7 @@ config RT2400PCI_RFKILL
-> > =20
-> >  config RT2500PCI
-> >  	tristate "Ralink rt2500 pci/pcmcia support"
-> > -	depends on RT2X00 && PCI
-> > +	depends on PCI
-> >  	select RT2X00_LIB_PCI
-> >  	select EEPROM_93CX6
-> >  	---help---
-> > @@ -77,7 +76,7 @@ config RT2500PCI_RFKILL
-> > =20
-> >  config RT61PCI
-> >  	tristate "Ralink rt61 pci/pcmcia support"
-> > -	depends on RT2X00 && PCI
-> > +	depends on PCI
-> >  	select RT2X00_LIB_PCI
-> >  	select RT2X00_LIB_FIRMWARE
-> >  	select EEPROM_93CX6
-> > @@ -97,7 +96,7 @@ config RT61PCI_RFKILL
-> > =20
-> >  config RT2500USB
-> >  	tristate "Ralink rt2500 usb support"
-> > -	depends on RT2X00 && USB
-> > +	depends on USB
-> >  	select RT2X00_LIB_USB
-> >  	---help---
-> >  	  This is an experimental driver for the Ralink rt2500 wireless c=
-hip.
-> > @@ -106,7 +105,7 @@ config RT2500USB
-> > =20
-> >  config RT73USB
-> >  	tristate "Ralink rt73 usb support"
-> > -	depends on RT2X00 && USB
-> > +	depends on USB
-> >  	select RT2X00_LIB_USB
-> >  	select RT2X00_LIB_FIRMWARE
-> >  	---help---
-> > @@ -128,3 +127,4 @@ config RT2X00_DEBUG
-> >  	---help---
-> >  	  Enable debugging output for all rt2x00 modules
-> > =20
-> > +endif
-
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Yi Zhu <yi.zhu@intel.com>
 ---
-~Randy
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |   35 ++++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 +++---
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |   35 ++++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +++-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    8 +++---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 +++---
+ 6 files changed, 52 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index d7ccf13..ac12269 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -401,23 +401,24 @@ struct iwl3945_rx_queue {
+ #define MIN_B_CHANNELS  1
+ 
+ #define STATUS_HCMD_ACTIVE	0	/* host command in progress */
+-#define STATUS_INT_ENABLED	1
+-#define STATUS_RF_KILL_HW	2
+-#define STATUS_RF_KILL_SW	3
+-#define STATUS_INIT		4
+-#define STATUS_ALIVE		5
+-#define STATUS_READY		6
+-#define STATUS_TEMPERATURE	7
+-#define STATUS_GEO_CONFIGURED	8
+-#define STATUS_EXIT_PENDING	9
+-#define STATUS_IN_SUSPEND	10
+-#define STATUS_STATISTICS	11
+-#define STATUS_SCANNING		12
+-#define STATUS_SCAN_ABORTING	13
+-#define STATUS_SCAN_HW		14
+-#define STATUS_POWER_PMI	15
+-#define STATUS_FW_ERROR		16
+-#define STATUS_CONF_PENDING	17
++#define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
++#define STATUS_INT_ENABLED	2
++#define STATUS_RF_KILL_HW	3
++#define STATUS_RF_KILL_SW	4
++#define STATUS_INIT		5
++#define STATUS_ALIVE		6
++#define STATUS_READY		7
++#define STATUS_TEMPERATURE	8
++#define STATUS_GEO_CONFIGURED	9
++#define STATUS_EXIT_PENDING	10
++#define STATUS_IN_SUSPEND	11
++#define STATUS_STATISTICS	12
++#define STATUS_SCANNING		13
++#define STATUS_SCAN_ABORTING	14
++#define STATUS_SCAN_HW		15
++#define STATUS_POWER_PMI	16
++#define STATUS_FW_ERROR		17
++#define STATUS_CONF_PENDING	18
+ 
+ #define MAX_TID_COUNT        9
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index add6311..51a1449 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1314,8 +1314,8 @@ void iwl4965_chain_noise_reset(struct iwl_priv *priv)
+ 		cmd.diff_gain_a = 0;
+ 		cmd.diff_gain_b = 0;
+ 		cmd.diff_gain_c = 0;
+-		iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
+-				 sizeof(cmd), &cmd);
++		iwl_send_cmd_pdu_async(priv, REPLY_PHY_CALIBRATION_CMD,
++				 sizeof(cmd), &cmd, NULL);
+ 		msleep(4);
+ 		data->state = IWL_CHAIN_NOISE_ACCUMULATE;
+ 		IWL_DEBUG_CALIB("Run chain_noise_calibrate\n");
+@@ -4563,8 +4563,8 @@ void iwl4965_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap)
+ 	/* Update the rate scaling for control frame Tx to AP */
+ 	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_setting.bcast_sta_id;
+ 
+-	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD, sizeof(link_cmd),
+-			 &link_cmd);
++	iwl_send_cmd_pdu_async(priv, REPLY_TX_LINK_QUALITY_CMD,
++			       sizeof(link_cmd), &link_cmd, NULL);
+ }
+ 
+ #ifdef CONFIG_IWL4965_HT
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index ca864fa..8c14e9a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -415,23 +415,24 @@ struct iwl4965_rx_queue {
+ #define MIN_B_CHANNELS  1
+ 
+ #define STATUS_HCMD_ACTIVE	0	/* host command in progress */
+-#define STATUS_INT_ENABLED	1
+-#define STATUS_RF_KILL_HW	2
+-#define STATUS_RF_KILL_SW	3
+-#define STATUS_INIT		4
+-#define STATUS_ALIVE		5
+-#define STATUS_READY		6
+-#define STATUS_TEMPERATURE	7
+-#define STATUS_GEO_CONFIGURED	8
+-#define STATUS_EXIT_PENDING	9
+-#define STATUS_IN_SUSPEND	10
+-#define STATUS_STATISTICS	11
+-#define STATUS_SCANNING		12
+-#define STATUS_SCAN_ABORTING	13
+-#define STATUS_SCAN_HW		14
+-#define STATUS_POWER_PMI	15
+-#define STATUS_FW_ERROR		16
+-#define STATUS_CONF_PENDING	17
++#define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
++#define STATUS_INT_ENABLED	2
++#define STATUS_RF_KILL_HW	3
++#define STATUS_RF_KILL_SW	4
++#define STATUS_INIT		5
++#define STATUS_ALIVE		6
++#define STATUS_READY		7
++#define STATUS_TEMPERATURE	8
++#define STATUS_GEO_CONFIGURED	9
++#define STATUS_EXIT_PENDING	10
++#define STATUS_IN_SUSPEND	11
++#define STATUS_STATISTICS	12
++#define STATUS_SCANNING		13
++#define STATUS_SCAN_ABORTING	14
++#define STATUS_SCAN_HW		15
++#define STATUS_POWER_PMI	16
++#define STATUS_FW_ERROR		17
++#define STATUS_CONF_PENDING	18
+ 
+ #define MAX_TID_COUNT        9
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 5efafe1..64f4df5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -138,9 +138,11 @@ int iwl_setup(struct iwl_priv *priv);
+  *****************************************************/
+ 
+ const char *get_cmd_string(u8 cmd);
+-int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
++int __must_check iwl_send_cmd_sync(struct iwl_priv *priv,
++				   struct iwl_host_cmd *cmd);
+ int iwl_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
+-int iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u16 len, const void *data);
++int __must_check iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id,
++				  u16 len, const void *data);
+ int iwl_send_cmd_pdu_async(struct iwl_priv *priv, u8 id, u16 len,
+ 			   const void *data,
+ 			   int (*callback)(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index 51c9949..1f8c299 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -151,17 +151,17 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ {
+ 	int cmd_idx;
+ 	int ret;
+-	static atomic_t entry = ATOMIC_INIT(0); /* reentrance protection */
+ 
+ 	BUG_ON(cmd->meta.flags & CMD_ASYNC);
+ 
+ 	 /* A synchronous command can not have a callback set. */
+ 	BUG_ON(cmd->meta.u.callback != NULL);
+ 
+-	if (atomic_xchg(&entry, 1)) {
++	if (test_and_set_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status)) {
+ 		IWL_ERROR("Error sending %s: Already sending a host command\n",
+ 			  get_cmd_string(cmd->id));
+-		return -EBUSY;
++		ret = -EBUSY;
++		goto out;
+ 	}
+ 
+ 	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
+@@ -231,7 +231,7 @@ fail:
+ 		cmd->meta.u.skb = NULL;
+ 	}
+ out:
+-	atomic_set(&entry, 0);
++	clear_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iwl_send_cmd_sync);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index af7233e..dc9ff50 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -733,17 +733,17 @@ static int iwl3945_send_cmd_sync(struct iwl3945_priv *priv, struct iwl3945_host_
+ {
+ 	int cmd_idx;
+ 	int ret;
+-	static atomic_t entry = ATOMIC_INIT(0); /* reentrance protection */
+ 
+ 	BUG_ON(cmd->meta.flags & CMD_ASYNC);
+ 
+ 	 /* A synchronous command can not have a callback set. */
+ 	BUG_ON(cmd->meta.u.callback != NULL);
+ 
+-	if (atomic_xchg(&entry, 1)) {
++	if (test_and_set_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status)) {
+ 		IWL_ERROR("Error sending %s: Already sending a host command\n",
+ 			  get_cmd_string(cmd->id));
+-		return -EBUSY;
++		ret = -EBUSY;
++		goto out;
+ 	}
+ 
+ 	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
+@@ -813,7 +813,7 @@ fail:
+ 		cmd->meta.u.skb = NULL;
+ 	}
+ out:
+-	atomic_set(&entry, 0);
++	clear_bit(STATUS_HCMD_SYNC_ACTIVE, &priv->status);
+ 	return ret;
+ }
+ 
+-- 
+1.5.3.4
+
