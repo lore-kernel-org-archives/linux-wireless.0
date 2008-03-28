@@ -1,117 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53074 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbYCTSpw (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:53837 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbYC1Kug (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 14:45:52 -0400
-Subject: [PATCH/RFC v3] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig symbol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1206038373.16475.150.camel@johannes.berg> (sfid-20080320_184016_333600_B74BDE6D)
-References: <1206023695.16475.137.camel@johannes.berg>
-	 <20080320181310.GA17884@uranus.ravnborg.org>
-	 <1206038373.16475.150.camel@johannes.berg>
-	 (sfid-20080320_184016_333600_B74BDE6D)
-Content-Type: text/plain
-Date: Thu, 20 Mar 2008 19:45:34 +0100
-Message-Id: <1206038734.16475.153.camel@johannes.berg> (sfid-20080320_184557_838156_88C19590)
-Mime-Version: 1.0
+	Fri, 28 Mar 2008 06:50:36 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix PCMCIA IRQ routing
+Date: Fri, 28 Mar 2008 11:48:53 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803281148.53300.mb@bu3sch.de> (sfid-20080328_105040_686445_9AC9BF2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: introduce HAVE_UNALIGNED_ACCESS_SUPPORT Kconfig symbol
+This fixes the IRQ routing on PCMCIA devices.
+With this patch the card will finally be able to receive IRQs.
 
-In many cases, especially in networking, it can be beneficial to
-know at compile time whether the architecture can do unaligned
-accesses. This patch introduces a new Kconfig symbol
-	HAVE_UNALIGNED_ACCESS_SUPPORT
-for that purpose and adds it to the powerpc and x86 architectures.
-Also add some documentation about alignment and networking, and
-especially one intended use of this symbol.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-Erm. I should update the patch description and title too...
 
- Documentation/unaligned-memory-access.txt |   32 +++++++++++++++++++++++++++---
- arch/Kconfig                              |    3 ++
- arch/powerpc/Kconfig                      |    1 
- arch/x86/Kconfig                          |    1 
- 4 files changed, 34 insertions(+), 3 deletions(-)
+Please queue for 2.6.25
 
---- everything.orig/Documentation/unaligned-memory-access.txt	2008-03-20 15:30:38.000000000 +0100
-+++ everything/Documentation/unaligned-memory-access.txt	2008-03-20 19:38:30.000000000 +0100
-@@ -218,9 +218,35 @@ If use of such macros is not convenient,
- where the source or destination (or both) are of type u8* or unsigned char*.
- Due to the byte-wise nature of this operation, unaligned accesses are avoided.
+Index: wireless-testing/drivers/net/wireless/b43/pcmcia.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/pcmcia.c	2008-03-28 11:35:25.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/pcmcia.c	2008-03-28 11:38:14.000000000 +0100
+@@ -88,12 +88,14 @@ static int __devinit b43_pcmcia_probe(st
+ 	res = pcmcia_parse_tuple(dev, &tuple, &parse);
+ 	if (res != CS_SUCCESS)
+ 		goto err_kfree_ssb;
  
-+
-+Alignment vs. Networking
-+========================
-+
-+On architectures that require aligned loads, networking requires that the IP
-+header is aligned on a four-byte boundary to optimise the IP stack. For
-+regular ethernet hardware, the constant NET_IP_ALIGN is used, on most
-+architectures this constant has the value 2 because the normal ethernet
-+header is 14 bytes long, so in order to get proper alignment one needs to
-+DMA to an address that is can be expressed as 4*n + 2. One notable exception
-+here is powerpc which defines NET_IP_ALIGN to 0 because DMA to unaligned
-+addresses can be very expensive and dwarf the cost of unaligned loads.
-+
-+For some ethernet hardware that cannot DMA to unaligned addresses like
-+4*n+2 or non-ethernet hardware, this can be a problem, and it is then
-+required to copy the incoming frame into an aligned buffer. Because this is
-+unnecessary on architectures that can do unaligned accesses, the code can be
-+made depend on CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT like so:
-+
-+#ifdef CONFIG_HAVE_UNALIGNED_ACCESS_SUPPORT
-+	skb = original skb
-+#else
-+	skb = copy skb
-+#endif
-+
- --
--Author: Daniel Drake <dsd@gentoo.org>
-+Authors: Daniel Drake <dsd@gentoo.org>,
-+         Johannes Berg <johannes@sipsolutions.net>
- With help from: Alan Cox, Avuton Olrich, Heikki Orsila, Jan Engelhardt,
--Johannes Berg, Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock,
--Uli Kunitz, Vadim Lobanov
-+Kyle McMartin, Kyle Moffett, Randy Dunlap, Robert Hancock, Uli Kunitz,
-+Vadim Lobanov
+ 	dev->conf.ConfigBase = parse.config.base;
+ 	dev->conf.Present = parse.config.rmask[0];
++	dev->conf.Attributes = CONF_ENABLE_IRQ;
++	dev->conf.IntType = INT_MEMORY_AND_IO;
  
---- everything.orig/arch/powerpc/Kconfig	2008-03-20 15:30:38.000000000 +0100
-+++ everything/arch/powerpc/Kconfig	2008-03-20 19:37:22.000000000 +0100
-@@ -91,6 +91,7 @@ config PPC
- 	select HAVE_OPROFILE
- 	select HAVE_KPROBES
- 	select HAVE_KRETPROBES
-+	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 	dev->io.BasePort2 = 0;
+ 	dev->io.NumPorts2 = 0;
+ 	dev->io.Attributes2 = 0;
  
- config EARLY_PRINTK
- 	bool
---- everything.orig/arch/x86/Kconfig	2008-03-20 15:30:38.000000000 +0100
-+++ everything/arch/x86/Kconfig	2008-03-20 19:38:08.000000000 +0100
-@@ -23,6 +23,7 @@ config X86
- 	select HAVE_KPROBES
- 	select HAVE_KRETPROBES
- 	select HAVE_KVM if ((X86_32 && !X86_VOYAGER && !X86_VISWS && !X86_NUMAQ) || X86_64)
-+	select HAVE_UNALIGNED_ACCESS_SUPPORT
+ 	win.Attributes = WIN_ADDR_SPACE_MEM | WIN_MEMORY_TYPE_CM |
+@@ -109,14 +111,14 @@ static int __devinit b43_pcmcia_probe(st
+ 	mem.CardOffset = 0;
+ 	mem.Page = 0;
+ 	res = pcmcia_map_mem_page(dev->win, &mem);
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
  
+-	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING | IRQ_FIRST_SHARED;
+-	dev->irq.IRQInfo1 = IRQ_LEVEL_ID | IRQ_SHARE_ID;
++	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
++	dev->irq.IRQInfo1 = IRQ_LEVEL_ID;
+ 	dev->irq.Handler = NULL; /* The handler is registered later. */
+ 	dev->irq.Instance = NULL;
+ 	res = pcmcia_request_irq(dev, &dev->irq);
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
  
- config GENERIC_LOCKBREAK
---- everything.orig/arch/Kconfig	2008-03-20 19:37:26.000000000 +0100
-+++ everything/arch/Kconfig	2008-03-20 19:37:34.000000000 +0100
-@@ -36,3 +36,6 @@ config HAVE_KPROBES
- 
- config HAVE_KRETPROBES
- 	def_bool n
-+
-+config HAVE_UNALIGNED_ACCESS_SUPPORT
-+	def_bool n
-
-
