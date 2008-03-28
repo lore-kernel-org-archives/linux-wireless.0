@@ -1,64 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:50748 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764898AbYCDP0e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2008 10:26:34 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: drivers/net/wireless/b43legacy/ on mips
-Date: Tue, 4 Mar 2008 16:26:03 +0100
-Cc: linux-wireless@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
-References: <20080303233651.82c592a4.akpm@linux-foundation.org>
-In-Reply-To: <20080303233651.82c592a4.akpm@linux-foundation.org>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2628 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755044AbYC1Ux2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 16:53:28 -0400
+Date: Fri, 28 Mar 2008 16:32:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless mini-summit agenda proposals?
+Message-ID: <20080328203246.GB810@tuxdriver.com> (sfid-20080328_205330_701058_DBCD9FFA)
+References: <20080131162514.GC6413@tuxdriver.com> <1201801923.3000.13.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803041626.03830.mb@bu3sch.de> (sfid-20080304_152659_908676_825BFBF2)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1201801923.3000.13.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 March 2008 08:36:51 Andrew Morton wrote:
-> 
-> ERROR: "__ucmpdi2" [drivers/net/wireless/b43legacy/b43legacy.ko] undefined!
-> ERROR: "__ucmpdi2" [drivers/net/wireless/b43/b43.ko] undefined!
-> 
-> int b43legacy_dma_init(struct b43legacy_wldev *dev)
-> {
->         struct b43legacy_dma *dma = &dev->dma;
->         struct b43legacy_dmaring *ring;
->         int err;
->         u64 dmamask;
->         enum b43legacy_dmatype type;
-> 
->         dmamask = supported_dma_mask(dev);
->         switch (dmamask) {
->         default:
->                 B43legacy_WARN_ON(1);
->         case DMA_30BIT_MASK:
->                 type = B43legacy_DMA_30BIT;
->                 break;
->         case DMA_32BIT_MASK:
->                 type = B43legacy_DMA_32BIT;
->                 break;
->         case DMA_64BIT_MASK:
->                 type = B43legacy_DMA_64BIT;
->                 break;
->         }
-> 
-> because some versions of gcc emit a __ucmpdi2 call for switch statements. 
-> It might be fixable by switching to an open-coded if/compare/else sequence.
+(Excuse the top-posting...this isn't really a reply to Dan, but I
+wanted to remind everyone of his agenda suggestions...)
 
-I guess that's only done for a 64bit data type, right?
+I'm sorry I didn't find-out sooner (apparently there was an email
+delivery problem of some sort), but we got approved for a mini-summit
+just before OLS in July:
 
-> Or maybe my mips compiler (gcc-3.4.5) is just too old..
+	http://www.linuxsymposium.org/2008/minisummits.php
 
-Well yeah. b43 uses exactly the same code and we use that in openwrt
-on the bcm47xx mips platform with some 4.x compiler.
+This location is reasonably convenient for both North America and
+Europe, and many people attend the OLS event anyway.  Are there any
+major objections to this venue?
 
-Can we switch off the generation of the __ucmpdi2 call somehow?
-Or can we insert an implementation for it? Probably #ifdefed by the
-compiler version.
+I'm sure some people will need some help with funds for attending.
+I don't have any budget for such things, but if you are in need of
+assistance and believe your attendance to be necessary or beneficial
+then let me know -- I'll see if I can scratch-up some funds from
+somewhere.
+
+Any comments?
+
+John
+
+On Thu, Jan 31, 2008 at 12:52:03PM -0500, Dan Williams wrote:
+> On Thu, 2008-01-31 at 11:25 -0500, John W. Linville wrote:
+> > Greetings,
+> > 
+> > It looks as if we have a few venue options for a third wireless summit.
+> > While this may seem like a luxury, none of the options are perfect
+> > for everyone and each has it's own potential drawbacks.  So rather
+> > than move blindly forward with any given venue, I think it would be
+> > good to discuss some potential agenda points.
+> > 
+> > This will serve both to determine who is most interested in attending
+> > a summit and who might most need to be there.  This will also serve
+> > to justify the trouble of having a summit at all.  So, I'd like to
+> > open the 'floor' to discussion proposals.
+> > 
+> > What discussions pertinent to Linux wireless development do
+> > you want to see?  What can you contribute to those discussions?
+> > How would a face-to-face discussion of that issue be better than an
+> > online discussion?
+> 
+> cfg80211/nl80211 - overview, get Johannes to disseminate knowledge
+> because email isn't optimal for this.  I haven't had enough time to jump
+> into it yet, but the fact that Johannes is the vast majority of the
+> effort here is worrisome.  Having a reference implementation (airo,
+> atmel, maybe libertas) of a fullmac driver ported to cfg80211 would
+> probably be very useful, even just to get a sense of how the API works.
+> 
+> rfkill - how to clean up the mess, including how it's all supposed to
+> work from userspace with kernel bits, ACPI bits, vendor modules like
+> asus_acpi and dellWirelessCtl, input-only buttons, etc
+> 
+> WiMAX - what hardware is coming, what the APIs should look like (OMA-DM
+> is likely to be part of Sprint's stack for XOHM), what the driver
+> situation is, and how to fend off a repeat of the 802.11 regulatory
+> situation for WiMAX (most parts are apparently fullmac right now, but
+> softmac will surely come).
+> 
+> 802.11s - nail down issues that Javier/Luis/others might have and try to
+> push the 802.11s mesh stack forward (driver issues, API issues, etc)
+> 
+> 802.11n - do we need any discussion here or is it just a question of
+> executing on the current plan?
+> 
+> Userspace MLME - what's going on here?  Noise around this seems to be
+> quieter these days.  Is stuff going according to plan/schedule or are
+> there roadblocks?
+> 
+> lib80211/fullmac - maybe this just needs to be picked up and done by
+> somebody and doesn't need any discussion or whatever
+> 
+> Dan
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
