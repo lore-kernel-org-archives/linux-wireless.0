@@ -1,219 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:58061 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756239AbYCRArn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 20:47:43 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so6645297wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 17:47:43 -0700 (PDT)
-Subject: [PATCH 4/5] b43: Organize cases in radio2050_rfover_val
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 17 Mar 2008 17:47:30 -0700
-Message-Id: <1205801250.2329.53.camel@brick> (sfid-20080318_004802_183738_B5239890)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:30165 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756135AbYC1XZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 19:25:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 5/8] iwlwifi: move rate registration to module load
+Date: Fri, 28 Mar 2008 16:21:09 -0700
+Message-Id: <1206746472-10443-6-git-send-email-reinette.chatre@intel.com> (sfid-20080328_232539_338183_C17EAD5D)
+In-Reply-To: <1206746472-10443-5-git-send-email-reinette.chatre@intel.com>
+References: <1206746472-10443-1-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-2-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-4-git-send-email-reinette.chatre@intel.com>
+ <1206746472-10443-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function has three independant states that are looked at
+Having rate registration during module load enables the use of
+error checking as well as reliable registration/unregistration
+pairing. Previously this was not possible as rate registration
+was done during _probe where _probe could be run for more than
+one device on the system.
 
-phy_register: B43_PHY_RFOVER, B43_PHY_RFOVERVAL
-lb_gain: has_loopback_gain(phy)
-phy_lna: (phy->rev < 7) || !(sprom->boardflags_lo & B43_BFL_EXTLNA)
-
-The B43_PHY_RFOVER case depends only on the phy_lna value, make this
-test explicit.
-
-The B43_PHY_RFOVERVAL case depends on both lb_gain and phy_lna.
-
-Move the calculation of extlna before the if blocks and pull up an
-adjustment that depends on phy_lna out of the switch statements.
-
-Consolidate the switch statements using a conditional on phy_lna.
-
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/b43/phy.c |  133 ++++++++++++++--------------------------
- 1 files changed, 46 insertions(+), 87 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.h  |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.h  |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   23 ++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   22 ++++++++++++++++++----
+ 7 files changed, 46 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-index bac54bb..0e2b065 100644
---- a/drivers/net/wireless/b43/phy.c
-+++ b/drivers/net/wireless/b43/phy.c
-@@ -3329,22 +3329,28 @@ static void radio2050_rfover_val(struct b43_wldev *dev,
- {
- 	struct b43_phy *phy = &dev->phy;
- 	struct ssb_sprom *sprom = &(dev->dev->bus->sprom);
-+	int lb_gain;
-+	int phy_lna;
- 	u16 data = 0;
-+	u16 extlna;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index 157e572..8559f25 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -976,12 +976,12 @@ void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id)
+ 		       iwl3945_rates[rs_sta->start_rate].plcp);
+ }
  
- 	if (!phy->gmode) {
- 		data = 0;
- 		goto writereg;
+-void iwl3945_rate_control_register(struct ieee80211_hw *hw)
++int iwl3945_rate_control_register(void)
+ {
+-	ieee80211_rate_control_register(&rs_ops);
++	return ieee80211_rate_control_register(&rs_ops);
+ }
+ 
+-void iwl3945_rate_control_unregister(struct ieee80211_hw *hw)
++void iwl3945_rate_control_unregister(void)
+ {
+ 	ieee80211_rate_control_unregister(&rs_ops);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.h b/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
+index e88b1d3..f085d33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
+@@ -202,7 +202,7 @@ extern void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id);
+  * ieee80211_register_hw
+  *
+  */
+-extern void iwl3945_rate_control_register(struct ieee80211_hw *hw);
++extern int iwl3945_rate_control_register(void);
+ 
+ /**
+  * iwl3945_rate_control_unregister - Unregister the rate control callbacks
+@@ -210,6 +210,6 @@ extern void iwl3945_rate_control_register(struct ieee80211_hw *hw);
+  * This should be called after calling ieee80211_unregister_hw, but before
+  * the driver is unloaded.
+  */
+-extern void iwl3945_rate_control_unregister(struct ieee80211_hw *hw);
++extern void iwl3945_rate_control_unregister(void);
+ 
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 735eadd..90ecf26 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -2822,12 +2822,12 @@ void iwl4965_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id)
+ 	priv->lq_mngr.lq_ready = 1;
+ }
+ 
+-void iwl4965_rate_control_register(struct ieee80211_hw *hw)
++int iwl4965_rate_control_register(void)
+ {
+-	ieee80211_rate_control_register(&rs_ops);
++	return ieee80211_rate_control_register(&rs_ops);
+ }
+ 
+-void iwl4965_rate_control_unregister(struct ieee80211_hw *hw)
++void iwl4965_rate_control_unregister(void)
+ {
+ 	ieee80211_rate_control_unregister(&rs_ops);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
+index ae827e1..866e378 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
+@@ -288,7 +288,7 @@ extern void iwl4965_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id);
+  * ieee80211_register_hw
+  *
+  */
+-extern void iwl4965_rate_control_register(struct ieee80211_hw *hw);
++extern int iwl4965_rate_control_register(void);
+ 
+ /**
+  * iwl4965_rate_control_unregister - Unregister the rate control callbacks
+@@ -296,6 +296,6 @@ extern void iwl4965_rate_control_register(struct ieee80211_hw *hw);
+  * This should be called after calling ieee80211_unregister_hw, but before
+  * the driver is unloaded.
+  */
+-extern void iwl4965_rate_control_unregister(struct ieee80211_hw *hw);
++extern void iwl4965_rate_control_unregister(void);
+ 
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 3ab5d82..add6311 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -177,7 +177,6 @@ static int iwl4965_init_drv(struct iwl_priv *priv)
+ 		goto err_free_channel_map;
  	}
  
--	if (has_loopback_gain(phy)) {
-+	phy_lna = (phy->rev < 7) || !(sprom->boardflags_lo & B43_BFL_EXTLNA);
-+
-+	lb_gain = has_loopback_gain(phy);
-+	if (lb_gain) {
- 		int max_lb_gain = phy->max_lb_gain;
--		u16 extlna;
- 		u16 i;
+-	iwl4965_rate_control_register(priv->hw);
+ 	ret = ieee80211_register_hw(priv->hw);
+ 	if (ret) {
+ 		IWL_ERROR("Failed to register network device (error %d)\n",
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index ed85db7..af7233e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8157,7 +8157,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 		goto out_free_channel_map;
+ 	}
  
- 		if (phy->radio_rev == 8)
- 			max_lb_gain += 0x3E;
- 		else
- 			max_lb_gain += 0x26;
-+
- 		if (max_lb_gain >= 0x46) {
- 			extlna = 0x3000;
- 			max_lb_gain -= 0x46;
-@@ -3365,101 +3371,54 @@ static void radio2050_rfover_val(struct b43_wldev *dev,
- 				break;
- 		}
+-	iwl3945_rate_control_register(priv->hw);
+ 	err = ieee80211_register_hw(priv->hw);
+ 	if (err) {
+ 		IWL_ERROR("Failed to register network device (error %d)\n", err);
+@@ -8242,7 +8241,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
  
--		if ((phy->rev < 7) ||
--		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
--			if (phy_register == B43_PHY_RFOVER) {
--				data = 0x1B3;
-+		if (!phy_lna && extlna)
-+			extlna |= 0x8000;
-+		extlna |= (i << 8);
+ 	if (priv->mac80211_registered) {
+ 		ieee80211_unregister_hw(priv->hw);
+-		iwl3945_rate_control_unregister(priv->hw);
+ 	}
+ 
+ 	/*netif_stop_queue(dev); */
+@@ -8323,21 +8321,35 @@ static int __init iwl3945_init(void)
+ 	int ret;
+ 	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
+ 	printk(KERN_INFO DRV_NAME ": " DRV_COPYRIGHT "\n");
++
++	ret = iwl3945_rate_control_register();
++	if (ret) {
++		IWL_ERROR("Unable to register rate control algorithm: %d\n", ret);
++		return ret;
 +	}
 +
-+	if (phy_register == B43_PHY_RFOVER) {
-+		if (phy_lna)
-+			data = 0x01B3;
-+		else
-+			data = 0x09B3;
-+		goto writereg;
-+	} else if (phy_register == B43_PHY_RFOVERVAL) {
-+		if (lb_gain) {
-+			switch (lpd) {
-+			case LPD(0, 1, 1):
-+				data = (phy_lna ? 0x0F92 : 0x8F92);
- 				goto writereg;
--			} else if (phy_register == B43_PHY_RFOVERVAL) {
--				extlna |= (i << 8);
--				switch (lpd) {
--				case LPD(0, 1, 1):
--					data = 0x0F92;
--					goto writereg;
--				case LPD(0, 0, 1):
--				case LPD(1, 0, 1):
--					data = (0x0092 | extlna);
--					goto writereg;
--				case LPD(1, 0, 0):
--					data = (0x0093 | extlna);
--					goto writereg;
--				}
--				B43_WARN_ON(1);
--			}
--			B43_WARN_ON(1);
--		} else {
--			if (phy_register == B43_PHY_RFOVER) {
--				data = 0x9B3;
-+			case LPD(0, 0, 1):
-+				data = (phy_lna ? 0x0092 : 0x8092) | extlna;
- 				goto writereg;
--			} else if (phy_register == B43_PHY_RFOVERVAL) {
--				if (extlna)
--					extlna |= 0x8000;
--				extlna |= (i << 8);
--				switch (lpd) {
--				case LPD(0, 1, 1):
--					data = 0x8F92;
--					goto writereg;
--				case LPD(0, 0, 1):
--					data = (0x8092 | extlna);
--					goto writereg;
--				case LPD(1, 0, 1):
--					data = (0x2092 | extlna);
--					goto writereg;
--				case LPD(1, 0, 0):
--					data = (0x2093 | extlna);
--					goto writereg;
--				}
--				B43_WARN_ON(1);
--			}
--			B43_WARN_ON(1);
--		}
--	} else {
--		if ((phy->rev < 7) ||
--		    !(sprom->boardflags_lo & B43_BFL_EXTLNA)) {
--			if (phy_register == B43_PHY_RFOVER) {
--				data = 0x1B3;
-+			case LPD(1, 0, 1):
-+				data = (phy_lna ? 0x0092 : 0x2092) | extlna;
-+				goto writereg;
-+			case LPD(1, 0, 0):
-+				data = (phy_lna ? 0x0093 : 0x2093) | extlna;
- 				goto writereg;
--			} else if (phy_register == B43_PHY_RFOVERVAL) {
--				switch (lpd) {
--				case LPD(0, 1, 1):
--					data = 0x0FB2;
--					goto writereg;
--				case LPD(0, 0, 1):
--					data = 0x00B2;
--					goto writereg;
--				case LPD(1, 0, 1):
--					data = 0x30B2;
--					goto writereg;
--				case LPD(1, 0, 0):
--					data = 0x30B3;
--					goto writereg;
--				}
--				B43_WARN_ON(1);
- 			}
- 			B43_WARN_ON(1);
- 		} else {
--			if (phy_register == B43_PHY_RFOVER) {
--				data = 0x9B3;
-+			switch (lpd) {
-+			case LPD(0, 1, 1):
-+				data = phy_lna ? 0x0FB2 : 0x8FB2;
-+				goto writereg;
-+			case LPD(0, 0, 1):
-+				data = phy_lna ? 0x00B2 : 0x80B2;
-+				goto writereg;
-+			case LPD(1, 0, 1):
-+				data = phy_lna ? 0x30B2 : 0x20B2;
-+				goto writereg;
-+			case LPD(1, 0, 0):
-+				data = phy_lna ? 0x30B3 : 0x20B3;
- 				goto writereg;
--			} else if (phy_register == B43_PHY_RFOVERVAL) {
--				switch (lpd) {
--				case LPD(0, 1, 1):
--					data = 0x8FB2;
--					goto writereg;
--				case LPD(0, 0, 1):
--					data = 0x80B2;
--					goto writereg;
--				case LPD(1, 0, 1):
--					data = 0x20B2;
--					goto writereg;
--				case LPD(1, 0, 0):
--					data = 0x20B3;
--					goto writereg;
--				}
--				B43_WARN_ON(1);
- 			}
- 			B43_WARN_ON(1);
- 		}
-+	} else {
-+		/* B43_PHY_RFOVER, B43_PHY_RFOVERVAL are the only valid args */
-+		B43_WARN_ON(1);
+ 	ret = pci_register_driver(&iwl3945_driver);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to initialize PCI module\n");
+-		return ret;
++		goto error_register;
+ 	}
+ #ifdef CONFIG_IWL3945_DEBUG
+ 	ret = driver_create_file(&iwl3945_driver.driver, &driver_attr_debug_level);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to create driver sysfs file\n");
+-		pci_unregister_driver(&iwl3945_driver);
+-		return ret;
++		goto error_debug;
+ 	}
+ #endif
+ 
+ 	return ret;
++
++#ifdef CONFIG_IWL3945_DEBUG
++error_debug:
++	pci_unregister_driver(&iwl3945_driver);
++#endif
++error_register:
++	iwl3945_rate_control_unregister();
++	return ret;
+ }
+ 
+ static void __exit iwl3945_exit(void)
+@@ -8346,6 +8358,7 @@ static void __exit iwl3945_exit(void)
+ 	driver_remove_file(&iwl3945_driver.driver, &driver_attr_debug_level);
+ #endif
+ 	pci_unregister_driver(&iwl3945_driver);
++	iwl3945_rate_control_unregister();
+ }
+ 
+ module_param_named(antenna, iwl3945_param_antenna, int, 0444);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 7f2dca3..3ea8c7e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -8244,7 +8244,6 @@ static void __devexit iwl4965_pci_remove(struct pci_dev *pdev)
+ 
+ 	if (priv->mac80211_registered) {
+ 		ieee80211_unregister_hw(priv->hw);
+-		iwl4965_rate_control_unregister(priv->hw);
  	}
  
- writereg:
+ 	/*netif_stop_queue(dev); */
+@@ -8325,21 +8324,35 @@ static int __init iwl4965_init(void)
+ 	int ret;
+ 	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
+ 	printk(KERN_INFO DRV_NAME ": " DRV_COPYRIGHT "\n");
++
++	ret = iwl4965_rate_control_register();
++	if (ret) {
++		IWL_ERROR("Unable to register rate control algorithm: %d\n", ret);
++		return ret;
++	}
++
+ 	ret = pci_register_driver(&iwl4965_driver);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to initialize PCI module\n");
+-		return ret;
++		goto error_register;
+ 	}
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	ret = driver_create_file(&iwl4965_driver.driver, &driver_attr_debug_level);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to create driver sysfs file\n");
+-		pci_unregister_driver(&iwl4965_driver);
+-		return ret;
++		goto error_debug;
+ 	}
+ #endif
+ 
+ 	return ret;
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++error_debug:
++	pci_unregister_driver(&iwl4965_driver);
++#endif
++error_register:
++	iwl4965_rate_control_unregister();
++	return ret;
+ }
+ 
+ static void __exit iwl4965_exit(void)
+@@ -8348,6 +8361,7 @@ static void __exit iwl4965_exit(void)
+ 	driver_remove_file(&iwl4965_driver.driver, &driver_attr_debug_level);
+ #endif
+ 	pci_unregister_driver(&iwl4965_driver);
++	iwl4965_rate_control_unregister();
+ }
+ 
+ module_exit(iwl4965_exit);
 -- 
-1.5.4.4.684.g0e08
-
+1.5.3.4
 
