@@ -1,95 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:32781 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969AbYC3BGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2008 21:06:38 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Olver Eduardo Ramos <olver.ramos@gmail.com>
-Subject: Re: kernel bug
-Date: Sun, 30 Mar 2008 02:06:05 +0100
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-References: <47EE063D.3050000@gmail.com>
-In-Reply-To: <47EE063D.3050000@gmail.com>
+Received: from el-out-1112.google.com ([209.85.162.179]:57988 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbYC1BCI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2008 21:02:08 -0400
+Received: by el-out-1112.google.com with SMTP id z25so11469ele.15
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2008 18:02:05 -0700 (PDT)
+Message-ID: <1ba2fa240803271802w261394a0y7aee01928368922e@mail.gmail.com> (sfid-20080328_010212_733758_3C0187CE)
+Date: Fri, 28 Mar 2008 03:02:04 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwlwifi: do not register bands with no supported channels
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+In-Reply-To: <20080327205359.GA17267@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803300306.06256.rjw@sisk.pl> (sfid-20080330_020702_804541_B9F39F70)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1206475120-10188-1-git-send-email-linville@tuxdriver.com>
+	 <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com>
+	 <20080325212407.GB20488@tuxdriver.com>
+	 <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com>
+	 <20080327205359.GA17267@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[CCing wierless developers.]
+On Thu, Mar 27, 2008 at 10:53 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Mar 26, 2008 at 01:45:03AM +0200, Tomas Winkler wrote:
+>
+>  > >  I don't think your version will resolve the issue.  Am I missing
+>  > >  something?
+>  >
+>  > Yep I was a bit snappy. my suggestion doesn't resolve the problem.
+>  > Anyhow, let me look at this tomorrow if we have other SKU issues so it
+>  > can be rolled in together.
+>
+>  I'm going to go ahead and push mine with todays patches.  Feel free
+>  to correct it later if there is some more appropriate test.
+>
+>  Thanks,
 
-A couple of questions:
-(1) Which kernel is this?
-(2) Did that happen on any previous kernels?
-(3) What was the last kernel on which it didn't happen?
+Fine with me. I just got the material about SKUs few hours ago so I
+won't be ready with fixes till Sunday.
 
-On Saturday, 29 of March 2008, Olver Eduardo Ramos wrote:
-> ------------[ cut here ]------------
-> kernel BUG at net/mac80211/ieee80211.c:966!
-> invalid opcode: 0000 [#1] SMP
-> Modules linked in: iwl3945 mac80211 cfg80211 cryptomgr ecb arc4
-> blkcipher crypto_algapi snd_seq_oss snd_seq_device snd_seq_midi_event
-> snd_seq snd_pcm_oss snd_mixer_oss nvidia(P) snd_hda_intel snd_pcm
-> snd_timer snd snd_page_alloc
-> 
-> Pid: 4472, comm: insmod Tainted: P        (2.6.24 #4)
-> EIP: 0060:[<f9982867>] EFLAGS: 00210246 CPU: 1
-> EIP is at ieee80211_alloc_hw+0x5a/0x2af [mac80211]
-> EAX: f3ea8d80 EBX: fc226d60 ECX: c029cd19 EDX: f3ea8040
-> ESI: fc226c80 EDI: f3ea8180 EBP: f7cc58e4 ESP: f3ea5dbc
->  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-> Process insmod (pid: 4472, ti=f3ea4000 task=f3c8d110 task.ti=f3ea4000)
-> Stack: f78583d8 f3ea8040 fc226cb0 fc226c80 f7cc5800 f7cc58e4 fc2110cc
-> f5772180
->        00000000 f7ccdc90 c019c69e f3c81780 f3c81780 00200296 c03eb51d
-> f7ccdc90
->        f7cc5800 f7cc58c4 c021fb2d fc226cb0 fc226c80 f7cc5800 f7cc58e4
-> c022d84d
-> Call Trace:
->  [<fc2110cc>] iwl3945_pci_probe+0x9e/0xcfd [iwl3945]
->  [<c019c69e>] sysfs_create_link+0xb7/0xf9
->  [<c03eb51d>] netlink_broadcast+0x261/0x2a1
->  [<c021fb2d>] kobject_get+0xf/0x13
->  [<c022d84d>] pci_device_probe+0x36/0x57
->  [<c029f010>] driver_probe_device+0xde/0x15c
->  [<c02205ff>] kobject_uevent_env+0x350/0x374
->  [<c029f125>] __driver_attach+0x0/0x87
->  [<c029f177>] __driver_attach+0x52/0x87
->  [<c029e5c5>] bus_for_each_dev+0x33/0x55
->  [<c029ee77>] driver_attach+0x16/0x18
->  [<c029f125>] __driver_attach+0x0/0x87
->  [<c029e8ab>] bus_add_driver+0x6d/0x197
->  [<c022d989>] __pci_register_driver+0x48/0x74
->  [<f93c9030>] iwl3945_init+0x30/0x74 [iwl3945]
->  [<c014229f>] sys_init_module+0x14bd/0x15e0
->  [<c0169f8d>] do_sync_read+0xc7/0x10a
->  [<c0150936>] __alloc_pages+0x61/0x2cf
->  [<f998d2d1>] ieee80211_rx_irqsafe+0x0/0x4f [mac80211]
->  [<c017b7e4>] mntput_no_expire+0x11/0x56
->  [<c0104e5a>] syscall_call+0x7/0xb
->  [<c0450000>] rpc_sleep_on+0x11d/0x224
->  =======================
-> Code: 4c 9f 99 f9 89 d7 89 42 08 89 d0 81 c7 40 01 00 00 05 40 0d 00 00
-> 89 57 2c 89 47 38 83 3b 00 75 04 0f 0b eb fe 83 7b 04 00 75 04 <0f> 0b
-> eb fe 83 7b 08 00 75 04 0f 0b eb fe 83 7b 14 00 75 04 0f
-> EIP: [<f9982867>] ieee80211_alloc_hw+0x5a/0x2af [mac80211] SS:ESP
-> 0068:f3ea5dbc
-> ---[ end trace 0378acc020bdab15 ]---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> 
-
-
-
--- 
-"Premature optimization is the root of all evil." - Donald Knuth
+Tomas
+>
+>
