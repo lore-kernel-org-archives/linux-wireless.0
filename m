@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flatoutfitness.com ([66.178.130.209]:35503 "EHLO www.seiner.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757428AbYCCEJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 23:09:50 -0500
-Message-ID: <47CB71CA.7050304@seiner.com> (sfid-20080303_041009_563067_57730AB8)
-Date: Sun, 02 Mar 2008 19:34:34 -0800
-From: Yan Seiner <yan@seiner.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:21972 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751755AbYC1KxJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 06:53:09 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
+Date: Fri, 28 Mar 2008 19:52:47 +0900
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+References: <20080326123042.11233.80949.stgit@localhost> <1206622063.22530.25.camel@johannes.berg>
+In-Reply-To: <1206622063.22530.25.camel@johannes.berg>
 MIME-Version: 1.0
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Marvel 8385 on a Sharp Zaurus
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803281952.47401.bruno@thinktube.com> (sfid-20080328_105313_446372_6CEF3322)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a Marvell 8385 card that I am trying to use with a Sharp Zaurus, 
-a Xscale CPU.  The card is completely dead after associating.
+On Thursday 27 March 2008 21:47:43 Johannes Berg wrote:
+> On Wed, 2008-03-26 at 21:30 +0900, Bruno Randolf wrote:
+> > trying to clean up the signal/noise mess. the previous code in mac80211
+> > did not have much definition of what units of signal and noise were
+> > provided and used weird implicit mechanisms from the wireless extensions.
+> >
+> > introduce hardware capability flags to let the hardware specify if it can
+> > provide signal and noise level values and which units it can provide:
+> >
+> >   IEEE80211_HW_SIGNAL_UNSPEC - unspecified, unknown, hw specific
+> >   IEEE80211_HW_SIGNAL_DB     - dB difference to unspecified reference
+> > point IEEE80211_HW_SIGNAL_DBM    - dBm, difference to 1mW
+> >
+> >   IEEE80211_HW_NOISE_DBM     - dBm, difference to 1mW
+> >
+> > also clean up the misleading and confusing names which were used for
+> > signal, noise and qual before.
+>
+> I have to admit to not particularly caring about these things, so if
+> you're willing to accept responsibility for all breakage I'm ok with the
+> patch going in :)
 
-It associates, but fails to transmit any data.  I applied this patch  
-<http://lists.infradead.org/pipermail/libertas-dev/2008-January/001130.html>  
-and now the packet counters increment when I check with ifconfig but the 
-card still doesn't send or receive any data.
+well, i'm going to - for whatever that means :)
 
-In other words, the card associates nearly instantly, I get good signal 
-strength with iwconfig, ifconfig shows the RX counter incrementing if I 
-ping it from outside, but no packets are sent in response.
+i have compile tested the current patch with all mac80211 based drivers, i 
+believe and function tested with ath5k and iwl4965 - but lets give the driver 
+authors some more time for feedback and review. also i'd like to integrate 
+jean's suggestion that unspec doesn't have to be linear.
 
-If I ping outside from inside the Zaurus, the TX counter increments, but 
-nothing is received on the outside.
-
-Is there anything I can do to help debug this?  I am stuck with this 
-card (I need Channel 13) and that's the only card that provides that.
-
-Thanks,
-
---Yan
+bruno
