@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58631 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756399AbYCEJXi (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:10098 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbYC1Hn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 04:23:38 -0500
-Subject: RE: [PATCH 4/8] mac80211: RCU-ify STA info structure access
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	linux-wireless@vger.kernel.org,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-In-Reply-To: <D936D925018D154694D8A362EEB0892003CFB0E4@orsmsx416.amr.corp.intel.com>
-References: <20080222111644.183587000@sipsolutions.net>
-	 <20080222111749.689180000@sipsolutions.net>
-	 <D936D925018D154694D8A362EEB0892003CFB0E4@orsmsx416.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Wed, 05 Mar 2008 10:23:25 +0100
-Message-Id: <1204709005.25502.38.camel@johannes.berg> (sfid-20080305_092408_621727_1871A9C4)
-Mime-Version: 1.0
+	Fri, 28 Mar 2008 03:43:29 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so162170wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 00:43:27 -0700 (PDT)
+Message-ID: <1ba2fa240803280043g7d0fea74vd76691d836900c15@mail.gmail.com> (sfid-20080328_074333_689751_15BFD2B0)
+Date: Fri, 28 Mar 2008 10:43:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: TKIP patches
+Cc: linux-wireless@vger.kernel.org,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+In-Reply-To: <20080328023336.GA10006@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240803271823m4adecaeat9ad05ee6bb97969b@mail.gmail.com>
+	 <20080328023336.GA10006@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Mar 28, 2008 at 5:33 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+>
+> On Fri, Mar 28, 2008 at 03:23:28AM +0200, Tomas Winkler wrote:
+>  > John, what restraining you from applying TKIP patches to wireless-testing
+>  > First of all they were acked by Johannes second they need to got into
+>  > wider use, most of  the people don't pick up code from the mailing
+>  > list but from git directory.
+>  > Even TKIP is stupid encryption schema and everybody wants see it dead
+>  > it's still used. From our testing our patches reduces significantly
+>  > cpu utilization and throughput.
+>  > If there are any other issues please let us know
+>
+>  The only TKIP-related patches I have in my queue that haven't been
+>  applied are some cleanups from Harvey Harrison.  What other patches
+>  do you mean?  The ones from a week or so ago have already been applied.
 
-> This patch is causing some problems in the iwlwifi driver. Often when
-> one of these RCU locks are held the driver tries to send a command to
-> the device and waits for the response, or it does some other activity
-> requiring sleeping. This causes numerous BUG messages as seen below:
-> 
-> BUG: sleeping function called from invalid context at
-> /home/rchatre/wifi/repos.git/iwlwifi-2.6/kernel/mutex.c:209
-
-
->  [<dca8e637>] iwl3945_mac_conf_tx+0x1b0/0x234 [iwl3945]
->  [<dc9d186a>] ieee80211_sta_wmm_params+0x165/0x195 [mac80211]
-
-Ouch, sorry. Try this patch please.
-
-johannes
-
----
- net/mac80211/ieee80211_sta.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-05 10:17:37.000000000 +0100
-+++ everything/net/mac80211/ieee80211_sta.c	2008-03-05 10:18:12.000000000 +0100
-@@ -1930,16 +1930,16 @@ static void ieee80211_rx_mgmt_assoc_resp
- 
- 	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
- 		sta->flags |= WLAN_STA_WME;
-+		rcu_read_unlock();
- 		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
- 					 elems.wmm_param_len);
--	}
-+	} else
-+		rcu_read_unlock();
- 
- 	/* set AID, ieee80211_set_associated() will tell the driver */
- 	bss_conf->aid = aid;
- 	ieee80211_set_associated(dev, ifsta, 1);
- 
--	rcu_read_unlock();
--
- 	ieee80211_associated(dev, ifsta);
- }
- 
-
-
+Hmm, have to missed it somehow, my mistake.  I've seen only the revert
+patches before.
+Thanks
+Tomas
