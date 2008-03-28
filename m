@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:30496 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756020AbYCaVYI (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48326 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751106AbYC1HdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 17:24:08 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so715338nfb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 14:24:07 -0700 (PDT)
-To: TK <tobutaz+kernel@gmail.com>
-Subject: Re: 2.6.24 panic in rt2x00lib_txdone / ieee80211_tx_status_irqsafe
-Date: Mon, 31 Mar 2008 23:23:51 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <fsjfq1$vl8$1@ger.gmane.org> <fsou5a$biu$2@ger.gmane.org> <fsranu$qk3$1@ger.gmane.org>
-In-Reply-To: <fsranu$qk3$1@ger.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803312323.51770.IvDoorn@gmail.com> (sfid-20080331_222413_123859_A9573D98)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 28 Mar 2008 03:33:12 -0400
+Received: from imap1.linux-foundation.org (imap1.linux-foundation.org [140.211.169.55])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2S7XAKU015582
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 00:33:11 -0700
+Received: from y.localdomain (localhost [127.0.0.1])
+	by imap1.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with SMTP id m2S7XASU011732
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2008 00:33:10 -0700
+Date: Fri, 28 Mar 2008 00:33:10 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-wireless@vger.kernel.org
+Subject: various printk warnings on ia64
+Message-Id: <20080328003310.e7e119f5.akpm@linux-foundation.org> (sfid-20080328_073318_736949_761F6F00)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 31 March 2008, TK wrote:
-> On Sun, 30 Mar 2008 20:45:31 +0000, TK said:
-> 
-> > On Sun, 30 Mar 2008 20:26:44 +0000, TK said:
-> > 
-> >> On Fri, 28 Mar 2008 20:34:55 +0100, Ivo van Doorn said:
-> >> 
-> >>> The wireless-testing would be the most interesting since several race
-> >>> conditions in the queues where fixed in there.
-> 
-> Great, I wasn't able to trigger the crash again.
-> I expect there is no chance of a backport though - 2.6.25 doesn't play 
-> nice with my distro, yet.
-
-Sorry, but backporting isn't that easy.
-rt2x00 has undergone some major changes after the 2.6.25 codebase,
-some code was completely restructured and several new features were added.
-Between the rt2x00 version in 2.6.25 and the latest wireless-testing code are
-over 80 patches, those patches fixed a lot of issues, and backporting those is
-troublesome due to the code restructuring (where the code restructuring itself
-most likely fixed your bug).
-
-Ivo
+drivers/net/wireless/ath5k/base.c: In function `ath5k_check_ibss_tsf':
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long int format, u64 arg (arg 7)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 8)
+drivers/net/wireless/ath5k/base.c:1757: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/net/wireless/ath5k/base.c:1757: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/iwlwifi/iwl4965-base.c: In function `iwl4965_tx_status_reply_tx':
+drivers/net/wireless/iwlwifi/iwl4965-base.c:3105: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/iwlwifi/iwl-4965.c: In function `iwl4965_rx_reply_rx':
+drivers/net/wireless/iwlwifi/iwl-4965.c:3978: warning: long long unsigned int format, u64 arg (arg 7)
