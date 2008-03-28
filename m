@@ -1,199 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:19598 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756602AbYCSTxX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 15:53:23 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 2] libertas: make a handy lbs_cmd_async() command
-Date: Wed, 19 Mar 2008 10:11:00 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200803181119.22293.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200803181119.22293.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200803191011.00430.hs4233@mail.mn-solutions.de> (sfid-20080319_195417_653773_E09CF586)
+Received: from mga02.intel.com ([134.134.136.20]:15212 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756081AbYC1Xdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 19:33:55 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 2/4] iwlwifi: eliminate conf_ht
+Date: Fri, 28 Mar 2008 16:33:33 -0700
+Message-Id: <1206747215-10640-3-git-send-email-reinette.chatre@intel.com> (sfid-20080328_233358_528267_289843F3)
+In-Reply-To: <1206747215-10640-2-git-send-email-reinette.chatre@intel.com>
+References: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
+ <1206747215-10640-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This uses a static lbs_cmd_async_callback function, which is a
-noop. Just setting the callback argument to __lbs_cmd_async()
-to NULL won't work, because then the cmdnode wouldn't be
-released.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-This also makes __lbs_cmd_async() a static method, which is
-now only used by lbs_cmd() and lbs_cmd_async().
+This patch eliminates the use of conf_ht in iwlwifi driver, replacing it
+with bss_info_changed.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |  146 ++++++++++++---------------
+ 1 files changed, 63 insertions(+), 83 deletions(-)
 
-This patch is needed to fix the CMD_MAC_CONTROL bug correcly.
-
-Compared with "take 1", this patch doesn't leak cmd_ctrl_node's
-anymore.
-
-
-[PATCH] libertas: make a handy lbs_cmd_async() command
-
-This uses a static lbs_cmd_async_callback function, which is a noop. Just
-setting the callback argument to __lbs_cmd_async() to NULL won't work,
-because then the cmdnode wouldn't be released.
-
-This also makes __lbs_cmd_async() a static method, which is now only used by
-lbs_cmd() and lbs_cmd_async().
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
----
-
-This patch is needed to fix the CMD_MAC_CONTROL bug correcly. Patch for this
-follows in the next mail.
-
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:04:44.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-19 09:05:25.000000000 +0100
-@@ -20,6 +20,46 @@ static void lbs_set_cmd_ctrl_node(struct
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 6b69429..8f4d2aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6942,6 +6942,64 @@ static void iwl4965_mac_remove_interface(struct ieee80211_hw *hw,
  
- 
- /**
-+ *  @brief Simple callback that copies response back into command
-+ *
-+ *  @param priv    	A pointer to struct lbs_private structure
-+ *  @param extra  	A pointer to the original command structure for which
-+ *                      'resp' is a response
-+ *  @param resp         A pointer to the command response
-+ *
-+ *  @return 	   	0 on success, error on failure
-+ */
-+int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
-+		     struct cmd_header *resp)
-+{
-+	struct cmd_header *buf = (void *)extra;
-+	uint16_t copy_len;
-+
-+	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
-+	memcpy(buf, resp, copy_len);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
-+
-+/**
-+ *  @brief Simple callback that ignores the result. Use this if
-+ *  you just want to send a command to the hardware, but don't
-+ *  care for the result.
-+ *
-+ *  @param priv         ignored
-+ *  @param extra        ignored
-+ *  @param resp         ignored
-+ *
-+ *  @return 	   	0 for success
-+ */
-+static int lbs_cmd_async_callback(struct lbs_private *priv, unsigned long extra,
-+		     struct cmd_header *resp)
-+{
-+	return 0;
-+}
-+
-+
-+/**
-  *  @brief Checks whether a command is allowed in Power Save mode
-  *
-  *  @param command the command ID
-@@ -1242,7 +1282,7 @@ void lbs_complete_command(struct lbs_pri
- 	cmd->cmdwaitqwoken = 1;
- 	wake_up_interruptible(&cmd->cmdwait_q);
- 
--	if (!cmd->callback)
-+	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
- 		__lbs_cleanup_and_insert_cmd(priv, cmd);
- 	priv->cur_cmd = NULL;
- }
-@@ -2018,32 +2058,10 @@ void lbs_ps_confirm_sleep(struct lbs_pri
  }
  
++
++#ifdef CONFIG_IWL4965_HT
++static void iwl4965_ht_conf(struct iwl_priv *priv,
++			    struct ieee80211_bss_conf *bss_conf)
++{
++	struct ieee80211_ht_info *ht_conf = bss_conf->ht_conf;
++	struct ieee80211_ht_bss_info *ht_bss_conf = bss_conf->ht_bss_conf;
++	struct iwl_ht_info *iwl_conf = &priv->current_ht_config;
++
++	IWL_DEBUG_MAC80211("enter: \n");
++
++	iwl_conf->is_ht = bss_conf->assoc_ht;
++
++	if (!iwl_conf->is_ht)
++		return;
++
++	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
++
++	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
++		iwl_conf->sgf |= 0x1;
++	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
++		iwl_conf->sgf |= 0x2;
++
++	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
++	iwl_conf->max_amsdu_size =
++		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
++
++	iwl_conf->supported_chan_width =
++		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
++	iwl_conf->extension_chan_offset =
++		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
++	/* If no above or below channel supplied disable FAT channel */
++	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
++	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
++		iwl_conf->supported_chan_width = 0;
++
++	iwl_conf->tx_mimo_ps_mode =
++		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
++	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
++
++	iwl_conf->control_channel = ht_bss_conf->primary_channel;
++	iwl_conf->tx_chan_width =
++		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
++	iwl_conf->ht_protection =
++		ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_HT_PROTECTION;
++	iwl_conf->non_GF_STA_present =
++		!!(ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_NON_GF_STA_PRSNT);
++
++	IWL_DEBUG_MAC80211("control channel %d\n", iwl_conf->control_channel);
++	IWL_DEBUG_MAC80211("leave\n");
++}
++#else
++static inline void iwl4965_ht_conf(struct iwl_priv *priv,
++				   struct ieee80211_bss_conf *bss_conf)
++{
++}
++#endif
++
+ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+@@ -6963,6 +7021,11 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
+ 	}
  
--/**
-- *  @brief Simple callback that copies response back into command
-- *
-- *  @param priv    	A pointer to struct lbs_private structure
-- *  @param extra  	A pointer to the original command structure for which
-- *                      'resp' is a response
-- *  @param resp         A pointer to the command response
-- *
-- *  @return 	   	0 on success, error on failure
-- */
--int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
--		     struct cmd_header *resp)
--{
--	struct cmd_header *buf = (void *)extra;
--	uint16_t copy_len;
++	if (changes & BSS_CHANGED_HT) {
++		iwl4965_ht_conf(priv, bss_conf);
++		iwl4965_set_rxon_chain(priv);
++	}
++
+ 	if (changes & BSS_CHANGED_ASSOC) {
+ 		/*
+ 		 * TODO:
+@@ -7359,88 +7422,6 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_IWL4965_HT
 -
--	copy_len = min(le16_to_cpu(buf->size), le16_to_cpu(resp->size));
--	memcpy(buf, resp, copy_len);
+-static void iwl4965_ht_info_fill(struct ieee80211_conf *conf,
+-				 struct iwl_priv *priv)
+-{
+-	struct iwl_ht_info *iwl_conf = &priv->current_ht_config;
+-	struct ieee80211_ht_info *ht_conf = &conf->ht_conf;
+-	struct ieee80211_ht_bss_info *ht_bss_conf = &conf->ht_bss_conf;
+-
+-	IWL_DEBUG_MAC80211("enter: \n");
+-
+-	if (!(conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE)) {
+-		iwl_conf->is_ht = 0;
+-		return;
+-	}
+-
+-	iwl_conf->is_ht = 1;
+-	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+-
+-	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
+-		iwl_conf->sgf |= 0x1;
+-	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
+-		iwl_conf->sgf |= 0x2;
+-
+-	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
+-	iwl_conf->max_amsdu_size =
+-		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
+-
+-	iwl_conf->supported_chan_width =
+-		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH);
+-	iwl_conf->extension_chan_offset =
+-		ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_SEC_OFFSET;
+-	/* If no above or below channel supplied disable FAT channel */
+-	if (iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_ABOVE &&
+-	    iwl_conf->extension_chan_offset != IWL_EXT_CHANNEL_OFFSET_BELOW)
+-		iwl_conf->supported_chan_width = 0;
+-
+-	iwl_conf->tx_mimo_ps_mode =
+-		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+-	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
+-
+-	iwl_conf->control_channel = ht_bss_conf->primary_channel;
+-	iwl_conf->tx_chan_width =
+-		!!(ht_bss_conf->bss_cap & IEEE80211_HT_IE_CHA_WIDTH);
+-	iwl_conf->ht_protection =
+-		ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_HT_PROTECTION;
+-	iwl_conf->non_GF_STA_present =
+-		!!(ht_bss_conf->bss_op_mode & IEEE80211_HT_IE_NON_GF_STA_PRSNT);
+-
+-	IWL_DEBUG_MAC80211("control channel %d\n",
+-		iwl_conf->control_channel);
+-	IWL_DEBUG_MAC80211("leave\n");
+-}
+-
+-static int iwl4965_mac_conf_ht(struct ieee80211_hw *hw,
+-			       struct ieee80211_conf *conf)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-
+-	IWL_DEBUG_MAC80211("enter: \n");
+-
+-	iwl4965_ht_info_fill(conf, priv);
+-	iwl4965_set_rxon_chain(priv);
+-
+-	if (priv && priv->assoc_id &&
+-	    (priv->iw_mode == IEEE80211_IF_TYPE_STA)) {
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(&priv->lock, flags);
+-		if (priv->beacon_int)
+-			queue_work(priv->workqueue, &priv->post_associate.work);
+-		else
+-			priv->call_post_assoc_from_beacon = 1;
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-	}
+-
+-	IWL_DEBUG_MAC80211("leave:\n");
 -	return 0;
 -}
--EXPORT_SYMBOL_GPL(lbs_cmd_copyback);
 -
--struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
--				      struct cmd_header *in_cmd, int in_cmd_size,
--				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
--				      unsigned long callback_arg)
-+static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
-+	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
-+	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-+	unsigned long callback_arg)
- {
- 	struct cmd_ctrl_node *cmdnode;
- 
-@@ -2080,9 +2098,6 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
- 
- 	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
- 
--	/* here was the big old switch() statement, which is now obsolete,
--	 * because the caller of lbs_cmd() sets up all of *cmd for us. */
+-#endif /*CONFIG_IWL4965_HT*/
 -
- 	cmdnode->cmdwaitqwoken = 0;
- 	lbs_queue_cmd(priv, cmdnode);
- 	wake_up_interruptible(&priv->waitq);
-@@ -2092,6 +2107,15 @@ struct cmd_ctrl_node *__lbs_cmd_async(st
- 	return cmdnode;
- }
- 
-+void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-+	struct cmd_header *in_cmd, int in_cmd_size)
-+{
-+	lbs_deb_enter(LBS_DEB_CMD);
-+	__lbs_cmd_async(priv, command, in_cmd, in_cmd_size,
-+		lbs_cmd_async_callback, 0);
-+	lbs_deb_leave(LBS_DEB_CMD);
-+}
-+
- int __lbs_cmd(struct lbs_private *priv, uint16_t command,
- 	      struct cmd_header *in_cmd, int in_cmd_size,
- 	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:44.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-03-19 09:04:46.000000000 +0100
-@@ -18,12 +18,9 @@
- #define lbs_cmd_with_response(priv, cmdnr, cmd)	\
- 	lbs_cmd(priv, cmdnr, cmd, lbs_cmd_copyback, (unsigned long) (cmd))
- 
--/* __lbs_cmd() will free the cmdnode and return success/failure.
--   __lbs_cmd_async() requires that the callback free the cmdnode */
--struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv, uint16_t command,
--				      struct cmd_header *in_cmd, int in_cmd_size,
--				      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
--				      unsigned long callback_arg);
-+void lbs_cmd_async(struct lbs_private *priv, uint16_t command,
-+	struct cmd_header *in_cmd, int in_cmd_size);
-+
- int __lbs_cmd(struct lbs_private *priv, uint16_t command,
- 	      struct cmd_header *in_cmd, int in_cmd_size,
- 	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+ /*****************************************************************************
+  *
+  * sysfs attributes
+@@ -8000,7 +7981,6 @@ static struct ieee80211_ops iwl4965_hw_ops = {
+ 	.beacon_update = iwl4965_mac_beacon_update,
+ 	.bss_info_changed = iwl4965_bss_info_changed,
+ #ifdef CONFIG_IWL4965_HT
+-	.conf_ht = iwl4965_mac_conf_ht,
+ 	.ampdu_action = iwl4965_mac_ampdu_action,
+ #endif  /* CONFIG_IWL4965_HT */
+ 	.hw_scan = iwl4965_mac_hw_scan
+-- 
+1.5.3.4
+
