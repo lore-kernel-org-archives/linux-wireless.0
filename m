@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2331 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758798AbYC0VU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2008 17:20:28 -0400
-Date: Thu, 27 Mar 2008 16:53:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-Subject: Re: [PATCH] iwlwifi: do not register bands with no supported
-	channels
-Message-ID: <20080327205359.GA17267@tuxdriver.com> (sfid-20080327_212033_114035_138E5A5D)
-References: <1206475120-10188-1-git-send-email-linville@tuxdriver.com> <1ba2fa240803251331y60f3cf58x8f08bd4411b1369d@mail.gmail.com> <20080325212407.GB20488@tuxdriver.com> <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240803251645r1f034c5enf880c0ffbb830a1a@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38909 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753919AbYC1GjM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 02:39:12 -0400
+Date: Thu, 27 Mar 2008 23:38:16 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: Re: [PATCH 13/18] mac80211: mesh statistics and config through
+ debugfs
+Message-Id: <20080327233816.f6cb207e.akpm@linux-foundation.org> (sfid-20080328_063918_018308_8CA3DA72)
+In-Reply-To: <20080223142015.478371000@sipsolutions.net>
+References: <20080223141703.194775000@sipsolutions.net>
+	<20080223142015.478371000@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 26, 2008 at 01:45:03AM +0200, Tomas Winkler wrote:
+On Sat, 23 Feb 2008 15:17:16 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> >  I don't think your version will resolve the issue.  Am I missing
-> >  something?
 > 
-> Yep I was a bit snappy. my suggestion doesn't resolve the problem.
-> Anyhow, let me look at this tomorrow if we have other SKU issues so it
-> can be rolled in together.
+> This patch contains the debugfs code for mesh statistics and configuration
+> parameters. Please note that generic support for r/w debugfs attributes has been
+> added.
 
-I'm going to go ahead and push mine with todays patches.  Feel free
-to correct it later if there is some more appropriate test.
 
-Thanks,
+Would it be OK if we do this?
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+From: Andrew Morton <akpm@linux-foundation.org>
+
+This bool causes my gcc-4.1.0 alpha cross compiler to go into an infinite
+loop.  Switching it to u8 works around that.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ net/mac80211/debugfs_netdev.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN net/mac80211/debugfs_netdev.c~net-mac80211-debugfs_netdevc-use-of-bool-triggers-a-gcc-bug net/mac80211/debugfs_netdev.c
+--- a/net/mac80211/debugfs_netdev.c~net-mac80211-debugfs_netdevc-use-of-bool-triggers-a-gcc-bug
++++ a/net/mac80211/debugfs_netdev.c
+@@ -222,7 +222,7 @@ IEEE80211_IF_WFILE(dot11MeshConfirmTimeo
+ IEEE80211_IF_WFILE(dot11MeshHoldingTimeout,
+ 		u.sta.mshcfg.dot11MeshHoldingTimeout, DEC, u16);
+ IEEE80211_IF_WFILE(dot11MeshTTL, u.sta.mshcfg.dot11MeshTTL, DEC, u8);
+-IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, bool);
++IEEE80211_IF_WFILE(auto_open_plinks, u.sta.mshcfg.auto_open_plinks, DEC, u8);
+ IEEE80211_IF_WFILE(dot11MeshMaxPeerLinks,
+ 		u.sta.mshcfg.dot11MeshMaxPeerLinks, DEC, u16);
+ IEEE80211_IF_WFILE(dot11MeshHWMPactivePathTimeout,
+_
+
+
+quite a few people are (hopefully) using the alpha cross-compiler from
+http://userweb.kernel.org/~akpm/cross-compilers/, and this is rather an
+inconvenience.
+
