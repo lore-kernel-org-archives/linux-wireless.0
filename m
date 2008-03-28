@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52202 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbYCTDIS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2008 23:08:18 -0400
-Subject: RE: 2.6.25-rc6, rausb0 or wlan0 or both???
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Turk <bofh1234@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BAY101-W21790F71EFEF146FF9E2AC8000@phx.gbl>
-References: <BAY101-W2F265A1ACEEAD6E11D953C8000@phx.gbl>
-	 (sfid-20080320_011109_826246_EC8219A9)  <1205976828.16475.92.camel@johannes.berg>
-	 <BAY101-W21790F71EFEF146FF9E2AC8000@phx.gbl>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lrzP3g7iwj0pF8F/RzmW"
-Date: Thu, 20 Mar 2008 04:07:59 +0100
-Message-Id: <1205982479.16475.94.camel@johannes.berg> (sfid-20080320_030822_012602_4036CF21)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:23691 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755401AbYC1XZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2008 19:25:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/8] iwlwifi driver updates including one mac80211 change
+Date: Fri, 28 Mar 2008 16:21:04 -0700
+Message-Id: <1206746472-10443-1-git-send-email-reinette.chatre@intel.com> (sfid-20080328_232529_278268_4341E04E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series contains bug fixes as well as new rfkill features.
 
---=-lrzP3g7iwj0pF8F/RzmW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The series includes on patch to mac80211 that enables a driver to
+send status events to mac. This patch also changes iwlwifi to make
+use of this new feature.
+
+[PATCH 1/8] iwlwifi: add notification infrastructure to iwlcore
+[PATCH 2/8] iwlwifi: hook iwlwifi with Linux rfkill
+[PATCH 3/8] mac80211: enable driver to notify mac of status, change iwlwifi
+[PATCH 4/8] iwlwifi: fix race condition during driver unload
+[PATCH 5/8] iwlwifi: move rate registration to module load
+[PATCH 6/8] iwlwifi: unregister to upper stack before releasing resources
+[PATCH 7/8] iwlwifi: LED initialize before registering
+[PATCH 8/8] iwlwifi: Fix synchronous host command
 
 
-> Yes I did check the website listed, but I didn't see anything there
-> that would explain how to use the website, or fix the problem.  I
-> don't know how to use git.  I am just an enduser testing the kernel.
-> This of course begs the question of why is the kernel dependent on
-> something that is not in mainline to work properly?
+Thank you
 
-The kernel works fine, airmon-ng relies on iw.
-
-johannes
-
---=-lrzP3g7iwj0pF8F/RzmW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR+HVDqVg1VMiehFYAQK9PQ//XFse6I4tFusZaeJza2DRbYxm4C7Rg/kg
-5Yx9wITVi7XFc8kgICruHAozRNNmPTjAuk61E9R7aBXPmdyos5I1hDZumb3i/VQA
-ur2E2rcLSE3By5z/7IIepvVFCMc29h4BmS80V8qN9B8HBOixJEqBx8aY4Q+UT+73
-KwVR8hSbS2HAFpqJvNsBXVCCMKCA9n80qFEpmi+NBcTyxktQZR0l3ulbEZCfODNv
-nTpqvz5CJbKGtbKvSLph6BHbLw4UlVuzgZtdJ/jQ3/JnzOnMbbwoLoUL3jL0nzqD
-gslVXbo9ivXzRGT7TdMwJQvqapi7Etm4SU3dESkdiI6pwCl5mo/GNmTc/pLmJVXX
-Sp4EskmyMd9ePLIuM4QnimxkFdxVwLt+xxHKQntWE9vPTCFwSDLEvwXO7GWa+HdW
-8KTuXvwkku1w4U2+XwWXec7jlKCzE2NedUJTOsYLRl/3UL6LifRQXNemVxqfi0S8
-IeHAl1UFbCroanGqTE2TrnAbBbPtykK5lgmwIwsJCQvHzo446Sk3LoFKHtIZW3lo
-NgwYlfBhCh8RF+MxNCKDYpYKdZ1r34gHgO6Z+DVfrt4L48pGmIhCgCBCm4kX4rog
-Hi7X2FaK8N7rcNT+Euc8GXme4A1+cpArzLFFyh3FCx9EuX94pO6XUxXrekBqX/p4
-xovRJk8Pa9c=
-=v8ia
------END PGP SIGNATURE-----
-
---=-lrzP3g7iwj0pF8F/RzmW--
+Reinette
 
