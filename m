@@ -1,99 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:44266 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991AbYCHKks (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2008 05:40:48 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so505904rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2008 02:40:47 -0800 (PST)
-Subject: [PATCH] b43: pull out helpers for writing noise table
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 08 Mar 2008 02:40:38 -0800
-Message-Id: <1204972838.23455.47.camel@brick> (sfid-20080308_104109_950698_98EFB56B)
+Received: from main.gmane.org ([80.91.229.2]:57007 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750784AbYC2XpW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2008 19:45:22 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Jfkja-0005WR-HC
+	for linux-wireless@vger.kernel.org; Sat, 29 Mar 2008 23:45:14 +0000
+Received: from userch028.dsl.pipex.com ([62.190.239.28])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 23:45:14 +0000
+Received: from linux by userch028.dsl.pipex.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 23:45:14 +0000
+To: linux-wireless@vger.kernel.org
+From: Adam Baker <linux@baker-net.org.uk>
+Subject: Re: rt2500pci, infinite calls to =?utf-8?b?cnQyeDAwbWNfY29uZmlndXJlX2ZpbHRlcg==?=
+Date: Sat, 29 Mar 2008 23:45:04 +0000 (UTC)
+Message-ID: <loom.20080329T232927-720@post.gmane.org> (sfid-20080329_234528_024540_0594AD59)
+References: <1206801246.24689.19.camel@Bas> <200803291553.03955.IvDoorn@gmail.com> <1206808941.22448.22.camel@Bas> <200803291801.17068.IvDoorn@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/b43/wa.c |   44 +++++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 21 deletions(-)
+Ivo van Doorn <ivdoorn@...> writes:
 
-diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-index e632125..eff35ad 100644
---- a/drivers/net/wireless/b43/wa.c
-+++ b/drivers/net/wireless/b43/wa.c
-@@ -204,6 +204,22 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
- 		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
- }
- 
-+static void b43_write_null_nst(struct b43_wldev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-+		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
-+}
-+
-+static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
-+{
-+	int i;
-+
-+	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
-+		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, nst[i]);
-+}
-+
- static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
- {
- 	struct b43_phy *phy = &dev->phy;
-@@ -211,35 +227,21 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
- 
- 	if (phy->type == B43_PHYTYPE_A) {
- 		if (phy->rev <= 1)
--			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--							i, 0);
-+			b43_write_null_nst(dev);
- 		else if (phy->rev == 2)
--			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--							i, b43_tab_noisescalea2[i]);
-+			b43_write_nst(dev, b43_tab_noisescalea2);
- 		else if (phy->rev == 3)
--			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--							i, b43_tab_noisescalea3[i]);
-+			b43_write_nst(dev, b43_tab_noisescalea3);
- 		else
--			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--							i, b43_tab_noisescaleg3[i]);
-+			b43_write_nst(dev, b43_tab_noisescaleg3);
- 	} else {
- 		if (phy->rev >= 6) {
- 			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
--				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--						i, b43_tab_noisescaleg3[i]);
-+				b43_write_nst(dev, b43_tab_noisescaleg3);
- 			else
--				for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--					b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--						i, b43_tab_noisescaleg2[i]);
-+				b43_write_nst(dev, b43_tab_noisescaleg2);
- 		} else {
--			for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE,
--							i, b43_tab_noisescaleg1[i]);
-+			b43_write_nst(dev, b43_tab_noisescaleg1);
- 		}
- 	}
- }
--- 
-1.5.4.GIT
 
+> Could you enable debugfs and use the tools here:
+> http://www-user.rhrk.uni-kl.de/~nissler/rt2x00/index.html
+> 
+> To create a dump of the frames as they are actually send out from the driver
+> to the hardware including the status report. This will tell if rt2x00 is
+> actually bringing the frame to the hardware correctly.
+> 
+
+I think you've got that back to front - If I'm reading the
+thread correctly the suspicion is the data is being transmitted
+correctly by the remote end and is being lost somehere between
+the rt2500pci antenna and user space.
+
+The tools would still be helpful to see if a packet is being
+received by the hardware and lost in the stack (maybe it doesn't
+like something about the received packet) or if it is not even
+getting as far as the rt2x00 driver.
+
+> > this is the flag status when running hostapd; as printed with
+> > printk(KERN_INFO "rt2500pci filter_flags: %d\n",
+> > rt2x00dev->packet_filter);
+> > 
+> > rt2500pci filter_flags: 2
+> > rt2500pci MAC changed: 00:0c:f6:14:05:19
+> 
+> Packet filter flags of 2 sounds a bit restrictive.
+> 
+> Johannes, for Master mode shouldn't the following flags be set as well:
+> FIF_PROMISC_IN_BSS
+> FIF_CONTROL
+> 
+
+Ivo,
+Don't forget that there was no response to the request for someone to test
+if broadcast packets were received in monitor mode on the older hardware
+so if the filter flags don't select multicast traffic we could be losing
+broadcast traffic too. I'm not sure if the stack will be reporting any
+active multicast groups in AP mode. (For the benefit of others the only
+reason normal broadcast traffic was working was because there was always a
+multicast group present, Ivo's request is linked below.)
+
+http://sourceforge.net/mailarchive/forum.php?thread_name=200803031921.41634.IvDoorn%40gmail.com&forum_name=rt2400-devel
 
 
