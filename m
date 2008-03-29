@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.int-evry.fr ([157.159.10.71]:38402 "EHLO
-	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbYC3V5O convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:10475 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797AbYC2X3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2008 17:57:14 -0400
-From: Florian Fainelli <florian.fainelli@telecomint.eu>
-To: Chr <chunkeey@web.de>
-Subject: Re: [RFC][PATCH 2/2] p54: statistic readback and other changes
-Date: Sun, 30 Mar 2008 23:02:43 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-References: <200803302349.27450.chunkeey@web.de>
-In-Reply-To: <200803302349.27450.chunkeey@web.de>
+	Sat, 29 Mar 2008 19:29:10 -0400
+Received: by an-out-0708.google.com with SMTP id d31so240557and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 16:29:09 -0700 (PDT)
+Message-ID: <40f31dec0803291629v540badd2xb31ab92d860d9ea2@mail.gmail.com> (sfid-20080329_232920_386131_9CDC1D51)
+Date: Sun, 30 Mar 2008 01:29:09 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Helge Deller" <deller@gmx.de>
+Subject: Re: ath5k aborts wireless connections
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com
+In-Reply-To: <200803272017.50126.deller@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200803310002.44110.florian.fainelli@telecomint.eu> (sfid-20080330_225717_694341_625B1D0B)
+Content-Type: text/plain; charset=UTF-8
+References: <200803221129.59090.deller@gmx.de>
+	 <200803252111.05726.deller@gmx.de>
+	 <20080327115125.GA10265@hash.localnet>
+	 <200803272017.50126.deller@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+2008/3/27, Helge Deller <deller@gmx.de>:
+> On Thursday 27 March 2008, Bob Copeland wrote:
+>  > On Tue, Mar 25, 2008 at 09:11:05PM +0100, Helge Deller wrote:
+>  > > On Tuesday 25 March 2008, Bob Copeland wrote:
+>  > > > On Tue, Mar 25, 2008 at 2:16 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>  > > > > Hello ppl, sory for the delay ;-)
+>  > > > >
+>  > > > >  Are you using encryption ? I haven't got such errors on my tests (it
+>  > > > >  might be that my setup is really simple) so far...
+>  > > >
+>  > > > I can't speak for Helge, but in my case yes - WPA-TKIP.
+>  > >
+>  > > Same here. WPA-PSK & TKIP.
+>  >
+>  > So, I turned off encryption here and did not get any "invalid Michael
+>  > MIC" messages while doing a large apt-get upgrade overnight.  I do get
+>  > random pauses but nothing else in my dmesg.
+>  >
+>  > Helge, can you confirm disabling encryption makes the reset go away?
+>
+>
+> Yes, I can confirm this.
+>
+>  Without encryption everything worked pretty OK.
+>
+>  I only faced one very small hickup, but ath5k reconnected immediately again, so I don't think this is a real problem:
+>
+>
+>  wlan1: authenticated
+>  wlan1: associate with AP 00:50:18:3b:2b:04
+>
+> wlan1: RX AssocResp from 00:50:18:3b:2b:04 (capab=0x461 status=0 aid=1)
+>  wlan1: associated
+>  wlan1: No ProbeResp from current AP 00:50:18:3b:2b:04 - assume out of range
+>
+> wlan1: Initial auth_alg=0
+>  wlan1: authenticate with AP 00:50:18:3b:2b:04
+>  wlan1: RX authentication from 00:50:18:3b:2b:04 (alg=0 transaction=2 status=0)
+>  wlan1: authenticated
+>
+>
+> Helge
+>
 
-Le dimanche 30 mars 2008, Chr a =E9crit=A0:
-> This patch brings some of the new features for both
-> (PCI and USB) devices... unfortunately I don't know if
-> the readback works on USB.
+Since we use software encryption for now we 'll need to trace this
+inside base.c or higher on the stack. Anyone with similar problems
+with other drivers that use software encryption ???
 
-@@ -53,10 +53,10 @@ struct pda_entry {
- } __attribute__ ((packed));
-=20
- struct eeprom_pda_wrap {
--	__le32 magic;
--	__le16 pad;
--	__le16 len;
--	__le32 arm_opcode;
-+	u32 magic;
-+	u16 pad;
-+	u16 len;
-+	u32 arm_opcode;
- 	u8 data[0];
- } __attribute__ ((packed));
-
-This change will break p54 on big-endian hosts which is something that =
-has=20
-been fixed few weeks ago.
-
-Will have some test	on a prism54 usb device and report back here.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
