@@ -1,126 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48474 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbYCMBn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 21:43:57 -0400
-Subject: Re: libertas: convert CMD_MAC_CONTROL to a direct command
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200803121605.41013.hs4233@mail.mn-solutions.de>
-References: <200803121605.41013.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 12 Mar 2008 21:38:51 -0400
-Message-Id: <1205372331.23943.8.camel@localhost.localdomain> (sfid-20080313_014359_900005_6B428B36)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.154]:20862 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751824AbYC2Ox5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2008 10:53:57 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so826602fgb.17
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 07:53:56 -0700 (PDT)
+To: Bas Hulsken <bhulsken@hotmail.com>
+Subject: Re: rt2500pci, infinite calls to rt2x00mc_configure_filter
+Date: Sat, 29 Mar 2008 15:53:03 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <1206801246.24689.19.camel@Bas>
+In-Reply-To: <1206801246.24689.19.camel@Bas>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803291553.03955.IvDoorn@gmail.com> (sfid-20080329_145400_727291_577C47AD)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-03-12 at 16:05 +0100, Holger Schurig wrote:
-> convert CMD_MAC_CONTROL to a direct command
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Hi,
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+> with the latest changes, I guess in particular the commit "rt2x00: Fix
+> in _atomic() usage" changing the flags for rt2500pci results in infinite
+> calls to the new "rt2x00mc_configure_filter" in rt2x00mac.c. I noticed
+> this after applying the attached patch that I've been using to debug
+> some hostapd problems. All it does is add some printk's, I don't think
+> it can cause the problem, right? 
 
-> 
-> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-03-12 14:56:12.000000000 +0100
-> @@ -1200,24 +1200,6 @@ static void lbs_submit_command(struct lb
->  	lbs_deb_leave(LBS_DEB_HOST);
->  }
->  
-> -static int lbs_cmd_mac_control(struct lbs_private *priv,
-> -				struct cmd_ds_command *cmd)
-> -{
-> -	struct cmd_ds_mac_control *mac = &cmd->params.macctrl;
-> -
-> -	lbs_deb_enter(LBS_DEB_CMD);
-> -
-> -	cmd->command = cpu_to_le16(CMD_MAC_CONTROL);
-> -	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_mac_control) + S_DS_GEN);
-> -	mac->action = cpu_to_le16(priv->currentpacketfilter);
-> -
-> -	lbs_deb_cmd("MAC_CONTROL: action 0x%04x, size %d\n",
-> -		    le16_to_cpu(mac->action), le16_to_cpu(cmd->size));
-> -
-> -	lbs_deb_leave(LBS_DEB_CMD);
-> -	return 0;
-> -}
-> -
->  /**
->   *  This function inserts command node to cmdfreeq
->   *  after cleans it. Requires priv->driver_lock held.
-> @@ -1307,12 +1289,15 @@ int lbs_set_radio_control(struct lbs_pri
->  int lbs_set_mac_packet_filter(struct lbs_private *priv)
->  {
->  	int ret = 0;
-> +	struct cmd_ds_mac_control cmd;
->  
->  	lbs_deb_enter(LBS_DEB_CMD);
->  
-> -	/* Send MAC control command to station */
-> -	ret = lbs_prepare_and_send_command(priv,
-> -				    CMD_MAC_CONTROL, 0, 0, 0, NULL);
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(priv->currentpacketfilter);
-> +	cmd.reserved = 0;
-> +
-> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
->  
->  	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
->  	return ret;
-> @@ -1382,10 +1367,6 @@ int lbs_prepare_and_send_command(struct 
->  		ret = lbs_cmd_802_11_ps_mode(priv, cmdptr, cmd_action);
->  		break;
->  
-> -	case CMD_MAC_CONTROL:
-> -		ret = lbs_cmd_mac_control(priv, cmdptr);
-> -		break;
-> -
->  	case CMD_802_11_ASSOCIATE:
->  	case CMD_802_11_REASSOCIATE:
->  		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
-> Index: wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c	2008-03-12 14:55:30.000000000 +0100
-> @@ -394,7 +394,6 @@ static inline int handle_cmd_response(st
->  		break;
->  
->  	case CMD_RET(CMD_MAC_MULTICAST_ADR):
-> -	case CMD_RET(CMD_MAC_CONTROL):
->  	case CMD_RET(CMD_802_11_RESET):
->  	case CMD_RET(CMD_802_11_AUTHENTICATE):
->  	case CMD_RET(CMD_802_11_BEACON_STOP):
-> Index: wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:51:41.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h	2008-03-12 14:55:30.000000000 +0100
-> @@ -211,8 +211,9 @@ struct cmd_ds_802_11_get_log {
->  };
->  
->  struct cmd_ds_mac_control {
-> +	struct cmd_header hdr;
->  	__le16 action;
-> -	__le16 reserved;
-> +	u16 reserved;
->  };
->  
->  struct cmd_ds_mac_multicast_adr {
-> @@ -695,7 +696,6 @@ struct cmd_ds_command {
->  	/* command Body */
->  	union {
->  		struct cmd_ds_802_11_ps_mode psmode;
-> -		struct cmd_ds_mac_control macctrl;
->  		struct cmd_ds_802_11_associate associate;
->  		struct cmd_ds_802_11_deauthenticate deauth;
->  		struct cmd_ds_802_11_ad_hoc_start ads;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oops...
+I found the problem, patch coming will be released in a few minutes. :)
 
+Ivo
