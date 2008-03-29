@@ -1,103 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:52746 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483AbYCQTyW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2008 15:54:22 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so3330071rnb.15
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2008 12:54:21 -0700 (PDT)
-Message-ID: <1ba2fa240803171254j2709011ax7522bb05ded04aeb@mail.gmail.com> (sfid-20080317_195431_519430_A67C2821)
-Date: Mon, 17 Mar 2008 21:54:20 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ipw3945-devel] [PATCH 2/5] mac80211: allows driver to request a Phase 1 RX key
-Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1205766247.1614.111.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1205366762-12828-1-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-2-git-send-email-reinette.chatre@intel.com>
-	 <1205366762-12828-3-git-send-email-reinette.chatre@intel.com>
-	 <1205608293.15910.53.camel@johannes.berg>
-	 <1ba2fa240803161704r36b5df43q33c953d698b88590@mail.gmail.com>
-	 <1205753998.1614.34.camel@johannes.berg>
-	 <1ba2fa240803170603g58cd5378n4e8e58b62c41c37c@mail.gmail.com>
-	 <1205759599.1614.69.camel@johannes.berg>
-	 <1ba2fa240803170745x4d70cc0esd4b49ebf85d68267@mail.gmail.com>
-	 <1205766247.1614.111.camel@johannes.berg>
+Received: from main.gmane.org ([80.91.229.2]:60529 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753113AbYC2SdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2008 14:33:05 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JffrR-0007oq-62
+	for linux-wireless@vger.kernel.org; Sat, 29 Mar 2008 18:33:01 +0000
+Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 18:33:01 +0000
+Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2008 18:33:01 +0000
+To: linux-wireless@vger.kernel.org
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: mac80211 bug? no data is being transmitted after interface is brought
+ down and then up again
+Date: Sat, 29 Mar 2008 19:32:51 +0100
+Message-ID: <fsm20k$usk$1@ger.gmane.org> (sfid-20080329_183313_563700_497BD04E)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBNYXIgMTcsIDIwMDggYXQgNTowNCBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPiAgPiBUaGlzIGlzIG9ubHkgaW4gUlggc2lkZS4g
-RWFjaCBBQyAoYWNjZXNzIGNhdGVnb3J5KSBxdWV1ZSB0cmFuc21pdCBpbgo+ICA+IGl0J3Mgb3du
-IHJhdGUuIEZvciBleGFtcGxlIFZPIHRyYXNtaXR0cyBtb3JlIHBhY2tldHMgdGhlbiBCRS4gU28g
-eW91Cj4gID4gbWlnaHQgZ2V0IGludG8gY2FzZSBpbiByZWNlaXZlIHNpdGUgdGhhdCBWTyBwYWNr
-ZXRzIGFyZSBhbHJlYWR5IG9uCj4gID4gd3JhcGFyb3VuZCBzaWRlIHdoaWxlIEJFIGFyZSBzdGls
-bCB1c2luZyAnb2xkJyBwaGFzZTEuCj4gID4gQmVzdCByZW1lZHkgaXMgdG8ga2VlcCBwaGFzZTEg
-cGVyIGVhY2ggQUMuCj4gID4KPiAgPiA+ICBidXQgSSB0aGluayB0aGlzIGlzIG5vdCB0b28gaW1w
-b3J0YW50IGFzCj4gID4gPiAgbm9uLW1hdGNoaW5nIHdpbGwganVzdCBiZSBkb25lIGluIHNvZnR3
-YXJlLgo+ICA+Cj4gID4gQ29ycmVjdCwgdGhpcyBzaG91bGQgaGFwcGVuIG9ubHkgZm9yIHNob3J0
-IHBlcmlvZCBvZiB0aW1lIHRoYXQgcGgxCj4gID4gZG9lc24ndCBtYXRjaCBmb3IgZWFjaCBBQyBx
-dWV1ZS4KPgo+ICBSaWdodCwgaW4gc29mdHdhcmUgd2UgY2FuIGtlZXAgYSBwaGFzZTEgcGVyIEFD
-IGJ1dCB3ZSBkb24ndCBuZWVkIHRvIGluCj4gIGhhcmR3YXJlIHNpbmNlIHRoYXQncyBqdXN0IHRo
-ZSBvcHRpbWlzYXRpb24uCgpDb3JyZWN0LCBJJ20ganVzdCBub3Qgc3VyZSBob3cgaXQncyBkb25l
-IGZvciBiY29tIGNhcmRzLgo+Cj4gID4gPiAgSG93ZXZlciwgYmNvbSBmaXJtd2FyZSB3YW50cwo+
-ICA+ID4gIHRvIGhhdmUganVzdCB0aGUgcGhhc2UgMSBrZXksIGFuZCBhcyBmYXIgYXMgSSBjYW4g
-dGVsbCB0aGUgZHJpdmVyIGNhbid0LAo+ICA+ID4gIGV2ZW4gd2l0aCB5b3VyIHBhdGNoZXMsIG9i
-dGFpbiBhIHBoYXNlIDEga2V5IGZvciBUWC4KPiAgPgo+ICA+IE5vdCBzdXJlIHRoZXNlIGNhc2Vz
-IGFyZSBzeW1tZXRyaWMuIFlvdSBoYXZlIHRvIGhhdmUgcGhhc2UxIHJlYWR5IGluCj4gID4gSFcg
-YmVmb3JlIHlvdSB0cmFuc21pdCB0aGUgcGFja2V0Cj4gID4gUGhhc2UxIG5lZWQgdG8gYmUgYWRo
-ZXJlZCB0byBhIHBhY2tldCB0aGF0IGNhdXNlcyB3cmFwYXJvdW5kIHVubGlrZSBSWAo+ICA+IHRo
-YXQgeW91IGNhbiBmYWxsIGJhY2sgdG8gU1cgZGVjcnlwdGlvbgo+ICA+IEluIFRYIHRoZXJlIGlz
-IG5vIHdheSBiYWNrLgo+Cj4gIEdvb2QgcG9pbnQuIFNvIHRoZW4gZm9yIEJyb2FkY29tIHdlIGFj
-dHVhbGx5IG5lZWQgdG8gdXBkYXRlIHBoYXNlMSBpbgo+ICBoYXJkd2FyZSB3aGVuIGl0IGNoYW5n
-ZXMgb24gVFggYW5kIG5vdCBib3RoZXIgd2l0aCBSWCBhdCBhbGwsIHdlJ2xsIGZhbGwKPiAgYmFj
-ayB0byBzb2Z0d2FyZSBpbiB0aGF0IGNhc2UuCgpFdmVudHVhbGx5IHlvdSB3YW50IHRvIHVwZGF0
-ZSBSWCBwaGFzZTEga2V5IGludG8gSFcgc28geW91IGdldCB5b3VyCkNQVSB1dGlsaXphdGlvbiB3
-aGVyZSBpdCBoYXZlIHRvIGJlLCByaWdodD8KCj4KPiAgPiA+ICA+ID4gIEhvdyBhYm91dCBpbnN0
-ZWFkIHdlIGFkZCBhIG5ldyAidXBkYXRlX3RraXBfa2V5KCkiIGNhbGxiYWNrIHRoYXQgdGFrZXMK
-PiAgPiA+ICA+ID4gIGV4YWN0bHkgdGhlIHJlcXVpcmVkIHBhcmFtZXRlcnM/IEl0IHNob3VsZCBh
-bHNvIGdpdmUgdGhlCj4gID4gPiAgPiA+ICBoYXJkd2FyZS1rZXktaW5kZXggc28gdGhhdCB0aGUg
-ZHJpdmVyIGhhcyBsZXNzIHdvcmsgdG8gZG8uCj4gID4gPiAgPgo+ICA+ID4gID4gSXQncyB2aWFi
-bGUgYnV0IEkgYWN0dWFsbHkgcHJlZmVyIG5vdCBvcGVuaW5nIHRvbyBtYW55IGludGVyZmFjZXMu
-Cj4gID4gPiAgPiBQbGVhc2UgZ2l2ZSBtZSBzb21lIG1vcmUgZGV0YWlsZWQgc2tldGNoIGhvdyBk
-byB5b3Ugc2VlIHRoYXQgYW5kIHdlCj4gID4gPiAgPiBzdXJlIGdldCB0byBzb21lIGFjY2VwdGFi
-bGUgc29sdXRpb24uCj4gID4gPgo+ICA+ID4gIFllcywgSSB3b3VsZCBwcmVmZXIgbm90IGhhdmlu
-ZyB0aGF0IG1hbnkgaW50ZXJmYWNlcyBhcyB3ZWxsLCBidXQgSSBkb24ndAo+ICA+ID4gIHRoaW5r
-IHNob2Vob3JuaW5nIGl0IGludG8gdGhlIHNldF9rZXkoKSBjYWxsYmFjayBpcyBhIGdvb2QgaWRl
-YSBiZWNhdXNlCj4gID4gPiAgIChhKSB5b3UgYWRkIGZpZWxkcyB0byB0aGUga2V5IGNvbmYgc3Ry
-dWN0dXJlIHRoYXQgYXJlIG9ubHkgdXNlZCBmb3IKPiAgPiA+ICAgICAgdGhlIHRraXAgc3R1ZmYg
-YW5kIG9ubHkgdmFsaWQgaW4gc29tZSBjYWxscwo+ICA+ID4gICAoYikgdGhlIHBhdGNoIGJyZWFr
-cyB0aGUgc2V0X2tleSgpIGludGVyZmFjZSdzIHN5bW1ldHJ5Cj4gID4gPgo+ICA+ID4gIEEgbmV3
-IGNhbGxiYWNrIHVwZGF0ZV90a2lwX2tleSBjb3VsZCBsb29rIGxpa2UgdGhpczoKPiAgPiA+Cj4g
-ID4gPiAgdm9pZCB1cGRhdGVfdGtpcF9waGFzZTFrZXkoaHcsIGtleWNvbmYsIGl2MzIsIHAxa2V5
-KQo+ICA+Cj4gID4gV2hhdCBhYm91dAo+ICA+IGVudW0gdGtpcF91cGRhdGVfZmxhZ3Mgewo+ICA+
-ICAgIFRLSVBfUEgxX1RYX0tFWQo+ICA+ICAgIFRLSVBfUEgxX1JYX0tFWQo+ICA+ICAgIFRLSVBf
-UEgyX1RYX0tFWQo+ICA+ICAgIFRLSVBfUEgyX1JYX0tFWSAtLSBhY3R1YWxseSBubyBuZWVkIGZv
-ciBhbnkgZHJpdmVyLgo+ICA+IH0KPiAgPiAgIHVwZGF0ZV90a2lwX2tleShodywga2V5Y29uZiAs
-IGl2MzIsICBmbGFnLCBrZXkpCj4gID4KPiAgPiBCdXQgSSdtIG5vdCBzdXJlIGFib3V0IHRoaXMu
-Li4gc2VlIGFib3ZlL2JlbG92ZQo+ICA+Cj4gID4gPiAgVGhlIO+7v0lFRUU4MDIxMV9LRVlfRkxB
-R19US0lQX1BIQVNFMV9WQUxJRCBmbGFnIHdvdWxkIGdvIGF3YXksIGFuZCB0aGUKPiAgPiA+ICBu
-ZXcgY2FsbGJhY2sgd291bGQgYmUgaW52b2tlZCByaWdodCBmcm9tIHdoZXJlIHRoZSBwaGFzZTEg
-a2V5IGlzCj4gID4gPiAgY2FsY3VsYXRlZC4KPiAgPgo+ICA+IFN1cmUgYWdhaW4gSSdtIG5vdCBz
-dXJlIHRoaXMgaXMgc3ltbWV0cmljIC0gRm9yIFRYIGl0IHdvdWxkIGJlIHNhZmVyCj4gID4gdG8g
-ZG8gcHVsbCBtb2RlIG90aGVyd2lzZSBpdCBjYW4gZ2V0IG91dCBvZiBzeW5jLgo+Cj4gIFRydWUu
-IEhlbmNlLCBzaW5jZSBwaGFzZTJyeCBpcyBub3QgcmVhbGx5IHVzZWZ1bCwgd2UgZG9uJ3QgYWN0
-dWFsbHkgbmVlZAo+ICBhbnkgc29ydCBvZiB1cGRhdGUgZmxhZ3Mgd2hlbiB3ZSBkbyB0aGUgVFgg
-a2V5cyBpbiBwdWxsIG1vZGUsIHdoaWNoIEkKPiAgcHJlZmVyIGFueXdheS4KPgo+Cj4gID4gPiAg
-SSdtIG5vdCBleGFjdGx5IHN1cmUgd2hldGhlciBvbmUgbmVlZHMgYSBwaGFzZTEga2V5IGZvciBS
-WCBhbmQgb25lIGZvcgo+ICA+ID4gIFRYIHJpZ2h0IG5vdywgYnV0IGlmIHNvIGEgZGlyZWN0aW9u
-IGZsYWcgc2hvdWxkIGJlIGFkZGVkPwo+ICA+Cj4gID4gUGhhc2UxIGZvciBUWCBhbmQgUlggYXJl
-IG5vdCB0aGUgc2FtZSwgYWdhaW4gYmVjYXVzZSBvZiB0aGUgc2ltcGxlCj4gID4gcmVhc29uZSB0
-aGF0IG51bWJlciBvZiB0cmFuc21pdHRlZCBhbmQgcmVjZWl2ZWQgcGFja2V0IGlzIG5vdCB0aGUK
-PiAgPiBzYW1lLgo+Cj4gIEhtLCByaWdodC4gQnV0IGlmIHdlIGdvIGZvciBwdWxsIG1vZGUgZm9y
-IFRYLCB3ZSBvbmx5IG5lZWQgdG8gaGF2ZSBwdXNoCj4gIG1vZGUgZm9yIHRoZSBwaGFzZTEgcngg
-a2V5IHdoZW4gdGhhdCBjaGFuZ2VzLCBubz8KCkVtbWFudWVsIGhhcyBwcmVwYXJlZCBwYXRjaGVz
-IGZvciBUWCBwdWxsIG1vZGUgIChwaGFzZTIgb25seSBmb3Igbm93KSAuCklmIHRoaXMgT0sgd2lp
-dGggSSB3aWxsIHJlc2VuZCB0aGUgd2hvbGUgVEtJUCBzZXJpZXMgd2l0aCB0aGlzIGNoYW5nZSwK
-bGVhdmluZyBSWCBpbiBwdWxsIG1vZGUuCldlIGNhbiBkbyBsaXR0bGUgZWZmb3J0IHRvIGFkZCBw
-dWxsaW5nIHBoYXNlMSBvbmx5IGJ1dCB3ZSBjYW5ub3QgcmVhbGx5IHRlc3QgaXQuCgpUaGFua3MK
-VG9tYXMK
+This is the result of my quest to find the reason why I couldn't roam 
+with any mac80211 driver (tested with iwl3945 and b43).
+
+When you use dhclient for dhcp, the (very old) default dhclient-script 
+brings the interface down and then up again after it receives a DHCPNAK 
+(and on some other occasions). With the ieee80211 stack, this never 
+caused any problems.
+
+However, with mac80211, after the interface has been brought down and 
+then up again, the "RUNNING" flag in ifconfig disappears and no data is 
+being transmitted. Due to dhclient's weird behaviour, this makes any 
+mac80211 driver unusable with dhclient and the (very old) default script.
+
+I had no difficulty fixing this problem (once I found it), simply remove 
+the word 'down' from all ifconfig-lines in dhclient-script.
+
+My question is, should this be considered a bug in mac80211?
+IMO, when an interface is brought down and then up again, one of the 
+following things should happen:
+1) Everything works as before
+2) Nothing works, but the card disassociates from the network.
+The current behaviour (card stays associated, but no data is transmitted 
+any more) is unintuitive and costed me much time.
+
