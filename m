@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51133 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101AbYCJO5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2008 10:57:08 -0400
-Subject: Re: reproducible association with wrong essid, iwl3945
-From: Dan Williams <dcbw@redhat.com>
-To: Helge Hafting <helgehaf@mail.aitel.hist.no>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47D508A5.6090805@mail.aitel.hist.no>
-References: <47D508A5.6090805@mail.aitel.hist.no>
-Content-Type: text/plain
-Date: Mon, 10 Mar 2008 10:53:21 -0400
-Message-Id: <1205160801.3347.35.camel@localhost.localdomain> (sfid-20080310_145713_611409_0786AD66)
-Mime-Version: 1.0
+Received: from vs166246.vserver.de ([62.75.166.246]:35115 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730AbYC2Uty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2008 16:49:54 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] b43: Add PIO support for PCMCIA devices
+Date: Sat, 29 Mar 2008 21:49:11 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200803292101.16696.mb@bu3sch.de>
+In-Reply-To: <200803292101.16696.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200803292149.11953.mb@bu3sch.de> (sfid-20080329_204957_764663_8B0CFE55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-10 at 11:08 +0100, Helge Hafting wrote:
-> Get a normal association so the network works. (WEP encryption)
-> $ iwconfig wlan0 nonexistent_essid key s:correct_key
-> 
-> The network keeps working!  I would expect the driver to look
-> for an access point with the different essid, and fail
-> if no such access point exists.
-> Two different networks with the same encryption string is possible, 
-> after all.
+On Saturday 29 March 2008, Michael Buesch wrote:
+> +# Data transfers to the device via PIO
+> +# This is only needed on PCMCIA devices. All others can do DMA properly.
+> +config B43_PIO
+> +	bool
+> +	depends on B43 && (B43_PCMCIA || B43_FORCE_PIO)
+> +	default y
+> +
+>  config B43_NPHY
+>  	bool "Pre IEEE 802.11n support (BROKEN)"
+>  	depends on B43 && EXPERIMENTAL
 
-Should definitely fail, disassociate, and send the SIOCSIWAP event with
-00:00:00:00:00:00 via wireless_send_event().
+Oh, this generates a tiny fuzz here, as I locally removed the && BROKEN from B43_NPHY.
+I guess that's trivial to fix for you and I don't need to rediff without
+that local patch applied before. :)
 
-Dan
-
-
+>  	---help---
+>  	  Support for the IEEE 802.11n draft.
+>  
