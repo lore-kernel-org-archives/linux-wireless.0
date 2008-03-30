@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4567 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754615AbYCaUde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 16:33:34 -0400
-Date: Mon, 31 Mar 2008 16:12:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless mini-summit agenda proposals?
-Message-ID: <20080331201212.GB13799@tuxdriver.com> (sfid-20080331_213338_462261_FF41615A)
-References: <20080131162514.GC6413@tuxdriver.com> <1201801923.3000.13.camel@localhost.localdomain> <20080328203246.GB810@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080328203246.GB810@tuxdriver.com>
+Received: from mail.gmx.net ([213.165.64.20]:33562 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752650AbYC3Qtt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Mar 2008 12:49:49 -0400
+Subject: Re: rt2500pci, infinite calls to rt2x00mc_configure_filter
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Bas Hulsken <bhulsken@hotmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Adam Baker <linux@baker-net.org.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1206894742.6450.13.camel@Bas>
+References: <1206801246.24689.19.camel@Bas>
+	 <loom.20080329T232927-720@post.gmane.org> <1206882945.4973.5.camel@Bas>
+	 <200803301527.34583.IvDoorn@gmail.com>  <1206894742.6450.13.camel@Bas>
+Content-Type: text/plain
+Date: Sun, 30 Mar 2008 18:49:44 +0200
+Message-Id: <1206895784.7752.5.camel@localhost> (sfid-20080330_175000_807375_1718AB73)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2008 at 04:32:46PM -0400, John W. Linville wrote:
-> (Excuse the top-posting...this isn't really a reply to Dan, but I
-> wanted to remind everyone of his agenda suggestions...)
-> 
-> I'm sorry I didn't find-out sooner (apparently there was an email
-> delivery problem of some sort), but we got approved for a mini-summit
-> just before OLS in July:
-> 
-> 	http://www.linuxsymposium.org/2008/minisummits.php
-> 
-> This location is reasonably convenient for both North America and
-> Europe, and many people attend the OLS event anyway.  Are there any
-> major objections to this venue?
+On Sun, 2008-03-30 at 18:32 +0200, Bas Hulsken wrote:
+> I've made the dumps you've asked for; at least I think so:
+> '/debug/ieee80211/phy2/rt2500pci/frame/dump' as mentioned in the rt2wtap
+> doc does not exist for me, so I've captured from:
+> '/debug/ieee80211/phy1/rt2500pci/queue/dump' is that the new name or
+> something?
 
-It is getting late in the day, but it is worth mentioning that the
-OLS registration price goes up tomorrow.  So, if you think you will
-come then better go ahead and register ASAP!
- 
-> I'm sure some people will need some help with funds for attending.
-> I don't have any budget for such things, but if you are in need of
-> assistance and believe your attendance to be necessary or beneficial
-> then let me know -- I'll see if I can scratch-up some funds from
-> somewhere.
+Yes. I need to update the documentation :-)
 
-I found that the Linux Foundation has a page describing their travel
-funding process:
+Mattias
 
-	http://www.linux-foundation.org/en/Travelfund
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
