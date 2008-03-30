@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52536 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754908AbYCBPMQ (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.184]:38543 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbYC3L42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 10:12:16 -0500
-Subject: Re: p54: fix EEPROM structure endianness
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Fainelli <florian.fainelli@telecomint.eu>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200803021559.28528.florian.fainelli@telecomint.eu> (sfid-20080302_150231_277924_AA60DE19)
-References: <1204289793.3938.20.camel@johannes.berg>
-	 <200803021324.51010.florian.fainelli@telecomint.eu>
-	 <1204465244.3917.17.camel@johannes.berg>
-	 <200803021559.28528.florian.fainelli@telecomint.eu>
-	 (sfid-20080302_150231_277924_AA60DE19)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-STS1uHHApdkrM0c0lmIj"
-Date: Sun, 02 Mar 2008 16:11:53 +0100
-Message-Id: <1204470713.3917.20.camel@johannes.berg> (sfid-20080302_151246_307878_58DF3E33)
-Mime-Version: 1.0
+	Sun, 30 Mar 2008 07:56:28 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so612386rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Mar 2008 04:56:27 -0700 (PDT)
+Message-ID: <c85cb4470803300456y75ced072ue89ea3f2dbbdce8b@mail.gmail.com> (sfid-20080330_125641_033279_D50ED97F)
+Date: Sun, 30 Mar 2008 14:56:27 +0300
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: "Try to stop Tx aggregation on non active TID" messages
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Tomas Winkler" <tomasw@gmail.com>
+In-Reply-To: <c85cb4470803280145j42bcf1b5kfcfd220b5b6cf76a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1206568750.22530.8.camel@johannes.berg>
+	 <c85cb4470803280145j42bcf1b5kfcfd220b5b6cf76a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > we have a slew of messages saying
+> >
+> > [18131.640793] Stop a BA session requested for 00:1a:2a:2c:a2:c5 tid 13
+> > [18131.640798] Try to stop Tx aggregation on non active TID
+> >
+> > just like we had for the RX case before.
+> >
+> > Feel free to change the API to allow calling a
+> > function without as session in progress, but in that case please don't
+> > print out anything at all.
+>
+> yes, i noticed that. the prints are coming of course from the MLME
+> itself that can be called while no session is in progress and checks
+> the status when called.
+> i'll do a quick check to decide which way is better (outside check of
+> the state machine or just a silent discard of non active TIDs
+> requests) and fix it.
+> Ron
 
---=-STS1uHHApdkrM0c0lmIj
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-
-> Le dimanche 2 mars 2008, Johannes Berg a =C3=A9crit :
-> > You mean my patch fixes it?
->=20
-> Yes absolutely, before, I got error from the eeprom parsing function that=
- it=20
-> could not read all required eeprom fields, leading to a non-working wirel=
-ess=20
-> interface, causing oopses sometimes.
->=20
-> With your patch, MAC address, calibration values are read correctly and I=
- can=20
-> use the USB dongle successfully. Of course the dongle does not oops anymo=
-re=20
-> on big-endian hosts.
->=20
-> Tested-by: Florian Fainelli <florian.fainelli@telecomint.eu>
-
-Great, thanks for testing, confirms my suspicions about the eeprom
-reading code. Can you do me a favour and also test my patch titled
-"[PATCH] p54: fix eeprom parser length sanity checks"?
-
-johannes
-
---=-STS1uHHApdkrM0c0lmIj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR8rDuKVg1VMiehFYAQIlJQ//fSh2M6qM4gWGFKO/Z0XL4rlP5r2jdaIW
-aHFqzANxv8Fz6wPWSMzClKBWpVcv8vmRPeSudAIgYNR0lQCeL/44qxMSAUnjT3Ac
-PwXyAPeHLK9dbjznR1NpZ1vC8fHj2LL/ryt2JHwIFf+7Z3Kx5ME/EtAamJG38wf3
-Lbti6qJmRJHkbd7TjoUjAEB8QyEVw45XBjuQed0V7X0TojanIPRoTWqI0qU0eh5Z
-8m/DLgpRxLbDrsD7jVTdY69aLI0PINBFne/kk5OfgpZbh9KavoL5EN9Szxqn9Jbw
-ZPEHIubKg8T4Cwc2icebr3xLD0HmVk0nYwV8T/ylz6cUpUjly3EUbAhvi3whKNzL
-aDTiQyoP9OTSvFzaZ7lT69f4jMWL1ZWe70kIeFix/t27LAbYkRcsLcgJ9s1ukrQF
-7MlycmJZvzQ3GtkUS7/M/6aNFSZ3cTykBIPamTDpuES/BB9XCdYwIIVpaCds+2na
-VVIqeczsmlyTMItg6vJ9ZemtVCu5xVeHUstOeF1Pt8lPyEBEm5/Jv1qYhjFP0K4X
-XeHsajKe3joeYlh/lYjuWKQEH7W3boGXJIhUCexwMPotp4A0fiXFVSz3qdZwh6Ei
-4e8QRYupq4oVE+nPmnJ/TD03qWBVJ6yn4tXn2Zz36+iHn8ChG8BWM0d2nl9kKP1U
-D3ufazTIhf8=
-=Sfky
------END PGP SIGNATURE-----
-
---=-STS1uHHApdkrM0c0lmIj--
-
+ok, i checked it. i think it is the same as the Rx issue we had. those
+prints can be eliminated by .config file's MAC80211_HT_DEBUG. if we
+don't use this flag what's the use of it? if we do use it, i would
+like to insert the Rx prints back as well.
+Ron
