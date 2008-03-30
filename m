@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:58169 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702AbYCWVXh (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:41248 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbYC3VtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2008 17:23:37 -0400
-Received: by an-out-0708.google.com with SMTP id d31so606976and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Mar 2008 14:23:37 -0700 (PDT)
-Message-ID: <97a0a9ac0803231423v739da7bbtef037a47b98f8068@mail.gmail.com> (sfid-20080323_212344_727640_CE50E4F7)
-Date: Sun, 23 Mar 2008 15:23:36 -0600
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-To: "Sam Ravnborg" <sam@ravnborg.org>
-Subject: Re: pull request: wireless-2.6 2008-02-27
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-In-Reply-To: <20080323205126.GB5087@uranus.ravnborg.org>
+	Sun, 30 Mar 2008 17:49:15 -0400
+From: Chr <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][PATCH 0/2] p54: updates
+Date: Sun, 30 Mar 2008 23:49:12 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080228014125.GI3078@tuxdriver.com>
-	 <20080229214240.GH3234@tuxdriver.com>
-	 <20080301130133.GA14250@uranus.ravnborg.org>
-	 <200803011651.13652.mb@bu3sch.de>
-	 <20080302115828.GA15820@uranus.ravnborg.org>
-	 <97a0a9ac0803172107s2ac19268h3b297bb645011a3@mail.gmail.com>
-	 <20080323205126.GB5087@uranus.ravnborg.org>
+Cc: Michael Wu <flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200803302349.12587.chunkeey@web.de> (sfid-20080330_224926_735101_B3690416)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sam
+It's been a long time... 
 
-On Sun, Mar 23, 2008 at 2:51 PM, Sam Ravnborg <sam@ravnborg.org> wrote:
->  Thanks for your paitience.
->  I have been outright busy so I never came around to this.
->  It is pushed for inclusion in 2.6.25 now.
+Since my machine has some weird problems with
+any 2.6.25-rcX kernel and I don't have any 
+prism54 softmac USB adaptors.... 
+I hope someone else can help me with the review.
 
-Thanks, Sam. Sorry to have bugged you a little :-) Also, thanks very
-much for creating the patch in the first place.
+New features:
+- p54pci specific:
+  - activated tx and rx management rings
+  - wrote a rx tasklet...
+- general:
+ - gave some _unknown_ parameters meaningful names
+ - noise & signal strength in dBm rather than rssi values
+ - enhanced promiscuous/monitor mode. 
+   (Now it does capture more than just beacons!)
 
-Gordon
 
--- 
-Gordon Farquharson
-GnuPG Key ID: 32D6D676
+I'm planning to get the AP/AD-Hoc code ready for release too.
+But.. All in its proper time.
+
+Regards,
+	Chr
