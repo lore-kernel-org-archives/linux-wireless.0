@@ -1,273 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:22822 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbYCZJGq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbYCaLwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2008 05:06:46 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: convert CMD_802_11_EEPROM_ACCESS to a direct command
-Date: Wed, 26 Mar 2008 10:03:48 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200803261003.48250.hs4233@mail.mn-solutions.de> (sfid-20080326_090649_216382_F117E559)
+	Mon, 31 Mar 2008 07:52:50 -0400
+Subject: mac80211 MLME scanning - BSS list trouble
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	Bill Moss <bmoss@CLEMSON.EDU>, Daniel Drake <dsd@gentoo.org>,
+	Dan Williams <dcbw@redhat.com>, Vladimir Koutny <vlado@ksp.sk>,
+	Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DOnVt30fvr7V9SjfSho3"
+Date: Sun, 30 Mar 2008 10:33:19 +0200
+Message-Id: <1206865999.22530.187.camel@johannes.berg> (sfid-20080331_125256_160835_6A512197)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
----
+--=-DOnVt30fvr7V9SjfSho3
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Side note: on http://wiki.laptop.org/go/88W8388#Gross_EEPROM_map is
-a little shell script that uses "ethtool" to get the dump. I used
-this script before and after the patch to check it's sanity. While
-I was doing this, I noticed that our new "direct command" thingy
-is way faster than it used to be:
+Hi,
 
-Before this patch:
+Apologies for the long CC list, it seems lots of people were either
+involved with the scanning code or could know how it should work :)
 
-# time lbs_eeprom >a
+After having two bug reports about the BSS list/probe_resp variable in
+mac80211 and a very detailed analysis of the problem from Bill Moss, I
+think I've understood the problem now but I'm not sure how to proceed
+because I do not understand the reason for "Do not allow beacons to
+override data from probe responses".
 
-real    0m11.635s
-user    0m0.540s
-sys     0m11.053s
+I'll get into more detail of that code in a bit, but let me give a
+global overview first for those not intimately familiar with the code.
 
+In the MLME/scan code, mac80211 keeps a list of BSS info structures (for
+each hardware that is registered to the system), each of the structures
+containing information on the BSS, see struct ieee80211_sta_bss in
+ieee80211_i.h.
 
-After this patch:
+When we scan, we will always try to keep each of the BSS structs we have
+updated with the last information received, but there is code to prevent
+updating it from a beacon when we have previously received probe
+responses.
 
-# time lbs_eeprom >b
+Now, this code has two mostly orthogonal problems.
 
-real    0m1.478s
-user    0m0.476s
-sys     0m0.912s
+The first one is that there is no actual expiration of BSS structs. Each
+BSS struct has a 'last_update' member that contains (in jiffies) the
+time this item was last updated. This means that we accumulate BSS
+information forever, but due to the 'last_update' only the last few
+items will be returned to the user on asking for a scan result. This
+obviously has problems since a rogue station could bombard us with fake
+probe responses and cause us to build a huge BSS list which is never
+again freed until the hardware is deregistered. This will need to be
+fixed, of course.
 
-Thats a nice, unexpected side effect :-)
+The second problem is the one Bill Moss and Vladimir Koutny were running
+into. As soon as we receive a probe response from a BSS, we never again
+update it from beacons, hence userspace can never find an AP during
+passive scanning if we've seen that BSSID before during an active scan.
+In Vladimir Koutny's case this is due to a hardware bug (though I can't
+see why any hardware would behave that way), in Bill Moss's case I'm not
+entirely sure why he's not getting probe responses, maybe the AP is just
+not quick enough.
+In any case, the problem then is that last_update is updated only along
+with the remaining information in a BSS struct, which is quite correct.
+The question, however, is: why are beacons not allowed to override probe
+response information? That is, why does this piece of code exist:
 
+        if (sdata->vif.type !=3D IEEE80211_IF_TYPE_IBSS &&
+            bss->probe_resp && beacon) {
+                /* STA mode:
+                 * Do not allow beacon to override data from Probe Response=
+. */
+                ieee80211_rx_bss_put(dev, bss);
+                return;
+        } =20
 
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c
-@@ -970,27 +970,6 @@
- 	return 0;
- }
- 
--static int lbs_cmd_802_11_eeprom_access(struct cmd_ds_command *cmd,
--					void *pdata_buf)
--{
--	struct lbs_ioctl_regrdwr *ea = pdata_buf;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	cmd->command = cpu_to_le16(CMD_802_11_EEPROM_ACCESS);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_eeprom_access) +
--				S_DS_GEN);
--	cmd->result = 0;
--
--	cmd->params.rdeeprom.action = cpu_to_le16(ea->action);
--	cmd->params.rdeeprom.offset = cpu_to_le16(ea->offset);
--	cmd->params.rdeeprom.bytecount = cpu_to_le16(ea->NOB);
--	cmd->params.rdeeprom.value = 0;
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
- 			       u16 cmd_action, void *pdata_buf)
- {
-@@ -1421,10 +1400,6 @@
- 		ret = lbs_cmd_80211_ad_hoc_stop(cmdptr);
- 		break;
- 
--	case CMD_802_11_EEPROM_ACCESS:
--		ret = lbs_cmd_802_11_eeprom_access(cmdptr, pdata_buf);
--		break;
--
- 	case CMD_802_11_SET_AFC:
- 	case CMD_802_11_GET_AFC:
- 
---- wireless-testing.orig/drivers/net/wireless/libertas/cmdresp.c
-+++ wireless-testing/drivers/net/wireless/libertas/cmdresp.c
-@@ -210,31 +210,6 @@
- 	return 0;
- }
- 
--static int lbs_ret_802_11_eeprom_access(struct lbs_private *priv,
--				  struct cmd_ds_command *resp)
--{
--	struct lbs_ioctl_regrdwr *pbuf;
--	pbuf = (struct lbs_ioctl_regrdwr *) priv->prdeeprom;
--
--	lbs_deb_enter_args(LBS_DEB_CMD, "len %d",
--	       le16_to_cpu(resp->params.rdeeprom.bytecount));
--	if (pbuf->NOB < le16_to_cpu(resp->params.rdeeprom.bytecount)) {
--		pbuf->NOB = 0;
--		lbs_deb_cmd("EEPROM read length too big\n");
--		return -1;
--	}
--	pbuf->NOB = le16_to_cpu(resp->params.rdeeprom.bytecount);
--	if (pbuf->NOB > 0) {
--
--		memcpy(&pbuf->value, (u8 *) & resp->params.rdeeprom.value,
--		       le16_to_cpu(resp->params.rdeeprom.bytecount));
--		lbs_deb_hex(LBS_DEB_CMD, "EEPROM", (char *)&pbuf->value,
--			le16_to_cpu(resp->params.rdeeprom.bytecount));
--	}
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int lbs_ret_802_11_bcn_ctrl(struct lbs_private * priv,
- 					struct cmd_ds_command *resp)
- {
-@@ -320,10 +295,6 @@
- 		ret = lbs_ret_80211_ad_hoc_stop(priv);
- 		break;
- 
--	case CMD_RET(CMD_802_11_EEPROM_ACCESS):
--		ret = lbs_ret_802_11_eeprom_access(priv, resp);
--		break;
--
- 	case CMD_RET(CMD_802_11D_DOMAIN_INFO):
- 		ret = lbs_ret_802_11d_domain_info(resp);
- 		break;
---- wireless-testing.orig/drivers/net/wireless/libertas/ethtool.c
-+++ wireless-testing/drivers/net/wireless/libertas/ethtool.c
-@@ -48,61 +48,28 @@
-                                   struct ethtool_eeprom *eeprom, u8 * bytes)
- {
- 	struct lbs_private *priv = (struct lbs_private *) dev->priv;
--	struct lbs_ioctl_regrdwr regctrl;
--	char *ptr;
-+	struct cmd_ds_802_11_eeprom_access cmd;
- 	int ret;
- 
--	regctrl.action = 0;
--	regctrl.offset = eeprom->offset;
--	regctrl.NOB = eeprom->len;
--
--	if (eeprom->offset + eeprom->len > LBS_EEPROM_LEN)
--		return -EINVAL;
--
--//      mutex_lock(&priv->mutex);
--
--	priv->prdeeprom = kmalloc(eeprom->len+sizeof(regctrl), GFP_KERNEL);
--	if (!priv->prdeeprom)
--		return -ENOMEM;
--	memcpy(priv->prdeeprom, &regctrl, sizeof(regctrl));
--
--	/* +14 is for action, offset, and NOB in
--	 * response */
--	lbs_deb_ethtool("action:%d offset: %x NOB: %02x\n",
--	       regctrl.action, regctrl.offset, regctrl.NOB);
--
--	ret = lbs_prepare_and_send_command(priv,
--				    CMD_802_11_EEPROM_ACCESS,
--				    regctrl.action,
--				    CMD_OPTION_WAITFORRSP, 0,
--				    &regctrl);
-+	lbs_deb_enter(LBS_DEB_ETHTOOL);
- 
--	if (ret) {
--		if (priv->prdeeprom)
--			kfree(priv->prdeeprom);
--		goto done;
-+	if (eeprom->offset + eeprom->len > LBS_EEPROM_LEN ||
-+	    eeprom->len > LBS_EEPROM_READ_LEN) {
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
--	mdelay(10);
--
--	ptr = (char *)priv->prdeeprom;
--
--	/* skip the command header, but include the "value" u32 variable */
--	ptr = ptr + sizeof(struct lbs_ioctl_regrdwr) - 4;
--
--	/*
--	 * Return the result back to the user
--	 */
--	memcpy(bytes, ptr, eeprom->len);
--
--	if (priv->prdeeprom)
--		kfree(priv->prdeeprom);
--//	mutex_unlock(&priv->mutex);
--
--	ret = 0;
-+	cmd.hdr.size = cpu_to_le16(sizeof(struct cmd_ds_802_11_eeprom_access) -
-+		LBS_EEPROM_READ_LEN + eeprom->len);
-+	cmd.action = cpu_to_le16(CMD_ACT_GET);
-+	cmd.offset = cpu_to_le16(eeprom->offset);
-+	cmd.len    = cpu_to_le16(eeprom->len);
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_EEPROM_ACCESS, &cmd);
-+	if (!ret)
-+		memcpy(bytes, cmd.value, eeprom->len);
- 
--done:
--	lbs_deb_enter_args(LBS_DEB_ETHTOOL, "ret %d", ret);
-+out:
-+	lbs_deb_leave_args(LBS_DEB_ETHTOOL, "ret %d", ret);
-         return ret;
- }
- 
---- wireless-testing.orig/drivers/net/wireless/libertas/hostcmd.h
-+++ wireless-testing/drivers/net/wireless/libertas/hostcmd.h
-@@ -592,12 +592,13 @@
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_eeprom_access {
-+	struct cmd_header hdr;
- 	__le16 action;
--
--	/* multiple 4 */
- 	__le16 offset;
--	__le16 bytecount;
--	u8 value;
-+	__le16 len;
-+	/* firmware says it returns a maximum of 20 bytes */
-+#define LBS_EEPROM_READ_LEN 20
-+	u8 value[LBS_EEPROM_READ_LEN];
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_tpc_cfg {
-@@ -722,7 +723,6 @@
- 		struct cmd_ds_mac_reg_access macreg;
- 		struct cmd_ds_bbp_reg_access bbpreg;
- 		struct cmd_ds_rf_reg_access rfreg;
--		struct cmd_ds_802_11_eeprom_access rdeeprom;
- 
- 		struct cmd_ds_802_11d_domain_info domaininfo;
- 		struct cmd_ds_802_11d_domain_info domaininforesp;
---- wireless-testing.orig/drivers/net/wireless/libertas/wext.h
-+++ wireless-testing/drivers/net/wireless/libertas/wext.h
-@@ -4,17 +4,6 @@
- #ifndef	_LBS_WEXT_H_
- #define	_LBS_WEXT_H_
- 
--/** lbs_ioctl_regrdwr */
--struct lbs_ioctl_regrdwr {
--	/** Which register to access */
--	u16 whichreg;
--	/** Read or Write */
--	u16 action;
--	u32 offset;
--	u16 NOB;
--	u32 value;
--};
--
- extern struct iw_handler_def lbs_handler_def;
- extern struct iw_handler_def mesh_handler_def;
- 
---- wireless-testing.orig/drivers/net/wireless/libertas/dev.h
-+++ wireless-testing/drivers/net/wireless/libertas/dev.h
-@@ -310,7 +310,6 @@
- 	u32 enable11d;
- 
- 	/**	MISCELLANEOUS */
--	u8 *prdeeprom;
- 	struct lbs_offset_value offsetvalue;
- 
- 	u32 monitormode;
+I failed to find any explanation for it in the git archive (it was part
+of the first code drop from Jiri that made it into a wireless tree and I
+don't have any older git archives handy) nor in my email though I
+vaguely remember there was a reason for it (or I may have made it up).
+
+Bill Moss reports that removing this piece of code (and then the
+probe_resp variable =EF=BB=BFcompletely since it'll be write-only) fixes th=
+e
+problem, and it's obvious why.
+
+The only thing I'm not sure about is whether that will introduce
+regressions because probe responses can contain better information than
+beacons. The only reason I can find for this would be an AP that has
+multiple SSIDs with different security settings on each and announces
+those only in the probe responses (and otherwise uses a hidden SSID),
+but we only handle that now, much later than the code there that was
+already present.
+
+However, that actually seems to have another bug, if you have such an AP
+will you find two BSSes, one with a hidden and one with a visible SSID?
+
+Any hints about this code or the desired behaviour would be greatly
+appreciated.
+
+Thanks,
+johannes
+
+--=-DOnVt30fvr7V9SjfSho3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR+9QTaVg1VMiehFYAQI4OBAAnqYz2N7hYoGj+qH8T4fwY5BYUoNAtOUS
+uHdYT6m+iszMvahiy+UO6RjcoeRsA+ABJAT9BqB92Xv2wbOw5uZyt2PcDel2wSTc
+sZVR9Tn1bLgDb9vD2Jo6TT3rDbNmBf7AKRNczfW1PHY0oWBAeoJDIJgsOuDLWxLF
+kZZM9zZAXCyh0s2iqkUNayPk3rfq2adOppp0/MR/GjFOyenj6s0iA7edtWJOM4AC
+ZKn2vX9sqMtJXv0iScRon6cMCbS86+mL0qlvmlxXAvvyGDIorfXFivZz+a37qIL+
+v/jgDwwg/QO8D/hLgU7uDiRsLb2p75uivZG26FtCGDoKn0zaeqKk42H2FCya2y6W
+sZvFX81s363pJNrSv8q4wucewdyZjjrXJh1KeapgkRlnsRDr2mtyot0IeQSBNfIX
+tae5LXqLiXe+DwzM0IiPBw3P9jcLduakv2ccHsaAG1HxXQBhVNqMxkypvo6lL+rh
+LPX2AR8pIPiZSzSA4L+EVMGsBKP7xi9YskGP7Txq/gOoEmUEKcUjX2QHFh9lzbj4
+jYkcSnB2PJ4G0vHFEFYw8T129KToX7/7tz0abzc57NQQqf41vktI7/Xm/XNsD1iu
+e30owRkHaEbml1c25So4a2sQ3T96yxJbpWl0NgH0H31EW7NodSCZ07EWYwFzjHeh
+I/47nINvbnI=
+=pqa8
+-----END PGP SIGNATURE-----
+
+--=-DOnVt30fvr7V9SjfSho3--
+
