@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2947 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755394AbYDAREj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 13:04:39 -0400
-Date: Tue, 1 Apr 2008 12:44:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luca Venturini <lucventurini@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support
-	WPA2 wireless network with PEAP - MSCHAPV2
-Message-ID: <20080401164419.GA3530@tuxdriver.com> (sfid-20080401_180442_080435_4F22E2EC)
-References: <47F1F4F4.2080502@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47F1F4F4.2080502@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.236]:7922 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395AbYDABDP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 21:03:15 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so1054936wra.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 18:03:12 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: johannes@sipsolutions.net
+Date: Mon, 31 Mar 2008 16:00:13 -0700
+Subject: [PATCH 1/2] mac80211: check for mesh_config length on incoming management frames
+Message-ID: <47f189ce.0a528c0a.4608.0322@mx.google.com> (sfid-20080401_020317_021930_45A006D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You probably want to address this to linux-wireless@vger.kernel.org
-instead...
 
-On Tue, Apr 01, 2008 at 10:40:20AM +0200, Luca Venturini wrote:
-> Using Ubuntu Hardy Beta, Linux kernel 2.6.24, AMD64.
-> I have to connect to a campus (University of Verona, Italy; more 
-> information maybe available at https://wifi.univr.it sadly in Italian only, 
-> and I am not sure it is reachable from outside the university) WPA2 
-> wireless network. It uses PEAP authentication, Dynamic WEP encryption, 
-> second phase: MSCHAPv2.
-> It also requires user login, password, and a CA certificate (available at 
-> the web page I linked above).
-> At the same page a wpasupplicant configuration file is also available, so 
-> to allow people to connect from linux also.
-> In Ubuntu Gutsy 32 bit (Linux kernel 2.6.22.14 if I am not mistaken) I was 
-> able to connect through NetworkManager and precisely using the GNOME 
-> nm-applet.
-> However, since I switched to Linux 2.6.24, I have no more been able to 
-> connect, whether through NM-applet or from the command line, using 
-> wpasupplicant. The wireless functions perfectly, and there has been no 
-> change in its configuration, since I am using it now (Windows Vista, 
-> configured months ago).
-> Reported also here on launchpad: 
-> https://bugs.launchpad.net/ubuntu/+bug/209602
-> Thank you for your attention.
-> Greetings
->
-> Luca Venturini
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/ieee80211_sta.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index cfe6fcc..feec201 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2153,11 +2153,14 @@ ieee80211_rx_mesh_bss_get(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
+ 
+ static struct ieee80211_sta_bss *
+ ieee80211_rx_mesh_bss_add(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
+-			  u8 *mesh_cfg, int freq)
++			  u8 *mesh_cfg, int mesh_config_len, int freq)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sta_bss *bss;
+ 
++	if (mesh_config_len != MESH_CFG_LEN)
++		return NULL;
++
+ 	bss = kzalloc(sizeof(*bss), GFP_ATOMIC);
+ 	if (!bss)
+ 		return NULL;
+@@ -2530,7 +2533,8 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
+ #ifdef CONFIG_MAC80211_MESH
+ 		if (elems.mesh_config)
+ 			bss = ieee80211_rx_mesh_bss_add(dev, elems.mesh_id,
+-				elems.mesh_id_len, elems.mesh_config, freq);
++				elems.mesh_id_len, elems.mesh_config,
++				elems.mesh_config_len, freq);
+ 		else
+ #endif
+ 			bss = ieee80211_rx_bss_add(dev, mgmt->bssid, freq,
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.4.3
+
+
+
