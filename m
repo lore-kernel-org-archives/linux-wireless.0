@@ -1,47 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6916 "EHLO mga09.intel.com"
+Received: from mx.fenrir.org.uk ([81.168.115.223]:48459 "EHLO mx.fenrir.org.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757409AbYDXSzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/21] iwlwifi updates to enable 5000 family
-Date: Thu, 24 Apr 2008 11:55:17 -0700
-Message-Id: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com> (sfid-20080424_205620_108326_72C2DF2C)
+	id S1751094AbYCaXFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 19:05:33 -0400
+Date: Mon, 31 Mar 2008 23:00:30 +0100
+From: Brian Morrison <bdm@fenrir.org.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: add EU regulatory domain
+Message-ID: <20080331230030.18da1c21@peterson.fenrir.org.uk> (sfid-20080401_000538_531462_F55C8CDE)
+In-Reply-To: <1206997315-15878-1-git-send-email-linville@tuxdriver.com>
+References: <1206997315-15878-1-git-send-email-linville@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains more general iwlwifi changes to support
-more hardware. It also includes our first series of patches to
-add support for the Intel Wifi Link 5000 family.
+On Mon, 31 Mar 2008 17:01:55 -0400
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-[PATCH 01/21] iwlwifi: move verify_ucode functions to iwl-core
-[PATCH 02/21] iwlwifi: remove 49 prefix from general CSR values
-[PATCH 03/21] iwlwifi: move hw_rx_handler_setup to iwl-4965.c
-[PATCH 04/21] iwlwifi: remove unnecessary apmg settings
-[PATCH 05/21] iwlwifi: wrapping nic configuration in iwl core handler
-[PATCH 06/21] iwlwifi-5000: adding initial recognition for the 5000 family
-[PATCH 07/21] iwlwifi-5000: add ops infrastructure for 5000
-[PATCH 08/21] iwlwifi-5000: add apm_init handler for 5000 HW family
-[PATCH 09/21] iwlwifi-5000: use iwl4965_set_pwr_src in 5000
-[PATCH 10/21] iwlwifi-5000: EEPROM settings for 5000
-[PATCH 11/21] iwlwifi-5000: adding iwl5000 HW parameters
-[PATCH 12/21] iwlwifi-5000: update the CT-Kill value for 5000 series
-[PATCH 13/21] iwlwifi-5000: add run time calibrations for 5000
-[PATCH 14/21] iwlwifi-5000: adjust antennas names in 5000 HW family
-[PATCH 15/21] iwlwifi-5000: Add HW REV of 5000 HW family
-[PATCH 16/21] iwlwifi-5000: add iwl 5000 shared memory handlers
-[PATCH 17/21] iwlwifi-5000: update the byte count in SCD
-[PATCH 18/21] iwlwifi-5000: add eeprom check version handler
-[PATCH 19/21] iwlwifi-5000: add nic config handler for 5000 HW
-[PATCH 20/21] iwlwifi: rename iwl-4965-commands to iwl-commands.h
-[PATCH 21/21] iwlwifi: rename iwl-4965.h to iwl-dev.h
+> Based on initial footwork from Brian Morrison.
+> 
+> Cc: Brian Morrison <bdm@fenrir.org.uk>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Is this worth having?  I'm surprised no one has asked for it until
+> recently...
+> 
+> Are these values correct?  Including the power and gain values?  Does
+> anyone know have a link to an authoritative source?
+> 
+>  net/wireless/reg.c |   16 ++++++++++++++++
+>  1 files changed, 16 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 8cc6037..998ceb6 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -80,6 +80,21 @@ static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
+>  				     IEEE80211_CHAN_RADAR),
+>  };
+>  
+> +static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
+> +	/* IEEE 802.11b/g, channels 1..13 */
+> +	RANGE_PWR(2412, 2472, 27, 6, 0),
+
+This should read:
+
++	RANGE_PWR(2412, 2472, 20, 0, 0),
+
+The power limit is supposed to be +20dBm in the EU, and it's EIRP so
+that includes antenna gain which I've set to 0dB.
+
+For an authoritative document you need http://www.etsi.org but their
+site is down just now, so I can't find the document I want.
+
+> +	/* IEEE 802.11a, channel 36*/
+> +	RANGE_PWR(5180, 5180, 23, 6, 0),
+> +	/* IEEE 802.11a, channel 40*/
+> +	RANGE_PWR(5200, 5200, 23, 6, 0),
+> +	/* IEEE 802.11a, channel 44*/
+> +	RANGE_PWR(5220, 5220, 23, 6, 0),
+> +	/* IEEE 802.11a, channels 48..64 */
+> +	RANGE_PWR(5240, 5320, 23, 6, 0),
+> +	/* IEEE 802.11a, channels 100..140 */
+> +	RANGE_PWR(5500, 5700, 23, 6, 0),
+> +};
+> +
+>  #define REGDOM(_code)							\
+>  	{								\
+>  		.code = __stringify(_code),				\
+> @@ -90,6 +105,7 @@ static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
+>  static const struct ieee80211_regdomain ieee80211_regdoms[] = {
+>  	REGDOM(US),
+>  	REGDOM(JP),
+> +	REGDOM(EU),
+>  };
+>  
+>  
 
 
-Thank you
 
-Reinette
 
+-- 
+
+Brian Morrison
+
+bdm at fenrir dot org dot uk
+
+   "Arguing with an engineer is like wrestling with a pig in the mud;
+    after a while you realize you are muddy and the pig is enjoying it."
+    
+GnuPG key ID DE32E5C5 - http://wwwkeys.uk.pgp.net/pgpnet/wwwkeys.html
