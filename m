@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fenrir.org.uk ([81.168.115.223]:33024 "EHLO mx.fenrir.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756957AbYDLAXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 20:23:08 -0400
-Received: from fangio.fenrir.org.uk ([10.0.0.4])
-	(TLSv1:AES256-SHA:256)
-	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
-	id 1JkTWL-00011c-M2
-	for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 01:23:05 +0100
-Date: Sat, 12 Apr 2008 01:23:05 +0100
-From: Brian Morrison <bdm@fenrir.org.uk>
-To: linux-wireless@vger.kernel.org
-Subject: Latest compat-wireless build fails
-Message-ID: <20080412012305.76f1b7eb@fangio.fenrir.org.uk> (sfid-20080412_012314_710323_0A9EF5C5)
+Received: from baikonur.stro.at ([213.239.196.228]:54717 "EHLO
+	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404AbYCaXOU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 19:14:20 -0400
+Date: Tue, 1 Apr 2008 01:12:42 +0200
+From: maximilian attems <max@stro.at>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwlwifi page allocation failure oops
+Message-ID: <20080331231242.GW17874@baikonur.stro.at> (sfid-20080401_001423_541387_707427AB)
+References: <20080331215552.GF11802@stro.at> <D936D925018D154694D8A362EEB08920040FA45D@orsmsx416.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D936D925018D154694D8A362EEB08920040FA45D@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If anyone is interested, the latest compat-wireless tarball fails to
-build. It complains about some missing led defines in the rt2x00
-directory.
+On Mon, Mar 31, 2008 at 04:09:54PM -0700, Chatre, Reinette wrote:
+> On , maximilian attems  wrote:
+> 
+> > have that oops since 2.6.24 after some cycles of suspend to ram.
+> > just happened again with 2.6.25-rc7 on a x61s box
+> > ap is plain unencrypted network.
+> > 
+> 
+> ...
+> 
+> Coud you please submit a new bug at
+> http://www.intellinuxwireless.org/bugzilla that includes the details of
+> your environment (which kernel/driver) and the log of the oops?
 
-I don't have the exact error messages to hand, but I imagine it's
-trivial for someone to type make and find out.
-
-Cheers!
-
--- 
-
-Brian
+thanks for quick response
+is bugzilla.k.o fine, why another bugzilla?
