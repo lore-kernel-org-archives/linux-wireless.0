@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50520
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753774AbYCTWKi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2008 18:10:38 -0400
-Date: Thu, 20 Mar 2008 15:10:54 -0700 (PDT)
-Message-Id: <20080320.151054.41532763.davem@davemloft.net> (sfid-20080320_221042_909507_907574BA)
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, sam@ravnborg.org, dsd@gentoo.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH/RFC v2] introduce ARCH_CAN_UNALIGNED_ACCESS Kconfig
- symbol
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080320220348.GC1330@tuxdriver.com>
-References: <20080320.141307.173590705.davem@davemloft.net>
-	<1206048106.16475.161.camel@johannes.berg>
-	<20080320220348.GC1330@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([70.61.120.52]:2360 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751520AbYCaTdT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 15:33:19 -0400
+Date: Mon, 31 Mar 2008 15:02:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 bug? no data is being transmitted after interface is
+	brought down and then up again
+Message-ID: <20080331190225.GA12933@tuxdriver.com> (sfid-20080331_203333_356166_CE46FB5E)
+References: <fsm20k$usk$1@ger.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <fsm20k$usk$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 20 Mar 2008 18:03:48 -0400
+On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
 
-> While I think Dave has a point, I don't think you should labor the word
-> choice too much.  Try to document it as clearly as possible and hope
-> for the best -- I hear that the arch maintainers are top notch! :-)
+> My question is, should this be considered a bug in mac80211?
+> IMO, when an interface is brought down and then up again, one of the=20
+> following things should happen:
+> 1) Everything works as before
+> 2) Nothing works, but the card disassociates from the network.
 
-I think the name of the macro is very important.
+#2 would be my vote.
 
-Non-arch people will see this thing and wonder what in the
-world it means.  You can document something with kerneldoc
-foo as much as you like, still the initial impression the
-reader gets from the name is of utmost importance.
+> The current behaviour (card stays associated, but no data is transmit=
+ted=20
+> any more) is unintuitive and costed me much time.
+
+Seems like a bug to me.  Would you mind opening a bug at
+bugzilla.kernel.org?
+
+Thanks!
+
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
