@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:35804 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756010AbYDQQ7z convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754173AbYDALsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 12:59:55 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so96233nfb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 09:59:53 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 hardware encryption
-Date: Thu, 17 Apr 2008 19:04:25 +0200
-Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>
-References: <200804051931.58895.IvDoorn@gmail.com> <200804151717.54920.IvDoorn@gmail.com> <1208427279.4066.14.camel@johannes.berg>
-In-Reply-To: <1208427279.4066.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200804171904.26094.IvDoorn@gmail.com> (sfid-20080417_175959_774824_21AE5414)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 1 Apr 2008 07:48:10 -0400
+Subject: Re: [PATCH 2/8] iwlwifi: hook iwlwifi with Linux rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mabbas@linux.intel.com>
+In-Reply-To: <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
+References: <1206746472-10443-1-git-send-email-reinette.chatre@intel.com>
+	 <1206746472-10443-2-git-send-email-reinette.chatre@intel.com>
+	 <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tqT6pm0jZ/eoPzfel/3s"
+Date: Mon, 31 Mar 2008 22:23:37 +0200
+Message-Id: <1206995017.5143.9.camel@johannes.berg> (sfid-20080401_124815_044445_34FC9507)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 17 April 2008, Johannes Berg wrote:
-> On Tue, 2008-04-15 at 17:17 +0200, Ivo van Doorn wrote:
->=20
-> > > In any case, for the problem at hand, I wouldn't mind increasing
-> > > hw_key_idx to a u16 all the way through, or pass the key_conf poi=
-nter
-> > > instead.
-> >=20
-> > I'll create a patch that changes it to the key_conf pointer then,
-> > that sounds like the safest option to allow changes to key_conf lat=
-er.
->=20
-> That'll also solve your problem of having to know the algorithm, and =
-b43
-> might benefit of that too, I think it currently keeps a table for the
-> algorithms.
 
-Exactly :)
-A follow up patch that I will create later will add a flag to the key_c=
-onf
-structure that marks the key as shared or pairwise. After that adding t=
-he
-final bits for HW encryption to rt61pci and rt73usb should be very easy=
-=2E :)
+--=-tqT6pm0jZ/eoPzfel/3s
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> One thing to keep in mind that you'll want to document clearly: the
-> key_conf pointer there will only be valid until ops->tx() returns, so
-> you must not access it (e.g. via the tx control copy you need to make
-> for tx status) outside of the tx() routine unless you want to somehow
-> make sure it isn't removed while in use (which is possible [1] since
-> set_key() may sleep.)
->=20
-> Hence, if you defer ops->tx() to some workqueue or something, you nee=
-d
-> to copy out all the data you need from the key_conf beforehand.
 
-Ok, I'll update my patch with the above warning.
+> +ifeq ($(CONFIG_IWLCORE_RFKILL),y)
+> +	iwlcore-objs +=3D iwl-rfkill.o
+> +endif
 
-> Tomas: was it you who mentioned we should remove tx_control from
-> tx_status and just require copying the fields we need? If so, did you
-> ever look into that?
->=20
-> > Note that this change (either adding the key_conf pointer or the hw=
-_key_idx to u16)
-> > will cause ieee80211_tx_control to exceed the 48 bytes. So that wil=
-l make it
-> > harder to move it into the skb->cb array later.
->=20
-> I just had a look, we could make the rate pointers index into the rat=
-e
-> array instead which would make them go from 24=EF=BB=BF bytes (12 on =
-32-bit) to
-> 3 bytes (we only need a u8 index.)
->=20
-> johannes
->=20
-> [1] using creative bit-locking in hw_key_idx.
+Btw, you should be able to rewrite that as
 
-Ivo
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iwlcore-objs-$(CONFIG_IWLCORE_RFKILL) +=3D iwl-rfkill.o
+
+and make the Makefile much more concise.
+
+johannes
+
+--=-tqT6pm0jZ/eoPzfel/3s
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/FISKVg1VMiehFYAQLMOQ//Xzh/OLWmrLbyMTXb8ArL93tOmpFPN9rA
+CPNbUeW/EY3otVVulLJT60IhYiTCQId3U1B+Ncm+VzbbKSDIsAbgoa4WY99cTPte
+s9lSrbCfCOK8qNZCE3b8CaPbdyI0dgJ13Epca0Ob3uiHKRWv+75ienymToNC3fAo
+viFIeg2Tky+BNJhc2vM+/D6u9/t1XCtc1rqbj6z2/sYR5BUe9XCxvTXTKQYfIZOr
+ASc/rODh6uFTjS0AsFlhK8qNCJtFRw6JUtMbMaHEMZh4tA8XUupKaHjzXqwS1RvL
+fe2f48/Jpj5yf7xl0GhgaLZWKC7hVtVbf2jaFjqIZrKXeS3dDaFcoeIt4v0X4JQ9
+ykL6rKDk6zd/s/McY6IzAedBrZceuM38jF+Cr5EPa1C/x9Lv9QU24pC5bU0Rftd0
+KaClVOTyh7DG1wiiqbcvkPuLI6kA3Dg8d9/WCr9A9R3rnH0nBCkDW/Imv7iVBbMg
+eq9XmV+to6AXZPK7p3T4JPpAjxoGjxpzKrrR3EjfMlbtydCuf1AXQ9H373Kfwjl1
+jnJ/2xapdr7Om+5yRESmtgPVmGDPynFVOg1vOH8GlXnA6vGktF1WImDtr9dFzngh
+LbDsVtdaoUQmYvHRjp7Vhe7vweRNCK5ReoIaoVsmyv5PSbs7j26BoC7PCUvKTZ+D
+bL5m8HdVwHg=
+=YcB0
+-----END PGP SIGNATURE-----
+
+--=-tqT6pm0jZ/eoPzfel/3s--
+
