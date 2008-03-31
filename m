@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:20399 "EHLO mga02.intel.com"
+Received: from element.ksp.sk ([158.195.16.154]:56111 "EHLO element.ksp.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755883AbYCYRVw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 13:21:52 -0400
+	id S1751743AbYCaPFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 11:05:09 -0400
+Message-ID: <47F0FD9F.6020709@work.ksp.sk> (sfid-20080331_160524_598389_F98B96E1)
+Date: Mon, 31 Mar 2008 17:05:03 +0200
+From: Vladimir Koutny <vlado@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: mac80211 - 10.0.4 - Kernel - 2.6.23.9-1mdv
-Date: Tue, 25 Mar 2008 10:10:22 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892004037184@orsmsx416.amr.corp.intel.com> (sfid-20080325_172157_627537_9B999A9F)
-In-Reply-To: <aed435370803211515n5223a7aaob31339ed427a02cd@mail.gmail.com>
-References: <aed435370803211515n5223a7aaob31339ed427a02cd@mail.gmail.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Rakesh Sinha" <rakesh.usenet@gmail.com>,
-	<linux-wireless@vger.kernel.org>
+To: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH 1/2] mac80211: correct use_short_preamble handling
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, March 21, 2008 3:16 PM, Rakesh Sinha wrote:
+ERP IE bit for preamble mode is 0 for short and 1 for long, not the other
+way around. This fixes the value reported to the driver via
+bss_conf->use_short_preamble field.
 
-> Hi -
->  I am trying to build the mac80211 system on my Mandirva 2008
-> package. Kernel - 
-> 
-> # uname -a
-> Linux localhost 2.6.23.9-1mdv #1 Tue Nov 27 03:30:42 EST 2007 i686
-> Genuine Intel(R) CPU           T2060  @ 1.60GHz GNU/Linux
-> 
-> I am looking at the instructions available here -
-> 
-> http://intellinuxwireless.org/?p=mac80211&n=HOWTO-mac80211 .
-> 
-> After running make on 10.0.4 version of mac80211 - this is what I get
-> on the console. 
-> 
-> ----patch failure output-----
-> patching file net/mac80211/ieee80211.c
-> Hunk #1 FAILED at 2817.
-> Hunk #2 FAILED at 2838.
-> Hunk #3 FAILED at 2890.
-> Hunk #4 FAILED at 2975.
-> Hunk #5 FAILED at 2990.
-> Hunk #6 FAILED at 3003.
-> Hunk #7 FAILED at 3019.
-> 7 out of 7 hunks FAILED -- saving rejects to file
-> net/mac80211/ieee80211.c.rej
-> 
-> pending/0033-mac80211-fix-a-msdu-header.patch failed. Terminating.
-> If patch or script failed, check pre/ and post/ for current stage.
-> make: *** [modified] Error 1 
-> 
+Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
 
-Looks like the line endings in that patch may be wrong. Please run the
-following:
-$ make clean
-$ dos2unix pending/0033-mac80211-fix-a-msdu-header.patch
+---
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index f9cf2f1..6fb179a 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -360,7 +360,7 @@ static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
+ 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
+-	bool preamble_mode = (erp_value & WLAN_ERP_BARKER_PREAMBLE) != 0;
++	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
+ 	DECLARE_MAC_BUF(mac);
+ 	u32 changed = 0;
 
-Now try to build the mac80211 again.
+@@ -376,16 +376,15 @@ static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
+ 		changed |= BSS_CHANGED_ERP_CTS_PROT;
+ 	}
 
-Reinette
+-	if (preamble_mode != bss_conf->use_short_preamble) {
++	if (use_short_preamble != bss_conf->use_short_preamble) {
+ 		if (net_ratelimit()) {
+ 			printk(KERN_DEBUG "%s: switched to %s barker preamble"
+ 			       " (BSSID=%s)\n",
+ 			       sdata->dev->name,
+-			       (preamble_mode == WLAN_ERP_PREAMBLE_SHORT) ?
+-					"short" : "long",
++			       use_short_preamble ? "short" : "long",
+ 			       print_mac(mac, ifsta->bssid));
+ 		}
+-		bss_conf->use_short_preamble = preamble_mode;
++		bss_conf->use_short_preamble = use_short_preamble;
+ 		changed |= BSS_CHANGED_ERP_PREAMBLE;
+ 	}
 
