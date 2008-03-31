@@ -1,32 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.179]:16011 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbYCFAMu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2008 19:12:50 -0500
-Received: by el-out-1112.google.com with SMTP id v27so2486284ele.17
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2008 16:12:49 -0800 (PST)
-Message-ID: <84ac67910803051612w15dd7247xf9d3c7b05330b7ff@mail.gmail.com> (sfid-20080306_001253_912651_FB60B2BE)
-Date: Thu, 6 Mar 2008 00:12:49 +0000
-From: "Ahmed Ammar" <b33fc0d3@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: B43 will not associate
-Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <1204752217.17696.14.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <84ac67910803041143y76e378c7m2fd88a26115f0ae2@mail.gmail.com>
-	 <200803042047.35710.mb@bu3sch.de>
-	 <84ac67910803041413s510c5513k25f77762b0e70d@mail.gmail.com>
-	 <200803051517.31919.mb@bu3sch.de>
-	 <84ac67910803050734t1386a8edx39eb7133c909d9bb@mail.gmail.com>
-	 <1204741000.9378.6.camel@localhost.localdomain>
-	 <84ac67910803051253p7906314asc3cbdb740af5ba1c@mail.gmail.com>
-	 <1204752217.17696.14.camel@localhost.localdomain>
+Received: from styx.suse.cz ([82.119.242.94]:51563 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751270AbYCaN4q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 09:56:46 -0400
+Date: Mon, 31 Mar 2008 15:57:18 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	Bill Moss <bmoss@CLEMSON.EDU>, Daniel Drake <dsd@gentoo.org>,
+	Dan Williams <dcbw@redhat.com>, Vladimir Koutny <vlado@ksp.sk>,
+	Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: mac80211 MLME scanning - BSS list trouble
+Message-ID: <20080331155718.357d88b0@griffin.suse.cz> (sfid-20080331_145648_902036_65B3303B)
+In-Reply-To: <1206865999.22530.187.camel@johannes.berg>
+References: <1206865999.22530.187.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Ok; and you are _never_ able to associate with the AP with with wlan1,
->  correct?
+On Sun, 30 Mar 2008 10:33:19 +0200, Johannes Berg wrote:
+> The question, however, is: why are beacons not allowed to override probe
+> response information? That is, why does this piece of code exist:
+> 
+>         if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
+>             bss->probe_resp && beacon) {
+>                 /* STA mode:
+>                  * Do not allow beacon to override data from Probe Response. */
+>                 ieee80211_rx_bss_put(dev, bss);
+>                 return;
+>         }  
+> 
+> I failed to find any explanation for it in the git archive (it was part
+> of the first code drop from Jiri that made it into a wireless tree and I
+> don't have any older git archives handy) nor in my email though I
+> vaguely remember there was a reason for it (or I may have made it up).
 
-Yes. WPA/WEP/Open. nothing works.
+It was already in the initial Devicescape release:
+
+1478         if (bss->probe_resp && beacon) {
+1479                 /* Do not allow beacon to override data from Probe Response. */
+1480                 ieee80211_rx_bss_put(dev, bss);
+1481                 return;
+1482         }
+
+The only reason I can think of is handling of hidden SSIDs. Seems it
+was necessary at that time. I'd vote for removing it.
+
+> However, that actually seems to have another bug, if you have such an AP
+> will you find two BSSes, one with a hidden and one with a visible SSID?
+
+That's what I would consider a correct behaviour. You in fact do have
+two distinct BSSes. But I don't know how the current user space handles
+that.
+
+Thanks,
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
