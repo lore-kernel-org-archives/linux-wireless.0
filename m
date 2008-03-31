@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.237]:17693 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbYCJWWI (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:17580 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755131AbYCaV4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2008 18:22:08 -0400
-Received: by qb-out-0506.google.com with SMTP id o24so135635qba.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2008 15:22:05 -0700 (PDT)
-To: Franz Apeltauer <franz.apeltauer@gmx.at>
-Subject: Re: 2 compile errors: rt2x00firmware.c and mesh.c
-Date: Mon, 10 Mar 2008 23:21:35 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Mon, 31 Mar 2008 17:56:03 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2250938wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 14:55:58 -0700 (PDT)
+Subject: Re: [PATCH 13/18] mac80211: mesh statistics and config through
+	debugfs
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <47CB3B5E.4020701@gmx.at> <43e72e890803071859r2788075cp12272cad0920d2b0@mail.gmail.com> <47D5AAFC.80401@gmx.at>
-In-Reply-To: <47D5AAFC.80401@gmx.at>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200803102321.35909.IvDoorn@gmail.com> (sfid-20080310_222529_445463_C9853DA0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080327231639.fd1264b9.akpm@linux-foundation.org>
+References: <20080223141703.194775000@sipsolutions.net>
+	 <20080223142015.478371000@sipsolutions.net>
+	 <20080327231639.fd1264b9.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 31 Mar 2008 14:55:56 -0700
+Message-Id: <1207000556.7792.35.camel@localhost> (sfid-20080331_225607_179853_A4D41AE5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 March 2008, Franz Apeltauer wrote:
-> Luis R. Rodriguez schrieb:
-> >>  b) Test on a PC with MSI PC54G2 ... RaLink rt2500
-> > 
-> > You can test this now, I've enabled rt2x00 drivers by fixing
-> > dependencies on config.mk. Forced re-generation of new tarball based
-> > on latest updates too.
-> > 
-> >   Luis
-> 
-> Loaded today's tarball (10.3.).
-> The "redefinition of rt2x00lib_load_firmware" error is back.
-> 
-> I believe, that there should be 2 additional lines in rt2x00firmware.c:
-> a) line #115, before "int rt2x00lib_load_firmware":
->      #ifdef CONFIG_RT2X00_LIB_FIRMWARE
-> b) at the end of the file:
->      #endif /* CONFIG_RT2X00_LIB_FIRMWARE */
-> to be consistent with #ifdef/#else/#endif in rt2x00lib.h lines 124, 127, 
-> 135.
-> Then it compiles fine. install, unload, load.
-> ... and now I see wlan0 and wmaster0!  Yippee!
+On Thu, 2008-03-27 at 23:16 -0700, Andrew Morton wrote:
+> - then fix the obvious, trivial, instantly-detectable, very-deadlocka=
+ble
+>   bug in this patch.  There is just no longer any excuse for this:
+>=20
+> +	read_lock(&dev_base_lock);
+> +	if (copy_from_user(buf, userbuf, buf_size))
 
-How about not linking rt2x00firmware.c at all when RT2X00_LIB_FIRMWARE
-is not set? That should be a clean solution that can be made in the Makefile...
+=EF=BB=BFAs the author of the patch, I would like to apologize about th=
+is.=20
 
-Ivo
+Regarding review quality, I would like to point out that the function
+just above this one, ieee80211_if_read(), which has been for a while in
+the stable releases, suffers the same problem. That does not excuse
+myself though, I should have spotted and fixed it and then implement
+ieee80211_if_write() properly. I will send a patch fixing both issues
+today.
+
+Again sorry for the mess and thank you for spotting the problem.
+
+--=20
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
