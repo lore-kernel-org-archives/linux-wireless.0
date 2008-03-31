@@ -1,90 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:8516 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbYCYOZ7 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:9169 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755614AbYCaMvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2008 10:25:59 -0400
-Received: by py-out-1112.google.com with SMTP id u52so4962640pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2008 07:25:58 -0700 (PDT)
-Message-ID: <43e72e890803250725x2fae4748idcfcea70e114d23f@mail.gmail.com> (sfid-20080325_142604_126745_143D32A5)
-Date: Tue, 25 Mar 2008 10:25:58 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Florian Manschwetus" <florianmanschwetus@gmx.de>
-Subject: Re: gentoo ebuild for compat wireless (resend)
-Cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <47E8DEAD.1040808@gmx.de>
+	Mon, 31 Mar 2008 08:51:47 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so428503ugc.16
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 05:51:44 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt2500pci, infinite calls to rt2x00mc_configure_filter
+Date: Mon, 31 Mar 2008 14:51:22 +0200
+Cc: Bas Hulsken <bhulsken@hotmail.com>, linux-wireless@vger.kernel.org
+References: <1206801246.24689.19.camel@Bas> <200803291801.17068.IvDoorn@gmail.com> <1206964876.5468.12.camel@johannes.berg>
+In-Reply-To: <1206964876.5468.12.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47E7A8DB.5020106@gmx.de>
-	 <43e72e890803241304g13ea443co4e4afb1681da989c@mail.gmail.com>
-	 <47E839BE.5030806@gmx.de>
-	 <43e72e890803241630n1906147ej1190d7562f5d1354@mail.gmail.com>
-	 <47E83DF5.9030401@gmx.de> <47E8DEAD.1040808@gmx.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200803311451.23388.IvDoorn@gmail.com> (sfid-20080331_135215_255202_7FE7A35D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 7:14 AM, Florian Manschwetus
-<florianmanschwetus@gmx.de> wrote:
-> Florian Manschwetus schrieb:
->
->
-> > Luis R. Rodriguez schrieb:
->  >> On Mon, Mar 24, 2008 at 7:31 PM, Florian Manschwetus
->  >> <florianmanschwetus@gmx.de> wrote:
->  >>> Luis R. Rodriguez schrieb:
->  >>>
->  >>>
->  >>>> On Mon, Mar 24, 2008 at 9:12 AM, Florian Manschwetus
->  >>>  > <florianmanschwetus@gmx.de> wrote:
->  >>>  >> is it possible to get a version appendix on the tar.bz?
->  >>>  >>  so it should be easy to get a working ebuild fpr this.
->  >>>  >
->  >>>  > The problem is there's two things to "version", compat-wireless
->  >>> itself
->  >>>  > and Linux. I keep both version already as part of the tarball.
->  >>>  >
->  >>>  > wireless@sipsolutions:~$ cat compat-wireless-2.6/compat-release
->  >>>  > 2.8-49-gfe0f268
->  >>>  >
->  >>>  > wireless@sipsolutions:~$ cat compat-wireless-2.6/git-describe
->  >>>  > v2.6.25-rc5-2623-g7556b76
->  >>>  >
->  >>>  > You can also just pull these from the directory that was used to
->  >>>  > create the tarball:
->  >>>  >
->  >>>  >
->  >>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/compat-release
->  >>>
->  >>>  >
->  >>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6/git-describe
->  >>>
->  >>>  >
->  >>>  > Does this suffice?
->  >>>
->  >>>
->  >>> Not really but it gives a version hint, could you create a symlink or
->  >>> so?
->  >>>  a url like that would be fine:
->  >>>  http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.8-49.tar.bz2
->  >>>
->  >>
->  >> The problem is that does not reflect changes to Linux so there may be
->  >> a lot of great code added and yet this wouldn't reflect it. And if we
->  >> go with git-describe for Linux we could get updates on compat-wireless
->  >> itself during no code changes on Linux. I could use date (date -I),
->  >> that might work best but will it work for you?
->  > a date would be perfect (f.e. -20080325)
->  > florian
->  Ok, i got a working ebuild, no i need an regular accessible download
->  source with "solid" filenames e.g. the date appendix, then i could
->  publish it as testing package.
+Hi,
 
-Does this work for you?
+> Thanks for helping debug this. I haven't had a chance to run hostapd
+> again, been far too busy. As it stands, I'm not sure when I can possibly
+> get to that.
+> 
+> > > rt2500pci filter_flags: 2
+> > > rt2500pci MAC changed: 00:0c:f6:14:05:19
+> > 
+> > Packet filter flags of 2 sounds a bit restrictive.
+> > 
+> > Johannes, for Master mode shouldn't the following flags be set as well:
+> > FIF_PROMISC_IN_BSS
+> > FIF_CONTROL
+> > 
+> > Or should the driver enable those automatically when master mode is enabled?
+> 
+> The driver most definitely shouldn't do anything, but neither of those
+> flags should be needed. In a BSS, all frames from the stations are
+> addressed to the BSS-MAC, i.e. to the AP, so the regular MAC filter
+> should allow them through without any sort of promisc. And control
+> frames aren't needed, those are just ack/cts/... frames.
 
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2008-03-25.tar.bz2
+Ok, I think I found the problem. The packet filter in all Ralink devices have a
+TODS filter. Currently I had this only enabled when FIF_PROMISC_IN_BSS was set.
+I'll change this to a check that determines if master mode is enabled.
 
-Note that I'll delete all old tarballs when generating a new one for
-the new date. This happens at 05:10am UTC.
-
-  Luis
+Ivo
