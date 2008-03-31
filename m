@@ -1,67 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41025 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45239 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbYDPOIr (ORCPT
+	with ESMTP id S1753059AbYDALs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 10:08:47 -0400
-Subject: RE: [PATCH RFC] mac80211: Fixes n-band association problem
-	withcertain APs
+	Tue, 1 Apr 2008 07:48:56 -0400
+Message-Id: <20080331172436.345610000@sipsolutions.net> (sfid-20080401_124931_797277_B7076B46)
+References: <20080331172258.541914000@sipsolutions.net>
+Date: Mon, 31 Mar 2008 19:23:03 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <BD524EA7912ED5469DFD0BAEF6BC752F038E39C1@orsmsx411.amr.corp.intel.com>
-References: <1207867745-26538-1-git-send-email-reinette.chatre@intel.com>
-	 <1207943021.13354.76.camel@johannes.berg>
-	 <BD524EA7912ED5469DFD0BAEF6BC752F038E39C1@orsmsx411.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fLabrNeISRQH+YOzEiB8"
-Date: Wed, 16 Apr 2008 15:59:00 +0200
-Message-Id: <1208354340.11676.33.camel@johannes.berg> (sfid-20080416_150849_511129_0F319474)
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/6] mac80211: sta_info_flush() fixes
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the IBSS code tries to flush the STA list, it does so in
+an atomic context. Flushing isn't safe there, however, and
+requires the RTNL, so we need to defer it to a workqueue.
 
---=-fLabrNeISRQH+YOzEiB8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h   |    2 +
+ net/mac80211/ieee80211_sta.c |    2 -
+ net/mac80211/key.c           |    9 +++++
+ net/mac80211/sta_info.c      |   70 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h      |    2 +
+ 5 files changed, 84 insertions(+), 1 deletion(-)
 
-On Tue, 2008-04-15 at 10:01 -0700, Kolekar, Abhijeet wrote:
-> There are two structures named wmm_info and wmm_param, they are used
-> while
-> Parsing the beacon frame. (Check the function ieee802_11_parse_elems).
-> Certain APs like D-link does not set the fifth bit in WMM IE. I was able
-> to see it thought packet capture. And this patch fixes this problem by
-> copying the wmm_info to wmm_ie, which enables the "wmm" flag in
-> iee80211_send_assoc.
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-03-31 18:25:36.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-03-31 19:13:37.000000000 +0200
+@@ -602,6 +602,8 @@ struct ieee80211_local {
+ 	spinlock_t sta_lock;
+ 	unsigned long num_sta;
+ 	struct list_head sta_list;
++	struct list_head sta_flush_list;
++	struct work_struct sta_flush_work;
+ 	struct sta_info *sta_hash[STA_HASH_SIZE];
+ 	struct timer_list sta_cleanup;
+ 
+--- everything.orig/net/mac80211/sta_info.c	2008-03-31 18:25:59.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-03-31 19:19:28.000000000 +0200
+@@ -643,10 +643,41 @@ static void sta_info_debugfs_add_work(st
+ }
+ #endif
+ 
++void __ieee80211_run_pending_flush(struct ieee80211_local *local)
++{
++	struct sta_info *sta;
++	unsigned long flags;
++
++	ASSERT_RTNL();
++
++	spin_lock_irqsave(&local->sta_lock, flags);
++	while (!list_empty(&local->sta_flush_list)) {
++		sta = list_first_entry(&local->sta_flush_list,
++				       struct sta_info, list);
++		list_del(&sta->list);
++		spin_unlock_irqrestore(&local->sta_lock, flags);
++		sta_info_destroy(sta);
++		spin_lock_irqsave(&local->sta_lock, flags);
++	}
++	spin_unlock_irqrestore(&local->sta_lock, flags);
++}
++
++static void ieee80211_sta_flush_work(struct work_struct *work)
++{
++	struct ieee80211_local *local =
++		container_of(work, struct ieee80211_local, sta_flush_work);
++
++	rtnl_lock();
++	__ieee80211_run_pending_flush(local);
++	rtnl_unlock();
++}
++
+ void sta_info_init(struct ieee80211_local *local)
+ {
+ 	spin_lock_init(&local->sta_lock);
+ 	INIT_LIST_HEAD(&local->sta_list);
++	INIT_LIST_HEAD(&local->sta_flush_list);
++	INIT_WORK(&local->sta_flush_work, ieee80211_sta_flush_work);
+ 
+ 	setup_timer(&local->sta_cleanup, sta_info_cleanup,
+ 		    (unsigned long)local);
+@@ -667,7 +698,12 @@ int sta_info_start(struct ieee80211_loca
+ void sta_info_stop(struct ieee80211_local *local)
+ {
+ 	del_timer(&local->sta_cleanup);
++	cancel_work_sync(&local->sta_flush_work);
++
++	rtnl_lock();
+ 	sta_info_flush(local, NULL);
++	__ieee80211_run_pending_flush(local);
++	rtnl_unlock();
+ }
+ 
+ /**
+@@ -687,6 +723,7 @@ int sta_info_flush(struct ieee80211_loca
+ 	unsigned long flags;
+ 
+ 	might_sleep();
++	ASSERT_RTNL();
+ 
+ 	spin_lock_irqsave(&local->sta_lock, flags);
+ 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
+@@ -705,3 +742,36 @@ int sta_info_flush(struct ieee80211_loca
+ 
+ 	return ret;
+ }
++
++/**
++ * sta_info_flush_delayed - flush matching STA entries from the STA table
++ *
++ * This function unlinks all stations for a given interface and queues
++ * them for freeing. Note that the workqueue function scheduled here has
++ * to run before any new keys can be added to the system to avoid set_key()
++ * callback ordering issues.
++ *
++ * @sdata: the interface
++ */
++void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta, *tmp;
++	unsigned long flags;
++	bool work = false;
++
++	spin_lock_irqsave(&local->sta_lock, flags);
++	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
++		if (sdata == sta->sdata) {
++			__sta_info_unlink(&sta);
++			if (sta) {
++				list_add_tail(&sta->list,
++					      &local->sta_flush_list);
++				work = true;
++			}
++		}
++	}
++	if (work)
++		schedule_work(&local->sta_flush_work);
++	spin_unlock_irqrestore(&local->sta_lock, flags);
++}
+--- everything.orig/net/mac80211/sta_info.h	2008-03-31 18:25:35.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-03-31 19:19:48.000000000 +0200
+@@ -354,5 +354,7 @@ int sta_info_start(struct ieee80211_loca
+ void sta_info_stop(struct ieee80211_local *local);
+ int sta_info_flush(struct ieee80211_local *local,
+ 		    struct ieee80211_sub_if_data *sdata);
++void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata);
++void __ieee80211_run_pending_flush(struct ieee80211_local *local);
+ 
+ #endif /* STA_INFO_H */
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-03-31 18:25:59.000000000 +0200
++++ everything/net/mac80211/ieee80211_sta.c	2008-03-31 19:13:38.000000000 +0200
+@@ -2232,7 +2232,7 @@ static int ieee80211_sta_join_ibss(struc
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	/* Remove possible STA entries from other IBSS networks. */
+-	sta_info_flush(local, sdata);
++	sta_info_flush_delayed(sdata);
+ 
+ 	if (local->ops->reset_tsf) {
+ 		/* Reset own TSF to allow time synchronization work. */
+--- everything.orig/net/mac80211/key.c	2008-03-31 19:18:04.000000000 +0200
++++ everything/net/mac80211/key.c	2008-03-31 19:21:10.000000000 +0200
+@@ -73,6 +73,15 @@ static void ieee80211_key_enable_hw_acce
+ 	if (!key->local->ops->set_key)
+ 		return;
+ 
++	/*
++	 * This makes sure that all pending flushes have
++	 * actually completed prior to uploading new key
++	 * material to the hardware. That is necessary to
++	 * avoid races between flushing STAs and adding
++	 * new keys for them.
++	 */
++	__ieee80211_run_pending_flush(key->local);
++
+ 	addr = get_mac_for_key(key);
+ 
+ 	ret = key->local->ops->set_key(local_to_hw(key->local), SET_KEY,
 
-Ok. Sounds like we want this, but maybe with a comment saying why we do
-it?
-
-johannes
-
---=-fLabrNeISRQH+YOzEiB8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAYGIqVg1VMiehFYAQLRphAAnBxLaSJgQ+YWsLbSqp95bOcRzwHJTW+c
-bMC6ARUTckUgtsVkdVf3tguMc3S4RZPhqZmBfqwAlbaDuqfDdasld6s2GPnAznDO
-n6ZBs800dSi+OqrRFzYaqd8MLTulWvBvSfwZczRt72Zhx/Ll7LA046eYCwXiBK8M
-AYXRlC7njBuXDgwZB5MoJerFH1NMGcO/1yddm8kefr1nfGsvmc1LERrv/pDj1noI
-M9BrssWEQ/q5k1q8tCzS4ujIjQY/X7rakokiBJ8Hn3KIpppPSc1Be4q1f8T2EcBi
-KNohntVHsghJ+E/9KKeuRuSTljFzn3FtLaI+nUfj8djROhNt+du3m3L145dN9Mr1
-f5vxL2VnHERx2yNRquq/Ux4n0rL7znz7loaU+jyERuDmIQ5LpdNYf9sOc+xqNpaB
-2u1b2IR1qb8bmECKQ/GON1qSr5tRlBXFAHwSpkXGCeGjStRzp4QeWUPx4ptaAkDw
-Fsa3fzNQ3pM9w4JTVFbETTLKNUv1sW3X4SR6Z66q5vXJajSWrc52zjQWgunXghhR
-iiDJYWKpVSEAv/W+gbPyUe9iX+exkhA4PMoFRTVhjreYTI1W3dkkOCPosxRgwp85
-XjG8JwcPHQg36UkssKiON7NUV76ABU3CU2MNHoIMy5jjziLhPkcKLxGZ25ta2FUp
-OsletuI5iZM=
-=FqJJ
------END PGP SIGNATURE-----
-
---=-fLabrNeISRQH+YOzEiB8--
+-- 
 
