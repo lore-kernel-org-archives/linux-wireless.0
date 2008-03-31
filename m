@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:64725 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbYCLUNe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 16:13:34 -0400
-Subject: [PATCH] ath5k: disable irq handling in ath5k_hw_detach()
-From: Pavel Roskin <proski@gnu.org>
-To: ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 12 Mar 2008 16:13:31 -0400
-Message-Id: <1205352811.5557.2.camel@dv> (sfid-20080312_201339_338336_4DDB9726)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.171]:4020 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbYCaThf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 15:37:35 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1725256wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 12:37:34 -0700 (PDT)
+Message-ID: <f6ca9fed0803311237w1b714034w8ba3cfd56aec9686@mail.gmail.com> (sfid-20080331_203738_314043_287A3D62)
+Date: Mon, 31 Mar 2008 21:37:34 +0200
+From: drago01 <drago01@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: dynamic wep with mulitple keys
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once ah has been freed, it may not be accessed.  Set ATH_STAT_INVALID
-bit to make the interrupt handler return IRQ_NONE without accessing ah.
+Hello,
 
-This fixes oops on unload with CONFIG_DEBUG_SHIRQ enabled.
-
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-
- drivers/net/wireless/ath5k/hw.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 677600b..ff579a2 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -458,6 +458,8 @@ void ath5k_hw_detach(struct ath5k_hw *ah)
- {
- 	ATH5K_TRACE(ah->ah_sc);
- 
-+	__set_bit(ATH_STAT_INVALID, ah->ah_sc->status);
-+
- 	if (ah->ah_rf_banks != NULL)
- 		kfree(ah->ah_rf_banks);
- 
-
--- 
-Regards,
-Pavel Roskin
+I noticed that I can connect to some dynamic wep APs fine using
+iwl3945 and with other it does not work, while ipw3945 work with all
+of them.
+Both driver associate fine but iwl3945 never gets an ip from dhcp.
+I checked with iwlist key and it seems that this APs are using only
+one key with iwl3945 but two with ipw3945.
+The APs that work (I recognize them by BSSID) are using only one key
+with both drivers.
+Does this mean that mac80211/iwl3945 for some reason drops one key or
+never sets it?  (broadcast key?)
+Any idea how to get more infos to debug this? (Can attach both iwlist
+key outputs if this is needed).
