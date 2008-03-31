@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60747 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605AbYCLOzK (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.185]:50293 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826AbYCaWC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2008 10:55:10 -0400
-Subject: Re: [PATCH 4/5] mac80211: remove Hi16, Lo16 helpers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1204968188.23455.40.camel@brick> (sfid-20080308_092338_480606_A4DDBE10)
-References: <1204968188.23455.40.camel@brick>
-	 (sfid-20080308_092338_480606_A4DDBE10)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Sm0iZQ2QrCp2RkDPXNQx"
-Date: Wed, 12 Mar 2008 15:54:47 +0100
-Message-Id: <1205333687.15910.10.camel@johannes.berg> (sfid-20080312_145518_158873_E6908331)
-Mime-Version: 1.0
+	Mon, 31 Mar 2008 18:02:29 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1015394rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 15:02:29 -0700 (PDT)
+Message-ID: <183c1cc10803311502u1ae78f5cme9e05f0100c4a10f@mail.gmail.com> (sfid-20080331_230232_669829_9B19EBF1)
+Date: Mon, 31 Mar 2008 18:02:29 -0400
+From: "John Goulah" <jgoulah@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: problem with iwl4965 and kernel 2.6.24.4
+In-Reply-To: <D936D925018D154694D8A362EEB08920040FA1C9@orsmsx416.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com>
+	 <183c1cc10803261149r2f518772j2ea3a1b5df55b2cc@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com>
+	 <183c1cc10803262027k4c40386v767b2f9c79945deb@mail.gmail.com>
+	 <183c1cc10803270741r66896d88q15614af05a4142e6@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB08920040BC0B8@orsmsx416.amr.corp.intel.com>
+	 <183c1cc10803301935p16647709u837f3fb3377c687d@mail.gmail.com>
+	 <D936D925018D154694D8A362EEB08920040FA1C9@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 31, 2008 at 4:40 PM, Chatre, Reinette
+<reinette.chatre@intel.com> wrote:
+> On Sunday, March 30, 2008 7:35 PM, John Goulah  wrote:
+>
+>  > Let me know where to go from here; if you still want the
+>  > wpa_supplicant info I can post a bug for that, but the more major
+>  > problem seems that I have to explicitly tell iwconfig what my AP mac
+>  > address is, it wont associate otherwise even though "iwlist scan"
+>  > turns it up just fine, but I'm not having much luck producing useful
+>  > info here.
+>
+>  It is not clear how you are associating. Are you using wpa_supplicant or
+>  iwconfig? Please submit a bug with the details of your setup and steps
+>  to associate. Please include the wpa_supplicant logs and the driver
+>  logs.
+>
 
---=-Sm0iZQ2QrCp2RkDPXNQx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+
+I have to use both.  I have to use iwconfig to pick my essid and
+access point, and I use wpa_supplicant to setup the encryption tunnel.
+ Then I dhclient the IP address.    In previous wireless experience,
+once I've set the essid , it automatically associates to the access
+point (at least I can see that the MAC address is defined when I run
+iwconfig).  That does not happen with this driver- only "Not
+Associated" or "Invalid". Unfortunately debug for these cases isn't
+spitting any info.  I've been setting my access point mac address
+specifically with "iwconfig wlan0 ap <MAC>"   -before- running
+wpa_supplicant since I thought I had to be associated before running
+wpa_supplicant but it sounds like you are saying otherwise, so I'll
+try that tonight and then submit my findings in a bug.   If something
+I've said sounds completely wrong let me know.
 
 
-On Sat, 2008-03-08 at 01:23 -0800, Harvey Harrison wrote:
-> They were only used in one place, just open-code it there.
-
-This depends on the previous patches removing a few uses, right?
-
-johannes
-
---=-Sm0iZQ2QrCp2RkDPXNQx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR9futqVg1VMiehFYAQIbtQ/+NTuHzBSYwqRPW1FTuqZiR2HZcskGg5Gu
-6p2r7PfQkzZ10mB7Xgm+mL1jn2MmiXtnDkqcw09BbyVWw3Tw6DMPqLf3AJllspCv
-jMJquRwaipkLTVcU0w7++qByYCFajq+uLr0NVe9fz3j9J+wRxh55tNXjNkRpAdjS
-LhnrTkTo4QPPKh/OUsP5JhtBmrLATBbeR3lWcBwQOtnw3vAt4zKX+0LH2QXE7N9U
-b/OS1ql7iM4WdMULlLIdxce3HEWUM//jNvhLn92rt+f8/Lz3Ab6Q6qEdj6Pu+XNg
-3OPDrVoCZSv5/+JPByxvad1rWL3yao6ARzQryIxvayGKK0qfzXOIzLTqRBNKgXjv
-qYUNM3gcSpbxAaOaWdyKs+FmhvUu/tZAPmvrA4ovjT+4O/iPMiBa3SSQrE4A44ra
-qXWACfW9cdqcMWABPupFiNdSOVBZy4rz+CMXepve5egdCHIq9DUZCZofyU4/Lttz
-319Ik3Hd1At9Ng+YrM6YrPt+Qgtigphq5qeCeR9rWhzYgB5aRISLoWvbnprK5JSg
-d4VPJllfw4q0BORE3Qe/VgfTr2AGZ888/UZClCW5jOTA2Qg1/OK6EbX9sSVDzjb4
-+jJ4Vv5Wk58X/mHZirvoFDIvwkeGTqQ6BQIslwyW8RdFjLyjRq4LFtFcEKE8yZmC
-DMp4X7pS0Wg=
-=nrsf
------END PGP SIGNATURE-----
-
---=-Sm0iZQ2QrCp2RkDPXNQx--
-
+Thanks,
+John
