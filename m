@@ -1,113 +1,459 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42327 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751733AbYCBPgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2008 10:36:24 -0500
-Subject: Re: Netgear WG311v3 - Marvell 88w8355 "Libertas"
-From: Dan Williams <dcbw@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com>
-References: <646765f40803020319mf2db1fg9b9a1dde58fcda62@mail.gmail.com>
-Content-Type: text/plain
-Date: Sun, 02 Mar 2008 10:33:36 -0500
-Message-Id: <1204472016.13121.27.camel@localhost.localdomain> (sfid-20080302_153644_851515_C4F96911)
-Mime-Version: 1.0
+Received: from fmmailgate02.web.de ([217.72.192.227]:44977 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754158AbYCaMay (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2008 08:30:54 -0400
+From: Chr <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC][PATCH 1/2] p54: p54pci management rings
+Date: Mon, 31 Mar 2008 14:30:51 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>
+References: <200803302349.21319.chunkeey@web.de>
+In-Reply-To: <200803302349.21319.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_7lN8HKskH1GPLGr"
+Message-Id: <200803311430.51825.chunkeey@web.de> (sfid-20080331_133429_813940_A65CE240)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-03-02 at 22:19 +1100, Julian Calaby wrote:
-> Hi,
-> 
-> I'm not sure if this is the correct place to ask this, but here goes.
-> 
-> I have recently obtained a Netgear WG311v3 card, under the
-> misunderstanding that it was an atheros card. (though I have no idea
-> how I managed to do that)
-> 
-> Following some random FAQ, I have this card working reliably, for the
-> moment, using ndiswrapper, which is more than suitable for my needs.
-> 
-> However I yearn for more.
-> 
-> I have discovered here:
-> http://users.linpro.no/janl/hardware/wifi.html
-> that this card appears to use a Marvel 88w8355 "Libertas" chipset.
-> However I have not yet confirmed the exact chip used on my card.
+--Boundary-00=_7lN8HKskH1GPLGr
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I think you mean "88w8335" actually.  The Netgear WG311v3 uses the
-Marvell 88w8335 chipset.
+On Sunday 30 March 2008 23:49:21 Chr wrote:
+> This patch adds the _now_ necessary rx_tasklet in p54pci.c,
+> because the interrupt routine is probably the wrong place for more bloat...
+>
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
 
-> I believe variants of this chip, are supported on SDIO, (8385, 8686)
-> USB (8388) and CompactFlash (8385) using the libertas driver.
+--Boundary-00=_7lN8HKskH1GPLGr
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="p54p-tasklets-v2.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54p-tasklets-v2.diff"
 
-Correct; the existing Libertas driver (perhaps somewhat mis-named)
-supports only the FullMAC variants of the libertas family.
+diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+--- a/drivers/net/wireless/p54common.c	2008-03-29 16:05:32.000000000 +0100
++++ b/drivers/net/wireless/p54common.c	2008-03-31 14:16:44.000000000 +0200
+@@ -66,7 +66,6 @@ static struct ieee80211_supported_band b
+ 	.n_bitrates = ARRAY_SIZE(p54_rates),
+ };
+ 
+-
+ void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ {
+ 	struct p54_common *priv = dev->priv;
+@@ -388,12 +387,15 @@ static void p54_rx_frame_sent(struct iee
+ 	struct p54_common *priv = dev->priv;
+ 	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
+ 	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
+-	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
++	struct sk_buff *entry;
++	unsigned long flags;
+ 	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
+ 	struct memrecord *range = NULL;
+ 	u32 freed = 0;
+ 	u32 last_addr = priv->rx_start;
+ 
++	spin_lock_irqsave(&priv->tx_queue.lock, flags);
++	entry = (struct sk_buff *) priv->tx_queue.next;
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+ 		range = (struct memrecord *)&entry->cb;
+ 		if (range->start_addr == addr) {
+@@ -409,9 +411,11 @@ static void p54_rx_frame_sent(struct iee
+ 
+ 			last_addr = range->end_addr;
+ 			__skb_unlink(entry, &priv->tx_queue);
++			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
++
+ 			if (!range->control) {
+ 				kfree_skb(entry);
+-				break;
++				goto out;
+ 			}
+ 			memset(&status, 0, sizeof(status));
+ 			memcpy(&status.control, range->control,
+@@ -434,12 +438,14 @@ static void p54_rx_frame_sent(struct iee
+ 			status.ack_signal = le16_to_cpu(payload->ack_rssi);
+ 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+ 			ieee80211_tx_status_irqsafe(dev, entry, &status);
+-			break;
++			goto out;
+ 		} else
+ 			last_addr = range->end_addr;
+ 		entry = entry->next;
+ 	}
+ 
++	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
++out:
+ 	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
+ 	    sizeof(struct p54_control_hdr))
+ 		p54_wake_free_queues(dev);
+@@ -610,7 +616,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	txhdr->magic4 = 0;
+ 	txhdr->antenna = (control->antenna_sel_tx == 0) ?
+ 		2 : control->antenna_sel_tx - 1;
+-	txhdr->output_power = 0x7f; // HW Maximum
++	txhdr->output_power = 0x7f;
+ 	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
+ 		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
+ 	if (padding)
+diff -Nurp a/drivers/net/wireless/p54pci.c b/drivers/net/wireless/p54pci.c
+--- a/drivers/net/wireless/p54pci.c	2008-03-29 16:05:32.000000000 +0100
++++ b/drivers/net/wireless/p54pci.c	2008-03-30 23:20:20.000000000 +0200
+@@ -237,20 +237,22 @@ static int p54p_read_eeprom(struct ieee8
+ 	return err;
+ }
+ 
+-static void p54p_refill_rx_ring(struct ieee80211_hw *dev)
++static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
++	int ring_index, struct p54p_desc *ring, u32 ring_limit,
++	struct sk_buff **rx_buf)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+-	u32 limit, host_idx, idx;
++	u32 limit, idx, i;
+ 
+-	host_idx = le32_to_cpu(ring_control->host_idx[0]);
+-	limit = host_idx;
+-	limit -= le32_to_cpu(ring_control->device_idx[0]);
+-	limit = ARRAY_SIZE(ring_control->rx_data) - limit;
++	idx = le32_to_cpu(ring_control->host_idx[ring_index]);
++	limit = idx;
++	limit -= le32_to_cpu(ring_control->device_idx[ring_index]);
++	limit = ring_limit - limit;
+ 
+-	idx = host_idx % ARRAY_SIZE(ring_control->rx_data);
++	i = idx % ring_limit;
+ 	while (limit-- > 1) {
+-		struct p54p_desc *desc = &ring_control->rx_data[idx];
++		struct p54p_desc *desc = &ring[i];
+ 
+ 		if (!desc->host_addr) {
+ 			struct sk_buff *skb;
+@@ -267,16 +269,107 @@ static void p54p_refill_rx_ring(struct i
+ 			desc->device_addr = 0;	// FIXME: necessary?
+ 			desc->len = cpu_to_le16(MAX_RX_SIZE);
+ 			desc->flags = 0;
+-			priv->rx_buf[idx] = skb;
++			rx_buf[i] = skb;
+ 		}
+ 
++		i++;
+ 		idx++;
+-		host_idx++;
+-		idx %= ARRAY_SIZE(ring_control->rx_data);
++		i %= ring_limit;
+ 	}
+ 
+ 	wmb();
+-	ring_control->host_idx[0] = cpu_to_le32(host_idx);
++	ring_control->host_idx[ring_index] = cpu_to_le32(idx);
++}
++
++static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
++	int ring_index, struct p54p_desc *ring, u32 ring_limit,
++	struct sk_buff **rx_buf)
++{
++	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
++	struct p54p_desc *desc;
++	u32 idx, i;
++
++	i = (*index) % ring_limit;
++	(*index) = idx = le32_to_cpu(ring_control->device_idx[ring_index]);
++	idx %= ring_limit;
++	while (i != idx) {
++		u16 len;
++		struct sk_buff *skb;
++		desc = &ring[i];
++		len = le16_to_cpu(desc->len);
++		skb = rx_buf[i];
++
++		skb_put(skb, len);
++
++		if (p54_rx(dev, skb)) {
++			pci_unmap_single(priv->pdev,
++					 le32_to_cpu(desc->host_addr),
++					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++			/* TODO: refill queue here */
++			rx_buf[i] = NULL;
++			desc->host_addr = 0;
++		} else {
++			skb_trim(skb, 0);
++			desc->len = cpu_to_le16(MAX_RX_SIZE);
++		}
++
++		i++;
++		i %= ring_limit;
++	}
++
++	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
++}
++
++/* caller must hold priv->lock */
++static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
++	int ring_index, struct p54p_desc *ring, u32 ring_limit,
++	void **tx_buf)
++{
++	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
++	struct p54p_desc *desc;
++	u32 idx, i;
++
++	i = (*index) % ring_limit;
++	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
++	idx %= ring_limit;
++
++	while (i != idx) {
++		desc = &ring[i];
++		if (tx_buf[i]) {
++			kfree(tx_buf[i]);
++			tx_buf[i] = NULL;
++		}
++
++		pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
++				 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
++
++		desc->host_addr = 0;
++		desc->device_addr = 0;
++		desc->len = 0;
++		desc->flags = 0;
++
++		i++;
++		i %= ring_limit;
++	}
++}
++
++static void p54p_rx_tasklet(unsigned long dev_id)
++{
++	struct ieee80211_hw *dev = (struct ieee80211_hw *)dev_id;
++	struct p54p_priv *priv = dev->priv;
++	struct p54p_ring_control *ring_control = priv->ring_control;
++
++	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
++		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
++
++	p54p_check_rx_ring(dev, &priv->rx_idx_data, 0, ring_control->rx_data,
++		ARRAY_SIZE(ring_control->rx_data), priv->rx_buf_data);
++
++	wmb();
++	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
++
+ }
+ 
+ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
+@@ -298,65 +391,18 @@ static irqreturn_t p54p_interrupt(int ir
+ 	reg &= P54P_READ(int_enable);
+ 
+ 	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE)) {
+-		struct p54p_desc *desc;
+-		u32 idx, i;
+-		i = priv->tx_idx;
+-		i %= ARRAY_SIZE(ring_control->tx_data);
+-		priv->tx_idx = idx = le32_to_cpu(ring_control->device_idx[1]);
+-		idx %= ARRAY_SIZE(ring_control->tx_data);
+-
+-		while (i != idx) {
+-			desc = &ring_control->tx_data[i];
+-			if (priv->tx_buf[i]) {
+-				kfree(priv->tx_buf[i]);
+-				priv->tx_buf[i] = NULL;
+-			}
++		p54p_check_tx_ring(dev, &priv->tx_idx_mgmt,
++				   3, ring_control->tx_mgmt,
++				   ARRAY_SIZE(ring_control->tx_mgmt),
++				   priv->tx_buf_mgmt);
++
++		p54p_check_tx_ring(dev, &priv->tx_idx_data,
++				   1, ring_control->tx_data,
++				   ARRAY_SIZE(ring_control->tx_data),
++				   priv->tx_buf_data);
+ 
+-			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+-					 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
+-
+-			desc->host_addr = 0;
+-			desc->device_addr = 0;
+-			desc->len = 0;
+-			desc->flags = 0;
+-
+-			i++;
+-			i %= ARRAY_SIZE(ring_control->tx_data);
+-		}
+-
+-		i = priv->rx_idx;
+-		i %= ARRAY_SIZE(ring_control->rx_data);
+-		priv->rx_idx = idx = le32_to_cpu(ring_control->device_idx[0]);
+-		idx %= ARRAY_SIZE(ring_control->rx_data);
+-		while (i != idx) {
+-			u16 len;
+-			struct sk_buff *skb;
+-			desc = &ring_control->rx_data[i];
+-			len = le16_to_cpu(desc->len);
+-			skb = priv->rx_buf[i];
+-
+-			skb_put(skb, len);
+-
+-			if (p54_rx(dev, skb)) {
+-				pci_unmap_single(priv->pdev,
+-						 le32_to_cpu(desc->host_addr),
+-						 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
+-
+-				priv->rx_buf[i] = NULL;
+-				desc->host_addr = 0;
+-			} else {
+-				skb_trim(skb, 0);
+-				desc->len = cpu_to_le16(MAX_RX_SIZE);
+-			}
++		tasklet_schedule(&priv->rx_tasklet);
+ 
+-			i++;
+-			i %= ARRAY_SIZE(ring_control->rx_data);
+-		}
+-
+-		p54p_refill_rx_ring(dev);
+-
+-		wmb();
+-		P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
+ 	} else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
+ 		complete(&priv->boot_comp);
+ 
+@@ -392,7 +438,7 @@ static void p54p_tx(struct ieee80211_hw 
+ 	ring_control->host_idx[1] = cpu_to_le32(idx + 1);
+ 
+ 	if (free_on_tx)
+-		priv->tx_buf[i] = data;
++		priv->tx_buf_data[i] = data;
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+@@ -420,8 +466,14 @@ static int p54p_open(struct ieee80211_hw
+ 	}
+ 
+ 	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
+-	priv->rx_idx = priv->tx_idx = 0;
+-	p54p_refill_rx_ring(dev);
++	priv->rx_idx_data = priv->tx_idx_data = 0;
++	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
++
++	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
++		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
++
++	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
++		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
+ 
+ 	p54p_upload_firmware(dev);
+ 
+@@ -465,6 +517,8 @@ static void p54p_stop(struct ieee80211_h
+ 	unsigned int i;
+ 	struct p54p_desc *desc;
+ 
++	tasklet_kill(&priv->rx_tasklet);
++
+ 	P54P_WRITE(int_enable, cpu_to_le32(0));
+ 	P54P_READ(int_enable);
+ 	udelay(10);
+@@ -473,26 +527,51 @@ static void p54p_stop(struct ieee80211_h
+ 
+ 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+ 
+-	for (i = 0; i < ARRAY_SIZE(priv->rx_buf); i++) {
++	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_data); i++) {
+ 		desc = &ring_control->rx_data[i];
+ 		if (desc->host_addr)
+-			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
++			pci_unmap_single(priv->pdev,
++					 le32_to_cpu(desc->host_addr),
++					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++		kfree_skb(priv->rx_buf_data[i]);
++		priv->rx_buf_data[i] = NULL;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_mgmt); i++) {
++		desc = &ring_control->rx_mgmt[i];
++		if (desc->host_addr)
++			pci_unmap_single(priv->pdev,
++					 le32_to_cpu(desc->host_addr),
+ 					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
+-		kfree_skb(priv->rx_buf[i]);
+-		priv->rx_buf[i] = NULL;
++		kfree_skb(priv->rx_buf_mgmt[i]);
++		priv->rx_buf_mgmt[i] = NULL;
+ 	}
+ 
+-	for (i = 0; i < ARRAY_SIZE(priv->tx_buf); i++) {
++	for (i = 0; i < ARRAY_SIZE(priv->tx_buf_data); i++) {
+ 		desc = &ring_control->tx_data[i];
+ 		if (desc->host_addr)
+-			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+-					 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
++			pci_unmap_single(priv->pdev,
++					 le32_to_cpu(desc->host_addr),
++					 le16_to_cpu(desc->len),
++					 PCI_DMA_TODEVICE);
++
++		kfree(priv->tx_buf_data[i]);
++		priv->tx_buf_data[i] = NULL;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(priv->tx_buf_mgmt); i++) {
++		desc = &ring_control->tx_mgmt[i];
++		if (desc->host_addr)
++			pci_unmap_single(priv->pdev,
++					 le32_to_cpu(desc->host_addr),
++					 le16_to_cpu(desc->len),
++					 PCI_DMA_TODEVICE);
+ 
+-		kfree(priv->tx_buf[i]);
+-		priv->tx_buf[i] = NULL;
++		kfree(priv->tx_buf_mgmt[i]);
++		priv->tx_buf_mgmt[i] = NULL;
+ 	}
+ 
+-	memset(ring_control, 0, sizeof(ring_control));
++	memset(ring_control, 0, sizeof(*ring_control));
+ }
+ 
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+@@ -585,6 +664,7 @@ static int __devinit p54p_probe(struct p
+ 	priv->common.tx = p54p_tx;
+ 
+ 	spin_lock_init(&priv->lock);
++	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+diff -Nurp a/drivers/net/wireless/p54pci.h b/drivers/net/wireless/p54pci.h
+--- a/drivers/net/wireless/p54pci.h	2008-03-29 16:05:32.000000000 +0100
++++ b/drivers/net/wireless/p54pci.h	2008-03-29 16:39:14.000000000 +0100
+@@ -92,13 +92,17 @@ struct p54p_priv {
+ 	struct p54_common common;
+ 	struct pci_dev *pdev;
+ 	struct p54p_csr __iomem *map;
++	struct tasklet_struct rx_tasklet;
+ 
+ 	spinlock_t lock;
+ 	struct p54p_ring_control *ring_control;
+ 	dma_addr_t ring_control_dma;
+-	u32 rx_idx, tx_idx;
+-	struct sk_buff *rx_buf[8];
+-	void *tx_buf[32];
++	u32 rx_idx_data, tx_idx_data;
++	u32 rx_idx_mgmt, tx_idx_mgmt;
++	struct sk_buff *rx_buf_data[8];
++	struct sk_buff *rx_buf_mgmt[4];
++	void *tx_buf_data[32];
++	void *tx_buf_mgmt[4];
+ 	struct completion boot_comp;
+ };
+ 
 
-The other, lower-numbered chips in the libertas family (8335, 8310, etc)
-are all more softmac parts and not supported by the existing libertas
-driver.
-
-> Annoyingly I can find no information on this chip, or anything related
-> to it, and I have heard that Marvel has been relatively uninterested
-> in supporting these chips on Linux.
-
-Correct; Marvell isn't that interested in supporting the older libertas
-family chips in Linux (ie, anything < 8388 actually).  They have
-expressed interest in getting their TopDog 802.11n solution working in
-Linux however.
-
-> I also note that this chip appears to have been designed exclusively
-> for the embedded market, and as such, my card is somewhat rare, which
-> has probably contributed to the lack of any interest in a pci driver.
-> 
-> I can also find no information on a pci version of the libertas
-> driver, only a proposal which appeared to go nowhere due to lack of
-> documentation. I also cannot find any information on any linux support
-> for this card outside of using ndiswrapper.
-
-There's an existing vendor net80211-based driver for the 8335 here:
-
-http://git.infradead.org/?p=users/dwmw2/marvell-db64660-2.6.12.6.git;a=tree;f=drivers/net/wireless/marvell_softap;h=566585b308d53a7006814c77dedae73cc919cbef;hb=HEAD
-
-There's also some reverse-engineered bits here:
-
-http://www.saillard.org/linux/mrv8k/
-
-and the mac80211 port of mrv8k here:
-
-http://david.woodhou.se/mrv.tar.gz
-
-though the last one here panic-ed in the interrupt handler when I tried
-it last on 2.6.22.
-
-> As such, I am considering reverse engineering the pci interface for
-> this chipset, and hopefully linking it up with the existing libertas
-> driver.
-
-Don't link up with the existing libertas driver, they are just too
-different (softmac vs. fullmac).
-
-> I was hoping to use the ndiswrapper driver as a starting point, using
-> it as a black box to see how it talks to the PCI card. (possibly
-> hacking together a OS level PCI sniffer) and hopefully, what I'll see
-> will match up to what's going on in the libertas driver for similar
-> tasks, and then I should be able to write the necessary code (or
-> specifications) to do this.
-> 
-> I am also concerned about any possible legal ramifications of this
-> reverse engineering. Is it all right for me to do this, providing that
-> I treat the ndiswrapper driver as a black box? or am I too close to
-> non-free code to have my code be untainted?
-
-I'd say first, try to whip the existing mrv8k-mac80211 port into shape
-and you probably won't have to worry much about the legal ramifications.
-You can look at the GPL-ed vendor driver (from the git I posted) for
-pointers about hardware-specific stuff, but after the 8388 driver
-experience, I'd strongly advocate writing a driver from scratch (or
-basing off mrv8k) and not using existing Marvell vendor drivers as a
-starting point.
-
-Dan
-
-
+--Boundary-00=_7lN8HKskH1GPLGr--
