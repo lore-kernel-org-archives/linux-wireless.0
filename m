@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56105 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754057AbYDZQQR (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:5997 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754933AbYCaXWd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 12:16:17 -0400
-Subject: Re: [PATCH] iwlwifi: Select also LEDS_TRIGGERS.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Priit Laes <plaes@plaes.org>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com,
-	reinette.chatre@intel.com
-In-Reply-To: <1ba2fa240804240424r29f4c83boa40f8172f65fd024@mail.gmail.com> (sfid-20080424_132527_332991_4EBA2A2B)
-References: <1209033767.1368.3.camel@localhost>
-	 <1ba2fa240804240424r29f4c83boa40f8172f65fd024@mail.gmail.com>
-	 (sfid-20080424_132527_332991_4EBA2A2B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cQBCXSDxkjXPuH0zSwB5"
-Date: Sat, 26 Apr 2008 18:16:09 +0200
-Message-Id: <1209226569.10943.49.camel@johannes.berg> (sfid-20080426_181635_227194_DC114C1D)
-Mime-Version: 1.0
+	Mon, 31 Mar 2008 19:22:33 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: problem with iwl4965 and kernel 2.6.24.4
+Date: Mon, 31 Mar 2008 16:20:22 -0700
+Message-ID: <D936D925018D154694D8A362EEB08920040FA488@orsmsx416.amr.corp.intel.com> (sfid-20080401_002256_848312_CAA66D54)
+In-Reply-To: <183c1cc10803311502u1ae78f5cme9e05f0100c4a10f@mail.gmail.com>
+References: <183c1cc10803261031p6e7e16bdme000416095de9b7f@mail.gmail.com> <D936D925018D154694D8A362EEB0892004073B0C@orsmsx416.amr.corp.intel.com> <183c1cc10803261149r2f518772j2ea3a1b5df55b2cc@mail.gmail.com> <D936D925018D154694D8A362EEB0892004073D90@orsmsx416.amr.corp.intel.com> <183c1cc10803262027k4c40386v767b2f9c79945deb@mail.gmail.com> <183c1cc10803270741r66896d88q15614af05a4142e6@mail.gmail.com> <D936D925018D154694D8A362EEB08920040BC0B8@orsmsx416.amr.corp.intel.com> <183c1cc10803301935p16647709u837f3fb3377c687d@mail.gmail.com> <D936D925018D154694D8A362EEB08920040FA1C9@orsmsx416.amr.corp.intel.com> <183c1cc10803311502u1ae78f5cme9e05f0100c4a10f@mail.gmail.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "John Goulah" <jgoulah@gmail.com>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday, March 31, 2008 3:02 PM, John Goulah  wrote:
 
---=-cQBCXSDxkjXPuH0zSwB5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I have to use both.  I have to use iwconfig to pick my essid and
+> access point, and I use wpa_supplicant to setup the encryption tunnel.
+> Then I dhclient the IP address.    In previous wireless experience,
+> once I've set the essid , it automatically associates to the access
+> point (at least I can see that the MAC address is defined when I run
+> iwconfig).  That does not happen with this driver- only "Not
+> Associated" or "Invalid". Unfortunately debug for these cases isn't
+> spitting any info.  I've been setting my access point mac address
+> specifically with "iwconfig wlan0 ap <MAC>"   -before- running
+> wpa_supplicant since I thought I had to be associated before running
+> wpa_supplicant but it sounds like you are saying otherwise, so I'll
+> try that tonight and then submit my findings in a bug.   If something
+> I've said sounds completely wrong let me know.
 
-On Thu, 2008-04-24 at 14:24 +0300, Tomas Winkler wrote:
-> Shouldn't be this already covered by MAC80211_LEDS
+It should not be necessary to use both iwconfig and wpa_supplicant.
+wpa_supplicant will take care of the association for you. 
 
-No, select isn't transitive.
+You will need to bring the interface up (ifconfig wlan0 up) before you
+run wpa_supplicant.
 
-johannes
+If you run into issues, please also send wpa_supplicant's configuration
+and debug log.
 
---=-cQBCXSDxkjXPuH0zSwB5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thanks
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBNVSKVg1VMiehFYAQKXzg//UkjVk35zgqqa4oSDHZAV0O3unmCkwboM
-7UT31huZhnNMSfrrM9FNR+1gCGZT+WpeYYaAxRrwjy0NQnbCG4YLhiHz+oT9as9Z
-UZxTRC5X9iWEWXDRuntMMgpXhbcHbts+dQiHAgbVKyElrD3v9nkSWqbCbvytsm7Z
-au9gEDuH9XFLObRoDM5Bii2lS9ijhB4rP445jv2qgA7f4QDzzFJ80uD2GFQgGn7x
-eSuEmjOHFC4SpKj//hA8L550ZgcK10odaqNWdIjPSLngIAj0WHUN5hR4vmnMRum1
-Uhzna0FjgZ9W2fg5IbDM9y4ViQ5EMSDTMVRQkHBEkH4Y5ChsNDrKAOO2POHgORh/
-6OBVjfO0rE/oQMgkfQlOugypJSF/jBiGlevcyC7J5el+G3VLVkniA4fsq7xE3pHk
-8Dl+96NanX3nC38DSi3F7r9W7tbZLoHP1qHrTKaJbBMxzvLRlUe3E2ZyZajSgRzz
-btbu/BZxHid0WFZUY1WPuBmwShKONO7FYMq5dty/SM51ueTaMuf4damWTr8I+z24
-mLt1Z6EKyLaQE4co5IQ9TiDnPOfRL/KOVv0wdqNKtFZMrRw3JBzam6UL9EnLMc/e
-o9VoeJdqNSeaFtcCulk3DLWTnTC5MiSYGMu+EMZ+ZH6jSxUgz43JMQlIDSBVBJT3
-gq5wUNJmeHU=
-=INAX
------END PGP SIGNATURE-----
-
---=-cQBCXSDxkjXPuH0zSwB5--
-
+Reinette
