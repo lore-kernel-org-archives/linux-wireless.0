@@ -1,78 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758634AbYDKMQx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 08:16:53 -0400
-Subject: RE: iwlwifi integer overflow warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: Meelis Roos <mroos@linux.ee>, linux-wireless@vger.kernel.org,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <D936D925018D154694D8A362EEB0892004289DB4@orsmsx416.amr.corp.intel.com>
-References: <Pine.SOC.4.64.0804101121160.13294@math.ut.ee>
-	 <D936D925018D154694D8A362EEB0892004289DB4@orsmsx416.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UhVfTv7A8+dNb8Ez/wFt"
-Date: Fri, 11 Apr 2008 14:16:44 +0200
-Message-Id: <1207916204.13354.63.camel@johannes.berg> (sfid-20080411_131729_423981_9B3B25E6)
-Mime-Version: 1.0
+Received: from Bass.Opus1.COM ([192.245.12.9]:1530 "EHLO bass.opus1.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751922AbYDATTk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 15:19:40 -0400
+Received: from egdell.wetwork.net ([204.17.34.178])
+ by Opus1.COM (PMDF V6.2-X27 #9830)
+ with ESMTPSA id <01MT3V2V6SB08ZOZTY@Opus1.COM> for
+ linux-wireless@vger.kernel.org; Tue, 01 Apr 2008 10:34:07 -0700 (MST)
+Date: Tue, 01 Apr 2008 10:34:07 -0700
+From: gavron@wetwork.net
+Subject: Re: [PATCH] b43: Enable quantum cryptography support
+In-reply-to: <200804011613.06749.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Message-id: <47F2720F.7030306@wetwork.net> (sfid-20080401_201942_776639_DCA8FCE1)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200804011613.06749.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I tried this patch against the 3.6 tree and I was unable to get it to 
+compile.
+It kept saying my version of gcc is too old.
+Is it my SPROM?
 
---=-UhVfTv7A8+dNb8Ez/wFt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ehud
+gcc version 5.1.2 20090401 (Red Hat 5.1.2-33)
 
-
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
-> > 'iwl3945_enqueue_hcmd':
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c:719: warning: integer
-> > overflow in expression drivers/net/wireless/iwlwifi/iwl-3945.c: In
-> > function 'iwl3945_add_radiotap':
-> > drivers/net/wireless/iwlwifi/iwl-3945.c:326: warning: integer
-> > overflow in expression drivers/net/wireless/iwlwifi/iwl4965-base.c:
-> > In function 'iwl4965_enqueue_hcmd':
-> > drivers/net/wireless/iwlwifi/iwl4965-base.c:723: warning: integer
-> > overflow in expression drivers/net/wireless/iwlwifi/iwl-4965.c: In
-> > function 'iwl4965_add_radiotap':
-> > drivers/net/wireless/iwlwifi/iwl-4965.c:3617: warning: integer
-> > overflow in expression  =20
-> >=20
->=20
-> (adding Johannes and John)
->=20
-> These problems have been fixed by Johannes with his patch "iwlwifi:fix
-> some warnings". If this is an issue in 2.6.25 then that kernel may take
-> this patch to address the problem.
-
-That patch never was applied though and Tomas had reservations. I didn't
-have time to look at it again.
-
-johannes
-
---=-UhVfTv7A8+dNb8Ez/wFt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/9WqqVg1VMiehFYAQLunQ//bjQ7rXTt5WFcYonvdwkhSB2xRa9I1GXD
-0IZ78wMQ3Vt4CsAUVr8MI6MmWV9XJ/dgj/a2VKShdtZCOcIkGJN9dXNsuSvyE5g2
-VyhHWJ6iWyC23GNsL69UjIhCdPuve0ypLxYuJPxMt2EfkPLdCWLR67fMc7O0YtIW
-cxciHb9Y0JS2ahsHFwUqFRwu1FrZM/aj8RE9X++xtUsEhakFpwVk/ewbmw0qu6V1
-fgZYMhGxkV5bJpGtCQ14jKZHJhdrA36oRp2HialY1uuZotugHTsRSf/2EFDXyYj3
-gVlp9WuEEMCzwGpWNgDm4EDtaQh1lfoaZJScYvs8EKWlUcuqpdPkatyx+bjmjll1
-kU/4J5vXyzA6spyIyZYx1ub3w0rtZrzSELXXpvgtSd4qz2ByiPnYyv1g0ijtKRAc
-oMIjlcuKjFZzeLUrs92FYAhspy50iBxF3U7np81J3BnJJHsQ5hHfwpmObuL9dYBV
-tzA8s2DUQTww36rxCZqxZ4v+LlfHXaXSPFLcbW/vUK/U3UURizi9AudFVbXfjubZ
-3K0hh/4/EtkydUO90waXMi5ouKzVdi3/CBcuaBqb3mc7M3QbbMWpTSPU1l4NDbLj
-x3my0/UBmQ/jLO1cBu0Rv22mOlG+NERaa/KIzZ+d8AitLYP3KGojmXrchBw9UDJk
-StGsxqLVZCA=
-=i2zx
------END PGP SIGNATURE-----
-
---=-UhVfTv7A8+dNb8Ez/wFt--
-
+Michael Buesch wrote:
+> This patch enables support for quantum cryptography on latest b43 devices.
+> The quantum cryptography algorithm is 100% backward compatible with the
+> standard CCMP algorithm, so no additional changes to the mac80211 stack
+> are needed. While staying compatible, it makes the unbreakable(!) WLAN connection
+> possible. Of course, that's only the case, if both ends use b43-qcrypto.
+> In the case where one STA uses legacy encryption, the card will automatically
+> detect this and switch back to plain old CCMP.
+>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+>
+> ---
+>
+> John, please queue this patch for linux-3.6.26
+>
+>
+> Index: wireless-testing/drivers/net/wireless/b43/b43.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-03-22 15:44:00.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-01 15:53:40.000000000 +0200
+> @@ -270,6 +270,7 @@ enum {
+>  #define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode (rev >= 13 only) */
+>  #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
+>  #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
+> +#define B43_HF_QUANTUMCRYPT	0x100000000000ULL /* Enable quantum cryptography in firmware. */
+>  
+>  /* MacFilter offsets. */
+>  #define B43_MACFILTER_SELF		0x0000
+> @@ -439,6 +440,7 @@ enum {
+>  	B43_SEC_ALGO_AES,
+>  	B43_SEC_ALGO_WEP104,
+>  	B43_SEC_ALGO_AES_LEGACY,
+> +	B43_SEC_ALGO_QUANTUM,
+>  };
+>  
+>  struct b43_dmaring;
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-27 17:11:38.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-01 15:53:41.000000000 +0200
+> @@ -3215,6 +3215,13 @@ static int b43_op_set_key(struct ieee802
+>  		break;
+>  	case ALG_CCMP:
+>  		algorithm = B43_SEC_ALGO_AES;
+> +		if (dev->dev->id.revision >= 20080401) {
+> +			/* Latest devices can do quantum cryptography
+> +			 * to encrypt/decrypt the data stream.
+> +			 * This is 100% backward compatible with the traditional
+> +			 * CCMP algorithm. */
+> +			algorithm = B43_SEC_ALGO_QUANTUM;
+> +		}
+>  		break;
+>  	default:
+>  		B43_WARN_ON(1);
+> @@ -3254,6 +3261,10 @@ static int b43_op_set_key(struct ieee802
+>  			b43_hf_write(dev,
+>  				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
+>  		}
+> +		if (algorithm == B43_SEC_ALGO_QUANTUM) {
+> +			b43_hf_write(dev, b43_hf_read(dev)
+> +				     | B43_HF_QUANTUMCRYPT);
+> +		}
+>  		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>  		break;
+>  	case DISABLE_KEY: {
+>
+>   
