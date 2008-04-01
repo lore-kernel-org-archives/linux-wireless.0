@@ -1,202 +1,521 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:2085 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755023AbYDBUJT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 16:09:19 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so366720ywb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:09:16 -0700 (PDT)
+Received: from mail.clemson.edu ([130.127.28.87]:49639 "EHLO CLEMSON.EDU"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753542AbYDARCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 13:02:36 -0400
+Message-ID: <47F269E3.6020803@clemson.edu> (sfid-20080401_180241_456716_3C4C24FE)
+Date: Tue, 01 Apr 2008 12:59:15 -0400
+From: Bill Moss <bmoss@CLEMSON.EDU>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Wed, 2 Apr 2008 12:33:35 -0700
-Subject: [PATCH] Revert "mac80211: use a struct for bss->mesh_config"
-Message-ID: <47f3e7eb.20038e0a.7994.ffffdbf9@mx.google.com> (sfid-20080402_211123_436217_13C6D1B1)
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>, Dan Williams <dcbw@redhat.com>,
+	Vladimir Koutny <vlado@ksp.sk>,
+	Tomas Winkler <tomasw@gmail.com>,
+	John Linville <linville@redhat.com>,
+	Jouni Malinen <jkmaline@cc.hut.fi>
+Subject: Patch: mac80211: ieee80211_sta.c:  ieee80211_rx_bss_info
+Content-Type: multipart/mixed;
+ boundary="------------000203040408030104010404"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 2349f76c3987da12f737bbba4be78f23002477b6.
+This is a multi-part message in MIME format.
+--------------000203040408030104010404
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 
-That patch breaks mesh config comparison between beacons/probe reponses, so
-every beacon from a mesh network would be added as a new bss. Since the
-comparison has to be performed for every received beacon I believe it is best to
-save the mesh config in a format easy to compare, rather than do a bunch of
-unaligned accesses to compare field by field.
+Based on Jouni Malinen's email comments and some reading of standards, I 
+have rearranged the code segments in ieee80211_rx_bss_info. I only 
+changed bss->probe_resp from a counter to a boolean. Patch 
+ieee80211_sta-4.patch is attached.
 
----
- net/mac80211/ieee80211_i.h   |   13 ++-----------
- net/mac80211/ieee80211_sta.c |   32 ++++++++++++--------------------
- net/mac80211/mesh.c          |    4 ++++
- net/mac80211/mesh.h          |   10 ----------
- 4 files changed, 18 insertions(+), 41 deletions(-)
+HT or high throughput seems to be mostly an N thing. I can't find any 
+standard covering it. Google uncovered about 6 articles. There were 
+references to beacons but not to probe responses. I don't think HT is 
+required at all. It is optional at this point. I moved the HT code block.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6c62dd4..0997a0f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -69,14 +69,6 @@ struct ieee80211_fragment_entry {
- 	u8 last_pn[6]; /* PN of the last fragment if CCMP was used */
- };
- 
--struct bss_mesh_config {
--	u32 path_proto_id;
--	u32 path_metric_id;
--	u32 cong_control_id;
--	u32 channel_precedence;
--	u8 mesh_version;
--};
--
- 
- struct ieee80211_sta_bss {
- 	struct list_head list;
-@@ -102,7 +94,7 @@ struct ieee80211_sta_bss {
- #ifdef CONFIG_MAC80211_MESH
- 	u8 *mesh_id;
- 	size_t mesh_id_len;
--	struct bss_mesh_config *mesh_cfg;
-+	u8 *mesh_cfg;
- #endif
- #define IEEE80211_MAX_SUPP_RATES 32
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
-@@ -121,8 +113,7 @@ struct ieee80211_sta_bss {
- 	u8 erp_value;
- };
- 
--static inline
--struct bss_mesh_config *bss_mesh_cfg(struct ieee80211_sta_bss *bss)
-+static inline u8 *bss_mesh_cfg(struct ieee80211_sta_bss *bss)
- {
- #ifdef CONFIG_MAC80211_MESH
- 	return bss->mesh_cfg;
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index c20ef89..1ee07f0 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -27,7 +27,6 @@
- #include <linux/rtnetlink.h>
- #include <net/iw_handler.h>
- #include <asm/types.h>
--#include <asm/unaligned.h>
- 
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-@@ -2123,11 +2122,6 @@ ieee80211_rx_bss_get(struct net_device *dev, u8 *bssid, int freq,
- }
- 
- #ifdef CONFIG_MAC80211_MESH
--static inline u32 bss_mesh_cfg_get(u8 *mesh_cfg, u8 offset)
--{
--	return be32_to_cpu(get_unaligned((__be32 *) (mesh_cfg + offset)));
--}
--
- static struct ieee80211_sta_bss *
- ieee80211_rx_mesh_bss_get(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
- 			  u8 *mesh_cfg, int freq)
-@@ -2167,7 +2161,7 @@ ieee80211_rx_mesh_bss_add(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
- 	if (!bss)
- 		return NULL;
- 
--	bss->mesh_cfg = kmalloc(sizeof(struct bss_mesh_config), GFP_ATOMIC);
-+	bss->mesh_cfg = kmalloc(MESH_CFG_CMP_LEN, GFP_ATOMIC);
- 	if (!bss->mesh_cfg) {
- 		kfree(bss);
- 		return NULL;
-@@ -2185,12 +2179,7 @@ ieee80211_rx_mesh_bss_add(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
- 
- 	atomic_inc(&bss->users);
- 	atomic_inc(&bss->users);
--	bss->mesh_cfg->mesh_version = mesh_cfg[0];
--	bss->mesh_cfg->path_proto_id = bss_mesh_cfg_get(mesh_cfg, PP_OFFSET);
--	bss->mesh_cfg->path_metric_id = bss_mesh_cfg_get(mesh_cfg, PM_OFFSET);
--	bss->mesh_cfg->cong_control_id = bss_mesh_cfg_get(mesh_cfg, CC_OFFSET);
--	bss->mesh_cfg->channel_precedence = bss_mesh_cfg_get(mesh_cfg,
--							     CP_OFFSET);
-+	memcpy(bss->mesh_cfg, mesh_cfg, MESH_CFG_CMP_LEN);
- 	bss->mesh_id_len = mesh_id_len;
- 	bss->freq = freq;
- 	spin_lock_bh(&local->sta_bss_lock);
-@@ -4067,33 +4056,36 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 
- 	if (bss_mesh_cfg(bss)) {
- 		char *buf;
--		struct bss_mesh_config *cfg = bss_mesh_cfg(bss);
-+		u8 *cfg = bss_mesh_cfg(bss);
- 		buf = kmalloc(50, GFP_ATOMIC);
- 		if (buf) {
- 			memset(&iwe, 0, sizeof(iwe));
- 			iwe.cmd = IWEVCUSTOM;
--			sprintf(buf, "Mesh network (version %d)",
--				cfg->mesh_version);
-+			sprintf(buf, "Mesh network (version %d)", cfg[0]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
- 			sprintf(buf, "Path Selection Protocol ID: "
--				"0x%08X", cfg->path_proto_id);
-+				"0x%02X%02X%02X%02X", cfg[1], cfg[2], cfg[3],
-+							cfg[4]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
- 			sprintf(buf, "Path Selection Metric ID: "
--				"0x%08X", cfg->path_metric_id);
-+				"0x%02X%02X%02X%02X", cfg[5], cfg[6], cfg[7],
-+							cfg[8]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
- 			sprintf(buf, "Congestion Control Mode ID: "
--				"0x%08X", cfg->cong_control_id);
-+				"0x%02X%02X%02X%02X", cfg[9], cfg[10],
-+							cfg[11], cfg[12]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
- 			sprintf(buf, "Channel Precedence: "
--				"0x%08X", cfg->channel_precedence);
-+				"0x%02X%02X%02X%02X", cfg[13], cfg[14],
-+							cfg[15], cfg[16]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index b10f1e5..594a335 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -11,6 +11,10 @@
- #include "ieee80211_i.h"
- #include "mesh.h"
- 
-+#define PP_OFFSET 	1		/* Path Selection Protocol */
-+#define PM_OFFSET	5		/* Path Selection Metric   */
-+#define CC_OFFSET	9		/* Congestion Control Mode */
-+#define CAPAB_OFFSET 17
- #define ACCEPT_PLINKS 0x80
- 
- int mesh_allocated;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8ff46ea..742003d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -157,16 +157,6 @@ struct mesh_rmc {
-  */
- #define MESH_CFG_CMP_LEN 	17
- 
--/*
-- * Components offset within the mesh configuration IE
-- */
--#define PP_OFFSET	1		/* Path Selection Protocol */
--#define PM_OFFSET	5		/* Path Selection Metric   */
--#define CC_OFFSET	9		/* Congestion Control Mode */
--#define CP_OFFSET	13		/* Channel Precedence */
--#define CAPAB_OFFSET	17		/* Mesh Capabilities */
--
--
- /* Default values, timeouts in ms */
- #define MESH_TTL 		5
- #define MESH_MAX_RETR	 	3
+This is a temporary fix until someone can do a more detailed study.
+
+This has gone well beyond my original issue. I found that with iwl3945
+
+ip link set wlan0 up
+iwconfig wlan0 key xxxxxxxxxxxxxxxxxxxxxxxxxx
+iwconfig wlan0 essid mosswap
+dhclient wlan0
+
+dhclient -r wlan0
+iwconfig wlan0 key off
+iwconfig wlan0 ap off
+iwconfig wlan0 essid off
+
+ip link set wlan0 up
+iwlist wlan0 scan
+
+Produced no scan results because the probe generated by 'iwconfig wlan0 
+mosswap' put a bss in the bss_list and set bss->probe_resp > 0.
+Subsequent beacons were not used for updates and so bss->last_update was 
+never updated. This caused ieee80211_sta_scan_result to expire this bss. 
+The simple fix was to move the update code: bss->last_update = jiffies;
+
+Here is the rearranged function. The patch is attached.
+
+static void ieee80211_rx_bss_info(struct net_device *dev,
+struct ieee80211_mgmt *mgmt,
+size_t len,
+struct ieee80211_rx_status *rx_status,
+int beacon)
+{
+struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+struct ieee802_11_elems elems;
+size_t baselen;
+int freq, clen;
+struct ieee80211_sta_bss *bss;
+struct sta_info *sta;
+struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+u64 beacon_timestamp, rx_timestamp;
+struct ieee80211_channel *channel;
+DECLARE_MAC_BUF(mac);
+DECLARE_MAC_BUF(mac2);
+
+if (!beacon && memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
+return; /* ignore ProbeResp to foreign address */
+
+#if 0
+printk(KERN_DEBUG "%s: RX %s from %s to %s\n",
+dev->name, beacon ? "Beacon" : "Probe Response",
+print_mac(mac, mgmt->sa), print_mac(mac2, mgmt->da));
+#endif
+
+baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
+if (baselen > len)
+return;
+
+beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
+ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+
+if (ieee80211_vif_is_mesh(&sdata->vif) && elems.mesh_id &&
+elems.mesh_config && mesh_matches_local(&elems, dev)) {
+u64 rates = ieee80211_sta_get_rates(local, &elems,
+rx_status->band);
+
+mesh_neighbour_update(mgmt->sa, rates, dev,
+mesh_peer_accepts_plinks(&elems, dev));
+}
+
+rcu_read_lock();
+
+if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems.supp_rates &&
+memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
+(sta = sta_info_get(local, mgmt->sa))) {
+u64 prev_rates;
+u64 supp_rates = ieee80211_sta_get_rates(local, &elems,
+rx_status->band);
+
+prev_rates = sta->supp_rates[rx_status->band];
+sta->supp_rates[rx_status->band] &= supp_rates;
+if (sta->supp_rates[rx_status->band] == 0) {
+/* No matching rates - this should not really happen.
+* Make sure that at least one rate is marked
+* supported to avoid issues with TX rate ctrl. */
+sta->supp_rates[rx_status->band] =
+sdata->u.sta.supp_rates_bits[rx_status->band];
+}
+if (sta->supp_rates[rx_status->band] != prev_rates) {
+printk(KERN_DEBUG "%s: updated supp_rates set for "
+"%s based on beacon info (0x%llx & 0x%llx -> "
+"0x%llx)\n",
+dev->name, print_mac(mac, sta->addr),
+(unsigned long long) prev_rates,
+(unsigned long long) supp_rates,
+(unsigned long long) sta->supp_rates[rx_status->band]);
+}
+}
+
+rcu_read_unlock();
+
+if (elems.ds_params && elems.ds_params_len == 1)
+freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
+else
+freq = rx_status->freq;
+
+channel = ieee80211_get_channel(local->hw.wiphy, freq);
+
+if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+return;
+
+#ifdef CONFIG_MAC80211_MESH
+if (elems.mesh_config)
+bss = ieee80211_rx_mesh_bss_get(dev, elems.mesh_id,
+elems.mesh_id_len, elems.mesh_config, freq);
+else
+#endif
+bss = ieee80211_rx_bss_get(dev, mgmt->bssid, freq,
+elems.ssid, elems.ssid_len);
+if (!bss) {
+#ifdef CONFIG_MAC80211_MESH
+if (elems.mesh_config)
+bss = ieee80211_rx_mesh_bss_add(dev, elems.mesh_id,
+elems.mesh_id_len, elems.mesh_config, freq);
+else
+#endif
+bss = ieee80211_rx_bss_add(dev, mgmt->bssid, freq,
+elems.ssid, elems.ssid_len);
+if (!bss)
+return;
+} else {
+#if 0
+/* TODO: order by RSSI? */
+spin_lock_bh(&local->sta_bss_lock);
+list_move_tail(&bss->list, &local->sta_bss_list);
+spin_unlock_bh(&local->sta_bss_lock);
+#endif
+}
+
+/* save the ERP value so that it is available at association time */
+if (elems.erp_info && elems.erp_info_len >= 1) {
+bss->erp_value = elems.erp_info[0];
+bss->has_erp_value = 1;
+}
+
+if (elems.ht_cap_elem &&
+(!bss->ht_ie || bss->ht_ie_len != elems.ht_cap_elem_len ||
+memcmp(bss->ht_ie, elems.ht_cap_elem, elems.ht_cap_elem_len))) {
+kfree(bss->ht_ie);
+bss->ht_ie = kmalloc(elems.ht_cap_elem_len + 2, GFP_ATOMIC);
+if (bss->ht_ie) {
+memcpy(bss->ht_ie, elems.ht_cap_elem - 2,
+elems.ht_cap_elem_len + 2);
+bss->ht_ie_len = elems.ht_cap_elem_len + 2;
+} else
+bss->ht_ie_len = 0;
+} else if (!elems.ht_cap_elem && bss->ht_ie) {
+kfree(bss->ht_ie);
+bss->ht_ie = NULL;
+bss->ht_ie_len = 0;
+}
+
+bss->beacon_int = le16_to_cpu(mgmt->u.beacon.beacon_int);
+bss->capability = le16_to_cpu(mgmt->u.beacon.capab_info);
+
+bss->supp_rates_len = 0;
+if (elems.supp_rates) {
+clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
+if (clen > elems.supp_rates_len)
+clen = elems.supp_rates_len;
+memcpy(&bss->supp_rates[bss->supp_rates_len], elems.supp_rates,
+clen);
+bss->supp_rates_len += clen;
+}
+if (elems.ext_supp_rates) {
+clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
+if (clen > elems.ext_supp_rates_len)
+clen = elems.ext_supp_rates_len;
+memcpy(&bss->supp_rates[bss->supp_rates_len],
+elems.ext_supp_rates, clen);
+bss->supp_rates_len += clen;
+}
+
+bss->band = rx_status->band;
+
+bss->timestamp = beacon_timestamp;
+bss->last_update = jiffies;
+bss->rssi = rx_status->ssi;
+bss->signal = rx_status->signal;
+bss->noise = rx_status->noise;
+if (!beacon && !bss->probe_resp)
+bss->probe_resp = 1;
+
+/* Above here put stuff that must be handled for all cases. */
+
+if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
+bss->probe_resp && beacon) {
+/* STA mode:
+* Do not allow beacon to override data from Probe Response. */
+ieee80211_rx_bss_put(dev, bss);
+return;
+}
+
+/* don't override with a beacon */
+
+if (elems.wpa &&
+(!bss->wpa_ie || bss->wpa_ie_len != elems.wpa_len ||
+memcmp(bss->wpa_ie, elems.wpa, elems.wpa_len))) {
+kfree(bss->wpa_ie);
+bss->wpa_ie = kmalloc(elems.wpa_len + 2, GFP_ATOMIC);
+if (bss->wpa_ie) {
+memcpy(bss->wpa_ie, elems.wpa - 2, elems.wpa_len + 2);
+bss->wpa_ie_len = elems.wpa_len + 2;
+} else
+bss->wpa_ie_len = 0;
+} else if (!elems.wpa && bss->wpa_ie) {
+kfree(bss->wpa_ie);
+bss->wpa_ie = NULL;
+bss->wpa_ie_len = 0;
+}
+
+/* don't override with a beacon */
+
+if (elems.rsn &&
+(!bss->rsn_ie || bss->rsn_ie_len != elems.rsn_len ||
+memcmp(bss->rsn_ie, elems.rsn, elems.rsn_len))) {
+kfree(bss->rsn_ie);
+bss->rsn_ie = kmalloc(elems.rsn_len + 2, GFP_ATOMIC);
+if (bss->rsn_ie) {
+memcpy(bss->rsn_ie, elems.rsn - 2, elems.rsn_len + 2);
+bss->rsn_ie_len = elems.rsn_len + 2;
+} else
+bss->rsn_ie_len = 0;
+} else if (!elems.rsn && bss->rsn_ie) {
+kfree(bss->rsn_ie);
+bss->rsn_ie = NULL;
+bss->rsn_ie_len = 0;
+}
+
+/* 
+http://www.wipo.int/pctdb/en/wo.jsp?wo=2007047181&IA=WO2007047181&DISPLAY=DESC
+In particular, "Wi-Fi CERTIFIED for WMM - Support for Multimedia 
+Applications with
+Quality of Service in Wi-Fi Networks," Wi- Fi Alliance (September 1, 
+2004) is incorporated
+by reference herein. The inclusion of the WMM Parameters in probe 
+responses and association
+responses is mandatory for WMM enabled networks. The inclusion of the 
+WMM Parameters in beacons,
+however, is optional. */
+
+if (elems.wmm_param &&
+(!bss->wmm_ie || bss->wmm_ie_len != elems.wmm_param_len ||
+memcmp(bss->wmm_ie, elems.wmm_param, elems.wmm_param_len))) {
+kfree(bss->wmm_ie);
+bss->wmm_ie = kmalloc(elems.wmm_param_len + 2, GFP_ATOMIC);
+if (bss->wmm_ie) {
+memcpy(bss->wmm_ie, elems.wmm_param - 2,
+elems.wmm_param_len + 2);
+bss->wmm_ie_len = elems.wmm_param_len + 2;
+} else
+bss->wmm_ie_len = 0;
+} else if (!elems.wmm_param && bss->wmm_ie) {
+kfree(bss->wmm_ie);
+bss->wmm_ie = NULL;
+bss->wmm_ie_len = 0;
+}
+
+/* check if we need to merge IBSS */
+if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
+!local->sta_sw_scanning && !local->sta_hw_scanning &&
+bss->capability & WLAN_CAPABILITY_IBSS &&
+bss->freq == local->oper_channel->center_freq &&
+elems.ssid_len == sdata->u.sta.ssid_len &&
+memcmp(elems.ssid, sdata->u.sta.ssid, sdata->u.sta.ssid_len) == 0) {
+if (rx_status->flag & RX_FLAG_TSFT) {
+/* in order for correct IBSS merging we need mactime
+*
+* since mactime is defined as the time the first data
+* symbol of the frame hits the PHY, and the timestamp
+* of the beacon is defined as "the time that the data
+* symbol containing the first bit of the timestamp is
+* transmitted to the PHY plus the transmitting STA’s
+* delays through its local PHY from the MAC-PHY
+* interface to its interface with the WM"
+* (802.11 11.1.2) - equals the time this bit arrives at
+* the receiver - we have to take into account the
+* offset between the two.
+* e.g: at 1 MBit that means mactime is 192 usec earlier
+* (=24 bytes * 8 usecs/byte) than the beacon timestamp.
+*/
+int rate = local->hw.wiphy->bands[rx_status->band]->
+bitrates[rx_status->rate_idx].bitrate;
+rx_timestamp = rx_status->mactime + (24 * 8 * 10 / rate);
+} else if (local && local->ops && local->ops->get_tsf)
+/* second best option: get current TSF */
+rx_timestamp = local->ops->get_tsf(local_to_hw(local));
+else
+/* can't merge without knowing the TSF */
+rx_timestamp = -1LLU;
+#ifdef CONFIG_MAC80211_IBSS_DEBUG
+printk(KERN_DEBUG "RX beacon SA=%s BSSID="
+"%s TSF=0x%llx BCN=0x%llx diff=%lld @%lu\n",
+print_mac(mac, mgmt->sa),
+print_mac(mac2, mgmt->bssid),
+(unsigned long long)rx_timestamp,
+(unsigned long long)beacon_timestamp,
+(unsigned long long)(rx_timestamp - beacon_timestamp),
+jiffies);
+#endif /* CONFIG_MAC80211_IBSS_DEBUG */
+if (beacon_timestamp > rx_timestamp) {
+#ifndef CONFIG_MAC80211_IBSS_DEBUG
+if (net_ratelimit())
+#endif
+printk(KERN_DEBUG "%s: beacon TSF higher than "
+"local TSF - IBSS merge with BSSID %s\n",
+dev->name, print_mac(mac, mgmt->bssid));
+ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
+ieee80211_ibss_add_sta(dev, NULL,
+mgmt->bssid, mgmt->sa);
+}
+}
+
+ieee80211_rx_bss_put(dev, bss);
+}
+
 -- 
-1.5.4.3
+Bill Moss
+Alumni Distinguished Professor
+Mathematical Sciences
+Clemson University
 
 
+--------------000203040408030104010404
+Content-Type: text/x-patch;
+ name="ieee80211_sta-4.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ieee80211_sta-4.patch"
 
+--- ieee80211_sta.c_orig	2008-03-28 09:38:50.000000000 -0400
++++ ieee80211_sta.c	2008-03-31 23:45:00.000000000 -0400
+@@ -2546,22 +2546,29 @@
+ #endif
+ 	}
+ 
+-	bss->band = rx_status->band;
+-
+-	if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
+-	    bss->probe_resp && beacon) {
+-		/* STA mode:
+-		 * Do not allow beacon to override data from Probe Response. */
+-		ieee80211_rx_bss_put(dev, bss);
+-		return;
+-	}
+-
+ 	/* save the ERP value so that it is available at association time */
+ 	if (elems.erp_info && elems.erp_info_len >= 1) {
+ 		bss->erp_value = elems.erp_info[0];
+ 		bss->has_erp_value = 1;
+ 	}
+ 
++	if (elems.ht_cap_elem &&
++	     (!bss->ht_ie || bss->ht_ie_len != elems.ht_cap_elem_len ||
++	     memcmp(bss->ht_ie, elems.ht_cap_elem, elems.ht_cap_elem_len))) {
++		kfree(bss->ht_ie);
++		bss->ht_ie = kmalloc(elems.ht_cap_elem_len + 2, GFP_ATOMIC);
++		if (bss->ht_ie) {
++			memcpy(bss->ht_ie, elems.ht_cap_elem - 2,
++				elems.ht_cap_elem_len + 2);
++			bss->ht_ie_len = elems.ht_cap_elem_len + 2;
++		} else
++			bss->ht_ie_len = 0;
++	} else if (!elems.ht_cap_elem && bss->ht_ie) {
++		kfree(bss->ht_ie);
++		bss->ht_ie = NULL;
++		bss->ht_ie_len = 0;
++	}
++
+ 	bss->beacon_int = le16_to_cpu(mgmt->u.beacon.beacon_int);
+ 	bss->capability = le16_to_cpu(mgmt->u.beacon.capab_info);
+ 
+@@ -2569,7 +2576,7 @@
+ 	if (elems.supp_rates) {
+ 		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
+ 		if (clen > elems.supp_rates_len)
+-			clen = elems.supp_rates_len;
++		       clen = elems.supp_rates_len;
+ 		memcpy(&bss->supp_rates[bss->supp_rates_len], elems.supp_rates,
+ 		       clen);
+ 		bss->supp_rates_len += clen;
+@@ -2577,12 +2584,34 @@
+ 	if (elems.ext_supp_rates) {
+ 		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
+ 		if (clen > elems.ext_supp_rates_len)
+-			clen = elems.ext_supp_rates_len;
++		       clen = elems.ext_supp_rates_len;
+ 		memcpy(&bss->supp_rates[bss->supp_rates_len],
+ 		       elems.ext_supp_rates, clen);
+ 		bss->supp_rates_len += clen;
+ 	}
+ 
++	bss->band = rx_status->band;
++
++	bss->timestamp = beacon_timestamp;
++	bss->last_update = jiffies;
++	bss->rssi = rx_status->ssi;
++	bss->signal = rx_status->signal;
++	bss->noise = rx_status->noise;
++	if (!beacon && !bss->probe_resp)
++		bss->probe_resp = 1;
++
++	/* Above here put stuff that must be handled for all cases. */
++
++	if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS &&
++	    bss->probe_resp && beacon) {
++		/* STA mode:
++		 * Do not allow beacon to override data from Probe Response. */
++		ieee80211_rx_bss_put(dev, bss);
++		return;
++	}
++
++	/* don't override with a beacon */
++
+ 	if (elems.wpa &&
+ 	    (!bss->wpa_ie || bss->wpa_ie_len != elems.wpa_len ||
+ 	     memcmp(bss->wpa_ie, elems.wpa, elems.wpa_len))) {
+@@ -2599,6 +2628,8 @@
+ 		bss->wpa_ie_len = 0;
+ 	}
+ 
++	/* don't override with a beacon */
++
+ 	if (elems.rsn &&
+ 	    (!bss->rsn_ie || bss->rsn_ie_len != elems.rsn_len ||
+ 	     memcmp(bss->rsn_ie, elems.rsn, elems.rsn_len))) {
+@@ -2615,6 +2646,13 @@
+ 		bss->rsn_ie_len = 0;
+ 	}
+ 
++	/* http://www.wipo.int/pctdb/en/wo.jsp?wo=2007047181&IA=WO2007047181&DISPLAY=DESC
++	In particular, "Wi-Fi CERTIFIED for WMM - Support for Multimedia Applications with
++	Quality of Service in Wi-Fi Networks," Wi- Fi Alliance (September 1, 2004) is incorporated 
++	by reference herein. The inclusion of the WMM Parameters in probe responses and association 
++	responses is mandatory for WMM enabled networks. The inclusion of the WMM Parameters in beacons, 
++	however, is optional. */ 
++
+ 	if (elems.wmm_param &&
+ 	    (!bss->wmm_ie || bss->wmm_ie_len != elems.wmm_param_len ||
+ 	     memcmp(bss->wmm_ie, elems.wmm_param, elems.wmm_param_len))) {
+@@ -2631,30 +2669,6 @@
+ 		bss->wmm_ie = NULL;
+ 		bss->wmm_ie_len = 0;
+ 	}
+-	if (elems.ht_cap_elem &&
+-	    (!bss->ht_ie || bss->ht_ie_len != elems.ht_cap_elem_len ||
+-	     memcmp(bss->ht_ie, elems.ht_cap_elem, elems.ht_cap_elem_len))) {
+-		kfree(bss->ht_ie);
+-		bss->ht_ie = kmalloc(elems.ht_cap_elem_len + 2, GFP_ATOMIC);
+-		if (bss->ht_ie) {
+-			memcpy(bss->ht_ie, elems.ht_cap_elem - 2,
+-			       elems.ht_cap_elem_len + 2);
+-			bss->ht_ie_len = elems.ht_cap_elem_len + 2;
+-		} else
+-			bss->ht_ie_len = 0;
+-	} else if (!elems.ht_cap_elem && bss->ht_ie) {
+-		kfree(bss->ht_ie);
+-		bss->ht_ie = NULL;
+-		bss->ht_ie_len = 0;
+-	}
+-
+-	bss->timestamp = beacon_timestamp;
+-	bss->last_update = jiffies;
+-	bss->rssi = rx_status->ssi;
+-	bss->signal = rx_status->signal;
+-	bss->noise = rx_status->noise;
+-	if (!beacon)
+-		bss->probe_resp++;
+ 
+ 	/* check if we need to merge IBSS */
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && beacon &&
+
+--------------000203040408030104010404--
