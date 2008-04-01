@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45991 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbYDCSvO (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:38197 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbYDASIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 14:51:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43legacy: Partial Fix for Range issue
-Date: Thu, 3 Apr 2008 20:50:38 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	KURT PETERS <peterskurt@msn.com>
-References: <BAY103-F373BE8D28C2F2A21BC15E0D8F70@phx.gbl> <200804031719.44026.mb@bu3sch.de> <47F5242D.80404@lwfinger.net>
-In-Reply-To: <47F5242D.80404@lwfinger.net>
+	Tue, 1 Apr 2008 14:08:45 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so923962nfb.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 11:08:43 -0700 (PDT)
+To: Thomas =?iso-8859-15?q?B=E4chler?= <thomas@archlinux.org>
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+Date: Tue, 1 Apr 2008 20:09:02 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br> <200804010010.15705.IvDoorn@gmail.com> <fstta0$jhu$1@ger.gmane.org>
+In-Reply-To: <fstta0$jhu$1@ger.gmane.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200804032050.38774.mb@bu3sch.de> (sfid-20080403_195119_268869_3A15AEB8)
+Message-Id: <200804012009.02448.IvDoorn@gmail.com> (sfid-20080401_190848_765757_73AACEBC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 03 April 2008 20:38:37 Larry Finger wrote:
-> When the mac80211 channel tables were recently changed,
-> the power_level member was removed. As a result, the value
-> passed to b43legacy in conf->power_level became zero. This
-> value is transferred to phy->power_level and used in calculating
-> the desired TX power, which thus became zero. This patch does not
-> fix all the power problems with b43legacy, but it will be needed
-> anyway.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John,
-> 
-> This is 2.6.25 material.
-> 
-> Larry
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
-> +++ wireless-testing/drivers/net/wireless/b43legacy/main.c
-> @@ -127,6 +127,7 @@ static struct ieee80211_rate __b43legacy
->   	{							\
->   		.center_freq	= (_freq),			\
->   		.hw_value	= (_chanid),			\
-> +		.max_power	= 0x14,				\
->   	}
->   static struct ieee80211_channel b43legacy_bg_chantable[] = {
->   	CHANTAB_ENT(1, 2412),
-> 
-> 
+Hi,
 
-In b43 I set this value to 30.
-I dunno what the real HW upper limit is, so I set it so something
-that's way above the actual value mac80211 will ever try anyway (because
-mac80211 won't try illegal rates, if implemented correctly).
+> >> Is the last kernel code working with RaLink RT2500 802.11g Cardbus/mini-PCI?
+> > 
+> > With 'latest' do you mean:
+> >  latest 2.6.25-rc kernel?
+> >  latest wireless-testing git snapshot
+> >  latest rt2x00 git snapshot
+> > 
+> > The latter 2 should work fine, the first one has known issues
+> > but the state variates per person.
+> 
+> I was complaining about speed a while ago, so after reading this post, I 
+> thought I should try again and tell you:
+> 
+> The version in wireless-testing seems to work great, a test download 
+> gave me 1.24MB/s, which is about the same speed I get with my (Intel 
+> wireless) laptop. I am using rt2500pci.
+> 
+> Does the above mean that the stock driver in 2.6.25 will still be slow?
 
--- 
-Greetings Michael.
+Most likely yes.
+Although I hear mixed reports, some say it depends on the rate selection
+algorithm, some claim rt2x00 in 2.6.24 is faster then wireless-testing and
+others claim the exact opposite.
+At the moment it is hard to tell, but I haven't collected data yet with specific
+information about the used rate selection module and exact data transfer
+numbers.
+
+Ivo
