@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:20476 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbYDZFIe (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:35906 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758925AbYDAVjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 01:08:34 -0400
-Received: by an-out-0708.google.com with SMTP id d31so1016526and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 22:08:33 -0700 (PDT)
-Message-ID: <43e72e890804252208g2d19acedh1ceff3aa209489ad@mail.gmail.com> (sfid-20080426_070904_616530_DD435259)
-Date: Fri, 25 Apr 2008 22:08:32 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Machek" <pavel@ucw.cz>
-Subject: Re: w35und: one more unneccessary function
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080419194206.GA17558@elf.ucw.cz>
+	Tue, 1 Apr 2008 17:39:39 -0400
+From: Chr <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][PATCH 0/4] p54: various updates
+Cc: Michael Wu <flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080419194206.GA17558@elf.ucw.cz>
+Date: Tue, 1 Apr 2008 23:39:36 +0200
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200804012339.37204.chunkeey@web.de> (sfid-20080401_223943_580841_30803FEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 19, 2008 at 12:42 PM, Pavel Machek <pavel@ucw.cz> wrote:
-> Remove one more unnecessary function.
->
->  ---
->  commit 8cf2b466620bd533acf20596be1fabfc0b46d992
->  tree e0bf7b039e545bede22980048669557fc49490e4
->  parent 6627ff26a459db3e792ec4dc194122c133c150a5
->  author Pavel <pavel@amd.ucw.cz> Sat, 19 Apr 2008 21:41:31 +0200
->  committer Pavel <pavel@amd.ucw.cz> Sat, 19 Apr 2008 21:41:31 +0200
->
->   .../net/wireless/winbond/winbondport/mlmetxrx.c    |   57 -----------------------
->   1 files changed, 0 insertions(+), 57 deletions(-)
->
->  diff --git a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
->  index dcfdfd4..f58e458 100644
->  --- a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
->  +++ b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
+Hi,
 
-drivers/net/wireless/winbond/ ? What tree is this in?
+this is the next RFC round...
 
-  Luis
+1) rename all prism54* to p54* (to match the filenames)
+2) rx_tasklet for p54pci
+3) link statistics
+4) AP-Patch 
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+
+---
+diffstat: 
+ p54.h       |   40 ++++
+ p54common.c |  487 
+++++++++++++++++++++++++++++++++++++++++++++++++------------
+ p54common.h |  111 ++++++++++---
+ p54pci.c    |  283 ++++++++++++++++++++++------------
+ p54pci.h    |   20 +-
+ p54usb.c    |   34 ++--
+ p54usb.h    |    6
+ 7 files changed, 726 insertions(+), 255 deletions(-)
