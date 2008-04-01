@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34859 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163AbYDTPz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 11:55:28 -0400
-Message-ID: <480B6117.3000201@hauke-m.de> (sfid-20080420_165531_570329_F6F9D5A8)
-Date: Sun, 20 Apr 2008 17:28:23 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: lrodriguez@atheros.com
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: compat-wireless-2008-04-20 doesn't build on kernel 2.6.23
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig57573A2D736AE5D6B6B36306"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731AbYDAMCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 08:02:34 -0400
+Subject: Re: [PATCH] mac80211: fix deadlocks in debugfs_netdev.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	linville@tuxdriver.com
+In-Reply-To: <47f18973.1498600a.3eb4.ffffbefb@mx.google.com> (sfid-20080401_020142_502048_1A55C83F)
+References: <47f18973.1498600a.3eb4.ffffbefb@mx.google.com>
+	 (sfid-20080401_020142_502048_1A55C83F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BiREdqUA67avcUBQ14dw"
+Date: Tue, 01 Apr 2008 14:02:30 +0200
+Message-Id: <1207051350.5143.56.camel@johannes.berg> (sfid-20080401_130237_362232_6F4BF7D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig57573A2D736AE5D6B6B36306
-Content-Type: text/plain; charset=UTF-8
+
+--=-BiREdqUA67avcUBQ14dw
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-I have tested to build compat-wireless-2008-04-20 on kernel 2.6.23 but
-it doesn't build. I got the following error:
 
-  CC [M]  compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.o
-compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.c: In function
-'ath5k_hw_attach':
-compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.c:346: error:
-'struct pci_dev' has no member named 'is_pcie'
-make[4]: *** compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.o]
-Error 1
-make[3]: *** compat-wireless-2008-04-20/drivers/net/wireless/ath5k] Error=
- 2
-make[2]: *** compat-wireless-2008-04-20/drivers/net/wireless] Error 2
-make[1]: ***
-[_module_/home/hmehr/compat-wireless/compat-wireless-2008-04-20] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.23.15-80.fc7-x86_64'
+On Mon, 2008-03-31 at 15:10 -0700, Luis Carlos Cobo wrote:
+> The bug shows up with CONFIG_PREEMPT enabled. Pointed out by Andrew Morto=
+n.
 
+> @@ -51,13 +53,13 @@ static ssize_t ieee80211_if_write(
+> =20
+>  	memset(buf, 0x00, sizeof(buf));
+>  	buf_size =3D min(count, (sizeof(buf)-1));
+> -	read_lock(&dev_base_lock);
+>  	if (copy_from_user(buf, userbuf, buf_size))
 
-The next error I got while building was:
+Do we actually still need all this ieee80211_if_write code? It seems
+that nl80211 can fully replace it now.
 
-  CC [M]  ompat-wireless-2008-04-20/drivers/net/wireless/b43/main.o
-In file included from include/linux/input-polldev.h:12,
-                 from
-compat-wireless-2008-04-20/drivers/net/wireless/b43/rfkill.h:10,
-                 from
-compat-wireless-2008-04-20/drivers/net/wireless/b43/b43.h:13,
-                 from
-compat-wireless-2008-04-20/drivers/net/wireless/b43/main.c:45:
-include/linux/input.h:933:1: warning: "BIT" redefined
-In file included from include/linux/kernel.h:15,
-                 from compat-wireless-2008-04-20/include/net/compat.h:5,
-                 from <command line>:1:
-compat-wireless-2008-04-20/include/linux/bitops.h:7:1: warning: this is
-the location of the previous definition
+johannes
 
-
-If you need the full log please mail me.
-
-Hauke
-
-
---------------enig57573A2D736AE5D6B6B36306
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+--=-BiREdqUA67avcUBQ14dw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iQIVAwUBSAthJYZ0px9YPRMyAQJN/xAAg4I+1vljwBo850PYQmUhlYL5s2VUn4Pt
-FiruBiVjF98A2ppC8Zor3/8wroMQ90UHL531rmFqBDiYsNdxaIGva/C3nNWeFyj7
-70B8LbHBsHcz1fmpuk70JdjL4VZbvni7pSAZxlzwCz/ZdnVVZSui+c9LW5GTH4OZ
-nCFx88JF2LP4jkmBgAbnWO6BuAzQ0XAxwUYutV90dlsD0mhjqeTQq1xDn21eW5D8
-ZjjRPq28j6q31j1k1KcG77u/EMwqwk1tHWXrQTvO3uow7BP1y2VGB0nMNTkKbkcp
-5Mo+g8XwZRPNE9mC8udh1T5dWZB3iZstMWqaQY+Jz8Aze46M9pWVA6mXTUJVZ3zc
-YD+cvqaQ8kdp6qnn50oDu9PQb/AnUIF3wqnrfwmLpiJW5f2xOiOr6zdYiHZXuqWB
-PYvAqLOJWnw+o19b5MMHvhzEZs1UT9uxDEEJ0uA28y9iUkbIsgEqp29sdOS/YnXO
-3GDQdCrloOCctg2qgeMgQkHGYsgiFRDRnOCOYCYfD3edoBelzm3uoWUPjpQIba4p
-tMEPvkq0pwA6UTG/vOqGQQcTqffUmUO/6kvkFSkLsPVByp7m2c7XJ+NVh1tjee1t
-esX9VpM2j2TevD6qttMtPOl54lulWRT54GVsM66qAlNYBvqgZal6vWx3fBbT0uqB
-35BF/SNcdG8=
-=xbWJ
+iQIVAwUAR/IkVaVg1VMiehFYAQJZ/g//eyIM4iQ7x3gwjmOlrsBQDFDMWQy26YZr
+Hipddm7jQeUrZLdHwY42BbT3WJC6AMuoE2z0lGEqLIWS5I/RfyF3zON5/pe8ad9n
+HyiBqdBPocd/cbTC9k0lu0DlgjuNAMnFV13wz7rjqpQaIYHTaWMgPSLIgwNK+2U9
+DlQ1w41Z6YQlqUwo0Yg9jhmmCadTht/ihh4RZJrl7usoCrNihrik61PHCNLo026X
+WyUbpLFfBq5LU65H0kxC5hCmXfUvMc79EvnLEYbTPD4VXfViyM6+Sedc+wnDqPho
+HfNjUWWta6R0y0Ovtp7+7IXNPsYzZi9Zm+q3wydRzJQRIwFjtKJkCbaW166ZP8sa
+LNvCps/QPLINU7NtX5la/PzVWvQe0kdTCF9exBdhlrlvgzkRflV0lbtXApzIHUWi
+mmtLAr9lpk6vE2RiFVAAEWe2nRshU4nNfJVXpkXA1PIRp4l6uxNcymcPe+hg5DBb
+XkIyGB15qzAhi5vsi3tpznDri2prIqX9p41jetxMArc72yOTNbEbmc4TknUCS3l8
+iWF9EYdli8e6EupsH9vEbGOzeaaRO/bsJ90w1QZxKS8BGgq27rPvS+p1fgGIRk7C
+0rKX0yKQOXUZb1P7dm0kpI4n/dG150pxnjsPUmV9+gDp2NPjv4SicvCjZvAz3Ns8
+UlziQ4enJDQ=
+=iAwB
 -----END PGP SIGNATURE-----
 
---------------enig57573A2D736AE5D6B6B36306--
+--=-BiREdqUA67avcUBQ14dw--
+
