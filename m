@@ -1,72 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17408 "EHLO mga02.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2344 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753907AbYDCXFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 19:05:49 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/5] iwlwifi: ensure led registration complete as part of initialization
-Date: Thu,  3 Apr 2008 16:05:23 -0700
-Message-Id: <1207263924-25385-5-git-send-email-reinette.chatre@intel.com> (sfid-20080404_000607_409957_A8BBC6E6)
-In-Reply-To: <1207263924-25385-4-git-send-email-reinette.chatre@intel.com>
-References: <1207263924-25385-1-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-2-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-3-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-4-git-send-email-reinette.chatre@intel.com>
+	id S1757533AbYDASDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 14:03:22 -0400
+Date: Tue, 1 Apr 2008 13:51:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Problems with RTL8187 USB device
+Message-ID: <20080401175156.GB14670@tuxdriver.com> (sfid-20080401_190324_540647_0134477C)
+References: <47C49D21.1030905@lwfinger.net> <20080227010732.GB3066@tuxdriver.com> <pan.2008.03.25.20.31.22.955127@gimpelevich.san-francisco.ca.us> <pan.2008.04.01.15.41.45.711513@gimpelevich.san-francisco.ca.us>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <pan.2008.04.01.15.41.45.711513@gimpelevich.san-francisco.ca.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the workqueue is notified the LED code may be accessed. Ensure
-that LED registration completes completely as part of initialization
-before anything waiting on this is notified.
+On Tue, Apr 01, 2008 at 08:41:48AM -0700, Daniel Gimpelevich wrote:
+> On Tue, 25 Mar 2008 14:31:23 -0700, Daniel Gimpelevich wrote:
+> 
+> > On Tue, 26 Feb 2008 20:07:32 -0500, John W. Linville wrote:
+> > 
+> >> As for rtl8187b support in general, I've been looking at porting
+> >> support for those devices form the vendor-provided driver.  But the
+> >> patch is incomplete ATM -- hopefully soon, depending on events. :-(
+> >> 
+> >> I'm sorry you are caught in the middle.  I'll try to get that b support
+> >> patch done soon -- hopefully we can get something working for you then.
+> > 
+> > What's the current status of this patch? Thanx
+> 
+> Well?
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Same as before -- sorry.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 51480a4..d4daa04 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5874,12 +5874,12 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
- 
- 	iwl3945_reg_txpower_periodic(priv);
- 
-+	iwl3945_led_register(priv);
-+
- 	IWL_DEBUG_INFO("ALIVE processing complete.\n");
- 	set_bit(STATUS_READY, &priv->status);
- 	wake_up_interruptible(&priv->wait_command_queue);
- 
--	iwl3945_led_register(priv);
--
- 	if (priv->error_recovering)
- 		iwl3945_error_recovery(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 5dfc414..4517e4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5701,12 +5701,12 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 
- 	iwl4965_rf_kill_ct_config(priv);
- 
-+	iwl_leds_register(priv);
-+
- 	IWL_DEBUG_INFO("ALIVE processing complete.\n");
- 	set_bit(STATUS_READY, &priv->status);
- 	wake_up_interruptible(&priv->wait_command_queue);
- 
--	iwl_leds_register(priv);
--
- 	if (priv->error_recovering)
- 		iwl4965_error_recovery(priv);
- 
 -- 
-1.5.3.4
-
+John W. Linville
+linville@tuxdriver.com
