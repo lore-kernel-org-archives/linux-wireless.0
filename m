@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:15538 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755438AbYDBUPx (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:25437 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753987AbYDAIvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 16:15:53 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so1807910rng.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:15:51 -0700 (PDT)
-Message-ID: <1ba2fa240804021315s399111d3ibbb1044e8964de5@mail.gmail.com> (sfid-20080402_211613_415350_B52B2F6F)
-Date: Wed, 2 Apr 2008 23:15:50 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] iwlwifi/Kconfg: make IWLWIFI_LEDS invisible
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Miles Lane" <miles.lane@gmail.com>, reinette.chatre@intel.com
-In-Reply-To: <1207152604-22973-1-git-send-email-linville@tuxdriver.com>
+	Tue, 1 Apr 2008 04:51:37 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2509080wah.23
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 01:51:36 -0700 (PDT)
+Message-ID: <a32f33a40804010151v6cd1c6d6w9c4e6cc03b7db01d@mail.gmail.com> (sfid-20080401_095142_448671_13969D24)
+Date: Tue, 1 Apr 2008 10:51:36 +0200
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Felipe Maya" <fmay@cetuc.puc-rio.br>
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <53141.201.36.161.238.1207002489.squirrel@mamao.cetuc.puc-rio.br>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <a44ae5cd0804020404k295ffc7ew8761cc0901996e20@mail.gmail.com>
-	 <1207152604-22973-1-git-send-email-linville@tuxdriver.com>
+References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
+	 <200804010010.15705.IvDoorn@gmail.com>
+	 <53141.201.36.161.238.1207002489.squirrel@mamao.cetuc.puc-rio.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 2, 2008 at 7:10 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> Select IWLWIFI_LEDS automatically when either IWL3945_LEDS or
->  IWL4965_LEDS is selected.  This avoids potential misconfigurations
->  which lead to build failures for iwl-led.c.
->
->  Cc: Miles Lane <miles.lane@gmail.com>
->  Cc: reinette.chatre@intel.com
->  Signed-off-by: John w. Linville <linville@tuxdriver.com>
->  ---
->   drivers/net/wireless/iwlwifi/Kconfig |   11 +++++------
->   1 files changed, 5 insertions(+), 6 deletions(-)
->
->  diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
->  index 4a5c8c0..8137690 100644
->  --- a/drivers/net/wireless/iwlwifi/Kconfig
->  +++ b/drivers/net/wireless/iwlwifi/Kconfig
->  @@ -3,11 +3,8 @@ config IWLCORE
->         depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
->
->   config IWLWIFI_LEDS
->  -       bool "Enable LEDS features in iwlwifi driver"
->  -       depends on IWLCORE && MAC80211_LEDS && LEDS_CLASS
->  -       ---help---
->  -         This option enables LEDS for the iwlwifi drivers
->  -
->  +       bool
->  +       default n
->
->   config IWLCORE_RFKILL
->         boolean "IWLWIFI RF kill support"
->  @@ -52,7 +49,8 @@ config IWL4965_HT
->
->   config IWL4965_LEDS
->         bool "Enable LEDS features in iwl4965 driver"
->  -       depends on IWL4965 && IWLWIFI_LEDS
->  +       depends on IWL4965 && MAC80211_LEDS && LEDS_CLASS
->  +       select IWLWIFI_LEDS
->         ---help---
->           This option enables LEDS for the iwlwifi drivers
->
->  @@ -137,6 +135,7 @@ config IWL3945_SPECTRUM_MEASUREMENT
->   config IWL3945_LEDS
->         bool "Enable LEDS features in iwl3945 driver"
->         depends on IWL3945 && MAC80211_LEDS && LEDS_CLASS
->  +       select IWLWIFI_LEDS
+Hi,
 
-3945 is for now not dependent at all on this flag.
-Otherwise looks OK
+> The configuration (kernel 2.6.23.1) seems OK (mac80211  132112  4
+>  rc80211_simple,rt2500pci,rt2x00pci,rt2x00lib),
+
+I still have the same question, what version?
+kernel 2.6.23 does not contain rt2x00, so what version are you using?
+
+> but when I try to connect
+>  with another machine in a simples Ad-Hoc mode, don't transmit anything,
+>  remaining invisible with 'iwlist scan' command. While with the
+>  serialmonkey driver run OK.
+
+Again same questions:
+How are you configuring the interface?
+What tools are you using?
+Do you get an error messages?
+Is there any other information that might be useful for understanding this bug?
+
+Ivo
