@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:27593 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765572AbYD1IQi (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:40752 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754377AbYDATpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 04:16:38 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so7841313waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 01:16:35 -0700 (PDT)
-Message-ID: <68676e00804280116j7b44c2adwdaa488d078cb94a1@mail.gmail.com> (sfid-20080428_101650_776296_5F62DDD2)
-Date: Mon, 28 Apr 2008 10:16:35 +0200
-From: "Luca Tettamanti" <kronos.it@gmail.com>
-To: "Adrian Bunk" <bunk@kernel.org>
-Subject: Re: [PATCH] Fix compile error with wifi & leds
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-In-Reply-To: <20080428075452.GB16379@cs181133002.pp.htv.fi>
+	Tue, 1 Apr 2008 15:45:20 -0400
+Received: from smtp06.web.de (fmsmtp06.dlan.cinetic.de [172.20.5.172])
+	by fmmailgate02.web.de (Postfix) with ESMTP id 5D514D722D50
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Apr 2008 21:45:19 +0200 (CEST)
+Received: from [91.22.247.48] (helo=debian64.daheim)
+	by smtp06.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.109 #226)
+	id 1JgmQ3-0002oF-00
+	for linux-wireless@vger.kernel.org; Tue, 01 Apr 2008 21:45:19 +0200
+Received: from localhost ([127.0.0.1] ident=chuck)
+	by debian64.daheim with esmtpa (Exim 4.69)
+	(envelope-from <chunkeey@web.de>)
+	id 1JgmQ2-00025z-P5
+	for linux-wireless@vger.kernel.org; Tue, 01 Apr 2008 21:45:18 +0200
+From: Chr <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: add station aid into ieee80211_tx_control
+Date: Tue, 1 Apr 2008 21:45:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080426203408.GA12074@dreamland.darkstar.lan>
-	 <20080428074531.GA16379@cs181133002.pp.htv.fi>
-	 <20080428075452.GB16379@cs181133002.pp.htv.fi>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_ODp8H+47GzjqeFw"
+Message-Id: <200804012145.18294.chunkeey@web.de> (sfid-20080401_204526_683133_262D4EC3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 28, 2008 at 9:54 AM, Adrian Bunk <bunk@kernel.org> wrote:
-> On Mon, Apr 28, 2008 at 10:45:31AM +0300, Adrian Bunk wrote:
->  > Can you send the .config that gives this problem?
+--Boundary-00=_ODp8H+47GzjqeFw
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Just select IWL4965_LEDS without enabling LEDS_TRIGGERS.
+This patch is necessary for the upcoming Accesspoint patch for p54.
 
->  Scrap that, I already got the problem (and your patch looks right).
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 
-It works, yes - but I don't like it... NEW_LEDS enables the core code
-of the leds driver but also enables/disables the compilation of the
-whole driver/leds directory; *every* user of the led driver has to
-select whatever config option it wants (e.g. LEDS_TRIGGERS) _plus_
-NEW_LEDS, otherwise led code won't be compiled.
->From a quick inspection RT2{4,5}00PCI_LEDS
-(driver/net/wireless/rt2x00) have the same problem, they select
-LEDS_CLASS without enabling NEW_LEDS -> unresolved symbols :|
-Maybe LEDS_* should also select NEW_LEDS?
+--Boundary-00=_ODp8H+47GzjqeFw
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="mac80211-station-aid-in-tx-control.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="mac80211-station-aid-in-tx-control.diff"
 
-Luca
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 48428a6..b428472 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -287,6 +287,7 @@ struct ieee80211_tx_control {
+ 	u8 iv_len;		/* length of the IV field in octets */
+ 	u8 queue;		/* hardware queue to use for this frame;
+ 				 * 0 = highest, hw->queues-1 = lowest */
++	u16 aid;		/* Station AID */
+ 	int type;	/* internal */
+ };
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 80f4343..ea3fa0f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -741,6 +741,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+ 	}
+ 
+ 	if (tx->sta) {
++		control->aid = tx->sta->aid;
+ 		tx->sta->tx_packets++;
+ 		tx->sta->tx_fragments++;
+ 		tx->sta->tx_bytes += tx->skb->len;
+
+--Boundary-00=_ODp8H+47GzjqeFw--
