@@ -1,66 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759914AbYD3UGs (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:34210 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756805AbYDARsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 16:06:48 -0400
-Subject: Re: [PATCH 3/3] mac80211: QoS related cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200804301929.21347.IvDoorn@gmail.com> (sfid-20080430_192528_226096_53B6E431)
-References: <20080429151858.253229000@sipsolutions.net>
-	 <20080429152042.544902000@sipsolutions.net>
-	 <200804301929.21347.IvDoorn@gmail.com>
-	 (sfid-20080430_192528_226096_53B6E431)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O1YtEyJI9wGGFlJujUAP"
-Date: Wed, 30 Apr 2008 22:05:56 +0200
-Message-Id: <1209585957.18659.90.camel@johannes.berg> (sfid-20080430_220640_852323_5463A26F)
-Mime-Version: 1.0
+	Tue, 1 Apr 2008 13:48:55 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so2485826fgb.17
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 10:48:54 -0700 (PDT)
+Message-ID: <69e28c910804011048o6f5ddb84j28c3508d2d1609b6@mail.gmail.com> (sfid-20080401_184858_273695_7195FD3A)
+Date: Tue, 1 Apr 2008 19:48:54 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: gavron@wetwork.net
+Subject: Re: [PATCH] b43: Enable quantum cryptography support
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <47F2720F.7030306@wetwork.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200804011613.06749.mb@bu3sch.de> <47F2720F.7030306@wetwork.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Try the latest GCC 6 development version, that should work. (I tested
+it on a Core 4 Hexadeca CPU, not sure if it will work on Core 3 Octos,
+as it seems to use SSE6 instructions. Maybe DDR5 RAM is required,
+too.)
 
---=-O1YtEyJI9wGGFlJujUAP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 4/1/08, gavron@wetwork.net <gavron@wetwork.net> wrote:
+> I tried this patch against the 3.6 tree and I was unable to get it to
+> compile.
+> It kept saying my version of gcc is too old.
+> Is it my SPROM?
+>
+> Ehud
+> gcc version 5.1.2 20090401 (Red Hat 5.1.2-33)
+>
+> Michael Buesch wrote:
+> > This patch enables support for quantum cryptography on latest b43 devices.
+> > The quantum cryptography algorithm is 100% backward compatible with the
+> > standard CCMP algorithm, so no additional changes to the mac80211 stack
+> > are needed. While staying compatible, it makes the unbreakable(!) WLAN
+> connection
+> > possible. Of course, that's only the case, if both ends use b43-qcrypto.
+> > In the case where one STA uses legacy encryption, the card will
+> automatically
+> > detect this and switch back to plain old CCMP.
+> >
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> >
+> > ---
+> >
+> > John, please queue this patch for linux-3.6.26
+> >
+> >
+> > Index: wireless-testing/drivers/net/wireless/b43/b43.h
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-03-22
+> 15:44:00.000000000 +0100
+> > +++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-01
+> 15:53:40.000000000 +0200
+> > @@ -270,6 +270,7 @@ enum {
+> >  #define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode
+> (rev >= 13 only) */
+> >  #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev
+> >= 13 only) */
+> >  #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >=
+> 13 only) */
+> > +#define B43_HF_QUANTUMCRYPT	0x100000000000ULL /* Enable quantum
+> cryptography in firmware. */
+> >
+> >  /* MacFilter offsets. */
+> >  #define B43_MACFILTER_SELF		0x0000
+> > @@ -439,6 +440,7 @@ enum {
+> >  	B43_SEC_ALGO_AES,
+> >  	B43_SEC_ALGO_WEP104,
+> >  	B43_SEC_ALGO_AES_LEGACY,
+> > +	B43_SEC_ALGO_QUANTUM,
+> >  };
+> >
+> >  struct b43_dmaring;
+> > Index: wireless-testing/drivers/net/wireless/b43/main.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-27
+> 17:11:38.000000000 +0100
+> > +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-01
+> 15:53:41.000000000 +0200
+> > @@ -3215,6 +3215,13 @@ static int b43_op_set_key(struct ieee802
+> >  		break;
+> >  	case ALG_CCMP:
+> >  		algorithm = B43_SEC_ALGO_AES;
+> > +		if (dev->dev->id.revision >= 20080401) {
+> > +			/* Latest devices can do quantum cryptography
+> > +			 * to encrypt/decrypt the data stream.
+> > +			 * This is 100% backward compatible with the traditional
+> > +			 * CCMP algorithm. */
+> > +			algorithm = B43_SEC_ALGO_QUANTUM;
+> > +		}
+> >  		break;
+> >  	default:
+> >  		B43_WARN_ON(1);
+> > @@ -3254,6 +3261,10 @@ static int b43_op_set_key(struct ieee802
+> >  			b43_hf_write(dev,
+> >  				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
+> >  		}
+> > +		if (algorithm == B43_SEC_ALGO_QUANTUM) {
+> > +			b43_hf_write(dev, b43_hf_read(dev)
+> > +				     | B43_HF_QUANTUMCRYPT);
+> > +		}
+> >  		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+> >  		break;
+> >  	case DISABLE_KEY: {
+> >
+> >
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>
 
 
-> >  	if (unlikely(queue < 0)) {
-> >  			kfree_skb(skb);
-> >  			err =3D NET_XMIT_DROP;
->=20
-> With queue now unsigned, the above check will always be false:
-> net/mac80211/wme.c: In function 'wme_qdiscop_enqueue':
-> net/mac80211/wme.c:219: warning: comparison is always false due to limite=
-d range of data type
-
-Odd, I wonder why I never got that, good catch though.
-
-johannes
-
---=-O1YtEyJI9wGGFlJujUAP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBjRI6Vg1VMiehFYAQKznA//TSFn08o5YaIOkTmWNlZen0yj2w8gJFsw
-pdb2VXdxrhlm3UD8vdU0eSgZ6QegAHzv2wrHv8JarfMaSP0LPMmy/o+7GNwV+pCA
-ZHX83OtZaXLfrnZ3egawgxYOGzmwYBS5m2CO7UC7YOB7jdew2+1D2OjqBehQ4m/F
-dNBPckAtZU9ICiPsvDK7GH9qn5wI1KLs+1VkluOyH3vkZ7/vc1jPXWL+QnQbrfZC
-s1cb6NqrTuRRnhi3jtqAboY5rho2gCwZv1iLzjcAP4dlUM9C6v9YWMog7iAaKsew
-7gcfLRkKvAj44erCfo6wSjTCRRhNUC3e7Xvynv7i7PjgXUckdxbEUtxN/27cOHcw
-Cl2VC0Hh3OSm0HaUE4ro7LLWGISWsxEIhyGnfVaA5jfQyRh4YCEYDVsr0OFa3pVI
-StT5dzqCe1CO8LsSDjLyEzAe2oyVDMC44Tb8AKsoVMPdKlppUsbe0Jm8w0xCyylW
-OYJ9ILNdcwcgFubj2TPADIPb+s3rqVr53tNAexK5X8g+PYgGD94Lz6DX0FwNlKPm
-IxkyjHvlJMIkXlhFM7F/TkKHbsOA6UCrqYZIN2ql40wqKi7mJfHHjbb+bmaL+prL
-4vYIJ2LcdseT5he4jmdle3DzM5YKsUyibSpV6JvpffMEre05y3uUTVd3NahyF5Cz
-/pdMCTcXsZI=
-=SB1u
------END PGP SIGNATURE-----
-
---=-O1YtEyJI9wGGFlJujUAP--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
