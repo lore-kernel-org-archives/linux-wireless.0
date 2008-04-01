@@ -1,82 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52751 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755426AbYDOJBH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708AbYDAMVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 05:01:07 -0400
-Date: Tue, 15 Apr 2008 02:01:03 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Bart Van Assche" <bart.vanassche@gmail.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 10455] New: Kernel lockup when iwl3945 modules
- is loaded after a few hours
-Message-Id: <20080415020103.cd8e17f4.akpm@linux-foundation.org> (sfid-20080415_100112_538100_D09E6FDD)
-In-Reply-To: <e2e108260804150139kf816be5m91e6206853a0d755@mail.gmail.com>
-References: <bug-10455-10286@http.bugzilla.kernel.org/>
-	<20080415013251.e90e5abd.akpm@linux-foundation.org>
-	<e2e108260804150139kf816be5m91e6206853a0d755@mail.gmail.com>
+	Tue, 1 Apr 2008 08:21:39 -0400
+Subject: Re: [PATCH] cfg80211: add EU regulatory domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Brian Morrison <bdm@fenrir.org.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080331230030.18da1c21@peterson.fenrir.org.uk> (sfid-20080401_000538_531462_F55C8CDE)
+References: <1206997315-15878-1-git-send-email-linville@tuxdriver.com>
+	 <20080331230030.18da1c21@peterson.fenrir.org.uk>
+	 (sfid-20080401_000538_531462_F55C8CDE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NYrN9mGBnaMVm8G+bX6G"
+Date: Tue, 01 Apr 2008 14:21:19 +0200
+Message-Id: <1207052479.5143.68.camel@johannes.berg> (sfid-20080401_132150_028542_35B3DAE3)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 15 Apr 2008 10:39:17 +0200 "Bart Van Assche" <bart.vanassche@gmail.com> wrote:
 
-> On Tue, Apr 15, 2008 at 10:32 AM, Andrew Morton
-> <akpm@linux-foundation.org> wrote:
-> >
-> >  > Latest working kernel version: (not known)
-> >  > Earliest failing kernel version: 2.6.25-rc9
-> >
-> >  hm, why?  Has this machine never run earlier kernels?
-> 
-> 2.6.22-14 works fine on the same hardware. This is the kernel provided
-> by Ubuntu.
+--=-NYrN9mGBnaMVm8G+bX6G
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-OK, thanks, so it's a regression but we don't know if it's a post-2.6.25
-regression.
 
-> >  > Apr 14 21:06:00 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
-> >  > (level, low) -> IRQ 19
-> >  > Apr 14 21:06:00 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
-> >  > disabled
-> >
-> >  Yes, that does look like an ACPI problem.  But one would expect it to kill
-> >  the interface immediately, not several hours later.
-> >
-> >  Can you send the /proc/interrupts contents?
-> 
-> Here it is:
-> 
->            CPU0       CPU1
->   0:     996478          0   IO-APIC-edge      timer
->   1:         30          0   IO-APIC-edge      i8042
->   8:          7          0   IO-APIC-edge      rtc
->   9:      57710          0   IO-APIC-fasteoi   acpi
->  12:        132          0   IO-APIC-edge      i8042
->  14:      31294      11519   IO-APIC-edge      ata_piix
->  15:      69158          0   IO-APIC-edge      ata_piix
->  16:      85016          0   IO-APIC-fasteoi   uhci_hcd:usb4,
-> i915@pci:0000:00:02.0
->  18:      15921          0   IO-APIC-fasteoi   uhci_hcd:usb3
->  19:          0          0   IO-APIC-fasteoi   uhci_hcd:usb2
->  21:      79770      60509   IO-APIC-fasteoi   eth0
->  22:       5811          0   IO-APIC-fasteoi   HDA Intel
->  23:          3          0   IO-APIC-fasteoi   uhci_hcd:usb1, ehci_hcd:usb5
-> NMI:          0          0   Non-maskable interrupts
-> LOC:        509     996926   Local timer interrupts
-> RES:      29774      84400   Rescheduling interrupts
-> CAL:         62      28154   function call interrupts
-> TLB:        868       1262   TLB shootdowns
-> TRM:          0          0   Thermal event interrupts
-> SPU:          0          0   Spurious interrupts
-> ERR:          0
-> MIS:          0
+> > Is this worth having?  I'm surprised no one has asked for it until
+> > recently...
+> >=20
+> > Are these values correct?  Including the power and gain values?
+> Does
+> > anyone know have a link to an authoritative source?
 
-hm, OK.
+> +	RANGE_PWR(2412, 2472, 20, 0, 0),
+>=20
+> The power limit is supposed to be +20dBm in the EU, and it's EIRP so
+> that includes antenna gain which I've set to 0dB.
+>=20
+> For an authoritative document you need http://www.etsi.org but their
+> site is down just now, so I can't find the document I want.
 
-I'd suggest that you raise a separate report against
-acpi_config-interrupts@kernel-bugs.osdl.org for this one - it does appear
-to be unrelated, I think.
+Mind you, I think France and some other countries still have different
+limits/restrictions, isn't ETSI just a sort of advisory body?
+
+johannes
+
+--=-NYrN9mGBnaMVm8G+bX6G
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/IovaVg1VMiehFYAQJiQBAAkwuqSTUk1OrL29Rch6s5AX915FoyUCh3
+7aZNVs7JNrCzTkjK0gNsLKS6Rvn92o9qNGRyj/A+HnYWGrsyKZv7vO534vVvUfrJ
+CNa7nS0aZnuFIpY1UD3l2vTORuTK/z3DqFDqtWjROkfsyEXG2Gh5xUVH3Y5xe3Ed
+xlho3Y25OMzYnmVZXmtd9dsNUfoTww9gP1ZNXnw55GT/Hj+mQpS0PISd8onkqNGG
+1IFFpzVzqr734Z813JJMr1Co/aiU2EIVFRk2sZUhTGFfYDVSzoywsgL9RI0RC8xS
+xdrQFQNXaENPJstOGT5hobZO4cDS3onCDzSPtd8MDOPmjRoJV83mCHDnI5G87arD
+D4nGspUASE4xdCHny3s1NsIp0zpMiE7u45zu/ldCb8LezVhN8mA50xuueNMvUQXB
++SJccYQeslMkPePgRHx5nrQeK9nB9fYT43Z9ScmO8G/9VX9nfJ31QuqNm3Em5/Ao
+RrAR8Z1lLktrzjaEx7PKDRVUFvupwZXYOZ91Hli9YQsokpKNx0vmojaWAqRMqBPs
+tu6XLdy398zutHcAvRMJ8Z1eCLxdbKqRvkNLEuCf2h6dx+RYZublpMH4tL3FkzfX
+wQd8dKhU6yjEpTCZQkbzguXsrFvElmZL8lVyb3Bi80ZTY8z0XJiBtBW1u9zAXd9l
+ViKfmbM1Azk=
+=zEdJ
+-----END PGP SIGNATURE-----
+
+--=-NYrN9mGBnaMVm8G+bX6G--
 
