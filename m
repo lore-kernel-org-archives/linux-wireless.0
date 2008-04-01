@@ -1,93 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58841 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759295AbYDAL7U (ORCPT
+Received: from bugs.comnets.uni-bremen.de ([134.102.186.10]:50405 "EHLO
+	bugs.comnets.uni-bremen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755131AbYDAN6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 07:59:20 -0400
-Subject: Re: [PATCH 1/2] mac80211: check for mesh_config length on incoming
-	management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <47f189ce.0a528c0a.4608.0322@mx.google.com> (sfid-20080401_020316_451825_4D6102CB)
-References: <47f189ce.0a528c0a.4608.0322@mx.google.com>
-	 (sfid-20080401_020316_451825_4D6102CB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HeZnH0Rp8UqzQQ6yLV/l"
-Date: Tue, 01 Apr 2008 13:59:16 +0200
-Message-Id: <1207051156.5143.50.camel@johannes.berg> (sfid-20080401_125944_422291_556DD7BF)
-Mime-Version: 1.0
+	Tue, 1 Apr 2008 09:58:05 -0400
+Date: Tue, 1 Apr 2008 15:58:02 +0200 (CEST)
+From: Markus Becker <mab@comnets.uni-bremen.de>
+To: Dan Williams <dcbw@redhat.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	julian.calaby@gmail.com, david@woodhou.se, dwmw2@infradead.org,
+	andreamrl@tiscali.it
+Subject: Re: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335 [Libertas]"
+In-Reply-To: <1206992394.12973.39.camel@localhost.localdomain>
+Message-ID: <Pine.LNX.4.64.0804011523240.21835@bugs.comnets.uni-bremen.de> (sfid-20080401_145809_638095_DE65180C)
+References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
+ <200803191124.03743.hs4233@mail.mn-solutions.de>
+ <Pine.LNX.4.64.0803281122240.21835@bugs.comnets.uni-bremen.de>
+ <1206992394.12973.39.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dan.
 
---=-HeZnH0Rp8UqzQQ6yLV/l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 31 Mar 2008, Dan Williams wrote:
 
+> So a few comments...  the driver as-is needs to be cleaned up for a few
+> general issues, inline below.  Do you have some time to address the
+> cleanups, or would you like some help with them?
 
-Indeed :)
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+I am working on it. Some comments inline.
 
-> ---
->  net/mac80211/ieee80211_sta.c |    8 ++++++--
->  1 files changed, 6 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index cfe6fcc..feec201 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -2153,11 +2153,14 @@ ieee80211_rx_mesh_bss_get(struct net_device *dev,=
- u8 *mesh_id, int mesh_id_len,
-> =20
->  static struct ieee80211_sta_bss *
->  ieee80211_rx_mesh_bss_add(struct net_device *dev, u8 *mesh_id, int mesh_=
-id_len,
-> -			  u8 *mesh_cfg, int freq)
-> +			  u8 *mesh_cfg, int mesh_config_len, int freq)
->  {
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_sta_bss *bss;
-> =20
-> +	if (mesh_config_len !=3D MESH_CFG_LEN)
-> +		return NULL;
-> +
->  	bss =3D kzalloc(sizeof(*bss), GFP_ATOMIC);
->  	if (!bss)
->  		return NULL;
-> @@ -2530,7 +2533,8 @@ static void ieee80211_rx_bss_info(struct net_device=
- *dev,
->  #ifdef CONFIG_MAC80211_MESH
->  		if (elems.mesh_config)
->  			bss =3D ieee80211_rx_mesh_bss_add(dev, elems.mesh_id,
-> -				elems.mesh_id_len, elems.mesh_config, freq);
-> +				elems.mesh_id_len, elems.mesh_config,
-> +				elems.mesh_config_len, freq);
->  		else
->  #endif
->  			bss =3D ieee80211_rx_bss_add(dev, mgmt->bssid, freq,
+> Kill this file; as long as the rest of the files have the short GPL,
+> it's OK, as the kernel is already distributed under the GPL.
 
---=-HeZnH0Rp8UqzQQ6yLV/l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+OK.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+[...]
+>> +ifeq ($(CONFIG_MRV8K_DEBUG),y)
+>> +EXTRA_CFLAGS += -DDEBUG
+>> +endif
+>
+> Don't do this; in your code, just use:
+>
+> #ifdef CONFIG_MRV8K_DEBUG
+>    <debug stuff>
+> #endif
+>
+> Don't need additional defines in the makefile.
 
-iQIVAwUAR/Ijk6Vg1VMiehFYAQJbthAAozvbjz8SdiQwkNbkGWhoE0N5Th+OpHCR
-9JKI6gYsWq5rYRs/hj7rH3RaB8E8XWXMKsjr0TDoN2vzk58hZOu/epQHybawYXDE
-ZqTjqoPTxAgyUSwOMp6oqhOUOWCRYyyz6do7bq8mT9oKw63cYNdCF/MUFMXD8axA
-hdS9kHUqSB8myAYes0IM8NUImRNLpJq0NZmFhsHn6YYgZj6VKeXtqclQLllbdNqL
-vKCZftMMk3N1lOwKB/UviEesZG9ndR86CennmPfq0/vgODTCj17pYEWcbKOcDooF
-fx6IalbZR1f30zK1rM4H7z1UrZOsiHRMGGi+7pazKfOiFpDxhz7ZfJhC93ynBvKG
-kS7g+suxB58WpfjjW7M1MsxMpI50T3UyYlzH3M3iLxidsPsA/Q3gHk5R6b6jYLTj
-F8EmICO/Aslz0xuQCEOOOoVLd8zSpqSb6i56kLoGDbTd/ZrZ8+OjOMpmFOTewtHw
-GmuTbkDQMRFBHlsEQUiQcwtpiQwaB2AOYM2Pqrr9aYY5Drce6LFvBK7kZB/FvoDC
-cjr4iJXGt12kniobwC5HuZq4fEX2maiIJ+tuZnquqDoV2pvRkW4oX7V5BhdcUlwU
-+GE/Wtqh2GbBBkb1urO0I51NK8SfB/a8LUNqjg1q1aDdWTZjMXy+sjJrOuUqW4h6
-fPnEVUQESec=
-=vPC1
------END PGP SIGNATURE-----
+OK.
 
---=-HeZnH0Rp8UqzQQ6yLV/l--
+[...]
+>> +#if !defined(MAC_ARG)
+>> +#define MAC_ARG(x) (\
+>> +((u8 *)(x))[0], ((u8 *)(x))[1], \
+>> +((u8 *)(x))[2], ((u8 *)(x))[3], \
+>> +((u8 *)(x))[4], ((u8 *)(x))[5])
+>> +#endif
+>
+> Remove this; just use the kernel definitions in ethdev.h or whatever it
+> is.  If the define is already in kernel git, it doesn't need to be in
+> the driver.  If you want to keep compat with older kernels, you get to
+> maintain those bits out-of-tree as additional patches on top of the
+> upstream kernel.
 
+OK, it was only used once anyway. Instead I am gonna use perm_addr 
+directly.
+
+[...]
+>> +static void _mrv_send_cmd(struct mrv_priv *priv, u32 addr)
+>> +{
+>> +  /*	printk(KERN_ERR"_mrv_send_cmd\n");*/
+>
+> Either remove the commented out code, or set up debugging prints that
+> are switched on/off with CONFIG_MRV8K_DEBUG.  Or better yet, have a
+> 'debug' module parameter that can dynamically update the debugging
+> output if the driver has been compiled with CONFIG_MRV8K_DEBUG by
+> echoing something else to /sys/modules/mrv8k/parameters/debug.
+
+Setting up debugging prints for the moment.
+
+[...]
+>> +	} else {
+>> +	  printk(KERN_ERR"status %x\n", priv->cmd_status);
+>
+> Formatting issues; you'll want to run the patch through checkpatch.pl
+> before submitting.
+
+I was running it through checkpatch.pl, might have slipped through the 
+warnings for 80 chars/line.
+
+[...]
+>> +		mrv_int_enable(priv);
+>> +		return IRQ_NONE;
+>> +	}
+>> +
+>> +	if (status & 0x4) {
+>
+> Any idea if these status bits can be #defined somewhere instead of being
+> magic numbers?
+
+Defining them in the header.
+
+>> +/*
+>> +static int mrv_set_allowed_rates(struct mrv_priv *priv, int allowg)
+>
+> If the function is commented out, it should probably either be removed
+> entirely and added back later when it works.
+
+I am uncommenting the function. Did not want to through code away, that 
+was in the original driver without reason.
+
+[...]
+>
+> Any idea why the .flags bits are commented out?
+>
+
+I have added #include <net/ieee80211.h>, but the compiler complains with 
+error "'IEEE80211_CCK_RATE_1MB_MASK' undeclared here (not in a function)" 
+and I don't know how to fix it.
+
+[...]
+> I think this was already shadowed above?  Since it's included in
+> mrv8k.c, doesn't need to be here too.
+OK.
+
+[...]
+>> +	int AntNum;
+>> +	int FwVer;
+>> +	int HwVer;
+>> +	int TxRingNum;
+>> +	int RegionCode;
+>> +	int TxHwDma0;
+>> +	int TxHwDma1;
+>> +	int TxHwDma2;
+>> +	int TxHwDma3;
+>> +	int RxHwDmaR;
+>> +	int RxHwDmaW;
+>
+> Any chance you could un-studly-caps the variables?  Normal kernel style
+> is first_second_third, so in this case it would be like "rx_hw_dma_w"
+> not "RxHwDmaW".
+
+No problem.
+
+Thanks,
+Markus
