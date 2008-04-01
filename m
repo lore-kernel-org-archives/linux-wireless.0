@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56474 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757338AbYDJOlf (ORCPT
+Received: from mga07.intel.com ([143.182.124.22]:5877 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752672AbYDAShv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2008 10:41:35 -0400
-Message-Id: <20080410134827.771251000@sipsolutions.net> (sfid-20080410_154208_423607_C92A3030)
-References: <20080410134810.629048000@sipsolutions.net>
-Date: Thu, 10 Apr 2008 15:48:11 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-kernel@vger.kernel.org
-Cc: Josh Triplett <josh@freedesktop.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-Subject: [RFC 1/3] add macros for new sparse features
-Mime-Version: 1.0
+	Tue, 1 Apr 2008 14:37:51 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
+Date: Tue, 1 Apr 2008 11:33:02 -0700
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <200804011107.38563.inaky@linux.intel.com> <20080401111802.65fe259f@extreme>
+In-Reply-To: <20080401111802.65fe259f@extreme>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804011133.03333.inaky@linux.intel.com> (sfid-20080401_193804_014872_1E48E717)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds kernel macros for a few new sparse features, namely
- * checking try_lock functions and
- * making a function or macro require a certain lock.
+On Tuesday 01 April 2008, Stephen Hemminger wrote:
+> On Tue, 1 Apr 2008 11:07:37 -0700
+> Inaky Perez-Gonzalez <inaky@linux.intel.com> wrote:
+> 
+> > 
+> > Intel would like to announce the initial release of a Linux WiMAX 
+> > common stack and drivers for its WiMAX devices (eg: Intel(r) 
+> > WiMAX/WiFi Link 5050, with estimated availability around third 
+> > quarter of 2008).
+> > 
+> > ...
+> 
+> Code review occurs on patch submittable not by pointing developers off
+> to an external project. Most likely there will be feedback that requires
+> changes to API and other choices so you want to do this soon.
 
-Still waiting to see what the sparse folks say to my patches.
+I know. Just wanted to get out the bits ASAP for whoever is interested to
+start looking at it.
 
-Not-yet-signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/compiler.h |    6 ++++++
- 1 file changed, 6 insertions(+)
+I am pondering how to do this because there is a lot of code and 
+I still don't have it ready for merging to mainline. 
 
---- everything.orig/include/linux/compiler.h	2008-04-10 15:36:18.000000000 +0200
-+++ everything/include/linux/compiler.h	2008-04-10 15:36:40.000000000 +0200
-@@ -11,9 +11,12 @@
- # define __nocast	__attribute__((nocast))
- # define __iomem	__attribute__((noderef, address_space(2)))
- # define __acquires(x)	__attribute__((context(x,0,1)))
-+# define __try_acquires(x,t,f)	__attribute__((conditional_context(x,0,t,f)))
- # define __releases(x)	__attribute__((context(x,1,0)))
- # define __acquire(x)	__context__(x,1)
- # define __release(x)	__context__(x,-1)
-+# define __requires(x)	__attribute__((context(x,1,1)))
-+# define __macro_requires(x)	__context__(x,0,1)
- # define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
- extern void __chk_user_ptr(const volatile void __user *);
- extern void __chk_io_ptr(const volatile void __iomem *);
-@@ -28,9 +31,12 @@ extern void __chk_io_ptr(const volatile 
- # define __chk_io_ptr(x) (void)0
- # define __builtin_warning(x, y...) (1)
- # define __acquires(x)
-+# define __try_acquires(x,t,f)
- # define __releases(x)
- # define __acquire(x) (void)0
- # define __release(x) (void)0
-+# define __requires(x)
-+# define __macro_requires(x)
- # define __cond_lock(x,c) (c)
- #endif
- 
+Eventually I'll have a git tree branching off netdev and will have to break 
+up the kernel part in patchbombs for review & submission and fix stuff as 
+we go.
 
--- 
-
+Thanks,
