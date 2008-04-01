@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48499 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762002AbYDRVDz (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:63312 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755519AbYDAG1G convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 17:03:55 -0400
-Message-Id: <200804182059.m3IKxn5E015592@imap1.linux-foundation.org> (sfid-20080418_220857_491657_F3845634)
-Subject: [patch 2/7] mac80211: tkip.c remove opencoded swab16 in tkip_S
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, jbenc@suse.cz, joe@perches.com,
-	johannes@sipsolutions.net
-From: akpm@linux-foundation.org
-Date: Fri, 18 Apr 2008 13:59:49 -0700
+	Tue, 1 Apr 2008 02:27:06 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2451586wah.23
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 23:27:06 -0700 (PDT)
+Message-ID: <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com> (sfid-20080401_072725_150985_DAD70408)
+Date: Tue, 1 Apr 2008 09:27:06 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "bruno randolf" <bruno@thinktube.com>
+Subject: Re: mac80211 bug? no data is being transmitted after interface is brought down and then up again
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"=?ISO-8859-1?Q?Thomas_B=E4chler?=" <thomas@archlinux.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200804011053.19675.bruno@thinktube.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <fsm20k$usk$1@ger.gmane.org> <20080331190225.GA12933@tuxdriver.com>
+	 <200804011053.19675.bruno@thinktube.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+On 4/1/08, bruno randolf <bruno@thinktube.com> wrote:
+> On Tuesday 01 April 2008 04:02:25 John W. Linville wrote:
+> > On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
+> > > My question is, should this be considered a bug in mac80211?
+> > > IMO, when an interface is brought down and then up again, one of =
+the
+> > > following things should happen:
+> > > 1) Everything works as before
+> > > 2) Nothing works, but the card disassociates from the network.
+> >
+> > #2 would be my vote.
+>
+> why is that? would it be so difficult to provide #1?
 
-Opencode the Hi8/Lo8 and eliminate the temporary variable in tkip_S().
+Driver should not take policy decision. It should be user controled app=
+lincation
+such as NM or ifup script of whatever to decide if to reconnect or not.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Joe Perches <joe@perches.com>
-Cc: Jiri Benc <jbenc@suse.cz>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+>
+> from a usability point of view #1 would be clearly better. whatever t=
+he state
+> was before, when i bring the interface up it want it to work (associa=
+te, join
+> IBSS) and be able to transmit data.
 
- net/mac80211/tkip.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+=46or usuablity point of view you should configure your applicantion or
+script to do reconnection, but it should not be driver call to do
+that.
+There are security issues with this that just get more and more compilc=
+ated.
+In application level you have more options to discover your
+environment and handle user preferences. and take the correct call
 
-diff -puN net/mac80211/tkip.c~mac80211-tkipc-remove-opencoded-swab16-in-tkip_s net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-tkipc-remove-opencoded-swab16-in-tkip_s
-+++ a/net/mac80211/tkip.c
-@@ -94,13 +94,9 @@ static inline u16 Lo16(u32 v)
- 
- static inline u16 tkip_S(u16 val)
- {
--	u16 a = tkip_sbox[Hi8(val)];
--
--	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
-+	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
- }
- 
--
--
- /* P1K := Phase1(TA, TK, TSC)
-  * TA = transmitter address (48 bits)
-  * TK = dot11DefaultKeyValue or dot11KeyMappingValue (128 bits)
-_
+Tomas
+
+> bruno
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
