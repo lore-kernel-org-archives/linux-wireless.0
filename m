@@ -1,71 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51290 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754013AbYDXSzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 12/21] iwlwifi-5000: update the CT-Kill value for 5000 series
-Date: Thu, 24 Apr 2008 11:55:29 -0700
-Message-Id: <1209063338-6572-13-git-send-email-reinette.chatre@intel.com> (sfid-20080424_210543_993930_383E0A56)
-In-Reply-To: <1209063338-6572-12-git-send-email-reinette.chatre@intel.com>
-References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-3-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-4-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-5-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-6-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-7-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-8-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-9-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-10-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-11-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-12-git-send-email-reinette.chatre@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754202AbYDAMBb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 08:01:31 -0400
+Subject: Re: [PATCH] mac80211: fix spinlock recursion on sta expiration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47f1899c.02578c0a.0489.586f@mx.google.com> (sfid-20080401_020224_391860_0D7DFAD8)
+References: <47f1899c.02578c0a.0489.586f@mx.google.com>
+	 (sfid-20080401_020224_391860_0D7DFAD8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4xMxrvyWzA4B99jGlYGN"
+Date: Tue, 01 Apr 2008 14:01:26 +0200
+Message-Id: <1207051286.5143.54.camel@johannes.berg> (sfid-20080401_130134_742086_DFCC642A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch upadtes the CT-Kill value for 5000 series.
+--=-4xMxrvyWzA4B99jGlYGN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 545970b..7c42bbf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -181,6 +181,21 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 						IWL_ANTENNA_AUX | 0x04);
- 		break;
- 	}
-+
-+	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
-+	case CSR_HW_REV_TYPE_5100:
-+	case CSR_HW_REV_TYPE_5300:
-+		/* 5X00 wants in Celsius */
-+		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
-+		break;
-+	case CSR_HW_REV_TYPE_5150:
-+	case CSR_HW_REV_TYPE_5350:
-+		/* 5X50 wants in Kelvin */
-+		priv->hw_params.ct_kill_threshold =
-+				CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD);
-+		break;
-+	}
-+
- 	return 0;
- }
- static struct iwl_hcmd_ops iwl5000_hcmd = {
--- 
-1.5.3.4
+On Mon, 2008-03-31 at 15:21 -0700, Luis Carlos Cobo wrote:
+> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+
+Woah. Good catch. I hope it doesn't conflict with the other fixes I just
+posted.
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/ieee80211_sta.c |    2 +-
+>  net/mac80211/sta_info.c      |    2 +-
+>  net/mac80211/sta_info.h      |    1 +
+>  3 files changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> index f9cf2f1..cfe6fcc 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -3081,7 +3081,7 @@ static void ieee80211_sta_expire(struct net_device =
+*dev, unsigned long exp_time)
+>  		if (time_after(jiffies, sta->last_rx + exp_time)) {
+>  			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
+>  			       dev->name, print_mac(mac, sta->addr));
+> -			sta_info_unlink(&sta);
+> +			__sta_info_unlink(&sta);
+>  			if (sta)
+>  				list_add(&sta->list, &tmp_list);
+>  		}
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index f708367..ba02b43 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -409,7 +409,7 @@ static struct sta_info *__sta_info_unpin(struct sta_i=
+nfo *sta)
+>  	return ret;
+>  }
+> =20
+> -static void __sta_info_unlink(struct sta_info **sta)
+> +void __sta_info_unlink(struct sta_info **sta)
+>  {
+>  	struct ieee80211_local *local =3D (*sta)->local;
+>  	struct ieee80211_sub_if_data *sdata =3D (*sta)->sdata;
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index 5e39a41..d4d6dcb 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -347,6 +347,7 @@ int sta_info_insert(struct sta_info *sta);
+>   * has already unlinked it.
+>   */
+>  void sta_info_unlink(struct sta_info **sta);
+> +void __sta_info_unlink(struct sta_info **sta);
+> =20
+>  void sta_info_destroy(struct sta_info *sta);
+>  void sta_info_set_tim_bit(struct sta_info *sta);
+
+--=-4xMxrvyWzA4B99jGlYGN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/IkFaVg1VMiehFYAQKsLRAAniry8vSOKVJAz77y+e64x8fyjHNoMALy
+SR01SuluT7uDLF9wyPGEHwjI6tVLGqalD5Sd8zxQGceLwyBe4dzp+4Pk+4EmPKBd
+Bt5Vd/5Ctib2GvUVuy5+PVNz/2jIVKfhVyXL7LVVcQ7ZDpwOKo92MtnE+2VJ51pu
+dqpD7rfaFSSL+LtpBJIiSWYA+JO6GYn3ZAJ6P/mMClmNqgRE91pRFQ7KFpskpzYw
+T5sdQQW6ackRe6hviKrUaKMenOczK54n9w9jHT1/I+AHffw3J57PuDN8IV61Jobo
+l1mQRJT7Btc5qJGOq2DOCu/OLGd5ncJqmaeWhSqrrHBkHYAEXTljle5t48DWTmww
+QxWwFOe+bTUmkafGp6onF1cQhKAHNDdNa8CCJmmcmzIbPtvRpDpiVZ7AgoR5VOvX
+T19rcY2AziW0BsAR1WN2tZpWPJtNUJSKImUF4rFkPhO5BC+Uaz5DQsCgtfGCpqhe
+bkp5R7jb+ltMJm8XTy1iJB9obOoTgLjd5koZBEAnA4LsLamhVRrBzWtuL3BB4SSE
+WFqGbDOz4Nh5cnVcOBjxNgEzq0BnwDPf5bIcMD5l7IjzZwA2V7QMa1dX/VEjFLE2
+kGlpCtc751nJQGENfuDcby3ikvSiIgklxRIL1B36IgfjPFQScR4O9Q5IPHE4dzKu
+6m3/cruDbp8=
+=JtT6
+-----END PGP SIGNATURE-----
+
+--=-4xMxrvyWzA4B99jGlYGN--
 
