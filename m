@@ -1,293 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:35404 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756375AbYD3BHz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 21:07:55 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so273268wra.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 18:07:54 -0700 (PDT)
-Subject: [PATCH 5/7] mac80211: add a struct to hold tkip context
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 29 Apr 2008 18:07:36 -0700
-Message-Id: <1209517665.24729.53.camel@brick> (sfid-20080430_030750_299029_6589FE36)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3269 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753516AbYDAWEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 18:04:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] wireless: fix various printk warnings on ia64 (and others)
+Date: Tue,  1 Apr 2008 17:40:03 -0400
+Message-Id: <1207086003-1036-1-git-send-email-linville@tuxdriver.com> (sfid-20080401_230436_988564_4C7BCA5E)
+In-Reply-To: <20080328003310.e7e119f5.akpm@linux-foundation.org>
+References: <20080328003310.e7e119f5.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+drivers/net/wireless/ath5k/base.c: In function `ath5k_check_ibss_tsf':
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long int format, u64 arg (arg 7)
+drivers/net/wireless/ath5k/base.c:1740: warning: long long unsigned int format, u64 arg (arg 8)
+drivers/net/wireless/ath5k/base.c:1757: warning: long long unsigned int format, u64 arg (arg 5)
+drivers/net/wireless/ath5k/base.c:1757: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/iwlwifi/iwl4965-base.c: In function `iwl4965_tx_status_reply_tx':
+drivers/net/wireless/iwlwifi/iwl4965-base.c:3105: warning: long long unsigned int format, u64 arg (arg 6)
+drivers/net/wireless/iwlwifi/iwl-4965.c: In function `iwl4965_rx_reply_rx':
+drivers/net/wireless/iwlwifi/iwl-4965.c:3978: warning: long long unsigned int format, u64 arg (arg 7)
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/cfg.c         |    4 +-
- net/mac80211/debugfs_key.c |    8 +++---
- net/mac80211/key.h         |   17 +++++++------
- net/mac80211/tkip.c        |   54 ++++++++++++++++++++++----------------------
- net/mac80211/wpa.c         |   16 ++++++------
- 5 files changed, 50 insertions(+), 49 deletions(-)
+ drivers/net/wireless/ath5k/base.c           |    9 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 3 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 699d97b..17d0656 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -256,8 +256,8 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
- 	case ALG_TKIP:
- 		params.cipher = WLAN_CIPHER_SUITE_TKIP;
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index b5c0a0d..8862d24 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1739,8 +1739,10 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
  
--		iv32 = key->u.tkip.iv32;
--		iv16 = key->u.tkip.iv16;
-+		iv32 = key->u.tkip.tx.iv32;
-+		iv16 = key->u.tkip.tx.iv16;
+ 		ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
+ 			"beacon %llx mactime %llx (diff %lld) tsf now %llx\n",
+-			bc_tstamp, rxs->mactime,
+-			(rxs->mactime - bc_tstamp), tsf);
++			(unsigned long long)bc_tstamp,
++			(unsigned long long)rxs->mactime,
++			(unsigned long long)(rxs->mactime - bc_tstamp),
++			(unsigned long long)tsf);
  
- 		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
- 		    sdata->local->ops->get_tkip_seq)
-diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-index 879e721..c13b08b 100644
---- a/net/mac80211/debugfs_key.c
-+++ b/net/mac80211/debugfs_key.c
-@@ -97,8 +97,8 @@ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
- 		break;
- 	case ALG_TKIP:
- 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
--				key->u.tkip.iv32,
--				key->u.tkip.iv16);
-+				key->u.tkip.tx.iv32,
-+				key->u.tkip.tx.iv16);
- 		break;
- 	case ALG_CCMP:
- 		tpn = key->u.ccmp.tx_pn;
-@@ -128,8 +128,8 @@ static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 			p += scnprintf(p, sizeof(buf)+buf-p,
- 				       "%08x %04x\n",
--				       key->u.tkip.iv32_rx[i],
--				       key->u.tkip.iv16_rx[i]);
-+				       key->u.tkip.rx[i].iv32,
-+				       key->u.tkip.rx[i].iv16);
- 		len = p - buf;
- 		break;
- 	case ALG_CCMP:
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index f52c3df..a0f774a 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -69,6 +69,13 @@ enum ieee80211_internal_key_flags {
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
- };
- 
-+struct tkip_ctx {
-+	u32 iv32;
-+	u16 iv16;
-+	u16 p1k[5];
-+	int initialized;
-+};
-+
- struct ieee80211_key {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -85,16 +92,10 @@ struct ieee80211_key {
- 	union {
- 		struct {
- 			/* last used TSC */
--			u32 iv32;
--			u16 iv16;
--			u16 p1k[5];
--			int tx_initialized;
-+			struct tkip_ctx tx;
- 
- 			/* last received RSC */
--			u32 iv32_rx[NUM_RX_DATA_QUEUES];
--			u16 iv16_rx[NUM_RX_DATA_QUEUES];
--			u16 p1k_rx[NUM_RX_DATA_QUEUES][5];
--			int rx_initialized[NUM_RX_DATA_QUEUES];
-+			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 8cdf053..d74c91e 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -138,7 +138,7 @@ u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 	*pos++ = iv1;
- 	*pos++ = iv2;
- 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
--	put_unaligned_le32(key->u.tkip.iv32, pos);
-+	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
- 	return pos + 4;
- }
- 
-@@ -146,16 +146,16 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 			       u8 *rc4key)
- {
- 	/* Calculate per-packet key */
--	if (key->u.tkip.iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   key->u.tkip.iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv16, rc4key);
-+			   key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -179,9 +179,9 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
- 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
- 			iv16, iv32);
- 
--	if (iv32 != key->u.tkip.iv32) {
-+	if (iv32 != key->u.tkip.tx.iv32) {
- 		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
--			iv32, key->u.tkip.iv32);
-+			iv32, key->u.tkip.tx.iv32);
- 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
- 			"fragmented packet\n");
- 	}
-@@ -190,19 +190,19 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
- 	 * fragmented packets. */
--	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+			iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
- 	if (type == IEEE80211_TKIP_P1_KEY) {
--		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
-+		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
-@@ -263,33 +263,33 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 	if ((keyid >> 6) != key->conf.keyidx)
- 		return TKIP_DECRYPT_INVALID_KEYIDX;
- 
--	if (key->u.tkip.rx_initialized[queue] &&
--	    (iv32 < key->u.tkip.iv32_rx[queue] ||
--	     (iv32 == key->u.tkip.iv32_rx[queue] &&
--	      iv16 <= key->u.tkip.iv16_rx[queue]))) {
-+	if (key->u.tkip.rx[queue].initialized &&
-+	    (iv32 < key->u.tkip.rx[queue].iv32 ||
-+	     (iv32 == key->u.tkip.rx[queue].iv32 &&
-+	      iv16 <= key->u.tkip.rx[queue].iv16))) {
- #ifdef CONFIG_TKIP_DEBUG
- 		DECLARE_MAC_BUF(mac);
- 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
- 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
- 		       print_mac(mac, ta),
--		       iv32, iv16, key->u.tkip.iv32_rx[queue],
--		       key->u.tkip.iv16_rx[queue]);
-+		       iv32, iv16, key->u.tkip.rx[queue].iv32,
-+		       key->u.tkip.rx[queue].iv16);
- #endif /* CONFIG_TKIP_DEBUG */
- 		return TKIP_DECRYPT_REPLAY;
- 	}
- 
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
--		key->u.tkip.rx_initialized[queue] = 1;
-+		key->u.tkip.rx[queue].initialized = 1;
- 		goto done;
- 	}
- 
--	if (!key->u.tkip.rx_initialized[queue] ||
--	    key->u.tkip.iv32_rx[queue] != iv32) {
--		key->u.tkip.rx_initialized[queue] = 1;
-+	if (!key->u.tkip.rx[queue].initialized ||
-+	    key->u.tkip.rx[queue].iv32 != iv32) {
-+		key->u.tkip.rx[queue].initialized = 1;
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   iv32, key->u.tkip.p1k_rx[queue]);
-+				   iv32, key->u.tkip.rx[queue].p1k);
- #ifdef CONFIG_TKIP_DEBUG
- 		{
- 			int i;
-@@ -303,7 +303,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 			printk("\n");
- 			printk(KERN_DEBUG "TKIP decrypt: P1K=");
- 			for (i = 0; i < 5; i++)
--				printk("%04x ", key->u.tkip.p1k_rx[queue][i]);
-+				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
- 			printk("\n");
+ 		/*
+ 		 * Sometimes the HW will give us a wrong tstamp in the rx
+@@ -1756,7 +1758,8 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
+ 		if (bc_tstamp > rxs->mactime) {
+ 			ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON,
+ 				"fixing mactime from %llx to %llx\n",
+-				rxs->mactime, tsf);
++				(unsigned long long)rxs->mactime,
++				(unsigned long long)tsf);
+ 			rxs->mactime = tsf;
  		}
- #endif /* CONFIG_TKIP_DEBUG */
-@@ -318,11 +318,11 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
  
- 			key->local->ops->update_tkip_key(
- 				local_to_hw(key->local), &key->conf,
--				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
-+				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
- 		}
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 51a1449..89d600c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3971,7 +3971,7 @@ static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
  
--	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
-+	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
- 			   iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 45709ad..fbd9299 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -176,8 +176,8 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
+ 	IWL_DEBUG_STATS_LIMIT("Rssi %d, noise %d, qual %d, TSF %llu\n",
+ 			      rx_status.ssi, rx_status.noise, rx_status.signal,
+-			      rx_status.mactime);
++			      (unsigned long long)rx_status.mactime);
  
- 	/* update IV in key information to be able to detect replays */
--	rx->key->u.tkip.iv32_rx[rx->queue] = rx->tkip_iv32;
--	rx->key->u.tkip.iv16_rx[rx->queue] = rx->tkip_iv16;
-+	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
-+	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
+ 	network_packet = iwl4965_is_network_packet(priv, header);
+ 	if (network_packet) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index e98695f..8d49ff4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3119,7 +3119,7 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 		agg->rate_n_flags = le32_to_cpu(tx_resp->rate_n_flags);
+ 		IWL_DEBUG_TX_REPLY("Frames %d start_idx=%d bitmap=0x%llx\n",
+ 				   agg->frame_count, agg->start_idx,
+-				   agg->bitmap);
++				   (unsigned long long)agg->bitmap);
  
- 	return RX_CONTINUE;
- }
-@@ -214,19 +214,19 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx,
- 	pos += hdrlen;
- 
- 	/* Increase IV for the frame */
--	key->u.tkip.iv16++;
--	if (key->u.tkip.iv16 == 0)
--		key->u.tkip.iv32++;
-+	key->u.tkip.tx.iv16++;
-+	if (key->u.tkip.tx.iv16 == 0)
-+		key->u.tkip.tx.iv32++;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* hwaccel - with preallocated room for IV */
- 		ieee80211_tkip_add_iv(pos, key,
--				      (u8) (key->u.tkip.iv16 >> 8),
--				      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
-+				      (u8) (key->u.tkip.tx.iv16 >> 8),
-+				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
- 					    0x7f),
--				      (u8) key->u.tkip.iv16);
-+				      (u8) key->u.tkip.tx.iv16);
- 
- 		tx->control->key_idx = tx->key->conf.hw_key_idx;
- 		return 0;
+ 		if (bitmap)
+ 			agg->wait_for_ba = 1;
 -- 
-1.5.5.144.g3e42
-
+1.5.3.3
 
