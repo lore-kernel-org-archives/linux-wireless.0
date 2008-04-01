@@ -1,76 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.179]:64072 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbYDWVW4 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10367 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbYDAMmx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 17:22:56 -0400
-Received: by el-out-1112.google.com with SMTP id n30so1074783elf.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2008 14:22:53 -0700 (PDT)
-Message-ID: <1ba2fa240804231422y683ce590r1c09e6d5c733da8e@mail.gmail.com> (sfid-20080423_232334_571444_4DC63B71)
-Date: Thu, 24 Apr 2008 00:22:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis Carlos Cobo" <luisca@cozybit.com>
-Subject: Re: [PATCH] mac80211: update mesh EID values
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-In-Reply-To: <480f9321.14045a0a.5b67.51aa@mx.google.com>
+	Tue, 1 Apr 2008 08:42:53 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC] libertas: convert libertas driver to use an event/cmdresp queue
+Date: Tue, 1 Apr 2008 14:39:54 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200803271700.58477.hs4233@mail.mn-solutions.de> <1206722403.3392.9.camel@localhost.localdomain>
+In-Reply-To: <1206722403.3392.9.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <480f9321.14045a0a.5b67.51aa@mx.google.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200804011439.54618.hs4233@mail.mn-solutions.de> (sfid-20080401_134256_604421_C7F9CDC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2008 at 10:34 PM, Luis Carlos Cobo <luisca@cozybit.com> wrote:
-> This patch updates mesh EID values, some of which where conflicting with
->  already-approved 11h EIDs (pointed out by Tomas Winkler). I wanted to use the
->  values suggested in the last available 802.11 draft (2.0) but it assigns 50 to
->  MESH_CONFIG, the same value than EXT_SUPP_RATES. Using the values proposed in
->  the draft incremented by one.
->
->  Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
->  ---
->   include/linux/ieee80211.h |   20 +++++++++++++-------
->   1 files changed, 13 insertions(+), 7 deletions(-)
->
->  diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
->  index c840bd1..0b5e03e 100644
->  --- a/include/linux/ieee80211.h
->  +++ b/include/linux/ieee80211.h
->  @@ -465,13 +465,19 @@ enum ieee80211_eid {
->         WLAN_EID_TS_DELAY = 43,
->         WLAN_EID_TCLAS_PROCESSING = 44,
->         WLAN_EID_QOS_CAPA = 46,
->  -       /* 802.11s */
->  -       WLAN_EID_MESH_CONFIG = 36,      /* Pending IEEE 802.11 ANA approval */
->  -       WLAN_EID_MESH_ID = 37,          /* Pending IEEE 802.11 ANA approval */
->  -       WLAN_EID_PEER_LINK = 40,        /* Pending IEEE 802.11 ANA approval */
->  -       WLAN_EID_PREQ = 53,             /* Pending IEEE 802.11 ANA approval */
->  -       WLAN_EID_PREP = 54,             /* Pending IEEE 802.11 ANA approval */
->  -       WLAN_EID_PERR = 55,             /* Pending IEEE 802.11 ANA approval */
->  +       /* 802.11s
->  +        *
->  +        * All mesh EID numbers are pending IEEE 802.11 ANA approval.
->  +        * The numbers have been incremented from those suggested in
->  +        * 802.11s/D2.0 so that MESH_CONFIG does not conflict with
->  +        * EXT_SUPP_RATES.
->  +        */
->  +       WLAN_EID_MESH_CONFIG = 51,
->  +       WLAN_EID_MESH_ID = 52,
->  +       WLAN_EID_PEER_LINK = 55,
->  +       WLAN_EID_PREQ = 68,
->  +       WLAN_EID_PREP = 69,
->  +       WLAN_EID_PERR = 70,
->         /* 802.11h */
->         WLAN_EID_PWR_CONSTRAINT = 32,
->         WLAN_EID_PWR_CAPABILITY = 33,
->  --
->  1.5.4.3
->
->
+> It's been tested lightly on USB, SDIO, and CF.  I'd like wider
+> testing on CF as this patch causes SSH transfers to stall
+> (only on CF!)
 
-ACK
+I've modified if_cs.c somewhat and did
 
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+$ scp inkscape inkview emacs-snapshot-x mtn \
+  emacs-snapshot-nox pgadmin3 quanta gs-gpl \
+  root@10.2.1.4:/tmp
+inkscape           100% 5856KB 650.7KB/s   00:09
+inkview            100% 5853KB 585.3KB/s   00:10
+emacs-snapshot-x   100% 5333KB 666.6KB/s   00:08
+mtn                100% 5263KB 657.9KB/s   00:08
+emacs-snapshot-nox 100% 4913KB 614.1KB/s   00:08
+pgadmin3           100% 3925KB 654.2KB/s   00:06
+quanta             100% 3597KB 719.5KB/s   00:05
+gs-gpl             100% 3597KB 599.4KB/s   00:06
+
+I didn't notice any stall so far.  What test did you make?
