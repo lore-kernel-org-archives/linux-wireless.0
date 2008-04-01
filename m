@@ -1,135 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:33285 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758539AbYDKKRX (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:51673 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbYDAStE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 06:17:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH v2] b43legacy: Fix usage of struct device used for DMAing
-Date: Fri, 11 Apr 2008 12:16:36 +0200
-Cc: bcm43xx-dev@lists.berlios.de,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
+	Tue, 1 Apr 2008 14:49:04 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so2223209wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 11:49:03 -0700 (PDT)
+Message-ID: <f6ca9fed0804011149wc306716xb49e1f5dc2791f7a@mail.gmail.com> (sfid-20080401_194909_591758_824F5338)
+Date: Tue, 1 Apr 2008 20:49:02 +0200
+From: drago01 <drago01@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [ipw3945-devel] dynamic wep with mulitple keys
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Dan Williams" <dcbw@redhat.com>, "Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1ba2fa240803312253l4595ce43ya3a6812ceb216f12@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200804111216.36589.mb@bu3sch.de> (sfid-20080411_111726_465964_9A50E5B9)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0803311237w1b714034w8ba3cfd56aec9686@mail.gmail.com>
+	 <1ba2fa240803312253l4595ce43ya3a6812ceb216f12@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes b43legacy for the SSB DMA API change.
+On Tue, Apr 1, 2008 at 7:53 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>
+> On 3/31/08, drago01 <drago01@gmail.com> wrote:
+>  > Hello,
+>  >
+>  > I noticed that I can connect to some dynamic wep APs fine using
+>  > iwl3945 and with other it does not work, while ipw3945 work with all
+>  > of them.
+>  > Both driver associate fine but iwl3945 never gets an ip from dhcp.
+>  > I checked with iwlist key and it seems that this APs are using only
+>  > one key with iwl3945 but two with ipw3945.
+>  > The APs that work (I recognize them by BSSID) are using only one key
+>  > with both drivers.
+>  > Does this mean that mac80211/iwl3945 for some reason drops one key or
+>  > never sets it?  (broadcast key?)
+>  > Any idea how to get more infos to debug this? (Can attach both iwlist
+>  > key outputs if this is needed).
+>
+>  Currently iwl uses cryptom management provided by mac80211, we are
+>  preparing patches for using of HW acceleration till now you must look
+>  for
+>  problems mac80211.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
+OK, Johannes any idea what it might be?
 
----
+>  Some log prints will be useful to debug it anyway.
 
-John, this is the fixed version of the bugfix for 2.6.25 :P
+Which kind of logs exactly?
+Tried adding debug=0x43fff and no usefull (related) stuff got printed.
 
-
-Index: wireless-testing/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/dma.c	2008-02-16 19:08:12.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43legacy/dma.c	2008-04-11 12:15:56.000000000 +0200
-@@ -393,11 +393,11 @@ dma_addr_t map_descbuffer(struct b43lega
- 	dma_addr_t dmaaddr;
- 
- 	if (tx)
--		dmaaddr = dma_map_single(ring->dev->dev->dev,
-+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
- 					 buf, len,
- 					 DMA_TO_DEVICE);
- 	else
--		dmaaddr = dma_map_single(ring->dev->dev->dev,
-+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
- 					 buf, len,
- 					 DMA_FROM_DEVICE);
- 
-@@ -411,11 +411,11 @@ void unmap_descbuffer(struct b43legacy_d
- 		      int tx)
- {
- 	if (tx)
--		dma_unmap_single(ring->dev->dev->dev,
-+		dma_unmap_single(ring->dev->dev->dma_dev,
- 				 addr, len,
- 				 DMA_TO_DEVICE);
- 	else
--		dma_unmap_single(ring->dev->dev->dev,
-+		dma_unmap_single(ring->dev->dev->dma_dev,
- 				 addr, len,
- 				 DMA_FROM_DEVICE);
- }
-@@ -427,7 +427,7 @@ void sync_descbuffer_for_cpu(struct b43l
- {
- 	B43legacy_WARN_ON(ring->tx);
- 
--	dma_sync_single_for_cpu(ring->dev->dev->dev,
-+	dma_sync_single_for_cpu(ring->dev->dev->dma_dev,
- 				addr, len, DMA_FROM_DEVICE);
- }
- 
-@@ -438,7 +438,7 @@ void sync_descbuffer_for_device(struct b
- {
- 	B43legacy_WARN_ON(ring->tx);
- 
--	dma_sync_single_for_device(ring->dev->dev->dev,
-+	dma_sync_single_for_device(ring->dev->dev->dma_dev,
- 				   addr, len, DMA_FROM_DEVICE);
- }
- 
-@@ -458,9 +458,9 @@ void free_descriptor_buffer(struct b43le
- 
- static int alloc_ringmemory(struct b43legacy_dmaring *ring)
- {
--	struct device *dev = ring->dev->dev->dev;
-+	struct device *dma_dev = ring->dev->dev->dma_dev;
- 
--	ring->descbase = dma_alloc_coherent(dev, B43legacy_DMA_RINGMEMSIZE,
-+	ring->descbase = dma_alloc_coherent(dma_dev, B43legacy_DMA_RINGMEMSIZE,
- 					    &(ring->dmabase), GFP_KERNEL);
- 	if (!ring->descbase) {
- 		b43legacyerr(ring->dev->wl, "DMA ringmemory allocation"
-@@ -474,9 +474,9 @@ static int alloc_ringmemory(struct b43le
- 
- static void free_ringmemory(struct b43legacy_dmaring *ring)
- {
--	struct device *dev = ring->dev->dev->dev;
-+	struct device *dma_dev = ring->dev->dev->dma_dev;
- 
--	dma_free_coherent(dev, B43legacy_DMA_RINGMEMSIZE,
-+	dma_free_coherent(dma_dev, B43legacy_DMA_RINGMEMSIZE,
- 			  ring->descbase, ring->dmabase);
- }
- 
-@@ -886,7 +886,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 			goto err_kfree_meta;
- 
- 		/* test for ability to dma to txhdr_cache */
--		dma_test = dma_map_single(dev->dev->dev, ring->txhdr_cache,
-+		dma_test = dma_map_single(dev->dev->dma_dev, ring->txhdr_cache,
- 					  sizeof(struct b43legacy_txhdr_fw3),
- 					  DMA_TO_DEVICE);
- 
-@@ -900,7 +900,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 			if (!ring->txhdr_cache)
- 				goto err_kfree_meta;
- 
--			dma_test = dma_map_single(dev->dev->dev,
-+			dma_test = dma_map_single(dev->dev->dma_dev,
- 					ring->txhdr_cache,
- 					sizeof(struct b43legacy_txhdr_fw3),
- 					DMA_TO_DEVICE);
-@@ -910,7 +910,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 				goto err_kfree_txhdr_cache;
- 		}
- 
--		dma_unmap_single(dev->dev->dev,
-+		dma_unmap_single(dev->dev->dma_dev,
- 				 dma_test, sizeof(struct b43legacy_txhdr_fw3),
- 				 DMA_TO_DEVICE);
- 	}
-
-
--- 
-Greetings Michael.
+(added some CC's)
