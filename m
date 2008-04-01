@@ -1,46 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout03-winn.ispmail.ntl.com ([81.103.221.33]:60859 "EHLO
-	queueout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757922AbYDBTs2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:48:28 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: reinette.chatre@intel.com
-Cc: ipw2100-devel@lists.sourceforge.net
-Subject: [PATCH] ipw2200: set MAC address on radiotap interface
-Message-Id: <20080402193354.0E2DF9D4143@zog.reactivated.net> (sfid-20080402_204844_702594_11F31AAB)
-Date: Wed,  2 Apr 2008 20:33:54 +0100 (BST)
+Received: from ra.tuxdriver.com ([70.61.120.52]:4051 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758433AbYDAUdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 16:33:31 -0400
+Date: Tue, 1 Apr 2008 16:15:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-2.6 2008-04-01
+Message-ID: <20080401201530.GA25094@tuxdriver.com> (sfid-20080401_213418_913242_E306B576)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit bada339ba24dee9e143bfb42e1dc61f146619846 enforces that all
-interfaces have a valid MAC address before they are brought up.
+Dave,
 
-ipw2200 does not assign a MAC address to it's radiotap interface, meaning
-that the radiotap interface cannot be brought up in 2.6.24.
-https://bugs.gentoo.org/show_bug.cgi?id=215714
+A few more for 2.6.25...one of them isn't really a bug fix, but
+it includes messages which might be useful for future debugging.
+All of them are relatively minor, but I think it would be good to
+have them now rather than later.
 
-Fix this by copying the MAC address from the real interface.
+Please let me know if there are problems!
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/ipw2200.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index a56d9fc..b34c275 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -11576,6 +11576,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
- 	priv->prom_priv->priv = priv;
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit f83f1768f833cb45bc93429fdc552252a4f55ac3:
+  Joonwoo Park (1):
+        [LLC]: skb allocation size for responses
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Jan Niehusmann (1):
+      mac80211: trigger ieee80211_sta_work after opening interface
+
+Michael Buesch (2):
+      b43: Add DMA mapping failure messages
+      b43: Fix PCMCIA IRQ routing
+
+Vladimir Koutny (1):
+      mac80211: correct use_short_preamble handling
+
+ drivers/net/wireless/b43/dma.c    |    7 ++++++-
+ drivers/net/wireless/b43/pcmcia.c |    6 ++++--
+ net/mac80211/ieee80211.c          |   12 ++++++++++++
+ net/mac80211/ieee80211_sta.c      |    9 ++++-----
+ 4 files changed, 26 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index cfbc1a2..948eb1f 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -619,6 +619,7 @@ static int setup_rx_descbuffer(struct b43_dmaring *ring,
+ 	}
  
- 	strcpy(priv->prom_net_dev->name, "rtap%d");
-+	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
+ 	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
++		b43err(ring->dev->wl, "RX DMA buffer allocation failed\n");
+ 		dev_kfree_skb_any(skb);
+ 		return -EIO;
+ 	}
+@@ -874,8 +875,12 @@ struct b43_dmaring *b43_setup_dmaring(struct b43_wldev *dev,
+ 						  DMA_TO_DEVICE);
  
- 	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 	priv->prom_net_dev->open = ipw_prom_open;
+ 			if (b43_dma_mapping_error(ring, dma_test,
+-						  b43_txhdr_size(dev), 1))
++						  b43_txhdr_size(dev), 1)) {
++
++				b43err(dev->wl,
++				       "TXHDR DMA allocation failed\n");
+ 				goto err_kfree_txhdr_cache;
++			}
+ 		}
+ 
+ 		dma_unmap_single(dev->dev->dev,
+diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
+index b79a6bd..371e4a1 100644
+--- a/drivers/net/wireless/b43/pcmcia.c
++++ b/drivers/net/wireless/b43/pcmcia.c
+@@ -91,6 +91,8 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
+ 
+ 	dev->conf.ConfigBase = parse.config.base;
+ 	dev->conf.Present = parse.config.rmask[0];
++	dev->conf.Attributes = CONF_ENABLE_IRQ;
++	dev->conf.IntType = INT_MEMORY_AND_IO;
+ 
+ 	dev->io.BasePort2 = 0;
+ 	dev->io.NumPorts2 = 0;
+@@ -112,8 +114,8 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
+ 	if (res != CS_SUCCESS)
+ 		goto err_disable;
+ 
+-	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING | IRQ_FIRST_SHARED;
+-	dev->irq.IRQInfo1 = IRQ_LEVEL_ID | IRQ_SHARE_ID;
++	dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
++	dev->irq.IRQInfo1 = IRQ_LEVEL_ID;
+ 	dev->irq.Handler = NULL; /* The handler is registered later. */
+ 	dev->irq.Instance = NULL;
+ 	res = pcmcia_request_irq(dev, &dev->irq);
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 28bcdf9..8e58639 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -286,6 +286,18 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (need_hw_reconfig)
+ 		ieee80211_hw_config(local);
+ 
++	/*
++	 * ieee80211_sta_work is disabled while network interface
++	 * is down. Therefore, some configuration changes may not
++	 * yet be effective. Trigger execution of ieee80211_sta_work
++	 * to fix this.
++	 */
++	if(sdata->vif.type == IEEE80211_IF_TYPE_STA ||
++	   sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
++		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++		queue_work(local->hw.workqueue, &ifsta->work);
++	}
++
+ 	netif_start_queue(dev);
+ 
+ 	return 0;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 9aeed53..e0c72d0 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -319,7 +319,7 @@ static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
+ 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	bool use_protection = (erp_value & WLAN_ERP_USE_PROTECTION) != 0;
+-	bool preamble_mode = (erp_value & WLAN_ERP_BARKER_PREAMBLE) != 0;
++	bool use_short_preamble = (erp_value & WLAN_ERP_BARKER_PREAMBLE) == 0;
+ 	DECLARE_MAC_BUF(mac);
+ 	u32 changed = 0;
+ 
+@@ -335,16 +335,15 @@ static u32 ieee80211_handle_erp_ie(struct ieee80211_sub_if_data *sdata,
+ 		changed |= BSS_CHANGED_ERP_CTS_PROT;
+ 	}
+ 
+-	if (preamble_mode != bss_conf->use_short_preamble) {
++	if (use_short_preamble != bss_conf->use_short_preamble) {
+ 		if (net_ratelimit()) {
+ 			printk(KERN_DEBUG "%s: switched to %s barker preamble"
+ 			       " (BSSID=%s)\n",
+ 			       sdata->dev->name,
+-			       (preamble_mode == WLAN_ERP_PREAMBLE_SHORT) ?
+-					"short" : "long",
++			       use_short_preamble ? "short" : "long",
+ 			       print_mac(mac, ifsta->bssid));
+ 		}
+-		bss_conf->use_short_preamble = preamble_mode;
++		bss_conf->use_short_preamble = use_short_preamble;
+ 		changed |= BSS_CHANGED_ERP_PREAMBLE;
+ 	}
+ 
 -- 
-1.5.4.5
-
+John W. Linville
+linville@tuxdriver.com
