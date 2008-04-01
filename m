@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14983 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758431AbYDBQjc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 12:39:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: fix incorrect config variable
-Date: Wed,  2 Apr 2008 09:39:18 -0700
-Message-Id: <1207154358-29025-1-git-send-email-reinette.chatre@intel.com> (sfid-20080402_173951_925377_38D78D56)
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:40569 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752805AbYDAM5n convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 08:57:43 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: mac80211 bug? no data is being transmitted after interface is brought down and then up again
+Date: Tue, 1 Apr 2008 21:57:25 +0900
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Thomas =?iso-8859-1?q?B=E4chler?=" <thomas@archlinux.org>,
+	linux-wireless@vger.kernel.org
+References: <fsm20k$usk$1@ger.gmane.org> <200804011053.19675.bruno@thinktube.com> <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com>
+In-Reply-To: <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200804012157.25474.bruno@thinktube.com> (sfid-20080401_135750_801448_01928572)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tuesday 01 April 2008 15:27:06 Tomas Winkler wrote:
+> On 4/1/08, bruno randolf <bruno@thinktube.com> wrote:
+> > On Tuesday 01 April 2008 04:02:25 John W. Linville wrote:
+> > > On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
+> > > > My question is, should this be considered a bug in mac80211?
+> > > > IMO, when an interface is brought down and then up again, one o=
+f the
+> > > > following things should happen:
+> > > > 1) Everything works as before
+> > > > 2) Nothing works, but the card disassociates from the network.
+> > >
+> > > #2 would be my vote.
+> >
+> > why is that? would it be so difficult to provide #1?
+>
+> Driver should not take policy decision. It should be user controled
+> applincation such as NM or ifup script of whatever to decide if to
+> reconnect or not.
+>
+> > from a usability point of view #1 would be clearly better. whatever=
+ the
+> > state was before, when i bring the interface up it want it to work
+> > (associate, join IBSS) and be able to transmit data.
+>
+> For usuablity point of view you should configure your applicantion or
+> script to do reconnection, but it should not be driver call to do
+> that.
+> There are security issues with this that just get more and more
+> compilcated.. In application level you have more options to discover =
+your
+> environment and handle user preferences. and take the correct call
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index ac12269..8114d05 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -779,7 +779,7 @@ struct iwl3945_priv {
- 	struct iwl3945_init_alive_resp card_alive_init;
- 	struct iwl3945_alive_resp card_alive;
- 
--#ifdef CONFIG_IWL4965_LEDS
-+#ifdef CONFIG_IWL3945_LEDS
- 	struct iwl3945_led led[IWL_LED_TRG_MAX];
- 	unsigned long last_blink_time;
- 	u8 last_blink_rate;
--- 
-1.5.3.4
+allright - that seems to be the way to go. thanks for the explanation. =
+i guess=20
+i'm a little bit behind, still thinking in in terms of iwconfig ;)
 
+bruno
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
