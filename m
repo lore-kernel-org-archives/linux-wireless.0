@@ -1,115 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:37583 "EHLO WNmonitoring"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752227AbYDGU7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 16:59:05 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH 2/2] mac80211: fix defined but not used
-Date: Mon,  7 Apr 2008 21:53:49 +0200
-Message-Id: <1207598029-20000-2-git-send-email-jirislaby@gmail.com> (sfid-20080407_215918_604800_96AD50FC)
-In-Reply-To: <1207598029-20000-1-git-send-email-jirislaby@gmail.com>
-References: <1207598029-20000-1-git-send-email-jirislaby@gmail.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:43029 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754989AbYDAOOa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 10:14:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Enable quantum cryptography support
+Date: Tue, 1 Apr 2008 16:13:06 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200804011613.06749.mb@bu3sch.de> (sfid-20080401_151434_906114_43AEBC44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two symbols are used only in ifdeffed function. Move them to that
-section too.
-net/mac80211/sta_info.c:387: warning: `__sta_info_pin' defined but not used
-net/mac80211/sta_info.c:397: warning: `__sta_info_unpin' defined but not used
+This patch enables support for quantum cryptography on latest b43 devices.
+The quantum cryptography algorithm is 100% backward compatible with the
+standard CCMP algorithm, so no additional changes to the mac80211 stack
+are needed. While staying compatible, it makes the unbreakable(!) WLAN connection
+possible. Of course, that's only the case, if both ends use b43-qcrypto.
+In the case where one STA uses legacy encryption, the card will automatically
+detect this and switch back to plain old CCMP.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
 ---
- net/mac80211/sta_info.c |   60 +++++++++++++++++++++++-----------------------
- 1 files changed, 30 insertions(+), 30 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index ba02b43..e30426e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -379,36 +379,6 @@ void sta_info_clear_tim_bit(struct sta_info *sta)
- 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
- }
+John, please queue this patch for linux-3.6.26
+
+
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-03-22 15:44:00.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-01 15:53:40.000000000 +0200
+@@ -270,6 +270,7 @@ enum {
+ #define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode (rev >= 13 only) */
+ #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
+ #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
++#define B43_HF_QUANTUMCRYPT	0x100000000000ULL /* Enable quantum cryptography in firmware. */
  
--/*
-- * See comment in __sta_info_unlink,
-- * caller must hold local->sta_lock.
-- */
--static void __sta_info_pin(struct sta_info *sta)
--{
--	WARN_ON(sta->pin_status != STA_INFO_PIN_STAT_NORMAL);
--	sta->pin_status = STA_INFO_PIN_STAT_PINNED;
--}
--
--/*
-- * See comment in __sta_info_unlink, returns sta if it
-- * needs to be destroyed.
-- */
--static struct sta_info *__sta_info_unpin(struct sta_info *sta)
--{
--	struct sta_info *ret = NULL;
--	unsigned long flags;
--
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
--	WARN_ON(sta->pin_status != STA_INFO_PIN_STAT_DESTROY &&
--		sta->pin_status != STA_INFO_PIN_STAT_PINNED);
--	if (sta->pin_status == STA_INFO_PIN_STAT_DESTROY)
--		ret = sta;
--	sta->pin_status = STA_INFO_PIN_STAT_NORMAL;
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
--
--	return ret;
--}
--
- void __sta_info_unlink(struct sta_info **sta)
- {
- 	struct ieee80211_local *local = (*sta)->local;
-@@ -565,6 +535,36 @@ static void sta_info_cleanup(unsigned long data)
- }
+ /* MacFilter offsets. */
+ #define B43_MACFILTER_SELF		0x0000
+@@ -439,6 +440,7 @@ enum {
+ 	B43_SEC_ALGO_AES,
+ 	B43_SEC_ALGO_WEP104,
+ 	B43_SEC_ALGO_AES_LEGACY,
++	B43_SEC_ALGO_QUANTUM,
+ };
  
- #ifdef CONFIG_MAC80211_DEBUGFS
-+/*
-+ * See comment in __sta_info_unlink,
-+ * caller must hold local->sta_lock.
-+ */
-+static void __sta_info_pin(struct sta_info *sta)
-+{
-+	WARN_ON(sta->pin_status != STA_INFO_PIN_STAT_NORMAL);
-+	sta->pin_status = STA_INFO_PIN_STAT_PINNED;
-+}
-+
-+/*
-+ * See comment in __sta_info_unlink, returns sta if it
-+ * needs to be destroyed.
-+ */
-+static struct sta_info *__sta_info_unpin(struct sta_info *sta)
-+{
-+	struct sta_info *ret = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sta->local->sta_lock, flags);
-+	WARN_ON(sta->pin_status != STA_INFO_PIN_STAT_DESTROY &&
-+		sta->pin_status != STA_INFO_PIN_STAT_PINNED);
-+	if (sta->pin_status == STA_INFO_PIN_STAT_DESTROY)
-+		ret = sta;
-+	sta->pin_status = STA_INFO_PIN_STAT_NORMAL;
-+	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+
-+	return ret;
-+}
-+
- static void sta_info_debugfs_add_work(struct work_struct *work)
- {
- 	struct ieee80211_local *local =
+ struct b43_dmaring;
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-27 17:11:38.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-01 15:53:41.000000000 +0200
+@@ -3215,6 +3215,13 @@ static int b43_op_set_key(struct ieee802
+ 		break;
+ 	case ALG_CCMP:
+ 		algorithm = B43_SEC_ALGO_AES;
++		if (dev->dev->id.revision >= 20080401) {
++			/* Latest devices can do quantum cryptography
++			 * to encrypt/decrypt the data stream.
++			 * This is 100% backward compatible with the traditional
++			 * CCMP algorithm. */
++			algorithm = B43_SEC_ALGO_QUANTUM;
++		}
+ 		break;
+ 	default:
+ 		B43_WARN_ON(1);
+@@ -3254,6 +3261,10 @@ static int b43_op_set_key(struct ieee802
+ 			b43_hf_write(dev,
+ 				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
+ 		}
++		if (algorithm == B43_SEC_ALGO_QUANTUM) {
++			b43_hf_write(dev, b43_hf_read(dev)
++				     | B43_HF_QUANTUMCRYPT);
++		}
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 		break;
+ 	case DISABLE_KEY: {
+
 -- 
-1.5.4.4
-
+Greetings Michael.
