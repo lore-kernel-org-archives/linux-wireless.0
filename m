@@ -1,105 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61085 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752401AbYDOXCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 19:02:11 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 11/11] iwlwifi: Use HW acceleration decryption by default
-Date: Tue, 15 Apr 2008 16:01:47 -0700
-Message-Id: <1208300507-25628-12-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000232_180320_8C2E1447)
-In-Reply-To: <1208300507-25628-11-git-send-email-reinette.chatre@intel.com>
-References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-4-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-5-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-7-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-8-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-9-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-10-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-11-git-send-email-reinette.chatre@intel.com>
+Received: from ruslug.rutgers.edu ([165.230.139.146]:40267 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755446AbYDATRk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 15:17:40 -0400
+Date: Tue, 1 Apr 2008 15:17:36 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Roy Marples <uberlord@gentoo.org>
+Subject: Re: [PATCH] [PATCH] prism54: set carrier flags correctly
+Message-ID: <20080401191736.GC4810@ruslug.rutgers.edu> (sfid-20080401_201744_266803_C60BF01E)
+References: <1206988135-12309-1-git-send-email-linville@tuxdriver.com> <1206989990.12973.9.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1206989990.12973.9.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Mar 31, 2008 at 02:59:50PM -0400, Dan Williams wrote:
+> On Mon, 2008-03-31 at 14:28 -0400, John W. Linville wrote:
+> > From: Roy Marples <uberlord@gentoo.org>
+> > 
+> > prism54 should set the carrier flags correctly when it thinks the
+> > link can be used.
+> > 
+> > Signed-off-by: Roy Marples <uberlord@gentoo.org>
+> > ---
+> > I found this in my pile from a long time back.  Anyone have any
+> > comments on it?
+> 
+> Other than the fact that the carrier flag on wireless devices is kind of
+> useless, it's fine. 
 
-This patch reverses the hw_crypto logic and makes HW crypto a default.
-Giving swcrypto=1 as parameter to the module disables HW crypto.
+Agreed, so sure, this is OK but I rather we turn the carrier on
+or off *before* sending an event, like this.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 3 files changed, 6 insertions(+), 7 deletions(-)
+Signed-off-by: Roy Marples <uberlord@gentoo.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b072523..17f629f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3691,7 +3691,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
- 	stats->flag = 0;
- 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 2e25e19..e5b3c28 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -2081,6 +2081,7 @@ link_changed(struct net_device *ndev, u32 bitrate)
+ 	islpci_private *priv = netdev_priv(ndev);
  
--	if (priv->cfg->mod_params->hw_crypto)
-+	if (!priv->cfg->mod_params->sw_crypto)
- 		iwl4965_set_decrypted_flag(priv, rxb->skb, ampdu_status, stats);
+ 	if (bitrate) {
++		netif_carrier_on(ndev);
+ 		if (priv->iw_mode == IW_MODE_INFRA) {
+ 			union iwreq_data uwrq;
+ 			prism54_get_wap(ndev, NULL, (struct sockaddr *) &uwrq,
+@@ -2089,8 +2090,10 @@ link_changed(struct net_device *ndev, u32 bitrate)
+ 		} else
+ 			send_simple_event(netdev_priv(ndev),
+ 					  "Link established");
+-	} else
++	} else {
++		netif_carrier_off(ndev);
+ 		send_simple_event(netdev_priv(ndev), "Link lost");
++	}
+ }
  
- 	if (priv->add_radiotap)
-@@ -4988,9 +4988,8 @@ module_param_named(antenna, iwl4965_mod_params.antenna, int, 0444);
- MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
- module_param_named(disable, iwl4965_mod_params.disable, int, 0444);
- MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
--module_param_named(hwcrypto, iwl4965_mod_params.hw_crypto, int, 0444);
--MODULE_PARM_DESC(hwcrypto,
--		 "using hardware crypto engine (default 0 [software])\n");
-+module_param_named(swcrypto, iwl4965_mod_params.sw_crypto, int, 0444);
-+MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])\n");
- module_param_named(debug, iwl4965_mod_params.debug, int, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
- module_param_named(
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e22563a..7193d97 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -120,7 +120,7 @@ struct iwl_ops {
- 
- struct iwl_mod_params {
- 	int disable;		/* def: 0 = enable radio */
--	int hw_crypto;		/* def: 0 = using software encryption */
-+	int sw_crypto;		/* def: 0 = using hardware encryption */
- 	int debug;		/* def: 0 = minimal debug log messages */
- 	int disable_hw_scan;	/* def: 0 = use h/w scan */
- 	int num_of_queues;	/* def: HW dependent */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index dae881e..d7e2358 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -835,7 +835,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 		       le16_to_cpu(priv->staging_rxon.channel),
- 		       print_mac(mac, priv->staging_rxon.bssid_addr));
- 
--	iwl4965_set_rxon_hwcrypto(priv, priv->cfg->mod_params->hw_crypto);
-+	iwl4965_set_rxon_hwcrypto(priv, !priv->cfg->mod_params->sw_crypto);
- 	/* Apply the new configuration */
- 	rc = iwl_send_cmd_pdu(priv, REPLY_RXON,
- 			      sizeof(struct iwl4965_rxon_cmd), &priv->staging_rxon);
-@@ -6840,7 +6840,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	IWL_DEBUG_MAC80211("enter\n");
- 
--	if (!priv->cfg->mod_params->hw_crypto) {
-+	if (priv->cfg->mod_params->sw_crypto) {
- 		IWL_DEBUG_MAC80211("leave - hwcrypto disabled\n");
- 		return -EOPNOTSUPP;
+ /* Beacon/ProbeResp payload header */
+diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+index eb7c1c6..04c2638 100644
+--- a/drivers/net/wireless/prism54/islpci_dev.c
++++ b/drivers/net/wireless/prism54/islpci_dev.c
+@@ -387,7 +387,9 @@ islpci_open(struct net_device *ndev)
  	}
--- 
-1.5.3.4
-
+ 
+ 	netif_start_queue(ndev);
+-/*      netif_mark_up( ndev ); */
++
++	/* Turn off carrier unless we know we have associated */
++	netif_carrier_off(ndev);
+ 
+ 	return 0;
+ }
