@@ -1,129 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:20916 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756004AbYD3Orb (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37167 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbYDBJjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 10:47:31 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: reduce command retry time
-Date: Wed, 30 Apr 2008 16:44:29 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804301644.29927.hs4233@mail.mn-solutions.de> (sfid-20080430_164726_081603_91840AF6)
+	Wed, 2 Apr 2008 05:39:16 -0400
+Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chr <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200804012145.18294.chunkeey@web.de> (sfid-20080401_204526_683133_262D4EC3)
+References: <200804012145.18294.chunkeey@web.de>
+	 (sfid-20080401_204526_683133_262D4EC3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qfyE3fsooMMbtTJe08Qk"
+Date: Wed, 02 Apr 2008 11:34:17 +0200
+Message-Id: <1207128858.10910.19.camel@johannes.berg> (sfid-20080402_103920_089229_BEF0EDCD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the normal case, an unsuccessful command would be tried for
-10*5 seconds, or 10*10 seconds in the worst case. This patch
-reduces this to 3*1 seconds, or 3*5 seconds in the worst case.
 
-Also changed the needless del_timer_sync(&priv->command_timer);
-to del_timer().
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
----
-
-The story behind this patch is the following: let the driver
-load, and let the hardware have a failure, e.g. because of a
-bad power supply to the device. Now try "pccardctl eject".
-It looks like this is now hanging, nothing happens. Only
-when all the retries are done does the "pccardctrl eject"
-do what it is supposed to do, that might have been in 50 or 100
-seconds.
-
-As I didn't have seen a case where it makes sense to retry a
-faulty command 10 times I changed this number.
-
-Also, I've never seen a command (except scan/assoc) to take more
-than a few milliseconds. So giving them 5 seconds seemed excessive.
+--=-qfyE3fsooMMbtTJe08Qk
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
 
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-04-30 15:10:14.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-04-30 15:18:08.000000000 +0200
-@@ -1144,7 +1144,7 @@ static void lbs_submit_command(struct lb
- 	struct cmd_header *cmd;
- 	uint16_t cmdsize;
- 	uint16_t command;
--	int timeo = 5 * HZ;
-+	int timeo = HZ;
- 	int ret;
- 
- 	lbs_deb_enter(LBS_DEB_HOST);
-@@ -1162,7 +1162,7 @@ static void lbs_submit_command(struct lb
- 	/* These commands take longer */
- 	if (command == CMD_802_11_SCAN || command == CMD_802_11_ASSOCIATE ||
- 	    command == CMD_802_11_AUTHENTICATE)
--		timeo = 10 * HZ;
-+		timeo = 5 * HZ;
- 
- 	lbs_deb_cmd("DNLD_CMD: command 0x%04x, seq %d, size %d\n",
- 		     command, le16_to_cpu(cmd->seqnum), cmdsize);
-@@ -1174,7 +1174,7 @@ static void lbs_submit_command(struct lb
- 		lbs_pr_info("DNLD_CMD: hw_host_to_card failed: %d\n", ret);
- 		/* Let the timer kick in and retry, and potentially reset
- 		   the whole thing if the condition persists */
--		timeo = HZ;
-+		timeo = HZ/2;
- 	}
- 
- 	/* Setup the timer after transmit command */
-Index: wireless-testing/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-04-30 15:10:13.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-04-30 15:16:27.000000000 +0200
-@@ -749,15 +749,18 @@ static int lbs_thread(void *data)
- 		if (priv->cmd_timed_out && priv->cur_cmd) {
- 			struct cmd_ctrl_node *cmdnode = priv->cur_cmd;
- 
--			if (++priv->nr_retries > 10) {
--				lbs_pr_info("Excessive timeouts submitting command %x\n",
--					    le16_to_cpu(cmdnode->cmdbuf->command));
-+			if (++priv->nr_retries > 3) {
-+				lbs_pr_info("excessive timeouts submitting "
-+					"command 0x%04x\n",
-+					le16_to_cpu(cmdnode->cmdbuf->command));
- 				lbs_complete_command(priv, cmdnode, -ETIMEDOUT);
- 				priv->nr_retries = 0;
- 			} else {
- 				priv->cur_cmd = NULL;
--				lbs_pr_info("requeueing command %x due to timeout (#%d)\n",
--					    le16_to_cpu(cmdnode->cmdbuf->command), priv->nr_retries);
-+				lbs_pr_info("requeueing command 0x%04x due "
-+					"to timeout (#%d)\n",
-+					le16_to_cpu(cmdnode->cmdbuf->command),
-+					priv->nr_retries);
- 
- 				/* Stick it back at the _top_ of the pending queue
- 				   for immediate resubmission */
-@@ -958,12 +961,11 @@ static void command_timer_fn(unsigned lo
- 	lbs_deb_enter(LBS_DEB_CMD);
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 
--	if (!priv->cur_cmd) {
--		lbs_pr_info("Command timer expired; no pending command\n");
-+	if (!priv->cur_cmd)
- 		goto out;
--	}
- 
--	lbs_pr_info("Command %x timed out\n", le16_to_cpu(priv->cur_cmd->cmdbuf->command));
-+	lbs_pr_info("command 0x%04x timed out\n",
-+		le16_to_cpu(priv->cur_cmd->cmdbuf->command));
- 
- 	priv->cmd_timed_out = 1;
- 	wake_up_interruptible(&priv->waitq);
-@@ -1278,7 +1280,7 @@ void lbs_stop_card(struct lbs_private *p
- 		device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
- 
- 	/* Flush pending command nodes */
--	del_timer_sync(&priv->command_timer);
-+	del_timer(&priv->command_timer);
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
- 		cmdnode->result = -ENOENT;
+On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
+> This patch is necessary for the upcoming Accesspoint patch for p54.
+
+Hm. I don't like increasing the tx control structure size but I guess
+you really need that :)
+
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+Please CC the appropriate maintainers (i.e. at least me for mac80211) on
+code changes.
+
+
+> =EF=BB=BFdiff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 48428a6..b428472 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -287,6 +287,7 @@ struct ieee80211_tx_control {
+>         u8 iv_len;              /* length of the IV field in octets */
+>         u8 queue;               /* hardware queue to use for this frame;
+>                                  * 0 =3D highest, hw->queues-1 =3D lowest=
+ */
+> +       u16 aid;                /* Station AID */
+>         int type;       /* internal */
+>  };
+> =20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 80f4343..ea3fa0f 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -741,6 +741,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+>         }
+> =20
+>         if (tx->sta) {
+> +               control->aid =3D tx->sta->aid;
+>                 tx->sta->tx_packets++;
+>                 tx->sta->tx_fragments++;
+>                 tx->sta->tx_bytes +=3D tx->skb->len;
+
+--=-qfyE3fsooMMbtTJe08Qk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/NTGaVg1VMiehFYAQLe+g/+LF8XMBIHamn5gC14bCYH9XsGZ5b89qQp
+8ikU67QxNFS+oga98dSDcg2wvr2LTf9+EzMV9e8r/W71qnKRHdJ1CwewaEVAwU/V
+1NeQguQp8UvcflSq7O1ztDkNTNkzKPSKREnCo/SV7hKKB5B+48jy954HhhaLOH2n
+0muiGnH6x9q5yR6qqUW2Ep5BcIDgyL7ISC5RiEGAgijfLwI01g5vCgdfiaSd/GYD
+pxqEYR2JS4y0PaygmqKGvI6+5vv7IEu/aS4vIFpz7G17DotlVIVAkpvBxlbbIAFH
+x5rNPHlX9v/ZkeGHqTwXSJHstJhPW+rohedZXYLoKZK8CWyu41+T/objmlfeDgFk
+6/MMEA3qG75/WTnBMceT6ePFT/4KAXp66fPPZGTbfggkHwL0+tfA0skb3HNqL9G+
+QV695PL7uSGaENCmV5ck+uOd0IXy1b89WInszViMIwNRxyYbE+XjMBv5V8+3UZO8
+wEI+w1x382khDSehFnqUcbzdqokjiE8A1qwKsC7uNW5ywthTaMJMUi5Y3whA7N/D
+RTwW0Jc6I0gEqbnZ3cOOFTlkiXwsH8RtPb47Mjpxj6YfhrTbgYfVzmjeHSI0rC3D
+jlJeRynjiwnLpCfEL4oXmCszGCX7qHt1SCm85nzNZNofhV/FEZ7pzm8iuvCY4bTq
+o/GgaL14K34=
+=qC/p
+-----END PGP SIGNATURE-----
+
+--=-qfyE3fsooMMbtTJe08Qk--
+
