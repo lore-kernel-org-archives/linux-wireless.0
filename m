@@ -1,337 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54268 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751219AbYDOEQT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 00:16:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 07/12] iwlwifi: moves security functions to iwl-sta.c
-Date: Mon, 14 Apr 2008 21:16:09 -0700
-Message-Id: <1208232974-3828-8-git-send-email-reinette.chatre@intel.com> (sfid-20080415_051628_483263_0084DC09)
-In-Reply-To: <1208232974-3828-7-git-send-email-reinette.chatre@intel.com>
-References: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-2-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-3-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-4-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-5-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-6-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-7-git-send-email-reinette.chatre@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbYDBJJ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 05:09:27 -0400
+Subject: Re: mac80211: holding sta_info for non associated stations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240804011419l1b825c7cnd02790257af9112c@mail.gmail.com> (sfid-20080401_221920_584454_405C87BE)
+References: <c85cb4470803310746h36b20d0egce98f8cea3becb0b@mail.gmail.com>
+	 <1207052896.5143.76.camel@johannes.berg>
+	 <1ba2fa240804011419l1b825c7cnd02790257af9112c@mail.gmail.com>
+	 (sfid-20080401_221920_584454_405C87BE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IKly1l/ePL1UGeYRFKO/"
+Date: Wed, 02 Apr 2008 11:08:51 +0200
+Message-Id: <1207127331.10910.2.camel@johannes.berg> (sfid-20080402_100933_031966_82FB0EE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch moves security related functions to iwl-sta.c.
-Note that iwl4965_mac_update_tkip_key is still in iwl4965-base.c since it
-is a mac80211 handler.
+--=-IKly1l/ePL1UGeYRFKO/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-sta.c      |  119 ++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    7 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |  120 +--------------------------
- 3 files changed, 123 insertions(+), 123 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 41238f2..8765358 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -139,7 +139,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 	return ret;
- }
- 
--int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
-+static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 				struct ieee80211_key_conf *keyconf,
- 				u8 sta_id)
- {
-@@ -186,3 +186,120 @@ int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 
- 	return ret;
- }
-+
-+static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
-+				   struct ieee80211_key_conf *keyconf,
-+				   u8 sta_id)
-+{
-+	unsigned long flags;
-+	__le16 key_flags = 0;
-+
-+	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
-+	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
-+	key_flags &= ~STA_KEY_FLG_INVALID;
-+
-+	if (sta_id == priv->hw_setting.bcast_sta_id)
-+		key_flags |= STA_KEY_MULTICAST_MSK;
-+
-+	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+	keyconf->hw_key_idx = keyconf->keyidx;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
-+	priv->stations[sta_id].keyinfo.keylen = keyconf->keylen;
-+
-+	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key,
-+	       keyconf->keylen);
-+
-+	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key,
-+	       keyconf->keylen);
-+
-+	priv->stations[sta_id].sta.key.key_offset =
-+				iwl_get_free_ucode_key_index(priv);
-+	priv->stations[sta_id].sta.key.key_flags = key_flags;
-+	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-+	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
-+
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
-+	return iwl4965_send_add_station(priv,
-+				&priv->stations[sta_id].sta, CMD_ASYNC);
-+}
-+
-+static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
-+				   struct ieee80211_key_conf *keyconf,
-+				   u8 sta_id)
-+{
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+	keyconf->hw_key_idx = keyconf->keyidx;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+
-+	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
-+	priv->stations[sta_id].keyinfo.conf = keyconf;
-+	priv->stations[sta_id].keyinfo.keylen = 16;
-+
-+	/* This copy is acutally not needed: we get the key with each TX */
-+	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
-+
-+	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key, 16);
-+
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	return ret;
-+}
-+
-+int iwl_remove_dynamic_key(struct iwl_priv *priv, u8 sta_id)
-+{
-+	unsigned long flags;
-+
-+	priv->key_mapping_key = 0;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
-+		&priv->ucode_key_table))
-+		IWL_ERROR("index %d not used in uCode key table.\n",
-+			priv->stations[sta_id].sta.key.key_offset);
-+	memset(&priv->stations[sta_id].keyinfo, 0,
-+					sizeof(struct iwl4965_hw_key));
-+	memset(&priv->stations[sta_id].sta.key, 0,
-+					sizeof(struct iwl4965_keyinfo));
-+	priv->stations[sta_id].sta.key.key_flags = STA_KEY_FLG_NO_ENC;
-+	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-+	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
-+	return iwl4965_send_add_station(priv, &priv->stations[sta_id].sta, 0);
-+}
-+
-+int iwl_set_dynamic_key(struct iwl_priv *priv,
-+				struct ieee80211_key_conf *key, u8 sta_id)
-+{
-+	int ret;
-+
-+	priv->key_mapping_key = 1;
-+
-+	switch (key->alg) {
-+	case ALG_CCMP:
-+		ret = iwl_set_ccmp_dynamic_key_info(priv, key, sta_id);
-+		break;
-+	case ALG_TKIP:
-+		ret = iwl_set_tkip_dynamic_key_info(priv, key, sta_id);
-+		break;
-+	case ALG_WEP:
-+		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
-+		break;
-+	default:
-+		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 3f1b205..44f272e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -43,8 +43,7 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 				struct ieee80211_key_conf *key);
- int iwl_set_default_wep_key(struct iwl_priv *priv,
- 				struct ieee80211_key_conf *key);
--int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
--				struct ieee80211_key_conf *keyconf,
--				u8 sta_id);
--
-+int iwl_remove_dynamic_key(struct iwl_priv *priv, u8 sta_id);
-+int iwl_set_dynamic_key(struct iwl_priv *priv,
-+				struct ieee80211_key_conf *key, u8 sta_id);
- #endif /* __iwl_sta_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index da01896..bfefb05 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1112,122 +1112,6 @@ int iwl4965_send_add_station(struct iwl_priv *priv,
- 	return rc;
- }
- 
--static int iwl4965_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
--				   struct ieee80211_key_conf *keyconf,
--				   u8 sta_id)
--{
--	unsigned long flags;
--	__le16 key_flags = 0;
--
--	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
--	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
--
--	if (sta_id == priv->hw_setting.bcast_sta_id)
--		key_flags |= STA_KEY_MULTICAST_MSK;
--
--	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--	keyconf->hw_key_idx = keyconf->keyidx;
--
--	key_flags &= ~STA_KEY_FLG_INVALID;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
--	priv->stations[sta_id].keyinfo.keylen = keyconf->keylen;
--
--	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key,
--	       keyconf->keylen);
--
--	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key,
--	       keyconf->keylen);
--
--	priv->stations[sta_id].sta.key.key_offset =
--				iwl_get_free_ucode_key_index(priv);
--	priv->stations[sta_id].sta.key.key_flags = key_flags;
--	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
--	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
--	return iwl4965_send_add_station(priv,
--				&priv->stations[sta_id].sta, CMD_ASYNC);
--}
--
--static int iwl4965_set_tkip_dynamic_key_info(struct iwl_priv *priv,
--				   struct ieee80211_key_conf *keyconf,
--				   u8 sta_id)
--{
--	unsigned long flags;
--	int ret = 0;
--
--	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
--	keyconf->hw_key_idx = keyconf->keyidx;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--
--	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
--	priv->stations[sta_id].keyinfo.conf = keyconf;
--	priv->stations[sta_id].keyinfo.keylen = 16;
--
--	/* This copy is acutally not needed: we get the key with each TX */
--	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
--
--	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key, 16);
--
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
--	return ret;
--}
--
--static int iwl4965_clear_sta_key_info(struct iwl_priv *priv, u8 sta_id)
--{
--	unsigned long flags;
--
--	priv->key_mapping_key = 0;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
--		&priv->ucode_key_table))
--		IWL_ERROR("index %d not used in uCode key table.\n",
--			priv->stations[sta_id].sta.key.key_offset);
--	memset(&priv->stations[sta_id].keyinfo, 0, sizeof(struct iwl4965_hw_key));
--	memset(&priv->stations[sta_id].sta.key, 0, sizeof(struct iwl4965_keyinfo));
--	priv->stations[sta_id].sta.key.key_flags = STA_KEY_FLG_NO_ENC;
--	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
--	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
--	iwl4965_send_add_station(priv, &priv->stations[sta_id].sta, 0);
--	return 0;
--}
--
--static int iwl4965_set_dynamic_key(struct iwl_priv *priv,
--				struct ieee80211_key_conf *key, u8 sta_id)
--{
--	int ret;
--
--	priv->key_mapping_key = 1;
--
--	switch (key->alg) {
--	case ALG_CCMP:
--		ret = iwl4965_set_ccmp_dynamic_key_info(priv, key, sta_id);
--		break;
--	case ALG_TKIP:
--		ret = iwl4965_set_tkip_dynamic_key_info(priv, key, sta_id);
--		break;
--	case ALG_WEP:
--		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
--		break;
--	default:
--		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
--		ret = -EINVAL;
--	}
--
--	return ret;
--}
--
- static void iwl4965_clear_free_frames(struct iwl_priv *priv)
- {
- 	struct list_head *element;
-@@ -7043,7 +6927,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		if (is_default_wep_key)
- 			ret = iwl_set_default_wep_key(priv, key);
- 		else
--			ret = iwl4965_set_dynamic_key(priv, key, sta_id);
-+			ret = iwl_set_dynamic_key(priv, key, sta_id);
- 
- 		IWL_DEBUG_MAC80211("enable hwcrypto key\n");
- 		break;
-@@ -7051,7 +6935,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		if (is_default_wep_key)
- 			ret = iwl_remove_default_wep_key(priv, key);
- 		else
--			ret = iwl4965_clear_sta_key_info(priv, sta_id);
-+			ret = iwl_remove_dynamic_key(priv, sta_id);
- 
- 		IWL_DEBUG_MAC80211("disable hwcrypto key\n");
- 		break;
--- 
-1.5.3.4
+> >  > If i associate to a random AP "x" (what happened automatically as i
+> >  > was configured by ifup scripts to do that), and then scan and
+> >  > associate to my desired AP "y", i notice that AP "x" was not removed
+> >  > from the mac80211 station table. Then, what happened was that during
+> >  > ieee80211_stop, when we reach
+> >  >
+> >  > list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> >  >     if (sta->sdata =3D=3D sdata)
+> >  >     ieee80211_sta_tear_down_BA_sessions(dev, sta->addr);
+> >  > }
+> >  >
+> >  > we try to tear down sessions to irrelevant stations (AP "x" in my
+> >  > example), which leads to bugs.
+> >
+> >  Why would that lead to bugs? That station was known, and there are no
+> >  sessions for that AP.
+>=20
+> It's like freeing twice the same a pointer. On what level will you
+> check that there are no BA session with this ghost  AP?
+
+I don't see the problem. BA sessions are per-STA-info, so what's the
+problem with having a STA-info linger around a bit longer maybe?
+
+> >  There might be a problem in that we forget to remove that AP under som=
+e
+> >  circumstances but it shouldn't matter, we always can have multiple
+> >  stations in our table.
+>=20
+> Not in STA mode, should be associated only to one AP at a time. (Hope
+> this also cover roaming).
+
+True, but BA sessions ought to also work in AP mode and I don't see
+where the code differs.
+
+Maybe I misunderstood the problem?
+
+johannes
+
+--=-IKly1l/ePL1UGeYRFKO/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/NNIqVg1VMiehFYAQL2dRAAgzJGTPS0pMj9FShBlplzKAczlvX5mTh+
+/Edfkfy0/JxaVfxq3us/7AkjrUqdnRG6NYbQwN7JbM/27ut7W89kN45gLvhlL/4L
+HR7Xt8miUF756eBNBy9L2ZBhr0KTJY2BfjxVl/oeJT+dnnme/wu64B+WdLmuI5an
+dQl9XdAbD9pUVe8oJ+ZTYfZ63W66Zz+7TwVP6kKOt+x3NDp/ommv5F4J6AVBiRwY
+SpsOkPk/+AUbziNqOzp0Mr9Q3AgzH8bXEL5MYw4y/ukRvMEMjRvTPCS+WAhfR8i5
+ZlxLemqVDLFfHDt0kMkdM+JaO5Jks9B+cNA5G2oB2tXiQukZpVQD1dz31U2TdbBt
+alj7fypWqqs+YJTegzwPi/zJbyuqxSogGyETon6bBtKJ+VOb6HrseFnrVI8LlUp3
+f9YjqQ+fJS+KxQFL6h3LKncLg+onP4OPRBk6maTa4aJmUGhnYQdZqTBFAKmSDFTi
+O3wUlKg0AM/eiIiBif2nz9aADfMONvjgkO/fuBzaLS0FrMeiYTW/QH6aHiIGx7gs
+XrLEHFyqz0zGljiz62GaHy460kej1XTTVeZnOvNmowGO9xXHdhWjXOm/Hj1CbgIL
+9EdJR+rQSiAuk0/o5HxuSX2EybGdT0hAcfuZs5Jaal2GB4hY05w6UNMcm6UNsTmg
+Vror+1EtkdY=
+=qMXf
+-----END PGP SIGNATURE-----
+
+--=-IKly1l/ePL1UGeYRFKO/--
 
