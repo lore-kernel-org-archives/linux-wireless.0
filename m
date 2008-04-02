@@ -1,61 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758855AbYDZUyw (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:15522 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbYDBUBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 16:54:52 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: "'John W. Linville'" <linville@tuxdriver.com>,
-	'Dan Williams' <dcbw@redhat.com>,
-	'Holger Schurig' <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <00da01c8a631$bfbecce0$0b3ca8c0@gotws1589>
-References: <00da01c8a631$bfbecce0$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IsP8SYoYTo7JNamsKQ1K"
-Date: Sat, 26 Apr 2008 22:54:15 +0200
-Message-Id: <1209243255.10943.63.camel@johannes.berg> (sfid-20080426_225515_007631_90F9383A)
-Mime-Version: 1.0
+	Wed, 2 Apr 2008 16:01:39 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so917959ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:01:37 -0700 (PDT)
+Message-ID: <1ba2fa240804021301v5c5e9cbhe13c53fc97a666c3@mail.gmail.com> (sfid-20080402_210150_938781_A2BA5E79)
+Date: Wed, 2 Apr 2008 23:01:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: "Try to stop Tx aggregation on non active TID" messages
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1207065107.5143.117.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1206568750.22530.8.camel@johannes.berg>
+	 <c85cb4470803280145j42bcf1b5kfcfd220b5b6cf76a@mail.gmail.com>
+	 <c85cb4470803300456y75ced072ue89ea3f2dbbdce8b@mail.gmail.com>
+	 <1206964750.5468.9.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB08920040FA21F@orsmsx416.amr.corp.intel.com>
+	 <1207065107.5143.117.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 1, 2008 at 6:51 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>  > > [1] as, incidentally, you can see in the current wireless tree from a
+>  > > few days ago, iwlwifi with debugging doesn't even compile!
+>  >
+>  > Could you please send the errors you see? The debug flags recently
+>  > changed, so the following is needed:
+>
+>  It seems that this was before I updated to after the debug flags change,
+>  everything seems fine now.
+>
+>  Unrelated, but while I was at it, I get a whole bunch of warnings that
+>  are fixed by the patch below.
+>
+>  johannes
+>
+>  From: Johannes Berg <johannes@sipsolutions.net>
+>  Subject: iwlwifi: fix warnings
+>
+>  This fixes all kinds of warnings in iwlwifi.
+>
+>  Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>  ---
+>   drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 +++---
+>   drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 ++--
+>   drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 ++++----
+>   drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 ++--
+>   drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 +-
+>   drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+>   6 files changed, 13 insertions(+), 13 deletions(-)
+>
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-4965.c       2008-04-01 17:38:21.311669543 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-4965.c    2008-04-01 17:43:17.931669482 +0200
+>  @@ -3297,7 +3297,7 @@ static void iwl4965_add_radiotap(struct
+>         s8 noise = 0;
+>         int rate = stats->rate_idx;
+>         u64 tsf = stats->mactime;
+>  -       __le16 phy_flags_hw = rx_start->phy_flags;
+>  +       __le16 phy_flags_hw = rx_start->phy_flags, antenna;
 
---=-IsP8SYoYTo7JNamsKQ1K
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Can you do this on separate lines
+
+>         struct iwl4965_rt_rx_hdr {
+>                 struct ieee80211_radiotap_header rt_hdr;
+>                 __le64 rt_tsf;          /* TSF */
+>  @@ -3381,8 +3381,8 @@ static void iwl4965_add_radiotap(struct
+>          * new 802.11n radiotap field "RX chains" that is defined
+>          * as a bitmask.
+>          */
+>  -       iwl4965_rt->rt_antenna =
+>  -               le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
+>  +       antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
+>  +       iwl4965_rt->rt_antenna = le16_to_cpu(antenna) >> 4;
+>
+>         /* set the preamble flag if appropriate */
+>         if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
+>  @@ -3972,7 +3972,7 @@ static void iwl4965_rx_reply_rx(struct i
+>
+>         IWL_DEBUG_STATS_LIMIT("Rssi %d, noise %d, qual %d, TSF %llu\n",
+>                               rx_status.ssi, rx_status.noise, rx_status.signal,
+>  -                             rx_status.mactime);
+>  +                             (unsigned long long)rx_status.mactime);
+>
+>         network_packet = iwl4965_is_network_packet(priv, header);
+>         if (network_packet) {
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-4965.h       2008-04-01 17:36:10.893796252 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-4965.h    2008-04-01 17:44:02.702794566 +0200
+>  @@ -293,8 +293,8 @@ struct iwl4965_frame {
+>
+>   #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
+>   #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
+>  -#define SEQ_TO_INDEX(x) (x & 0xff)
+>  -#define INDEX_TO_SEQ(x) (x & 0xff)
+>  +#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
+>  +#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
+>   #define SEQ_HUGE_FRAME  (0x4000)
+>   #define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
+>   #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.c       2008-04-01 17:42:39.875671121 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.c    2008-04-01 17:42:55.953764661 +0200
+>  @@ -524,7 +524,7 @@ static void iwl3945_add_radiotap(struct
+>         s8 noise = 0;
+>         int rate = stats->rate_idx;
+>         u64 tsf = stats->mactime;
+>  -       __le16 phy_flags_hw = rx_hdr->phy_flags;
+>  +       __le16 phy_flags_hw = rx_hdr->phy_flags, antenna;
+>
+>         struct iwl3945_rt_rx_hdr {
+>                 struct ieee80211_radiotap_header rt_hdr;
+>  @@ -596,8 +596,8 @@ static void iwl3945_add_radiotap(struct
+>                 iwl3945_rt->rt_rate = iwl3945_rates[rate].ieee;
+>
+>         /* antenna number */
+>  -       iwl3945_rt->rt_antenna =
+>  -               le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
+>  +       antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
+>  +       iwl3945_rt->rt_antenna = le16_to_cpu(antenna) >> 4;
+>
+>         /* set the preamble flag if we have it */
+>         if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.h       2008-04-01 17:42:17.083795908 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.h    2008-04-01 17:44:02.701795986 +0200
+>  @@ -280,8 +280,8 @@ struct iwl3945_frame {
+>
+>   #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
+>   #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
+>  -#define SEQ_TO_INDEX(x) (x & 0xff)
+>  -#define INDEX_TO_SEQ(x) (x & 0xff)
+>  +#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
+>  +#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
+>   #define SEQ_HUGE_FRAME  (0x4000)
+>   #define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
+>   #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-debugfs.c    2008-04-01 17:43:44.900670090 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-debugfs.c 2008-04-01 17:43:55.875048052 +0200
+>  @@ -243,7 +243,7 @@ static ssize_t iwl_dbgfs_stations_read(s
+>                                                 station->tid[j].agg.wait_for_ba);
+>                                 pos += sprintf(buf+pos, "%u\t%llu\t%u\n",
+>                                                 station->tid[j].agg.start_idx,
+>  -                                               station->tid[j].agg.bitmap,
+>  +                                               (unsigned long long)station->tid[j].agg.bitmap,
+>                                                 station->tid[j].agg.rate_n_flags);
 
 
-> - Driver authenticating with new AP while having a valid association with
-> and other AP.
 
-Yes, that is the problem, we should disassociate first. If you can come
-up with a patch to send a disassoc packet in that case (and test it,
-preferably) that would be much welcome.
+>                         }
+>                         pos += sprintf(buf+pos, "\n");
+>  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c   2008-04-01 17:43:25.884921531 +0200
+>  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl4965-base.c        2008-04-01 17:43:33.955669481 +0200
+>  @@ -3111,7 +3111,7 @@ static int iwl4965_tx_status_reply_tx(st
+>                 agg->rate_n_flags = le32_to_cpu(tx_resp->rate_n_flags);
+>                 IWL_DEBUG_TX_REPLY("Frames %d start_idx=%d bitmap=0x%llx\n",
+>                                    agg->frame_count, agg->start_idx,
+>  -                                  agg->bitmap);
+>  +                                  (unsigned long long)agg->bitmap);
+>
+This was already submitted by John IIRC.
 
-johannes
 
---=-IsP8SYoYTo7JNamsKQ1K
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBOWdqVg1VMiehFYAQKthBAAu4pL2DO2FW4qDovQe23FAepueMYAEpJ8
-+U4qPjpWxjTWjv6Nt7ZxqkbMVMF6o79vIBAgI6ApHbSqJLmXGrrnCry2poZG/zLC
-ezecwQLp2BMoQ6zwO9QB2nC3RuZd8x4V4dG0bZmcTAZafVJU28VWqpKerduaYfmM
-HUuQubk7pPwSBwWmrlAyOTDQPoO07Tp3QB3mgOKpkLhQepWpxdrnAnULeUdIGfRi
-jhXJNqgaeivPyt3XvRbAbH1bMPjtYyQTYvMqPnbqKVCcWqMZjsZovQA48lvmfMNR
-gjvOx3tLt9xsBlBXd8IF0PAn25U+8NZpb3RSlAyeQ+XbUAk2tCC/b5tPpwneMxNb
-92JVALJ4iF8Fj++b8qKiet2+0WaDAelyfUbBmbeRq8g4BU9dGldssujGelP2sOth
-aOOIASuflwXOkXkFtX5Bjv81Xu3jKB90IIMnKd64zVhONhKCw2ARmhnprdcyaSfV
-Ck0sB/nBHLTxbSQZf8mb45Ks2pg1UAPheuY4jvxRkIxz2Qb2FY6NDB8IF0SpIblH
-/gVG7dpIgQZlpISGA+s5KPUfduHR/8jrPNl2LSRergN52+yPiZmXNHYVfhCoU//1
-iAYP09oyy2hl+wqSQrVep+rWFnX3uuWsINs2qhYhUhClbIWEq9VEguj7+MDfgIko
-359a9qMn2jg=
-=7b6F
------END PGP SIGNATURE-----
-
---=-IsP8SYoYTo7JNamsKQ1K--
-
+>                 if (bitmap)
+>                         agg->wait_for_ba = 1;
+>
+>
+>
