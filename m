@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:41757 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbYDWLCf (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:42251 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753811AbYDBLyU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 07:02:35 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so4548563waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2008 04:02:34 -0700 (PDT)
-Message-ID: <1ba2fa240804230402q3d2cb68en61051431f946c903@mail.gmail.com> (sfid-20080423_130314_335187_D2B7C5E0)
-Date: Wed, 23 Apr 2008 14:02:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 1/1] iwlwifi: Fix built-in compilation of iwlcore
-Cc: torvalds@linux-foundation.org, linville@tuxdriver.com,
-	reinette.chatre@intel.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080423.040019.239111304.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208948327-23894-1-git-send-email-tomas.winkler@intel.com>
-	 <20080423.040019.239111304.davem@davemloft.net>
+	Wed, 2 Apr 2008 07:54:20 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so2858132fgb.17
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 04:54:19 -0700 (PDT)
+Date: Wed, 2 Apr 2008 13:54:03 +0200
+To: "Felipe Maya" <fmay@cetuc.puc-rio.br>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+Message-ID: <20080402135403.7fa54310@localhost> (sfid-20080402_125424_554434_CFEC3541)
+In-Reply-To: <36899.201.36.161.238.1207134354.squirrel@mamao.cetuc.puc-rio.br>
+References: <20080402001213.7b879a73@localhost>
+	<36899.201.36.161.238.1207134354.squirrel@mamao.cetuc.puc-rio.br>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+From: TK <tobutaz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2008 at 2:00 PM, David Miller <davem@davemloft.net> wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
->  Date: Wed, 23 Apr 2008 13:58:47 +0300
->
->
->  > This patch fixes problem in Makefile that prevented
->  > built-in compilation of iwlcore
->  >
->  > Commit that caused this problem: eadd3c4b
->  >
->  > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->  > Signed-off-by: Yi Zhu <yi.zhu@intel.com>
->
->  I already applied the corrected version of your patch,
->  no need to resend this.  See my reply to your first
->  posting.
->
->
-Thanks
-Sorry for the mess
-Tomas
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Le Wed, 2 Apr 2008 08:05:54 -0300 (BRT),
+"Felipe Maya" <fmay@cetuc.puc-rio.br> a =C3=A9crit :
+> filename:     =20
+> /lib/modules/2.6.23.1/kernel/drivers/net/wireless/rt2x00/rt2500pci.ko
+> license:        GPL
+> description:    Ralink RT2500 PCI & PCMCIA Wireless LAN driver.
+> version:        2.0.8
+> author:         http://rt2x00.serialmonkey.com
+> srcversion:     C8DB886C372334BFB58A7F5
+> alias:          pci:v00001814d00000201sv*sd*bc*sc*i*
+> depends:        rt2x00pci,rt2x00lib,mac80211,eeprom_93cx6
+> vermagic:       2.6.23.1 SMP mod_unload 686 4KSTACKS
+
+Don't tell me, tell the list.
+Even then, I am not sure this is enough info to help you, since there
+are no obvious error messages.
+Maybe this is simply ad-hoc mode being broken in rt2x00, I think this
+code is too new. You could try with a way more recent kernel
+(the wireless-testing tree suggested above), or check that the legacy
+driver does ad-hoc (I think it does).
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
