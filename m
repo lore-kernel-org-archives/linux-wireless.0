@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbYDZQKi (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:65177 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751571AbYDBAyh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 12:10:38 -0400
-Subject: Re: [PATCH RFT] tkip: fix iv32 calculation in
-	ieee80211_get_tkip_key()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240804260825qcae5777qddd2d1e91a0277dc@mail.gmail.com> (sfid-20080426_172604_795906_4CB85248)
-References: <1209081653.12561.50.camel@dv>
-	 <1ba2fa240804260825qcae5777qddd2d1e91a0277dc@mail.gmail.com>
-	 (sfid-20080426_172604_795906_4CB85248)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0FkuMgW6ZZwLiYBK13G1"
-Date: Sat, 26 Apr 2008 18:10:28 +0200
-Message-Id: <1209226228.10943.45.camel@johannes.berg> (sfid-20080426_181056_501113_FEE168CA)
-Mime-Version: 1.0
+	Tue, 1 Apr 2008 20:54:37 -0400
+Message-ID: <20080401205435.iov001h7gxs0o8sc@webmail.spamcop.net> (sfid-20080402_015503_686357_90F89AEB)
+Date: Tue, 01 Apr 2008 20:54:35 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Luca Venturini <lucventurini@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support
+	WPA2 wireless network with PEAP - MSCHAPV2
+References: <47F1F4F4.2080502@gmail.com>
+	<20080401164419.GA3530@tuxdriver.com>
+	<5d75f4610804011306y55352e73sb5223a294b66f2cf@mail.gmail.com>
+	<47F2A2F0.4060908@gmail.com>
+In-Reply-To: <47F2A2F0.4060908@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, Luca!
 
---=-0FkuMgW6ZZwLiYBK13G1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm replying to your message that didn't come to be through a mailing  
+list.  Please don't bcc: random people.  It's a bad style.
 
+Quoting Luca Venturini <lucventurini@gmail.com>:
 
-> >  It's a side product of testing a sparse patch by Linus Torvalds.
-> >  Compile tested only.
+> I hope, then, that Linux 2.6.25.x stable will be out sooner than 24th
+> april (Hardy release date) otherwise I (and I guess also many other
+> people) will be in a very bad spot until the kernel is updated...(I am
+> not proficient enough so to compile a whole Linux kernel for my distro).
+> Thank you very much for your attention, in any case.
 
-> >         iv32 =3D data[hdr_len + 4] +
-> >  -               (data[hdr_len + 5] >> 8) +
-> >  -               (data[hdr_len + 6] >> 16) +
-> >  -               (data[hdr_len + 7] >> 24);
-> >  +               (data[hdr_len + 5] << 8) +
-> >  +               (data[hdr_len + 6] << 16) +
-> >  +               (data[hdr_len + 7] << 24);
-> >
-> >   #ifdef CONFIG_TKIP_DEBUG
-> >         printk(KERN_DEBUG "TKIP encrypt: iv16 =3D 0x%04x, iv32 =3D 0x%0=
-8x\n",
-> >
-> >
->=20
-> We've tested TKIP code well and I'm not sure we wouldn't pay attention
-> to such mistake.
+2.6.25.1 will be out after the first bug is fixed in Linux 2.6.25.  I  
+cannot promise you that any such bug would exist.  Actually, I hope  
+that there will be no reason for 2.6.25.1 release.
 
-But the code does look a bit fishy. I'm confused.
+In any case, putting pressure on wireless developers is not  
+appreciated.  Maybe you should learn how to compile Linux kernels.  Or  
+maybe you should talk to Ubuntu release engineers and ask them not to  
+wait for 2.6.25.1 (provided that your implication is correct and they  
+would wait).
 
-johannes
-
---=-0FkuMgW6ZZwLiYBK13G1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBNT86Vg1VMiehFYAQKynRAAt5dfUON68R8CStUR6f0v5YyO3WErV5jQ
-3i2WVeyIeaaAc211/j4zuhw+xRwLUM1tgSO5nVJhOJ+1W8BYPkWW7zeCSBMCpM/C
-7dUTS783quJdr3W5Jka3tc+jqrEUlRnW3LbNpEyr2GxEtNM9VLZ2GA1nCeUlnNrg
-PeCtfCPpXa7NKr9S1PaVNYpGf5T8f3jXMoZGWhokID6NXxe8IF8z/4FnlaEezXlm
-S58JGdXOcDWPNiF1WjJ3fj+eD9/8raWpou7sb4pwg4c59dEFT+EpsbpNB7jVt9S7
-lAttz+LuSDivMX3zTWO7pF2MS3hi/N+84zZNZN/uNYyT3VKQ6nQPhBZpVXYuSYEZ
-wwc3SEKr9XvhLrd1u5sngj6Ur3DgcZ41z2SbqZVmQcG5yQiPyl5YNZ0HBosWDiWH
-J6pOISOlm6G4n/BRbx+0cSol5QctSzOlKLzgNYH5VgZzg0VDVM/Q95OdxKfMxrpW
-9PcZIksGpF6/+j5+v+Th9xQtSgv9mdi15k87A8LSQhHvTLgShlE4jL8vNdsHmQVy
-RnGriWhA2+dG+KNEo8vaXpB6t+GGz3u1suVUm879uLMVKraPrtZYHveqojCH0Psc
-88ry7ddnz8lWutLGmm7l28XkXQyE5DwbIQWWkcstCXh+tv8pFp4uAi3Ugxzph0Nb
-ANJXBjo+HpQ=
-=K+lS
------END PGP SIGNATURE-----
-
---=-0FkuMgW6ZZwLiYBK13G1--
-
+-- 
+Regards,
+Pavel Roskin
