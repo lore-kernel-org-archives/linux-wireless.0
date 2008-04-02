@@ -1,86 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:19560 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbYDGU2M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 16:28:12 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2327338mue.5
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2008 13:28:09 -0700 (PDT)
-Message-ID: <47FA83D3.4030203@gmail.com> (sfid-20080407_212817_701569_F8816B15)
-Date: Mon, 07 Apr 2008 22:28:03 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+Received: from a.mail.sonic.net ([64.142.16.245]:59064 "EHLO a.mail.sonic.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751651AbYDBHBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 03:01:48 -0400
+From: Jason Riedy <jason@acm.org>
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: [PATCH] Remove most references to iwl4965-only features from iwl3945.
+Date: Tue, 01 Apr 2008 23:26:00 -0700
+Message-ID: <87bq4shix3.fsf@sparse.dyndns.org> (sfid-20080402_080151_851138_5FB6CF51)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: ath5k-devel@lists.ath5k.org
-Subject: WARNING: at ieee80211_rate.h:155
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The references confused me while trying to debug my configuration
+problem, and the #ifdef using a *4965* symbol is obviously wrong.
 
-I got this. Maybe it's an ath5k bug, just in case you saw it already, don't you 
-know what could be wrong here?
+I know the rfkill switch on my laptop works, so I left that
+"4965-only" feature in iwl3945-base.c.  There is one remaining
+"4965-only" feature:
+	/* Chip got too hot and stopped itself (4965 only) */
+I don't know if the 3945 supports this, but I also lack the guts
+to remove it and the time to search for documentation.
 
-rate_control_pid_rate_init: 0 2462
-PUJ: 0 12 00000000
-------------[ cut here ]------------
-WARNING: at /home/l/latest/xxx/net/mac80211/ieee80211_rate.h:155 
-rate_control_pid_rate_init+0x90/0xc0 [mac80211]()
-Modules linked in: ath5k mac80211 nls_cp437 vfat fat usb_storage tun bitrev ipv6 
-test arc4 ecb crypto_blkcipher cryptomgr crypto_algapi usbhid crc32 sr_mod hid 
-rtc_cmos cfg80211 ohci1394 rtc_core floppy ieee1394 ehci_hcd ff_memless cdrom 
-rtc_lib [last unloaded: mac80211]
-Pid: 0, comm: swapper Not tainted 2.6.25-rc8-mm1_64lock #6
+Signed-off-by: Jason Riedy <jason@acm.org>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-commands.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-3945.h          |    9 ++++-----
+ drivers/net/wireless/iwlwifi/iwl3945-base.c      |    3 +--
+ 3 files changed, 5 insertions(+), 8 deletions(-)
 
-Call Trace:
-  <IRQ>  [<ffffffff8022fdef>] warn_on_slowpath+0x5f/0x80
-  [<ffffffff80230ff7>] ? printk+0x67/0x70
-  [<ffffffff80328108>] ? __spin_lock_init+0x38/0x70
-  [<ffffffffa0090c9b>] ? :mac80211:sta_info_alloc+0x1ab/0x210
-  [<ffffffffa00a2c50>] :mac80211:rate_control_pid_rate_init+0x90/0xc0
-  [<ffffffffa0093023>] :mac80211:ieee80211_ibss_add_sta+0xe3/0x140
-  [<ffffffff80228698>] ? try_to_wake_up+0x88/0x130
-  [<ffffffffa009ceb0>] :mac80211:__ieee80211_rx_handle_packet+0x420/0x800
-  [<ffffffffa009f106>] ? :mac80211:__ieee80211_rx+0x76/0x5c0
-  [<ffffffffa009f106>] ? :mac80211:__ieee80211_rx+0x76/0x5c0
-  [<ffffffffa009f372>] :mac80211:__ieee80211_rx+0x2e2/0x5c0
-  [<ffffffffa0146a15>] :ath5k:ath5k_tasklet_rx+0x105/0x5f0
-  [<ffffffff80236077>] tasklet_action+0x67/0xf0
-  [<ffffffff80235f04>] __do_softirq+0x84/0x110
-  [<ffffffff8020c8cc>] call_softirq+0x1c/0x30
-  [<ffffffff8020e5f5>] do_softirq+0x65/0xa0
-  [<ffffffff80235e75>] irq_exit+0x95/0xa0
-  [<ffffffff8020e6e9>] do_IRQ+0x89/0x100
-  [<ffffffff8020a420>] ? default_idle+0x0/0x80
-  [<ffffffff8020bbc6>] ret_from_intr+0x0/0xf
-  <EOI>  [<ffffffff8020a463>] ? default_idle+0x43/0x80
-  [<ffffffff8020a461>] ? default_idle+0x41/0x80
-  [<ffffffff8020a420>] ? default_idle+0x0/0x80
-  [<ffffffff8020a4e7>] ? cpu_idle+0x47/0xd0
-  [<ffffffff804da4ce>] ? start_secondary+0x2fe/0x430
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
+index 817ece7..925678b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
+@@ -89,7 +89,6 @@ enum {
+ 	REPLY_TX = 0x1c,
+ 	REPLY_RATE_SCALE = 0x47,	/* 3945 only */
+ 	REPLY_LEDS_CMD = 0x48,
+-	REPLY_TX_LINK_QUALITY_CMD = 0x4e, /* 4965 only */
+ 
+ 	/* 802.11h related */
+ 	RADAR_NOTIFICATION = 0x70,	/* not used */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index ac12269..a4a4f3a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -188,7 +188,7 @@ struct iwl3945_scan_power_info {
+  * Some of the fields (e.g. eeprom and flags/max_power_avg) are redundant
+  *     with one another!
+  */
+-#define IWL4965_MAX_RATE (33)
++#define IWL3945_MAX_RATE (33)
+ 
+ struct iwl3945_channel_info {
+ 	struct iwl3945_channel_tgd_info tgd;
+@@ -211,7 +211,7 @@ struct iwl3945_channel_info {
+ 	/* Radio/DSP gain settings for each "normal" data Tx rate.
+ 	 * These include, in addition to RF and DSP gain, a few fields for
+ 	 *   remembering/modifying gain settings (indexes). */
+-	struct iwl3945_channel_power_info power_info[IWL4965_MAX_RATE];
++	struct iwl3945_channel_power_info power_info[IWL3945_MAX_RATE];
+ 
+ 	/* Radio/DSP gain settings for each scan rate, for directed scans. */
+ 	struct iwl3945_scan_power_info scan_pwr_info[IWL_NUM_SCAN_RATES];
+@@ -653,7 +653,6 @@ extern int iwl3945_hw_reg_set_txpower(struct iwl3945_priv *priv, s8 power);
+ extern void iwl3945_hw_rx_statistics(struct iwl3945_priv *priv,
+ 				 struct iwl3945_rx_mem_buffer *rxb);
+ extern void iwl3945_disable_events(struct iwl3945_priv *priv);
+-extern int iwl4965_get_temperature(const struct iwl3945_priv *priv);
+ 
+ /**
+  * iwl3945_hw_find_station - Find station id for a given BSSID
+@@ -775,11 +774,11 @@ struct iwl3945_priv {
+ 	struct iwl3945_rxon_cmd recovery_rxon;
+ 
+ 	/* 1st responses from initialize and runtime uCode images.
+-	 * 4965's initialize alive response contains some calibration data. */
++	 * 3945's initialize alive response contains some calibration data. */
+ 	struct iwl3945_init_alive_resp card_alive_init;
+ 	struct iwl3945_alive_resp card_alive;
+ 
+-#ifdef CONFIG_IWL4965_LEDS
++#ifdef CONFIG_IWL3945_LEDS
+ 	struct iwl3945_led led[IWL_LED_TRG_MAX];
+ 	unsigned long last_blink_time;
+ 	u8 last_blink_rate;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index dc9ff50..8705383 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -582,7 +582,6 @@ static const char *get_cmd_string(u8 cmd)
+ 		IWL_CMD(REPLY_TX);
+ 		IWL_CMD(REPLY_RATE_SCALE);
+ 		IWL_CMD(REPLY_LEDS_CMD);
+-		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
+ 		IWL_CMD(RADAR_NOTIFICATION);
+ 		IWL_CMD(REPLY_QUIET_CMD);
+ 		IWL_CMD(REPLY_CHANNEL_SWITCH);
+@@ -4480,7 +4479,7 @@ static void iwl3945_irq_tasklet(struct iwl3945_priv *priv)
+ 	/* Safely ignore these bits for debug checks below */
+ 	inta &= ~(CSR_INT_BIT_SCD | CSR_INT_BIT_ALIVE);
+ 
+-	/* HW RF KILL switch toggled (4965 only) */
++	/* HW RF KILL switch toggled */
+ 	if (inta & CSR_INT_BIT_RF_KILL) {
+ 		int hw_rf_kill = 0;
+ 		if (!(iwl3945_read32(priv, CSR_GP_CNTRL) &
+-- 
+1.5.5.rc1.121.g1594
 
----[ end trace 9dbdd8f4f112ff0b ]---
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: no IPv6 routers present
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: Creating new IBSS network, BSSID f6:ae:b9:e2:70:1f
-phy1: Removed STA
-...
-wlan0: Configured IBSS beacon template
-ieee80211_sta_join_ibss: 00000fff rates
-
-It's
-printk(KERN_DEBUG "PUJ: %u %u %.8llx\n", sband->band, sband->n_bitrates,
-                      sta->supp_rates[sband->band]);
-right before the WARN_ON. And this
-printk(KERN_DEBUG "%s: %u %u\n", __func__, local->hw.conf.channel->band,
-                      local->hw.conf.channel->center_freq);
-in rate_control_pid_rate_init.
-
-00000fff means which rates were set to
-ifsta->supp_rates_bits[local->hw.conf.channel->band]
-The problem here is that it is after receiving a frame which caused the warning.
-
-Thanks.
