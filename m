@@ -1,357 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6913 "EHLO mga09.intel.com"
+Received: from b.mail.sonic.net ([64.142.19.5]:56673 "EHLO b.mail.sonic.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754013AbYDXSzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 01/21] iwlwifi: move verify_ucode functions to iwl-core
-Date: Thu, 24 Apr 2008 11:55:18 -0700
-Message-Id: <1209063338-6572-2-git-send-email-reinette.chatre@intel.com> (sfid-20080424_205618_177688_83864080)
-In-Reply-To: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
-References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
+	id S1752992AbYDBG5Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 02:57:25 -0400
+From: Jason Riedy <jason@acm.org>
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: [PATCH] Make IWLCORE a silent option not to confuse iwl3945 users.
+Date: Tue, 01 Apr 2008 23:28:34 -0700
+Message-ID: <874pakhist.fsf@sparse.dyndns.org> (sfid-20080402_075728_671212_FF0429BB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The iwl3945 (currently?) does not use iwlcore.  Either the iwlcore
+documentation should change or the option should be silent.  This
+patch follows the latter route.  IWL4965 already SELECTs IWLCORE,
+so there should be no new problems.  Note that IWLWIFI_DEBUGFS and
+IWLCORE_RFKILL have no suboptions for 4965, so they are grouped
+together and given a description that includes "4965+" to indicate
+they're not for the 3945 adapters.
 
-This patch moves verify_ucode functions to iwl-core.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Jason Riedy <jason@acm.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c     |  134 +++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |  144 +--------------------------
- 3 files changed, 137 insertions(+), 142 deletions(-)
+   I don't really know what I'm doing here, but something needs
+   done, and my code is better than my exposition right now.  BTW,
+   I'm guilty of the same sub-par testing as Intel.  I haven't
+   checked compiling the pieces separately, only together.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index ca32fb3..8c8b51d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -704,3 +704,137 @@ int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags)
- }
- EXPORT_SYMBOL(iwl_send_statistics_request);
+ drivers/net/wireless/iwlwifi/Kconfig        |   28 ++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   32 +++++++++++++-------------
+ 2 files changed, 31 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 4a5c8c0..09d872e 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -1,19 +1,14 @@
+ config IWLCORE
+-	tristate "Intel Wireless Wifi Core"
++	tristate
+ 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
  
-+/**
-+ * iwl_verify_inst_sparse - verify runtime uCode image in card vs. host,
-+ *   using sample data 100 bytes apart.  If these sample points are good,
-+ *   it's a pretty good bet that everything between them is good, too.
-+ */
-+static int iwlcore_verify_inst_sparse(struct iwl_priv *priv, __le32 *image, u32 len)
-+{
-+	u32 val;
-+	int ret = 0;
-+	u32 errcnt = 0;
-+	u32 i;
-+
-+	IWL_DEBUG_INFO("ucode inst image size is %u\n", len);
-+
-+	ret = iwl_grab_nic_access(priv);
-+	if (ret)
-+		return ret;
-+
-+	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
-+		/* read data comes through single port, auto-incr addr */
-+		/* NOTE: Use the debugless read so we don't flood kernel log
-+		 * if IWL_DL_IO is set */
-+		iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR,
-+			i + RTC_INST_LOWER_BOUND);
-+		val = _iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
-+		if (val != le32_to_cpu(*image)) {
-+			ret = -EIO;
-+			errcnt++;
-+			if (errcnt >= 3)
-+				break;
-+		}
-+	}
-+
-+	iwl_release_nic_access(priv);
-+
-+	return ret;
-+}
-+
-+/**
-+ * iwlcore_verify_inst_full - verify runtime uCode image in card vs. host,
-+ *     looking at all data.
-+ */
-+static int iwl_verify_inst_full(struct iwl_priv *priv, __le32 *image,
-+				 u32 len)
-+{
-+	u32 val;
-+	u32 save_len = len;
-+	int ret = 0;
-+	u32 errcnt;
-+
-+	IWL_DEBUG_INFO("ucode inst image size is %u\n", len);
-+
-+	ret = iwl_grab_nic_access(priv);
-+	if (ret)
-+		return ret;
-+
-+	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR, RTC_INST_LOWER_BOUND);
-+
-+	errcnt = 0;
-+	for (; len > 0; len -= sizeof(u32), image++) {
-+		/* read data comes through single port, auto-incr addr */
-+		/* NOTE: Use the debugless read so we don't flood kernel log
-+		 * if IWL_DL_IO is set */
-+		val = _iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
-+		if (val != le32_to_cpu(*image)) {
-+			IWL_ERROR("uCode INST section is invalid at "
-+				  "offset 0x%x, is 0x%x, s/b 0x%x\n",
-+				  save_len - len, val, le32_to_cpu(*image));
-+			ret = -EIO;
-+			errcnt++;
-+			if (errcnt >= 20)
-+				break;
-+		}
-+	}
-+
-+	iwl_release_nic_access(priv);
-+
-+	if (!errcnt)
-+		IWL_DEBUG_INFO
-+		    ("ucode image in INSTRUCTION memory is good\n");
-+
-+	return ret;
-+}
-+
-+/**
-+ * iwl_verify_ucode - determine which instruction image is in SRAM,
-+ *    and verify its contents
-+ */
-+int iwl_verify_ucode(struct iwl_priv *priv)
-+{
-+	__le32 *image;
-+	u32 len;
-+	int ret;
-+
-+	/* Try bootstrap */
-+	image = (__le32 *)priv->ucode_boot.v_addr;
-+	len = priv->ucode_boot.len;
-+	ret = iwlcore_verify_inst_sparse(priv, image, len);
-+	if (!ret) {
-+		IWL_DEBUG_INFO("Bootstrap uCode is good in inst SRAM\n");
-+		return 0;
-+	}
-+
-+	/* Try initialize */
-+	image = (__le32 *)priv->ucode_init.v_addr;
-+	len = priv->ucode_init.len;
-+	ret = iwlcore_verify_inst_sparse(priv, image, len);
-+	if (!ret) {
-+		IWL_DEBUG_INFO("Initialize uCode is good in inst SRAM\n");
-+		return 0;
-+	}
-+
-+	/* Try runtime/protocol */
-+	image = (__le32 *)priv->ucode_code.v_addr;
-+	len = priv->ucode_code.len;
-+	ret = iwlcore_verify_inst_sparse(priv, image, len);
-+	if (!ret) {
-+		IWL_DEBUG_INFO("Runtime uCode is good in inst SRAM\n");
-+		return 0;
-+	}
-+
-+	IWL_ERROR("NO VALID UCODE IMAGE IN INSTRUCTION SRAM!!\n");
-+
-+	/* Since nothing seems to match, show first several data entries in
-+	 * instruction SRAM, so maybe visual inspection will give a clue.
-+	 * Selection of bootstrap image (vs. other images) is arbitrary. */
-+	image = (__le32 *)priv->ucode_boot.v_addr;
-+	len = priv->ucode_boot.len;
-+	ret = iwl_verify_inst_full(priv, image, len);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(iwl_verify_ucode);
-+
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e18940d..8196ef7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -253,6 +253,7 @@ enum iwlcore_card_notify {
- int iwlcore_low_level_notify(struct iwl_priv *priv,
- 			     enum iwlcore_card_notify notify);
- extern int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags);
-+extern int iwl_verify_ucode(struct iwl_priv *priv);
- int iwl_send_lq_cmd(struct iwl_priv *priv,
- 		    struct iwl_link_quality_cmd *lq, u8 flags);
+ config IWLWIFI_LEDS
+-	bool "Enable LEDS features in iwlwifi driver"
++	bool
+ 	depends on IWLCORE && MAC80211_LEDS && LEDS_CLASS
+-	---help---
+-	  This option enables LEDS for the iwlwifi drivers
+-
  
+-config IWLCORE_RFKILL
+-	boolean "IWLWIFI RF kill support"
++config IWLWIFI_DEBUG
++	bool
+ 	depends on IWLCORE
+-	select RFKILL
+-	select RFKILL_INPUT
+ 
+ config IWL4965
+ 	tristate "Intel Wireless WiFi 4965AGN"
+@@ -52,9 +47,10 @@ config IWL4965_HT
+ 
+ config IWL4965_LEDS
+ 	bool "Enable LEDS features in iwl4965 driver"
+-	depends on IWL4965 && IWLWIFI_LEDS
++	depends on IWL4965
++	select IWLWIFI_LEDS
+ 	---help---
+-	  This option enables LEDS for the iwlwifi drivers
++	  This option enables LEDS for the iwl4965 driver.
+ 
+ 
+ config IWL4965_SPECTRUM_MEASUREMENT
+@@ -70,7 +66,7 @@ config IWL4965_SENSITIVITY
+ 	  This option will enable sensitivity calibration for the iwl4965
+ 	  driver.
+ 
+-config IWLWIFI_DEBUG
++config IWL4965_DEBUG
+ 	bool "Enable full debugging output in iwl4965 driver"
+ 	depends on IWL4965
+ 	---help---
+@@ -96,8 +92,14 @@ config IWLWIFI_DEBUG
+ 	  as the debug information can assist others in helping you resolve
+ 	  any problems you may encounter.
+ 
++config IWLCORE_RFKILL
++	boolean "Iwlwifi (4965+) RF kill support"
++	depends on IWLCORE
++	select RFKILL
++	select RFKILL_INPUT
++
+ config IWLWIFI_DEBUGFS
+-        bool "Iwlwifi debugfs support"
++        bool "Iwlwifi (4965+) debugfs support"
+         depends on IWLCORE && IWLWIFI_DEBUG && MAC80211_DEBUGFS
+         ---help---
+ 	  Enable creation of debugfs files for the iwlwifi drivers.
 diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 9e46517..d2726dc 100644
+index 385ec7a..2bbdf64 100644
 --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
 +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4512,146 +4512,6 @@ static void iwl4965_dealloc_ucode_pci(struct iwl_priv *priv)
- 	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_boot);
+@@ -67,7 +67,7 @@ static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
+ 
+ #define DRV_DESCRIPTION	"Intel(R) Wireless WiFi Link 4965AGN driver for Linux"
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ #define VD "d"
+ #else
+ #define VD
+@@ -2363,7 +2363,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	if (ieee80211_is_auth(fc))
+ 		IWL_DEBUG_TX("Sending AUTH frame\n");
+ 	else if (ieee80211_is_assoc_request(fc))
+@@ -3335,7 +3335,7 @@ static void iwl4965_rx_spectrum_measure_notif(struct iwl_priv *priv,
+ static void iwl4965_rx_pm_sleep_notif(struct iwl_priv *priv,
+ 				  struct iwl4965_rx_mem_buffer *rxb)
+ {
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	struct iwl4965_rx_packet *pkt = (void *)rxb->skb->data;
+ 	struct iwl4965_sleep_notification *sleep = &(pkt->u.sleep_notif);
+ 	IWL_DEBUG_RX("sleep mode: %d, src: %d\n",
+@@ -3381,7 +3381,7 @@ static void iwl4965_bg_beacon_update(struct work_struct *work)
+ static void iwl4965_rx_beacon_notif(struct iwl_priv *priv,
+ 				struct iwl4965_rx_mem_buffer *rxb)
+ {
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	struct iwl4965_rx_packet *pkt = (void *)rxb->skb->data;
+ 	struct iwl4965_beacon_notif *beacon = &(pkt->u.beacon_status);
+ 	u8 rate = iwl4965_hw_get_rate(beacon->beacon_notify_hdr.rate_n_flags);
+@@ -3404,7 +3404,7 @@ static void iwl4965_rx_beacon_notif(struct iwl_priv *priv,
+ static void iwl4965_rx_reply_scan(struct iwl_priv *priv,
+ 			      struct iwl4965_rx_mem_buffer *rxb)
+ {
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	struct iwl4965_rx_packet *pkt = (void *)rxb->skb->data;
+ 	struct iwl4965_scanreq_notification *notif =
+ 	    (struct iwl4965_scanreq_notification *)pkt->u.raw;
+@@ -4255,7 +4255,7 @@ static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
+ 	return rc;
  }
  
--/**
-- * iwl4965_verify_inst_full - verify runtime uCode image in card vs. host,
-- *     looking at all data.
-- */
--static int iwl4965_verify_inst_full(struct iwl_priv *priv, __le32 *image,
--				 u32 len)
--{
--	u32 val;
--	u32 save_len = len;
--	int rc = 0;
--	u32 errcnt;
--
--	IWL_DEBUG_INFO("ucode inst image size is %u\n", len);
--
--	rc = iwl_grab_nic_access(priv);
--	if (rc)
--		return rc;
--
--	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR, RTC_INST_LOWER_BOUND);
--
--	errcnt = 0;
--	for (; len > 0; len -= sizeof(u32), image++) {
--		/* read data comes through single port, auto-incr addr */
--		/* NOTE: Use the debugless read so we don't flood kernel log
--		 * if IWL_DL_IO is set */
--		val = _iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
--		if (val != le32_to_cpu(*image)) {
--			IWL_ERROR("uCode INST section is invalid at "
--				  "offset 0x%x, is 0x%x, s/b 0x%x\n",
--				  save_len - len, val, le32_to_cpu(*image));
--			rc = -EIO;
--			errcnt++;
--			if (errcnt >= 20)
--				break;
--		}
--	}
--
--	iwl_release_nic_access(priv);
--
--	if (!errcnt)
--		IWL_DEBUG_INFO
--		    ("ucode image in INSTRUCTION memory is good\n");
--
--	return rc;
--}
--
--
--/**
-- * iwl4965_verify_inst_sparse - verify runtime uCode image in card vs. host,
-- *   using sample data 100 bytes apart.  If these sample points are good,
-- *   it's a pretty good bet that everything between them is good, too.
-- */
--static int iwl4965_verify_inst_sparse(struct iwl_priv *priv, __le32 *image, u32 len)
--{
--	u32 val;
--	int rc = 0;
--	u32 errcnt = 0;
--	u32 i;
--
--	IWL_DEBUG_INFO("ucode inst image size is %u\n", len);
--
--	rc = iwl_grab_nic_access(priv);
--	if (rc)
--		return rc;
--
--	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
--		/* read data comes through single port, auto-incr addr */
--		/* NOTE: Use the debugless read so we don't flood kernel log
--		 * if IWL_DL_IO is set */
--		iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR,
--			i + RTC_INST_LOWER_BOUND);
--		val = _iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
--		if (val != le32_to_cpu(*image)) {
--#if 0 /* Enable this if you want to see details */
--			IWL_ERROR("uCode INST section is invalid at "
--				  "offset 0x%x, is 0x%x, s/b 0x%x\n",
--				  i, val, *image);
--#endif
--			rc = -EIO;
--			errcnt++;
--			if (errcnt >= 3)
--				break;
--		}
--	}
--
--	iwl_release_nic_access(priv);
--
--	return rc;
--}
--
--
--/**
-- * iwl4965_verify_ucode - determine which instruction image is in SRAM,
-- *    and verify its contents
-- */
--static int iwl4965_verify_ucode(struct iwl_priv *priv)
--{
--	__le32 *image;
--	u32 len;
--	int rc = 0;
--
--	/* Try bootstrap */
--	image = (__le32 *)priv->ucode_boot.v_addr;
--	len = priv->ucode_boot.len;
--	rc = iwl4965_verify_inst_sparse(priv, image, len);
--	if (rc == 0) {
--		IWL_DEBUG_INFO("Bootstrap uCode is good in inst SRAM\n");
--		return 0;
--	}
--
--	/* Try initialize */
--	image = (__le32 *)priv->ucode_init.v_addr;
--	len = priv->ucode_init.len;
--	rc = iwl4965_verify_inst_sparse(priv, image, len);
--	if (rc == 0) {
--		IWL_DEBUG_INFO("Initialize uCode is good in inst SRAM\n");
--		return 0;
--	}
--
--	/* Try runtime/protocol */
--	image = (__le32 *)priv->ucode_code.v_addr;
--	len = priv->ucode_code.len;
--	rc = iwl4965_verify_inst_sparse(priv, image, len);
--	if (rc == 0) {
--		IWL_DEBUG_INFO("Runtime uCode is good in inst SRAM\n");
--		return 0;
--	}
--
--	IWL_ERROR("NO VALID UCODE IMAGE IN INSTRUCTION SRAM!!\n");
--
--	/* Since nothing seems to match, show first several data entries in
--	 * instruction SRAM, so maybe visual inspection will give a clue.
--	 * Selection of bootstrap image (vs. other images) is arbitrary. */
--	image = (__le32 *)priv->ucode_boot.v_addr;
--	len = priv->ucode_boot.len;
--	rc = iwl4965_verify_inst_full(priv, image, len);
--
--	return rc;
--}
--
- static void iwl4965_nic_start(struct iwl_priv *priv)
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ static void iwl4965_print_rx_config_cmd(struct iwl4965_rxon_cmd *rxon)
  {
- 	/* Remove all resets to allow NIC to operate */
-@@ -4927,7 +4787,7 @@ static void iwl4965_init_alive_start(struct iwl_priv *priv)
- 	/* Bootstrap uCode has loaded initialize uCode ... verify inst image.
- 	 * This is a paranoid check, because we would not have gotten the
- 	 * "initialize" alive if code weren't properly loaded.  */
--	if (iwl4965_verify_ucode(priv)) {
-+	if (iwl_verify_ucode(priv)) {
- 		/* Runtime instruction load was bad;
- 		 * take it all the way back down so we can try again */
- 		IWL_DEBUG_INFO("Bad \"initialize\" uCode load.\n");
-@@ -4975,7 +4835,7 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 	/* Initialize uCode has loaded Runtime uCode ... verify inst image.
- 	 * This is a paranoid check, because we would not have gotten the
- 	 * "runtime" alive if code weren't properly loaded.  */
--	if (iwl4965_verify_ucode(priv)) {
-+	if (iwl_verify_ucode(priv)) {
- 		/* Runtime instruction load was bad;
- 		 * take it all the way back down so we can try again */
- 		IWL_DEBUG_INFO("Bad runtime uCode load.\n");
+ 	DECLARE_MAC_BUF(mac);
+@@ -4486,7 +4486,7 @@ static void iwl4965_irq_handle_error(struct iwl_priv *priv)
+ 	/* Cancel currently queued command. */
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	if (iwl_debug_level & IWL_DL_FW_ERRORS) {
+ 		iwl4965_dump_nic_error_log(priv);
+ 		iwl4965_dump_nic_event_log(priv);
+@@ -4535,7 +4535,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 	u32 inta, handled = 0;
+ 	u32 inta_fh;
+ 	unsigned long flags;
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	u32 inta_mask;
+ #endif
+ 
+@@ -4553,7 +4553,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 	inta_fh = iwl_read32(priv, CSR_FH_INT_STATUS);
+ 	iwl_write32(priv, CSR_FH_INT_STATUS, inta_fh);
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	if (iwl_debug_level & IWL_DL_ISR) {
+ 		/* just for debug */
+ 		inta_mask = iwl_read32(priv, CSR_INT_MASK);
+@@ -4587,7 +4587,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 		return;
+ 	}
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	if (iwl_debug_level & (IWL_DL_ISR)) {
+ 		/* NIC fires this, but we don't use it, redundant with WAKEUP */
+ 		if (inta & CSR_INT_BIT_SCD)
+@@ -4680,7 +4680,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+ 		iwl4965_enable_interrupts(priv);
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	if (iwl_debug_level & (IWL_DL_ISR)) {
+ 		inta = iwl_read32(priv, CSR_INT);
+ 		inta_mask = iwl_read32(priv, CSR_INT_MASK);
+@@ -7443,7 +7443,7 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+  *
+  *****************************************************************************/
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 
+ /*
+  * The following adds a new attribute to the sysfs representation
+@@ -7476,7 +7476,7 @@ static ssize_t store_debug_level(struct device_driver *d,
+ static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+ 		   show_debug_level, store_debug_level);
+ 
+-#endif /* CONFIG_IWLWIFI_DEBUG */
++#endif /* CONFIG_IWL4965_DEBUG */
+ 
+ 
+ static ssize_t show_temperature(struct device *d,
+@@ -8035,7 +8035,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	priv->cfg = cfg;
+ 	priv->pci_dev = pdev;
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	iwl_debug_level = priv->cfg->mod_params->debug;
+ 	atomic_set(&priv->restrict_refcnt, 0);
+ #endif
+@@ -8333,7 +8333,7 @@ static int __init iwl4965_init(void)
+ 		IWL_ERROR("Unable to initialize PCI module\n");
+ 		goto error_register;
+ 	}
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	ret = driver_create_file(&iwl4965_driver.driver, &driver_attr_debug_level);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to create driver sysfs file\n");
+@@ -8354,7 +8354,7 @@ error_register:
+ 
+ static void __exit iwl4965_exit(void)
+ {
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWL4965_DEBUG
+ 	driver_remove_file(&iwl4965_driver.driver, &driver_attr_debug_level);
+ #endif
+ 	pci_unregister_driver(&iwl4965_driver);
 -- 
-1.5.3.4
+1.5.5.rc1.121.g1594
 
