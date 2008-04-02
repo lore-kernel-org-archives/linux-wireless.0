@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:43406 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757185AbYDZUeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 16:34:05 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so4193829fgb.17
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 13:34:03 -0700 (PDT)
-Date: Sat, 26 Apr 2008 22:34:08 +0200
-From: Luca Tettamanti <kronos.it@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH] Fix compile error with wifi & leds
-Message-ID: <20080426203408.GA12074@dreamland.darkstar.lan> (sfid-20080426_223426_560044_06868534)
+Received: from ra.tuxdriver.com ([70.61.120.52]:3197 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751703AbYDBBEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 21:04:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] drivers/net/wireless/iwlwifi/iwl-debugfs.c: fix another '%llu' warning
+Date: Tue,  1 Apr 2008 20:59:32 -0400
+Message-Id: <1207097972-16649-1-git-send-email-linville@tuxdriver.com> (sfid-20080402_020433_602919_9374E15E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I encountered a build error with current git tree:
+drivers/net/wireless/iwlwifi/iwl-debugfs.c: In function =E2=80=98iwl_db=
+gfs_stations_read=E2=80=99:
+drivers/net/wireless/iwlwifi/iwl-debugfs.c:247: warning: format =E2=80=98=
+%llu=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, bu=
+t argument 4 has type =E2=80=98u64=E2=80=99
 
-  CC [M]  net/mac80211/led.o
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c: In function 'ieee80211_led_init':
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:58: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:62: error: dereferencing pointer to incomplete type
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:63: error: implicit declaration of function 'led_trigger_register'
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:69: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:73: error: dereferencing pointer to incomplete type
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:80: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:84: error: dereferencing pointer to incomplete type
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:91: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:95: error: dereferencing pointer to incomplete type
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c: In function 'ieee80211_led_exit':
-/home/kronos/src/linux-2.6.git/net/mac80211/led.c:106: error: implicit declaration of function 'led_trigger_unregister'
-make[3]: *** [net/mac80211/led.o] Error 1
-make[2]: *** [net/mac80211] Error 2
-make[1]: *** [net] Error 2
-make: *** [sub-make] Error 2
-
-This has been caused by commit e82404ad612ebabc65d15c3d59b971cb35c3ff36
-from David Miller:
-
- config IWL4965_LEDS
-        bool "Enable LEDS features in iwl4965 driver"
--       depends on IWL4965 && MAC80211_LEDS && LEDS_CLASS
-+       depends on IWL4965
-+       select MAC80211_LEDS
-+       select LEDS_CLASS
-
-
-the problem is that MAC80211_LEDS *depends* on LEDS_TRIGGER but does not
-_select_ it. IOW enabling IWL4965_LEDS enables MAC80211_LEDS which in
-turn does not compile if LEDS_TRIGGER is not enabled.
-
-LEDS_TRIGGER is not enough though, NEW_LEDS (which is a menuconfig
-guarding the aforementioned symbol) must also be selected.
-
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
+I finally have a 64-bit box in my build stable...(thanks, Sony!)
 
-Since MAC80211_LEDS is selected by wireless drivers it must select its
-own dependencies otherwise a build error may occur (kbuild will select
-the symbol regardless of "depends" constraints).
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Signed-Off-By: Luca Tettamanti <kronos.it@gmail.com>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/w=
+ireless/iwlwifi/iwl-debugfs.c
+index b2cc552..447ff2c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -243,7 +243,7 @@ static ssize_t iwl_dbgfs_stations_read(struct file =
+*file, char __user *user_buf,
+ 						station->tid[j].agg.wait_for_ba);
+ 				pos +=3D sprintf(buf+pos, "%u\t%llu\t%u\n",
+ 						station->tid[j].agg.start_idx,
+-						station->tid[j].agg.bitmap,
++						(unsigned long long)station->tid[j].agg.bitmap,
+ 						station->tid[j].agg.rate_n_flags);
+ 			}
+ 			pos +=3D sprintf(buf+pos, "\n");
+--=20
+1.5.3.3
 
----
-
- net/mac80211/Kconfig |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 520a518..a24b459 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -73,7 +73,9 @@ config MAC80211_MESH
-
- config MAC80211_LEDS
- 	bool "Enable LED triggers"
--	depends on MAC80211 && LEDS_TRIGGERS
-+	depends on MAC80211
-+	select NEW_LEDS
-+	select LEDS_TRIGGERS
- 	---help---
- 	  This option enables a few LED triggers for different
- 	  packet receive/transmit events.
-
-
-Luca
--- 
-Io sono un uomo che non deve chiedere mai. Di solito imploro.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
