@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:10268 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760950AbYDAVTT (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:57444 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758243AbYDBWvF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 17:19:19 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so1343063rng.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 14:19:18 -0700 (PDT)
-Message-ID: <1ba2fa240804011419l1b825c7cnd02790257af9112c@mail.gmail.com> (sfid-20080401_221937_344116_2D036939)
-Date: Wed, 2 Apr 2008 00:19:12 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: holding sta_info for non associated stations
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1207052896.5143.76.camel@johannes.berg>
+	Wed, 2 Apr 2008 18:51:05 -0400
+From: Chr <chunkeey@web.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
+Date: Thu, 3 Apr 2008 00:51:01 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+References: <200804012145.18294.chunkeey@web.de> <1207128858.10910.19.camel@johannes.berg> <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com>
+In-Reply-To: <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c85cb4470803310746h36b20d0egce98f8cea3becb0b@mail.gmail.com>
-	 <1207052896.5143.76.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804030051.02391.chunkeey@web.de> (sfid-20080402_235109_495512_FA341E9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 1, 2008 at 3:28 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
+On Wednesday 02 April 2008 22:05:46 Tomas Winkler wrote:
+> On Wed, Apr 2, 2008 at 12:34 PM, Johannes Berg
 >
+> <johannes@sipsolutions.net> wrote:
+> >  On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
+> >  > This patch is necessary for the upcoming Accesspoint patch for p54.
+> >
+> >  Hm. I don't like increasing the tx control structure size but I guess
+> >  you really need that :)
+> >
+> >  > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> >
+> >  Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> >
+> >  Please CC the appropriate maintainers (i.e. at least me for mac80211) on
+> >  code changes.
 >
->  > If i associate to a random AP "x" (what happened automatically as i
->  > was configured by ifup scripts to do that), and then scan and
->  > associate to my desired AP "y", i notice that AP "x" was not removed
->  > from the mac80211 station table. Then, what happened was that during
->  > ieee80211_stop, when we reach
->  >
->  > list_for_each_entry_rcu(sta, &local->sta_list, list) {
->  >     if (sta->sdata == sdata)
->  >     ieee80211_sta_tear_down_BA_sessions(dev, sta->addr);
->  > }
->  >
->  > we try to tear down sessions to irrelevant stations (AP "x" in my
->  > example), which leads to bugs.
->
->  Why would that lead to bugs? That station was known, and there are no
->  sessions for that AP.
+> Not sure why this cannot be bookeeped in the driver.
+> Upon association AID is delivered to driver, so every packet that will
+> be sent to this AP has this AID?
 
-It's like freeing twice the same a pointer. On what level will you
-check that there are no BA session with this ghost  AP?
+hmm? where? sta_notify just gives us the mac-address and a command.
+(maybe you have mixed it up with set_tim?!)
 
->
->  > did i miss something, or is there really a problem in the state
->  > machine in the described scenario?
->
->  There might be a problem in that we forget to remove that AP under some
->  circumstances but it shouldn't matter, we always can have multiple
->  stations in our table.
+Or do I miss something obvious here?
 
-Not in STA mode, should be associated only to one AP at a time. (Hope
-this also cover roaming).
+Regards,
+	Chr.
 
-Tomas
+
+
+
