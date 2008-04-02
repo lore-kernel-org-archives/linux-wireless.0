@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:57976 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752816AbYDMXAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2008 19:00:52 -0400
-Date: Mon, 14 Apr 2008 01:00:24 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] b43legacy: Fix usage of struct device used for
- DMAing
-Message-ID: <20080414010024.3ea2d264@polimi.it> (sfid-20080414_000054_010594_48C14A9C)
-In-Reply-To: <200804111216.36589.mb@bu3sch.de>
-References: <200804111216.36589.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga09.intel.com ([134.134.136.24]:30266 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754273AbYDBQwc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 12:52:32 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH] drivers/net/wireless/iwlwifi/iwl-3945.h: correct CONFIG_IWL4965_LEDS typo
+Date: Wed, 2 Apr 2008 09:52:18 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200415A66F@orsmsx416.amr.corp.intel.com> (sfid-20080402_175234_267888_E74B05C3)
+In-Reply-To: <1207150532-30440-1-git-send-email-linville@tuxdriver.com>
+References: <47F38D53.3020901@tilanus.com> <1207150532-30440-1-git-send-email-linville@tuxdriver.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: <ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 11 Apr 2008 12:16:36 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+On , John W. Linville  wrote:
 
-> This fixes b43legacy for the SSB DMA API change.
+> Thakns to Winfried Tilanus <winfried@tilanus.com> for identifying the
+> problem! 
 > 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> Cc: Stefano Brivio <stefano.brivio@polimi.it>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com> ---
 
-Acked-by: Stefano Brivio <stefano.brivio@polimi.it>
+Thanks! I just sent the same patch myself.
+
+Reinette
 
 
---
-Ciao
-Stefano
