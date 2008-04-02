@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:35906 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758925AbYDAVjj (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:22349 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754284AbYDBVAn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 17:39:39 -0400
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][PATCH 0/4] p54: various updates
-Cc: Michael Wu <flamingice@sourmilk.net>
+	Wed, 2 Apr 2008 17:00:43 -0400
 MIME-Version: 1.0
-Date: Tue, 1 Apr 2008 23:39:36 +0200
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804012339.37204.chunkeey@web.de> (sfid-20080401_223943_580841_30803FEE)
+	charset="us-ascii"
+Subject: RE: [PATCH 0/4] mac80211 and iwlwifi driver updates
+Date: Wed, 2 Apr 2008 14:00:21 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892004194A96@orsmsx416.amr.corp.intel.com> (sfid-20080402_220047_248453_E1FD9D26)
+In-Reply-To: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
+References: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Friday, March 28, 2008 4:34 PM, Chatre, Reinette  wrote:
 
-this is the next RFC round...
+> This series eliminates conf_ht, adds more information to bss_conf, and
+> eliminates association from a beacon.
+> 
+> [PATCH 1/4] mac80211: eliminate conf_ht
+> [PATCH 2/4] iwlwifi: eliminate conf_ht
+> [PATCH 3/4] mac80211: add association capabilty and timing
+> info into bss_conf
+> [PATCH 4/4] iwlwifi: Eliminate association from beacon
+> 
 
-1) rename all prism54* to p54* (to match the filenames)
-2) rx_tasklet for p54pci
-3) link statistics
-4) AP-Patch 
+John and Johannes,
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+This patch series seems to have slipped through unnoticed. Could you
+please consider it for merging to wireless-testing?
 
----
-diffstat: 
- p54.h       |   40 ++++
- p54common.c |  487 
-++++++++++++++++++++++++++++++++++++++++++++++++------------
- p54common.h |  111 ++++++++++---
- p54pci.c    |  283 ++++++++++++++++++++++------------
- p54pci.h    |   20 +-
- p54usb.c    |   34 ++--
- p54usb.h    |    6
- 7 files changed, 726 insertions(+), 255 deletions(-)
+Thank you
+
+Reinette
