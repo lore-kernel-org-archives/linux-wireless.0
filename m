@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47536 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753600AbYDUI0d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 04:26:33 -0400
-Subject: Re: [RFC 0/3] Examples for the new sparse context tracking
-	functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: paulmck@linux.vnet.ibm.com
-Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <20080419233338.GG20138@linux.vnet.ibm.com>
-References: <20080410134810.629048000@sipsolutions.net>
-	 <20080419233338.GG20138@linux.vnet.ibm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zXfPgHTr0bx60QQxTjW1"
-Date: Mon, 21 Apr 2008 10:25:55 +0200
-Message-Id: <1208766355.26186.37.camel@johannes.berg> (sfid-20080421_092637_595578_22B8661B)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3817 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751226AbYDBAeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2008 20:34:16 -0400
+Date: Tue, 1 Apr 2008 20:18:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: wireless mini-summit agenda proposals?
+Message-ID: <20080402001840.GA9830@tuxdriver.com> (sfid-20080402_013423_268785_112417C3)
+References: <20080131162514.GC6413@tuxdriver.com> <1201801923.3000.13.camel@localhost.localdomain> <20080328203246.GB810@tuxdriver.com> <20080331201212.GB13799@tuxdriver.com> <1207052632.5143.70.camel@johannes.berg> <1207059142.5143.106.camel@johannes.berg> <40f31dec0804011600y60ce5b37n36daac3576c6c810@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0804011600y60ce5b37n36daac3576c6c810@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Apr 02, 2008 at 02:00:49AM +0300, Nick Kossifidis wrote:
 
---=-zXfPgHTr0bx60QQxTjW1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Should we make reservations etc until 26 ? How many days we 'll have
+> for the summit ?
 
+The mini-summit is just the 22nd.  However OLS is the 23rd through
+the 26th.  I recommend staying for OLS both to experience and/or enjoy
+the event itself but also for the extended opportunities to continue
+discussions with other wireless developers and other members of the
+Linux community.
 
-> At some point in the future, we might want to distinguish between
-> the different flavors of RCU -- except that there is already common
-> code that doesn't care which flavor of RCU is in use, as long as
-> some sort of RCU is present.  So make that "some point in the distant
-> future"...
+The OLS folks seem to be recommending that people leave on the 28th.
+However I usually leave on Sunday, in this case the 27th.
 
-No big deal, just declare
+Hth!  I hope to see you there!
 
-my_specific_rcu_get() __acquires(RCU) __acquires(specificRCU);
-
-and then annotate whatever needs the specific RCU type with
-__requires(specificRCU)
-
-johannes
-
---=-zXfPgHTr0bx60QQxTjW1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAxPkaVg1VMiehFYAQLCJg//XzY1TPDQloPBagkmx8DylFB7yBu4Lnlz
-gNcU89xyITrDTtV0er7U+/jM56duWUEDv2wjnxBNAvHwUM2CkapRUvOzIJbAYBwR
-Ds4FMfyY5KMXs2Iz5jkjnrq7UIzOCkaywmjilZIcYY5mtXqKphj0z3lmhn4PixM7
-mQXxhJUgEVQcnk4dBxYOgWE6AbS/Spp8gqK6FtgLFWVpY/pu4AIucXmHWSSMYKY2
-NfuqszqaU43o4gQe1t3Zb2MXJyC/3YFL9gokp8zn7rnRvzIk9imxJorLP0gC6FoH
-Voy5nimZzEp2LzaIX75RJRpFQRVNLqjrpy6FJKcpWd+di9PpZSjygkzKFxM6U9IZ
-hBw6CxnswdUm7ROPcQ1I1EnB+9AnRauaWmamz5k65PAxEihj18fdivSGzZ83kGp1
-iOZJQel8G9hvCSvmFJDc3XMf58IAifHWI3fdtKfpZE06C1lEX3M2uqjrj0JyjBCg
-HjY+AzflghF/uCD0iaqzNi3VnmSQV/dSuM0QH4aY6cayORMnL/BLP8LSpgE/E7vc
-h0vhw60uyq2PYXsBDeIFjAtoK17Zqv7CJ8tnMqbMvWxY2n9rfbSvF7IGymqrQk4M
-6HnycEc7zIVPFw/c6/oC532YwbWk7jH3eb5R/D2AQZ1PRDjQhNPZV0KFDWySXGeC
-/zqEjyI3h2Y=
-=B43P
------END PGP SIGNATURE-----
-
---=-zXfPgHTr0bx60QQxTjW1--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
