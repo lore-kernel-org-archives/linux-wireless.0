@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:36898 "EHLO smtp5.pp.htv.fi"
+Received: from c60.cesmail.net ([216.154.195.49]:62281 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752152AbYDWJwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 05:52:07 -0400
-Date: Wed, 23 Apr 2008 12:51:28 +0300
-From: Adrian Bunk <bunk@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [2.6 patch] net/mac80211/rx.c: fix off-by-one
-Message-ID: <20080423095128.GY28933@cs181133002.pp.htv.fi> (sfid-20080423_115301_785840_347A2309)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1758048AbYDBTsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 15:48:08 -0400
+Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support
+	WPA2 wireless network with PEAP - MSCHAPV2
+From: Pavel Roskin <proski@gnu.org>
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: Luca Venturini <lucventurini@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080402122440.GA24239@csclub.uwaterloo.ca>
+References: <47F1F4F4.2080502@gmail.com>
+	 <20080401164419.GA3530@tuxdriver.com>
+	 <5d75f4610804011306y55352e73sb5223a294b66f2cf@mail.gmail.com>
+	 <47F2A2F0.4060908@gmail.com>
+	 <20080401205435.iov001h7gxs0o8sc@webmail.spamcop.net>
+	 <20080402122440.GA24239@csclub.uwaterloo.ca>
+Content-Type: text/plain
+Date: Wed, 02 Apr 2008 15:48:05 -0400
+Message-Id: <1207165685.7840.5.camel@dv> (sfid-20080402_204813_032480_B52643E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an off-by-one in net/mac80211/rx.c introduced by
-commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
-(cfg80211 API for channels/bitrates, mac80211 and driver conversion)
-and spotted by the Coverity checker.
+On Wed, 2008-04-02 at 08:24 -0400, Lennart Sorensen wrote:
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> Strangely I find with the 2.6.24 kernel currently in Debian, the intel
+> wireless seemed to work great with WPA2 (at least on a 4965).  Maybe
+> that was 2.6.24.2 or 2.6.24.3 or something.  It was a couple of weeks
+> ago now.  I haven't heard of the 4935 before.
 
----
---- linux-2.6/net/mac80211/rx.c.old	2008-04-22 02:23:40.000000000 +0300
-+++ linux-2.6/net/mac80211/rx.c	2008-04-22 02:24:23.000000000 +0300
-@@ -2168,11 +2168,11 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	u32 pkt_load;
- 	struct ieee80211_rate *rate = NULL;
- 	struct ieee80211_supported_band *sband;
- 
- 	if (status->band < 0 ||
--	    status->band > IEEE80211_NUM_BANDS) {
-+	    status->band >= IEEE80211_NUM_BANDS) {
- 		WARN_ON(1);
- 		return;
- 	}
- 
- 	sband = local->hw.wiphy->bands[status->band];
+Since nobody has mentioned that, it's possible to compile the latest
+wireless drivers for the current kernel (starting with 2.6.18) thanks to
+the compat-wireless package:
 
+http://linuxwireless.org/en/users/Download
+
+That should be of great help for those looking to use the latest
+wireless drivers without having to recompile the currently used kernel.
+
+-- 
+Regards,
+Pavel Roskin
