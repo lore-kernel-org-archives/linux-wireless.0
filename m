@@ -1,185 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:60336 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbYDENDD (ORCPT
+Received: from smtp103.prem.mail.ac4.yahoo.com ([76.13.13.42]:41269 "HELO
+	smtp103.prem.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753026AbYDBPff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2008 09:03:03 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix beacon BH update
-Date: Sat, 5 Apr 2008 15:02:09 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+	Wed, 2 Apr 2008 11:35:35 -0400
+Message-ID: <47F3A7BB.1050501@yahoo.com> (sfid-20080402_163538_341566_89114B58)
+Date: Wed, 02 Apr 2008 11:35:23 -0400
+From: Andres Bertens <abertensu@yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804051502.09379.mb@bu3sch.de> (sfid-20080405_140311_477518_B8DA28A1)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Dan Williams <dcbw@redhat.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4)
+ andtimeout, a solution
+References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>	 <1206999696.20744.2.camel@localhost.localdomain>	 <1207051434.5143.58.camel@johannes.berg>  <47F23C6B.6060205@yahoo.com>	 (sfid-20080401_144755_080818_247DF100) <1207068153.5143.137.camel@johannes.berg>
+In-Reply-To: <1207068153.5143.137.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes beacon updating in the bottomhalf.
-In case the device is busy, we will defer to later in the IRQ handler.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-John, this is for 2.6.26 in addition to the beacon patch I sent yesterday.
 
 
- drivers/net/wireless/b43/main.c |   98 +++++++++++++++++++++++-----------------
- 1 file changed, 57 insertions(+), 41 deletions(-)
+Johannes Berg wrote:
+>> Reason=4 is in fact "Inactivity timer expired and station was 
+>> disassociated". According to my router log:
+>> "Tuesday April 01, 2008 09:08:54 Disassociated: 00-19-D2-4F-22-4D 
+>> because idle 300 seconds"
+>>
+>> Indeed, the default behaviour goes for a reassocation 
+> 
+> Right, I just checked, we try to reassociate after one second.
+> 
+>> but my hw/sw 
+>> combination (intel3945/dlink/wep) fails with a status=17 (AP unable to 
+>> handle new status).
+> 
+> 17 actually is WLAN_REASON_IE_DIFFERENT, i.e. the WPA/RSN IE we send is
+> no longer appropriate, something for wpa_supplicant to handle then. Are
+> you using encryption?
+> 
+>> After 3 tries, it dies with an AP association 
+>> timeout. From there is no recovery till I set the interface down and up.
+>>
+>> That's why I solved it (perhaps not in the best way) ignoring the 
+>> disassociation. Now it works.
+> 
+> Your AP is broken. After it disassociates you and you ignore this
+> status, it complains that it deauthenticated (!) you and then
+> deauthenticates you again (with reason=6 meaning that you weren't
+> authenticated.) 
+> 
+> The thing is, it's disassociating you and thinks it actually
+> deauthenticated you since when you ignore the disassociation and
+> continue sending it frames it starts complaining that you weren't
+> authenticated (reason=6.)
+> 
+> Your fix is obviously wrong, and only fixes the problem for you because
+> it works around your broken AP that needs a re-authentication after it
+> disassociated you.
+> 
+> I'm not sure what we can do about that. Assuming we're deauthenticated
+> seems completely wrong, and I fear that if we assume deauthentication if
+> the association times out then we may easily end up in a loop there.
+> 
+> johannes
 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-05 14:09:33.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-05 14:48:01.000000000 +0200
-@@ -1445,28 +1445,76 @@ static void b43_write_probe_resp_templat
- 	b43_write_template_common(dev, probe_resp_data,
- 				  size, ram_offset, shm_size_offset,
- 				  rate->hw_value);
- 	kfree(probe_resp_data);
- }
- 
-+static void handle_irq_beacon(struct b43_wldev *dev)
-+{
-+	struct b43_wl *wl = dev->wl;
-+	u32 cmd, beacon0_valid, beacon1_valid;
-+
-+	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-+		return;
-+
-+	/* This is the bottom half of the asynchronous beacon update. */
-+
-+	/* Ignore interrupt in the future. */
-+	dev->irq_savedstate &= ~B43_IRQ_BEACON;
-+
-+	cmd = b43_read32(dev, B43_MMIO_MACCMD);
-+	beacon0_valid = (cmd & B43_MACCMD_BEACON0_VALID);
-+	beacon1_valid = (cmd & B43_MACCMD_BEACON1_VALID);
-+
-+	/* Schedule interrupt manually, if busy. */
-+	if (beacon0_valid && beacon1_valid) {
-+		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_BEACON);
-+		dev->irq_savedstate |= B43_IRQ_BEACON;
-+		return;
-+	}
-+
-+	if (!beacon0_valid) {
-+		if (!wl->beacon0_uploaded) {
-+			b43_write_beacon_template(dev, 0x68, 0x18,
-+						  B43_CCK_RATE_1MB);
-+			b43_write_probe_resp_template(dev, 0x268, 0x4A,
-+						      &__b43_ratetable[3]);
-+			wl->beacon0_uploaded = 1;
-+		}
-+		cmd = b43_read32(dev, B43_MMIO_MACCMD);
-+		cmd |= B43_MACCMD_BEACON0_VALID;
-+		b43_write32(dev, B43_MMIO_MACCMD, cmd);
-+	} else if (!beacon1_valid) {
-+		if (!wl->beacon1_uploaded) {
-+			b43_write_beacon_template(dev, 0x468, 0x1A,
-+						  B43_CCK_RATE_1MB);
-+			wl->beacon1_uploaded = 1;
-+		}
-+		cmd = b43_read32(dev, B43_MMIO_MACCMD);
-+		cmd |= B43_MACCMD_BEACON1_VALID;
-+		b43_write32(dev, B43_MMIO_MACCMD, cmd);
-+	}
-+}
-+
- static void b43_beacon_update_trigger_work(struct work_struct *work)
- {
- 	struct b43_wl *wl = container_of(work, struct b43_wl,
- 					 beacon_update_trigger);
- 	struct b43_wldev *dev;
- 
- 	mutex_lock(&wl->mutex);
- 	dev = wl->current_dev;
- 	if (likely(dev && (b43_status(dev) >= B43_STAT_INITIALIZED))) {
--		/* Force the microcode to trigger the
--		 * beacon update bottom-half IRQ. */
- 		spin_lock_irq(&wl->irq_lock);
--		b43_write32(dev, B43_MMIO_MACCMD,
--			    b43_read32(dev, B43_MMIO_MACCMD)
--			    | B43_MACCMD_BEACON0_VALID
--			    | B43_MACCMD_BEACON1_VALID);
-+		/* update beacon right away or defer to irq */
-+		dev->irq_savedstate = b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);
-+		handle_irq_beacon(dev);
-+		/* The handler might have updated the IRQ mask. */
-+		b43_write32(dev, B43_MMIO_GEN_IRQ_MASK,
-+			    dev->irq_savedstate);
-+		mmiowb();
- 		spin_unlock_irq(&wl->irq_lock);
- 	}
- 	mutex_unlock(&wl->mutex);
- }
- 
- /* Asynchronously update the packet templates in template RAM.
-@@ -1517,47 +1565,12 @@ static void b43_set_beacon_int(struct b4
- 		b43_write16(dev, 0x610, beacon_int);
- 	}
- 	b43_time_unlock(dev);
- 	b43dbg(dev->wl, "Set beacon interval to %u\n", beacon_int);
- }
- 
--static void handle_irq_beacon(struct b43_wldev *dev)
--{
--	struct b43_wl *wl = dev->wl;
--	u32 cmd, beacon0_valid, beacon1_valid;
--
--	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
--		return;
--
--	/* This is the bottom half of the asynchronous beacon update. */
--
--	cmd = b43_read32(dev, B43_MMIO_MACCMD);
--	beacon0_valid = (cmd & B43_MACCMD_BEACON0_VALID);
--	beacon1_valid = (cmd & B43_MACCMD_BEACON1_VALID);
--	cmd &= ~(B43_MACCMD_BEACON0_VALID | B43_MACCMD_BEACON1_VALID);
--
--	if (!beacon0_valid) {
--		if (!wl->beacon0_uploaded) {
--			b43_write_beacon_template(dev, 0x68, 0x18,
--						  B43_CCK_RATE_1MB);
--			b43_write_probe_resp_template(dev, 0x268, 0x4A,
--						      &__b43_ratetable[3]);
--			wl->beacon0_uploaded = 1;
--		}
--		cmd |= B43_MACCMD_BEACON0_VALID;
--	} else if (!beacon1_valid) {
--		if (!wl->beacon1_uploaded) {
--			b43_write_beacon_template(dev, 0x468, 0x1A,
--						  B43_CCK_RATE_1MB);
--			wl->beacon1_uploaded = 1;
--		}
--		cmd |= B43_MACCMD_BEACON1_VALID;
--	}
--	b43_write32(dev, B43_MMIO_MACCMD, cmd);
--}
--
- static void handle_irq_ucode_debug(struct b43_wldev *dev)
- {
- 	//TODO
- }
- 
- /* Interrupt handler bottom-half */
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-04-05 14:41:57.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-05 14:45:06.000000000 +0200
-@@ -408,13 +408,12 @@ enum {
- #define B43_IRQ_TX_OK			0x20000000
- #define B43_IRQ_PHY_G_CHANGED		0x40000000
- #define B43_IRQ_TIMEOUT			0x80000000
- 
- #define B43_IRQ_ALL			0xFFFFFFFF
- #define B43_IRQ_MASKTEMPLATE		(B43_IRQ_MAC_SUSPENDED | \
--					 B43_IRQ_BEACON | \
- 					 B43_IRQ_TBTT_INDI | \
- 					 B43_IRQ_ATIM_END | \
- 					 B43_IRQ_PMQ | \
- 					 B43_IRQ_MAC_TXERR | \
- 					 B43_IRQ_PHY_TXERR | \
- 					 B43_IRQ_DMA | \
+Sorry to hear my AP is broken.
+
+It works ok with other 2 computers with different cards (intel2200bg and 
+dlink w/texas acx100) under Linux (ipw2200/acx100) or Windows. No 
+problem at all. It worked flawlessly with my notebook (intel3945) using 
+ipw3945 with any pre-2.6.24.x kernel.
+
+A couple of months ago I tried kernel 2.6.24 with iwlwifi and moved back 
+due to this problem. A week ago, I tried again but this time getting 
+into the code and I'm still using kernel 2.6.24.4 with this fix which is 
+obviously wrong.
+
+I guess you will hear more often about this problem when more people 
+moves to kernel 2.6.24.x.
+
+Regards,
+Andres
