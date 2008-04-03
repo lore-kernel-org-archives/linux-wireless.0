@@ -1,145 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fenrir.org.uk ([81.168.115.223]:59338 "EHLO mx.fenrir.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754861AbYDUJOo convert rfc822-to-8bit (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.176]:22870 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755562AbYDCNP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 05:14:44 -0400
-Received: from [62.189.241.202] (helo=[10.104.10.102])
-	(TLSv1:AES256-SHA:256)
-	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
-	id 1Jns6k-0005SV-QC
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:14:42 +0100
-Message-ID: <480C5AFF.5020005@fenrir.org.uk> (sfid-20080421_101455_395583_495A4EE6)
-Date: Mon, 21 Apr 2008 10:14:39 +0100
-From: Brian Morrison <bdm@fenrir.org.uk>
+	Thu, 3 Apr 2008 09:15:59 -0400
+Received: by el-out-1112.google.com with SMTP id v27so1609656ele.17
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 06:15:58 -0700 (PDT)
+Message-ID: <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com> (sfid-20080403_141602_246433_5F230782)
+Date: Thu, 3 Apr 2008 09:15:57 -0400
+From: "Miles Lane" <miles.lane@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX non-WEP frame, but expected encryption"
+Cc: "Jiri Benc" <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1207226756.3636.66.camel@johannes.berg>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [ipw3945-devel] iwl3945: Disabled channels
-References: <fuhkfp$mnk$1@ger.gmane.org>
-In-Reply-To: <fuhkfp$mnk$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
+	 <1207226756.3636.66.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas B=E4chler wrote:
-> Using iwl3945 from compat-wireless, I can not use all the channels I=20
-> should be allowed to use. In particular, I cannot see some 802.11a=20
-> networks which I could see with ipw3945. Here is what I get:
->=20
-> iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
->=20
-> But:
->=20
-> # ./iw dev wlan0 info
-> Band 1:
-> 	Frequencies:
-> 		* 2412 MHz
-> 		* 2417 MHz
-> 		* 2422 MHz
-> 		* 2427 MHz
-> 		* 2432 MHz
-> 		* 2437 MHz
-> 		* 2442 MHz
-> 		* 2447 MHz
-> 		* 2452 MHz
-> 		* 2457 MHz
-> 		* 2462 MHz
-> 		* 2467 MHz (disabled, passive scanning, no IBSS)
-> 		* 2472 MHz (disabled, passive scanning, no IBSS)
-> 	Bitrates:
-> 		* 1.0 Mbps
-> 		* 2.0 Mbps (short preamble supported)
-> 		* 5.5 Mbps (short preamble supported)
-> 		* 11.0 Mbps (short preamble supported)
-> 		* 6.0 Mbps
-> 		* 9.0 Mbps
-> 		* 12.0 Mbps
-> 		* 18.0 Mbps
-> 		* 24.0 Mbps
-> 		* 36.0 Mbps
-> 		* 48.0 Mbps
-> 		* 54.0 Mbps
-> Band 2:
-> 	Frequencies:
-> 		* 5170 MHz (disabled, passive scanning, no IBSS)
-> 		* 5180 MHz
-> 		* 5190 MHz (disabled, passive scanning, no IBSS)
-> 		* 5200 MHz
-> 		* 5210 MHz (disabled, passive scanning, no IBSS)
-> 		* 5220 MHz
-> 		* 5230 MHz (disabled, passive scanning, no IBSS)
-> 		* 5240 MHz
-> 		* 5260 MHz (passive scanning, no IBSS, radar detection)
-> 		* 5280 MHz (passive scanning, no IBSS, radar detection)
-> 		* 5300 MHz (passive scanning, no IBSS, radar detection)
-> 		* 5320 MHz (passive scanning, no IBSS, radar detection)
-> 		* 5500 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5520 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5540 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5560 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5580 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5600 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5620 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5640 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5660 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5680 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 		* 5700 MHz (disabled, passive scanning, no IBSS, radar detection)
-> 	Bitrates:
-> 		* 6.0 Mbps
-> 		* 9.0 Mbps
-> 		* 12.0 Mbps
-> 		* 18.0 Mbps
-> 		* 24.0 Mbps
-> 		* 36.0 Mbps
-> 		* 48.0 Mbps
-> 		* 54.0 Mbps
->=20
-> Most of the 802.11a channels are disabled, as are channel 12 and 13 i=
-n=20
-> the 802.11g band (I am sure those 11g channels should be enabled).
+On Thu, Apr 3, 2008 at 8:45 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>  Please copy the mailing list, I've done that now.
+>
+>
+>  > My log files are filling up with these messages:
+>  >
+>  >        [ 8722.198929] wlan0: RX non-WEP frame, but expected encryption
+>  >        [ 8726.506345] __ratelimit: 14 messages suppressed
+>
+>
+> > ./rx.c:                       printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
+>
+>
+>
+> > It seems that others who are using Netgear WPN824 access points are
+>  > also seeing these messages in their logs.
+>  > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1614
+>  > http://ubuntuforums.org/showthread.php?t=637084
+>  >
+>  > I am wondering whether this indicates a problem situation with the
+>  > access point that really needs to be reported.  Is this being reported
+>  > because it is a security risk?   Is this a condition that really needs
+>  > to be reported by wireless drivers?
+>
+>  Hm. You shouldn't actually be getting this when your AP is configured to
+>  use encryption. It either points to somebody trying to invade your
+>  network (unlikely) or an AP bug.
+>
+>  Can you use 'iw' to add a new monitor interface and capture some of the
+>  unencrypted packets with that? Use
+>
+>  $ git clone http://git.sipsolutions.net/iw.git/
+>  $ cd iw
+>  $ make
+>
+>  # ./iw dev wmaster0 interface add moni0 type monitor
+>
+>  and then wireshark/tcpdump on it, you can also send me the dump in
+>  private mail if you cannot identify the problem. If you *disable* hw
+>  crypto I won't even be able to read your actual traffic :)
 
-If you're in the EU, I contributed a fix that has not yet made it into=20
-the iwlwifi code as it is under review (the whole regulatory aspect is=20
-difficult, there are so many caveats!).
+Thanks Johannes,
 
-Temporarily I'd suggest that you add:
+I tried to build iw, but got an error:
 
-options cfg80211 ieee80211_regdom=3D"JP"
+# make
+ CC   iw.o
+/bin/sh: cgcc: not found
+make[1]: *** [iw.o] Error 127
+make: *** [check] Error 2
 
-into your /etc/modprobe.conf as it will enable the 2.4GHz channel 12 an=
-d=20
-13 for you, I'm not sure that the 802.11a channels will be correct, but=
-=20
-it's better than it was.
+After poking around, I found
+http://ftp.idilis.ro/mirrors/ftp.kernel.org/pub/software/devel/sparse/news.html
+which seems to be where I can find the tool.
+I compiled, and (after setting $HOME to /usr) installed it.
+Now, when I try to compile iw, I get:
 
-Eventually this should become:
+# make
+ CC   iw.o
+iw.c:9:11: error: unable to open 'netlink/genl/genl.h'
+iw.c:9:31: error: netlink/genl/genl.h: No such file or directory
+iw.c:10:33: error: netlink/genl/family.h: No such file or directory
+iw.c:11:33: error: netlink/genl/ctrl.h: No such file or directory
+iw.c:12:25: error: netlink/msg.h: No such file or directory
+iw.c:13:26: error: netlink/attr.h: No such file or directory
+iw.c: In function 'nl80211_init':
+iw.c:23: error: implicit declaration of function 'nl_handle_alloc'
+iw.c:23: warning: assignment makes pointer from integer without a cast
+iw.c:29: error: implicit declaration of function 'genl_connect'
+iw.c:35: error: implicit declaration of function 'genl_ctrl_alloc_cache'
+iw.c:35: warning: assignment makes pointer from integer without a cast
+iw.c:42: error: implicit declaration of function 'genl_ctrl_search_by_name'
+iw.c:42: warning: assignment makes pointer from integer without a cast
+iw.c:52: error: implicit declaration of function 'nl_cache_free'
+iw.c:54: error: implicit declaration of function 'nl_handle_destroy'
+iw.c: In function 'nl80211_cleanup':
+iw.c:60: error: implicit declaration of function 'genl_family_put'
+iw.c: In function 'get_phy_or_dev':
+iw.c:83: error: implicit declaration of function 'strcmp'
+make[1]: *** [iw.o] Error 1
 
-options cfg80211 ieee80211_regdom=3D"EU"
+Help?
 
-once things are correctly defined again. But it may take a little while=
-=2E=20
-I need to check what's in 2.6.25 before I think about tweaking my patch=
-,=20
-but it will depend on John Linville as to whether it goes in to the=20
-mainline kernel.
-
-All a bit tricky!
-
-A look here would be useful as a starting point:
-
-http://en.wikipedia.org/wiki/List_of_WLAN_channels
-
-but be aware there is a lot of legislation that affects the available=20
-frequencies and it's not easy to get an overview of what is and isn't=20
-allowed.
-
---=20
-
-Brian
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+        Miles
