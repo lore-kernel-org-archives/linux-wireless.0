@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54390 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49089 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649AbYDAMYH (ORCPT
+	with ESMTP id S1755421AbYDCNTr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:24:07 -0400
-Subject: Re: wireless mini-summit agenda proposals?
+	Thu, 3 Apr 2008 09:19:47 -0400
+Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX
+	non-WEP frame, but expected encryption"
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080331201212.GB13799@tuxdriver.com> (sfid-20080331_213338_462261_FF41615A)
-References: <20080131162514.GC6413@tuxdriver.com>
-	 <1201801923.3000.13.camel@localhost.localdomain>
-	 <20080328203246.GB810@tuxdriver.com> <20080331201212.GB13799@tuxdriver.com>
-	 (sfid-20080331_213338_462261_FF41615A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y09KQFVjsAsdlJmIEZBz"
-Date: Tue, 01 Apr 2008 14:23:52 +0200
-Message-Id: <1207052632.5143.70.camel@johannes.berg> (sfid-20080401_132426_878509_63E88C97)
+To: Miles Lane <miles.lane@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com> (sfid-20080403_141559_906325_954376AC)
+References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
+	 <1207226756.3636.66.camel@johannes.berg>
+	 <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com>
+	 (sfid-20080403_141559_906325_954376AC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mmW7w7DICOCIdwK5FFsE"
+Date: Thu, 03 Apr 2008 15:19:37 +0200
+Message-Id: <1207228777.3636.74.camel@johannes.berg> (sfid-20080403_141951_556326_865B0302)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-y09KQFVjsAsdlJmIEZBz
+--=-mmW7w7DICOCIdwK5FFsE
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> > I'm sorry I didn't find-out sooner (apparently there was an email
-> > delivery problem of some sort), but we got approved for a mini-summit
-> > just before OLS in July:
-> >=20
-> > 	http://www.linuxsymposium.org/2008/minisummits.php
-> >=20
-> > This location is reasonably convenient for both North America and
-> > Europe, and many people attend the OLS event anyway.  Are there any
-> > major objections to this venue?
+> I tried to build iw, but got an error:
 >=20
-> It is getting late in the day, but it is worth mentioning that the
-> OLS registration price goes up tomorrow.  So, if you think you will
-> come then better go ahead and register ASAP!
+> # make
+>  CC   iw.o
+> /bin/sh: cgcc: not found
+> make[1]: *** [iw.o] Error 127
+> make: *** [check] Error 2
+>=20
+> After poking around, I found
+> http://ftp.idilis.ro/mirrors/ftp.kernel.org/pub/software/devel/sparse/new=
+s.html
+> which seems to be where I can find the tool.
+> I compiled, and (after setting $HOME to /usr) installed it.
+> Now, when I try to compile iw, I get:
 
-Early registration has been extended to the 15th.
+Doh. I thought I hacked the makefile to not require cgcc. Will remove
+that hack and just mandate that people run 'make check' instead of
+'make' or 'make all'.
+
+
+> iw.c:9:11: error: unable to open 'netlink/genl/genl.h'
+
+You need to install libnl development headers, your distro should ship
+libnl-dev (debian's package for example) or similar, or you need libnl
+from source: http://people.suug.ch/~tgr/libnl/ At least version -pre8 is
+required.
 
 johannes
 
---=-y09KQFVjsAsdlJmIEZBz
+--=-mmW7w7DICOCIdwK5FFsE
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/IpVqVg1VMiehFYAQIlhhAAosIb1jh/03Ro2gAOESbRKO2wy7OYOPlj
-PG1LJ17Vr7rhBdmWKUsITYHSw3Hdj7vliZapa0RY1DT41HpNbnBBpoKu8FOIH5R3
-Jyj9iZ60T1JUQvnQjoT1b0ShEpMVrmiFzJpw+3En0qLB/5SEYLFbffB336EWXpAm
-TaZ0YKDOOMO5f9kC4feF5DVluPZhEWOGmpsxUdWMnayPnmIkUiUme8rvP5xLQoL6
-GYEKpPBnuxpOVI/65/PJC7EfU6SqwPtGML+K+CkVFR0y3PUVxfwULLUy5IdH1Qbf
-L+kfPTDZjcVCoyWi2V6+NIz7f923ZOkUq0OQXnpjXEu+bXBf5qvhIPBabdozNx0J
-a/+HxAOhRdg2tDHU/B1cEEH3cxpysmqearHh1WJP7EuVYud0Zq2jDt6ftBgu79b6
-vdW+yoVr8DYp/OGfRC6AfNWcgnvwdWoPqD/Bn8vhahBSsZVZBWiGs6TVp/TlcSe9
-XpjsrOLCcitCHWH9w1PFjSUTc0BmwqUU02425/VVdoMxjEpNVre9QV4sL3j++QqR
-f4ncX0RytIeEhdNzziUGzAFsZ0C66x53FLVNebNjRpfDQ9I1WnEP4USROazTiWJB
-j7iOisJHvx7GbkSmdKo3+8GXlfr1g9sWBbF35zP867bLnVql73jl1J3US9Se28xR
-0fvimRb4DU0=
-=dXC+
+iQIVAwUAR/TZaKVg1VMiehFYAQIgbA/+NGdbMWa/sAnX3l6zQSwM8hgdlbeGYZ46
+POL3cCFqBjZqdIqYUH7O+LChGafJBkqUVzoFdo8GPiuANMDxjjeiDuygZ2Z6ZlyU
+cCNghXTlpUhj754q9pqMy22DnI9UXVHcnmiQvxZ9LS2Jffwjxd22W3LpXDTKoWlf
++c/x2CyAhG/5nCQ5IvaMioOuChOX86p8PL6nNMlHHAYHV1faF/Xz0npm0eGqJXWV
+mKpYE2KYvM/NfelC6swaAK30zL1t+E74ni5NvW5UGS7flMtvUV2+NFM7325AJ4eb
+hgjsrEjbf/osarDXjuZI8L4UpV9LHD6cNybjZ2b9zpvf4Ajc2kS+Lq5+4YI+Zi0u
+QnrPCqH3Dl2OfGCoZ0gF+3zzrj3tgaSrEKkTm9lWQoSLRa2wr23OdGH770xF69Zu
+kUO0l4fDSo066xVRjzvyUC+vnpX1jlk/AIXhXYzPv23HrPo8zKQ/ITfKAkd7QPbJ
+eS8xTCr8KqW6OGp1uZN/CnGr9aPc+2SA9pC3bMZMen7TsyLY0toGuoeARQ3WF/Tq
+zLZSubcwhhz+AX1lm+mOr4zV2ad+HaY0jLTzI4QOLgpTc9UmM6RVxyM4N5NO+We+
+Q6UqJ2Zpf2Em0SCfgZExTvxZ/b7hCVbh6nbrxQhPos50kGctUQ5FhJuHQhUGl9o2
+DsJJBFD8d/c=
+=HNt4
 -----END PGP SIGNATURE-----
 
---=-y09KQFVjsAsdlJmIEZBz--
+--=-mmW7w7DICOCIdwK5FFsE--
 
