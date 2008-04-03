@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:46736 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755522AbYDIR3I (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbYDCKkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 13:29:08 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so3416744fkr.5
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2008 10:29:06 -0700 (PDT)
-To: Bas Hulsken <bhulsken@hotmail.com>
-Subject: Re: hostapd hangs on rt2500pci, leaving the nic in an unstable state
-Date: Wed, 9 Apr 2008 19:33:03 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1207412527.6965.21.camel@Bas> <1207590445.3028.2.camel@Bas> <200804091932.09459.IvDoorn@gmail.com>
-In-Reply-To: <200804091932.09459.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804091933.03615.IvDoorn@gmail.com> (sfid-20080409_182924_208427_6B3EB71A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 3 Apr 2008 06:40:08 -0400
+Subject: Re: [PATCH] b43: Add PIO support for PCMCIA devices
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200803292101.16696.mb@bu3sch.de> (sfid-20080329_200236_826304_8681CDF1)
+References: <200803292101.16696.mb@bu3sch.de>
+	 (sfid-20080329_200236_826304_8681CDF1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4Db8T698AYD4bOyDHIVj"
+Date: Thu, 03 Apr 2008 12:36:48 +0200
+Message-Id: <1207219008.3636.27.camel@johannes.berg> (sfid-20080403_114022_175465_BFC70ADB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 April 2008, Ivo van Doorn wrote:
-> On Monday 07 April 2008, Bas Hulsken wrote:
-> > Hi
-> > 
-> > > Could you try editing rt2500pci.c
-> > > and in rt2500pci_interrupt() change:
-> > > 
-> > > 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
-> > > 		rt2x00lib_beacondone(rt2x00dev);
-> > > 
-> > > to
-> > > 
-> > > 	//if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
-> > > 	//	rt2x00lib_beacondone(rt2x00dev);
-> > 
-> > did that, also applied Johannes' "fix STA AID bug" patch, but no change
-> > in behaviour, still the same hang in hostapd.
-> 
-> Does the patch by Daniel Wagner:
-> 	rt61pci: rt61pci_beacon_update do not free skb twice
-> which was send to the linux-wireless mailing list today help?
 
-wait never mind, that was a stupid comment since you are using rt2500pci... :S
-I'll see if the patch also is applicable for rt2500pci and post that patch if that is
-the case. :)
+--=-4Db8T698AYD4bOyDHIVj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+
+> PIO is needed for 16bit PCMCIA devices, as we really don't want to poke w=
+ith
+> the braindead DMA mechanisms on PCMCIA sockets. Additionally, not all
+> PCMCIA sockets do actually support DMA in 16bit mode (mine doesn't).
+
+Oddly, my CF card still doesn't work. Is there anything else I need in a
+current wireless-testing tree?
+
+johannes
+
+--=-4Db8T698AYD4bOyDHIVj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/SzP6Vg1VMiehFYAQL3QQ/+I/g/bD2SuZ5CHUeeJqnCif2dj/Tq54xc
+Ka8qS/WLUMhMH6bfOJDh6wO+JohWIB86qXrXDk17z5l+S61uD9blz68fYbypsSvB
+7ztXk5OGusqXWPfFV+G1M6oNJiOSR0uuOmL6QbOgpRrWLMKK9lJvHDDsFIajAmuR
+lJ+jaWj/zUYcpk2jIpUx6KNYG2ZhOVa06C8LNGjPH/EVAmxY0KJq+cjy+1crWIo2
+BkeZ6M1ed30JsdV+gUI7zOCiTaZ1gpl3kzPe1r+7JAaSSSe0xgyuwUXLTm8wX44S
+BSe8L23pnU803nSXrUHNZFPjNVY7vMyMBQIvMAyshnnyLSqbuVHe/MAfXAayDi1w
+u4WcSKDvbr6ZbsjNdX8zMKqKCRhkVwRT5f1aZ11tLlXrlQTBxxG0lP4pxfw3RP8S
+hY5UlybAuL3ZayA6BCpem372ONgSwMzcYT/ZFwmD8S+61NCNdgiQeL/2pl5tOVvA
+jJFiij9E+0F2JHoj3nJpy3zqSY2xMuQOYGKnic4S7A0IU6wEdHv4ntOmO4Shdb4Y
+coOg3hL1+gkaRE4OG0vuDe90GvZxGM2z+/F/OSx2rAGuIw+9JJEwbXNltuG3bZ6A
+dcbOT0Uy70s9yXK6m248e3jBjFmlTHaeqAH1Mh6maZj4+GsRt8cWQhuPQmC0zmhN
+1rMyYbSJago=
+=NsxM
+-----END PGP SIGNATURE-----
+
+--=-4Db8T698AYD4bOyDHIVj--
+
