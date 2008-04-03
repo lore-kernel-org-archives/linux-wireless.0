@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52701 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753267AbYDXSJI (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:41311 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751582AbYDCUKX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:09:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable 1/4] ssb: Fix all-ones boardflags
-Date: Thu, 24 Apr 2008 20:00:45 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Thu, 3 Apr 2008 16:10:23 -0400
+Message-ID: <47F539A8.6060105@lwfinger.net> (sfid-20080403_211025_267206_781F3BEC)
+Date: Thu, 03 Apr 2008 15:10:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Message-Id: <200804242000.45740.mb@bu3sch.de> (sfid-20080424_200947_618421_48594E74)
-Content-Type: Text/Plain;
-  charset="us-ascii"
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	KURT PETERS <peterskurt@msn.com>
+Subject: Re: [PATCH] b43legacy: Partial Fix for Range issue
+References: <BAY103-F373BE8D28C2F2A21BC15E0D8F70@phx.gbl> <200804031719.44026.mb@bu3sch.de> <47F5242D.80404@lwfinger.net> <200804032050.38774.mb@bu3sch.de>
+In-Reply-To: <200804032050.38774.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Michael Buesch wrote:
+> 
+> In b43 I set this value to 30.
+> I dunno what the real HW upper limit is, so I set it so something
+> that's way above the actual value mac80211 will ever try anyway (because
+> mac80211 won't try illegal rates, if implemented correctly).
+> 
 
-In the SSB SPROM a field set to all ones means the value
-is not defined in the SPROM.
-In case of the boardflags, we need to set them to zero
-to avoid confusing drivers. Drivers will only check the
-flags by ANDing.
+I used 20 (0x14) because 20 dBm is the regulatory maximum for almost 
+all regions. In fact, the value of desired_pwr (in Q5.2) that results 
+is 37, or 9.25 dBm. My guess is that this value is too low; however, 
+changing the initialization value to 30 as it is in b43 did not change 
+anything.
 
-This patch is in wireless-testing.git, commit
-d30cdf8a251e88e58bc566f5acaa9eb97ac102e9
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Gabor Stefanik <netrolller.3d@gmail.com>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Larry
 
 
-Index: linux-2.6.25/drivers/ssb/pci.c
-===================================================================
---- linux-2.6.25.orig/drivers/ssb/pci.c	2008-04-17 17:11:28.000000000 +0200
-+++ linux-2.6.25/drivers/ssb/pci.c	2008-04-19 17:56:54.000000000 +0200
-@@ -482,6 +482,11 @@ static int sprom_extract(struct ssb_bus 
- 			goto unsupported;
- 	}
- 
-+	if (out->boardflags_lo == 0xFFFF)
-+		out->boardflags_lo = 0;  /* per specs */
-+	if (out->boardflags_hi == 0xFFFF)
-+		out->boardflags_hi = 0;  /* per specs */
-+
- 	return 0;
- unsupported:
- 	ssb_printk(KERN_WARNING PFX "Unsupported SPROM revision %d "
