@@ -1,27 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:48186 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbYDOEYr (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:42666 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754384AbYDCKlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 00:24:47 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so2863706waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2008 21:24:45 -0700 (PDT)
-Message-ID: <9f33c5230804142124g3c8f4a0ai28a6b5117e1034c9@mail.gmail.com> (sfid-20080415_052459_149800_593C87F0)
-Date: Tue, 15 Apr 2008 00:24:45 -0400
-From: "cao jing" <caojing.china@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: AR5K_INT_SWBA can't generate interruption for sending beacons
+	Thu, 3 Apr 2008 06:41:13 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so2227069wra.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 03:41:12 -0700 (PDT)
+Message-ID: <1ba2fa240804030341v7d1c20ecva35cc169095deb3d@mail.gmail.com> (sfid-20080403_114421_573216_6369E0A3)
+Date: Thu, 3 Apr 2008 13:41:12 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
+Cc: Chr <chunkeey@web.de>, linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <1207218083.3636.12.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+References: <200804012145.18294.chunkeey@web.de>
+	 <1207128858.10910.19.camel@johannes.berg>
+	 <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com>
+	 <1207218083.3636.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Apr 3, 2008 at 1:21 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>  > >  On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
+>  > >  > This patch is necessary for the upcoming Accesspoint patch for p54.
+>  > >
+>  > >  Hm. I don't like increasing the tx control structure size but I guess
+>  > >  you really need that :)
+>
+>
+> > Not sure why this cannot be bookeeped in the driver.
+>  > Upon association AID is delivered to driver, so every packet that will
+>  > be sent to this AP has this AID?
+>
+>  We're talking about AP mode, and afaict to do that in the driver you'd
+>  have to have a hash table from sta MAC -> AID.
 
-I'm working on mac80211 and ath5k. I found that the AR5K_INT_SWBA
-interruption can't be generated. So I can't send beacons by this
-interruption. Anyone knows what's going on with it?
+I see, AP mode is different story and in second thought it think we
+can use this to speed up TX path
+also for iwliwfi, we waste significant time on searching for STA based
+on MAC address.
+So it's ACK from me. Thanks for opening my eyes :)
 
-Thank you very much!
+Another question is if there will be more info needed for station in the driver.
+Currently in iwlwifi we have STA representation, this is HW
+requirement but some data are kept twice in iwlwifi and mac.
+The question is whether STA mac80211 representation cannot be more
+accessible to the driver?  Not sure how this can be done
+without over complicated station book keeping.
 
-Jing
+
+Thanks
+Tomas.
