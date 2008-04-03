@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51452 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837AbYDHI0F (ORCPT
+Received: from n10.bullet.re3.yahoo.com ([68.142.237.123]:40757 "HELO
+	n10.bullet.re3.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752710AbYDCKWh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 04:26:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Alejandro Grijalba <sud@latinsud.com>
-Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
-Date: Tue, 8 Apr 2008 10:25:39 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-References: <47FAB829.9010304@latinsud.com>
-In-Reply-To: <47FAB829.9010304@latinsud.com>
+	Thu, 3 Apr 2008 06:22:37 -0400
+Message-ID: <47F4AFE8.4020405@yahoo.it> (sfid-20080403_112241_062311_EBEDB022)
+Date: Thu, 03 Apr 2008 12:22:32 +0200
+From: Filippo Zangheri <filippo.zangheri@yahoo.it>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804081025.39645.mb@bu3sch.de> (sfid-20080408_092609_909502_698A80A4)
+To: ipw3945-devel@lists.sourceforge.net
+CC: linux-wireless@vger.kernel.org,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+Subject: [PATCH] iwlwifi: add missing include in iwl-3945-led.c
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 08 April 2008 02:11:21 Alejandro Grijalba wrote:
-> When injecting frames we should allow user to play with fields like
-> fragment or sequence numbers. This patch prevents mac80211 from modifying
-> those fields on injected frames.
-> 
-> Tested on 2.6.24.4 with aireplay-ng.
-> 
-> Signed-off-by: Alejandro Grijalba <sud@latinsud.com>
-> ---
-> There is still a problem with some drivers (b43) that also modify seq numbers, 
-> and i cannot find there a clean way to tell whether the frame was injected.
-> An alternative way would be to create a radiotap flag meaning not to modify header.
-> 
-> --- linux-2.6.24.4/net/mac80211/tx.c	2008-01-24 23:58:37.000000000 +0100
-> +++ linux-2.6.24.4-sud/net/mac80211/tx.c	2008-04-05 16:43:19.000000000 +0200
-> @@ -281,6 +281,9 @@ ieee80211_tx_h_sequence(struct ieee80211
->  {
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
->  
-> +	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
-> +		return TXRX_CONTINUE;
-> +
->  	if (ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >= 24)
->  		ieee80211_include_sequence(tx->sdata, hdr);
->  
+iwl-3945-led.c does not include a relevant file.
 
-This does not work, since we use injection for other types of frames. For example
-management frames from hostapd. We don't want (and can't) make hostapd keep track of
-sequence numbers.
-You'll have to contact radiotap people and add a flag for this. This would also
-solve the hardware counter problem then.
+Signed-off-by: Filippo Zangheri <filippo.zangheri@yahoo.it>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-led.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
+index d200d08..7743cac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
+@@ -40,6 +40,7 @@
+ #include <asm/unaligned.h>
+ 
+ #include "iwl-3945.h"
++#include "iwl-3945-led.h"
+ #include "iwl-helpers.h"
+ 
+ #define IWL_1MB_RATE (128 * 1024)
 
 -- 
-Greetings Michael.
+Filippo Zangheri
+
+GPG key ID: 0xE1D879FA
+Key fingerprint: 816B CE57 D43C 0A47 EF35 3378 EA5F A72A E1D8 79FA
+Key server: pgp.mit.edu
+
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GE d- s+:- a-- C++ UL+++ P+ L+++ E-- W+ N* o-- K- w--- O-- M--
+V- PS++ PE+ Y+ PGP++ t 5-- X++ R* tv b+ DI-- D---- G-- e++ h--
+r++ z*
+------END GEEK CODE BLOCK------
+
