@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54268 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798AbYDOEQP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 00:16:15 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/12] iwlwifi driver updates
-Date: Mon, 14 Apr 2008 21:16:02 -0700
-Message-Id: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com> (sfid-20080415_051621_423087_D2E70747)
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:40929 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441AbYDCQyF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2008 12:54:05 -0400
+Date: Thu, 3 Apr 2008 19:52:55 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Miles Lane <miles.lane@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX
+	non-WEP frame, but expected encryption"
+Message-ID: <20080403165255.GI2025@jm.kir.nu> (sfid-20080403_175408_862538_7DFFEDCB)
+References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com> <1207226756.3636.66.camel@johannes.berg> <1207231313.3636.100.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1207231313.3636.100.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains a few iwlwifi driver updates.
+On Thu, Apr 03, 2008 at 04:01:53PM +0200, Johannes Berg wrote:
 
-Patches 3 to 7 introduces support for WEP HW encryption
-acceleration. It supports default and dynamic keys both PSK and 1X
-No changes in mac80211 were required.  It also reorganizes security
-related code into a new file iwl-sta.c
+> > > My log files are filling up with these messages:
+> > >        [ 8722.198929] wlan0: RX non-WEP frame, but expected encry=
+ption
+> > >        [ 8726.506345] __ratelimit: 14 messages suppressed
 
-Please note that patch "iwlwifi: perform bss_info_changed post
-association work right away" depends on recent mac80211 patch:
-mac80211: no BSS changes to driver from beacons processed during scanning
+Is the network using WEP or TKIP/CCMP?
 
+> Ok, I got packets from Miles, and this is what I found:
+>=20
+> IEEE 802.11 Data, Flags: ......F.
+>     Type/Subtype: Data (0x20)
+>     Frame Control: 0x0208 (Normal)
+>     Duration: 44
+>     Destination address: <his STA MAC>
+>     BSS Id: <his Netgear AP>
+>     Source address: <his Netgear AP>
+>     Fragment number: 0
+>     Sequence number: 3874
+> Logical-Link Control
+>     DSAP: NULL LSAP (0x00)
+> Data (1472 bytes)
+> 0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   .............=
+=2E..
+> * all zeroes
 
-[PATCH 01/12] iwlwifi: generalize iwlwifi init flow
-[PATCH 02/12] iwlwifi: replace sprintf with scnprintf for debugfs output
-[PATCH 03/12] iwlwifi: add default WEP key host command
-[PATCH 04/12] iwlwifi: default WEP HW encryption
-[PATCH 05/12] iwlwifi: add 1X HW WEP support
-[PATCH 06/12] iwlwifi: maintain uCode key table state
-[PATCH 07/12] iwlwifi: moves security functions to iwl-sta.c
-[PATCH 08/12] iwlwifi: Fix byte count table for fragmented packets
-[PATCH 09/12] iwl4965: make iwl4956_send_rxon_assoc asynchronous
-[PATCH 10/12] iwlwifi: make Makefile more concise
-[PATCH 11/12] iwlwifi: perform bss_info_changed post association work right away
-[PATCH 12/12] iwlwifi: move shared pointers to iwl_priv
+> Note how the LLC header is also all-zeroes. =EF=BB=BFAlso note how th=
+e duration
+> field is totally bogus. The sequence number is actually correct.
 
-Thank you
+What's wrong with the duration field value? The dump here does not
+indicate which transmit rate was used, so I don't know what TX rate the
+ACK would use, but 44 sounds like a reasonable duration value for
+802.11g rates..
 
-Reinette
+> Does anybody have an explanation for that except that the AP software=
+ is
+> messing it up?
+
+Looks like an interesting AP behavior to me..
+
+> In any case, I suppose the message in question isn't actually necessa=
+ry.
+> I'll make it depend on verbose debugging maybe.
+
+Yes, that sounds reasonable. The AP should not be sending this kind of
+crap, but well, what can you do if it does.. In theory, this could also
+be showing up in multi-SSID configuration when another SSID is
+configured to use unencrypted frames (though, that would cause interop
+issues in association for number of clients..).
+
+--=20
+Jouni Malinen                                            PGP id EFC895F=
+A
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
