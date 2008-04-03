@@ -1,67 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46587 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50177 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbYDPRdA (ORCPT
+	with ESMTP id S1751910AbYDCMb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 13:33:00 -0400
-Subject: Re: 2.6.25-rc9 -- bcm4306 performance is in the toilet
+	Thu, 3 Apr 2008 08:31:59 -0400
+Subject: [PATCH] mac80211: fix possible sta-debugfs work lockup
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Miles Lane <miles.lane@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a44ae5cd0804161012w7c07efb0w68f9a8664f077556@mail.gmail.com> (sfid-20080416_181325_307669_A96F226B)
-References: <48056406.2060502@gmail.com> <48060D71.6020507@lwfinger.net>
-	 <a44ae5cd0804161012w7c07efb0w68f9a8664f077556@mail.gmail.com>
-	 (sfid-20080416_181325_307669_A96F226B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZTneHi1LdyfgayjrfK0b"
-Date: Wed, 16 Apr 2008 19:30:41 +0200
-Message-Id: <1208367041.11676.55.camel@johannes.berg> (sfid-20080416_183324_207122_334D5770)
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1207223373.3636.48.camel@johannes.berg> (sfid-20080403_124940_803408_642A0255)
+References: <D936D925018D154694D8A362EEB0892004194DDE@orsmsx416.amr.corp.intel.com>
+	 <1207218482.3636.19.camel@johannes.berg>
+	 (sfid-20080403_112812_982366_CC856F98)  <1207223373.3636.48.camel@johannes.berg>
+	 (sfid-20080403_124940_803408_642A0255)
+Content-Type: text/plain
+Date: Thu, 03 Apr 2008 14:31:05 +0200
+Message-Id: <1207225865.3636.58.camel@johannes.berg> (sfid-20080403_135447_070039_4F06167A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Because we queue the sta-debugfs-adding work on our mac80211
+workqueue (which needs to be flushed under RTNL) and that work
+needs the RTNL, it can currently deadlock, thanks to Reinette
+Chatre for pointing out the lockdep warning about this.
 
---=-ZTneHi1LdyfgayjrfK0b
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes it by moving this work to the common kernel
+workqueue (using schedule_work) and canceling it as appropriate.
 
+It also fixes a related problem: When a STA is pinned by the
+debugfs adding work and sta_info_flush() runs concurrently
+it is not guaranteed that all STAs are removed from the driver
+before the corresponding interface is removed which may lead
+to bugs.
 
-> interface.c: In function 'get_if_type':
-> interface.c:50: error: 'NL80211_IFTYPE_MESH_POINT' undeclared (first
-> use in this function)
-> interface.c:50: error: (Each undeclared identifier is reported only once
-> interface.c:50: error: for each function it appears in.)
-> interface.c: In function 'handle_interface_add':
-> interface.c:121: error: 'NL80211_ATTR_MESH_ID' undeclared (first use
-> in this function)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+---
+This should fix the problem.
 
-You need a newer copy of nl80211.h or revert back to an older revision
-of iw before the mesh code was added.
+ net/mac80211/sta_info.c |   29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-johannes
+--- everything.orig/net/mac80211/sta_info.c	2008-04-03 14:11:51.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-04-03 14:29:04.000000000 +0200
+@@ -351,7 +351,7 @@ int sta_info_insert(struct sta_info *sta
+ 	 * NOTE: due to auto-freeing semantics this may only be done
+ 	 *       if the insertion is successful!
+ 	 */
+-	queue_work(local->hw.workqueue, &local->sta_debugfs_add);
++	schedule_work(&local->sta_debugfs_add);
+ #endif
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+@@ -476,16 +476,23 @@ void __sta_info_unlink(struct sta_info *
+ 	 *
+ 	 * The rules are not trivial, but not too complex either:
+ 	 *  (1) pin_status is only modified under the sta_lock
+-	 *  (2) sta_info_debugfs_add_work() will set the status
++	 *  (2) STAs may only be pinned under the RTNL so that
++	 *	sta_info_flush() is guaranteed to actually destroy
++	 *	all STAs that are active for a given interface, this
++	 *	is required for correctness because otherwise we
++	 *	could notify a driver that an interface is going
++	 *	away and only after that (!) notify it about a STA
++	 *	on that interface going away.
++	 *  (3) sta_info_debugfs_add_work() will set the status
+ 	 *	to PINNED when it found an item that needs a new
+ 	 *	debugfs directory created. In that case, that item
+ 	 *	must not be freed although all *RCU* users are done
+ 	 *	with it. Hence, we tell the caller of _unlink()
+ 	 *	that the item is already gone (as can happen when
+ 	 *	two tasks try to unlink/destroy at the same time)
+-	 *  (3) We set the pin_status to DESTROY here when we
++	 *  (4) We set the pin_status to DESTROY here when we
+ 	 *	find such an item.
+-	 *  (4) sta_info_debugfs_add_work() will reset the pin_status
++	 *  (5) sta_info_debugfs_add_work() will reset the pin_status
+ 	 *	from PINNED to NORMAL when it is done with the item,
+ 	 *	but will check for DESTROY before resetting it in
+ 	 *	which case it will free the item.
+@@ -617,6 +624,8 @@ static void sta_info_debugfs_add_work(st
+ 	struct sta_info *sta, *tmp;
+ 	unsigned long flags;
+ 
++	/* We need to keep the RTNL across the whole pinned status. */
++	rtnl_lock();
+ 	while (1) {
+ 		sta = NULL;
+ 
+@@ -637,10 +646,9 @@ static void sta_info_debugfs_add_work(st
+ 		rate_control_add_sta_debugfs(sta);
+ 
+ 		sta = __sta_info_unpin(sta);
+-		rtnl_lock();
+ 		sta_info_destroy(sta);
+-		rtnl_unlock();
+ 	}
++	rtnl_unlock();
+ }
+ #endif
+ 
+@@ -700,6 +708,15 @@ void sta_info_stop(struct ieee80211_loca
+ {
+ 	del_timer(&local->sta_cleanup);
+ 	cancel_work_sync(&local->sta_flush_work);
++#ifdef CONFIG_MAC80211_DEBUGFS
++	/*
++	 * Make sure the debugfs adding work isn't pending after this
++	 * because we're about to be destroyed. It doesn't matter
++	 * whether it ran or not since we're going to flush all STAs
++	 * anyway.
++	 */
++	cancel_work_sync(&local->sta_debugfs_add);
++#endif
+ 
+ 	rtnl_lock();
+ 	sta_info_flush(local, NULL);
 
---=-ZTneHi1LdyfgayjrfK0b
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAY3v6Vg1VMiehFYAQKwGRAAvCTPzF8cfWKO5V3HURLTvsu3Bqd88/Ld
-pvxVy56CCWvqrzKSd+X7bQ6hjmGjOso+pJmYUdGWk8caR8RZHpUBbGEUZ2WjQJPN
-OQhM8RrUP7EWuFBVyp8qnT4FWxoEqKuAveogITxuDDytcD9SnLTboGilqfH0th1D
-coHXC8wnzCVLgjBqaqCEUBQzFPGZw9TNC5cCgWh4ZamGJUq6sS/rKm++UFf1ikJF
-DJ7I7ZfqmgfBthfP7HuxYjaje6Vh7sM26NhGTTHSsv3zlah2vz7gD1wQARucDFxE
-8KBhI4oNlcDpm/H1w1Y51kMsIF+8P4fusTOyi1xQ03LSXUmzRJBxcL/C/qnYp7Xc
-U9SN+1JSRG5Vwcjiy67eAMcm31YR/GUCZ/tLCQIZSabv7OFTaMUC3WnBz8RrycBh
-K1Bc2+gR2Gj+utCWSuKEtrzQF9+Yoyt/MdeNhwCyh5Vu3oBbmzCSjZiwQzUQ4zgl
-gtxSDWPy99RYM8rnARLXpbMgqhqWTM0xZDkNmSR+NkPY39OkkT937Uxyp/0zqqfs
-PJchh4qiI4HLi0PxC6NK8hFY16Ya3WXv7KMCWEiLAZFBoQRYbV/5a94MdJO84FCW
-BqNLh22JhOmWFnecpVrPzwYtnwt8jxizG9X+hqCuZGTq2HltLQIMvAEw/34TsA13
-+utAExOxfhc=
-=hOww
------END PGP SIGNATURE-----
-
---=-ZTneHi1LdyfgayjrfK0b--
 
