@@ -1,71 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56243 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753007AbYDPCXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 22:23:20 -0400
-Message-ID: <480561DE.7020205@atheros.com> (sfid-20080416_032328_485113_154B7FFD)
-Date: Tue, 15 Apr 2008 19:18:06 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-MIME-Version: 1.0
-To: <ath5k-devel@lists.ath5k.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Atheros kernel support, joining the company
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature";
-	boundary="------------enig3855A978AD66761DB7381C29"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53842 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373AbYDCNaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2008 09:30:11 -0400
+Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX
+	non-WEP frame, but expected encryption"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miles Lane <miles.lane@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <a44ae5cd0804030624u40be9ad9rb1cadefadb13f889@mail.gmail.com> (sfid-20080403_142500_363034_CE408D97)
+References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
+	 <1207226756.3636.66.camel@johannes.berg>
+	 <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com>
+	 <a44ae5cd0804030624u40be9ad9rb1cadefadb13f889@mail.gmail.com>
+	 (sfid-20080403_142500_363034_CE408D97)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CeD+tbpqgo2BcFrHRQAB"
+Date: Thu, 03 Apr 2008 15:30:07 +0200
+Message-Id: <1207229407.3636.79.camel@johannes.berg> (sfid-20080403_143020_473126_0D644FA1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------enig3855A978AD66761DB7381C29
-Content-Type: text/plain; charset=ISO-8859-1
+
+--=-CeD+tbpqgo2BcFrHRQAB
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-Fellow ath5k hackers,
+On Thu, 2008-04-03 at 09:24 -0400, Miles Lane wrote:
+> Thanks.  I think I have a working build, but can you confirm that the
+> linker messages are benign?
 
-Good news. I write to you to inform you that I have decided to join
-Atheros as a full time employee, as a Software Engineer, to help them
-with their goals and mission to get every device of Atheros supported
-upstream in the Linux kernel. I realize there are a lot of challenges
-ahead but I am well aware of the how the community works and the
-benefits of working with it and am confident we will find ways to
-strengthen the relationship between Atheros and the community. I also
-realize there are a lot of pending questions and perhaps even more now.
-Please rest assured we are doing what we can to work together as soon as
-possible.
+Yeah, seems ok, as long as it runs :)
 
-I will keep maintaining compat-wireless and prism54 but I didn't get to
-finish the Marvell TopDog driver port from net80211 to mac80211. Hope
-someone is willing to take that over as I will be pretty busy with other
-work now.
+> I will get to work now on getting the log for you.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/mrvl_cb82.git
+I'm about to go offline now, I'll look at it tomorrow. You should be
+able to identify the packet that caused the problem in wireshark by
+adding a display filter like "=EF=BB=BFwlan.fc.protected =3D=3D 0"
 
-I do plan on keeping on pushing the Central Regulatory Domain Agent work
-I had started. The db schema and a port of ar5k regulatory information
-to it can now be found here:
+>  CC   iw.o
+> cc: -lnl: linker input file unused because linking not done
 
-http://winlab.rutgers.edu/~mcgrof/crda/
+Hrm. Yes, my mistake, I suppose. I don't like Makefile hacking :) Maybe
+I should just go back to the built-in rules.
 
-In the coming weeks I hope to finish the integration now that a db is
-available and hope to also update the db with more up to date values.
+> interface.c: In function 'handle_interface':
+> interface.c:64: warning: 'err' may be used uninitialized in this function
+> interface.c:64: note: 'err' was declared here
+> interface.c:138: warning: 'err' may be used uninitialized in this functio=
+n
+> interface.c:138: note: 'err' was declared here
 
-   Luis
+Strange. I don't get those, and I don't know how the compiler arrives at
+that conclusion.
 
+johannes
 
-
---------------enig3855A978AD66761DB7381C29
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+--=-CeD+tbpqgo2BcFrHRQAB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFIBWHhat1JN+IKUl4RAqZIAJ41YAzWBMzE0ilNm917N0p4IwXsMgCdETSQ
-39IlGIhzAqC5B+f2B0LpygA=
-=Rtp+
+iQIVAwUAR/Tb3qVg1VMiehFYAQL89A/+KT3+5VJoFUU/Hz65VvPHz8O5sBPJbJYB
+sSH9tvS3gGHcUvnc0/vBGbZ4TuQXiwjPqbCVWx1g95Kly3HKtTqVHHjypjPJQniX
+ISdyncnhm1Ax3xrAArshHcfpZ8AkKnoc5KpyXOeXSmG0vbTEVsQ2EHCXqydilrGy
+l5AVbT4eeMFm5CXIqmMhNwyM63ELJwi/esvIJcxvOa6TtZwXOEvm67rOmtaKA2Az
+UTsJWtB3CTDiA0aCRyKEKu4k/3WrC86ko0knHP6ignz3NkokhoEQ1XxMxw35DFr9
+xy+15njud8yXyCELwx/SGknsQ/2ffJl+qG4oocLJtDZ9Z0ykl+luaZRuPPXEiL1W
+q7w/5aeJu+ZfbgTkfgsQOKWd9Ge+7GETkQn1MON9XTUWPEA1AVVdMWdj20CX6xAT
+ptmFK6jdlXssZ2NLF5FPnt3860ld8+0dAWVwzmt5QcZBhP83+YqBi4nR7lAFXeLe
+p3tP37wLUqj6J4WziqbnDjPQTiKIZAJfWYLayx8/Z5p/fg4Q5sWHVVPMiRvUwDxJ
+aUrjmmpZjbnlQ/rI6xfbPXCs7t4TzxqQyi5GVLrF38ygNBnXaMS8WwdclD/OS+h3
+1YeeuZsFSMXUBo3k7kEgQcda2C9bJkSysMTHVXSmn4uvXI1gv3Q2VEvkXVHNXN9y
+Yv+mPBtMvHE=
+=x9x/
 -----END PGP SIGNATURE-----
 
---------------enig3855A978AD66761DB7381C29--
+--=-CeD+tbpqgo2BcFrHRQAB--
+
