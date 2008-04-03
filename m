@@ -1,84 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:35165 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758021AbYDCBz4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 21:55:56 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Date: Thu, 3 Apr 2008 10:55:43 +0900
-Cc: jt@hpl.hp.com, ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
-	"Haris Kremo" <harisk@winlab.rutgers.edu>,
-	"Kishore Ramachandran" <kishore@winlab.rutgers.edu>,
-	"Sanjit Kaul" <sanjitkaul@gmail.com>
-References: <20080326123042.11233.80949.stgit@localhost> <20080327001909.GA17555@bougret.hpl.hp.com> <43e72e890804021619k4e8fea71i152c5dafe010ddfc@mail.gmail.com>
-In-Reply-To: <43e72e890804021619k4e8fea71i152c5dafe010ddfc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200804031055.43707.bruno@thinktube.com> (sfid-20080403_025601_410090_AAB27F58)
+Received: from mga03.intel.com ([143.182.124.21]:3125 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755975AbYDCXPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2008 19:15:07 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mabbas@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] mac80211: notify mac from low level driver (iwlwifi)
+Date: Thu,  3 Apr 2008 16:08:50 -0700
+Message-Id: <1207264130-25437-2-git-send-email-reinette.chatre@intel.com> (sfid-20080404_001531_255875_527A74D6)
+In-Reply-To: <1207264130-25437-1-git-send-email-reinette.chatre@intel.com>
+References: <1207264130-25437-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 03 April 2008 08:19:07 Luis R. Rodriguez wrote:
-> >  > Jean, if range->max_qual.level is set to -110 does this mean sig=
-nal
-> >  > level can be set only from -110 up to 0 ? Is max_qual.level supp=
-osed
-> >  > to be the weakest signal possibly detected?
-> >
-> >         Yes. This is what make most sense.
->
-> How so? I think I must still be seriously misunderstanding something
-> then. If the weakest signal possibly detected is -110 dbm it does not
-> imply the strongest signal will be 0 dbm. On the contrary, I expect t=
-o
-> be able to receive frames with positive dbm values. For example, if I
-> hook up a card's antenna which is transmitting at 20dbm to another
-> card's antenna directly with cables with 10 dbm attenuator in the
-> middle I expect to see 10 dbm on the reception side. Therefore
-> shouldn't the max be close the max allowed, or at least expected,
-> EIRP?
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
-from a paper, from Joshua Bardwell, also available at:
-http://madwifi.org/attachment/wiki/UserDocs/RSSI/you_believe_D100201.pd=
-f
+Add new API to MAC80211 to allow low level driver to
+notify MAC with driver status like comming from suspend
+and HW rfkill
 
-"Bear in mind that, realistically, stations will nearly always receive =
-signals=20
-below 1 mW, unless they are very close (within a few feet) of the acces=
-s=20
-point. Therefore, the power levels below 1 mW are critical to the opera=
-tion=20
-of an 802.11 chipset."
-=2E..
-"Realistically, 1 mW is about the maximum power that a station is likel=
-y to=20
-receive, and the station would have to be within inches of a powerful A=
-P to=20
-receive even that much! (That might surprise you, but remember that 802=
-=2E11=20
-NICs can receive signals down to about 10-7 to 10-9 mW, so a =E2=80=9Cw=
-eak=E2=80=9D 1 mW=20
-signal is actually millions of times stronger than the weakest signal t=
-he=20
-card could discern.)"
-=2E..
-"Consequently, the RSSI ranges used by the 802.11 chipset manufacturers=
- don=E2=80=99t=20
-measure at all above 1 mW. The maximum RSSI value for all 802.11 chipse=
-ts and=20
-NICs represents a power level that is less than 1 mW. Everything betwee=
-n 1 mW=20
-and 100 mW is simply considered =E2=80=9C100 %=E2=80=9D RSSI."
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
+ include/net/mac80211.h                      |   21 +++++++++++++++++++++
+ net/mac80211/ieee80211_sta.c                |   27 +++++++++++++++++++++++++++
+ 4 files changed, 50 insertions(+), 0 deletions(-)
 
-bruno
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d4daa04..19a14ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5883,6 +5883,7 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
+ 	if (priv->error_recovering)
+ 		iwl3945_error_recovery(priv);
+ 
++	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ 	return;
+ 
+  restart:
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 4517e4c..4de81d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -5711,6 +5711,7 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
+ 		iwl4965_error_recovery(priv);
+ 
+ 	iwlcore_low_level_notify(priv, IWLCORE_START_EVT);
++	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
+ 	return;
+ 
+  restart:
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 01b3215..9fcda2d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -74,6 +74,14 @@
+  */
+ 
+ /**
++ * enum ieee80211_notification_type - Low level driver notification
++ * @IEEE80211_NOTIFY_RE_ASSOC: start the re-association sequence
++ */
++enum ieee80211_notification_types {
++	IEEE80211_NOTIFY_RE_ASSOC,
++};
++
++/**
+  * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
+  *
+  * This structure describes most essential parameters needed
+@@ -1677,4 +1685,17 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid);
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *ra,
+ 				     u16 tid);
+ 
++/**
++ * ieee80211_notify_mac - low level driver notification
++ * @hw: pointer as obtained from ieee80211_alloc_hw().
++ * @notification_types: enum ieee80211_notification_types
++ *
++ * This function must be called by low level driver to inform mac80211 of
++ * low level driver status change or force mac80211 to re-assoc for low
++ * level driver internal error that require re-assoc. A good example to use
++ * this notification to call mac80211 after suspend/resume, some NIC require
++ * re-assoc.
++ */
++void ieee80211_notify_mac(struct ieee80211_hw *hw,
++			  enum ieee80211_notification_types  notif_type);
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index f3c8a21..e1dd739 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -4235,3 +4235,30 @@ int ieee80211_sta_disassociate(struct net_device *dev, u16 reason)
+ 	ieee80211_set_disassoc(dev, ifsta, 0);
+ 	return 0;
+ }
++
++void ieee80211_notify_mac(struct ieee80211_hw *hw,
++			  enum ieee80211_notification_types  notif_type)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++
++	switch (notif_type) {
++	case IEEE80211_NOTIFY_RE_ASSOC:
++		rcu_read_lock();
++		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++
++			/* No need to wake the master device. */
++			if (sdata->dev == local->mdev)
++				continue;
++
++			if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
++				ieee80211_sta_req_auth(sdata->dev,
++						       &sdata->u.sta);
++			}
++
++		}
++		rcu_read_unlock();
++		break;
++	}
++}
++EXPORT_SYMBOL(ieee80211_notify_mac);
+-- 
+1.5.3.4
+
