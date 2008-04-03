@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:64172 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753480AbYDLWtl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931AbYDCKqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Apr 2008 18:49:41 -0400
-Message-ID: <48013C80.4070108@lwfinger.net> (sfid-20080412_234954_320198_4B288A33)
-Date: Sat, 12 Apr 2008 17:49:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] Add Realtek 8187B support
-References: <200804081931.07638.herton@mandriva.com.br>	 <200804100143.32854.herton@mandriva.com.br> <47FEEFCE.6040006@lwfinger.net>	 <200804112336.50903.herton@mandriva.com.br> <1208021344.6845.0.camel@dv>
-In-Reply-To: <1208021344.6845.0.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 3 Apr 2008 06:46:19 -0400
+Subject: RE: [PATCH 0/4] mac80211 and iwlwifi driver updates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <D936D925018D154694D8A362EEB0892004194A96@orsmsx416.amr.corp.intel.com>
+References: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
+	 <D936D925018D154694D8A362EEB0892004194A96@orsmsx416.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GakSmA6965Nyb7fbOm8B"
+Date: Thu, 03 Apr 2008 12:46:13 +0200
+Message-Id: <1207219573.3636.36.camel@johannes.berg> (sfid-20080403_114623_134629_CFBB9C3E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> On Fri, 2008-04-11 at 23:36 -0300, Herton Ronaldo Krzesinski wrote:
-> 
->> Yes, I'm too concerned about the fact that could be the patch that fried your
->> dongle.
-> 
-> I think you understood Larry too literally.  I assume the dongle is
-> still working.
 
-No, the transmitter failed. It could still receive, but nothing ever 
-was sent out. It happened while I was doing a ping -f with the rate 
-set at 1Mbs.
+--=-GakSmA6965Nyb7fbOm8B
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have received an RMA and will be sending the dongle back for 
-replacement on Monday.
 
-Larry
+> > [PATCH 1/4] mac80211: eliminate conf_ht
+> > [PATCH 2/4] iwlwifi: eliminate conf_ht
+> > [PATCH 3/4] mac80211: add association capabilty and timing
+> > info into bss_conf
+> > [PATCH 4/4] iwlwifi: Eliminate association from beacon
 
+> This patch series seems to have slipped through unnoticed. Could you
+> please consider it for merging to wireless-testing?
+
+Sorry, I probably read it, thought it looked fine and forgot to reply.
+The mac80211 parts look good to me.
+
+johannes
+
+--=-GakSmA6965Nyb7fbOm8B
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/S1dKVg1VMiehFYAQIKVRAAoMtsB4W6AOaNfk9Nhn8fZ205GS60hleh
+7n3bpKxHbN2pVU30psPgBgszLSFB6ZTexlomm5hZkx9ZTddOkd5LpGBlL5Xg1yGH
+qfB2I90iyL4cU5639n56CbNFL9lcYnSyZLtFIgBR5wfCLyUVdXFNeWgBqcXgcVG+
+lm55aDIIbVkRW4xYu9DVM3ievtKrOh7ij4I6iz+j2wa3mshjvmc2YyIb132IgH+F
+gIJp6PhbAmYH2VO+OohjTSH2dAwgdvPMyzzK40W/JAaC4WcOgUkFNrYteC5K12r1
+W1/DVB+2WcUFERMndvCrzPk1mPyXOo/ZQ7g5E6ZvmsZxUj4FquBsJTM6eH1e0Erl
+JxPhgMzqKTUSkdjV1ty76ZSM8sMaIjXnbYw7N1IgzLz78inFVgOrg7aaEB2BbpU0
+JFDNmBA+B1B6uIDLm8525Ktxag6tjbsiHh8Vxtfs4Zlws/kUaLZ3Y+sESncDPOg0
+kbE0LNzFlTd3k/x4f3V4lge7qHNleuvp6hEUFRmxDwHX5ZfGgESJ7jqI6nQ+u7OY
+ZsF59nQfaIQ6D/6wLVwgFW4WUA7Z8Qar5SHv6Xwjaq7pR1PmYladrqlWsCRNk4Hm
+0u6H1/pGOQwYXybKQdcWkY4K9Uar1DwpHhrupQIEmee7T97sQmsTpLSsHHWK14KV
+Hbuk9ObOfXM=
+=GKNF
+-----END PGP SIGNATURE-----
+
+--=-GakSmA6965Nyb7fbOm8B--
 
