@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:35674 "EHLO minas.ics.muni.cz"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4547 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752532AbYDWXjJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 19:39:09 -0400
-Date: Thu, 24 Apr 2008 01:39:04 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: iwl4965 regression since 2.6.24
-Message-ID: <20080423233904.GD14412@ics.muni.cz> (sfid-20080424_013946_353853_11D756CA)
-References: <20080423124105.GA4783@ics.muni.cz> <D936D925018D154694D8A362EEB0892004415BC8@orsmsx416.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <D936D925018D154694D8A362EEB0892004415BC8@orsmsx416.amr.corp.intel.com>
+	id S1758409AbYDCUEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2008 16:04:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Larry.Finger@lwfinger.net,
+	mcgrof@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] cfg80211: default to regulatory max power for channel
+Date: Thu,  3 Apr 2008 15:32:54 -0400
+Message-Id: <1207251174-23860-1-git-send-email-linville@tuxdriver.com> (sfid-20080403_210421_297727_6416004C)
+In-Reply-To: <47F5242D.80404@lwfinger.net>
+References: <47F5242D.80404@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2008 at 02:29:14PM -0700, Chatre, Reinette wrote:
-> Could you please send us some logs that can help us debug this proble=
-m?
-> Please load the driver with debugging (modprobe iwl4965 debug=3D0x43f=
-fb)
-> to get detailed logs and add a detailed description about what you ar=
-e
-> trying to do with the driver as the logs are created. Also, please
-> consider filing a bug at http://www.intellinuxwireless.org/bugzilla/
-> with these logs attached.
+If the driver does not specify a maximum power output, default to the
+regulatory max.
 
-done at:
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=3D1659
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Is this a worth alternative to Larry's b43legacy patch?  It looked like
+ath5k wasn't setting max_power either -- how does it work?
 
---=20
-Luk=E1=B9 Hejtm=E1nek
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ net/wireless/reg.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8cc6037..185488d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -136,7 +136,10 @@ static void handle_channel(struct ieee80211_channel *chan,
+ 	chan->flags = flags;
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+ 					 rg->max_antenna_gain);
+-	chan->max_power = min(chan->orig_mpwr, rg->max_power);
++	if (chan->orig_mpwr)
++		chan->max_power = min(chan->orig_mpwr, rg->max_power);
++	else
++		chan->max_power = rg->max_power;
+ }
+ 
+ static void handle_band(struct ieee80211_supported_band *sband,
+-- 
+1.5.3.3
+
