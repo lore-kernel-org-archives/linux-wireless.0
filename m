@@ -1,52 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out0.tiscali.nl ([195.241.79.175]:46452 "EHLO
-	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753845AbYDYAqP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 20:46:15 -0400
-Message-ID: <4811299A.7060407@tiscali.nl> (sfid-20080425_024644_641088_43B0F7BC)
-Date: Fri, 25 Apr 2008 02:45:14 +0200
-From: Roel Kluin <12o3l@tiscali.nl>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] prism54: prism54_get_encode() test below 0 on unsigned
- index
-References: <480F9481.2040303@tiscali.nl> <1209056973.5224.0.camel@localhost.localdomain>
-In-Reply-To: <1209056973.5224.0.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([66.187.233.31]:37897 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759832AbYDCDfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Apr 2008 23:35:34 -0400
+Subject: Re: [PATCH] libertas: remove lbs_get_fwversion()
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200804021804.35559.hs4233@mail.mn-solutions.de>
+References: <200804021804.35559.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 02 Apr 2008 23:33:41 -0400
+Message-Id: <1207193621.9435.10.camel@localhost.localdomain> (sfid-20080403_043536_440056_9FB504AD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Wed, 2008-04-23 at 21:56 +0200, Roel Kluin wrote:
-
->> u32 index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+On Wed, 2008-04-02 at 18:04 +0200, Holger Schurig wrote:
+> It was used only at one place anyway.
 > 
-> Probably should just change that to an 'int' instead of a u32.
-> 
-> Dan
-> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Thanks, in that case use the patch below
----
-when left unsigned, the test 'if (index < 0)' will not work.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index e5b3c28..8076ead 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1158,7 +1158,8 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
- {
- 	islpci_private *priv = netdev_priv(ndev);
- 	struct obj_key *key;
--	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-+	u32 devindex;
-+	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
- 	u32 authen = 0, invoke = 0, exunencrypt = 0;
- 	int rvalue;
- 	union oid_res_t r;
+> Index: wireless-testing/drivers/net/wireless/libertas/ethtool.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/ethtool.c	2008-04-02 15:56:13.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/ethtool.c	2008-04-02 16:00:35.000000000 +0200
+> @@ -24,13 +24,14 @@ static void lbs_ethtool_get_drvinfo(stru
+>  					 struct ethtool_drvinfo *info)
+>  {
+>  	struct lbs_private *priv = (struct lbs_private *) dev->priv;
+> -	char fwver[32];
+> -
+> -	lbs_get_fwversion(priv, fwver, sizeof(fwver) - 1);
+>  
+> +	snprintf(info->fw_version, 32, "%u.%u.%u.p%u",
+> +		priv->fwrelease >> 24 & 0xff,
+> +		priv->fwrelease >> 16 & 0xff,
+> +		priv->fwrelease >>  8 & 0xff,
+> +		priv->fwrelease       & 0xff);
+>  	strcpy(info->driver, "libertas");
+>  	strcpy(info->version, lbs_driver_version);
+> -	strcpy(info->fw_version, fwver);
+>  }
+>  
+>  /* All 8388 parts have 16KiB EEPROM size at the time of writing.
+> Index: wireless-testing/drivers/net/wireless/libertas/decl.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-04-02 15:59:57.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-04-02 16:00:01.000000000 +0200
+> @@ -37,9 +37,6 @@ void lbs_notify_command_response(struct 
+>  int lbs_set_radio_control(struct lbs_private *priv);
+>  u32 lbs_fw_index_to_data_rate(u8 index);
+>  u8 lbs_data_rate_to_fw_index(u32 rate);
+> -void lbs_get_fwversion(struct lbs_private *priv,
+> -	char *fwversion,
+> -	int maxlen);
+>  
+>  /** The proc fs interface */
+>  int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
+> Index: wireless-testing/drivers/net/wireless/libertas/wext.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-04-02 15:56:20.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-04-02 16:00:25.000000000 +0200
+> @@ -2060,23 +2060,6 @@ static int lbs_set_wap(struct net_device
+>  	return ret;
+>  }
+>  
+> -void lbs_get_fwversion(struct lbs_private *priv, char *fwversion, int maxlen)
+> -{
+> -	char fwver[32];
+> -
+> -	mutex_lock(&priv->lock);
+> -
+> -	sprintf(fwver, "%u.%u.%u.p%u",
+> -		priv->fwrelease >> 24 & 0xff,
+> -		priv->fwrelease >> 16 & 0xff,
+> -		priv->fwrelease >>  8 & 0xff,
+> -		priv->fwrelease       & 0xff);
+> -
+> -	mutex_unlock(&priv->lock);
+> -	snprintf(fwversion, maxlen, fwver);
+> -}
+> -
+> -
+>  /*
+>   * iwconfig settable callbacks
+>   */
 
