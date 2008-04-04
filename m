@@ -1,135 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.249]:54275 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753164AbYDQUNo (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59672 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751230AbYDDRoo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 16:13:44 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so112329rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 13:13:44 -0700 (PDT)
-Subject: [PATCH 4/7] mac80211: add const, remove unused function, make one
-	function static
-From: Harvey Harrison <harvey.harrison@gmail.com>
+	Fri, 4 Apr 2008 13:44:44 -0400
+Date: Fri, 4 Apr 2008 10:43:02 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 17 Apr 2008 13:13:49 -0700
-Message-Id: <1208463229.17196.26.camel@brick> (sfid-20080417_211451_832758_6B1DA99D)
+Cc: Miles Lane <miles.lane@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>, netdev <netdev@vger.kernel.org>,
+	ALSA development <alsa-devel@alsa-project.org>,
+	Thomas Graf <tgraf@suug.ch>,
+	YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>,
+	Stephen Hemminger <shemminger@vyatta.com>
+Subject: Re: 2.6.25-rc8-mm1 -- INFO: possible circular locking dependency
+ detected (while using iw to debug a wireless issue)
+Message-Id: <20080404104302.7445e41f.akpm@linux-foundation.org> (sfid-20080404_184449_274422_E4035A01)
+In-Reply-To: <1207323936.19189.58.camel@johannes.berg>
+References: <a44ae5cd0804030741jc9c7aebx21a7635e827b190f@mail.gmail.com>
+	<1207323936.19189.58.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/michael.c |    7 +++----
- net/mac80211/michael.h |    4 ++--
- net/mac80211/tkip.c    |   12 ++----------
- net/mac80211/tkip.h    |    6 +-----
- 4 files changed, 8 insertions(+), 21 deletions(-)
+On Fri, 04 Apr 2008 17:45:36 +0200 Johannes Berg <johannes@sipsolutions.net> wrote:
 
-diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
-index 4e151e0..1fcdf38 100644
---- a/net/mac80211/michael.c
-+++ b/net/mac80211/michael.c
-@@ -6,7 +6,6 @@
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-  */
--
- #include <linux/types.h>
- #include <linux/bitops.h>
- #include <asm/unaligned.h>
-@@ -28,7 +27,7 @@ static void michael_block(struct michael_mic_ctx *mctx, u32 val)
- }
- 
- static void michael_mic_hdr(struct michael_mic_ctx *mctx,
--			    u8 *key, u8 *da, u8 *sa, u8 priority)
-+			const u8 *key, const u8 *da, const u8 *sa, u8 priority)
- {
- 	mctx->l = get_unaligned_le32(key);
- 	mctx->r = get_unaligned_le32(key + 4);
-@@ -44,8 +43,8 @@ static void michael_mic_hdr(struct michael_mic_ctx *mctx,
- 	michael_block(mctx, priority);
- }
- 
--void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
--		 u8 *data, size_t data_len, u8 *mic)
-+void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
-+		 const u8 *data, size_t data_len, u8 *mic)
- {
- 	u32 val;
- 	size_t block, blocks, left;
-diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
-index 7d5707b..69b4501 100644
---- a/net/mac80211/michael.h
-+++ b/net/mac80211/michael.h
-@@ -18,7 +18,7 @@ struct michael_mic_ctx {
- 	u32 l, r;
- };
- 
--void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
--		 u8 *data, size_t data_len, u8 *mic);
-+void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
-+		 const u8 *data, size_t data_len, u8 *mic);
- 
- #endif /* MICHAEL_H */
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index a7c3feb..8cdf053 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -6,7 +6,6 @@
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-  */
--
- #include <linux/kernel.h>
- #include <linux/bitops.h>
- #include <linux/types.h>
-@@ -132,7 +131,7 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
- /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
-  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
-  * the packet payload). */
--u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
-+u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 			   u8 iv0, u8 iv1, u8 iv2)
- {
- 	*pos++ = iv0;
-@@ -143,14 +142,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 	return pos + 4;
- }
- 
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key)
--{
--	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv32, phase1key);
--}
--
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
-+static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 			       u8 *rc4key)
- {
- 	/* Calculate per-packet key */
-diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
-index b7c2ee7..7cfdb23 100644
---- a/net/mac80211/tkip.h
-+++ b/net/mac80211/tkip.h
-@@ -13,12 +13,8 @@
- #include <linux/crypto.h>
- #include "key.h"
- 
--u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
-+u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 			   u8 iv0, u8 iv1, u8 iv2);
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key);
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
--			       u8 *rc4key);
- void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta);
--- 
-1.5.5.144.g3e42
+> 
+> On Thu, 2008-04-03 at 10:41 -0400, Miles Lane wrote:
+> > After collecting the wireshark log, I found this in my messages log:
+> 
+> Below is a better version of the trace Miles sent me privately, but I
+> have no idea what would be causing it. I don't think it's related to
+> wireless.
+> 
+> ___=======================================================
+> [ INFO: possible circular locking dependency detected ]
+> 2.6.25-rc8-mm1 #15
+> -------------------------------------------------------
+> iw/9417 is trying to acquire lock:
+> (genl_mutex){--..}, at: [ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
+> 
+> but task is already holding lock:
+> (nlk->cb_mutex){--..}, at: [netlink_dump+0x39/0x22e] netlink_dump+0x39/0x22e
+> 
+> which lock already depends on the new lock.
+> 
+> the existing dependency chain (in reverse order) is:
+> 
+> -> #1 (nlk->cb_mutex){--..}:
+> [__lock_acquire+0xa02/0xbaf] __lock_acquire+0xa02/0xbaf
+> [lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
+> [snd_mixer_oss:mutex_lock_nested+0xd5/0x67b] mutex_lock_nested+0xd5/0x274
+> [netlink_dump_start+0xbd/0x15a] netlink_dump_start+0xbd/0x15a
+> [genl_rcv_msg+0x9d/0x13a] genl_rcv_msg+0x9d/0x13a
+> [netlink_rcv_skb+0x30/0x75] netlink_rcv_skb+0x30/0x75
+> [genl_rcv+0x1e/0x2e] genl_rcv+0x1e/0x2e
+> [cfg80211:netlink_unicast+0x1c1/0x1867] netlink_unicast+0x1c1/0x293
+> [netlink_sendmsg+0x21f/0x22c] netlink_sendmsg+0x21f/0x22c
+> [sock_sendmsg+0xca/0xe1] sock_sendmsg+0xca/0xe1
+> [sys_sendmsg+0x14d/0x1a8] sys_sendmsg+0x14d/0x1a8
+> [sys_socketcall+0x163/0x17e] sys_socketcall+0x163/0x17e
+> [sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
+>        [<ffffffff>] 0xffffffff
+> -> #0 (genl_mutex){--..}:
+> [__lock_acquire+0x929/0xbaf] __lock_acquire+0x929/0xbaf
+> [lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
+> [snd_mixer_oss:mutex_lock_nested+0xd5/0x67b] mutex_lock_nested+0xd5/0x274
+> [ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
+> [netlink_dump+0x51/0x22e] netlink_dump+0x51/0x22e
+> [netlink_recvmsg+0x156/0x203] netlink_recvmsg+0x156/0x203
+> [sock_recvmsg+0xd1/0xe9] sock_recvmsg+0xd1/0xe9
+> [sys_recvmsg+0xf2/0x17f] sys_recvmsg+0xf2/0x17f
+> [sys_socketcall+0x16f/0x17e] sys_socketcall+0x16f/0x17e
+> [sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
+>        [<ffffffff>] 0xffffffff
+> 
+> other info that might help us debug this:
+> 
+> 1 lock held by iw/9417:
+>  #0: (nlk->cb_mutex){--..}, at: [netlink_dump+0x39/0x22e] netlink_dump+0x39/0x22e
+> 
+> stack backtrace:
+> Pid: 9417, comm: iw Not tainted 2.6.25-rc8-mm1 #15
+> [print_circular_bug_tail+0x5b/0x66] print_circular_bug_tail+0x5b/0x66
+> [print_circular_bug_header+0xa5/0xb0] ? print_circular_bug_header+0xa5/0xb0
+> [__lock_acquire+0x929/0xbaf] __lock_acquire+0x929/0xbaf
+> [lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
+> [ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
+> [snd_mixer_oss:mutex_lock_nested+0xd5/0x67b] mutex_lock_nested+0xd5/0x274
+> [ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
+> [ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
+> [ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
+> [netlink_dump+0x51/0x22e] netlink_dump+0x51/0x22e
+> [mac80211:kfree_skb+0x40/0x45] ? kfree_skb+0x40/0x45
+> [netlink_recvmsg+0x156/0x203] netlink_recvmsg+0x156/0x203
+> [sock_sendmsg+0xca/0xe1] ? sock_sendmsg+0xca/0xe1
+> [sock_recvmsg+0xd1/0xe9] sock_recvmsg+0xd1/0xe9
+> [<c01313d9>] ? autoremove_wake_function+0x0/0x30
+> [snd_pcm_oss:copy_from_user+0x3b/0x236] ? copy_from_user+0x3b/0x5e
+> [verify_iovec+0x40/0x70] ? verify_iovec+0x40/0x70
+> [sys_recvmsg+0xf2/0x17f] sys_recvmsg+0xf2/0x17f
+> [snd_hda_intel:_spin_unlock_irqrestore+0x56/0x6c] ? _spin_unlock_irqrestore+0x56/0x6c
+> [paravirt_get_lazy_mode+0xe/0x1b] ? paravirt_get_lazy_mode+0xe/0x1b
+> [crypto_algapi:kunmap_atomic+0x9e/0x2e8e] ? kunmap_atomic+0x9e/0xbb
+> [handle_mm_fault+0x7aa/0x7bb] ? handle_mm_fault+0x7aa/0x7bb
+> [sys_socketcall+0x16f/0x17e] sys_socketcall+0x16f/0x17e
+> [processor:trace_hardirqs_on+0xf0/0x5d38] ? trace_hardirqs_on+0xf0/0x12c
+> [sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
+> 
 
-
+Yes, that looks like a problem in the core netlink code.  git-net contains
+several largeish changes to it..
