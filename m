@@ -1,138 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:42003 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752750AbYDMXAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2008 19:00:17 -0400
-Date: Mon, 14 Apr 2008 00:59:49 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev@lists.berlios.de,
-	Christian Casteyde <casteyde.christian@free.fr>
-Subject: [PATCH] b43legacy: fix DMA mapping leakage
-Message-ID: <20080414005949.162956b2@polimi.it> (sfid-20080414_000021_120624_1E9C6C7B)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wf-out-1314.google.com ([209.85.200.171]:63787 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbYDDXeH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Apr 2008 19:34:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so300042wff.4
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2008 16:34:06 -0700 (PDT)
+Message-ID: <b3153e950804041634k2c3fd960h3e118deb7c42f0e7@mail.gmail.com> (sfid-20080405_003411_745001_98DF8E31)
+Date: Fri, 4 Apr 2008 16:34:06 -0700
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: notify mac from low level driver (iwlwifi)
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Mohamed Abbas" <mabbas@linux.intel.com>
+In-Reply-To: <1207345183.3625.18.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1207264130-25437-1-git-send-email-reinette.chatre@intel.com>
+	 <1207264130-25437-2-git-send-email-reinette.chatre@intel.com>
+	 <1207320389.19189.30.camel@johannes.berg>
+	 <b3153e950804041435p7233fe3bn23bc017967687e9a@mail.gmail.com>
+	 <1207345183.3625.18.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a DMA mapping leakage in the case where we reject a DMA buffer
-because of its address.
-The patch by Michael Buesch has been ported to b43legacy.
+On 4/4/08, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Fri, 2008-04-04 at 14:35 -0700, mohamed salim abbas wrote:
+> > On 4/4/08, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > >
+> > > > + * This function must be called by low level driver to inform mac80211 of
+> > > > + * low level driver status change or force mac80211 to re-assoc for low
+> > > > + * level driver internal error that require re-assoc. A good example to use
+> > > > + * this notification to call mac80211 after suspend/resume, some NIC require
+> > > > + * re-assoc.
+> > >
+> > > I think the suspend/resume text should be dropped since IMHO that
+> > > requires more work, reprogramming all the hardware crypto keys for
+> > > example.
+>
+> > I can remove the suspend/resume text will be that good enough?
+>
+> Sure. I hope at some point somebody will implement proper suspend/resume
+> (i.e. when the suspend callback is invoked all interfaces, stations,
+> keys etc. are removed from the driver) but that's a lot more work. That
+> you mention suspend/resume though makes me wonder: does iwlwifi store
+> all that information locally and restore it to the hardware so that it
+> can actually work with this across suspend/resume? For b43, I at least
+> need to reset all WEP keys.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Christian Casteyde <casteyde.christian@free.fr>
----
-John, this is a fix for 2.6.25.
----
-Index: bcm-testing/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- bcm-testing.orig/drivers/net/wireless/b43legacy/dma.c
-+++ bcm-testing/drivers/net/wireless/b43legacy/dma.c
-@@ -585,8 +585,9 @@ static int b43legacy_dmacontroller_tx_re
- 
- /* Check if a DMA mapping address is invalid. */
- static bool b43legacy_dma_mapping_error(struct b43legacy_dmaring *ring,
--					dma_addr_t addr,
--					size_t buffersize)
-+					 dma_addr_t addr,
-+					 size_t buffersize,
-+					 bool dma_to_device)
- {
- 	if (unlikely(dma_mapping_error(addr)))
- 		return 1;
-@@ -594,11 +595,11 @@ static bool b43legacy_dma_mapping_error(
- 	switch (ring->type) {
- 	case B43legacy_DMA_30BIT:
- 		if ((u64)addr + buffersize > (1ULL << 30))
--			return 1;
-+			goto address_error;
- 		break;
- 	case B43legacy_DMA_32BIT:
- 		if ((u64)addr + buffersize > (1ULL << 32))
--			return 1;
-+			goto address_error;
- 		break;
- 	case B43legacy_DMA_64BIT:
- 		/* Currently we can't have addresses beyond 64 bits in the kernel. */
-@@ -607,6 +608,12 @@ static bool b43legacy_dma_mapping_error(
- 
- 	/* The address is OK. */
- 	return 0;
-+
-+address_error:
-+	/* We can't support this address. Unmap it again. */
-+	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
-+
-+	return 1;
- }
- 
- static int setup_rx_descbuffer(struct b43legacy_dmaring *ring,
-@@ -626,7 +633,7 @@ static int setup_rx_descbuffer(struct b4
- 		return -ENOMEM;
- 	dmaaddr = map_descbuffer(ring, skb->data,
- 				 ring->rx_buffersize, 0);
--	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
-+	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		/* ugh. try to realloc in zone_dma */
- 		gfp_flags |= GFP_DMA;
- 
-@@ -639,7 +646,7 @@ static int setup_rx_descbuffer(struct b4
- 					 ring->rx_buffersize, 0);
- 	}
- 
--	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
-+	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		dev_kfree_skb_any(skb);
- 		return -EIO;
- 	}
-@@ -891,7 +898,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 					  DMA_TO_DEVICE);
- 
- 		if (b43legacy_dma_mapping_error(ring, dma_test,
--					sizeof(struct b43legacy_txhdr_fw3))) {
-+					sizeof(struct b43legacy_txhdr_fw3), 1)) {
- 			/* ugh realloc */
- 			kfree(ring->txhdr_cache);
- 			ring->txhdr_cache = kcalloc(nr_slots,
-@@ -906,7 +913,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 					DMA_TO_DEVICE);
- 
- 			if (b43legacy_dma_mapping_error(ring, dma_test,
--					sizeof(struct b43legacy_txhdr_fw3)))
-+					sizeof(struct b43legacy_txhdr_fw3), 1))
- 				goto err_kfree_txhdr_cache;
- 		}
- 
-@@ -1235,7 +1242,7 @@ static int dma_tx_fragment(struct b43leg
- 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
- 					   sizeof(struct b43legacy_txhdr_fw3), 1);
- 	if (b43legacy_dma_mapping_error(ring, meta_hdr->dmaaddr,
--					sizeof(struct b43legacy_txhdr_fw3))) {
-+					sizeof(struct b43legacy_txhdr_fw3), 1)) {
- 		ring->current_slot = old_top_slot;
- 		ring->used_slots = old_used_slots;
- 		return -EIO;
-@@ -1254,7 +1261,7 @@ static int dma_tx_fragment(struct b43leg
- 
- 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 	/* create a bounce buffer in zone_dma on mapping failure. */
--	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
-+	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
- 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
- 		if (!bounce_skb) {
- 			ring->current_slot = old_top_slot;
-@@ -1268,7 +1275,7 @@ static int dma_tx_fragment(struct b43leg
- 		skb = bounce_skb;
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
--		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
-+		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
- 			ring->current_slot = old_top_slot;
- 			ring->used_slots = old_used_slots;
- 			err = -EIO;
+for iwl the driver on suspend behave like the device is going down, on
+resume the driver reload the firmware and start fresh. the driver does
+save some data to restore on resume.
+I guess we can enhance on this to handle more scenario, but atleast
+this is good enough for iwl driver.
 
-
---
-Ciao
-Stefano
+>
+> Thanks,
+> johannes
+>
+>
