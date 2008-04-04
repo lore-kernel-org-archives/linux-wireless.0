@@ -1,86 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46216 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57588 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbYDDVjz (ORCPT
+	with ESMTP id S1757033AbYDDOvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 17:39:55 -0400
-Subject: Re: [PATCH] mac80211: notify mac from low level driver (iwlwifi)
+	Fri, 4 Apr 2008 10:51:19 -0400
+Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX
+	non-WEP frame, but expected encryption"
 From: Johannes Berg <johannes@sipsolutions.net>
-To: mohamed salim abbas <mabbaswireless@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mabbas@linux.intel.com>
-In-Reply-To: <b3153e950804041435p7233fe3bn23bc017967687e9a@mail.gmail.com> (sfid-20080404_223559_199978_E0FDDF61)
-References: <1207264130-25437-1-git-send-email-reinette.chatre@intel.com>
-	 <1207264130-25437-2-git-send-email-reinette.chatre@intel.com>
-	 <1207320389.19189.30.camel@johannes.berg>
-	 <b3153e950804041435p7233fe3bn23bc017967687e9a@mail.gmail.com>
-	 (sfid-20080404_223559_199978_E0FDDF61)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9AVwxfb8BzX8Cfw8cmS7"
-Date: Fri, 04 Apr 2008 23:39:43 +0200
-Message-Id: <1207345183.3625.18.camel@johannes.berg> (sfid-20080404_223957_724284_A3960A58)
+To: Jouni Malinen <j@w1.fi>
+Cc: Miles Lane <miles.lane@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080403165255.GI2025@jm.kir.nu>
+References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
+	 <1207226756.3636.66.camel@johannes.berg>
+	 <1207231313.3636.100.camel@johannes.berg> <20080403165255.GI2025@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9IF0QjAmHQdQ0oioxsxM"
+Date: Fri, 04 Apr 2008 16:51:11 +0200
+Message-Id: <1207320671.19189.36.camel@johannes.berg> (sfid-20080404_155123_080883_E193A16A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9AVwxfb8BzX8Cfw8cmS7
+--=-9IF0QjAmHQdQ0oioxsxM
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Fri, 2008-04-04 at 14:35 -0700, mohamed salim abbas wrote:
-> On 4/4/08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >
-> > > + * This function must be called by low level driver to inform mac802=
-11 of
-> > > + * low level driver status change or force mac80211 to re-assoc for =
-low
-> > > + * level driver internal error that require re-assoc. A good example=
- to use
-> > > + * this notification to call mac80211 after suspend/resume, some NIC=
- require
-> > > + * re-assoc.
-> >
-> > I think the suspend/resume text should be dropped since IMHO that
-> > requires more work, reprogramming all the hardware crypto keys for
-> > example.
+> >     Duration: 44
 
-> I can remove the suspend/resume text will be that good enough?
+> What's wrong with the duration field value? The dump here does not
+> indicate which transmit rate was used, so I don't know what TX rate the
+> ACK would use, but 44 sounds like a reasonable duration value for
+> 802.11g rates..
 
-Sure. I hope at some point somebody will implement proper suspend/resume
-(i.e. when the suspend callback is invoked all interfaces, stations,
-keys etc. are removed from the driver) but that's a lot more work. That
-you mention suspend/resume though makes me wonder: does iwlwifi store
-all that information locally and restore it to the hardware so that it
-can actually work with this across suspend/resume? For b43, I at least
-need to reset all WEP keys.
+Yes, you're perfectly right, my rough estimate was totally off, I
+miscalculated.
 
-Thanks,
+> > Does anybody have an explanation for that except that the AP software i=
+s
+> > messing it up?
+>=20
+> Looks like an interesting AP behavior to me..
+
+For some values of interesting... :)
+
+> > In any case, I suppose the message in question isn't actually necessary=
+.
+> > I'll make it depend on verbose debugging maybe.
+>=20
+> Yes, that sounds reasonable. The AP should not be sending this kind of
+> crap, but well, what can you do if it does.. In theory, this could also
+> be showing up in multi-SSID configuration when another SSID is
+> configured to use unencrypted frames (though, that would cause interop
+> issues in association for number of clients..).
+
+That would be ... interesting. But yeah, the message doesn't have much
+value, it just tells you your peer might be buggy...
+
 johannes
 
---=-9AVwxfb8BzX8Cfw8cmS7
+--=-9IF0QjAmHQdQ0oioxsxM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/agHqVg1VMiehFYAQKXWhAAlpZ/wzj54ocYfdF1sJOx07T1YgYnCOFj
-dKbWdiQvh4bZXvQPPZlQwP5Kw117pUSXNVat5TR9arrDrMsZlqelZEWDP7c0kQtK
-QgwRS8kgVRdNg/CmizRPWEvfd40fG0Ihxm3E5f482pJ+/Q7wLowJP7O24VGpOr1n
-9bodFAa1hE5HNCo4tIJdOZBX/xOrnnQXC7kaFC1+bhAvOcNDUuXRb4A9npkLlPfb
-sgABFV0GIxFhrdv6/+n+BHoZh+/pR2MYmD51nSAXvRECXVNAKQbA0a7KXm4X3Ldp
-aNY2fCA24umJO0Ky2C4bHvcWpElONYDiWGu6yCOv3duTI54+RHQW04O2zsFzpmah
-urQrLZm5xHh+1RRzjk+Fvbpr6ONJ9EVwz/0ZChwthasWEma3lnUjDycQdCIDaT+u
-L5F6ieTVOS6pdFp+TMaI6Qqj6eFRbBUoBkavPaZJ2/aD9THnD1hnBO5rMBWq7tkg
-iFLNsqsavK4pYOx1wElEANuVQ9SBwONBsVmBKIikYz397hqkX29JfaNWau48CiqE
-QNL1UdgioTGecomkImcaFKVtHhCPdaRxc7PK9Y6FG3oYJ9qoUodpdc+Jw9ZK34i6
-QfPEYUXeMlxJ/lFqT94Mn1Q+i+8ZRsV80MytDo16PBn4KhWPUCNXaRnmrsnQsJNy
-z2CPG2FEGBU=
-=Oka0
+iQIVAwUAR/ZAXqVg1VMiehFYAQIjDw//WvREJtSnWb+6g1Gg3s7z/+x40Rt3+Z1C
+0JFJFiSIOPq4O9OXI2rRau7uL5i3Que1w5FqJycTRPd1oh+8uDuWqA5H5iEdH8d4
+EYMEJIBsBU0xgNN3941mDETvL54E140zq1gX1uyVCUwRK0YZ6C8GnmQsyNg/xY6x
+3V/veCRVnux44UDcPwlPx2p+iW/p9JtVbnQdkeIXsAiiqTY7/ugy2lq1OZzDUmK6
+ZOYrbPwPcD3zs30b+7Ayrk+tVcZHi0elJJbRBU3C9MjaQvBKkDvMVkUwnmRi2/Cf
+erqbx6rn4i9rJs107SFuTzJQsfZIdVLFIZilfEFBDUW2TVqnkep5bKt4yQ0CH6Ev
+bYmemYunqb5BxG91ngeIU3VN41wg7F/FVF8KX20nhiXUQBO3ib4moAQzGV7Tb2lH
+oEnb4Br37Ga7GbaJK6q1G1UB2tj720G5Wab4fH+D7UTIB11vysWzhYtn7BrqgQWS
+w/a4ygEaoT/BNarq15D351dAaSiNjYQCjWhhXgQeG9zz0ugGWC4IFCH6UlWm86W0
+B8u7SCN1gy6PcIBiLjzOe1yzVhEtTVoFuvHF4DQRTFMACPEc3dU+fBEJ70VJ5xES
+r/apCtNrKhjOrl+54fCANOsZWJBsTco48fZHBdRnvKEiw8f1ehk54xuxp8iqxvSo
+/H0TQ52zyXg=
+=XN8O
 -----END PGP SIGNATURE-----
 
---=-9AVwxfb8BzX8Cfw8cmS7--
+--=-9IF0QjAmHQdQ0oioxsxM--
 
