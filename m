@@ -1,94 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:55664 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756674AbYDUTFN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56621 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759016AbYDDOnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 15:05:13 -0400
-Message-ID: <480CE50A.1000200@lwfinger.net> (sfid-20080421_210605_263113_A4A0F745)
-Date: Mon, 21 Apr 2008 14:03:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Miles Lane <miles.lane@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-Subject: Re: b43 speed problem over 2.6.24
-References: <a44ae5cd0804161701k1014f3dkebaa1d35f1a8e20a@mail.gmail.com>	 <a44ae5cd0804181446g596daa2yd1be5b1ac7e5e472@mail.gmail.com>	 <1208555536.4848.54.camel@johannes.berg>	 <a44ae5cd0804190801n66035332ubedbae99a7b635ce@mail.gmail.com>	 <a44ae5cd0804190811g10335c22mf10b9ddb2ab568ec@mail.gmail.com>	 <a44ae5cd0804190814i434dc92bwba3bb33737fbec1f@mail.gmail.com>	 <a44ae5cd0804191905qb281d7ehf839f80cd753a82@mail.gmail.com>	 <1208766258.26186.35.camel@johannes.berg>	 <a44ae5cd0804210400o1ed662aeqb00b9ba5abc61126@mail.gmail.com>	 <1208779022.26186.91.camel@johannes.berg> <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
-In-Reply-To: <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+	Fri, 4 Apr 2008 10:43:37 -0400
+Subject: Re: mac80211: ieee80211_ops.bss_info_changed question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <D936D925018D154694D8A362EEB08920041CC3C6@orsmsx416.amr.corp.intel.com>
+References: <D936D925018D154694D8A362EEB08920041CC3C6@orsmsx416.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+Nq8rCGLP3nkmfwhOun9"
+Date: Fri, 04 Apr 2008 16:43:25 +0200
+Message-Id: <1207320205.19189.25.camel@johannes.berg> (sfid-20080404_154409_934891_129A1631)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Miles Lane wrote:
-> On Mon, Apr 21, 2008 at 7:57 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> Hi,
->>
->>  Miles described a b43 speed problem in the thread
->>
->>         =EF=BB=BF2.6.25-rc9 -- bcm4306 performance is in the toilet
->>
->>  (over 2.6.24) and not being able to see anything from his logs/pack=
-et
->>  captures/... I asked him to bisect. This resulted in
->>
->>  commit 61bca6eb85c863603d6054530e2f65c3b9aba85b
->>  Author: Stefano Brivio <stefano.brivio@polimi.it>
->>  Date:   Tue Nov 6 22:49:05 2007 +0100
->>
->>     b43: rewrite A PHY initialization
->>
->>  which is a huge commit and hence a bit of a problem. Does anyone ha=
-ve
->>  suggestions how to proceed?
->>
->>  I have very similar hardware, maybe this card is affected by the
->>  boardflags problems we found recently? Miles, can you give us
->>   * lspci -vn -s =EF=BB=BF01:06.0
->>   * the kernel init messages when ssb is built with debugging
->=20
-> Here you go:
->=20
-> # lspci -vn -s 01:06.0
-> 01:06.0 0280: 14e4:4320 (rev 03)
-> 	Subsystem: 1057:7110
-> 	Flags: bus master, fast devsel, latency 16, IRQ 5
-> 	Memory at ed000000 (32-bit, non-prefetchable) [size=3D8K]
->=20
-> [    3.977930] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x04, ven=
-dor 0x4243)
-> [    3.977942] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x05,
-> vendor 0x4243)
-> [    3.977952] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x02, vendor =
-0x4243)
-> [    3.977962] ssb: Core 3 found: V90 (cc 0x807, rev 0x02, vendor 0x4=
-243)
-> [    3.977971] ssb: Core 4 found: PCI (cc 0x804, rev 0x09, vendor 0x4=
-243)
-> [    3.993965] ssb: SPROM revision 2 detected.
-> [    3.994816] ssb: Sonics Silicon Backplane found on PCI device 0000=
-:01:06.0
->=20
-> Thanks,
->       Miles
-> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
-=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
-=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
-=EF=BF=BD*=DE=95=EF=BF=BD,=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD=
-,j=07=EF=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=
-=BF=BDz=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=
-=BF=BD=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=
-=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ=
-+=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
-I don't know what got garbled, but we also need the b43 debugging=20
-information. In particular, what is the PHY rev?
 
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-+Nq8rCGLP3nkmfwhOun9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Reinette,
+
+> In the comments about bss_info_changed it is said that the callback has
+> to be atomic. I was looking at it and could only find that it is called
+> either from the workqueue or an ioctl. It thus seems that we may be able
+> to sleep in there. I likely missed the spot where it needs to be atomic
+> ... could you please direct me to it?
+
+I think you may be right, I can't find any spots either. I was likely
+mislead when writing that by the fact that much of the code in
+ieee80211_sta.c uses GFP_ATOMIC while it actually runs from a workqueue,
+which is actually confusing me still.
+
+johannes
+
+--=-+Nq8rCGLP3nkmfwhOun9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/Y+jKVg1VMiehFYAQJKuxAArMapINowUhCg1vlMjHRQ8Xb96wBALGEA
+54TpV8BY1o/WcXyme7hqh1ZuPee0afNDBiXj3vhi4gVaSWMkzonCpS9YniB4B8Zn
+dI6TCOVV8XHdXEFzR8yX3/DKkYJurasezils3E6bwMXOFoL5z+OeVPg2FZh9tM7k
+o0StRlFIJVZXLzun0Isz+tC0lBIxhoz7Pw+V0Dz0vQmOpHTH5tV18LnP06gLeewA
+46AEzjJoKzONCjgK+pAdaNikMMRAu3VeUM4gsh/2lWmTQHqnltdMGeCaT2dpDtBg
+H0+gJ9+ymUGmKcdEhiuK0aYiVQIPs/k5IKrKDSUVjHq9dNDjrZlqA07VFqz4bkKq
+CtrK5Fyaa13ccf0tmhD4zfT+6azg/7ytX8vKpQH5aONlyfTBFF4g8G/vlhaGIgPY
+3u3TqW/qsQJAuQ0rP+AJNgn+lvDTiLkIyswkQBcml4i8fjH4aV+kIH12blYkEUbs
+0xTO/Knr5ULgSzFSIApRqyaCB+BTnabqzhZKCZwZNcUmJGIbtqQC3I7rXhZKb8Ah
+GPU0KGtYeGw+EaAF43clWfqVWVNoeLeqOymVvJ1OgZGqlUMFM5X3k6BwR4mgEu4X
+etG11xc9yR+zjZQlJXZIJIG3AaUYNQhXRHHfBKg2aO0Ft2/Liv9WxpBCcywgwoEK
+iNzCjdVgF2A=
+=6DN1
+-----END PGP SIGNATURE-----
+
+--=-+Nq8rCGLP3nkmfwhOun9--
+
