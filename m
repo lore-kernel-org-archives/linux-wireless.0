@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53307 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032AbYDWQyT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 12:54:19 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: 'Dan Williams' <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	hostap@lists.shmoo.com
-In-Reply-To: <005401c8a561$4e27efb0$0b3ca8c0@gotws1589>
-References: <005401c8a561$4e27efb0$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KQ9q8H2ub1zOkGNSwhxj"
-Date: Wed, 23 Apr 2008 18:53:25 +0200
-Message-Id: <1208969605.31429.88.camel@johannes.berg> (sfid-20080423_185456_205737_1BAAF7B5)
+Received: from c60.cesmail.net ([216.154.195.49]:40524 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756056AbYDDDVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2008 23:21:25 -0400
+Subject: Re: [PATCH] rtl8187b work in progress...
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+In-Reply-To: <1207074268-16335-1-git-send-email-linville@tuxdriver.com>
+References: <pan.2008.04.01.18.07.31.772700@gimpelevich.san-francisco.ca.us>
+	 <1207074268-16335-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 03 Apr 2008 23:21:23 -0400
+Message-Id: <1207279283.2585.11.camel@dv> (sfid-20080404_042134_935806_E1B954E0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-04-01 at 14:24 -0400, John W. Linville wrote:
+> No idea if it even compiles...
 
---=-KQ9q8H2ub1zOkGNSwhxj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry for delay.  Thanks for the code!  It needs some minor changes to
+compile:
 
-On Wed, 2008-04-23 at 18:44 +0200, Lars Ericsson wrote:
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index 4c297d1..35c6486 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -50,6 +50,13 @@ struct rtl8187_tx_info {
+ 	struct ieee80211_hw *dev;
+ };
+ 
++enum {
++	DEVICE_RTL8187,
++	DEVICE_RTL8187B
++};
++
++#define RTL818X_MSR_ENEDCA		(1 << 4)
++
+ /* Tx flags are common between rtl8187 and rtl8187b */
+ #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+ #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index ec7f80b..b1b2548 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -224,7 +224,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	info->urb = urb;
+ 	info->dev = dev;
+ 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
+-			  priv->is_rtl8187b ? hdr_b : hdr,
++			  priv->is_rtl8187b ? (void *)hdr_b : (void *)hdr,
+ 			  skb->len, rtl8187_tx_cb, skb);
+ 	usb_submit_urb(urb, GFP_ATOMIC);
+ 
 
-> Currently this is what happens most of the time, when all ioclts had been
-> issued from the driver, it drops current authentication/association atemp=
-ts
-> and start with the new one. Most of the times that works fine.
->=20
-> But sometimes, when for any reason the 3 ioctls get delayed, the driver m=
-ay
-> success to associate with the old BSSID (since that is still valid in the
-> driver). Then when all 3 ioctls has been received, including the new BSSI=
-D,
-> the driver re-starts the authentication/association sequence with the new
-> BSSID.
->=20
-> The problem is that the STA already have a valid association with the fir=
-st
-> AP. In this case the new BSSID silently ignores any
-> authentication/association attempts. My believe is that it knows that the
-> STA already have a valid association.
+Plus there are spurious messages about uninitialized hdr and hdr_b in
+rtl8187_tx().  Perhaps a cleaner solution would be to use a union or
+separate functions to populate the header, but that's details.  sparse
+doesn't report anything serious.
 
-Uh huh. Aren't we disassociating when we change to a new bssid?
+Anyway, the module loads fine:
 
-johannes
+rtl8187 1-1:1.0: usb_probe_interface
+rtl8187 1-1:1.0: usb_probe_interface - got id
+phy2: Selected rate control algorithm 'pid'
+phy2: hwaddr 00:14:d1:45:a9:0b, rtl8187 V0 + rtl8225
+usbcore: registered new interface driver rtl8187
 
---=-KQ9q8H2ub1zOkGNSwhxj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+But if I bring the interface up, it takes a lot of time, and I get this
+in the kernel log:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+phy2: RF Calibration Failed! 0
 
-iQIVAwUASA9phKVg1VMiehFYAQIxMxAAwyQ0/Vpmm21KjauZG/nZHK6GuppkETm7
-THo+fY38xRS7GobUyddfTvHDVEHJUIJ14I9TvRUiha1RwqPlyzYKy0kNPcCHq30b
-KVQJV6jSqRy8SM3UE0mUNnAuuUW/Snvm9ftL6gCYMl+HZpTaTi26xS5FBSwznl1H
-Ata7sXGH5jHQ9YS+eht829GdyO7MCg9B79Een/7uM+NJw9gD4GMBfwAb3fvScetE
-KlYjq5ZvaVfFudhWS2Rz9QDBpSQvgwhrGzEjjiozdQmI+Czh3TXSmurQ7l9L0+F7
-qYy79C0IgsG99/yPk75DtU4e4q3dRDSB/pYjHvYhLmOHamlBbGLydQCVTDhxRlqd
-gl8MriK4eW4xAEbgBoZW9JRbmHLcnCca8tlFeaFOwE2uU2ZK3HqMeQsiwLrGR+Vn
-Z8POjm7qxJRTba6wzF0pYdijh+7Ccph6QqGxPyXu3r9HN64QDV2d1XtFckCJlPjM
-XeEEmMo6mxoKpFPIWaMKgiv3vQ5/4RCpP98KM+bbUXiR85Kz8Wd/i7yvjzeqqOIv
-ayonQzEMZWazITWfItVWEEnV0Pcmu+qkPOMQTLgqMnXm0Yt3+N7L8ObLPMd8sfrG
-O/QyZy7sWAx6TJRKekjMVNhgr4Y6jsA9xo7hYItuvugnda8FPTkzYeJVSsuN25EM
-M6dECpf2Pug=
-=RfXm
------END PGP SIGNATURE-----
+Scanning causes immediate kernel panic in
+ieee80211_generic_frame_duration(), which is called from rtl8187_tx().
+Sorry, no time to capture the backtrace now, but it's the code added by
+you.
 
---=-KQ9q8H2ub1zOkGNSwhxj--
-
+-- 
+Regards,
+Pavel Roskin
