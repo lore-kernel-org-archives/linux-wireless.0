@@ -1,231 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:37655 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761799AbYDQRTK (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:61787 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756677AbYDDPG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 13:19:10 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so194555fkr.5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 10:19:08 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3] mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf
-Date: Thu, 17 Apr 2008 19:23:41 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>
-References: <200804171728.30188.IvDoorn@gmail.com> <200804171759.54830.IvDoorn@gmail.com>
-In-Reply-To: <200804171759.54830.IvDoorn@gmail.com>
+	Fri, 4 Apr 2008 11:06:58 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so70242wah.23
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2008 08:06:58 -0700 (PDT)
+Message-ID: <a44ae5cd0804040806t1cc86a90of667ef589dc73fa8@mail.gmail.com> (sfid-20080404_160703_205011_2066E1A3)
+Date: Fri, 4 Apr 2008 11:06:57 -0400
+From: "Miles Lane" <miles.lane@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.25-rc8-mm1 -- INFO: possible circular locking dependency detected (while using iw to debug a wireless issue)
+In-Reply-To: <a44ae5cd0804040804q43f9a27dl34de512d3bda5f2@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804171923.41533.IvDoorn@gmail.com> (sfid-20080417_181916_756029_FBE1A288)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="----=_Part_9460_31781007.1207321617882"
+References: <a44ae5cd0804030741jc9c7aebx21a7635e827b190f@mail.gmail.com>
+	 <a44ae5cd0804040804q43f9a27dl34de512d3bda5f2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hw_key_idx inside the ieee80211_key_conf structure does
-not provide all the information drivers might need to perform
-hardware encryption.
+------=_Part_9460_31781007.1207321617882
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This is in particular true for rt2x00 who needs to know the
-key algorithm and whether it is a shared or pairwise key.
+Hello Johannes,
 
-By passing the ieee80211_key_conf pointer it assures us that
-drivers can make full use of all information that it should know
-about a particular key.
+I am attaching the information, since I do not have a regular mail
+client on the machine I am working on now.  I know the mailing lists
+may bounce a message with an attachment.  I can resend from my other
+machine later if need be.
 
-Additionally this patch updates all drivers to grab the hw_key_idx from
-the ieee80211_key_conf structure.
+Miles
 
-v2: Removed bogus u16 cast
-v3: Add warning about ieee80211_tx_control pointers
+------=_Part_9460_31781007.1207321617882
+Content-Type: text/plain; name=locking-dependency.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_femw2n5f1
+Content-Disposition: attachment; filename=locking-dependency.txt
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index e18305b..cd20abe 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1323,7 +1323,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
- 	pktlen = skb->len;
- 
- 	if (!(ctl->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)) {
--		keyidx = ctl->key_idx;
-+		keyidx = ctl->hw_key->hw_key_idx;
- 		pktlen += ctl->icv_len;
- 	}
- 
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 19aefbf..8849194 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -235,7 +235,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
- 
- 	plcp_fragment_len = fragment_len + FCS_LEN;
- 	if (use_encryption) {
--		u8 key_idx = (u16) (txctl->key_idx);
-+		u8 key_idx = txctl->hw_key->hw_key_idx;
- 		struct b43_key *key;
- 		int wlhdr_len;
- 		size_t iv_len;
-diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
-index dcad249..fc83dab 100644
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -232,7 +232,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- 
- 	plcp_fragment_len = fragment_len + FCS_LEN;
- 	if (use_encryption) {
--		u8 key_idx = (u16)(txctl->key_idx);
-+		u8 key_idx = txctl->hw_key->hw_key_idx;
- 		struct b43legacy_key *key;
- 		int wlhdr_len;
- 		size_t iv_len;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1a5678f..b1250ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2391,7 +2391,8 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
- 				      struct sk_buff *skb_frag,
- 				      int last_frag)
- {
--	struct iwl3945_hw_key *keyinfo = &priv->stations[ctl->key_idx].keyinfo;
-+	struct iwl3945_hw_key *keyinfo =
-+	    &priv->stations[ctl->hw_key->hw_key_idx].keyinfo;
- 
- 	switch (keyinfo->alg) {
- 	case ALG_CCMP:
-@@ -2414,7 +2415,7 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
- 
- 	case ALG_WEP:
- 		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_WEP |
--		    (ctl->key_idx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT;
-+		    (ctl->hw_key->hw_key_idx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT;
- 
- 		if (keyinfo->keylen == 13)
- 			cmd->cmd.tx.sec_ctl |= TX_CMD_SEC_KEY128;
-@@ -2422,7 +2423,7 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
- 		memcpy(&cmd->cmd.tx.key[3], keyinfo->key, keyinfo->keylen);
- 
- 		IWL_DEBUG_TX("Configuring packet for WEP encryption "
--			     "with key %d\n", ctl->key_idx);
-+			     "with key %d\n", ctl->hw_key->hw_key_idx);
- 		break;
- 
- 	default:
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index d7e2358..ae74042 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1936,7 +1936,7 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- 	struct iwl_wep_key *wepkey;
- 	int keyidx = 0;
- 
--	BUG_ON(ctl->key_idx > 3);
-+	BUG_ON(ctl->hw_key->hw_key_idx > 3);
- 
- 	switch (keyinfo->alg) {
- 	case ALG_CCMP:
-@@ -1955,11 +1955,11 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- 		break;
- 
- 	case ALG_WEP:
--		wepkey = &priv->wep_keys[ctl->key_idx];
-+		wepkey = &priv->wep_keys[ctl->hw_key->hw_key_idx];
- 		cmd->cmd.tx.sec_ctl = 0;
- 		if (priv->default_wep_key) {
- 			/* the WEP key was sent as static */
--			keyidx = ctl->key_idx;
-+			keyidx = ctl->hw_key->hw_key_idx;
- 			memcpy(&cmd->cmd.tx.key[3], wepkey->key,
- 							wepkey->key_size);
- 			if (wepkey->key_size == WEP_KEY_LEN_128)
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4a80d74..28a8893 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -286,8 +286,13 @@ enum mac80211_tx_control_flags {
- 
- /* Transmit control fields. This data structure is passed to low-level driver
-  * with each TX frame. The low-level driver is responsible for configuring
-- * the hardware to use given values (depending on what is supported). */
--
-+ * the hardware to use given values (depending on what is supported).
-+ *
-+ * NOTE: All pointers within this structure are only valid until
-+ * ieee80211_ops->tx() returns. If the information is required
-+ * at a later time (i.e. when defering the work to a workqueue)
-+ * make sure that not only the contents of struct ieee80211_tx_control
-+ * is copied, but also the data where the pointers refer to. */
- struct ieee80211_tx_control {
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_rate *tx_rate;
-@@ -298,9 +303,11 @@ struct ieee80211_tx_control {
- 	/* retry rate for the last retries */
- 	struct ieee80211_rate *alt_retry_rate;
- 
-+	/* Key used for hardware encryption
-+	 * NULL if IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
-+	struct ieee80211_key_conf *hw_key;
-+
- 	u32 flags;		/* tx control flags defined above */
--	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
--				 * IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
- 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, ..
- 				 * This could be used when set_retry_limit
- 				 * is not implemented by the driver */
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index affcecd..3cbae42 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -337,7 +337,7 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
- 			return -1;
- 	} else {
--		tx->control->key_idx = tx->key->conf.hw_key_idx;
-+		tx->control->hw_key = &tx->key->conf;
- 		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
- 			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
- 				return -1;
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 45709ad..42f3654 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -228,7 +228,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx,
- 					    0x7f),
- 				      (u8) key->u.tkip.iv16);
- 
--		tx->control->key_idx = tx->key->conf.hw_key_idx;
-+		tx->control->hw_key = &tx->key->conf;
- 		return 0;
- 	}
- 
-@@ -256,7 +256,7 @@ ieee80211_crypto_tkip_encrypt(struct ieee80211_tx_data *tx)
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
- 	    !wpa_test) {
- 		/* hwaccel - with no need for preallocated room for IV/ICV */
--		tx->control->key_idx = tx->key->conf.hw_key_idx;
-+		tx->control->hw_key = &tx->key->conf;
- 		return TX_CONTINUE;
- 	}
- 
-@@ -478,7 +478,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx,
- 
- 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 		/* hwaccel - with preallocated room for CCMP header */
--		tx->control->key_idx = key->conf.hw_key_idx;
-+		tx->control->hw_key = &tx->key->conf;
- 		return 0;
- 	}
- 
-@@ -505,7 +505,7 @@ ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx)
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
- 		/* hwaccel - with no need for preallocated room for CCMP "
- 		 * header or MIC fields */
--		tx->control->key_idx = tx->key->conf.hw_key_idx;
-+		tx->control->hw_key = &tx->key->conf;
- 		return TX_CONTINUE;
- 	}
- 
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0K
+WyBJTkZPOiBwb3NzaWJsZSBjaXJjdWxhciBsb2NraW5nIGRlcGVuZGVuY3kgZGV0ZWN0ZWQgXQ0K
+Mi42LjI1LXJjOC1tbTEgIzE1DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQppdy85NDE3IGlzIHRyeWluZyB0byBhY3F1aXJlIGxvY2s6DQoo
+Z2VubF9tdXRleCl7LS0uLn0sIGF0OiBbY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYV0gY3RybF9k
+dW1wZmFtaWx5KzB4MzcvMHhkYQ0KDQpidXQgdGFzayBpcyBhbHJlYWR5IGhvbGRpbmcgbG9jazoN
+CihubGstPmNiX211dGV4KXstLS4ufSwgYXQ6IFtuZXRsaW5rX2R1bXArMHgzOS8weDIyZV0gbmV0
+bGlua19kdW1wKzB4MzkvMHgyMmUNCg0Kd2hpY2ggbG9jayBhbHJlYWR5IGRlcGVuZHMgb24gdGhl
+IG5ldyBsb2NrLg0KDQp0aGUgZXhpc3RpbmcgZGVwZW5kZW5jeSBjaGFpbiAoaW4gcmV2ZXJzZSBv
+cmRlcikgaXM6DQoNCi0+ICMxIChubGstPmNiX211dGV4KXstLS4ufToNCltfX2xvY2tfYWNxdWly
+ZSsweGEwMi8weGJhZl0gX19sb2NrX2FjcXVpcmUrMHhhMDIvMHhiYWYNCltsb2NrX2FjcXVpcmUr
+MHg3Ni8weDlkXSBsb2NrX2FjcXVpcmUrMHg3Ni8weDlkDQpbc25kX21peGVyX29zczptdXRleF9s
+b2NrX25lc3RlZCsweGQ1LzB4NjdiXSBtdXRleF9sb2NrX25lc3RlZCsweGQ1LzB4Mjc0DQpbbmV0
+bGlua19kdW1wX3N0YXJ0KzB4YmQvMHgxNWFdIG5ldGxpbmtfZHVtcF9zdGFydCsweGJkLzB4MTVh
+DQpbZ2VubF9yY3ZfbXNnKzB4OWQvMHgxM2FdIGdlbmxfcmN2X21zZysweDlkLzB4MTNhDQpbbmV0
+bGlua19yY3Zfc2tiKzB4MzAvMHg3NV0gbmV0bGlua19yY3Zfc2tiKzB4MzAvMHg3NQ0KW2dlbmxf
+cmN2KzB4MWUvMHgyZV0gZ2VubF9yY3YrMHgxZS8weDJlDQpbY2ZnODAyMTE6bmV0bGlua191bmlj
+YXN0KzB4MWMxLzB4MTg2N10gbmV0bGlua191bmljYXN0KzB4MWMxLzB4MjkzDQpbbmV0bGlua19z
+ZW5kbXNnKzB4MjFmLzB4MjJjXSBuZXRsaW5rX3NlbmRtc2crMHgyMWYvMHgyMmMNCltzb2NrX3Nl
+bmRtc2crMHhjYS8weGUxXSBzb2NrX3NlbmRtc2crMHhjYS8weGUxDQpbc3lzX3NlbmRtc2crMHgx
+NGQvMHgxYThdIHN5c19zZW5kbXNnKzB4MTRkLzB4MWE4DQpbc3lzX3NvY2tldGNhbGwrMHgxNjMv
+MHgxN2VdIHN5c19zb2NrZXRjYWxsKzB4MTYzLzB4MTdlDQpbc3lzZW50ZXJfcGFzdF9lc3ArMHg2
+ZC8weGM1XSBzeXNlbnRlcl9wYXN0X2VzcCsweDZkLzB4YzUNCiAgICAgICBbPGZmZmZmZmZmPl0g
+MHhmZmZmZmZmZg0KLT4gIzAgKGdlbmxfbXV0ZXgpey0tLi59Og0KW19fbG9ja19hY3F1aXJlKzB4
+OTI5LzB4YmFmXSBfX2xvY2tfYWNxdWlyZSsweDkyOS8weGJhZg0KW2xvY2tfYWNxdWlyZSsweDc2
+LzB4OWRdIGxvY2tfYWNxdWlyZSsweDc2LzB4OWQNCltzbmRfbWl4ZXJfb3NzOm11dGV4X2xvY2tf
+bmVzdGVkKzB4ZDUvMHg2N2JdIG11dGV4X2xvY2tfbmVzdGVkKzB4ZDUvMHgyNzQNCltjdHJsX2R1
+bXBmYW1pbHkrMHgzNy8weGRhXSBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbbmV0bGlua19k
+dW1wKzB4NTEvMHgyMmVdIG5ldGxpbmtfZHVtcCsweDUxLzB4MjJlDQpbbmV0bGlua19yZWN2bXNn
+KzB4MTU2LzB4MjAzXSBuZXRsaW5rX3JlY3Ztc2crMHgxNTYvMHgyMDMNCltzb2NrX3JlY3Ztc2cr
+MHhkMS8weGU5XSBzb2NrX3JlY3Ztc2crMHhkMS8weGU5DQpbc3lzX3JlY3Ztc2crMHhmMi8weDE3
+Zl0gc3lzX3JlY3Ztc2crMHhmMi8weDE3Zg0KW3N5c19zb2NrZXRjYWxsKzB4MTZmLzB4MTdlXSBz
+eXNfc29ja2V0Y2FsbCsweDE2Zi8weDE3ZQ0KW3N5c2VudGVyX3Bhc3RfZXNwKzB4NmQvMHhjNV0g
+c3lzZW50ZXJfcGFzdF9lc3ArMHg2ZC8weGM1DQogICAgICAgWzxmZmZmZmZmZj5dIDB4ZmZmZmZm
+ZmYNCg0Kb3RoZXIgaW5mbyB0aGF0IG1pZ2h0IGhlbHAgdXMgZGVidWcgdGhpczoNCg0KMSBsb2Nr
+IGhlbGQgYnkgaXcvOTQxNzoNCiAjMDogKG5say0+Y2JfbXV0ZXgpey0tLi59LCBhdDogW25ldGxp
+bmtfZHVtcCsweDM5LzB4MjJlXSBuZXRsaW5rX2R1bXArMHgzOS8weDIyZQ0KDQpzdGFjayBiYWNr
+dHJhY2U6DQpQaWQ6IDk0MTcsIGNvbW06IGl3IE5vdCB0YWludGVkIDIuNi4yNS1yYzgtbW0xICMx
+NQ0KW3ByaW50X2NpcmN1bGFyX2J1Z190YWlsKzB4NWIvMHg2Nl0gcHJpbnRfY2lyY3VsYXJfYnVn
+X3RhaWwrMHg1Yi8weDY2DQpbcHJpbnRfY2lyY3VsYXJfYnVnX2hlYWRlcisweGE1LzB4YjBdID8g
+cHJpbnRfY2lyY3VsYXJfYnVnX2hlYWRlcisweGE1LzB4YjANCltfX2xvY2tfYWNxdWlyZSsweDky
+OS8weGJhZl0gX19sb2NrX2FjcXVpcmUrMHg5MjkvMHhiYWYNCltsb2NrX2FjcXVpcmUrMHg3Ni8w
+eDlkXSBsb2NrX2FjcXVpcmUrMHg3Ni8weDlkDQpbY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYV0g
+PyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbc25kX21peGVyX29zczptdXRleF9sb2NrX25l
+c3RlZCsweGQ1LzB4NjdiXSBtdXRleF9sb2NrX25lc3RlZCsweGQ1LzB4Mjc0DQpbY3RybF9kdW1w
+ZmFtaWx5KzB4MzcvMHhkYV0gPyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbY3RybF9kdW1w
+ZmFtaWx5KzB4MzcvMHhkYV0gPyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbY3RybF9kdW1w
+ZmFtaWx5KzB4MzcvMHhkYV0gY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYQ0KW25ldGxpbmtfZHVt
+cCsweDUxLzB4MjJlXSBuZXRsaW5rX2R1bXArMHg1MS8weDIyZQ0KW21hYzgwMjExOmtmcmVlX3Nr
+YisweDQwLzB4NDVdID8ga2ZyZWVfc2tiKzB4NDAvMHg0NQ0KW25ldGxpbmtfcmVjdm1zZysweDE1
+Ni8weDIwM10gbmV0bGlua19yZWN2bXNnKzB4MTU2LzB4MjAzDQpbc29ja19zZW5kbXNnKzB4Y2Ev
+MHhlMV0gPyBzb2NrX3NlbmRtc2crMHhjYS8weGUxDQpbc29ja19yZWN2bXNnKzB4ZDEvMHhlOV0g
+c29ja19yZWN2bXNnKzB4ZDEvMHhlOQ0KWzxjMDEzMTNkOT5dID8gYXV0b3JlbW92ZV93YWtlX2Z1
+bmN0aW9uKzB4MC8weDMwDQpbc25kX3BjbV9vc3M6Y29weV9mcm9tX3VzZXIrMHgzYi8weDIzNl0g
+PyBjb3B5X2Zyb21fdXNlcisweDNiLzB4NWUNClt2ZXJpZnlfaW92ZWMrMHg0MC8weDcwXSA/IHZl
+cmlmeV9pb3ZlYysweDQwLzB4NzANCltzeXNfcmVjdm1zZysweGYyLzB4MTdmXSBzeXNfcmVjdm1z
+ZysweGYyLzB4MTdmDQpbc25kX2hkYV9pbnRlbDpfc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSsweDU2
+LzB4NmNdID8gX3NwaW5fdW5sb2NrX2lycXJlc3RvcmUrMHg1Ni8weDZjDQpbcGFyYXZpcnRfZ2V0
+X2xhenlfbW9kZSsweGUvMHgxYl0gPyBwYXJhdmlydF9nZXRfbGF6eV9tb2RlKzB4ZS8weDFiDQpb
+Y3J5cHRvX2FsZ2FwaTprdW5tYXBfYXRvbWljKzB4OWUvMHgyZThlXSA/IGt1bm1hcF9hdG9taWMr
+MHg5ZS8weGJiDQpbaGFuZGxlX21tX2ZhdWx0KzB4N2FhLzB4N2JiXSA/IGhhbmRsZV9tbV9mYXVs
+dCsweDdhYS8weDdiYg0KW3N5c19zb2NrZXRjYWxsKzB4MTZmLzB4MTdlXSBzeXNfc29ja2V0Y2Fs
+bCsweDE2Zi8weDE3ZQ0KW3Byb2Nlc3Nvcjp0cmFjZV9oYXJkaXJxc19vbisweGYwLzB4NWQzOF0g
+PyB0cmFjZV9oYXJkaXJxc19vbisweGYwLzB4MTJjDQpbc3lzZW50ZXJfcGFzdF9lc3ArMHg2ZC8w
+eGM1XSBzeXNlbnRlcl9wYXN0X2VzcCsweDZkLzB4YzUNCj09PT09PT09PT09PT09PT09PT09PT09
+
+------=_Part_9460_31781007.1207321617882--
