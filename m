@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53614 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbYDXKAR (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:44624 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbYDDUDD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 06:00:17 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: "'John W. Linville'" <linville@tuxdriver.com>,
-	'Dan Williams' <dcbw@redhat.com>, hostap@lists.shmoo.com,
-	'Holger Schurig' <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <009e01c8a5f1$625e0790$0b3ca8c0@gotws1589>
-References: <009e01c8a5f1$625e0790$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4sudm9aGOvswO1D4KnGb"
-Date: Thu, 24 Apr 2008 11:59:52 +0200
-Message-Id: <1209031192.3357.61.camel@johannes.berg> (sfid-20080424_120051_046235_F0AD86D8)
-Mime-Version: 1.0
+	Fri, 4 Apr 2008 16:03:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: gavron@wetwork.net
+Subject: Re: [PATCH RFT] b43: We need lots of regression testing
+Date: Fri, 4 Apr 2008 22:02:39 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200804041612.18840.mb@bu3sch.de> <47F68931.4040205@wetwork.net>
+In-Reply-To: <47F68931.4040205@wetwork.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804042202.39854.mb@bu3sch.de> (sfid-20080404_210307_238714_FC3F6E81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 04 April 2008 22:01:53 gavron@wetwork.net wrote:
+> Works great on my 4311 rev 01.
 
---=-4sudm9aGOvswO1D4KnGb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks a lot for testing!
 
+> Michael Buesch wrote:
+> > Hi b43 users,
+> >
+> > Please be so kind to run lots of regression tests on the following
+> > patch. This patch is supposed to make the LO calibration a _lot_ more
+> > lightweight and avoid a long MAC-disable period every 120 seconds.
+> >
+> > We need a lot of regression testing with this patch on lots of different
+> > devices to make sure we don't introduce regressions.
+> >
+> > I tested this on a 4306 and a 4318 card. So far it seems to work great
+> > on these cards.
+> >
+> > Thanks.
+> >
+> >
+> > ----------  Forwarded Message  ----------
+> >
+> > Subject: Re: b43: 1 second "freeze" every 2 minutes - works with bcm43xx
+> > Date: Friday 04 April 2008
+> > From: Michael Buesch <mb@bu3sch.de>
+> >
+> > Can you try the following patch?
+> > http://bu3sch.de/patches/wireless-testing/20080404-1408/patches/010-b43-calibrate-lo-on-demand.patch
+> >
+> > This patch is supposed to distribute the calibration bursts over time,
+> > so that calibration only happens when it's actually needed.
+> > So instead of disabling the MAC every 120 secs and recalibrating the
+> > whole calibration tables, we assign a timeout to each calibration value
+> > and only recalibrate it if it's
+> > a) expired and
+> > b) currently used.
+> > Recalibration might also happen on TX power adjustment, if the corresponding
+> > calibration item is no longer in the cache because it has expired. That
+> > actually happens most of the time, but we can live with it, as power adjustment
+> > doesn't happen that often and calibration is a _lot_ cheaper.
+> >
+> > This patch also reduced overall memory consumption by nuking the
+> > huge static calibration tables.
+> >
+> > Disclaimer:
+> > The algorithms in this patch are completely redesigned and have nothing in
+> > common with how broadcom does the stuff in the proprietary driver. So it's
+> > highly experimental and I'm not responsible in case this patch eats your cat.
+> >
+> > -------------------------------------------------------
 
-> It's OK, but then the wpa_supplicant needs to 'cancel' current settings i=
-n
-> the driver before it start prepare for the new AP.
-> As I have understood it, that is done by issuing a BSSID of
-> 00:00:00:00:00:00. I will look into a patch for that.
-
-No, wpa_supplicant shouldn't have to do that, mac80211 should do that
-automatically once a new BSSID comes in. The problem seems to be between
-mac80211 and your AP in that mac80211 associates to another AP and then
-tries the target one but the target one doesn't like that so we should
-at least try to disassociate from the previous one first.
-
-> An other aspect of the selected design. If the driver (STA) is associated
-> with an BSSID and the wpa_supplicant would like to change BSSID, who is
-> responsible for a proper de- association/authentication from the first BS=
-SID
-> ?
-
-mac80211 should be responsible.
-
-> My findings says that the network does not allow an STA to
-> associate/authenticate with one BSSID while it still have a valid aid wit=
-h
-> an other BSSID. At least my Cisco AP does not allow that.=20
-
-I tend to think that is rather questionable behaviour, how can the
-second AP know that you're still in range to the first and can even
-disassociate from that one?
-
-johannes
-
---=-4sudm9aGOvswO1D4KnGb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBBaFqVg1VMiehFYAQJy1RAAs8fnRAc7cb9BRgYYYAB2sOICCz6fWmIS
-g8QJlzQXja/GWaRbS0nRevxt1t70EOTj3hPuJmD4miX2pz3YVy+kpY2Fk/P7J9Gb
-FnETduyo7QRxjowI1wHhR0N3bDr33D4N/ACWrY2BoKmXHhLMnB2PivpyZCF1YpdU
-qhWwwkWyzi4wSx5f3HnvYdyUdi0rK6d6nVvRz5VGsNpCWISi6w8ingVoUw7KPkaZ
-PSJwtL7jwFA0FwFPlgqBVk8NDXbeiscsNnzhRP9Wayii25VLdjkLt+2aVfm0Wfhc
-5r8Bn3mjBAYLuMLplvNrfQzIuf605zWb7l4Quf59PL/nWed14qSpz3cA1gblIv93
-KAjrIJUieUNxTrdhuMOmXK9MKUX+CMQFn8hlTzIPT9YRl1bVCzDWbQSqKwB0pYCg
-Ku8CuWsx7IrKc9xImohqBoVSWvY1Z5d/kLvLCAIXqA3YgHxLuoxmH6bkajUR2rUC
-ak0l954OUoNFHPUeQpYS2GEa2IbPJzYepX7XeCORfHijphT0b49GNsOyyY3WjSci
-q9ZF6PZ/DHfBG2b3TRiwVH5KbxDeoIrBLECbaPNmG1MzwIVOpBqq8E3+kUabT80u
-geTNfU2M4tURR1JP0lPJnE02NLh/a5PuSNBGv8xX5VefZmQf1jrdL9EDkNALmE9W
-zvJUpYjQwD0=
-=ZLQB
------END PGP SIGNATURE-----
-
---=-4sudm9aGOvswO1D4KnGb--
-
+-- 
+Greetings Michael.
