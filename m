@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:48245 "EHLO
-	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755032AbYDMKUm (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:45753 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbYDDLRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2008 06:20:42 -0400
-Received: from ironport-out-2.rz.rwth-aachen.de ([134.130.3.59])
- by mta-2.ms.rz.RWTH-Aachen.de
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0JZ900LPME1PFY60@mta-2.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Sun, 13 Apr 2008 12:20:13 +0200 (CEST)
-Date: Sun, 13 Apr 2008 12:20:11 +0200
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
-In-reply-to: <1208081495.4111.32.camel@johannes.berg>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vladimir Koutny <vlado@ksp.sk>
-Message-id: <4801DE5B.9090903@archlinux.org> (sfid-20080413_112048_128235_277C1A35)
-MIME-version: 1.0
-Content-type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary=------------enigB48404172F76FC9795D4875F
-References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
- <200804021932.26046.IvDoorn@gmail.com> <47FE8FAD.9020802@archlinux.org>
- <200804121246.44236.IvDoorn@gmail.com> <4800F76C.7000801@archlinux.org>
- <1208072495.4111.10.camel@johannes.berg>
- <1208074049.4111.18.camel@johannes.berg> <4801C4FF.5060606@archlinux.org>
- <1208081495.4111.32.camel@johannes.berg>
+	Fri, 4 Apr 2008 07:17:52 -0400
+From: Chr <chunkeey@web.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC][PATCH 0/4] p54: various updates
+Date: Fri, 4 Apr 2008 04:07:51 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+References: <200804012339.37204.chunkeey@web.de> <200804031740.33177.chunkeey@web.de> <43e72e890804031534y2afdc8d4h1154414df2ccdcd3@mail.gmail.com>
+In-Reply-To: <43e72e890804031534y2afdc8d4h1154414df2ccdcd3@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804040407.52432.chunkeey@web.de> (sfid-20080404_121757_185034_8DAE3C43)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigB48404172F76FC9795D4875F
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: quoted-printable
+On Friday 04 April 2008 00:34:35 Luis R. Rodriguez wrote:
+> On Thu, Apr 3, 2008 at 11:40 AM, Chr <chunkeey@web.de> wrote:
+> > On Thursday 03 April 2008 01:42:59 Luis R. Rodriguez wrote:
+> >  > Thanks, can you resend as inline patches so it can help get better
+> >  > review. Also while you're at it can you stuff all p54 files into its
+> >  > own folder?
+> >
+> >  hmm, I can.... but:
+> >  - in which folder? for now.. I put everything into a new one folder
+> > named p54, but as you know the fullmac driver has already the prism54
+> > subdirectory... should I put it there? or is this confusing?
+>
+> p54 directory works nice. Now that you are introducing master mode the
+> only thing left I think is IBSS compared to prism54, and if that is
+> done I think we should *consider* removing prism54 driver after one
+> release cycle of the kernel. I once was told that for some cards the
+> softmac driver wouldn't work on some fullmac chipsets. I have yet to
+> hear of someone who found these type of cards though. I know we also
+> had some WDS code for prism54 lying around, it just never got merged
+> in because Jeff didn't find it widely used and IIRC it needed a little
+> more cleanup.
+>
+> Think you can get IBSS and maybe WDS to work too?
+>
+Hmm, AFAIK they were thinking of the 3877 (802.11a only)... I guess this one
+won't work with p54. But have you ever see anyone (except the 
+Intersil/Conexant people) with a 5Ghz prism card at all? It'll be interesting 
+to get a eeprom dump from them... 
 
-Johannes Berg schrieb:
-> Even using use_short_preamble wrongly shouldn't give much of a drop in
-> network speed. I fear there's another bug. Is your AP even
-> short-preamble capable? Maybe that's the problem, your AP isn't
-> announcing short preamble but we're enabling it by that code? I haven't=
+About WDS: is there anything special about WDS, that I should know? 
+Since, I thought it's entirely done by mac80211 by now?
 
-> looked in too much detail yet though.
+About IBSS: yes, it is kind of working... I'll put some code for this in the 
+next round.
 
-It's a WRT54GL, so I suppose it supports it. On my laptop (iwl3945), I ge=
-t
-wlan0: switched to short barker preamble (BSSID=3D00:1d:7e:43:14:a7)
-after connecting to the wireless and everything is still okay and fast.
+> >  - the resulting patch is too big to post it here, ~ 271kb as
+> > plaintext... is a bz2 (32kb)  attachment ok too?
+>
+> Oh OK, I see. Can you perhaps split the big patch up into a few series?
+that'll be about 3 or 4 parts... tomorrow! I have to figure out how
+I can split up the _big_ one.
 
-
---------------enigB48404172F76FC9795D4875F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.8 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEAREIAAYFAkgB3lwACgkQEda5KzHP/VCh1wCgvEN8OCaAv3VUG60QZvzNIwjl
-KHwAmwUJB1090jr2SGuBiYuYhQwCPI2Y
-=MiNj
------END PGP SIGNATURE-----
-
---------------enigB48404172F76FC9795D4875F--
+Regards,
+	Chr
