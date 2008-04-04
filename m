@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:57091 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305AbYDPRpu (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.233]:50086 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbYDDVf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 13:45:50 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so4065041waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 10:45:49 -0700 (PDT)
-Message-ID: <a44ae5cd0804161045h37aafedbk5ff69bbb3c5ff850@mail.gmail.com> (sfid-20080416_184559_728441_DC036AE4)
-Date: Wed, 16 Apr 2008 13:45:48 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
+	Fri, 4 Apr 2008 17:35:58 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so94166qbe.15
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2008 14:35:55 -0700 (PDT)
+Message-ID: <b3153e950804041435p7233fe3bn23bc017967687e9a@mail.gmail.com> (sfid-20080404_223604_229876_F738D251)
+Date: Fri, 4 Apr 2008 14:35:55 -0700
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: 2.6.25-rc9 -- bcm4306 performance is in the toilet
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1208367041.11676.55.camel@johannes.berg>
+Subject: Re: [PATCH] mac80211: notify mac from low level driver (iwlwifi)
+Cc: "Reinette Chatre" <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Mohamed Abbas" <mabbas@linux.intel.com>
+In-Reply-To: <1207320389.19189.30.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <48056406.2060502@gmail.com> <48060D71.6020507@lwfinger.net>
-	 <a44ae5cd0804161012w7c07efb0w68f9a8664f077556@mail.gmail.com>
-	 <1208367041.11676.55.camel@johannes.berg>
+References: <1207264130-25437-1-git-send-email-reinette.chatre@intel.com>
+	 <1207264130-25437-2-git-send-email-reinette.chatre@intel.com>
+	 <1207320389.19189.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2008 at 1:30 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On 4/4/08, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
->  > interface.c: In function 'get_if_type':
->  > interface.c:50: error: 'NL80211_IFTYPE_MESH_POINT' undeclared (first
->  > use in this function)
->  > interface.c:50: error: (Each undeclared identifier is reported only once
->  > interface.c:50: error: for each function it appears in.)
->  > interface.c: In function 'handle_interface_add':
->  > interface.c:121: error: 'NL80211_ATTR_MESH_ID' undeclared (first use
->  > in this function)
+> > + * This function must be called by low level driver to inform mac80211 of
+> > + * low level driver status change or force mac80211 to re-assoc for low
+> > + * level driver internal error that require re-assoc. A good example to use
+> > + * this notification to call mac80211 after suspend/resume, some NIC require
+> > + * re-assoc.
 >
->  You need a newer copy of nl80211.h or revert back to an older revision
->  of iw before the mesh code was added.
-
-Am I required to get the linux-wireless git kernel tree in order to
-get the newer nl80211.h?
-
-I checked in the 2.6.25-rc9 tree and was surprised to find four copies
-of nl80211.h:
-0 2008-04-14 23:48 ./include/config/nl80211.h
-10074 2008-04-11 16:32 ./include/linux/nl80211.h
-510 2008-04-11 16:32 ./net/wireless/nl80211.h
-10074 2008-04-15 05:50 ./usr/include/linux/nl80211.h
-
-It seems interesting that two copies have the same byte count and that
-one of the files is empty.  What's up with that?
-
-Thanks,
-      Miles
+> I think the suspend/resume text should be dropped since IMHO that
+> requires more work, reprogramming all the hardware crypto keys for
+> example.
+I can remove the suspend/resume text will be that good enough?
+>
+> > +                     /* No need to wake the master device. */
+> > +                     if (sdata->dev == local->mdev)
+> > +                             continue;
+>
+> That looks like a copy&paste bug, we're not waking it in any way. Also,
+> it's of IF_TYPE_AP so it's not necessary to test this at all.
+>
+you are right it is a copy&paste from other part in mac80211, but as
+you mentioned this an extra filtering which is not needed. I will
+remove it and resubmit again.
+> johannes
+>
+>
