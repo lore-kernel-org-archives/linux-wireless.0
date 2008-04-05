@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:42444 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbYDUOxd (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:57177 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbYDEAmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 10:53:33 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so808120wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 07:53:31 -0700 (PDT)
-Message-ID: <c85cb4470804210753q394962f9lcd03d6c4beed077f@mail.gmail.com> (sfid-20080421_165436_409223_3ECF0FC8)
-Date: Mon, 21 Apr 2008 17:53:29 +0300
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [2.6 patch] make sta_rx_agg_session_timer_expired() static
-Cc: "Adrian Bunk" <bunk@kernel.org>,
-	"Tomas Winkler" <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <1208769228.26186.58.camel@johannes.berg>
+	Fri, 4 Apr 2008 20:42:38 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 5/5] p54: update Makefile and Kconfig
+Date: Sat, 5 Apr 2008 02:42:35 +0200
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net
+References: <E1Jhv2j-0006LQ-3j@debian64.daheim> <200804050219.32270.chunkeey@web.de> <1207355167.6675.9.camel@johannes.berg>
+In-Reply-To: <1207355167.6675.9.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080421084751.GI26897@cs181133002.pp.htv.fi>
-	 <1208769228.26186.58.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804050242.36018.chunkeey@web.de> (sfid-20080405_014241_947653_16D60693)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, 2008-04-21 at 11:47 +0300, Adrian Bunk wrote:
-> > sta_rx_agg_session_timer_expired() can now become static.
-> >
-> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+On Saturday 05 April 2008 02:26:07 Johannes Berg wrote:
+> > John? can you please do the git mv?
+> > I have attached a diff to make checkpatch.pl happy, so you don't have to
+> > do it. ;-)
 >
-> Good plan, thanks.
+> Uh, I think you need at least a small patch that modifies the
+> drivers/net/wireless/{Makefile,Kconfig} as appropriate. From what I
+> could see, your original patch didn't even add the wireless/p54/Kconfig
+> into wireless/Kconfig so it wouldn't be useful?
 >
-> johannes
 
-Agree, thanks
+hmmmmm, look careful! one small + ;-) it's nearly invisible.
 
-Ron
++source "drivers/net/wireless/p54/Kconfig" 
+
+Regards,
+	Chr
+
