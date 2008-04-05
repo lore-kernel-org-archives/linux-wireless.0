@@ -1,62 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:40987 "EHLO smtp6.pp.htv.fi"
+Received: from tor.lindesign.se ([194.17.154.111]:58079 "EHLO tor.lindesign.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620AbYDUIsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 04:48:19 -0400
-Date: Mon, 21 Apr 2008 11:47:51 +0300
-From: Adrian Bunk <bunk@kernel.org>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [2.6 patch] make sta_rx_agg_session_timer_expired() static
-Message-ID: <20080421084751.GI26897@cs181133002.pp.htv.fi> (sfid-20080421_094826_042377_F92BCDE4)
+	id S1751928AbYDEOju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2008 10:39:50 -0400
+Message-ID: <47F78F2F.8000605@tor.lindesign.se> (sfid-20080405_154013_544991_73F973EF)
+Date: Sat, 05 Apr 2008 16:39:43 +0200
+From: Bachman Kharazmi <bachman@tor.lindesign.se>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [SOLVED] Re: compat-wireless iwl4965 on hp/compaq 2510p
+References: <47F75EB4.9090703@tor.lindesign.se>	 <1207396223.3860.9.camel@johannes.berg>	 <47F76814.7010405@tor.lindesign.se>	 <1207396488.3860.12.camel@johannes.berg>	 <47F76A0A.3080806@tor.lindesign.se> <1ba2fa240804050637g13a92505j5d4d65234db8c6fc@mail.gmail.com> <47F78349.8080704@tor.lindesign.se>
+In-Reply-To: <47F78349.8080704@tor.lindesign.se>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_rx_agg_session_timer_expired() can now become static.
+Here's what I did:
+(-Compiled my own 2.6.24-4 instead of using debian kernel.)
+-Booted XPee and hoped that all the clicking enabled the WLAN device. It 
+seem to be a software button, like a touch panel.
+-Entered BIOS, disabled switching wlan button to hopefully keep the 
+state constant(ON).
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+And finally I did configure my WEP, and requested IP and now I'm online ;)
 
----
+thx guys! /Bachman
 
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    3 ++-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-64e9b87bbd66ecaad44e27fe3b02ea465d4be36d diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8e53ce7..a202cb6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -940,7 +940,6 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 
- void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *da,
- 				u16 tid, u16 initiator, u16 reason);
--void sta_rx_agg_session_timer_expired(unsigned long data);
- void sta_addba_resp_timer_expired(unsigned long data);
- void ieee80211_sta_tear_down_BA_sessions(struct net_device *dev, u8 *addr);
- u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6b75cb6..43bcfe5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -87,6 +87,7 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
- 				    u8 *ssid, size_t ssid_len);
- static int ieee80211_sta_config_auth(struct net_device *dev,
- 				     struct ieee80211_if_sta *ifsta);
-+static void sta_rx_agg_session_timer_expired(unsigned long data);
- 
- 
- void ieee802_11_parse_elems(u8 *start, size_t len,
-@@ -1616,7 +1617,7 @@ timer_expired_exit:
-  * resetting it after each frame that arrives from the originator.
-  * if this timer expires ieee80211_sta_stop_rx_ba_session will be executed.
-  */
--void sta_rx_agg_session_timer_expired(unsigned long data)
-+static void sta_rx_agg_session_timer_expired(unsigned long data)
- {
- 	/* not an elegant detour, but there is no choice as the timer passes
- 	 * only one argument, and verious sta_info are needed here, so init
-
+Bachman Kharazmi wrote:
+> Not that easy.
+> When the module is loaded I press the (touch) panel where the wireless 
+> icon is. This still doesn't turn on the WLAN LED.
+> Nothing in dmesg then I press the touchbutton.
+> 
+> lapp:/tmp# cat /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+> 2
+> 
+> echo "1" > /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+> iwl4965: Error sending REPLY_CARD_STATE_CMD: enqueue_hcmd failed: -5
+> 
+> echo "0" > /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+> iwl4965: WARNING: Requesting MAC access during RFKILL wakes up NIC
+> 
+> lapp:/tmp# cat /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+> 2
+> 
+> /Bachman
+> Tomas Winkler wrote:
+>> On Sat, Apr 5, 2008 at 3:01 PM, Bachman Kharazmi
+>> <bachman@tor.lindesign.se> wrote:
+>>> lapp:/tmp# ip link set wlan0 up
+>>>  SIOCSIFFLAGS: No such device
+>>>
+>>>  lapp:/tmp# iwconfig
+>>>  lo        no wireless extensions.
+>>>
+>>>  eth1      no wireless extensions.
+>>>
+>>>  wmaster0  no wireless extensions.
+>>>
+>>>  wlan0     IEEE 802.11  ESSID:"planet_mars"
+>>>           Mode:Managed  Frequency:2.412 GHz  Access Point: 
+>>> Not-Associated
+>>>           Tx-Power=0 dBm
+>>>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>>>           Encryption key:B200-A927-32DA-86E9-0DEF-EFF3-FB
+>>>           Link Quality:0  Signal level:0  Noise level:0
+>>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>>>
+>>>
+>>>  note that dmesg sais
+>>>  iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+>>>  iwl4965: Tunable channels: 13 802.11bg, 19 802.11a channels
+>>>  phy1: Selected rate control algorithm 'iwl-4965-rs'
+>>>  ACPI: PCI Interrupt 0000:10:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+>>>  iwl4965: Radio disabled by HW RF Kill switch
+>>
+>> ___iwl4965: Radio disabled by HW RF Kill switch___  this would explain
+>> the problem
+>>
+>> can you please enable the RF?
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
