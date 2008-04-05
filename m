@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbYDWSAD (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:44279 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbYDEB1M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 14:00:03 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: 'Dan Williams' <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <006b01c8a565$2dd40a10$0b3ca8c0@gotws1589>
-References: <006b01c8a565$2dd40a10$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BxH7rsMxi0cR1tEAHfbk"
-Date: Wed, 23 Apr 2008 19:59:24 +0200
-Message-Id: <1208973564.31429.91.camel@johannes.berg> (sfid-20080423_200050_653475_0606379D)
-Mime-Version: 1.0
+	Fri, 4 Apr 2008 21:27:12 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 5/5] p54: update Makefile and Kconfig
+Date: Sat, 5 Apr 2008 03:27:09 +0200
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net
+References: <E1Jhv2j-0006LQ-3j@debian64.daheim> <200804050242.36018.chunkeey@web.de> <1207357659.3860.0.camel@johannes.berg>
+In-Reply-To: <1207357659.3860.0.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804050327.09822.chunkeey@web.de> (sfid-20080405_022719_332467_32C0A51A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 05 April 2008 03:07:38 Johannes Berg wrote:
+> On Sat, 2008-04-05 at 02:42 +0200, Chr wrote:
+> > On Saturday 05 April 2008 02:26:07 Johannes Berg wrote:
+> > > > John? can you please do the git mv?
+> > > > I have attached a diff to make checkpatch.pl happy, so you don't have
+> > > > to do it. ;-)
+> > >
+> > > Uh, I think you need at least a small patch that modifies the
+> > > drivers/net/wireless/{Makefile,Kconfig} as appropriate. From what I
+> > > could see, your original patch didn't even add the wireless/p54/Kconfig
+> > > into wireless/Kconfig so it wouldn't be useful?
+> >
+> > hmmmmm, look careful! one small + ;-) it's nearly invisible.
+> >
+> > +source "drivers/net/wireless/p54/Kconfig"
+>
+> Ah, so we need this patch (5/5) and the git mv. Sorry, got confused
+> because you sent some other patch :)
+yes, this and p54-net2280-replace-space-with-tabs.patch as checkpatch.pl
+looks really awful without it...
 
---=-BxH7rsMxi0cR1tEAHfbk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> I think the best way would be check the trace I attached in the first pos=
-t.
-
-I think the best way would be if you'd create an additional monitor
-interface (with iw:
-http://linuxwireless.sipsolutions.net/en/users/Documentation/iw) and
-then make a packet capture on that interface while getting the problem.
-
-johannes
-
---=-BxH7rsMxi0cR1tEAHfbk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASA94+6Vg1VMiehFYAQLIcA//dImnIArAZvEPEnRNOtC/Q/TYnzGwmKP3
-QvAvgIq1jrUSE0XBOIrYuIbQr+S7TIpyAQCLcmrUnhmyOdK6vfj/MQ+2cP0pkJsf
-v46KE2IXhsUFuJ/YShn5Lvoh+X44nrDUa4/LVuzGWhhHBTZH99p0lGOZARy9Fh9u
-xkam8w8p2WIp4rlBAUCpSTAvSNQPBi2J8iTRXc5GEJcpsryi+KKvjhF274vY34q2
-vZr5bA2zIxUiZ3vS04t2UDq8y0+UZicFTxjDPzUXruqMX6sEFTBM0Bg8rLMvRvt5
-E6IyVhBsju3DjylcrsloFWhgjSBip60SbEfcj4Xi7qiMaE/x+ZwmV1G3Opf6ZR7e
-29uwoo/u+ladz314Y3Cb7p6RkOt5DtDEPlWf2Nr/9cescVht384F+rWw4AlDKeyZ
-VzS89yd87B7Pj1pfqhHkMsZrhyRmVhvKIReAmLbmw5LjRxI620lgVwBQfzZB8qIy
-p1Ps21IIiv5gW3yO6dOGFYW2VuiIK5l8Mpqj8h536AIZRJ4iv15CH7uRgDdZN9KH
-GqxrutgVez7WGcDCzMoXv4TzCzeT7x7jno6cYmUOFtR/o6CNuM74Kmni2fM4oi4X
-/OUOjrLtlGASgFXI6nRYgLAq0KLgMVWn9akSlmsWzB8HVD8IJeb6r5GiOHUA70mV
-2Kb6okyECSA=
-=iBWF
------END PGP SIGNATURE-----
-
---=-BxH7rsMxi0cR1tEAHfbk--
-
+Regards,
+	Chr.
