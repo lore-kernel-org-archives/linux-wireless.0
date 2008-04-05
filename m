@@ -1,99 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33081 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43135 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751647AbYDDVdm (ORCPT
+	with ESMTP id S1751169AbYDEA0M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 17:33:42 -0400
-Subject: [PATCH] mac80211: make debugfs files root-only
+	Fri, 4 Apr 2008 20:26:12 -0400
+Subject: Re: [PATCH 5/5] p54: update Makefile and Kconfig
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 04 Apr 2008 23:33:37 +0200
-Message-Id: <1207344817.3625.11.camel@johannes.berg> (sfid-20080404_223344_789952_6BE1FC94)
+To: Chr <chunkeey@web.de>
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net
+In-Reply-To: <200804050219.32270.chunkeey@web.de>
+References: <E1Jhv2j-0006LQ-3j@debian64.daheim>
+	 <1207351939.6675.2.camel@johannes.berg>
+	 <200804050219.32270.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BbSsLmXDkT5BKHp3l4gH"
+Date: Sat, 05 Apr 2008 02:26:07 +0200
+Message-Id: <1207355167.6675.9.camel@johannes.berg> (sfid-20080405_012616_221210_0875861C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unfortunately, debugfs can be made to access invalid memory by
-open()ing a file and then waiting until the corresponding debugfs
-file has been removed (and, probably, the underlying object.)
 
-That could be exploited by any user if the user is able to open
-debugfs files and can cause networking devices, STA entries or
-similar to disappear which is quite easy to do.
+--=-BbSsLmXDkT5BKHp3l4gH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hence, all debugfs files should be root-only.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Others may want to investigate whether the same should be done for their
-debugfs code.
+> John? can you please do the git mv?
+> I have attached a diff to make checkpatch.pl happy, so you don't have to =
+do=20
+> it. ;-)
 
- net/mac80211/debugfs.c        |    4 ++--
- net/mac80211/debugfs_netdev.c |    6 +++---
- net/mac80211/debugfs_sta.c    |    2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+Uh, I think you need at least a small patch that modifies the
+drivers/net/wireless/{Makefile,Kconfig} as appropriate. From what I
+could see, your original patch didn't even add the wireless/p54/Kconfig
+into wireless/Kconfig so it wouldn't be useful?
 
---- everything.orig/net/mac80211/debugfs.c	2008-04-04 23:28:37.000000000 +0200
-+++ everything/net/mac80211/debugfs.c	2008-04-04 23:28:52.000000000 +0200
-@@ -37,7 +37,7 @@ static const struct file_operations name
- };
- 
- #define DEBUGFS_ADD(name)						\
--	local->debugfs.name = debugfs_create_file(#name, 0444, phyd,	\
-+	local->debugfs.name = debugfs_create_file(#name, 0400, phyd,	\
- 						  local, &name## _ops);
- 
- #define DEBUGFS_DEL(name)						\
-@@ -130,7 +130,7 @@ static const struct file_operations stat
- };
- 
- #define DEBUGFS_STATS_ADD(name)						\
--	local->debugfs.stats.name = debugfs_create_file(#name, 0444, statsd,\
-+	local->debugfs.stats.name = debugfs_create_file(#name, 0400, statsd,\
- 		local, &stats_ ##name## _ops);
- 
- #define DEBUGFS_STATS_DEL(name)						\
---- everything.orig/net/mac80211/debugfs_netdev.c	2008-04-04 23:28:38.000000000 +0200
-+++ everything/net/mac80211/debugfs_netdev.c	2008-04-04 23:29:24.000000000 +0200
-@@ -243,7 +243,7 @@ IEEE80211_IF_WFILE(min_discovery_timeout
- 
- 
- #define DEBUGFS_ADD(name, type)\
--	sdata->debugfs.type.name = debugfs_create_file(#name, 0444,\
-+	sdata->debugfs.type.name = debugfs_create_file(#name, 0400,\
- 		sdata->debugfsdir, sdata, &name##_ops);
- 
- static void add_sta_files(struct ieee80211_sub_if_data *sdata)
-@@ -298,7 +298,7 @@ static void add_monitor_files(struct iee
- 
- #ifdef CONFIG_MAC80211_MESH
- #define MESHSTATS_ADD(name)\
--	sdata->mesh_stats.name = debugfs_create_file(#name, 0444,\
-+	sdata->mesh_stats.name = debugfs_create_file(#name, 0400,\
- 		sdata->mesh_stats_dir, sdata, &name##_ops);
- 
- static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
-@@ -312,7 +312,7 @@ static void add_mesh_stats(struct ieee80
- }
- 
- #define MESHPARAMS_ADD(name)\
--	sdata->mesh_config.name = debugfs_create_file(#name, 0644,\
-+	sdata->mesh_config.name = debugfs_create_file(#name, 0600,\
- 		sdata->mesh_config_dir, sdata, &name##_ops);
- 
- static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
---- everything.orig/net/mac80211/debugfs_sta.c	2008-04-04 23:28:38.000000000 +0200
-+++ everything/net/mac80211/debugfs_sta.c	2008-04-04 23:29:42.000000000 +0200
-@@ -267,7 +267,7 @@ static ssize_t sta_agg_status_write(stru
- STA_OPS_WR(agg_status);
- 
- #define DEBUGFS_ADD(name) \
--	sta->debugfs.name = debugfs_create_file(#name, 0444, \
-+	sta->debugfs.name = debugfs_create_file(#name, 0400, \
- 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
- 
- #define DEBUGFS_DEL(name) \
+johannes
 
+--=-BbSsLmXDkT5BKHp3l4gH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/bHHqVg1VMiehFYAQLSmRAAnuQHpTfUmkFqp5HNhSqytNrjzTOWGuuc
+GXzpU/oLEjxGHlvcNWOvYgLpvi7oSDdVbEDXjW7GtoDokj8ggLnbcZOSUAuK1tY2
+pMi8YdldbmNEPwp/sQ6GMkTzRbWBuBeuY3LtLoVdjpS63aELu767Glpg6wqJIKOB
+G1VyxIdcoKWb4dbrreZegYKVWLfWBAlYeg6w1SMElS/3JQFFVQcg1K5OReUpAOCF
+XWF/WBoH2jW/gitJ0FcYo4I77U6CTJ8MmfqRyWEGBTOmscNJZkCUHbcOrZ+p41xg
+cY2QlQtU5ny0KyRqXbA1BDDngwNn2KcvSokav7U8AeJdVD4h2F/7QZRgz024JnFR
+arwi/45tF5P0hokHiY63+O5b0Rs2yUMmBeYGyFX0dYu8XNzNi+2xAXc8ptK3Fqa3
+hjpkEfhcmcvd6QNgQm6i0qQ8ynjSuQXx49DHq8U2EnNPilD+JdOyPDFH4gmLegJ1
+qD3nEeLaEwtmAcVNCpI/5WWjG53MY830q0tQfS8BmE65vh00pCgEp4hIwbUwDhIV
+swxVZl5PM6asPcaC7L9fzQoiwPwT9Km3pJLaprVwQVQnCgwtnShj1E6f6E+hQK1C
+sVVyH+yH8T6dql6jb1ytvq5cvXtstnWES76Iy8gF/gnniF92ZiUbVQUCPLLBylxe
+KtYjej/+Omw=
+=2Xa+
+-----END PGP SIGNATURE-----
+
+--=-BbSsLmXDkT5BKHp3l4gH--
 
