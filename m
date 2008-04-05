@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp103.prem.mail.ac4.yahoo.com ([76.13.13.42]:41269 "HELO
-	smtp103.prem.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753026AbYDBPff (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.180]:35174 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbYDENhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 11:35:35 -0400
-Message-ID: <47F3A7BB.1050501@yahoo.com> (sfid-20080402_163538_341566_89114B58)
-Date: Wed, 02 Apr 2008 11:35:23 -0400
-From: Andres Bertens <abertensu@yahoo.com>
+	Sat, 5 Apr 2008 09:37:52 -0400
+Received: by el-out-1112.google.com with SMTP id v27so345612ele.17
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Apr 2008 06:37:51 -0700 (PDT)
+Message-ID: <1ba2fa240804050637g13a92505j5d4d65234db8c6fc@mail.gmail.com> (sfid-20080405_143803_999924_03C5D19A)
+Date: Sat, 5 Apr 2008 16:37:50 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Bachman Kharazmi" <bachman@tor.lindesign.se>
+Subject: Re: compat-wireless iwl4965 on hp/compaq 2510p
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <47F76A0A.3080806@tor.lindesign.se>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4)
- andtimeout, a solution
-References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>	 <1206999696.20744.2.camel@localhost.localdomain>	 <1207051434.5143.58.camel@johannes.berg>  <47F23C6B.6060205@yahoo.com>	 (sfid-20080401_144755_080818_247DF100) <1207068153.5143.137.camel@johannes.berg>
-In-Reply-To: <1207068153.5143.137.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <47F75EB4.9090703@tor.lindesign.se>
+	 <1207396223.3860.9.camel@johannes.berg>
+	 <47F76814.7010405@tor.lindesign.se>
+	 <1207396488.3860.12.camel@johannes.berg>
+	 <47F76A0A.3080806@tor.lindesign.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Apr 5, 2008 at 3:01 PM, Bachman Kharazmi
+<bachman@tor.lindesign.se> wrote:
+> lapp:/tmp# ip link set wlan0 up
+>  SIOCSIFFLAGS: No such device
+>
+>  lapp:/tmp# iwconfig
+>  lo        no wireless extensions.
+>
+>  eth1      no wireless extensions.
+>
+>  wmaster0  no wireless extensions.
+>
+>  wlan0     IEEE 802.11  ESSID:"planet_mars"
+>           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+>           Tx-Power=0 dBm
+>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>           Encryption key:B200-A927-32DA-86E9-0DEF-EFF3-FB
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+>
+>  note that dmesg sais
+>  iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+>  iwl4965: Tunable channels: 13 802.11bg, 19 802.11a channels
+>  phy1: Selected rate control algorithm 'iwl-4965-rs'
+>  ACPI: PCI Interrupt 0000:10:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+>  iwl4965: Radio disabled by HW RF Kill switch
 
+___iwl4965: Radio disabled by HW RF Kill switch___  this would explain
+the problem
 
-Johannes Berg wrote:
->> Reason=4 is in fact "Inactivity timer expired and station was 
->> disassociated". According to my router log:
->> "Tuesday April 01, 2008 09:08:54 Disassociated: 00-19-D2-4F-22-4D 
->> because idle 300 seconds"
->>
->> Indeed, the default behaviour goes for a reassocation 
-> 
-> Right, I just checked, we try to reassociate after one second.
-> 
->> but my hw/sw 
->> combination (intel3945/dlink/wep) fails with a status=17 (AP unable to 
->> handle new status).
-> 
-> 17 actually is WLAN_REASON_IE_DIFFERENT, i.e. the WPA/RSN IE we send is
-> no longer appropriate, something for wpa_supplicant to handle then. Are
-> you using encryption?
-> 
->> After 3 tries, it dies with an AP association 
->> timeout. From there is no recovery till I set the interface down and up.
->>
->> That's why I solved it (perhaps not in the best way) ignoring the 
->> disassociation. Now it works.
-> 
-> Your AP is broken. After it disassociates you and you ignore this
-> status, it complains that it deauthenticated (!) you and then
-> deauthenticates you again (with reason=6 meaning that you weren't
-> authenticated.) 
-> 
-> The thing is, it's disassociating you and thinks it actually
-> deauthenticated you since when you ignore the disassociation and
-> continue sending it frames it starts complaining that you weren't
-> authenticated (reason=6.)
-> 
-> Your fix is obviously wrong, and only fixes the problem for you because
-> it works around your broken AP that needs a re-authentication after it
-> disassociated you.
-> 
-> I'm not sure what we can do about that. Assuming we're deauthenticated
-> seems completely wrong, and I fear that if we assume deauthentication if
-> the association times out then we may easily end up in a loop there.
-> 
-> johannes
-
-Sorry to hear my AP is broken.
-
-It works ok with other 2 computers with different cards (intel2200bg and 
-dlink w/texas acx100) under Linux (ipw2200/acx100) or Windows. No 
-problem at all. It worked flawlessly with my notebook (intel3945) using 
-ipw3945 with any pre-2.6.24.x kernel.
-
-A couple of months ago I tried kernel 2.6.24 with iwlwifi and moved back 
-due to this problem. A week ago, I tried again but this time getting 
-into the code and I'm still using kernel 2.6.24.4 with this fix which is 
-obviously wrong.
-
-I guess you will hear more often about this problem when more people 
-moves to kernel 2.6.24.x.
-
-Regards,
-Andres
+can you please enable the RF?
