@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:20737 "EHLO mga02.intel.com"
+Received: from porco.dhbit.ca ([216.187.72.182]:32865 "EHLO porco.dhbit.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132AbYDRWMP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 18:12:15 -0400
+	id S1753625AbYDEWIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2008 18:08:48 -0400
+From: "Gabriel A. Devenyi" <ace@staticwave.ca>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [REGRESSION] BCM4306 cannot associate with any version of b43 driver
+Date: Sat, 5 Apr 2008 17:49:24 -0400
+Cc: bdm@fenrir.org.uk, fhimpe@telenet.be
+References: <200804031115.52596.ace@staticwave.ca>
+In-Reply-To: <200804031115.52596.ace@staticwave.ca>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: RE:  RE: iwl3945 problem with 2.6.25-rc9
-Date: Fri, 18 Apr 2008 15:12:13 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com> (sfid-20080418_231234_669737_BDAABB98)
-In-Reply-To: <1208555842.4848.56.camel@johannes.berg>
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com> A<fu931e$k1b$1@ger.gmane.org> <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com> (sfid-20080418_224627_648936_DECA7576) <1208555842.4848.56.camel@johannes.berg>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Marcus Furlong" <furlongm@hotmail.com>,
-	<linux-wireless@vger.kernel.org>
+  charset="utf-8"
+Message-Id: <200804051749.24849.ace@staticwave.ca> (sfid-20080405_230922_209307_FF1D9B69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, April 18, 2008 2:57 PM, Johannes Berg  wrote:
+Brian Morrison wrote:
+>Which channel is your AP on?
 
- 
-> Just jumping in here because I want to know if there are any mac80211
-> bugs (I don't have any 5 GHz hw except the iwl4965, no AP), would it
-> maybe help to explicitly enable sw scanning?
+My AP is on channel 11.
 
-First thing is that there is a iwlwifi driver or ucode problem as it
-asserts every time (it seems) when mac_config is called for channels 38,
-42, 46, and 52. Channel 36 succeeds. The cause of the ucode error is
-unclear to me as I am waiting for somebody to get back to me about what
-the contents of that "event log dump" means.
+>Did you notice the old firmware message in the dmesg output you provided?
+>Have you tried the version 4 firmware?
 
-I looked further about why mac_config is called for those channels and
-the reason appears to be that it is done from ieee80211_sta_scan_work.
-This should not happen as it should only do so for sw scanning (if I
-understand correctly), while the default for this driver is hw scanning
-(and the user is not overriding the default). I am thus now trying to
-figure out how it actually thinks sw scanning is enabled through some
-simple debugging where mac80211 tries to run the driver's hw_scan
-function.
+Comment #3 on the bug points this out, and in comment #4 I updated the firmware.
 
-Explicitly enabling sw scanning is an interesting idea. 
+Please add me to CC as I am not subscribed to the list
 
-Marcus: could you please run your test twice with that patch? The first
-time you run it as you did before, the second time please provide the
-driver parameter "disable_hw_scan=1" together with the debug parameter.
-
-Thank you 
-
-Reinette
+-- 
+Gabriel A. Devenyi B.Eng.
+ace@staticwave.ca
