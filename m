@@ -1,153 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:19179 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbYDQUNn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 16:13:43 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so221123wxd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 13:13:40 -0700 (PDT)
-Subject: [PATCH 2/7] mac80211: introduce struct michael_mic_ctx and static
-	helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Thu, 17 Apr 2008 13:13:47 -0700
-Message-Id: <1208463228.17196.24.camel@brick> (sfid-20080417_211446_632723_C7E4FA07)
-Mime-Version: 1.0
+Received: from Viola.Opus1.COM ([192.245.12.8]:2824 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbYDEKsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2008 06:48:10 -0400
+Received: from egdell.wetwork.net ([204.17.34.178])
+ by Opus1.COM (PMDF V6.2-X27 #9830)
+ with ESMTPSA id <01MT922V1UTY8YM7QJ@Opus1.COM> for
+ linux-wireless@vger.kernel.org; Sat, 05 Apr 2008 03:48:07 -0700 (MST)
+Date: Sat, 05 Apr 2008 03:48:07 -0700
+From: gavron@wetwork.net
+Subject: Re: [PATCH RFT] b43: We need lots of regression testing
+In-reply-to: <1207364787.2115.16.camel@dv>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Message-id: <47F758E7.3050306@wetwork.net> (sfid-20080405_114814_744953_188811F0)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200804041612.18840.mb@bu3sch.de> <1207364787.2115.16.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the existing macro with a static function, significantly
-shrinks the size of the produced object file.
+I had a case of total disassociation last night, and it is unusual.  NM 
+was unable to reconnect (so we go to bash).
+A scan revealed no APs but after a module reload they are back...
+What further testing or other diagnostics can I run should this happen 
+again to rest?
+Thanks
+E
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/michael.c |   75 +++++++++++++++++++++++++----------------------
- net/mac80211/michael.h |    4 ++
- 2 files changed, 44 insertions(+), 35 deletions(-)
+[root@egdell ~]# iwlist wlan0 scan
+wlan0     No scan results
 
-diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
-index c1e5897..4e151e0 100644
---- a/net/mac80211/michael.c
-+++ b/net/mac80211/michael.c
-@@ -13,46 +13,52 @@
- 
- #include "michael.h"
- 
--#define michael_block(l, r) \
--do { \
--	r ^= rol32(l, 17); \
--	l += r; \
--	r ^= ((l & 0xff00ff00) >> 8) | ((l & 0x00ff00ff) << 8); \
--	l += r; \
--	r ^= rol32(l, 3); \
--	l += r; \
--	r ^= ror32(l, 2); \
--	l += r; \
--} while (0)
-+static void michael_block(struct michael_mic_ctx *mctx, u32 val)
-+{
-+	mctx->l ^= val;
-+	mctx->r ^= rol32(mctx->l, 17);
-+	mctx->l += mctx->r;
-+	mctx->r ^= ((mctx->l & 0xff00ff00) >> 8) |
-+		   ((mctx->l & 0x00ff00ff) << 8);
-+	mctx->l += mctx->r;
-+	mctx->r ^= rol32(mctx->l, 3);
-+	mctx->l += mctx->r;
-+	mctx->r ^= ror32(mctx->l, 2);
-+	mctx->l += mctx->r;
-+}
-+
-+static void michael_mic_hdr(struct michael_mic_ctx *mctx,
-+			    u8 *key, u8 *da, u8 *sa, u8 priority)
-+{
-+	mctx->l = get_unaligned_le32(key);
-+	mctx->r = get_unaligned_le32(key + 4);
-+
-+	/*
-+	 * A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
-+	 * calculation, but it is _not_ transmitted
-+	 */
-+	michael_block(mctx, get_unaligned_le32(da));
-+	michael_block(mctx, get_unaligned_le16(&da[4]) |
-+			    (get_unaligned_le16(sa) << 16));
-+	michael_block(mctx, get_unaligned_le32(&sa[2]));
-+	michael_block(mctx, priority);
-+}
- 
- void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
- 		 u8 *data, size_t data_len, u8 *mic)
- {
--	u32 l, r, val;
-+	u32 val;
- 	size_t block, blocks, left;
-+	struct michael_mic_ctx mctx;
- 
--	l = get_unaligned_le32(key);
--	r = get_unaligned_le32(key + 4);
--
--	/* A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
--	 * calculation, but it is _not_ transmitted */
--	l ^= get_unaligned_le32(da);
--	michael_block(l, r);
--	l ^= get_unaligned_le16(&da[4]) | (get_unaligned_le16(sa) << 16);
--	michael_block(l, r);
--	l ^= get_unaligned_le32(&sa[2]);
--	michael_block(l, r);
--	l ^= priority;
--	michael_block(l, r);
-+	michael_mic_hdr(&mctx, key, da, sa, priority);
- 
- 	/* Real data */
- 	blocks = data_len / 4;
- 	left = data_len % 4;
- 
--	for (block = 0; block < blocks; block++) {
--		l ^= get_unaligned_le32(&data[block * 4]);
--		michael_block(l, r);
--	}
-+	for (block = 0; block < blocks; block++)
-+		michael_block(&mctx, get_unaligned_le32(&data[block * 4]));
- 
- 	/* Partial block of 0..3 bytes and padding: 0x5a + 4..7 zeros to make
- 	 * total length a multiple of 4. */
-@@ -62,11 +68,10 @@ void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
- 		left--;
- 		val |= data[blocks * 4 + left];
- 	}
--	l ^= val;
--	michael_block(l, r);
--	/* last block is zero, so l ^ 0 = l */
--	michael_block(l, r);
- 
--	put_unaligned_le32(l, mic);
--	put_unaligned_le32(r, mic + 4);
-+	michael_block(&mctx, val);
-+	michael_block(&mctx, 0);
-+
-+	put_unaligned_le32(mctx.l, mic);
-+	put_unaligned_le32(mctx.r, mic + 4);
- }
-diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
-index 2e6aeba..7d5707b 100644
---- a/net/mac80211/michael.h
-+++ b/net/mac80211/michael.h
-@@ -14,6 +14,10 @@
- 
- #define MICHAEL_MIC_LEN 8
- 
-+struct michael_mic_ctx {
-+	u32 l, r;
-+};
-+
- void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
- 		 u8 *data, size_t data_len, u8 *mic);
- 
--- 
-1.5.5.144.g3e42
+[root@egdell ~]# rmmod b43
+[root@egdell ~]# modprobe b43
+[root@egdell ~]# iwlist wlan0 scan
+wlan0     Scan completed :
+          Cell 01 - Address: 00:16:01:B9:F9:3F
+                    ESSID:"wetwork"
+                    Mode:Master
+                    Frequency:2.437 GHz (Channel 6)
+                    Channel:6
+                    Quality=71/100  Signal level=-64 dBm  Noise 
+level=-69 dBm
+                    Encryption key:on
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+                              11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+                              48 Mb/s; 54 Mb/s
+                    Extra:tsf=00000266671a2b44
+          Cell 02 - Address: 00:16:01:B9:FE:8F
+                    ESSID:"wetwork"
+                    Mode:Master
+                    Frequency:2.437 GHz (Channel 6)
+                    Channel:6
+                    Quality=98/100  Signal level=-36 dBm  Noise 
+level=-69 dBm
+                    Encryption key:on
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+                              11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+                              48 Mb/s; 54 Mb/s
+                    Extra:tsf=000002cd08cbc1ce
+          Cell 03 - Address: 00:16:01:B9:F5:1F
+                    ESSID:"wetwork"
+                    Mode:Master
+                    Frequency:2.437 GHz (Channel 6)
+                    Channel:6
+                    Quality=61/100  Signal level=-74 dBm  Noise 
+level=-69 dBm
+                    Encryption key:on
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 6 Mb/s; 9 Mb/s
+                              11 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+                              48 Mb/s; 54 Mb/s
+                    Extra:tsf=0000021011e7a0e7
+
+[root@egdell ~]#
 
 
+Pavel Roskin wrote:
+> On Fri, 2008-04-04 at 16:12 +0200, Michael Buesch wrote:
+>   
+>> Hi b43 users,
+>>
+>> Please be so kind to run lots of regression tests on the following
+>> patch. This patch is supposed to make the LO calibration a _lot_ more
+>> lightweight and avoid a long MAC-disable period every 120 seconds.
+>>
+>> We need a lot of regression testing with this patch on lots of different
+>> devices to make sure we don't introduce regressions.
+>>
+>> I tested this on a 4306 and a 4318 card. So far it seems to work great
+>> on these cards.
+>>     
+>
+> Tested on this:
+>
+> b43-phy0: Broadcom 4306 WLAN found
+> b43-phy0 debug: Found PHY: Analog 2, Type 2, Revision 2
+> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+> phy0: Selected rate control algorithm 'pid'
+> Broadcom 43xx driver loaded [ Features: PMLR, Firmware-ID: FW13 ]
+>
+> It's actually Fedora development kernel 2.6.25-0.195.rc8.git1.fc9.i686
+> with patched compat-wireless installed.
+>
+> It's working better than I could possibly expect.  The range is on the
+> par with another laptop with ipw3945 running Linux or Windows XP.  It's
+> working through 4 walls and 30 meters on top of that.  I understand that
+> there are many random factors involved, but my impression is very
+> positive.  Basically, it's good enough to go outside with the laptop
+> without having an AP installed near a window.  I haven't seen any
+> significant interruptions in the connection.
+>
+> Unfortunately, I hit that nasty circular lock dependency bug (already
+> discussed in another thread) when I killed wpa_supplicant to try another
+> AP.  The CPU utilization went to 100%, but the driver kept working.
+>
+> Another unrelated bug (sorry, testing often finds unrelated bugs) is
+> that scanning with specific ESSID was returning non-matching APs.  I
+> mean "iwlist wlan0 scan my_essid", which would still report many
+> different ESSIDs.  It's inconvenient when the driver can sense 22 APs at
+> once :)
+>
+> I'll try to get 4318 tested over the weekend.
+>
+>   
