@@ -1,30 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52741 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbYDAPOu (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbYDELu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 11:14:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Mark Hagger <mark.hagger@m-spatial.com>
-Subject: Re: [PATCH] b43: Enable quantum cryptography support
-Date: Tue, 1 Apr 2008 17:14:22 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200804011613.06749.mb@bu3sch.de> <1207061419.2879.298.camel@giga.cambridge.m-spatial.com>
-In-Reply-To: <1207061419.2879.298.camel@giga.cambridge.m-spatial.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804011714.22378.mb@bu3sch.de> (sfid-20080401_161455_413624_4465B9A6)
+	Sat, 5 Apr 2008 07:50:27 -0400
+Subject: Re: compat-wireless iwl4965 on hp/compaq 2510p
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bachman Kharazmi <bachman@tor.lindesign.se>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47F75EB4.9090703@tor.lindesign.se> (sfid-20080405_124018_600873_72164D53)
+References: <47F75EB4.9090703@tor.lindesign.se>
+	 (sfid-20080405_124018_600873_72164D53)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B8T5th5jdEZYQSkU4JWz"
+Date: Sat, 05 Apr 2008 13:50:23 +0200
+Message-Id: <1207396223.3860.9.camel@johannes.berg> (sfid-20080405_125030_531123_633F7A47)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 April 2008 16:50:19 Mark Hagger wrote:
-> Excellent, did you manage to implement the time travel support mode as
-> well?
 
-Sure. I used it to actually get one of those q-crypto devices to test
-the code. ;)
+--=-B8T5th5jdEZYQSkU4JWz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+
+> lapp:~/temp/compat-wireless-2008-04-01# iwconfig
+> lo        no wireless extensions.
+> eth1      no wireless extensions.
+> wmaster0  no wireless extensions.
+> wlan0     IEEE 802.11  ESSID:""
+>            Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associate=
+d
+
+> lapp:~/temp/compat-wireless-2008-04-01# dhclient wlan0
+
+Have you considered connecting to a network before trying to use it?
+
+johannes
+
+--=-B8T5th5jdEZYQSkU4JWz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/dnfqVg1VMiehFYAQL7Ug/7BoziqRQgDghV93LAM7NC/6AK7vaEnLUZ
+FBsaLQQqRvIlctA6PrNoQZ6QBnG9cfOT3B06qGjAgvn9ea7XosiT5P7dx+lpEz7I
+Cgr1JXTxhMjA5e7skqhE2zU/SsOjFu9V2i8vjYzGZuVTbssHCzoId/wzMgWkfv/6
+ugI0GnvQzbLgmJyeZYvvvvoEHMw5twbN3lJX1Anuy4jJP1WLCFusn459WQaUz3Fz
+d9bg5Uc7Xj7mB44MP6xXY5F2fgrJ53DNrfzVS3krbfBsPe7AJ97r8zYsfpKMQv+A
+Q/Dd6OLL9F4ZR+A1tbsf0V1VNdlQHE3u0IHMLdT2SaYMBWjd8+3orGT4Hq6X+KKD
+59Qlc3zBIOjEochGjHXgvRvqcek0tVH9+lPkSk4hgYh9dGzbITuDefdyAGfIlxju
+EwRxfIZnNBqanhwtnr+1PhEBePo5fGQoMOZ2r3l6zYk0gu6isba1nfMYJxSe5V6w
+SW5fATntcI1pFeKAYl29l1PT88nAndXsdd3mGG0OfsddmEUfBUZh6h09q+B2bNpV
+5LvLfYveMLrSR4R9CUWKgGl2rcjuGg0rEofaPbIh7nlVKqZyN3pYrglRgd5BJFRT
+Le06tvUw+MIi3hRrrbIVL4m099eQXpKQ208bhkAcUizwy3uaHZ5z5JzftlxmkJFl
+uZ124NIs0/w=
+=hbC6
+-----END PGP SIGNATURE-----
+
+--=-B8T5th5jdEZYQSkU4JWz--
+
