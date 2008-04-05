@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56154 "EHLO mx1.redhat.com"
+Received: from tor.lindesign.se ([194.17.154.111]:41800 "EHLO tor.lindesign.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751036AbYDJTLX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2008 15:11:23 -0400
-Date: Thu, 10 Apr 2008 16:08:58 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Marcelo Tosatti <marcelo@kvack.org>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 3] libertas: convert RSSI to a direct command
-Message-ID: <20080410190858.GA8969@dmt> (sfid-20080410_201129_747022_AA22B0F5)
-References: <200803261021.48470.hs4233@mail.mn-solutions.de> <1206653042.21106.10.camel@localhost.localdomain> <20080401031530.GA14633@dmt> <200804010848.48789.hs4233@mail.mn-solutions.de> <20080410154341.GB6741@dmt> <1207842441.13354.9.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1207842441.13354.9.camel@johannes.berg>
+	id S1751870AbYDENs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2008 09:48:59 -0400
+Message-ID: <47F78349.8080704@tor.lindesign.se> (sfid-20080405_144903_466091_32C748BB)
+Date: Sat, 05 Apr 2008 15:48:57 +0200
+From: Bachman Kharazmi <bachman@tor.lindesign.se>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless iwl4965 on hp/compaq 2510p
+References: <47F75EB4.9090703@tor.lindesign.se>	 <1207396223.3860.9.camel@johannes.berg>	 <47F76814.7010405@tor.lindesign.se>	 <1207396488.3860.12.camel@johannes.berg>	 <47F76A0A.3080806@tor.lindesign.se> <1ba2fa240804050637g13a92505j5d4d65234db8c6fc@mail.gmail.com>
+In-Reply-To: <1ba2fa240804050637g13a92505j5d4d65234db8c6fc@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2008 at 05:47:21PM +0200, Johannes Berg wrote:
-> On Thu, 2008-04-10 at 12:43 -0300, Marcelo Tosatti wrote:
-> > On Tue, Apr 01, 2008 at 08:48:48AM +0200, Holger Schurig wrote:
-> > > > Won't this call block? You can't block in the get_wireless
-> > > > handler (it holds the rtnl lock). See wext_handle_ioctl.
-> > > 
-> > > Yes, this blocks.
-> > > 
-> > > So you mean that when I cannot get a current RSSI value at this 
-> > > time I have to re-use some old value?
-> > 
-> > All I mean is that get_wireless_stats should not schedule() because it
-> > holds the rtnl_lock. You get ugly hangs doing that.
+Not that easy.
+When the module is loaded I press the (touch) panel where the wireless 
+icon is. This still doesn't turn on the WLAN LED.
+Nothing in dmesg then I press the touchbutton.
+
+lapp:/tmp# cat /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+2
+
+echo "1" > /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+iwl4965: Error sending REPLY_CARD_STATE_CMD: enqueue_hcmd failed: -5
+
+echo "0" > /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+iwl4965: WARNING: Requesting MAC access during RFKILL wakes up NIC
+
+lapp:/tmp# cat /sys/bus/pci/drivers/iwl4965/0000\:10\:00.0/rf_kill
+2
+
+/Bachman
+Tomas Winkler wrote:
+> On Sat, Apr 5, 2008 at 3:01 PM, Bachman Kharazmi
+> <bachman@tor.lindesign.se> wrote:
+>> lapp:/tmp# ip link set wlan0 up
+>>  SIOCSIFFLAGS: No such device
+>>
+>>  lapp:/tmp# iwconfig
+>>  lo        no wireless extensions.
+>>
+>>  eth1      no wireless extensions.
+>>
+>>  wmaster0  no wireless extensions.
+>>
+>>  wlan0     IEEE 802.11  ESSID:"planet_mars"
+>>           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+>>           Tx-Power=0 dBm
+>>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>>           Encryption key:B200-A927-32DA-86E9-0DEF-EFF3-FB
+>>           Link Quality:0  Signal level:0  Noise level:0
+>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>>
+>>
+>>  note that dmesg sais
+>>  iwl4965: Detected Intel Wireless WiFi Link 4965AGN
+>>  iwl4965: Tunable channels: 13 802.11bg, 19 802.11a channels
+>>  phy1: Selected rate control algorithm 'iwl-4965-rs'
+>>  ACPI: PCI Interrupt 0000:10:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+>>  iwl4965: Radio disabled by HW RF Kill switch
 > 
-> Of course you can schedule with the rtnl held. It's a mutex, after all.
-
-True, my bad. The problem is:
-
-    dev_seq_start
-    read_lock(&dev_base_lock)
-    wireless_seq_show
-    wireless_seq_printf_stats
-    get_wireless_stats
-    dev->wireless_handlers->get_wireless_stats
-
-
+> ___iwl4965: Radio disabled by HW RF Kill switch___  this would explain
+> the problem
+> 
+> can you please enable the RF?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
