@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:13034 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760014AbYDCWeh (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:21180 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752638AbYDERa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 18:34:37 -0400
-Received: by py-out-1112.google.com with SMTP id u52so4830503pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 15:34:36 -0700 (PDT)
-Message-ID: <43e72e890804031534y2afdc8d4h1154414df2ccdcd3@mail.gmail.com> (sfid-20080403_233444_846145_F41CB236)
-Date: Thu, 3 Apr 2008 18:34:35 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Chr <chunkeey@web.de>
-Subject: Re: [RFC][PATCH 0/4] p54: various updates
-Cc: linux-wireless@vger.kernel.org,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <200804031740.33177.chunkeey@web.de>
+	Sat, 5 Apr 2008 13:30:27 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so607126fgb.17
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Apr 2008 10:30:25 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 hardware encryption
+Date: Sat, 5 Apr 2008 19:31:58 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200804012339.37204.chunkeey@web.de>
-	 <43e72e890804021642u4dd7b329w60344c991e2a7e43@mail.gmail.com>
-	 <200804031740.33177.chunkeey@web.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804051931.58895.IvDoorn@gmail.com> (sfid-20080405_183035_742466_18F9841F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 3, 2008 at 11:40 AM, Chr <chunkeey@web.de> wrote:
-> On Thursday 03 April 2008 01:42:59 Luis R. Rodriguez wrote:
->  >
->  > Thanks, can you resend as inline patches so it can help get better
->  > review. Also while you're at it can you stuff all p54 files into its
->  > own folder?
->  hmm, I can.... but:
->  - in which folder? for now.. I put everything into a new one folder named p54,
->   but as you know the fullmac driver has already the prism54 subdirectory...
->   should I put it there? or is this confusing?
+Hi,
 
-p54 directory works nice. Now that you are introducing master mode the
-only thing left I think is IBSS compared to prism54, and if that is
-done I think we should *consider* removing prism54 driver after one
-release cycle of the kernel. I once was told that for some cards the
-softmac driver wouldn't work on some fullmac chipsets. I have yet to
-hear of someone who found these type of cards though. I know we also
-had some WDS code for prism54 lying around, it just never got merged
-in because Jeff didn't find it widely used and IIRC it needed a little
-more cleanup.
+I'm investigating hardware encryption support for the rt2x00 drivers,
+Support for rt61pci and rt73usb should be the easiest to do so currently I'm
+only focussing on that, and decide later if rt2500pci and rt2500usb should
+also be implemented.
 
-Think you can get IBSS and maybe WDS to work too?
+What I am currently facing is the following problem:
+For each TX frame the device needs 2 fields in the descriptor namely the
+IV and the EIV. From what I can gather from mac80211 those 2 fields are
+created by mac80211 with the following code in wpa.c:
 
->  - the resulting patch is too big to post it here, ~ 271kb as plaintext...
->   is a bz2 (32kb)  attachment ok too?
+ieee80211_tkip_add_iv(pos, key,
+		      (u8) (key->u.tkip.iv16 >> 8),
+		      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
+			    0x7f),
+		      (u8) key->u.tkip.iv16);
 
-Oh OK, I see. Can you perhaps split the big patch up into a few series?
+And the following function in tkip.c:
 
-  Luis
+u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+			   u8 iv0, u8 iv1, u8 iv2)
+{
+	*pos++ = iv0;
+	*pos++ = iv1;
+	*pos++ = iv2;
+	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+	*pos++ = key->u.tkip.iv32 & 0xff;
+	*pos++ = (key->u.tkip.iv32 >> 8) & 0xff;
+	*pos++ = (key->u.tkip.iv32 >> 16) & 0xff;
+	*pos++ = (key->u.tkip.iv32 >> 24) & 0xff;
+	return pos;
+}
+
+If I understand correctly mac80211 is inserting the values just after
+the ieee80211 header in the frame. Now there are 2 ways rt2x00 can
+handle this.
+	1) copy the frame to the DMA in 2 steps, skipping the inserted IV by mac80211
+	    and copy the IV into the descriptor.
+	2) Add flag to mac80211 to provide the IV and EIV seperately to the driver
+	    so there won't be overhead by mac80211 to insert the IV after the ieee80211
+	    header when the driver doesn't want it to.
+
+Thanks,
+
+Ivo
