@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:10367 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752904AbYDAMmx (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:34191 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbYDENUh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:42:53 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC] libertas: convert libertas driver to use an event/cmdresp queue
-Date: Tue, 1 Apr 2008 14:39:54 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200803271700.58477.hs4233@mail.mn-solutions.de> <1206722403.3392.9.camel@localhost.localdomain>
-In-Reply-To: <1206722403.3392.9.camel@localhost.localdomain>
+	Sat, 5 Apr 2008 09:20:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: use b43_is_mode() call
+Date: Sat, 5 Apr 2008 15:19:36 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804011439.54618.hs4233@mail.mn-solutions.de> (sfid-20080401_134256_604421_C7F9CDC1)
+  charset="us-ascii"
+Message-Id: <200804051519.36755.mb@bu3sch.de> (sfid-20080405_142040_974233_E1FEAE50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's been tested lightly on USB, SDIO, and CF.  I'd like wider
-> testing on CF as this patch causes SSH transfers to stall
-> (only on CF!)
+We must use the b43_is_mode() call to check the current interface
+operation mode.
 
-I've modified if_cs.c somewhat and did
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-$ scp inkscape inkview emacs-snapshot-x mtn \
-  emacs-snapshot-nox pgadmin3 quanta gs-gpl \
-  root@10.2.1.4:/tmp
-inkscape           100% 5856KB 650.7KB/s   00:09
-inkview            100% 5853KB 585.3KB/s   00:10
-emacs-snapshot-x   100% 5333KB 666.6KB/s   00:08
-mtn                100% 5263KB 657.9KB/s   00:08
-emacs-snapshot-nox 100% 4913KB 614.1KB/s   00:08
-pgadmin3           100% 3925KB 654.2KB/s   00:06
-quanta             100% 3597KB 719.5KB/s   00:05
-gs-gpl             100% 3597KB 599.4KB/s   00:06
+---
 
-I didn't notice any stall so far.  What test did you make?
+John, this is for 2.6.26.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-05 15:10:43.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-05 15:12:48.000000000 +0200
+@@ -3768,13 +3768,13 @@ static void b43_set_synth_pu_delay(struc
+ 
+ 	/* The time value is in microseconds. */
+ 	if (dev->phy.type == B43_PHYTYPE_A)
+ 		pu_delay = 3700;
+ 	else
+ 		pu_delay = 1050;
+-	if ((dev->wl->if_type == IEEE80211_IF_TYPE_IBSS) || idle)
++	if (b43_is_mode(dev->wl, IEEE80211_IF_TYPE_IBSS) || idle)
+ 		pu_delay = 500;
+ 	if ((dev->phy.radio_ver == 0x2050) && (dev->phy.radio_rev == 8))
+ 		pu_delay = max(pu_delay, (u16)2400);
+ 
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SPUWKUP, pu_delay);
+ }
+@@ -3782,13 +3782,13 @@ static void b43_set_synth_pu_delay(struc
+ /* Set the TSF CFP pre-TargetBeaconTransmissionTime. */
+ static void b43_set_pretbtt(struct b43_wldev *dev)
+ {
+ 	u16 pretbtt;
+ 
+ 	/* The time value is in microseconds. */
+-	if (dev->wl->if_type == IEEE80211_IF_TYPE_IBSS) {
++	if (b43_is_mode(dev->wl, IEEE80211_IF_TYPE_IBSS)) {
+ 		pretbtt = 2;
+ 	} else {
+ 		if (dev->phy.type == B43_PHYTYPE_A)
+ 			pretbtt = 120;
+ 		else
+ 			pretbtt = 250;
