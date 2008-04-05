@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:34063 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbYDGT6V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 15:58:21 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so739966nfb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2008 12:58:19 -0700 (PDT)
-Message-ID: <47FA7CBB.4060504@gmail.com> (sfid-20080407_205837_899174_DBCD04E4)
-Date: Mon, 07 Apr 2008 21:57:47 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+Received: from tor.lindesign.se ([194.17.154.111]:40616 "EHLO tor.lindesign.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751471AbYDELj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2008 07:39:58 -0400
+Received: from [192.168.100.4] (h-235-0.A189.cust.bahnhof.se [81.170.235.0])
+	by tor.lindesign.se (Postfix) with ESMTP id 897F3E2B60
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Apr 2008 13:12:52 +0200 (CEST)
+Message-ID: <47F75EB4.9090703@tor.lindesign.se> (sfid-20080405_124018_600873_72164D53)
+Date: Sat, 05 Apr 2008 13:12:52 +0200
+From: Bachman Kharazmi <bachman@tor.lindesign.se>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RTNL: assertion failed at key.c
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: compat-wireless iwl4965 on hp/compaq 2510p
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
+I've tried to get the onboard iwl4965 wlan nic working with 
+compat-wireless since it didn't work with driver that was in 2.6.24 kernel.
 
-I got this:
+However I've followed the guide here: 
+http://linuxwireless.org/en/users/Download downloading tarball from 
+http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/compat-wireless-2008-04-01.tar.bz2
 
-RTNL: assertion failed at /home/l/latest/xxx/net/mac80211/sta_info.c (140)
-Pid: 19097, comm: ath5k_pci Tainted: G        W 2.6.25-rc8-mm1_64lock #6
+Compiling and installing went well, but there looks to be serious issues 
+using the device.
 
-Call Trace:
-  [<ffffffffa009073c>] :mac80211:sta_info_destroy+0x14c/0x170
-  [<ffffffffa009085b>] :mac80211:sta_info_flush+0xfb/0x120
-  [<ffffffffa0093926>] :mac80211:ieee80211_sta_join_ibss+0x66/0x560
-  [<ffffffffa0093f2d>] ? :mac80211:ieee80211_rx_bss_add+0x10d/0x160
-  [<ffffffff804e020f>] ? _spin_unlock_bh+0x2f/0x40
-  [<ffffffffa0093f2d>] ? :mac80211:ieee80211_rx_bss_add+0x10d/0x160
-  [<ffffffffa0095526>] :mac80211:ieee80211_sta_find_ibss+0x376/0x4a0
-  [<ffffffffa0095885>] ? :mac80211:ieee80211_scan_completed+0x125/0x2c0
-  [<ffffffffa00959e5>] :mac80211:ieee80211_scan_completed+0x285/0x2c0
-  [<ffffffffa0098a72>] :mac80211:ieee80211_sta_scan_work+0xa2/0x1e0
-  [<ffffffffa00989d0>] ? :mac80211:ieee80211_sta_scan_work+0x0/0x1e0
-  [<ffffffff80241fc6>] run_workqueue+0x176/0x220
-  [<ffffffff80242c96>] worker_thread+0xa6/0x110
-  [<ffffffff802462e0>] ? autoremove_wake_function+0x0/0x40
-  [<ffffffff80242bf0>] ? worker_thread+0x0/0x110
-  [<ffffffff80245ebd>] kthread+0x4d/0x80
-  [<ffffffff8020c558>] child_rip+0xa/0x12
-  [<ffffffff8020bc6f>] ? restore_args+0x0/0x30
-  [<ffffffff80245e70>] ? kthread+0x0/0x80
-  [<ffffffff8020c54e>] ? child_rip+0x0/0x12
+dmesg and lspci can be found here: 
+http://bachman.tor.lindesign.se/tmp/dmesgC2510p.txt
+http://bachman.tor.lindesign.se/tmp/lspci-vnn_C2510p.txt
+Debian/2.6.24
 
-RTNL: assertion failed at /home/l/latest/xxx/net/mac80211/key.c (275)
-Pid: 19097, comm: ath5k_pci Tainted: G        W 2.6.25-rc8-mm1_64lock #6
+I've heard that the wlan on this laptop works with ubuntu which suprises 
+me after all effort to get it going with latest drivers. Are there any 
+solution to get this wlan nic working on my current system?
 
-Call Trace:
-  [<ffffffffa00a218a>] :mac80211:ieee80211_key_free+0xaa/0xb0
-  [<ffffffffa0090634>] :mac80211:sta_info_destroy+0x44/0x170
-  [<ffffffffa009085b>] :mac80211:sta_info_flush+0xfb/0x120
-  [<ffffffffa0093926>] :mac80211:ieee80211_sta_join_ibss+0x66/0x560
-  [<ffffffffa0093f2d>] ? :mac80211:ieee80211_rx_bss_add+0x10d/0x160
-  [<ffffffff804e020f>] ? _spin_unlock_bh+0x2f/0x40
-  [<ffffffffa0093f2d>] ? :mac80211:ieee80211_rx_bss_add+0x10d/0x160
-  [<ffffffffa0095526>] :mac80211:ieee80211_sta_find_ibss+0x376/0x4a0
-  [<ffffffffa0095885>] ? :mac80211:ieee80211_scan_completed+0x125/0x2c0
-  [<ffffffffa00959e5>] :mac80211:ieee80211_scan_completed+0x285/0x2c0
-  [<ffffffffa0098a72>] :mac80211:ieee80211_sta_scan_work+0xa2/0x1e0
-  [<ffffffffa00989d0>] ? :mac80211:ieee80211_sta_scan_work+0x0/0x1e0
-  [<ffffffff80241fc6>] run_workqueue+0x176/0x220
-  [<ffffffff80242c96>] worker_thread+0xa6/0x110
-  [<ffffffff802462e0>] ? autoremove_wake_function+0x0/0x40
-  [<ffffffff80242bf0>] ? worker_thread+0x0/0x110
-  [<ffffffff80245ebd>] kthread+0x4d/0x80
-  [<ffffffff8020c558>] child_rip+0xa/0x12
-  [<ffffffff8020bc6f>] ? restore_args+0x0/0x30
-  [<ffffffff80245e70>] ? kthread+0x0/0x80
-  [<ffffffff8020c54e>] ? child_rip+0x0/0x12
+Thanks! /Bachman
 
 
-I don't know what's the proper place for rtnl_un/lock here. sta_info_flush? Or 
-even ieee80211_sta_join_ibss and others who call sta_info_flush?
+lapp:~/temp/compat-wireless-2008-04-01# modprobe iwl4965
+lapp:~/temp/compat-wireless-2008-04-01# iwconfig
+lo        no wireless extensions.
+eth1      no wireless extensions.
+wmaster0  no wireless extensions.
+wlan0     IEEE 802.11  ESSID:""
+           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+           Tx-Power=0 dBm
+           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+           Encryption key:off
+           Link Quality:0  Signal level:0  Noise level:0
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-Thanks.
+
+Trying to get IP
+lapp:~/temp/compat-wireless-2008-04-01# dhclient wlan0
+There is already a pid file /var/run/dhclient.pid with pid 6677
+killed old client process, removed PID file
+Internet Systems Consortium DHCP Client V3.0.4
+Copyright 2004-2006 Internet Systems Consortium.
+All rights reserved.
+For info, please visit http://www.isc.org/sw/dhcp/
+
+wmaster0: unknown hardware address type 801
+SIOCSIFFLAGS: No such device
+SIOCSIFFLAGS: No such device
+wmaster0: unknown hardware address type 801
+Listening on LPF/wlan0/00:13:e8:81:40:d3
+Sending on   LPF/wlan0/00:13:e8:81:40:d3
+Sending on   Socket/fallback
+receive_packet failed on wlan0: Network is down
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 8
+send_packet: Network is down
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 15
+send_packet: Network is down
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 19
+send_packet: Network is down
