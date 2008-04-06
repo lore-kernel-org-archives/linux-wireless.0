@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54077 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbYDHOhy (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:11558 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438AbYDFPGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 10:37:54 -0400
-Subject: Re: RTNL: assertion failed at key.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <47FA7CBB.4060504@gmail.com> (sfid-20080407_205822_984925_CFD8C464)
-References: <47FA7CBB.4060504@gmail.com>
-	 (sfid-20080407_205822_984925_CFD8C464)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RgcgbMFid2KePC1TmIMt"
-Date: Tue, 08 Apr 2008 16:28:37 +0200
-Message-Id: <1207664917.14253.24.camel@johannes.berg> (sfid-20080408_153756_901879_AB48141B)
-Mime-Version: 1.0
+	Sun, 6 Apr 2008 11:06:53 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so1390831fkr.5
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Apr 2008 08:06:46 -0700 (PDT)
+To: Bas Hulsken <bhulsken@hotmail.com>
+Subject: Re: hostapd hangs on rt2500pci, leaving the nic in an unstable state
+Date: Sun, 6 Apr 2008 17:08:50 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1207412527.6965.21.camel@Bas> <200804051946.24100.IvDoorn@gmail.com> <1207486334.7395.9.camel@Bas>
+In-Reply-To: <1207486334.7395.9.camel@Bas>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200804061708.51044.IvDoorn@gmail.com> (sfid-20080406_160656_159254_52A6E2CA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-RgcgbMFid2KePC1TmIMt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > This is all very strange behavior, I don't know what can cause the
+> > ACPI to disable an interrupt for the device, but what is interesting to
+> > see is that the BSSID in the register seems to have been cleared....
+> I remember reading somewhere that ACPI can do that, if it detects
+> spurious interrupts coming from the device. Not sure if that's the only
+> situation where ACPI does this.
 
+Could you try editing rt2500pci.c
+and in rt2500pci_interrupt() change:
 
-> I don't know what's the proper place for rtnl_un/lock here. sta_info_flus=
-h? Or=20
-> even ieee80211_sta_join_ibss and others who call sta_info_flush?
+	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
+		rt2x00lib_beacondone(rt2x00dev);
 
-I fixed this totally differently now, got fed up with the rtnl.
+to
 
-johannes
+	//if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
+	//	rt2x00lib_beacondone(rt2x00dev);
 
---=-RgcgbMFid2KePC1TmIMt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > Could you create a debugfs dump of the time just before it breaks?
+> > Because it is very odd to see the BSSID to be suddenly cleared, currently
+> > is seems to occur with some people in managed mode as well and so
+> > far I haven't been able to trace it.
+> > Although now that it occurs in master mode as well it becomes
+> > more worrying since mac80211 doesn't control the BSSID in that case
+> > (rt2x00 just grabs the MAC address). So if this seems reproducable there
+> > might be some sort of hardware register reset occuring that messes
+> > things up badly.. :S
+> ok, here are some regdumps:
+> 
+> 1) regdump_beforeifup: a regdump taken before the interface is brought
+> up (module is loaded of course)
+> 2) regdump_beforehostapd: a regdump taken immediately after the
+> interface is brought up, but before hostapd is running.
+> 3) regdump_beforeauth: a regdump taken after hostapd is started, and
+> running, but before a client has started an authentication.
+> 4) regdump_afterauthhang: a regdump, after hostapd has locked up, due to
+> an authentication attempt.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/uBE6Vg1VMiehFYAQIqQA//VyMj0P7cI6NVTjhvphKkGP+KRt9SKGtu
-pfFEdAaWkt0IP0UMriN3QZoDNwka+islJfrO+PY/E+pjQuleO+eBm7FWeRjAd1pu
-JryIF0xWkc/h/Ml7NjLOP0HstFrqqzne2BpfNQU3htsS8//PAvJRD4kT4+U5BjDN
-ertDKWmavxvcEUNFyRv/B3+X0QhQCU5kDleXEthYZ7MYpxKRn/7nOwR8xg9gxzA8
-i8Y5gszlW9UE20APncASfmmN6Slvh+gYsThWekFG2wYxpKdVBMr4nQuVmTtSwrDB
-hwxfC8WKaas5XyjHqzsKLkzu1lZuDTaKAkJAeTIKLt2v21+5j8DtkcNXCZelDL8k
-M9iMDVMDxXGW5DXRgOdgKbUxU8dtK3Y/phMmDi/N1+E1MS3rLTh0cakFQ8JzxDEo
-h60xhwaT+EWMOyYIxro0HyByMfGNTr09C4km92C2H9CaKnikyBRmO9gYUILpRraN
-eJ/yXNWVevnaL+Lw9Oie/JQCk+IfYs8O1XAypBoVfH8LzjHf89W7pbyJmaF7d5Xs
-kW7rEiO1l0lIxboTXqWO2aP6tAlBbhWiy8D1ddCBPW6zB4hwF6sAVJOH6Dd3TWMq
-s+CsMM157HZp/QQr5553KpjgZhq2C9/g14tE2cqX0Cqcat6fOZoLr5r85K5KJ0/b
-sg+EF0GmOzM=
-=aQCs
------END PGP SIGNATURE-----
-
---=-RgcgbMFid2KePC1TmIMt--
-
+Ivo
