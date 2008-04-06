@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:43050 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760182AbYD2SKe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 14:10:34 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: make rx radiotap header more flexible
-Date: Tue, 29 Apr 2008 20:10:21 +0200
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-References: <20080407042541.9026.59360.stgit@localhost> <20080407042549.9026.81997.stgit@localhost> <1209243111.10943.61.camel@johannes.berg>
-In-Reply-To: <1209243111.10943.61.camel@johannes.berg>
-MIME-Version: 1.0
-Message-Id: <200804292010.21367.bruno@thinktube.com> (sfid-20080429_201052_234684_7576D01B)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from c60.cesmail.net ([216.154.195.49]:45252 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751928AbYDFFqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Apr 2008 01:46:51 -0400
+Subject: Re: [PATCH RFT] b43: We need lots of regression testing
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <1207364787.2115.16.camel@dv>
+References: <200804041612.18840.mb@bu3sch.de>  <1207364787.2115.16.camel@dv>
+Content-Type: text/plain
+Date: Sun, 06 Apr 2008 01:46:49 -0400
+Message-Id: <1207460809.7146.73.camel@dv> (sfid-20080406_064657_255142_01FD636B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 April 2008 22:51:50 Johannes Berg wrote:
-> > +static void
-> > +ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
-> > +				 struct sk_buff *skb,
-> > +				 struct ieee80211_rx_status *status,
-> > +				 struct ieee80211_rate *rate,
-> > +				 int rtap_len)
-> > +{
-> > +	struct ieee80211_radiotap_header *rthdr;
-> > +	unsigned char *pos;
-> > +
-> > +	rthdr = (struct ieee80211_radiotap_header *)skb_push(skb, rtap_len);
-> > +	memset(rthdr, 0, rtap_len);
-> > +
-> > +	/* radiotap header, set always present flags */
-> > +	rthdr->it_present =
-> > +		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
-> > +			    (1 << IEEE80211_RADIOTAP_RATE) |
-> > +			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
-> > +			    (1 << IEEE80211_RADIOTAP_ANTENNA) |
-> > +			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
->
-> Is all this alignment-safe now? Not sure it was before but it'd be nice
-> if we could fix it up.
->
-> Radiotap explicitly allows you to have a longer length than you need so
-> maybe we should just make sure to align things?
+On Fri, 2008-04-04 at 23:06 -0400, Pavel Roskin wrote:
 
-are you talking about the alignment of the radiotap header itself? no, i just 
-took care about the alignment requirements of the radiotap fields, relative 
-to the start of radiotap. but it would be easy to add some additional length 
-in ieee80211_rx_radiotap_len() and just leave that empty at the end.
+> I'll try to get 4318 tested over the weekend.
 
-i think i don't understand all alignment requirements though...
+It's just as good as bcm4306.
 
-bruno
+b43-phy0: Broadcom 4318 WLAN found
+b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+
+It was the same laptop in the same place, and I could even go a couple
+of steps further than with bcm4306.  It's a place with 22 APs in range,
+and the AP I was connecting to is installed in a brick building away
+from any windows.  Yet I could maintain connection at the far end of the
+paring lot nearby.
+
+I realize that the unpatched drive could probably perform as well.  But
+I wanted to use this opportunity to test the driver and the patch at
+once in some real life conditions, and the results are great!
+
+Another thing I noticed today is that the quality next to the AP is
+normally from 65/100 to 75/100.  But sometimes it jumps to a higher
+number momentarily, up to 130/100.  Yet I don't see corresponding
+changes in the signal and noise when it happens.  Signal level is
+jumping randomly from -55 dBm to -15 dBm, and noise level is always -72
+dBm (rarely -71 dBm).
+
+When at the place when the connection breaks, the quality is 30/100,
+the signal level is -84 dBm and the noise level is still -72 dBm.
+
+Perhaps the quality could be calibrated so that 30 becomes 0 and 70
+becomes 100 (and we should never get quality over 100).  The noise level
+is probably too high.  And the signal jumping 40 dBm without me even
+touching anything may indicate that the driver probably fails to make
+some adjustments in the signal value.
+
+-- 
+Regards,
+Pavel Roskin
