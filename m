@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17399 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751495AbYDCXFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 19:05:46 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/5] iwlwifi driver updates
-Date: Thu,  3 Apr 2008 16:05:19 -0700
-Message-Id: <1207263924-25385-1-git-send-email-reinette.chatre@intel.com> (sfid-20080404_000559_039526_DE581FC9)
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:36709 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752913AbYDFPaA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Apr 2008 11:30:00 -0400
+Message-ID: <47F8EC74.7000802@lwfinger.net> (sfid-20080406_163007_812940_22B18378)
+Date: Sun, 06 Apr 2008 10:29:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43legacy: fix bcm4303 crash
+References: <20080406170507.16992935@polimi.it>
+In-Reply-To: <20080406170507.16992935@polimi.it>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series continues the driver cleanup and reorganization.
-It also includes a fix that ensures LED is initialized before upper
-layers are notified that it can be used.
-A second fix (fix rfkill memory error) fixes a slab corruption error.
+Stefano Brivio wrote:
+> This fixes an hard crash which happened upon driver loading on bcm4303 rev.
+> 2 devices.
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> ---
+> John, this is for 2.6.26.
 
-[PATCH 1/5] iwlwifi: hw names cleanup
-[PATCH 2/5] iwlwifi: move driver status inliners into iwl-core.h
-[PATCH 3/5] iwlwifi: use ieee80211_frequency_to_channel
-[PATCH 4/5] iwlwifi: ensure led registration complete as part of initialization
-[PATCH 5/5] iwlwifi: fix rfkill memory error
+Shouldn't this be for 2.6.25?
 
-Thanks
-
-Reinette
+Larry
 
