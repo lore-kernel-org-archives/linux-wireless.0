@@ -1,27 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:8724 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbYDPP6U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 11:58:20 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: 2.6.25-rc9 -- bcm4306 performance is in the toilet
-Date: Wed, 16 Apr 2008 17:55:19 +0200
-Cc: Miles Lane <miles.lane@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <48056406.2060502@gmail.com>
-In-Reply-To: <48056406.2060502@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="windows-1252"
-Message-Id: <200804161755.19721.hs4233@mail.mn-solutions.de> (sfid-20080416_165824_367756_DFED8104)
+Received: from mfe1.polimi.it ([131.175.12.23]:49761 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752376AbYDFPLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Apr 2008 11:11:15 -0400
+Date: Sun, 6 Apr 2008 17:10:53 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH RFT] b43legacy: fix initvals loading on bcm4303
+Message-ID: <20080406171053.62008810@polimi.it> (sfid-20080406_161119_768853_BE7C94DE)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I built with a bunch of network and wireless debugging options
-> enabled and am seeing this is my kernel log:
->
-> [...]
+This allows for the correct initial values to be uploaded to bcm4303
+devices. It should be correct, but I can't reliably test this as I suspect
+there's something going wrong with an hardware rfkill switch on my laptop.
+Please test.
 
-Beware of sniffing in the toilet :-)
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+Please note that for this patch to be tested a previous patch:
+'b43legacy: fix bcm4303 crash'
+needs to be applied.
+---
+Index: bcm-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- bcm-testing.orig/drivers/net/wireless/b43legacy/main.c
++++ bcm-testing/drivers/net/wireless/b43legacy/main.c
+@@ -1516,6 +1516,7 @@ static int b43legacy_request_firmware(st
+ 	}
+ 	if (!fw->initvals) {
+ 		switch (dev->phy.type) {
++		case B43legacy_PHYTYPE_B:
+ 		case B43legacy_PHYTYPE_G:
+ 			if ((rev >= 5) && (rev <= 10))
+ 				filename = "b0g0initvals5";
+@@ -1533,6 +1534,7 @@ static int b43legacy_request_firmware(st
+ 	}
+ 	if (!fw->initvals_band) {
+ 		switch (dev->phy.type) {
++		case B43legacy_PHYTYPE_B:
+ 		case B43legacy_PHYTYPE_G:
+ 			if ((rev >= 5) && (rev <= 10))
+ 				filename = "b0g0bsinitvals5";
+
+
+--
+Ciao
+Stefano
+
