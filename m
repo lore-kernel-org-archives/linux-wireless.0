@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59302 "EHLO mga01.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:54114 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbYDUWmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 18:42:13 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/11] iwlwifi: remove includes to net/ieee80211.h
-Date: Mon, 21 Apr 2008 15:41:54 -0700
-Message-Id: <1208817721-11333-5-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004344_159339_D294DD29)
-In-Reply-To: <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
-References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
+	id S1755568AbYDGB0l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Apr 2008 21:26:41 -0400
+Subject: Re: [PATCH RFT] b43: We need lots of regression testing
+From: Pavel Roskin <proski@gnu.org>
+To: ronald645@gmail.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <47F8887F.3050500@gmail.com>
+References: <47F8887F.3050500@gmail.com>
+Content-Type: text/plain
+Date: Sun, 06 Apr 2008 21:26:39 -0400
+Message-Id: <1207531599.8725.4.camel@dv> (sfid-20080407_022654_445207_1D144988)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Sun, 2008-04-06 at 10:23 +0200, Ronald wrote:
+> hey all,
+> 
+> Can I safely apply this patch to the 2.6.25.1 kernel once it is 
+> released? I would love to test it... =)
+> 
+> (maybe a stupid question but I have no idea)
 
-this patch removes remaining includes to net/ieee80211.h
+The patch doesn't apply cleanly to the current main branch (linux-2.6),
+and it's not likely to change before 2.6.25.1.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+The conflicts are minor, but the patch would need to be adjusted.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 85c2264..e51eeef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -29,7 +29,6 @@
- #include <linux/skbuff.h>
- #include <linux/wireless.h>
- #include <net/mac80211.h>
--#include <net/ieee80211.h>
- 
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 557912a..e20c938 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -28,7 +28,6 @@
- #include <linux/skbuff.h>
- #include <linux/wireless.h>
- #include <net/mac80211.h>
--#include <net/ieee80211.h>
- 
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
+If you want to test the patch, I suggest that you don't wait, but take
+the current compat-wireless instead, patch it and compile it for you
+current kernel.  It worked for me.
+
 -- 
-1.5.3.4
-
+Regards,
+Pavel Roskin
