@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51789 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754395AbYDBNsZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 09:48:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ssb-pcmcia: IRQ and DMA related fixes
-Date: Wed, 2 Apr 2008 15:47:56 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200803281034.55731.mb@bu3sch.de> <20080401192733.GA17630@tuxdriver.com>
-In-Reply-To: <20080401192733.GA17630@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804021547.56480.mb@bu3sch.de> (sfid-20080402_144828_460399_462BE62E)
+Received: from smtp.wellnetcz.com ([212.24.148.102]:37583 "EHLO WNmonitoring"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752167AbYDGU7C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Apr 2008 16:59:02 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH 1/2] mac80211: fix recursive locking in ieee80211_sta_expire
+Date: Mon,  7 Apr 2008 21:53:48 +0200
+Message-Id: <1207598029-20000-1-git-send-email-jirislaby@gmail.com> (sfid-20080407_215912_627585_7703BB87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 April 2008 21:27:33 John W. Linville wrote:
-> On Fri, Mar 28, 2008 at 10:34:55AM +0100, Michael Buesch wrote:
-> > Here come some IRQ and DMA related fixes for the ssb PCMCIA-host code.
-> > Not much to say, actually. I think the patch explains itself.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> > 
-> > For 2.6.25
-> 
-> This seems to build upon these two patches:
-> 
-> commit e7ec2e3230633a858af1b0b359f6c4670dbeb997
-> Author: Michael Buesch <mb@bu3sch.de>
-> Date:   Mon Mar 10 17:26:32 2008 +0100
-> 
->     ssb: Add SPROM/invariants support for PCMCIA devices
-> 
->     This adds support for reading/writing the SPROM invariants
->     for PCMCIA based devices.
-> 
->     Signed-off-by: Michael Buesch <mb@bu3sch.de>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> commit ffc7689ddae5cbe12bde437ae0f2b386d568b5cd
-> Author: Michael Buesch <mb@bu3sch.de>
-> Date:   Wed Feb 20 19:08:10 2008 +0100
-> 
->     ssb: Add support for 8bit register access
-> 
->     This adds support for 8bit wide register reads/writes.
->     This is needed in order to support the gigabit ethernet core.
-> 
->     Signed-off-by: Michael Buesch <mb@bu3sch.de>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Those are not in 2.6.25.  Is 2.6.26 OK for this one?
+Hi,
 
-Yeah, right. I was a little bit confused what was in 2.6.25 :)
+it's against -mm, what's current mac80211 git tree? It seems that
+-mm has fresher material, than wireless-2.6...
 
+--
 
+ieee80211_sta_expire grabs local->sta_lock and calls sta_info_unlink
+which tries to grab the lock again. (make available) and use
+__sta_info_unlink variant instead.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@suse.cz>
+---
+ net/mac80211/ieee80211_sta.c |    2 +-
+ net/mac80211/sta_info.c      |    2 +-
+ net/mac80211/sta_info.h      |    2 ++
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index f9cf2f1..cfe6fcc 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -3081,7 +3081,7 @@ static void ieee80211_sta_expire(struct net_device *dev, unsigned long exp_time)
+ 		if (time_after(jiffies, sta->last_rx + exp_time)) {
+ 			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
+ 			       dev->name, print_mac(mac, sta->addr));
+-			sta_info_unlink(&sta);
++			__sta_info_unlink(&sta);
+ 			if (sta)
+ 				list_add(&sta->list, &tmp_list);
+ 		}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f708367..ba02b43 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -409,7 +409,7 @@ static struct sta_info *__sta_info_unpin(struct sta_info *sta)
+ 	return ret;
+ }
+ 
+-static void __sta_info_unlink(struct sta_info **sta)
++void __sta_info_unlink(struct sta_info **sta)
+ {
+ 	struct ieee80211_local *local = (*sta)->local;
+ 	struct ieee80211_sub_if_data *sdata = (*sta)->sdata;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 5e39a41..3a89b28 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -347,6 +347,8 @@ int sta_info_insert(struct sta_info *sta);
+  * has already unlinked it.
+  */
+ void sta_info_unlink(struct sta_info **sta);
++/* no lock version */
++void __sta_info_unlink(struct sta_info **sta);
+ 
+ void sta_info_destroy(struct sta_info *sta);
+ void sta_info_set_tim_bit(struct sta_info *sta);
 -- 
-Greetings Michael.
+1.5.4.4
+
