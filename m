@@ -1,165 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54107 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57477 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152AbYDHOia (ORCPT
+	with ESMTP id S1752891AbYDGNK1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 10:38:30 -0400
-Subject: Re: [PATCH] mac80211: BA session debug prints changes
+	Mon, 7 Apr 2008 09:10:27 -0400
+Subject: Re: mac80211 hardware encryption
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1207588616-30489-1-git-send-email-reinette.chatre@intel.com>
-References: <1207588616-30489-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N3mJRkmoYj+ClFZpZrOF"
-Date: Tue, 08 Apr 2008 16:30:22 +0200
-Message-Id: <1207665022.14253.28.camel@johannes.berg> (sfid-20080408_153835_702145_BFA250CF)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200804051931.58895.IvDoorn@gmail.com> (sfid-20080405_183029_572967_86DFF20C)
+References: <200804051931.58895.IvDoorn@gmail.com>
+	 (sfid-20080405_183029_572967_86DFF20C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WYQgk9iCDW9jP/FXmcxt"
+Date: Mon, 07 Apr 2008 15:09:21 +0200
+Message-Id: <1207573761.12481.4.camel@johannes.berg> (sfid-20080407_142554_399047_9531DD74)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-N3mJRkmoYj+ClFZpZrOF
+--=-WYQgk9iCDW9jP/FXmcxt
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+Hi Ivo,
 
-On Mon, 2008-04-07 at 10:16 -0700, Reinette Chatre wrote:
-> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->=20
-> This patch contains next issues:
-> 1 - prevents "stop BA session" multiple warnings
-> 2 - adds debug print to stop Rx BA session flow
-> 3 - adds EOL in one debug print
->=20
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+In addition to what Jouni already mentioned about replay detection, I
+have a question.
 
-Great, thanks.
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> If I understand correctly mac80211 is inserting the values just after
+> the ieee80211 header in the frame.=20
 
-> ---
->  net/mac80211/ieee80211.c     |   18 ++++++++----------
->  net/mac80211/ieee80211_sta.c |   10 ++++++++--
->  2 files changed, 16 insertions(+), 12 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-> index 5d30dd4..b3cf69e 100644
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -700,11 +700,6 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_hw=
- *hw,
->  	if (tid >=3D STA_TID_NUM)
->  		return -EINVAL;
-> =20
-> -#ifdef CONFIG_MAC80211_HT_DEBUG
-> -	printk(KERN_DEBUG "Stop a BA session requested for %s tid %u\n",
-> -				print_mac(mac, ra), tid);
-> -#endif /* CONFIG_MAC80211_HT_DEBUG */
-> -
->  	rcu_read_lock();
->  	sta =3D sta_info_get(local, ra);
->  	if (!sta) {
-> @@ -717,14 +712,15 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_h=
-w *hw,
->  	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
-> =20
->  	if (*state !=3D HT_AGG_STATE_OPERATIONAL) {
-> -#ifdef CONFIG_MAC80211_HT_DEBUG
-> -		printk(KERN_DEBUG "Try to stop Tx aggregation on"
-> -				" non active TID\n");
-> -#endif /* CONFIG_MAC80211_HT_DEBUG */
->  		ret =3D -ENOENT;
->  		goto stop_BA_exit;
->  	}
-> =20
-> +#ifdef CONFIG_MAC80211_HT_DEBUG
-> +	printk(KERN_DEBUG "Tx BA session stop requested for %s tid %u\n",
-> +				print_mac(mac, ra), tid);
-> +#endif /* CONFIG_MAC80211_HT_DEBUG */
-> +
->  	ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
-> =20
->  	*state =3D HT_AGG_STATE_REQ_STOP_BA_MSK |
-> @@ -809,8 +805,10 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw=
-, u8 *ra, u8 tid)
->  		return;
->  	}
-> =20
-> -	printk(KERN_DEBUG "Stop a BA session requested on DA %s tid %d\n",
-> +#ifdef CONFIG_MAC80211_HT_DEBUG
-> +	printk(KERN_DEBUG "Stopping Tx BA session for %s tid %d\n",
->  				print_mac(mac, ra), tid);
-> +#endif /* CONFIG_MAC80211_HT_DEBUG */
-> =20
->  	rcu_read_lock();
->  	sta =3D sta_info_get(local, ra);
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index 833b225..5120e38 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -1281,7 +1281,7 @@ static void ieee80211_sta_process_addba_request(str=
-uct net_device *dev,
->  		ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
->  					       sta->addr, tid, &start_seq_num);
->  #ifdef CONFIG_MAC80211_HT_DEBUG
-> -	printk(KERN_DEBUG "Rx A-MPDU on tid %d result %d", tid, ret);
-> +	printk(KERN_DEBUG "Rx A-MPDU request on tid %d result %d\n", tid, ret);
->  #endif /* CONFIG_MAC80211_HT_DEBUG */
-> =20
->  	if (ret) {
-> @@ -1436,6 +1436,7 @@ void ieee80211_sta_stop_rx_ba_session(struct net_de=
-vice *dev, u8 *ra, u16 tid,
->  	struct ieee80211_hw *hw =3D &local->hw;
->  	struct sta_info *sta;
->  	int ret, i;
-> +	DECLARE_MAC_BUF(mac);
-> =20
->  	rcu_read_lock();
-> =20
-> @@ -1456,12 +1457,17 @@ void ieee80211_sta_stop_rx_ba_session(struct net_=
-device *dev, u8 *ra, u16 tid,
->  	sta->ampdu_mlme.tid_state_rx[tid] =3D
->  		HT_AGG_STATE_REQ_STOP_BA_MSK |
->  		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-> -		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-> +	spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
-> =20
->  	/* stop HW Rx aggregation. ampdu_action existence
->  	 * already verified in session init so we add the BUG_ON */
->  	BUG_ON(!local->ops->ampdu_action);
-> =20
-> +#ifdef CONFIG_MAC80211_HT_DEBUG
-> +	printk(KERN_DEBUG "Rx BA session stop requested for %s tid %u\n",
-> +				print_mac(mac, ra), tid);
-> +#endif /* CONFIG_MAC80211_HT_DEBUG */
-> +
->  	ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
->  					ra, tid, NULL);
->  	if (ret)
+Well, yes, that's where they belong on air.
 
---=-N3mJRkmoYj+ClFZpZrOF
+> Now there are 2 ways rt2x00 can
+> handle this.
+> 	1) copy the frame to the DMA in 2 steps, skipping the inserted IV by mac=
+80211
+> 	    and copy the IV into the descriptor.
+
+How much overhead do you reckon this would be?
+
+> 	2) Add flag to mac80211 to provide the IV and EIV seperately to the driv=
+er
+> 	    so there won't be overhead by mac80211 to insert the IV after the ie=
+ee80211
+> 	    header when the driver doesn't want it to.
+
+I'd prefer 1) over 2) just because it seems a rather special case for
+this particular hardware.
+
+johannes
+
+--=-WYQgk9iCDW9jP/FXmcxt
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/uBfKVg1VMiehFYAQKpXw/+Kai7Qbh+dVIgHE8g2c2VXvSFKrtOmbRU
-xYqCtnN3SSWT0glXo8rY/wiu6dTywLZ4YMn2TENeCbqgcs4cbfpVXdrRf4zz8PqL
-5lzJ8dhLEIfSw/MAhiFC9/ikGgGaG77U1vQcSqwL8k8WSMz/XUP9qee3JB1VSnf6
-sVBv5B5q2AHHDo6lZCRyGn0LXkC7qScyLsljUeOfxfly/BLjgJOt3QCmwwULLbk8
-eEfG0hbw3p75R73gYjfxuw55+jp7hf3FQIhxzspB9UTpKXvEeRXIvLo5sh0yDjzj
-Qlcz5VP16J/H+wTb7dGo//4WgCcyxrsaRnRhuiBeW2UeRKd6uqlHSVR4v48TtaEE
-AX0kF3/i7tamhY36uq6b5wlrqC9a+6/DHId7bL00VzGeBoqc9E+7LymcbTKuzuQt
-/uCkDRxlgR37uXfjblgbVRspnKT+mFZk0X5DFEEZnzvhesPqO8HRXUCUD0UJRtNk
-Gz5GprRI+j+yG5PG8SfEhKnXss0gBmF3T+pjP1ABA0lUd59V5rxdqhgvAfTuCPh3
-2+WtrQHIj2iZ6ohjiL/sZaFNO3UtE6dSRYe0UAsaulmJybFFs4i7y1bPsrgy5y2t
-t3UzRyU9f54WbMRrfQUgDRG/l27hrpN9LDVKW2BfJle3burwemKkChV37iYq7Ux1
-N5OaG3hMqvk=
-=MM98
+iQIVAwUAR/odAKVg1VMiehFYAQKOCBAApNLWe94VfpDtdOV8B+GoBcbeeqOohcdE
+rgQHacZ3JNyYrhTw4OBZ4D6tjAUUOy8SuL7UnyJEL13w6L6zqPEXyz8OY+uTOlXR
+MWEZ1EITWEQEveufZ24um80w6MHiIW/DU/hGvDvVfSThssQ5DVVBvaZLZ/gvhIVq
+JmAjiDg5kaoakED3RJ6C07aFwp9M2Jyo6Khzj7MK0xg7ICIknd7z4Y4x7Bh5Iu8G
+tsYrZ4aTylj8E6lP93Z/zvpd34KGqjdW6SfnUi2jmDPQrpA3/tytseqBUrezSKDy
+7cq6mtoN2juM761kZ3/WfzxTtRdYjMT8Hd6GFwZHC33Z9lI8uCKIlYfXpXh91CRp
+Yp9sQYbzyQ58Or5M2nEyam1qbB1usTqocLA9aWUR2G9yKCBXOLzr7mhpZ/LYvXrK
+G7ATsRh144EqRWaprbCSzH1TqytwwvSe6m0kjU8sbor3/BCUxsewKMnYssegDagt
+nCyd3jSo0LYWxSV9l3WcUanOag0morvXkn8229I4boGo4GTDuc+68IwNGDmMLjpW
+vt80EKOQdFAWVRPPRat/Lpn8f9Coh3J2m4iyF47co7WJ0YFD3QBsDn7jdwaC2ecV
+yJpTb85+dfqm1s3SG1/Y13R9MCXr/aS/jrvEyF3hwqjWp/R82Iirz6FWKQPeyqJX
+/WRv8bFk6Yg=
+=p5TO
 -----END PGP SIGNATURE-----
 
---=-N3mJRkmoYj+ClFZpZrOF--
+--=-WYQgk9iCDW9jP/FXmcxt--
 
