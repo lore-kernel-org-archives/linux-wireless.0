@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:52282 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759062AbYD2RVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 13:21:35 -0400
-Date: Tue, 29 Apr 2008 10:18:53 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [24/37] b43: Add more btcoexist workarounds
-Message-ID: <20080429171853.GY14724@suse.de> (sfid-20080429_192148_544577_C900F189)
-References: <20080429171222.073929148@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080429171730.GA14724@suse.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758187AbYDGOgI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Apr 2008 10:36:08 -0400
+Subject: Re: mac80211 hardware encryption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200804071626.37799.IvDoorn@gmail.com> (sfid-20080407_152410_751293_81ABF326)
+References: <200804051931.58895.IvDoorn@gmail.com>
+	 <200804071610.47598.IvDoorn@gmail.com>
+	 <1207577549.12481.24.camel@johannes.berg>
+	 <200804071626.37799.IvDoorn@gmail.com>
+	 (sfid-20080407_152410_751293_81ABF326)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X/F1HTsvhbriScXoDp0E"
+Date: Mon, 07 Apr 2008 16:36:03 +0200
+Message-Id: <1207578963.12481.27.camel@johannes.berg> (sfid-20080407_153611_379363_13797761)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+--=-X/F1HTsvhbriScXoDp0E
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-commit 9fc38458355525f801cd2ab403ac89850489a05e upstream
 
-This adds more workarounds for devices with broken BT bits.
+> Ok, so just to summarize (so I have everything right :) )
+>=20
+> TX path)
+> rt2x00 sets the IEEE80211_KEY_FLAG_GENERATE_IV flag
+> grabs the IV/EIV from behind the ieee80211 header
+> memmove ieee80211 header to remove the IV/EIV
+>=20
+> TX done path)
+> memmove ieee80211 header to make room for IV/EIV
+> reinsert IV/EIV behind ieee80211 header
+> call ieee80211_tx_status() for mac80211
+>=20
+> RX path)
+> memmove ieee80211 header to make room for IV/EIV
+> insert IV/EIV behind ieee80211 header
+> call ieee80211_rx() for mac80211
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Yes, that looks right.
 
----
- drivers/net/wireless/b43/main.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+johannes
 
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4009,6 +4009,12 @@ static int b43_one_core_attach(struct ss
- 	return err;
- }
- 
-+#define IS_PDEV(pdev, _vendor, _device, _subvendor, _subdevice)		( \
-+	(pdev->vendor == PCI_VENDOR_ID_##_vendor) &&			\
-+	(pdev->device == _device) &&					\
-+	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
-+	(pdev->subsystem_device == _subdevice)				)
-+
- static void b43_sprom_fixup(struct ssb_bus *bus)
- {
- 	struct pci_dev *pdev;
-@@ -4022,10 +4028,9 @@ static void b43_sprom_fixup(struct ssb_b
- 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
- 	if (bus->bustype == SSB_BUSTYPE_PCI) {
- 		pdev = bus->host_pci;
--		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
--		    pdev->device == 0x4318 &&
--		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
--		    pdev->subsystem_device == 0x100F)
-+		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
- 			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
- 	}
- }
+--=-X/F1HTsvhbriScXoDp0E
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/oxUqVg1VMiehFYAQKfmBAAtvEbl+w5JhjvpaT5aaBOinrO39Ahx+UC
+az9Ml+NPqhVsYgIQ8ISRT7p4OiKUb0y9GqHdX6K9J5R0bx97gJ/M9p+1lqNKbFWx
+G1QWsek7nF6/5LabeTxd+hsRRreDLHh/PjR+TRxebYFTSVigHtDUNB/xlM7wBLZc
+UrPwRKFjsfEXZAY89/2YPdNyJMYoZOU7GXjMp0KBxagCLNwUU9E9frhLX1MW5XGV
+9MbXwLAuofh+k3eQtndWbMuKHc9rk3uqzh5KGBv5UDakFv2w6dbzjM/GWzbO/mit
+UbxIWaYIiVrV9E9SwV8WWJ5h3EBUg6Fx3tbf6XUBjJPd5Z3CwM0H2VC9ZRVUlb89
+rpNsynzvceF51p5ybH8zGnjg3XMRa7GeNS/QBSWpocNWnqN0LGeLpyeQh5pqfpy+
+hy82NBUFrHGxRMi42O0ZZueKfmRxKjBKZzp44OcmlR/6qxitpghf12obqhQdL84X
+vr70SnSddyD4itVUuyarQWeiwvbs2+N7cyOmav9CKDxUUWEVkf/4QeToQZ5hV9Ua
+DSFLO56ULQpzN20+0ojjAvIRZ5YgBHwI5rWC/35mt6RaG/sc5QgC8s4/Hrf69BP7
+h8+WHXzkdRSkQqNZS1ex373CarhWncsDZArR/f+EW9ftSCXQCKYIQlHSRBup8Re4
+UogSSvqvh/g=
+=uRM9
+-----END PGP SIGNATURE-----
+
+--=-X/F1HTsvhbriScXoDp0E--
+
