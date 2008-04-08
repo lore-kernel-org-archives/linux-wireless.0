@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3197 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751703AbYDBBEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 21:04:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] drivers/net/wireless/iwlwifi/iwl-debugfs.c: fix another '%llu' warning
-Date: Tue,  1 Apr 2008 20:59:32 -0400
-Message-Id: <1207097972-16649-1-git-send-email-linville@tuxdriver.com> (sfid-20080402_020433_602919_9374E15E)
+Received: from vs166246.vserver.de ([62.75.166.246]:51452 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837AbYDHI0F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 04:26:05 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Alejandro Grijalba <sud@latinsud.com>
+Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
+Date: Tue, 8 Apr 2008 10:25:39 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <47FAB829.9010304@latinsud.com>
+In-Reply-To: <47FAB829.9010304@latinsud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804081025.39645.mb@bu3sch.de> (sfid-20080408_092609_909502_698A80A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwlwifi/iwl-debugfs.c: In function =E2=80=98iwl_db=
-gfs_stations_read=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-debugfs.c:247: warning: format =E2=80=98=
-%llu=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, bu=
-t argument 4 has type =E2=80=98u64=E2=80=99
+On Tuesday 08 April 2008 02:11:21 Alejandro Grijalba wrote:
+> When injecting frames we should allow user to play with fields like
+> fragment or sequence numbers. This patch prevents mac80211 from modifying
+> those fields on injected frames.
+> 
+> Tested on 2.6.24.4 with aireplay-ng.
+> 
+> Signed-off-by: Alejandro Grijalba <sud@latinsud.com>
+> ---
+> There is still a problem with some drivers (b43) that also modify seq numbers, 
+> and i cannot find there a clean way to tell whether the frame was injected.
+> An alternative way would be to create a radiotap flag meaning not to modify header.
+> 
+> --- linux-2.6.24.4/net/mac80211/tx.c	2008-01-24 23:58:37.000000000 +0100
+> +++ linux-2.6.24.4-sud/net/mac80211/tx.c	2008-04-05 16:43:19.000000000 +0200
+> @@ -281,6 +281,9 @@ ieee80211_tx_h_sequence(struct ieee80211
+>  {
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+>  
+> +	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
+> +		return TXRX_CONTINUE;
+> +
+>  	if (ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >= 24)
+>  		ieee80211_include_sequence(tx->sdata, hdr);
+>  
 
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-I finally have a 64-bit box in my build stable...(thanks, Sony!)
+This does not work, since we use injection for other types of frames. For example
+management frames from hostapd. We don't want (and can't) make hostapd keep track of
+sequence numbers.
+You'll have to contact radiotap people and add a flag for this. This would also
+solve the hardware counter problem then.
 
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/w=
-ireless/iwlwifi/iwl-debugfs.c
-index b2cc552..447ff2c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -243,7 +243,7 @@ static ssize_t iwl_dbgfs_stations_read(struct file =
-*file, char __user *user_buf,
- 						station->tid[j].agg.wait_for_ba);
- 				pos +=3D sprintf(buf+pos, "%u\t%llu\t%u\n",
- 						station->tid[j].agg.start_idx,
--						station->tid[j].agg.bitmap,
-+						(unsigned long long)station->tid[j].agg.bitmap,
- 						station->tid[j].agg.rate_n_flags);
- 			}
- 			pos +=3D sprintf(buf+pos, "\n");
---=20
-1.5.3.3
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
