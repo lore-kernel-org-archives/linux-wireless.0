@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:25417 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755109AbYDCGkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 02:40:14 -0400
-Received: from lin01.mn-solutions.de (pD95FA9DC.dip0.t-ipconnect.de [217.95.169.220])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id B4D905E4247
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Apr 2008 08:40:10 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 30EDD1E000E
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Apr 2008 08:37:18 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] libertas: convert libertas driver to use an event/cmdresp queue
-Date: Thu, 3 Apr 2008 08:37:17 +0200
-References: <200803271700.58477.hs4233@mail.mn-solutions.de> <1207191923.9250.6.camel@localhost.localdomain> <1207193206.9435.0.camel@localhost.localdomain>
-In-Reply-To: <1207193206.9435.0.camel@localhost.localdomain>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4408 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752182AbYDIADZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 20:03:25 -0400
+Date: Tue, 8 Apr 2008 19:43:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH 1/2] mac80211: fix recursive locking in
+	ieee80211_sta_expire
+Message-ID: <20080408234321.GB23670@tuxdriver.com> (sfid-20080409_010338_598479_7D2ED77E)
+References: <1207598029-20000-1-git-send-email-jirislaby@gmail.com> <20080408183556.GC8183@tuxdriver.com> <47FBEC4B.7030205@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804030837.17365.hs4233@mail.mn-solutions.de> (sfid-20080403_074018_824261_0D45C11F)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47FBEC4B.7030205@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm running 5.0.16.p0 BTW.
+On Wed, Apr 09, 2008 at 12:06:03AM +0200, Jiri Slaby wrote:
+> On 04/08/2008 08:35 PM, John W. Linville wrote:
+>> On Mon, Apr 07, 2008 at 09:53:48PM +0200, Jiri Slaby wrote:
+>>> Hi,
+>>>
+>>> it's against -mm, what's current mac80211 git tree? It seems that
+>>> -mm has fresher material, than wireless-2.6...
+>>
+>> As it should.  The wireless-2.6 tree is for feeding the linux-2.6 tree
+>> (by way of the net-2.6 tree).  Similarly, wireless-2.6.26 feeds -mm
+>> by way of the net-2.6.26 tree.
+>
+> Wow, too many trees even with their branches to know the ropes.
 
-I've the same.
+Pick your poison -- previously everyone complained about the number
+of branches in the tree.
+
+FWIW, I've had far fewer complaints about tree management since
+switching to the new practices.  Of course, most of that is probably
+attributable to pleasing dwmw2 (more-or-less)...
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
