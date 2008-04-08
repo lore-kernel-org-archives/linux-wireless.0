@@ -1,1842 +1,1125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.versatel.nl ([62.58.50.88]:51721 "EHLO smtp1.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751782AbYDGRvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 13:51:25 -0400
-Subject: Re: hostapd hangs on rt2500pci, leaving the nic in an unstable
-	state
-From: Bas Hulsken <bhulsken@hotmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <200804061708.51044.IvDoorn@gmail.com>
-References: <1207412527.6965.21.camel@Bas>
-	 <200804051946.24100.IvDoorn@gmail.com> <1207486334.7395.9.camel@Bas>
-	 <200804061708.51044.IvDoorn@gmail.com>
-Content-Type: multipart/mixed; boundary="=-JOri3nCo+j+cjdVfuLmz"
-Date: Mon, 07 Apr 2008 19:47:25 +0200
-Message-Id: <1207590445.3028.2.camel@Bas> (sfid-20080407_185133_227914_69587A72)
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39652 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbYDHP5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 11:57:04 -0400
+Subject: [PATCH v2] mac80211: fix key vs. sta locking problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1207652975.14253.7.camel@johannes.berg> (sfid-20080408_153208_486174_0F26D65C)
+References: <1207652975.14253.7.camel@johannes.berg>
+	 (sfid-20080408_153208_486174_0F26D65C)
+Content-Type: text/plain
+Date: Tue, 08 Apr 2008 17:56:52 +0200
+Message-Id: <1207670212.5550.0.camel@johannes.berg> (sfid-20080408_165742_434728_B84D6D1D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Up to now, key manipulation is supposed to run under RTNL to
+avoid concurrent manipulations and also allow the set_key()
+hardware callback to sleep. This is not feasible because STA
+structs are rcu-protected and thus a lot of operations there
+cannot take the RTNL. Also, key references are rcu-protected
+so we cannot do things atomically.
 
---=-JOri3nCo+j+cjdVfuLmz
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+This patch changes key locking completely:
+ * key operations are now atomic
+ * hardware crypto offload is enabled and disabled from
+   a workqueue, due to that key freeing is also delayed
+ * debugfs code is also run from a workqueue
+ * keys reference STAs (and vice versa!) so during STA
+   unlink the STAs key reference is removed but not the
+   keys STA reference, to avoid races key todo work is
+   run before STA destruction.
+ * fewer STA operations now need the RTNL which was
+   required due to key operations
 
-Hi
+This fixes the locking problems lockdep pointed out and also
+makes things more light-weight because the rtnl isn't required
+as much.
 
-> Could you try editing rt2500pci.c
-> and in rt2500pci_interrupt() change:
-> 
-> 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
-> 		rt2x00lib_beacondone(rt2x00dev);
-> 
-> to
-> 
-> 	//if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
-> 	//	rt2x00lib_beacondone(rt2x00dev);
+Note that the key todo lock/key mutex are global locks, this
+is not required, of course, they could be per-hardware instead.
 
-did that, also applied Johannes' "fix STA AID bug" patch, but no change
-in behaviour, still the same hang in hostapd.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Tested in AP mode (with WPA), STA mode (with WPA) and IBSS
+mode (unencrypted); first time I actually used IBSS :)
 
-I've attached the debugfs dumps, same meaning as in the previous mail
-(see below)
+Oddly, IBSS mode on the same machine between two wireless NICs
+didn't quite work, ARP never resolved.
 
-> > 
-> > 1) regdump_beforeifup: a regdump taken before the interface is brought
-> > up (module is loaded of course)
-> > 2) regdump_beforehostapd: a regdump taken immediately after the
-> > interface is brought up, but before hostapd is running.
-> > 3) regdump_beforeauth: a regdump taken after hostapd is started, and
-> > running, but before a client has started an authentication.
-> > 4) regdump_afterauthhang: a regdump, after hostapd has locked up, due to
-> > an authentication attempt.
-> 
+v2: fix small bug with hw accel enabling
 
-Bas
+ net/mac80211/cfg.c             |   44 +++-
+ net/mac80211/debugfs_key.c     |   38 ++-
+ net/mac80211/debugfs_key.h     |   11 -
+ net/mac80211/ieee80211.c       |    6 
+ net/mac80211/ieee80211_i.h     |    4 
+ net/mac80211/ieee80211_ioctl.c |   26 ++
+ net/mac80211/ieee80211_key.h   |   20 +-
+ net/mac80211/ieee80211_sta.c   |    9 
+ net/mac80211/key.c             |  406 ++++++++++++++++++++++++++---------------
+ net/mac80211/sta_info.c        |   48 ++--
+ net/mac80211/sta_info.h        |    1 
+ 11 files changed, 386 insertions(+), 227 deletions(-)
 
+--- everything.orig/net/mac80211/key.c	2008-04-08 17:06:51.000000000 +0200
++++ everything/net/mac80211/key.c	2008-04-08 17:54:23.000000000 +0200
+@@ -2,7 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005-2006, Devicescape Software, Inc.
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+- * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -33,17 +33,78 @@
+  * There is currently no way of knowing this except by looking into
+  * debugfs.
+  *
+- * All operations here are called under RTNL so no extra locking is
+- * required.
++ * All key operations are protected internally so you can call them at
++ * any time.
+  *
+- * NOTE: This code requires that sta info *destruction* is done under
+- *	 RTNL, otherwise it can try to access already freed STA structs
+- *	 when a STA key is being freed.
++ * Within mac80211, key references are, just as STA structure references,
++ * protected by RCU. Note, however, that some things are unprotected,
++ * namely the key->sta dereferences within the hardware acceleration
++ * functions. This means that sta_info_destroy() must flush the key todo
++ * list.
++ *
++ * All the direct key list manipulation functions must not sleep because
++ * they can operate on STA info structs that are protected by RCU.
+  */
+ 
+ static const u8 bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ static const u8 zero_addr[ETH_ALEN];
+ 
++/* key mutex: used to synchronise todo runners */
++static DEFINE_MUTEX(key_mutex);
++static DEFINE_SPINLOCK(todo_lock);
++static LIST_HEAD(todo_list);
++
++static void key_todo(struct work_struct *work)
++{
++	ieee80211_key_todo();
++}
++
++static DECLARE_WORK(todo_work, key_todo);
++
++/**
++ * add_todo - add todo item for a key
++ *
++ * @key: key to add to do item for
++ * @flag: todo flag(s)
++ */
++static void add_todo(struct ieee80211_key *key, u32 flag)
++{
++	if (!key)
++		return;
++
++	spin_lock(&todo_lock);
++	key->flags |= flag;
++	/* only add if not already added */
++	if (list_empty(&key->todo))
++		list_add(&key->todo, &todo_list);
++	schedule_work(&todo_work);
++	spin_unlock(&todo_lock);
++}
++
++/**
++ * ieee80211_key_lock - lock the mac80211 key operation lock
++ *
++ * This locks the (global) mac80211 key operation lock, all
++ * key operations must be done under this lock.
++ */
++static void ieee80211_key_lock(void)
++{
++	mutex_lock(&key_mutex);
++}
++
++/**
++ * ieee80211_key_unlock - unlock the mac80211 key operation lock
++ */
++static void ieee80211_key_unlock(void)
++{
++	mutex_unlock(&key_mutex);
++}
++
++static void assert_key_lock(void)
++{
++	WARN_ON(!mutex_is_locked(&key_mutex));
++}
++
+ static const u8 *get_mac_for_key(struct ieee80211_key *key)
+ {
+ 	const u8 *addr = bcast_addr;
+@@ -70,26 +131,23 @@ static void ieee80211_key_enable_hw_acce
+ 	int ret;
+ 	DECLARE_MAC_BUF(mac);
+ 
++	assert_key_lock();
++	might_sleep();
++
+ 	if (!key->local->ops->set_key)
+ 		return;
+ 
+-	/*
+-	 * This makes sure that all pending flushes have
+-	 * actually completed prior to uploading new key
+-	 * material to the hardware. That is necessary to
+-	 * avoid races between flushing STAs and adding
+-	 * new keys for them.
+-	 */
+-	__ieee80211_run_pending_flush(key->local);
+-
+ 	addr = get_mac_for_key(key);
+ 
+ 	ret = key->local->ops->set_key(local_to_hw(key->local), SET_KEY,
+ 				       key->sdata->dev->dev_addr, addr,
+ 				       &key->conf);
+ 
+-	if (!ret)
++	if (!ret) {
++		spin_lock(&todo_lock);
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
++		spin_unlock(&todo_lock);
++	}
+ 
+ 	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
+ 		printk(KERN_ERR "mac80211-%s: failed to set key "
+@@ -98,26 +156,24 @@ static void ieee80211_key_enable_hw_acce
+ 		       key->conf.keyidx, print_mac(mac, addr), ret);
+ }
+ 
+-static void ieee80211_key_mark_hw_accel_off(struct ieee80211_key *key)
+-{
+-	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+-		key->flags |= KEY_FLAG_REMOVE_FROM_HARDWARE;
+-	}
+-}
+-
+ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ {
+ 	const u8 *addr;
+ 	int ret;
+ 	DECLARE_MAC_BUF(mac);
+ 
++	assert_key_lock();
++	might_sleep();
++
+ 	if (!key || !key->local->ops->set_key)
+ 		return;
+ 
+-	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
+-	    !(key->flags & KEY_FLAG_REMOVE_FROM_HARDWARE))
++	spin_lock(&todo_lock);
++	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
++		spin_unlock(&todo_lock);
+ 		return;
++	}
++	spin_unlock(&todo_lock);
+ 
+ 	addr = get_mac_for_key(key);
+ 
+@@ -131,8 +187,72 @@ static void ieee80211_key_disable_hw_acc
+ 		       wiphy_name(key->local->hw.wiphy),
+ 		       key->conf.keyidx, print_mac(mac, addr), ret);
+ 
+-	key->flags &= ~(KEY_FLAG_UPLOADED_TO_HARDWARE |
+-			KEY_FLAG_REMOVE_FROM_HARDWARE);
++	spin_lock(&todo_lock);
++	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++	spin_unlock(&todo_lock);
++}
++
++static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
++					int idx)
++{
++	struct ieee80211_key *key = NULL;
++
++	if (idx >= 0 && idx < NUM_DEFAULT_KEYS)
++		key = sdata->keys[idx];
++
++	rcu_assign_pointer(sdata->default_key, key);
++
++	if (key)
++		add_todo(key, KEY_FLAG_TODO_DEFKEY);
++}
++
++void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
++	__ieee80211_set_default_key(sdata, idx);
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
++}
++
++
++static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
++				    struct sta_info *sta,
++				    struct ieee80211_key *old,
++				    struct ieee80211_key *new)
++{
++	int idx, defkey;
++
++	if (new)
++		list_add(&new->list, &sdata->key_list);
++
++	if (sta) {
++		rcu_assign_pointer(sta->key, new);
++	} else {
++		WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
++
++		if (old)
++			idx = old->conf.keyidx;
++		else
++			idx = new->conf.keyidx;
++
++		defkey = old && sdata->default_key == old;
++
++		if (defkey && !new)
++			__ieee80211_set_default_key(sdata, -1);
++
++		rcu_assign_pointer(sdata->keys[idx], new);
++		if (defkey && new)
++			__ieee80211_set_default_key(sdata, new->conf.keyidx);
++	}
++
++	if (old) {
++		/*
++		 * We'll use an empty list to indicate that the key
++		 * has already been removed.
++		 */
++		list_del_init(&old->list);
++	}
+ }
+ 
+ struct ieee80211_key *ieee80211_key_alloc(enum ieee80211_key_alg alg,
+@@ -160,6 +280,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 	key->conf.keylen = key_len;
+ 	memcpy(key->conf.key, key_data, key_len);
+ 	INIT_LIST_HEAD(&key->list);
++	INIT_LIST_HEAD(&key->todo);
+ 
+ 	if (alg == ALG_CCMP) {
+ 		/*
+@@ -168,7 +289,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 		 */
+ 		key->u.ccmp.tfm = ieee80211_aes_key_setup_encrypt(key_data);
+ 		if (!key->u.ccmp.tfm) {
+-			ieee80211_key_free(key);
++			kfree(key);
+ 			return NULL;
+ 		}
+ 	}
+@@ -176,56 +297,14 @@ struct ieee80211_key *ieee80211_key_allo
+ 	return key;
+ }
+ 
+-static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+-				    struct sta_info *sta,
+-				    struct ieee80211_key *key,
+-				    struct ieee80211_key *new)
+-{
+-	int idx, defkey;
+-
+-	if (new)
+-		list_add(&new->list, &sdata->key_list);
+-
+-	if (sta) {
+-		rcu_assign_pointer(sta->key, new);
+-	} else {
+-		WARN_ON(new && key && new->conf.keyidx != key->conf.keyidx);
+-
+-		if (key)
+-			idx = key->conf.keyidx;
+-		else
+-			idx = new->conf.keyidx;
+-
+-		defkey = key && sdata->default_key == key;
+-
+-		if (defkey && !new)
+-			ieee80211_set_default_key(sdata, -1);
+-
+-		rcu_assign_pointer(sdata->keys[idx], new);
+-		if (defkey && new)
+-			ieee80211_set_default_key(sdata, new->conf.keyidx);
+-	}
+-
+-	if (key) {
+-		ieee80211_key_mark_hw_accel_off(key);
+-		/*
+-		 * We'll use an empty list to indicate that the key
+-		 * has already been removed.
+-		 */
+-		list_del_init(&key->list);
+-	}
+-}
+-
+ void ieee80211_key_link(struct ieee80211_key *key,
+ 			struct ieee80211_sub_if_data *sdata,
+ 			struct sta_info *sta)
+ {
+ 	struct ieee80211_key *old_key;
++	unsigned long flags;
+ 	int idx;
+ 
+-	ASSERT_RTNL();
+-	might_sleep();
+-
+ 	BUG_ON(!sdata);
+ 	BUG_ON(!key);
+ 
+@@ -234,11 +313,7 @@ void ieee80211_key_link(struct ieee80211
+ 	key->sdata = sdata;
+ 	key->sta = sta;
+ 
+-	ieee80211_debugfs_key_add(key->local, key);
+-
+ 	if (sta) {
+-		ieee80211_debugfs_key_sta_link(key, sta);
+-
+ 		/*
+ 		 * some hardware cannot handle TKIP with QoS, so
+ 		 * we indicate whether QoS could be in use.
+@@ -249,7 +324,10 @@ void ieee80211_key_link(struct ieee80211
+ 		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
+ 			struct sta_info *ap;
+ 
+-			rcu_read_lock();
++			/*
++			 * We're getting a sta pointer in,
++			 * so must be under RCU read lock.
++			 */
+ 
+ 			/* same here, the AP could be using QoS */
+ 			ap = sta_info_get(key->local, key->sdata->u.sta.bssid);
+@@ -258,11 +336,11 @@ void ieee80211_key_link(struct ieee80211
+ 					key->conf.flags |=
+ 						IEEE80211_KEY_FLAG_WMM_STA;
+ 			}
+-
+-			rcu_read_unlock();
+ 		}
+ 	}
+ 
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
++
+ 	if (sta)
+ 		old_key = sta->key;
+ 	else
+@@ -270,50 +348,73 @@ void ieee80211_key_link(struct ieee80211
+ 
+ 	__ieee80211_key_replace(sdata, sta, old_key, key);
+ 
+-	if (old_key) {
+-		synchronize_rcu();
+-		ieee80211_key_free(old_key);
+-	}
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
++
++	/* free old key later */
++	add_todo(old_key, KEY_FLAG_TODO_DELETE);
+ 
++	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+-		ieee80211_key_enable_hw_accel(key);
++		add_todo(key, KEY_FLAG_TODO_HWACCEL);
+ }
+ 
+ void ieee80211_key_free(struct ieee80211_key *key)
+ {
+-	ASSERT_RTNL();
+-	might_sleep();
++	unsigned long flags;
+ 
+ 	if (!key)
+ 		return;
+ 
++	/*
++	 * Replace key with nothingness if it was ever used.
++	 */
+ 	if (key->sdata) {
+-		/*
+-		 * Replace key with nothingness.
+-		 *
+-		 * Because other code may have key reference (RCU protected)
+-		 * right now, we then wait for a grace period before freeing
+-		 * it.
+-		 * An empty list indicates it was never added to the key list
+-		 * or has been removed already. It may, however, still be in
+-		 * hardware for acceleration.
+-		 */
+-		if (!list_empty(&key->list))
+-			__ieee80211_key_replace(key->sdata, key->sta,
+-						key, NULL);
++		spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
++		__ieee80211_key_replace(key->sdata, key->sta,
++					key, NULL);
++		spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
++	}
+ 
+-		/*
+-		 * Do NOT remove this without looking at sta_info_destroy()
+-		 */
+-		synchronize_rcu();
++	add_todo(key, KEY_FLAG_TODO_DELETE);
++}
+ 
+-		/*
+-		 * Remove from hwaccel if appropriate, this will
+-		 * only happen when the key is actually unlinked,
+-		 * it will already be done when the key was replaced.
+-		 */
++void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_key *key;
++
++	might_sleep();
++
++	if (WARN_ON(!netif_running(sdata->dev)))
++		return;
++
++	ieee80211_key_lock();
++
++	list_for_each_entry(key, &sdata->key_list, list)
++		ieee80211_key_enable_hw_accel(key);
++
++	ieee80211_key_unlock();
++}
++
++void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_key *key;
++
++	might_sleep();
++
++	ieee80211_key_lock();
++
++	list_for_each_entry(key, &sdata->key_list, list)
+ 		ieee80211_key_disable_hw_accel(key);
+-	}
++
++	ieee80211_key_unlock();
++}
++
++static void __ieee80211_key_free(struct ieee80211_key *key)
++{
++	if (!key)
++		return;
++
++	ieee80211_key_disable_hw_accel(key);
+ 
+ 	if (key->conf.alg == ALG_CCMP)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+@@ -322,21 +423,60 @@ void ieee80211_key_free(struct ieee80211
+ 	kfree(key);
+ }
+ 
+-void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx)
++static void __ieee80211_key_todo(void)
+ {
+-	struct ieee80211_key *key = NULL;
++	struct ieee80211_key *key;
++	bool work_done;
++	u32 todoflags;
+ 
+-	if (idx >= 0 && idx < NUM_DEFAULT_KEYS)
+-		key = sdata->keys[idx];
++	/*
++	 * NB: sta_info_destroy relies on this!
++	 */
++	synchronize_rcu();
+ 
+-	if (sdata->default_key != key) {
+-		ieee80211_debugfs_key_remove_default(sdata);
++	spin_lock(&todo_lock);
++	while (!list_empty(&todo_list)) {
++		key = list_first_entry(&todo_list, struct ieee80211_key, todo);
++		list_del_init(&key->todo);
++		todoflags = key->flags & (KEY_FLAG_TODO_ADD_DEBUGFS |
++					  KEY_FLAG_TODO_DEFKEY |
++					  KEY_FLAG_TODO_HWACCEL |
++					  KEY_FLAG_TODO_DELETE);
++		key->flags &= ~todoflags;
++		spin_unlock(&todo_lock);
++
++		work_done = false;
++
++		if (todoflags & KEY_FLAG_TODO_ADD_DEBUGFS) {
++			ieee80211_debugfs_key_add(key);
++			work_done = true;
++		}
++		if (todoflags & KEY_FLAG_TODO_DEFKEY) {
++			ieee80211_debugfs_key_remove_default(key->sdata);
++			ieee80211_debugfs_key_add_default(key->sdata);
++			work_done = true;
++		}
++		if (todoflags & KEY_FLAG_TODO_HWACCEL) {
++			ieee80211_key_enable_hw_accel(key);
++			work_done = true;
++		}
++		if (todoflags & KEY_FLAG_TODO_DELETE) {
++			__ieee80211_key_free(key);
++			work_done = true;
++		}
+ 
+-		rcu_assign_pointer(sdata->default_key, key);
++		WARN_ON(!work_done);
+ 
+-		if (sdata->default_key)
+-			ieee80211_debugfs_key_add_default(sdata);
++		spin_lock(&todo_lock);
+ 	}
++	spin_unlock(&todo_lock);
++}
++
++void ieee80211_key_todo(void)
++{
++	ieee80211_key_lock();
++	__ieee80211_key_todo();
++	ieee80211_key_unlock();
+ }
+ 
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
+@@ -344,34 +484,14 @@ void ieee80211_free_keys(struct ieee8021
+ 	struct ieee80211_key *key, *tmp;
+ 	LIST_HEAD(tmp_list);
+ 
+-	ASSERT_RTNL();
+-	might_sleep();
++	ieee80211_key_lock();
++
++	ieee80211_debugfs_key_remove_default(sdata);
+ 
+ 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+ 		ieee80211_key_free(key);
+-}
+ 
+-void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_key *key;
+-
+-	ASSERT_RTNL();
+-	might_sleep();
+-
+-	if (WARN_ON(!netif_running(sdata->dev)))
+-		return;
++	__ieee80211_key_todo();
+ 
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_enable_hw_accel(key);
+-}
+-
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_key *key;
+-
+-	ASSERT_RTNL();
+-	might_sleep();
+-
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_disable_hw_accel(key);
++	ieee80211_key_unlock();
+ }
+--- everything.orig/net/mac80211/ieee80211_key.h	2008-04-08 17:09:59.000000000 +0200
++++ everything/net/mac80211/ieee80211_key.h	2008-04-08 17:53:49.000000000 +0200
+@@ -51,13 +51,19 @@ struct sta_info;
+  *
+  * @KEY_FLAG_UPLOADED_TO_HARDWARE: Indicates that this key is present
+  *	in the hardware for TX crypto hardware acceleration.
+- * @KEY_FLAG_REMOVE_FROM_HARDWARE: Indicates to the key code that this
+- *	key is present in the hardware (but it cannot be used for
+- *	hardware acceleration any more!)
++ * @KEY_FLAG_TODO_DELETE: Key is marked for deletion and will, after an
++ *	RCU grace period, no longer be reachable other than from the
++ *	todo list.
++ * @KEY_FLAG_TODO_HWACCEL: Key needs to be added to hardware acceleration.
++ * @KEY_FLAG_TODO_DEFKEY: Key is default key and debugfs needs to be updated.
++ * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
+  */
+ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
+-	KEY_FLAG_REMOVE_FROM_HARDWARE	= BIT(1),
++	KEY_FLAG_TODO_DELETE		= BIT(1),
++	KEY_FLAG_TODO_HWACCEL		= BIT(2),
++	KEY_FLAG_TODO_DEFKEY		= BIT(3),
++	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(4),
+ };
+ 
+ struct ieee80211_key {
+@@ -65,8 +71,12 @@ struct ieee80211_key {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
++	/* for sdata list */
+ 	struct list_head list;
++	/* for todo list */
++	struct list_head todo;
+ 
++	/* protected by todo lock! */
+ 	unsigned int flags;
+ 
+ 	union {
+@@ -143,4 +153,6 @@ void ieee80211_free_keys(struct ieee8021
+ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata);
+ 
++void ieee80211_key_todo(void);
++
+ #endif /* IEEE80211_KEY_H */
+--- everything.orig/net/mac80211/sta_info.c	2008-04-08 17:10:00.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-04-08 17:53:48.000000000 +0200
+@@ -51,17 +51,15 @@
+  *
+  * In order to remove a STA info structure, the caller needs to first
+  * unlink it (sta_info_unlink()) from the list and hash tables and
+- * then destroy it while holding the RTNL; sta_info_destroy() will wait
+- * for an RCU grace period to elapse before actually freeing it. Due to
+- * the pinning and the possibility of multiple callers trying to remove
+- * the same STA info at the same time, sta_info_unlink() can clear the
+- * STA info pointer it is passed to indicate that the STA info is owned
+- * by somebody else now.
++ * then destroy it; sta_info_destroy() will wait for an RCU grace period
++ * to elapse before actually freeing it. Due to the pinning and the
++ * possibility of multiple callers trying to remove the same STA info at
++ * the same time, sta_info_unlink() can clear the STA info pointer it is
++ * passed to indicate that the STA info is owned by somebody else now.
+  *
+  * If sta_info_unlink() did not clear the pointer then the caller owns
+  * the STA info structure now and is responsible of destroying it with
+- * a call to sta_info_destroy(), not before RCU synchronisation, of
+- * course. Note that sta_info_destroy() must be protected by the RTNL.
++ * a call to sta_info_destroy().
+  *
+  * In all other cases, there is no concept of ownership on a STA entry,
+  * each structure is owned by the global hash table/list until it is
+@@ -164,7 +162,6 @@ void sta_info_destroy(struct sta_info *s
+ 	struct sk_buff *skb;
+ 	int i;
+ 
+-	ASSERT_RTNL();
+ 	might_sleep();
+ 
+ 	if (!sta)
+@@ -180,22 +177,16 @@ void sta_info_destroy(struct sta_info *s
+ 		mesh_plink_deactivate(sta);
+ #endif
+ 
+-	if (sta->key) {
+-		/*
+-		 * NOTE: This will call synchronize_rcu() internally to
+-		 * make sure no key references can be in use. We rely on
+-		 * that when we take this branch to make sure nobody can
+-		 * reference this STA struct any longer!
+-		 */
+-		ieee80211_key_free(sta->key);
+-		WARN_ON(sta->key);
+-	} else {
+-		/*
+-		 * Make sure that nobody can reference this STA struct
+-		 * any longer.
+-		 */
+-		synchronize_rcu();
+-	}
++	/*
++	 * We have only unlinked the key, and actually destroying it
++	 * may mean it is removed from hardware which requires that
++	 * the key->sta pointer is still valid, so flush the key todo
++	 * list here.
++	 *
++	 * ieee80211_key_todo() will synchronize_rcu() so after this
++	 * nothing can reference this sta struct any more.
++	 */
++	ieee80211_key_todo();
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (ieee80211_vif_is_mesh(&sta->sdata->vif))
+@@ -469,6 +460,11 @@ void __sta_info_unlink(struct sta_info *
+ 		return;
+ 	}
+ 
++	if ((*sta)->key) {
++		ieee80211_key_free((*sta)->key);
++		WARN_ON((*sta)->key);
++	}
++
+ 	list_del(&(*sta)->list);
+ 
+ 	if ((*sta)->flags & WLAN_STA_PS) {
+@@ -652,7 +648,7 @@ static void sta_info_debugfs_add_work(st
+ }
+ #endif
+ 
+-void __ieee80211_run_pending_flush(struct ieee80211_local *local)
++static void __ieee80211_run_pending_flush(struct ieee80211_local *local)
+ {
+ 	struct sta_info *sta;
+ 	unsigned long flags;
+--- everything.orig/net/mac80211/debugfs_key.c	2008-04-08 17:09:59.000000000 +0200
++++ everything/net/mac80211/debugfs_key.c	2008-04-08 17:53:48.000000000 +0200
+@@ -184,24 +184,39 @@ KEY_OPS(key);
+ 	key->debugfs.name = debugfs_create_file(#name, 0400,\
+ 				key->debugfs.dir, key, &key_##name##_ops);
+ 
+-void ieee80211_debugfs_key_add(struct ieee80211_local *local,
+-			       struct ieee80211_key *key)
++void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ {
+ 	static int keycount;
+-	char buf[20];
++	char buf[50];
++	DECLARE_MAC_BUF(mac);
++	struct sta_info *sta;
+ 
+-	if (!local->debugfs.keys)
++	if (!key->local->debugfs.keys)
+ 		return;
+ 
+ 	sprintf(buf, "%d", keycount);
+ 	key->debugfs.cnt = keycount;
+ 	keycount++;
+ 	key->debugfs.dir = debugfs_create_dir(buf,
+-					local->debugfs.keys);
++					key->local->debugfs.keys);
+ 
+ 	if (!key->debugfs.dir)
+ 		return;
+ 
++	if (!key->debugfs.dir)
++		return;
++
++	rcu_read_lock();
++	sta = rcu_dereference(key->sta);
++	if (sta)
++		sprintf(buf, "../../stations/%s", print_mac(mac, sta->addr));
++	rcu_read_unlock();
++
++	/* using sta as a boolean is fine outside RCU lock */
++	if (sta)
++		key->debugfs.stalink =
++			debugfs_create_symlink("station", key->debugfs.dir, buf);
++
+ 	DEBUGFS_ADD(keylen);
+ 	DEBUGFS_ADD(flags);
+ 	DEBUGFS_ADD(keyidx);
+@@ -259,19 +274,6 @@ void ieee80211_debugfs_key_remove_defaul
+ 	debugfs_remove(sdata->debugfs.default_key);
+ 	sdata->debugfs.default_key = NULL;
+ }
+-void ieee80211_debugfs_key_sta_link(struct ieee80211_key *key,
+-				    struct sta_info *sta)
+-{
+-	char buf[50];
+-	DECLARE_MAC_BUF(mac);
+-
+-	if (!key->debugfs.dir)
+-		return;
+-
+-	sprintf(buf, "../../stations/%s", print_mac(mac, sta->addr));
+-	key->debugfs.stalink =
+-		debugfs_create_symlink("station", key->debugfs.dir, buf);
+-}
+ 
+ void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
+ 				   struct sta_info *sta)
+--- everything.orig/net/mac80211/debugfs_key.h	2008-04-08 17:06:51.000000000 +0200
++++ everything/net/mac80211/debugfs_key.h	2008-04-08 17:10:01.000000000 +0200
+@@ -2,18 +2,14 @@
+ #define __MAC80211_DEBUGFS_KEY_H
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-void ieee80211_debugfs_key_add(struct ieee80211_local *local,
+-			       struct ieee80211_key *key);
++void ieee80211_debugfs_key_add(struct ieee80211_key *key);
+ void ieee80211_debugfs_key_remove(struct ieee80211_key *key);
+ void ieee80211_debugfs_key_add_default(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_debugfs_key_remove_default(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_debugfs_key_sta_link(struct ieee80211_key *key,
+-				    struct sta_info *sta);
+ void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
+ 				   struct sta_info *sta);
+ #else
+-static inline void ieee80211_debugfs_key_add(struct ieee80211_local *local,
+-					     struct ieee80211_key *key)
++static inline void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ {}
+ static inline void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
+ {}
+@@ -23,9 +19,6 @@ static inline void ieee80211_debugfs_key
+ static inline void ieee80211_debugfs_key_remove_default(
+ 	struct ieee80211_sub_if_data *sdata)
+ {}
+-static inline void ieee80211_debugfs_key_sta_link(
+-	struct ieee80211_key *key, struct sta_info *sta)
+-{}
+ static inline void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
+ 						 struct sta_info *sta)
+ {}
+--- everything.orig/net/mac80211/ieee80211.c	2008-04-08 17:06:51.000000000 +0200
++++ everything/net/mac80211/ieee80211.c	2008-04-08 17:53:50.000000000 +0200
+@@ -1855,6 +1855,12 @@ static void __exit ieee80211_exit(void)
+ {
+ 	rc80211_pid_exit();
+ 
++	/*
++	 * For key todo, it'll be empty by now but the work
++	 * might still be scheduled.
++	 */
++	flush_scheduled_work();
++
+ 	if (mesh_allocated)
+ 		ieee80211s_stop();
+ 
+--- everything.orig/net/mac80211/cfg.c	2008-04-08 17:09:59.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-04-08 17:53:47.000000000 +0200
+@@ -141,6 +141,7 @@ static int ieee80211_add_key(struct wiph
+ 	struct sta_info *sta = NULL;
+ 	enum ieee80211_key_alg alg;
+ 	struct ieee80211_key *key;
++	int err;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -163,17 +164,24 @@ static int ieee80211_add_key(struct wiph
+ 	if (!key)
+ 		return -ENOMEM;
+ 
++	rcu_read_lock();
++
+ 	if (mac_addr) {
+ 		sta = sta_info_get(sdata->local, mac_addr);
+ 		if (!sta) {
+ 			ieee80211_key_free(key);
+-			return -ENOENT;
++			err = -ENOENT;
++			goto out_unlock;
+ 		}
+ 	}
+ 
+ 	ieee80211_key_link(key, sdata, sta);
+ 
+-	return 0;
++	err = 0;
++ out_unlock:
++	rcu_read_unlock();
++
++	return err;
+ }
+ 
+ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+@@ -185,28 +193,37 @@ static int ieee80211_del_key(struct wiph
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
++	rcu_read_lock();
++
+ 	if (mac_addr) {
++		ret = -ENOENT;
++
+ 		sta = sta_info_get(sdata->local, mac_addr);
+ 		if (!sta)
+-			return -ENOENT;
++			goto out_unlock;
+ 
+-		ret = 0;
+ 		if (sta->key) {
+ 			ieee80211_key_free(sta->key);
+ 			WARN_ON(sta->key);
+-		} else
+-			ret = -ENOENT;
++			ret = 0;
++		}
+ 
+-		return ret;
++		goto out_unlock;
+ 	}
+ 
+-	if (!sdata->keys[key_idx])
+-		return -ENOENT;
++	if (!sdata->keys[key_idx]) {
++		ret = -ENOENT;
++		goto out_unlock;
++	}
+ 
+ 	ieee80211_key_free(sdata->keys[key_idx]);
+ 	WARN_ON(sdata->keys[key_idx]);
+ 
+-	return 0;
++	ret = 0;
++ out_unlock:
++	rcu_read_unlock();
++
++	return ret;
+ }
+ 
+ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+@@ -223,6 +240,8 @@ static int ieee80211_get_key(struct wiph
+ 	u16 iv16;
+ 	int err = -ENOENT;
+ 
++	rcu_read_lock();
++
+ 	if (mac_addr) {
+ 		sta = sta_info_get(sdata->local, mac_addr);
+ 		if (!sta)
+@@ -286,6 +305,7 @@ static int ieee80211_get_key(struct wiph
+ 	err = 0;
+ 
+  out:
++	rcu_read_unlock();
+ 	return err;
+ }
+ 
+@@ -295,9 +315,13 @@ static int ieee80211_config_default_key(
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
++	rcu_read_lock();
++
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	ieee80211_set_default_key(sdata, key_idx);
+ 
++	rcu_read_unlock();
++
+ 	return 0;
+ }
+ 
+--- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-04-08 17:09:59.000000000 +0200
++++ everything/net/mac80211/ieee80211_ioctl.c	2008-04-08 17:53:50.000000000 +0200
+@@ -36,6 +36,7 @@ static int ieee80211_set_encryption(stru
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+ 	struct ieee80211_sub_if_data *sdata;
++	int err;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -46,23 +47,31 @@ static int ieee80211_set_encryption(stru
+ 	}
+ 
+ 	if (remove) {
++		rcu_read_lock();
++
++		err = 0;
++
+ 		if (is_broadcast_ether_addr(sta_addr)) {
+ 			key = sdata->keys[idx];
+ 		} else {
+ 			sta = sta_info_get(local, sta_addr);
+-			if (!sta)
+-				return -ENOENT;
++			if (!sta) {
++				err = -ENOENT;
++				goto out_unlock;
++			}
+ 			key = sta->key;
+ 		}
+ 
+ 		ieee80211_key_free(key);
+-		return 0;
+ 	} else {
+ 		key = ieee80211_key_alloc(alg, idx, key_len, _key);
+ 		if (!key)
+ 			return -ENOMEM;
+ 
+ 		sta = NULL;
++		err = 0;
++
++		rcu_read_lock();
+ 
+ 		if (!is_broadcast_ether_addr(sta_addr)) {
+ 			set_tx_key = 0;
+@@ -74,13 +83,15 @@ static int ieee80211_set_encryption(stru
+ 			 */
+ 			if (idx != 0 && alg != ALG_WEP) {
+ 				ieee80211_key_free(key);
+-				return -EINVAL;
++				err = -EINVAL;
++				goto out_unlock;
+ 			}
+ 
+ 			sta = sta_info_get(local, sta_addr);
+ 			if (!sta) {
+ 				ieee80211_key_free(key);
+-				return -ENOENT;
++				err = -ENOENT;
++				goto out_unlock;
+ 			}
+ 		}
+ 
+@@ -90,7 +101,10 @@ static int ieee80211_set_encryption(stru
+ 			ieee80211_set_default_key(sdata, idx);
+ 	}
+ 
+-	return 0;
++ out_unlock:
++	rcu_read_unlock();
++
++	return err;
+ }
+ 
+ static int ieee80211_ioctl_siwgenie(struct net_device *dev,
+--- everything.orig/net/mac80211/ieee80211_sta.c	2008-04-08 17:09:55.000000000 +0200
++++ everything/net/mac80211/ieee80211_sta.c	2008-04-08 17:53:49.000000000 +0200
+@@ -935,11 +935,8 @@ static void ieee80211_associated(struct 
+ 
+ 	rcu_read_unlock();
+ 
+-	if (disassoc && sta) {
+-		rtnl_lock();
++	if (disassoc && sta)
+ 		sta_info_destroy(sta);
+-		rtnl_unlock();
+-	}
+ 
+ 	if (disassoc) {
+ 		ifsta->state = IEEE80211_DISABLED;
+@@ -3097,12 +3094,8 @@ static void ieee80211_sta_expire(struct 
+ 		}
+ 	spin_unlock_irqrestore(&local->sta_lock, flags);
+ 
+-	synchronize_rcu();
+-
+-	rtnl_lock();
+ 	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
+ 		sta_info_destroy(sta);
+-	rtnl_unlock();
+ }
+ 
+ 
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-04-08 17:09:55.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-04-08 17:53:48.000000000 +0200
+@@ -609,8 +609,8 @@ struct ieee80211_local {
+ 	/*
+ 	 * The lock only protects the list, hash, timer and counter
+ 	 * against manipulation, reads are done in RCU. Additionally,
+-	 * the lock protects each BSS's TIM bitmap and a few items
+-	 * in a STA info structure.
++	 * the lock protects each BSS's TIM bitmap, a few items in
++	 * STA info structures and various key pointers.
+ 	 */
+ 	spinlock_t sta_lock;
+ 	unsigned long num_sta;
+--- everything.orig/net/mac80211/sta_info.h	2008-04-08 17:06:50.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-04-08 17:53:47.000000000 +0200
+@@ -359,6 +359,5 @@ void sta_info_stop(struct ieee80211_loca
+ int sta_info_flush(struct ieee80211_local *local,
+ 		    struct ieee80211_sub_if_data *sdata);
+ void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata);
+-void __ieee80211_run_pending_flush(struct ieee80211_local *local);
+ 
+ #endif /* STA_INFO_H */
 
---=-JOri3nCo+j+cjdVfuLmz
-Content-Disposition: attachment; filename=regdump_afterauthhang
-Content-Type: text/plain; name=regdump_afterauthhang; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-2.6.24.4-64.fc8
-driver: rt2500pci
-version: 2.1.4
-compiled: Apr  7 2008 19:35:38
-dev_flags: 0x0000042f
-rt chip: 0201
-rf chip: 0003
-revision:00000004
-
-csr length: 93
-eeprom length: 256
-bbp length: 64
-rf length: 5
-
-csr
-0 :0x00000004
-1 :0x00000004
-2 :0x00000000
-3 :0x14f60c00
-4 :0x00001905
-5 :0x00000000
-6 :0x00000000
-7 :0x00000000
-8 :0x000fff86
-9 :0x00000980
-10 :0xcf8b7200
-11 :0x070414a5
-12 :0x06400640
-13 :0x000000a0
-14 :0x0000000d
-15 :0x00000000
-16 :0x08acbbe1
-17 :0x00000000
-18 :0x001e000a
-19 :0x013a0032
-20 :0x000005a0
-21 :0x00000030
-22 :0x00000000
-23 :0x00000000
-24 :0x00000000
-25 :0x01627562
-26 :0x0c010c2c
-27 :0xcf8c7200
-28 :0xcf8c8980
-29 :0xcf8bf200
-30 :0xcf85d100
-31 :0x00000000
-32 :0x0000005e
-33 :0x00000c2c
-34 :0xcf8b7200
-35 :0x000003b8
-36 :0xb3aab3af
-37 :0x86870885
-38 :0x8c8d8b8a
-39 :0x000a0000
-40 :0x00000000
-41 :0x00000000
-42 :0x0000009c
-43 :0x0000003d
-44 :0x00000002
-45 :0x0003ffff
-46 :0x00000000
-47 :0x00000000
-48 :0x00000000
-49 :0x3f3b3100
-50 :0x00020002
-51 :0x00000002
-52 :0x00020002
-53 :0x00000002
-54 :0x000001fe
-55 :0x1ab03f21
-56 :0x00213223
-57 :0x00000518
-58 :0x9a009a11
-59 :0x00000000
-60 :0x00001132
-61 :0x14062e11
-62 :0x00011e46
-63 :0x0000c78f
-64 :0xcf8b7360
-65 :0xcf8c7200
-66 :0xcf8bf284
-67 :0xcf8c8980
-68 :0x00000020
-69 :0x00000000
-70 :0x0000000d
-71 :0x000000aa
-72 :0x00000001
-73 :0x00000001
-74 :0x00000000
-75 :0x0001e8f4
-76 :0x000500f0
-77 :0x00000040
-78 :0x000000f0
-79 :0x00700400
-80 :0x00380401
-81 :0x00140402
-82 :0x000a8403
-83 :0x7038140a
-84 :0x1d21252d
-85 :0x1919191d
-86 :0xcf8c7200
-87 :0x82188200
-88 :0x00000003
-89 :0x00000000
-90 :0x00000000
-91 :0x00000000
-92 :0x76543210
-
-eeprom
-0 :0x2560
-1 :0xffff
-2 :0x0c00
-3 :0x14f6
-4 :0x1905
-5 :0x0201
-6 :0x1814
-7 :0x0601
-8 :0x0000
-9 :0x9073
-10 :0x182d
-11 :0x0000
-12 :0x0002
-13 :0x0000
-14 :0xffff
-15 :0xffff
-16 :0x182a
-17 :0xfff0
-18 :0x02ff
-19 :0x0f30
-20 :0x1128
-21 :0x150d
-22 :0x160d
-23 :0x3510
-24 :0x3610
-25 :0x3d6a
-26 :0x3e10
-27 :0x2350
-28 :0x2960
-29 :0x3618
-30 :0xffff
-31 :0xffff
-32 :0xffff
-33 :0xffff
-34 :0xffff
-35 :0x1717
-36 :0x1717
-37 :0x1717
-38 :0x1717
-39 :0x1717
-40 :0x1717
-41 :0x1717
-42 :0xffff
-43 :0xffff
-44 :0xffff
-45 :0xffff
-46 :0xffff
-47 :0xffff
-48 :0xffff
-49 :0xffff
-50 :0xffff
-51 :0xffff
-52 :0xffff
-53 :0xffff
-54 :0xffff
-55 :0xffff
-56 :0xffff
-57 :0xffff
-58 :0xffff
-59 :0xffff
-60 :0xffff
-61 :0xffff
-62 :0xff6f
-63 :0x0101
-64 :0xffff
-65 :0xffff
-66 :0xffff
-67 :0xffff
-68 :0xffff
-69 :0xffff
-70 :0xffff
-71 :0xffff
-72 :0xffff
-73 :0xffff
-74 :0xffff
-75 :0xffff
-76 :0xffff
-77 :0xffff
-78 :0xffff
-79 :0xffff
-80 :0xffff
-81 :0xffff
-82 :0xffff
-83 :0xffff
-84 :0xffff
-85 :0xffff
-86 :0xffff
-87 :0xffff
-88 :0xffff
-89 :0xffff
-90 :0xffff
-91 :0xffff
-92 :0xffff
-93 :0xffff
-94 :0xffff
-95 :0xffff
-96 :0xffff
-97 :0xffff
-98 :0xffff
-99 :0xffff
-100 :0xffff
-101 :0xffff
-102 :0xffff
-103 :0xffff
-104 :0xffff
-105 :0xffff
-106 :0xffff
-107 :0xffff
-108 :0xffff
-109 :0xffff
-110 :0xffff
-111 :0xffff
-112 :0xffff
-113 :0xffff
-114 :0xffff
-115 :0xffff
-116 :0xffff
-117 :0xffff
-118 :0xffff
-119 :0xffff
-120 :0xffff
-121 :0xffff
-122 :0xffff
-123 :0xffff
-124 :0xffff
-125 :0xffff
-126 :0xffff
-127 :0xffff
-128 :0x2560
-129 :0xffff
-130 :0x0c00
-131 :0x14f6
-132 :0x1905
-133 :0x0201
-134 :0x1814
-135 :0x0601
-136 :0x0000
-137 :0x9073
-138 :0x182d
-139 :0x0000
-140 :0x0002
-141 :0x0000
-142 :0xffff
-143 :0xffff
-144 :0x182a
-145 :0xffff
-146 :0x02ff
-147 :0x0f30
-148 :0x1128
-149 :0x150d
-150 :0x160d
-151 :0x3510
-152 :0x3610
-153 :0x3d6a
-154 :0x3e10
-155 :0x2350
-156 :0x2960
-157 :0x3718
-158 :0xffff
-159 :0xffff
-160 :0xffff
-161 :0xffff
-162 :0xffff
-163 :0x1717
-164 :0x1717
-165 :0x1717
-166 :0x1717
-167 :0x1717
-168 :0x1717
-169 :0x1717
-170 :0xffff
-171 :0xffff
-172 :0xffff
-173 :0xffff
-174 :0xffff
-175 :0xffff
-176 :0xffff
-177 :0xffff
-178 :0xffff
-179 :0xffff
-180 :0xffff
-181 :0xffff
-182 :0xffff
-183 :0xffff
-184 :0xffff
-185 :0xffff
-186 :0xffff
-187 :0xffff
-188 :0xffff
-189 :0xffff
-190 :0xff6f
-191 :0x0101
-192 :0xffff
-193 :0xffff
-194 :0xffff
-195 :0xffff
-196 :0xffff
-197 :0xffff
-198 :0xffff
-199 :0xffff
-200 :0xffff
-201 :0xffff
-202 :0xffff
-203 :0xffff
-204 :0xffff
-205 :0xffff
-206 :0xffff
-207 :0xffff
-208 :0xffff
-209 :0xffff
-210 :0xffff
-211 :0xffff
-212 :0xffff
-213 :0xffff
-214 :0xffff
-215 :0xffff
-216 :0xffff
-217 :0xffff
-218 :0xffff
-219 :0xffff
-220 :0xffff
-221 :0xffff
-222 :0xffff
-223 :0xffff
-224 :0xffff
-225 :0xffff
-226 :0xffff
-227 :0xffff
-228 :0xffff
-229 :0xffff
-230 :0xffff
-231 :0xffff
-232 :0xffff
-233 :0xffff
-234 :0xffff
-235 :0xffff
-236 :0xffff
-237 :0xffff
-238 :0xffff
-239 :0xffff
-240 :0xffff
-241 :0xffff
-242 :0xffff
-243 :0xffff
-244 :0xffff
-245 :0xffff
-246 :0xffff
-247 :0xffff
-248 :0xffff
-249 :0xffff
-250 :0xffff
-251 :0xffff
-252 :0xffff
-253 :0xffff
-254 :0xffff
-255 :0xffff
-
-bbp
-0 :0x12
-1 :0xf8
-2 :0x00
-3 :0x02
-4 :0x19
-5 :0x0b
-6 :0x00
-7 :0x0e
-8 :0x00
-9 :0x00
-10 :0x00
-11 :0x04
-12 :0x00
-13 :0x70
-14 :0x1c
-15 :0x30
-16 :0xac
-17 :0x32
-18 :0x18
-19 :0xff
-20 :0x1e
-21 :0x0d
-22 :0x0d
-23 :0x08
-24 :0x70
-25 :0x40
-26 :0x08
-27 :0x23
-28 :0x18
-29 :0x00
-30 :0x10
-31 :0x2b
-32 :0xb9
-33 :0x55
-34 :0x12
-35 :0x50
-36 :0x11
-37 :0x05
-38 :0x00
-39 :0xc4
-40 :0x02
-41 :0x60
-42 :0x05
-43 :0x55
-44 :0x71
-45 :0x00
-46 :0xec
-47 :0x0a
-48 :0x04
-49 :0x05
-50 :0x98
-51 :0x26
-52 :0x2e
-53 :0x10
-54 :0x18
-55 :0x7c
-56 :0x08
-57 :0x10
-58 :0x08
-59 :0x01
-60 :0x03
-61 :0x6a
-62 :0x10
-63 :0x00
-
-rf
-0 :0x00000000
-1 :0x00002020
-2 :0x00080c9e
-3 :0x00062e11
-4 :0x00000a1b
-
---=-JOri3nCo+j+cjdVfuLmz
-Content-Disposition: attachment; filename=regdump_beforeauth
-Content-Type: text/plain; name=regdump_beforeauth; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-2.6.24.4-64.fc8
-driver: rt2500pci
-version: 2.1.4
-compiled: Apr  7 2008 19:35:38
-dev_flags: 0x0000042f
-rt chip: 0201
-rf chip: 0003
-revision:00000004
-
-csr length: 93
-eeprom length: 256
-bbp length: 64
-rf length: 5
-
-csr
-0 :0x00000004
-1 :0x00000004
-2 :0x00000000
-3 :0x14f60c00
-4 :0x00001905
-5 :0x00000000
-6 :0x00000000
-7 :0x00000000
-8 :0x000fff86
-9 :0x00000980
-10 :0xcf8b7200
-11 :0x070414a5
-12 :0x06400640
-13 :0x000000a0
-14 :0x0000000d
-15 :0x00000000
-16 :0x0042c577
-17 :0x00000000
-18 :0x001e000a
-19 :0x013a0032
-20 :0x000005a0
-21 :0x00000030
-22 :0x00000000
-23 :0x00000000
-24 :0x00000008
-25 :0x01627562
-26 :0x0c010c2c
-27 :0xcf8c7200
-28 :0xcf8c8980
-29 :0xcf8bf200
-30 :0xcf85d100
-31 :0x00000000
-32 :0x0000005e
-33 :0x00000c2c
-34 :0xcf8b7200
-35 :0x000003b8
-36 :0xb3aab3af
-37 :0x86870885
-38 :0x8c8d8b8a
-39 :0x000a0000
-40 :0x00000000
-41 :0x00000000
-42 :0x0000009c
-43 :0x0000001b
-44 :0x00000004
-45 :0x0003ffff
-46 :0x00000001
-47 :0x00000000
-48 :0x00000000
-49 :0x3f3b3100
-50 :0x00020002
-51 :0x00000002
-52 :0x00020002
-53 :0x00000002
-54 :0x000001fe
-55 :0x1ab03f21
-56 :0x00213223
-57 :0x00000518
-58 :0x9a009a11
-59 :0x00000000
-60 :0x00011146
-61 :0x14062e11
-62 :0x00011e46
-63 :0x0000c78f
-64 :0xcf8b722c
-65 :0xcf8c7200
-66 :0xcf8bf200
-67 :0xcf8c8980
-68 :0x00000020
-69 :0x00000000
-70 :0x00000000
-71 :0x000000aa
-72 :0x00000001
-73 :0x00000001
-74 :0x00000000
-75 :0x00002a15
-76 :0x000500f0
-77 :0x00000040
-78 :0x000000f0
-79 :0x00700400
-80 :0x00380401
-81 :0x00140402
-82 :0x000a8403
-83 :0x7038140a
-84 :0x1d21252d
-85 :0x1919191d
-86 :0xcf8c7200
-87 :0x82188200
-88 :0x00000003
-89 :0x00000000
-90 :0x00000000
-91 :0x00000000
-92 :0x76543210
-
-eeprom
-0 :0x2560
-1 :0xffff
-2 :0x0c00
-3 :0x14f6
-4 :0x1905
-5 :0x0201
-6 :0x1814
-7 :0x0601
-8 :0x0000
-9 :0x9073
-10 :0x182d
-11 :0x0000
-12 :0x0002
-13 :0x0000
-14 :0xffff
-15 :0xffff
-16 :0x182a
-17 :0xfff0
-18 :0x02ff
-19 :0x0f30
-20 :0x1128
-21 :0x150d
-22 :0x160d
-23 :0x3510
-24 :0x3610
-25 :0x3d6a
-26 :0x3e10
-27 :0x2350
-28 :0x2960
-29 :0x3618
-30 :0xffff
-31 :0xffff
-32 :0xffff
-33 :0xffff
-34 :0xffff
-35 :0x1717
-36 :0x1717
-37 :0x1717
-38 :0x1717
-39 :0x1717
-40 :0x1717
-41 :0x1717
-42 :0xffff
-43 :0xffff
-44 :0xffff
-45 :0xffff
-46 :0xffff
-47 :0xffff
-48 :0xffff
-49 :0xffff
-50 :0xffff
-51 :0xffff
-52 :0xffff
-53 :0xffff
-54 :0xffff
-55 :0xffff
-56 :0xffff
-57 :0xffff
-58 :0xffff
-59 :0xffff
-60 :0xffff
-61 :0xffff
-62 :0xff6f
-63 :0x0101
-64 :0xffff
-65 :0xffff
-66 :0xffff
-67 :0xffff
-68 :0xffff
-69 :0xffff
-70 :0xffff
-71 :0xffff
-72 :0xffff
-73 :0xffff
-74 :0xffff
-75 :0xffff
-76 :0xffff
-77 :0xffff
-78 :0xffff
-79 :0xffff
-80 :0xffff
-81 :0xffff
-82 :0xffff
-83 :0xffff
-84 :0xffff
-85 :0xffff
-86 :0xffff
-87 :0xffff
-88 :0xffff
-89 :0xffff
-90 :0xffff
-91 :0xffff
-92 :0xffff
-93 :0xffff
-94 :0xffff
-95 :0xffff
-96 :0xffff
-97 :0xffff
-98 :0xffff
-99 :0xffff
-100 :0xffff
-101 :0xffff
-102 :0xffff
-103 :0xffff
-104 :0xffff
-105 :0xffff
-106 :0xffff
-107 :0xffff
-108 :0xffff
-109 :0xffff
-110 :0xffff
-111 :0xffff
-112 :0xffff
-113 :0xffff
-114 :0xffff
-115 :0xffff
-116 :0xffff
-117 :0xffff
-118 :0xffff
-119 :0xffff
-120 :0xffff
-121 :0xffff
-122 :0xffff
-123 :0xffff
-124 :0xffff
-125 :0xffff
-126 :0xffff
-127 :0xffff
-128 :0x2560
-129 :0xffff
-130 :0x0c00
-131 :0x14f6
-132 :0x1905
-133 :0x0201
-134 :0x1814
-135 :0x0601
-136 :0x0000
-137 :0x9073
-138 :0x182d
-139 :0x0000
-140 :0x0002
-141 :0x0000
-142 :0xffff
-143 :0xffff
-144 :0x182a
-145 :0xffff
-146 :0x02ff
-147 :0x0f30
-148 :0x1128
-149 :0x150d
-150 :0x160d
-151 :0x3510
-152 :0x3610
-153 :0x3d6a
-154 :0x3e10
-155 :0x2350
-156 :0x2960
-157 :0x3718
-158 :0xffff
-159 :0xffff
-160 :0xffff
-161 :0xffff
-162 :0xffff
-163 :0x1717
-164 :0x1717
-165 :0x1717
-166 :0x1717
-167 :0x1717
-168 :0x1717
-169 :0x1717
-170 :0xffff
-171 :0xffff
-172 :0xffff
-173 :0xffff
-174 :0xffff
-175 :0xffff
-176 :0xffff
-177 :0xffff
-178 :0xffff
-179 :0xffff
-180 :0xffff
-181 :0xffff
-182 :0xffff
-183 :0xffff
-184 :0xffff
-185 :0xffff
-186 :0xffff
-187 :0xffff
-188 :0xffff
-189 :0xffff
-190 :0xff6f
-191 :0x0101
-192 :0xffff
-193 :0xffff
-194 :0xffff
-195 :0xffff
-196 :0xffff
-197 :0xffff
-198 :0xffff
-199 :0xffff
-200 :0xffff
-201 :0xffff
-202 :0xffff
-203 :0xffff
-204 :0xffff
-205 :0xffff
-206 :0xffff
-207 :0xffff
-208 :0xffff
-209 :0xffff
-210 :0xffff
-211 :0xffff
-212 :0xffff
-213 :0xffff
-214 :0xffff
-215 :0xffff
-216 :0xffff
-217 :0xffff
-218 :0xffff
-219 :0xffff
-220 :0xffff
-221 :0xffff
-222 :0xffff
-223 :0xffff
-224 :0xffff
-225 :0xffff
-226 :0xffff
-227 :0xffff
-228 :0xffff
-229 :0xffff
-230 :0xffff
-231 :0xffff
-232 :0xffff
-233 :0xffff
-234 :0xffff
-235 :0xffff
-236 :0xffff
-237 :0xffff
-238 :0xffff
-239 :0xffff
-240 :0xffff
-241 :0xffff
-242 :0xffff
-243 :0xffff
-244 :0xffff
-245 :0xffff
-246 :0xffff
-247 :0xffff
-248 :0xffff
-249 :0xffff
-250 :0xffff
-251 :0xffff
-252 :0xffff
-253 :0xffff
-254 :0xffff
-255 :0xffff
-
-bbp
-0 :0x12
-1 :0x00
-2 :0x00
-3 :0x02
-4 :0x19
-5 :0x0b
-6 :0x10
-7 :0x00
-8 :0x00
-9 :0x00
-10 :0x00
-11 :0x04
-12 :0x04
-13 :0x00
-14 :0x1c
-15 :0x30
-16 :0xac
-17 :0x44
-18 :0x18
-19 :0xff
-20 :0x1e
-21 :0x0d
-22 :0x0d
-23 :0x08
-24 :0x70
-25 :0x40
-26 :0x08
-27 :0x23
-28 :0x18
-29 :0x00
-30 :0x10
-31 :0x2b
-32 :0xb9
-33 :0x55
-34 :0x12
-35 :0x50
-36 :0x11
-37 :0x05
-38 :0x00
-39 :0xc4
-40 :0x02
-41 :0x60
-42 :0x0f
-43 :0x3a
-44 :0x05
-45 :0x36
-46 :0x23
-47 :0x0a
-48 :0x04
-49 :0x05
-50 :0x98
-51 :0x26
-52 :0x2e
-53 :0x10
-54 :0x18
-55 :0x7c
-56 :0x08
-57 :0x10
-58 :0x08
-59 :0x01
-60 :0x04
-61 :0x6a
-62 :0x10
-63 :0x00
-
-rf
-0 :0x00000000
-1 :0x00002020
-2 :0x00080c9e
-3 :0x00062e11
-4 :0x00000a1b
-
---=-JOri3nCo+j+cjdVfuLmz
-Content-Disposition: attachment; filename=regdump_beforehostapd
-Content-Type: text/plain; name=regdump_beforehostapd; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-2.6.24.4-64.fc8
-driver: rt2500pci
-version: 2.1.4
-compiled: Apr  7 2008 19:35:38
-dev_flags: 0x0000042f
-rt chip: 0201
-rf chip: 0003
-revision:00000004
-
-csr length: 93
-eeprom length: 256
-bbp length: 64
-rf length: 5
-
-csr
-0 :0x00000004
-1 :0x00000004
-2 :0x00000000
-3 :0x14f60c00
-4 :0x00001905
-5 :0x00000000
-6 :0x00000000
-7 :0x00000000
-8 :0x000fff86
-9 :0x00000980
-10 :0xcf8b7200
-11 :0x070414a5
-12 :0x3e803e80
-13 :0x000000a0
-14 :0x0000000b
-15 :0x00000000
-16 :0x008b0e89
-17 :0x00000000
-18 :0x001e000a
-19 :0x013a0032
-20 :0x000005a0
-21 :0x00000030
-22 :0x00000000
-23 :0x00000000
-24 :0x00000000
-25 :0x01627562
-26 :0x0c010c2c
-27 :0xcf8c7200
-28 :0xcf8c8980
-29 :0xcf8bf200
-30 :0xcf85d100
-31 :0x00000000
-32 :0x0000007e
-33 :0x00000c2c
-34 :0xcf8b7200
-35 :0x000003b8
-36 :0xb3aab3af
-37 :0x86870885
-38 :0x8c8d8b8a
-39 :0x000a0000
-40 :0x00000000
-41 :0x00000000
-42 :0x0000009c
-43 :0x00000000
-44 :0x00000000
-45 :0x0003ffff
-46 :0x00000000
-47 :0x00000000
-48 :0x00000000
-49 :0x3f3b3100
-50 :0x00020002
-51 :0x00000002
-52 :0x00020002
-53 :0x00000002
-54 :0x000001fe
-55 :0x1ab03f21
-56 :0x00213223
-57 :0x00000518
-58 :0x9a009a11
-59 :0x00000000
-60 :0x00011141
-61 :0x14062e11
-62 :0x00011e46
-63 :0x0000c78f
-64 :0xcf8b73e4
-65 :0xcf8c7200
-66 :0xcf8bf3e4
-67 :0xcf8c8980
-68 :0x00000020
-69 :0x00000000
-70 :0x00000000
-71 :0x000000aa
-72 :0x00000001
-73 :0x00000001
-74 :0x00000000
-75 :0x0001feff
-76 :0x000500f0
-77 :0x00000040
-78 :0x000000f0
-79 :0x00700400
-80 :0x00380401
-81 :0x00140402
-82 :0x000a8403
-83 :0x7038140a
-84 :0x1d21252d
-85 :0x1919191d
-86 :0xcf8c7200
-87 :0x821a8202
-88 :0x00000003
-89 :0x00000000
-90 :0x00000000
-91 :0x00000000
-92 :0x76543210
-
-eeprom
-0 :0x2560
-1 :0xffff
-2 :0x0c00
-3 :0x14f6
-4 :0x1905
-5 :0x0201
-6 :0x1814
-7 :0x0601
-8 :0x0000
-9 :0x9073
-10 :0x182d
-11 :0x0000
-12 :0x0002
-13 :0x0000
-14 :0xffff
-15 :0xffff
-16 :0x182a
-17 :0xfff0
-18 :0x02ff
-19 :0x0f30
-20 :0x1128
-21 :0x150d
-22 :0x160d
-23 :0x3510
-24 :0x3610
-25 :0x3d6a
-26 :0x3e10
-27 :0x2350
-28 :0x2960
-29 :0x3618
-30 :0xffff
-31 :0xffff
-32 :0xffff
-33 :0xffff
-34 :0xffff
-35 :0x1717
-36 :0x1717
-37 :0x1717
-38 :0x1717
-39 :0x1717
-40 :0x1717
-41 :0x1717
-42 :0xffff
-43 :0xffff
-44 :0xffff
-45 :0xffff
-46 :0xffff
-47 :0xffff
-48 :0xffff
-49 :0xffff
-50 :0xffff
-51 :0xffff
-52 :0xffff
-53 :0xffff
-54 :0xffff
-55 :0xffff
-56 :0xffff
-57 :0xffff
-58 :0xffff
-59 :0xffff
-60 :0xffff
-61 :0xffff
-62 :0xff6f
-63 :0x0101
-64 :0xffff
-65 :0xffff
-66 :0xffff
-67 :0xffff
-68 :0xffff
-69 :0xffff
-70 :0xffff
-71 :0xffff
-72 :0xffff
-73 :0xffff
-74 :0xffff
-75 :0xffff
-76 :0xffff
-77 :0xffff
-78 :0xffff
-79 :0xffff
-80 :0xffff
-81 :0xffff
-82 :0xffff
-83 :0xffff
-84 :0xffff
-85 :0xffff
-86 :0xffff
-87 :0xffff
-88 :0xffff
-89 :0xffff
-90 :0xffff
-91 :0xffff
-92 :0xffff
-93 :0xffff
-94 :0xffff
-95 :0xffff
-96 :0xffff
-97 :0xffff
-98 :0xffff
-99 :0xffff
-100 :0xffff
-101 :0xffff
-102 :0xffff
-103 :0xffff
-104 :0xffff
-105 :0xffff
-106 :0xffff
-107 :0xffff
-108 :0xffff
-109 :0xffff
-110 :0xffff
-111 :0xffff
-112 :0xffff
-113 :0xffff
-114 :0xffff
-115 :0xffff
-116 :0xffff
-117 :0xffff
-118 :0xffff
-119 :0xffff
-120 :0xffff
-121 :0xffff
-122 :0xffff
-123 :0xffff
-124 :0xffff
-125 :0xffff
-126 :0xffff
-127 :0xffff
-128 :0x2560
-129 :0xffff
-130 :0x0c00
-131 :0x14f6
-132 :0x1905
-133 :0x0201
-134 :0x1814
-135 :0x0601
-136 :0x0000
-137 :0x9073
-138 :0x182d
-139 :0x0000
-140 :0x0002
-141 :0x0000
-142 :0xffff
-143 :0xffff
-144 :0x182a
-145 :0xffff
-146 :0x02ff
-147 :0x0f30
-148 :0x1128
-149 :0x150d
-150 :0x160d
-151 :0x3510
-152 :0x3610
-153 :0x3d6a
-154 :0x3e10
-155 :0x2350
-156 :0x2960
-157 :0x3718
-158 :0xffff
-159 :0xffff
-160 :0xffff
-161 :0xffff
-162 :0xffff
-163 :0x1717
-164 :0x1717
-165 :0x1717
-166 :0x1717
-167 :0x1717
-168 :0x1717
-169 :0x1717
-170 :0xffff
-171 :0xffff
-172 :0xffff
-173 :0xffff
-174 :0xffff
-175 :0xffff
-176 :0xffff
-177 :0xffff
-178 :0xffff
-179 :0xffff
-180 :0xffff
-181 :0xffff
-182 :0xffff
-183 :0xffff
-184 :0xffff
-185 :0xffff
-186 :0xffff
-187 :0xffff
-188 :0xffff
-189 :0xffff
-190 :0xff6f
-191 :0x0101
-192 :0xffff
-193 :0xffff
-194 :0xffff
-195 :0xffff
-196 :0xffff
-197 :0xffff
-198 :0xffff
-199 :0xffff
-200 :0xffff
-201 :0xffff
-202 :0xffff
-203 :0xffff
-204 :0xffff
-205 :0xffff
-206 :0xffff
-207 :0xffff
-208 :0xffff
-209 :0xffff
-210 :0xffff
-211 :0xffff
-212 :0xffff
-213 :0xffff
-214 :0xffff
-215 :0xffff
-216 :0xffff
-217 :0xffff
-218 :0xffff
-219 :0xffff
-220 :0xffff
-221 :0xffff
-222 :0xffff
-223 :0xffff
-224 :0xffff
-225 :0xffff
-226 :0xffff
-227 :0xffff
-228 :0xffff
-229 :0xffff
-230 :0xffff
-231 :0xffff
-232 :0xffff
-233 :0xffff
-234 :0xffff
-235 :0xffff
-236 :0xffff
-237 :0xffff
-238 :0xffff
-239 :0xffff
-240 :0xffff
-241 :0xffff
-242 :0xffff
-243 :0xffff
-244 :0xffff
-245 :0xffff
-246 :0xffff
-247 :0xffff
-248 :0xffff
-249 :0xffff
-250 :0xffff
-251 :0xffff
-252 :0xffff
-253 :0xffff
-254 :0xffff
-255 :0xffff
-
-bbp
-0 :0x12
-1 :0xf8
-2 :0x02
-3 :0x02
-4 :0x19
-5 :0x0b
-6 :0x10
-7 :0x00
-8 :0x00
-9 :0x00
-10 :0x00
-11 :0x04
-12 :0x01
-13 :0xd8
-14 :0x1e
-15 :0x30
-16 :0xac
-17 :0x40
-18 :0x18
-19 :0xff
-20 :0x1e
-21 :0x0d
-22 :0x0d
-23 :0x08
-24 :0x70
-25 :0x40
-26 :0x08
-27 :0x23
-28 :0x18
-29 :0x18
-30 :0x10
-31 :0x2b
-32 :0xb9
-33 :0x55
-34 :0x12
-35 :0x50
-36 :0x11
-37 :0x05
-38 :0x00
-39 :0xc4
-40 :0x02
-41 :0x60
-42 :0x00
-43 :0x00
-44 :0x00
-45 :0x00
-46 :0x00
-47 :0x0a
-48 :0x04
-49 :0x05
-50 :0x98
-51 :0x27
-52 :0x2e
-53 :0x10
-54 :0x18
-55 :0x7d
-56 :0x08
-57 :0x10
-58 :0x08
-59 :0x01
-60 :0x03
-61 :0x6a
-62 :0x10
-63 :0x00
-
-rf
-0 :0x00000000
-1 :0x00002020
-2 :0x00080c9e
-3 :0x00062e11
-4 :0x00000a1b
-
---=-JOri3nCo+j+cjdVfuLmz
-Content-Disposition: attachment; filename=regdump_beforeifup
-Content-Type: text/plain; name=regdump_beforeifup; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-2.6.24.4-64.fc8
-driver: rt2500pci
-version: 2.1.4
-compiled: Apr  7 2008 19:35:38
-dev_flags: 0x00000403
-rt chip: 0201
-rf chip: 0003
-revision:00000004
-
-csr length: 93
-eeprom length: 256
-bbp length: 64
-rf length: 5
-
-csr
-0 :0x00000004
-1 :0x00000000
-2 :0x00000000
-3 :0x14f60c00
-4 :0x00001905
-5 :0x00000000
-6 :0x00000000
-7 :0x00000002
-8 :0x000fffff
-9 :0x00000600
-10 :0x00000000
-11 :0x070414a5
-12 :0x06400640
-13 :0x000000a0
-14 :0x00000000
-15 :0x00000000
-16 :0x00000000
-17 :0x00000000
-18 :0x001e000a
-19 :0x016c0032
-20 :0x000005a0
-21 :0x00000030
-22 :0x00000000
-23 :0x00000000
-24 :0x00000000
-25 :0x01605b62
-26 :0x08081030
-27 :0x00000000
-28 :0x00000000
-29 :0x00000000
-30 :0x00000000
-31 :0x00000000
-32 :0x0000007f
-33 :0x00000830
-34 :0x00000000
-35 :0x00000380
-36 :0xb32ab32f
-37 :0x86870885
-38 :0x8c8d8b8a
-39 :0x000a0000
-40 :0x00000000
-41 :0x00000000
-42 :0x0000009c
-43 :0x00000000
-44 :0x00000000
-45 :0x0003ffff
-46 :0x00000000
-47 :0x00000000
-48 :0x00000000
-49 :0x00000000
-50 :0x000a000a
-51 :0x00000001
-52 :0x00010001
-53 :0x0000000a
-54 :0x000001e0
-55 :0x1ab03f20
-56 :0x00211201
-57 :0x00000018
-58 :0xa900a901
-59 :0x00000000
-60 :0x00000000
-61 :0x00000000
-62 :0x00001e46
-63 :0x0000c78f
-64 :0x00000000
-65 :0x00000000
-66 :0x00000000
-67 :0x00000000
-68 :0x00000162
-69 :0x00000000
-70 :0x00000000
-71 :0x000000aa
-72 :0x00000001
-73 :0x00000001
-74 :0x00000000
-75 :0x00000000
-76 :0x00050000
-77 :0x00000004
-78 :0x00000000
-79 :0x00700400
-80 :0x00380401
-81 :0x00150402
-82 :0x000b8403
-83 :0x7038140a
-84 :0x1d25212d
-85 :0x1919191d
-86 :0x00000000
-87 :0x821c8204
-88 :0x00000003
-89 :0x00000000
-90 :0x00000000
-91 :0x00000000
-92 :0x76543210
-
-eeprom
-0 :0x2560
-1 :0xffff
-2 :0x0c00
-3 :0x14f6
-4 :0x1905
-5 :0x0201
-6 :0x1814
-7 :0x0601
-8 :0x0000
-9 :0x9073
-10 :0x182d
-11 :0x0000
-12 :0x0002
-13 :0x0000
-14 :0xffff
-15 :0xffff
-16 :0x182a
-17 :0xfff0
-18 :0x02ff
-19 :0x0f30
-20 :0x1128
-21 :0x150d
-22 :0x160d
-23 :0x3510
-24 :0x3610
-25 :0x3d6a
-26 :0x3e10
-27 :0x2350
-28 :0x2960
-29 :0x3618
-30 :0xffff
-31 :0xffff
-32 :0xffff
-33 :0xffff
-34 :0xffff
-35 :0x1717
-36 :0x1717
-37 :0x1717
-38 :0x1717
-39 :0x1717
-40 :0x1717
-41 :0x1717
-42 :0xffff
-43 :0xffff
-44 :0xffff
-45 :0xffff
-46 :0xffff
-47 :0xffff
-48 :0xffff
-49 :0xffff
-50 :0xffff
-51 :0xffff
-52 :0xffff
-53 :0xffff
-54 :0xffff
-55 :0xffff
-56 :0xffff
-57 :0xffff
-58 :0xffff
-59 :0xffff
-60 :0xffff
-61 :0xffff
-62 :0xff6f
-63 :0x0101
-64 :0xffff
-65 :0xffff
-66 :0xffff
-67 :0xffff
-68 :0xffff
-69 :0xffff
-70 :0xffff
-71 :0xffff
-72 :0xffff
-73 :0xffff
-74 :0xffff
-75 :0xffff
-76 :0xffff
-77 :0xffff
-78 :0xffff
-79 :0xffff
-80 :0xffff
-81 :0xffff
-82 :0xffff
-83 :0xffff
-84 :0xffff
-85 :0xffff
-86 :0xffff
-87 :0xffff
-88 :0xffff
-89 :0xffff
-90 :0xffff
-91 :0xffff
-92 :0xffff
-93 :0xffff
-94 :0xffff
-95 :0xffff
-96 :0xffff
-97 :0xffff
-98 :0xffff
-99 :0xffff
-100 :0xffff
-101 :0xffff
-102 :0xffff
-103 :0xffff
-104 :0xffff
-105 :0xffff
-106 :0xffff
-107 :0xffff
-108 :0xffff
-109 :0xffff
-110 :0xffff
-111 :0xffff
-112 :0xffff
-113 :0xffff
-114 :0xffff
-115 :0xffff
-116 :0xffff
-117 :0xffff
-118 :0xffff
-119 :0xffff
-120 :0xffff
-121 :0xffff
-122 :0xffff
-123 :0xffff
-124 :0xffff
-125 :0xffff
-126 :0xffff
-127 :0xffff
-128 :0x2560
-129 :0xffff
-130 :0x0c00
-131 :0x14f6
-132 :0x1905
-133 :0x0201
-134 :0x1814
-135 :0x0601
-136 :0x0000
-137 :0x9073
-138 :0x182d
-139 :0x0000
-140 :0x0002
-141 :0x0000
-142 :0xffff
-143 :0xffff
-144 :0x182a
-145 :0xffff
-146 :0x02ff
-147 :0x0f30
-148 :0x1128
-149 :0x150d
-150 :0x160d
-151 :0x3510
-152 :0x3610
-153 :0x3d6a
-154 :0x3e10
-155 :0x2350
-156 :0x2960
-157 :0x3718
-158 :0xffff
-159 :0xffff
-160 :0xffff
-161 :0xffff
-162 :0xffff
-163 :0x1717
-164 :0x1717
-165 :0x1717
-166 :0x1717
-167 :0x1717
-168 :0x1717
-169 :0x1717
-170 :0xffff
-171 :0xffff
-172 :0xffff
-173 :0xffff
-174 :0xffff
-175 :0xffff
-176 :0xffff
-177 :0xffff
-178 :0xffff
-179 :0xffff
-180 :0xffff
-181 :0xffff
-182 :0xffff
-183 :0xffff
-184 :0xffff
-185 :0xffff
-186 :0xffff
-187 :0xffff
-188 :0xffff
-189 :0xffff
-190 :0xff6f
-191 :0x0101
-192 :0xffff
-193 :0xffff
-194 :0xffff
-195 :0xffff
-196 :0xffff
-197 :0xffff
-198 :0xffff
-199 :0xffff
-200 :0xffff
-201 :0xffff
-202 :0xffff
-203 :0xffff
-204 :0xffff
-205 :0xffff
-206 :0xffff
-207 :0xffff
-208 :0xffff
-209 :0xffff
-210 :0xffff
-211 :0xffff
-212 :0xffff
-213 :0xffff
-214 :0xffff
-215 :0xffff
-216 :0xffff
-217 :0xffff
-218 :0xffff
-219 :0xffff
-220 :0xffff
-221 :0xffff
-222 :0xffff
-223 :0xffff
-224 :0xffff
-225 :0xffff
-226 :0xffff
-227 :0xffff
-228 :0xffff
-229 :0xffff
-230 :0xffff
-231 :0xffff
-232 :0xffff
-233 :0xffff
-234 :0xffff
-235 :0xffff
-236 :0xffff
-237 :0xffff
-238 :0xffff
-239 :0xffff
-240 :0xffff
-241 :0xffff
-242 :0xffff
-243 :0xffff
-244 :0xffff
-245 :0xffff
-246 :0xffff
-247 :0xffff
-248 :0xffff
-249 :0xffff
-250 :0xffff
-251 :0xffff
-252 :0xffff
-253 :0xffff
-254 :0xffff
-255 :0xffff
-
-bbp
-0 :0x00
-1 :0x00
-2 :0x00
-3 :0x00
-4 :0x00
-5 :0x00
-6 :0x00
-7 :0x00
-8 :0x00
-9 :0x00
-10 :0x00
-11 :0x00
-12 :0x00
-13 :0x00
-14 :0x00
-15 :0x00
-16 :0x00
-17 :0x00
-18 :0x00
-19 :0x00
-20 :0x00
-21 :0x00
-22 :0x00
-23 :0x00
-24 :0x00
-25 :0x00
-26 :0x00
-27 :0x00
-28 :0x00
-29 :0x00
-30 :0x00
-31 :0x00
-32 :0x00
-33 :0x00
-34 :0x00
-35 :0x00
-36 :0x00
-37 :0x00
-38 :0x00
-39 :0x00
-40 :0x00
-41 :0x00
-42 :0x00
-43 :0x00
-44 :0x00
-45 :0x00
-46 :0x00
-47 :0x00
-48 :0x00
-49 :0x00
-50 :0x00
-51 :0x00
-52 :0x00
-53 :0x00
-54 :0x00
-55 :0x00
-56 :0x00
-57 :0x00
-58 :0x00
-59 :0x00
-60 :0x00
-61 :0x00
-62 :0x00
-63 :0x00
-
-rf
-0 :0x00000000
-1 :0x00000000
-2 :0x00000000
-3 :0x00000000
-4 :0x00000000
-
---=-JOri3nCo+j+cjdVfuLmz--
 
