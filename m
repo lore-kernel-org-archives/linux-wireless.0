@@ -1,61 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39626 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51702 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091AbYDCKkI (ORCPT
+	with ESMTP id S1752585AbYDHOby (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 06:40:08 -0400
-Subject: Re: [PATCH] b43: Add PIO support for PCMCIA devices
+	Tue, 8 Apr 2008 10:31:54 -0400
+Subject: [PATCH] mac80211: fix sta-info pinning
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200803292101.16696.mb@bu3sch.de> (sfid-20080329_200236_826304_8681CDF1)
-References: <200803292101.16696.mb@bu3sch.de>
-	 (sfid-20080329_200236_826304_8681CDF1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4Db8T698AYD4bOyDHIVj"
-Date: Thu, 03 Apr 2008 12:36:48 +0200
-Message-Id: <1207219008.3636.27.camel@johannes.berg> (sfid-20080403_114022_175465_BFC70ADB)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 08 Apr 2008 13:08:20 +0200
+Message-Id: <1207652901.14253.4.camel@johannes.berg> (sfid-20080408_153200_525828_8EBB7940)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When a STA is supposed to be unlinked but is pinned, it still needs
+to be unlinked from all structures. Only at the end of the unlink
+process should we check for pin status and invalidate the callers
+reference if it is pinned. Move the pin status check down.
 
---=-4Db8T698AYD4bOyDHIVj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/sta_info.c |   64 ++++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
+--- everything.orig/net/mac80211/sta_info.c	2008-04-08 11:20:42.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-04-08 11:22:02.000000000 +0200
+@@ -469,8 +469,39 @@ void __sta_info_unlink(struct sta_info *
+ 		return;
+ 	}
+ 
++	list_del(&(*sta)->list);
++
++	if ((*sta)->flags & WLAN_STA_PS) {
++		(*sta)->flags &= ~WLAN_STA_PS;
++		if (sdata->bss)
++			atomic_dec(&sdata->bss->num_sta_ps);
++		__sta_info_clear_tim_bit(sdata->bss, *sta);
++	}
++
++	local->num_sta--;
++
++	if (local->ops->sta_notify) {
++		if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
++			sdata = sdata->u.vlan.ap;
++
++		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
++				       STA_NOTIFY_REMOVE, (*sta)->addr);
++	}
++
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		mesh_accept_plinks_update(sdata);
++#ifdef CONFIG_MAC80211_MESH
++		del_timer(&(*sta)->plink_timer);
++#endif
++	}
++
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++	printk(KERN_DEBUG "%s: Removed STA %s\n",
++	       wiphy_name(local->hw.wiphy), print_mac(mbuf, (*sta)->addr));
++#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
++
+ 	/*
+-	 * Also pull caller's reference if the STA is pinned by the
++	 * Finally, pull caller's reference if the STA is pinned by the
+ 	 * task that is adding the debugfs entries. In that case, we
+ 	 * leave the STA "to be freed".
+ 	 *
+@@ -502,37 +533,6 @@ void __sta_info_unlink(struct sta_info *
+ 		*sta = NULL;
+ 		return;
+ 	}
+-
+-	list_del(&(*sta)->list);
+-
+-	if ((*sta)->flags & WLAN_STA_PS) {
+-		(*sta)->flags &= ~WLAN_STA_PS;
+-		if (sdata->bss)
+-			atomic_dec(&sdata->bss->num_sta_ps);
+-		__sta_info_clear_tim_bit(sdata->bss, *sta);
+-	}
+-
+-	local->num_sta--;
+-
+-	if (local->ops->sta_notify) {
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_VLAN)
+-			sdata = sdata->u.vlan.ap;
+-
+-		local->ops->sta_notify(local_to_hw(local), &sdata->vif,
+-				       STA_NOTIFY_REMOVE, (*sta)->addr);
+-	}
+-
+-	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+-		mesh_accept_plinks_update(sdata);
+-#ifdef CONFIG_MAC80211_MESH
+-		del_timer(&(*sta)->plink_timer);
+-#endif
+-	}
+-
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	printk(KERN_DEBUG "%s: Removed STA %s\n",
+-	       wiphy_name(local->hw.wiphy), print_mac(mbuf, (*sta)->addr));
+-#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+ }
+ 
+ void sta_info_unlink(struct sta_info **sta)
 
-> PIO is needed for 16bit PCMCIA devices, as we really don't want to poke w=
-ith
-> the braindead DMA mechanisms on PCMCIA sockets. Additionally, not all
-> PCMCIA sockets do actually support DMA in 16bit mode (mine doesn't).
-
-Oddly, my CF card still doesn't work. Is there anything else I need in a
-current wireless-testing tree?
-
-johannes
-
---=-4Db8T698AYD4bOyDHIVj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/SzP6Vg1VMiehFYAQL3QQ/+I/g/bD2SuZ5CHUeeJqnCif2dj/Tq54xc
-Ka8qS/WLUMhMH6bfOJDh6wO+JohWIB86qXrXDk17z5l+S61uD9blz68fYbypsSvB
-7ztXk5OGusqXWPfFV+G1M6oNJiOSR0uuOmL6QbOgpRrWLMKK9lJvHDDsFIajAmuR
-lJ+jaWj/zUYcpk2jIpUx6KNYG2ZhOVa06C8LNGjPH/EVAmxY0KJq+cjy+1crWIo2
-BkeZ6M1ed30JsdV+gUI7zOCiTaZ1gpl3kzPe1r+7JAaSSSe0xgyuwUXLTm8wX44S
-BSe8L23pnU803nSXrUHNZFPjNVY7vMyMBQIvMAyshnnyLSqbuVHe/MAfXAayDi1w
-u4WcSKDvbr6ZbsjNdX8zMKqKCRhkVwRT5f1aZ11tLlXrlQTBxxG0lP4pxfw3RP8S
-hY5UlybAuL3ZayA6BCpem372ONgSwMzcYT/ZFwmD8S+61NCNdgiQeL/2pl5tOVvA
-jJFiij9E+0F2JHoj3nJpy3zqSY2xMuQOYGKnic4S7A0IU6wEdHv4ntOmO4Shdb4Y
-coOg3hL1+gkaRE4OG0vuDe90GvZxGM2z+/F/OSx2rAGuIw+9JJEwbXNltuG3bZ6A
-dcbOT0Uy70s9yXK6m248e3jBjFmlTHaeqAH1Mh6maZj4+GsRt8cWQhuPQmC0zmhN
-1rMyYbSJago=
-=NsxM
------END PGP SIGNATURE-----
-
---=-4Db8T698AYD4bOyDHIVj--
 
