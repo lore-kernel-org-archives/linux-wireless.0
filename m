@@ -1,109 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:61787 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756677AbYDDPG6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54107 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753152AbYDHOia (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 11:06:58 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so70242wah.23
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2008 08:06:58 -0700 (PDT)
-Message-ID: <a44ae5cd0804040806t1cc86a90of667ef589dc73fa8@mail.gmail.com> (sfid-20080404_160703_205011_2066E1A3)
-Date: Fri, 4 Apr 2008 11:06:57 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.25-rc8-mm1 -- INFO: possible circular locking dependency detected (while using iw to debug a wireless issue)
-In-Reply-To: <a44ae5cd0804040804q43f9a27dl34de512d3bda5f2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_9460_31781007.1207321617882"
-References: <a44ae5cd0804030741jc9c7aebx21a7635e827b190f@mail.gmail.com>
-	 <a44ae5cd0804040804q43f9a27dl34de512d3bda5f2@mail.gmail.com>
+	Tue, 8 Apr 2008 10:38:30 -0400
+Subject: Re: [PATCH] mac80211: BA session debug prints changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1207588616-30489-1-git-send-email-reinette.chatre@intel.com>
+References: <1207588616-30489-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N3mJRkmoYj+ClFZpZrOF"
+Date: Tue, 08 Apr 2008 16:30:22 +0200
+Message-Id: <1207665022.14253.28.camel@johannes.berg> (sfid-20080408_153835_702145_BFA250CF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_9460_31781007.1207321617882
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-Hello Johannes,
+--=-N3mJRkmoYj+ClFZpZrOF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I am attaching the information, since I do not have a regular mail
-client on the machine I am working on now.  I know the mailing lists
-may bounce a message with an attachment.  I can resend from my other
-machine later if need be.
 
-Miles
+On Mon, 2008-04-07 at 10:16 -0700, Reinette Chatre wrote:
+> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>=20
+> This patch contains next issues:
+> 1 - prevents "stop BA session" multiple warnings
+> 2 - adds debug print to stop Rx BA session flow
+> 3 - adds EOL in one debug print
+>=20
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-------=_Part_9460_31781007.1207321617882
-Content-Type: text/plain; name=locking-dependency.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_femw2n5f1
-Content-Disposition: attachment; filename=locking-dependency.txt
+Great, thanks.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0K
-WyBJTkZPOiBwb3NzaWJsZSBjaXJjdWxhciBsb2NraW5nIGRlcGVuZGVuY3kgZGV0ZWN0ZWQgXQ0K
-Mi42LjI1LXJjOC1tbTEgIzE1DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tDQppdy85NDE3IGlzIHRyeWluZyB0byBhY3F1aXJlIGxvY2s6DQoo
-Z2VubF9tdXRleCl7LS0uLn0sIGF0OiBbY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYV0gY3RybF9k
-dW1wZmFtaWx5KzB4MzcvMHhkYQ0KDQpidXQgdGFzayBpcyBhbHJlYWR5IGhvbGRpbmcgbG9jazoN
-CihubGstPmNiX211dGV4KXstLS4ufSwgYXQ6IFtuZXRsaW5rX2R1bXArMHgzOS8weDIyZV0gbmV0
-bGlua19kdW1wKzB4MzkvMHgyMmUNCg0Kd2hpY2ggbG9jayBhbHJlYWR5IGRlcGVuZHMgb24gdGhl
-IG5ldyBsb2NrLg0KDQp0aGUgZXhpc3RpbmcgZGVwZW5kZW5jeSBjaGFpbiAoaW4gcmV2ZXJzZSBv
-cmRlcikgaXM6DQoNCi0+ICMxIChubGstPmNiX211dGV4KXstLS4ufToNCltfX2xvY2tfYWNxdWly
-ZSsweGEwMi8weGJhZl0gX19sb2NrX2FjcXVpcmUrMHhhMDIvMHhiYWYNCltsb2NrX2FjcXVpcmUr
-MHg3Ni8weDlkXSBsb2NrX2FjcXVpcmUrMHg3Ni8weDlkDQpbc25kX21peGVyX29zczptdXRleF9s
-b2NrX25lc3RlZCsweGQ1LzB4NjdiXSBtdXRleF9sb2NrX25lc3RlZCsweGQ1LzB4Mjc0DQpbbmV0
-bGlua19kdW1wX3N0YXJ0KzB4YmQvMHgxNWFdIG5ldGxpbmtfZHVtcF9zdGFydCsweGJkLzB4MTVh
-DQpbZ2VubF9yY3ZfbXNnKzB4OWQvMHgxM2FdIGdlbmxfcmN2X21zZysweDlkLzB4MTNhDQpbbmV0
-bGlua19yY3Zfc2tiKzB4MzAvMHg3NV0gbmV0bGlua19yY3Zfc2tiKzB4MzAvMHg3NQ0KW2dlbmxf
-cmN2KzB4MWUvMHgyZV0gZ2VubF9yY3YrMHgxZS8weDJlDQpbY2ZnODAyMTE6bmV0bGlua191bmlj
-YXN0KzB4MWMxLzB4MTg2N10gbmV0bGlua191bmljYXN0KzB4MWMxLzB4MjkzDQpbbmV0bGlua19z
-ZW5kbXNnKzB4MjFmLzB4MjJjXSBuZXRsaW5rX3NlbmRtc2crMHgyMWYvMHgyMmMNCltzb2NrX3Nl
-bmRtc2crMHhjYS8weGUxXSBzb2NrX3NlbmRtc2crMHhjYS8weGUxDQpbc3lzX3NlbmRtc2crMHgx
-NGQvMHgxYThdIHN5c19zZW5kbXNnKzB4MTRkLzB4MWE4DQpbc3lzX3NvY2tldGNhbGwrMHgxNjMv
-MHgxN2VdIHN5c19zb2NrZXRjYWxsKzB4MTYzLzB4MTdlDQpbc3lzZW50ZXJfcGFzdF9lc3ArMHg2
-ZC8weGM1XSBzeXNlbnRlcl9wYXN0X2VzcCsweDZkLzB4YzUNCiAgICAgICBbPGZmZmZmZmZmPl0g
-MHhmZmZmZmZmZg0KLT4gIzAgKGdlbmxfbXV0ZXgpey0tLi59Og0KW19fbG9ja19hY3F1aXJlKzB4
-OTI5LzB4YmFmXSBfX2xvY2tfYWNxdWlyZSsweDkyOS8weGJhZg0KW2xvY2tfYWNxdWlyZSsweDc2
-LzB4OWRdIGxvY2tfYWNxdWlyZSsweDc2LzB4OWQNCltzbmRfbWl4ZXJfb3NzOm11dGV4X2xvY2tf
-bmVzdGVkKzB4ZDUvMHg2N2JdIG11dGV4X2xvY2tfbmVzdGVkKzB4ZDUvMHgyNzQNCltjdHJsX2R1
-bXBmYW1pbHkrMHgzNy8weGRhXSBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbbmV0bGlua19k
-dW1wKzB4NTEvMHgyMmVdIG5ldGxpbmtfZHVtcCsweDUxLzB4MjJlDQpbbmV0bGlua19yZWN2bXNn
-KzB4MTU2LzB4MjAzXSBuZXRsaW5rX3JlY3Ztc2crMHgxNTYvMHgyMDMNCltzb2NrX3JlY3Ztc2cr
-MHhkMS8weGU5XSBzb2NrX3JlY3Ztc2crMHhkMS8weGU5DQpbc3lzX3JlY3Ztc2crMHhmMi8weDE3
-Zl0gc3lzX3JlY3Ztc2crMHhmMi8weDE3Zg0KW3N5c19zb2NrZXRjYWxsKzB4MTZmLzB4MTdlXSBz
-eXNfc29ja2V0Y2FsbCsweDE2Zi8weDE3ZQ0KW3N5c2VudGVyX3Bhc3RfZXNwKzB4NmQvMHhjNV0g
-c3lzZW50ZXJfcGFzdF9lc3ArMHg2ZC8weGM1DQogICAgICAgWzxmZmZmZmZmZj5dIDB4ZmZmZmZm
-ZmYNCg0Kb3RoZXIgaW5mbyB0aGF0IG1pZ2h0IGhlbHAgdXMgZGVidWcgdGhpczoNCg0KMSBsb2Nr
-IGhlbGQgYnkgaXcvOTQxNzoNCiAjMDogKG5say0+Y2JfbXV0ZXgpey0tLi59LCBhdDogW25ldGxp
-bmtfZHVtcCsweDM5LzB4MjJlXSBuZXRsaW5rX2R1bXArMHgzOS8weDIyZQ0KDQpzdGFjayBiYWNr
-dHJhY2U6DQpQaWQ6IDk0MTcsIGNvbW06IGl3IE5vdCB0YWludGVkIDIuNi4yNS1yYzgtbW0xICMx
-NQ0KW3ByaW50X2NpcmN1bGFyX2J1Z190YWlsKzB4NWIvMHg2Nl0gcHJpbnRfY2lyY3VsYXJfYnVn
-X3RhaWwrMHg1Yi8weDY2DQpbcHJpbnRfY2lyY3VsYXJfYnVnX2hlYWRlcisweGE1LzB4YjBdID8g
-cHJpbnRfY2lyY3VsYXJfYnVnX2hlYWRlcisweGE1LzB4YjANCltfX2xvY2tfYWNxdWlyZSsweDky
-OS8weGJhZl0gX19sb2NrX2FjcXVpcmUrMHg5MjkvMHhiYWYNCltsb2NrX2FjcXVpcmUrMHg3Ni8w
-eDlkXSBsb2NrX2FjcXVpcmUrMHg3Ni8weDlkDQpbY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYV0g
-PyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbc25kX21peGVyX29zczptdXRleF9sb2NrX25l
-c3RlZCsweGQ1LzB4NjdiXSBtdXRleF9sb2NrX25lc3RlZCsweGQ1LzB4Mjc0DQpbY3RybF9kdW1w
-ZmFtaWx5KzB4MzcvMHhkYV0gPyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbY3RybF9kdW1w
-ZmFtaWx5KzB4MzcvMHhkYV0gPyBjdHJsX2R1bXBmYW1pbHkrMHgzNy8weGRhDQpbY3RybF9kdW1w
-ZmFtaWx5KzB4MzcvMHhkYV0gY3RybF9kdW1wZmFtaWx5KzB4MzcvMHhkYQ0KW25ldGxpbmtfZHVt
-cCsweDUxLzB4MjJlXSBuZXRsaW5rX2R1bXArMHg1MS8weDIyZQ0KW21hYzgwMjExOmtmcmVlX3Nr
-YisweDQwLzB4NDVdID8ga2ZyZWVfc2tiKzB4NDAvMHg0NQ0KW25ldGxpbmtfcmVjdm1zZysweDE1
-Ni8weDIwM10gbmV0bGlua19yZWN2bXNnKzB4MTU2LzB4MjAzDQpbc29ja19zZW5kbXNnKzB4Y2Ev
-MHhlMV0gPyBzb2NrX3NlbmRtc2crMHhjYS8weGUxDQpbc29ja19yZWN2bXNnKzB4ZDEvMHhlOV0g
-c29ja19yZWN2bXNnKzB4ZDEvMHhlOQ0KWzxjMDEzMTNkOT5dID8gYXV0b3JlbW92ZV93YWtlX2Z1
-bmN0aW9uKzB4MC8weDMwDQpbc25kX3BjbV9vc3M6Y29weV9mcm9tX3VzZXIrMHgzYi8weDIzNl0g
-PyBjb3B5X2Zyb21fdXNlcisweDNiLzB4NWUNClt2ZXJpZnlfaW92ZWMrMHg0MC8weDcwXSA/IHZl
-cmlmeV9pb3ZlYysweDQwLzB4NzANCltzeXNfcmVjdm1zZysweGYyLzB4MTdmXSBzeXNfcmVjdm1z
-ZysweGYyLzB4MTdmDQpbc25kX2hkYV9pbnRlbDpfc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSsweDU2
-LzB4NmNdID8gX3NwaW5fdW5sb2NrX2lycXJlc3RvcmUrMHg1Ni8weDZjDQpbcGFyYXZpcnRfZ2V0
-X2xhenlfbW9kZSsweGUvMHgxYl0gPyBwYXJhdmlydF9nZXRfbGF6eV9tb2RlKzB4ZS8weDFiDQpb
-Y3J5cHRvX2FsZ2FwaTprdW5tYXBfYXRvbWljKzB4OWUvMHgyZThlXSA/IGt1bm1hcF9hdG9taWMr
-MHg5ZS8weGJiDQpbaGFuZGxlX21tX2ZhdWx0KzB4N2FhLzB4N2JiXSA/IGhhbmRsZV9tbV9mYXVs
-dCsweDdhYS8weDdiYg0KW3N5c19zb2NrZXRjYWxsKzB4MTZmLzB4MTdlXSBzeXNfc29ja2V0Y2Fs
-bCsweDE2Zi8weDE3ZQ0KW3Byb2Nlc3Nvcjp0cmFjZV9oYXJkaXJxc19vbisweGYwLzB4NWQzOF0g
-PyB0cmFjZV9oYXJkaXJxc19vbisweGYwLzB4MTJjDQpbc3lzZW50ZXJfcGFzdF9lc3ArMHg2ZC8w
-eGM1XSBzeXNlbnRlcl9wYXN0X2VzcCsweDZkLzB4YzUNCj09PT09PT09PT09PT09PT09PT09PT09
+> ---
+>  net/mac80211/ieee80211.c     |   18 ++++++++----------
+>  net/mac80211/ieee80211_sta.c |   10 ++++++++--
+>  2 files changed, 16 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+> index 5d30dd4..b3cf69e 100644
+> --- a/net/mac80211/ieee80211.c
+> +++ b/net/mac80211/ieee80211.c
+> @@ -700,11 +700,6 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_hw=
+ *hw,
+>  	if (tid >=3D STA_TID_NUM)
+>  		return -EINVAL;
+> =20
+> -#ifdef CONFIG_MAC80211_HT_DEBUG
+> -	printk(KERN_DEBUG "Stop a BA session requested for %s tid %u\n",
+> -				print_mac(mac, ra), tid);
+> -#endif /* CONFIG_MAC80211_HT_DEBUG */
+> -
+>  	rcu_read_lock();
+>  	sta =3D sta_info_get(local, ra);
+>  	if (!sta) {
+> @@ -717,14 +712,15 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_h=
+w *hw,
+>  	spin_lock_bh(&sta->ampdu_mlme.ampdu_tx);
+> =20
+>  	if (*state !=3D HT_AGG_STATE_OPERATIONAL) {
+> -#ifdef CONFIG_MAC80211_HT_DEBUG
+> -		printk(KERN_DEBUG "Try to stop Tx aggregation on"
+> -				" non active TID\n");
+> -#endif /* CONFIG_MAC80211_HT_DEBUG */
+>  		ret =3D -ENOENT;
+>  		goto stop_BA_exit;
+>  	}
+> =20
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +	printk(KERN_DEBUG "Tx BA session stop requested for %s tid %u\n",
+> +				print_mac(mac, ra), tid);
+> +#endif /* CONFIG_MAC80211_HT_DEBUG */
+> +
+>  	ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
+> =20
+>  	*state =3D HT_AGG_STATE_REQ_STOP_BA_MSK |
+> @@ -809,8 +805,10 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw=
+, u8 *ra, u8 tid)
+>  		return;
+>  	}
+> =20
+> -	printk(KERN_DEBUG "Stop a BA session requested on DA %s tid %d\n",
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +	printk(KERN_DEBUG "Stopping Tx BA session for %s tid %d\n",
+>  				print_mac(mac, ra), tid);
+> +#endif /* CONFIG_MAC80211_HT_DEBUG */
+> =20
+>  	rcu_read_lock();
+>  	sta =3D sta_info_get(local, ra);
+> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+> index 833b225..5120e38 100644
+> --- a/net/mac80211/ieee80211_sta.c
+> +++ b/net/mac80211/ieee80211_sta.c
+> @@ -1281,7 +1281,7 @@ static void ieee80211_sta_process_addba_request(str=
+uct net_device *dev,
+>  		ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
+>  					       sta->addr, tid, &start_seq_num);
+>  #ifdef CONFIG_MAC80211_HT_DEBUG
+> -	printk(KERN_DEBUG "Rx A-MPDU on tid %d result %d", tid, ret);
+> +	printk(KERN_DEBUG "Rx A-MPDU request on tid %d result %d\n", tid, ret);
+>  #endif /* CONFIG_MAC80211_HT_DEBUG */
+> =20
+>  	if (ret) {
+> @@ -1436,6 +1436,7 @@ void ieee80211_sta_stop_rx_ba_session(struct net_de=
+vice *dev, u8 *ra, u16 tid,
+>  	struct ieee80211_hw *hw =3D &local->hw;
+>  	struct sta_info *sta;
+>  	int ret, i;
+> +	DECLARE_MAC_BUF(mac);
+> =20
+>  	rcu_read_lock();
+> =20
+> @@ -1456,12 +1457,17 @@ void ieee80211_sta_stop_rx_ba_session(struct net_=
+device *dev, u8 *ra, u16 tid,
+>  	sta->ampdu_mlme.tid_state_rx[tid] =3D
+>  		HT_AGG_STATE_REQ_STOP_BA_MSK |
+>  		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
+> -		spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
+> +	spin_unlock_bh(&sta->ampdu_mlme.ampdu_rx);
+> =20
+>  	/* stop HW Rx aggregation. ampdu_action existence
+>  	 * already verified in session init so we add the BUG_ON */
+>  	BUG_ON(!local->ops->ampdu_action);
+> =20
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +	printk(KERN_DEBUG "Rx BA session stop requested for %s tid %u\n",
+> +				print_mac(mac, ra), tid);
+> +#endif /* CONFIG_MAC80211_HT_DEBUG */
+> +
+>  	ret =3D local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
+>  					ra, tid, NULL);
+>  	if (ret)
 
-------=_Part_9460_31781007.1207321617882--
+--=-N3mJRkmoYj+ClFZpZrOF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/uBfKVg1VMiehFYAQKpXw/+Kai7Qbh+dVIgHE8g2c2VXvSFKrtOmbRU
+xYqCtnN3SSWT0glXo8rY/wiu6dTywLZ4YMn2TENeCbqgcs4cbfpVXdrRf4zz8PqL
+5lzJ8dhLEIfSw/MAhiFC9/ikGgGaG77U1vQcSqwL8k8WSMz/XUP9qee3JB1VSnf6
+sVBv5B5q2AHHDo6lZCRyGn0LXkC7qScyLsljUeOfxfly/BLjgJOt3QCmwwULLbk8
+eEfG0hbw3p75R73gYjfxuw55+jp7hf3FQIhxzspB9UTpKXvEeRXIvLo5sh0yDjzj
+Qlcz5VP16J/H+wTb7dGo//4WgCcyxrsaRnRhuiBeW2UeRKd6uqlHSVR4v48TtaEE
+AX0kF3/i7tamhY36uq6b5wlrqC9a+6/DHId7bL00VzGeBoqc9E+7LymcbTKuzuQt
+/uCkDRxlgR37uXfjblgbVRspnKT+mFZk0X5DFEEZnzvhesPqO8HRXUCUD0UJRtNk
+Gz5GprRI+j+yG5PG8SfEhKnXss0gBmF3T+pjP1ABA0lUd59V5rxdqhgvAfTuCPh3
+2+WtrQHIj2iZ6ohjiL/sZaFNO3UtE6dSRYe0UAsaulmJybFFs4i7y1bPsrgy5y2t
+t3UzRyU9f54WbMRrfQUgDRG/l27hrpN9LDVKW2BfJle3burwemKkChV37iYq7Ux1
+N5OaG3hMqvk=
+=MM98
+-----END PGP SIGNATURE-----
+
+--=-N3mJRkmoYj+ClFZpZrOF--
+
