@@ -1,91 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37167 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48432 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbYDBJjQ (ORCPT
+	with ESMTP id S1752048AbYDINlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 05:39:16 -0400
-Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
+	Wed, 9 Apr 2008 09:41:51 -0400
+Subject: [PATCH] mac80211: fix key hwaccel race
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chr <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200804012145.18294.chunkeey@web.de> (sfid-20080401_204526_683133_262D4EC3)
-References: <200804012145.18294.chunkeey@web.de>
-	 (sfid-20080401_204526_683133_262D4EC3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qfyE3fsooMMbtTJe08Qk"
-Date: Wed, 02 Apr 2008 11:34:17 +0200
-Message-Id: <1207128858.10910.19.camel@johannes.berg> (sfid-20080402_103920_089229_BEF0EDCD)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 08 Apr 2008 23:11:43 +0200
+Message-Id: <1207689103.7442.1.camel@johannes.berg> (sfid-20080409_144159_236494_E883DECE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The previous key locking patch left a small race: it would be possible
+to add a key and take the interface down before the key todo is run so
+that hwaccel for that key is enabled on an interface that is down. Avoid
+this by running the todo list when an interface is brought up or down.
 
---=-qfyE3fsooMMbtTJe08Qk
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+This patch also fixes a small bug: before this change, a few functions
+used the key list without the lock that protects it.
 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_key.h |    7 ++-
+ net/mac80211/key.c           |   84 ++++++++++++++++++++++++++-----------------
+ 2 files changed, 57 insertions(+), 34 deletions(-)
 
-On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
-> This patch is necessary for the upcoming Accesspoint patch for p54.
+--- everything.orig/net/mac80211/key.c	2008-04-08 22:19:37.000000000 +0200
++++ everything/net/mac80211/key.c	2008-04-08 23:07:59.000000000 +0200
+@@ -355,61 +355,74 @@ void ieee80211_key_link(struct ieee80211
+ 
+ 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+-		add_todo(key, KEY_FLAG_TODO_HWACCEL);
++		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
+ }
+ 
+-void ieee80211_key_free(struct ieee80211_key *key)
++static void __ieee80211_key_free(struct ieee80211_key *key)
+ {
+-	unsigned long flags;
+-
+-	if (!key)
+-		return;
+-
+ 	/*
+ 	 * Replace key with nothingness if it was ever used.
+ 	 */
+-	if (key->sdata) {
+-		spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
++	if (key->sdata)
+ 		__ieee80211_key_replace(key->sdata, key->sta,
+ 					key, NULL);
+-		spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
+-	}
+ 
+ 	add_todo(key, KEY_FLAG_TODO_DELETE);
+ }
+ 
+-void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_key_free(struct ieee80211_key *key)
+ {
+-	struct ieee80211_key *key;
+-
+-	might_sleep();
++	unsigned long flags;
+ 
+-	if (WARN_ON(!netif_running(sdata->dev)))
++	if (!key)
+ 		return;
+ 
+-	ieee80211_key_lock();
++	spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
++	__ieee80211_key_free(key);
++	spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
++}
+ 
++/*
++ * To be safe against concurrent manipulations of the list (which shouldn't
++ * actually happen) we need to hold the spinlock. But under the spinlock we
++ * can't actually do much, so we defer processing to the todo list. Then run
++ * the todo list to be sure the operation and possibly previously pending
++ * operations are completed.
++ */
++static void ieee80211_todo_for_each_key(struct ieee80211_sub_if_data *sdata,
++					u32 todo_flags)
++{
++	struct ieee80211_key *key;
++	unsigned long flags;
++
++	might_sleep();
++
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
+ 	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_enable_hw_accel(key);
++		add_todo(key, todo_flags);
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
+ 
+-	ieee80211_key_unlock();
++	ieee80211_key_todo();
+ }
+ 
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_key *key;
++	ASSERT_RTNL();
+ 
+-	might_sleep();
++	if (WARN_ON(!netif_running(sdata->dev)))
++		return;
+ 
+-	ieee80211_key_lock();
++	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_ADD);
++}
+ 
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_disable_hw_accel(key);
++void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++{
++	ASSERT_RTNL();
+ 
+-	ieee80211_key_unlock();
++	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_REMOVE);
+ }
+ 
+-static void __ieee80211_key_free(struct ieee80211_key *key)
++static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ {
+ 	if (!key)
+ 		return;
+@@ -440,7 +453,8 @@ static void __ieee80211_key_todo(void)
+ 		list_del_init(&key->todo);
+ 		todoflags = key->flags & (KEY_FLAG_TODO_ADD_DEBUGFS |
+ 					  KEY_FLAG_TODO_DEFKEY |
+-					  KEY_FLAG_TODO_HWACCEL |
++					  KEY_FLAG_TODO_HWACCEL_ADD |
++					  KEY_FLAG_TODO_HWACCEL_REMOVE |
+ 					  KEY_FLAG_TODO_DELETE);
+ 		key->flags &= ~todoflags;
+ 		spin_unlock(&todo_lock);
+@@ -456,12 +470,16 @@ static void __ieee80211_key_todo(void)
+ 			ieee80211_debugfs_key_add_default(key->sdata);
+ 			work_done = true;
+ 		}
+-		if (todoflags & KEY_FLAG_TODO_HWACCEL) {
++		if (todoflags & KEY_FLAG_TODO_HWACCEL_ADD) {
+ 			ieee80211_key_enable_hw_accel(key);
+ 			work_done = true;
+ 		}
++		if (todoflags & KEY_FLAG_TODO_HWACCEL_REMOVE) {
++			ieee80211_key_disable_hw_accel(key);
++			work_done = true;
++		}
+ 		if (todoflags & KEY_FLAG_TODO_DELETE) {
+-			__ieee80211_key_free(key);
++			__ieee80211_key_destroy(key);
+ 			work_done = true;
+ 		}
+ 
+@@ -482,14 +500,16 @@ void ieee80211_key_todo(void)
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key, *tmp;
+-	LIST_HEAD(tmp_list);
++	unsigned long flags;
+ 
+ 	ieee80211_key_lock();
+ 
+ 	ieee80211_debugfs_key_remove_default(sdata);
+ 
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
+ 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+-		ieee80211_key_free(key);
++		__ieee80211_key_free(key);
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
+ 
+ 	__ieee80211_key_todo();
+ 
+--- everything.orig/net/mac80211/ieee80211_key.h	2008-04-08 22:19:37.000000000 +0200
++++ everything/net/mac80211/ieee80211_key.h	2008-04-08 23:08:01.000000000 +0200
+@@ -54,14 +54,17 @@ struct sta_info;
+  * @KEY_FLAG_TODO_DELETE: Key is marked for deletion and will, after an
+  *	RCU grace period, no longer be reachable other than from the
+  *	todo list.
+- * @KEY_FLAG_TODO_HWACCEL: Key needs to be added to hardware acceleration.
++ * @KEY_FLAG_TODO_HWACCEL_ADD: Key needs to be added to hardware acceleration.
++ * @KEY_FLAG_TODO_HWACCEL_REMOVE: Key needs to be removed from hardware
++ *	acceleration.
+  * @KEY_FLAG_TODO_DEFKEY: Key is default key and debugfs needs to be updated.
+  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
+  */
+ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
+ 	KEY_FLAG_TODO_DELETE		= BIT(1),
+-	KEY_FLAG_TODO_HWACCEL		= BIT(2),
++	KEY_FLAG_TODO_HWACCEL_ADD	= BIT(2),
++	KEY_FLAG_TODO_HWACCEL_REMOVE	= BIT(2),
+ 	KEY_FLAG_TODO_DEFKEY		= BIT(3),
+ 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(4),
+ };
 
-Hm. I don't like increasing the tx control structure size but I guess
-you really need that :)
-
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-Please CC the appropriate maintainers (i.e. at least me for mac80211) on
-code changes.
-
-
-> =EF=BB=BFdiff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 48428a6..b428472 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -287,6 +287,7 @@ struct ieee80211_tx_control {
->         u8 iv_len;              /* length of the IV field in octets */
->         u8 queue;               /* hardware queue to use for this frame;
->                                  * 0 =3D highest, hw->queues-1 =3D lowest=
- */
-> +       u16 aid;                /* Station AID */
->         int type;       /* internal */
->  };
-> =20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 80f4343..ea3fa0f 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -741,6 +741,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
->         }
-> =20
->         if (tx->sta) {
-> +               control->aid =3D tx->sta->aid;
->                 tx->sta->tx_packets++;
->                 tx->sta->tx_fragments++;
->                 tx->sta->tx_bytes +=3D tx->skb->len;
-
---=-qfyE3fsooMMbtTJe08Qk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/NTGaVg1VMiehFYAQLe+g/+LF8XMBIHamn5gC14bCYH9XsGZ5b89qQp
-8ikU67QxNFS+oga98dSDcg2wvr2LTf9+EzMV9e8r/W71qnKRHdJ1CwewaEVAwU/V
-1NeQguQp8UvcflSq7O1ztDkNTNkzKPSKREnCo/SV7hKKB5B+48jy954HhhaLOH2n
-0muiGnH6x9q5yR6qqUW2Ep5BcIDgyL7ISC5RiEGAgijfLwI01g5vCgdfiaSd/GYD
-pxqEYR2JS4y0PaygmqKGvI6+5vv7IEu/aS4vIFpz7G17DotlVIVAkpvBxlbbIAFH
-x5rNPHlX9v/ZkeGHqTwXSJHstJhPW+rohedZXYLoKZK8CWyu41+T/objmlfeDgFk
-6/MMEA3qG75/WTnBMceT6ePFT/4KAXp66fPPZGTbfggkHwL0+tfA0skb3HNqL9G+
-QV695PL7uSGaENCmV5ck+uOd0IXy1b89WInszViMIwNRxyYbE+XjMBv5V8+3UZO8
-wEI+w1x382khDSehFnqUcbzdqokjiE8A1qwKsC7uNW5ywthTaMJMUi5Y3whA7N/D
-RTwW0Jc6I0gEqbnZ3cOOFTlkiXwsH8RtPb47Mjpxj6YfhrTbgYfVzmjeHSI0rC3D
-jlJeRynjiwnLpCfEL4oXmCszGCX7qHt1SCm85nzNZNofhV/FEZ7pzm8iuvCY4bTq
-o/GgaL14K34=
-=qC/p
------END PGP SIGNATURE-----
-
---=-qfyE3fsooMMbtTJe08Qk--
 
