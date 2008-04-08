@@ -1,90 +1,353 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:47074 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751721AbYDBKVQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51712 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbYDHOcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 06:21:16 -0400
-Received: from ironport-out-2.rz.rwth-aachen.de ([134.130.3.59])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0JYP00GTM0RFDQ00@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Wed, 02 Apr 2008 12:21:15 +0200 (CEST)
-Date: Wed, 02 Apr 2008 12:21:15 +0200
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
-In-reply-to: <200804012009.02448.IvDoorn@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Message-id: <47F35E1B.8000103@archlinux.org> (sfid-20080402_112124_390171_5003768D)
-MIME-version: 1.0
-Content-type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary=------------enig2ABC4CFFA2215D55C126D4C2
-References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
- <200804010010.15705.IvDoorn@gmail.com> <fstta0$jhu$1@ger.gmane.org>
- <200804012009.02448.IvDoorn@gmail.com>
+	Tue, 8 Apr 2008 10:32:06 -0400
+Subject: [PATCH] mac80211: rename files
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 08 Apr 2008 13:27:26 +0200
+Message-Id: <1207654046.14253.13.camel@johannes.berg> (sfid-20080408_153246_070974_131A127E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2ABC4CFFA2215D55C126D4C2
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: quoted-printable
+This patch renames all mac80211 files (except ieee80211_i.h) to get rid
+of the useless ieee80211_ prefix.
 
-Ivo van Doorn schrieb:
-> Hi,
->=20
->>>> Is the last kernel code working with RaLink RT2500 802.11g Cardbus/m=
-ini-PCI?
->>> With 'latest' do you mean:
->>>  latest 2.6.25-rc kernel?
->>>  latest wireless-testing git snapshot
->>>  latest rt2x00 git snapshot
->>>
->>> The latter 2 should work fine, the first one has known issues
->>> but the state variates per person.
->> I was complaining about speed a while ago, so after reading this post,=
- I=20
->> thought I should try again and tell you:
->>
->> The version in wireless-testing seems to work great, a test download=20
->> gave me 1.24MB/s, which is about the same speed I get with my (Intel=20
->> wireless) laptop. I am using rt2500pci.
->>
->> Does the above mean that the stock driver in 2.6.25 will still be slow=
-?
->=20
-> Most likely yes.
-> Although I hear mixed reports, some say it depends on the rate selectio=
-n
-> algorithm, some claim rt2x00 in 2.6.24 is faster then wireless-testing =
-and
-> others claim the exact opposite.
-> At the moment it is hard to tell, but I haven't collected data yet with=
- specific
-> information about the used rate selection module and exact data transfe=
-r
-> numbers.
->=20
-> Ivo
->=20
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Even though we have tab completion, I'm getting tired of typing that
+prefix all the time. Please first run
 
-I rebuilt 2.6.25-rc8 (again) to use the 'simple' algorithm instead of=20
-the 'PID' algorithm by default. rt2500pci is still fast!
+git mv ieee80211.c main.c
+git mv ieee80211_iface.c iface.c
+git mv ieee80211_ioctl.c wext.c
+git mv ieee80211_key.h key.h
+git mv ieee80211_led.c led.c
+git mv ieee80211_led.h led.h
+git mv ieee80211_rate.c rate.c
+git mv ieee80211_rate.h rate.h
+git mv ieee80211_sta.c mlme.c
+
+and then apply this patch.
+
+ net/mac80211/Makefile              |   12 ++++++------
+ net/mac80211/aes_ccm.c             |    2 +-
+ net/mac80211/cfg.c                 |    2 +-
+ net/mac80211/debugfs.c             |    2 +-
+ net/mac80211/debugfs_key.c         |    2 +-
+ net/mac80211/debugfs_netdev.c      |    2 +-
+ net/mac80211/ieee80211_i.h         |    2 +-
+ net/mac80211/led.c                 |    2 +-
+ net/mac80211/main.c                |    4 ++--
+ net/mac80211/mesh_plink.c          |    2 +-
+ net/mac80211/mlme.c                |    4 ++--
+ net/mac80211/rate.c                |    2 +-
+ net/mac80211/rc80211_pid_algo.c    |    2 +-
+ net/mac80211/rc80211_pid_debugfs.c |    2 +-
+ net/mac80211/rx.c                  |    2 +-
+ net/mac80211/sta_info.c            |    2 +-
+ net/mac80211/sta_info.h            |    2 +-
+ net/mac80211/tkip.c                |    2 +-
+ net/mac80211/tkip.h                |    2 +-
+ net/mac80211/tx.c                  |    4 ++--
+ net/mac80211/util.c                |    2 +-
+ net/mac80211/wep.h                 |    2 +-
+ net/mac80211/wext.c                |    4 ++--
+ 23 files changed, 32 insertions(+), 32 deletions(-)
+
+--- everything.orig/net/mac80211/Makefile	2008-04-08 13:20:13.000000000 +0200
++++ everything/net/mac80211/Makefile	2008-04-08 13:20:34.000000000 +0200
+@@ -10,14 +10,14 @@ rc-pid-m := rc80211_pid.o
+ 
+ # mac80211 objects
+ mac80211-y := \
+-	ieee80211.o \
+-	ieee80211_ioctl.o \
++	main.o \
++	wext.o \
+ 	sta_info.o \
+ 	wep.o \
+ 	wpa.o \
+-	ieee80211_sta.o \
+-	ieee80211_iface.o \
+-	ieee80211_rate.o \
++	mlme.o \
++	iface.o \
++	rate.o \
+ 	michael.o \
+ 	tkip.o \
+ 	aes_ccm.o \
+@@ -28,7 +28,7 @@ mac80211-y := \
+ 	util.o \
+ 	event.o
+ 
+-mac80211-$(CONFIG_MAC80211_LEDS) += ieee80211_led.o
++mac80211-$(CONFIG_MAC80211_LEDS) += led.o
+ mac80211-$(CONFIG_NET_SCHED) += wme.o
+ mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
+ 	debugfs.o \
+--- everything.orig/net/mac80211/aes_ccm.c	2008-04-08 13:20:47.000000000 +0200
++++ everything/net/mac80211/aes_ccm.c	2008-04-08 13:21:16.000000000 +0200
+@@ -13,7 +13,7 @@
+ #include <linux/err.h>
+ 
+ #include <net/mac80211.h>
+-#include "ieee80211_key.h"
++#include "key.h"
+ #include "aes_ccm.h"
+ 
+ 
+--- everything.orig/net/mac80211/cfg.c	2008-04-08 13:20:47.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-04-08 13:21:30.000000000 +0200
+@@ -14,7 +14,7 @@
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+ #include "cfg.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "mesh.h"
+ 
+ static enum ieee80211_if_types
+--- everything.orig/net/mac80211/debugfs.c	2008-04-08 13:20:48.000000000 +0200
++++ everything/net/mac80211/debugfs.c	2008-04-08 13:21:30.000000000 +0200
+@@ -10,7 +10,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/rtnetlink.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "debugfs.h"
+ 
+ int mac80211_open_file_generic(struct inode *inode, struct file *file)
+--- everything.orig/net/mac80211/debugfs_key.c	2008-04-08 13:20:48.000000000 +0200
++++ everything/net/mac80211/debugfs_key.c	2008-04-08 13:21:16.000000000 +0200
+@@ -10,7 +10,7 @@
+ 
+ #include <linux/kobject.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_key.h"
++#include "key.h"
+ #include "debugfs.h"
+ #include "debugfs_key.h"
+ 
+--- everything.orig/net/mac80211/debugfs_netdev.c	2008-04-08 13:20:48.000000000 +0200
++++ everything/net/mac80211/debugfs_netdev.c	2008-04-08 13:21:30.000000000 +0200
+@@ -17,7 +17,7 @@
+ #include <net/mac80211.h>
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "debugfs.h"
+ #include "debugfs_netdev.h"
+ 
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-04-08 13:20:49.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-04-08 13:21:16.000000000 +0200
+@@ -23,7 +23,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/etherdevice.h>
+ #include <net/wireless.h>
+-#include "ieee80211_key.h"
++#include "key.h"
+ #include "sta_info.h"
+ 
+ /* ieee80211.o internal definitions, etc. These are not included into
+--- everything.orig/net/mac80211/led.c	2008-04-08 13:20:49.000000000 +0200
++++ everything/net/mac80211/led.c	2008-04-08 13:21:06.000000000 +0200
+@@ -8,7 +8,7 @@
+ 
+ /* just for IFNAMSIZ */
+ #include <linux/if.h>
+-#include "ieee80211_led.h"
++#include "led.h"
+ 
+ void ieee80211_led_rx(struct ieee80211_local *local)
+ {
+--- everything.orig/net/mac80211/main.c	2008-04-08 13:20:50.000000000 +0200
++++ everything/net/mac80211/main.c	2008-04-08 13:21:30.000000000 +0200
+@@ -25,12 +25,12 @@
+ #include <net/cfg80211.h>
+ 
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "mesh.h"
+ #include "wep.h"
+ #include "wme.h"
+ #include "aes_ccm.h"
+-#include "ieee80211_led.h"
++#include "led.h"
+ #include "cfg.h"
+ #include "debugfs.h"
+ #include "debugfs_netdev.h"
+--- everything.orig/net/mac80211/mesh_plink.c	2008-04-08 13:20:50.000000000 +0200
++++ everything/net/mac80211/mesh_plink.c	2008-04-08 13:21:30.000000000 +0200
+@@ -9,7 +9,7 @@
+ #include <linux/kernel.h>
+ #include <linux/random.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "mesh.h"
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+--- everything.orig/net/mac80211/mlme.c	2008-04-08 13:20:50.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-04-08 13:21:30.000000000 +0200
+@@ -31,8 +31,8 @@
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
+-#include "ieee80211_led.h"
++#include "rate.h"
++#include "led.h"
+ #include "mesh.h"
+ 
+ #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
+--- everything.orig/net/mac80211/rate.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/rate.c	2008-04-08 13:21:30.000000000 +0200
+@@ -10,7 +10,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/rtnetlink.h>
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "ieee80211_i.h"
+ 
+ struct rate_control_alg {
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-04-08 13:21:30.000000000 +0200
+@@ -14,7 +14,7 @@
+ #include <linux/skbuff.h>
+ #include <linux/debugfs.h>
+ #include <net/mac80211.h>
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "mesh.h"
+ #include "rc80211_pid.h"
+ 
+--- everything.orig/net/mac80211/rc80211_pid_debugfs.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_debugfs.c	2008-04-08 13:21:30.000000000 +0200
+@@ -13,7 +13,7 @@
+ #include <linux/skbuff.h>
+ 
+ #include <net/mac80211.h>
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ 
+ #include "rc80211_pid.h"
+ 
+--- everything.orig/net/mac80211/rx.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-04-08 13:21:06.000000000 +0200
+@@ -19,7 +19,7 @@
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include "ieee80211_i.h"
+-#include "ieee80211_led.h"
++#include "led.h"
+ #include "mesh.h"
+ #include "wep.h"
+ #include "wpa.h"
+--- everything.orig/net/mac80211/sta_info.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/sta_info.c	2008-04-08 13:21:30.000000000 +0200
+@@ -19,7 +19,7 @@
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "sta_info.h"
+ #include "debugfs_sta.h"
+ #include "mesh.h"
+--- everything.orig/net/mac80211/sta_info.h	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-04-08 13:21:16.000000000 +0200
+@@ -12,7 +12,7 @@
+ #include <linux/list.h>
+ #include <linux/types.h>
+ #include <linux/if_ether.h>
+-#include "ieee80211_key.h"
++#include "key.h"
+ 
+ /**
+  * enum ieee80211_sta_info_flags - Stations flags
+--- everything.orig/net/mac80211/tkip.c	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/tkip.c	2008-04-08 13:21:16.000000000 +0200
+@@ -12,7 +12,7 @@
+ #include <linux/netdevice.h>
+ 
+ #include <net/mac80211.h>
+-#include "ieee80211_key.h"
++#include "key.h"
+ #include "tkip.h"
+ #include "wep.h"
+ 
+--- everything.orig/net/mac80211/tkip.h	2008-04-08 13:20:51.000000000 +0200
++++ everything/net/mac80211/tkip.h	2008-04-08 13:21:16.000000000 +0200
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/types.h>
+ #include <linux/crypto.h>
+-#include "ieee80211_key.h"
++#include "key.h"
+ 
+ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2);
+--- everything.orig/net/mac80211/tx.c	2008-04-08 13:20:52.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-04-08 13:21:31.000000000 +0200
+@@ -25,12 +25,12 @@
+ #include <asm/unaligned.h>
+ 
+ #include "ieee80211_i.h"
+-#include "ieee80211_led.h"
++#include "led.h"
+ #include "mesh.h"
+ #include "wep.h"
+ #include "wpa.h"
+ #include "wme.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ 
+ #define IEEE80211_TX_OK		0
+ #define IEEE80211_TX_AGAIN	1
+--- everything.orig/net/mac80211/util.c	2008-04-08 13:20:52.000000000 +0200
++++ everything/net/mac80211/util.c	2008-04-08 13:21:31.000000000 +0200
+@@ -25,7 +25,7 @@
+ #include <net/rtnetlink.h>
+ 
+ #include "ieee80211_i.h"
+-#include "ieee80211_rate.h"
++#include "rate.h"
+ #include "mesh.h"
+ #include "wme.h"
+ 
+--- everything.orig/net/mac80211/wep.h	2008-04-08 13:20:52.000000000 +0200
++++ everything/net/mac80211/wep.h	2008-04-08 13:21:16.000000000 +0200
+@@ -14,7 +14,7 @@
+ #include <linux/skbuff.h>
+ #include <linux/types.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_key.h"
++#include "key.h"
+ 
+ int ieee80211_wep_init(struct ieee80211_local *local);
+ void ieee80211_wep_free(struct ieee80211_local *local);
+--- everything.orig/net/mac80211/wext.c	2008-04-08 13:20:52.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-04-08 13:21:31.000000000 +0200
+@@ -21,8 +21,8 @@
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-#include "ieee80211_led.h"
+-#include "ieee80211_rate.h"
++#include "led.h"
++#include "rate.h"
+ #include "wpa.h"
+ #include "aes_ccm.h"
+ 
 
 
---------------enig2ABC4CFFA2215D55C126D4C2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.8 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEAREIAAYFAkfzXhsACgkQEda5KzHP/VClXwCgpIbTUeaz4qPvLHPowAuW9bHJ
-dbIAnR7gi1RQgbTabdALgbBOrgVrIxoB
-=eSkV
------END PGP SIGNATURE-----
-
---------------enig2ABC4CFFA2215D55C126D4C2--
