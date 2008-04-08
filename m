@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.181]:62001 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755549AbYDBTud (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:60027 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbYDHJSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:50:33 -0400
-Received: by el-out-1112.google.com with SMTP id v27so1395245ele.17
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 12:50:32 -0700 (PDT)
-Message-ID: <1ba2fa240804021250t4d0f3e12g201f1af253dea838@mail.gmail.com> (sfid-20080402_205040_215182_CB4FF6C1)
-Date: Wed, 2 Apr 2008 22:50:31 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Jason Riedy" <jason@acm.org>
-Subject: Re: [PATCH] Remove most references to iwl4965-only features from iwl3945.
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <87bq4shix3.fsf@sparse.dyndns.org>
+	Tue, 8 Apr 2008 05:18:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb-mipscore: Fix interrupt vectors
+Date: Tue, 8 Apr 2008 11:17:29 +0200
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <87bq4shix3.fsf@sparse.dyndns.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200804081117.29738.mb@bu3sch.de> (sfid-20080408_101842_395974_2532F8A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  -       /* HW RF KILL switch toggled (4965 only) */
->  +       /* HW RF KILL switch toggled */
->         if (inta & CSR_INT_BIT_RF_KILL) {
->                 int hw_rf_kill = 0;
->                 if (!(iwl3945_read32(priv, CSR_GP_CNTRL) &
+This fixes assignment of the interrupt vectors on the SSB MIPS core.
 
-This one is not supported in 3945 for real.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Tomas
+---
+
+John, please apply this bugfix to 2.6.25.
+
+
+Index: wireless-testing/drivers/ssb/driver_mipscore.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_mipscore.c	2008-03-22 17:51:22.000000000 +0100
++++ wireless-testing/drivers/ssb/driver_mipscore.c	2008-04-08 11:14:38.000000000 +0200
+@@ -106,18 +106,19 @@ static void set_irq(struct ssb_device *d
+ 	if (oldirq == 0)
+ 		ssb_write32(mdev, SSB_INTVEC, (~(1 << irqflag) & ssb_read32(mdev, SSB_INTVEC)));
+ 	else
+ 		clear_irq(bus, oldirq);
+ 
+ 	/* assign the new one */
+-	if (irq == 0)
+-		ssb_write32(mdev, SSB_INTVEC, ((1 << irqflag) & ssb_read32(mdev, SSB_INTVEC)));
+-
+-	irqflag <<= ipsflag_irq_shift[irq];
+-	irqflag |= (ssb_read32(mdev, SSB_IPSFLAG) & ~ipsflag_irq_mask[irq]);
+-	ssb_write32(mdev, SSB_IPSFLAG, irqflag);
++	if (irq == 0) {
++		ssb_write32(mdev, SSB_INTVEC, ((1 << irqflag) | ssb_read32(mdev, SSB_INTVEC)));
++	} else {
++		irqflag <<= ipsflag_irq_shift[irq];
++		irqflag |= (ssb_read32(mdev, SSB_IPSFLAG) & ~ipsflag_irq_mask[irq]);
++		ssb_write32(mdev, SSB_IPSFLAG, irqflag);
++	}
+ }
+ 
+ static void ssb_mips_serial_init(struct ssb_mipscore *mcore)
+ {
+ 	struct ssb_bus *bus = mcore->dev->bus;
+ 
