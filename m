@@ -1,27 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:63243 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbYDFIYR (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbYDHO1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Apr 2008 04:24:17 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so1207378fkr.5
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Apr 2008 01:24:15 -0700 (PDT)
-Message-ID: <47F8887F.3050500@gmail.com> (sfid-20080406_092431_845578_EA599C12)
-Date: Sun, 06 Apr 2008 10:23:27 +0200
-From: Ronald <ronald645@gmail.com>
-Reply-To: ronald645@gmail.com
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFT] b43: We need lots of regression testing
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 8 Apr 2008 10:27:47 -0400
+Subject: [PATCH] mac80211: fix key debugfs default_key link
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 08 Apr 2008 13:07:50 +0200
+Message-Id: <1207652870.14253.2.camel@johannes.berg> (sfid-20080408_153016_119072_96ECDC7C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hey all,
+The default_key symlink points to the key index rather than
+they key counter, fix it.
 
-Can I safely apply this patch to the 2.6.25.1 kernel once it is 
-released? I would love to test it... =)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/debugfs_key.c   |    3 ++-
+ net/mac80211/ieee80211_key.h |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-(maybe a stupid question but I have no idea)
+--- everything.orig/net/mac80211/debugfs_key.c	2008-04-08 11:20:39.000000000 +0200
++++ everything/net/mac80211/debugfs_key.c	2008-04-08 11:20:43.000000000 +0200
+@@ -194,6 +194,7 @@ void ieee80211_debugfs_key_add(struct ie
+ 		return;
+ 
+ 	sprintf(buf, "%d", keycount);
++	key->debugfs.cnt = keycount;
+ 	keycount++;
+ 	key->debugfs.dir = debugfs_create_dir(buf,
+ 					local->debugfs.keys);
+@@ -246,7 +247,7 @@ void ieee80211_debugfs_key_add_default(s
+ 	if (!sdata->debugfsdir)
+ 		return;
+ 
+-	sprintf(buf, "../keys/%d", sdata->default_key->conf.keyidx);
++	sprintf(buf, "../keys/%d", sdata->default_key->debugfs.cnt);
+ 	sdata->debugfs.default_key =
+ 		debugfs_create_symlink("default_key", sdata->debugfsdir, buf);
+ }
+--- everything.orig/net/mac80211/ieee80211_key.h	2008-04-08 11:20:39.000000000 +0200
++++ everything/net/mac80211/ieee80211_key.h	2008-04-08 11:20:43.000000000 +0200
+@@ -115,6 +115,7 @@ struct ieee80211_key {
+ 		struct dentry *replays;
+ 		struct dentry *key;
+ 		struct dentry *ifindex;
++		int cnt;
+ 	} debugfs;
+ #endif
+ 
 
-							Ronald
+
