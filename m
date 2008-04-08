@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41931 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663AbYDKMR1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 08:17:27 -0400
-Subject: Re: [PATCH, take 3] libertas: convert RSSI to a direct command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcelo Tosatti <mtosatti@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Marcelo Tosatti <marcelo@kvack.org>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20080410190858.GA8969@dmt>
-References: <200803261021.48470.hs4233@mail.mn-solutions.de>
-	 <1206653042.21106.10.camel@localhost.localdomain>
-	 <20080401031530.GA14633@dmt>
-	 <200804010848.48789.hs4233@mail.mn-solutions.de>
-	 <20080410154341.GB6741@dmt> <1207842441.13354.9.camel@johannes.berg>
-	 <20080410190858.GA8969@dmt>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DSQP2o52Nt2LAob3nXAO"
-Date: Fri, 11 Apr 2008 14:17:18 +0200
-Message-Id: <1207916238.13354.65.camel@johannes.berg> (sfid-20080411_131739_074047_5E24DDAF)
+Received: from mail.vyatta.com ([216.93.170.194]:39899 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757218AbYDHS4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 14:56:08 -0400
+Date: Tue, 8 Apr 2008 13:56:01 -0500
+From: Stephen Hemminger <stephen.hemminger@vyatta.com>
+To: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+Cc: wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
+Message-ID: <20080408135601.5dad3566@speedy> (sfid-20080408_195613_199682_BBCBB2EE)
+In-Reply-To: <200804011107.38563.inaky@linux.intel.com>
+References: <200804011107.38563.inaky@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is the short (not in depth) code review of kernel component of Wimax.
 
---=-DSQP2o52Nt2LAob3nXAO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Generic stack: drivers/net/wimax
 
+1. Why spread those over 8 files of 100 lines each. Better to have a single
+   file with 1000 lines and get reduced namespace and better compiler inlining
+   etc.
 
-> True, my bad. The problem is:
->=20
->     dev_seq_start
->     read_lock(&dev_base_lock)
->     wireless_seq_show
->     wireless_seq_printf_stats
->     get_wireless_stats
->     dev->wireless_handlers->get_wireless_stats
+2. The debug infrastructure is a mess of ugly macros that are unlikely
+   to accepted in the current form, rework or delete it.
 
-Hah, ok, yes, you can't schedule there.
+3. Use of sysfs for family and version ok, but why bother?
+   Please don't build sysfs version checks into the API.
 
-johannes
+4. __wimax_flush_queue: is a nop, just remove
 
---=-DSQP2o52Nt2LAob3nXAO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+5. Stack is using generic netlink instead use newer netlink interface
+   for management of devices: newlink/dellink instead see macvlan
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+i2400m hardware driver
 
-iQIVAwUAR/9WzaVg1VMiehFYAQKOgBAAptb8IRscVGJznKaRxeitSGmJdWJQR9Lm
-bjaKjE4N2rzye+qLSVvJozS92QCFeNRlPI01AZ1kNryAqdsyPQ8hEkLENWNuvr64
-SiEa9lR4UtvfqL95lXroSirn7GDIHcCBbqdFaPC3inBeTPjbew9SEGViuHhx4xxl
-ELaMPQNi2c8jDO0x0bEsuGQXE4Yn0UAmufXat2HyDHzPoCvg1iXDRu+hIB+2xP64
-C3xGjwMNFFencroknvU3bgMKGXbgnpQsDKbxFMaBrpOqtM930Ogvf1bOY1Ts4jSO
-nF2gctS9ldvk5A/04AqjwPMsSGFs4xXWJ7AynMzSgnf5ZBDNi7Xg2kcQSIV1H6lP
-SjQFIO3wdKo6IEVcfiSB9m/yEb1ZJwdz6DuFYq1iiQYUlJdqmrCRCaaE01ljvbPK
-zgEHzqeSQ8lf//j0pktKw7lChEcBBa5lEaCu0PTNMB3QW38MrDYqBdvK0gguHdnm
-JjpE5q+TfUjuuq4xAb10ZSLoZxhMWyev3hH9BxQ7WqGDcBj5PiT2pG7GY9BbBjDO
-k+DpukMpXO7Im0sUtMZrpv3PgNNXMk1Z/WmnpWsLST7svP7FzRSohjgrQupesY79
-HgcAtphUmgSbebn4UolDDG7v2EaJs+LtEsziYeJ4TUsXZy8VSHHDSQmxHqKU4wq+
-PcXrjQ1t69o=
-=slwy
------END PGP SIGNATURE-----
+1. sysfs
+  the inflight file is being used in a /proc style. Either change to
+  one value per file or move to /proc/net/i2400m/ethX or better yet use debugfs
+  /debugfs/i2400m/ethX/xxx
 
---=-DSQP2o52Nt2LAob3nXAO--
+2. Use internal dev->stats for network stats (may not need get_stats at all)
+
+3. No ioctl stub if not implemented
+
+4. Use netdev_alloc_skb rather than alloc_skb for new code.
+
+5. Use skb_copy_to_linear_data in i2400m_net_rx
+
+6. Since hardware has to copy every received frame. Don't bother with
+   checksum offload, the copy does the checksum for you and is safer.
+
+7. Fine grain file organization in i2400m is bogus, put in one file and use
+   proper name scope. Having 100 line files is unneeded
+
+8. Fix the FIXME's?
+
+9. Anyway to reuse existing usbnet infrastructure?
+
+10. Since device is USB, Rx is in workqueue, so no need to go through
+    netif_rx() softirq, should be able to go through netif_receive_skb
+
+11. net_device and private data are zero on allocation, so no need
+   for memset.
+
+12. Since this is new code elminate all legacy ifdef's
 
