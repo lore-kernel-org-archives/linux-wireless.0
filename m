@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6913 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:29618 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757674AbYDXSzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 02/21] iwlwifi: remove 49 prefix from general CSR values
-Date: Thu, 24 Apr 2008 11:55:19 -0700
-Message-Id: <1209063338-6572-3-git-send-email-reinette.chatre@intel.com> (sfid-20080424_205621_268911_AD953377)
-In-Reply-To: <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
-References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
+	id S1753109AbYDHWw0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 18:52:26 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH] Make IWLCORE a silent option not to confuse iwl3945 users.
+Date: Tue, 8 Apr 2008 15:45:13 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200424D627@orsmsx416.amr.corp.intel.com> (sfid-20080408_235230_860080_2F1BEC7C)
+In-Reply-To: <877if8m5zx.fsf@sparse.dyndns.org>
+References: <874pakhist.fsf@sparse.dyndns.org><D936D925018D154694D8A362EEB0892004195168@orsmsx416.amr.corp.intel.com><20080408180441.GB8183@tuxdriver.com> <877if8m5zx.fsf@sparse.dyndns.org>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Jason Riedy" <jason@acm.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <ipw3945-devel@lists.sourceforge.net>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Tuesday, April 08, 2008 1:44 PM, Jason Riedy  wrote:
 
-This patch change CSR49_ to CSR_ for values used in
-other HW
+> And John W. Linville writes:
+>> I think it makes sense to make IWLCORE invisible, but this patch
+>> seems not quite right.  I'm dropping it -- feel free to repost a
+>> revised version.
+> 
+> I would love to, but I have no idea what the current base is.
+> The net-2.6.26 branch of jgarzik/netdev-2.6.git, master of
+> davem/net-2.6.26.git, and master of your 2.6.26 repo all still
+> have the iwl3945 that won't compile without iwl4965.  And
+> rchatre/iwlwifi-2.6.git won't merge into those without irrelevant
+> conflicts. 
+> 
+> This is a mess.  I hope y'all can sort it out before the window
+> opens.  The blinky lights are fun.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-csr.h  |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+You can base your patches on either the iwlwifi-2.6 or wireless-testing
+repositories that are hosted on git.kernel.org. You do not need to merge
+between repositories.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 99c08ea..b1b7363 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -618,8 +618,8 @@ int iwl4965_hw_nic_init(struct iwl_priv *priv)
- 
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
- 		    CSR49_HW_IF_CONFIG_REG_BIT_4965_R |
--		    CSR49_HW_IF_CONFIG_REG_BIT_RADIO_SI |
--		    CSR49_HW_IF_CONFIG_REG_BIT_MAC_SI);
-+		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
-+		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
- 
- 	ret = iwl_grab_nic_access(priv);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index df9949a..f8de32b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -106,9 +106,9 @@
- 
- /* Bits for CSR_HW_IF_CONFIG_REG */
- #define CSR49_HW_IF_CONFIG_REG_BIT_4965_R	(0x00000010)
--#define CSR49_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x00000C00)
--#define CSR49_HW_IF_CONFIG_REG_BIT_MAC_SI		(0x00000100)
--#define CSR49_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
-+#define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x00000C00)
-+#define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI 	(0x00000100)
-+#define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
- 
- #define CSR39_HW_IF_CONFIG_REG_BIT_3945_MB         (0x00000100)
- #define CSR39_HW_IF_CONFIG_REG_BIT_3945_MM         (0x00000200)
--- 
-1.5.3.4
+Reinette
 
