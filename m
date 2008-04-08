@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:58390 "EHLO c60.cesmail.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2083 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753741AbYDAV0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 17:26:44 -0400
-Subject: Re: Problems with RTL8187 USB device
-From: Pavel Roskin <proski@gnu.org>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <pan.2008.04.01.18.07.31.772700@gimpelevich.san-francisco.ca.us>
-References: <47C49D21.1030905@lwfinger.net>
-	 <20080227010732.GB3066@tuxdriver.com>
-	 <pan.2008.03.25.20.31.22.955127@gimpelevich.san-francisco.ca.us>
-	 <pan.2008.04.01.15.41.45.711513@gimpelevich.san-francisco.ca.us>
-	 <20080401175156.GB14670@tuxdriver.com>
-	 <pan.2008.04.01.18.07.31.772700@gimpelevich.san-francisco.ca.us>
-Content-Type: text/plain
-Date: Tue, 01 Apr 2008 17:26:42 -0400
-Message-Id: <1207085202.27851.4.camel@dv> (sfid-20080401_222650_260100_D1CBBDD9)
-Mime-Version: 1.0
+	id S1753686AbYDHSbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2008 14:31:19 -0400
+Date: Tue, 8 Apr 2008 14:04:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: Jason Riedy <jason@acm.org>, ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Make IWLCORE a silent option not to confuse iwl3945
+	users.
+Message-ID: <20080408180441.GB8183@tuxdriver.com> (sfid-20080408_193125_266739_CDF839C1)
+References: <874pakhist.fsf@sparse.dyndns.org> <D936D925018D154694D8A362EEB0892004195168@orsmsx416.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D936D925018D154694D8A362EEB0892004195168@orsmsx416.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-04-01 at 11:07 -0700, Daniel Gimpelevich wrote:
+On Thu, Apr 03, 2008 at 09:14:23AM -0700, Chatre, Reinette wrote:
+> On Tuesday, April 01, 2008 11:29 PM,
+> linux-wireless-owner@vger.kernel.org  wrote:
+> 
+> > The iwl3945 (currently?) does not use iwlcore.  Either the iwlcore
+> > documentation should change or the option should be silent.  This
+> > patch follows the latter route.  IWL4965 already SELECTs IWLCORE,
+> > so there should be no new problems.  Note that IWLWIFI_DEBUGFS and
+> > IWLCORE_RFKILL have no suboptions for 4965, so they are grouped
+> > together and given a description that includes "4965+" to indicate
+> > they're not for the 3945 adapters.
+> > 
+> > Signed-off-by: Jason Riedy <jason@acm.org>
+> 
+> We are moving to a common library for the devices and changing
+> CONFIG_IWLWIFI_DEBUG to CONFIG_IWL4965_DEBUG undoes this work. Please be
+> patient as we move to common code.
+> 
+> The numerous Kconfig variables help us to add and test the new features
+> during development. They should not be there permanently.
 
-> Any hope of posting the incomplete patch you have so far, for a possible
-> group effort?
+I think it makes sense to make IWLCORE invisible, but this patch
+seems not quite right.  I'm dropping it -- feel free to repost a
+revised version.
 
-I have a RTL8187b device (0bda:8189 Realtek Semiconductor Corp. RTL8187B
-Wireless 802.11g 54Mbps Network Adapter).  I'm ready to test any patches
-on kernels with most debugging options enabled.  And I know how to
-sparse :-)
+Thanks,
 
-There is a patched driver for Intel's ieee80211 here:
-http://www.datanorth.net/~cuervo/rtl8187b/
-
-All that's needed is to port the changes to mac80211.  It shouldn't be
-hard.
-
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville
+linville@tuxdriver.com
