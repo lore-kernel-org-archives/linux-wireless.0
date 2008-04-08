@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42309
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752812AbYDPCUl (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51997 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbYDHTpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 22:20:41 -0400
-Date: Tue, 15 Apr 2008 19:20:42 -0700 (PDT)
-Message-Id: <20080415.192042.119702071.davem@davemloft.net> (sfid-20080416_032047_582050_DA533287)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Tue, 8 Apr 2008 15:45:00 -0400
+Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>, wimax@linuxwimax.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-04-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080415193857.GA16625@tuxdriver.com>
-References: <20080415193857.GA16625@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <FA91A8B7-CD77-439F-94EA-AC2742583E89@holtmann.org> (sfid-20080408_204511_600460_C985E77E)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Stephen Hemminger <stephen.hemminger@vyatta.com>
+In-Reply-To: <20080408135601.5dad3566@speedy>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
+Date: Tue, 8 Apr 2008 21:44:55 +0200
+References: <200804011107.38563.inaky@linux.intel.com> <20080408135601.5dad3566@speedy>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 15 Apr 2008 15:38:57 -0400
+Hi Stephen,
 
-> This set looks bigger than it really is...three of the patches deal
-> with a subtle API change for the SSB bus to do DMA correctly on
-> architectures with complex DMA requirements.  The changes in those
-> patches amount to applying the same one-line change in dozens of
-> places across three drivers (b44, b43, and b43legacy).
-> 
-> Also included are a number of MAINTAINERS updates.  I guess everyone
-> forgets about these until the release nears.
-> 
-> Finally there are a few minor fixes, like the rfkill fix to only toggle
-> state for the correct device type rather than all devices on a system,
-> the rtl8187 priv->vif fix, the gelic IE overrun fix, and the mac80211
-> fix to limit log SPAM.
-> 
-> Please let me know if there are problems!  Hopefully this will be the
-> last round before 2.6.25...(famous last words...)
+> This is the short (not in depth) code review of kernel component of  
+> Wimax.
 
-Pulled, thanks John.
+many thanks for having a look at the source code.
+
+> Generic stack: drivers/net/wimax
+
+<snip>
+
+> 5. Stack is using generic netlink instead use newer netlink interface
+>   for management of devices: newlink/dellink instead see macvlan
+
+I might have missed something in the latest code, but how it is using  
+generic netlink for device management. The current code is using  
+generic netlink for communication with the user space component. This  
+includes task like scanning and association. The current kernel/user  
+space API might need improvement, but I am not getting your point  
+here. Please explain what you mean.
+
+> i2400m hardware driver
+
+<snip>
+
+> 9. Anyway to reuse existing usbnet infrastructure?
+
+I don't think so. WiMAX is not emulating an Ethernet device. It is an  
+IP only networking interface.
+
+> 10. Since device is USB, Rx is in workqueue, so no need to go through
+>    netif_rx() softirq, should be able to go through netif_receive_skb
+
+You could have SDIO or PCI as a different transport.
+
+> 12. Since this is new code elminate all legacy ifdef's
+
+Don't worry. We will do this before submitting it for mainline  
+inclusion. It is a temporary solutions to help people that wanna test  
+it with older kernels.
+
+Regards
+
+Marcel
+
