@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44121 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758680AbYDXRVh (ORCPT
+Received: from 90.144.36.72.static.reverse.ltdomains.com ([72.36.144.90]:44446
+	"EHLO anubis.xasein.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010AbYDHBCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 13:21:37 -0400
-Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335
-	[Libertas]"
-From: David Woodhouse <David@Woodhou.se>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Markus Becker <mab@comnets.uni-bremen.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	julian.calaby@gmail.com, andreamrl@tiscali.it
-In-Reply-To: <1209057222.5224.3.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
-	 <200803191124.03743.hs4233@mail.mn-solutions.de>
-	 <Pine.LNX.4.64.0803281122240.21835@bugs.comnets.uni-bremen.de>
-	 <1206992394.12973.39.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0804030921150.21835@bugs.comnets.uni-bremen.de>
-	 <1207943754.3364.1.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0804140910580.21835@bugs.comnets.uni-bremen.de>
-	 <1209057222.5224.3.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 24 Apr 2008 18:21:20 +0100
-Message-Id: <1209057680.9212.1065.camel@pmac.infradead.org> (sfid-20080424_192208_709976_B091E3FE)
-Mime-Version: 1.0
+	Mon, 7 Apr 2008 21:02:42 -0400
+Message-ID: <47FAB829.9010304@latinsud.com> (sfid-20080408_020245_602188_C8B3076F)
+Date: Tue, 08 Apr 2008 02:11:21 +0200
+From: Alejandro Grijalba <sud@latinsud.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com
+Subject: [PATCH] mac80211: do not alter injected seq numbers
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-04-24 at 13:13 -0400, Dan Williams wrote:
-> 
-> As a note, the driver works a lot better with a 3Com CardBus card than
-> with the Netgear PCI card.  Not sure if firmwares make a difference; I
-> used the firmware from each card's respective driver CD.  I'm trying to
-> clean up some of the bits of the driver.  We should really get a git
-> tree for this though.
+When injecting frames we should allow user to play with fields like
+fragment or sequence numbers. This patch prevents mac80211 from modifying
+those fields on injected frames.
 
-You can create trees in ~/public_git on bombadil.infradead.org if you
-want to, and we can set up shared trees in /srv/git too.
+Tested on 2.6.24.4 with aireplay-ng.
 
--- 
-dwmw2
+Signed-off-by: Alejandro Grijalba <sud@latinsud.com>
+---
+There is still a problem with some drivers (b43) that also modify seq numbers, 
+and i cannot find there a clean way to tell whether the frame was injected.
+An alternative way would be to create a radiotap flag meaning not to modify header.
+
+--- linux-2.6.24.4/net/mac80211/tx.c	2008-01-24 23:58:37.000000000 +0100
++++ linux-2.6.24.4-sud/net/mac80211/tx.c	2008-04-05 16:43:19.000000000 +0200
+@@ -281,6 +281,9 @@ ieee80211_tx_h_sequence(struct ieee80211
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 
++	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
++		return TXRX_CONTINUE;
++
+ 	if (ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >= 24)
+ 		ieee80211_include_sequence(tx->sdata, hdr);
+ 
+
 
