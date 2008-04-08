@@ -1,84 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:31468 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757605AbYDBT1c (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:57657 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752704AbYDHU7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:27:32 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1542543rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 12:27:32 -0700 (PDT)
-Message-ID: <43e72e890804021227y520380f7j8ad25eb30f635d2b@mail.gmail.com> (sfid-20080402_202744_869699_8E996DF4)
-Date: Wed, 2 Apr 2008 15:27:31 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: [PATCH] mac80211: use hardware flags for signal/noise units
-Cc: ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz,
-	"Ivan Seskar" <Seskar@winlab.rutgers.edu>,
-	"Jean Tourrilhes" <jt@hpl.hp.com>,
-	"Haris Kremo" <harisk@winlab.rutgers.edu>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>
-In-Reply-To: <200803271107.54208.bruno@thinktube.com>
+	Tue, 8 Apr 2008 16:59:16 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Stephen Hemminger <stephen.hemminger@vyatta.com>
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
+Date: Tue, 8 Apr 2008 13:59:03 -0700
+Cc: wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <200804011107.38563.inaky@linux.intel.com> <20080408135601.5dad3566@speedy>
+In-Reply-To: <20080408135601.5dad3566@speedy>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080326123042.11233.80949.stgit@localhost>
-	 <43e72e890803261559keb944a1g48d93645db2f2e73@mail.gmail.com>
-	 <200803271107.54208.bruno@thinktube.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804081359.03611.inaky@linux.intel.com> (sfid-20080408_215926_616960_8061E2E7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 26, 2008 at 10:07 PM, bruno randolf <bruno@thinktube.com> wrote:
-> On Thursday 27 March 2008 07:59:11 Luis R. Rodriguez wrote:
->  > >  + * @IEEE80211_HW_SIGNAL_UNSPEC:
->  > >  + *     Hardware can provide signal values but we don't know its units.
->  > > To be + *     able to standardize between different devices we would like
->  > > linear + *     values from 0-100. If possible please provide dB or dBm
->  > > instead. + *
->  > >  + * @IEEE80211_HW_SIGNAL_DB:
->  > >  + *     Hardware gives signal values in dB, decibel difference from an
->  > >  + *     arbitrary, fixed reference. If possible please provide dBm
->  > > instead. + *
->  >
->  > Signal should given in either be in dBm or an unspecified value. Since
->  > we have "unspecified" not sure why we would have the "db" value. Can
->  > you clarify what the difference between "unspecified" and "db" would
->  > be? I don't think it makes sense to refer to signal with a "db" value,
->  > unless we want "singal" here to be able to mean SNR.
->
->  the best thing to specify is dBm and all drivers should try to do that. it's
->  the only absolute value which makes sense and can be compared between
->  different drivers and devices.
->
->  however as we know some drivers simply cannot provide that. instead they have
->  some form of RSSI - RSSI in general meaning nothing more than "received
->  signal strength indication", which could be *anything*: voltage, any numbers,
->  in dB or linear or whatever. RSSI does *not* in general mean SNR! for example
->  you might remember the values of prism54, they were somewhere around 200. or
->  prism2 cards which had something around 100 (it's been a while since i've
->  touched them, so that might have changed). as jean noted the values don't
->  even have to be linear - so i think we should remove that from the
->  definition.
->
->  so in the "unspecified" case we really don't know much about the units, in the
->  worst case we can't even assume that 1/2 the value will mean 1/2 of the
->  received signal strength. it's very hard to work with this values, but it's
->  better than nothing.
->
->  other cards might not have noise, so no absolute (dBm) measurement, but a form
->  of RSSI which is measured in dB (that is a logarithmic difference). in this
->  case we might not know which reference point the measurement is taken to, but
->  we know how it behaves: -3 dB means half of the signal strength. if you add a
->  6dB gain antenna you can expect to see the signal reading to increase by 6dB.
->  it's not strictly SNR (because we don't know the noise) but quite close to
->  it.
->
->  i think it's important to know the difference between this 3 cases i order to
->  make some sense of the values in userspace gui, roaming agents, mesh link
->  metrics, etc...
+On Tuesday 08 April 2008, Stephen Hemminger wrote:
+> This is the short (not in depth) code review of kernel component of Wimax.
+> 
+> Generic stack: drivers/net/wimax
+> 
+> 1. Why spread those over 8 files of 100 lines each. Better to have a single
+>    file with 1000 lines and get reduced namespace and better compiler inlining
+>    etc.
 
-Agreed, but can you give me an example of a card which does provide
-RSSI in db for values we don't know and that UNSPEC cannot handle? Is
-this what is assumed of the rt2x00 cards?
+Style difference, simplifies maintenance. Each file is logically grouped. 
+Everything for doing X is in file X. I know you are a fan of big files, 
+I am not :)
 
-  Luis
+There is almost no inlining because each X only does stuff from itself. If
+there is a need for inlined stuff (I missed it) it should go to one of the
+header files --internal or external.
+
+> 2. The debug infrastructure is a mess of ugly macros that are unlikely
+>    to accepted in the current form, rework or delete it.
+
+Ok, I'll figure a way to clean it up. Need to move most to inlines,
+still making sure anything that is disabled is compiled out.
+ 
+> 3. Use of sysfs for family and version ok, but why bother?
+>    Please don't build sysfs version checks into the API.
+
+family ID: it makes it easy to map device<->family-id without
+expensive look ups the kernel like an attribute with the device 
+name would be. Rationale is most systems will have a single wimax
+device in the kernel. include/linux/wimax.h and drivers/net/wimax/id-table.c
+should have this documented...ouch, just remembered. The code drop
+out there shouldn't be as complete (documentation wise) as what
+I need to publish. Pls hold for it, will be available.
+
+version: I anticipate the wimax API exported to user space is
+going to undergo a lot of changes while we all agree on what
+is the best interface. Because things might break, I want to
+make sure user space stuff can detect that and fail cleanly. 
+Hence the versioning. 
+
+It is designed to be flexible so that adding new APIs allows 
+old code to work (however, changing existing APIs is where it 
+breaks). From the docs:
+
+ * Each WiMAX device exports two sysfs files declaring the generic
+ * netlink family ID associated to the interface and another one which
+ * version it supports. The version code has to fit in one byte
+ * (restrictions imposed by generic netlink); we use version / 10 for
+ * the major version and version % 10 for the minor. This gives 9
+ * minors for each major and 25 majors.
+ *
+ * The inexistence of any of this means the device does not support
+ * the WiMAX extensions.
+ *
+ * The version change protocol is as follow:
+ *
+>* - Major versions: needs to be increased if an existing message is
+>*   changed or removed. Doesn't need to be changed if a new message
+>*   is added.
+ *
+>* - Minor verion: needs to be increased if new messages are being
+>*   added or some other consideration that doesn't impact too much
+>*   (like some kind of bug fix) and that is kind of left up in the
+>*   air to common sense.
+ *
+ * Your user space code should not try to work if the major version it
+ * was compiled for differs from what the kernel offers. As well, it
+ * should not work if the minor version of the kernel interface is
+ * lower than the one the user space code was compiled for.
+ *
+ * libwimax's wimax_open() takes care of all this for you.
+
+> 
+> 4. __wimax_flush_queue: is a nop, just remove
+
+Removed in newer code.
+
+> 5. Stack is using generic netlink instead use newer netlink interface
+>    for management of devices: newlink/dellink instead see macvlan
+
+Geeze, I hide out for one week and a new system pops up? 
+
+What is the advantage of newlink dellink vs generic netlink? Pointers
+to doc? Generic netlink is fitting the bill pretty well as of now,
+so unless it is going away from the kernel, I feel we should not
+move it.
+ 
+> i2400m hardware driver
+> 
+> 1. sysfs
+>   the inflight file is being used in a /proc style. Either change to
+>   one value per file or move to /proc/net/i2400m/ethX or better yet use debugfs
+>   /debugfs/i2400m/ethX/xxx
+
+All that is gone from current tip.
+
+> 2. Use internal dev->stats for network stats (may not need get_stats at all)
+
+Noted, will do.
+
+> 3. No ioctl stub if not implemented
+
+Ack.
+
+> 4. Use netdev_alloc_skb rather than alloc_skb for new code.
+
+Any rationales for it? other than the padding and setting
+skb->dev, they seem the same.
+
+> 5. Use skb_copy_to_linear_data in i2400m_net_rx
+>
+> 6. Since hardware has to copy every received frame. Don't bother with
+>    checksum offload, the copy does the checksum for you and is safer.
+
+Current tip code receives data from the device to an skb and then 
+clones the different packets to deliver to netdev. This is not 
+needed/done any more.
+ 
+> 7. Fine grain file organization in i2400m is bogus, put in one file and use
+>    proper name scope. Having 100 line files is unneeded
+
+Again, style differences, a 10k file is already way too big for me.
+ 
+> 8. Fix the FIXME's?
+
+En route, most of them fixed in tip.
+ 
+> 9. Anyway to reuse existing usbnet infrastructure?
+
+Nope, the 2400 is a pure IP device (as Marcel mentioned). As well, we need
+to provide for using other bus connections (SDIO in the works), so that would
+break it up. OTOH, the hw protocol makes it different to plug into USBNET,
+as we can receive many packets in a single transaction.
+ 
+> 10. Since device is USB, Rx is in workqueue, so no need to go through
+>     netif_rx() softirq, should be able to go through netif_receive_skb
+
+Good point. Ack.
+ 
+> 11. net_device and private data are zero on allocation, so no need
+>    for memset.
+
+Ack
+ 
+> 12. Since this is new code elminate all legacy ifdef's
+
+Done in tip.
+
+We need to keep backwards compatibility to certain kernels for OSV support.
+]Trying to make that as unobstrusive as possible. The git tip tree will
+be mostly backward-stuff clean.
+
+Hey thanks a lot, this is great feedback
+
+-- 
+Inaky
