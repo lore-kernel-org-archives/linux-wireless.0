@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:5727 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754546AbYDLNkQ (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:27573 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752494AbYDIPn3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Apr 2008 09:40:16 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so357561ywb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 06:40:12 -0700 (PDT)
-Message-ID: <4800BBAF.7000609@gmail.com> (sfid-20080412_144023_643919_8FFFD65F)
-Date: Sat, 12 Apr 2008 08:39:59 -0500
-From: "Jory A. Pratt" <geekypenguin@gmail.com>
+	Wed, 9 Apr 2008 11:43:29 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] b43: Fixes injection speed (up to 350 pps)
-Content-Type: multipart/mixed;
- boundary="------------000808060704020208020204"
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] [PATCH] Make IWLCORE a silent option not toconfuse iwl3945	users.
+Date: Wed, 9 Apr 2008 08:38:31 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200424DA91@orsmsx416.amr.corp.intel.com> (sfid-20080409_164337_861196_372EB60B)
+In-Reply-To: <20080409083025.GB17458@infradead.org>
+References: <874pakhist.fsf@sparse.dyndns.org> <20080409083025.GB17458@infradead.org>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Christoph Hellwig" <hch@infradead.org>,
+	"Jason Riedy" <jason@acm.org>
+Cc: <linux-wireless@vger.kernel.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000808060704020208020204
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On , Christoph Hellwig  wrote:
 
+> On Tue, Apr 01, 2008 at 11:28:34PM -0700, Jason Riedy wrote:
+>> The iwl3945 (currently?) does not use iwlcore.  Either the iwlcore
+>> documentation should change or the option should be silent.  This
+>> patch follows the latter route.  IWL4965 already SELECTs IWLCORE,
+>> so there should be no new problems.  Note that IWLWIFI_DEBUGFS and
+>> IWLCORE_RFKILL have no suboptions for 4965, so they are grouped
+>> together and given a description that includes "4965+" to indicate
+>> they're not for the 3945 adapters.
+> 
+> Just kill the option entirely and build the core module for both in
+> the makefile. 
 
---------------000808060704020208020204
-Content-Type: text/plain;
- name="b43-injection-wireless-testing.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="b43-injection-wireless-testing.patch"
+iwlcore is not currently needed for 3945. We'll clean up the Kconfig
+dependencies.
 
-# Fixes injection speed (up to 350 pps)
+Thanks
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 345c34b..d3a5535 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2841,6 +2841,11 @@ static int b43_op_tx(struct ieee80211_hw *hw,
-                goto out;
-        if (unlikely(b43_status(dev) < B43_STAT_STARTED))
-                goto out;
-+
-+       if (ctl->type == IEEE80211_IF_TYPE_MNTR) {
-+               ctl->flags |= IEEE80211_TXCTL_NO_ACK;
-+       }
-+
-        /* TX is done without a global lock. */
-        if (b43_using_pio_transfers(dev))
-                err = b43_pio_tx(dev, skb, ctl);
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 19aefbf..85e446b 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -318,7 +318,8 @@ int b43_generate_txhdr(struct b43_wldev *dev,
-        /* MAC control */
-        if (!(txctl->flags & IEEE80211_TXCTL_NO_ACK))
-                mac_ctl |= B43_TXH_MAC_ACK;
--       if (!(((fctl & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
-+       if ( (txctl->type != IEEE80211_IF_TYPE_MNTR) &&
-+             !(((fctl & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
-              ((fctl & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)))
-                mac_ctl |= B43_TXH_MAC_HWSEQ;
-        if (txctl->flags & IEEE80211_TXCTL_FIRST_FRAGMENT)
-
---------------000808060704020208020204--
+Reinette
