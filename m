@@ -1,321 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout2-sn2.hy.skanova.net ([81.228.8.164]:53104 "EHLO
-	pne-smtpout2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758163AbYDVQTe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753009AbYDIOp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2008 12:19:34 -0400
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: <linux-wireless@vger.kernel.org>, <hostap@lists.shmoo.com>
-Subject: Roaming problems
-Date: Tue, 22 Apr 2008 17:09:14 +0200
-Message-ID: <00ff01c8a48a$d4063d80$0b3ca8c0@gotws1589> (sfid-20080422_182021_530520_6814A1A4)
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0100_01C8A49B.978F0D80"
+	Wed, 9 Apr 2008 10:45:57 -0400
+Subject: [PATCH v2] mac80211: fix key hwaccel race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200804091639.24321.IvDoorn@gmail.com> (sfid-20080409_153547_539824_75C658CB)
+References: <1207689103.7442.1.camel@johannes.berg>
+	 <200804091639.24321.IvDoorn@gmail.com>
+	 (sfid-20080409_153547_539824_75C658CB)
+Content-Type: text/plain
+Date: Wed, 09 Apr 2008 16:45:37 +0200
+Message-Id: <1207752337.7442.29.camel@johannes.berg> (sfid-20080409_154603_226260_5D1D05EC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+The previous key locking patch left a small race: it would be possible
+to add a key and take the interface down before the key todo is run so
+that hwaccel for that key is enabled on an interface that is down. Avoid
+this by running the todo list when an interface is brought up or down.
 
-------=_NextPart_000_0100_01C8A49B.978F0D80
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+This patch also fixes a small bug: before this change, a few functions
+used the key list without the lock that protects it.
 
-Hi, 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: fix duplicate BIT(2) pointed out by Ivo, thanks. Also updated for
+file renames.
 
-I'm currently running a number of sites using the RT61 WLAN chipset.
->From time to time we have fatal roaming problems. 
+ net/mac80211/key.c |   84 ++++++++++++++++++++++++++++++++---------------------
+ net/mac80211/key.h |   11 ++++--
+ 2 files changed, 59 insertions(+), 36 deletions(-)
 
-I have collected a trace that show normal and problem situation.
-Any help explaining the cause of the problem is appreciated.
+--- everything.orig/net/mac80211/key.c	2008-04-09 16:21:59.000000000 +0200
++++ everything/net/mac80211/key.c	2008-04-09 16:38:32.000000000 +0200
+@@ -355,61 +355,74 @@ void ieee80211_key_link(struct ieee80211
+ 
+ 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+-		add_todo(key, KEY_FLAG_TODO_HWACCEL);
++		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
+ }
+ 
+-void ieee80211_key_free(struct ieee80211_key *key)
++static void __ieee80211_key_free(struct ieee80211_key *key)
+ {
+-	unsigned long flags;
+-
+-	if (!key)
+-		return;
+-
+ 	/*
+ 	 * Replace key with nothingness if it was ever used.
+ 	 */
+-	if (key->sdata) {
+-		spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
++	if (key->sdata)
+ 		__ieee80211_key_replace(key->sdata, key->sta,
+ 					key, NULL);
+-		spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
+-	}
+ 
+ 	add_todo(key, KEY_FLAG_TODO_DELETE);
+ }
+ 
+-void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_key_free(struct ieee80211_key *key)
+ {
+-	struct ieee80211_key *key;
+-
+-	might_sleep();
++	unsigned long flags;
+ 
+-	if (WARN_ON(!netif_running(sdata->dev)))
++	if (!key)
+ 		return;
+ 
+-	ieee80211_key_lock();
++	spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
++	__ieee80211_key_free(key);
++	spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
++}
+ 
++/*
++ * To be safe against concurrent manipulations of the list (which shouldn't
++ * actually happen) we need to hold the spinlock. But under the spinlock we
++ * can't actually do much, so we defer processing to the todo list. Then run
++ * the todo list to be sure the operation and possibly previously pending
++ * operations are completed.
++ */
++static void ieee80211_todo_for_each_key(struct ieee80211_sub_if_data *sdata,
++					u32 todo_flags)
++{
++	struct ieee80211_key *key;
++	unsigned long flags;
++
++	might_sleep();
++
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
+ 	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_enable_hw_accel(key);
++		add_todo(key, todo_flags);
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
+ 
+-	ieee80211_key_unlock();
++	ieee80211_key_todo();
+ }
+ 
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_key *key;
++	ASSERT_RTNL();
+ 
+-	might_sleep();
++	if (WARN_ON(!netif_running(sdata->dev)))
++		return;
+ 
+-	ieee80211_key_lock();
++	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_ADD);
++}
+ 
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_disable_hw_accel(key);
++void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++{
++	ASSERT_RTNL();
+ 
+-	ieee80211_key_unlock();
++	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_REMOVE);
+ }
+ 
+-static void __ieee80211_key_free(struct ieee80211_key *key)
++static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ {
+ 	if (!key)
+ 		return;
+@@ -440,7 +453,8 @@ static void __ieee80211_key_todo(void)
+ 		list_del_init(&key->todo);
+ 		todoflags = key->flags & (KEY_FLAG_TODO_ADD_DEBUGFS |
+ 					  KEY_FLAG_TODO_DEFKEY |
+-					  KEY_FLAG_TODO_HWACCEL |
++					  KEY_FLAG_TODO_HWACCEL_ADD |
++					  KEY_FLAG_TODO_HWACCEL_REMOVE |
+ 					  KEY_FLAG_TODO_DELETE);
+ 		key->flags &= ~todoflags;
+ 		spin_unlock(&todo_lock);
+@@ -456,12 +470,16 @@ static void __ieee80211_key_todo(void)
+ 			ieee80211_debugfs_key_add_default(key->sdata);
+ 			work_done = true;
+ 		}
+-		if (todoflags & KEY_FLAG_TODO_HWACCEL) {
++		if (todoflags & KEY_FLAG_TODO_HWACCEL_ADD) {
+ 			ieee80211_key_enable_hw_accel(key);
+ 			work_done = true;
+ 		}
++		if (todoflags & KEY_FLAG_TODO_HWACCEL_REMOVE) {
++			ieee80211_key_disable_hw_accel(key);
++			work_done = true;
++		}
+ 		if (todoflags & KEY_FLAG_TODO_DELETE) {
+-			__ieee80211_key_free(key);
++			__ieee80211_key_destroy(key);
+ 			work_done = true;
+ 		}
+ 
+@@ -482,14 +500,16 @@ void ieee80211_key_todo(void)
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key, *tmp;
+-	LIST_HEAD(tmp_list);
++	unsigned long flags;
+ 
+ 	ieee80211_key_lock();
+ 
+ 	ieee80211_debugfs_key_remove_default(sdata);
+ 
++	spin_lock_irqsave(&sdata->local->sta_lock, flags);
+ 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
+-		ieee80211_key_free(key);
++		__ieee80211_key_free(key);
++	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
+ 
+ 	__ieee80211_key_todo();
+ 
+--- everything.orig/net/mac80211/key.h	2008-04-09 16:21:59.000000000 +0200
++++ everything/net/mac80211/key.h	2008-04-09 16:38:53.000000000 +0200
+@@ -54,16 +54,19 @@ struct sta_info;
+  * @KEY_FLAG_TODO_DELETE: Key is marked for deletion and will, after an
+  *	RCU grace period, no longer be reachable other than from the
+  *	todo list.
+- * @KEY_FLAG_TODO_HWACCEL: Key needs to be added to hardware acceleration.
++ * @KEY_FLAG_TODO_HWACCEL_ADD: Key needs to be added to hardware acceleration.
++ * @KEY_FLAG_TODO_HWACCEL_REMOVE: Key needs to be removed from hardware
++ *	acceleration.
+  * @KEY_FLAG_TODO_DEFKEY: Key is default key and debugfs needs to be updated.
+  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
+  */
+ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
+ 	KEY_FLAG_TODO_DELETE		= BIT(1),
+-	KEY_FLAG_TODO_HWACCEL		= BIT(2),
+-	KEY_FLAG_TODO_DEFKEY		= BIT(3),
+-	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(4),
++	KEY_FLAG_TODO_HWACCEL_ADD	= BIT(2),
++	KEY_FLAG_TODO_HWACCEL_REMOVE	= BIT(3),
++	KEY_FLAG_TODO_DEFKEY		= BIT(4),
++	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
+ };
+ 
+ struct ieee80211_key {
 
-Below is a summary of the trace. Attached it the complete trace.
-
-/Lars
-
-
-CASE 1: The above trace is a typical trace from a roaming atempt.
-==========================================================
-361830.763657	We lost conatct with current AP 00:0e:d7:ac:84:20
-361831.252992	We have selected the new AP 00:0f:24:d1:5e:e0
-361831.256287	Why do we try to authenticate with previous AP
-00:0e:d7:ac:84:20 ? <-----
-361831.261071	Finaly we selected the correct AP 00:0f:24:d1:5e:e0
-361831.295573	We are up and running
-
-CASE 2: The above trace is a typical trace from a roaming atempt.
-==========================================================
-362123.346748	We lost conatct with current AP 00:0f:24:d1:5e:e0
-362123.842242	We have selected the new AP 00:0e:d7:ac:84:20
-362123.861586	We try connect AP 00:0e:d7:ac:84:20
-362123.874442	We are up and running
-
-CASE 3: The above trace is a typical trace from a roaming atempt.
-===================================================================
-362441.946825   We lost conatct with current AP 00:0e:d7:ac:84:20
-362442.449435	We have selected the new AP 00:0f:24:a3:b8:60
-362442.466944	Why do we try to authenticate with previous AP
-00:0e:d7:ac:84:20 ? <-----
-362442.470147	Finaly we selected the correct AP 00:0f:24:a3:b8:60
-361831.295573	We are up and running
-362443.066379	Timeout.
-362444.886776	New try with selected AP 00:0f:24:a3:b8:60
-362444.904429	Associated
-362444.904883	What initiate this 'Initial auth_alg=0' with the associated
-AP ? <-----
-362444.908677	What initiate this 'Initial auth_alg=0' with AP
-00:0f:24:d1:5e:e0 ? <-----
-362445.505964	No one reacts on the 'timed out' event  <-----
-
-------=_NextPart_000_0100_01C8A49B.978F0D80
-Content-Type: text/plain;
-	name="trace.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="trace.txt"
-
-Hi,=20
-
-I'm currently running a number of sites using the RT61 WLAN chipset.
->From time to time we have fatal roaming problems.=20
-
-I have collected a trace that show normal and problem situation.
-Any help explaning the cause of the problem is apprechiated.
-
-/Lars
-
-
-[361830.763657] wlan0: To few (3) beacons from current AP =
-00:0e:d7:ac:84:20 - assume out of range
-[361830.763726] phy0: Removed STA 00:0e:d7:ac:84:20
-[361830.903691] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[361830.959483] HW CONFIG: channel=3D6 freq=3D2437 phymode=3D2
-[361831.032651] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[361831.104153] HW CONFIG: channel=3D11 freq=3D2462 phymode=3D2
-[361831.174702] HW CONFIG: channel=3D13 freq=3D2472 phymode=3D2
-[361831.239425] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[361831.252992] wlan0: set_encrypt - unknown addr 00:0f:24:d1:5e:e0
-[361831.253576] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[361831.256238] wlan0: Initial auth_alg=3D0
-[361831.256287] wlan0: authenticate with AP 00:0e:d7:ac:84:20
-[361831.258615] wlan0: RX authentication from 00:0e:d7:ac:84:20 (alg=3D0 =
-transaction=3D2 status=3D0)
-[361831.258662] wlan0: authenticated
-[361831.258692] wlan0: associate with AP 00:0e:d7:ac:84:20
-[361831.260485] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[361831.260544] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[361831.260586] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[361831.260628] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[361831.260670] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 4 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[361831.260712] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 7 - =
-CWmin: 5, CWmax: 10, Aifs: 2.
-[361831.261031] wlan0: Initial auth_alg=3D0
-[361831.261071] wlan0: authenticate with AP 00:0f:24:d1:5e:e0
-[361831.282732] wlan0: RX authentication from 00:0f:24:d1:5e:e0 (alg=3D0 =
-transaction=3D2 status=3D0)
-[361831.282783] wlan0: authenticated
-[361831.283546] wlan0: associate with AP 00:0f:24:d1:5e:e0
-[361831.295124] wlan0: RX ReassocResp from 00:0f:24:d1:5e:e0 =
-(capab=3D0x431 status=3D0 aid=3D95)
-[361831.295221] wlan0: associated
-[361831.295269] wlan0: CTS protection enabled =
-(BSSID=3D00:0f:24:d1:5e:e0)
-[361831.295573] phy0: Added STA 00:0f:24:d1:5e:e0
-[361831.295628] wlan0: WMM queue=3D2 aci=3D0 acm=3D0 aifs=3D3 cWmin=3D15 =
-cWmax=3D1023 burst=3D0
-[361831.295668] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 3.
-[361831.295712] wlan0: WMM queue=3D3 aci=3D1 acm=3D0 aifs=3D7 cWmin=3D15 =
-cWmax=3D1023 burst=3D0
-[361831.295749] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 7.
-[361831.295792] wlan0: WMM queue=3D1 aci=3D2 acm=3D0 aifs=3D2 cWmin=3D7 =
-cWmax=3D15 burst=3D30
-[361831.295829] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 3, CWmax: 4, Aifs: 2.
-[361831.295872] wlan0: WMM queue=3D0 aci=3D3 acm=3D0 aifs=3D2 cWmin=3D3 =
-cWmax=3D7 burst=3D15
-[361831.295908] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 2, CWmax: 3, Aifs: 2.
-
-CASE 1: The above trace is a typical trace from a roaming atempt.
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-361830.763657	We lost conatct with current AP 00:0e:d7:ac:84:20
-361831.252992	We have selected the new AP 00:0f:24:d1:5e:e0
-361831.256287	Why do we try to authenticate with previous AP =
-00:0e:d7:ac:84:20 ? <-----
-361831.261071	Finaly we selected the correct AP 00:0f:24:d1:5e:e0
-361831.295573	We are up and running
-
-
-
-
-
-[362123.346748] wlan0: To few (3) beacons from current AP =
-00:0f:24:d1:5e:e0 - assume out of range
-[362123.346815] phy0: Removed STA 00:0f:24:d1:5e:e0
-[362123.480600] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362123.539316] HW CONFIG: channel=3D6 freq=3D2437 phymode=3D2
-[362123.611786] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[362123.683135] HW CONFIG: channel=3D11 freq=3D2462 phymode=3D2
-[362123.746670] HW CONFIG: channel=3D13 freq=3D2472 phymode=3D2
-[362123.822505] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362123.842242] wlan0: set_encrypt - unknown addr 00:0e:d7:ac:84:20
-[362123.852958] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362123.853081] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362123.853128] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362123.853169] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362123.853211] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362123.853253] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 4 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362123.853295] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 7 - =
-CWmin: 5, CWmax: 10, Aifs: 2.
-[362123.861530] wlan0: Initial auth_alg=3D0
-[362123.861586] wlan0: authenticate with AP 00:0e:d7:ac:84:20
-[362123.864873] wlan0: RX authentication from 00:0e:d7:ac:84:20 (alg=3D0 =
-transaction=3D2 status=3D0)
-[362123.864922] wlan0: authenticated
-[362123.864952] wlan0: associate with AP 00:0e:d7:ac:84:20
-[362123.874048] wlan0: RX ReassocResp from 00:0e:d7:ac:84:20 =
-(capab=3D0x431 status=3D0 aid=3D181)
-[362123.874097] wlan0: associated
-[362123.874140] wlan0: CTS protection enabled =
-(BSSID=3D00:0e:d7:ac:84:20)
-[362123.874442] phy0: Added STA 00:0e:d7:ac:84:20
-[362123.874497] wlan0: WMM queue=3D2 aci=3D0 acm=3D0 aifs=3D3 cWmin=3D15 =
-cWmax=3D1023 burst=3D0
-[362123.883166] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 3.
-[362123.883217] wlan0: WMM queue=3D3 aci=3D1 acm=3D0 aifs=3D7 cWmin=3D15 =
-cWmax=3D1023 burst=3D0
-[362123.883255] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 7.
-[362123.883298] wlan0: WMM queue=3D1 aci=3D2 acm=3D0 aifs=3D2 cWmin=3D7 =
-cWmax=3D15 burst=3D30
-[362123.883335] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 3, CWmax: 4, Aifs: 2.
-[362123.883376] wlan0: WMM queue=3D0 aci=3D3 acm=3D0 aifs=3D2 cWmin=3D3 =
-cWmax=3D7 burst=3D15
-[362123.883413] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 2, CWmax: 3, Aifs: 2.
-
-CASE 2: The above trace is a typical trace from a roaming atempt.
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-362123.346748	We lost conatct with current AP 00:0f:24:d1:5e:e0
-362123.842242	We have selected the new AP 00:0e:d7:ac:84:20
-362123.861586	We try connect AP 00:0e:d7:ac:84:20
-362123.874442	We are up and running
-
-
-
-
-
-[362441.946825] wlan0: To few (0) beacons from current AP =
-00:0e:d7:ac:84:20 - assume out of range
-[362441.946894] phy0: Removed STA 00:0e:d7:ac:84:20
-[362442.087032] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362442.147484] HW CONFIG: channel=3D6 freq=3D2437 phymode=3D2
-[362442.215884] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[362442.287306] HW CONFIG: channel=3D11 freq=3D2462 phymode=3D2
-[362442.360678] HW CONFIG: channel=3D13 freq=3D2472 phymode=3D2
-[362442.435708] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362442.449435] wlan0: set_encrypt - unknown addr 00:0f:24:a3:b8:60
-[362442.458892] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[362442.466891] wlan0: Initial auth_alg=3D0
-[362442.466944] wlan0: authenticate with AP 00:0e:d7:ac:84:20
-[362442.467815] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362442.467875] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362442.467917] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362442.467959] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362442.468000] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 4 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362442.468043] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 7 - =
-CWmin: 5, CWmax: 10, Aifs: 2.
-[362442.470093] wlan0: Initial auth_alg=3D0
-[362442.470147] wlan0: authenticate with AP 00:0f:24:a3:b8:60
-[362442.666716] wlan0: authenticate with AP 00:0f:24:a3:b8:60
-[362442.869682] wlan0: authenticate with AP 00:0f:24:a3:b8:60
-[362443.066379] wlan0: authentication with AP 00:0f:24:a3:b8:60 timed =
-out
-[362444.515475] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362444.582299] HW CONFIG: channel=3D6 freq=3D2437 phymode=3D2
-[362444.664275] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[362444.735721] HW CONFIG: channel=3D11 freq=3D2462 phymode=3D2
-[362444.802200] HW CONFIG: channel=3D13 freq=3D2472 phymode=3D2
-[362444.875930] HW CONFIG: channel=3D7 freq=3D2442 phymode=3D2
-[362444.878856] HW CONFIG: channel=3D1 freq=3D2412 phymode=3D2
-[362444.886723] wlan0: Initial auth_alg=3D0
-[362444.886776] wlan0: authenticate with AP 00:0f:24:a3:b8:60
-[362444.887643] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 0 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362444.887778] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 1 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362444.887821] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 2 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362444.887863] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 3 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362444.887904] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 4 - =
-CWmin: 4, CWmax: 10, Aifs: 2.
-[362444.887946] phy0 -> rt2x00mac_conf_tx: Info - Configured TX ring 7 - =
-CWmin: 5, CWmax: 10, Aifs: 2.
-[362444.896286] wlan0: RX authentication from 00:0f:24:a3:b8:60 (alg=3D0 =
-transaction=3D2 status=3D0)
-[362444.896340] wlan0: authenticated
-[362444.896370] wlan0: associate with AP 00:0f:24:a3:b8:60
-[362444.904391] wlan0: RX ReassocResp from 00:0f:24:a3:b8:60 =
-(capab=3D0x431 status=3D0 aid=3D126)
-[362444.904429] wlan0: associated
-[362444.904662] phy0: Added STA 00:0f:24:a3:b8:60
-[362444.904800] wlan0: Initial auth_alg=3D0
-[362444.904838] wlan0: authenticate with AP 00:0f:24:a3:b8:60
-[362444.908677] wlan0: Initial auth_alg=3D0
-[362444.908735] wlan0: authenticate with AP 00:0f:24:d1:5e:e0
-[362445.106501] wlan0: authenticate with AP 00:0f:24:d1:5e:e0
-[362445.306037] wlan0: authenticate with AP 00:0f:24:d1:5e:e0
-[362445.505964] wlan0: authentication with AP 00:0f:24:d1:5e:e0 timed =
-out
-
-CASE 3: The above trace is a typical trace from a roaming atempt.
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-362441.946825   We lost conatct with current AP 00:0e:d7:ac:84:20
-362442.449435	We have selected the new AP 00:0f:24:a3:b8:60
-362442.466944	Why do we try to authenticate with previous AP =
-00:0e:d7:ac:84:20 ? <-----
-362442.470147	Finaly we selected the correct AP 00:0f:24:a3:b8:60
-361831.295573	We are up and running
-362443.066379	Timeout.
-362444.886776	New try with selected AP 00:0f:24:a3:b8:60
-362444.904429	Associated
-362444.904883	What initiate this 'Initial auth_alg=3D0' with the =
-associated AP ? <-----
-362444.908677	What initiate this 'Initial auth_alg=3D0' with AP =
-00:0f:24:d1:5e:e0 ? <-----
-362445.505964	No one reacts on the 'timed out' event  <-----
-
-
->From this point, no WLAN communication was operating.
-
-
-
-------=_NextPart_000_0100_01C8A49B.978F0D80--
 
