@@ -1,177 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:57657 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752704AbYDHU7Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 16:59:16 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: Stephen Hemminger <stephen.hemminger@vyatta.com>
-Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
-Date: Tue, 8 Apr 2008 13:59:03 -0700
-Cc: wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <200804011107.38563.inaky@linux.intel.com> <20080408135601.5dad3566@speedy>
-In-Reply-To: <20080408135601.5dad3566@speedy>
+Received: from mga09.intel.com ([134.134.136.24]:51560 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753762AbYDIXb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2008 19:31:56 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH RFC] mac80211: no BSS changes to driver from beacons processed during scanning
+Date: Wed,  9 Apr 2008 16:31:55 -0700
+Message-Id: <1207783915-13260-1-git-send-email-reinette.chatre@intel.com> (sfid-20080410_003200_973599_A6CEC3E7)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804081359.03611.inaky@linux.intel.com> (sfid-20080408_215926_616960_8061E2E7)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 08 April 2008, Stephen Hemminger wrote:
-> This is the short (not in depth) code review of kernel component of Wimax.
-> 
-> Generic stack: drivers/net/wimax
-> 
-> 1. Why spread those over 8 files of 100 lines each. Better to have a single
->    file with 1000 lines and get reduced namespace and better compiler inlining
->    etc.
+There is no need to send BSS changes to driver from beacons processed
+during scanning. We are more interested in beacons from an AP with whic=
+h
+we are associated - these will still be used to send updates to driver =
+as
+the beacons are received without scanning.
 
-Style difference, simplifies maintenance. Each file is logically grouped. 
-Everything for doing X is in file X. I know you are a fan of big files, 
-I am not :)
+This change=C2=B7removes the requirement that bss_info_changed needs to=
+ be atomic.
+The beacons received during scanning are processed from a tasklet, but =
+if we
+do not call bss_info_changed for these beacons there is no need for it =
+to be
+atomic. This function (bss_info_changed) is called either from workqueu=
+e or
+ioctl in all other instances.
 
-There is almost no inlining because each X only does stuff from itself. If
-there is a need for inlined stuff (I missed it) it should go to one of the
-header files --internal or external.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h       |    3 +--
+ net/mac80211/ieee80211_sta.c |   16 +++++++++++-----
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-> 2. The debug infrastructure is a mess of ugly macros that are unlikely
->    to accepted in the current form, rework or delete it.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0bc73e2..417b6aa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1019,8 +1019,7 @@ enum ieee80211_ampdu_mlme_action {
+  *	level driver (e.g. assoc/disassoc status, erp parameters).
+  *	This function should not be used if no BSS has been set, unless
+  *	for association indication. The @changed parameter indicates which
+- *	of the bss parameters has changed when a call is made. This callbac=
+k
+- *	has to be atomic.
++ *	of the bss parameters has changed when a call is made.
+  *
+  * @configure_filter: Configure the device's RX filter.
+  *	See the section "Frame filtering" for more information.
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.=
+c
+index 5120e38..b469c8a 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2791,6 +2791,17 @@ static void ieee80211_rx_mgmt_beacon(struct net_=
+device *dev,
+=20
+ 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems=
+);
+=20
++	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
++		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
++					 elems.wmm_param_len);
++	}
++
++	/* Do not send changes to driver if we are scanning. This removes
++	 * requirement that driver's bss_info_changed function needs to be
++	 * atomic. */
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
++		return;
++
+ 	if (elems.erp_info && elems.erp_info_len >=3D 1)
+ 		changed |=3D ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
+=20
+@@ -2805,11 +2816,6 @@ static void ieee80211_rx_mgmt_beacon(struct net_=
+device *dev,
+ 					       &bss_info);
+ 	}
+=20
+-	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+-		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
+-					 elems.wmm_param_len);
+-	}
+-
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+=20
+--=20
+1.5.3.4
 
-Ok, I'll figure a way to clean it up. Need to move most to inlines,
-still making sure anything that is disabled is compiled out.
- 
-> 3. Use of sysfs for family and version ok, but why bother?
->    Please don't build sysfs version checks into the API.
-
-family ID: it makes it easy to map device<->family-id without
-expensive look ups the kernel like an attribute with the device 
-name would be. Rationale is most systems will have a single wimax
-device in the kernel. include/linux/wimax.h and drivers/net/wimax/id-table.c
-should have this documented...ouch, just remembered. The code drop
-out there shouldn't be as complete (documentation wise) as what
-I need to publish. Pls hold for it, will be available.
-
-version: I anticipate the wimax API exported to user space is
-going to undergo a lot of changes while we all agree on what
-is the best interface. Because things might break, I want to
-make sure user space stuff can detect that and fail cleanly. 
-Hence the versioning. 
-
-It is designed to be flexible so that adding new APIs allows 
-old code to work (however, changing existing APIs is where it 
-breaks). From the docs:
-
- * Each WiMAX device exports two sysfs files declaring the generic
- * netlink family ID associated to the interface and another one which
- * version it supports. The version code has to fit in one byte
- * (restrictions imposed by generic netlink); we use version / 10 for
- * the major version and version % 10 for the minor. This gives 9
- * minors for each major and 25 majors.
- *
- * The inexistence of any of this means the device does not support
- * the WiMAX extensions.
- *
- * The version change protocol is as follow:
- *
->* - Major versions: needs to be increased if an existing message is
->*   changed or removed. Doesn't need to be changed if a new message
->*   is added.
- *
->* - Minor verion: needs to be increased if new messages are being
->*   added or some other consideration that doesn't impact too much
->*   (like some kind of bug fix) and that is kind of left up in the
->*   air to common sense.
- *
- * Your user space code should not try to work if the major version it
- * was compiled for differs from what the kernel offers. As well, it
- * should not work if the minor version of the kernel interface is
- * lower than the one the user space code was compiled for.
- *
- * libwimax's wimax_open() takes care of all this for you.
-
-> 
-> 4. __wimax_flush_queue: is a nop, just remove
-
-Removed in newer code.
-
-> 5. Stack is using generic netlink instead use newer netlink interface
->    for management of devices: newlink/dellink instead see macvlan
-
-Geeze, I hide out for one week and a new system pops up? 
-
-What is the advantage of newlink dellink vs generic netlink? Pointers
-to doc? Generic netlink is fitting the bill pretty well as of now,
-so unless it is going away from the kernel, I feel we should not
-move it.
- 
-> i2400m hardware driver
-> 
-> 1. sysfs
->   the inflight file is being used in a /proc style. Either change to
->   one value per file or move to /proc/net/i2400m/ethX or better yet use debugfs
->   /debugfs/i2400m/ethX/xxx
-
-All that is gone from current tip.
-
-> 2. Use internal dev->stats for network stats (may not need get_stats at all)
-
-Noted, will do.
-
-> 3. No ioctl stub if not implemented
-
-Ack.
-
-> 4. Use netdev_alloc_skb rather than alloc_skb for new code.
-
-Any rationales for it? other than the padding and setting
-skb->dev, they seem the same.
-
-> 5. Use skb_copy_to_linear_data in i2400m_net_rx
->
-> 6. Since hardware has to copy every received frame. Don't bother with
->    checksum offload, the copy does the checksum for you and is safer.
-
-Current tip code receives data from the device to an skb and then 
-clones the different packets to deliver to netdev. This is not 
-needed/done any more.
- 
-> 7. Fine grain file organization in i2400m is bogus, put in one file and use
->    proper name scope. Having 100 line files is unneeded
-
-Again, style differences, a 10k file is already way too big for me.
- 
-> 8. Fix the FIXME's?
-
-En route, most of them fixed in tip.
- 
-> 9. Anyway to reuse existing usbnet infrastructure?
-
-Nope, the 2400 is a pure IP device (as Marcel mentioned). As well, we need
-to provide for using other bus connections (SDIO in the works), so that would
-break it up. OTOH, the hw protocol makes it different to plug into USBNET,
-as we can receive many packets in a single transaction.
- 
-> 10. Since device is USB, Rx is in workqueue, so no need to go through
->     netif_rx() softirq, should be able to go through netif_receive_skb
-
-Good point. Ack.
- 
-> 11. net_device and private data are zero on allocation, so no need
->    for memset.
-
-Ack
- 
-> 12. Since this is new code elminate all legacy ifdef's
-
-Done in tip.
-
-We need to keep backwards compatibility to certain kernels for OSV support.
-]Trying to make that as unobstrusive as possible. The git tip tree will
-be mostly backward-stuff clean.
-
-Hey thanks a lot, this is great feedback
-
--- 
-Inaky
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
