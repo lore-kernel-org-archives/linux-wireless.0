@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50542 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49379 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755815AbYD3OGk (ORCPT
+	with ESMTP id S1755647AbYDINmg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 10:06:40 -0400
-Message-Id: <20080429152041.385102000@sipsolutions.net> (sfid-20080430_160638_520893_A152CCAB)
-References: <20080429151858.253229000@sipsolutions.net>
-Date: Tue, 29 Apr 2008 17:19:00 +0200
+	Wed, 9 Apr 2008 09:42:36 -0400
+Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] mac80211: remove queue info from ieee80211_tx_status
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Alejandro Grijalba <sud@latinsud.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <200804081025.39645.mb@bu3sch.de> (sfid-20080408_092609_909502_698A80A4)
+References: <47FAB829.9010304@latinsud.com>
+	 <200804081025.39645.mb@bu3sch.de> (sfid-20080408_092609_909502_698A80A4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VnkK0pVA9IJC1y4A7T17"
+Date: Wed, 09 Apr 2008 10:00:37 +0200
+Message-Id: <1207728037.7442.7.camel@johannes.berg> (sfid-20080409_144240_410977_558E1405)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The queue info in struct ieee80211_tx_status is never used.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    7 -------
- drivers/net/wireless/rt2x00/rt2x00dev.c     |    3 ---
- include/net/mac80211.h                      |    4 ----
- 3 files changed, 14 deletions(-)
+--=-VnkK0pVA9IJC1y4A7T17
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/include/net/mac80211.h	2008-04-29 11:20:55.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-04-29 11:20:59.000000000 +0200
-@@ -406,8 +406,6 @@ enum ieee80211_tx_status_flags {
-  * @ampdu_ack_map: block ack bit map for the aggregation.
-  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-  * @ack_signal: signal strength of the ACK frame
-- * @queue_length: ?? REMOVE
-- * @queue_number: ?? REMOVE
-  */
- struct ieee80211_tx_status {
- 	struct ieee80211_tx_control control;
-@@ -417,8 +415,6 @@ struct ieee80211_tx_status {
- 	u8 ampdu_ack_len;
- 	u64 ampdu_ack_map;
- 	int ack_signal;
--	int queue_length;
--	int queue_number;
- };
- 
- /**
---- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-04-29 11:20:55.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-04-29 11:20:59.000000000 +0200
-@@ -2710,8 +2710,6 @@ static void iwl4965_txstatus_to_ieee(str
- 
- 	tx_sta->status.ack_signal = 0;
- 	tx_sta->status.excessive_retries = 0;
--	tx_sta->status.queue_length = 0;
--	tx_sta->status.queue_number = 0;
- 
- 	if (in_interrupt())
- 		ieee80211_tx_status_irqsafe(priv->hw,
-@@ -2847,8 +2845,6 @@ static int iwl4965_tx_status_reply_tx(st
- 
- 		tx_status = &(priv->txq[txq_id].txb[idx].status);
- 		tx_status->retry_count = tx_resp->failure_frame;
--		tx_status->queue_number = status & 0xff;
--		tx_status->queue_length = tx_resp->failure_rts;
- 		tx_status->control.flags &= ~IEEE80211_TXCTL_AMPDU;
- 		tx_status->flags = iwl4965_is_tx_success(status)?
- 			IEEE80211_TX_STATUS_ACK : 0;
-@@ -3008,9 +3004,6 @@ static void iwl4965_rx_reply_tx(struct i
- 	tx_status = &(txq->txb[txq->q.read_ptr].status);
- 
- 	tx_status->retry_count = tx_resp->failure_frame;
--	tx_status->queue_number = status;
--	tx_status->queue_length = tx_resp->bt_kill_count;
--	tx_status->queue_length |= tx_resp->failure_rts;
- 	tx_status->flags =
- 	    iwl4965_is_tx_success(status) ? IEEE80211_TX_STATUS_ACK : 0;
- 	iwl4965_hwrate_to_tx_control(priv, le32_to_cpu(tx_resp->rate_n_flags),
---- everything.orig/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-04-29 11:20:50.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2x00dev.c	2008-04-29 11:20:59.000000000 +0200
-@@ -525,9 +525,6 @@ void rt2x00lib_txdone(struct queue_entry
- 			rt2x00dev->low_level_stats.dot11ACKFailureCount++;
- 	}
- 
--	tx_status.queue_length = entry->queue->limit;
--	tx_status.queue_number = tx_status.control.queue;
--
- 	if (tx_status.control.flags & IEEE80211_TXCTL_USE_RTS_CTS) {
- 		if (success)
- 			rt2x00dev->low_level_stats.dot11RTSSuccessCount++;
 
--- 
+> This does not work, since we use injection for other types of frames. For=
+ example
+> management frames from hostapd. We don't want (and can't) make hostapd ke=
+ep track of
+> sequence numbers.
+> You'll have to contact radiotap people and add a flag for this. This woul=
+d also
+> solve the hardware counter problem then.
+
+If hardware is capable of not overriding sequence numbers. I expect much
+hardware to just always insert them.
+
+Wasn't the original goal to control fragmentation rather than sequence
+numbers? That could possibly be done with fewer problems.
+
+johannes
+
+--=-VnkK0pVA9IJC1y4A7T17
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUAR/x3pKVg1VMiehFYAQLAng/9GhWI6doqjy7ArVyubi0uP87ywdcH5PpD
+ibU2nS2XnwSdizjthmBYdiTaJ2SscwO0ReZVuRoWVafjAu0wsqjsN5zDlAi3i9qC
+7Ra6ZnP4IVEdEsriEOSqHeb3rtQKLQ5bJItV3WYlInH/axkgQs30KeNvc8RzUrEH
+s1I6QfFEK007eItNuo+4+t0N+Ec7NzbbWMEYdXcfY55GPnuH9bWIyeAubx8fnUgL
+dYHeLZ7sJRtJeWMb62QhHUapDvz9O3FvH3IZdBo/lLD72eqwy16fqA7Px+DMp8GT
+staZasbUvYWtnbvgXXG0VaFGn4uI84SDv1EzuN0FFkwl5rkwPl0+sp4WC6dEbH7n
+ue6bfvW1DLeKj0kUtvMQ9wVexhoKZlol4qIKjdpz/7Dch2xdK/+MpkzCwYAuSenV
+KS1FJaKHk4KB7P8/yLfYtKz+w9B3cuYxv2rNcV6V1VoAvbI/apAotZoCR/fbtlD/
+fdDpKr4r4RhyqAHrYHMRCP/r2cRE4bNC5nycgP0YCbVvLUl3HAxcJgowU5ZnQLFg
+VLPBmfg4VrOd9rbx0wHn9yXm6N5ZnSSbDo86H8vO4ecxihHuXBLNPNPOsPHEA/F+
+U9RtR6TewfXOxfmYGQN6ZiQcOWEZ4h9KHI566C/Gt1vO4IhHr4oZ79+zzcnAetTg
+I5Cf5LlHOAU=
+=crdz
+-----END PGP SIGNATURE-----
+
+--=-VnkK0pVA9IJC1y4A7T17--
 
