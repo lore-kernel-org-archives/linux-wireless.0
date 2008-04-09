@@ -1,169 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.184]:41298 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757466AbYDCOlb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 10:41:31 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so2070784rng.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 07:41:29 -0700 (PDT)
-Message-ID: <a44ae5cd0804030741jc9c7aebx21a7635e827b190f@mail.gmail.com> (sfid-20080403_154138_679216_55BDB49E)
-Date: Thu, 3 Apr 2008 10:41:28 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: 2.6.25-rc8-mm1 -- INFO: possible circular locking dependency detected (while using iw to debug a wireless issue)
-Cc: "Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <j@w1.fi>,
-	"Andrew Morton" <akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:30107 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752551AbYDIGbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2008 02:31:46 -0400
+Subject: Re: [PATCH] Add Realtek 8187B support
+From: Pavel Roskin <proski@gnu.org>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200804081931.07638.herton@mandriva.com.br>
+References: <200804081931.07638.herton@mandriva.com.br>
+Content-Type: text/plain
+Date: Wed, 09 Apr 2008 02:31:40 -0400
+Message-Id: <1207722700.8539.80.camel@rd> (sfid-20080409_073207_310208_C1A5367E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After collecting the wireshark log, I found this in my messages log:
+On Tue, 2008-04-08 at 19:31 -0300, Herton Ronaldo Krzesinski wrote:
 
-Apr  3 09:22:12 whirligig kernel: [ 3987.336200]
-=======================================================
-Apr  3 09:22:12 whirligig kernel: [ 3987.336215] [ INFO: possible
-circular locking dependency detected ]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336222] 2.6.25-rc8-mm1 #15
-Apr  3 09:22:12 whirligig kernel: [ 3987.336227]
--------------------------------------------------------
-Apr  3 09:22:12 whirligig kernel: [ 3987.336233] iw/9417 is trying to
-acquire lock:
-Apr  3 09:22:12 whirligig kernel: [ 3987.336630]  (genl_mutex){--..},
-at: [ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.336654]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336656] but task is already
-holding lock:
-Apr  3 09:22:12 whirligig kernel: [ 3987.336661]
-(nlk->cb_mutex){--..}, at: [netlink_dump+0x39/0x22e]
-netlink_dump+0x39/0x22e
-Apr  3 09:22:12 whirligig kernel: [ 3987.336682]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336684] which lock already
-depends on the new lock.
-Apr  3 09:22:12 whirligig kernel: [ 3987.336687]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336693]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336695] the existing
-dependency chain (in reverse order) is:
-Apr  3 09:22:12 whirligig kernel: [ 3987.336703]
-Apr  3 09:22:12 whirligig kernel: [ 3987.336704] -> #1 (nlk->cb_mutex){--..}:
-Apr  3 09:22:12 whirligig kernel: [ 3987.336717]
-[__lock_acquire+0xa02/0xbaf] __lock_acquire+0xa02/0xbaf
-Apr  3 09:22:12 whirligig kernel: [ 3987.336746]
-[lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
-Apr  3 09:22:12 whirligig kernel: [ 3987.336772]
-[snd_mixer_oss:mutex_lock_nested+0xd5/0x67b]
-mutex_lock_nested+0xd5/0x274
-Apr  3 09:22:12 whirligig kernel: [ 3987.336796]
-[netlink_dump_start+0xbd/0x15a] netlink_dump_start+0xbd/0x15a
-Apr  3 09:22:12 whirligig kernel: [ 3987.336821]
-[genl_rcv_msg+0x9d/0x13a] genl_rcv_msg+0x9d/0x13a
-Apr  3 09:22:12 whirligig kernel: [ 3987.336846]
-[netlink_rcv_skb+0x30/0x75] netlink_rcv_skb+0x30/0x75
-Apr  3 09:22:12 whirligig kernel: [ 3987.336874]
-[genl_rcv+0x1e/0x2e] genl_rcv+0x1e/0x2e
-Apr  3 09:22:12 whirligig kernel: [ 3987.336899]
-[cfg80211:netlink_unicast+0x1c1/0x1867] netlink_unicast+0x1c1/0x293
-Apr  3 09:22:12 whirligig kernel: [ 3987.336925]
-[netlink_sendmsg+0x21f/0x22c] netlink_sendmsg+0x21f/0x22c
-Apr  3 09:22:12 whirligig kernel: [ 3987.336950]
-[sock_sendmsg+0xca/0xe1] sock_sendmsg+0xca/0xe1
-Apr  3 09:22:12 whirligig kernel: [ 3987.336977]
-[sys_sendmsg+0x14d/0x1a8] sys_sendmsg+0x14d/0x1a8
-Apr  3 09:22:12 whirligig kernel: [ 3987.337003]
-[sys_socketcall+0x163/0x17e] sys_socketcall+0x163/0x17e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337028]
-[sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
-Apr  3 09:22:12 whirligig kernel: [ 3987.337057]        [<ffffffff>] 0xffffffff
-Apr  3 09:22:12 whirligig kernel: [ 3987.337264]
-Apr  3 09:22:12 whirligig kernel: [ 3987.337266] -> #0 (genl_mutex){--..}:
-Apr  3 09:22:12 whirligig kernel: [ 3987.337280]
-[__lock_acquire+0x929/0xbaf] __lock_acquire+0x929/0xbaf
-Apr  3 09:22:12 whirligig kernel: [ 3987.337305]
-[lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
-Apr  3 09:22:12 whirligig kernel: [ 3987.337332]
-[snd_mixer_oss:mutex_lock_nested+0xd5/0x67b]
-mutex_lock_nested+0xd5/0x274
-Apr  3 09:22:12 whirligig kernel: [ 3987.337358]
-[ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.337384]
-[netlink_dump+0x51/0x22e] netlink_dump+0x51/0x22e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337409]
-[netlink_recvmsg+0x156/0x203] netlink_recvmsg+0x156/0x203
-Apr  3 09:22:12 whirligig kernel: [ 3987.337435]
-[sock_recvmsg+0xd1/0xe9] sock_recvmsg+0xd1/0xe9
-Apr  3 09:22:12 whirligig kernel: [ 3987.337460]
-[sys_recvmsg+0xf2/0x17f] sys_recvmsg+0xf2/0x17f
-Apr  3 09:22:12 whirligig kernel: [ 3987.337485]
-[sys_socketcall+0x16f/0x17e] sys_socketcall+0x16f/0x17e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337511]
-[sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
-Apr  3 09:22:12 whirligig kernel: [ 3987.337537]        [<ffffffff>] 0xffffffff
-Apr  3 09:22:12 whirligig kernel: [ 3987.337567]
-Apr  3 09:22:12 whirligig kernel: [ 3987.337569] other info that might
-help us debug this:
-Apr  3 09:22:12 whirligig kernel: [ 3987.337572]
-Apr  3 09:22:12 whirligig kernel: [ 3987.337579] 1 lock held by iw/9417:
-Apr  3 09:22:12 whirligig kernel: [ 3987.337585]  #0:
-(nlk->cb_mutex){--..}, at: [netlink_dump+0x39/0x22e]
-netlink_dump+0x39/0x22e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337609]
-Apr  3 09:22:12 whirligig kernel: [ 3987.337611] stack backtrace:
-Apr  3 09:22:12 whirligig kernel: [ 3987.337620] Pid: 9417, comm: iw
-Not tainted 2.6.25-rc8-mm1 #15
-Apr  3 09:22:12 whirligig kernel: [ 3987.337631]
-[print_circular_bug_tail+0x5b/0x66] print_circular_bug_tail+0x5b/0x66
-Apr  3 09:22:12 whirligig kernel: [ 3987.337649]
-[print_circular_bug_header+0xa5/0xb0] ?
-print_circular_bug_header+0xa5/0xb0
-Apr  3 09:22:12 whirligig kernel: [ 3987.337673]
-[__lock_acquire+0x929/0xbaf] __lock_acquire+0x929/0xbaf
-Apr  3 09:22:12 whirligig kernel: [ 3987.337701]
-[lock_acquire+0x76/0x9d] lock_acquire+0x76/0x9d
-Apr  3 09:22:12 whirligig kernel: [ 3987.337718]
-[ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.337737]
-[snd_mixer_oss:mutex_lock_nested+0xd5/0x67b]
-mutex_lock_nested+0xd5/0x274
-Apr  3 09:22:12 whirligig kernel: [ 3987.337750]
-[ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.337767]
-[ctrl_dumpfamily+0x37/0xda] ? ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.337788]
-[ctrl_dumpfamily+0x37/0xda] ctrl_dumpfamily+0x37/0xda
-Apr  3 09:22:12 whirligig kernel: [ 3987.337807]
-[netlink_dump+0x51/0x22e] netlink_dump+0x51/0x22e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337820]
-[mac80211:kfree_skb+0x40/0x45] ? kfree_skb+0x40/0x45
-Apr  3 09:22:12 whirligig kernel: [ 3987.337839]
-[netlink_recvmsg+0x156/0x203] netlink_recvmsg+0x156/0x203
-Apr  3 09:22:12 whirligig kernel: [ 3987.337860]
-[sock_sendmsg+0xca/0xe1] ? sock_sendmsg+0xca/0xe1
-Apr  3 09:22:12 whirligig kernel: [ 3987.337880]
-[sock_recvmsg+0xd1/0xe9] sock_recvmsg+0xd1/0xe9
-Apr  3 09:22:12 whirligig kernel: [ 3987.337903]  [<c01313d9>] ?
-autoremove_wake_function+0x0/0x30
-Apr  3 09:22:12 whirligig kernel: [ 3987.337939]
-[snd_pcm_oss:copy_from_user+0x3b/0x236] ? copy_from_user+0x3b/0x5e
-Apr  3 09:22:12 whirligig kernel: [ 3987.337959]
-[verify_iovec+0x40/0x70] ? verify_iovec+0x40/0x70
-Apr  3 09:22:12 whirligig kernel: [ 3987.337979]
-[sys_recvmsg+0xf2/0x17f] sys_recvmsg+0xf2/0x17f
-Apr  3 09:22:12 whirligig kernel: [ 3987.337997]
-[snd_hda_intel:_spin_unlock_irqrestore+0x56/0x6c] ?
-_spin_unlock_irqrestore+0x56/0x6c
-Apr  3 09:22:12 whirligig kernel: [ 3987.338021]
-[paravirt_get_lazy_mode+0xe/0x1b] ? paravirt_get_lazy_mode+0xe/0x1b
-Apr  3 09:22:12 whirligig kernel: [ 3987.338040]
-[crypto_algapi:kunmap_atomic+0x9e/0x2e8e] ? kunmap_atomic+0x9e/0xbb
-Apr  3 09:22:12 whirligig kernel: [ 3987.338061]
-[handle_mm_fault+0x7aa/0x7bb] ? handle_mm_fault+0x7aa/0x7bb
-Apr  3 09:22:12 whirligig kernel: [ 3987.338100]
-[sys_socketcall+0x16f/0x17e] sys_socketcall+0x16f/0x17e
-Apr  3 09:22:12 whirligig kernel: [ 3987.338116]
-[processor:trace_hardirqs_on+0xf0/0x5d38] ?
-trace_hardirqs_on+0xf0/0x12c
-Apr  3 09:22:12 whirligig kernel: [ 3987.338138]
-[sysenter_past_esp+0x6d/0xc5] sysenter_past_esp+0x6d/0xc5
-Apr  3 09:22:12 whirligig kernel: [ 3987.338163]  =======================
+P.S. More stuff as I'm going through the patch.  Sorry, I had to post
+the first reply quickly to disavow my Signed-off-by.
+
+> Also I fixed a bug of a missing "priv->vif = vif" in rtl8187_config_interface
+> that makes kernel oops in transmit code in ieee80211_generic_frame_duration
+> function.
+
+This should be a separate patch.  In the kernel, it's very important to
+be able to pinpoint which change broke things.  And git is well suited
+for working with multiple patches (my personal preference is StGIT,
+which is not just suited for that - it's the main thing StGIT does).
+
+> diff --git a/drivers/net/wireless/rtl8180_rtl8225.c b/drivers/net/wireless/rtl8180_rtl8225.c
+> index cd22781..b4c6ae0 100644
+> --- a/drivers/net/wireless/rtl8180_rtl8225.c
+> +++ b/drivers/net/wireless/rtl8180_rtl8225.c
+> @@ -718,10 +718,7 @@ static void rtl8225_rf_set_channel(struct ieee80211_hw *dev,
+>  	struct rtl8180_priv *priv = dev->priv;
+>  	int chan = ieee80211_frequency_to_channel(conf->channel->center_freq);
+>  
+> -	if (priv->rf->init == rtl8225_rf_init)
+> -		rtl8225_rf_set_tx_power(dev, chan);
+> -	else
+> -		rtl8225z2_rf_set_tx_power(dev, chan);
+> +	priv->rf->set_txpwr(dev, chan);
+
+It seems to me it's unrelated to rtl8187b support.  You are doing some
+unrelated refactoring here, which could be done in a separate patch.
+
+> -	.set_chan	= rtl8225_rf_set_channel
+> +	.set_chan	= rtl8225_rf_set_channel,
+> +	.set_txpwr	= rtl8225_rf_set_tx_power
+
+Same thing here.  If you need extra infrastructure, add it in one patch
+and leave hardware support for another.
+
+> +struct rtl8187b_rx_hdr {
+> +	__le32 flags;
+> +	__le64 mac_time;
+> +	u8 noise;
+> +	u8 signal;
+> +	u8 agc;
+> +	u8 reserved;
+> +	__le32 unused;
+> +} __attribute__((packed));
+
+I know, you are copying parts from the rtl8187 header.  But looking at
+the vendor driver, "reserved" and "unused" are better described.  Nobody
+would guess it by looking at this header.  It would be great if you at
+least give a hint that the vendor driver describes the structure of
+those fields.  That should be a separate patch, of course.
+
+> +struct rtl8187b_tx_hdr {
+> +	__le32 flags;
+> +	__le16 rts_duration;
+> +	__le16 len;
+> +	__le32 unused_1;
+> +	__le16 unused_2;
+> +	__le16 tx_duration;
+> +	__le32 unused_3;
+> +	__le32 retry;
+> +	__le32 unused_4[2];
+> +} __attribute__((packed));
+
+Those are indeed "unused in" the vendor driver.
+
+> +#define DEVICE_RTL8187	0
+> +#define DEVICE_RTL8187B	1
+
+I prefer enums here, but I don't feel strongly about it.
+
+>  struct rtl8187_priv {
+>  	/* common between rtl818x drivers */
+>  	struct rtl818x_csr *map;
+> @@ -76,70 +103,100 @@ struct rtl8187_priv {
+>  	u32 rx_conf;
+>  	u16 txpwr_base;
+>  	u8 asic_rev;
+> +	u8 is_rtl8187b;
+> +	enum {
+> +		RTL8187BvB,
+> +		RTL8187BvD,
+> +		RTL8187BvE
+> +	} hw_rev;
+
+Or maybe we could have one enum here, and use (hw_rev > DEVICE_RTL8187)
+instead of is_rtl8187b.  Maybe there will be future revisions that
+change something else.  The standard approaches are flags that are ORed
+or enums that are compared.  is_something doesn't scale well.
+ 
+> -static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
+> +static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
+> +				     u8 *addr, u8 idx)
+>  {
+>  	u8 val;
+>  
+>  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+>  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+> -			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
+> +			(unsigned long)addr, idx & 0x03, &val,
+> +			sizeof(val), HZ / 2);
+
+As I said, "addr" should not be a pointer.  In fact, the fifth argument
+is __u16.  There is no way a valid pointer can even be passed to
+usb_control_msg() without truncating it.  Make it __u16 and remove all
+casts unless they are needed and you know why.
+
+> -static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
+> +#define rtl818x_ioread8(priv, addr) rtl818x_ioread8_idx(priv, addr, 0)
+
+Inline functions are preferred for that.
+
+> +static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
+> +				       __le16 *addr, u8 idx)
+>  {
+>  	__le16 val;
+>  
+>  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+>  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+> -			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
+> +			(unsigned long)addr, idx & 0x03, &val,
+> +			sizeof(val), HZ / 2);
+
+More of the same stuff.
+ 
+>  static struct usb_device_id rtl8187_table[] __devinitdata = {
+> -	/* Realtek */
+> -	{USB_DEVICE(0x0bda, 0x8187)},
+> +	/* Realtek 8187 */
+> +	{USB_DEVICE(0x0bda, 0x8187), .driver_info = DEVICE_RTL8187},
+
+You are mixing to things in the comment.  DEVICE_RTL8187 already
+indicates that it's 8187.  Better keep Realtek devices together, and
+leave the details to the code.
+
+> -	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
+> -	hdr->flags = cpu_to_le32(flags);
+> -	hdr->len = 0;
+> -	hdr->rts_duration = rts_dur;
+> -	hdr->retry = cpu_to_le32(control->retry_limit << 8);
+> +	if (!priv->is_rtl8187b) {
+
+I would explore the possibility of splitting the hardware specific parts
+of rtl8187_tx() into two separate functions.
+
+> @@ -240,11 +264,25 @@ static void rtl8187_rx_cb(struct urb *urb)
+
+And the same on the rx side.  gcc is good at inlining static functions
+that are used once.
+
+> +		rx_status.mactime = le64_to_cpu(hdr_b->mac_time);
+
+Careful here!  mac_time is not size-aligned in rtl8187b_rx_hdr.  I would
+ask our alignment gurus it it's OK.
+
+> -static int rtl8187_init_hw(struct ieee80211_hw *dev)
+> +static int rtl8187_cmd_reset(struct ieee80211_hw *dev)
+>  {
+>  	struct rtl8187_priv *priv = dev->priv;
+>  	u8 reg;
+>  	int i;
+
+It seems to me that there is too much in common between those functions.
+Please consider refactoring.  I would also suggest that you submit it
+separately.
+
+Skipping lots of stuff for a later review, as it's getting late, and the
+end it far away.  I hope you got the idea.
+
+>  	u8	reserved_19[3];
+> +	__le16	INT_MIG;
+> +#define RTL818X_R8187B_B	0
+> +#define RTL818X_R8187B_D	1
+> +#define RTL818X_R8187B_E	2
+
+You are inconsistent here.  You were using an enum in another structure
+essentially for the same thing.
+
+-- 
+Regards,
+Pavel Roskin
