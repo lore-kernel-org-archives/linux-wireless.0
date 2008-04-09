@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:8267 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762852AbYDRVEe (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:28604 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbYDIICo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 17:04:34 -0400
-Received: by py-out-1112.google.com with SMTP id u52so992669pyb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2008 14:04:31 -0700 (PDT)
-Subject: Re: [patch 1/7] mac80211: tkipc.c michael.c use kernel bit
-	rotation helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: akpm@linux-foundation.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jbenc@suse.cz, joe@perches.com, johannes@sipsolutions.net
-In-Reply-To: <200804182059.m3IKxmv4015589@imap1.linux-foundation.org>
-References: <200804182059.m3IKxmv4015589@imap1.linux-foundation.org>
-Content-Type: text/plain
-Date: Fri, 18 Apr 2008 14:04:44 -0700
-Message-Id: <1208552684.10414.1.camel@brick> (sfid-20080418_220913_341474_7339309F)
-Mime-Version: 1.0
+	Wed, 9 Apr 2008 04:02:44 -0400
+Received: from lin01.mn-solutions.de (pD95FBA15.dip0.t-ipconnect.de [217.95.186.21])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 704B45E4022
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Apr 2008 10:02:41 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 72E761E000E
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Apr 2008 09:59:47 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
+Date: Wed, 9 Apr 2008 09:59:47 +0200
+References: <200804011107.38563.inaky@linux.intel.com> <20080408135601.5dad3566@speedy> <200804081359.03611.inaky@linux.intel.com>
+In-Reply-To: <200804081359.03611.inaky@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804090959.47619.hs4233@mail.mn-solutions.de> (sfid-20080409_090251_129231_CA5CB200)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-04-18 at 13:59 -0700, akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Use ror16, ror32, rol32 instead of a private helper.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Joe Perches <joe@perches.com>
-> Cc: Jiri Benc <jbenc@suse.cz>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
+> > 9. Anyway to reuse existing usbnet infrastructure?
+>
+> Nope, the 2400 is a pure IP device (as Marcel mentioned).
 
-Andrew, I've since reworked this series to use the new unaligned
-helpers, johannes has that series and you can drop these 7 patches.
-
-Harvey
-
+With "pure IP", do you mean IPv4?  Or do you mean "pure 
+IPv4/IPv6"?  If it is "pure IPv4", then WiMAX seems not future 
+proof ...
