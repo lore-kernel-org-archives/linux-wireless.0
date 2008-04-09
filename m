@@ -1,42 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:60720 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753470AbYDBMYk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 08:24:40 -0400
-Date: Wed, 2 Apr 2008 08:24:40 -0400
-To: Pavel Roskin <proski@gnu.org>
-Cc: Luca Venturini <lucventurini@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support WPA2 wireless network with PEAP - MSCHAPV2
-Message-ID: <20080402122440.GA24239@csclub.uwaterloo.ca> (sfid-20080402_132447_800612_EEE6DC43)
-References: <47F1F4F4.2080502@gmail.com> <20080401164419.GA3530@tuxdriver.com> <5d75f4610804011306y55352e73sb5223a294b66f2cf@mail.gmail.com> <47F2A2F0.4060908@gmail.com> <20080401205435.iov001h7gxs0o8sc@webmail.spamcop.net>
+Received: from mga03.intel.com ([143.182.124.21]:8441 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752641AbYDJAFf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2008 20:05:35 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH RFC v2] mac80211: no BSS changes to driver from beacons processed during scanning
+Date: Wed,  9 Apr 2008 16:56:15 -0700
+Message-Id: <1207785375-13470-1-git-send-email-reinette.chatre@intel.com> (sfid-20080410_010541_441570_040FDAE3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080401205435.iov001h7gxs0o8sc@webmail.spamcop.net>
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 01, 2008 at 08:54:35PM -0400, Pavel Roskin wrote:
-> 2.6.25.1 will be out after the first bug is fixed in Linux 2.6.25.  I  
-> cannot promise you that any such bug would exist.  Actually, I hope  
-> that there will be no reason for 2.6.25.1 release.
-> 
-> In any case, putting pressure on wireless developers is not  
-> appreciated.  Maybe you should learn how to compile Linux kernels.  Or  
-> maybe you should talk to Ubuntu release engineers and ask them not to  
-> wait for 2.6.25.1 (provided that your implication is correct and they  
-> would wait).
+There is no need to send BSS changes to driver from beacons processed
+during scanning. We are more interested in beacons from an AP with whic=
+h
+we are associated - these will still be used to send updates to driver =
+as
+the beacons are received without scanning.
 
-Or perhaps Ubuntu could learn from Debian and do releases when the
-software is in a good state rather than at specific predetermined
-release dates.  Or fix the bugs themselves and contribute them upstream.
+This change=C2=B7removes the requirement that bss_info_changed needs to=
+ be atomic.
+The beacons received during scanning are processed from a tasklet, but =
+if we
+do not call bss_info_changed for these beacons there is no need for it =
+to be
+atomic. This function (bss_info_changed) is called either from workqueu=
+e or
+ioctl in all other instances.
 
-Strangely I find with the 2.6.24 kernel currently in Debian, the intel
-wireless seemed to work great with WPA2 (at least on a 4965).  Maybe
-that was 2.6.24.2 or 2.6.24.3 or something.  It was a couple of weeks
-ago now.  I haven't heard of the 4935 before.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+This patch applies to the latest code after mac80211 filename changes.
 
--- 
-Len Sorensen
+ include/net/mac80211.h |    3 +--
+ net/mac80211/mlme.c    |   16 +++++++++++-----
+ 2 files changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 079e7bd..4a80d74 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1020,8 +1020,7 @@ enum ieee80211_ampdu_mlme_action {
+  *	level driver (e.g. assoc/disassoc status, erp parameters).
+  *	This function should not be used if no BSS has been set, unless
+  *	for association indication. The @changed parameter indicates which
+- *	of the bss parameters has changed when a call is made. This callbac=
+k
+- *	has to be atomic.
++ *	of the bss parameters has changed when a call is made.
+  *
+  * @configure_filter: Configure the device's RX filter.
+  *	See the section "Frame filtering" for more information.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 83e8b49..e3f2cb0 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2797,6 +2797,17 @@ static void ieee80211_rx_mgmt_beacon(struct net_=
+device *dev,
+=20
+ 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems=
+);
+=20
++	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
++		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
++					 elems.wmm_param_len);
++	}
++
++	/* Do not send changes to driver if we are scanning. This removes
++	 * requirement that driver's bss_info_changed function needs to be
++	 * atomic. */
++	if (local->sta_sw_scanning || local->sta_hw_scanning)
++		return;
++
+ 	if (elems.erp_info && elems.erp_info_len >=3D 1)
+ 		changed |=3D ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
+ 	else {
+@@ -2816,11 +2827,6 @@ static void ieee80211_rx_mgmt_beacon(struct net_=
+device *dev,
+ 					       &bss_info);
+ 	}
+=20
+-	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+-		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
+-					 elems.wmm_param_len);
+-	}
+-
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+=20
+--=20
+1.5.3.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
