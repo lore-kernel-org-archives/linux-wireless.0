@@ -1,207 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48432 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbYDINlv (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:35213 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753439AbYDIWN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 09:41:51 -0400
-Subject: [PATCH] mac80211: fix key hwaccel race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 08 Apr 2008 23:11:43 +0200
-Message-Id: <1207689103.7442.1.camel@johannes.berg> (sfid-20080409_144159_236494_E883DECE)
-Mime-Version: 1.0
+	Wed, 9 Apr 2008 18:13:26 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1139024ugc.16
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2008 15:13:24 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 ifup & ifdown
+Date: Thu, 10 Apr 2008 00:17:23 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804100017.23359.IvDoorn@gmail.com> (sfid-20080409_231348_935405_D8449F27)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous key locking patch left a small race: it would be possible
-to add a key and take the interface down before the key todo is run so
-that hwaccel for that key is enabled on an interface that is down. Avoid
-this by running the todo list when an interface is brought up or down.
+Hi,
 
-This patch also fixes a small bug: before this change, a few functions
-used the key list without the lock that protects it.
+I think I recently saw some discussion about mac80211 having a bug
+when the interface was brought down and back up again which would
+leave mac80211 & driver in a state from which it could no longer be
+able to associate again.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_key.h |    7 ++-
- net/mac80211/key.c           |   84 ++++++++++++++++++++++++++-----------------
- 2 files changed, 57 insertions(+), 34 deletions(-)
+I can't find the particular email again, but was this issue indeed a bug
+with mac80211? And if so, is that bug present in 2.6.25 or only in
+wireless-testing?
 
---- everything.orig/net/mac80211/key.c	2008-04-08 22:19:37.000000000 +0200
-+++ everything/net/mac80211/key.c	2008-04-08 23:07:59.000000000 +0200
-@@ -355,61 +355,74 @@ void ieee80211_key_link(struct ieee80211
- 
- 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
- 	if (netif_running(sdata->dev))
--		add_todo(key, KEY_FLAG_TODO_HWACCEL);
-+		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
- }
- 
--void ieee80211_key_free(struct ieee80211_key *key)
-+static void __ieee80211_key_free(struct ieee80211_key *key)
- {
--	unsigned long flags;
--
--	if (!key)
--		return;
--
- 	/*
- 	 * Replace key with nothingness if it was ever used.
- 	 */
--	if (key->sdata) {
--		spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
-+	if (key->sdata)
- 		__ieee80211_key_replace(key->sdata, key->sta,
- 					key, NULL);
--		spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
--	}
- 
- 	add_todo(key, KEY_FLAG_TODO_DELETE);
- }
- 
--void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
-+void ieee80211_key_free(struct ieee80211_key *key)
- {
--	struct ieee80211_key *key;
--
--	might_sleep();
-+	unsigned long flags;
- 
--	if (WARN_ON(!netif_running(sdata->dev)))
-+	if (!key)
- 		return;
- 
--	ieee80211_key_lock();
-+	spin_lock_irqsave(&key->sdata->local->sta_lock, flags);
-+	__ieee80211_key_free(key);
-+	spin_unlock_irqrestore(&key->sdata->local->sta_lock, flags);
-+}
- 
-+/*
-+ * To be safe against concurrent manipulations of the list (which shouldn't
-+ * actually happen) we need to hold the spinlock. But under the spinlock we
-+ * can't actually do much, so we defer processing to the todo list. Then run
-+ * the todo list to be sure the operation and possibly previously pending
-+ * operations are completed.
-+ */
-+static void ieee80211_todo_for_each_key(struct ieee80211_sub_if_data *sdata,
-+					u32 todo_flags)
-+{
-+	struct ieee80211_key *key;
-+	unsigned long flags;
-+
-+	might_sleep();
-+
-+	spin_lock_irqsave(&sdata->local->sta_lock, flags);
- 	list_for_each_entry(key, &sdata->key_list, list)
--		ieee80211_key_enable_hw_accel(key);
-+		add_todo(key, todo_flags);
-+	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
- 
--	ieee80211_key_unlock();
-+	ieee80211_key_todo();
- }
- 
--void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
-+void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_key *key;
-+	ASSERT_RTNL();
- 
--	might_sleep();
-+	if (WARN_ON(!netif_running(sdata->dev)))
-+		return;
- 
--	ieee80211_key_lock();
-+	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_ADD);
-+}
- 
--	list_for_each_entry(key, &sdata->key_list, list)
--		ieee80211_key_disable_hw_accel(key);
-+void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
-+{
-+	ASSERT_RTNL();
- 
--	ieee80211_key_unlock();
-+	ieee80211_todo_for_each_key(sdata, KEY_FLAG_TODO_HWACCEL_REMOVE);
- }
- 
--static void __ieee80211_key_free(struct ieee80211_key *key)
-+static void __ieee80211_key_destroy(struct ieee80211_key *key)
- {
- 	if (!key)
- 		return;
-@@ -440,7 +453,8 @@ static void __ieee80211_key_todo(void)
- 		list_del_init(&key->todo);
- 		todoflags = key->flags & (KEY_FLAG_TODO_ADD_DEBUGFS |
- 					  KEY_FLAG_TODO_DEFKEY |
--					  KEY_FLAG_TODO_HWACCEL |
-+					  KEY_FLAG_TODO_HWACCEL_ADD |
-+					  KEY_FLAG_TODO_HWACCEL_REMOVE |
- 					  KEY_FLAG_TODO_DELETE);
- 		key->flags &= ~todoflags;
- 		spin_unlock(&todo_lock);
-@@ -456,12 +470,16 @@ static void __ieee80211_key_todo(void)
- 			ieee80211_debugfs_key_add_default(key->sdata);
- 			work_done = true;
- 		}
--		if (todoflags & KEY_FLAG_TODO_HWACCEL) {
-+		if (todoflags & KEY_FLAG_TODO_HWACCEL_ADD) {
- 			ieee80211_key_enable_hw_accel(key);
- 			work_done = true;
- 		}
-+		if (todoflags & KEY_FLAG_TODO_HWACCEL_REMOVE) {
-+			ieee80211_key_disable_hw_accel(key);
-+			work_done = true;
-+		}
- 		if (todoflags & KEY_FLAG_TODO_DELETE) {
--			__ieee80211_key_free(key);
-+			__ieee80211_key_destroy(key);
- 			work_done = true;
- 		}
- 
-@@ -482,14 +500,16 @@ void ieee80211_key_todo(void)
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_key *key, *tmp;
--	LIST_HEAD(tmp_list);
-+	unsigned long flags;
- 
- 	ieee80211_key_lock();
- 
- 	ieee80211_debugfs_key_remove_default(sdata);
- 
-+	spin_lock_irqsave(&sdata->local->sta_lock, flags);
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
--		ieee80211_key_free(key);
-+		__ieee80211_key_free(key);
-+	spin_unlock_irqrestore(&sdata->local->sta_lock, flags);
- 
- 	__ieee80211_key_todo();
- 
---- everything.orig/net/mac80211/ieee80211_key.h	2008-04-08 22:19:37.000000000 +0200
-+++ everything/net/mac80211/ieee80211_key.h	2008-04-08 23:08:01.000000000 +0200
-@@ -54,14 +54,17 @@ struct sta_info;
-  * @KEY_FLAG_TODO_DELETE: Key is marked for deletion and will, after an
-  *	RCU grace period, no longer be reachable other than from the
-  *	todo list.
-- * @KEY_FLAG_TODO_HWACCEL: Key needs to be added to hardware acceleration.
-+ * @KEY_FLAG_TODO_HWACCEL_ADD: Key needs to be added to hardware acceleration.
-+ * @KEY_FLAG_TODO_HWACCEL_REMOVE: Key needs to be removed from hardware
-+ *	acceleration.
-  * @KEY_FLAG_TODO_DEFKEY: Key is default key and debugfs needs to be updated.
-  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
-  */
- enum ieee80211_internal_key_flags {
- 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
- 	KEY_FLAG_TODO_DELETE		= BIT(1),
--	KEY_FLAG_TODO_HWACCEL		= BIT(2),
-+	KEY_FLAG_TODO_HWACCEL_ADD	= BIT(2),
-+	KEY_FLAG_TODO_HWACCEL_REMOVE	= BIT(2),
- 	KEY_FLAG_TODO_DEFKEY		= BIT(3),
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(4),
- };
+Thanks,
 
-
+Ivo
