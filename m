@@ -1,55 +1,1271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:63394 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753609AbYDUCgQ (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:36775 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753527AbYDIXb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 22:36:16 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so2759706waf.23
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 19:36:15 -0700 (PDT)
-Subject: [PATCH] mac80211: simplify code in util.c
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 20 Apr 2008 19:36:36 -0700
-Message-Id: <1208745396.7941.14.camel@brick> (sfid-20080421_033634_222430_AF4A26F4)
-Mime-Version: 1.0
+	Wed, 9 Apr 2008 19:31:57 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Add Realtek 8187B support
+Date: Wed, 9 Apr 2008 20:31:44 -0300
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>
+References: <200804081931.07638.herton@mandriva.com.br> <1207722700.8539.80.camel@rd> <200804091507.10816.herton@mandriva.com.br>
+In-Reply-To: <200804091507.10816.herton@mandriva.com.br>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804092031.44948.herton@mandriva.com.br> (sfid-20080410_003203_217749_333F02CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/util.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+Em Wednesday 09 April 2008 15:07:10 Herton Ronaldo Krzesinski escreveu:
+> > > +#define DEVICE_RTL8187	0
+> > > +#define DEVICE_RTL8187B	1
+> > 
+> > I prefer enums here, but I don't feel strongly about it.
+> > 
+> > >  struct rtl8187_priv {
+> > >  	/* common between rtl818x drivers */
+> > >  	struct rtl818x_csr *map;
+> > > @@ -76,70 +103,100 @@ struct rtl8187_priv {
+> > >  	u32 rx_conf;
+> > >  	u16 txpwr_base;
+> > >  	u8 asic_rev;
+> > > +	u8 is_rtl8187b;
+> > > +	enum {
+> > > +		RTL8187BvB,
+> > > +		RTL8187BvD,
+> > > +		RTL8187BvE
+> > > +	} hw_rev;
+> > 
+> > Or maybe we could have one enum here, and use (hw_rev > DEVICE_RTL8187)
+> > instead of is_rtl8187b.  Maybe there will be future revisions that
+> > change something else.  The standard approaches are flags that are ORed
+> > or enums that are compared.  is_something doesn't scale well.
+> 
+> Ok, I'll merge and compare using '>'
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index cc9f715..9960372 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -101,16 +101,13 @@ int ieee80211_get_hdrlen(u16 fc)
- 	switch (fc & IEEE80211_FCTL_FTYPE) {
- 	case IEEE80211_FTYPE_DATA:
- 		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
--			hdrlen = 30; /* Addr4 */
-+			hdrlen += ETH_ALEN; /* Addr4 */
- 		/*
- 		 * The QoS Control field is two bytes and its presence is
--		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
--		 * hdrlen if that bit is set.
--		 * This works by masking out the bit and shifting it to
--		 * bit position 1 so the result has the value 0 or 2.
-+		 * indicated by the IEEE80211_STYPE_QOS_DATA bit.
- 		 */
--		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
--				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
-+		if (fc & IEEE80211_STYPE_QOS_DATA)
-+			hdrlen += 2;
- 		break;
- 	case IEEE80211_FTYPE_CTL:
- 		/*
+I started to look into this, but the conclusion is that there is no way to
+merge this now, as there is no way to know if a device is 8187 or 8187b at
+runtime that I know of (you must know if the device is 8187 or 8187b before
+probing its variants, by the driver_info field).
+
+> > 
+> > > -	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
+> > > -	hdr->flags = cpu_to_le32(flags);
+> > > -	hdr->len = 0;
+> > > -	hdr->rts_duration = rts_dur;
+> > > -	hdr->retry = cpu_to_le32(control->retry_limit << 8);
+> > > +	if (!priv->is_rtl8187b) {
+> > 
+> > I would explore the possibility of splitting the hardware specific parts
+> > of rtl8187_tx() into two separate functions.
+> 
+> I'll split them.
+> 
+> > 
+> > > @@ -240,11 +264,25 @@ static void rtl8187_rx_cb(struct urb *urb)
+> > 
+> > And the same on the rx side.  gcc is good at inlining static functions
+> > that are used once.
+
+I splitted tx function. Please take a look at the new patch below and see if
+it's ok or seems better. For me there is not much difference in splitting it or
+not, for rx would be worse, as I either would have to make functions return
+a struct with fields or pass rx_status as parameter and would become strange,
+as having to set some rx_status fields inside functions and others outside,
+wouldn't this compromise some of the readability of the code? (for now I just
+didn't split rx)
+
+Here it's updated patch with most of previous issues pointed fixed, just for
+review (missing are what I told before plus the pointer casts cleanups etc.
+that I don't know how we will handle). Only needs cleanup in tx code, I kept
+commented old code just to compare the before/after split.
+
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index 076d88b..18d1c8e 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -44,23 +44,50 @@ struct rtl8187_rx_hdr {
+ 	__le64 mac_time;
+ } __attribute__((packed));
+ 
++struct rtl8187b_rx_hdr {
++	__le32 flags;
++	__le64 mac_time;
++	u8 noise;
++	u8 signal;
++	u8 agc;
++	u8 reserved;
++	__le32 unused;
++} __attribute__((packed));
++
+ struct rtl8187_tx_info {
+ 	struct ieee80211_tx_control *control;
+ 	struct urb *urb;
+ 	struct ieee80211_hw *dev;
+ };
+ 
+-struct rtl8187_tx_hdr {
+-	__le32 flags;
++/* Tx flags are common between rtl8187 and rtl8187b */
+ #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+ #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+ #define RTL8187_TX_FLAG_CTS		(1 << 18)
+ #define RTL8187_TX_FLAG_RTS		(1 << 23)
++
++struct rtl8187_tx_hdr {
++	__le32 flags;
+ 	__le16 rts_duration;
+ 	__le16 len;
+ 	__le32 retry;
+ } __attribute__((packed));
+ 
++struct rtl8187b_tx_hdr {
++	__le32 flags;
++	__le16 rts_duration;
++	__le16 len;
++	__le32 unused_1;
++	__le16 unused_2;
++	__le16 tx_duration;
++	__le32 unused_3;
++	__le32 retry;
++	__le32 unused_4[2];
++} __attribute__((packed));
++
++#define DEVICE_RTL8187	0
++#define DEVICE_RTL8187B	1
++
+ struct rtl8187_priv {
+ 	/* common between rtl818x drivers */
+ 	struct rtl818x_csr *map;
+@@ -76,70 +103,117 @@ struct rtl8187_priv {
+ 	u32 rx_conf;
+ 	u16 txpwr_base;
+ 	u8 asic_rev;
++	u8 is_rtl8187b;
++	enum {
++		RTL8187BvB,
++		RTL8187BvD,
++		RTL8187BvE
++	} hw_rev;
+ 	struct sk_buff_head rx_queue;
+ };
+ 
+ void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+ 
+-static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
++				     u8 *addr, u8 idx)
+ {
+ 	u8 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return val;
+ }
+ 
+-static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++{
++	return rtl818x_ioread8_idx(priv, addr, 0);
++}
++
++static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
++				       __le16 *addr, u8 idx)
+ {
+ 	__le16 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return le16_to_cpu(val);
+ }
+ 
+-static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++{
++	return rtl818x_ioread16_idx(priv, addr, 0);
++}
++
++static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
++				       __le32 *addr, u8 idx)
+ {
+ 	__le32 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return le32_to_cpu(val);
+ }
+ 
+-static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
+-				    u8 *addr, u8 val)
++static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++{
++	return rtl818x_ioread32_idx(priv, addr, 0);
++}
++
++static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
++					u8 *addr, u8 val, u8 idx)
+ {
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
++}
++
++static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
++{
++	rtl818x_iowrite8_idx(priv, addr, val, 0);
+ }
+ 
+-static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
+-				     __le16 *addr, u16 val)
++static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
++					 __le16 *addr, u16 val, u8 idx)
+ {
+ 	__le16 buf = cpu_to_le16(val);
+ 
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
+ }
+ 
+-static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
+-				     __le32 *addr, u32 val)
++static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
++				     u16 val)
++{
++	rtl818x_iowrite16_idx(priv, addr, val, 0);
++}
++
++static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
++					 __le32 *addr, u32 val, u8 idx)
+ {
+ 	__le32 buf = cpu_to_le32(val);
+ 
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
++}
++
++static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
++				     u32 val)
++{
++	rtl818x_iowrite32_idx(priv, addr, val, 0);
+ }
+ 
+ #endif /* RTL8187_H */
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index d5787b3..48e51a1 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -27,19 +27,20 @@
+ 
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+ MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
+-MODULE_DESCRIPTION("RTL8187 USB wireless driver");
++MODULE_DESCRIPTION("RTL8187/RTL8187B USB wireless driver");
+ MODULE_LICENSE("GPL");
+ 
+ static struct usb_device_id rtl8187_table[] __devinitdata = {
+ 	/* Realtek */
+-	{USB_DEVICE(0x0bda, 0x8187)},
++	{USB_DEVICE(0x0bda, 0x8187), .driver_info = DEVICE_RTL8187},
++	{USB_DEVICE(0x0bda, 0x8189), .driver_info = DEVICE_RTL8187B},
+ 	/* Netgear */
+-	{USB_DEVICE(0x0846, 0x6100)},
+-	{USB_DEVICE(0x0846, 0x6a00)},
++	{USB_DEVICE(0x0846, 0x6100), .driver_info = DEVICE_RTL8187},
++	{USB_DEVICE(0x0846, 0x6a00), .driver_info = DEVICE_RTL8187},
+ 	/* HP */
+-	{USB_DEVICE(0x03f0, 0xca02)},
++	{USB_DEVICE(0x03f0, 0xca02), .driver_info = DEVICE_RTL8187},
+ 	/* Sitecom */
+-	{USB_DEVICE(0x0df6, 0x000d)},
++	{USB_DEVICE(0x0df6, 0x000d), .driver_info = DEVICE_RTL8187},
+ 	{}
+ };
+ 
+@@ -148,6 +149,8 @@ static void rtl8187_tx_cb(struct urb *urb)
+ 	struct ieee80211_tx_status status;
+ 	struct sk_buff *skb = (struct sk_buff *)urb->context;
+ 	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
++	struct ieee80211_hw *dev = info->dev;
++	struct rtl8187_priv *priv = dev->priv;
+ 
+ 	memset(&status, 0, sizeof(status));
+ 
+@@ -155,20 +158,54 @@ static void rtl8187_tx_cb(struct urb *urb)
+ 	if (info->control)
+ 		memcpy(&status.control, info->control, sizeof(status.control));
+ 	kfree(info->control);
+-	skb_pull(skb, sizeof(struct rtl8187_tx_hdr));
++	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
++					  sizeof(struct rtl8187_tx_hdr));
+ 	status.flags |= IEEE80211_TX_STATUS_ACK;
+ 	ieee80211_tx_status_irqsafe(info->dev, skb, &status);
+ }
+ 
++static void *rtl8187_tx_buf(struct sk_buff *skb, __le32 flags, __le16 rts_dur,
++			    __le32 retry)
++{
++	struct rtl8187_tx_hdr *hdr;
++
++	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
++	hdr->flags = flags;
++	hdr->len = 0;
++	hdr->rts_duration = rts_dur;
++	hdr->retry = retry;
++
++	return hdr;
++}
++
++static void *rtl8187b_tx_buf(struct sk_buff *skb, __le32 flags,
++			     __le16 rts_dur, __le32 retry,
++			     __le16 tx_dur)
++{
++	struct rtl8187b_tx_hdr *hdr;
++
++	hdr = (struct rtl8187b_tx_hdr *)skb_push(skb, sizeof(*hdr));
++	memset(hdr, 0, sizeof(*hdr));
++	hdr->flags = flags;
++	hdr->rts_duration = rts_dur;
++	hdr->retry = retry;
++	hdr->tx_duration = tx_dur;
++
++	return hdr;
++}
++
+ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 		      struct ieee80211_tx_control *control)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+-	struct rtl8187_tx_hdr *hdr;
++	/*struct rtl8187_tx_hdr *hdr = NULL;
++	struct rtl8187b_tx_hdr *hdr_b = NULL;*/
++	void *buf;
+ 	struct rtl8187_tx_info *info;
+ 	struct urb *urb;
+ 	__le16 rts_dur = 0;
+ 	u32 flags;
++	unsigned int ep[4] = { 6, 7, 5, 4 };
+ 
+ 	urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!urb) {
+@@ -196,18 +233,46 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 		flags |= control->rts_cts_rate->hw_value << 19;
+ 	}
+ 
+-	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
+-	hdr->flags = cpu_to_le32(flags);
+-	hdr->len = 0;
+-	hdr->rts_duration = rts_dur;
+-	hdr->retry = cpu_to_le32(control->retry_limit << 8);
++	if (!priv->is_rtl8187b)
++		buf = rtl8187_tx_buf(skb, cpu_to_le32(flags), rts_dur,
++				       cpu_to_le32(control->retry_limit << 8));
++	else
++		buf = rtl8187b_tx_buf(skb, cpu_to_le32(flags), rts_dur,
++					cpu_to_le32(control->retry_limit << 8),
++					ieee80211_generic_frame_duration(
++						dev,
++						priv->vif,
++						skb->len,
++						control->tx_rate));
++
++	/*if (!priv->is_rtl8187b) {
++		hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
++		hdr->flags = cpu_to_le32(flags);
++		hdr->len = 0;
++		hdr->rts_duration = rts_dur;
++		hdr->retry = cpu_to_le32(control->retry_limit << 8);
++	} else {
++		hdr_b = (struct rtl8187b_tx_hdr *)skb_push(skb, sizeof(*hdr_b));
++		memset(hdr_b, 0, sizeof(*hdr_b));
++		hdr_b->flags = cpu_to_le32(flags);
++		hdr_b->rts_duration = rts_dur;
++		hdr_b->retry = cpu_to_le32(control->retry_limit << 8);
++		hdr_b->tx_duration = ieee80211_generic_frame_duration(
++			dev,
++			priv->vif,
++			skb->len,
++			control->tx_rate);
++	}*/
+ 
+ 	info = (struct rtl8187_tx_info *)skb->cb;
+ 	info->control = kmemdup(control, sizeof(*control), GFP_ATOMIC);
+ 	info->urb = urb;
+ 	info->dev = dev;
+-	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
+-			  hdr, skb->len, rtl8187_tx_cb, skb);
++	usb_fill_bulk_urb(urb, priv->udev,
++			  usb_sndbulkpipe(priv->udev,
++			  priv->is_rtl8187b ? ep[skb->priority] : 2),
++			  /*priv->is_rtl8187b ? (void *)hdr_b : (void *)hdr,*/
++			  buf, skb->len, rtl8187_tx_cb, skb);
+ 	usb_submit_urb(urb, GFP_ATOMIC);
+ 
+ 	return 0;
+@@ -220,6 +285,7 @@ static void rtl8187_rx_cb(struct urb *urb)
+ 	struct ieee80211_hw *dev = info->dev;
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	struct rtl8187_rx_hdr *hdr;
++	struct rtl8187b_rx_hdr *hdr_b;
+ 	struct ieee80211_rx_status rx_status = { 0 };
+ 	int rate, signal;
+ 	u32 flags;
+@@ -240,11 +306,25 @@ static void rtl8187_rx_cb(struct urb *urb)
+ 	}
+ 
+ 	skb_put(skb, urb->actual_length);
+-	hdr = (struct rtl8187_rx_hdr *)(skb_tail_pointer(skb) - sizeof(*hdr));
+-	flags = le32_to_cpu(hdr->flags);
+-	skb_trim(skb, flags & 0x0FFF);
++	if (!priv->is_rtl8187b) {
++		hdr = (struct rtl8187_rx_hdr *)
++			(skb_tail_pointer(skb) - sizeof(*hdr));
++		flags = le32_to_cpu(hdr->flags);
++		signal = hdr->agc >> 1;
++		rx_status.antenna = (hdr->signal >> 7) & 1;
++		rx_status.signal = 64 - min(hdr->noise, (u8)64);
++		rx_status.mactime = le64_to_cpu(hdr->mac_time);
++	} else {
++		hdr_b = (struct rtl8187b_rx_hdr *)
++			(skb_tail_pointer(skb) - sizeof(*hdr_b));
++		flags = le32_to_cpu(hdr_b->flags);
++		signal = hdr_b->agc >> 1;
++		rx_status.antenna = (hdr_b->signal >> 7) & 1;
++		rx_status.signal = 64 - min(hdr_b->noise, (u8)64);
++		rx_status.mactime = le64_to_cpu(hdr_b->mac_time);
++	}
+ 
+-	signal = hdr->agc >> 1;
++	skb_trim(skb, flags & 0x0FFF);
+ 	rate = (flags >> 20) & 0xF;
+ 	if (rate > 3) {	/* OFDM rate */
+ 		if (signal > 90)
+@@ -260,13 +340,10 @@ static void rtl8187_rx_cb(struct urb *urb)
+ 		signal = 95 - signal;
+ 	}
+ 
+-	rx_status.antenna = (hdr->signal >> 7) & 1;
+-	rx_status.signal = 64 - min(hdr->noise, (u8)64);
+ 	rx_status.ssi = signal;
+ 	rx_status.rate_idx = rate;
+ 	rx_status.freq = dev->conf.channel->center_freq;
+ 	rx_status.band = dev->conf.channel->band;
+-	rx_status.mactime = le64_to_cpu(hdr->mac_time);
+ 	rx_status.flag |= RX_FLAG_TSFT;
+ 	if (flags & (1 << 13))
+ 		rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+@@ -306,7 +383,8 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+ 			break;
+ 		}
+ 		usb_fill_bulk_urb(entry, priv->udev,
+-				  usb_rcvbulkpipe(priv->udev, 1),
++				  usb_rcvbulkpipe(priv->udev,
++				  priv->is_rtl8187b ? 3 : 1),
+ 				  skb_tail_pointer(skb),
+ 				  RTL8187_MAX_RX, rtl8187_rx_cb, skb);
+ 		info = (struct rtl8187_rx_info *)skb->cb;
+@@ -319,29 +397,12 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+ 	return 0;
+ }
+ 
+-static int rtl8187_init_hw(struct ieee80211_hw *dev)
++static int rtl8187_cmd_reset(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	u8 reg;
+ 	int i;
+ 
+-	/* reset */
+-	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+-	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+-	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
+-	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+-
+-	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
+-
+-	msleep(200);
+-	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x10);
+-	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x11);
+-	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x00);
+-	msleep(200);
+-
+ 	reg = rtl818x_ioread8(priv, &priv->map->CMD);
+ 	reg &= (1 << 1);
+ 	reg |= RTL818X_CMD_RESET;
+@@ -377,6 +438,36 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	return 0;
++}
++
++static int rtl8187_init_hw(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 reg;
++	int res;
++
++	/* reset */
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
++
++	msleep(200);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x10);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x11);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x00);
++	msleep(200);
++
++	res = rtl8187_cmd_reset(dev);
++	if (res)
++		return res;
++
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+@@ -446,16 +537,192 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 	return 0;
+ }
+ 
++static const u8 rtl8187b_reg_table[][3] = {
++	{0xF0, 0x32, 0}, {0xF1, 0x32, 0}, {0xF2, 0x00, 0}, {0xF3, 0x00, 0},
++	{0xF4, 0x32, 0}, {0xF5, 0x43, 0}, {0xF6, 0x00, 0}, {0xF7, 0x00, 0},
++	{0xF8, 0x46, 0}, {0xF9, 0xA4, 0}, {0xFA, 0x00, 0}, {0xFB, 0x00, 0},
++	{0xFC, 0x96, 0}, {0xFD, 0xA4, 0}, {0xFE, 0x00, 0}, {0xFF, 0x00, 0},
++
++	{0x58, 0x4B, 1}, {0x59, 0x00, 1}, {0x5A, 0x4B, 1}, {0x5B, 0x00, 1},
++	{0x60, 0x4B, 1}, {0x61, 0x09, 1}, {0x62, 0x4B, 1}, {0x63, 0x09, 1},
++	{0xCE, 0x0F, 1}, {0xCF, 0x00, 1}, {0xE0, 0xFF, 1}, {0xE1, 0x0F, 1},
++	{0xE2, 0x00, 1}, {0xF0, 0x4E, 1}, {0xF1, 0x01, 1}, {0xF2, 0x02, 1},
++	{0xF3, 0x03, 1}, {0xF4, 0x04, 1}, {0xF5, 0x05, 1}, {0xF6, 0x06, 1},
++	{0xF7, 0x07, 1}, {0xF8, 0x08, 1},
++
++	{0x4E, 0x00, 2}, {0x0C, 0x04, 2}, {0x21, 0x61, 2}, {0x22, 0x68, 2},
++	{0x23, 0x6F, 2}, {0x24, 0x76, 2}, {0x25, 0x7D, 2}, {0x26, 0x84, 2},
++	{0x27, 0x8D, 2}, {0x4D, 0x08, 2}, {0x50, 0x05, 2}, {0x51, 0xF5, 2},
++	{0x52, 0x04, 2}, {0x53, 0xA0, 2}, {0x54, 0x1F, 2}, {0x55, 0x23, 2},
++	{0x56, 0x45, 2}, {0x57, 0x67, 2}, {0x58, 0x08, 2}, {0x59, 0x08, 2},
++	{0x5A, 0x08, 2}, {0x5B, 0x08, 2}, {0x60, 0x08, 2}, {0x61, 0x08, 2},
++	{0x62, 0x08, 2}, {0x63, 0x08, 2}, {0x64, 0xCF, 2}, {0x72, 0x56, 2},
++	{0x73, 0x9A, 2},
++
++	{0x34, 0xF0, 0}, {0x35, 0x0F, 0}, {0x5B, 0x40, 0}, {0x84, 0x88, 0},
++	{0x85, 0x24, 0}, {0x88, 0x54, 0}, {0x8B, 0xB8, 0}, {0x8C, 0x07, 0},
++	{0x8D, 0x00, 0}, {0x94, 0x1B, 0}, {0x95, 0x12, 0}, {0x96, 0x00, 0},
++	{0x97, 0x06, 0}, {0x9D, 0x1A, 0}, {0x9F, 0x10, 0}, {0xB4, 0x22, 0},
++	{0xBE, 0x80, 0}, {0xDB, 0x00, 0}, {0xEE, 0x00, 0}, {0x91, 0x03, 0},
++
++	{0x4C, 0x00, 2}, {0x9F, 0x00, 3}, {0x8C, 0x01, 0}, {0x8D, 0x10, 0},
++	{0x8E, 0x08, 0}, {0x8F, 0x00, 0}
++};
++
++static int rtl8187b_init_hw(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	int res, i;
++	u8 reg;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE | RTL818X_CONFIG3_GNT_SELECT;
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, 0x727f3f52);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, 0x45090658);
++	rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, 0);
++
++	rtl818x_iowrite8(priv, (u8 *)0xFF61, 0x10);
++	reg = rtl818x_ioread8(priv, (u8 *)0xFF62);
++	rtl818x_iowrite8(priv, (u8 *)0xFF62, reg & ~(1 << 5));
++	rtl818x_iowrite8(priv, (u8 *)0xFF62, reg | (1 << 5));
++
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	reg &= ~RTL818X_CONFIG3_ANAPARAM_WRITE;
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	res = rtl8187_cmd_reset(dev);
++	if (res)
++		return res;
++
++	rtl818x_iowrite16(priv, (__le16 *)0xFF2D, 0x0FFF);
++	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
++	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
++	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
++	reg |= RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT |
++	       RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
++
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
++	reg = rtl818x_ioread8(priv, &priv->map->RATE_FALLBACK);
++	reg |= RTL818X_RATE_FALLBACK_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->RATE_FALLBACK, reg);
++
++	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
++	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFD4, 0xFFFF, 1);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG1);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG1, (reg & 0x3F) | 0x80);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite8(priv, &priv->map->WPA_CONF, 0);
++	for (i = 0; i < ARRAY_SIZE(rtl8187b_reg_table); i++) {
++		rtl818x_iowrite8_idx(priv,
++				     (u8 *)(uintptr_t)
++				     (rtl8187b_reg_table[i][0] | 0xFF00),
++				     rtl8187b_reg_table[i][1],
++				     rtl8187b_reg_table[i][2]);
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->TID_AC_MAP, 0xFA50);
++	rtl818x_iowrite16(priv, &priv->map->INT_MIG, 0);
++
++	rtl818x_iowrite32_idx(priv, (__le32 *)0xFFF0, 0, 1);
++	rtl818x_iowrite32_idx(priv, (__le32 *)0xFFF4, 0, 1);
++	rtl818x_iowrite8_idx(priv, (u8 *)0xFFF8, 0, 1);
++
++	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x00004001);
++
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF72, 0x569A, 2);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE;
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++	msleep(1100);
++
++	priv->rf->init(dev);
++
++	reg = RTL818X_CMD_TX_ENABLE | RTL818X_CMD_RX_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
++
++	rtl818x_iowrite8(priv, (u8 *)0xFE41, 0xF4);
++	rtl818x_iowrite8(priv, (u8 *)0xFE40, 0x00);
++	rtl818x_iowrite8(priv, (u8 *)0xFE42, 0x00);
++	rtl818x_iowrite8(priv, (u8 *)0xFE42, 0x01);
++	rtl818x_iowrite8(priv, (u8 *)0xFE40, 0x0F);
++	rtl818x_iowrite8(priv, (u8 *)0xFE42, 0x00);
++	rtl818x_iowrite8(priv, (u8 *)0xFE42, 0x01);
++
++	reg = rtl818x_ioread8(priv, (u8 *)0xFFDB);
++	rtl818x_iowrite8(priv, (u8 *)0xFFDB, reg | (1 << 2));
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF72, 0x59FA, 3);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF74, 0x59D2, 3);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF76, 0x59D2, 3);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF78, 0x19FA, 3);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF7A, 0x19FA, 3);
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF7C, 0x00D0, 3);
++	rtl818x_iowrite8(priv, (u8 *)0xFF61, 0);
++	rtl818x_iowrite8_idx(priv, (u8 *)0xFF80, 0x0F, 1);
++	rtl818x_iowrite8_idx(priv, (u8 *)0xFF83, 0x03, 1);
++	rtl818x_iowrite8(priv, (u8 *)0xFFDA, 0x10);
++	rtl818x_iowrite8_idx(priv, (u8 *)0xFF4D, 0x08, 2);
++
++	rtl818x_iowrite32(priv, &priv->map->HSSI_PARA, 0x0600321B);
++
++	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFEC, 0x0800, 1);
++
++	return 0;
++}
++
+ static int rtl8187_start(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	u32 reg;
+ 	int ret;
+ 
+-	ret = rtl8187_init_hw(dev);
++	ret = (!priv->is_rtl8187b) ? rtl8187_init_hw(dev) :
++				     rtl8187b_init_hw(dev);
+ 	if (ret)
+ 		return ret;
+ 
++	if (priv->is_rtl8187b) {
++		reg = RTL818X_RX_CONF_MGMT |
++		      RTL818X_RX_CONF_DATA |
++		      RTL818X_RX_CONF_BROADCAST |
++		      RTL818X_RX_CONF_NICMAC |
++		      RTL818X_RX_CONF_BSSID |
++		      (7 << 13 /* RX FIFO threshold NONE */) |
++		      (7 << 10 /* MAX RX DMA */) |
++		      RTL818X_RX_CONF_RX_AUTORESETPHY |
++		      RTL818X_RX_CONF_ONLYERLPKT |
++		      RTL818X_RX_CONF_MULTICAST;
++		priv->rx_conf = reg;
++		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
++
++		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
++				  RTL818X_TX_CONF_HW_SEQNUM |
++				  RTL818X_TX_CONF_DISREQQSIZE |
++				  (7 << 8  /* short retry limit */) |
++				  (7 << 0  /* long retry limit */) |
++				  (7 << 21 /* MAX TX DMA */));
++		rtl8187_init_urbs(dev);
++		return 0;
++	}
++
+ 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
+ 
+ 	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
+@@ -582,18 +849,20 @@ static int rtl8187_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
+ 	msleep(10);
+ 	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
+ 
+-	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+-
+-	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
+-		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
+-		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+-		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
+-		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
+-	} else {
+-		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
+-		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
+-		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
+-		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
++	if (!priv->is_rtl8187b) {
++		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
++
++		if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
++			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
++			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
++			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
++			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
++		} else {
++			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
++			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
++			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
++			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
++		}
+ 	}
+ 
+ 	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
+@@ -609,14 +878,20 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev,
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	int i;
++	u8 reg;
+ 
+ 	for (i = 0; i < ETH_ALEN; i++)
+ 		rtl818x_iowrite8(priv, &priv->map->BSSID[i], conf->bssid[i]);
+ 
+-	if (is_valid_ether_addr(conf->bssid))
+-		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_INFRA);
+-	else
+-		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_NO_LINK);
++	if (is_valid_ether_addr(conf->bssid)) {
++		reg = RTL818X_MSR_INFRA;
++		if (priv->is_rtl8187b)
++			reg |= RTL818X_MSR_ENEDCA;
++		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
++	} else {
++		reg = RTL818X_MSR_NO_LINK;
++		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
++	}
+ 
+ 	return 0;
+ }
+@@ -703,6 +978,7 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	struct rtl8187_priv *priv;
+ 	struct eeprom_93cx6 eeprom;
+ 	struct ieee80211_channel *channel;
++	const char *chip_name;
+ 	u16 txpwr, reg;
+ 	int err, i;
+ 	DECLARE_MAC_BUF(mac);
+@@ -714,6 +990,7 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	}
+ 
+ 	priv = dev->priv;
++	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+ 
+ 	SET_IEEE80211_DEV(dev, &intf->dev);
+ 	usb_set_intfdata(intf, dev);
+@@ -741,7 +1018,9 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	priv->mode = IEEE80211_IF_TYPE_MNTR;
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS;
+-	dev->extra_tx_headroom = sizeof(struct rtl8187_tx_hdr);
++	dev->extra_tx_headroom = (!priv->is_rtl8187b) ?
++				  sizeof(struct rtl8187_tx_hdr) :
++				  sizeof(struct rtl8187b_tx_hdr);
+ 	dev->queues = 1;
+ 	dev->max_rssi = 65;
+ 	dev->max_signal = 64;
+@@ -778,10 +1057,24 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 		(*channel++).hw_value = txpwr & 0xFF;
+ 		(*channel++).hw_value = txpwr >> 8;
+ 	}
+-	for (i = 0; i < 2; i++) {
+-		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_TXPWR_CHAN_6 + i,
++	if (!priv->is_rtl8187b) {
++		for (i = 0; i < 2; i++) {
++			eeprom_93cx6_read(&eeprom,
++					  RTL8187_EEPROM_TXPWR_CHAN_6 + i,
++					  &txpwr);
++			(*channel++).hw_value = txpwr & 0xFF;
++			(*channel++).hw_value = txpwr >> 8;
++		}
++	} else {
++		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_TXPWR_CHAN_6,
+ 				  &txpwr);
+ 		(*channel++).hw_value = txpwr & 0xFF;
++
++		eeprom_93cx6_read(&eeprom, 0x0A, &txpwr);
++		(*channel++).hw_value = txpwr & 0xFF;
++
++		eeprom_93cx6_read(&eeprom, 0x1C, &txpwr);
++		(*channel++).hw_value = txpwr & 0xFF;
+ 		(*channel++).hw_value = txpwr >> 8;
+ 	}
+ 
+@@ -797,6 +1090,38 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+ 
++	if (!priv->is_rtl8187b) {
++		u32 reg32;
++		reg32 = rtl818x_ioread32(priv, &priv->map->TX_CONF);
++		reg32 &= RTL818X_TX_CONF_HWVER_MASK;
++		switch (reg32) {
++		case RTL818X_TX_CONF_R8187vD_1:
++		case RTL818X_TX_CONF_R8187vD_2:
++			chip_name = "RTL8187vD";
++			break;
++		default:
++			chip_name = "RTL8187vB (default)";
++		}
++       } else {
++		switch (rtl818x_ioread8(priv, (u8 *)0xFFE1)) {
++		case RTL818X_R8187B_B:
++			chip_name = "RTL8187BvB";
++			priv->hw_rev = RTL8187BvB;
++			break;
++		case RTL818X_R8187B_D:
++			chip_name = "RTL8187BvD";
++			priv->hw_rev = RTL8187BvD;
++			break;
++		case RTL818X_R8187B_E:
++			chip_name = "RTL8187BvE";
++			priv->hw_rev = RTL8187BvE;
++			break;
++		default:
++			chip_name = "RTL8187BvB (default)";
++			priv->hw_rev = RTL8187BvB;
++		}
++	}
++
+ 	priv->rf = rtl8187_detect_rf(dev);
+ 
+ 	err = ieee80211_register_hw(dev);
+@@ -805,9 +1130,9 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 		goto err_free_dev;
+ 	}
+ 
+-	printk(KERN_INFO "%s: hwaddr %s, rtl8187 V%d + %s\n",
++	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
+ 	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
+-	       priv->asic_rev, priv->rf->name);
++	       chip_name, priv->asic_rev, priv->rf->name);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
+index 9146387..2a21ddb 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -471,12 +471,42 @@ static void rtl8225_rf_init(struct ieee80211_hw *dev)
+ 	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
+ }
+ 
++static const u8 rtl8225z2_agc[] = {
++	0x5e, 0x5e, 0x5e, 0x5e, 0x5d, 0x5b, 0x59, 0x57, 0x55, 0x53, 0x51, 0x4f,
++	0x4d, 0x4b, 0x49, 0x47, 0x45, 0x43, 0x41, 0x3f, 0x3d, 0x3b, 0x39, 0x37,
++	0x35, 0x33, 0x31, 0x2f, 0x2d, 0x2b, 0x29, 0x27, 0x25, 0x23, 0x21, 0x1f,
++	0x1d, 0x1b, 0x19, 0x17, 0x15, 0x13, 0x11, 0x0f, 0x0d, 0x0b, 0x09, 0x07,
++	0x05, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19,
++	0x19, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x26, 0x27, 0x27, 0x28,
++	0x28, 0x29, 0x2a, 0x2a, 0x2a, 0x2b, 0x2b, 0x2b, 0x2c, 0x2c, 0x2c, 0x2d,
++	0x2d, 0x2d, 0x2d, 0x2e, 0x2e, 0x2e, 0x2e, 0x2f, 0x2f, 0x2f, 0x30, 0x30,
++	0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
++	0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31
++};
++static const u8 rtl8225z2_ofdm[] = {
++	0x10, 0x0d, 0x01, 0x00, 0x14, 0xfb, 0xfb, 0x60,
++	0x00, 0x60, 0x00, 0x00, 0x00, 0x5c, 0x00, 0x00,
++	0x40, 0x00, 0x40, 0x00, 0x00, 0x00, 0xa8, 0x26,
++	0x32, 0x33, 0x07, 0xa5, 0x6f, 0x55, 0xc8, 0xb3,
++	0x0a, 0xe1, 0x2C, 0x8a, 0x86, 0x83, 0x34, 0x0f,
++	0x4f, 0x24, 0x6f, 0xc2, 0x6b, 0x40, 0x80, 0x00,
++	0xc0, 0xc1, 0x58, 0xf1, 0x00, 0xe4, 0x90, 0x3e,
++	0x6d, 0x3c, 0xfb, 0x07
++};
++
+ static const u8 rtl8225z2_tx_power_cck_ch14[] = {
+-	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00
++	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00,
++	0x30, 0x2f, 0x29, 0x15, 0x00, 0x00, 0x00, 0x00,
++	0x30, 0x2f, 0x29, 0x15, 0x00, 0x00, 0x00, 0x00,
++	0x30, 0x2f, 0x29, 0x15, 0x00, 0x00, 0x00, 0x00
+ };
+ 
+ static const u8 rtl8225z2_tx_power_cck[] = {
+-	0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04
++	0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04,
++	0x30, 0x2f, 0x29, 0x21, 0x19, 0x10, 0x08, 0x03,
++	0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03,
++	0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03
+ };
+ 
+ static const u8 rtl8225z2_tx_power_ofdm[] = {
+@@ -542,6 +572,85 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	msleep(1);
+ }
+ 
++static void rtl8225z2_b_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 cck_power, ofdm_power;
++	const u8 *tmp;
++	int i;
++
++	cck_power = priv->channels[channel - 1].hw_value & 0xF;
++	ofdm_power = priv->channels[channel - 1].hw_value >> 4;
++
++	if (cck_power > 15)
++		cck_power = (priv->hw_rev == RTL8187BvB) ? 15 : 22;
++	else
++		cck_power += (priv->hw_rev == RTL8187BvB) ? 0 : 7;
++	cck_power += priv->txpwr_base & 0xF;
++	cck_power = min(cck_power, (u8)35);
++
++	if (ofdm_power > 15)
++		ofdm_power = (priv->hw_rev == RTL8187BvB) ? 17 : 25;
++	else
++		ofdm_power += (priv->hw_rev == RTL8187BvB) ? 2 : 10;
++	ofdm_power += (priv->txpwr_base >> 4) & 0xF;
++	ofdm_power = min(ofdm_power, (u8)35);
++
++	if (channel == 14)
++		tmp = rtl8225z2_tx_power_cck_ch14;
++	else
++		tmp = rtl8225z2_tx_power_cck;
++
++	if (priv->hw_rev == RTL8187BvB) {
++		if (cck_power <= 6)
++			; /* do nothing */
++		else if (cck_power <= 11)
++			tmp += 8;
++		else
++			tmp += 16;
++	} else {
++		if (cck_power <= 5)
++			; /* do nothing */
++		else if (cck_power <= 11)
++			tmp += 8;
++		else if (cck_power <= 17)
++			tmp += 16;
++		else
++			tmp += 24;
++	}
++
++	for (i = 0; i < 8; i++)
++		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
++			 rtl8225z2_tx_gain_cck_ofdm[cck_power]);
++	msleep(1);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
++			 rtl8225z2_tx_gain_cck_ofdm[ofdm_power] << 1);
++	if (priv->hw_rev == RTL8187BvB) {
++		if (ofdm_power <= 11) {
++			rtl8225_write_phy_ofdm(dev, 0x87, 0x60);
++			rtl8225_write_phy_ofdm(dev, 0x89, 0x60);
++		} else {
++			rtl8225_write_phy_ofdm(dev, 0x87, 0x5c);
++			rtl8225_write_phy_ofdm(dev, 0x89, 0x5c);
++		}
++	} else {
++		if (ofdm_power <= 11) {
++			rtl8225_write_phy_ofdm(dev, 0x87, 0x5c);
++			rtl8225_write_phy_ofdm(dev, 0x89, 0x5c);
++		} else if (ofdm_power <= 17) {
++			rtl8225_write_phy_ofdm(dev, 0x87, 0x54);
++			rtl8225_write_phy_ofdm(dev, 0x89, 0x54);
++		} else {
++			rtl8225_write_phy_ofdm(dev, 0x87, 0x50);
++			rtl8225_write_phy_ofdm(dev, 0x89, 0x50);
++		}
++	}
++	msleep(1);
++}
++
+ static const u16 rtl8225z2_rxgain[] = {
+ 	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
+ 	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
+@@ -715,6 +824,81 @@ static void rtl8225z2_rf_init(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
+ }
+ 
++static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	int i;
++
++	rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
++	rtl8225_write(dev, 0x1, 0xEE0); msleep(1);
++	rtl8225_write(dev, 0x2, 0x44D); msleep(1);
++	rtl8225_write(dev, 0x3, 0x441); msleep(1);
++	rtl8225_write(dev, 0x4, 0x8C3); msleep(1);
++	rtl8225_write(dev, 0x5, 0xC72); msleep(1);
++	rtl8225_write(dev, 0x6, 0x0E6); msleep(1);
++	rtl8225_write(dev, 0x7, 0x82A); msleep(1);
++	rtl8225_write(dev, 0x8, 0x03F); msleep(1);
++	rtl8225_write(dev, 0x9, 0x335); msleep(1);
++	rtl8225_write(dev, 0xa, 0x9D4); msleep(1);
++	rtl8225_write(dev, 0xb, 0x7BB); msleep(1);
++	rtl8225_write(dev, 0xc, 0x850); msleep(1);
++	rtl8225_write(dev, 0xd, 0xCDF); msleep(1);
++	rtl8225_write(dev, 0xe, 0x02B); msleep(1);
++	rtl8225_write(dev, 0xf, 0x114); msleep(1);
++
++	rtl8225_write(dev, 0x0, 0x1B7); msleep(1);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
++		rtl8225_write(dev, 0x1, i + 1); msleep(1);
++		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]); msleep(1);
++	}
++
++	rtl8225_write(dev, 0x3, 0x080); msleep(1);
++	rtl8225_write(dev, 0x5, 0x004); msleep(1);
++	rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
++	msleep(3000);
++
++	rtl8225_write(dev, 0x2, 0xC4D); msleep(1);
++	msleep(2000);
++
++	rtl8225_write(dev, 0x2, 0x44D); msleep(1);
++	rtl8225_write(dev, 0x0, 0x2BF); msleep(1);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK, 0x03);
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM, 0x07);
++	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);
++
++	rtl8225_write_phy_ofdm(dev, 0x80, 0x12);
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_agc); i++) {
++		rtl8225_write_phy_ofdm(dev, 0xF, rtl8225z2_agc[i]);
++		rtl8225_write_phy_ofdm(dev, 0xE, 0x80 + i);
++		rtl8225_write_phy_ofdm(dev, 0xE, 0);
++	}
++	rtl8225_write_phy_ofdm(dev, 0x80, 0x10);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_ofdm); i++)
++		rtl8225_write_phy_ofdm(dev, i, rtl8225z2_ofdm[i]);
++
++	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
++	rtl818x_iowrite8(priv, &priv->map->SLOT, 9);
++	rtl818x_iowrite8(priv, (u8 *)0xFFF0, 28);
++	rtl818x_iowrite8(priv, (u8 *)0xFFF4, 28);
++	rtl818x_iowrite8(priv, (u8 *)0xFFF8, 28);
++	rtl818x_iowrite8(priv, (u8 *)0xFFFC, 28);
++	rtl818x_iowrite8(priv, (u8 *)0xFF2D, 0x5B);
++	rtl818x_iowrite8(priv, (u8 *)0xFF79, 0x5B);
++	rtl818x_iowrite32(priv, (__le32 *)0xFFF0, (7 << 12) | (3 << 8) | 28);
++	rtl818x_iowrite32(priv, (__le32 *)0xFFF4, (7 << 12) | (3 << 8) | 28);
++	rtl818x_iowrite32(priv, (__le32 *)0xFFF8, (7 << 12) | (3 << 8) | 28);
++	rtl818x_iowrite32(priv, (__le32 *)0xFFFC, (7 << 12) | (3 << 8) | 28);
++	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
++
++	rtl8225_write_phy_ofdm(dev, 0x97, 0x46); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0xa4, 0xb6); msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x85, 0xfc); msleep(1);
++	rtl8225_write_phy_cck(dev, 0xc1, 0x88); msleep(1);
++}
++
+ static void rtl8225_rf_stop(struct ieee80211_hw *dev)
+ {
+ 	u8 reg;
+@@ -739,8 +923,10 @@ static void rtl8225_rf_set_channel(struct ieee80211_hw *dev,
+ 
+ 	if (priv->rf->init == rtl8225_rf_init)
+ 		rtl8225_rf_set_tx_power(dev, chan);
+-	else
++	else if (priv->rf->init == rtl8225z2_rf_init)
+ 		rtl8225z2_rf_set_tx_power(dev, chan);
++	else
++		rtl8225z2_b_rf_set_tx_power(dev, chan);
+ 
+ 	rtl8225_write(dev, 0x7, rtl8225_chan[chan - 1]);
+ 	msleep(10);
+@@ -760,19 +946,30 @@ static const struct rtl818x_rf_ops rtl8225z2_ops = {
+ 	.set_chan	= rtl8225_rf_set_channel
+ };
+ 
++static const struct rtl818x_rf_ops rtl8225z2_b_ops = {
++	.name		= "rtl8225z2",
++	.init		= rtl8225z2_b_rf_init,
++	.stop		= rtl8225_rf_stop,
++	.set_chan	= rtl8225_rf_set_channel
++};
++
+ const struct rtl818x_rf_ops * rtl8187_detect_rf(struct ieee80211_hw *dev)
+ {
+ 	u16 reg8, reg9;
++	struct rtl8187_priv *priv = dev->priv;
+ 
+-	rtl8225_write(dev, 0, 0x1B7);
++	if (!priv->is_rtl8187b) {
++		rtl8225_write(dev, 0, 0x1B7);
+ 
+-	reg8 = rtl8225_read(dev, 8);
+-	reg9 = rtl8225_read(dev, 9);
++		reg8 = rtl8225_read(dev, 8);
++		reg9 = rtl8225_read(dev, 9);
+ 
+-	rtl8225_write(dev, 0, 0x0B7);
++		rtl8225_write(dev, 0, 0x0B7);
+ 
+-	if (reg8 != 0x588 || reg9 != 0x700)
+-		return &rtl8225_ops;
++		if (reg8 != 0x588 || reg9 != 0x700)
++			return &rtl8225_ops;
+ 
+-	return &rtl8225z2_ops;
++		return &rtl8225z2_ops;
++	} else
++		return &rtl8225z2_b_ops;
+ }
+diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
+index 4f7d38f..e497fea 100644
+--- a/drivers/net/wireless/rtl818x.h
++++ b/drivers/net/wireless/rtl818x.h
+@@ -66,7 +66,10 @@ struct rtl818x_csr {
+ #define RTL818X_TX_CONF_R8180_F		(3 << 25)
+ #define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
+ #define RTL818X_TX_CONF_R8185_D		(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_1	(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_2	(6 << 25)
+ #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
++#define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
+ #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
+ #define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
+ #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
+@@ -106,8 +109,11 @@ struct rtl818x_csr {
+ #define RTL818X_MSR_NO_LINK		(0 << 2)
+ #define RTL818X_MSR_ADHOC		(1 << 2)
+ #define RTL818X_MSR_INFRA		(2 << 2)
++#define RTL818X_MSR_MASTER		(3 << 2)
++#define RTL818X_MSR_ENEDCA		(4 << 2)
+ 	u8	CONFIG3;
+ #define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
++#define RTL818X_CONFIG3_GNT_SELECT	(1 << 7)
+ 	u8	CONFIG4;
+ #define RTL818X_CONFIG4_POWEROFF	(1 << 6)
+ #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
+@@ -133,7 +139,9 @@ struct rtl818x_csr {
+ 	__le32	RF_TIMING;
+ 	u8	GP_ENABLE;
+ 	u8	GPIO;
+-	u8	reserved_12[10];
++	u8	reserved_12[2];
++	__le32	HSSI_PARA;
++	u8	reserved_13[4];
+ 	u8	TX_AGC_CTL;
+ #define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
+ #define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
+@@ -141,29 +149,38 @@ struct rtl818x_csr {
+ 	u8	TX_GAIN_CCK;
+ 	u8	TX_GAIN_OFDM;
+ 	u8	TX_ANTENNA;
+-	u8	reserved_13[16];
++	u8	reserved_14[16];
+ 	u8	WPA_CONF;
+-	u8	reserved_14[3];
++	u8	reserved_15[3];
+ 	u8	SIFS;
+ 	u8	DIFS;
+ 	u8	SLOT;
+-	u8	reserved_15[5];
++	u8	reserved_16[5];
+ 	u8	CW_CONF;
+ #define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
+ #define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
+ 	u8	CW_VAL;
+ 	u8	RATE_FALLBACK;
+-	u8	reserved_16[25];
++#define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
++	u8	ACM_CONTROL;
++	u8	reserved_17[24];
+ 	u8	CONFIG5;
+ 	u8	TX_DMA_POLLING;
+-	u8	reserved_17[2];
++	u8	reserved_18[2];
+ 	__le16	CWR;
+ 	u8	RETRY_CTR;
+-	u8	reserved_18[5];
++	u8	reserved_19[3];
++	__le16	INT_MIG;
++#define RTL818X_R8187B_B	0
++#define RTL818X_R8187B_D	1
++#define RTL818X_R8187B_E	2
+ 	__le32	RDSAR;
+-	u8	reserved_19[12];
+-	__le16	FEMR;
++	__le16	TID_AC_MAP;
+ 	u8	reserved_20[4];
++	u8	ANAPARAM3;
++	u8	reserved_21[5];
++	__le16	FEMR;
++	u8	reserved_22[4];
+ 	__le16	TALLY_CNT;
+ 	u8	TALLY_SEL;
+ } __attribute__((packed));
+
+
 -- 
-1.5.5.144.g3e42
-
-
-
+[]'s
+Herton
