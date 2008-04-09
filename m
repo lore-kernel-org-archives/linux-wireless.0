@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbYDWLNV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 07:13:21 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-In-Reply-To: <001101c8a51d$8e5997d0$0b3ca8c0@gotws1589> (sfid-20080423_114948_059414_17607EB2)
-References: <001101c8a51d$8e5997d0$0b3ca8c0@gotws1589>
-	 (sfid-20080423_114948_059414_17607EB2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VJ0GCoRMcUVaAaNO6b/u"
-Date: Wed, 23 Apr 2008 13:12:42 +0200
-Message-Id: <1208949162.31429.74.camel@johannes.berg> (sfid-20080423_131408_595316_4F446F1F)
+Received: from c60.cesmail.net ([216.154.195.49]:34284 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752425AbYDIS7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2008 14:59:25 -0400
+Subject: Re: [PATCH] Add Realtek 8187B support
+From: Pavel Roskin <proski@gnu.org>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200804091436.23685.herton@mandriva.com.br>
+References: <200804081931.07638.herton@mandriva.com.br>
+	 <1207714923.8539.26.camel@rd>  <200804091436.23685.herton@mandriva.com.br>
+Content-Type: text/plain
+Date: Wed, 09 Apr 2008 14:59:23 -0400
+Message-Id: <1207767563.3944.7.camel@dv> (sfid-20080409_195929_663745_0CC7D2D7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-04-09 at 14:36 -0300, Herton Ronaldo Krzesinski wrote:
 
---=-VJ0GCoRMcUVaAaNO6b/u
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I run checkpatch.pl, I just didn't fixed these because they were lines already
+> this way, my patch got these because I moved reset code common to rtl8187b
+> and rtl8187 (new rtl8187_cmd_reset function) out of rtl8187_init_hw. Also I
+> introduced some new ones, these lines are over 80 characters:
+> rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+> rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+> 
+> Should I fix all of these ocurrences in rtl8187b patch or in a new patch?
 
+I feel bad that you have to deal with sloppy code left by others, but
+these are the rules of the game.  I suggest that you do all cleanups
+first as separate patches, and then the user-visible changes.  The only
+exception is then your user visible changes replace the old code.
 
-> The below patch makes sure that we drop the BSSID when we disassociate.
+I could do some cleanups myself, but I think it would be easier for you
+to do it at once rather than merge my patches.
 
-> --- a/ieee80211_sta.c	Wed Apr 23 10:14:30 2008
-> +++ b/ieee80211_sta.c	Wed Apr 23 08:41:23 2008
-> @@ -479,6 +479,9 @@ static void ieee80211_set_associated(str
->  		netif_carrier_off(dev);
->  		ieee80211_reset_erp_info(dev);
->  		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
-> +
-> +		// make sure no association start before we got a new BSSID
-> +		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
+Or maybe we should ask the existing maintainers to prepare a clean
+playground for new contributors?  Michael?  Andrea?
 
-I don't think that patch makes sense, after all, userspace could request
-to disassociate and afterwards re-request to associate by setting the
-SSID and not setting the BSSID again, which would lose the fixed BSSID
-without userspace interaction.
-
-However, I'm not sure how to fix this.
-
-johannes
-
---=-VJ0GCoRMcUVaAaNO6b/u
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASA8ZqaVg1VMiehFYAQJIWg/+MVge1tKZqBrFlxzk5ycmpIVjMwcB2SVH
-c/hPV2brlyr0/tiPb0u2x1z/mMcnvpZeOAXIvuVtcqD6hs8UxZiBkA1XHoPw6rLA
-bRGHbPi/n55HZKnBr8RvGaGMEPAxLR3aML+jBZXWzHG+jjponL+YgjH0NIEcJVDo
-cUvv1lCUYkApM1GGLZtiIremfjLAWX/BCRTrBrs5Lo5F6/VLNxkWfubKFhNqyE0n
-Rf3QjNAEeM7rosRnwD0rfYBUzzlzT9hFXHjLQJXs52YshSA93lSdAWaUKTGHV132
-4cbYKd4sEhZ/jczHtsaWDJJqTldUXMgtaHNuGxu6GsQWH5FsRgEsVqG3e2wwbzcu
-81YyqfKL3KRKT8s9LuoUS0M/LBZx7Sif+hLRxkV871g3ay1HcTRmTQUZ0gMDmH8f
-9cqJqFm8NVPR3DAxUC1n3PG8ZzDB81Q9fT1kN3Fyn3+NH/kdy4T8HzDF6e5B7zUz
-/Rfit+U3a8ITqeDec9Pam/jRJ6KcWpmJH3deIoMLxnyr+3n1Ysl7fVRN1IRc/FYG
-/K0tJN+7p/Tf/OQbVntIYULh4fzFTopgsEnnot0/LAgoV4CvcmDa787KIdnbYbWr
-8E4GvNyNdLr2/v51jtl1gBJ/XtfHDNO4+Snf6qAVgD/OWRNIxZ4Z/0HEBwhlrOWk
-MOSOawwowKw=
-=g4G+
------END PGP SIGNATURE-----
-
---=-VJ0GCoRMcUVaAaNO6b/u--
-
+-- 
+Regards,
+Pavel Roskin
