@@ -1,86 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47815 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751921AbYDUTYc convert rfc822-to-8bit (ORCPT
+Received: from smtp239.poczta.interia.pl ([217.74.64.239]:26891 "EHLO
+	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497AbYDJLdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 15:24:32 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Miles Lane" <miles.lane@gmail.com>
-Subject: Re: b43 speed problem over 2.6.24 (was: One more log file from when the network was unusable)
-Date: Mon, 21 Apr 2008 21:24:05 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-References: <a44ae5cd0804161701k1014f3dkebaa1d35f1a8e20a@mail.gmail.com> <1208779022.26186.91.camel@johannes.berg> <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
-In-Reply-To: <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
+	Thu, 10 Apr 2008 07:33:18 -0400
+Received: from poczta.interia.pl (mi02.poczta.interia.pl [10.217.12.2])
+	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id E5CF1D47A3
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:33:13 +0200 (CEST)
+Received: from [192.168.1.27] (d90-129-71-151.cust.tele2.pl [90.129.71.151])
+	by poczta.interia.pl (INTERIA.PL) with ESMTP id E7B2B2BF89E
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:33:12 +0200 (CEST)
+Message-ID: <47FDFB57.3010700@interia.pl> (sfid-20080410_123330_038534_DED0CD6A)
+Date: Thu, 10 Apr 2008 13:34:47 +0200
+From: Maciek Kaliszewski <mkalkal@interia.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200804212124.05493.mb@bu3sch.de> (sfid-20080421_212522_318754_874A3E52)
+To: linux-wireless@vger.kernel.org
+Subject: Kismet shows no clients (drivers iwl3945.ko or p54pci.ko)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 21 April 2008 20:50:06 Miles Lane wrote:
-> On Mon, Apr 21, 2008 at 7:57 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Hi,
-> >
-> >  Miles described a b43 speed problem in the thread
-> >
-> >         =EF=BB=BF2.6.25-rc9 -- bcm4306 performance is in the toilet
-> >
-> >  (over 2.6.24) and not being able to see anything from his logs/pac=
-ket
-> >  captures/... I asked him to bisect. This resulted in
-> >
-> >  commit 61bca6eb85c863603d6054530e2f65c3b9aba85b
-> >  Author: Stefano Brivio <stefano.brivio@polimi.it>
-> >  Date:   Tue Nov 6 22:49:05 2007 +0100
-> >
-> >     b43: rewrite A PHY initialization
-> >
-> >  which is a huge commit and hence a bit of a problem. Does anyone h=
-ave
-> >  suggestions how to proceed?
-> >
-> >  I have very similar hardware, maybe this card is affected by the
-> >  boardflags problems we found recently? Miles, can you give us
-> >   * lspci -vn -s =EF=BB=BF01:06.0
-> >   * the kernel init messages when ssb is built with debugging
->=20
-> Here you go:
->=20
-> # lspci -vn -s 01:06.0
-> 01:06.0 0280: 14e4:4320 (rev 03)
-> 	Subsystem: 1057:7110
-> 	Flags: bus master, fast devsel, latency 16, IRQ 5
-> 	Memory at ed000000 (32-bit, non-prefetchable) [size=3D8K]
->=20
-> [    3.977930] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x04, ven=
-dor 0x4243)
-> [    3.977942] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x05,
-> vendor 0x4243)
-> [    3.977952] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x02, vendor =
-0x4243)
-> [    3.977962] ssb: Core 3 found: V90 (cc 0x807, rev 0x02, vendor 0x4=
-243)
-> [    3.977971] ssb: Core 4 found: PCI (cc 0x804, rev 0x09, vendor 0x4=
-243)
-> [    3.993965] ssb: SPROM revision 2 detected.
-> [    3.994816] ssb: Sonics Silicon Backplane found on PCI device 0000=
-:01:06.0
->=20
-> Thanks,
->       Miles
->=20
+Hi,
 
-Can you also provide an SPROM dump?
-cat $(find /sys -name ssb_sprom)
+I have "02:00.0 Network controller: Intersil Corporation ISL3890 [Prism
+GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)"
+which does not work with prism54.ko driver . So I have to use p54pci.ko
+(from kernel 2.6.25-rc8) .
+When I run kismet ,it detects wifi networks , but shows there is no
+clients on the networks (I started data transfer on that network but it
+didn't help)
+Tcpdump on wlan0 interface (Monitor mode ) shows :
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+tcpdump: WARNING: wlan0: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on wlan0, link-type IEEE802_11_RADIO (802.11 plus BSD radio
+information header), capture size 96 bytes
+12:38:51.010818 490951797us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.317951 491258998us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.625134 491566198us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.932369 491873444us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.034714 491975793us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.137106 492078194us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.239481 492180591us tsft 1.0 Mb/s 2457 MHz (0x0480) 74dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.341902 492282991us tsft 1.0 Mb/s 2457 MHz (0x0480) 84dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.444271 492385391us tsft 1.0 Mb/s 2457 MHz (0x0480) 80dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.649064 492590193us tsft 1.0 Mb/s 2457 MHz (0x0480) 82dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.751479 492692596us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.853861 492794991us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.956271 492897395us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.161056 493102186us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.263467 493204593us tsft 1.0 Mb/s 2457 MHz (0x0480) 87dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.365850 493306992us tsft 1.0 Mb/s 2457 MHz (0x0480) 86dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.468229 493409393us tsft 1.0 Mb/s 2457 MHz (0x0480) 78dB signal
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
+Mbit] ESS CH: 11, PRIVACY
+
+
+
+
+As far as I can read the log , it show there is no traffic on net
+APTEKA, but I know there is a data transfer on the net.
+I had similar results on other computer ,intel wifi card with iwl3945.ko
+driver(kernel 2.6.24.2).
+
+Regards
+Maciek
+
+
+
+
+
+
+----------------------------------------------------------------------
+Sprawdz, czy jestes prawdziwym internauta!
+Kliknij http://link.interia.pl/f1d6e
+
