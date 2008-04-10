@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56433
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752465AbYDIWT5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 18:19:57 -0400
-Date: Wed, 09 Apr 2008 15:19:58 -0700 (PDT)
-Message-Id: <20080409.151958.240894682.davem@davemloft.net> (sfid-20080409_232000_983015_5C003669)
+Received: from mga01.intel.com ([192.55.52.88]:64184 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752926AbYDJUTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2008 16:19:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6.26 2008-04-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080408211043.GA17197@tuxdriver.com>
-References: <20080408211043.GA17197@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] MAINTAINERS: move to generic repository for iwlwifi
+Date: Thu, 10 Apr 2008 13:16:27 -0700
+Message-Id: <1207858587-14503-1-git-send-email-reinette.chatre@intel.com> (sfid-20080410_211925_078274_6B858569)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 8 Apr 2008 17:10:43 -0400
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+John,
 
-> Another week, another 50+ patches for 2.6.26...
-> 
-> There are the usual libertas, iwlwifi, and b43 (and ssb) updates, plus a
-> few other fixes for issues already in net-2.6.26.  There is also some
-> movement of files to more convenient places or names.
-> 
-> Please let me know if there are problems!
+Is it possible to get this laggard into 2.6.25?
 
-Pulled, thanks.
+ MAINTAINERS |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I'll push it out to net-2.6.26 after some basic build validations
-pass.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9e63f16..d7c62b2 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2116,7 +2116,7 @@ M:	reinette.chatre@intel.com
+ L:	linux-wireless@vger.kernel.org
+ L:	ipw3945-devel@lists.sourceforge.net
+ W:	http://intellinuxwireless.org
+-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/rchatre/iwlwifi-2.6.git
++T:	git kernel.org:/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+ S:	Supported
+ 
+ IOC3 ETHERNET DRIVER
+-- 
+1.5.3.4
 
-Thanks again John!
