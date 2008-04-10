@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:54766 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393AbYDZEj1 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56474 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757338AbYDJOlf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 00:39:27 -0400
-Date: Sat, 26 Apr 2008 00:39:27 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Roel Kluin <12o3l@tiscali.nl>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] prism54: prism54_get_encode() test below 0 on unsigned index
-Message-ID: <20080426043927.GE4810@ruslug.rutgers.edu> (sfid-20080426_063949_565318_E43B7F6D)
-References: <480F9481.2040303@tiscali.nl> <1209056973.5224.0.camel@localhost.localdomain> <4811299A.7060407@tiscali.nl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4811299A.7060407@tiscali.nl>
+	Thu, 10 Apr 2008 10:41:35 -0400
+Message-Id: <20080410134827.771251000@sipsolutions.net> (sfid-20080410_154208_423607_C92A3030)
+References: <20080410134810.629048000@sipsolutions.net>
+Date: Thu, 10 Apr 2008 15:48:11 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel@vger.kernel.org
+Cc: Josh Triplett <josh@freedesktop.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+Subject: [RFC 1/3] add macros for new sparse features
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 25, 2008 at 02:45:14AM +0200, Roel Kluin wrote:
-> Dan Williams wrote:
-> > On Wed, 2008-04-23 at 21:56 +0200, Roel Kluin wrote:
-> 
-> >> u32 index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-> > 
-> > Probably should just change that to an 'int' instead of a u32.
-> > 
-> > Dan
-> > 
-> 
-> Thanks, in that case use the patch below
-> ---
-> when left unsigned, the test 'if (index < 0)' will not work.
-> 
-> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
-> ---
-> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> index e5b3c28..8076ead 100644
-> --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> @@ -1158,7 +1158,8 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
->  {
->  	islpci_private *priv = netdev_priv(ndev);
->  	struct obj_key *key;
-> -	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-> +	u32 devindex;
-> +	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+This patch adds kernel macros for a few new sparse features, namely
+ * checking try_lock functions and
+ * making a function or macro require a certain lock.
 
-The check for -1 seems silly lets just remove its use.
+Still waiting to see what the sparse folks say to my patches.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Not-yet-signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/compiler.h |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 5b375b2..7e2d3b6 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1158,7 +1158,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
- {
- 	islpci_private *priv = netdev_priv(ndev);
- 	struct obj_key *key;
--	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-+	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX);
- 	u32 authen = 0, invoke = 0, exunencrypt = 0;
- 	int rvalue;
- 	union oid_res_t r;
-@@ -1186,7 +1186,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
- 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYID, 0, NULL, &r);
- 	devindex = r.u;
- 	/* Now get the key, return it */
--	if (index == -1 || index > 3)
-+	if (!index || index > 3)
- 		/* no index provided, use the current one */
- 		index = devindex;
- 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYX, index, NULL, &r);
+--- everything.orig/include/linux/compiler.h	2008-04-10 15:36:18.000000000 +0200
++++ everything/include/linux/compiler.h	2008-04-10 15:36:40.000000000 +0200
+@@ -11,9 +11,12 @@
+ # define __nocast	__attribute__((nocast))
+ # define __iomem	__attribute__((noderef, address_space(2)))
+ # define __acquires(x)	__attribute__((context(x,0,1)))
++# define __try_acquires(x,t,f)	__attribute__((conditional_context(x,0,t,f)))
+ # define __releases(x)	__attribute__((context(x,1,0)))
+ # define __acquire(x)	__context__(x,1)
+ # define __release(x)	__context__(x,-1)
++# define __requires(x)	__attribute__((context(x,1,1)))
++# define __macro_requires(x)	__context__(x,0,1)
+ # define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
+ extern void __chk_user_ptr(const volatile void __user *);
+ extern void __chk_io_ptr(const volatile void __iomem *);
+@@ -28,9 +31,12 @@ extern void __chk_io_ptr(const volatile 
+ # define __chk_io_ptr(x) (void)0
+ # define __builtin_warning(x, y...) (1)
+ # define __acquires(x)
++# define __try_acquires(x,t,f)
+ # define __releases(x)
+ # define __acquire(x) (void)0
+ # define __release(x) (void)0
++# define __requires(x)
++# define __macro_requires(x)
+ # define __cond_lock(x,c) (c)
+ #endif
+ 
+
+-- 
+
