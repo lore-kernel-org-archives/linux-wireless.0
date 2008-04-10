@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:39970 "EHLO
-	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751140AbYDXJ4X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 05:56:23 -0400
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: "'Dan Williams'" <dcbw@redhat.com>,
-	"'Johannes Berg'" <johannes@sipsolutions.net>,
-	<hostap@lists.shmoo.com>,
-	"'Holger Schurig'" <hs4233@mail.mn-solutions.de>,
-	<linux-wireless@vger.kernel.org>
-Subject: RE: Roaming problems
-Date: Thu, 24 Apr 2008 11:55:52 +0200
-Message-ID: <009e01c8a5f1$625e0790$0b3ca8c0@gotws1589> (sfid-20080424_115655_774659_8DCD5E51)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-In-Reply-To: <200804240845.41867.hs4233@mail.mn-solutions.de>
+Received: from smtp1.versatel.nl ([62.58.50.88]:33454 "EHLO smtp1.versatel.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755248AbYDJQn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2008 12:43:57 -0400
+Subject: Re: hostapd hangs on rt2500pci, leaving the nic in an unstable
+	state
+From: Bas Hulsken <bhulsken@hotmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <200804091933.03615.IvDoorn@gmail.com>
+References: <1207412527.6965.21.camel@Bas> <1207590445.3028.2.camel@Bas>
+	 <200804091932.09459.IvDoorn@gmail.com>
+	 <200804091933.03615.IvDoorn@gmail.com>
+Content-Type: text/plain
+Date: Thu, 10 Apr 2008 18:39:56 +0200
+Message-Id: <1207845596.2907.2.camel@Bas> (sfid-20080410_174401_315593_00D090F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- 
-> > I'm not disputing that as a reasonable approach.  But FWIW for two 
-> > years we've been saying it is OK for drivers to use setting SSID as 
-> > the only trigger for association.  Is that not your understanding?
+Hi,
+
+On Wed, 2008-04-09 at 19:33 +0200, Ivo van Doorn wrote:
+
+> > Does the patch by Daniel Wagner:
+> > 	rt61pci: rt61pci_beacon_update do not free skb twice
+> > which was send to the linux-wireless mailing list today help?
 > 
+> wait never mind, that was a stupid comment since you are using rt2500pci... :S
+> I'll see if the patch also is applicable for rt2500pci and post that patch if that is
+> the case. :)
 
-Sorry, I din not know that there has been a discussion about the feature of
-letting 'SSID set' trigger an association.
+I assume the patch as it applies to rt2500pci is this one: "rt2x00: Only
+free skb when beacon_update fails"
 
-It's OK, but then the wpa_supplicant needs to 'cancel' current settings in
-the driver before it start prepare for the new AP.
-As I have understood it, that is done by issuing a BSSID of
-00:00:00:00:00:00. I will look into a patch for that.
+I've tried it, and it does not solve the problem, still exactly the same
+hang as before.
 
-An other aspect of the selected design. If the driver (STA) is associated
-with an BSSID and the wpa_supplicant would like to change BSSID, who is
-responsible for a proper de- association/authentication from the first BSSID
-?
+Bas
 
-My findings says that the network does not allow an STA to
-associate/authenticate with one BSSID while it still have a valid aid with
-an other BSSID. At least my Cisco AP does not allow that. 
-
-/Lars
 
