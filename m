@@ -1,66 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:21180 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbYDERa1 (ORCPT
+Received: from smtp239.poczta.interia.pl ([217.74.64.239]:16568 "EHLO
+	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbYDJLgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2008 13:30:27 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so607126fgb.17
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Apr 2008 10:30:25 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: mac80211 hardware encryption
-Date: Sat, 5 Apr 2008 19:31:58 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 10 Apr 2008 07:36:51 -0400
+Received: from poczta.interia.pl (mi04.poczta.interia.pl [10.217.12.4])
+	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id 2549D2C5734
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:16:29 +0200 (CEST)
+Received: from [192.168.1.27] (d90-129-71-151.cust.tele2.pl [90.129.71.151])
+	by poczta.interia.pl (INTERIA.PL) with ESMTP id E14A0145C92
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:16:22 +0200 (CEST)
+Message-ID: <47FDF732.7000304@interia.pl> (sfid-20080410_123653_979180_69A3ACD8)
+Date: Thu, 10 Apr 2008 13:17:06 +0200
+From: Maciek Kaliszewski <mkalkal@interia.pl>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804051931.58895.IvDoorn@gmail.com> (sfid-20080405_183035_742466_18F9841F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Kismet shows no clients (drivers iwl3945.ko or p54pci.ko)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-I'm investigating hardware encryption support for the rt2x00 drivers,
-Support for rt61pci and rt73usb should be the easiest to do so currently I'm
-only focussing on that, and decide later if rt2500pci and rt2500usb should
-also be implemented.
+I have "02:00.0 Network controller: Intersil Corporation ISL3890 [Prism 
+GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)"
+which does not work with prism54.ko driver . So I have to use p54pci.ko 
+(from kernel 2.6.25-rc8) .
+When I run kismet ,it detects wifi networks , but shows there is no 
+clients on the networks (I started data transfer on that network but it 
+didn't help)
+Tcpdump on wlan0 interface (Monitor mode ) shows :
 
-What I am currently facing is the following problem:
-For each TX frame the device needs 2 fields in the descriptor namely the
-IV and the EIV. From what I can gather from mac80211 those 2 fields are
-created by mac80211 with the following code in wpa.c:
+tcpdump: WARNING: wlan0: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on wlan0, link-type IEEE802_11_RADIO (802.11 plus BSD radio 
+information header), capture size 96 bytes
+12:38:51.010818 490951797us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.317951 491258998us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.625134 491566198us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:51.932369 491873444us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.034714 491975793us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.137106 492078194us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.239481 492180591us tsft 1.0 Mb/s 2457 MHz (0x0480) 74dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.341902 492282991us tsft 1.0 Mb/s 2457 MHz (0x0480) 84dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.444271 492385391us tsft 1.0 Mb/s 2457 MHz (0x0480) 80dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.649064 492590193us tsft 1.0 Mb/s 2457 MHz (0x0480) 82dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.751479 492692596us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.853861 492794991us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:52.956271 492897395us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.161056 493102186us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.263467 493204593us tsft 1.0 Mb/s 2457 MHz (0x0480) 87dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.365850 493306992us tsft 1.0 Mb/s 2457 MHz (0x0480) 86dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
+12:38:53.468229 493409393us tsft 1.0 Mb/s 2457 MHz (0x0480) 78dB signal 
+[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+Mbit] ESS CH: 11, PRIVACY
 
-ieee80211_tkip_add_iv(pos, key,
-		      (u8) (key->u.tkip.iv16 >> 8),
-		      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
-			    0x7f),
-		      (u8) key->u.tkip.iv16);
 
-And the following function in tkip.c:
 
-u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
-			   u8 iv0, u8 iv1, u8 iv2)
-{
-	*pos++ = iv0;
-	*pos++ = iv1;
-	*pos++ = iv2;
-	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
-	*pos++ = key->u.tkip.iv32 & 0xff;
-	*pos++ = (key->u.tkip.iv32 >> 8) & 0xff;
-	*pos++ = (key->u.tkip.iv32 >> 16) & 0xff;
-	*pos++ = (key->u.tkip.iv32 >> 24) & 0xff;
-	return pos;
-}
 
-If I understand correctly mac80211 is inserting the values just after
-the ieee80211 header in the frame. Now there are 2 ways rt2x00 can
-handle this.
-	1) copy the frame to the DMA in 2 steps, skipping the inserted IV by mac80211
-	    and copy the IV into the descriptor.
-	2) Add flag to mac80211 to provide the IV and EIV seperately to the driver
-	    so there won't be overhead by mac80211 to insert the IV after the ieee80211
-	    header when the driver doesn't want it to.
+As far as I can read the log , it show there is no traffic on net 
+APTEKA, but I know there is a data transfer on the net.
+I had similar results on other computer ,intel wifi card with iwl3945.ko 
+driver(kernel 2.6.24.2).
 
-Thanks,
+Regards
+Maciek
 
-Ivo
+
+
+
+
+----------------------------------------------------------------------
+Zadzwonila do chlopaka korzystajac z ...
+Sprawdz >>> http://link.interia.pl/f1d8a  
+
