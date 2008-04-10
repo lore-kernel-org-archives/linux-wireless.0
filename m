@@ -1,45 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4590 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757157AbYDHTBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 15:01:46 -0400
-Date: Tue, 8 Apr 2008 14:35:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 1/2] mac80211: fix recursive locking in
-	ieee80211_sta_expire
-Message-ID: <20080408183556.GC8183@tuxdriver.com> (sfid-20080408_200149_941516_4E90517E)
-References: <1207598029-20000-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1207598029-20000-1-git-send-email-jirislaby@gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56485 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757313AbYDJOlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2008 10:41:45 -0400
+Message-Id: <20080410134829.412424000@sipsolutions.net> (sfid-20080410_154212_532637_B12B542A)
+References: <20080410134810.629048000@sipsolutions.net>
+Date: Thu, 10 Apr 2008 15:48:13 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel@vger.kernel.org
+Cc: Josh Triplett <josh@freedesktop.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+Subject: [RFC 3/3] mac80211: annotate with __requires_rcu
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 07, 2008 at 09:53:48PM +0200, Jiri Slaby wrote:
-> Hi,
-> 
-> it's against -mm, what's current mac80211 git tree? It seems that
-> -mm has fresher material, than wireless-2.6...
+As an example, this annotates mac80211 with the new __requires_rcu.
 
-As it should.  The wireless-2.6 tree is for feeding the linux-2.6 tree
-(by way of the net-2.6 tree).  Similarly, wireless-2.6.26 feeds -mm
-by way of the net-2.6.26 tree.
+Not-yet-signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/key.c      |    2 +-
+ net/mac80211/key.h      |    2 +-
+ net/mac80211/rx.c       |   12 ++++++------
+ net/mac80211/sta_info.h |    3 ++-
+ net/mac80211/tx.c       |    3 ++-
+ 5 files changed, 12 insertions(+), 10 deletions(-)
 
-Please use the wireless-testing tree for development, as it contains
-both sets of patches (fixes for the current release and updates for the
-future) as well as a few extras (like drivers still in development).
-Plus it is somewhat more stable, being based off the most a recent
--rc release rather than just whatever someone last pulled.
+--- everything.orig/net/mac80211/sta_info.h	2008-04-10 15:36:20.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-04-10 15:36:45.000000000 +0200
+@@ -321,7 +321,8 @@ static inline enum plink_state sta_plink
+ /*
+  * Get a STA info, must have be under RCU read lock.
+  */
+-struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr);
++struct sta_info *sta_info_get(struct ieee80211_local *local, u8 *addr) __requires_rcu;
++
+ /*
+  * Get STA info by index, BROKEN!
+  */
+--- everything.orig/net/mac80211/key.c	2008-04-10 15:36:20.000000000 +0200
++++ everything/net/mac80211/key.c	2008-04-10 15:36:45.000000000 +0200
+@@ -299,7 +299,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 
+ void ieee80211_key_link(struct ieee80211_key *key,
+ 			struct ieee80211_sub_if_data *sdata,
+-			struct sta_info *sta)
++			struct sta_info *sta) __requires_rcu
+ {
+ 	struct ieee80211_key *old_key;
+ 	unsigned long flags;
+--- everything.orig/net/mac80211/key.h	2008-04-10 15:36:20.000000000 +0200
++++ everything/net/mac80211/key.h	2008-04-10 15:36:45.000000000 +0200
+@@ -146,7 +146,7 @@ struct ieee80211_key *ieee80211_key_allo
+  */
+ void ieee80211_key_link(struct ieee80211_key *key,
+ 			struct ieee80211_sub_if_data *sdata,
+-			struct sta_info *sta);
++			struct sta_info *sta) __requires(RCU);
+ void ieee80211_key_free(struct ieee80211_key *key);
+ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx);
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
+--- everything.orig/net/mac80211/rx.c	2008-04-10 15:36:20.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-04-10 15:36:45.000000000 +0200
+@@ -1261,7 +1261,7 @@ static bool ieee80211_frame_allowed(stru
+  * requires that rx->skb is a frame with ethernet header
+  */
+ static void
+-ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
++ieee80211_deliver_skb(struct ieee80211_rx_data *rx) __requires_rcu
+ {
+ 	struct net_device *dev = rx->dev;
+ 	struct ieee80211_local *local = rx->local;
+@@ -1349,7 +1349,7 @@ ieee80211_deliver_skb(struct ieee80211_r
+ }
+ 
+ static ieee80211_rx_result
+-ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
++ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx) __requires_rcu
+ {
+ 	struct net_device *dev = rx->dev;
+ 	struct ieee80211_local *local = rx->local;
+@@ -1466,7 +1466,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx
+ }
+ 
+ static ieee80211_rx_result
+-ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
++ieee80211_rx_h_data(struct ieee80211_rx_data *rx) __requires_rcu
+ {
+ 	struct net_device *dev = rx->dev;
+ 	u16 fc;
+@@ -1876,7 +1876,7 @@ static void __ieee80211_rx_handle_packet
+ 					 struct sk_buff *skb,
+ 					 struct ieee80211_rx_status *status,
+ 					 u32 load,
+-					 struct ieee80211_rate *rate)
++					 struct ieee80211_rate *rate) __requires_rcu
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1997,7 +1997,7 @@ static inline u16 seq_sub(u16 sq1, u16 s
+ u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 				struct tid_ampdu_rx *tid_agg_rx,
+ 				struct sk_buff *skb, u16 mpdu_seq_num,
+-				int bar_req)
++				int bar_req) __requires_rcu
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rx_status status;
+@@ -2100,7 +2100,7 @@ u8 ieee80211_sta_manage_reorder_buf(stru
+ }
+ 
+ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+-				     struct sk_buff *skb)
++				     struct sk_buff *skb) __requires_rcu
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+--- everything.orig/net/mac80211/tx.c	2008-04-10 15:36:20.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-04-10 15:36:45.000000000 +0200
+@@ -968,7 +968,7 @@ static ieee80211_tx_result
+ __ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
+ 		       struct sk_buff *skb,
+ 		       struct net_device *dev,
+-		       struct ieee80211_tx_control *control)
++		       struct ieee80211_tx_control *control) __requires_rcu
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr;
+@@ -1047,6 +1047,7 @@ static int ieee80211_tx_prepare(struct i
+ 				struct sk_buff *skb,
+ 				struct net_device *mdev,
+ 				struct ieee80211_tx_control *control)
++	__requires_rcu
+ {
+ 	struct ieee80211_tx_packet_data *pkt_data;
+ 	struct net_device *dev;
 
-Hth!
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+
