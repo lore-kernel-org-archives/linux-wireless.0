@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mamona.cetuc.puc-rio.br ([139.82.74.4]:33592 "EHLO
-	mamona.cetuc.puc-rio.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753506AbYDBLTl (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:15104 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758488AbYDKO4g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 07:19:41 -0400
-Message-ID: <42744.201.36.161.238.1207135145.squirrel@mamao.cetuc.puc-rio.br> (sfid-20080402_121945_071477_00D9850A)
-In-Reply-To: <a32f33a40804010151v6cd1c6d6w9c4e6cc03b7db01d@mail.gmail.com>
-References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
-    <200804010010.15705.IvDoorn@gmail.com>
-    <53141.201.36.161.238.1207002489.squirrel@mamao.cetuc.puc-rio.br>
-    <a32f33a40804010151v6cd1c6d6w9c4e6cc03b7db01d@mail.gmail.com>
-Date: Wed, 2 Apr 2008 08:19:05 -0300 (BRT)
-Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
-From: "Felipe Maya" <fmay@cetuc.puc-rio.br>
-To: "Ivo Van Doorn" <ivdoorn@gmail.com>
-Cc: "Felipe Maya" <fmay@cetuc.puc-rio.br>,
-	linux-wireless@vger.kernel.org
+	Fri, 11 Apr 2008 10:56:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: iwlwifi integer overflow warnings
+Date: Fri, 11 Apr 2008 07:55:25 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200428A233@orsmsx416.amr.corp.intel.com> (sfid-20080411_155639_050534_B4B53F9C)
+In-Reply-To: <1207916204.13354.63.camel@johannes.berg>
+References: <Pine.SOC.4.64.0804101121160.13294@math.ut.ee> <D936D925018D154694D8A362EEB0892004289DB4@orsmsx416.amr.corp.intel.com> <1207916204.13354.63.camel@johannes.berg>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "Meelis Roos" <mroos@linux.ee>, <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday, April 11, 2008 5:17 AM, Johannes Berg  wrote:
 
-> How are you configuring the interface?
-> What tools are you using?
-ifconfig wlan0 up
-iwconfig wlan0 essid COLOMBIA mode Ad-Hoc channel 3
-ifconfig wlan0 192.168.1.1 netmask 255.255.255.0
+>>> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
+>>> 'iwl3945_enqueue_hcmd':
+>>> drivers/net/wireless/iwlwifi/iwl3945-base.c:719: warning: integer
+>>> overflow in expression drivers/net/wireless/iwlwifi/iwl-3945.c: In
+>>> function 'iwl3945_add_radiotap':
+>>> drivers/net/wireless/iwlwifi/iwl-3945.c:326: warning: integer
+>>> overflow in expression drivers/net/wireless/iwlwifi/iwl4965-base.c:
+>>> In function 'iwl4965_enqueue_hcmd':
+>>> drivers/net/wireless/iwlwifi/iwl4965-base.c:723: warning: integer
+>>> overflow in expression drivers/net/wireless/iwlwifi/iwl-4965.c: In
+>>> function 'iwl4965_add_radiotap':
+>>> drivers/net/wireless/iwlwifi/iwl-4965.c:3617: warning: integer
+>>> overflow in expression  
+>>> 
+>> 
+>> (adding Johannes and John)
+>> 
+>> These problems have been fixed by Johannes with his patch
+>> "iwlwifi:fix some warnings". If this is an issue in 2.6.25 then that
+>> kernel may take this patch to address the problem.
+> 
+> That patch never was applied though and Tomas had
+> reservations. I didn't
+> have time to look at it again.
 
-> Do you get an error messages?
-No errors, zero Tx
-> Is there any other information that might be useful for understanding this
-> bug?
+I did find it in the current wireless-testing as commit
+cb08e71a7bc92a5ad518758584f077ed81d62b5c
 
-//cat /proc/net/wireless
-Inter-| sta-|   Quality        |   Discarded packets               |
-Missed | WE
- face | tus | link level noise |  nwid  crypt   frag  retry   misc |
-beacon | 22
- wlan0: 0000    0     0     0        0      0      0      0      0        0
-
-
-//cat /proc/net/arp
-IP address       HW type     Flags       HW address            Mask    
-Device
-201.36.161.1     0x1         0x2         00:05:5F:EA:1C:54     *        eth0
-
-//common dmesg
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: no IPv6 routers present
-wlan0: Creating new IBSS network, BSSID 6e:fb:bb:15:2d:9d
-wlan0: Configured IBSS beacon template based on scan results
-wlan0: No active IBSS STAs - trying to scan for other IBSS networks with
-same SSID (merge)
-
-
+Reinette
