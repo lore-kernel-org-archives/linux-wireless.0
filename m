@@ -1,32 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48923
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751074AbYDBFOA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 01:14:00 -0400
-Date: Tue, 01 Apr 2008 22:14:01 -0700 (PDT)
-Message-Id: <20080401.221401.257167991.davem@davemloft.net> (sfid-20080402_061407_780177_F12C5C1A)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6.26 2008-04-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080401220225.GA32555@tuxdriver.com>
-References: <20080401220225.GA32555@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mr1.bfh.ch ([147.87.250.50]:46380 "EHLO mr1.bfh.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758209AbYDKJDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Apr 2008 05:03:46 -0400
+Received: from square.bfh.ch (square.bfh.ch [147.87.224.33])
+	by mr1.bfh.ch (8.13.8/8.13.8) with ESMTP id m3B8ctdC004497
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Apr 2008 10:39:18 +0200
+Message-ID: <47FF220C.6090109@bfh.ch> (sfid-20080411_100400_540484_A11E4A8C)
+Date: Fri, 11 Apr 2008 10:32:12 +0200
+From: Bernhard Michael <michael.bernhard@bfh.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 does not delete beacons properly
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 1 Apr 2008 18:02:26 -0400
+Hi
 
-> Another week, another load of patches for 2.6.26.  This round includes
-> some locking and other cleanups for mac80211, a few important rt2x00
-> patches that fix problems already living in net-2.6.26, and some more
-> libertas and iwlwifi patches.
-> 
-> Please let me know if there are problems!
+I'm playing around with hostapd and observed that deleting the beacon (when hostapd terminates) is not working.
 
-Pulled, will push to net-2.6.26 after test builds complete.
+Looking at the kernel code I see the reason:
 
-Thanks!
+In function ieee80211_del_beacon (cfg.c) the old beacon (stored in sdata->u.ap.beacon) is removed. After that ieee80211_if_config_beacon is called.
+
+This function (ieee80211_if_config_beacon, main.c) first checks if the driver handles beacon generation itself and therefore needs to be informed. For my card (b43) this is the case. However ieee80211_beacon_get is now called which will fail because the beacon in mac80211 is already removed.
+
+This results in a ENOMEM error message for the caller even though the beacon is 'half' removed.
+
+I don't know how this problem could be handled properly, therefore I post just the problem description :-)
+
+Cheers
+Mike
