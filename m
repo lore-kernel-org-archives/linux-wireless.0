@@ -1,83 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:50251 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994AbYDSPts (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40366 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761989AbYDKVLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 11:49:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Fix all-ones boardflags
-Date: Sat, 19 Apr 2008 17:49:03 +0200
-Cc: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>,
-	Larry.Finger@lwfinger.net, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200804191749.04393.mb@bu3sch.de> (sfid-20080419_164951_882569_C39817A0)
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_wRhCIAcr9BWF+mp"
+	Fri, 11 Apr 2008 17:11:39 -0400
+Subject: Re: [PATCH RFC v2] mac80211: no BSS changes to driver from beacons
+	processed during scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1207785375-13470-1-git-send-email-reinette.chatre@intel.com>
+References: <1207785375-13470-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VEMdcci4N7xxXw9q38/T"
+Date: Fri, 11 Apr 2008 23:11:21 +0200
+Message-Id: <1207948281.13354.98.camel@johannes.berg> (sfid-20080411_221200_493160_5ED18AAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_wRhCIAcr9BWF+mp
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-VEMdcci4N7xxXw9q38/T
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-=46rom: Larry Finger <Larry.Finger@lwfinger.net>
+On Wed, 2008-04-09 at 16:56 -0700, Reinette Chatre wrote:
+> There is no need to send BSS changes to driver from beacons processed
+> during scanning. We are more interested in beacons from an AP with which
+> we are associated - these will still be used to send updates to driver as
+> the beacons are received without scanning.
+>=20
+> This change=C2=B7removes the requirement that bss_info_changed needs to b=
+e atomic.
+> The beacons received during scanning are processed from a tasklet, but if=
+ we
+> do not call bss_info_changed for these beacons there is no need for it to=
+ be
+> atomic. This function (bss_info_changed) is called either from workqueue =
+or
+> ioctl in all other instances.
 
-In the SSB SPROM a field set to all ones means the value
-is not defined in the SPROM.
-In case of the boardflags, we need to set them to zero
-to avoid confusing drivers. Drivers will only check the
-flags by ANDing.
+Seems reasonable. Makes me itch to rewrite the scan code completely (as
+I had already planned once) so that the mlme isn't full of it, we don't
+do everything twice (master and regular device) and the context (tasklet
+vs. workqueue) is clearer. Oh well, not right now.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> Acked-by: Tomas Winkler <tomas.winkler@intel.com>
 
-=2D--
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-John,
+> ---
+> This patch applies to the latest code after mac80211 filename changes.
 
-This is 2.6.26 material.
+Didn't think it would be much of a problem otherwise I wouldn't have
+asked for it, was it?
 
+>  include/net/mac80211.h |    3 +--
+>  net/mac80211/mlme.c    |   16 +++++++++++-----
+>  2 files changed, 12 insertions(+), 7 deletions(-)
+>=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 079e7bd..4a80d74 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1020,8 +1020,7 @@ enum ieee80211_ampdu_mlme_action {
+>   *	level driver (e.g. assoc/disassoc status, erp parameters).
+>   *	This function should not be used if no BSS has been set, unless
+>   *	for association indication. The @changed parameter indicates which
+> - *	of the bss parameters has changed when a call is made. This callback
+> - *	has to be atomic.
+> + *	of the bss parameters has changed when a call is made.
+>   *
+>   * @configure_filter: Configure the device's RX filter.
+>   *	See the section "Frame filtering" for more information.
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 83e8b49..e3f2cb0 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2797,6 +2797,17 @@ static void ieee80211_rx_mgmt_beacon(struct net_de=
+vice *dev,
+> =20
+>  	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
+> =20
+> +	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+> +		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
+> +					 elems.wmm_param_len);
+> +	}
+> +
+> +	/* Do not send changes to driver if we are scanning. This removes
+> +	 * requirement that driver's bss_info_changed function needs to be
+> +	 * atomic. */
+> +	if (local->sta_sw_scanning || local->sta_hw_scanning)
+> +		return;
+> +
+>  	if (elems.erp_info && elems.erp_info_len >=3D 1)
+>  		changed |=3D ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
+>  	else {
+> @@ -2816,11 +2827,6 @@ static void ieee80211_rx_mgmt_beacon(struct net_de=
+vice *dev,
+>  					       &bss_info);
+>  	}
+> =20
+> -	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
+> -		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
+> -					 elems.wmm_param_len);
+> -	}
+> -
+>  	ieee80211_bss_info_change_notify(sdata, changed);
+>  }
+> =20
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 904b1a8..57c4ccf 100644
-=2D-- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -484,6 +484,11 @@ static int sprom_extract(struct ssb_bus *bus,
-struct ssb_sprom *out,
- 			goto unsupported;
- 	}
+--=-VEMdcci4N7xxXw9q38/T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-+	if (out->boardflags_lo =3D=3D 0xFFFF)
-+		out->boardflags_lo =3D 0;  /* per specs */
-+	if (out->boardflags_hi =3D=3D 0xFFFF)
-+		out->boardflags_hi =3D 0;  /* per specs */
-+
- 	return 0;
- unsupported:
- 	ssb_printk(KERN_WARNING PFX "Unsupported SPROM revision %d "
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-=2D-=20
-Greetings Michael.
+iQIVAwUAR//T+KVg1VMiehFYAQIOWw/6A67z0N2Kb2vN9MUzmL8c7zjv6YY3nDmO
+ZirqytNnt7BaXkQxG/XKtkybe7926HZyhpL1h7RGtkYFbIvvVfWHCLuoyZTgi0g+
+DXrvzHyqq4FvBAn+VDe8hg1SoKRURmuxIgDOfYh9tCGMiG1LH9lWwp+Tb8hSbZNd
+yNeGVeoITxztNi12VPVv63/D3SGX8JCsRPYttK7HIIfaAs/QSC0kjv00lDViZDaQ
+pKY8SronrGXoT0wa1k2b86sJL6qSW+gm8GinGM/DOMeA7q8bpuoPanlCk1SFoP/z
+wj4FAhZyzRizBGwTfuKBXCjRmwvtV4AcW+FtsUeyajcWeswFZ9LVJbMU7nsGsQTy
+EtzfgMdsHLNxjtZsQz67cAlZVJh3pl+1ZhJRWrlCFipjCVKgv5YjlSMrTlfgOcWx
+yEqUCL2gQ917HjDItbz4jgtmAvCapbu/5YtMel6lGYX3gRCp5hSQRTSQ08x8z77T
+t4l8PvqA95BMAIg75eolpq50PsNIUXsEqusyDrFN81/cdL00a2KHSrCptuTd8uet
+R+V4uFvT3dukvoa5YgdesNZFB6jpQvlAKpabToihC9YGH+GdVb+Jq0FRJkvNqRyq
+z47lB0UqXAvAJeND1gl4CjgMJN4TtPEYpEeU1LDitTUQ6h+yXt1c2Ka/9oSPdiEW
+DRXsv0GiOlw=
+=MG9q
+-----END PGP SIGNATURE-----
 
---Boundary-00=_wRhCIAcr9BWF+mp
-Content-Type: text/x-patch;
-  name="ssb-fix-unset-boardflags.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=ssb-fix-unset-boardflags.patch
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3NiL3BjaS5jIGIvZHJpdmVycy9zc2IvcGNpLmMKaW5kZXgg
-OTA0YjFhOC4uNTdjNGNjZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9zc2IvcGNpLmMKKysrIGIvZHJp
-dmVycy9zc2IvcGNpLmMKQEAgLTQ4NCw2ICs0ODQsMTEgQEAgc3RhdGljIGludCBzcHJvbV9leHRy
-YWN0KHN0cnVjdCBzc2JfYnVzICpidXMsIHN0cnVjdCBzc2Jfc3Byb20gKm91dCwKIAkJCWdvdG8g
-dW5zdXBwb3J0ZWQ7CiAJfQogCisJaWYgKG91dC0+Ym9hcmRmbGFnc19sbyA9PSAweEZGRkYpCisJ
-CW91dC0+Ym9hcmRmbGFnc19sbyA9IDA7ICAvKiBwZXIgc3BlY3MgKi8KKwlpZiAob3V0LT5ib2Fy
-ZGZsYWdzX2hpID09IDB4RkZGRikKKwkJb3V0LT5ib2FyZGZsYWdzX2hpID0gMDsgIC8qIHBlciBz
-cGVjcyAqLworCiAJcmV0dXJuIDA7CiB1bnN1cHBvcnRlZDoKIAlzc2JfcHJpbnRrKEtFUk5fV0FS
-TklORyBQRlggIlVuc3VwcG9ydGVkIFNQUk9NIHJldmlzaW9uICVkICIK
---Boundary-00=_wRhCIAcr9BWF+mp--
+--=-VEMdcci4N7xxXw9q38/T--
 
