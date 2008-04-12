@@ -1,82 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39220 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757974AbYDRVDk (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:51944 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753454AbYDLRWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 17:03:40 -0400
-Message-Id: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org> (sfid-20080418_220915_541595_29B119CB)
-Subject: [patch 6/7] mac80211: michael.c use unaligned/byteorder helpers
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, jbenc@suse.cz
-From: akpm@linux-foundation.org
-Date: Fri, 18 Apr 2008 13:59:52 -0700
+	Sat, 12 Apr 2008 13:22:23 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so132317ugc.16
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 10:22:21 -0700 (PDT)
+To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] Add rfkill to MAINTAINERS file
+Date: Sat, 12 Apr 2008 19:23:55 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804121923.55933.IvDoorn@gmail.com> (sfid-20080412_182238_805320_B62AF59A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+I have been acting as the maintainer since the rfkill introduction,
+so lets make it official by adding a rfkill entry in the MAINTAINERS file.
 
-Rather than open-coding the get/put of little endian values, use
-get/put_unaligned and the byteorder helpers.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
-
- net/mac80211/michael.c |   21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
-
-diff -puN net/mac80211/michael.c~mac80211-michaelc-use-unaligned-byteorder-helpers net/mac80211/michael.c
---- a/net/mac80211/michael.c~mac80211-michaelc-use-unaligned-byteorder-helpers
-+++ a/net/mac80211/michael.c
-@@ -9,6 +9,8 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9e63f16..9f5aaff 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3342,6 +3342,13 @@ L:	reiserfs-devel@vger.kernel.org
+ W:	http://www.namesys.com
+ S:	Supported
  
- #include <linux/types.h>
- #include <linux/bitops.h>
-+#include <asm/byteorder.h>
-+#include <asm/unaligned.h>
- 
- #include "michael.h"
- 
-@@ -24,21 +26,20 @@ static void michael_block(u32 *l, u32 *r
- 	*l += *r;
- }
- 
--
--static inline u32 michael_get32(u8 *data)
-+static u32 michael_get16(u8 *data)
- {
--	return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-+	return le16_to_cpu(get_unaligned((__le16 *)data));
- }
- 
--
--static inline void michael_put32(u32 val, u8 *data)
-+static u32 michael_get32(u8 *data)
- {
--	data[0] = val & 0xff;
--	data[1] = (val >> 8) & 0xff;
--	data[2] = (val >> 16) & 0xff;
--	data[3] = (val >> 24) & 0xff;
-+	return le32_to_cpu(get_unaligned((__le32 *)data));
- }
- 
-+static void michael_put32(u32 val, u8 *data)
-+{
-+	put_unaligned(cpu_to_le32(val), (__le32 *)data);
-+}
- 
- void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
- 		 u8 *data, size_t data_len, u8 *mic)
-@@ -53,7 +54,7 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
- 	 * calculation, but it is _not_ transmitted */
- 	l ^= michael_get32(da);
- 	michael_block(&l, &r);
--	l ^= da[4] | (da[5] << 8) | (sa[0] << 16) | (sa[1] << 24);
-+	l ^= michael_get16(da) | (michael_get16(sa) << 16);
- 	michael_block(&l, &r);
- 	l ^= michael_get32(&sa[2]);
- 	michael_block(&l, &r);
-_
++RFKILL
++P:	Ivo van Doorn
++M:	IvDoorn@gmail.com
++L:	netdev@vger.kernel.org
++S:	Maintained
++F:	net/rfkill
++
+ ROCKETPORT DRIVER
+ P:	Comtrol Corp.
+ W:	http://www.comtrol.com
