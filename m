@@ -1,87 +1,263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58553 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753741AbYDAUpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 16:45:24 -0400
-Subject: Re: [PATCH] [PATCH] prism54: set carrier flags correctly
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Roy Marples <uberlord@gentoo.org>
-In-Reply-To: <20080401191736.GC4810@ruslug.rutgers.edu>
-References: <1206988135-12309-1-git-send-email-linville@tuxdriver.com>
-	 <1206989990.12973.9.camel@localhost.localdomain>
-	 <20080401191736.GC4810@ruslug.rutgers.edu>
-Content-Type: text/plain
-Date: Tue, 01 Apr 2008 16:43:30 -0400
-Message-Id: <1207082610.3235.0.camel@localhost.localdomain> (sfid-20080401_214528_890424_121506EC)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.176]:7937 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbYDLWSD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Apr 2008 18:18:03 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1416475pyb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 15:18:02 -0700 (PDT)
+From: Filipus Klutiero <chealer@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [Rt2400-devel] rt2x00: cleanup Kconfig help
+Date: Sat, 12 Apr 2008 18:17:00 -0400
+Cc: rt2400-devel@lists.sourceforge.net
+References: <200804121509.56291.chealer@gmail.com> <200804121610.59971.chealer@gmail.com> <200804122253.16920.IvDoorn@gmail.com>
+In-Reply-To: <200804122253.16920.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200804121817.00328.chealer@gmail.com> (sfid-20080412_231819_484459_C438C484)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-04-01 at 15:17 -0400, Luis R. Rodriguez wrote:
-> On Mon, Mar 31, 2008 at 02:59:50PM -0400, Dan Williams wrote:
-> > On Mon, 2008-03-31 at 14:28 -0400, John W. Linville wrote:
-> > > From: Roy Marples <uberlord@gentoo.org>
-> > > 
-> > > prism54 should set the carrier flags correctly when it thinks the
-> > > link can be used.
-> > > 
-> > > Signed-off-by: Roy Marples <uberlord@gentoo.org>
-> > > ---
-> > > I found this in my pile from a long time back.  Anyone have any
-> > > comments on it?
-> > 
-> > Other than the fact that the carrier flag on wireless devices is kind of
-> > useless, it's fine. 
-> 
-> Agreed, so sure, this is OK but I rather we turn the carrier on
-> or off *before* sending an event, like this.
+Le April 12, 2008 04:53:16 pm Ivo van Doorn, vous avez =E9crit=A0:
+[...]
+>=20
+> > > I send a patch that fixed this line several weeks/months ago upst=
+ream.
+> > >=20
+> > > >  	  When building one of the individual drivers, the rt2x00 lib=
+rary
+> > > >  	  will also be created. That library (when the driver is buil=
+t as
+> > > > @@ -38,12 +38,12 @@
+> > > >  	select INPUT_POLLDEV
+> > > > =20
+> > > >  config RT2400PCI
+> > > > -	tristate "Ralink rt2400 pci/pcmcia support"
+> > > > +	tristate "Ralink RT2400 (PCI/PCMCIA) support"
+> > >=20
+> > > Can't see a real reason for either capatilizing RT or PCI/PCMCIA =
+=2E..
+> > rtxxxx refer to the drivers. "rt" is capitalized in the name of the=
+ chips. For PCI and PCMCIA, these are abbreviations.
+>=20
+> Well the names of the drivers are after the names of the chipset. So =
+the rt can stay as it is now.
+They are, but all driver names are lowercase, so capitalization was los=
+t. The chip names really use capitals.
+>=20
+> Convention seems to be that PCI, PCMCIA and USB are capilitized so th=
+at change is fine,
+> but please make it consistent for all drivers like it currently is. S=
+o either put them all between braces or none of them.
+OK, I put all in parentheses in the following update.
+>=20
+> > > >  config RT61PCI
+> > > > -	tristate "Ralink rt61 pci/pcmcia support"
+> > > > +	tristate "Ralink RT2561, RT2661 support"
+> > >=20
+> > > Since we are setting the bus type clearly everywhere else,
+> > > we shouldn't remove it here...
+> > The reason I changed it is because the abbreviations weren't capita=
+lized, but I simply removed it since RT2561 and RT2661 are only used in=
+ PCI (or PCMCIA) devices.
+>=20
+> So? rt2400 is only for PCI and rt73 is only for USB. That doesn't mat=
+ter.
+> This way it is clearer to everybody what kind of device we are talkin=
+g about.
+It should already be clear to experienced people if the device is USB o=
+r PCI. For simple users, they know what they own.
+> It is also consistent with the other rt2x00 driver entries.
 
-+1 from me, that's the right sequence.
+[...]
 
-Dan
+> > >=20
+> > > >  	  hardware button to control the radio state.
+> > > >  	  This feature depends on the RF switch subsystem rfkill.
+> > > > =20
+> > > >  config RT2500USB
+> > > > -	tristate "Ralink rt2500 usb support"
+> > > > +	tristate "Ralink RT2500USB support"
+> > >=20
+> > > Original version was fine since it is consistent with the rest...
+> > See bug #10440. "RT2500" refers to the RT2500 (PCI or PCMCIA) chips=
+et.
+>=20
+> So you mean that stating "rt2500 usb" makes people confused to think =
+it is a pci device?
+> The usb label is already mentioned in the subject....
+>=20
+> rt2500 is _not_ PCI only, the USB version is the same chipset pasted =
+on a different busconnector.
+I'm not really knowledgeable in Ralink, but according to http://ralink.=
+rapla.net/ RT2500USB uses different RF and MAC chips than RT2500. Maybe=
+ you know better.
 
-> Signed-off-by: Roy Marples <uberlord@gentoo.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-> 
-> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> index 2e25e19..e5b3c28 100644
-> --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> @@ -2081,6 +2081,7 @@ link_changed(struct net_device *ndev, u32 bitrate)
->  	islpci_private *priv = netdev_priv(ndev);
->  
->  	if (bitrate) {
-> +		netif_carrier_on(ndev);
->  		if (priv->iw_mode == IW_MODE_INFRA) {
->  			union iwreq_data uwrq;
->  			prism54_get_wap(ndev, NULL, (struct sockaddr *) &uwrq,
-> @@ -2089,8 +2090,10 @@ link_changed(struct net_device *ndev, u32 bitrate)
->  		} else
->  			send_simple_event(netdev_priv(ndev),
->  					  "Link established");
-> -	} else
-> +	} else {
-> +		netif_carrier_off(ndev);
->  		send_simple_event(netdev_priv(ndev), "Link lost");
-> +	}
->  }
->  
->  /* Beacon/ProbeResp payload header */
-> diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-> index eb7c1c6..04c2638 100644
-> --- a/drivers/net/wireless/prism54/islpci_dev.c
-> +++ b/drivers/net/wireless/prism54/islpci_dev.c
-> @@ -387,7 +387,9 @@ islpci_open(struct net_device *ndev)
->  	}
->  
->  	netif_start_queue(ndev);
-> -/*      netif_mark_up( ndev ); */
-> +
-> +	/* Turn off carrier unless we know we have associated */
-> +	netif_carrier_off(ndev);
->  
->  	return 0;
->  }
+[...]
+> > >=20
+> > > >  	  When compiled as a module, this driver will be called "rt25=
+00usb.ko".
+> > > > =20
+> > > >  config RT73USB
+> > > > -	tristate "Ralink rt73 usb support"
+> > > > +	tristate "Ralink RT2571W (USB) support"
+> > >=20
+> > > consistency and don't forget to add all types.
+> > > tristate "Ralink rt2571W & rt2671 usb support"
+> > You must know better than me if RT2671 is also supported. I didn't =
+mean that my patch fixed everything.
+>=20
+> I just added it so you can add it when you rebase your patch based on=
+ my comments.
+> It is just for completeness.
+I added it, but I don't know which chipset(s) use RT2671, so the new pa=
+tch is somewhat incomplete.
+>=20
+> > > >  	depends on RT2X00 && USB
+> > > >  	select RT2X00_LIB_USB
+> > > >  	select RT2X00_LIB_FIRMWARE
+> > > >  	---help---
+> > > > -	  This is an experimental driver for the Ralink rt73 wireless=
+ chip.
+> > > > +	  This is an experimental driver for the Ralink RT2501USB and=
+ RT5201USB wireless chipsets.
+> > >=20
+> > > Those devices doesn't match the config title, so it should be som=
+ething like:
+> > >=20
+> > > This is an experimental driver for the Ralink rt2571W and rt2671 =
+wireless chipsets.
+> > Other extended descriptions only refer to the chipsets. I think the=
+ chipset should be mentioned because users are more likely to know it t=
+han the MAC chip. OTOH, nothing prevents us from mentioning both.
+>=20
+> What I am saying is that it will be confusing when the config option =
+subject mentions chip A while
+> the help text mentions chip B. And this patch was focussed on making =
+the text more clear.
+Yes, but it's IMHO more important that users that only know the chipset=
+ can find the driver. Anyway, I added the supported chips too.
+---
 
+--- drivers/net/wireless/rt2x00/Kconfig	2008-01-24 17:58:37.000000000 -=
+0500
++++ drivers/net/wireless/rt2x00/Kconfig.USB	2008-04-12 18:12:06.0000000=
+00 -0400
+@@ -2,10 +2,10 @@
+ 	tristate "Ralink driver support"
+ 	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	---help---
+-	  This will enable the experimental support for the Ralink drivers,
++	  This enables the experimental support for the Ralink drivers,
+ 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
+=20
+-	  These drivers will make use of the Devicescape ieee80211 stack.
++	  These drivers use the mac80211 stack.
+=20
+ 	  When building one of the individual drivers, the rt2x00 library
+ 	  will also be created. That library (when the driver is built as
+@@ -38,12 +38,12 @@
+ 	select INPUT_POLLDEV
+=20
+ config RT2400PCI
+-	tristate "Ralink rt2400 pci/pcmcia support"
++	tristate "Ralink RT2400 (PCI/PCMCIA) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2400 wireless chip.
++	  This is an experimental driver for the Ralink RT2400 wireless chips=
+et.
+=20
+ 	  When compiled as a module, this driver will be called "rt2400pci.ko=
+".
+=20
+@@ -52,17 +52,17 @@
+ 	depends on RT2400PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt2400 devices that feature a
++	  This adds support for integrated RT2400 devices that feature a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT2500PCI
+-	tristate "Ralink rt2500 pci/pcmcia support"
++	tristate "Ralink RT2500 (PCI/PCMCIA) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2500 wireless chip.
++	  This is an experimental driver for the Ralink RT2500 wireless chips=
+et.
+=20
+ 	  When compiled as a module, this driver will be called "rt2500pci.ko=
+".
+=20
+@@ -71,18 +71,18 @@
+ 	depends on RT2500PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt2500 devices that feature a
++	  This adds support for integrated RT2500 devices that feature a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT61PCI
+-	tristate "Ralink rt61 pci/pcmcia support"
++	tristate "Ralink RT2561 and RT2661 (PCI) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select RT2X00_LIB_FIRMWARE
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt61 wireless chip.
++	  This is an experimental driver for the Ralink RT2600 and RT2501 [Tu=
+rbo] (PCI) wireless chipsets.
+=20
+ 	  When compiled as a module, this driver will be called "rt61pci.ko".
+=20
+@@ -91,26 +91,26 @@
+ 	depends on RT61PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt61 devices that feature a
++	  This adds support for integrated RT2600 and RT2501 devices that fea=
+ture a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT2500USB
+-	tristate "Ralink rt2500 usb support"
++	tristate "Ralink RT2500USB support"
+ 	depends on RT2X00 && USB
+ 	select RT2X00_LIB_USB
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2500 wireless chip.
++	  This is an experimental driver for the Ralink RT2500USB wireless ch=
+ipset.
+=20
+ 	  When compiled as a module, this driver will be called "rt2500usb.ko=
+".
+=20
+ config RT73USB
+-	tristate "Ralink rt73 usb support"
++	tristate "Ralink RT2571W and RT2671 (USB) support"
+ 	depends on RT2X00 && USB
+ 	select RT2X00_LIB_USB
+ 	select RT2X00_LIB_FIRMWARE
+ 	---help---
+-	  This is an experimental driver for the Ralink rt73 wireless chip.
++	  This is an experimental driver for the RT2571W and RT2671 MAC/BBP c=
+hips. It supports Ralink RT2501USB and RT5201USB wireless chipsets.
+=20
+ 	  When compiled as a module, this driver will be called "rt73usb.ko".
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
