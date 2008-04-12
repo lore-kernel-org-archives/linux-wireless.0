@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:59204 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751423AbYDKE6C (ORCPT
+Received: from mx.fenrir.org.uk ([81.168.115.223]:36445 "EHLO mx.fenrir.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761325AbYDLJwk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 00:58:02 -0400
-Message-ID: <47FEEFCE.6040006@lwfinger.net> (sfid-20080411_055808_596577_394B25C4)
-Date: Thu, 10 Apr 2008 23:57:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] Add Realtek 8187B support
-References: <200804081931.07638.herton@mandriva.com.br> <47FD8C0E.3060807@lwfinger.net> <200804100143.32854.herton@mandriva.com.br>
-In-Reply-To: <200804100143.32854.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 12 Apr 2008 05:52:40 -0400
+Received: from fangio.fenrir.org.uk ([10.0.0.4])
+	(TLSv1:AES256-SHA:256)
+	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
+	id 1JkcPW-0001es-LX
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 10:52:38 +0100
+Date: Sat, 12 Apr 2008 10:42:07 +0100
+From: Brian Morrison <bdm@fenrir.org.uk> (by way of Brian Morrison
+	<bdm@fenrir.org.uk>)
+To: Brian Morrison <bdm@fenrir.org.uk>
+Message-ID: <20080412104207.478f9f14@fangio.fenrir.org.uk> (sfid-20080412_105318_939979_FC9DF4C9)
+In-Reply-To: <20080412012305.76f1b7eb@fangio.fenrir.org.uk>
+References: <20080412012305.76f1b7eb@fangio.fenrir.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: Re: Latest compat-wireless build fails
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> 
-> Can you open your dongle and see if you really have a RTL8187B? (as you
-> said you had to force the ID). May be it wasn't really a 8187b device but
-> another variant. I did many tests this week with a 8187b that continues to
-> work ok.
+On Sat, 12 Apr 2008 01:23:05 +0100
+Brian Morrison <bdm@fenrir.org.uk> wrote:
 
-I don't want to open it as it should still be under warranty. I'm
-pretty sure it is an 8187b. When I tried it with the 8187 driver, it
-gets an rf calibration error. By using your driver with the patch
-below, it loaded and worked, at least for a while. It probably was a
-natural death, but I felt I should issue a warning, jest in case.
+> If anyone is interested, the latest compat-wireless tarball fails to
+> build. It complains about some missing led defines in the rt2x00
+> directory.
+>=20
+> I don't have the exact error messages to hand, but I imagine it's
+> trivial for someone to type make and find out.
+>=20
+> Cheers!
+>=20
 
-I was going to hold the following patch until I had more to 
-contribute; however, I don't know if I will be able to participate. 
-Please apply the patch, as it lets devices like mine, where the 
-iProduct string identifies is as an RTL8187B device, but the idProduct 
-value is 0x8187, not 0x8189.
+=46WIW, the 2008-04-04 and later compat-wireless tarballs fail in the
+same way.
 
-Thanks,
+The error is:
 
-Larry
+CC [M]  /home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x0=
+0/rt2x00leds.o
+/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x00/rt2x00=
+leds.c: In function =E2=80=98rt2x00leds_register=E2=80=99:
+/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x00/rt2x00=
+leds.c:171: error: =E2=80=98struct led_classdev=E2=80=99 has no member =
+named =E2=80=98blink_set=E2=80=99
+/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x00/rt2x00=
+leds.c:174: error: =E2=80=98struct led_classdev=E2=80=99 has no member =
+named =E2=80=98blink_set=E2=80=99
+make[4]: *** [/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless=
+/rt2x00/rt2x00leds.o] Error 1
+make[3]: *** [/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless=
+/rt2x00] Error 2
+make[2]: *** [/home/bdm/compat-wireless-2008-04-04/drivers/net/wireless=
+] Error 2
+make[1]: *** [_module_/home/bdm/compat-wireless-2008-04-04] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.24.4-64.fc8-x86_64'
+make: *** [modules] Error 2
 
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -946,7 +946,8 @@ static int __devinit rtl8187_probe(struc
-  	}
+so it looks like a missing define or variable definition.
 
-  	priv = dev->priv;
--       priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
-+	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B) ||
-+			    !memcmp(udev->product, "RTL8187B", 8);
+--=20
 
-  	SET_IEEE80211_DEV(dev, &intf->dev);
-  	usb_set_intfdata(intf, dev);
+Brian
 
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
