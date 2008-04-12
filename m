@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47816 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922AbYDSIdI (ORCPT
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:48425 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755630AbYDLRyy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 04:33:08 -0400
-Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Brian Morrison <bdm@fenrir.org.uk>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com> (sfid-20080419_012818_214996_06C2AEF6)
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
-	 <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
-	 <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
-	 <fu931e$k1b$1@ger.gmane.org>
-	 <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
-	 <1208555842.4848.56.camel@johannes.berg>
-	 <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
-	 <20080418232358.000fbdf7@peterson.fenrir.org.uk>
-	 <1208558255.4848.60.camel@johannes.berg>
-	 <1208558382.4848.63.camel@johannes.berg>
-	 <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
-	 (sfid-20080419_012818_214996_06C2AEF6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MRKVb7xkS5iKjSrarIjp"
-Date: Sat, 19 Apr 2008 10:32:53 +0200
-Message-Id: <1208593973.26186.2.camel@johannes.berg> (sfid-20080419_093315_310519_2D56BCC5)
-Mime-Version: 1.0
+	Sat, 12 Apr 2008 13:54:54 -0400
+Received: from ironport-out-2.rz.rwth-aachen.de ([134.130.3.59])
+ by mta-2.ms.rz.RWTH-Aachen.de
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZ8008YZ4FH6680@mta-2.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Sat, 12 Apr 2008 19:54:53 +0200 (CEST)
+Date: Sat, 12 Apr 2008 19:54:52 +0200
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+In-reply-to: <200804121246.44236.IvDoorn@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Message-id: <4800F76C.7000801@archlinux.org> (sfid-20080412_185459_927704_9BFD3D28)
+MIME-version: 1.0
+Content-type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary=------------enigAE95A969D8BEA4D93C63DD9C
+References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
+ <200804021932.26046.IvDoorn@gmail.com> <47FE8FAD.9020802@archlinux.org>
+ <200804121246.44236.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-MRKVb7xkS5iKjSrarIjp
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigAE95A969D8BEA4D93C63DD9C
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
+Ivo van Doorn schrieb:
+>> Bad news again:
+>>
+>> With 2.6.25-rc8, rt2500pci is fast. When I apply this patch:
+>> ftp://ftp.kernel.org/pub/linux/kernel/v2.6/snapshots/patch-2.6.25-rc8-=
+git8.bz2
+>> on top of rc8, then it is slow again. I can't make sense of it, maybe =
 
-> Second the 3954 and 4965 my uCode may crash intentionally if you send
-> probe requests on a passive channel.according EEPROM.
+>> you can.
+>=20
+> Not really, looking at that patchset neither rt2x00 or mac80211 had any=
+ patches
+> that could influence packet flow.. :S
+>=20
+> Ivo
 
-I really wonder what sort of error handling strategy that is, even if
-it's done for regulatory compliance purposes I don't see a need to crash
-the whole card. Especially considering that the userspace MLME in
-wpa_supplicant will scan by itself (yes, it scans in userspace, whether
-or not you may like that), of course it would be made comply with
-regulatory settings but that makes it hard to develop.
+I compiled half a dozen kernels and now figured it out. This is the=20
+patch that causes rt2500pci to be slow. If I revert it, it is fast again:=
 
-> I personally  wish to not make SW scanning possible at all for that reaso=
-n.
+http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dco=
+mmitdiff;h=3Dd43c7b37ad787173d08683f05eadeea0398fefdf
 
-That is not going to happen since you can always "scan" by sending probe
-requests manually.
+I'd love to see this fixed before 2.6.25 is released, as it's a=20
+regression compared to -rc8.
 
-> At last iwlwifi HW scanning can handle up to 4 essids for direct scan
-> but currently wireless tools interface cannot utilize this.
 
-Does anybody actually *want* that? I personally dislike the behaviour of
-scanning for all previously known SSIDs actively when hidden SSIDs are
-so uncommon, I see it as an information disclosure vulnerability.
-
-johannes
-
---=-MRKVb7xkS5iKjSrarIjp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--------------enigAE95A969D8BEA4D93C63DD9C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.8 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIVAwUASAmuM6Vg1VMiehFYAQKYtA//WUDJKI7+r7kAh7U4VzH3kIqxeCNIUicr
-XO/2T5XTJOwFFc60W6D1e6f8xO0zCfcQvERc5/qV4oCNzCBCAYFhAtffz6tKG/YA
-ogbnDTygGgQr4eVj83wtADC98ZCow5+WXdAv72ZOefUgjqjZJgQLirjGHpsJiPhn
-ILLAPAWznIzntTInIfeMadpLc7GjY8qFnwSBOqSO4+vVdXPXC0GAMZbE3BdzSzqn
-O3sqoHt45jbaaYEiq8vWuM6CaV/v4dSNj9rxnAnkYoKRZDIP9SY50355/Zz5QsLn
-ucDpcgSCYR8OPvj/BeIvYQ9oPnFV1SM6uXwaWIoJ2ALSatjH2YGv9l5E9E5s+gBO
-6yiABJ9IZY2rTN4bN+0BBD4reUjhulahS7AT/I9FHBJMdByD2eL1/QvUUcBymBdQ
-DAflBS3hSK30bMp5K9GijuqBW/uK0IogQXSyAMQvo95RkKvmju1Tw96TSQzZeES6
-OfmtkjZFjh6wt/lgGVVDKJrH6VoB99epyGticZ9dEN8VI87UtuJqBPeyOFQ+EHt9
-ayXqBZBbErVhyMC8cFspL8QDe1mCnq24HXtV36IJtZhQxpKT5pb6tw6R/kyccO2p
-rwTkXyBA3bGwr12wAbSHKLfhhwTCFGGC2J6UOusjk81mzgX6KqIRKvq8+dm+m2m3
-sjI9PT1iZNk=
-=LwxQ
+iEYEAREIAAYFAkgA92wACgkQEda5KzHP/VBrggCgkWOgzjA057oFnq6kHgbOeckb
+6PwAoM4ofCnRCnp/cKfNpYrvJgM2hr9h
+=f2Eq
 -----END PGP SIGNATURE-----
 
---=-MRKVb7xkS5iKjSrarIjp--
-
+--------------enigAE95A969D8BEA4D93C63DD9C--
