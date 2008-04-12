@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:51951 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbYDWT4w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 15:56:52 -0400
-Message-ID: <480F9481.2040303@tiscali.nl> (sfid-20080423_215729_837784_CF58FAAB)
-Date: Wed, 23 Apr 2008 21:56:49 +0200
-From: Roel Kluin <12o3l@tiscali.nl>
-MIME-Version: 1.0
-To: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-CC: lkml <linux-kernel@vger.kernel.org>
-Subject: [PATCH] prism54: prism54_get_encode() test below 0 on unsigned index
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx.fenrir.org.uk ([81.168.115.223]:33024 "EHLO mx.fenrir.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756957AbYDLAXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Apr 2008 20:23:08 -0400
+Received: from fangio.fenrir.org.uk ([10.0.0.4])
+	(TLSv1:AES256-SHA:256)
+	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
+	id 1JkTWL-00011c-M2
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 01:23:05 +0100
+Date: Sat, 12 Apr 2008 01:23:05 +0100
+From: Brian Morrison <bdm@fenrir.org.uk>
+To: linux-wireless@vger.kernel.org
+Subject: Latest compat-wireless build fails
+Message-ID: <20080412012305.76f1b7eb@fangio.fenrir.org.uk> (sfid-20080412_012314_710323_0A9EF5C5)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-previously in this function:
+If anyone is interested, the latest compat-wireless tarball fails to
+build. It complains about some missing led defines in the rt2x00
+directory.
 
-u32 index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+I don't have the exact error messages to hand, but I imagine it's
+trivial for someone to type make and find out.
 
-index is unsigned, so if -1, the original test (below) didn't work.
+Cheers!
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index e5b3c28..5b375b2 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1186,7 +1186,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
- 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYID, 0, NULL, &r);
- 	devindex = r.u;
- 	/* Now get the key, return it */
--	if ((index < 0) || (index > 3))
-+	if (index == -1 || index > 3)
- 		/* no index provided, use the current one */
- 		index = devindex;
- 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYX, index, NULL, &r);
+-- 
+
+Brian
