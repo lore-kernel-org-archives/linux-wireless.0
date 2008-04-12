@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:7921 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758512AbYDCNYR (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41302 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757073AbYDLI4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 09:24:17 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3644163wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 06:24:16 -0700 (PDT)
-Message-ID: <a44ae5cd0804030624u40be9ad9rb1cadefadb13f889@mail.gmail.com> (sfid-20080403_142500_363034_CE408D97)
-Date: Thu, 3 Apr 2008 09:24:16 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX non-WEP frame, but expected encryption"
-Cc: "Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
-	 <1207226756.3636.66.camel@johannes.berg>
-	 <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com>
+	Sat, 12 Apr 2008 04:56:48 -0400
+Subject: Re: [RFC 3/3] mac80211: annotate with __requires_rcu
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0804121050160.28120@vixen.sonytel.be>
+References: <20080410134810.629048000@sipsolutions.net>
+	 <20080410134829.412424000@sipsolutions.net>
+	 <Pine.LNX.4.64.0804121050160.28120@vixen.sonytel.be>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eLdB7X2w7Ui/c5zhNN5e"
+Date: Sat, 12 Apr 2008 10:56:29 +0200
+Message-Id: <1207990589.13354.123.camel@johannes.berg> (sfid-20080412_095652_993701_38543DBA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks.  I think I have a working build, but can you confirm that the
-linker messages are benign?
-I will get to work now on getting the log for you.
 
-Now I get:
-# make
- CC   iw.o
-cc: -lnl: linker input file unused because linking not done
- CC   interface.o
-interface.c: In function 'handle_interface':
-interface.c:64: warning: 'err' may be used uninitialized in this function
-interface.c:64: note: 'err' was declared here
-interface.c:138: warning: 'err' may be used uninitialized in this function
-interface.c:138: note: 'err' was declared here
-cc: -lnl: linker input file unused because linking not done
- CC   info.o
-cc: -lnl: linker input file unused because linking not done
- CC   station.o
-cc: -lnl: linker input file unused because linking not done
- CC   util.o
-cc: -lnl: linker input file unused because linking not done
- CC   mpath.o
-cc: -lnl: linker input file unused because linking not done
- CC   iw
+--=-eLdB7X2w7Ui/c5zhNN5e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 2008-04-12 at 10:50 +0200, Geert Uytterhoeven wrote:
+> On Thu, 10 Apr 2008, Johannes Berg wrote:
+> > --- everything.orig/net/mac80211/key.h	2008-04-10 15:36:20.000000000 +0=
+200
+> > +++ everything/net/mac80211/key.h	2008-04-10 15:36:45.000000000 +0200
+> > @@ -146,7 +146,7 @@ struct ieee80211_key *ieee80211_key_allo
+> >   */
+> >  void ieee80211_key_link(struct ieee80211_key *key,
+> >  			struct ieee80211_sub_if_data *sdata,
+> > -			struct sta_info *sta);
+> > +			struct sta_info *sta) __requires(RCU);
+>                                               ^^^^^^^^^^^^^^^
+> 					      __requires_rcu? (for consistency)
+
+Yeah, forgot to fix up this one, I had been playing with it locally
+without __requires_rcu first.
+
+Thanks,
+johannes
+
+--=-eLdB7X2w7Ui/c5zhNN5e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASAB5PKVg1VMiehFYAQLMAw/+N7qQr2NIQ7Pq2n58zFhvPKFvyswwGy13
+PPh2Apm/0qg9eIDfoCUsghs/OkNyclzRitfEcBol/QJzm/8tBpnhhY9F1lF4DZr1
+SOeH8tdiM0Ncj+CE27CSVz/8yDbXUZRYPvpQB4z16IfEGW1gyQpQlmCpBy139VUl
+Sg48L8DBdX91g7V44UngZKlQmOI/zv99+47X+vXc7vEkQe74I5T+pLt8BHiQhjRg
+vmANxijyVFZO6C6WmeQgbZe8CkTyzldzsC+RBKnt51ldWqRMHZvzf9fFPicGUDI7
+6/Ugd0fEqW82Sheyvp74uloS+KsV+NoITcaPiS7MoYrdznfM7ggLEBhuxbz6aEeH
+a3brZWpTkIetV6OCMpsj/lZ6iXd/g4nWh/60YRwSv5CGZdkMhNR26TTghLK4OkEa
+c8OFGxRtvPajDXBnyCbUP9HN2+mZ0aMSTFDfUC/xkH9svZ96vSI64gxwxDXlZbq5
+3zyfsCml5YTzq1OYugVE4lSz1BgOr96Vizc6vTYoyvcWoIZPMBcc3xHc/lTyJij3
+SM+8KT3YeBsa0yWzAV29NjqOXfyLFNcrmB3BE3L7F4muDskdVu3SPGXOYfoqWaYG
+hK7EswuKckAKTDZBQ6tT3h+3kTmXED4zPVMhqvSsdYAVU+cnjbSF0HASsRTmcHZ0
+PayuD7eGgxQ=
+=wtII
+-----END PGP SIGNATURE-----
+
+--=-eLdB7X2w7Ui/c5zhNN5e--
+
