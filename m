@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38476 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56178 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbYDIOia (ORCPT
+	with ESMTP id S1751675AbYDMHnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 10:38:30 -0400
-Subject: Re: [PATCH] mac80211: fix key hwaccel race
+	Sun, 13 Apr 2008 03:43:20 -0400
+Subject: Re: [RFC 1/2] b43: Fixes injection speed (up to 350 pps)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200804091639.24321.IvDoorn@gmail.com> (sfid-20080409_153547_539824_75C658CB)
-References: <1207689103.7442.1.camel@johannes.berg>
-	 <200804091639.24321.IvDoorn@gmail.com>
-	 (sfid-20080409_153547_539824_75C658CB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BzBfg/OZRVs7jWMYSgX2"
-Date: Wed, 09 Apr 2008 16:38:13 +0200
-Message-Id: <1207751893.7442.23.camel@johannes.berg> (sfid-20080409_153837_354487_8BD43B10)
+To: "Jory A. Pratt" <geekypenguin@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4800BBAF.7000609@gmail.com> (sfid-20080412_144023_643919_8FFFD65F)
+References: <4800BBAF.7000609@gmail.com>
+	 (sfid-20080412_144023_643919_8FFFD65F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c1Sg/+3ZdSao2noyZwAO"
+Date: Sun, 13 Apr 2008 09:43:13 +0200
+Message-Id: <1208072593.4111.12.camel@johannes.berg> (sfid-20080413_084324_500902_F8403E5D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-BzBfg/OZRVs7jWMYSgX2
+--=-c1Sg/+3ZdSao2noyZwAO
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-On Wed, 2008-04-09 at 16:39 +0200, Ivo van Doorn wrote:
-> Hi,
->=20
-> >  enum ieee80211_internal_key_flags {
-> >  	KEY_FLAG_UPLOADED_TO_HARDWARE	=3D BIT(0),
-> >  	KEY_FLAG_TODO_DELETE		=3D BIT(1),
-> > -	KEY_FLAG_TODO_HWACCEL		=3D BIT(2),
-> > +	KEY_FLAG_TODO_HWACCEL_ADD	=3D BIT(2),
-> > +	KEY_FLAG_TODO_HWACCEL_REMOVE	=3D BIT(2),
-> >  	KEY_FLAG_TODO_DEFKEY		=3D BIT(3),
-> >  	KEY_FLAG_TODO_ADD_DEBUGFS	=3D BIT(4),
-> >  };
->=20
-> Just to be sure, but the duplicate BIT(2) is correct?
+> +       if (ctl->type =3D=3D IEEE80211_IF_TYPE_MNTR) {
+> +               ctl->flags |=3D IEEE80211_TXCTL_NO_ACK;
+> +       }
+> +
+>         /* TX is done without a global lock. */
+>         if (b43_using_pio_transfers(dev))
+>                 err =3D b43_pio_tx(dev, skb, ctl);
+> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/x=
+mit.c
+> index 19aefbf..85e446b 100644
+> --- a/drivers/net/wireless/b43/xmit.c
+> +++ b/drivers/net/wireless/b43/xmit.c
+> @@ -318,7 +318,8 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+>         /* MAC control */
+>         if (!(txctl->flags & IEEE80211_TXCTL_NO_ACK))
+>                 mac_ctl |=3D B43_TXH_MAC_ACK;
+> -       if (!(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_CTL) =
+&&
+> +       if ( (txctl->type !=3D IEEE80211_IF_TYPE_MNTR) &&
+> +             !(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_CTL=
+) &&
+>               ((fctl & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PSPOL=
+L)))
+>                 mac_ctl |=3D B43_TXH_MAC_HWSEQ;
+>         if (txctl->flags & IEEE80211_TXCTL_FIRST_FRAGMENT)
 
-Eh, no. Wonder why it actually worked.
+FWIW, Michael meant this one too, it's not acceptable and we've
+previously said why.
 
 johannes
 
---=-BzBfg/OZRVs7jWMYSgX2
+--=-c1Sg/+3ZdSao2noyZwAO
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/zU1KVg1VMiehFYAQLoZg/9GLMVeyu5jKEJrFHsJs3aISwoluKQDy78
-TrTxtsp/iAeGrYswqgphwyxRaS694FOOqsWbqlF5XZdcQlUbMQaD62PU+1Wri/uD
-knldfUPpyhRMfyAXZTd7JKebxSyVM2ktm4+57HJucQvnxCNlz9RP7nB2Q3FigfCN
-MZNGkiDcqd095w1gsznJ1V3jMACggpeZAcciK86tz7iXann/kszt9NeJhltapQFC
-su2HC4gZjPaL2nKFfgpnJzDTwXXWz7oeX4nxHGsdEcqa7qqxnq2PSfOnB+SKQ1DY
-7xqPlJ/8g08QaaRFhPutnrTU1WEUQpgNVJ6o5etsJlMWYX+8kWZlK4rVyNEvHiI2
-kQqgd202hjUavsMTFZf8gHy9MyOuYBuMWrHFQ9P6uAoHD6362gmGHjk1Vz2mn+zO
-R4Efgm/nLyV36arr9ga6RkGfSQmkbxqR1xKo+KIFkObv7Gj8G8NDDUdpilViZtZi
-EVRv0TNOhddODC65dD6TbiAbjYwt8PNovb0X/AecGA60s9fby/V3PMVnfYyihZOz
-DQWVKA58Or0veacKMDsdbV2SKr5kG/2NQLA1B9FqfikxKOXe1aNw4JqyZSZ8dbW8
-gMTFWN5jRsFu/DO3XTvvCFEQgMiztW+7DPkbkpev+3zPnts6oe8qVWbPtRrOJCWb
-QCpAUUpiXIY=
-=41HP
+iQIVAwUASAG5kKVg1VMiehFYAQJ57Q//cP23B0P0q4CnAhBCQ+EAxK9OT6XywXyz
+EFu3iVSqAUx0NpVWwIDW6qNY9lrcxLanI/z8MbVFHJJpEgQSDCVZ4ubxDpdqJfXo
+ASpKsX5Qg8T/o4QGt4paWM7PGxehNxci0i8i6jfBj+vMsATPhkHXuP2ZX9hlzpcM
+nUiShBnNkT5gtk496TyM/D7b7yXeNXJRGbQA4AbcsSE9h/2MPJUvOpB40UfyFiHw
+ZtPr0LwkTFJuImpl5OBA7+D4IXbFcQTHt/OcLZdyQXdhLgv8w0wxGLC3ep3mrsUD
+Jbmz1Y1xgZBIDit6pfnKgHRNOrn8FFMvm3HblXh6LvLGXOpNtTRb2QbkHTYU+KTd
+sJWMFd9gvG/8OMgNyQ2S56gctff+zZheVQQP11YoqQGGLMYN2kOF4pxQMWJcYO53
++NNTWOhEnCk0ZaSxpKrqOHoUGXIHpclKaQkuRoc6swqVPwXAOqPOTaHtSJSxjaVz
+dCNcfYy1zyTJkp5OndaXkn9Qa8Iw9/OcYBFU/d4stH0AM6zS3qbpIyFtkvVQQyGx
+ScLaGuvHLdJq1j2dMT+ivfvXQNnc/o+MMs8FeASUFR8tRPOL795G99ZLwzdJgPn+
+mWSAkakdXAgnLikdia7ixxtCBKCcl4P86oo9kb2Z2uEyKaUCchsptIxxeQ56pPbi
+TeHUH7KRvgw=
+=v1O9
 -----END PGP SIGNATURE-----
 
---=-BzBfg/OZRVs7jWMYSgX2--
+--=-c1Sg/+3ZdSao2noyZwAO--
 
