@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59631 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755124AbYDQQzM (ORCPT
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:48245 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755032AbYDMKUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 12:55:12 -0400
-Subject: Re: [PATCH v2] mac80211: Replace ieee80211_tx_control->key_idx
-	with ieee80211_key_conf
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <200804171759.54830.IvDoorn@gmail.com> (sfid-20080417_165522_787079_BA83CC8B)
-References: <200804171728.30188.IvDoorn@gmail.com>
-	 <200804171759.54830.IvDoorn@gmail.com>
-	 (sfid-20080417_165522_787079_BA83CC8B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZrdHkrg7MonMHX3aop/v"
-Date: Thu, 17 Apr 2008 18:54:53 +0200
-Message-Id: <1208451294.4066.23.camel@johannes.berg> (sfid-20080417_175531_969633_B3919879)
-Mime-Version: 1.0
+	Sun, 13 Apr 2008 06:20:42 -0400
+Received: from ironport-out-2.rz.rwth-aachen.de ([134.130.3.59])
+ by mta-2.ms.rz.RWTH-Aachen.de
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZ900LPME1PFY60@mta-2.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Sun, 13 Apr 2008 12:20:13 +0200 (CEST)
+Date: Sun, 13 Apr 2008 12:20:11 +0200
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+In-reply-to: <1208081495.4111.32.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Vladimir Koutny <vlado@ksp.sk>
+Message-id: <4801DE5B.9090903@archlinux.org> (sfid-20080413_112048_128235_277C1A35)
+MIME-version: 1.0
+Content-type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary=------------enigB48404172F76FC9795D4875F
+References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
+ <200804021932.26046.IvDoorn@gmail.com> <47FE8FAD.9020802@archlinux.org>
+ <200804121246.44236.IvDoorn@gmail.com> <4800F76C.7000801@archlinux.org>
+ <1208072495.4111.10.camel@johannes.berg>
+ <1208074049.4111.18.camel@johannes.berg> <4801C4FF.5060606@archlinux.org>
+ <1208081495.4111.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-ZrdHkrg7MonMHX3aop/v
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB48404172F76FC9795D4875F
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-> =20
-> +	/* Key used for hardware encryption
-> +	 * undefined if IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
-> +	struct ieee80211_key_conf *hw_key;
+Johannes Berg schrieb:
+> Even using use_short_preamble wrongly shouldn't give much of a drop in
+> network speed. I fear there's another bug. Is your AP even
+> short-preamble capable? Maybe that's the problem, your AP isn't
+> announcing short preamble but we're enabling it by that code? I haven't=
 
-I would prefer "NULL if <flag> is set". And we could possibly do some
-internal rework to get rid of the flag now (don't do that right now
-unless you think it's easy, I'm not too sure off-hand). Can you also add
-a comment about what I said wrt. accessing it inside ops->tx() only?
-Sorry about the mail crossing.
+> looked in too much detail yet though.
 
-johannes
+It's a WRT54GL, so I suppose it supports it. On my laptop (iwl3945), I ge=
+t
+wlan0: switched to short barker preamble (BSSID=3D00:1d:7e:43:14:a7)
+after connecting to the wireless and everything is still okay and fast.
 
---=-ZrdHkrg7MonMHX3aop/v
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+
+--------------enigB48404172F76FC9795D4875F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.8 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIVAwUASAeA3KVg1VMiehFYAQJwrw//e4Rd+JV0YC0DcX6RkH40tHw3Gyz/yfq4
-fwEsXY5FYZuPkstEKhQiccNW9lkU+0Dm+P0OOpgIH/u2E/erWdKKo+jtq+mHGjSN
-FT/+R5QLLuWYe7kzhaNhs6MxiQANbAgsw5WH1x9GsOrg+Mv5Mbsw85867WqP8PyJ
-O/+l6VU3A2kdfXbMYim8xbSmYi664iC0WHREHjk51t/j2UfU6NgUbkSHSLhl+CmN
-0NE24wIcDv3bnv5dWooD3RwnqOqxNII11YVnkm1Jb6IN6Gb8FdxwYBqMLTdqv247
-aABNSj6m9ffc2GkvCVxz6L+dnwlQesL4u7dLwmy1XVIZEi70jKHKX3dyh5lHIxkl
-isrgeB3pvEHyHQQ5o5LYkr5qJPJUaHzmfkOh4WzbwM63x9Kr7glpKxFKRwt8n29C
-SI+/rOn0PaVbuTeIuNIdkSgIEuuU7OG/CxKZ5WvHwzH79TlnCkSHds1KJDZ4AsSn
-JdydRwZQXyNcjDSWVXWYddeKUhcOXzXEALNRd+aO9KpwUM6WKPIinXdQbMSXTG/I
-8BpDNeXZjB/NGFxJ2vGhwhgnWH8clJhokZjgfGlee1lB+b6F+55RiFKE0Wk//m8P
-6o6K0ITZ3YVsyzcmYE/uWK09NOE/AOKIEwEWVrbgoQ6EBKaJgW4IYmCP23mBhkAU
-/aV13V7Umoc=
-=5mP2
+iEYEAREIAAYFAkgB3lwACgkQEda5KzHP/VCh1wCgvEN8OCaAv3VUG60QZvzNIwjl
+KHwAmwUJB1090jr2SGuBiYuYhQwCPI2Y
+=MiNj
 -----END PGP SIGNATURE-----
 
---=-ZrdHkrg7MonMHX3aop/v--
-
+--------------enigB48404172F76FC9795D4875F--
