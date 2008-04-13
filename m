@@ -1,68 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753316AbYDCNOi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 09:14:38 -0400
-Subject: Re: [PATCH/RFC v3] mac80211: proper STA info locking
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mfe1.polimi.it ([131.175.12.23]:42003 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752750AbYDMXAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Apr 2008 19:00:17 -0400
+Date: Mon, 14 Apr 2008 00:59:49 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-In-Reply-To: <1207067026.5143.120.camel@johannes.berg> (sfid-20080402_100543_479722_BE0B648C)
-References: <1206569781.22530.18.camel@johannes.berg>
-	 (sfid-20080327_125027_868420_4C276109)  <1207056452.5143.95.camel@johannes.berg>
-	 (sfid-20080401_142746_785699_29242688)  <1207067026.5143.120.camel@johannes.berg>
-	 (sfid-20080402_100543_479722_BE0B648C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LYsh8DALBxKbnoW6ZJXg"
-Date: Thu, 03 Apr 2008 15:14:32 +0200
-Message-Id: <1207228472.3636.69.camel@johannes.berg> (sfid-20080403_141447_386429_22F6296C)
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de,
+	Christian Casteyde <casteyde.christian@free.fr>
+Subject: [PATCH] b43legacy: fix DMA mapping leakage
+Message-ID: <20080414005949.162956b2@polimi.it> (sfid-20080414_000021_120624_1E9C6C7B)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes a DMA mapping leakage in the case where we reject a DMA buffer
+because of its address.
+The patch by Michael Buesch has been ported to b43legacy.
 
---=-LYsh8DALBxKbnoW6ZJXg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Christian Casteyde <casteyde.christian@free.fr>
+---
+John, this is a fix for 2.6.25.
+---
+Index: bcm-testing/drivers/net/wireless/b43legacy/dma.c
+===================================================================
+--- bcm-testing.orig/drivers/net/wireless/b43legacy/dma.c
++++ bcm-testing/drivers/net/wireless/b43legacy/dma.c
+@@ -585,8 +585,9 @@ static int b43legacy_dmacontroller_tx_re
+ 
+ /* Check if a DMA mapping address is invalid. */
+ static bool b43legacy_dma_mapping_error(struct b43legacy_dmaring *ring,
+-					dma_addr_t addr,
+-					size_t buffersize)
++					 dma_addr_t addr,
++					 size_t buffersize,
++					 bool dma_to_device)
+ {
+ 	if (unlikely(dma_mapping_error(addr)))
+ 		return 1;
+@@ -594,11 +595,11 @@ static bool b43legacy_dma_mapping_error(
+ 	switch (ring->type) {
+ 	case B43legacy_DMA_30BIT:
+ 		if ((u64)addr + buffersize > (1ULL << 30))
+-			return 1;
++			goto address_error;
+ 		break;
+ 	case B43legacy_DMA_32BIT:
+ 		if ((u64)addr + buffersize > (1ULL << 32))
+-			return 1;
++			goto address_error;
+ 		break;
+ 	case B43legacy_DMA_64BIT:
+ 		/* Currently we can't have addresses beyond 64 bits in the kernel. */
+@@ -607,6 +608,12 @@ static bool b43legacy_dma_mapping_error(
+ 
+ 	/* The address is OK. */
+ 	return 0;
++
++address_error:
++	/* We can't support this address. Unmap it again. */
++	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
++
++	return 1;
+ }
+ 
+ static int setup_rx_descbuffer(struct b43legacy_dmaring *ring,
+@@ -626,7 +633,7 @@ static int setup_rx_descbuffer(struct b4
+ 		return -ENOMEM;
+ 	dmaaddr = map_descbuffer(ring, skb->data,
+ 				 ring->rx_buffersize, 0);
+-	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
++	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+ 		/* ugh. try to realloc in zone_dma */
+ 		gfp_flags |= GFP_DMA;
+ 
+@@ -639,7 +646,7 @@ static int setup_rx_descbuffer(struct b4
+ 					 ring->rx_buffersize, 0);
+ 	}
+ 
+-	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize)) {
++	if (b43legacy_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+ 		dev_kfree_skb_any(skb);
+ 		return -EIO;
+ 	}
+@@ -891,7 +898,7 @@ struct b43legacy_dmaring *b43legacy_setu
+ 					  DMA_TO_DEVICE);
+ 
+ 		if (b43legacy_dma_mapping_error(ring, dma_test,
+-					sizeof(struct b43legacy_txhdr_fw3))) {
++					sizeof(struct b43legacy_txhdr_fw3), 1)) {
+ 			/* ugh realloc */
+ 			kfree(ring->txhdr_cache);
+ 			ring->txhdr_cache = kcalloc(nr_slots,
+@@ -906,7 +913,7 @@ struct b43legacy_dmaring *b43legacy_setu
+ 					DMA_TO_DEVICE);
+ 
+ 			if (b43legacy_dma_mapping_error(ring, dma_test,
+-					sizeof(struct b43legacy_txhdr_fw3)))
++					sizeof(struct b43legacy_txhdr_fw3), 1))
+ 				goto err_kfree_txhdr_cache;
+ 		}
+ 
+@@ -1235,7 +1242,7 @@ static int dma_tx_fragment(struct b43leg
+ 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+ 					   sizeof(struct b43legacy_txhdr_fw3), 1);
+ 	if (b43legacy_dma_mapping_error(ring, meta_hdr->dmaaddr,
+-					sizeof(struct b43legacy_txhdr_fw3))) {
++					sizeof(struct b43legacy_txhdr_fw3), 1)) {
+ 		ring->current_slot = old_top_slot;
+ 		ring->used_slots = old_used_slots;
+ 		return -EIO;
+@@ -1254,7 +1261,7 @@ static int dma_tx_fragment(struct b43leg
+ 
+ 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 	/* create a bounce buffer in zone_dma on mapping failure. */
+-	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
++	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+ 		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+ 		if (!bounce_skb) {
+ 			ring->current_slot = old_top_slot;
+@@ -1268,7 +1275,7 @@ static int dma_tx_fragment(struct b43leg
+ 		skb = bounce_skb;
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+-		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len)) {
++		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+ 			ring->current_slot = old_top_slot;
+ 			ring->used_slots = old_used_slots;
+ 			err = -EIO;
 
 
-On Tue, 2008-04-01 at 18:23 +0200, Johannes Berg wrote:
-> As discussed earlier, we can unify locking in struct sta_info
-> and use just a single spinlock protecting all members of the
-> structure that need protection. Many don't, but one of the
-> especially bad ones is the 'flags' member that can currently
-> be clobbered when RX and TX is being processed on different
-> CPUs at the same time.
-
-No objections? I remember Tomas wasn't entirely happy with the
-suggestion that RX/TX aggregation don't need separate spinlocks.
-
-johannes
-
---=-LYsh8DALBxKbnoW6ZJXg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/TYN6Vg1VMiehFYAQJGrA/9Ev9kyG34etgUT6VPrjj4hMxsOBm7rkQR
-0ocI/p8TKAMZh4LUwESrTftncoKEnjgRaLQoo/Z9fpCwFoN7L8VZdzcy7DtTZ+Si
-ABsjLDdUWkwENCJtRYYn90Xs5LVXFvFRqd/SLeqpC3gS0sG3sjc2V0Zlz46kHvlw
-pWm35RIbV9LbI63sqGVHBFK9YrWIaYBbn7oXwBNCXXTX3mpAX+SQfDVBq8eKRePE
-6KMBhFEyxJp85Nxf4lx6dM7RfP5HSJ/rHnvvre2o4i9Lo/dBpbA8HtQoAPCpsar4
-mLZ6MvS5mWX/GOPc7pqPbYVR3AGEYTRKqFzxrxfsjmDJXW1zNre/5tw9EeLowgxY
-O4xv/jM3ONGc8gOxJ6YVDxfcqIwuiD+N/jecuX5iJAriFnoQ7FNhEfnjhr1UmByP
-qBIt0HFS8YnBPGsZB9SHLCxxmI9/caqUn5Skw+5qtZpp9XRGrdHj7Flv3SmcC6Fp
-K23OtDz1Bm5MjvxLOhsBtfLq7H46eUOs3GygY3VzKlhEf90B2jSK8r4OAEWFFFsy
-Rk+wwf4URYRKMFvW5cTUQyULD9csjzgVo8SfGQMixJ2q0/VLnplOfMR5nZWMkIA3
-R8qRmfQUzijeDU4fXE9nAh/uEg5Z2x1h5HeK8B9BAEoLVyYigfJTQmxz1b/Fbgks
-5HrBYgmNMJ4=
-=CGis
------END PGP SIGNATURE-----
-
---=-LYsh8DALBxKbnoW6ZJXg--
-
+--
+Ciao
+Stefano
