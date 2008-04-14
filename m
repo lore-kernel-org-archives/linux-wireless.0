@@ -1,103 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56235 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341AbYDOXCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 19:02:08 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/11] iwlwifi: support different num of tx and rx antennas
-Date: Tue, 15 Apr 2008 16:01:39 -0700
-Message-Id: <1208300507-25628-4-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000231_810483_F6B19C85)
-In-Reply-To: <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
-References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
+Received: from fk-out-0910.google.com ([209.85.128.185]:26015 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754092AbYDNQZH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Apr 2008 12:25:07 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so1748436fkr.5
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2008 09:25:03 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 hardware encryption
+Date: Mon, 14 Apr 2008 18:27:50 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200804051931.58895.IvDoorn@gmail.com> <1207578963.12481.27.camel@johannes.berg> <200804071645.43604.IvDoorn@gmail.com>
+In-Reply-To: <200804071645.43604.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200804141827.50991.IvDoorn@gmail.com> (sfid-20080414_172512_351601_674B5C95)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hi,
 
-This patch adds infrastructure for supporting different
-number of tx and rx antennas
+I've implemented the steps for hardware encryption
+including the part where the IV/EIV is being moved around.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    9 ++++-----
- drivers/net/wireless/iwlwifi/iwl-4965.c          |    7 +++++--
- drivers/net/wireless/iwlwifi/iwl-4965.h          |    7 +++++--
- 3 files changed, 14 insertions(+), 9 deletions(-)
+I now have a different problem, the hw_key_idx is u8,
+so is very limited to what can be stored in it. I am trying
+to find a solution for the following problem without increasing
+the size of hw_key_idx since it is also used in the ieee80211_tx_control
+structure which should remain as small as possible to fix in skb->cb.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-index 65cd8ae..7aa7f0b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
-@@ -269,11 +269,10 @@ struct iwl_cmd_header {
-  *          10 B active, A inactive
-  *          11 Both active
-  */
--#define RATE_MCS_ANT_A_POS	14
--#define RATE_MCS_ANT_B_POS	15
--#define RATE_MCS_ANT_A_MSK	0x4000
--#define RATE_MCS_ANT_B_MSK	0x8000
--#define RATE_MCS_ANT_AB_MSK	0xc000
-+#define RATE_MCS_ANT_POS       14
-+#define RATE_MCS_ANT_A_MSK     0x04000
-+#define RATE_MCS_ANT_B_MSK     0x08000
-+#define RATE_MCS_ANT_AB_MSK    0x0C000
- 
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index a1e91db..e647be7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -410,7 +410,7 @@ void iwl4965_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
- 	int rate_index;
- 
- 	control->antenna_sel_tx =
--		((rate_n_flags & RATE_MCS_ANT_AB_MSK) >> RATE_MCS_ANT_A_POS);
-+		((rate_n_flags & RATE_MCS_ANT_AB_MSK) >> RATE_MCS_ANT_POS);
- 	if (rate_n_flags & RATE_MCS_HT_MSK)
- 		control->flags |= IEEE80211_TXCTL_OFDM_HT;
- 	if (rate_n_flags & RATE_MCS_GF_MSK)
-@@ -2040,7 +2040,10 @@ int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_stations = IWL4965_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL4965_BROADCAST_ID;
- 
--	priv->hw_params.tx_ant_num = 2;
-+	priv->hw_params.tx_chains_num = 2;
-+	priv->hw_params.rx_chains_num = 2;
-+	priv->hw_params.valid_tx_ant = (IWL_ANTENNA_MAIN | IWL_ANTENNA_AUX);
-+	priv->hw_params.valid_rx_ant = (IWL_ANTENNA_MAIN | IWL_ANTENNA_AUX);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index c127c91..cf909e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -580,11 +580,14 @@ struct iwl4965_ibss_seq {
- struct iwl_hw_params {
- 	u16 max_txq_num;
- 	u16 tx_cmd_len;
--	u16 tx_ant_num;
-+	u8  tx_chains_num;
-+	u8  rx_chains_num;
-+	u8  valid_tx_ant;
-+	u8  valid_rx_ant;
- 	u16 max_rxq_size;
-+	u16 max_rxq_log;
- 	u32 rx_buf_size;
- 	u32 max_pkt_size;
--	u16 max_rxq_log;
- 	u8  max_stations;
- 	u8  bcast_sta_id;
- };
--- 
-1.5.3.4
+The problem is as follows:
+rt61pci, rt73usb, rt2800pci and rt2800usb support both shared keys
+as well as pairwise keys. When the "address" argument of set_key()
+is a valid MAC address, then the key is considered to be pairwise,
+otherwise it is a shared key.
 
+rt61pci and rt73usb supports:
+shared keys: 16 (4 per allowed virtual interface)
+pairwise keys: 64 (16 per allowed virtual interface)
+
+rt2800pci and rt2800usb supports:
+shared keys: 32 (4 per allowed virtual interface)
+pairwise keys: 256 (32 per allowed virtual interface)
+
+This means that the hw_key_idx with rt2800 hardware is already
+full when all keys are being supported. I am thinking of adding a flag
+to the key structure and ieee80211_tx_control structure to indicate
+if the key is shared or pairwise. This will safe 1 bit that otherwise has
+to be reserved from the hw_key_idx.
+Do you agree with such a flag addition, or should the driver not care
+about pairwise vs. shared.
+
+But now the fun part begins, the hardware needs the ieee80211_key_alg value
+for encryption (don't ask why, the algorithm is also stored in the register
+so it should be easy for the hardware to look it up directly).
+What should be the best way to obtain this algorithm, should a callback
+function be added, or should the driver keep a list in memory for all
+added keys (which would be memory duplication since mac80211 also
+has it in memory).
+
+Thanks,
+
+Ivo
