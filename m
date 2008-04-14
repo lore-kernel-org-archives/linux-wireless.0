@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:52702 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:53492 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbYDRQg5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 12:36:57 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [Bugme-new] [Bug 10471] New: iwl3945 in 2.6.25 ignores state of hardware RF kill switch
-Date: Fri, 18 Apr 2008 09:27:30 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200438B254@orsmsx416.amr.corp.intel.com> (sfid-20080418_173705_101614_2D3E27EF)
-In-Reply-To: <20080417142934.be2bdd27.akpm@linux-foundation.org>
-References: <bug-10471-10286@http.bugzilla.kernel.org/> <20080417142934.be2bdd27.akpm@linux-foundation.org>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Andrew Morton" <akpm@linux-foundation.org>,
-	<thoralf.dassler@gmail.com>
-Cc: <bugme-daemon@bugzilla.kernel.org>,
-	<linux-wireless@vger.kernel.org>
+	id S1755722AbYDNRPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Apr 2008 13:15:21 -0400
+Subject: Re: Alternative Libertas SDIO driver seen
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: David Anders <dave123_aml@yahoo.com>,
+	libertas-dev@lists.infradead.org,
+	"Harvey, Timothy" <tharvey@irobot.com>, feng.tang@intel.com,
+	linux-wireless@vger.kernel.org, claud_yu <claud_yu@yahoo.com.tw>
+In-Reply-To: <200804141831.34183.hs4233@mail.mn-solutions.de>
+References: <916547.28931.qm@web54407.mail.yahoo.com>
+	 <200804141831.34183.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 14 Apr 2008 13:12:29 -0400
+Message-Id: <1208193149.31015.58.camel@localhost.localdomain> (sfid-20080414_181526_122384_1784C558)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First to address the subject of this bug, the driver does not ignore the
-state of the hardware RF kill switch. More below.
-
-On , Andrew Morton  wrote:
-
-> On Thu, 17 Apr 2008 14:17:51 -0700 (PDT)
-> bugme-daemon@bugzilla.kernel.org wrote:
+On Mon, 2008-04-14 at 18:31 +0200, Holger Schurig wrote:
+> > the moblin libertas driver is originally based on source
+> > marvell released for both the OLPC and the UMPC
 > 
+> I understand the history similar to this:
+> 
+>    Marvell driver developed driver
+>         dropped to OLPC
+>    Marvell continued internal driver
+>         Linux community used OLPC driver and
+>         brought it into a linux mainline acceptable form
+>    Marvell released 5.0.16 as GPL
+>         OLPC driver was massaged to support
+>         USB,CF and somwhat to support SDIO
+>    Marvell continued internal driver
+>         Linux community changed OLPC driver
+>    Marvell released v8 to Intel moblinux
+>    Marvell continued internal driver
+>         Linux community changed OLPC driver
+>    Marvell releases v9 to Intel moblinux
+> 
+> 
+> From some perspective, I find the current libertas driver in 
+> Linux better (Dan Williams wrote about this).
+> 
+> However, I'd like to compare an early OLPC driver to the v9 that 
+> is in Intel's moblinux tree. This way we can find out what 
+> Marvell changed in the meantime and decide which of those 
+> changes might be beneficial for us.
 
->> 
->> 
->> messages during boot:
->> -----------------------------------
->> SIOCSIFFLAGS: No such device
->> [3 lines of irrelevant output on my iwl3945]
->> SIOCSIFFLAGS: No such device
+WMM and BT coexistance are two big ones so far.
 
-This is exactly the error returned by the driver when it detects that
-the hardware RF kill switch is set. With several message like above in
-your logs - could it be a user app that keeps trying to bring the
-interface up even when it returns an error?
+For your reviewing pleasure, from the latest 8686 drop on the Marvell
+site against the early 8388 drop on their site, which is essentially
+what they tossed over the wall to OLPC in April 2006:
+
+http://people.redhat.com/dcbw/lbs-drivers.diff
+
+Dan
 
 
->> dmesg:
->> -----------
->> ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 17 (level, low) -> IRQ 17
->> PM: Writing back config space on device 0000:04:00.0 at offset 1
->> (was 100002, writing 100006) iwl3945: Radio disabled by HW RF Kill
->> switch [message repeated 7 more times]
-
-It is right after printing this message that the driver returns
-"ENODEV".
-
->From what I can tell the driver is doing the right thing. What is the
-expected behavior in this scenario?
-
-Reinette
