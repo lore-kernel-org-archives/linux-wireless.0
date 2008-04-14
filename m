@@ -1,132 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22816 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753467AbYDUWmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 18:42:14 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Guy Cohen <guy.cohen@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 07/11] iwlwifi: fix current channel is not scanned
-Date: Mon, 21 Apr 2008 15:41:57 -0700
-Message-Id: <1208817721-11333-8-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004344_008479_BB43A050)
-In-Reply-To: <1208817721-11333-7-git-send-email-reinette.chatre@intel.com>
-References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-5-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-6-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-7-git-send-email-reinette.chatre@intel.com>
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:49126 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755702AbYDNRhD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Apr 2008 13:37:03 -0400
+Received: from ironport-out-2.rz.rwth-aachen.de ([134.130.3.59])
+ by mta-2.ms.rz.RWTH-Aachen.de
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZB004KISXPWAC0@mta-2.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Mon, 14 Apr 2008 19:37:01 +0200 (CEST)
+Date: Mon, 14 Apr 2008 19:37:00 +0200
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
+In-reply-to: <200804141339.45645.IvDoorn@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Vladimir Koutny <vlado@ksp.sk>
+Message-id: <4803963C.2000101@archlinux.org> (sfid-20080414_183709_968854_B9B4A603)
+MIME-version: 1.0
+Content-type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary=------------enig92BCABCFC76F23BE1A4E0015
+References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
+ <1208074049.4111.18.camel@johannes.berg> <4801C4FF.5060606@archlinux.org>
+ <200804141339.45645.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guy Cohen <guy.cohen@intel.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig92BCABCFC76F23BE1A4E0015
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-All channels should be scanned, including the current channel
-when the client is associated.
+Ivo van Doorn schrieb:
+>>> No, wait, I'm confused, the original patch is correct. As far as I ca=
+n
+>>> tell, the code there is correct. The bug in that code was actually
+>>> introduced by me based on the wrong thinking I just did again.
+>> I figured as much from the original commit message. So rt2500pci works=
+=20
+>> properly when the use_short_preamble has the wrong value, and breaks=20
+>> when it has the right one.
+>> By the way, 2.6.25-rc8 was the first time that rt2500pci was ever fast=
+=20
+>> enough to be usable at all for me, so the bug you introduced seemed to=
+=20
+>> be the fix for my speed problems (which is odd). My guess is that=20
+>> rt2500pci treats use_short_preamble wrong.
+>=20
+> Could you test this with the below patch?
+> This enables short_preamble for all rt2x00 drivers regardless of what m=
+ac80211 issues.
 
-Removed also unused flag to scan only active channels.
+What tree is this against? It doesn't apply to linux-2.6.git=20
+(2.6.25-rc9), which was the one I was talking about all the time. I did=20
+not test the wireless-testing or rt2x00 tree.
 
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   13 -------------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   13 -------------
- 4 files changed, 0 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index fb3247b..fb96c62 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -742,7 +742,6 @@ struct iwl3945_priv {
- 	u8 direct_ssid_len;
- 	u8 direct_ssid[IW_ESSID_MAX_SIZE];
- 	struct iwl3945_scan_cmd *scan;
--	u8 only_active_channel;
- 
- 	/* spinlock */
- 	spinlock_t lock;	/* protect general shared data */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
-index aaec064..07209f8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
-@@ -998,7 +998,6 @@ struct iwl_priv {
- 	u8 direct_ssid_len;
- 	u8 direct_ssid[IW_ESSID_MAX_SIZE];
- 	struct iwl4965_scan_cmd *scan;
--	u8 only_active_channel;
- 
- 	/* spinlock */
- 	spinlock_t lock;	/* protect general shared data */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 94e6c49..7ba7b33 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4967,17 +4967,6 @@ static int iwl3945_get_channels_for_scan(struct iwl3945_priv *priv,
- 		if (channels[i].flags & IEEE80211_CHAN_DISABLED)
- 			continue;
- 
--		if (channels[i].hw_value ==
--		    le16_to_cpu(priv->active_rxon.channel)) {
--			if (iwl3945_is_associated(priv)) {
--				IWL_DEBUG_SCAN
--				    ("Skipping current channel %d\n",
--				     le16_to_cpu(priv->active_rxon.channel));
--				continue;
--			}
--		} else if (priv->only_active_channel)
--			continue;
--
- 		scan_ch->channel = channels[i].hw_value;
- 
- 		ch_info = iwl3945_get_channel_info(priv, band, scan_ch->channel);
-@@ -7311,8 +7300,6 @@ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
--	priv->only_active_channel = 0;
--
- 	iwl3945_set_rate(priv);
- 
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 53c5c01..e35ab6e 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4373,17 +4373,6 @@ static int iwl4965_get_channels_for_scan(struct iwl_priv *priv,
- 		if (channels[i].flags & IEEE80211_CHAN_DISABLED)
- 			continue;
- 
--		if (ieee80211_frequency_to_channel(channels[i].center_freq) ==
--		    le16_to_cpu(priv->active_rxon.channel)) {
--			if (iwl_is_associated(priv)) {
--				IWL_DEBUG_SCAN
--				    ("Skipping current channel %d\n",
--				     le16_to_cpu(priv->active_rxon.channel));
--				continue;
--			}
--		} else if (priv->only_active_channel)
--			continue;
--
- 		scan_ch->channel = ieee80211_frequency_to_channel(channels[i].center_freq);
- 
- 		ch_info = iwl_get_channel_info(priv, band,
-@@ -6799,8 +6788,6 @@ static void iwl4965_mac_reset_tsf(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
--	priv->only_active_channel = 0;
--
- 	iwl4965_set_rate(priv);
- 
- 	mutex_unlock(&priv->mutex);
--- 
-1.5.3.4
 
+--------------enig92BCABCFC76F23BE1A4E0015
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.8 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEAREIAAYFAkgDljwACgkQEda5KzHP/VBvvQCfZx7EDirpeJV7vdg7k0D8+05G
+wqkAnie30DDgbEtluNFbSRkXv0fuya2z
+=ofKF
+-----END PGP SIGNATURE-----
+
+--------------enig92BCABCFC76F23BE1A4E0015--
