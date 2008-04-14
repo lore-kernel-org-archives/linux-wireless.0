@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:40267 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755446AbYDATRk (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:18338 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753801AbYDNQee convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 15:17:40 -0400
-Date: Tue, 1 Apr 2008 15:17:36 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Roy Marples <uberlord@gentoo.org>
-Subject: Re: [PATCH] [PATCH] prism54: set carrier flags correctly
-Message-ID: <20080401191736.GC4810@ruslug.rutgers.edu> (sfid-20080401_201744_266803_C60BF01E)
-References: <1206988135-12309-1-git-send-email-linville@tuxdriver.com> <1206989990.12973.9.camel@localhost.localdomain>
+	Mon, 14 Apr 2008 12:34:34 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: David Anders <dave123_aml@yahoo.com>
+Subject: Re: Alternative Libertas SDIO driver seen
+Date: Mon, 14 Apr 2008 18:31:34 +0200
+Cc: libertas-dev@lists.infradead.org,
+	"Harvey, Timothy" <tharvey@irobot.com>, feng.tang@intel.com,
+	linux-wireless@vger.kernel.org, claud_yu <claud_yu@yahoo.com.tw>
+References: <916547.28931.qm@web54407.mail.yahoo.com>
+In-Reply-To: <916547.28931.qm@web54407.mail.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1206989990.12973.9.camel@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200804141831.34183.hs4233@mail.mn-solutions.de> (sfid-20080414_173453_762438_384F9A9A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 31, 2008 at 02:59:50PM -0400, Dan Williams wrote:
-> On Mon, 2008-03-31 at 14:28 -0400, John W. Linville wrote:
-> > From: Roy Marples <uberlord@gentoo.org>
-> > 
-> > prism54 should set the carrier flags correctly when it thinks the
-> > link can be used.
-> > 
-> > Signed-off-by: Roy Marples <uberlord@gentoo.org>
-> > ---
-> > I found this in my pile from a long time back.  Anyone have any
-> > comments on it?
-> 
-> Other than the fact that the carrier flag on wireless devices is kind of
-> useless, it's fine. 
+> the moblin libertas driver is originally based on source
+> marvell released for both the OLPC and the UMPC
 
-Agreed, so sure, this is OK but I rather we turn the carrier on
-or off *before* sending an event, like this.
+I understand the history similar to this:
 
-Signed-off-by: Roy Marples <uberlord@gentoo.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+   Marvell driver developed driver
+        dropped to OLPC
+   Marvell continued internal driver
+        Linux community used OLPC driver and
+        brought it into a linux mainline acceptable form
+   Marvell released 5.0.16 as GPL
+        OLPC driver was massaged to support
+        USB,CF and somwhat to support SDIO
+   Marvell continued internal driver
+        Linux community changed OLPC driver
+   Marvell released v8 to Intel moblinux
+   Marvell continued internal driver
+        Linux community changed OLPC driver
+   Marvell releases v9 to Intel moblinux
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 2e25e19..e5b3c28 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -2081,6 +2081,7 @@ link_changed(struct net_device *ndev, u32 bitrate)
- 	islpci_private *priv = netdev_priv(ndev);
- 
- 	if (bitrate) {
-+		netif_carrier_on(ndev);
- 		if (priv->iw_mode == IW_MODE_INFRA) {
- 			union iwreq_data uwrq;
- 			prism54_get_wap(ndev, NULL, (struct sockaddr *) &uwrq,
-@@ -2089,8 +2090,10 @@ link_changed(struct net_device *ndev, u32 bitrate)
- 		} else
- 			send_simple_event(netdev_priv(ndev),
- 					  "Link established");
--	} else
-+	} else {
-+		netif_carrier_off(ndev);
- 		send_simple_event(netdev_priv(ndev), "Link lost");
-+	}
- }
- 
- /* Beacon/ProbeResp payload header */
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index eb7c1c6..04c2638 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -387,7 +387,9 @@ islpci_open(struct net_device *ndev)
- 	}
- 
- 	netif_start_queue(ndev);
--/*      netif_mark_up( ndev ); */
-+
-+	/* Turn off carrier unless we know we have associated */
-+	netif_carrier_off(ndev);
- 
- 	return 0;
- }
+
+>From some perspective, I find the current libertas driver in 
+Linux better (Dan Williams wrote about this).
+
+However, I'd like to compare an early OLPC driver to the v9 that 
+is in Intel's moblinux tree. This way we can find out what 
+Marvell changed in the meantime and decide which of those 
+changes might be beneficial for us.
