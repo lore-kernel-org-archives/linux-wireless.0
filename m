@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:40569 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752805AbYDAM5n convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:27282 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbYDNKOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:57:43 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: mac80211 bug? no data is being transmitted after interface is brought down and then up again
-Date: Tue, 1 Apr 2008 21:57:25 +0900
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Thomas =?iso-8859-1?q?B=E4chler?=" <thomas@archlinux.org>,
+	Mon, 14 Apr 2008 06:14:42 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Alternative Libertas SDIO driver seen
+Date: Mon, 14 Apr 2008 12:11:43 +0200
+Cc: claud_yu <claud_yu@yahoo.com.tw>,
+	"Harvey, Timothy" <tharvey@irobot.com>, feng.tang@intel.com,
 	linux-wireless@vger.kernel.org
-References: <fsm20k$usk$1@ger.gmane.org> <200804011053.19675.bruno@thinktube.com> <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com>
-In-Reply-To: <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com>
+References: <252063.3227.qm@web72209.mail.tp2.yahoo.com>
+In-Reply-To: <252063.3227.qm@web72209.mail.tp2.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200804012157.25474.bruno@thinktube.com> (sfid-20080401_135750_801448_01928572)
+Content-Type: text/plain;
+  charset="big5"
+Message-Id: <200804141211.43539.hs4233@mail.mn-solutions.de> (sfid-20080414_111459_860753_BEB78F3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 April 2008 15:27:06 Tomas Winkler wrote:
-> On 4/1/08, bruno randolf <bruno@thinktube.com> wrote:
-> > On Tuesday 01 April 2008 04:02:25 John W. Linville wrote:
-> > > On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
-> > > > My question is, should this be considered a bug in mac80211?
-> > > > IMO, when an interface is brought down and then up again, one o=
-f the
-> > > > following things should happen:
-> > > > 1) Everything works as before
-> > > > 2) Nothing works, but the card disassociates from the network.
-> > >
-> > > #2 would be my vote.
-> >
-> > why is that? would it be so difficult to provide #1?
+On Monday 14 April 2008 11:12:38 claud_yu wrote:
+> Hi ,
 >
-> Driver should not take policy decision. It should be user controled
-> applincation such as NM or ifup script of whatever to decide if to
-> reconnect or not.
->
-> > from a usability point of view #1 would be clearly better. whatever=
- the
-> > state was before, when i bring the interface up it want it to work
-> > (associate, join IBSS) and be able to transmit data.
->
-> For usuablity point of view you should configure your applicantion or
-> script to do reconnection, but it should not be driver call to do
-> that.
-> There are security issues with this that just get more and more
-> compilcated.. In application level you have more options to discover =
-your
-> environment and handle user preferences. and take the correct call
+> Currently I use wi2wi W2SW0001, I send Murata module
+> back. I still try to port the libertas driver to mx31.
+> Wi2Wi provide a SD card development card on wi2wi
+> website. I also try another 88w8686 driver from
+> project moblin (http://www.moblin.org/). The driver
+> should based on marvell SDIO driver. But the driver
+> still have some problem while firmware download.
 
-allright - that seems to be the way to go. thanks for the explanation. =
-i guess=20
-i'm a little bit behind, still thinking in in terms of iwconfig ;)
+Okay, I find a kernel tree there which, in 
+debian/patches/0019-marvell_8686_8688.patch contains another 
+libertas driver.
 
-bruno
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Unfortunately, the (Intel created) moblin.org webpage only 
+supports the "http://" access protocol to the git tree, which is 
+rather inefficent. I'm currently trying to get this tree 
+with "git clone --reference /usr/src/linux-git 
+http://www.moblin.org/repos/projects/kernel-mid-2.6.24.git/", 
+and takes ages. Maybe they also made this tree from scratch, so 
+that the reference to Linus' git tree won't help the 
+downloading.
+
+
+
+Okay, to the driver:
+
+* it's GPL, so we can copy from it
+* it's an if_sdio.c only-driver (and also contains something
+   with bluetooth stuff)
+* it's weird, as this patch contains two wlan_11.c files
+  which differ. This is true for effectively every wlan_XXX.c
+  file.
+* it looks similar to what Marvell donated originally to OLPC
+* compared to the current in-kernel libertas driver, it has
+  some more code for 802.11a frequencies
+* older Marvell drivers contained firmware as *.h files, this
+  driver now uses #include <linux/firmware.h> as well
+
+As this driver is sdio-only, and we have already other libertas 
+drivers supported in the kernel, it would never accepted as-is 
+in mainland kernel. Therefore I invite Marvell and Intel to 
+participate with the in-kernel libertas driver. I understand 
+that for Intel this might not be possible immediately, because 
+the current libertas driver might not work on their 
+Atom-reference platform, but I guess in the long-run could be 
+beneficial.
+
+I CC'ed feng tang from "git log 
+debian/patches/0019-marvell_8686_8688.patch" therefore :-)
