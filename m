@@ -1,95 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936533AbYD1Sek (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:13238 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbYDNGhL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 14:34:40 -0400
-Subject: RE: Roaming problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: "'John W. Linville'" <linville@tuxdriver.com>,
-	'Dan Williams' <dcbw@redhat.com>,
-	'Holger Schurig' <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <009d01c8a95d$b73b0410$0b3ca8c0@gotws1589>
-References: <009d01c8a95d$b73b0410$0b3ca8c0@gotws1589>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jNfCvKhoWN6jyD9NS0dY"
-Date: Mon, 28 Apr 2008 20:34:17 +0200
-Message-Id: <1209407657.29025.21.camel@johannes.berg> (sfid-20080428_203450_596154_77BD6668)
-Mime-Version: 1.0
+	Mon, 14 Apr 2008 02:37:11 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1931972pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2008 23:36:49 -0700 (PDT)
+From: Filipus Klutiero <chealer@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [Rt2400-devel] rt2x00: cleanup Kconfig help
+Date: Mon, 14 Apr 2008 02:36:40 -0400
+Cc: rt2400-devel@lists.sourceforge.net
+References: <200804121509.56291.chealer@gmail.com> <200804121817.00328.chealer@gmail.com> <200804131244.06087.IvDoorn@gmail.com>
+In-Reply-To: <200804131244.06087.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200804140236.40614.chealer@gmail.com> (sfid-20080414_073725_859448_D6DB7F5F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-jNfCvKhoWN6jyD9NS0dY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-04-28 at 20:28 +0200, Lars Ericsson wrote:
-> > > - Driver authenticating with new AP while having a valid=20
-> > > association with and other AP.
-> >=20
-> > Yes, that is the problem, we should disassociate first. If=20
-> > you can come up with a patch to send a disassoc packet in=20
-> > that case (and test it,
-> > preferably) that would be much welcome.
+Le April 13, 2008 06:44:05 am Ivo van Doorn, vous avez =E9crit=A0:
+[...]
 >=20
-> OK. I understood that there has been a discussion about the way the drive=
-r
-> should handle this situation and the current behaviour is according to th=
-at
-> discussion.=20
+> > @@ -38,12 +38,12 @@
+> >  	select INPUT_POLLDEV
+> > =20
+> >  config RT2400PCI
+> > -	tristate "Ralink rt2400 pci/pcmcia support"
+> > +	tristate "Ralink RT2400 (PCI/PCMCIA) support"
+> >  	depends on RT2X00 && PCI
+> >  	select RT2X00_LIB_PCI
+> >  	select EEPROM_93CX6
+> >  	---help---
+> > -	  This is an experimental driver for the Ralink rt2400 wireless c=
+hip.
+> > +	  This is an experimental driver for the Ralink RT2400 wireless c=
+hipset.
+> > =20
+> >  	  When compiled as a module, this driver will be called "rt2400pc=
+i.ko".
+>=20
+> I ask again, please keep the RT lowercase.
+As I wrote, "rt" is capitalized in the name of the chips. I am not a Ra=
+link expert though, so feel free to point to a reference where "rt" is =
+lowercase if both forms are valid.
+>=20
+> >  config RT61PCI
+> > -	tristate "Ralink rt61 pci/pcmcia support"
+> > +	tristate "Ralink RT2561 and RT2661 (PCI) support"
+>=20
+> I can't see why you are overly obsessed with changing the device type=
+ here.
+> There are rt61 PCMCIA cards so make it:
+>=20
+> +	tristate "Ralink rt2561 and rt2661 (PCI/PCMCIA) support"
+Ah, that's not an obsession but it's the way it was in both versions. I=
+ removed "pcmcia" because it wasn't capitalized, before we started tryi=
+ng to make it consistent. I made it consistent in the new patch.
+>=20
+> >  	depends on RT2X00 && PCI
+> >  	select RT2X00_LIB_PCI
+> >  	select RT2X00_LIB_FIRMWARE
+> >  	select EEPROM_93CX6
+> >  	---help---
+> > -	  This is an experimental driver for the Ralink rt61 wireless chi=
+p.
+> > +	  This is an experimental driver for the Ralink RT2600 and RT2501=
+ [Turbo] (PCI) wireless chipsets.
+>=20
+> Again: It doesn't make any sense to claim support for chip A in the s=
+ubject and chip B in the help text.
+A is the MAC chip, B is the chipset. Anyway, I forgot that entry when d=
+oing the version which was supposed to be consistent. I changed it in t=
+he new patch.
+> Furthermore you don't need to repeat the (PCI) here, since it is alre=
+ady clear from the subject and
+> it isn't in the help text for the other drivers either.
+Right.
+>=20
+> >  	  When compiled as a module, this driver will be called "rt61pci.=
+ko".
+> > =20
+> > @@ -91,26 +91,26 @@
+> >  	depends on RT61PCI
+> >  	select RT2X00_LIB_RFKILL
+> >  	---help---
+> > -	  This adds support for integrated rt61 devices that feature a
+> > +	  This adds support for integrated RT2600 and RT2501 devices that=
+ feature a
+>=20
+> Same here, the driver is for rt2561 and rt2661
+Changed.
+>=20
+> >  	  hardware button to control the radio state.
+> >  	  This feature depends on the RF switch subsystem rfkill.
+> > =20
+> >  config RT2500USB
+> > -	tristate "Ralink rt2500 usb support"
+> > +	tristate "Ralink RT2500USB support"
+>=20
+> Again:
+> -	tristate "Ralink rt2500 (USB) support"
+> This is consistent with the rest where (PCI) is used.
+> A space between rt2500 and usb should not give people the impression =
+we are
+> suddenly talking about PCI hardware.
+>=20
+> Another option if that makes you happy is that you could rename it to=
+ rt2570
+> if you really want to differentiate between rt2500 usb and rt2500 pci=
+=2E
+We already discussed that in previous messages.
+>=20
+> >  	depends on RT2X00 && USB
+> >  	select RT2X00_LIB_USB
+> >  	---help---
+> > -	  This is an experimental driver for the Ralink rt2500 wireless c=
+hip.
+> > +	  This is an experimental driver for the Ralink RT2500USB wireles=
+s chipset.
+>=20
+> Again:
+> +	  This is an experimental driver for the Ralink RT2500 wireless chi=
+pset.
+As above.
+> >  	  When compiled as a module, this driver will be called "rt2500us=
+b.ko".
+> > =20
+> >  config RT73USB
+> > -	tristate "Ralink rt73 usb support"
+> > +	tristate "Ralink RT2571W and RT2671 (USB) support"
+> >  	depends on RT2X00 && USB
+> >  	select RT2X00_LIB_USB
+> >  	select RT2X00_LIB_FIRMWARE
+> >  	---help---
+> > -	  This is an experimental driver for the Ralink rt73 wireless chi=
+p.
+> > +	  This is an experimental driver for the RT2571W and RT2671 MAC/B=
+BP chips. It supports Ralink RT2501USB and RT5201USB wireless chipsets.
+> >  	  When compiled as a module, this driver will be called "rt73usb.=
+ko".
+>=20
+> *sigh* you seem to be absolutely sure you want to break any form of c=
+onsistency in the rt2x00 KConfig entry.
+> So to show how I would like to see it I have the following patch. Unl=
+ess you have objections against below changes
+> I will push this forward.
+No objection, but note that:
+* this has both "hardware that feature*s*" and  "hardware that feature"
+* The names of drivers are duplicated and not exactly the same. For exa=
+mple, "This is the experimental rt2500pci driver [...]" vs "[...] this =
+driver will be called "rt2500pci.ko"".
 
-Yeah but that was mostly just sidetrack.
+Here is the third version of my patch.
+---
 
-> Is there any information document available describing the
-> selected design path or is it only the code that document the design ?=20
-> I think need that information if I should be able to create the patch
-> requested above.
-
-Unfortunately, there is nothing about mac80211's mlme other than the
-code.
-
-> On the other hand, that patch will only keep track of 'dual association'
-> problem.=20
-
-Well, no, that would mean we disassociate first and then only have a
-single association.
-
-> With the current wpa_supplicant, we will still have the problem
-> with the driver start an association sequence as soon as 'trig' ioctl
-> arrives. I think the wpa_supplicant need to modified to better cooperate
-> with the driver.
-
-That would be doable as well (though I would argue it should be done in
-addition), we could use Holger's approach and delay the actual
-association sequence start until a commit wext ioctl is received or a
-timer expires. Then wpa_supplicant can call the commit explicitly after
-doing everything.
-
-johannes
-
---=-jNfCvKhoWN6jyD9NS0dY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBYYqKVg1VMiehFYAQJtpQ/9Gd7CfO9wfJuL7eX0VV9eXg9xSCGl2cb7
-fe2uI78DE+/SwoAa0V6zSrZ20hfiSGrqnkBXfJAD9SFjyjSIW0xl4YF8MdcmgFuQ
-MfRqhf3lWTCwgR1KuIDGAUYbiHHvBoo5mbQ6hO721kDMSV7fM1hH9Neo563t3TO/
-j7H2tSNOU5+GFjsoK4hmUP9Ao9/Ii/wfCvFPi4hkFsqL+W/f5l4N4Vcx1kQdzaIa
-VgJtuJqtVyxOlnPRE2sN4oi/iyMqGYV0Q4zPKxVjTvIJ1Nede2R4DNSvdVOyPFHr
-uZ6rQLrT/7jLqPfTmT4tlkVc605WKjV9RFzIafbaKWhPhVZv1oBcpnMHv0PZ3U5/
-eceA/S4IH4zTY1naM+pDmBhICjTJ7Tuu2BraAs1J/M4t6IhLsoUq4YClvQ+Mab3A
-a6vDp7QRxmfsewQ3a9fOiu1ZasGNPuZci7oF4BchPsi/p5u0InTjDDhvgX6toUpm
-3kRqBasMG0WrnUA7mWMImPA41FPmdUY11jKTbmBzN0MyrmnZoT2Ewcb1Npq5o8HN
-FpVlnGJD4yAgiGRlJQZww55/frbCHv4VzHxSw+nPiUDlRxMTBzs8I3UV6Jq9kIc7
-yCf+1+3oxX52jBE9b8bZRKMrpb+NPQdvFKv4jtuGI7Q/YF09W+mNZwiDN4F8HnLb
-JsRUxCvvLR8=
-=dsYE
------END PGP SIGNATURE-----
-
---=-jNfCvKhoWN6jyD9NS0dY--
-
+--- drivers/net/wireless/rt2x00/Kconfig	2008-01-24 17:58:37.000000000 -=
+0500
++++ drivers/net/wireless/rt2x00/Kconfig.USB	2008-04-14 02:29:37.0000000=
+00 -0400
+@@ -2,10 +2,10 @@
+ 	tristate "Ralink driver support"
+ 	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	---help---
+-	  This will enable the experimental support for the Ralink drivers,
++	  This enables the experimental support for the Ralink drivers,
+ 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
+=20
+-	  These drivers will make use of the Devicescape ieee80211 stack.
++	  These drivers use the mac80211 stack.
+=20
+ 	  When building one of the individual drivers, the rt2x00 library
+ 	  will also be created. That library (when the driver is built as
+@@ -38,12 +38,12 @@
+ 	select INPUT_POLLDEV
+=20
+ config RT2400PCI
+-	tristate "Ralink rt2400 pci/pcmcia support"
++	tristate "Ralink RT2400 (PCI/PCMCIA) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2400 wireless chip.
++	  This is an experimental driver for the Ralink RT2400 wireless chips=
+et.
+=20
+ 	  When compiled as a module, this driver will be called "rt2400pci.ko=
+".
+=20
+@@ -52,17 +52,17 @@
+ 	depends on RT2400PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt2400 devices that feature a
++	  This adds support for integrated RT2400 devices that feature a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT2500PCI
+-	tristate "Ralink rt2500 pci/pcmcia support"
++	tristate "Ralink RT2500 (PCI/PCMCIA) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2500 wireless chip.
++	  This is an experimental driver for the Ralink RT2500 wireless chips=
+et.
+=20
+ 	  When compiled as a module, this driver will be called "rt2500pci.ko=
+".
+=20
+@@ -71,18 +71,18 @@
+ 	depends on RT2500PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt2500 devices that feature a
++	  This adds support for integrated RT2500 devices that feature a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT61PCI
+-	tristate "Ralink rt61 pci/pcmcia support"
++	tristate "Ralink RT2561 and RT2661 (PCI/PCMCIA) support"
+ 	depends on RT2X00 && PCI
+ 	select RT2X00_LIB_PCI
+ 	select RT2X00_LIB_FIRMWARE
+ 	select EEPROM_93CX6
+ 	---help---
+-	  This is an experimental driver for the Ralink rt61 wireless chip.
++	  This is an experimental driver for the Ralink RT2561 and RT2661 MAC=
+/BBP chips. It supports RT2600 and RT2501 [Turbo] wireless chipsets.
+=20
+ 	  When compiled as a module, this driver will be called "rt61pci.ko".
+=20
+@@ -91,26 +91,26 @@
+ 	depends on RT61PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+-	  This adds support for integrated rt61 devices that feature a
++	  This adds support for integrated RT2561 and RT2661 devices that fea=
+ture a
+ 	  hardware button to control the radio state.
+ 	  This feature depends on the RF switch subsystem rfkill.
+=20
+ config RT2500USB
+-	tristate "Ralink rt2500 usb support"
++	tristate "Ralink RT2500USB support"
+ 	depends on RT2X00 && USB
+ 	select RT2X00_LIB_USB
+ 	---help---
+-	  This is an experimental driver for the Ralink rt2500 wireless chip.
++	  This is an experimental driver for the Ralink RT2500USB wireless ch=
+ipset.
+=20
+ 	  When compiled as a module, this driver will be called "rt2500usb.ko=
+".
+=20
+ config RT73USB
+-	tristate "Ralink rt73 usb support"
++	tristate "Ralink RT2571W and RT2671 (USB) support"
+ 	depends on RT2X00 && USB
+ 	select RT2X00_LIB_USB
+ 	select RT2X00_LIB_FIRMWARE
+ 	---help---
+-	  This is an experimental driver for the Ralink rt73 wireless chip.
++	  This is an experimental driver for the Ralink RT2571W and RT2671 MA=
+C/BBP chips. It supports RT2501USB and RT5201USB wireless chipsets.
+=20
+ 	  When compiled as a module, this driver will be called "rt73usb.ko".
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
