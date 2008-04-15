@@ -1,82 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:45475 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753181AbYDPXBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 19:01:39 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JmGdF-0001wI-6D
-	for linux-wireless@vger.kernel.org; Wed, 16 Apr 2008 23:01:37 +0000
-Received: from 84-203-37-37.mysmart.ie ([84.203.37.37])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 23:01:37 +0000
-Received: from furlongm by 84-203-37-37.mysmart.ie with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 23:01:37 +0000
-To: linux-wireless@vger.kernel.org
-From: Marcus Furlong <furlongm@hotmail.com>
-Subject: RE: iwl3945 problem with 2.6.25-rc9
-Date: Thu, 17 Apr 2008 00:01:20 +0100
-Message-ID: <fu60g5$1h0$1@ger.gmane.org> (sfid-20080417_000147_281975_9CF32A05)
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46868 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754297AbYDOIdX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 04:33:23 -0400
+Date: Tue, 15 Apr 2008 01:32:51 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: bart.vanassche@gmail.com
+Cc: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 10455] New: Kernel lockup when iwl3945 modules
+ is loaded after a few hours
+Message-Id: <20080415013251.e90e5abd.akpm@linux-foundation.org> (sfid-20080415_093330_348540_8CAFC0DD)
+In-Reply-To: <bug-10455-10286@http.bugzilla.kernel.org/>
+References: <bug-10455-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 April 2008 22:22 in
-<D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>,
-Chatre, Reinette wrote:
 
-> On Wednesday, April 16, 2008 1:05 PM, Dan Williams  wrote:
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
+
+On Tue, 15 Apr 2008 01:16:39 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=10455
 > 
->> On Wed, 2008-04-16 at 20:48 +0100, Marcus Furlong wrote:
->>> On Wednesday 16 April 2008 20:01 in
->> <fu5iel$c45$1@ger.gmane.org>, Marcus
->>> Furlong wrote:
->>> 
->>>> On Wednesday 16 April 2008 19:28 in
->>>> 
->>> 
->>
-<D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.in
-> tel.com>,
->>>> Chatre, Reinette wrote:
->>>> 
->>>>> Looks like the device is being brought up and down a lot ... are
->>>>> you perhaps running wpa_supplicant or some other user application
->>>>> that is doing this? Could you please give more information about
->>>>> what you were doing when these errors started to appear?
->>>> 
->>>> Yes, wpa_supplicant is running as part of the boot process. Should
->>>> I use some other application? (Do wireless-tools support WPA?) Or
->>>> should I just load the module on it's own and give the dmesg output
->>>> from that?
->>> 
->>> Here is the output from the module loading without wpa_supplicant,
->>> then me reloading it with debug flags, and running ifconfig wlan0
->>> and iwlist scanning. Still some Microcode SW and FW errors in there,
->>> but there's a lot less noise.
->>> 
->>> 
->> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwl3945-output-no-wpasu
->> pplicant.bz2
->> 
->> Interesting; can you run wpa_supplicant again but dump it's detailed
->> output using "-dddt" for us so we can see what it's doing and if it's
->> causing the restarts?
+>            Summary: Kernel lockup when iwl3945 modules is loaded after a few
+>                     hours
+>            Product: Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.25-rc9
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: network-wireless
+>         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
+>         ReportedBy: bart.vanassche@gmail.com
 > 
-> The driver itself is responsible for many of the restarts because of the
-> firmware errors. A wpa_supplicant log will still be useful.
+> 
+> Latest working kernel version: (not known)
+> Earliest failing kernel version: 2.6.25-rc9
 
-Ok got one now:
+hm, why?  Has this machine never run earlier kernels?
 
-https://www.cs.tcd.ie/~furlongm/iwlwifi/minicom-wpa_supplicant-output
+> Distribution: Ubuntu Linux 7.10
+> Hardware Environment: Acer Aspire laptop model 5633WLMi
+> Software Environment: Ubuntu Linux 7.10, 32 bit mode.
+> Problem Description: When the iwl3945 module is loaded, the kernel locks up
+> after a few hours. This problem does not occur when the iwl3945 module is not
+> loaded.
+> 
+> Steps to reproduce: Boot the system.
+> 
+> The following kernel messages look suspicious:
+> 
+> Apr 14 20:16:24 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:16:24 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:18:28 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:18:28 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:20:32 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:20:32 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:22:36 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:22:36 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:24:40 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:24:40 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:26:44 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:26:44 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:28:48 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:28:48 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:30:52 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:30:52 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:32:56 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:32:56 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:35:00 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:35:00 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:37:04 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:37:04 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:39:08 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:39:08 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:41:12 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:41:12 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:43:16 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:43:16 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:45:20 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:45:20 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:47:24 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:47:24 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:49:28 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:49:28 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:51:32 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:51:32 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:53:36 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:53:36 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:55:40 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:55:40 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:57:44 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:57:44 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 20:59:48 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 20:59:48 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 21:01:52 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 21:01:52 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 21:03:56 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 21:03:56 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
+> Apr 14 21:06:00 localhost kernel: ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 19
+> (level, low) -> IRQ 19
+> Apr 14 21:06:00 localhost kernel: ACPI: PCI interrupt for device 0000:05:00.0
+> disabled
 
-Reloaded the module halfway through to see if that made any difference.
-Sometimes it sees some of the access points after rmmod-ing and
-modprobe-ing it (never sees as many as the ipw driver though), but this
-time it didn't make any difference.
+Yes, that does look like an ACPI problem.  But one would expect it to kill
+the interface immediately, not several hours later.
 
-Marcus.
+Can you send the /proc/interrupts contents?
 
