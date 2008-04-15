@@ -1,71 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35946 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:17848 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965286AbYD1Srx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 14:47:53 -0400
-Subject: RE: Roaming problems
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
-	"'John W. Linville'" <linville@tuxdriver.com>,
-	"'Holger Schurig'" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1209407657.29025.21.camel@johannes.berg>
-References: <009d01c8a95d$b73b0410$0b3ca8c0@gotws1589>
-	 <1209407657.29025.21.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 28 Apr 2008 14:43:28 -0400
-Message-Id: <1209408208.23868.3.camel@localhost.localdomain> (sfid-20080428_204758_424215_0CFA52B4)
-Mime-Version: 1.0
+	id S1751449AbYDOEQS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 00:16:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 05/12] iwlwifi: add 1X HW WEP support
+Date: Mon, 14 Apr 2008 21:16:07 -0700
+Message-Id: <1208232974-3828-6-git-send-email-reinette.chatre@intel.com> (sfid-20080415_051626_453124_B7F8392A)
+In-Reply-To: <1208232974-3828-5-git-send-email-reinette.chatre@intel.com>
+References: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-2-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-3-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-4-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-04-28 at 20:34 +0200, Johannes Berg wrote:
-> On Mon, 2008-04-28 at 20:28 +0200, Lars Ericsson wrote:
-> > > > - Driver authenticating with new AP while having a valid 
-> > > > association with and other AP.
-> > > 
-> > > Yes, that is the problem, we should disassociate first. If 
-> > > you can come up with a patch to send a disassoc packet in 
-> > > that case (and test it,
-> > > preferably) that would be much welcome.
-> > 
-> > OK. I understood that there has been a discussion about the way the driver
-> > should handle this situation and the current behaviour is according to that
-> > discussion. 
-> 
-> Yeah but that was mostly just sidetrack.
-> 
-> > Is there any information document available describing the
-> > selected design path or is it only the code that document the design ? 
-> > I think need that information if I should be able to create the patch
-> > requested above.
-> 
-> Unfortunately, there is nothing about mac80211's mlme other than the
-> code.
-> 
-> > On the other hand, that patch will only keep track of 'dual association'
-> > problem. 
-> 
-> Well, no, that would mean we disassociate first and then only have a
-> single association.
-> 
-> > With the current wpa_supplicant, we will still have the problem
-> > with the driver start an association sequence as soon as 'trig' ioctl
-> > arrives. I think the wpa_supplicant need to modified to better cooperate
-> > with the driver.
-> 
-> That would be doable as well (though I would argue it should be done in
-> addition), we could use Holger's approach and delay the actual
-> association sequence start until a commit wext ioctl is received or a
-> timer expires. Then wpa_supplicant can call the commit explicitly after
-> doing everything.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is the best approach really; it's the one I took in the libertas
-driver and turned out to work quite well.  It completely avoids issues
-with iwconfig argument ordering and the timer is long enough that it'll
-pick up almost everything you can throw at it programmatically as long
-as you don't do something stupid like sleep(2)...
+This patch adds support for HW encryption/decryption in 1X WEP.
 
-Dan
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   47 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    3 ++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    9 ++++-
+ 4 files changed, 58 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 93df29e..23ab523 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -461,6 +461,7 @@ struct iwl4965_tid_data {
+ struct iwl4965_hw_key {
+ 	enum ieee80211_key_alg alg;
+ 	int keylen;
++	u8 keyidx;
+ 	struct ieee80211_key_conf *conf;
+ 	u8 key[32];
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index a48e228..cb96419 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -35,6 +35,7 @@
+ #include "iwl-sta.h"
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
++#include "iwl-4965.h"
+ 
+ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+ {
+@@ -117,3 +118,49 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 	return ret;
+ }
+ 
++int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
++				struct ieee80211_key_conf *keyconf,
++				u8 sta_id)
++{
++	unsigned long flags;
++	__le16 key_flags = 0;
++	int ret;
++
++	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
++	keyconf->hw_key_idx = keyconf->keyidx;
++
++	key_flags |= (STA_KEY_FLG_WEP | STA_KEY_FLG_MAP_KEY_MSK);
++	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
++	key_flags &= ~STA_KEY_FLG_INVALID;
++
++	if (keyconf->keylen == WEP_KEY_LEN_128)
++		key_flags |= STA_KEY_FLG_KEY_SIZE_MSK;
++
++	if (sta_id == priv->hw_setting.bcast_sta_id)
++		key_flags |= STA_KEY_MULTICAST_MSK;
++
++	spin_lock_irqsave(&priv->sta_lock, flags);
++
++	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
++	priv->stations[sta_id].keyinfo.keylen = keyconf->keylen;
++	priv->stations[sta_id].keyinfo.keyidx = keyconf->keyidx;
++
++	memcpy(priv->stations[sta_id].keyinfo.key,
++				keyconf->key, keyconf->keylen);
++
++	memcpy(&priv->stations[sta_id].sta.key.key[3],
++				keyconf->key, keyconf->keylen);
++
++	priv->stations[sta_id].sta.key.key_offset = sta_id % 8; /* FIXME */
++	priv->stations[sta_id].sta.key.key_flags = key_flags;
++
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
++
++	ret = iwl4965_send_add_station(priv,
++		&priv->stations[sta_id].sta, CMD_ASYNC);
++
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	return ret;
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 50e9f14..78e0254 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -42,5 +42,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *key);
+ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *key);
++int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
++				struct ieee80211_key_conf *keyconf,
++				u8 sta_id);
+ 
+ #endif /* __iwl_sta_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index dfd2b75..37ab1c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1214,7 +1214,7 @@ static int iwl4965_set_dynamic_key(struct iwl_priv *priv,
+ 		ret = iwl4965_set_tkip_dynamic_key_info(priv, key, sta_id);
+ 		break;
+ 	case ALG_WEP:
+-		ret = -EOPNOTSUPP;
++		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
+ 		break;
+ 	default:
+ 		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
+@@ -2138,7 +2138,12 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+ 			if (wepkey->key_size == WEP_KEY_LEN_128)
+ 				cmd->cmd.tx.sec_ctl |= TX_CMD_SEC_KEY128;
+ 		} else {
+-			IWL_ERROR("No support for WEP key mappings key\n");
++			/* the WEP key was sent as dynamic */
++			keyidx = keyinfo->keyidx;
++			memcpy(&cmd->cmd.tx.key[3], keyinfo->key,
++							keyinfo->keylen);
++			if (keyinfo->keylen == WEP_KEY_LEN_128)
++				cmd->cmd.tx.sec_ctl |= TX_CMD_SEC_KEY128;
+ 		}
+ 
+ 		cmd->cmd.tx.sec_ctl |= (TX_CMD_SEC_WEP |
+-- 
+1.5.3.4
 
