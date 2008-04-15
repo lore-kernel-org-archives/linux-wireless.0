@@ -1,113 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:54203 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbYDWTut (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:64425 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760689AbYDOCFv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 15:50:49 -0400
-Received: by an-out-0708.google.com with SMTP id d31so746758and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2008 12:50:49 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Wed, 23 Apr 2008 12:15:29 -0700
-Subject: [PATCH] mac80211: use 4-byte mesh sequence number
-Message-ID: <480f9318.0b35640a.0a3f.ffffc3eb@mx.google.com> (sfid-20080423_215126_615548_B37D1180)
+	Mon, 14 Apr 2008 22:05:51 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=gb2312
+Subject: RE: Alternative Libertas SDIO driver seen
+Date: Tue, 15 Apr 2008 10:05:45 +0800
+Message-ID: <8AD95083DC3E36478732061D9752441502FE7C65@pdsmsx411.ccr.corp.intel.com> (sfid-20080415_030557_705971_7AFFC188)
+In-Reply-To: <1208186399.31015.23.camel@localhost.localdomain>
+References: <252063.3227.qm@web72209.mail.tp2.yahoo.com> <200804141211.43539.hs4233@mail.mn-solutions.de> <1208186399.31015.23.camel@localhost.localdomain>
+From: "Tang, Feng" <feng.tang@intel.com>
+To: "Dan Williams" <dcbw@redhat.com>,
+	"Holger Schurig" <hs4233@mail.mn-solutions.de>
+Cc: <libertas-dev@lists.infradead.org>,
+	"claud_yu" <claud_yu@yahoo.com.tw>,
+	"Harvey, Timothy" <tharvey@irobot.com>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This follows the new 802.11s/D2.0 draft.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- include/linux/ieee80211.h  |    2 +-
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/mesh.c        |   17 +++++------------
- net/mac80211/mesh.h        |    2 +-
- 4 files changed, 8 insertions(+), 15 deletions(-)
+Hi, Dan, Hlger,
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index f27d11a..c840bd1 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -113,7 +113,7 @@ struct ieee80211_hdr {
- struct ieee80211s_hdr {
- 	u8 flags;
- 	u8 ttl;
--	u8 seqnum[3];
-+	__le32 seqnum;
- 	u8 eaddr1[6];
- 	u8 eaddr2[6];
- 	u8 eaddr3[6];
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8e53ce7..c7314bf 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -354,7 +354,7 @@ struct ieee80211_if_sta {
- 	int preq_queue_len;
- 	struct mesh_stats mshstats;
- 	struct mesh_config mshcfg;
--	u8 mesh_seqnum[3];
-+	u32 mesh_seqnum;
- 	bool accepting_plinks;
- #endif
- 	u16 aid;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 594a335..f76bc26 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -8,6 +8,7 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "mesh.h"
- 
-@@ -167,8 +168,8 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
- 	struct rmc_entry *p, *n;
- 
- 	/* Don't care about endianness since only match matters */
--	memcpy(&seqnum, mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
--	idx = mesh_hdr->seqnum[0] & rmc->idx_mask;
-+	memcpy(&seqnum, &mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
-+	idx = le32_to_cpu(mesh_hdr->seqnum) & rmc->idx_mask;
- 	list_for_each_entry_safe(p, n, &rmc->bucket[idx].list, list) {
- 		++entries;
- 		if (time_after(jiffies, p->exp_time) ||
-@@ -393,16 +394,8 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
- {
- 	meshhdr->flags = 0;
- 	meshhdr->ttl = sdata->u.sta.mshcfg.dot11MeshTTL;
--
--	meshhdr->seqnum[0] = sdata->u.sta.mesh_seqnum[0]++;
--	meshhdr->seqnum[1] = sdata->u.sta.mesh_seqnum[1];
--	meshhdr->seqnum[2] = sdata->u.sta.mesh_seqnum[2];
--
--	if (sdata->u.sta.mesh_seqnum[0] == 0) {
--		sdata->u.sta.mesh_seqnum[1]++;
--		if (sdata->u.sta.mesh_seqnum[1] == 0)
--			sdata->u.sta.mesh_seqnum[2]++;
--	}
-+	put_unaligned(cpu_to_le32(sdata->u.sta.mesh_seqnum), &meshhdr->seqnum);
-+	sdata->u.sta.mesh_seqnum++;
- 
- 	return 5;
- }
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 742003d..9f8cb76 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -139,7 +139,7 @@ struct rmc_entry {
- 
- struct mesh_rmc {
- 	struct rmc_entry bucket[RMC_BUCKETS];
--	u8 idx_mask;
-+	u32 idx_mask;
- };
- 
- 
--- 
-1.5.4.3
+Yes, moblin.org has some drivers for Marvell SDIO 868x devices. One rea=
+son for that is moblin.org need suppport some Marvell devices which are=
+ brand new and not covered by current Libertas driver.
 
+Also Marvell driver on moblin.org is updated frequently as it keeps get=
+ting new developing versons from Marvell, which make it difficult to cl=
+ean up the code to open-source format for each new version.
 
+Thanks,
+=46eng
+-----Original Message-----
+=46rom: Dan Williams [mailto:dcbw@redhat.com]=20
+Sent: 2008=C4=EA4=D4=C214=C8=D5 23:20
+To: Holger Schurig
+Cc: libertas-dev@lists.infradead.org; claud_yu; Harvey, Timothy; Tang, =
+=46eng; linux-wireless@vger.kernel.org
+Subject: Re: Alternative Libertas SDIO driver seen
 
+On Mon, 2008-04-14 at 12:11 +0200, Holger Schurig wrote:
+> On Monday 14 April 2008 11:12:38 claud_yu wrote:
+> > Hi ,
+> >
+> > Currently I use wi2wi W2SW0001, I send Murata module
+> > back. I still try to port the libertas driver to mx31.
+> > Wi2Wi provide a SD card development card on wi2wi
+> > website. I also try another 88w8686 driver from
+> > project moblin (http://www.moblin.org/). The driver
+> > should based on marvell SDIO driver. But the driver
+> > still have some problem while firmware download.
+>=20
+> Okay, I find a kernel tree there which, in=20
+> debian/patches/0019-marvell_8686_8688.patch contains another=20
+> libertas driver.
+
+Yeah, this is based on the V8/V9 Marvell vendor driver, which is a
+continuation of the driver that got dropped on OLPC.  So you'll notice
+quite a few similarities to early versions of the upstream libertas
+driver.
+
+I'd like to think we've improved on the vendor driver greatly, from a
+cleanup standpoint (getting rid of the SBI abstraction stuff), from a
+Wireless Extensions standpoint, from a readability/maintainability
+standpoint, etc.
+
+Unfortunately we never got any buy-in from Marvell themselves on
+developing on the upstream driver together, though we did get some
+patches from their engineers that were against upstream.
+
+We can only really pull stuff from the moblin/vendor driver since if we
+wanted to use that code, we'd have to re-do all the work we've done ove=
+r
+the past 2 years cleaning up the existing libertas driver but on the
+moblin/vendor driver.  The vendor driver probably has better support fo=
+r
+things like WMM, power management, etc in it that are useful to mobile
+stuff but haven't yet been a focus of the existing libertas driver sinc=
+e
+it too so long just to get it to work reliably with a lot of different
+hardware than just the 868x.
+
+Dan
+
+> Unfortunately, the (Intel created) moblin.org webpage only=20
+> supports the "http://" access protocol to the git tree, which is=20
+> rather inefficent. I'm currently trying to get this tree=20
+> with "git clone --reference /usr/src/linux-git=20
+> http://www.moblin.org/repos/projects/kernel-mid-2.6.24.git/",=20
+> and takes ages. Maybe they also made this tree from scratch, so=20
+> that the reference to Linus' git tree won't help the=20
+> downloading.
+>=20
+>=20
+>=20
+> Okay, to the driver:
+>=20
+> * it's GPL, so we can copy from it
+> * it's an if_sdio.c only-driver (and also contains something
+>    with bluetooth stuff)
+> * it's weird, as this patch contains two wlan_11.c files
+>   which differ. This is true for effectively every wlan_XXX.c
+>   file.
+> * it looks similar to what Marvell donated originally to OLPC
+> * compared to the current in-kernel libertas driver, it has
+>   some more code for 802.11a frequencies
+> * older Marvell drivers contained firmware as *.h files, this
+>   driver now uses #include <linux/firmware.h> as well
+>=20
+> As this driver is sdio-only, and we have already other libertas=20
+> drivers supported in the kernel, it would never accepted as-is=20
+> in mainland kernel. Therefore I invite Marvell and Intel to=20
+> participate with the in-kernel libertas driver. I understand=20
+> that for Intel this might not be possible immediately, because=20
+> the current libertas driver might not work on their=20
+> Atom-reference platform, but I guess in the long-run could be=20
+> beneficial.
+>=20
+> I CC'ed feng tang from "git log=20
+> debian/patches/0019-marvell_8686_8688.patch" therefore :-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
