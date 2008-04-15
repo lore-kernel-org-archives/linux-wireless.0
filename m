@@ -1,31 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:51343 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206AbYD0HUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2008 03:20:07 -0400
-Date: Sun, 27 Apr 2008 09:35:13 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] RFC: Add support for passing PMK to WEXT
-Message-ID: <20080427063513.GB22481@jm.kir.nu> (sfid-20080427_092021_787425_5A5D5F75)
-References: <20080424204950.03DD.40F06B3A@sm.sony.co.jp> <1209226427.10943.47.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1209226427.10943.47.camel@johannes.berg>
+Received: from vms042pub.verizon.net ([206.46.252.42]:57833 "EHLO
+	vms042pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752765AbYDONNj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 09:13:39 -0400
+Received: from [192.168.1.4] ([71.191.33.184])
+ by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0JZD0088GBEFBH30@vms042.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Tue, 15 Apr 2008 08:13:28 -0500 (CDT)
+Date: Tue, 15 Apr 2008 09:13:27 -0400
+From: Dad <ccmcphe@verizon.net>
+Subject: Re: mac80211 question
+In-reply-to: <1208188488.31015.34.camel@localhost.localdomain>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-id: <4804A9F7.1030507@verizon.net> (sfid-20080415_141343_931124_AE248B45)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <48037A8E.5050200@verizon.net>
+ <1208188488.31015.34.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 26, 2008 at 06:13:47PM +0200, Johannes Berg wrote:
+Our tech support people use it - to distinguish which wireless is for 
+which work group.
+You see, we have servers with multiple wireless's and depending on the 
+work group and
+location, the nickname aids the tech support people to identify what 
+wireless a person is
+using. That is the only reason why we use it. Right now I have created 
+code for those IOCTL's,
+so if mac80211 doesn't have it, we can just implement it on our servers.
 
-> Looks fine to me. You might want to ask for Jouni's input since took
-> part in the original design and will have to take the wpa_supplicant
-> patch :)
+-Tex
 
-Actually, I had already seen this (and the matching wpa_supplicant
-patch) and commented it before it was sent to linux-wireless. I'm fine
-with this version.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> On Mon, 2008-04-14 at 11:38 -0400, Dad wrote:
+>   
+>> Are there any plans to include the nickname into mac80211? I noticed 
+>> that the version I have the ioctl's for nickname are
+>> NULL'ed out.
+>>     
+>
+> Any particular reason you want nickname?  AFAIK it was only used for
+> compat with pre-802.11 stuff like WaveLAN and such.  It's pretty much
+> useless these days.  Some drivers used it to signal whether they were
+> connected or not, but that's a completely bogus use of nickname and not
+> something that mac80211 should support.
+>
+> Dan
+>
+>
+>   
