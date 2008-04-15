@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44833 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752530AbYD0Pnv (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:41502 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206AbYDOTOU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2008 11:43:51 -0400
-Message-ID: <48149F2B.4000503@lwfinger.net> (sfid-20080427_174403_772198_4143067F)
-Date: Sun, 27 Apr 2008 10:43:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 15 Apr 2008 15:14:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH v2] b43: Add fastpath to b43_mac_suspend()
+Date: Tue, 15 Apr 2008 21:13:36 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
 MIME-Version: 1.0
-To: Priit Laes <plaes@plaes.org>
-CC: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [REGRESSION] Trouble seeing some wireless networks in latest
- git
-References: <1209288298.3851.12.camel@localhost>
-In-Reply-To: <1209288298.3851.12.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200804152113.36990.mb@bu3sch.de> (sfid-20080415_201423_021212_CF6674C8)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Priit Laes wrote:
-> Hey,
-> 
-> There seems to be some kind of regression in wireless drivers that makes
-> it not possible to see some wireless networks.
-> 
-> This can be seen with both b43 and iwl3945 drivers.
-> 
-> Using Kismet wireless scanner these networks were visible under latest
-> git.
-> All the networks rendered invisible seem to be from channels: 1 (one
-> network visible), 3, 8, 12 and 13. Visible networks are in channels 1,
-> 4, 6, 9 and 11.
-> 
-> Any hints how to debug this further?
+This adds a fastpath for the common workloads to the
+MAC suspend flushing.
+In common workloads the FIFO flush will take between 100 and
+200 microseconds. So we want to avoid calling msleep() in the
+common case, as it will waste over 800 microseconds + scheduler
+overhead.
 
-This regression sounds like a perfect place to use git bisection. As it affects 
-b43 and iwl3945, I would suspect some change in mac80211.
+This fastpath will hit in workloads where only small chunks
+of data are transmitted (downloading a file) or when a TX rate bigger
+or equal to 24MBit/s is used when transmitting lots of stuff (iperf).
+So in the commonly used workloads it will basically always hit.
 
-Larry
+In case the fastpath is not hit, there's no real performance or latency
+disadvantage from that.
+
+And yes, I measured this. So this is not one of these
+bad Programmer Likeliness Assumptions that are always wrong. ;)
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+Patch version without useless {}
+
+John, please apply to 2.6.26
+Stefano, you may port this, if you like to.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-15 19:52:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-15 21:12:06.000000000 +0200
+@@ -2340,12 +2340,20 @@ static void b43_mac_suspend(struct b43_w
+ 		b43_power_saving_ctl_bits(dev, B43_PS_AWAKE);
+ 		b43_write32(dev, B43_MMIO_MACCTL,
+ 			    b43_read32(dev, B43_MMIO_MACCTL)
+ 			    & ~B43_MACCTL_ENABLED);
+ 		/* force pci to flush the write */
+ 		b43_read32(dev, B43_MMIO_MACCTL);
++		/* Finally wait for the microcode to flush the fifos. */
++		for (i = 35; i; i--) {
++			tmp = b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
++			if (tmp & B43_IRQ_MAC_SUSPENDED)
++				goto out;
++			udelay(10);
++		}
++		/* Hm, it seems this will take some time. Use msleep(). */
+ 		for (i = 40; i; i--) {
+ 			tmp = b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
+ 			if (tmp & B43_IRQ_MAC_SUSPENDED)
+ 				goto out;
+ 			msleep(1);
+ 		}
