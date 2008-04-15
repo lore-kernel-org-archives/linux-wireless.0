@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21440 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750751AbYDRWfW convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:15417 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbYDOIjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 18:35:22 -0400
+	Tue, 15 Apr 2008 04:39:52 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: AR5K_INT_SWBA can't generate interruption for sending beacons
+Date: Tue, 15 Apr 2008 10:36:55 +0200
+Cc: "cao jing" <caojing.china@gmail.com>
+References: <9f33c5230804142124g3c8f4a0ai28a6b5117e1034c9@mail.gmail.com>
+In-Reply-To: <9f33c5230804142124g3c8f4a0ai28a6b5117e1034c9@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: RE: iwl3945 problem with 2.6.25-rc9
-Date: Fri, 18 Apr 2008 15:35:21 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200438B79F@orsmsx416.amr.corp.intel.com> (sfid-20080418_233527_245462_09B925D8)
-In-Reply-To: <20080418232358.000fbdf7@peterson.fenrir.org.uk>
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com><fu5iel$c45$1@ger.gmane.org><fu5l5r$pm8$1@ger.gmane.org><1208376292.27708.3.camel@localhost.localdomain><D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com><D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com><fu931e$k1b$1@ger.gmane.org><D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com><1208555842.4848.56.camel@johannes.berg><D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com> <20080418232358.000fbdf7@peterson.fenrir.org.uk>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Brian Morrison" <bdm@fenrir.org.uk>,
-	<linux-wireless@vger.kernel.org>
+  charset="iso-8859-1"
+Message-Id: <200804151036.55216.hs4233@mail.mn-solutions.de> (sfid-20080415_093955_759199_4F22338B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Brian Morrison  wrote:
+> Hi,
+>
+> I'm working on mac80211 and ath5k. I found that the
+> AR5K_INT_SWBA interruption can't be generated. So I can't send
+> beacons by this interruption. Anyone knows what's going on
+> with it?
+>
+> Thank you very much!
 
-> Not wishing to muddy the waters, but I've found that the iwlwifi
-> driver with a 3945 card is only reliable for scanning and associating
-> for 
-> my laptop (x86_64) with disable_hw_scan=1 set, this is with
-> 2.4.24.4-64.fc8 kernel. Driver version is 1.2.26.
+ath5k didn't make it yet to wireless-testing. That is the git 
+tree for all wireless stuff that finally will make it into 
+mainline Linux. See http://linuxwireless.org for more detail.
 
-I agree that your problem is related (no scanning results from driver),
-but it does seem to be different from what we are trying to debug here.
-In this case the user is not receiving scanning results when using sw
-scanning while the driver should have been using hw scanning because the
-user is not using that driver parameter as you are.
+I know that some people from the the OpenMoko work with ATH5K, 
+but so far none of the people that work with ATH5K bothered to 
+submit the driver have submitted the driver or asked for 
+review/inclusion. Therefore I fear that the work development 
+force isn't united, but scattered here ...
 
-Reinette
+
+Also, because ath5k didn't make it into wireless-testing yet, you 
+might not find people that know the device well enought here.
