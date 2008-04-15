@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51828 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbYDTK4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 06:56:37 -0400
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-From: David Woodhouse <dwmw2@infradead.org>
-To: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20080420084101.GB7685@Chamillionaire.breakpoint.cc>
-References: <1208448814.9212.270.camel@pmac.infradead.org>
-	 <200804181149.41838.hs4233@mail.mn-solutions.de>
-	 <1208517302.9212.324.camel@pmac.infradead.org>
-	 <200804181510.53412.hs4233@mail.mn-solutions.de>
-	 <20080420084101.GB7685@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain
-Date: Sun, 20 Apr 2008 11:56:32 +0100
-Message-Id: <1208688992.9212.412.camel@pmac.infradead.org> (sfid-20080420_115642_326883_14C7B6A3)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:41005 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751926AbYDOXCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 19:02:10 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 08/11] iwlwifi: Fix TKIP update key and get_free_ucode_key
+Date: Tue, 15 Apr 2008 16:01:44 -0700
+Message-Id: <1208300507-25628-9-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000235_000613_2EA2EBF4)
+In-Reply-To: <1208300507-25628-8-git-send-email-reinette.chatre@intel.com>
+References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-4-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-5-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-7-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-04-20 at 10:41 +0200, Sebastian Siewior wrote:
-> The function before lbs_ethtool_get_stats() (in net code that
-> determinate the number of elements, dunno the name right now) is able to
-> return an error. This one could check if the firmware has mesh support.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-That's what my second patch does.
+This patch fixes a bug in update_tkip_key: only one key needs to be
+allocated in uCode, every time it is updated, the old one will be
+overwritten
 
-> Do I understand this correct: If the firmware has support for mesh
-> devices than we have ethX and mshX and only mshX should return the
-> statistics?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Well, they are _mesh_ statistics :)
-
-> returning uninitialized nonsense is leaking kernel memory.
-
-Indeed. We need that memset there to handle errors, definitely.
-
-> What about changing lbs_ethtool_get_stats() from void to int? All
-> other drivers are reading memory to get this data, we have to go
-> through usb/cs/sdio layer and all of them may fail.
-
-Yeah, that might be worthwhile.
-
-> I will try to form a patch around Monday that fixes Dan's comments (if
-> nobody else is going to).
-
-Which comments? If we apply your original patch, followed by my patch in
-<1208509888.9212.291.camel@pmac.infradead.org> (which for some reason
-only went to wireless-dev, not libertas-dev), then I think it's fine.
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 0ccd156..e4fdfaa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -43,7 +43,7 @@ int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
+ 	int i;
+ 
+ 	for (i = 0; i < STA_KEY_MAX_NUM; i++)
+-		if (test_and_set_bit(i, &priv->ucode_key_table))
++		if (!test_and_set_bit(i, &priv->ucode_key_table))
+ 			return i;
+ 
+ 	return -1;
+@@ -243,6 +243,8 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
+ 	priv->stations[sta_id].keyinfo.conf = keyconf;
+ 	priv->stations[sta_id].keyinfo.keylen = 16;
++	priv->stations[sta_id].sta.key.key_offset =
++				 iwl_get_free_ucode_key_index(priv);
+ 
+ 	/* This copy is acutally not needed: we get the key with each TX */
+ 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 745b462..0eb4220 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6810,8 +6810,6 @@ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 
+-	priv->stations[sta_id].sta.key.key_offset =
+-				iwl_get_free_ucode_key_index(priv);
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8) iv32;
+ 
 -- 
-dwmw2
+1.5.3.4
 
