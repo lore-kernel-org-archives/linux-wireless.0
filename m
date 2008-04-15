@@ -1,105 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms6.Sony.CO.JP ([211.125.136.204]:39365 "EHLO ms6.sony.co.jp"
+Received: from mga09.intel.com ([134.134.136.24]:54268 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753606AbYDYFHp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2008 01:07:45 -0400
-Received: from mta6.sony.co.jp (mta6.Sony.CO.JP [137.153.71.9])
- by ms6.sony.co.jp (R8/Sony) with ESMTP id m3P57gLo020163
- for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 14:07:42 +0900 (JST)
-Received: from mta6.sony.co.jp (localhost [127.0.0.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m3P57g9i014785
- for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 14:07:42 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m3P57fIg014777
- for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 14:07:42 +0900 (JST)
-Received: from imail.sm.sony.co.jp (imail.sm.sony.co.jp [43.4.141.32]) by smail1.sm.sony.co.jp (8.11.6p2/8.11.6) with ESMTP id m3P57gP18331 for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 14:07:42 +0900 (JST)
-Received: from [43.4.146.40] (bluenote.sm.sony.co.jp [43.4.146.40])
-	by imail.sm.sony.co.jp (8.12.11/3.7W) with ESMTP id m3P57fD8025275
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 14:07:41 +0900 (JST)
-Date: Fri, 25 Apr 2008 14:05:39 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] RFC: PS3: gelic: Use the new PMK interface in the gelic driver
-In-Reply-To: <20080424204950.03DD.40F06B3A@sm.sony.co.jp>
-References: <20080424204950.03DD.40F06B3A@sm.sony.co.jp>
-Message-Id: <20080425135835.03F8.40F06B3A@sm.sony.co.jp> (sfid-20080425_070823_096121_8326B753)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+	id S1751219AbYDOEQT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 00:16:19 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 07/12] iwlwifi: moves security functions to iwl-sta.c
+Date: Mon, 14 Apr 2008 21:16:09 -0700
+Message-Id: <1208232974-3828-8-git-send-email-reinette.chatre@intel.com> (sfid-20080415_051628_483263_0084DC09)
+In-Reply-To: <1208232974-3828-7-git-send-email-reinette.chatre@intel.com>
+References: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-2-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-3-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-4-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-5-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-6-git-send-email-reinette.chatre@intel.com>
+ <1208232974-3828-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the new WEXT flags, the PS3 wireless driver can tell the user space that
-it would do handle 4-way handshake by itself and needs the PSK without private
-ioctls.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+This patch moves security related functions to iwl-sta.c.
+Note that iwl4965_mac_update_tkip_key is still in iwl4965-base.c since it
+is a mac80211 handler.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/ps3_gelic_wireless.c |   46 ++++++++++-----------------------------
- 1 file changed, 12 insertions(+), 34 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |  119 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    7 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |  120 +--------------------------
+ 3 files changed, 123 insertions(+), 123 deletions(-)
 
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -350,7 +350,8 @@ static int gelic_wl_get_range(struct net
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 41238f2..8765358 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -139,7 +139,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 	return ret;
+ }
  
- 	/* encryption capability */
- 	range->enc_capa = IW_ENC_CAPA_WPA |
--		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
-+		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP |
-+		IW_ENC_CAPA_4WAY_HANDSHAKE;
- 	if (wpa2_capable())
- 		range->enc_capa |= IW_ENC_CAPA_WPA2;
- 	range->encoding_size[0] = 5;	/* 40bit WEP */
-@@ -1256,42 +1257,19 @@ static int gelic_wl_set_encodeext(struct
- 		set_bit(key_index, &wl->key_enabled);
- 		/* remember wep info changed */
- 		set_bit(GELIC_WL_STAT_CONFIGURED, &wl->stat);
--	} else if ((alg == IW_ENCODE_ALG_TKIP) || (alg == IW_ENCODE_ALG_CCMP)) {
--		pr_debug("%s: TKIP/CCMP requested alg=%d\n", __func__, alg);
--		/* check key length */
--		if (IW_ENCODING_TOKEN_MAX < ext->key_len) {
--			pr_info("%s: key is too long %d\n", __func__,
--				ext->key_len);
-+	} else if (alg == IW_ENCODE_ALG_PMK) {
-+		if (ext->key_len != WPA_PSK_LEN) {
-+			pr_err("%s: PSK length wrong %d\n", __func__,
-+			       ext->key_len);
- 			ret = -EINVAL;
- 			goto done;
- 		}
--		if (alg == IW_ENCODE_ALG_CCMP) {
--			pr_debug("%s: AES selected\n", __func__);
--			wl->group_cipher_method = GELIC_WL_CIPHER_AES;
--			wl->pairwise_cipher_method = GELIC_WL_CIPHER_AES;
--			wl->wpa_level = GELIC_WL_WPA_LEVEL_WPA2;
--		} else {
--			pr_debug("%s: TKIP selected, WPA forced\n", __func__);
--			wl->group_cipher_method = GELIC_WL_CIPHER_TKIP;
--			wl->pairwise_cipher_method = GELIC_WL_CIPHER_TKIP;
--			/* FIXME: how do we do if WPA2 + TKIP? */
--			wl->wpa_level = GELIC_WL_WPA_LEVEL_WPA;
--		}
--		if (flags & IW_ENCODE_RESTRICTED)
--			BUG();
--		wl->auth_method = GELIC_EURUS_AUTH_OPEN;
--		/* We should use same key for both and unicast */
--		if (ext->ext_flags & IW_ENCODE_EXT_GROUP_KEY)
--			pr_debug("%s: group key \n", __func__);
--		else
--			pr_debug("%s: unicast key \n", __func__);
--		/* OK, update the key */
--		wl->key_len[key_index] = ext->key_len;
--		memset(wl->key[key_index], 0, IW_ENCODING_TOKEN_MAX);
--		memcpy(wl->key[key_index], ext->key, ext->key_len);
--		set_bit(key_index, &wl->key_enabled);
--		/* remember info changed */
--		set_bit(GELIC_WL_STAT_CONFIGURED, &wl->stat);
-+		memset(wl->psk, 0, sizeof(wl->psk));
-+		memcpy(wl->psk, ext->key, ext->key_len);
-+		wl->psk_len = ext->key_len;
-+		wl->psk_type = GELIC_EURUS_WPA_PSK_BIN;
-+		/* remember PSK configured */
-+		set_bit(GELIC_WL_STAT_WPA_PSK_SET, &wl->stat);
- 	}
- done:
- 	spin_unlock_irqrestore(&wl->lock, irqflag);
+-int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
++static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *keyconf,
+ 				u8 sta_id)
+ {
+@@ -186,3 +186,120 @@ int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 
+ 	return ret;
+ }
++
++static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
++				   struct ieee80211_key_conf *keyconf,
++				   u8 sta_id)
++{
++	unsigned long flags;
++	__le16 key_flags = 0;
++
++	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
++	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
++	key_flags &= ~STA_KEY_FLG_INVALID;
++
++	if (sta_id == priv->hw_setting.bcast_sta_id)
++		key_flags |= STA_KEY_MULTICAST_MSK;
++
++	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++	keyconf->hw_key_idx = keyconf->keyidx;
++
++	spin_lock_irqsave(&priv->sta_lock, flags);
++	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
++	priv->stations[sta_id].keyinfo.keylen = keyconf->keylen;
++
++	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key,
++	       keyconf->keylen);
++
++	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key,
++	       keyconf->keylen);
++
++	priv->stations[sta_id].sta.key.key_offset =
++				iwl_get_free_ucode_key_index(priv);
++	priv->stations[sta_id].sta.key.key_flags = key_flags;
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
++
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
++	return iwl4965_send_add_station(priv,
++				&priv->stations[sta_id].sta, CMD_ASYNC);
++}
++
++static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
++				   struct ieee80211_key_conf *keyconf,
++				   u8 sta_id)
++{
++	unsigned long flags;
++	int ret = 0;
++
++	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++	keyconf->hw_key_idx = keyconf->keyidx;
++
++	spin_lock_irqsave(&priv->sta_lock, flags);
++
++	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
++	priv->stations[sta_id].keyinfo.conf = keyconf;
++	priv->stations[sta_id].keyinfo.keylen = 16;
++
++	/* This copy is acutally not needed: we get the key with each TX */
++	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
++
++	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key, 16);
++
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	return ret;
++}
++
++int iwl_remove_dynamic_key(struct iwl_priv *priv, u8 sta_id)
++{
++	unsigned long flags;
++
++	priv->key_mapping_key = 0;
++
++	spin_lock_irqsave(&priv->sta_lock, flags);
++	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
++		&priv->ucode_key_table))
++		IWL_ERROR("index %d not used in uCode key table.\n",
++			priv->stations[sta_id].sta.key.key_offset);
++	memset(&priv->stations[sta_id].keyinfo, 0,
++					sizeof(struct iwl4965_hw_key));
++	memset(&priv->stations[sta_id].sta.key, 0,
++					sizeof(struct iwl4965_keyinfo));
++	priv->stations[sta_id].sta.key.key_flags = STA_KEY_FLG_NO_ENC;
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
++	return iwl4965_send_add_station(priv, &priv->stations[sta_id].sta, 0);
++}
++
++int iwl_set_dynamic_key(struct iwl_priv *priv,
++				struct ieee80211_key_conf *key, u8 sta_id)
++{
++	int ret;
++
++	priv->key_mapping_key = 1;
++
++	switch (key->alg) {
++	case ALG_CCMP:
++		ret = iwl_set_ccmp_dynamic_key_info(priv, key, sta_id);
++		break;
++	case ALG_TKIP:
++		ret = iwl_set_tkip_dynamic_key_info(priv, key, sta_id);
++		break;
++	case ALG_WEP:
++		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
++		break;
++	default:
++		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 3f1b205..44f272e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -43,8 +43,7 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *key);
+ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *key);
+-int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+-				struct ieee80211_key_conf *keyconf,
+-				u8 sta_id);
+-
++int iwl_remove_dynamic_key(struct iwl_priv *priv, u8 sta_id);
++int iwl_set_dynamic_key(struct iwl_priv *priv,
++				struct ieee80211_key_conf *key, u8 sta_id);
+ #endif /* __iwl_sta_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index da01896..bfefb05 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1112,122 +1112,6 @@ int iwl4965_send_add_station(struct iwl_priv *priv,
+ 	return rc;
+ }
+ 
+-static int iwl4965_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+-				   struct ieee80211_key_conf *keyconf,
+-				   u8 sta_id)
+-{
+-	unsigned long flags;
+-	__le16 key_flags = 0;
+-
+-	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
+-	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+-
+-	if (sta_id == priv->hw_setting.bcast_sta_id)
+-		key_flags |= STA_KEY_MULTICAST_MSK;
+-
+-	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-	keyconf->hw_key_idx = keyconf->keyidx;
+-
+-	key_flags &= ~STA_KEY_FLG_INVALID;
+-
+-	spin_lock_irqsave(&priv->sta_lock, flags);
+-	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
+-	priv->stations[sta_id].keyinfo.keylen = keyconf->keylen;
+-
+-	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key,
+-	       keyconf->keylen);
+-
+-	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key,
+-	       keyconf->keylen);
+-
+-	priv->stations[sta_id].sta.key.key_offset =
+-				iwl_get_free_ucode_key_index(priv);
+-	priv->stations[sta_id].sta.key.key_flags = key_flags;
+-	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-
+-	spin_unlock_irqrestore(&priv->sta_lock, flags);
+-
+-	IWL_DEBUG_INFO("hwcrypto: modify ucode station key info\n");
+-	return iwl4965_send_add_station(priv,
+-				&priv->stations[sta_id].sta, CMD_ASYNC);
+-}
+-
+-static int iwl4965_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+-				   struct ieee80211_key_conf *keyconf,
+-				   u8 sta_id)
+-{
+-	unsigned long flags;
+-	int ret = 0;
+-
+-	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-	keyconf->hw_key_idx = keyconf->keyidx;
+-
+-	spin_lock_irqsave(&priv->sta_lock, flags);
+-
+-	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
+-	priv->stations[sta_id].keyinfo.conf = keyconf;
+-	priv->stations[sta_id].keyinfo.keylen = 16;
+-
+-	/* This copy is acutally not needed: we get the key with each TX */
+-	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+-
+-	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key, 16);
+-
+-	spin_unlock_irqrestore(&priv->sta_lock, flags);
+-
+-	return ret;
+-}
+-
+-static int iwl4965_clear_sta_key_info(struct iwl_priv *priv, u8 sta_id)
+-{
+-	unsigned long flags;
+-
+-	priv->key_mapping_key = 0;
+-
+-	spin_lock_irqsave(&priv->sta_lock, flags);
+-	if (!test_and_clear_bit(priv->stations[sta_id].sta.key.key_offset,
+-		&priv->ucode_key_table))
+-		IWL_ERROR("index %d not used in uCode key table.\n",
+-			priv->stations[sta_id].sta.key.key_offset);
+-	memset(&priv->stations[sta_id].keyinfo, 0, sizeof(struct iwl4965_hw_key));
+-	memset(&priv->stations[sta_id].sta.key, 0, sizeof(struct iwl4965_keyinfo));
+-	priv->stations[sta_id].sta.key.key_flags = STA_KEY_FLG_NO_ENC;
+-	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-	spin_unlock_irqrestore(&priv->sta_lock, flags);
+-
+-	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
+-	iwl4965_send_add_station(priv, &priv->stations[sta_id].sta, 0);
+-	return 0;
+-}
+-
+-static int iwl4965_set_dynamic_key(struct iwl_priv *priv,
+-				struct ieee80211_key_conf *key, u8 sta_id)
+-{
+-	int ret;
+-
+-	priv->key_mapping_key = 1;
+-
+-	switch (key->alg) {
+-	case ALG_CCMP:
+-		ret = iwl4965_set_ccmp_dynamic_key_info(priv, key, sta_id);
+-		break;
+-	case ALG_TKIP:
+-		ret = iwl4965_set_tkip_dynamic_key_info(priv, key, sta_id);
+-		break;
+-	case ALG_WEP:
+-		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
+-		break;
+-	default:
+-		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
+-		ret = -EINVAL;
+-	}
+-
+-	return ret;
+-}
+-
+ static void iwl4965_clear_free_frames(struct iwl_priv *priv)
+ {
+ 	struct list_head *element;
+@@ -7043,7 +6927,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		if (is_default_wep_key)
+ 			ret = iwl_set_default_wep_key(priv, key);
+ 		else
+-			ret = iwl4965_set_dynamic_key(priv, key, sta_id);
++			ret = iwl_set_dynamic_key(priv, key, sta_id);
+ 
+ 		IWL_DEBUG_MAC80211("enable hwcrypto key\n");
+ 		break;
+@@ -7051,7 +6935,7 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		if (is_default_wep_key)
+ 			ret = iwl_remove_default_wep_key(priv, key);
+ 		else
+-			ret = iwl4965_clear_sta_key_info(priv, sta_id);
++			ret = iwl_remove_dynamic_key(priv, sta_id);
+ 
+ 		IWL_DEBUG_MAC80211("disable hwcrypto key\n");
+ 		break;
+-- 
+1.5.3.4
 
