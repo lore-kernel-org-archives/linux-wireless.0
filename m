@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:12364 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755489AbYD2IKz (ORCPT
+Received: from vms173003pub.verizon.net ([206.46.173.3]:45027 "EHLO
+	vms173003pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbYDOVBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 04:10:55 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: fix use-before-check violation
-Date: Tue, 29 Apr 2008 10:07:56 +0200
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804291007.56406.hs4233@mail.mn-solutions.de> (sfid-20080429_101059_433377_43835568)
+	Tue, 15 Apr 2008 17:01:39 -0400
+Received: from [192.168.1.4] ([71.191.33.184]) by vms173003.mailsrvcs.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0JZD00K7JWXJSM01@vms173003.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Tue, 15 Apr 2008 15:58:32 -0500 (CDT)
+Date: Tue, 15 Apr 2008 17:01:23 -0400
+From: Dad <ccmcphe@verizon.net>
+Subject: Re: mac80211 question
+In-reply-to: <200804151521.33963.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-id: <480517A3.6070001@verizon.net> (sfid-20080415_220144_275887_FD9276C1)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <48037A8E.5050200@verizon.net>
+ <1208188488.31015.34.camel@localhost.localdomain>
+ <4804A9F7.1030507@verizon.net> <200804151521.33963.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[PATCH] fix use-before-check violation
+Thanks Michael, I'll give that a try.
 
-According to Coverity (kudo's to Adrian Bunk), we had one use-before-check
-bug in libe libertas driver. This patch fixes this issue.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
-Index: wireless-testing/drivers/net/wireless/libertas/scan.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/scan.c	2008-04-29 09:07:19.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/scan.c	2008-04-29 09:07:39.000000000 +0200
-@@ -298,7 +298,8 @@ static int lbs_do_scan(struct lbs_privat
- 	uint8_t *tlv;	/* pointer into our current, growing TLV storage area */
- 
- 	lbs_deb_enter_args(LBS_DEB_SCAN, "bsstype %d, chanlist[].chan %d, chan_count %d",
--			   bsstype, chan_list[0].channumber, chan_count);
-+		bsstype, chan_list ? chan_list[0].channumber : -1,
-+		chan_count);
- 
- 	/* create the fixed part for scan command */
- 	scan_cmd = kzalloc(MAX_SCAN_CFG_ALLOC, GFP_KERNEL);
+> On Tuesday 15 April 2008 15:13:27 Dad wrote:
+>   
+>> Our tech support people use it - to distinguish which wireless is for 
+>> which work group.
+>> You see, we have servers with multiple wireless's and depending on the 
+>> work group and
+>> location, the nickname aids the tech support people to identify what 
+>> wireless a person is
+>> using. That is the only reason why we use it. Right now I have created 
+>> code for those IOCTL's,
+>> so if mac80211 doesn't have it, we can just implement it on our servers.
+>>     
+>
+> Why don't you do that wireless-interface to whatever mapping in userspace?
+>
+>
+>   
