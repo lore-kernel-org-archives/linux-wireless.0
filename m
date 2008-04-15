@@ -1,95 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta1.srv.hcvlny.cv.net ([167.206.4.196]:48585 "EHLO
-	mta1.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910AbYDBTDI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59639 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755636AbYDOLDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:03:08 -0400
-Received: from X61.NetworkingUnlimited.com
- (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta1.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0JYP00B6ZOX6SI20@mta1.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Wed, 02 Apr 2008 15:03:06 -0400 (EDT)
-Date: Wed, 02 Apr 2008 15:03:06 -0400
-From: Vincent C Jones <v.jones@networkingunlimited.com>
-Subject: RE: problem with iwl4965 and kernel 2.6.24.4
-In-reply-to: <D936D925018D154694D8A362EEB0892004194819@orsmsx416.amr.corp.intel.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Message-id: <1207162986.12301.32.camel@X61.NetworkingUnlimited.com> (sfid-20080402_200322_442172_AA2D2074)
-MIME-version: 1.0
-Content-type: text/plain
-References: <1207092107.12301.18.camel@X61.NetworkingUnlimited.com>
- <D936D925018D154694D8A362EEB0892004194819@orsmsx416.amr.corp.intel.com>
+	Tue, 15 Apr 2008 07:03:55 -0400
+Subject: Re: Does mac80211 support ap mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: cao jing <caojing.china@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1208202280.12139.23.camel@localhost.localdomain> (sfid-20080414_204742_445593_54A5FE8E)
+References: <9f33c5230804141218j5778195ajc1a7bae011eb9528@mail.gmail.com>
+	 <1208202280.12139.23.camel@localhost.localdomain>
+	 (sfid-20080414_204742_445593_54A5FE8E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u2SbDY2TO/RD/aLEpu80"
+Date: Tue, 15 Apr 2008 13:03:47 +0200
+Message-Id: <1208257427.3502.28.camel@johannes.berg> (sfid-20080415_120358_281281_BF77409A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-04-02 at 11:21 -0700, Chatre, Reinette wrote:
-> On , Vincent C Jones  wrote:
-> 
-> > Agree, it should not be necessary to use both iwconfig &
-> > wpa_supplicant, but somewhere between the last official release for
-> > Intel 4965 and the latest the 3/27/2008 release, it has become
-> > necessary, at least for some of us. SuSE 10.3, all kernels tried from
-> > 2.6.22 through 2.6.25-rc4. Some data points which might give
-> > you a clue:
-> 
-> To check we are using the same code ... could you please use the latest
-> iwlwifi driver by making use of the compat-wireless project
-> (http://linuxwireless.org/en/users/Download)?
-> 
-> > 
-> > Incidentally, should the 802.11n work using 802.11n draft on 5Ghz?
-> 
-> yes
-> 
-> Reinette
 
-Downloaded, compiled and tested with today's version
-(compat-wireless-2008-04-02) compat-release "2.8-50-g7b9853d".
+--=-u2SbDY2TO/RD/aLEpu80
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Same results as before:
 
-iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.2.26k
-iwl4965: Copyright(c) 2003-2008 Intel Corporation
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-iwl4965: Detected Intel Wireless WiFi Link 4965AGN
-iwl4965: Tunable channels: 11 802.11bg, 13 802.11a channels
-phy0: Selected rate control algorithm 'iwl-4965-rs'
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-wlan0: Initial auth_alg=0
-wlan0: authenticate with AP 00:1a:c1:8a:23:40
-wlan0: Initial auth_alg=0
-wlan0: authenticate with AP 00:1a:c1:8a:23:40
-wlan0: RX authentication from 00:1a:c1:8a:23:40 (alg=0 transaction=2
-status=0)
-wlan0: authenticated
-wlan0: associate with AP 00:1a:c1:8a:23:40
-wlan0: authentication frame received from 00:1a:c1:8a:23:40, but not in
-authenticate state - ignored
-wlan0: RX deauthentication from 00:1a:c1:8a:23:40 (reason=6)
-wlan0: deauthenticated
+> > I read the mac80211 code. I found only the STA, IBSS and Mesh_Point
+> > interface type are processed by the code. So does it support the ap
+> > mode.
+>=20
+> Yes, it does.  I'd suggest using hostapd as your AP daemon and the
+> nl80211 hostap driver.  While it's still under pretty heavy development,
+> it all should be fairly usable.  Johannes Berg would probably have a
+> more up-to-date description of the status of the hostapd nl80211 driver
+> and mac80211 AP-mode support.
 
-execute - iwconfig wlan0 chan 149
+As for drivers, b43 is known to work (I test this), rt2500pci seems to
+have some trouble (Bas Hulsken was trying it) and I don't know about any
+others.
 
-wlan0: authenticate with AP 00:1a:c1:8a:23:40
-wlan0: RX authentication from 00:1a:c1:8a:23:40 (alg=0 transaction=2
-status=0)
-wlan0: authenticated
-wlan0: associate with AP 00:1a:c1:8a:23:40
-wlan0: RX AssocResp from 00:1a:c1:8a:23:40 (capab=0x11 status=0 aid=1)
-wlan0: associated
+johannes
 
-Note that upon further testing, I don't need to specify the AP address,
-only the channel to use, and only if the channel is in the 5Ghz band.
+--=-u2SbDY2TO/RD/aLEpu80
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Other info:
-   uname -a
-Linux X61 2.6.22.17-0.1-test #2 SMP Tue Apr 1 11:33:27 EDT 2008 x86_64
-x86_64 x86_64 GNU/Linux
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Lenovo 7675CTO X61 ThinkPad T7500 (2.2MHz Core-2 Duo), SuSE 10.3 X86_64
+iQIVAwUASASLkqVg1VMiehFYAQKgvQ//dLCdJttu6qTrLKMQbt1XpRhYnoVWTDjt
+yc0Xn+OZ2rrKYim2JzwgFHKUE4A0SpbgN7v7BwwytSd90qEpzIfXCdg3IpbVHkq5
+XcGRMseJ4cKaKrOTAGkswMWgOedQ5418YNGSbJZRgNutEmGMDqe5FF8hxebro/qN
+ICl4dMekXKUK7hfOG89inseZKUV73+NXdsPUuWq0rcXvvA3mS7sGrvX8Us3UnMex
+s5wIBPKp/osT1Jb4vjuFbDr9CMtQg70kgfEfJ/OLeNfZ+YSsa+rl1YtajVfLHi3E
+KRamD4IycXkqTiM5QzfbBs4WNeF6KEPU8C5FRu94eGdJ78ApZc2eEzK9pI9P3nuy
+Mj9XpxMF1E5/yul/76szroDUduk78DqR/T7Ngu5Ia61QdLxfslgkTTBcIQV166w0
+WmAxBH4aCoaXE7/RfNzapEA6GYmPxpAYBSFJ7O7YkBslvvLg8FMhc21XLZ7hXhAK
+X5wDI8v7UT7+tkkSdWMI57y7msub7IeZfEXWgBv9/6reXChtTkok6blctu0Mphqz
+XTrKKNZqmyifPxCNteMH64QNC7TA96a6dXPbKg8DoQhYbOSw+Ex6kdKwVWO/ihmf
+C9XYfWtgs2gYxoQkpYqOxK3LRuq5/08wPuqUnYgHTNdSY1BJMckz30c92p5yNNBj
+kPRvKDDkp3A=
+=MYj5
+-----END PGP SIGNATURE-----
 
-Any other info that would help (or tests to run), just let me know.
+--=-u2SbDY2TO/RD/aLEpu80--
 
-Vince
