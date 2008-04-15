@@ -1,116 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:32956 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757603AbYDKKPJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 06:15:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: Fix usage of struct device used for DMAing
-Date: Fri, 11 Apr 2008 12:13:03 +0200
-Cc: bcm43xx-dev@lists.berlios.de,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200804111213.03606.mb@bu3sch.de> (sfid-20080411_111513_816177_1FC073FA)
-Content-Type: text/plain;
-  charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:61085 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751442AbYDOXCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 19:02:10 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/11] iwlwifi: introduce host commands callbacks
+Date: Tue, 15 Apr 2008 16:01:42 -0700
+Message-Id: <1208300507-25628-7-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000234_270783_BC8C461C)
+In-Reply-To: <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
+References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-4-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-5-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes b43legacy for the SSB DMA API change.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
+This patch adds place holder for host command handlers
+for supporting different implementations per HW
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-John, this is a bugfix for 2.6.25
-
-
-Index: wireless-testing/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/dma.c	2008-02-16 19:08:12.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43legacy/dma.c	2008-04-11 12:07:56.000000000 +0200
-@@ -393,11 +393,11 @@ dma_addr_t map_descbuffer(struct b43lega
- 	dma_addr_t dmaaddr;
- 
- 	if (tx)
--		dmaaddr = dma_map_single(ring->dev->dev->dev,
-+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
- 					 buf, len,
- 					 DMA_TO_DEVICE);
- 	else
--		dmaaddr = dma_map_single(ring->dev->dev->dev,
-+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
- 					 buf, len,
- 					 DMA_FROM_DEVICE);
- 
-@@ -411,11 +411,11 @@ void unmap_descbuffer(struct b43legacy_d
- 		      int tx)
- {
- 	if (tx)
--		dma_unmap_single(ring->dev->dev->dev,
-+		dma_unmap_single(ring->dev->dev->dma_dev,
- 				 addr, len,
- 				 DMA_TO_DEVICE);
- 	else
--		dma_unmap_single(ring->dev->dev->dev,
-+		dma_unmap_single(ring->dev->dev->dma_dev,
- 				 addr, len,
- 				 DMA_FROM_DEVICE);
- }
-@@ -458,9 +458,9 @@ void free_descriptor_buffer(struct b43le
- 
- static int alloc_ringmemory(struct b43legacy_dmaring *ring)
- {
--	struct device *dev = ring->dev->dev->dev;
-+	struct device *dma_dev = ring->dev->dev->dma_dev;
- 
--	ring->descbase = dma_alloc_coherent(dev, B43legacy_DMA_RINGMEMSIZE,
-+	ring->descbase = dma_alloc_coherent(dma_dev, B43legacy_DMA_RINGMEMSIZE,
- 					    &(ring->dmabase), GFP_KERNEL);
- 	if (!ring->descbase) {
- 		b43legacyerr(ring->dev->wl, "DMA ringmemory allocation"
-@@ -474,9 +474,9 @@ static int alloc_ringmemory(struct b43le
- 
- static void free_ringmemory(struct b43legacy_dmaring *ring)
- {
--	struct device *dev = ring->dev->dev->dev;
-+	struct device *dma_dev = ring->dev->dev->dma_dev;
- 
--	dma_free_coherent(dev, B43legacy_DMA_RINGMEMSIZE,
-+	dma_free_coherent(dma_dev, B43legacy_DMA_RINGMEMSIZE,
- 			  ring->descbase, ring->dmabase);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 4a40109..9fa803a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -4905,6 +4905,10 @@ void iwl4965_hw_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_delayed_work(&priv->init_alive_start);
  }
  
-@@ -886,7 +886,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 			goto err_kfree_meta;
++
++static struct iwl_hcmd_ops iwl4965_hcmd = {
++};
++
+ static struct iwl_hcmd_utils_ops iwl4965_hcmd_utils = {
+ 	.enqueue_hcmd = iwl4965_enqueue_hcmd,
+ };
+@@ -4927,6 +4931,7 @@ static struct iwl_lib_ops iwl4965_lib = {
  
- 		/* test for ability to dma to txhdr_cache */
--		dma_test = dma_map_single(dev->dev->dev, ring->txhdr_cache,
-+		dma_test = dma_map_single(dev->dev->dma_dev, ring->txhdr_cache,
- 					  sizeof(struct b43legacy_txhdr_fw3),
- 					  DMA_TO_DEVICE);
+ static struct iwl_ops iwl4965_ops = {
+ 	.lib = &iwl4965_lib,
++	.hcmd = &iwl4965_hcmd,
+ 	.utils = &iwl4965_hcmd_utils,
+ };
  
-@@ -900,7 +900,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 			if (!ring->txhdr_cache)
- 				goto err_kfree_meta;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 0ff0978..64bab66 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -82,6 +82,8 @@ struct iwl_cmd;
+ #define IWL_SKU_A       0x2
+ #define IWL_SKU_N       0x8
  
--			dma_test = dma_map_single(dev->dev->dev,
-+			dma_test = dma_map_single(dev->dev->dma_dev,
- 					ring->txhdr_cache,
- 					sizeof(struct b43legacy_txhdr_fw3),
- 					DMA_TO_DEVICE);
-@@ -910,7 +910,7 @@ struct b43legacy_dmaring *b43legacy_setu
- 				goto err_kfree_txhdr_cache;
- 		}
++struct iwl_hcmd_ops {
++};
+ struct iwl_hcmd_utils_ops {
+ 	int (*enqueue_hcmd)(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
+ };
+@@ -111,6 +113,7 @@ struct iwl_lib_ops {
  
--		dma_unmap_single(dev->dev->dev,
-+		dma_unmap_single(dev->dev->dma_dev,
- 				 dma_test, sizeof(struct b43legacy_txhdr_fw3),
- 				 DMA_TO_DEVICE);
- 	}
-
+ struct iwl_ops {
+ 	const struct iwl_lib_ops *lib;
++	const struct iwl_hcmd_ops *hcmd;
+ 	const struct iwl_hcmd_utils_ops *utils;
+ };
+ 
 -- 
-Greetings Michael.
+1.5.3.4
+
