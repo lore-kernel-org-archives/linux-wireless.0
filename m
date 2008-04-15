@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52404 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:53242 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbYDHIc4 (ORCPT
+	with ESMTP id S1756662AbYDONWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 04:32:56 -0400
+	Tue, 15 Apr 2008 09:22:14 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb-pcicore: Remove b44 TPS flag workaround
-Date: Tue, 8 Apr 2008 10:31:22 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
+To: Dad <ccmcphe@verizon.net>
+Subject: Re: mac80211 question
+Date: Tue, 15 Apr 2008 15:21:33 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <48037A8E.5050200@verizon.net> <1208188488.31015.34.camel@localhost.localdomain> <4804A9F7.1030507@verizon.net>
+In-Reply-To: <4804A9F7.1030507@verizon.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804081031.22638.mb@bu3sch.de> (sfid-20080408_093314_386195_BB8165C6)
+  charset="iso-8859-1"
+Message-Id: <200804151521.33963.mb@bu3sch.de> (sfid-20080415_142217_102386_906E4519)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we fixed the TPS flag assignment in commit
-JOHN, INSERT COMMIT ID HERE
-we don't need the workaround for the bcm44xx chip anymore.
+On Tuesday 15 April 2008 15:13:27 Dad wrote:
+> Our tech support people use it - to distinguish which wireless is for 
+> which work group.
+> You see, we have servers with multiple wireless's and depending on the 
+> work group and
+> location, the nickname aids the tech support people to identify what 
+> wireless a person is
+> using. That is the only reason why we use it. Right now I have created 
+> code for those IOCTL's,
+> so if mac80211 doesn't have it, we can just implement it on our servers.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-John, please apply to 2.6.26.
-But please insert the commit ID of
-"[PATCH] ssb-pcicore: Fix IRQ TPS flag handling" into the commit text first.
+Why don't you do that wireless-interface to whatever mapping in userspace?
 
 
-Index: wireless-testing/drivers/ssb/driver_pcicore.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-04-08 00:40:06.000000000 +0200
-+++ wireless-testing/drivers/ssb/driver_pcicore.c	2008-04-08 00:41:00.000000000 +0200
-@@ -559,21 +559,15 @@ int ssb_pcicore_dev_irqvecs_enable(struc
- 		if (err)
- 			goto out;
- 	} else {
- 		u32 intvec;
- 
- 		intvec = ssb_read32(pdev, SSB_INTVEC);
--		if ((bus->chip_id & 0xFF00) == 0x4400) {
--			/* Workaround: On the BCM44XX the BPFLAG routing
--			 * bit is wrong. Use a hardcoded constant. */
--			intvec |= 0x00000002;
--		} else {
--			tmp = ssb_read32(dev, SSB_TPSFLAG);
--			tmp &= SSB_TPSFLAG_BPFLAG;
--			intvec |= (1 << tmp);
--		}
-+		tmp = ssb_read32(dev, SSB_TPSFLAG);
-+		tmp &= SSB_TPSFLAG_BPFLAG;
-+		intvec |= (1 << tmp);
- 		ssb_write32(pdev, SSB_INTVEC, intvec);
- 	}
- 
- 	/* Setup PCIcore operation. */
- 	if (pc->setup_done)
- 		goto out;
+-- 
+Greetings Michael.
