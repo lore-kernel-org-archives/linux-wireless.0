@@ -1,107 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49633 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753467AbYDZPvG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 11:51:06 -0400
-Subject: [PATCH] mac80211: insert WDS peer after adding interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 24 Apr 2008 14:18:37 +0200
-Message-Id: <1209039517.3357.75.camel@johannes.berg> (sfid-20080426_175125_007920_8CCC34E0)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:56235 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751982AbYDOXCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 19:02:11 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 09/11] iwlwifi: arrange max number of Tx queues
+Date: Tue, 15 Apr 2008 16:01:45 -0700
+Message-Id: <1208300507-25628-10-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000233_350578_85376707)
+In-Reply-To: <1208300507-25628-9-git-send-email-reinette.chatre@intel.com>
+References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-4-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-5-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-7-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-8-git-send-email-reinette.chatre@intel.com>
+ <1208300507-25628-9-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reorders the open code so that WDS peer STA info entries
-are added after the corresponding interface is added to the
-driver so that driver callbacks aren't invoked out of order.
-Also make any master device startup fatal.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch increases the max possible number of Tx queues, but leaves
+current used number of queues as HW dependent
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/main.c |   44 +++++++++++++++++++++++++++-----------------
- 1 file changed, 27 insertions(+), 17 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    2 ++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
+ 6 files changed, 17 insertions(+), 13 deletions(-)
 
---- everything.orig/net/mac80211/main.c	2008-04-24 13:56:39.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-04-24 13:57:13.000000000 +0200
-@@ -257,20 +257,6 @@ static int ieee80211_open(struct net_dev
- 	case IEEE80211_IF_TYPE_WDS:
- 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
- 			return -ENOLINK;
--
--		/* Create STA entry for the WDS peer */
--		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
--				     GFP_KERNEL);
--		if (!sta)
--			return -ENOMEM;
--
--		sta->flags |= WLAN_STA_AUTHORIZED;
--
--		res = sta_info_insert(sta);
--		if (res) {
--			/* STA has been freed */
--			return res;
--		}
- 		break;
- 	case IEEE80211_IF_TYPE_VLAN:
- 		if (!sdata->u.vlan.ap)
-@@ -337,10 +323,8 @@ static int ieee80211_open(struct net_dev
- 		conf.type = sdata->vif.type;
- 		conf.mac_addr = dev->dev_addr;
- 		res = local->ops->add_interface(local_to_hw(local), &conf);
--		if (res && !local->open_count && local->ops->stop)
--			local->ops->stop(local_to_hw(local));
- 		if (res)
--			return res;
-+			goto err_stop;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index 368da98..ad612a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -456,7 +456,7 @@ struct iwl3945_eeprom {
+ /* Size of uCode instruction memory in bootstrap state machine */
+ #define IWL_MAX_BSM_SIZE ALM_RTC_INST_SIZE
  
- 		ieee80211_if_config(dev);
- 		ieee80211_reset_erp_info(dev);
-@@ -353,9 +337,29 @@ static int ieee80211_open(struct net_dev
- 			netif_carrier_on(dev);
+-#define IWL_MAX_NUM_QUEUES	8
++#define IWL39_MAX_NUM_QUEUES	8
+ 
+ static inline int iwl3945_hw_valid_rtc_data_addr(u32 addr)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 3dc7f0f..45c1c55 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -687,6 +687,8 @@ enum {
+ 
+ #endif
+ 
++#define IWL_MAX_NUM_QUEUES IWL39_MAX_NUM_QUEUES
++
+ struct iwl3945_priv {
+ 
+ 	/* ieee device used by generic ieee processing code */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index 3d098da..1a66b50 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -1385,10 +1385,10 @@ static inline __le32 iwl4965_hw_set_rate_n_flags(u8 rate, u16 flags)
+  * up to 7 DMA channels (FIFOs).  Each Tx queue is supported by a circular array
+  * in DRAM containing 256 Transmit Frame Descriptors (TFDs).
+  */
+-#define IWL4965_MAX_WIN_SIZE              64
+-#define IWL4965_QUEUE_SIZE               256
+-#define IWL4965_NUM_FIFOS                  7
+-#define IWL_MAX_NUM_QUEUES                16
++#define IWL4965_MAX_WIN_SIZE	64
++#define IWL4965_QUEUE_SIZE	256
++#define IWL4965_NUM_FIFOS	7
++#define IWL4965_MAX_NUM_QUEUES	16
+ 
+ 
+ /**
+@@ -1553,7 +1553,7 @@ struct iwl4965_sched_queue_byte_cnt_tbl {
+  */
+ struct iwl4965_shared {
+ 	struct iwl4965_sched_queue_byte_cnt_tbl
+-	 queues_byte_cnt_tbls[IWL_MAX_NUM_QUEUES];
++	 queues_byte_cnt_tbls[IWL4965_MAX_NUM_QUEUES];
+ 	__le32 rb_closed;
+ 
+ 	/* __le32 rb_closed_stts_rb_num:12; */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 2e74712..b072523 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -46,7 +46,7 @@
+ 
+ /* module parameters */
+ static struct iwl_mod_params iwl4965_mod_params = {
+-	.num_of_queues = IWL_MAX_NUM_QUEUES,
++	.num_of_queues = IWL4965_MAX_NUM_QUEUES,
+ 	.enable_qos = 1,
+ 	.amsdu_size_8K = 1,
+ 	/* the rest are 0 by default */
+@@ -2021,10 +2021,10 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
+ int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+ {
+ 
+-	if ((priv->cfg->mod_params->num_of_queues > IWL_MAX_NUM_QUEUES) ||
++	if ((priv->cfg->mod_params->num_of_queues > IWL4965_MAX_NUM_QUEUES) ||
+ 	    (priv->cfg->mod_params->num_of_queues < IWL_MIN_NUM_QUEUES)) {
+ 		IWL_ERROR("invalid queues_num, should be between %d and %d\n",
+-			  IWL_MIN_NUM_QUEUES, IWL_MAX_NUM_QUEUES);
++			  IWL_MIN_NUM_QUEUES, IWL4965_MAX_NUM_QUEUES);
+ 		return -EINVAL;
  	}
  
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
-+		/* Create STA entry for the WDS peer */
-+		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
-+				     GFP_KERNEL);
-+		if (!sta) {
-+			res = -ENOMEM;
-+			goto err_del_interface;
-+		}
-+
-+		sta->flags |= WLAN_STA_AUTHORIZED;
-+
-+		res = sta_info_insert(sta);
-+		if (res) {
-+			/* STA has been freed */
-+			goto err_del_interface;
-+		}
-+	}
-+
- 	if (local->open_count == 0) {
- 		res = dev_open(local->mdev);
- 		WARN_ON(res);
-+		if (res)
-+			goto err_del_interface;
- 		tasklet_enable(&local->tx_pending_tasklet);
- 		tasklet_enable(&local->tasklet);
+@@ -4362,7 +4362,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	 * (in Tx queue's circular buffer) of first TFD/frame in window */
+ 	u16 ba_resp_scd_ssn = le16_to_cpu(ba_resp->scd_ssn);
+ 
+-	if (scd_flow >= ARRAY_SIZE(priv->txq)) {
++	if (scd_flow >= priv->hw_params.max_txq_num) {
+ 		IWL_ERROR("BUG_ON scd_flow is bigger than number of queues");
+ 		return;
  	}
-@@ -390,6 +394,12 @@ static int ieee80211_open(struct net_dev
- 	netif_start_queue(dev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index ddcbad5..9ed13cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -941,6 +941,8 @@ enum {
  
- 	return 0;
-+ err_del_interface:
-+	local->ops->remove_interface(local_to_hw(local), &conf);
-+ err_stop:
-+	if (!local->open_count && local->ops->stop)
-+		local->ops->stop(local_to_hw(local));
-+	return res;
- }
+ #endif
  
- static int ieee80211_stop(struct net_device *dev)
-
++#define IWL_MAX_NUM_QUEUES	20 /* FIXME: do dynamic allocation */
++
+ struct iwl_priv {
+ 
+ 	/* ieee device used by generic ieee processing code */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 29a9ecd..1a5678f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -70,7 +70,7 @@ static int iwl3945_param_disable;  /* def: 0 = enable radio */
+ static int iwl3945_param_antenna;  /* def: 0 = both antennas (use diversity) */
+ int iwl3945_param_hwcrypto;        /* def: 0 = use software encryption */
+ static int iwl3945_param_qos_enable = 1; /* def: 1 = use quality of service */
+-int iwl3945_param_queues_num = IWL_MAX_NUM_QUEUES; /* def: 8 Tx queues */
++int iwl3945_param_queues_num = IWL39_MAX_NUM_QUEUES; /* def: 8 Tx queues */
+ 
+ /*
+  * module name, copyright, version, etc.
+@@ -7974,10 +7974,10 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 		iwl3945_hw_ops.hw_scan = NULL;
+ 	}
+ 
+-	if ((iwl3945_param_queues_num > IWL_MAX_NUM_QUEUES) ||
++	if ((iwl3945_param_queues_num > IWL39_MAX_NUM_QUEUES) ||
+ 	    (iwl3945_param_queues_num < IWL_MIN_NUM_QUEUES)) {
+ 		IWL_ERROR("invalid queues_num, should be between %d and %d\n",
+-			  IWL_MIN_NUM_QUEUES, IWL_MAX_NUM_QUEUES);
++			  IWL_MIN_NUM_QUEUES, IWL39_MAX_NUM_QUEUES);
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
+-- 
+1.5.3.4
 
