@@ -1,93 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from element.ksp.sk ([158.195.16.154]:35665 "EHLO element.ksp.sk"
+Received: from mga11.intel.com ([192.55.52.93]:21627 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756181AbYDCP5r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 11:57:47 -0400
-Message-ID: <47F4FE6D.2000307@work.ksp.sk> (sfid-20080403_165752_683171_38D6FBED)
-Date: Thu, 03 Apr 2008 17:57:33 +0200
-From: Vladimir Koutny <vlado@work.ksp.sk>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Bill Moss <bmoss@CLEMSON.EDU>, Daniel Drake <dsd@gentoo.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: mac80211 MLME scanning - BSS list trouble
-References: <1206865999.22530.187.camel@johannes.berg> <20080331200536.GA13799@tuxdriver.com>
-In-Reply-To: <20080331200536.GA13799@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigA0293F35FD1D7FE00B5E95A9"
+	id S1752552AbYDPXex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2008 19:34:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/3] iwlwifi: cleanup set_pwr_src
+Date: Wed, 16 Apr 2008 16:34:49 -0700
+Message-Id: <1208388889-32131-4-git-send-email-reinette.chatre@intel.com> (sfid-20080417_003459_738753_5A4B9A63)
+In-Reply-To: <1208388889-32131-3-git-send-email-reinette.chatre@intel.com>
+References: <1208388889-32131-1-git-send-email-reinette.chatre@intel.com>
+ <1208388889-32131-2-git-send-email-reinette.chatre@intel.com>
+ <1208388889-32131-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigA0293F35FD1D7FE00B5E95A9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-John W. Linville wrote:
-> On Sun, Mar 30, 2008 at 10:33:19AM +0200, Johannes Berg wrote:
->=20
->> The first one is that there is no actual expiration of BSS structs. Ea=
-ch
->> BSS struct has a 'last_update' member that contains (in jiffies) the
->> time this item was last updated. This means that we accumulate BSS
->> information forever, but due to the 'last_update' only the last few
->> items will be returned to the user on asking for a scan result. This
->> obviously has problems since a rogue station could bombard us with fak=
-e
->> probe responses and cause us to build a huge BSS list which is never
->> again freed until the hardware is deregistered. This will need to be
->> fixed, of course.
->=20
-> Assuming this was fixed, does the rest of this issue go away?
-> It seems like it would.
+This patch cleans up semantic of set_pwr_src
+set_pwr_src is now part of apm handlers group
+in iwlcore
 
-I can just add another bug this is causing, this time for IBSS.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   27 ++++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-4965.h |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-csr.h  |    9 ++++-----
+ 4 files changed, 28 insertions(+), 16 deletions(-)
 
-The scenario:
-- you happen to have 2 IBSS entries for the same SSID/different BSSID (bo=
-th
-  of them inactive at this time; this can happen e.g. with IBSS merge),
-- you start new IBSS with the same SSID,
-- there is no other IBSS station with this SSID around.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index f318c50..69a355b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -492,7 +492,7 @@ int iwl4965_hw_rxq_stop(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
+-static int iwl4965_nic_set_pwr_src(struct iwl_priv *priv, int pwr_max)
++static int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src)
+ {
+ 	int ret;
+ 	unsigned long flags;
+@@ -504,20 +504,21 @@ static int iwl4965_nic_set_pwr_src(struct iwl_priv *priv, int pwr_max)
+ 		return ret;
+ 	}
+ 
+-	if (!pwr_max) {
++	if (src == IWL_PWR_SRC_VAUX) {
+ 		u32 val;
+-
+ 		ret = pci_read_config_dword(priv->pci_dev, PCI_POWER_SOURCE,
+-					   &val);
++					    &val);
+ 
+-		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT)
++		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT) {
+ 			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
+-				APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
+-				~APMG_PS_CTRL_MSK_PWR_SRC);
+-	} else
++					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
++					       ~APMG_PS_CTRL_MSK_PWR_SRC);
++		}
++	} else {
+ 		iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
+-			APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
+-			~APMG_PS_CTRL_MSK_PWR_SRC);
++				       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
++				       ~APMG_PS_CTRL_MSK_PWR_SRC);
++	}
+ 
+ 	iwl_release_nic_access(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+@@ -747,7 +748,8 @@ int iwl4965_hw_nic_init(struct iwl_priv *priv)
+ 
+ 	IWL_DEBUG_INFO("HW Revision ID = 0x%X\n", rev_id);
+ 
+-	iwl4965_nic_set_pwr_src(priv, 1);
++	rc = priv->cfg->ops->lib->apm_ops.set_pwr_src(priv, IWL_PWR_SRC_VMAIN);
++
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	if ((rev_id & 0x80) == 0x80 && (rev_id & 0x7f) < 8) {
+@@ -4272,6 +4274,9 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.is_valid_rtc_data_addr = iwl4965_hw_valid_rtc_data_addr,
+ 	.alive_notify = iwl4965_alive_notify,
+ 	.load_ucode = iwl4965_load_bsm,
++	.apm_ops = {
++		.set_pwr_src = iwl4965_set_pwr_src,
++	},
+ 	.eeprom_ops = {
+ 		.verify_signature  = iwlcore_eeprom_verify_signature,
+ 		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index e4674c2..547c313 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -252,6 +252,11 @@ struct iwl4965_clip_group {
+ 
+ /* Power management (not Tx power) structures */
+ 
++enum iwl_pwr_src {
++	IWL_PWR_SRC_VMAIN,
++	IWL_PWR_SRC_VAUX,
++};
++
+ struct iwl4965_power_vec_entry {
+ 	struct iwl4965_powertable_cmd cmd;
+ 	u8 no_dtim;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index dcbd411..51f61fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -115,6 +115,9 @@ struct iwl_lib_ops {
+ 	int (*load_ucode)(struct iwl_priv *priv);
+ 	/* rfkill */
+ 	void (*radio_kill_sw)(struct iwl_priv *priv, int disable_radio);
++	struct {
++		int (*set_pwr_src)(struct iwl_priv *priv, enum iwl_pwr_src src);
++	} apm_ops;
+ 	/* eeprom operations (as defined in iwl-eeprom.h) */
+ 	struct iwl_eeprom_ops eeprom_ops;
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 1272579..a59f48b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -170,6 +170,10 @@
+ #define CSR49_FH_INT_TX_MASK	(CSR_FH_INT_BIT_TX_CHNL1 | \
+ 				 CSR_FH_INT_BIT_TX_CHNL0)
+ 
++/* GPIO */
++#define CSR_GPIO_IN_BIT_AUX_POWER                   (0x00000200)
++#define CSR_GPIO_IN_VAL_VAUX_PWR_SRC                (0x00000000)
++#define CSR_GPIO_IN_VAL_VMAIN_PWR_SRC               (0x00000200)
+ 
+ /* RESET */
+ #define CSR_RESET_REG_FLAG_NEVO_RESET                (0x00000001)
+@@ -206,11 +210,6 @@
+ #define CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED           (0x00000004)
+ #define CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT      (0x00000008)
+ 
+-/* GPIO */
+-#define CSR_GPIO_IN_BIT_AUX_POWER                   (0x00000200)
+-#define CSR_GPIO_IN_VAL_VAUX_PWR_SRC                (0x00000000)
+-#define CSR_GPIO_IN_VAL_VMAIN_PWR_SRC		CSR_GPIO_IN_BIT_AUX_POWER
+-
+ /* GI Chicken Bits */
+ #define CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX  (0x00800000)
+ #define CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER  (0x20000000)
+-- 
+1.5.3.4
 
-In this case, the stack will end up using those 2 BSSIDs alternately, in =
-30sec
-intervals. The reason is that since there is no other active IBSS STA, it=
- will
-look at its BSS list and adopts the BSSID (and other params) of first mat=
-ching
-IBSS that is different to current one (or triggers a new scan, which will=
- never
-happen in this scenario; see ieee80211_sta_find_ibss).
-
-This seems to be fine when BSS list expiration is fixed, though (with tim=
-eout
-of less than 30s (IEEE80211_IBSS_MERGE_INTERVAL)).
-
-Vlado
-
-
---------------enigA0293F35FD1D7FE00B5E95A9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iQCVAwUBR/T+bbrYBI/WS7s0AQIRWQQAxIHT+G0vhqbsxP5SMMifKDn+W+6HGhrc
-hVaJwxEsw4BtA2FgLDt/mTIwMRomg4ZL3eoIBivfLZ6OpzVsfk6doV/k1XTiF11P
-cbo6lO72NisQUNL/r2FenTzGTyOChg+9yFMR5lxYRSgrtE0UUeBBy2Wokhh3v75i
-a7vpDdynuM4=
-=8GVa
------END PGP SIGNATURE-----
-
---------------enigA0293F35FD1D7FE00B5E95A9--
