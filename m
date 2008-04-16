@@ -1,52 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:40459 "EHLO ciao.gmane.org"
+Received: from mail.atheros.com ([12.36.123.2]:56243 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750934AbYDPTsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 15:48:22 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JmDcC-0000ZI-Sd
-	for linux-wireless@vger.kernel.org; Wed, 16 Apr 2008 19:48:21 +0000
-Received: from 84-203-37-37.mysmart.ie ([84.203.37.37])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 19:48:20 +0000
-Received: from furlongm by 84-203-37-37.mysmart.ie with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 19:48:20 +0000
-To: linux-wireless@vger.kernel.org
-From: Marcus Furlong <furlongm@hotmail.com>
-Subject: RE:  iwl3945 problem with 2.6.25-rc9
-Date: Wed, 16 Apr 2008 20:48:05 +0100
-Message-ID: <fu5l5r$pm8$1@ger.gmane.org> (sfid-20080416_204831_508099_8981F9AC)
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753007AbYDPCXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2008 22:23:20 -0400
+Message-ID: <480561DE.7020205@atheros.com> (sfid-20080416_032328_485113_154B7FFD)
+Date: Tue, 15 Apr 2008 19:18:06 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+MIME-Version: 1.0
+To: <ath5k-devel@lists.ath5k.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Atheros kernel support, joining the company
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature";
+	boundary="------------enig3855A978AD66761DB7381C29"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 April 2008 20:01 in <fu5iel$c45$1@ger.gmane.org>, Marcus
-Furlong wrote:
+--------------enig3855A978AD66761DB7381C29
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> On Wednesday 16 April 2008 19:28 in
->
-<D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>,
-> Chatre, Reinette wrote:
-> 
->> Looks like the device is being brought up and down a lot ... are you
->> perhaps running wpa_supplicant or some other user application that is
->> doing this? Could you please give more information about what you were
->> doing when these errors started to appear?
-> 
-> Yes, wpa_supplicant is running as part of the boot process. Should I use
-> some other application? (Do wireless-tools support WPA?) Or should I just
-> load the module on it's own and give the dmesg output from that?
 
-Here is the output from the module loading without wpa_supplicant, then me
-reloading it with debug flags, and running ifconfig wlan0 and iwlist
-scanning. Still some Microcode SW and FW errors in there, but there's a lot
-less noise.
+Fellow ath5k hackers,
 
-https://www.cs.tcd.ie/~furlongm/iwlwifi/iwl3945-output-no-wpasupplicant.bz2
+Good news. I write to you to inform you that I have decided to join
+Atheros as a full time employee, as a Software Engineer, to help them
+with their goals and mission to get every device of Atheros supported
+upstream in the Linux kernel. I realize there are a lot of challenges
+ahead but I am well aware of the how the community works and the
+benefits of working with it and am confident we will find ways to
+strengthen the relationship between Atheros and the community. I also
+realize there are a lot of pending questions and perhaps even more now.
+Please rest assured we are doing what we can to work together as soon as
+possible.
 
-Marcus.
+I will keep maintaining compat-wireless and prism54 but I didn't get to
+finish the Marvell TopDog driver port from net80211 to mac80211. Hope
+someone is willing to take that over as I will be pretty busy with other
+work now.
 
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/mrvl_cb82.git
+
+I do plan on keeping on pushing the Central Regulatory Domain Agent work
+I had started. The db schema and a port of ar5k regulatory information
+to it can now be found here:
+
+http://winlab.rutgers.edu/~mcgrof/crda/
+
+In the coming weeks I hope to finish the integration now that a db is
+available and hope to also update the db with more up to date values.
+
+   Luis
+
+
+
+--------------enig3855A978AD66761DB7381C29
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFIBWHhat1JN+IKUl4RAqZIAJ41YAzWBMzE0ilNm917N0p4IwXsMgCdETSQ
+39IlGIhzAqC5B+f2B0LpygA=
+=Rtp+
+-----END PGP SIGNATURE-----
+
+--------------enig3855A978AD66761DB7381C29--
