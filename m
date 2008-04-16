@@ -1,80 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbYDMIHj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2008 04:07:39 -0400
-Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas =?ISO-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vladimir Koutny <vlado@ksp.sk>
-In-Reply-To: <1208072495.4111.10.camel@johannes.berg> (sfid-20080413_084148_084338_B7DE3981)
-References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br>
-	 <200804021932.26046.IvDoorn@gmail.com> <47FE8FAD.9020802@archlinux.org>
-	 <200804121246.44236.IvDoorn@gmail.com>  <4800F76C.7000801@archlinux.org>
-	 (sfid-20080412_185459_927704_9BFD3D28)  <1208072495.4111.10.camel@johannes.berg>
-	 (sfid-20080413_084148_084338_B7DE3981)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6+fVytmX8rlV69qd8JKa"
-Date: Sun, 13 Apr 2008 10:07:29 +0200
-Message-Id: <1208074049.4111.18.camel@johannes.berg> (sfid-20080413_090757_131055_65BB9A71)
+Received: from main.gmane.org ([80.91.229.2]:45475 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753181AbYDPXBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2008 19:01:39 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JmGdF-0001wI-6D
+	for linux-wireless@vger.kernel.org; Wed, 16 Apr 2008 23:01:37 +0000
+Received: from 84-203-37-37.mysmart.ie ([84.203.37.37])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 23:01:37 +0000
+Received: from furlongm by 84-203-37-37.mysmart.ie with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 23:01:37 +0000
+To: linux-wireless@vger.kernel.org
+From: Marcus Furlong <furlongm@hotmail.com>
+Subject: RE: iwl3945 problem with 2.6.25-rc9
+Date: Thu, 17 Apr 2008 00:01:20 +0100
+Message-ID: <fu60g5$1h0$1@ger.gmane.org> (sfid-20080417_000147_281975_9CF32A05)
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 16 April 2008 22:22 in
+<D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>,
+Chatre, Reinette wrote:
 
---=-6+fVytmX8rlV69qd8JKa
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> On Wednesday, April 16, 2008 1:05 PM, Dan Williams  wrote:
+> 
+>> On Wed, 2008-04-16 at 20:48 +0100, Marcus Furlong wrote:
+>>> On Wednesday 16 April 2008 20:01 in
+>> <fu5iel$c45$1@ger.gmane.org>, Marcus
+>>> Furlong wrote:
+>>> 
+>>>> On Wednesday 16 April 2008 19:28 in
+>>>> 
+>>> 
+>>
+<D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.in
+> tel.com>,
+>>>> Chatre, Reinette wrote:
+>>>> 
+>>>>> Looks like the device is being brought up and down a lot ... are
+>>>>> you perhaps running wpa_supplicant or some other user application
+>>>>> that is doing this? Could you please give more information about
+>>>>> what you were doing when these errors started to appear?
+>>>> 
+>>>> Yes, wpa_supplicant is running as part of the boot process. Should
+>>>> I use some other application? (Do wireless-tools support WPA?) Or
+>>>> should I just load the module on it's own and give the dmesg output
+>>>> from that?
+>>> 
+>>> Here is the output from the module loading without wpa_supplicant,
+>>> then me reloading it with debug flags, and running ifconfig wlan0
+>>> and iwlist scanning. Still some Microcode SW and FW errors in there,
+>>> but there's a lot less noise.
+>>> 
+>>> 
+>> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwl3945-output-no-wpasu
+>> pplicant.bz2
+>> 
+>> Interesting; can you run wpa_supplicant again but dump it's detailed
+>> output using "-dddt" for us so we can see what it's doing and if it's
+>> causing the restarts?
+> 
+> The driver itself is responsible for many of the restarts because of the
+> firmware errors. A wpa_supplicant log will still be useful.
 
+Ok got one now:
 
-> > I compiled half a dozen kernels and now figured it out. This is the=20
-> > patch that causes rt2500pci to be slow. If I revert it, it is fast agai=
-n:
-> > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
-commitdiff;h=3Dd43c7b37ad787173d08683f05eadeea0398fefdf
+https://www.cs.tcd.ie/~furlongm/iwlwifi/minicom-wpa_supplicant-output
 
-> That's odd. But that patch looks a bit fishy now that I look at it, care
-> to try below change (manually, this isn't a patch)?
->=20
-> johannes
->=20
->         bool use_protection =3D (erp_value & WLAN_ERP_USE_PROTECTION) !=
-=3D 0;
-> -       bool use_short_preamble =3D (erp_value & WLAN_ERP_BARKER_PREAMBLE=
-) =3D=3D 0;
-> =EF=BB=BF=EF=BB=BF+       bool use_short_preamble =3D (erp_value & WLAN_E=
-RP_BARKER_PREAMBLE) !=3D 0;
->         DECLARE_MAC_BUF(mac);
+Reloaded the module halfway through to see if that made any difference.
+Sometimes it sees some of the access points after rmmod-ing and
+modprobe-ing it (never sees as many as the ipw driver though), but this
+time it didn't make any difference.
 
-No, wait, I'm confused, the original patch is correct. As far as I can
-tell, the code there is correct. The bug in that code was actually
-introduced by me based on the wrong thinking I just did again.
-
-johannes
-
---=-6+fVytmX8rlV69qd8JKa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAG/QKVg1VMiehFYAQJLoA/+InCvtovQzkcTJP1Jw3kQcqB1BKaxBpWc
-pyBQcD1CxSF+XLkpypNUIagOlVji2odcEs0+dKheYBPND67nu8qjhga2xUb8ZRmJ
-oth46ynkONPoiChb7ahfMAtFgyIG5fFZNoL4vRL2tGfFyYvjLdjnheExRb3mzh5s
-5sdWAoY63Rdqhs8SfcDtm4VFFl5hd2qQj6ZTncVcT37wfAiEKQfV6pUKuP/0+KjU
-GaFAp7duzVjIjTshzj9UZeE5TEkZF2bCJmmP1ppujY/UnV9RFsRYusk9V+LuKtjk
-pI2L2IUooatBqX9PqMlkCNTnZjSC7XZZhnu9hBiIrRacfhvKUxiCdJn00I76r5CH
-uVIQRM4mkNeS9QmV+Pe5SzedJ8hjSZck3HHwxDUY7WYF4h2VdrMzFW+hJnwWL83u
-+K2Lni0NeMEaWCX3EasHKUgJWymZtTMaWsHVa+fyUv/VOGY0v0kpguad4h4kCfB7
-SEFoo0k33ikxdIsPylv4w2UfjcAw4fD0ePpeLFXSWeZyJ2KVaUuq+3rACIiFjeda
-llbeR12AMciK6Kk+5c+AFSRk0OlG5G2imbxJhwUPj5jp7zHKadzTHcPkqoeceRIh
-+ZZgcqup9cnY9h0fHtw/XXkSAD6UsFpJ2zVvq7p72XMfqMFm80Tyeu/jk+zHr2eW
-Dq4SO3GcNW4=
-=J5LE
------END PGP SIGNATURE-----
-
---=-6+fVytmX8rlV69qd8JKa--
+Marcus.
 
