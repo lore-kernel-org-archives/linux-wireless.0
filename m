@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:28574 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757374AbYDORXH convert rfc822-to-8bit (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:37930 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbYDPTNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 13:23:07 -0400
+	Wed, 16 Apr 2008 15:13:55 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] b43: Add fastpath to b43_mac_suspend()
+Date: Wed, 16 Apr 2008 21:13:05 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+References: <200804152113.36990.mb@bu3sch.de> <1208370999.11676.60.camel@johannes.berg>
+In-Reply-To: <1208370999.11676.60.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [Bugme-new] [Bug 10455] New: Kernel lockup when iwl3945 modules is loaded after a few hours
-Date: Tue, 15 Apr 2008 10:22:58 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200430E111@orsmsx416.amr.corp.intel.com> (sfid-20080415_182312_946350_A52E5A4D)
-In-Reply-To: <200804150915.56235.bjorn.helgaas@hp.com>
-References: <bug-10455-10286@http.bugzilla.kernel.org/> <e2e108260804150139kf816be5m91e6206853a0d755@mail.gmail.com> <20080415020103.cd8e17f4.akpm@linux-foundation.org> <200804150915.56235.bjorn.helgaas@hp.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Bjorn Helgaas" <bjorn.helgaas@hp.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>
-Cc: "Bart Van Assche" <bart.vanassche@gmail.com>,
-	<bugme-daemon@bugzilla.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-acpi@vger.kernel.org>
+  charset="iso-8859-15"
+Message-Id: <200804162113.05549.mb@bu3sch.de> (sfid-20080416_201542_770891_9FAF1B20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Bjorn Helgaas  wrote:
-
-> iwl3945 modules is loaded after a few hours
+On Wednesday 16 April 2008 20:36:39 Johannes Berg wrote:
+> On Tue, 2008-04-15 at 21:13 +0200, Michael Buesch wrote:
+> > This adds a fastpath for the common workloads to the
+> > MAC suspend flushing.
 > 
->>>>  > Apr 14 21:06:00 localhost kernel: ACPI: PCI Interrupt
-> 0000:05:00.0[A] -> GSI 19 (level, low) -> IRQ 19
->>>>  > Apr 14 21:06:00 localhost kernel: ACPI: PCI interrupt
-> for device 0000:05:00.0 disabled
->>>> 
->>>>  Yes, that does look like an ACPI problem.  But one would expect
->>>>  it to kill the interface immediately, not several hours later.
 > 
-> I can't tell whether this is an ACPI problem.  These messages are from
-> pci_enable_device() and pci_disable_device().  So it looks like you're
-> seeing an enable/disable pair every 124 seconds.
+> > @@ -2340,12 +2340,20 @@ static void b43_mac_suspend(struct b43_w
+> >  		b43_power_saving_ctl_bits(dev, B43_PS_AWAKE);
+> >  		b43_write32(dev, B43_MMIO_MACCTL,
+> >  			    b43_read32(dev, B43_MMIO_MACCTL)
+> >  			    & ~B43_MACCTL_ENABLED);
+> >  		/* force pci to flush the write */
+> >  		b43_read32(dev, B43_MMIO_MACCTL);
+> > +		/* Finally wait for the microcode to flush the fifos. */
 > 
-> This could be a problem somewhere in iwl3945_mac_start() that causes
-> us to turn around and disable the device immediately.  Most of
-> the problems
-> there have IWL_ERROR() messages associated with them, and you
-> apparently aren't seeing those.
+> That comment is wrong, the ucode won't flush the FIFOs, it'll just go to
+> sleep. If you want it to flush FIFOs you have to set a flush request bit
+> somewhere (mac command I think), but you don't actually, you just don't
+> want to have it processing stuff.
 
-(duplicate entry will be found in bugzilla)
+Ah yeah. Whatever. What was meant it it flushes everything from the host
+point of view and goes to sleep. Feel free to remove that comment, John.
+(simply remove the line from the patch before applying it).
 
-Are there any userspace apps managing this device? (eg. wpa_supplicant?)
-
-Could you please load the driver with debugging (modprobe iwl3945
-debug=0x43ffb) - that will help us see if iwl3945_mac_start() is being
-called
-frequently.
-
-Thanks
-
-Reinette
+-- 
+Greetings Michael.
