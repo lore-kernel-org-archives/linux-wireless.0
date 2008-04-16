@@ -1,96 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:52303 "EHLO ciao.gmane.org"
+Received: from home.einfach.org ([80.86.92.145]:58923 "EHLO home.einfach.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752424AbYDUPiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 11:38:19 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Jny5t-0002vK-79
-	for linux-wireless@vger.kernel.org; Mon, 21 Apr 2008 15:38:13 +0000
-Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 15:38:13 +0000
-Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 15:38:13 +0000
-To: linux-wireless@vger.kernel.org
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: [ipw3945-devel] iwl3945: Disabled channels
-Date: Mon, 21 Apr 2008 17:38:03 +0200
-Message-ID: <fuiccr$keo$1@ger.gmane.org> (sfid-20080421_173908_753289_77443476)
-References: <fuhkfp$mnk$1@ger.gmane.org> <480C5AFF.5020005@fenrir.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <480C5AFF.5020005@fenrir.org.uk>
+	id S1753961AbYDPInO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2008 04:43:14 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: AR5K_INT_SWBA can't generate interruption for sending beacons
+Date: Wed, 16 Apr 2008 10:43:01 +0200
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, cao jing <caojing.china@gmail.com>
+References: <9f33c5230804142124g3c8f4a0ai28a6b5117e1034c9@mail.gmail.com> <200804151059.06119.bruno@thinktube.com> <20080416060109.GG15053@jm.kir.nu>
+In-Reply-To: <20080416060109.GG15053@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804161043.01769.bruno@thinktube.com> (sfid-20080416_094327_079900_5AED4CB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Morrison schrieb:
-> options cfg80211 ieee80211_regdom="JP"
+On Wednesday 16 April 2008 08:01:09 Jouni Malinen wrote:
+> On Tue, Apr 15, 2008 at 10:59:05AM +0200, bruno randolf wrote:
+> > the current code in wireless-testing uses SWBA not to send beacons but to
+> > keep track of the next beacon time NBTT. this is necessary to work around
+> > certain hardware limitations. once configured, the beacons are sent
+> > automatically by the hardware at the right time. of course it would be
+> > possible to change the code to generate a new beacon at every SWBA but as
+> > long as the beacon contents don't change very often i don't see the point
+> > of doing so.
+>
+> In AP mode, beacon payload changes for _every beacon_ unless you use
+> DTIM Period of 1. In order to make power saving work correctly, the
+> drivers need to update the beacon data for every beacon.
 
-Band 1:
-	Frequencies:
-		* 2412 MHz
-		* 2417 MHz
-		* 2422 MHz
-		* 2427 MHz
-		* 2432 MHz
-		* 2437 MHz
-		* 2442 MHz
-		* 2447 MHz
-		* 2452 MHz
-		* 2457 MHz
-		* 2462 MHz
-		* 2467 MHz (passive scanning, no IBSS)
-		* 2472 MHz (passive scanning, no IBSS)
-	Bitrates:
-		* 1.0 Mbps
-		* 2.0 Mbps (short preamble supported)
-		* 5.5 Mbps (short preamble supported)
-		* 11.0 Mbps (short preamble supported)
-		* 6.0 Mbps
-		* 9.0 Mbps
-		* 12.0 Mbps
-		* 18.0 Mbps
-		* 24.0 Mbps
-		* 36.0 Mbps
-		* 48.0 Mbps
-		* 54.0 Mbps
-Band 2:
-	Frequencies:
-		* 5170 MHz (passive scanning, no IBSS)
-		* 5180 MHz
-		* 5190 MHz (passive scanning, no IBSS)
-		* 5200 MHz
-		* 5210 MHz (passive scanning, no IBSS)
-		* 5220 MHz
-		* 5230 MHz (passive scanning, no IBSS)
-		* 5240 MHz
-		* 5260 MHz (passive scanning, no IBSS, radar detection)
-		* 5280 MHz (passive scanning, no IBSS, radar detection)
-		* 5300 MHz (passive scanning, no IBSS, radar detection)
-		* 5320 MHz (passive scanning, no IBSS, radar detection)
-		* 5500 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5520 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5540 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5560 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5580 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5600 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5620 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5640 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5660 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5680 MHz (disabled, passive scanning, no IBSS, radar detection)
-		* 5700 MHz (disabled, passive scanning, no IBSS, radar detection)
-	Bitrates:
-		* 6.0 Mbps
-		* 9.0 Mbps
-		* 12.0 Mbps
-		* 18.0 Mbps
-		* 24.0 Mbps
-		* 36.0 Mbps
-		* 48.0 Mbps
-		* 54.0 Mbps
+thats's true - i was thinking of IBSS mode first of all since AP mode is not 
+supported yet by ath5k. actually also in IBSS mode the beacon contents would 
+have to change for power saving, this is also not implemented yet.
 
-This look better, although I have to wait until tomorrow to see if the 
-Access Point in question uses one of the now enabled 11a channels.
-
+bruno
