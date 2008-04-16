@@ -1,118 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:38331 "EHLO
-	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754907AbYDWJtA (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755965AbYDPOHW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 05:49:00 -0400
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: <linux-wireless@vger.kernel.org>, <hostap@lists.shmoo.com>
-Subject: RE: Roaming problems
-Date: Wed, 23 Apr 2008 10:39:32 +0200
-Message-ID: <001101c8a51d$8e5997d0$0b3ca8c0@gotws1589> (sfid-20080423_114948_059414_17607EB2)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-In-Reply-To: <00ff01c8a48a$d4063d80$0b3ca8c0@gotws1589>
+	Wed, 16 Apr 2008 10:07:22 -0400
+Subject: Re: mac80211 hardware encryption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <200804151717.54920.IvDoorn@gmail.com> (sfid-20080415_161442_807626_6BB3493B)
+References: <200804051931.58895.IvDoorn@gmail.com>
+	 <200804142307.48550.IvDoorn@gmail.com>
+	 <1208255742.3502.5.camel@johannes.berg>
+	 <200804151717.54920.IvDoorn@gmail.com>
+	 (sfid-20080415_161442_807626_6BB3493B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z+lex4rEQuYLZTE5umqN"
+Date: Wed, 16 Apr 2008 15:57:24 +0200
+Message-Id: <1208354244.11676.31.camel@johannes.berg> (sfid-20080416_150727_330132_DA046179)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I think I have found the problem.
-
-When the wpa_supplicant configure the device it issues a number of ioctls.
-Some of them, ieee80211_ioctl_siwgenie()
-ieee80211_ioctl_siwessid() and ieee80211_ioctl_siwap() initiates a
-ieee80211_sta_req_auth().
-If there is a valid BSSID, ieee80211_sta_req_auth() will post a authenticate
-work.
-
-First roaming attempt, no problem since we do not have any valid BSSID.
-All following roaming will have the old BSSID when the wpa_supplicant start
-preparing for next AP.
-
-So any of the ieee80211_ioctl_siwgenie() or ieee80211_ioctl_siwessid() will
-force the mac80211 to start associate with the old BSSID. First when the
-ieee80211_ioctl_siwap() arrives, mac80211 knows which AP to use.
-
-If, by timing, the erroneous first association success before the real AP
-arrives, the real one may fail, with an infinite 'timed out' as a result.
-
-The below patch makes sure that we drop the BSSID when we disassociate.
+--=-z+lex4rEQuYLZTE5umqN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-/Lars
+> I'll create a patch that changes it to the key_conf pointer then,
+> that sounds like the safest option to allow changes to key_conf later.
 
+Ok.
 
-============================================================================
-====
---- a/ieee80211_sta.c	Wed Apr 23 10:14:30 2008
-+++ b/ieee80211_sta.c	Wed Apr 23 08:41:23 2008
-@@ -479,6 +479,9 @@ static void ieee80211_set_associated(str
- 		netif_carrier_off(dev);
- 		ieee80211_reset_erp_info(dev);
- 		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
-+
-+		// make sure no association start before we got a new BSSID
-+		ifsta->flags &= ~IEEE80211_STA_BSSID_SET;
- 	}
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-============================================================================
-====
+> Note that this change (either adding the key_conf pointer or the hw_key_i=
+dx to u16)
+> will cause ieee80211_tx_control to exceed the 48 bytes. So that will make=
+ it
+> harder to move it into the skb->cb array later.
 
+Yeah, well, tough luck, unless we can convince netdev to increase cb[]
+on 64-bit platforms.
 
+johannes
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Lars Ericsson
-Sent: den 22 april 2008 17:09
-To: linux-wireless@vger.kernel.org; hostap@lists.shmoo.com
-Subject: Roaming problems
+--=-z+lex4rEQuYLZTE5umqN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Hi, 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-I'm currently running a number of sites using the RT61 WLAN chipset.
->From time to time we have fatal roaming problems. 
+iQIVAwUASAYFwqVg1VMiehFYAQLFvQ//SBysAzdZ0rGoUmyIdjzSNbzKoiLXcZot
+uNEemwnephWj9OoKJd88xRqufZ4xnvfRlDIQ5A3QBM9Y0bN0BgFJ+pEBwXi1jPd4
+ICUnpB0UAmnA9g1PTvE/jUR6rFjjlqFSScFhI754Oiyi48bwa7gb3oU8HewpCtxF
+e6YYL/NXPthM2qVQoHJ70iFT2JZ4deA9UttG7j05Qcyrmlr7V8IH348GAnxfh3eZ
+BFE5cmp6Ic3xBjR3Q2p2O+ZEFX7qXfcJXQw9HWdX8Aq9TxJkB/P93Vh3jJ44IL6A
+AK7Snk9L7KvNHSDWzRHOxptiGt/ncOQsx9vpF561Lx/8KnP1vDU0sUrmyCKtCCN0
+6iLR1ADn0bspDu8DSWU/3EsyHPQbaTFfa8iYZiRNalk831+5wew4WPPyIIiooFSQ
+O4jOKyE1VBXrvuAe61MMkDW3yVJiq+oMiPzzP82l5EKeeJYWNXihIGGqMzS1SAKP
+cnsN6O6OSfm6jjfBk6tgXjEcG85wKYcd+/5CCy1XpBiz/uXP7Dv71SWXLSmB2yfX
+3iZ5WQi9v+Sknb8Uc8fgFxu70+pw9migsLYzIVpTb7CYYjGlsM4J0Prhy/c9Ks/9
+RsSCkz5N8BLQh7nnvmZ416fUyGOxDqW63T1UWjxdbLbZkJe/8Wav9O1OAG85yGVs
+Aa/RFwRLxcQ=
+=AYJK
+-----END PGP SIGNATURE-----
 
-I have collected a trace that show normal and problem situation.
-Any help explaining the cause of the problem is appreciated.
-
-Below is a summary of the trace. Attached it the complete trace.
-
-/Lars
-
-
-CASE 1: The above trace is a typical trace from a roaming atempt.
-==========================================================
-361830.763657	We lost conatct with current AP 00:0e:d7:ac:84:20
-361831.252992	We have selected the new AP 00:0f:24:d1:5e:e0
-361831.256287	Why do we try to authenticate with previous AP
-00:0e:d7:ac:84:20 ? <-----
-361831.261071	Finaly we selected the correct AP 00:0f:24:d1:5e:e0
-361831.295573	We are up and running
-
-CASE 2: The above trace is a typical trace from a roaming atempt.
-==========================================================
-362123.346748	We lost conatct with current AP 00:0f:24:d1:5e:e0
-362123.842242	We have selected the new AP 00:0e:d7:ac:84:20
-362123.861586	We try connect AP 00:0e:d7:ac:84:20
-362123.874442	We are up and running
-
-CASE 3: The above trace is a typical trace from a roaming atempt.
-===================================================================
-362441.946825   We lost conatct with current AP 00:0e:d7:ac:84:20
-362442.449435	We have selected the new AP 00:0f:24:a3:b8:60
-362442.466944	Why do we try to authenticate with previous AP
-00:0e:d7:ac:84:20 ? <-----
-362442.470147	Finaly we selected the correct AP 00:0f:24:a3:b8:60
-361831.295573	We are up and running
-362443.066379	Timeout.
-362444.886776	New try with selected AP 00:0f:24:a3:b8:60
-362444.904429	Associated
-362444.904883	What initiate this 'Initial auth_alg=0' with the associated
-AP ? <-----
-362444.908677	What initiate this 'Initial auth_alg=0' with AP
-00:0f:24:d1:5e:e0 ? <-----
-362445.505964	No one reacts on the 'timed out' event  <-----
+--=-z+lex4rEQuYLZTE5umqN--
 
