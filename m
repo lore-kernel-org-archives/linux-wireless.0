@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469AbYDAMA0 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:59936 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934296AbYDQPwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:00:26 -0400
-Subject: Re: [PATCH] mac80211: use recent multicast table for all mesh
-	multicast frames, not only broadcast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <47f189af.09038e0a.2eb1.ffffb304@mx.google.com> (sfid-20080401_020242_031816_0B005E21)
-References: <47f189af.09038e0a.2eb1.ffffb304@mx.google.com>
-	 (sfid-20080401_020242_031816_0B005E21)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FVsDQM/oBlYwG1JEeSqM"
-Date: Tue, 01 Apr 2008 14:00:22 +0200
-Message-Id: <1207051222.5143.52.camel@johannes.berg> (sfid-20080401_130031_822336_C9B59A37)
-Mime-Version: 1.0
+	Thu, 17 Apr 2008 11:52:17 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so155870fkr.5
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 08:52:16 -0700 (PDT)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf
+Date: Thu, 17 Apr 2008 17:56:51 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>
+References: <200804171728.30188.IvDoorn@gmail.com> <200804171729.34583.mb@bu3sch.de>
+In-Reply-To: <200804171729.34583.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804171756.51480.IvDoorn@gmail.com> (sfid-20080417_165222_215256_3FB68FA5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 17 April 2008, Michael Buesch wrote:
+> On Thursday 17 April 2008 17:28:29 Ivo van Doorn wrote:
+> > diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+> > index 19aefbf..2ee19cf 100644
+> > --- a/drivers/net/wireless/b43/xmit.c
+> > +++ b/drivers/net/wireless/b43/xmit.c
+> > @@ -235,7 +235,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+> >  
+> >  	plcp_fragment_len = fragment_len + FCS_LEN;
+> >  	if (use_encryption) {
+> > -		u8 key_idx = (u16) (txctl->key_idx);
+> > +		u8 key_idx = (u16) (txctl->hw_key->hw_key_idx);
+> 
+> Can we actually remove that bogus cast while we are at it? :)
+> 
+> >  		struct b43_key *key;
+> >  		int wlhdr_len;
+> >  		size_t iv_len;
+> > diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
+> > index dcad249..ba50b68 100644
+> > --- a/drivers/net/wireless/b43legacy/xmit.c
+> > +++ b/drivers/net/wireless/b43legacy/xmit.c
+> > @@ -232,7 +232,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+> >  
+> >  	plcp_fragment_len = fragment_len + FCS_LEN;
+> >  	if (use_encryption) {
+> > -		u8 key_idx = (u16)(txctl->key_idx);
+> > +		u8 key_idx = (u16)(txctl->hw_key->hw_key_idx);
+> 
+> Same here.
 
---=-FVsDQM/oBlYwG1JEeSqM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sure, updated patch on its way. :)
 
-Seems appropriate but I haven't checked the spec.
-
-On Mon, 2008-03-31 at 15:33 -0700, Luis Carlos Cobo wrote:
-> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-> ---
->  net/mac80211/rx.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index d9c6ed5..0ac6db5 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -433,7 +433,7 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
->  		}
-> =20
->  	 } else if ((rx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA=
- &&
-> -		    is_broadcast_ether_addr(hdr->addr1) &&
-> +		    is_multicast_ether_addr(hdr->addr1) &&
->  		    mesh_rmc_check(hdr->addr4, msh_h_get(hdr, hdrlen), rx->dev))
->  		return RX_DROP_MONITOR;
->  #undef msh_h_get
-
---=-FVsDQM/oBlYwG1JEeSqM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/Ij1KVg1VMiehFYAQKEKRAAxW6Lav0CJ9qxUKbuBMtwal2ukN3Km4K3
-OCo5gJWMo9GsHXtANsH4uglQtkv9Rgm9qTscgpfLqf3LOa158x7spCtncu7aQ0mn
-abtcqNBNi9TqXLN/mvXxElQRxVWIi8Aq3t88jpedHs5ik8NaEJ+Pe/cEOsRdFXt8
-cW3TncZFA+wh6mheD38cAtxH5IrxXMPHBrU7Wzhq1GOdVFWLkWXzeLhnCfn9CeUp
-kDK12fLWEpB9gc0vijzpCP2rszDLkg//bNqZOksYsa4kE5NNVAWfuw2lg8ySfiuN
-kUw0MkbbM8DBdheT1IwSyZmUUCjGKMxZjMeAb6Fpf9tg9JqyA5cIrysAyTnODK4E
-Xw1Nk7mUYDruRS+OtjWAi1o/G2lJpBIU2Y7fAQtENyIo29a/RSZu9tA2VurabXka
-+Bf2h00AxqO+BUt9dm/D4Yo4DrHtP4JP1cOEtQZDbR9WtScYdRj0Z0Ki9gLUnPDz
-EHWLt6lc9SYGEaVLINwlZ2pUsmRJdKo+gkMEpLKCiETn8d0EhJKiFiwsz+U5fgYe
-SQQYP67AUFugcBUybY463tQGArSgui9EIQsHZT7Wlt2p9JZKsJ0AF981ZJFIZQef
-b74JWSONhQDPUDDxRW3RfbgtTDkd3TTtCQfV0CHAFZ4xASKWyefG4Cxb9/VT3L0h
-8qePQdIO8Xs=
-=LnQd
------END PGP SIGNATURE-----
-
---=-FVsDQM/oBlYwG1JEeSqM--
-
+Ivo
