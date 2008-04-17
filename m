@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:41553 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbYDSOy3 (ORCPT
+Received: from rv-out-0708.google.com ([209.85.198.249]:54275 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753178AbYDQUNu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 10:54:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add more btcoexist workarounds
-Date: Sat, 19 Apr 2008 16:53:00 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804191653.00459.mb@bu3sch.de> (sfid-20080419_155433_601830_028E9F37)
+	Thu, 17 Apr 2008 16:13:50 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so112329rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 13:13:50 -0700 (PDT)
+Subject: [PATCH 7/7] mac80211: tkip.c use struct tkip_ctx in phase 2 key
+	mixing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 17 Apr 2008 13:13:50 -0700
+Message-Id: <1208463230.17196.29.camel@brick> (sfid-20080417_211453_442726_A2A67CBE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds more workarounds for devices with broken BT bits.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ net/mac80211/tkip.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
 
-John, this is for 2.6.26
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-18 21:00:58.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-19 16:43:36.000000000 +0200
-@@ -4420,12 +4420,18 @@ static int b43_one_core_attach(struct ss
- 
-       err_kfree_wldev:
- 	kfree(wldev);
- 	return err;
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index e9ee247..a00cf1e 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -95,10 +95,12 @@ static void tkip_mixing_phase1(struct ieee80211_key *key, const u8 *ta,
+ 	ctx->initialized = 1;
  }
  
-+#define IS_PDEV(pdev, _vendor, _device, _subvendor, _subdevice)		( \
-+	(pdev->vendor == PCI_VENDOR_ID_##_vendor) &&			\
-+	(pdev->device == _device) &&					\
-+	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
-+	(pdev->subsystem_device == _subdevice)				)
-+
- static void b43_sprom_fixup(struct ssb_bus *bus)
+-static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+-			       u8 *rc4key)
++static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
++			       u16 tsc_IV16, u8 *rc4key)
  {
- 	struct pci_dev *pdev;
+ 	u16 ppk[6];
++	const u16 *p1k = ctx->p1k;
++	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
+ 	int i;
  
- 	/* boardflags workarounds */
- 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
-@@ -4433,16 +4439,15 @@ static void b43_sprom_fixup(struct ssb_b
- 		bus->sprom.boardflags_lo |= B43_BFL_BTCOEXIST;
- 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
- 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
- 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
- 	if (bus->bustype == SSB_BUSTYPE_PCI) {
- 		pdev = bus->host_pci;
--		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
--		    pdev->device == 0x4318 &&
--		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
--		    pdev->subsystem_device == 0x100F)
-+		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
- 			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
+ 	ppk[0] = p1k[0];
+@@ -152,9 +154,7 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
+ 		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
+ 
+-	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+-			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.tx.iv16, rc4key);
++	tkip_mixing_phase2(key, &key->u.tkip.tx, key->u.tkip.tx.iv16, rc4key);
+ }
+ 
+ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+@@ -197,8 +197,7 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 		return;
  	}
- }
  
- static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
- {
+-	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+-		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
++	tkip_mixing_phase2(key, &key->u.tkip.tx, iv16, outkey);
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+ 
+@@ -315,9 +314,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 		}
+ 	}
+ 
+-	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
+-			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   iv16, rc4key);
++	tkip_mixing_phase2(key, &key->u.tkip.rx[queue], iv16, rc4key);
+ #ifdef CONFIG_TKIP_DEBUG
+ 	{
+ 		int i;
+-- 
+1.5.5.144.g3e42
+
