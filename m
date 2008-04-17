@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52590 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbYDDPR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 11:17:58 -0400
-Subject: Re: [PATCH] rtl8187b work in progress...
-From: Pavel Roskin <proski@gnu.org>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-In-Reply-To: <200804041107.59990.herton@mandriva.com.br>
-References: <pan.2008.04.01.18.07.31.772700@gimpelevich.san-francisco.ca.us>
-	 <200804012340.01354.herton@mandriva.com.br> <1207280003.2585.15.camel@dv>
-	 <200804041107.59990.herton@mandriva.com.br>
-Content-Type: text/plain
-Date: Fri, 04 Apr 2008 11:17:56 -0400
-Message-Id: <1207322276.2157.4.camel@dv> (sfid-20080404_161801_892809_576A6A5A)
-Mime-Version: 1.0
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:41536 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753401AbYDQToq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 15:44:46 -0400
+Date: Thu, 17 Apr 2008 21:44:37 +0200
+From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+Message-ID: <20080417194437.GA18291@Chamillionaire.breakpoint.cc> (sfid-20080417_204513_576386_F46F4F61)
+References: <1208448814.9212.270.camel@pmac.infradead.org> <1208455363.20193.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1208455363.20193.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-04-04 at 11:07 -0300, Herton Ronaldo Krzesinski wrote:
+* Dan Williams | 2008-04-17 14:02:43 [-0400]:
 
-> Yes, I will later do a patch against linux-wireless, I only posted it as a 
-> work in progress. But before I post an updated patch I want to fix it first 
-> to use changes made by John (like not duplicating the functions etc.) and 
-> there is another fundamental problem that I must first fix: it works and 
-> scans for aps, but for some reason I don't get authentication from access 
-> point (while normal 8187 gets data with IEEE80211_STYPE_AUTH in 8187b for 
-> some reason don't...).
+>On Thu, 2008-04-17 at 17:13 +0100, David Woodhouse wrote:
+>> We removed CMD_MESH_ACCESS from the big case statements and provided
+>> lbs_mesh_access() instead.... but we missed one user. Fix it.
+>> 
+>> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+>
+>Acked-by: Dan Williams <dcbw@redhat.com>
+Hmmm. This patch actually reminds me of something I was going to do. I
+don't really see the big difference between this and [1]. I have to
+exert myself to get on your auto-ack list...
 
-It may be useful to check if the AP is sending that packet.  If it does,
-I would check the rate and the channel and compare them to the packets
-the driver can receive.  I would also check the driver with another AP.
-If it's indeed on the receiving side of the driver, a crosscheck against
-the softmac driver could be helpful.
 
-Good luck fixing it, but if it still doesn't work, I'd like to see your
-patch posted anyway.
+[1]
+http://lists.infradead.org/pipermail/libertas-dev/2008-March/001281.html
 
--- 
-Regards,
-Pavel Roskin
+>> 
+>> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+>> index 21e6f98..9460300 100644
+>> --- a/drivers/net/wireless/libertas/ethtool.c
+>> +++ b/drivers/net/wireless/libertas/ethtool.c
+>> @@ -106,8 +106,8 @@ done:
+>>          return ret;
+>>  }
+>>  
+>> -static void lbs_ethtool_get_stats(struct net_device * dev,
+>> -				struct ethtool_stats * stats, u64 * data)
+>> +static void lbs_ethtool_get_stats(struct net_device *dev,
+>> +				  struct ethtool_stats *stats, u64 *data)
+>>  {
+>>  	struct lbs_private *priv = dev->priv;
+>>  	struct cmd_ds_mesh_access mesh_access;
+>> @@ -116,9 +116,7 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
+>>  	lbs_deb_enter(LBS_DEB_ETHTOOL);
+>>  
+>>  	/* Get Mesh Statistics */
+>> -	ret = lbs_prepare_and_send_command(priv,
+>> -			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
+>> -			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
+>> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
+>>  
+>>  	if (ret)
+>>  		return;
+>> 
+
+Sebastian
