@@ -1,122 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:52240 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758959AbYD2RVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 13:21:31 -0400
-Date: Tue, 29 Apr 2008 10:18:50 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [23/37] b43: Workaround invalid bluetooth settings
-Message-ID: <20080429171850.GX14724@suse.de> (sfid-20080429_192148_325967_6689ED3E)
-References: <20080429171222.073929148@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080429171730.GA14724@suse.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37768 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764557AbYDQR4j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 13:56:39 -0400
+Subject: FYI: hostapd status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EwO7XJkJg4OcE/F/4DNv"
+Date: Thu, 17 Apr 2008 19:56:30 +0200
+Message-Id: <1208454990.4066.42.camel@johannes.berg> (sfid-20080417_185653_145558_2F1F3D9F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+--=-EwO7XJkJg4OcE/F/4DNv
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-commit 1855ba7812dbd294fcfc083dc7d3b14d3b1f38db upstream.
+Since we just talked about it on IRC and I made a list, here it is. This
+lists what we're missing in mac80211 and nl80211 for proper AP support.
 
-This adds a workaround for invalid bluetooth SPROM settings
-on ASUS PCI cards.
-This will stop the microcode from poking with the BT GPIO line.
-This fixes data transmission on this device, as the BT GPIO line
-is used for something TX related on this device
-(probably the power amplifier or the radio).
-This also adds a modparam knob to help debugging this in the future,
-as more devices with this bug may show up.
+=EF=BB=BF * short slot        =20
+ * short preamble
+ * basic rate set=20
+ * rts/cts
+ * channel flag/regulatory domain
+ * tx queue params (the plan is to make them qdisc settings after
+   Ron's/my qos patch)
+ * multi-bss support (no kernel changes, just hostapd keep track of
+   BSSes)
+ * internal bridge setting (separated STAs in AP, local->bridge_packets)
+ * CTS-protect setting for AP
+ * check why we see data frames on cooked monitor
+ * investigate the skb truesize bug
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+johannes
 
+--=-EwO7XJkJg4OcE/F/4DNv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
----
- drivers/net/wireless/b43/main.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -78,6 +78,11 @@ static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
-+static int modparam_btcoex = 1;
-+module_param_named(btcoex, modparam_btcoex, int, 0444);
-+MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistance (default on)");
-+
-+
- static const struct ssb_device_id b43_ssb_tbl[] = {
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
-@@ -3339,6 +3344,8 @@ static void b43_bluetooth_coext_enable(s
- 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
- 	u32 hf;
- 
-+	if (!modparam_btcoex)
-+		return;
- 	if (!(sprom->boardflags_lo & B43_BFL_BTCOEXIST))
- 		return;
- 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
-@@ -3350,11 +3357,13 @@ static void b43_bluetooth_coext_enable(s
- 	else
- 		hf |= B43_HF_BTCOEX;
- 	b43_hf_write(dev, hf);
--	//TODO
- }
- 
- static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
--{				//TODO
-+{
-+	if (!modparam_btcoex)
-+		return;
-+	//TODO
- }
- 
- static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
-@@ -4002,6 +4011,8 @@ static int b43_one_core_attach(struct ss
- 
- static void b43_sprom_fixup(struct ssb_bus *bus)
- {
-+	struct pci_dev *pdev;
-+
- 	/* boardflags workarounds */
- 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
- 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
-@@ -4009,6 +4020,14 @@ static void b43_sprom_fixup(struct ssb_b
- 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
- 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
- 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
-+	if (bus->bustype == SSB_BUSTYPE_PCI) {
-+		pdev = bus->host_pci;
-+		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
-+		    pdev->device == 0x4318 &&
-+		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
-+		    pdev->subsystem_device == 0x100F)
-+			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
-+	}
- }
- 
- static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
+iQIVAwUASAePTaVg1VMiehFYAQKolg//Xidi8Hyvlccos6Vphr3NCmInq5bZs1/B
+gmlOxGRjVItYUSv1/wCSE8wtVu3B6hkgPpCMGLIufJ/jAXuj3zSD29zPQExTGctY
+8BQBEZA2xjks3/0CJ7wxkFlAOdpXyKxGMCOOYiQG6MlRfY59th1B8ka4IVB0GPJ6
+lb+9DdtwnxqUFTyERt5w6n2ST9oYdpaLBg8czU30fucbz8hLlzH1yxG2mI4s2QjD
+06PnTG6laeKnuFHJ5ICjla6K+wc13e2jnhUZEIUTsl72qyyKTlSMeekDVcvz3kzn
+MN55UAklLO7hjzH3WJ3ALIYdYItqpS7TdgJIIDl2Hec8yyQv/4mbx2BBH1zOIyvK
+tv8rR3P4bhlNuyUvYTKw+FBAcTp4cZYYCl4PUXu32aXStyr1gtRUKgs1fSRnSIR1
+b8G9lRJAqv5WWUn01R19xWZXT5rxPAj62m9tcjhpxp5i4XSqw5wd76SzdAvdoSfu
+YpU4eqOu1lSo0H2Z6+jBirDLr7JnGZpc6gx7ZULOOO88bQ872TvUGB7xOdXPqIgG
+fhrutto/nGnbYHjk34nT2pde/sGcnPNtDukh7KLJBuTuM4S/qSNKTvCMF1g3A6Wh
+IlChwdqd9CFTM3/U5G9+4/iPSIcyuWzulRddiP72tr3aQoPtx9+UurkYcD91VYz4
+A5ed6NkqaU0=
+=dpck
+-----END PGP SIGNATURE-----
 
--- 
+--=-EwO7XJkJg4OcE/F/4DNv--
+
