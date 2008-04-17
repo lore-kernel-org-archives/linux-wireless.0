@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54989 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753096AbYDIUZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 16:25:27 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
-Date: Wed, 9 Apr 2008 11:12:05 -0700
-Cc: linux-wireless@vger.kernel.org
-References: <200804011107.38563.inaky@linux.intel.com> <200804081359.03611.inaky@linux.intel.com> <200804090959.47619.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200804090959.47619.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804091112.05392.inaky@linux.intel.com> (sfid-20080409_212539_046487_F43EAED2)
+Received: from vm251.contextshift.co.uk ([85.13.250.28]:54908 "EHLO
+	garuda.bells23.org.uk" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244AbYDQRgu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 13:36:50 -0400
+Subject: Re: [ath5k-devel] Atheros kernel support, joining the company
+From: "Matthew \"mentor\" Bell" <mentor@madwifi.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: ath5k-devel@lists.ath5k.org,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <480561DE.7020205@atheros.com>
+References: <480561DE.7020205@atheros.com>
+Content-Type: text/plain
+Date: Thu, 17 Apr 2008 18:07:09 +0100
+Message-Id: <1208452029.2994.0.camel@ibis.bells> (sfid-20080417_183654_778600_A00C091F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 April 2008, Holger Schurig wrote:
-> > > 9. Anyway to reuse existing usbnet infrastructure?
-> >
-> > Nope, the 2400 is a pure IP device (as Marcel mentioned).
+On Tue, 2008-04-15 at 19:18 -0700, Luis R. Rodriguez wrote:
+> Fellow ath5k hackers,
 > 
-> With "pure IP", do you mean IPv4?  Or do you mean "pure 
-> IPv4/IPv6"?  If it is "pure IPv4", then WiMAX seems not future 
-> proof ...
+> Good news. I write to you to inform you that I have decided to join
+> Atheros as a full time employee, as a Software Engineer, to help them
+> with their goals and mission to get every device of Atheros supported
+> upstream in the Linux kernel.
 
-It takes both. I guess what we should be saying is that it is
-not an ethernet-frame based device :) What you give the device
-is sent over to the base station, so it really is whatever the
-base station operator implements, which is mostly IP protocol
-(4, 6 or whatever).
+Spiffing. Good Luck. 
 
--- 
-Inaky
+Matthew Bell
 
