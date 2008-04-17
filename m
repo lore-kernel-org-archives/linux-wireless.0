@@ -1,30 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6294 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:60234 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686AbYDQXDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 19:03:41 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/5] iwlwifi driver updates
-Date: Thu, 17 Apr 2008 16:03:35 -0700
-Message-Id: <1208473420-16550-1-git-send-email-reinette.chatre@intel.com> (sfid-20080418_000345_853044_0CDEF1A1)
+	id S1756149AbYDQSTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 14:19:54 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1208448814.9212.270.camel@pmac.infradead.org>
+References: <1208448814.9212.270.camel@pmac.infradead.org>
+Content-Type: text/plain
+Date: Thu, 17 Apr 2008 14:02:43 -0400
+Message-Id: <1208455363.20193.3.camel@localhost.localdomain> (sfid-20080417_192000_223345_5C85B3F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series continues to stabilize the HW crypto work. There are
-a few patches related to the architecture changes.
-The final patch fixes debugging output.
+On Thu, 2008-04-17 at 17:13 +0100, David Woodhouse wrote:
+> We removed CMD_MESH_ACCESS from the big case statements and provided
+> lbs_mesh_access() instead.... but we missed one user. Fix it.
+> 
+> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 
-[PATCH 1/5] iwlwifi: HW crypto acceleration fixes
-[PATCH 2/5] iwlwifi: arranging aggregation actions
-[PATCH 3/5] iwlwifi: define ANA_PLL values in iwl-csr.h
-[PATCH 4/5] iwlwifi: export int iwl4965_set_pwr_src
-[PATCH 5/5] iwlwifi: fix debug messages during scanning
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Thank you
-
-Reinette
+> 
+> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+> index 21e6f98..9460300 100644
+> --- a/drivers/net/wireless/libertas/ethtool.c
+> +++ b/drivers/net/wireless/libertas/ethtool.c
+> @@ -106,8 +106,8 @@ done:
+>          return ret;
+>  }
+>  
+> -static void lbs_ethtool_get_stats(struct net_device * dev,
+> -				struct ethtool_stats * stats, u64 * data)
+> +static void lbs_ethtool_get_stats(struct net_device *dev,
+> +				  struct ethtool_stats *stats, u64 *data)
+>  {
+>  	struct lbs_private *priv = dev->priv;
+>  	struct cmd_ds_mesh_access mesh_access;
+> @@ -116,9 +116,7 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
+>  	lbs_deb_enter(LBS_DEB_ETHTOOL);
+>  
+>  	/* Get Mesh Statistics */
+> -	ret = lbs_prepare_and_send_command(priv,
+> -			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
+> -			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
+> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
+>  
+>  	if (ret)
+>  		return;
+> 
 
