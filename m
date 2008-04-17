@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21158 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbYD3IyQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 04:54:16 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: allow removal of card at any time
-Date: Wed, 30 Apr 2008 10:51:15 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804301051.15420.hs4233@mail.mn-solutions.de> (sfid-20080430_105408_562256_784F56C6)
+Received: from mga03.intel.com ([143.182.124.21]:32173 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754722AbYDQXFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 19:05:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] mac80211: correct skb allocation
+Date: Thu, 17 Apr 2008 16:05:14 -0700
+Message-Id: <1208473514-16688-1-git-send-email-reinette.chatre@intel.com> (sfid-20080418_000520_553284_D6063D59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes several problems I had:
+From: Ester Kummer <ester.kummer@intel.com>
 
-* when removing the card while the card was scanning or associtating,
-  it could happen that destroy_workqueue() stuck and didn't return.
-* make sure the command function doesn't run while we remove the list
-  of pending commands
-* for still unknown reason, I had calls to lbs_stop_card() with
-  priv==NULL
+This patch corrects the allocation of skb in ADDBA req/resp and DELBA
+it removes redundant space u.addba_* are already counted in sizeof(*mgmt)
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: Ester Kummer <ester.kummer@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/libertas/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-04-30 09:28:50.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-04-30 09:33:56.000000000 +0200
-@@ -1166,8 +1166,8 @@ void lbs_remove_card(struct lbs_private 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c0a5345..b0b079c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1098,8 +1098,8 @@ static void ieee80211_send_addba_resp(struct net_device *dev, u8 *da, u16 tid,
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 capab;
  
- 	dev = priv->dev;
- 
--	cancel_delayed_work(&priv->scan_work);
--	cancel_delayed_work(&priv->assoc_work);
-+	cancel_delayed_work_sync(&priv->scan_work);
-+	cancel_delayed_work_sync(&priv->assoc_work);
- 	destroy_workqueue(priv->work_thread);
- 
- 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
-@@ -1267,6 +1267,9 @@ void lbs_stop_card(struct lbs_private *p
- 
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
-+	if (!priv)
-+		goto out;
+-	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
+-					sizeof(mgmt->u.action.u.addba_resp));
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
 +
- 	netif_stop_queue(priv->dev);
- 	netif_carrier_off(priv->dev);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer "
+ 		       "for addba resp frame\n", dev->name);
+@@ -1147,9 +1147,7 @@ void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 capab;
  
-@@ -1276,6 +1279,7 @@ void lbs_stop_card(struct lbs_private *p
- 		device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
+-	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
+-				sizeof(mgmt->u.action.u.addba_req));
+-
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
  
- 	/* Flush pending command nodes */
-+	del_timer_sync(&priv->command_timer);
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
- 		cmdnode->result = -ENOENT;
-@@ -1286,6 +1290,7 @@ void lbs_stop_card(struct lbs_private *p
+ 	if (!skb) {
+ 		printk(KERN_ERR "%s: failed to allocate buffer "
+@@ -1411,8 +1409,7 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
+ 	struct ieee80211_mgmt *mgmt;
+ 	u16 params;
  
- 	unregister_netdev(dev);
+-	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
+-					sizeof(mgmt->u.action.u.delba));
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
  
-+out:
- 	lbs_deb_leave(LBS_DEB_MAIN);
- }
- EXPORT_SYMBOL_GPL(lbs_stop_card);
+ 	if (!skb) {
+ 		printk(KERN_ERR "%s: failed to allocate buffer "
+-- 
+1.5.3.4
+
