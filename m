@@ -1,88 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21610 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766AbYDBQHd (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:54371 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756089AbYDQPX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 12:07:33 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: remove lbs_get_fwversion()
-Date: Wed, 2 Apr 2008 18:04:35 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+	Thu, 17 Apr 2008 11:23:56 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1165743ugc.16
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 08:23:55 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf
+Date: Thu, 17 Apr 2008 17:28:29 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804021804.35559.hs4233@mail.mn-solutions.de> (sfid-20080402_170737_274525_26DD4C64)
+  charset="utf-8"
+Message-Id: <200804171728.30188.IvDoorn@gmail.com> (sfid-20080417_162404_140923_DE041B95)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was used only at one place anyway.
+The hw_key_idx inside the ieee80211_key_conf structure does
+not provide all the information drivers might need to perform
+hardware encryption.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+This is in particular true for rt2x00 who needs to know the
+key algorithm and whether it is a shared or pairwise key.
 
-Index: wireless-testing/drivers/net/wireless/libertas/ethtool.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/ethtool.c	2008-04-02 15:56:13.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/ethtool.c	2008-04-02 16:00:35.000000000 +0200
-@@ -24,13 +24,14 @@ static void lbs_ethtool_get_drvinfo(stru
- 					 struct ethtool_drvinfo *info)
+By passing the ieee80211_key_conf pointer it assures us that
+drivers can make full use of all information that it should know
+about a particular key.
+
+Additionally this patch updates all drivers to grab the hw_key_idx from
+the ieee80211_key_conf structure.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index e18305b..cd20abe 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1323,7 +1323,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+ 	pktlen = skb->len;
+ 
+ 	if (!(ctl->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)) {
+-		keyidx = ctl->key_idx;
++		keyidx = ctl->hw_key->hw_key_idx;
+ 		pktlen += ctl->icv_len;
+ 	}
+ 
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 19aefbf..2ee19cf 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -235,7 +235,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+ 
+ 	plcp_fragment_len = fragment_len + FCS_LEN;
+ 	if (use_encryption) {
+-		u8 key_idx = (u16) (txctl->key_idx);
++		u8 key_idx = (u16) (txctl->hw_key->hw_key_idx);
+ 		struct b43_key *key;
+ 		int wlhdr_len;
+ 		size_t iv_len;
+diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
+index dcad249..ba50b68 100644
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -232,7 +232,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+ 
+ 	plcp_fragment_len = fragment_len + FCS_LEN;
+ 	if (use_encryption) {
+-		u8 key_idx = (u16)(txctl->key_idx);
++		u8 key_idx = (u16)(txctl->hw_key->hw_key_idx);
+ 		struct b43legacy_key *key;
+ 		int wlhdr_len;
+ 		size_t iv_len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1a5678f..b1250ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2391,7 +2391,8 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
+ 				      struct sk_buff *skb_frag,
+ 				      int last_frag)
  {
- 	struct lbs_private *priv = (struct lbs_private *) dev->priv;
--	char fwver[32];
--
--	lbs_get_fwversion(priv, fwver, sizeof(fwver) - 1);
+-	struct iwl3945_hw_key *keyinfo = &priv->stations[ctl->key_idx].keyinfo;
++	struct iwl3945_hw_key *keyinfo =
++	    &priv->stations[ctl->hw_key->hw_key_idx].keyinfo;
  
-+	snprintf(info->fw_version, 32, "%u.%u.%u.p%u",
-+		priv->fwrelease >> 24 & 0xff,
-+		priv->fwrelease >> 16 & 0xff,
-+		priv->fwrelease >>  8 & 0xff,
-+		priv->fwrelease       & 0xff);
- 	strcpy(info->driver, "libertas");
- 	strcpy(info->version, lbs_driver_version);
--	strcpy(info->fw_version, fwver);
- }
+ 	switch (keyinfo->alg) {
+ 	case ALG_CCMP:
+@@ -2414,7 +2415,7 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
  
- /* All 8388 parts have 16KiB EEPROM size at the time of writing.
-Index: wireless-testing/drivers/net/wireless/libertas/decl.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/decl.h	2008-04-02 15:59:57.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/decl.h	2008-04-02 16:00:01.000000000 +0200
-@@ -37,9 +37,6 @@ void lbs_notify_command_response(struct 
- int lbs_set_radio_control(struct lbs_private *priv);
- u32 lbs_fw_index_to_data_rate(u8 index);
- u8 lbs_data_rate_to_fw_index(u32 rate);
--void lbs_get_fwversion(struct lbs_private *priv,
--	char *fwversion,
--	int maxlen);
+ 	case ALG_WEP:
+ 		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_WEP |
+-		    (ctl->key_idx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT;
++		    (ctl->hw_key->hw_key_idx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT;
  
- /** The proc fs interface */
- int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
-Index: wireless-testing/drivers/net/wireless/libertas/wext.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/wext.c	2008-04-02 15:56:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/wext.c	2008-04-02 16:00:25.000000000 +0200
-@@ -2060,23 +2060,6 @@ static int lbs_set_wap(struct net_device
- 	return ret;
- }
+ 		if (keyinfo->keylen == 13)
+ 			cmd->cmd.tx.sec_ctl |= TX_CMD_SEC_KEY128;
+@@ -2422,7 +2423,7 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl3945_priv *priv,
+ 		memcpy(&cmd->cmd.tx.key[3], keyinfo->key, keyinfo->keylen);
  
--void lbs_get_fwversion(struct lbs_private *priv, char *fwversion, int maxlen)
--{
--	char fwver[32];
--
--	mutex_lock(&priv->lock);
--
--	sprintf(fwver, "%u.%u.%u.p%u",
--		priv->fwrelease >> 24 & 0xff,
--		priv->fwrelease >> 16 & 0xff,
--		priv->fwrelease >>  8 & 0xff,
--		priv->fwrelease       & 0xff);
--
--	mutex_unlock(&priv->lock);
--	snprintf(fwversion, maxlen, fwver);
--}
--
--
- /*
-  * iwconfig settable callbacks
-  */
+ 		IWL_DEBUG_TX("Configuring packet for WEP encryption "
+-			     "with key %d\n", ctl->key_idx);
++			     "with key %d\n", ctl->hw_key->hw_key_idx);
+ 		break;
+ 
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index d7e2358..ae74042 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1936,7 +1936,7 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+ 	struct iwl_wep_key *wepkey;
+ 	int keyidx = 0;
+ 
+-	BUG_ON(ctl->key_idx > 3);
++	BUG_ON(ctl->hw_key->hw_key_idx > 3);
+ 
+ 	switch (keyinfo->alg) {
+ 	case ALG_CCMP:
+@@ -1955,11 +1955,11 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+ 		break;
+ 
+ 	case ALG_WEP:
+-		wepkey = &priv->wep_keys[ctl->key_idx];
++		wepkey = &priv->wep_keys[ctl->hw_key->hw_key_idx];
+ 		cmd->cmd.tx.sec_ctl = 0;
+ 		if (priv->default_wep_key) {
+ 			/* the WEP key was sent as static */
+-			keyidx = ctl->key_idx;
++			keyidx = ctl->hw_key->hw_key_idx;
+ 			memcpy(&cmd->cmd.tx.key[3], wepkey->key,
+ 							wepkey->key_size);
+ 			if (wepkey->key_size == WEP_KEY_LEN_128)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4a80d74..af692f4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -298,9 +298,11 @@ struct ieee80211_tx_control {
+ 	/* retry rate for the last retries */
+ 	struct ieee80211_rate *alt_retry_rate;
+ 
++	/* Key used for hardware encryption
++	 * undefined if IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
++	struct ieee80211_key_conf *hw_key;
++
+ 	u32 flags;		/* tx control flags defined above */
+-	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
+-				 * IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
+ 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, ..
+ 				 * This could be used when set_retry_limit
+ 				 * is not implemented by the driver */
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index affcecd..3cbae42 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -337,7 +337,7 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
+ 			return -1;
+ 	} else {
+-		tx->control->key_idx = tx->key->conf.hw_key_idx;
++		tx->control->hw_key = &tx->key->conf;
+ 		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+ 			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
+ 				return -1;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 45709ad..42f3654 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -228,7 +228,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx,
+ 					    0x7f),
+ 				      (u8) key->u.tkip.iv16);
+ 
+-		tx->control->key_idx = tx->key->conf.hw_key_idx;
++		tx->control->hw_key = &tx->key->conf;
+ 		return 0;
+ 	}
+ 
+@@ -256,7 +256,7 @@ ieee80211_crypto_tkip_encrypt(struct ieee80211_tx_data *tx)
+ 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+ 	    !wpa_test) {
+ 		/* hwaccel - with no need for preallocated room for IV/ICV */
+-		tx->control->key_idx = tx->key->conf.hw_key_idx;
++		tx->control->hw_key = &tx->key->conf;
+ 		return TX_CONTINUE;
+ 	}
+ 
+@@ -478,7 +478,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx,
+ 
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+ 		/* hwaccel - with preallocated room for CCMP header */
+-		tx->control->key_idx = key->conf.hw_key_idx;
++		tx->control->hw_key = &tx->key->conf;
+ 		return 0;
+ 	}
+ 
+@@ -505,7 +505,7 @@ ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx)
+ 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+ 		/* hwaccel - with no need for preallocated room for CCMP "
+ 		 * header or MIC fields */
+-		tx->control->key_idx = tx->key->conf.hw_key_idx;
++		tx->control->hw_key = &tx->key->conf;
+ 		return TX_CONTINUE;
+ 	}
+ 
