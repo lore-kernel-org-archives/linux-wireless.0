@@ -1,172 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:15522 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988AbYDBUBj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 16:01:39 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so917959ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:01:37 -0700 (PDT)
-Message-ID: <1ba2fa240804021301v5c5e9cbhe13c53fc97a666c3@mail.gmail.com> (sfid-20080402_210150_938781_A2BA5E79)
-Date: Wed, 2 Apr 2008 23:01:27 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: "Try to stop Tx aggregation on non active TID" messages
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1207065107.5143.117.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1206568750.22530.8.camel@johannes.berg>
-	 <c85cb4470803280145j42bcf1b5kfcfd220b5b6cf76a@mail.gmail.com>
-	 <c85cb4470803300456y75ced072ue89ea3f2dbbdce8b@mail.gmail.com>
-	 <1206964750.5468.9.camel@johannes.berg>
-	 <D936D925018D154694D8A362EEB08920040FA21F@orsmsx416.amr.corp.intel.com>
-	 <1207065107.5143.117.camel@johannes.berg>
+Received: from mga09.intel.com ([134.134.136.24]:6294 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754288AbYDQXDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 19:03:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/5] iwlwifi: define ANA_PLL values in iwl-csr.h
+Date: Thu, 17 Apr 2008 16:03:38 -0700
+Message-Id: <1208473420-16550-4-git-send-email-reinette.chatre@intel.com> (sfid-20080418_000352_473067_7842B814)
+In-Reply-To: <1208473420-16550-3-git-send-email-reinette.chatre@intel.com>
+References: <1208473420-16550-1-git-send-email-reinette.chatre@intel.com>
+ <1208473420-16550-2-git-send-email-reinette.chatre@intel.com>
+ <1208473420-16550-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 1, 2008 at 6:51 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  > > [1] as, incidentally, you can see in the current wireless tree from a
->  > > few days ago, iwlwifi with debugging doesn't even compile!
->  >
->  > Could you please send the errors you see? The debug flags recently
->  > changed, so the following is needed:
->
->  It seems that this was before I updated to after the debug flags change,
->  everything seems fine now.
->
->  Unrelated, but while I was at it, I get a whole bunch of warnings that
->  are fixed by the patch below.
->
->  johannes
->
->  From: Johannes Berg <johannes@sipsolutions.net>
->  Subject: iwlwifi: fix warnings
->
->  This fixes all kinds of warnings in iwlwifi.
->
->  Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->  ---
->   drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 +++---
->   drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 ++--
->   drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 ++++----
->   drivers/net/wireless/iwlwifi/iwl-4965.h     |    4 ++--
->   drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 +-
->   drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
->   6 files changed, 13 insertions(+), 13 deletions(-)
->
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-4965.c       2008-04-01 17:38:21.311669543 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-4965.c    2008-04-01 17:43:17.931669482 +0200
->  @@ -3297,7 +3297,7 @@ static void iwl4965_add_radiotap(struct
->         s8 noise = 0;
->         int rate = stats->rate_idx;
->         u64 tsf = stats->mactime;
->  -       __le16 phy_flags_hw = rx_start->phy_flags;
->  +       __le16 phy_flags_hw = rx_start->phy_flags, antenna;
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Can you do this on separate lines
+This patch defines ANA_PLL values in iwl-csr.h
 
->         struct iwl4965_rt_rx_hdr {
->                 struct ieee80211_radiotap_header rt_hdr;
->                 __le64 rt_tsf;          /* TSF */
->  @@ -3381,8 +3381,8 @@ static void iwl4965_add_radiotap(struct
->          * new 802.11n radiotap field "RX chains" that is defined
->          * as a bitmask.
->          */
->  -       iwl4965_rt->rt_antenna =
->  -               le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
->  +       antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
->  +       iwl4965_rt->rt_antenna = le16_to_cpu(antenna) >> 4;
->
->         /* set the preamble flag if appropriate */
->         if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
->  @@ -3972,7 +3972,7 @@ static void iwl4965_rx_reply_rx(struct i
->
->         IWL_DEBUG_STATS_LIMIT("Rssi %d, noise %d, qual %d, TSF %llu\n",
->                               rx_status.ssi, rx_status.noise, rx_status.signal,
->  -                             rx_status.mactime);
->  +                             (unsigned long long)rx_status.mactime);
->
->         network_packet = iwl4965_is_network_packet(priv, header);
->         if (network_packet) {
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-4965.h       2008-04-01 17:36:10.893796252 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-4965.h    2008-04-01 17:44:02.702794566 +0200
->  @@ -293,8 +293,8 @@ struct iwl4965_frame {
->
->   #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
->   #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
->  -#define SEQ_TO_INDEX(x) (x & 0xff)
->  -#define INDEX_TO_SEQ(x) (x & 0xff)
->  +#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
->  +#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
->   #define SEQ_HUGE_FRAME  (0x4000)
->   #define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
->   #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.c       2008-04-01 17:42:39.875671121 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.c    2008-04-01 17:42:55.953764661 +0200
->  @@ -524,7 +524,7 @@ static void iwl3945_add_radiotap(struct
->         s8 noise = 0;
->         int rate = stats->rate_idx;
->         u64 tsf = stats->mactime;
->  -       __le16 phy_flags_hw = rx_hdr->phy_flags;
->  +       __le16 phy_flags_hw = rx_hdr->phy_flags, antenna;
->
->         struct iwl3945_rt_rx_hdr {
->                 struct ieee80211_radiotap_header rt_hdr;
->  @@ -596,8 +596,8 @@ static void iwl3945_add_radiotap(struct
->                 iwl3945_rt->rt_rate = iwl3945_rates[rate].ieee;
->
->         /* antenna number */
->  -       iwl3945_rt->rt_antenna =
->  -               le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
->  +       antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
->  +       iwl3945_rt->rt_antenna = le16_to_cpu(antenna) >> 4;
->
->         /* set the preamble flag if we have it */
->         if (phy_flags_hw & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.h       2008-04-01 17:42:17.083795908 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.h    2008-04-01 17:44:02.701795986 +0200
->  @@ -280,8 +280,8 @@ struct iwl3945_frame {
->
->   #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
->   #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
->  -#define SEQ_TO_INDEX(x) (x & 0xff)
->  -#define INDEX_TO_SEQ(x) (x & 0xff)
->  +#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
->  +#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
->   #define SEQ_HUGE_FRAME  (0x4000)
->   #define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
->   #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-debugfs.c    2008-04-01 17:43:44.900670090 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-debugfs.c 2008-04-01 17:43:55.875048052 +0200
->  @@ -243,7 +243,7 @@ static ssize_t iwl_dbgfs_stations_read(s
->                                                 station->tid[j].agg.wait_for_ba);
->                                 pos += sprintf(buf+pos, "%u\t%llu\t%u\n",
->                                                 station->tid[j].agg.start_idx,
->  -                                               station->tid[j].agg.bitmap,
->  +                                               (unsigned long long)station->tid[j].agg.bitmap,
->                                                 station->tid[j].agg.rate_n_flags);
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h  |    7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 598e4ee..2869533 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1233,7 +1233,7 @@ int iwl3945_hw_nic_init(struct iwl3945_priv *priv)
+ 	iwl3945_power_init_handle(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	iwl3945_set_bit(priv, CSR_ANA_PLL_CFG, (1 << 24));
++	iwl3945_set_bit(priv, CSR_ANA_PLL_CFG, CSR39_ANA_PLL_CFG_VAL);
+ 	iwl3945_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 		    CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index a59f48b..82c7445 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -95,8 +95,7 @@
+ #define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+ #define CSR_LED_REG             (CSR_BASE+0x094)
+ 
+-/* Analog phase-lock-loop configuration (3945 only)
+- * Set bit 24. */
++/* Analog phase-lock-loop configuration  */
+ #define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
+ /*
+  * Indicates hardware rev, to determine CCK backoff for txpower calculation.
+@@ -219,6 +218,10 @@
+ #define CSR_LED_REG_TRUN_ON (0x78)
+ #define CSR_LED_REG_TRUN_OFF (0x38)
+ 
++/* ANA_PLL */
++#define CSR39_ANA_PLL_CFG_VAL        (0x01000000)
++#define CSR50_ANA_PLL_CFG_VAL        (0x00880300)
++
+ /*=== HBUS (Host-side Bus) ===*/
+ #define HBUS_BASE	(0x400)
+ /*
+-- 
+1.5.3.4
 
-
->                         }
->                         pos += sprintf(buf+pos, "\n");
->  --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c   2008-04-01 17:43:25.884921531 +0200
->  +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl4965-base.c        2008-04-01 17:43:33.955669481 +0200
->  @@ -3111,7 +3111,7 @@ static int iwl4965_tx_status_reply_tx(st
->                 agg->rate_n_flags = le32_to_cpu(tx_resp->rate_n_flags);
->                 IWL_DEBUG_TX_REPLY("Frames %d start_idx=%d bitmap=0x%llx\n",
->                                    agg->frame_count, agg->start_idx,
->  -                                  agg->bitmap);
->  +                                  (unsigned long long)agg->bitmap);
->
-This was already submitted by John IIRC.
-
-
->                 if (bitmap)
->                         agg->wait_for_ba = 1;
->
->
->
