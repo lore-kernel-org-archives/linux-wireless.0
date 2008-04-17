@@ -1,54 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:17724 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754107AbYDRJFA convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0708.google.com ([209.85.198.249]:54275 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753164AbYDQUNs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 05:05:00 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-Date: Fri, 18 Apr 2008 11:02:03 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <1208448814.9212.270.camel@pmac.infradead.org>
-In-Reply-To: <1208448814.9212.270.camel@pmac.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200804181102.03107.hs4233@mail.mn-solutions.de> (sfid-20080418_100504_738768_356D5588)
+	Thu, 17 Apr 2008 16:13:48 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so112329rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 13:13:48 -0700 (PDT)
+Subject: [PATCH 6/7] mac80211: tkip.c use struct tkip_ctx in phase 1 key
+	mixing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 17 Apr 2008 13:13:50 -0700
+Message-Id: <1208463230.17196.28.camel@brick> (sfid-20080417_211453_095887_3757861D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NACK.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/tkip.c |   27 ++++++++++-----------------
+ 1 files changed, 10 insertions(+), 17 deletions(-)
 
-When I apply this patch and do "ethtool -S eth1", I get this:
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index d74c91e..e9ee247 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -71,10 +71,12 @@ static u16 tkipS(u16 val)
+  * TSC = TKIP sequence counter (48 bits, only 32 msb bits used)
+  * P1K: 80 bits
+  */
+-static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+-			       u16 *p1k)
++static void tkip_mixing_phase1(struct ieee80211_key *key, const u8 *ta,
++			       struct tkip_ctx *ctx, u32 tsc_IV32)
+ {
+ 	int i, j;
++	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	u16 *p1k = ctx->p1k;
+ 
+ 	p1k[0] = tsc_IV32 & 0xFFFF;
+ 	p1k[1] = tsc_IV32 >> 16;
+@@ -90,6 +92,7 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+ 		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
+ 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+ 	}
++	ctx->initialized = 1;
+ }
+ 
+ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+@@ -146,12 +149,8 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+-	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
+-		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
+-		key->u.tkip.tx.initialized = 1;
+-	}
++	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
++		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
+ 
+ 	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+ 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+@@ -190,12 +189,8 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+ 	 * fragmented packets. */
+-	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
+-		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			iv32, key->u.tkip.tx.p1k);
+-		key->u.tkip.tx.initialized = 1;
+-	}
++	if (iv16 == 0 || !key->u.tkip.tx.initialized)
++		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, iv32);
+ 
+ 	if (type == IEEE80211_TKIP_P1_KEY) {
+ 		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
+@@ -286,10 +281,8 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 
+ 	if (!key->u.tkip.rx[queue].initialized ||
+ 	    key->u.tkip.rx[queue].iv32 != iv32) {
+-		key->u.tkip.rx[queue].initialized = 1;
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   iv32, key->u.tkip.rx[queue].p1k);
++		tkip_mixing_phase1(key, ta, &key->u.tkip.rx[queue], iv32);
+ #ifdef CONFIG_TKIP_DEBUG
+ 		{
+ 			int i;
+-- 
+1.5.5.144.g3e42
 
-$ ethtool -S eth1
-NIC statistics:
-=A0 =A0 =A0drop_duplicate_bcast: 7
-=A0 =A0 =A0drop_ttl_zero: 0
-=A0 =A0 =A0drop_no_fwd_route: 0
-=A0 =A0 =A0drop_no_buffers: 9223372036854775808
-=A0 =A0 =A0fwded_unicast_cnt: 0
-=A0 =A0 =A0fwded_bcast_cnt: 0
-=A0 =A0 =A0drop_blind_table: 0
-=A0 =A0 =A0tx_failed_cnt: 9223372036854775808
 
-But more severely, I get this in dmesg:
-
-libertas enter: lbs_ethtool_get_stats()
-libertas: PREP_CMD: command 0x009b failed: 2
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0
-My firmware simply doesn't support the 009b command. It seems=20
-also wrong to call an MESH related command on an struct=20
-net_device *dev which is not priv->mesh_dev.
-
-
-That ethtool returns junk like "9223372036854775808" is another=20
-error. lbs_mesh_access() returned 2, and the code does "if (ret)=20
-return ret". Maybe it should be like "if (ret) return -ENOSYS=20
-(or some other ENOxxx) instead?
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
