@@ -1,176 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from be2.wartburg.edu ([216.159.168.186]:44043 "EHLO
-	WARTBURG-EVS-01.wartburg.edu" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753301AbYD1Bwe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2008 21:52:34 -0400
-Message-ID: <48152DDB.9050702@wartburg.edu> (sfid-20080428_035244_666132_3DD5D276)
-Date: Sun, 27 Apr 2008 20:52:27 -0500
-From: Charles Figura <charles.figura@wartburg.edu>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [Fwd: Re: Problems loading from compat-wireless-2008-04-24]
-References: <48148E6F.3080703@wartburg.edu> <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com>
-In-Reply-To: <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------090002070304030507020107"
+Received: from styx.suse.cz ([82.119.242.94]:45314 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756473AbYDQI7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 04:59:36 -0400
+Date: Thu, 17 Apr 2008 10:58:59 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH-mm 1/3] mac80211: tkip.c use get/put_unaligned helpers
+Message-ID: <20080417105859.45092413@griffin.suse.cz> (sfid-20080417_095941_836848_90611088)
+In-Reply-To: <1208370570.11920.107.camel@brick>
+References: <1208370570.11920.107.camel@brick>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090002070304030507020107
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 16 Apr 2008 11:29:30 -0700, Harvey Harrison wrote:
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+> This depends on the introduction of the new unaligned helpers, and applies
+> on top of the cleanup patches already in -mm.
 
-Okay, so I think I have an idea what might be going on.  I've attached
-the modprobe -l for the various modules involved both after installation
-and after uninstallation.  I note that after uninstallation, there are
-still a few modules from the /lib/modules/2.6.24-16-generic/updates
-folder.  Is this possibly due to an older self-installed compat-wireless
-update?
-Has monkeying around with non-apt packages goofed me up here?
-If so, how can I fix it?
+Please send all mac80211 patches to the linux-wireless mailing list and
+CC Johannes Berg. (It's a good idea to resend all of the mac80211
+patches you sent.)
 
--C
+Thanks,
 
-Luis R. Rodriguez wrote:
-> On Sun, Apr 27, 2008 at 7:32 AM, Charles Figura
-> <charles.figura@wartburg.edu> wrote:
->> I'm running Ubuntu Hardy with the 2.6.24-16-generic kernel.
->>  I've followed the log approach laid out by Luis Rodriguez below,
->>  and attached the corresponding dmesg output.
->>
->>  As you see, the modprobe FAILS due to lots of unknown symbols.
->>
->>  Oh, one other note that I hadn't mentioned before.  I've found
->>  that a 'sudo make uninstall' doesn't get rid of the module - at
->>  least, it doesn't reset the module list.  If I follow a 'sudo make
->>  uninstall' by 'sudo modprobe iwl3945', it tries to insert the same
->>  (faulty) module.  Only by rebooting is the original restored.
->>  How do I update the module list after doing a make uninstall?
->>
->>  Thanks - hope this helps!
->>
->>
->>
->>
->>  -------- Original Message --------
->>  Subject: Re: Problems loading from compat-wireless-2008-04-24
->>  Date: Sat, 26 Apr 2008 11:14:20 -0700
->>  From: Luis R. Rodriguez <mcgrof@gmail.com>
->>  To: Charles Figura <charles.figura@wartburg.edu>
->>  References: <4810F9BC.7030104@wartburg.edu>
->> <43e72e890804252146y600b6b40x738e0826bc492b0@mail.gmail.com>
->> <4813700F.5050108@wartburg.edu>
->>
->>  On Sat, Apr 26, 2008 at 11:10 AM, Charles Figura
->>  <charles.figura@wartburg.edu> wrote:
->>
->>> Luis -
->>>
->>>  Thanks for the response.  I did, actually, do a 'make unload' before
->>>  loading the new module.  And the error I sent you was actually from
->>>  loading the single module I need - the iwl3945 module.
->>>
->>>  So I'm still back where I started, I think.
->>>
->>  Please reply to the list explaining this, Intel reads linux-wireless
->>  so they can help if its their driver.
->>
->>  Do this:
->>
->>  Reboot.
->>
->>  sudo dmesg -c > log1
->>  less log1 # review it to make sure there are no oops
->>  sudo make unload
->>  sudo dmesg -c
->>  sudo modprobe iwl4965
->>  # Try to connect or whatever to try to replicate your oops
->>  sudo dmesg -c > oops.txt
->>
->>  copy and paste the oops.txt into your e-mail, that will give a cleaner
->>  log. Also be sure to mention your kernel you are using.
->>
->>   Luis
->>
->>
->>
->>  --
->>  Charles Figura                      charles.figura@wartburg.edu
->>
->>  Associate Professor of Physics    http://mcsp.wartburg.edu/figura
->>  Director, Wartburg Platte Observatory    (319) 352-8373
->>                                          (319) 352-8606 (fax)
->>
->> [  219.046669] iwlwifi_mac80211: disagrees about version of symbol
->> wiphy_register
->>  [  219.046681] iwlwifi_mac80211: Unknown symbol wiphy_register
->>  [  219.046742] iwlwifi_mac80211: disagrees about version of symbol
->> wiphy_new
->>  [  219.046747] iwlwifi_mac80211: Unknown symbol wiphy_new
->>  [  219.047765] iwlwifi_mac80211: disagrees about version of symbol
->> wiphy_unregister
->>  [  219.047771] iwlwifi_mac80211: Unknown symbol wiphy_unregister
->>  [  219.049060] iwlwifi_mac80211: disagrees about version of symbol
->> wiphy_free
->>  [  219.049066] iwlwifi_mac80211: Unknown symbol wiphy_free
+ Jiri
+
 > 
-> You have iwlwifi's mac8011 making the calls here. Please do after make
-> install and after make uninstall:
+>  net/mac80211/tkip.c |   62 +++++++++++++++++++--------------------------------
+>  1 files changed, 23 insertions(+), 39 deletions(-)
 > 
-> sudo modprobe -l iwl4965
-> sudo modprobe -l mac80211
-> sudo modprobe -l iwlwifi_mac80211
+> diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+> index 61c60d3..1c5a46a 100644
+> --- a/net/mac80211/tkip.c
+> +++ b/net/mac80211/tkip.c
+> @@ -63,16 +63,6 @@ static const u16 tkip_sbox[256] =
+>  	0x82C3, 0x29B0, 0x5A77, 0x1E11, 0x7BCB, 0xA8FC, 0x6DD6, 0x2C3A,
+>  };
+>  
+> -
+> -/*
+> - * Get a cpu-byteorder u16 from a u8 pointer fixing up possible unaligned
+> - * accesses.
+> - */
+> -static inline u16 getle16(const u8 *x)
+> -{
+> -	return le16_to_cpu(get_unaligned((__le16 *)x));
+> -}
+> -
+>  static inline u16 tkip_S(u16 val)
+>  {
+>  	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
+> @@ -91,17 +81,17 @@ static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+>  
+>  	p1k[0] = tsc_IV32 & 0xFFFF;
+>  	p1k[1] = tsc_IV32 >> 16;
+> -	p1k[2] = getle16(ta + 0);
+> -	p1k[3] = getle16(ta + 2);
+> -	p1k[4] = getle16(ta + 4);
+> +	p1k[2] = get_unaligned_le16(ta + 0);
+> +	p1k[3] = get_unaligned_le16(ta + 2);
+> +	p1k[4] = get_unaligned_le16(ta + 4);
+>  
+>  	for (i = 0; i < PHASE1_LOOP_COUNT; i++) {
+>  		j = 2 * (i & 1);
+> -		p1k[0] += tkip_S(p1k[4] ^ getle16(tk + 0 + j));
+> -		p1k[1] += tkip_S(p1k[0] ^ getle16(tk + 4 + j));
+> -		p1k[2] += tkip_S(p1k[1] ^ getle16(tk + 8 + j));
+> -		p1k[3] += tkip_S(p1k[2] ^ getle16(tk + 12 + j));
+> -		p1k[4] += tkip_S(p1k[3] ^ getle16(tk + 0 + j)) + i;
+> +		p1k[0] += tkip_S(p1k[4] ^ get_unaligned_le16(tk + 0 + j));
+> +		p1k[1] += tkip_S(p1k[0] ^ get_unaligned_le16(tk + 4 + j));
+> +		p1k[2] += tkip_S(p1k[1] ^ get_unaligned_le16(tk + 8 + j));
+> +		p1k[3] += tkip_S(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
+> +		p1k[4] += tkip_S(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+>  	}
+>  }
+>  
+> @@ -119,14 +109,14 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+>  	ppk[4] = p1k[4];
+>  	ppk[5] = p1k[4] + tsc_IV16;
+>  
+> -	ppk[0] += tkip_S(ppk[5] ^ getle16(tk + 0));
+> -	ppk[1] += tkip_S(ppk[0] ^ getle16(tk + 2));
+> -	ppk[2] += tkip_S(ppk[1] ^ getle16(tk + 4));
+> -	ppk[3] += tkip_S(ppk[2] ^ getle16(tk + 6));
+> -	ppk[4] += tkip_S(ppk[3] ^ getle16(tk + 8));
+> -	ppk[5] += tkip_S(ppk[4] ^ getle16(tk + 10));
+> -	ppk[0] +=  ror16(ppk[5] ^ getle16(tk + 12), 1);
+> -	ppk[1] +=  ror16(ppk[0] ^ getle16(tk + 14), 1);
+> +	ppk[0] += tkip_S(ppk[5] ^ get_unaligned_le16(tk + 0));
+> +	ppk[1] += tkip_S(ppk[0] ^ get_unaligned_le16(tk + 2));
+> +	ppk[2] += tkip_S(ppk[1] ^ get_unaligned_le16(tk + 4));
+> +	ppk[3] += tkip_S(ppk[2] ^ get_unaligned_le16(tk + 6));
+> +	ppk[4] += tkip_S(ppk[3] ^ get_unaligned_le16(tk + 8));
+> +	ppk[5] += tkip_S(ppk[4] ^ get_unaligned_le16(tk + 10));
+> +	ppk[0] +=  ror16(ppk[5] ^ get_unaligned_le16(tk + 12), 1);
+> +	ppk[1] +=  ror16(ppk[0] ^ get_unaligned_le16(tk + 14), 1);
+>  	ppk[2] +=  ror16(ppk[1], 1);
+>  	ppk[3] +=  ror16(ppk[2], 1);
+>  	ppk[4] +=  ror16(ppk[3], 1);
+> @@ -135,11 +125,11 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+>  	rc4key[0] = tsc_IV16 >> 8;
+>  	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
+>  	rc4key[2] = tsc_IV16 & 0xFF;
+> -	rc4key[3] = ((ppk[5] ^ getle16(tk)) >> 1) & 0xFF;
+> +	rc4key[3] = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
+>  
+>  	rc4key += 4;
+> -	for (i = 0; i < 6; i++)
+> -		put_unaligned(cpu_to_le16(ppk[i]), (__le16 *)rc4key + i);
+> +	for (i = 0; i < 12; i += 2)
+> +		put_unaligned_le16(ppk[i], rc4key + i);
+>  }
+>  
 > 
-> Also inspect your /lib/modules/ directory and /lib/modules/$(uname -r)/
+> @@ -153,11 +143,8 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+>  	*pos++ = iv1;
+>  	*pos++ = iv2;
+>  	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+> -	*pos++ = key->u.tkip.iv32 & 0xff;
+> -	*pos++ = (key->u.tkip.iv32 >> 8) & 0xff;
+> -	*pos++ = (key->u.tkip.iv32 >> 16) & 0xff;
+> -	*pos++ = (key->u.tkip.iv32 >> 24) & 0xff;
+> -	return pos;
+> +	put_unaligned_le32(key->u.tkip.iv32, pos);
+> +	return pos + 4;
+>  }
+>  
 > 
->   Luis
+> @@ -200,10 +187,7 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+>  
+>  	iv16 = data[hdr_len] << 8;
+>  	iv16 += data[hdr_len + 2];
+> -	iv32 = data[hdr_len + 4] +
+> -		(data[hdr_len + 5] >> 8) +
+> -		(data[hdr_len + 6] >> 16) +
+> -		(data[hdr_len + 7] >> 24);
+> +	iv32 = get_unaligned_le32(data + hdr_len + 4);
+>  
+>  #ifdef CONFIG_TKIP_DEBUG
+>  	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+> @@ -274,7 +258,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+>  
+>  	iv16 = (pos[0] << 8) | pos[2];
+>  	keyid = pos[3];
+> -	iv32 = pos[4] | (pos[5] << 8) | (pos[6] << 16) | (pos[7] << 24);
+> +	iv32 = get_unaligned_le32(pos + 4);
+>  	pos += 8;
+>  #ifdef CONFIG_TKIP_DEBUG
+>  	{
+> -- 
+> 1.5.5.144.g3e42
 > 
-> 
+
 
 -- 
-Charles Figura                      charles.figura@wartburg.edu
-Associate Professor of Physics    http://mcsp.wartburg.edu/figura
-Director, Wartburg Platte Observatory    (319) 352-8373
-                                          (319) 352-8606 (fax)
-
---------------090002070304030507020107
-Content-Type: text/plain;
- name="modprobes_installed"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="modprobes_installed"
-
-ZmlndXJhQG5pZ2h0ZmFsbDp+L2NvbXBhdC13aXJlbGVzcy0yMDA4LTA0LTI3JCBzdWRvIG1v
-ZHByb2JlIC1sIGl3bDQ5NjUKL2xpYi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmljL3VwZGF0
-ZXMvd2lyZWxlc3MvaXdsd2lmaS9pd2x3aWZpL2NvbXBhdGlibGUvaXdsNDk2NS5rbwpmaWd1
-cmFAbmlnaHRmYWxsOn4vY29tcGF0LXdpcmVsZXNzLTIwMDgtMDQtMjckIHN1ZG8gbW9kcHJv
-YmUgLWwgbWFjODAyMTEKL2xpYi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmljL3VwZGF0ZXMv
-bmV0L21hYzgwMjExL21hYzgwMjExLmtvCmZpZ3VyYUBuaWdodGZhbGw6fi9jb21wYXQtd2ly
-ZWxlc3MtMjAwOC0wNC0yNyQgc3VkbyBtb2Rwcm9iZSAtbCBpd2x3aWZpX21hYzgwMjExL2xp
-Yi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmljL3VwZGF0ZXMvd2lyZWxlc3MvaXdsd2lmaS9t
-YWM4MDIxMS9jb21wYXRpYmxlL25ldC9tYWM4MDIxMS9pd2x3aWZpX21hYzgwMjExLmtvCmZp
-Z3VyYUBuaWdodGZhbGw6fi9jb21wYXQtd2lyZWxlc3MtMjAwOC0wNC0yNyQgICAgICAK
---------------090002070304030507020107
-Content-Type: text/plain;
- name="modprobes_uninstalled"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="modprobes_uninstalled"
-
-ZmlndXJhQG5pZ2h0ZmFsbDovbGliL21vZHVsZXMvMi42LjI0LTE2LWdlbmVyaWMkIHN1ZG8g
-bW9kcHJvYmUgLWwgaXdsd2lmaV9tYWM4MDIxMQovbGliL21vZHVsZXMvMi42LjI0LTE2LWdl
-bmVyaWMvdXBkYXRlcy93aXJlbGVzcy9pd2x3aWZpL21hYzgwMjExL2NvbXBhdGlibGUvbmV0
-L21hYzgwMjExL2l3bHdpZmlfbWFjODAyMTEua28KZmlndXJhQG5pZ2h0ZmFsbDovbGliL21v
-ZHVsZXMvMi42LjI0LTE2LWdlbmVyaWMkIHN1ZG8gbW9kcHJvYmUgLWwgbWFjODAyMTEKL2xp
-Yi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmljL2tlcm5lbC9uZXQvbWFjODAyMTEvbWFjODAy
-MTEua28KZmlndXJhQG5pZ2h0ZmFsbDovbGliL21vZHVsZXMvMi42LjI0LTE2LWdlbmVyaWMk
-IHN1ZG8gbW9kcHJvYmUgLWwgaXdsNDk2NQovbGliL21vZHVsZXMvMi42LjI0LTE2LWdlbmVy
-aWMvdXBkYXRlcy93aXJlbGVzcy9pd2x3aWZpL2l3bHdpZmkvY29tcGF0aWJsZS9pd2w0OTY1
-LmtvCmZpZ3VyYUBuaWdodGZhbGw6L2xpYi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmljJCBz
-dWRvIG1vZHByb2JlIC1sIGl3bDM5NDUKL2xpYi9tb2R1bGVzLzIuNi4yNC0xNi1nZW5lcmlj
-L3VwZGF0ZXMvd2lyZWxlc3MvaXdsd2lmaS9pd2x3aWZpL2NvbXBhdGlibGUvaXdsMzk0NS5r
-bwpmaWd1cmFAbmlnaHRmYWxsOi9saWIvbW9kdWxlcy8yLjYuMjQtMTYtZ2VuZXJpYyQK
---------------090002070304030507020107--
+Jiri Benc
+SUSE Labs
