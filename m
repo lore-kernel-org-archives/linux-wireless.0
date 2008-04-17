@@ -1,79 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35352 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755256AbYDTSm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 14:42:27 -0400
-Message-ID: <480B8E70.4030703@hauke-m.de> (sfid-20080420_194231_700808_BAFE865B)
-Date: Sun, 20 Apr 2008 20:41:52 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: lrodriguez@atheros.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: compat-wireless-2008-04-20 doesn't build on armv5te (xscale)
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig810DA00DD6F96A96B60E387F"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34086 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763098AbYDQQi6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 12:38:58 -0400
+Subject: Re: mac80211 hardware encryption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200804151717.54920.IvDoorn@gmail.com> (sfid-20080415_161442_807626_6BB3493B)
+References: <200804051931.58895.IvDoorn@gmail.com>
+	 <200804142307.48550.IvDoorn@gmail.com>
+	 <1208255742.3502.5.camel@johannes.berg>
+	 <200804151717.54920.IvDoorn@gmail.com>
+	 (sfid-20080415_161442_807626_6BB3493B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R4GGfXCTSX3pspn1oQvb"
+Date: Thu, 17 Apr 2008 12:14:39 +0200
+Message-Id: <1208427279.4066.14.camel@johannes.berg> (sfid-20080417_174311_986857_FF778D3C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig810DA00DD6F96A96B60E387F
+
+--=-R4GGfXCTSX3pspn1oQvb
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-I have tried to build the full compat-wireless-2008-04-20 for OpenWRT on
-Intel ixp4xx Platfrom (armv5te, xscale), but I got the following error.
-The parts before this were all like on the ofter architectures.
-This was made with gcc 4.1.2 and kernel 2.6.24.2
+On Tue, 2008-04-15 at 17:17 +0200, Ivo van Doorn wrote:
 
+> > In any case, for the problem at hand, I wouldn't mind increasing
+> > hw_key_idx to a u16 all the way through, or pass the key_conf pointer
+> > instead.
+>=20
+> I'll create a patch that changes it to the key_conf pointer then,
+> that sounds like the safest option to allow changes to key_conf later.
 
-  CC [M]
-/build_dir/linux-ixp4xx_generic/compat-wireless-2008-04-20/net/wireless/n=
-l80211.o
-  LD [M]
-/build_dir/linux-ixp4xx_generic/compat-wireless-2008-04-20/net/wireless/c=
-fg80211.o
-  Building modules, stage 2.
-  MODPOST 37 modules
-FATAL:
-/build_dir/linux-ixp4xx_generic/compat-wireless-2008-04-20/drivers/net/wi=
-reless/b43/b43:
-sizeof(struct ssb_device_id)=3D6 is not a modulo of the size of section
-__mod_ssb_device_table=3D64.
-Fix definition of struct ssb_device_id in mod_devicetable.h
-make[6]: *** [__modpost] Error 1
-make[5]: *** [modules] Error 2
-make[5]: Leaving directory `/build_dir/linux-ixp4xx_generic/linux-2.6.24.=
-2'
-make[4]: *** [modules] Error 2
+That'll also solve your problem of having to know the algorithm, and b43
+might benefit of that too, I think it currently keeps a table for the
+algorithms.
 
+One thing to keep in mind that you'll want to document clearly: the
+key_conf pointer there will only be valid until ops->tx() returns, so
+you must not access it (e.g. via the tx control copy you need to make
+for tx status) outside of the tx() routine unless you want to somehow
+make sure it isn't removed while in use (which is possible [1] since
+set_key() may sleep.)
 
---=20
-Hauke
+Hence, if you defer ops->tx() to some workqueue or something, you need
+to copy out all the data you need from the key_conf beforehand.
 
+Tomas: was it you who mentioned we should remove tx_control from
+tx_status and just require copying the fields we need? If so, did you
+ever look into that?
 
---------------enig810DA00DD6F96A96B60E387F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+> Note that this change (either adding the key_conf pointer or the hw_key_i=
+dx to u16)
+> will cause ieee80211_tx_control to exceed the 48 bytes. So that will make=
+ it
+> harder to move it into the skb->cb array later.
+
+I just had a look, we could make the rate pointers index into the rate
+array instead which would make them go from 24=EF=BB=BF bytes (12 on 32-bit=
+) to
+3 bytes (we only need a u8 index.)
+
+johannes
+
+[1] using creative bit-locking in hw_key_idx.
+
+--=-R4GGfXCTSX3pspn1oQvb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iQIVAwUBSAuOhYZ0px9YPRMyAQIYiA//b60kfxuVyLl3RzeEhiLkiwhOccAtFcjy
-DmwBBR0AxuK8e9ReRttn7vnsW5eF2mqcrk0wlUhwTIbKnqd9A/MSt+KUDhnsXQ+c
-GKRBHFKFO0UBxqUcaiikB1DsKZgiEYrrwJJnKWg2qs5AOpgbPFGK/RxGjhuUDzkm
-DjyTGoZaZaFAC7dsIKjbNRRGBkMOOkpGtpcRgGK5rEJ/iRzATu7yQFeQWI6IVFvv
-7YDTTq9UoizuO163JtvKcVvcAAzAS6O2N38sEbBC/T7ETgKnAESBetwGaM3eTmTC
-a4gBFJR9CgY4LHcC8y25eKGEewUThJ1hSeVgUQlVgYNc8+2kJoENREL7Za1xN/Oe
-rvXZJ4WZs84UlUOaFdBkHsyCPgmlfy5isgxInFuFjlbA3TAMOJL4fFGTsEnxZMe8
-2U7tsIlt9UsMhSxqH14XIFpFub9FFm0NIOoJmpcCXqYXuJ52NiY8gLftG0T7Yl0t
-bZoJSDrigKSm9I2p5MfzNCdoO/GBM7zijA2CI6Bto9MVmEYBeyiTg+kQCeb7islc
-M719C3eY73P03at3EFrLWjWJ9ONMqow3ASKi6Uds1/eoYNF1YcBewbwriOavN8FN
-ijjJnGCKEMkLJgTSyFRZYPasRI4YclVmg7SO/NSbKcC7kGFvCobLR4QuIS2XrRrG
-g7sd1sJV/gw=
-=AyGZ
+iQIVAwUASAcjDqVg1VMiehFYAQJpWw//bOzqhI93Ip8ObSxwQtJtjVti9RAduoNh
+dxhcCML0RCi8/q+RNEhELVV78dfu4pGxdHjAi/JfQw/VSjJUua5HTlLdJ3y1f0RV
+hx8iSPmSbiBNiwfK6tneRP5GY3SuvQmgu0HK4yzyKoPZvIZoFCvp+9ZNlN6MIEyb
+FjEHPwDzp8oJHZAkOlpOcKgbBAgWBK6VWmSdKwY7NSLt148pyTnMHtxd5ZhabrYL
+PbH0n0MLXJVffSVnDheWjrNscxCXQlb/KwHaOL6Tka9FtffHS0c7572sLwU9WzA+
+dyBlNR/jLYUpTYzJtE817zn4zv2PrOiKmsWx9dJeritemsggIteyoYNbgwYrMfWA
+hLk3l9Ff58u2+R2vOzNSwATTCBu2AhWEidB4jOetgyKQM632x4ypcyGkW7MAeL2p
+xMLlmpfm9R6r6Q1IMZpLJEV2VvVL+04ZH65DiIBvwur3t9U4N3PNtCGoBQes1+co
+eNAvqYGmH+lO4utr9M2untawc3jzxPQwAZJ78mYzLtIm/waGuKQx9XBomXVfcSNs
+CEcLvcScaCLyUtJN4FWLRzTlHNNVTMavth8RagB2ryPNp+lTnYJrJmOyPDZSlrxA
+4cvuSNJ3BbURpVk+qGq3Zblf5caNRYOLXqS8vlV1oqhC1zFdoQsMTgsddGoJNPvH
+ChhNy2bnc6o=
+=jJin
 -----END PGP SIGNATURE-----
 
---------------enig810DA00DD6F96A96B60E387F--
+--=-R4GGfXCTSX3pspn1oQvb--
+
