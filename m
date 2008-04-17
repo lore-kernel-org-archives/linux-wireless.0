@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53292 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750714AbYDRPCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 11:02:54 -0400
-Subject: Re: ath5k phy0: noise floor calibration timeout
-From: Dan Williams <dcbw@redhat.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Pierre Frenkiel <pierre.frenkiel@apc.univ-paris7.fr>,
+Received: from rv-out-0708.google.com ([209.85.198.242]:32653 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761430AbYDQRWQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2008 13:22:16 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so80083rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 10:22:16 -0700 (PDT)
+Subject: Re: [PATCH-mm 1/3] mac80211: tkip.c use get/put_unaligned helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Kosina <jkosina@suse.cz>, Jiri Benc <jbenc@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <40f31dec0804180751y3c4e0a9bj509324ae712081f3@mail.gmail.com>
-References: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr>
-	 <1208526988.9388.12.camel@localhost.localdomain>
-	 <40f31dec0804180751y3c4e0a9bj509324ae712081f3@mail.gmail.com>
+In-Reply-To: <1208450454.4066.20.camel@johannes.berg>
+References: <1208370570.11920.107.camel@brick>
+	 <20080417105859.45092413@griffin.suse.cz>
+	 <Pine.LNX.4.64.0804171102370.19002@twin.jikos.cz>
+	 <1208450454.4066.20.camel@johannes.berg>
 Content-Type: text/plain
-Date: Fri, 18 Apr 2008 10:59:34 -0400
-Message-Id: <1208530774.10072.2.camel@localhost.localdomain> (sfid-20080418_160305_032589_CD94D8C7)
+Date: Thu, 17 Apr 2008 10:22:26 -0700
+Message-Id: <1208452946.17196.1.camel@brick> (sfid-20080417_182220_411527_4603ADBA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-04-18 at 17:51 +0300, Nick Kossifidis wrote:
-> 2008/4/18, Dan Williams <dcbw@redhat.com>:
-> > On Fri, 2008-04-18 at 14:51 +0200, Pierre Frenkiel wrote:
-> >  > hi,
-> >  > I have a 3-com PCCARD, with the AR5413 chipset
-> >  > I installed 2 days ago compat-wireless-2.6.tar.bz2, on Ubuntu Gutsy,
-> >  > and everything seemed to work.
-> >  > I just had in the log 2 or 3 messages:
-> >  >
-> >  >     ath5k phy0: noise floor calibration timeout
-> >  >
-> >  > but yesterday, when rebooting, I got a huge number of such messages(more
-> >  > than 100 in the log file), with also
-> >  >
-> >  >     ath5k phy0: ath5k_chan_set: unable to reset channel
-> >  >     ath0: failed to set freq to 2422 MHz for scan
-> >  >     ath0: failed to restore operational channel after scan
-> >
-> >
-> > I also get this all the time with a 5006E, and ath5k takes quite a lot
-> >  (30%) of CPU most of the time.  Haven't tried to track it down yet.
-> >  Anyone have ideas about the root cause of the problem?
-> >
-> >
-> >  Dan
-> >
-> >  > and the boot froze. I then removed my PCCARD,
-> >  > and after poweroff/poweron, I could boot normally.
-> >  >
-> >  > It seems to be fixed now, as I have no more this problem after
-> >  > re-inserting the card.
-> >  > But as I did nothing, I would like to know what might happen:
-> >  > If this happened once, there is no reason why this would not happen an
-> >  > other time.
-> >  >
-> >  > Pierre
-> >  > --
-> >  > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >  > the body of a message to majordomo@vger.kernel.org
-> >  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >  --
-> >  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >  the body of a message to majordomo@vger.kernel.org
-> >  More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+On Thu, 2008-04-17 at 18:40 +0200, Johannes Berg wrote:
+> > > I guess you are going to push this stuff through -mm altogether, right? 
+> > > I can hardly take this into my tree right now, as the helpers are not in 
+> > > Linus' tree yet.
+> > 
+> > yeah, sorry, that's been confusing a few people.
+> > 
+> > Strictly I'd merge the core infrastructure and then send the dependent 
+> > patches into the relevant maintainers.  But that can mean than we 
+> > needlessly miss the merge window, so it's most parctical to send along an 
+> > acked-by and I'll merge the dependent patch directly with the appropriate 
+> > ordering.
 > 
-> It seems that sometimes noise floor calibration takes longer than
-> usual. I'll check it out and come up with a patch asap ;-)
+> I guess what Jiri (Benc) is saying that *I* should ack them, not him.
+> Jiri (Benc), maybe you care to move yourself down in the maintainers
+> file?
 
-Happy to test patches.  AR5413 802.11agb NIC (rev 01).  168c:001b,
-subsys 10cf:1329.
+I'll resubmit a cleaned up series anyways once the unaligned access
+helpers get into mainline, so don't worry too much about this set I
+suppose.
 
-Dan
+Cheers,
+
+Harvey
 
