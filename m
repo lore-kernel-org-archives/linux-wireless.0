@@ -1,105 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202AbYDAMBb (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:57183 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753336AbYDRSyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:01:31 -0400
-Subject: Re: [PATCH] mac80211: fix spinlock recursion on sta expiration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <47f1899c.02578c0a.0489.586f@mx.google.com> (sfid-20080401_020224_391860_0D7DFAD8)
-References: <47f1899c.02578c0a.0489.586f@mx.google.com>
-	 (sfid-20080401_020224_391860_0D7DFAD8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4xMxrvyWzA4B99jGlYGN"
-Date: Tue, 01 Apr 2008 14:01:26 +0200
-Message-Id: <1207051286.5143.54.camel@johannes.berg> (sfid-20080401_130134_742086_DFCC642A)
-Mime-Version: 1.0
+	Fri, 18 Apr 2008 14:54:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Workaround invalid bluetooth settings
+Date: Fri, 18 Apr 2008 20:51:41 +0200
+Cc: "Stefanik =?utf-8?q?G=C3=A1bor?=" <netrolller.3d@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"kala mazoo" <myheadblewoff@hotmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <BAY107-W16EB5E320C48AEF9114BD6A0E40@phx.gbl> <4808E8AD.8040900@lwfinger.net> <69e28c910804181141u711e4f74g5b91ed17bd4273e0@mail.gmail.com>
+In-Reply-To: <69e28c910804181141u711e4f74g5b91ed17bd4273e0@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200804182051.42468.mb@bu3sch.de> (sfid-20080418_195451_123854_CABF0862)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds a workaround for invalid bluetooth SPROM settings
+on ASUS PCI cards.
+This will stop the microcode from poking with the BT GPIO line.
+This fixes data transmission on this device, as the BT GPIO line
+is used for something TX related on this device
+(probably the power amplifier or the radio).
+This also adds a modparam knob to help debugging this in the future,
+as more devices with this bug may show up.
 
---=-4xMxrvyWzA4B99jGlYGN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, this is 2.6.26 stuff.
 
 
-On Mon, 2008-03-31 at 15:21 -0700, Luis Carlos Cobo wrote:
-> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-
-Woah. Good catch. I hope it doesn't conflict with the other fixes I just
-posted.
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/ieee80211_sta.c |    2 +-
->  net/mac80211/sta_info.c      |    2 +-
->  net/mac80211/sta_info.h      |    1 +
->  3 files changed, 3 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index f9cf2f1..cfe6fcc 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -3081,7 +3081,7 @@ static void ieee80211_sta_expire(struct net_device =
-*dev, unsigned long exp_time)
->  		if (time_after(jiffies, sta->last_rx + exp_time)) {
->  			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
->  			       dev->name, print_mac(mac, sta->addr));
-> -			sta_info_unlink(&sta);
-> +			__sta_info_unlink(&sta);
->  			if (sta)
->  				list_add(&sta->list, &tmp_list);
->  		}
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index f708367..ba02b43 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -409,7 +409,7 @@ static struct sta_info *__sta_info_unpin(struct sta_i=
-nfo *sta)
->  	return ret;
->  }
-> =20
-> -static void __sta_info_unlink(struct sta_info **sta)
-> +void __sta_info_unlink(struct sta_info **sta)
->  {
->  	struct ieee80211_local *local =3D (*sta)->local;
->  	struct ieee80211_sub_if_data *sdata =3D (*sta)->sdata;
-> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-> index 5e39a41..d4d6dcb 100644
-> --- a/net/mac80211/sta_info.h
-> +++ b/net/mac80211/sta_info.h
-> @@ -347,6 +347,7 @@ int sta_info_insert(struct sta_info *sta);
->   * has already unlinked it.
->   */
->  void sta_info_unlink(struct sta_info **sta);
-> +void __sta_info_unlink(struct sta_info **sta);
-> =20
->  void sta_info_destroy(struct sta_info *sta);
->  void sta_info_set_tim_bit(struct sta_info *sta);
-
---=-4xMxrvyWzA4B99jGlYGN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/IkFaVg1VMiehFYAQKsLRAAniry8vSOKVJAz77y+e64x8fyjHNoMALy
-SR01SuluT7uDLF9wyPGEHwjI6tVLGqalD5Sd8zxQGceLwyBe4dzp+4Pk+4EmPKBd
-Bt5Vd/5Ctib2GvUVuy5+PVNz/2jIVKfhVyXL7LVVcQ7ZDpwOKo92MtnE+2VJ51pu
-dqpD7rfaFSSL+LtpBJIiSWYA+JO6GYn3ZAJ6P/mMClmNqgRE91pRFQ7KFpskpzYw
-T5sdQQW6ackRe6hviKrUaKMenOczK54n9w9jHT1/I+AHffw3J57PuDN8IV61Jobo
-l1mQRJT7Btc5qJGOq2DOCu/OLGd5ncJqmaeWhSqrrHBkHYAEXTljle5t48DWTmww
-QxWwFOe+bTUmkafGp6onF1cQhKAHNDdNa8CCJmmcmzIbPtvRpDpiVZ7AgoR5VOvX
-T19rcY2AziW0BsAR1WN2tZpWPJtNUJSKImUF4rFkPhO5BC+Uaz5DQsCgtfGCpqhe
-bkp5R7jb+ltMJm8XTy1iJB9obOoTgLjd5koZBEAnA4LsLamhVRrBzWtuL3BB4SSE
-WFqGbDOz4Nh5cnVcOBjxNgEzq0BnwDPf5bIcMD5l7IjzZwA2V7QMa1dX/VEjFLE2
-kGlpCtc751nJQGENfuDcby3ikvSiIgklxRIL1B36IgfjPFQScR4O9Q5IPHE4dzKu
-6m3/cruDbp8=
-=JtT6
------END PGP SIGNATURE-----
-
---=-4xMxrvyWzA4B99jGlYGN--
-
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-18 19:54:55.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-18 20:51:13.000000000 +0200
+@@ -81,12 +81,16 @@ module_param_named(nohwcrypt, modparam_n
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ 
+ int b43_modparam_qos = 1;
+ module_param_named(qos, b43_modparam_qos, int, 0444);
+ MODULE_PARM_DESC(qos, "Enable QOS support (default on)");
+ 
++static int modparam_btcoex = 1;
++module_param_named(btcoex, modparam_btcoex, int, 0444);
++MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistance (default on)");
++
+ 
+ static const struct ssb_device_id b43_ssb_tbl[] = {
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 7),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
+@@ -3705,28 +3709,32 @@ static void setup_struct_wldev_for_init(
+ 
+ static void b43_bluetooth_coext_enable(struct b43_wldev *dev)
+ {
+ 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
+ 	u32 hf;
+ 
++	if (!modparam_btcoex)
++		return;
+ 	if (!(sprom->boardflags_lo & B43_BFL_BTCOEXIST))
+ 		return;
+ 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
+ 		return;
+ 
+ 	hf = b43_hf_read(dev);
+ 	if (sprom->boardflags_lo & B43_BFL_BTCMOD)
+ 		hf |= B43_HF_BTCOEXALT;
+ 	else
+ 		hf |= B43_HF_BTCOEX;
+ 	b43_hf_write(dev, hf);
+-	//TODO
+ }
+ 
+ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+-{				//TODO
++{
++	if (!modparam_btcoex)
++		return;
++	//TODO
+ }
+ 
+ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+ {
+ #ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	struct ssb_bus *bus = dev->dev->bus;
+@@ -4413,19 +4421,29 @@ static int b43_one_core_attach(struct ss
+ 	kfree(wldev);
+ 	return err;
+ }
+ 
+ static void b43_sprom_fixup(struct ssb_bus *bus)
+ {
++	struct pci_dev *pdev;
++
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
+ 		bus->sprom.boardflags_lo |= B43_BFL_BTCOEXIST;
+ 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
+ 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
+ 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
++	if (bus->bustype == SSB_BUSTYPE_PCI) {
++		pdev = bus->host_pci;
++		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
++		    pdev->device == 0x4318 &&
++		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
++		    pdev->subsystem_device == 0x100F)
++			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
++	}
+ }
+ 
+ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
+ {
+ 	struct ieee80211_hw *hw = wl->hw;
+ 
