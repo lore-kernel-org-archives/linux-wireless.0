@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:41536 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753401AbYDQToq (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:54429 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752828AbYDRQ4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 15:44:46 -0400
-Date: Thu, 17 Apr 2008 21:44:37 +0200
-From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
-To: Dan Williams <dcbw@redhat.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-Message-ID: <20080417194437.GA18291@Chamillionaire.breakpoint.cc> (sfid-20080417_204513_576386_F46F4F61)
-References: <1208448814.9212.270.camel@pmac.infradead.org> <1208455363.20193.3.camel@localhost.localdomain>
+	Fri, 18 Apr 2008 12:56:31 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so1021368waf.23
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2008 09:56:30 -0700 (PDT)
+Message-ID: <1ba2fa240804180956j84ae83bqb561f389eb6f6694@mail.gmail.com> (sfid-20080418_175637_678800_60CF7333)
+Date: Fri, 18 Apr 2008 19:56:29 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v4] mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1208469746.4066.98.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1208455363.20193.3.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200804171728.30188.IvDoorn@gmail.com>
+	 <200804171759.54830.IvDoorn@gmail.com>
+	 <200804171923.41533.IvDoorn@gmail.com>
+	 <200804171941.03002.IvDoorn@gmail.com>
+	 <1208469746.4066.98.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dan Williams | 2008-04-17 14:02:43 [-0400]:
-
->On Thu, 2008-04-17 at 17:13 +0100, David Woodhouse wrote:
->> We removed CMD_MESH_ACCESS from the big case statements and provided
->> lbs_mesh_access() instead.... but we missed one user. Fix it.
->> 
->> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+On Fri, Apr 18, 2008 at 1:02 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
->Acked-by: Dan Williams <dcbw@redhat.com>
-Hmmm. This patch actually reminds me of something I was going to do. I
-don't really see the big difference between this and [1]. I have to
-exert myself to get on your auto-ack list...
+>  > --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+>  > +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+>  > @@ -1936,7 +1936,7 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+>  >       struct iwl_wep_key *wepkey;
+>  >       int keyidx = 0;
+>  >
+>  > -     BUG_ON(ctl->key_idx > 3);
+>  > +     BUG_ON(ctl->hw_key->hw_key_idx > 3);
+>  >
+>  >       switch (keyinfo->alg) {
+>  >       case ALG_CCMP:
+>  > @@ -1955,11 +1955,11 @@ static void iwl4965_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+>  >               break;
+>  >
+>  >       case ALG_WEP:
+>  > -             wepkey = &priv->wep_keys[ctl->key_idx];
+>  > +             wepkey = &priv->wep_keys[ctl->hw_key->hw_key_idx];
+>  >               cmd->cmd.tx.sec_ctl = 0;
+>  >               if (priv->default_wep_key) {
+>  >                       /* the WEP key was sent as static */
+>  > -                     keyidx = ctl->key_idx;
+>  > +                     keyidx = ctl->hw_key->hw_key_idx;
+>  >                       memcpy(&cmd->cmd.tx.key[3], wepkey->key,
+>  >                                                       wepkey->key_size);
+>  >                       if (wepkey->key_size == WEP_KEY_LEN_128)
+>
+>  All this is rather odd. I think you (Intel) may want to change it to use
+>  hw_key->keyidx and just leave the hw_key_idx alone, it seems to be a
+>  copy of keyidx in iwl4965 but an actual index as it was meant to be used
+>  in iwl3945?
 
+Sure, this patch changes the picture., in addition the code can be a
+bit simplified.
+Will fix that.
+Thanks
+Tomas
 
-[1]
-http://lists.infradead.org/pipermail/libertas-dev/2008-March/001281.html
-
->> 
->> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
->> index 21e6f98..9460300 100644
->> --- a/drivers/net/wireless/libertas/ethtool.c
->> +++ b/drivers/net/wireless/libertas/ethtool.c
->> @@ -106,8 +106,8 @@ done:
->>          return ret;
->>  }
->>  
->> -static void lbs_ethtool_get_stats(struct net_device * dev,
->> -				struct ethtool_stats * stats, u64 * data)
->> +static void lbs_ethtool_get_stats(struct net_device *dev,
->> +				  struct ethtool_stats *stats, u64 *data)
->>  {
->>  	struct lbs_private *priv = dev->priv;
->>  	struct cmd_ds_mesh_access mesh_access;
->> @@ -116,9 +116,7 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
->>  	lbs_deb_enter(LBS_DEB_ETHTOOL);
->>  
->>  	/* Get Mesh Statistics */
->> -	ret = lbs_prepare_and_send_command(priv,
->> -			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
->> -			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
->> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
->>  
->>  	if (ret)
->>  		return;
->> 
-
-Sebastian
+>
