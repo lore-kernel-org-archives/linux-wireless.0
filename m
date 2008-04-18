@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752438AbYDGNrY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 09:47:24 -0400
-Subject: Re: mac80211 hardware encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:43441 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750894AbYDRN7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 09:59:48 -0400
+Subject: Re: ath5k phy0: noise floor calibration timeout
+From: Dan Williams <dcbw@redhat.com>
+To: Pierre Frenkiel <pierre.frenkiel@apc.univ-paris7.fr>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200804071534.38526.IvDoorn@gmail.com> (sfid-20080407_143157_497315_70B0D37E)
-References: <200804051931.58895.IvDoorn@gmail.com>
-	 <1207573761.12481.4.camel@johannes.berg>
-	 <200804071534.38526.IvDoorn@gmail.com>
-	 (sfid-20080407_143157_497315_70B0D37E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E9Df6O4v/xqTCuUkNIe1"
-Date: Mon, 07 Apr 2008 15:47:21 +0200
-Message-Id: <1207576041.12481.21.camel@johannes.berg> (sfid-20080407_144726_443312_90792A9C)
+In-Reply-To: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr>
+References: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr>
+Content-Type: text/plain
+Date: Fri, 18 Apr 2008 09:56:28 -0400
+Message-Id: <1208526988.9388.12.camel@localhost.localdomain> (sfid-20080418_145952_132166_5304CD4E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-04-18 at 14:51 +0200, Pierre Frenkiel wrote:
+> hi,
+> I have a 3-com PCCARD, with the AR5413 chipset
+> I installed 2 days ago compat-wireless-2.6.tar.bz2, on Ubuntu Gutsy,
+> and everything seemed to work.
+> I just had in the log 2 or 3 messages:
+> 
+>     ath5k phy0: noise floor calibration timeout
+> 
+> but yesterday, when rebooting, I got a huge number of such messages(more
+> than 100 in the log file), with also
+> 
+>     ath5k phy0: ath5k_chan_set: unable to reset channel
+>     ath0: failed to set freq to 2422 MHz for scan
+>     ath0: failed to restore operational channel after scan
 
---=-E9Df6O4v/xqTCuUkNIe1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I also get this all the time with a 5006E, and ath5k takes quite a lot
+(30%) of CPU most of the time.  Haven't tried to track it down yet.
+Anyone have ideas about the root cause of the problem?
 
-Hi,
+Dan
 
-For the TX path, I don't think a memmove() of the header further down is
-really expensive, it should be within the CPU cache since we operate on
-the skb header a lot. However, you'd have to undo that too before TX
-status reporting to get radiotap working properly :/
-
-> I agree, but overall I think this would mean for rt2x00 it will be easier=
- to stop
-> sending the skb->data directly to the USB host and use the preallocated D=
-MA
-> instead.
-> Especially the RX path could benefit since otherwise it will be continuou=
-sly using
-> memmove on the header and payload to insert the IV and have the payload 4=
--byte aligned.
-
-How would you go about handling out-of-band IV in the RX path? In the TX
-path, I can see how you could do that, but in RX?
-
-In any case, if you can make usable patches for out-of-band IV I'm not
-totally against it, but I'd like to keep the overhead as low as
-possible. In particular, I was thinking of embedding tx_conf into
-skb->cb[] so you wouldn't have space in there for the IV.
-
-johannes
-
---=-E9Df6O4v/xqTCuUkNIe1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/ol6KVg1VMiehFYAQL5ZRAAuCk0AEpXy8rDk63eDAgAJR8/fYqCr6Ee
-3chiu0VSyE1256YcIJtrmi2FZ+NTb0OjRaBiZznDE/VZRFfVjzyO7d63akHodt4U
-jRdVjjl++Q+gVf/dsWU2UIutZVXCtlpZLv5g7IYu1CBp5nbfPkHZSfNsoFm0x147
-K4hEmLteqtqj9SP9FvP2+h6Gooluaf+H9ErOGRTM5dk6HHHV4gyDTM1DAtpElxbj
-rvHpZoP/RxtkUUavP13WOujnuqkSmt/dR+POMQXMxMNoPDRpKsDnJP9Ik092UezJ
-TYvFe6a5d6pAMtRtL4vg5sX4vxmkKtR41TlAaL4lAIPScZfknVXQUA/55f7O85II
-0hdek/G6c1xPtXwE8Sr1UuM8dleckIBOF04cYXbbny/urKHZqJW2DF6E2Gle+XBG
-unN8W0FhGSVdzRpMwMDOYTFOIq6HODDbVMJYgyLsaltRvNF4Plmndppp6PERSiZl
-v35Iofj/YjQHxiX97jWYAXCFy1+dzMiLrQmwIb3RJ++AzmGx8Zp0hGzULdkMRNXt
-cBDkwiEDiKZEOL4SxaTURQ8KwKXnGC5hSocrr/z2/hdj++RR2oJNfmUDvIbLAKVr
-tKfJhIa82n2M2A8ZZ1QnV1t6lN+nx7A0rgCuWKhMGl0UCkhReaQ1Ys30ay3rnHpO
-633IR5SY1Ok=
-=MMFo
------END PGP SIGNATURE-----
-
---=-E9Df6O4v/xqTCuUkNIe1--
+> and the boot froze. I then removed my PCCARD,
+> and after poweroff/poweron, I could boot normally.
+> 
+> It seems to be fixed now, as I have no more this problem after
+> re-inserting the card. 
+> But as I did nothing, I would like to know what might happen: 
+> If this happened once, there is no reason why this would not happen an
+> other time.
+> 
+> Pierre
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
