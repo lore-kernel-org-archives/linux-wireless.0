@@ -1,120 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60158 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756965AbYDALfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 07:35:39 -0400
-Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4)
-	andtimeout, a solution
-From: Dan Williams <dcbw@redhat.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net, abertensu@yahoo.com,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>
-References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Mon, 31 Mar 2008 17:41:36 -0400
-Message-Id: <1206999696.20744.2.camel@localhost.localdomain> (sfid-20080401_123543_111919_8FD87668)
-Mime-Version: 1.0
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52279 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1763021AbYDRVD7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 17:03:59 -0400
+Message-Id: <200804182059.m3IKxp3V015598@imap1.linux-foundation.org> (sfid-20080418_220904_482077_6EB2282D)
+Subject: [patch 4/7] mac80211: tkip.c remove Mk16, Hi8, Lo8 helpers
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com, jbenc@suse.cz, joe@perches.com,
+	johannes@sipsolutions.net
+From: akpm@linux-foundation.org
+Date: Fri, 18 Apr 2008 13:59:50 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-03-31 at 14:17 -0700, Chatre, Reinette wrote:
-> Forwarding this to linux-wireless where there is more knowledge about
-> association. The attached patch is also to the mac80211 stack, so we
-> need to involve the mac80211 maintainer.
-> 
-> Reinette
-> 
-> On Friday, March 28, 2008 4:00 PM, Andres Bertens  wrote:
-> 
-> > Hi,
-> > 
-> > Recently I moved from ipw3945 to iwl3945 and I was having an AP
-> > association timeout after some inactivity.
-> > Card is Intel 3945bg, router is DLink DI524, driver is
-> > compat-wireless-2.6 (2008-03-28) or older and mode is (WEP, open) on
-> > linux-2.6.24.4. It does not recover magically.
-> > 
-> > The trace is:
-> > 
-> > wlan0: RX disassociation from 00:17:9a:63:d2:21 (reason=4)
-> > wlan0: disassociated
-> > wlan0: associate with AP 00:17:9a:63:d2:21
-> > wlan0: RX ReassocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17
-> > aid=1) wlan0: AP denied association (code=17)
-> > wlan0: associate with AP 00:17:9a:63:d2:21
-> > wlan0: RX AssocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17
-> > aid=1073) wlan0: AP denied association (code=17)
-> > wlan0: associate with AP 00:17:9a:63:d2:21
-> > wlan0: RX AssocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17
-> > aid=1073) wlan0: AP denied association (code=17)
-> > wlan0: association with AP 00:17:9a:63:d2:21 timed out
-> > 
-> > After browsing the internet, I found a lot of people with the same
-> > problem and no solution. So, I dived into the code and found a simple
-> > solution: ignore disassociation. When a new request arrives to the
-> > wireless, a reconnection is done automatically.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Ignoring the disassociation from the AP is suspect...  wouldn't the AP
-be releasing resources associated with the station, requiring a
-reassociate/reauth from the station?  Reason 4 seems to mean "Inactivity
-timer expired and station was disassociated".
+Create a new getle16 helper to replace Mk16 that deals with unaligned access. 
+Also, use put_unaligned when writing out the rc4key result.  Opencode the few
+remaining Hi8/Lo8 calls and remove the helpers.
 
-A better solution would be to queue up a reassocation worker if the AP
-kicked you off for reason 4, maybe?
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Joe Perches <joe@perches.com>
+Cc: Jiri Benc <jbenc@suse.cz>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Dan
+ net/mac80211/tkip.c |   70 ++++++++++++++++++------------------------
+ 1 file changed, 31 insertions(+), 39 deletions(-)
 
-> > I patched the code, modifying net/mac80211/ieee80211_sta.c, and trace
-> > is as follow:
-> > 
-> > wlan0: RX disassociation for reason=4 received from 00:17:9a:63:d2:21
-> > - ignored
-> > wlan0: RX deauthentication from 00:17:9a:63:d2:21 (reason=6)
-> > wlan0: deauthenticated
-> > wlan0: authenticate with AP 00:17:9a:63:d2:21
-> > wlan0: RX authentication from 00:17:9a:63:d2:21 (alg=0 transaction=2
-> > status=0)
-> > wlan0: authenticated
-> > wlan0: associate with AP 00:17:9a:63:d2:21
-> > wlan0: RX ReassocResp from 00:17:9a:63:d2:21 (capab=0x431 status=0
-> > aid=2) wlan0: associated
-> > 
-> > and these entries repeats in time. As you can see, the disassociation
-> > still ocurrs but a new request afterwards generates a deauthentication
-> > (reason=6) and a reconnection takes place (transparent to the user).
-> > 
-> > Attached is patch to compat-wireless-2.6 (2008-03-28).  Please note
-> > that this is for iwl3945+dlink+WEP combination (according to other
-> > people, it seems to work for other combinations).
-> > 
-> > Hope this help.
-> > 
-> > Regards,
-> > Andres Bertens
-> 
-> 	
-> plain text document attachment (compat-wireless-2.6-ap-timeout.patch),
-> "compat-wireless-2.6-ap-timeout.patch"
-> diff -Naur compat-wireless-2008-03-28/net/mac80211/ieee80211_sta.c compat-wireless-2008-03-28-new/net/mac80211/ieee80211_sta.c
-> --- compat-wireless-2008-03-28/net/mac80211/ieee80211_sta.c	2008-03-28 01:14:15.000000000 -0400
-> +++ compat-wireless-2008-03-28-new/net/mac80211/ieee80211_sta.c	2008-03-28 16:19:57.000000000 -0400
-> @@ -1809,6 +1809,15 @@
->  
->  	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
->  
-> +/* ABU */
-> +	if( reason_code == 4 ) {
-> +		printk(KERN_DEBUG "%s: RX disassociation for reason=4 "
-> +			"received from %s - ignored\n",
-> +			dev->name, print_mac(mac, mgmt->sa));
-> +		return;
-> +	}
-> +/* ABU */
-> +
->  	printk(KERN_DEBUG "%s: RX disassociation from %s"
->  	       " (reason=%d)\n",
->  	       dev->name, print_mac(mac, mgmt->sa), reason_code);
-> 
-
+diff -puN net/mac80211/tkip.c~mac80211-tkipc-remove-mk16-hi8-lo8-helpers net/mac80211/tkip.c
+--- a/net/mac80211/tkip.c~mac80211-tkipc-remove-mk16-hi8-lo8-helpers
++++ a/net/mac80211/tkip.c
+@@ -11,6 +11,7 @@
+ #include <linux/bitops.h>
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
++#include <asm/unaligned.h>
+ 
+ #include <net/mac80211.h>
+ #include "key.h"
+@@ -63,21 +64,13 @@ static const u16 tkip_sbox[256] =
+ };
+ 
+ 
+-static inline u16 Mk16(u8 x, u8 y)
+-{
+-	return ((u16) x << 8) | (u16) y;
+-}
+-
+-
+-static inline u8 Hi8(u16 v)
+-{
+-	return v >> 8;
+-}
+-
+-
+-static inline u8 Lo8(u16 v)
++/*
++ * Get a cpu-byteorder u16 from a u8 pointer fixing up possible unaligned
++ * accesses.
++ */
++static inline u16 getle16(const u8 *x)
+ {
+-	return v & 0xff;
++	return le16_to_cpu(get_unaligned((__le16 *)x));
+ }
+ 
+ static inline u16 tkip_S(u16 val)
+@@ -98,17 +91,17 @@ static void tkip_mixing_phase1(const u8 
+ 
+ 	p1k[0] = tsc_IV32 & 0xFFFF;
+ 	p1k[1] = tsc_IV32 >> 16;
+-	p1k[2] = Mk16(ta[1], ta[0]);
+-	p1k[3] = Mk16(ta[3], ta[2]);
+-	p1k[4] = Mk16(ta[5], ta[4]);
++	p1k[2] = getle16(ta + 0);
++	p1k[3] = getle16(ta + 2);
++	p1k[4] = getle16(ta + 4);
+ 
+ 	for (i = 0; i < PHASE1_LOOP_COUNT; i++) {
+ 		j = 2 * (i & 1);
+-		p1k[0] += tkip_S(p1k[4] ^ Mk16(tk[ 1 + j], tk[ 0 + j]));
+-		p1k[1] += tkip_S(p1k[0] ^ Mk16(tk[ 5 + j], tk[ 4 + j]));
+-		p1k[2] += tkip_S(p1k[1] ^ Mk16(tk[ 9 + j], tk[ 8 + j]));
+-		p1k[3] += tkip_S(p1k[2] ^ Mk16(tk[13 + j], tk[12 + j]));
+-		p1k[4] += tkip_S(p1k[3] ^ Mk16(tk[ 1 + j], tk[ 0 + j])) + i;
++		p1k[0] += tkip_S(p1k[4] ^ getle16(tk + 0 + j));
++		p1k[1] += tkip_S(p1k[0] ^ getle16(tk + 4 + j));
++		p1k[2] += tkip_S(p1k[1] ^ getle16(tk + 8 + j));
++		p1k[3] += tkip_S(p1k[2] ^ getle16(tk + 12 + j));
++		p1k[4] += tkip_S(p1k[3] ^ getle16(tk + 0 + j)) + i;
+ 	}
+ }
+ 
+@@ -126,28 +119,27 @@ static void tkip_mixing_phase2(const u16
+ 	ppk[4] = p1k[4];
+ 	ppk[5] = p1k[4] + tsc_IV16;
+ 
+-	ppk[0] += tkip_S(ppk[5] ^ Mk16(tk[ 1], tk[ 0]));
+-	ppk[1] += tkip_S(ppk[0] ^ Mk16(tk[ 3], tk[ 2]));
+-	ppk[2] += tkip_S(ppk[1] ^ Mk16(tk[ 5], tk[ 4]));
+-	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
+-	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
+-	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
+-	ppk[0] +=  ror16(ppk[5] ^ Mk16(tk[13], tk[12]), 1);
+-	ppk[1] +=  ror16(ppk[0] ^ Mk16(tk[15], tk[14]), 1);
++	ppk[0] += tkip_S(ppk[5] ^ getle16(tk + 0));
++	ppk[1] += tkip_S(ppk[0] ^ getle16(tk + 2));
++	ppk[2] += tkip_S(ppk[1] ^ getle16(tk + 4));
++	ppk[3] += tkip_S(ppk[2] ^ getle16(tk + 6));
++	ppk[4] += tkip_S(ppk[3] ^ getle16(tk + 8));
++	ppk[5] += tkip_S(ppk[4] ^ getle16(tk + 10));
++	ppk[0] +=  ror16(ppk[5] ^ getle16(tk + 12), 1);
++	ppk[1] +=  ror16(ppk[0] ^ getle16(tk + 14), 1);
+ 	ppk[2] +=  ror16(ppk[1], 1);
+ 	ppk[3] +=  ror16(ppk[2], 1);
+ 	ppk[4] +=  ror16(ppk[3], 1);
+ 	ppk[5] +=  ror16(ppk[4], 1);
+ 
+-	rc4key[0] = Hi8(tsc_IV16);
+-	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
+-	rc4key[2] = Lo8(tsc_IV16);
+-	rc4key[3] = Lo8((ppk[5] ^ Mk16(tk[1], tk[0])) >> 1);
+-
+-	for (i = 0; i < 6; i++) {
+-		rc4key[4 + 2 * i] = Lo8(ppk[i]);
+-		rc4key[5 + 2 * i] = Hi8(ppk[i]);
+-	}
++	rc4key[0] = tsc_IV16 >> 8;
++	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
++	rc4key[2] = tsc_IV16 & 0xFF;
++	rc4key[3] = ((ppk[5] ^ getle16(tk)) >> 1) & 0xFF;
++
++	rc4key += 4;
++	for (i = 0; i < 6; i++)
++		put_unaligned(cpu_to_le16(ppk[i]), (__le16 *)rc4key + i);
+ }
+ 
+ 
+_
