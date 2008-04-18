@@ -1,116 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46103 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755002AbYDUPGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 11:06:13 -0400
-Subject: Re: [RFC 0/3] Examples for the new sparse context tracking
-	functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: paulmck@linux.vnet.ibm.com
-Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <20080421145525.GB9153@linux.vnet.ibm.com>
-References: <20080410134810.629048000@sipsolutions.net>
-	 <20080419233338.GG20138@linux.vnet.ibm.com>
-	 <1208766355.26186.37.camel@johannes.berg>
-	 <20080421145525.GB9153@linux.vnet.ibm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CV94L+f4brYivCkDyoUt"
-Date: Mon, 21 Apr 2008 17:05:33 +0200
-Message-Id: <1208790333.26186.112.camel@johannes.berg> (sfid-20080421_170705_875917_291509FF)
+Received: from mx1.redhat.com ([66.187.233.31]:53292 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750714AbYDRPCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 11:02:54 -0400
+Subject: Re: ath5k phy0: noise floor calibration timeout
+From: Dan Williams <dcbw@redhat.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Pierre Frenkiel <pierre.frenkiel@apc.univ-paris7.fr>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0804180751y3c4e0a9bj509324ae712081f3@mail.gmail.com>
+References: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr>
+	 <1208526988.9388.12.camel@localhost.localdomain>
+	 <40f31dec0804180751y3c4e0a9bj509324ae712081f3@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 18 Apr 2008 10:59:34 -0400
+Message-Id: <1208530774.10072.2.camel@localhost.localdomain> (sfid-20080418_160305_032589_CD94D8C7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-04-18 at 17:51 +0300, Nick Kossifidis wrote:
+> 2008/4/18, Dan Williams <dcbw@redhat.com>:
+> > On Fri, 2008-04-18 at 14:51 +0200, Pierre Frenkiel wrote:
+> >  > hi,
+> >  > I have a 3-com PCCARD, with the AR5413 chipset
+> >  > I installed 2 days ago compat-wireless-2.6.tar.bz2, on Ubuntu Gutsy,
+> >  > and everything seemed to work.
+> >  > I just had in the log 2 or 3 messages:
+> >  >
+> >  >     ath5k phy0: noise floor calibration timeout
+> >  >
+> >  > but yesterday, when rebooting, I got a huge number of such messages(more
+> >  > than 100 in the log file), with also
+> >  >
+> >  >     ath5k phy0: ath5k_chan_set: unable to reset channel
+> >  >     ath0: failed to set freq to 2422 MHz for scan
+> >  >     ath0: failed to restore operational channel after scan
+> >
+> >
+> > I also get this all the time with a 5006E, and ath5k takes quite a lot
+> >  (30%) of CPU most of the time.  Haven't tried to track it down yet.
+> >  Anyone have ideas about the root cause of the problem?
+> >
+> >
+> >  Dan
+> >
+> >  > and the boot froze. I then removed my PCCARD,
+> >  > and after poweroff/poweron, I could boot normally.
+> >  >
+> >  > It seems to be fixed now, as I have no more this problem after
+> >  > re-inserting the card.
+> >  > But as I did nothing, I would like to know what might happen:
+> >  > If this happened once, there is no reason why this would not happen an
+> >  > other time.
+> >  >
+> >  > Pierre
+> >  > --
+> >  > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >  > the body of a message to majordomo@vger.kernel.org
+> >  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >  --
+> >  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >  the body of a message to majordomo@vger.kernel.org
+> >  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> It seems that sometimes noise floor calibration takes longer than
+> usual. I'll check it out and come up with a patch asap ;-)
 
---=-CV94L+f4brYivCkDyoUt
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Happy to test patches.  AR5413 802.11agb NIC (rev 01).  168c:001b,
+subsys 10cf:1329.
 
-
-> > my_specific_rcu_get() __acquires(RCU) __acquires(specificRCU);
-> >=20
-> > and then annotate whatever needs the specific RCU type with
-> > __requires(specificRCU)
->=20
-> Cute!!!  I didn't realize you could mark a single interface with
-> multiple __acquires() markings.
->=20
-> So if there is at least one match, sparse is happy?
-
-No, sparse requires all the given contexts to match. For example, say
-you have
-
-#define __requires_rcu __requires(RCU)
-
-#define __requires_special_rcu \
-	__requires(specificRCU)
-
-#define __acquires_special_rcu \
-	__acquires(RCU) __acquires(specificRCU)
-
-=EF=BB=BF#define __acquires_regular_rcu __acquires(RCU)
-
-Then a function marked "__acquires_special_rcu" with acquire *both*
-contexts, and a function marked __requires_special_rcu will require just
-the special one. And a function marked __requires_rcu just requires the
-regular one. So say you have
-
-rcu_special_lock __acquires_special_rcu
-=EF=BB=BFrcu_special_unlock __releases_special_rcu
-=EF=BB=BF
-rcu_regular_lock __acquires_rcu
-=EF=BB=BFrcu_regular_unlock __releases_rcu
-
-rcu_do_special __requires_special_rcu
-rcu_do_something __requires_rcu
-
-
-Then both this will be fine:
-
-
-rcu_special_lock()
-rcu_do_special()
-rcu_do_something()
-rcu_special_unlock()
-
-
-but this will result in a warning:
-
-
-rcu_regular_lock()
-rcu_do_special()
-rcu_regular_unlock()
-
-because the "specialRCU" context is missing.
-
-You could mark do_special with *both* __requires(RCU) and
-__requires(specialRCU) but as long as the acquires/releases parts have a
-strict dependency (=EF=BB=BFspecialRCU implies RCU) that isn't necessary.
-
-johannes
-
---=-CV94L+f4brYivCkDyoUt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAytPKVg1VMiehFYAQIwTQ//QS8R7E3PBq027f4tO3NkphsHGilYCofv
-/4u4hq8B7DiyItML+ebNgPrl8xyozaxYOilnYMLsz36rQSJs5RYhVi6F1pAbwU8q
-Cv4RHJ6L3DNlxmR1B0G1HJcEcX6D8Y5ElXPN/HyU23tTATa1omTPJYBHfnzemzX3
-vz2xM+bwDEezCmsO8r7O1yOTo/GlERiOskdU2jKTgwAJkxHC/1Dbj0tTJ6pmWF9X
-aJtArFtCDEkoRZ5ySYIZq+cLpYNC+Yx9D1VwWT8+XEf4ybDTiuwbCVqiSKc/lXmW
-Lt35IiiPsvX1MNNl3m+BQAv2q0gLKlp2R8HR43llHSwsGfu33cHvqfjOQT+YD+KT
-AkQlVwm1cUtAu4DlI5qMqGPHXzBMhakxlY8sK1W5o12ffO09CiKL2MpJo3Ww++6X
-uwoUuc6i8OrDbcxkxYGCJeTf19BbWAWxA8j9YG0QRhYkqb4fqjbkiY5bMhPTRwdv
-ttvugB5GEj7Agml5Ch+d9WbN58eWsh81qTicjj9FSNFX66LfmPYuU6eONmLc4lto
-f804E/OtPdMLpRI4Ok5P8hk1wTXPzj1+goiF7DXAnNEiJW4kcCPPPOZR3Foi/TUV
-cs4vUjXW5KEflHze6RhWMgikhQHsTprQL0hJvCV6K547yYHdNcxf3D+HEP2rza0X
-0H5g9AjOsBM=
-=08Yo
------END PGP SIGNATURE-----
-
---=-CV94L+f4brYivCkDyoUt--
+Dan
 
