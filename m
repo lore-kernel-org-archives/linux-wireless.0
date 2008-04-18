@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:40929 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbYDCQyF convert rfc822-to-8bit (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:57042 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbYDRJLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 12:54:05 -0400
-Date: Thu, 3 Apr 2008 19:52:55 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Miles Lane <miles.lane@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX
-	non-WEP frame, but expected encryption"
-Message-ID: <20080403165255.GI2025@jm.kir.nu> (sfid-20080403_175408_862538_7DFFEDCB)
-References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com> <1207226756.3636.66.camel@johannes.berg> <1207231313.3636.100.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1207231313.3636.100.camel@johannes.berg>
+	Fri, 18 Apr 2008 05:11:32 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+From: David Woodhouse <dwmw2@infradead.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200804181102.03107.hs4233@mail.mn-solutions.de>
+References: <1208448814.9212.270.camel@pmac.infradead.org>
+	 <200804181102.03107.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Fri, 18 Apr 2008 10:11:28 +0100
+Message-Id: <1208509888.9212.291.camel@pmac.infradead.org> (sfid-20080418_101135_976350_7DE9DA26)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 03, 2008 at 04:01:53PM +0200, Johannes Berg wrote:
+On Fri, 2008-04-18 at 11:02 +0200, Holger Schurig wrote:
+> NACK.
 
-> > > My log files are filling up with these messages:
-> > >        [ 8722.198929] wlan0: RX non-WEP frame, but expected encry=
-ption
-> > >        [ 8726.506345] __ratelimit: 14 messages suppressed
+Thanks for testing.
 
-Is the network using WEP or TKIP/CCMP?
+> When I apply this patch and do "ethtool -S eth1", I get this:
+> 
+> $ ethtool -S eth1
+> NIC statistics:
+>      drop_duplicate_bcast: 7
+>      drop_ttl_zero: 0
+>      drop_no_fwd_route: 0
+>      drop_no_buffers: 9223372036854775808
+>      fwded_unicast_cnt: 0
+>      fwded_bcast_cnt: 0
+>      drop_blind_table: 0
+>      tx_failed_cnt: 9223372036854775808
 
-> Ok, I got packets from Miles, and this is what I found:
->=20
-> IEEE 802.11 Data, Flags: ......F.
->     Type/Subtype: Data (0x20)
->     Frame Control: 0x0208 (Normal)
->     Duration: 44
->     Destination address: <his STA MAC>
->     BSS Id: <his Netgear AP>
->     Source address: <his Netgear AP>
->     Fragment number: 0
->     Sequence number: 3874
-> Logical-Link Control
->     DSAP: NULL LSAP (0x00)
-> Data (1472 bytes)
-> 0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   .............=
-=2E..
-> * all zeroes
+You were getting that anyway.
 
-> Note how the LLC header is also all-zeroes. =EF=BB=BFAlso note how th=
-e duration
-> field is totally bogus. The sequence number is actually correct.
+> But more severely, I get this in dmesg:
+> 
+> libertas enter: lbs_ethtool_get_stats()
+> libertas: PREP_CMD: command 0x009b failed: 2
 
-What's wrong with the duration field value? The dump here does not
-indicate which transmit rate was used, so I don't know what TX rate the
-ACK would use, but 44 sounds like a reasonable duration value for
-802.11g rates..
+Now at least it's _trying_ to get the stats :)
+                
+> My firmware simply doesn't support the 009b command. It seems 
+> also wrong to call an MESH related command on an struct 
+> net_device *dev which is not priv->mesh_dev.
+> 
+> 
+> That ethtool returns junk like "9223372036854775808" is another 
+> error. lbs_mesh_access() returned 2, and the code does "if (ret) 
+> return ret". Maybe it should be like "if (ret) return -ENOSYS 
+> (or some other ENOxxx) instead?
 
-> Does anybody have an explanation for that except that the AP software=
- is
-> messing it up?
+The code does 'if (ret) return;', because it has no option to return an
+error. I think the way round it would be something like this:
 
-Looks like an interesting AP behavior to me..
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 21e6f98..2ca3f4f 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -146,12 +144,12 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
+ 
+ static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
+ {
+-	switch (sset) {
+-	case ETH_SS_STATS:
++	struct lbs_private *priv = dev->priv;
++
++	if (sset == ETH_SS_STATS && dev == priv->mesh_dev)
+ 		return MESH_STATS_NUM;
+-	default:
++	else
+ 		return -EOPNOTSUPP;
+-	}
+ }
+ 
+ static void lbs_ethtool_get_strings(struct net_device *dev,
 
-> In any case, I suppose the message in question isn't actually necessa=
-ry.
-> I'll make it depend on verbose debugging maybe.
+-- 
+dwmw2
 
-Yes, that sounds reasonable. The AP should not be sending this kind of
-crap, but well, what can you do if it does.. In theory, this could also
-be showing up in multi-SSID configuration when another SSID is
-configured to use unencrypted frames (though, that would cause interop
-issues in association for number of clients..).
-
---=20
-Jouni Malinen                                            PGP id EFC895F=
-A
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
