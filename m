@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61126 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755781AbYD2Wez (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 18:34:55 -0400
-Message-ID: <4817A28E.2050309@lwfinger.net> (sfid-20080430_003452_312081_04CAD81C)
-Date: Tue, 29 Apr 2008 17:34:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Gautam Iyer <gi1242@stanford.edu>, linux-wireless@vger.kernel.org
-Subject: Re: b43 reduced performance in Linux-2.6.25
-References: <20080429215629.GC17790@stanford.edu>
-In-Reply-To: <20080429215629.GC17790@stanford.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx.fenrir.org.uk ([81.168.115.223]:38034 "EHLO mx.fenrir.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751591AbYDRWiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 18:38:46 -0400
+Received: from peterson.fenrir.org.uk ([10.0.0.2])
+	(TLSv1:AES256-SHA:256)
+	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
+	id 1JmzED-0007pv-Ef
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2008 23:38:45 +0100
+Date: Fri, 18 Apr 2008 23:38:45 +0100
+From: Brian Morrison <bdm@fenrir.org.uk>
+To: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 problem with 2.6.25-rc9
+Message-ID: <20080418233845.06fe479d@peterson.fenrir.org.uk> (sfid-20080418_233848_465613_95148058)
+In-Reply-To: <D936D925018D154694D8A362EEB089200438B79F@orsmsx416.amr.corp.intel.com>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+	<fu5iel$c45$1@ger.gmane.org>
+	<fu5l5r$pm8$1@ger.gmane.org>
+	<1208376292.27708.3.camel@localhost.localdomain>
+	<D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+	<D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+	<fu931e$k1b$1@ger.gmane.org>
+	<D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+	<1208555842.4848.56.camel@johannes.berg>
+	<D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+	<20080418232358.000fbdf7@peterson.fenrir.org.uk>
+	<D936D925018D154694D8A362EEB089200438B79F@orsmsx416.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gautam Iyer wrote:
-> Hi All,
-> 
-> I saw a few threads about reduced performance in b43 in the 2.6.24 /
-> 2.6.25_rcXX kernels, but couldn't manage to fix the problem myself:
-> 
-> On my system, using ndiswrapper and the windows drivers gives me about
-> 1.5 times the performance of the in kernel b43 drivers.
-> 
-> Here are my system specs:
-> 
->     Broadcom Corporation BCM4312 802.11a/b/g [14e4:4312] (rev 02)
->     Linux 2.6.25 (gentoo-sources-2.6.25-r1).
->     b43 wireless driver with firmware 410.2160 (2007-05-26 15:32:10)
-> 
-> I measured the performance by running "ttcp" between my Laptop and my
-> router. Using b43 on my Laptop gives about 2MB/s reported, and using
-> ndiswrapper gives me about 3MB/s under exactly the same situations.
-> 
-> Any ideas about what's going on? (I would be happy to provide you with
-> any further specs on my computer).
+On Fri, 18 Apr 2008 15:35:21 -0700
+"Chatre, Reinette" <reinette.chatre@intel.com> wrote:
 
-Yes. Broadcom wrote the Windows drivers, but never gave the specifications to 
-anyone else. Obvious those specs from their engineers are better than those 
-from the _reverse_ engineers for your card. On my BCM4311/2 I get better 
-throughput with the b43 driver than I get when running Windows. I _NEVER_ use 
-ndiswrapper. Now that b43 works, why would I want to taint my kernel?
+> On , Brian Morrison  wrote:
+> 
+> > Not wishing to muddy the waters, but I've found that the iwlwifi
+> > driver with a 3945 card is only reliable for scanning and associating
+> > for 
+> > my laptop (x86_64) with disable_hw_scan=1 set, this is with
+> > 2.4.24.4-64.fc8 kernel. Driver version is 1.2.26.
+> 
+> I agree that your problem is related (no scanning results from driver),
+> but it does seem to be different from what we are trying to debug here.
+> In this case the user is not receiving scanning results when using sw
+> scanning while the driver should have been using hw scanning because the
+> user is not using that driver parameter as you are.
 
-The only loss of performance that we look at is those that happen between 
-release n and n+1. Those we call regressions and take them seriously.
+Yes, I just thought it might be useful to know that some people are
+seeing the exact reverse.
 
-The only specs that we are interested in are those that come from reverse 
-engineering. If you can provide them, we are very interested.
+It's actually working well for me now, so I'm in no hurry to break it :)
 
-Larry
+-- 
+
+Brian Morrison
+
+bdm at fenrir dot org dot uk
+
+   "Arguing with an engineer is like wrestling with a pig in the mud;
+    after a while you realize you are muddy and the pig is enjoying it."
+    
+GnuPG key ID DE32E5C5 - http://wwwkeys.uk.pgp.net/pgpnet/wwwkeys.html
