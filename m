@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22816 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbYDUWmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 18:42:15 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 08/11] iwlwifi: CT-Kill configuration fix
-Date: Mon, 21 Apr 2008 15:41:58 -0700
-Message-Id: <1208817721-11333-9-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004343_432727_D4C0B144)
-In-Reply-To: <1208817721-11333-8-git-send-email-reinette.chatre@intel.com>
-References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-5-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-6-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-7-git-send-email-reinette.chatre@intel.com>
- <1208817721-11333-8-git-send-email-reinette.chatre@intel.com>
+Received: from hs-out-0708.google.com ([64.233.178.241]:36555 "EHLO
+	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638AbYDROvC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 10:51:02 -0400
+Received: by hs-out-0708.google.com with SMTP id 4so381697hsl.5
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2008 07:51:01 -0700 (PDT)
+Message-ID: <40f31dec0804180751y3c4e0a9bj509324ae712081f3@mail.gmail.com> (sfid-20080418_155108_252490_DAA5D9BB)
+Date: Fri, 18 Apr 2008 17:51:01 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: ath5k phy0: noise floor calibration timeout
+Cc: "Pierre Frenkiel" <pierre.frenkiel@apc.univ-paris7.fr>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1208526988.9388.12.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr>
+	 <1208526988.9388.12.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+2008/4/18, Dan Williams <dcbw@redhat.com>:
+> On Fri, 2008-04-18 at 14:51 +0200, Pierre Frenkiel wrote:
+>  > hi,
+>  > I have a 3-com PCCARD, with the AR5413 chipset
+>  > I installed 2 days ago compat-wireless-2.6.tar.bz2, on Ubuntu Gutsy,
+>  > and everything seemed to work.
+>  > I just had in the log 2 or 3 messages:
+>  >
+>  >     ath5k phy0: noise floor calibration timeout
+>  >
+>  > but yesterday, when rebooting, I got a huge number of such messages(more
+>  > than 100 in the log file), with also
+>  >
+>  >     ath5k phy0: ath5k_chan_set: unable to reset channel
+>  >     ath0: failed to set freq to 2422 MHz for scan
+>  >     ath0: failed to restore operational channel after scan
+>
+>
+> I also get this all the time with a 5006E, and ath5k takes quite a lot
+>  (30%) of CPU most of the time.  Haven't tried to track it down yet.
+>  Anyone have ideas about the root cause of the problem?
+>
+>
+>  Dan
+>
+>  > and the boot froze. I then removed my PCCARD,
+>  > and after poweroff/poweron, I could boot normally.
+>  >
+>  > It seems to be fixed now, as I have no more this problem after
+>  > re-inserting the card.
+>  > But as I did nothing, I would like to know what might happen:
+>  > If this happened once, there is no reason why this would not happen an
+>  > other time.
+>  >
+>  > Pierre
+>  > --
+>  > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  > the body of a message to majordomo@vger.kernel.org
+>  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-This patch fixes the configuration of CT-Kill.
+It seems that sometimes noise floor calibration takes longer than
+usual. I'll check it out and come up with a patch asap ;-)
 
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   26 +++++---------------------
- 1 files changed, 5 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 9b3a745..91cc03f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -969,15 +969,9 @@ static void iwl4965_bg_statistics_periodic(unsigned long data)
- 	iwl_send_statistics_request(priv, CMD_ASYNC);
- }
- 
--#define CT_LIMIT_CONST		259
--#define TM_CT_KILL_THRESHOLD	110
--
- void iwl4965_rf_kill_ct_config(struct iwl_priv *priv)
- {
- 	struct iwl4965_ct_kill_config cmd;
--	u32 R1, R2, R3;
--	u32 temp_th;
--	u32 crit_temperature;
- 	unsigned long flags;
- 	int ret = 0;
- 
-@@ -986,27 +980,17 @@ void iwl4965_rf_kill_ct_config(struct iwl_priv *priv)
- 		    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	if (priv->statistics.flag & STATISTICS_REPLY_FLG_FAT_MODE_MSK) {
--		R1 = (s32)le32_to_cpu(priv->card_alive_init.therm_r1[1]);
--		R2 = (s32)le32_to_cpu(priv->card_alive_init.therm_r2[1]);
--		R3 = (s32)le32_to_cpu(priv->card_alive_init.therm_r3[1]);
--	} else {
--		R1 = (s32)le32_to_cpu(priv->card_alive_init.therm_r1[0]);
--		R2 = (s32)le32_to_cpu(priv->card_alive_init.therm_r2[0]);
--		R3 = (s32)le32_to_cpu(priv->card_alive_init.therm_r3[0]);
--	}
--
--	temp_th = CELSIUS_TO_KELVIN(TM_CT_KILL_THRESHOLD);
--
--	crit_temperature = ((temp_th * (R3-R1))/CT_LIMIT_CONST) + R2;
- 	cmd.critical_temperature_R =
--			cpu_to_le32(priv->hw_params.ct_kill_threshold);
-+		cpu_to_le32(priv->hw_params.ct_kill_threshold);
-+
- 	ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
- 			       sizeof(cmd), &cmd);
- 	if (ret)
- 		IWL_ERROR("REPLY_CT_KILL_CONFIG_CMD failed\n");
- 	else
--		IWL_DEBUG_INFO("REPLY_CT_KILL_CONFIG_CMD succeeded\n");
-+		IWL_DEBUG_INFO("REPLY_CT_KILL_CONFIG_CMD succeeded, "
-+			"critical temperature is %d\n",
-+			cmd.critical_temperature_R);
- }
- 
- #ifdef CONFIG_IWL4965_RUN_TIME_CALIB
 -- 
-1.5.3.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
