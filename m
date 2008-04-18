@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41005 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752375AbYDOXCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 19:02:11 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mabbas@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/11] iwlwifi: fix unload warning and error
-Date: Tue, 15 Apr 2008 16:01:46 -0700
-Message-Id: <1208300507-25628-11-git-send-email-reinette.chatre@intel.com> (sfid-20080416_000232_490522_1B2052C9)
-In-Reply-To: <1208300507-25628-10-git-send-email-reinette.chatre@intel.com>
-References: <1208300507-25628-1-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-2-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-3-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-4-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-5-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-6-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-7-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-8-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-9-git-send-email-reinette.chatre@intel.com>
- <1208300507-25628-10-git-send-email-reinette.chatre@intel.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:17724 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754107AbYDRJFA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 05:05:00 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+Date: Fri, 18 Apr 2008 11:02:03 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1208448814.9212.270.camel@pmac.infradead.org>
+In-Reply-To: <1208448814.9212.270.camel@pmac.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200804181102.03107.hs4233@mail.mn-solutions.de> (sfid-20080418_100504_738768_356D5588)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mabbas@linux.intel.com>
+NACK.
 
-This patch fix the error we get when unload the driver, No space for Tx.
-The cause of this problem is related to receiving late SW rfkill from
-rfkill subsystem during the driver teardown causing this error.
+When I apply this patch and do "ethtool -S eth1", I get this:
 
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-rfkill.c   |    3 +++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+$ ethtool -S eth1
+NIC statistics:
+=A0 =A0 =A0drop_duplicate_bcast: 7
+=A0 =A0 =A0drop_ttl_zero: 0
+=A0 =A0 =A0drop_no_fwd_route: 0
+=A0 =A0 =A0drop_no_buffers: 9223372036854775808
+=A0 =A0 =A0fwded_unicast_cnt: 0
+=A0 =A0 =A0fwded_bcast_cnt: 0
+=A0 =A0 =A0drop_blind_table: 0
+=A0 =A0 =A0tx_failed_cnt: 9223372036854775808
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index 8f38c24..5980a56 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -47,6 +47,9 @@ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
- 	if (!priv->rfkill_mngr.rfkill)
- 		return 0;
- 
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return 0;
-+
- 	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
- 	mutex_lock(&priv->mutex);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 0eb4220..dae881e 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2427,7 +2427,8 @@ void iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio)
- 				    CSR_UCODE_SW_BIT_RFKILL);
- 			spin_unlock_irqrestore(&priv->lock, flags);
- 			/* call the host command only if no hw rf-kill set */
--			if (!test_bit(STATUS_RF_KILL_HW, &priv->status))
-+			if (!test_bit(STATUS_RF_KILL_HW, &priv->status) &&
-+			    iwl_is_ready(priv))
- 				iwl4965_send_card_state(priv,
- 							CARD_STATE_CMD_DISABLE,
- 							0);
--- 
-1.5.3.4
+But more severely, I get this in dmesg:
 
+libertas enter: lbs_ethtool_get_stats()
+libertas: PREP_CMD: command 0x009b failed: 2
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0
+My firmware simply doesn't support the 009b command. It seems=20
+also wrong to call an MESH related command on an struct=20
+net_device *dev which is not priv->mesh_dev.
+
+
+That ethtool returns junk like "9223372036854775808" is another=20
+error. lbs_mesh_access() returned 2, and the code does "if (ret)=20
+return ret". Maybe it should be like "if (ret) return -ENOSYS=20
+(or some other ENOxxx) instead?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
