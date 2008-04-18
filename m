@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:17379 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758504AbYDZRFd (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:53759 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbYDRLKF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 13:05:33 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so6732199waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 10:05:33 -0700 (PDT)
-Message-ID: <1ba2fa240804261005h25d17fd4n72b6b07fee835ae3@mail.gmail.com> (sfid-20080426_190559_261540_9742BF2A)
-Date: Sat, 26 Apr 2008 20:05:32 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH RFT] tkip: fix iv32 calculation in ieee80211_get_tkip_key()
-Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1209226228.10943.45.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1209081653.12561.50.camel@dv>
-	 <1ba2fa240804260825qcae5777qddd2d1e91a0277dc@mail.gmail.com>
-	 <1209226228.10943.45.camel@johannes.berg>
+	Fri, 18 Apr 2008 07:10:05 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+From: David Woodhouse <dwmw2@infradead.org>
+To: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, libertas-dev@lists.infradead.org
+In-Reply-To: <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
+References: <1208448814.9212.270.camel@pmac.infradead.org>
+	 <1208455363.20193.3.camel@localhost.localdomain>
+	 <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain
+Date: Fri, 18 Apr 2008 12:09:50 +0100
+Message-Id: <1208516990.9212.319.camel@pmac.infradead.org> (sfid-20080418_121014_273858_90A58313)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 26, 2008 at 7:10 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  > >  It's a side product of testing a sparse patch by Linus Torvalds.
->  > >  Compile tested only.
->
->
-> > >         iv32 = data[hdr_len + 4] +
->  > >  -               (data[hdr_len + 5] >> 8) +
->  > >  -               (data[hdr_len + 6] >> 16) +
->  > >  -               (data[hdr_len + 7] >> 24);
->  > >  +               (data[hdr_len + 5] << 8) +
->  > >  +               (data[hdr_len + 6] << 16) +
->  > >  +               (data[hdr_len + 7] << 24);
->  > >
->  > >   #ifdef CONFIG_TKIP_DEBUG
->  > >         printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
->  > >
->  > >
->  >
->  > We've tested TKIP code well and I'm not sure we wouldn't pay attention
->  > to such mistake.
->
->  But the code does look a bit fishy. I'm confused.
+On Thu, 2008-04-17 at 21:44 +0200, Sebastian Siewior wrote:
+> * Dan Williams | 2008-04-17 14:02:43 [-0400]:
+> 
+> >On Thu, 2008-04-17 at 17:13 +0100, David Woodhouse wrote:
+> >> We removed CMD_MESH_ACCESS from the big case statements and provided
+> >> lbs_mesh_access() instead.... but we missed one user. Fix it.
+> >> 
+> >> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+> >
+> >Acked-by: Dan Williams <dcbw@redhat.com>
+> Hmmm. This patch actually reminds me of something I was going to do. I
+> don't really see the big difference between this and [1]. I have to
+> exert myself to get on your auto-ack list...
 
-It  looks bad. Frankly  Pavel's version looks more correct but as
-black box TKIP is working.
-Maybe we never tested more then 256 wrapparounds.... will need to dig into more
+Yes, your patch is better than mine because it also zeroes the stats in
+the error case. Although we should avoid that error, really.
 
-Thanks
-Tomas
+-- 
+dwmw2
 
->  johannes
->
