@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.242]:19163 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755556AbYDPQYl (ORCPT
+Received: from ccsrelay01.in2p3.fr ([134.158.66.51]:45854 "EHLO
+	ccsrelay01.in2p3.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbYDRNQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 12:24:41 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so1063845hsl.5
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 09:24:40 -0700 (PDT)
-Message-ID: <40f31dec0804160924m34877c87n5c2764cf526365ad@mail.gmail.com> (sfid-20080416_172445_784768_CA302CD3)
-Date: Wed, 16 Apr 2008 19:24:39 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] Atheros kernel support, joining the company
-Cc: ath5k-devel@lists.ath5k.org,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <480561DE.7020205@atheros.com>
+	Fri, 18 Apr 2008 09:16:32 -0400
+Received: from apcnb28.in2p3.fr (apcnb28.in2p3.fr [134.158.184.116])
+	by ccsrelay01.in2p3.fr (8.14.2/8.14.2/IN2P3) with ESMTP id m3ICp8t6013702
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2008 14:51:08 +0200
+Received: from frenkiel by apcnb28.in2p3.fr with esmtp (masqmail
+ 0.2.21) id 1Jmq3U-4Qs-00 for <linux-wireless@vger.kernel.org>; Fri, 18
+ Apr 2008 14:51:04 +0200
+Date: Fri, 18 Apr 2008 14:51:04 +0200 (CEST)
+From: Pierre Frenkiel <pierre.frenkiel@apc.univ-paris7.fr>
+To: linux-wireless@vger.kernel.org
+Subject: ath5k phy0: noise floor calibration timeout 
+Message-ID: <Pine.LNX.4.64.0804181435480.16108@apcnb28.in2p3.fr> (sfid-20080418_141634_753355_B12A449E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <480561DE.7020205@atheros.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/4/16, Luis R. Rodriguez <lrodriguez@atheros.com>:
->
->  Fellow ath5k hackers,
->
->  Good news. I write to you to inform you that I have decided to join
->  Atheros as a full time employee, as a Software Engineer, to help them
->  with their goals and mission to get every device of Atheros supported
->  upstream in the Linux kernel. I realize there are a lot of challenges
->  ahead but I am well aware of the how the community works and the
->  benefits of working with it and am confident we will find ways to
->  strengthen the relationship between Atheros and the community. I also
->  realize there are a lot of pending questions and perhaps even more now.
->  Please rest assured we are doing what we can to work together as soon as
->  possible.
+hi,
+I have a 3-com PCCARD, with the AR5413 chipset
+I installed 2 days ago compat-wireless-2.6.tar.bz2, on Ubuntu Gutsy,
+and everything seemed to work.
+I just had in the log 2 or 3 messages:
 
-Congratz !
+    ath5k phy0: noise floor calibration timeout
 
-I'm really looking forward to get some answers we had for a long time
-now, it'll save much time from rev. engineering. I hope now you are
-there you can make this happen and open a communication channel
-between Atheros and the community  ;-)
+but yesterday, when rebooting, I got a huge number of such messages(more
+than 100 in the log file), with also
 
->
->  http://winlab.rutgers.edu/~mcgrof/crda/
->
->  In the coming weeks I hope to finish the integration now that a db is
->  available and hope to also update the db with more up to date values.
->
+    ath5k phy0: ath5k_chan_set: unable to reset channel
+    ath0: failed to set freq to 2422 MHz for scan
+    ath0: failed to restore operational channel after scan
 
-Have you checked this one out ?
-http://www.iso.org/iso/country_codes/iso_3166_databases.htm
+and the boot froze. I then removed my PCCARD,
+and after poweroff/poweron, I could boot normally.
 
+It seems to be fixed now, as I have no more this problem after
+re-inserting the card. 
+But as I did nothing, I would like to know what might happen: 
+If this happened once, there is no reason why this would not happen an
+other time.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Pierre
