@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:59472 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760946AbYDVSk5 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45513 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753713AbYDRJBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2008 14:40:57 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1312961ywb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2008 11:40:55 -0700 (PDT)
-Message-ID: <9f33c5230804221125s65c2b3d5md69c0a4ee054f573@mail.gmail.com> (sfid-20080422_204142_686135_A98D9869)
-Date: Tue, 22 Apr 2008 14:25:11 -0400
-From: "cao jing" <caojing.china@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Does anybody know how to send a beacon in ath5k driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 18 Apr 2008 05:01:44 -0400
+Date: Fri, 18 Apr 2008 02:01:42 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Thoralf =?ISO-8859-1?Q?Da=DFler?= <thoralf.dassler@gmail.com>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 10471] New: iwl3945 in 2.6.25 ignores state of
+ hardware RF kill switch
+Message-Id: <20080418020142.18bf9f31.akpm@linux-foundation.org> (sfid-20080418_100202_768938_67831D78)
+In-Reply-To: <48086F6E.10901@gmail.com>
+References: <bug-10471-10286@http.bugzilla.kernel.org/>
+	<20080417142934.be2bdd27.akpm@linux-foundation.org>
+	<48086F6E.10901@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 18 Apr 2008 09:52:46 +0000 Thoralf Da__ler <thoralf.dassler@gmail.com> wrote:
 
-I try to generate the beacons in ath5k with mac802.11. I have done
-some work as follow. But it still doesn't work. Is there anybody know
-something about that.
+> Yeah, it seems dumb that the init scripts pause, but I don't understand why this started with the 2.6.25 kernel, whereas it was fine before.
 
---MAC80211--
+You have removed from Cc: the people who can explain it.  I restored them.
 
-set the fallow flag in the driver initialization.
+> Andrew Morton wrote:(switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
+> 
+> 
+> On Thu, 17 Apr 2008 14:17:51 -0700 (PDT)
+> bugme-daemon@bugzilla.kernel.org wrote:
+> 
+>   http://bugzilla.kernel.org/show_bug.cgi?id=10471
+> 
 
-local->hw.flags & IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE
-
---Atheros Driver--
-
-setting AP mode
-
-AR5K_STA_ID1 |= AR5K_STA_ID1_AP
-
-initialize beacon register
-
-AR5K_TIMER0 AR5K_TIMER2 AR5K_TIMER3 AR5K_TIMER4
-
-AR5K_BEACON |= AR5K_BEACON_ENABLE [ | AR5K_BEACON_RESET_TSF ]
-
-enable SWBA
-
-AR5K_PIMR |= AR5K_INT_SWBA
-
-configure the Receive filter register
-
-AR5K_RX_FILTER |= AR5K_RX_FILTER_BEACON
-
-
-Jing
