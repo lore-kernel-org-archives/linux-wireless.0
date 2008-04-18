@@ -1,213 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43180 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbYDTOaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 10:30:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Remove some dead code
-Date: Sun, 20 Apr 2008 16:23:26 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from mga11.intel.com ([192.55.52.93]:24806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755683AbYDRVqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 17:46:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804201623.26816.mb@bu3sch.de> (sfid-20080420_153010_168086_9FA37BB4)
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C8A19D.9958B9DE"
+Subject: RE:  RE:  RE: iwl3945 problem with 2.6.25-rc9
+Date: Fri, 18 Apr 2008 14:46:03 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com> (sfid-20080418_224627_648936_DECA7576)
+In-Reply-To: A<fu931e$k1b$1@ger.gmane.org>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com> A<fu931e$k1b$1@ger.gmane.org>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Marcus Furlong" <furlongm@hotmail.com>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes some dead code from the driver.
+This is a multi-part message in MIME format.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+------_=_NextPart_001_01C8A19D.9958B9DE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
----
+On , Marcus Furlong  wrote:
 
-John, please queue for 2.6.27
+> iwlist wlan0 scan showed the AP a few times, but mostly found nothing
+> at all. When it did find APs, it found at most 2-3 APs, whereas
+> the ipw driver
+> finds 10 or more APs on the same machine.
+
+I am seeing something very strange in this log and the logs you sent in
+your first message. It appears that your driver uses software scanning
+while hardware scanning is the default for this driver. This appears to
+be the cause of the ucode errors as the A band channels are configured
+as part of the scanning process.
+
+Now, how this happens is weird. I tried running 2.6.25-rc9 myself and
+was not able to reproduce the problem - hardware scanning was used.  The
+driver is also explicit when HW scanning is disabled, this does not
+appear in your logs, it is also explicit about when it runs HW scanning,
+this also does not appear in your logs. So it does not seem as though
+you are disabling the default HW scanning, but yet it uses SW scanning.
+How it ends up using software scanning is not clear.
+
+In an effort to trace what could be happening I created a small patch
+(attached) that adds more debugging to the scanning code. Could you
+please run with this patch and send us the debug output?=20
+
+Thank you very much
+
+Reinette
 
 
-Index: wireless-testing/drivers/net/wireless/b43/lo.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/lo.c	2008-04-20 15:24:10.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/lo.c	2008-04-20 16:21:36.000000000 +0200
-@@ -55,28 +55,26 @@ static struct b43_lo_calib * b43_find_lo
- 
- /* Write the LocalOscillator Control (adjust) value-pair. */
- static void b43_lo_write(struct b43_wldev *dev, struct b43_loctl *control)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	u16 value;
--	u16 reg;
- 
- 	if (B43_DEBUG) {
- 		if (unlikely(abs(control->i) > 16 || abs(control->q) > 16)) {
- 			b43dbg(dev->wl, "Invalid LO control pair "
- 			       "(I: %d, Q: %d)\n", control->i, control->q);
- 			dump_stack();
- 			return;
- 		}
- 	}
-+	B43_WARN_ON(phy->type != B43_PHYTYPE_G);
- 
- 	value = (u8) (control->q);
- 	value |= ((u8) (control->i)) << 8;
--
--	reg = (phy->type == B43_PHYTYPE_B) ? 0x002F : B43_PHY_LO_CTL;
--	b43_phy_write(dev, reg, value);
-+	b43_phy_write(dev, B43_PHY_LO_CTL, value);
- }
- 
- static u16 lo_measure_feedthrough(struct b43_wldev *dev,
- 				  u16 lna, u16 pga, u16 trsw_rx)
- {
- 	struct b43_phy *phy = &dev->phy;
-Index: wireless-testing/drivers/net/wireless/b43/phy.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy.c	2008-04-20 15:41:46.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy.c	2008-04-20 16:21:36.000000000 +0200
-@@ -887,115 +887,12 @@ static void b43_phy_inita(struct b43_wld
- 		b43_phy_write(dev, B43_PHY_OFDM(0x6E),
- 				  (b43_phy_read(dev, B43_PHY_OFDM(0x6E))
- 				   & 0xE000) | 0x3CF);
- 	}
- }
- 
--static void b43_phy_initb2(struct b43_wldev *dev)
--{
--	struct b43_phy *phy = &dev->phy;
--	u16 offset, val;
--
--	b43_write16(dev, 0x03EC, 0x3F22);
--	b43_phy_write(dev, 0x0020, 0x301C);
--	b43_phy_write(dev, 0x0026, 0x0000);
--	b43_phy_write(dev, 0x0030, 0x00C6);
--	b43_phy_write(dev, 0x0088, 0x3E00);
--	val = 0x3C3D;
--	for (offset = 0x0089; offset < 0x00A7; offset++) {
--		b43_phy_write(dev, offset, val);
--		val -= 0x0202;
--	}
--	b43_phy_write(dev, 0x03E4, 0x3000);
--	b43_radio_selectchannel(dev, phy->channel, 0);
--	if (phy->radio_ver != 0x2050) {
--		b43_radio_write16(dev, 0x0075, 0x0080);
--		b43_radio_write16(dev, 0x0079, 0x0081);
--	}
--	b43_radio_write16(dev, 0x0050, 0x0020);
--	b43_radio_write16(dev, 0x0050, 0x0023);
--	if (phy->radio_ver == 0x2050) {
--		b43_radio_write16(dev, 0x0050, 0x0020);
--		b43_radio_write16(dev, 0x005A, 0x0070);
--		b43_radio_write16(dev, 0x005B, 0x007B);
--		b43_radio_write16(dev, 0x005C, 0x00B0);
--		b43_radio_write16(dev, 0x007A, 0x000F);
--		b43_phy_write(dev, 0x0038, 0x0677);
--		b43_radio_init2050(dev);
--	}
--	b43_phy_write(dev, 0x0014, 0x0080);
--	b43_phy_write(dev, 0x0032, 0x00CA);
--	b43_phy_write(dev, 0x0032, 0x00CC);
--	b43_phy_write(dev, 0x0035, 0x07C2);
--//XXX won't trigger	b43_lo_b_measure(dev);
--	b43_phy_write(dev, 0x0026, 0xCC00);
--	if (phy->radio_ver != 0x2050)
--		b43_phy_write(dev, 0x0026, 0xCE00);
--	b43_write16(dev, B43_MMIO_CHANNEL_EXT, 0x1000);
--	b43_phy_write(dev, 0x002A, 0x88A3);
--	if (phy->radio_ver != 0x2050)
--		b43_phy_write(dev, 0x002A, 0x88C2);
--	b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt, phy->tx_control);
--	b43_phy_init_pctl(dev);
--}
--
--static void b43_phy_initb4(struct b43_wldev *dev)
--{
--	struct b43_phy *phy = &dev->phy;
--	u16 offset, val;
--
--	b43_write16(dev, 0x03EC, 0x3F22);
--	b43_phy_write(dev, 0x0020, 0x301C);
--	b43_phy_write(dev, 0x0026, 0x0000);
--	b43_phy_write(dev, 0x0030, 0x00C6);
--	b43_phy_write(dev, 0x0088, 0x3E00);
--	val = 0x3C3D;
--	for (offset = 0x0089; offset < 0x00A7; offset++) {
--		b43_phy_write(dev, offset, val);
--		val -= 0x0202;
--	}
--	b43_phy_write(dev, 0x03E4, 0x3000);
--	b43_radio_selectchannel(dev, phy->channel, 0);
--	if (phy->radio_ver != 0x2050) {
--		b43_radio_write16(dev, 0x0075, 0x0080);
--		b43_radio_write16(dev, 0x0079, 0x0081);
--	}
--	b43_radio_write16(dev, 0x0050, 0x0020);
--	b43_radio_write16(dev, 0x0050, 0x0023);
--	if (phy->radio_ver == 0x2050) {
--		b43_radio_write16(dev, 0x0050, 0x0020);
--		b43_radio_write16(dev, 0x005A, 0x0070);
--		b43_radio_write16(dev, 0x005B, 0x007B);
--		b43_radio_write16(dev, 0x005C, 0x00B0);
--		b43_radio_write16(dev, 0x007A, 0x000F);
--		b43_phy_write(dev, 0x0038, 0x0677);
--		b43_radio_init2050(dev);
--	}
--	b43_phy_write(dev, 0x0014, 0x0080);
--	b43_phy_write(dev, 0x0032, 0x00CA);
--	if (phy->radio_ver == 0x2050)
--		b43_phy_write(dev, 0x0032, 0x00E0);
--	b43_phy_write(dev, 0x0035, 0x07C2);
--
--//XXX won't trigger	b43_lo_b_measure(dev);
--
--	b43_phy_write(dev, 0x0026, 0xCC00);
--	if (phy->radio_ver == 0x2050)
--		b43_phy_write(dev, 0x0026, 0xCE00);
--	b43_write16(dev, B43_MMIO_CHANNEL_EXT, 0x1100);
--	b43_phy_write(dev, 0x002A, 0x88A3);
--	if (phy->radio_ver == 0x2050)
--		b43_phy_write(dev, 0x002A, 0x88C2);
--	b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt, phy->tx_control);
--	if (dev->dev->bus->sprom.boardflags_lo & B43_BFL_RSSI) {
--		b43_calc_nrssi_slope(dev);
--		b43_calc_nrssi_threshold(dev);
--	}
--	b43_phy_init_pctl(dev);
--}
--
- static void b43_phy_initb5(struct b43_wldev *dev)
- {
- 	struct ssb_bus *bus = dev->dev->bus;
- 	struct b43_phy *phy = &dev->phy;
- 	u16 offset, value;
- 	u8 old_channel;
-@@ -1947,30 +1844,12 @@ int b43_phy_init(struct b43_wldev *dev)
- 	case B43_PHYTYPE_A:
- 		if (phy->rev == 2 || phy->rev == 3)
- 			b43_phy_inita(dev);
- 		else
- 			unsupported = 1;
- 		break;
--	case B43_PHYTYPE_B:
--		switch (phy->rev) {
--		case 2:
--			b43_phy_initb2(dev);
--			break;
--		case 4:
--			b43_phy_initb4(dev);
--			break;
--		case 5:
--			b43_phy_initb5(dev);
--			break;
--		case 6:
--			b43_phy_initb6(dev);
--			break;
--		default:
--			unsupported = 1;
--		}
--		break;
- 	case B43_PHYTYPE_G:
- 		b43_phy_initg(dev);
- 		break;
- 	case B43_PHYTYPE_N:
- 		err = b43_phy_initn(dev);
- 		break;
+
+
+
+
+
+
+
+------_=_NextPart_001_01C8A19D.9958B9DE
+Content-Type: application/octet-stream;
+	name="scan.patch"
+Content-Transfer-Encoding: base64
+Content-Description: scan.patch
+Content-Disposition: attachment;
+	filename="scan.patch"
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9pZWVlODAyMTFfc3RhLmMgYi9uZXQvbWFjODAyMTEv
+aWVlZTgwMjExX3N0YS5jCmluZGV4IGMxNzA2ODUuLmI5Y2E2YTEgMTAwNjQ0Ci0tLSBhL25ldC9t
+YWM4MDIxMS9pZWVlODAyMTFfc3RhLmMKKysrIGIvbmV0L21hYzgwMjExL2llZWU4MDIxMV9zdGEu
+YwpAQCAtMzMxNywxNiArMzMxNywyMiBAQCBzdGF0aWMgaW50IGllZWU4MDIxMV9zdGFfc3RhcnRf
+c2NhbihzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LAogCQlyZXR1cm4gLUVCVVNZOwogCX0KIAorCWR1
+bXBfc3RhY2soKTsKKwlwcmludGsoS0VSTl9ERUJVRyAiVGVzdGluZyBpZiBkcml2ZXIncyBodyBz
+Y2FubmluZyBlbmFibGVkIC4uLlxuIik7CiAJaWYgKGxvY2FsLT5vcHMtPmh3X3NjYW4pIHsKKwkJ
+cHJpbnRrKEtFUk5fREVCVUcgIkRyaXZlciBwcm92aWRlZCBod19zY2FuIGZ1bmN0aW9uIC4uLiBc
+biIpOwogCQlpbnQgcmMgPSBsb2NhbC0+b3BzLT5od19zY2FuKGxvY2FsX3RvX2h3KGxvY2FsKSwK
+IAkJCQkJICAgICBzc2lkLCBzc2lkX2xlbik7CiAJCWlmICghcmMpIHsKKwkJCXByaW50ayhLRVJO
+X0RFQlVHICJEcml2ZXIncyBod19zY2FuIGZ1bmN0aW9uIFNVQ0NFU1MuLi4gXG4iKTsKIAkJCWxv
+Y2FsLT5zdGFfaHdfc2Nhbm5pbmcgPSAxOwogCQkJbG9jYWwtPnNjYW5fZGV2ID0gZGV2OwogCQl9
+CiAJCXJldHVybiByYzsKIAl9CiAKKwlwcmludGsoS0VSTl9ERUJVRyAiVXNpbmcgc29mdHdhcmUg
+c2Nhbm5pbmcgLi4uXG4iKTsKKwogCWxvY2FsLT5zdGFfc3dfc2Nhbm5pbmcgPSAxOwogCiAJcmN1
+X3JlYWRfbG9jaygpOwo=
+
+------_=_NextPart_001_01C8A19D.9958B9DE--
