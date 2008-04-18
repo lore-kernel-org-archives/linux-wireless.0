@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:29080 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759915AbYDAUGI (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:21440 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751AbYDRWfW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 16:06:08 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1289705rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 13:06:08 -0700 (PDT)
-Message-ID: <5d75f4610804011306y55352e73sb5223a294b66f2cf@mail.gmail.com> (sfid-20080401_210616_999572_AAF6D555)
-Date: Wed, 2 Apr 2008 03:06:07 +0700
-From: "BuraphaLinux Server" <buraphalinuxserver@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support WPA2 wireless network with PEAP - MSCHAPV2
-Cc: "Luca Venturini" <lucventurini@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080401164419.GA3530@tuxdriver.com>
+	Fri, 18 Apr 2008 18:35:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <47F1F4F4.2080502@gmail.com> <20080401164419.GA3530@tuxdriver.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: RE: iwl3945 problem with 2.6.25-rc9
+Date: Fri, 18 Apr 2008 15:35:21 -0700
+Message-ID: <D936D925018D154694D8A362EEB089200438B79F@orsmsx416.amr.corp.intel.com> (sfid-20080418_233527_245462_09B925D8)
+In-Reply-To: <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com><fu5iel$c45$1@ger.gmane.org><fu5l5r$pm8$1@ger.gmane.org><1208376292.27708.3.camel@localhost.localdomain><D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com><D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com><fu931e$k1b$1@ger.gmane.org><D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com><1208555842.4848.56.camel@johannes.berg><D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com> <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Brian Morrison" <bdm@fenrir.org.uk>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-intel wireless just doesn't work on linux 2.6.24.4; wait for 2.6.25.x stable.
+On , Brian Morrison  wrote:
 
-On 4/1/08, John W. Linville <linville@tuxdriver.com> wrote:
-> You probably want to address this to linux-wireless@vger.kernel.org
-> instead...
->
-> On Tue, Apr 01, 2008 at 10:40:20AM +0200, Luca Venturini wrote:
-> > Using Ubuntu Hardy Beta, Linux kernel 2.6.24, AMD64.
-> > I have to connect to a campus (University of Verona, Italy; more
-> > information maybe available at https://wifi.univr.it sadly in Italian
-> only,
-> > and I am not sure it is reachable from outside the university) WPA2
-> > wireless network. It uses PEAP authentication, Dynamic WEP encryption,
-> > second phase: MSCHAPv2.
-> > It also requires user login, password, and a CA certificate (available at
-> > the web page I linked above).
-> > At the same page a wpasupplicant configuration file is also available, so
-> > to allow people to connect from linux also.
-> > In Ubuntu Gutsy 32 bit (Linux kernel 2.6.22.14 if I am not mistaken) I was
-> > able to connect through NetworkManager and precisely using the GNOME
-> > nm-applet.
-> > However, since I switched to Linux 2.6.24, I have no more been able to
-> > connect, whether through NM-applet or from the command line, using
-> > wpasupplicant. The wireless functions perfectly, and there has been no
-> > change in its configuration, since I am using it now (Windows Vista,
-> > configured months ago).
-> > Reported also here on launchpad:
-> > https://bugs.launchpad.net/ubuntu/+bug/209602
-> > Thank you for your attention.
-> > Greetings
-> >
-> > Luca Venturini
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
->
-> --
-> John W. Linville
-> linville@tuxdriver.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+> Not wishing to muddy the waters, but I've found that the iwlwifi
+> driver with a 3945 card is only reliable for scanning and associating
+> for 
+> my laptop (x86_64) with disable_hw_scan=1 set, this is with
+> 2.4.24.4-64.fc8 kernel. Driver version is 1.2.26.
+
+I agree that your problem is related (no scanning results from driver),
+but it does seem to be different from what we are trying to debug here.
+In this case the user is not receiving scanning results when using sw
+scanning while the driver should have been using hw scanning because the
+user is not using that driver parameter as you are.
+
+Reinette
