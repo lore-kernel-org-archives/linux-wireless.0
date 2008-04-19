@@ -1,81 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57976 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49986 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbYDKMU6 (ORCPT
+	with ESMTP id S1755481AbYDSNsk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 08:20:58 -0400
-Subject: Re: [RFC 1/3] add macros for new sparse features
+	Sat, 19 Apr 2008 09:48:40 -0400
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <47FE425C.7060405@s5r6.in-berlin.de>
-References: <20080410134810.629048000@sipsolutions.net>
-	 <20080410134827.771251000@sipsolutions.net>
-	 <47FE425C.7060405@s5r6.in-berlin.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8pjRjQXmdm/TnsTbuq52"
-Date: Fri, 11 Apr 2008 14:20:39 +0200
-Message-Id: <1207916439.13354.68.camel@johannes.berg> (sfid-20080411_132104_375556_A7656D6F)
+To: Vincent C Jones <v.jones@networkingunlimited.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Brian Morrison <bdm@fenrir.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <1208612641.3980.31.camel@X61.NetworkingUnlimited.com>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+	 <fu931e$k1b$1@ger.gmane.org>
+	 <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+	 <1208555842.4848.56.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+	 <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+	 <1208558255.4848.60.camel@johannes.berg>
+	 <1208558382.4848.63.camel@johannes.berg>
+	 <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+	 <1208593973.26186.2.camel@johannes.berg>
+	 <1208608786.3980.7.camel@X61.NetworkingUnlimited.com>
+	 <1208610565.26186.17.camel@johannes.berg>
+	 <1208612641.3980.31.camel@X61.NetworkingUnlimited.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mrAkGAAmdKw9pQIc4GqC"
+Date: Sat, 19 Apr 2008 15:48:22 +0200
+Message-Id: <1208612902.26186.23.camel@johannes.berg> (sfid-20080419_144855_272045_BB1CE2BE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-8pjRjQXmdm/TnsTbuq52
+--=-mrAkGAAmdKw9pQIc4GqC
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> So, instead of
+> > So how would you feel if I told you that, after you have once used that
+> > hidden network, your laptop will be broadcasting the SSID in probe
+> > requests every time it scans, no matter where you are, even if you've
+> > moved across the continent?
 >=20
->   /* always call with host_lock held */
->   int foo(struct bar *b)
->   {
->=20
-> we could write
->=20
->   int foo(struct bar *b) __requires(host_lock)
->   {
->=20
-> and let sparse check the call chains... or how is it used?
+> I am not going to waste bandwidth debating the correctness of the PCI
+> guidelines, because right or wrong, they are what they are. I was just
+> trying to point out that the need to deal with access points which do
+> not broadcast their SSIDs is real and likely to become more common in
+> the future, at least for any systems using wireless in a retail or other
+> credit card dealing environment.
 
-Yes.
+Oh, I don't want to debate the PCI guidelines, just saying that, which
+is what I started out with, I don't see much reason to have active
+scanning for four SSIDs.
 
-> And what about dynamically allocated locks?
-> E.g. b->lock
-> Or struct host h* =3D container_of(b, struct host, m); with the necessity
-> to hold h->lock...
+> I'll leave it up to you (collective you, not necessarily a personal
+> you), how to best deal with associating with APs which are not
+> broadcasting their SSIDs. I agree with you (personal you this time) that
+> roaming around the country broadcasting those SSIDs does not seem
+> particularly desirable. So how should the ability to connect to non SSID
+> broadcasting APs be implemented?=20
 
-I was looking at making sparse check that certain variable references
-are under rcu, but it's not as easy. Also, the lock context is just an
-arbitrary name, there's no way to actually link it to a certain variable
-or so to differentiate between them. I think that's not really solvable
-in sparse, look at the things lockdep has to do.
+I would probably list, in network-manager, "I found (a) hidden
+network(s)" and ask the user for an SSID to scan for actively at that
+particular time, rather than trying to scan for all previously known
+SSIDs even if those networks weren't hidden, as windows laptops (at
+least those with Intel hardware but I haven't seen many others) seem to
+do.
 
 johannes
 
---=-8pjRjQXmdm/TnsTbuq52
+--=-mrAkGAAmdKw9pQIc4GqC
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/9XlqVg1VMiehFYAQKk0w//fRspT04ACbb1HUS5P21pbENuirTgrIFv
-jYz/UomtBkbuJrqZwL1OFO70jrBK3jt1UwzZENub162DHI6pzFgiKFlU5c5uYs7c
-d9zzpqF6SnPG2Ox2f9BUgGdqBdulXBXAlrT9W8MBW8fwuKngS0iQE3zkGjYB+nY5
-x7br69bWMK01h+tqMcfHaI76E+BGqlLhaomCAJe4VDhIXZJkKS95oevnHm9fHh2a
-NrxV+f+DvFyR4MezX3mVRpOBd0obtdcbquws/etOCcLofAWJWNFMccY4UKpU5CWO
-QoemmQIsAYYNfu96y8nwZaBaYwN8RP0pChneK+hpqHs2eQuynT8bIBpQPhASCKvC
-mKvqx9ANT+UYsfHj3gj8XZms/m7XGuf5n8KR2HwiLsqCmle3Jwoy/2y3P7JA2Xwi
-Asa7UBJmHcOpkGFAZb4ilA3cgp5CmFwijeWIHIEKLjM67VYnpyoSMg77tY89A7dU
-z8v1+vDQJfaEjBMXQL0x0W6rsazR41orXhFilgOXEhvL7hBHbZC4S618eRur4mxY
-Y1oRoH2ABKRPCMgmH5ZRjaADzRDdLQ0oSy49yvDKu1yWp6oxvH5MquaJ1owOaKNg
-d89eWSG0BrdX/b/hbvfqTUxEiC1eXVHP4RjGUgm7143/4Cjn5ewspAzZVHBHJjmN
-DAUgK98qcAc=
-=4MWs
+iQIVAwUASAn4JKVg1VMiehFYAQJ4ZQ/+IJI743N0zOlgJeNeQeW107Khb9s022X0
+dw0Ksnn4SBRf8PC+EMjfPw3R/ukWpY0OH/5WQTURpR3hNj4fXiBaHsR5iPJ14/+g
+MXwCm/NGuq1b8tMX/Zfye1r064Yt6fxBDNeQxivOImOczvKFRJhLoF9jIOqWCunJ
+GpDPzZNxysurzFW8vBLXSDbN6ZTGjwlMrmfnFFtXzqw1/KJSlYyukdyAz9oB13UG
+WDeml2YamUV8Z40PWgQAD95z4hSho2dy1AXO8p1W8LN+e81zMuMhEysVAMpGysdG
+BQPUMp7acbVgUEJ9bANkxcjmR1sDBD21GESvrcDKexXB9QkPT8w7bCKEVVMsJyRr
+54t1NlR4ZhNwkdzBw0vvHyIjdtbuYVmsNm19v+5KUu42dPqFGrdlgZ5Zfi7KlM5M
+dHWxT0+L9RZE0ngIZTibxEEi2iw4jIZL11Lq7KzB54luSZ2vdPDk52gqx7fWQzkb
+uzU4T8HlNYKG0j8PvdWx96Ske9CRIqNWjCx91E9YqB6fr9D1a1Pa6DSel+8FZ2bl
+zHDsR/PmpuSVdCJWZNF6xwNLiMWAbFlre8I48Erk+UKQBszgP9v4gDlaAqgqKymh
+geQbRYdzWFWPkadKkX0+keIqanpsXPVKB88buGZ/Vovaqo+etDLwAYxEt1OwIpJ3
+fuQe405PVk8=
+=VPvX
 -----END PGP SIGNATURE-----
 
---=-8pjRjQXmdm/TnsTbuq52--
+--=-mrAkGAAmdKw9pQIc4GqC--
 
