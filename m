@@ -1,67 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36050 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507AbYDUJMF (ORCPT
+Received: from mta1.srv.hcvlny.cv.net ([167.206.4.196]:50135 "EHLO
+	mta1.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570AbYDSNoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 05:12:05 -0400
-Subject: Re: [RFC: 2.6 patch] remove ieee80211_wx_{get,set}_auth()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Bunk <bunk@kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20080421084834.GP26897@cs181133002.pp.htv.fi> (sfid-20080421_094928_883145_7CB9F947)
-References: <20080421084834.GP26897@cs181133002.pp.htv.fi>
-	 (sfid-20080421_094928_883145_7CB9F947)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f1uKrp7pE/5qfJO77dNK"
-Date: Mon, 21 Apr 2008 11:11:14 +0200
-Message-Id: <1208769074.26186.53.camel@johannes.berg> (sfid-20080421_101211_205626_8E2F5A70)
-Mime-Version: 1.0
+	Sat, 19 Apr 2008 09:44:02 -0400
+Received: from X61.NetworkingUnlimited.com
+ (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta1.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZK003Z9RHCXR20@mta1.srv.hcvlny.cv.net> for
+ linux-wireless@vger.kernel.org; Sat, 19 Apr 2008 09:44:00 -0400 (EDT)
+Date: Sat, 19 Apr 2008 09:44:01 -0400
+From: Vincent C Jones <v.jones@networkingunlimited.com>
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
+In-reply-to: <1208610565.26186.17.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Brian Morrison <bdm@fenrir.org.uk>,
+	linux-wireless@vger.kernel.org
+Message-id: <1208612641.3980.31.camel@X61.NetworkingUnlimited.com> (sfid-20080419_144420_984870_5D57E1D6)
+MIME-version: 1.0
+Content-type: text/plain
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+ <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+ <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+ <fu931e$k1b$1@ger.gmane.org>
+ <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+ <1208555842.4848.56.camel@johannes.berg>
+ <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+ <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+ <1208558255.4848.60.camel@johannes.berg>
+ <1208558382.4848.63.camel@johannes.berg>
+ <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+ <1208593973.26186.2.camel@johannes.berg>
+ <1208608786.3980.7.camel@X61.NetworkingUnlimited.com>
+ <1208610565.26186.17.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2008-04-19 at 15:09 +0200, Johannes Berg wrote:
+> > > Does anybody actually *want* that? I personally dislike the behaviour
+> > > of scanning for all previously known SSIDs actively when hidden SSIDs
+> > > are so uncommon, I see it as an information disclosure vulnerability.
+> > 
+> > I can't speak for what others may want, but the Payment Card Industry
+> > security guidelines include not broadcasting the SSID as one of their
+> > requirements, if that is what you mean by "hidden SSIDs." 
+> 
+> So how would you feel if I told you that, after you have once used that
+> hidden network, your laptop will be broadcasting the SSID in probe
+> requests every time it scans, no matter where you are, even if you've
+> moved across the continent?
 
---=-f1uKrp7pE/5qfJO77dNK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am not going to waste bandwidth debating the correctness of the PCI
+guidelines, because right or wrong, they are what they are. I was just
+trying to point out that the need to deal with access points which do
+not broadcast their SSIDs is real and likely to become more common in
+the future, at least for any systems using wireless in a retail or other
+credit card dealing environment.
 
-On Mon, 2008-04-21 at 11:48 +0300, Adrian Bunk wrote:
-> After the bcm43xx removal ieee80211_wx_{get,set}_auth() were no longer=20
-> used.
->=20
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
->=20
-> ---
->=20
->  include/net/ieee80211.h      |    8 ---
->  net/ieee80211/ieee80211_wx.c |   89 -----------------------------------
->  2 files changed, 97 deletions(-)
+I'll leave it up to you (collective you, not necessarily a personal
+you), how to best deal with associating with APs which are not
+broadcasting their SSIDs. I agree with you (personal you this time) that
+roaming around the country broadcasting those SSIDs does not seem
+particularly desirable. So how should the ability to connect to non SSID
+broadcasting APs be implemented? 
 
-Interesting. I thought those would have been in softmac, removal sounds
-fine to me but I don't use the ieee80211 stack.
-
-johannes
-
---=-f1uKrp7pE/5qfJO77dNK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAxaMaVg1VMiehFYAQKSRhAAnjEoNF4XRbwmO9J9NsZInLZ8dJTDTLM6
-Mfjru3lrMuVq1CTl+EpnxRc0L1tigz3NCL/iei0y6GZi2sZq4+uiqHUIN/9KhgPQ
-tH9hM5C+dnNJCIcs7V3YWXNV8uoMBZ1Ic7aDebK1YThuamhOc7lGs/Y3F+Ohwrym
-WGOJ82n4K6fqx/jFtwOlSdnYG1Q0iVF8gv4D139AWRqqtP9KKOw+CtHrh83z2v7E
-f2hPRfYE25WHKtEY136tH/wNHxIwS/vPdZSB7FGPuGppY1uQLtkeHs94QPW8pF99
-sAmLhGZ/9Uwqhr5jaF7y1zWjryQvw616FramtVEVY1uU9Y0gNdPF4DX9W5jx9LG3
-HgJuFM44ZUrncqNU154GYzs7i2s8dIdlVVz7wuyKJfBsHaiYUX3siHmS09Cx6Sv3
-uRQtBx7htQ/9iPrKSjMYO+LgWp+fLGMiGWb1RGdgxvwWTWF/9mutHTZis5VQ4wxG
-2pwxJpAR2mbIy4ywKGoSWUTmV5lClKUVHGMeuBVtoDlbQIDNuabUgpMTiC7P+Hs3
-wvGZptvhJTCaONWHm+E5DVXhkOERFv2Iq2ZLvlEGUgiEMVIbsciTs3oaQwBlbfxp
-ouNVtchSGXVsXz+n5xqtIsYeXOKkAq38hCMrvFtlYVqWoeKSScFPUUqoKOPUfR2G
-pcLc3rS++q0=
-=drvt
------END PGP SIGNATURE-----
-
---=-f1uKrp7pE/5qfJO77dNK--
-
+My hope is that the more you are aware of the constraints on others who
+want to take advantage of all your hard work, the more likely you are to
+make the correct decisions and trade offs. I am not attacking your
+efforts, ability or motivation. I only wanted to point out that the
+design assumption in the first quotation that "hidden SSIDs are so
+uncommon" may need to be revised.
+-- 
+Vincent C Jones <v.jones@networkingunlimited.com>
+Networking Unlimited, Inc.
