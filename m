@@ -1,76 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:61485 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827AbYDBRbc convert rfc822-to-8bit (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:33800 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755766AbYDSSj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 13:31:32 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so2932330fgb.17
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 10:31:29 -0700 (PDT)
-To: Thomas =?iso-8859-15?q?B=E4chler?= <thomas@archlinux.org>
-Subject: Re: RaLink RT2500 802.11g Cardbus/mini-PCI
-Date: Wed, 2 Apr 2008 19:32:25 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <35856.201.36.161.238.1206999707.squirrel@mamao.cetuc.puc-rio.br> <200804012009.02448.IvDoorn@gmail.com> <47F35E1B.8000103@archlinux.org>
-In-Reply-To: <47F35E1B.8000103@archlinux.org>
+	Sat, 19 Apr 2008 14:39:59 -0400
+Message-ID: <480A3C3A.4020905@lwfinger.net> (sfid-20080419_194005_238947_DD10ACA6)
+Date: Sat, 19 Apr 2008 13:38:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Message-Id: <200804021932.26046.IvDoorn@gmail.com> (sfid-20080402_183140_507501_D52179A5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: akpm@linux-foundation.org
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	harvey.harrison@gmail.com, jbenc@suse.cz
+Subject: Re: [patch 6/7] mac80211: michael.c use unaligned/byteorder helpers
+References: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org>
+In-Reply-To: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 April 2008, Thomas B=E4chler wrote:
-> Ivo van Doorn schrieb:
-> > Hi,
-> >=20
-> >>>> Is the last kernel code working with RaLink RT2500 802.11g Cardb=
-us/mini-PCI?
-> >>> With 'latest' do you mean:
-> >>>  latest 2.6.25-rc kernel?
-> >>>  latest wireless-testing git snapshot
-> >>>  latest rt2x00 git snapshot
-> >>>
-> >>> The latter 2 should work fine, the first one has known issues
-> >>> but the state variates per person.
-> >> I was complaining about speed a while ago, so after reading this p=
-ost, I=20
-> >> thought I should try again and tell you:
-> >>
-> >> The version in wireless-testing seems to work great, a test downlo=
-ad=20
-> >> gave me 1.24MB/s, which is about the same speed I get with my (Int=
-el=20
-> >> wireless) laptop. I am using rt2500pci.
-> >>
-> >> Does the above mean that the stock driver in 2.6.25 will still be =
-slow?
-> >=20
-> > Most likely yes.
-> > Although I hear mixed reports, some say it depends on the rate sele=
-ction
-> > algorithm, some claim rt2x00 in 2.6.24 is faster then wireless-test=
-ing and
-> > others claim the exact opposite.
-> > At the moment it is hard to tell, but I haven't collected data yet =
-with specific
-> > information about the used rate selection module and exact data tra=
-nsfer
-> > numbers.
-> >=20
-> > Ivo
-> >=20
->=20
-> I rebuilt 2.6.25-rc8 (again) to use the 'simple' algorithm instead of=
-=20
-> the 'PID' algorithm by default. rt2500pci is still fast!
+akpm@linux-foundation.org wrote:
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> Rather than open-coding the get/put of little endian values, use
+> get/put_unaligned and the byteorder helpers.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Cc: Jiri Benc <jbenc@suse.cz>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  net/mac80211/michael.c |   21 +++++++++++----------
+>  1 file changed, 11 insertions(+), 10 deletions(-)
+> 
+> diff -puN net/mac80211/michael.c~mac80211-michaelc-use-unaligned-byteorder-helpers net/mac80211/michael.c
+> --- a/net/mac80211/michael.c~mac80211-michaelc-use-unaligned-byteorder-helpers
+> +++ a/net/mac80211/michael.c
+> @@ -9,6 +9,8 @@
+>  
+>  #include <linux/types.h>
+>  #include <linux/bitops.h>
+> +#include <asm/byteorder.h>
+> +#include <asm/unaligned.h>
+>  
+>  #include "michael.h"
+>  
+> @@ -24,21 +26,20 @@ static void michael_block(u32 *l, u32 *r
+>  	*l += *r;
+>  }
+>  
+> -
+> -static inline u32 michael_get32(u8 *data)
+> +static u32 michael_get16(u8 *data)
+>  {
+> -	return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+> +	return le16_to_cpu(get_unaligned((__le16 *)data));
+>  }
+>  
+> -
+> -static inline void michael_put32(u32 val, u8 *data)
+> +static u32 michael_get32(u8 *data)
+>  {
+> -	data[0] = val & 0xff;
+> -	data[1] = (val >> 8) & 0xff;
+> -	data[2] = (val >> 16) & 0xff;
+> -	data[3] = (val >> 24) & 0xff;
+> +	return le32_to_cpu(get_unaligned((__le32 *)data));
+>  }
+>  
+> +static void michael_put32(u32 val, u8 *data)
+> +{
+> +	put_unaligned(cpu_to_le32(val), (__le32 *)data);
+> +}
+>  
+>  void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+>  		 u8 *data, size_t data_len, u8 *mic)
+> @@ -53,7 +54,7 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
+>  	 * calculation, but it is _not_ transmitted */
+>  	l ^= michael_get32(da);
+>  	michael_block(&l, &r);
+> -	l ^= da[4] | (da[5] << 8) | (sa[0] << 16) | (sa[1] << 24);
+> +	l ^= michael_get16(da) | (michael_get16(sa) << 16);
+___________________________^^
 
-Good to hear. :)
+This should be da + 4! This change affects #7 of 7, and is needed 
+there as well. With those changes, my stuff works with patches 1-6 and 
+with 1-7.
 
-Thanks for the test.
+Larry
 
-Ivo
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
