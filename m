@@ -1,109 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:22870 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755562AbYDCNP7 (ORCPT
+Received: from mta1.srv.hcvlny.cv.net ([167.206.4.196]:34062 "EHLO
+	mta1.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953AbYDSMjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 09:15:59 -0400
-Received: by el-out-1112.google.com with SMTP id v27so1609656ele.17
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 06:15:58 -0700 (PDT)
-Message-ID: <a44ae5cd0804030615n3c3e906ey1db4513802bdf01@mail.gmail.com> (sfid-20080403_141602_246433_5F230782)
-Date: Thu, 3 Apr 2008 09:15:57 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX non-WEP frame, but expected encryption"
-Cc: "Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1207226756.3636.66.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
-	 <1207226756.3636.66.camel@johannes.berg>
+	Sat, 19 Apr 2008 08:39:46 -0400
+Received: from X61.NetworkingUnlimited.com
+ (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta1.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JZK004J6OI9QU00@mta1.srv.hcvlny.cv.net> for
+ linux-wireless@vger.kernel.org; Sat, 19 Apr 2008 08:39:45 -0400 (EDT)
+Date: Sat, 19 Apr 2008 08:39:46 -0400
+From: Vincent C Jones <v.jones@networkingunlimited.com>
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
+In-reply-to: <1208593973.26186.2.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Brian Morrison <bdm@fenrir.org.uk>,
+	linux-wireless@vger.kernel.org
+Message-id: <1208608786.3980.7.camel@X61.NetworkingUnlimited.com> (sfid-20080419_133959_147025_2DB36C95)
+MIME-version: 1.0
+Content-type: text/plain
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+ <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+ <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+ <fu931e$k1b$1@ger.gmane.org>
+ <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+ <1208555842.4848.56.camel@johannes.berg>
+ <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+ <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+ <1208558255.4848.60.camel@johannes.berg>
+ <1208558382.4848.63.camel@johannes.berg>
+ <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+ <1208593973.26186.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 3, 2008 at 8:45 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
->  Please copy the mailing list, I've done that now.
->
->
->  > My log files are filling up with these messages:
->  >
->  >        [ 8722.198929] wlan0: RX non-WEP frame, but expected encryption
->  >        [ 8726.506345] __ratelimit: 14 messages suppressed
->
->
-> > ./rx.c:                       printk(KERN_DEBUG "%s: RX non-WEP frame, but expected "
->
->
->
-> > It seems that others who are using Netgear WPN824 access points are
->  > also seeing these messages in their logs.
->  > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1614
->  > http://ubuntuforums.org/showthread.php?t=637084
->  >
->  > I am wondering whether this indicates a problem situation with the
->  > access point that really needs to be reported.  Is this being reported
->  > because it is a security risk?   Is this a condition that really needs
->  > to be reported by wireless drivers?
->
->  Hm. You shouldn't actually be getting this when your AP is configured to
->  use encryption. It either points to somebody trying to invade your
->  network (unlikely) or an AP bug.
->
->  Can you use 'iw' to add a new monitor interface and capture some of the
->  unencrypted packets with that? Use
->
->  $ git clone http://git.sipsolutions.net/iw.git/
->  $ cd iw
->  $ make
->
->  # ./iw dev wmaster0 interface add moni0 type monitor
->
->  and then wireshark/tcpdump on it, you can also send me the dump in
->  private mail if you cannot identify the problem. If you *disable* hw
->  crypto I won't even be able to read your actual traffic :)
+On Sat, 2008-04-19 at 10:32 +0200, Johannes Berg wrote:
+> > At last iwlwifi HW scanning can handle up to 4 essids for direct
+> > scan but currently wireless tools interface cannot utilize this.
+> 
+> Does anybody actually *want* that? I personally dislike the behaviour
+> of scanning for all previously known SSIDs actively when hidden SSIDs
+> are so uncommon, I see it as an information disclosure vulnerability.
 
-Thanks Johannes,
-
-I tried to build iw, but got an error:
-
-# make
- CC   iw.o
-/bin/sh: cgcc: not found
-make[1]: *** [iw.o] Error 127
-make: *** [check] Error 2
-
-After poking around, I found
-http://ftp.idilis.ro/mirrors/ftp.kernel.org/pub/software/devel/sparse/news.html
-which seems to be where I can find the tool.
-I compiled, and (after setting $HOME to /usr) installed it.
-Now, when I try to compile iw, I get:
-
-# make
- CC   iw.o
-iw.c:9:11: error: unable to open 'netlink/genl/genl.h'
-iw.c:9:31: error: netlink/genl/genl.h: No such file or directory
-iw.c:10:33: error: netlink/genl/family.h: No such file or directory
-iw.c:11:33: error: netlink/genl/ctrl.h: No such file or directory
-iw.c:12:25: error: netlink/msg.h: No such file or directory
-iw.c:13:26: error: netlink/attr.h: No such file or directory
-iw.c: In function 'nl80211_init':
-iw.c:23: error: implicit declaration of function 'nl_handle_alloc'
-iw.c:23: warning: assignment makes pointer from integer without a cast
-iw.c:29: error: implicit declaration of function 'genl_connect'
-iw.c:35: error: implicit declaration of function 'genl_ctrl_alloc_cache'
-iw.c:35: warning: assignment makes pointer from integer without a cast
-iw.c:42: error: implicit declaration of function 'genl_ctrl_search_by_name'
-iw.c:42: warning: assignment makes pointer from integer without a cast
-iw.c:52: error: implicit declaration of function 'nl_cache_free'
-iw.c:54: error: implicit declaration of function 'nl_handle_destroy'
-iw.c: In function 'nl80211_cleanup':
-iw.c:60: error: implicit declaration of function 'genl_family_put'
-iw.c: In function 'get_phy_or_dev':
-iw.c:83: error: implicit declaration of function 'strcmp'
-make[1]: *** [iw.o] Error 1
-
-Help?
-
-        Miles
+I can't speak for what others may want, but the Payment Card Industry
+security guidelines include not broadcasting the SSID as one of their
+requirements, if that is what you mean by "hidden SSIDs." 
+-- 
+Vincent C Jones <v.jones@networkingunlimited.com>
+Networking Unlimited, Inc.
