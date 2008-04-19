@@ -1,74 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:43028 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbYD2BHw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 21:07:52 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so8402384waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 18:07:52 -0700 (PDT)
-Message-ID: <1ba2fa240804281807u2162bf28red586ae61fd881a@mail.gmail.com> (sfid-20080429_030756_008190_6A61AF89)
-Date: Tue, 29 Apr 2008 03:07:51 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [2.6 patch] iwlwifi: move the selects to the tristate drivers
-Cc: "Adrian Bunk" <bunk@kernel.org>,
-	"David Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	reinette.chatre@intel.com, torvalds@linux-foundation.org,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20080428234548.GB3075@tuxdriver.com>
+Received: from bay0-omc3-s5.bay0.hotmail.com ([65.54.246.205]:28396 "EHLO
+	bay0-omc3-s5.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753780AbYDSCix convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Apr 2008 22:38:53 -0400
+Message-ID: <BAY109-W5276443C777EAD90F53A43C9E70@phx.gbl> (sfid-20080419_033859_609184_F31D6EFE)
+From: Marcus Furlong <furlongm@hotmail.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: RE: iwl3945 problem with 2.6.25-rc9
+Date: Sat, 19 Apr 2008 03:32:43 +0100
+In-Reply-To: <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+ <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org>
+ <1208376292.27708.3.camel@localhost.localdomain>
+ <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+ <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+ A<fu931e$k1b$1@ger.gmane.org>
+ <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+ (sfid-20080418_224627_648936_DECA7576)
+ <1208555842.4848.56.camel@johannes.berg>
+ <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+Content-Type: text/plain; charset=Windows-1252
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080428054700.GA16177@Pilar.virtua.com.br>
-	 <20080427.233507.261574307.davem@davemloft.net>
-	 <20080428073212.GA7260@Pilar.virtua.com.br>
-	 <20080428131552.GI16379@cs181133002.pp.htv.fi>
-	 <20080428142129.GA5679@beyonder.ift.unesp.br>
-	 <20080428205849.GB2813@cs181133002.pp.htv.fi>
-	 <20080428234548.GB3075@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/29/08, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Apr 28, 2008 at 11:58:49PM +0300, Adrian Bunk wrote:
+
+On Fri, 18 Apr 2008 15:12:13 -0700, you wrote:
 >
-> > This patch moves the following select's:
-> > - RFKILL        : IWLWIFI_RFKILL -> IWLCORE
-> > - RFKILL_INPUT  : IWLWIFI_RFKILL -> IWLCORE
-> > - MAC80211_LEDS : IWL4965_LEDS   -> IWLCORE
-> > - LEDS_CLASS    : IWL4965_LEDS   -> IWLCORE
-> > - MAC80211_LEDS : IWL3945_LEDS   -> IWL3945
-> > - LEDS_CLASS    : IWL3945_LEDS   -> IWL3945
-> >
-> > The effects are:
-> > - with IWLCORE=m and/or IWL3945=m RFKILL/RFKILL_INPUT/MAC80211_LEDS/LEDS_CLASS
-> >   are no longer wrongly forced to y
-> > - fixes a build error with IWLCORE=y, IWL4965=m
-> >   might be a bug in kconfig causing it, but doing this change that is
-> >   anyway the right thing fixes it
-> >
-> > Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
-> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> On Friday, April 18, 2008 2:57 PM, Johannes Berg wrote:
 >
-> This seems sane to me -- I'm sorry I let so much Kconfig mess slip
-> through on this driver in the first place!
-
-I'm sorry too, this is just so no intuitive... I'm really amazed where
-it get into yet constrain computation is always complex.  Next time I
-put more effort in this.
-
-Tomas
-
-> > ---
-> >
-> > BTW: There's no correlation between IWL3945_LEDS and IWLWIFI_LEDS.
-> >      That seems to be intended?
+>> Just jumping in here because I want to know if there are any mac8021=
+1
+>> bugs (I don't have any 5 GHz hw except the iwl4965, no AP), would it
+>> maybe help to explicitly enable sw scanning?
 >
-> Yes.  IWLWIFI_LEDS used to be IWL4965_LEDS, and I have the impression
-> that eventually it will subsume IWL3945_LEDS as well.
+> First thing is that there is a iwlwifi driver or ucode problem as it
+> asserts every time (it seems) when mac_config is called for channels =
+38,
+> 42, 46, and 52. Channel 36 succeeds. The cause of the ucode error is
+> unclear to me as I am waiting for somebody to get back to me about wh=
+at
+> the contents of that "event log dump" means.
 >
-True, not yet.
+> I looked further about why mac_config is called for those channels an=
+d
+> the reason appears to be that it is done from ieee80211_sta_scan_work=
+=2E
+> This should not happen as it should only do so for sw scanning (if I
+> understand correctly), while the default for this driver is hw scanni=
+ng
+> (and the user is not overriding the default). I am thus now trying to
+> figure out how it actually thinks sw scanning is enabled through some
+> simple debugging where mac80211 tries to run the driver's hw_scan
+> function.
+>
+> Explicitly enabling sw scanning is an interesting idea.
+>
+> Marcus: could you please run your test twice with that patch? The fir=
+st
+> time you run it as you did before, the second time please provide the
+> driver parameter "disable_hw_scan=3D1" together with the debug parame=
+ter.
 
+Both dmesg logs here:
 
+https://www.cs.tcd.ie/~furlongm/iwlwifi/2.6.25-dmesg-with-patch
+https://www.cs.tcd.ie/~furlongm/iwlwifi/2.6.25-dmesg-with-patch-disable=
+_hw_scan
 
-Thanks
-Tomas
+This time I was able to associate, and the dhcp client got an address e=
+ach time (with and without disable_hwscan=3D1). However, with disable_h=
+w_scan=3D1, I tried to associate, then dmesg said it had timed out. Aft=
+er playing around a bit, I figured out that I could only properly assoc=
+iate with my AP (essid testing) after I associated with a different AP =
+(connected to my neighbours one). Rebooted a few times and repeated and=
+ it worked each time.
+
+Unfortunately both with and without disable_hwscan=3D1, I lost the conn=
+ection after a few minutes.
+
+(Quick question: I can't find information about using wireless-tools an=
+d wpa for this driver. I saw for other drivers they use iwpriv set_algo=
+=3D2 for wpa support, but iwl3945 doesn't seem to support this yet or i=
+s there a different way?)
+
+Marcus.
+_________________________________________________________________
+Love Hotmail? It just got better =96 Drag and Drop capabilities, new Re=
+ading Panes making it easier to read your mail, enhanced security setti=
+ngs, 5GB of FREE storage? New Windows Live Hotmail. Get your free accou=
+nt here
+http://get.live.com/mail/overview/--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
