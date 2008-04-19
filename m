@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbYDZPuY (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:3290 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbYDSTbk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 11:50:24 -0400
-Subject: [PATCH] mac80211: don't allow invalid WDS peer addresses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Sat, 19 Apr 2008 15:31:40 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so1822471waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2008 12:31:39 -0700 (PDT)
+Subject: Re: [patch 6/7] mac80211: michael.c use unaligned/byteorder helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: akpm@linux-foundation.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, jbenc@suse.cz
+In-Reply-To: <480A38FA.3090300@lwfinger.net>
+References: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org>
+	 <480A38FA.3090300@lwfinger.net>
 Content-Type: text/plain
-Date: Thu, 24 Apr 2008 14:16:36 +0200
-Message-Id: <1209039396.3357.72.camel@johannes.berg> (sfid-20080426_175046_954326_E7A142CE)
+Date: Sat, 19 Apr 2008 12:31:56 -0700
+Message-Id: <1208633516.7941.1.camel@brick> (sfid-20080419_203144_399103_9826D127)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rather than just disallowing the zero address, disallow all
-invalid ones.
+On Sat, 2008-04-19 at 13:24 -0500, Larry Finger wrote:
+> akpm@linux-foundation.org wrote:
+> > From: Harvey Harrison <harvey.harrison@gmail.com>
+> > 
+> > Rather than open-coding the get/put of little endian values, use
+> > get/put_unaligned and the byteorder helpers.
+> > 
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> > Cc: Jiri Benc <jbenc@suse.cz>
+> > Cc: John W. Linville <linville@tuxdriver.com>
+> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> > ---
+> 
+> The set of 7 patches break my system, which is x86_64 using WPA-PSK 
+> TKIP. If I back out #6 and 7, then all is OK.
+> 
+> Does this series have any prerequisites? I'm running the current 
+> wireless-testing git tree.
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for the testing, I posted an updated patchset on Thursday
+last week and this set has been dropped from -mm.
 
---- everything.orig/net/mac80211/main.c	2008-04-24 13:29:06.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-04-24 13:29:13.000000000 +0200
-@@ -255,7 +255,7 @@ static int ieee80211_open(struct net_dev
- 
- 	switch (sdata->vif.type) {
- 	case IEEE80211_IF_TYPE_WDS:
--		if (is_zero_ether_addr(sdata->u.wds.remote_addr))
-+		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
- 			return -ENOLINK;
- 
- 		/* Create STA entry for the WDS peer */
+The new patchset depends on the new unaligned helpers in -mm,
+if you want I can send you a full set if you feel like testing
+them.
+
+Harvey
 
 
