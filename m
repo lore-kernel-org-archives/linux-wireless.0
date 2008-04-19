@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fenrir.org.uk ([81.168.115.223]:58176 "EHLO mx.fenrir.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbYDXKhz convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63740 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627AbYDSPnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 06:37:55 -0400
-Received: from [62.189.241.202] (helo=[10.104.10.102])
-	(TLSv1:AES256-SHA:256)
-	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
-	id 1Joypu-0002G2-E2
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2008 11:37:54 +0100
-Message-ID: <48106301.6070400@fenrir.org.uk> (sfid-20080424_123828_697709_C9F45332)
-Date: Thu, 24 Apr 2008 11:37:53 +0100
-From: Brian Morrison <bdm@fenrir.org.uk>
+	Sat, 19 Apr 2008 11:43:39 -0400
+Date: Sat, 19 Apr 2008 10:42:28 -0500
+From: Larry.Finger@lwfinger.net
+To: mb@bu3sch.de, linville@tuxdriver.com
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] ssb: Fix case where board flags are unset in SPROM
+Message-ID: <480a12e4.JW4WMtJZAF8ZXHLq%Larry.Finger@lwfinger.net> (sfid-20080419_164345_235110_21F435C6)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: 11h IE conflicts with 11s
-References: <1ba2fa240804221003o25515740r71c3210d3c9ffb91@mail.gmail.com>	 <1208885207.31429.43.camel@johannes.berg>	 <1ba2fa240804221723l51b8c9a1qa301ededf6c11336@mail.gmail.com>	 (sfid-20080423_022441_945194_1DBEBEB3) <1208978570.3357.1.camel@johannes.berg>
-In-Reply-To: <1208978570.3357.1.camel@johannes.berg>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->>>  Heh. Interesting. I just looked at the ANA spreadsheet
->>>  (=EF=BB=BF11-08-0227-00-0000-ana-database-assigned-numbers.xls) an=
-d there TGs
->>>  doesn't even have any tentative assignments although all other TGs=
- do.
->>>  But TGh is still listed there rather than being subsumed into
->>>  802.11-2007, what's up with that? Is there a new TGh?
->>>
->> It's in 7.3.2 table 20 in 11h draft I have here and in table 26 in
->> 11ma (unified version)
->=20
-> 802.11-2007 has been published :) It's table 7-26 there as well, of
-> course.
->=20
->> These numbers are being used for few years already. This is what for
->> example Cisco APs are using
->> so I have strong feeling it won't change.
->=20
-> Heh yeah.
->=20
->> Not sure why you are looking for it in 11n spec
->=20
-> Where did I say 11n? Huh?
+The specifications call for the low 16 bits of the board flags to
+be cleared if unset (== 0xFFFF). This step was taken in bcm43xx,
+but was missed when ssb was coded. With this patch, Linksys WMP11
+cards with a BCM4301 now work.
 
-It was my mistake, I was referring to 802.11s but for some reason wrote=
- n.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I looked at 802.11s Draft 2.0. It shows that these information element
-IDs are all waiting ANA approval, the Mesh Configuration and Mesh ID ar=
-e
-shown as <ANA 33> and <ANA 34> respectively. What these numbers will
-eventually be I don't know, the <ANA nn> designations are simply
-sequential from the first one to the last one shown in the document, so
-they may not actually end up as being sequential numbers.
+John,
 
-Is this information of any help to you?
+This is 2.6.26 material.
 
---=20
+Larry
+---
 
-Brian
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -483,6 +483,11 @@ static int sprom_extract(struct ssb_bus 
+ 		if (out->revision >= 5)
+ 			goto unsupported;
+ 	}
++	/* check for board flags not set (0xFFFF) and make 0 as per specs */
++	if (out->boardflags_lo == 0xFFFF)
++		out->boardflags_lo = 0;
++	if (out->boardflags_hi == 0xFFFF)
++		out->boardflags_hi = 0;
+ 
+ 	return 0;
+ unsupported:
