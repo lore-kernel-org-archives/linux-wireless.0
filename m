@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57501 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751599AbYDOQiY convert rfc822-to-8bit (ORCPT
+Received: from e31.co.us.ibm.com ([32.97.110.149]:60691 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403AbYDSXdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 12:38:24 -0400
+	Sat, 19 Apr 2008 19:33:41 -0400
+Date: Sat, 19 Apr 2008 16:33:38 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+Subject: Re: [RFC 0/3] Examples for the new sparse context tracking functionality
+Message-ID: <20080419233338.GG20138@linux.vnet.ibm.com> (sfid-20080420_003348_051324_299498FE)
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <20080410134810.629048000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 09/12] iwl4965: make iwl4956_send_rxon_assocasynchronous
-Date: Tue, 15 Apr 2008 09:38:22 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200430E027@orsmsx416.amr.corp.intel.com> (sfid-20080415_173828_041078_EB9A8B32)
-In-Reply-To: <1208277317.14211.35.camel@dv>
-References: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com> <1208232974-3828-2-git-send-email-reinette.chatre@intel.com> <1208232974-3828-3-git-send-email-reinette.chatre@intel.com> <1208232974-3828-4-git-send-email-reinette.chatre@intel.com> <1208232974-3828-5-git-send-email-reinette.chatre@intel.com> <1208232974-3828-6-git-send-email-reinette.chatre@intel.com> <1208232974-3828-7-git-send-email-reinette.chatre@intel.com> <1208232974-3828-8-git-send-email-reinette.chatre@intel.com> <1208232974-3828-9-git-send-email-reinette.chatre@intel.com> <1208232974-3828-10-git-send-email-reinette.chatre@intel.com> <1208276232.14211.28.camel@dv> <D936D925018D154694D8A362EEB089200430DFD0@orsmsx416.amr.corp.intel.com> <1208277317.14211.35.camel@dv>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080410134810.629048000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, April 15, 2008 9:35 AM, Pavel Roskin  wrote:
-
-> On Tue, 2008-04-15 at 09:22 -0700, Chatre, Reinette wrote:
->>>>  static int iwl4965_send_rxon_assoc(struct iwl_priv *priv)
->>> 
->>> Wrong patch description.  Please swap 5 and 6 :-)
->> 
->> Sorry - I do not understand your comment. Could you please elaborate?
+On Thu, Apr 10, 2008 at 03:48:10PM +0200, Johannes Berg wrote:
+> Here are some patches that show how the new sparse functionality  
+> could be used in the kernel if merged.
 > 
-> The subject was:
-> iwl4965: make iwl4956_send_rxon_assoc asynchronous
-> (you also lost a space in this reply, but it was there)
-> 
-> It should be:
-> iwl4965: make iwl4965_send_rxon_assoc asynchronous
-> 
-> In other words, replace 4956 with 4965 in the subject.  I hope John
-> can do it while applying. 
+> As mentioned before, I have actually found three bugs in mac80211
+> using these patches. If you apply them and the sparse patches I have
+> also just posted, you can find them too :)
 
-oh no - great catch.
+I like this approach in general, deferring to Josh on specifics.
 
-John, could you please fix the typo in the patch description when you
-apply this one?
+At some point in the future, we might want to distinguish between
+the different flavors of RCU -- except that there is already common
+code that doesn't care which flavor of RCU is in use, as long as
+some sort of RCU is present.  So make that "some point in the distant
+future"...
 
-Thank you very much
-
-Reinette
+						Thanx, Paul
