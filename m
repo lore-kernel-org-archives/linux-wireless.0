@@ -1,96 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42538 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47816 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbYDWHyb (ORCPT
+	with ESMTP id S1752922AbYDSIdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 03:54:31 -0400
-Subject: Re: [PATCH] mac80211: Fix race between ieee80211_rx_bss_put and
-	lookup routines.
+	Sat, 19 Apr 2008 04:33:08 -0400
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Emelyanov <xemul@openvz.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <480EE983.4020209@openvz.org>
-References: <480EE983.4020209@openvz.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rRGNBGUfbN2oGHL1FeQ2"
-Date: Wed, 23 Apr 2008 09:53:49 +0200
-Message-Id: <1208937230.31429.60.camel@johannes.berg> (sfid-20080423_095511_531549_3D56BAB4)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Brian Morrison <bdm@fenrir.org.uk>, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com> (sfid-20080419_012818_214996_06C2AEF6)
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+	 <fu931e$k1b$1@ger.gmane.org>
+	 <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+	 <1208555842.4848.56.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+	 <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+	 <1208558255.4848.60.camel@johannes.berg>
+	 <1208558382.4848.63.camel@johannes.berg>
+	 <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+	 (sfid-20080419_012818_214996_06C2AEF6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MRKVb7xkS5iKjSrarIjp"
+Date: Sat, 19 Apr 2008 10:32:53 +0200
+Message-Id: <1208593973.26186.2.camel@johannes.berg> (sfid-20080419_093315_310519_2D56BCC5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-rRGNBGUfbN2oGHL1FeQ2
+--=-MRKVb7xkS5iKjSrarIjp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-04-23 at 11:47 +0400, Pavel Emelyanov wrote:
-> The put routine first decrements the users counter and then
-> (if it is zero) locks the sta_bss_lock and removes one from
-> the list and the hash.
->=20
-> Thus, any of ieee80211_sta_config_auth, ieee80211_rx_bss_get
-> or ieee80211_rx_mesh_bss_get can race with it by finding a
-> bss that is about to get kfree-ed.
->=20
-> Using atomic_dec_and_lock in ieee80211_rx_bss_put takes care
-> of this race.
 
-Good catch, thanks.
+> Second the 3954 and 4965 my uCode may crash intentionally if you send
+> probe requests on a passive channel.according EEPROM.
 
-> Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+I really wonder what sort of error handling strategy that is, even if
+it's done for regulatory compliance purposes I don't see a need to crash
+the whole card. Especially considering that the userspace MLME in
+wpa_supplicant will scan by itself (yes, it scans in userspace, whether
+or not you may like that), of course it would be made comply with
+regulatory settings but that makes it hard to develop.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> I personally  wish to not make SW scanning possible at all for that reaso=
+n.
 
-I think we will need this in -stable (different file, same contents)
+That is not going to happen since you can always "scan" by sending probe
+requests manually.
 
-> ---
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 6b75cb6..dac3c2a 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2248,10 +2248,13 @@ static void ieee80211_rx_bss_put(struct net_devic=
-e *dev,
->  				 struct ieee80211_sta_bss *bss)
->  {
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> -	if (!atomic_dec_and_test(&bss->users))
-> +
-> +	local_bh_disable();
-> +	if (!atomic_dec_and_lock(&bss->users, &local->sta_bss_lock)) {
-> +		local_bh_enable();
->  		return;
-> +	}
-> =20
-> -	spin_lock_bh(&local->sta_bss_lock);
->  	__ieee80211_rx_bss_hash_del(dev, bss);
->  	list_del(&bss->list);
->  	spin_unlock_bh(&local->sta_bss_lock);
->=20
+> At last iwlwifi HW scanning can handle up to 4 essids for direct scan
+> but currently wireless tools interface cannot utilize this.
 
---=-rRGNBGUfbN2oGHL1FeQ2
+Does anybody actually *want* that? I personally dislike the behaviour of
+scanning for all previously known SSIDs actively when hidden SSIDs are
+so uncommon, I see it as an information disclosure vulnerability.
+
+johannes
+
+--=-MRKVb7xkS5iKjSrarIjp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASA7rDKVg1VMiehFYAQIGGBAAhI+C4JZYmVANKUiIC2BwY6LfB0eIlOCl
-xnB+fCsRMfW3Yv/+6KaEg8dYK+Nqyw9yuNo4wejpE51wtj6qHGRQGmQp8D8LwH/N
-9QsO/X2FhfQWU7tMe7/8fSdbIk1YFOC17WjAli8F0MHaIZwJ1w6gPSN6TrCdilWr
-ivYH/PAOXDtqjNG50ugE5BypSEXQFGNL4BhvGI1fphteQFe9wYmvfnVfmyuQxcdW
-xfJNDJFBrcA5w24QKPOWaHg3Ub8eIAVHP92h+mEMSJDj9lr9b/M060ebTSipcUwm
-qhEdUkiLghE/nOPYcjqkLd8fMlNLTcK5QlI9cbSjr3zStw0cL3W5wkojEIQvTe2t
-SMVoHTKuYjx71TAo3Ia9/qQlnK7Xh2/aBHg0n9xUwh9ZxA8AaOrzvXFr0GdBc92s
-lxM54kXvbMaoGeMsnqs7b0A7sdoB1v6e0E9GFStcEhok0Val7d0tBiMAjPHwUeCp
-fdDDZKZ8GWvY6xEXVx0oakgjz4l3C9sNRPt2zAvBKBavl0lHRJETZzF1ttSxp8PH
-NqbuyN1pvu5gkNOWSP8TrE+PiqVnPYYFrpbMqNjCM1JsT44MjSCT9rnOwj9lP5sl
-OZsmceWp1rNlVNtbPT5HW8Hg3ZJ94EG/4vxqgKC6BY2hu41/eQChSY0vfN5h/FWs
-+bxCzndZBXo=
-=iFLl
+iQIVAwUASAmuM6Vg1VMiehFYAQKYtA//WUDJKI7+r7kAh7U4VzH3kIqxeCNIUicr
+XO/2T5XTJOwFFc60W6D1e6f8xO0zCfcQvERc5/qV4oCNzCBCAYFhAtffz6tKG/YA
+ogbnDTygGgQr4eVj83wtADC98ZCow5+WXdAv72ZOefUgjqjZJgQLirjGHpsJiPhn
+ILLAPAWznIzntTInIfeMadpLc7GjY8qFnwSBOqSO4+vVdXPXC0GAMZbE3BdzSzqn
+O3sqoHt45jbaaYEiq8vWuM6CaV/v4dSNj9rxnAnkYoKRZDIP9SY50355/Zz5QsLn
+ucDpcgSCYR8OPvj/BeIvYQ9oPnFV1SM6uXwaWIoJ2ALSatjH2YGv9l5E9E5s+gBO
+6yiABJ9IZY2rTN4bN+0BBD4reUjhulahS7AT/I9FHBJMdByD2eL1/QvUUcBymBdQ
+DAflBS3hSK30bMp5K9GijuqBW/uK0IogQXSyAMQvo95RkKvmju1Tw96TSQzZeES6
+OfmtkjZFjh6wt/lgGVVDKJrH6VoB99epyGticZ9dEN8VI87UtuJqBPeyOFQ+EHt9
+ayXqBZBbErVhyMC8cFspL8QDe1mCnq24HXtV36IJtZhQxpKT5pb6tw6R/kyccO2p
+rwTkXyBA3bGwr12wAbSHKLfhhwTCFGGC2J6UOusjk81mzgX6KqIRKvq8+dm+m2m3
+sjI9PT1iZNk=
+=LwxQ
 -----END PGP SIGNATURE-----
 
---=-rRGNBGUfbN2oGHL1FeQ2--
+--=-MRKVb7xkS5iKjSrarIjp--
 
