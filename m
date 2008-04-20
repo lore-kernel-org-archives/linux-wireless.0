@@ -1,82 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56293 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756672AbYD3OUZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 10:20:25 -0400
-Subject: Re: [RFC] WARNING: at net/mac80211/ieee80211_rate.h:159
-	rate_lowest_index()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Koutny <vlado@work.ksp.sk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48174652.6080909@work.ksp.sk> (sfid-20080429_180141_582175_8C7B6399)
-References: <48174652.6080909@work.ksp.sk>
-	 (sfid-20080429_180141_582175_8C7B6399)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PFD2j0IKPRx7EHeGfMym"
-Date: Wed, 30 Apr 2008 16:20:15 +0200
-Message-Id: <1209565215.18659.26.camel@johannes.berg> (sfid-20080430_162017_586248_D00379B8)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34859 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163AbYDTPz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2008 11:55:28 -0400
+Message-ID: <480B6117.3000201@hauke-m.de> (sfid-20080420_165531_570329_F6F9D5A8)
+Date: Sun, 20 Apr 2008 17:28:23 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: lrodriguez@atheros.com
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: compat-wireless-2008-04-20 doesn't build on kernel 2.6.23
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig57573A2D736AE5D6B6B36306"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-PFD2j0IKPRx7EHeGfMym
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig57573A2D736AE5D6B6B36306
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
+I have tested to build compat-wireless-2008-04-20 on kernel 2.6.23 but
+it doesn't build. I got the following error:
 
-> because sdata->u.sta.supp_rates_bits is set only when we actually
-> join an ibss, which is not the case in this scenario; so we assign
-> zero here. Then, the code in rate_control_pid_rate_init() calls
-> rate_lowest_index() for some reason, and since no supported rate is
-> found, this warning is issued.
->=20
->=20
-> The question is how sta->supp_rates should be initialized:
->=20
-> - we could initialize it to our sta's rates, but then we could
->   probably transmit to a station at unsupported rate
->=20
-> - add new ibss station only on received beacon, not on a data frame;
->   currently, beacons are ignored for this purpose (they just update
->   the bss list later on)
->=20
-> - something else (like 1Mbps only)?
->=20
-> As soon as we do sta_join_ibss(), this warning won't happen again.
->=20
->=20
-> Note that once we have sta entry (in our ibss), we will update its
-> supported rates based on beacons it sends (in rx_bss_info()).
->=20
-> Any thoughts?
+  CC [M]  compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.o
+compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.c: In function
+'ath5k_hw_attach':
+compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.c:346: error:
+'struct pci_dev' has no member named 'is_pcie'
+make[4]: *** compat-wireless-2008-04-20/drivers/net/wireless/ath5k/hw.o]
+Error 1
+make[3]: *** compat-wireless-2008-04-20/drivers/net/wireless/ath5k] Error=
+ 2
+make[2]: *** compat-wireless-2008-04-20/drivers/net/wireless] Error 2
+make[1]: ***
+[_module_/home/hmehr/compat-wireless/compat-wireless-2008-04-20] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.23.15-80.fc7-x86_64'
 
-I don't know. I don't use IBSS nor am I intimately familiar with the
-specs for it.
 
-johannes
+The next error I got while building was:
 
---=-PFD2j0IKPRx7EHeGfMym
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+  CC [M]  ompat-wireless-2008-04-20/drivers/net/wireless/b43/main.o
+In file included from include/linux/input-polldev.h:12,
+                 from
+compat-wireless-2008-04-20/drivers/net/wireless/b43/rfkill.h:10,
+                 from
+compat-wireless-2008-04-20/drivers/net/wireless/b43/b43.h:13,
+                 from
+compat-wireless-2008-04-20/drivers/net/wireless/b43/main.c:45:
+include/linux/input.h:933:1: warning: "BIT" redefined
+In file included from include/linux/kernel.h:15,
+                 from compat-wireless-2008-04-20/include/net/compat.h:5,
+                 from <command line>:1:
+compat-wireless-2008-04-20/include/linux/bitops.h:7:1: warning: this is
+the location of the previous definition
+
+
+If you need the full log please mail me.
+
+Hauke
+
+
+--------------enig57573A2D736AE5D6B6B36306
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIVAwUASBiAHqVg1VMiehFYAQLR9A/9EXX2K7CXcnThxd9JGSVe31HS42HvrXSH
-cnvowErynHwTKOjo08OmMXrm/z85d7y82pdNA+spdessIUlRbqkVY+Cj+6tnnMNB
-B4qokmPlmEHO5/HdUaFX06rKxZ4DFWcMj/NLD7s/Eplf6xE0h2iwXXUnvEYupgZ6
-5Iz6KG28HUMJODMJ7PbXabzZ95orpjcs1G4bJoZa14l1QIvonhN0HIfXE18ZvTfz
-G+lNjg+X16pp9d5qYY+DUfxCgyi9NURN23y4eFqN27JDJTUkeBrVmQ+2rRyzmoPx
-2EPNaGWKJ0hxPldsAgZSeGJSIIZFWKINwwep3BEsl+WF+YzLKN5YBLctQ5pEkq/I
-kniLoUeNsyDIvephCIsx9KH/wx5Dbi+0xG3KuGiNgsVT6ehFljG22/s7cSMzNHgg
-V3TgwL8lsiT6wdT8A84ixfcMlKksDPwhJj/6qhxwMdOWL7qglFdnfcXdiHcYVV+C
-anKsumX/IaC4amTSNHqvScP172f7qXUXT1m4Q9T25CeBZ/z0+JQpff10q0ukczN7
-pSsQS1WUZpJnFtnUKVjU2rvFWrr69pHxhb1GkH8Y2I5OKNkJZsX3OcDwJk8V1sY2
-U6KsVm93UPzV7s8Ek7niqPHfDXt6htJJIE6ChahBjXkjhmztJxW5ZKnivitrB1eM
-j86ZTElcuvU=
-=J0Rd
+iQIVAwUBSAthJYZ0px9YPRMyAQJN/xAAg4I+1vljwBo850PYQmUhlYL5s2VUn4Pt
+FiruBiVjF98A2ppC8Zor3/8wroMQ90UHL531rmFqBDiYsNdxaIGva/C3nNWeFyj7
+70B8LbHBsHcz1fmpuk70JdjL4VZbvni7pSAZxlzwCz/ZdnVVZSui+c9LW5GTH4OZ
+nCFx88JF2LP4jkmBgAbnWO6BuAzQ0XAxwUYutV90dlsD0mhjqeTQq1xDn21eW5D8
+ZjjRPq28j6q31j1k1KcG77u/EMwqwk1tHWXrQTvO3uow7BP1y2VGB0nMNTkKbkcp
+5Mo+g8XwZRPNE9mC8udh1T5dWZB3iZstMWqaQY+Jz8Aze46M9pWVA6mXTUJVZ3zc
+YD+cvqaQ8kdp6qnn50oDu9PQb/AnUIF3wqnrfwmLpiJW5f2xOiOr6zdYiHZXuqWB
+PYvAqLOJWnw+o19b5MMHvhzEZs1UT9uxDEEJ0uA28y9iUkbIsgEqp29sdOS/YnXO
+3GDQdCrloOCctg2qgeMgQkHGYsgiFRDRnOCOYCYfD3edoBelzm3uoWUPjpQIba4p
+tMEPvkq0pwA6UTG/vOqGQQcTqffUmUO/6kvkFSkLsPVByp7m2c7XJ+NVh1tjee1t
+esX9VpM2j2TevD6qttMtPOl54lulWRT54GVsM66qAlNYBvqgZal6vWx3fBbT0uqB
+35BF/SNcdG8=
+=xbWJ
 -----END PGP SIGNATURE-----
 
---=-PFD2j0IKPRx7EHeGfMym--
-
+--------------enig57573A2D736AE5D6B6B36306--
