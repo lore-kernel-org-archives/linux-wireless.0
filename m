@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41655 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798AbYDPSC0 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:58512 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbYDTUj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 14:02:26 -0400
-Subject: Re: 2.6.25-rc9 -- bcm4306 performance is in the toilet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Miles Lane <miles.lane@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a44ae5cd0804161045h37aafedbk5ff69bbb3c5ff850@mail.gmail.com> (sfid-20080416_184616_878424_D672AB3A)
-References: <48056406.2060502@gmail.com> <48060D71.6020507@lwfinger.net>
-	 <a44ae5cd0804161012w7c07efb0w68f9a8664f077556@mail.gmail.com>
-	 <1208367041.11676.55.camel@johannes.berg>
-	 <a44ae5cd0804161045h37aafedbk5ff69bbb3c5ff850@mail.gmail.com>
-	 (sfid-20080416_184616_878424_D672AB3A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ltTyat7eSiXYf8aWeWRQ"
-Date: Wed, 16 Apr 2008 20:01:15 +0200
-Message-Id: <1208368875.11676.58.camel@johannes.berg> (sfid-20080416_192700_200631_2D0768A0)
-Mime-Version: 1.0
+	Sun, 20 Apr 2008 16:39:27 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so2572785waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 13:39:27 -0700 (PDT)
+Message-ID: <1ba2fa240804201339u3232c5f6mede647c5c8521ae3@mail.gmail.com> (sfid-20080420_213934_100738_6B66EC2B)
+Date: Sun, 20 Apr 2008 23:39:26 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
+Cc: "Brian Morrison" <bdm@fenrir.org.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1208593973.26186.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+	 <fu931e$k1b$1@ger.gmane.org>
+	 <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+	 <1208555842.4848.56.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+	 <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+	 <1208558255.4848.60.camel@johannes.berg>
+	 <1208558382.4848.63.camel@johannes.berg>
+	 <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+	 <1208593973.26186.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Apr 19, 2008 at 11:32 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>  > Second the 3954 and 4965 my uCode may crash intentionally if you send
+>  > probe requests on a passive channel.according EEPROM.
+>
+>  I really wonder what sort of error handling strategy that is, even if
+>  it's done for regulatory compliance purposes I don't see a need to crash
+>  the whole card. Especially considering that the userspace MLME in
+>  wpa_supplicant will scan by itself (yes, it scans in userspace, whether
+>  or not you may like that), of course it would be made comply with
+>  regulatory settings but that makes it hard to develop.
 
---=-ltTyat7eSiXYf8aWeWRQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It should not scan on not supported channel in any conditions. EEPROM
+and reg.c has to be combined.
 
+>
+>  > I personally  wish to not make SW scanning possible at all for that reason.
+>
+>  That is not going to happen since you can always "scan" by sending probe
+>  requests manually.
 
-> Am I required to get the linux-wireless git kernel tree in order to
-> get the newer nl80211.h?
+Probe request before association is  a must, no argue about it.
 
-No, you can just get it from gitweb too :) But other than that,
-probably. Or a compat tarball would work.
+>  > At last iwlwifi HW scanning can handle up to 4 essids for direct scan
+>  > but currently wireless tools interface cannot utilize this.
+>
+>  Does anybody actually *want* that? I personally dislike the behaviour of
+>  scanning for all previously known SSIDs actively when hidden SSIDs are
+>  so uncommon, I see it as an information disclosure vulnerability.
 
-> I checked in the 2.6.25-rc9 tree and was surprised to find four copies
-> of nl80211.h:
-> 0 2008-04-14 23:48 ./include/config/nl80211.h
-> 10074 2008-04-11 16:32 ./include/linux/nl80211.h
-> 510 2008-04-11 16:32 ./net/wireless/nl80211.h
-> 10074 2008-04-15 05:50 ./usr/include/linux/nl80211.h
->=20
-> It seems interesting that two copies have the same byte count and that
-> one of the files is empty.  What's up with that?
+Sure you want that. User space applications handles number of
+preferred SSIDs, let's call them profiles. It's desired that you do
+direct scan for those SSIDss for faster connection.
+Currently it takes 20 minutes  for NM to connect to network I want in
+crowded air. (I'm exaggerating now I don't have real number...  but
+it's something like that)
+It's not just for hidden ssids.
 
-The empty one is created when you configure, because there's a kconfig
-symbol for nl80211. I'm not sure why it is empty, it should have
-"#define CONFIG_NL80211 1" or so in it. The ./usr one is a copy of
-the ./include one, that's done by headers_install (IIRC), the
-net/wireless/nl80211.h one is for some local stuff in that dir.
-
-johannes
-
---=-ltTyat7eSiXYf8aWeWRQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAY+6aVg1VMiehFYAQIkLQ//bY4eY7M6lHXmU+dTGMwbLDZn78UqqggD
-HUCq4/m+KNOavc7y4zvunrPW4l7IMJOo70fBQw2RtX8BBi4FMJxZjAvjch9l6reE
-KSZL+zS9lAu8cPHDSXaaepPgYc11bReWNqCoEf6Vpyj2nPVHMRQYaOD46lZiLK89
-RlVefJHKtO6pW79aCIyL+WpkbinlRMMd30irbUkQOLqi2iWedapVEq+KU3teJjCy
-abn3qD5vP32SdgQi3mQNr1c/EKb1OMrvJIovrE1Dxlz0YylNbbUOJa9VUvxGeQnM
-3pl7lEWj7uYb8tC++aSg05ghSZ/TSh1PFJ3kCFspzp76Z78fJvHKtq3+kURcrVxI
-1oKn3Yy756rtJe0/xy7EmJoGRb5a6p1xrJ95klD8FVtYCiHvU00pwjeRBf+85E5v
-F8PzQsjwyC5aISF+CYmHjk37IGYOKlAwdnQ6lCTxNmMZ/YIZeBZ9x9oNiJL3Snoj
-xUwvFtWxiCSuG4W8PYy8GzBnFqXXX7tjQvkZ0IuzIUdH9oikNu3tS5pXtV6rWUYv
-+6NbmwpdKOov6jTi8NEmiTtnth5rMXRGANfhcs9STJW7N56mq0LtLnrrsaK4LC53
-lCr6+B9nPuQM7lqXaijBe0QaaCxpXzImihU3jZXzMj587IOTgtA1kYt8zE0FRg//
-2ZeaxX4py5U=
-=pwia
------END PGP SIGNATURE-----
-
---=-ltTyat7eSiXYf8aWeWRQ--
-
+Tomas
