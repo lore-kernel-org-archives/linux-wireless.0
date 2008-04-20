@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5405 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbYDII0b (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:57109 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755624AbYDTTKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 04:26:31 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: un-garbage various command structs
-Date: Wed, 9 Apr 2008 10:23:31 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+	Sun, 20 Apr 2008 15:10:54 -0400
+Date: Sun, 20 Apr 2008 21:10:51 +0200
+From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+Message-ID: <20080420191051.GA12136@Chamillionaire.breakpoint.cc> (sfid-20080420_201057_593194_5C69A897)
+References: <1208448814.9212.270.camel@pmac.infradead.org> <200804181149.41838.hs4233@mail.mn-solutions.de> <1208517302.9212.324.camel@pmac.infradead.org> <200804181510.53412.hs4233@mail.mn-solutions.de> <20080420084101.GB7685@Chamillionaire.breakpoint.cc> <1208688992.9212.412.camel@pmac.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804091023.31707.hs4233@mail.mn-solutions.de> (sfid-20080409_092635_936007_258E5BB1)
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1208688992.9212.412.camel@pmac.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some command structs contain reserved or unused fields, which the driver
-send uninitialized down to the card.
+* David Woodhouse | 2008-04-20 11:56:32 [+0100]:
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+>On Sun, 2008-04-20 at 10:41 +0200, Sebastian Siewior wrote:
+>> The function before lbs_ethtool_get_stats() (in net code that
+>> determinate the number of elements, dunno the name right now) is able to
+>> return an error. This one could check if the firmware has mesh support.
+>
+>That's what my second patch does.
+got to check that patch.
 
-Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-04-08 18:45:29.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-04-08 20:05:11.000000000 +0200
-@@ -296,6 +296,7 @@ int lbs_cmd_802_11_set_wep(struct lbs_pr
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
-+	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.command = cpu_to_le16(CMD_802_11_SET_WEP);
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 
-@@ -359,7 +360,9 @@ int lbs_cmd_802_11_enable_rsn(struct lbs
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(cmd_action);
- 
--	if (cmd_action == CMD_ACT_SET) {
-+	if (cmd_action == CMD_ACT_GET)
-+		cmd.enable = 0;
-+	else {
- 		if (*enable)
- 			cmd.enable = cpu_to_le16(CMD_ENABLE_RSN);
- 		else
-@@ -811,6 +814,7 @@ int lbs_get_channel(struct lbs_private *
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
-+	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_OPT_802_11_RF_CHANNEL_GET);
- 
-@@ -858,6 +862,7 @@ int lbs_set_channel(struct lbs_private *
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
-+	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_OPT_802_11_RF_CHANNEL_SET);
- 	cmd.channel = cpu_to_le16(channel);
+>> Do I understand this correct: If the firmware has support for mesh
+>> devices than we have ethX and mshX and only mshX should return the
+>> statistics?
+>
+>Well, they are _mesh_ statistics :)
+yes, but I have two interfaces or just one?
+
+>Yeah, that might be worthwhile.
+>
+>> I will try to form a patch around Monday that fixes Dan's comments (if
+>> nobody else is going to).
+>
+>Which comments? If we apply your original patch, followed by my patch in
+><1208509888.9212.291.camel@pmac.infradead.org> (which for some reason
+>only went to wireless-dev, not libertas-dev), then I think it's fine.
+The comments were
+- everything what deals with mesh should take the mash lock
+- check for mesh support before calling lbs_ethtool_get_stats()
+
+If your second patch deals with these than yes it should be fine.
+
+>dwmw2
+
+Sebastian
