@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755965AbYDPOHW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 10:07:22 -0400
-Subject: Re: mac80211 hardware encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200804151717.54920.IvDoorn@gmail.com> (sfid-20080415_161442_807626_6BB3493B)
-References: <200804051931.58895.IvDoorn@gmail.com>
-	 <200804142307.48550.IvDoorn@gmail.com>
-	 <1208255742.3502.5.camel@johannes.berg>
-	 <200804151717.54920.IvDoorn@gmail.com>
-	 (sfid-20080415_161442_807626_6BB3493B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z+lex4rEQuYLZTE5umqN"
-Date: Wed, 16 Apr 2008 15:57:24 +0200
-Message-Id: <1208354244.11676.31.camel@johannes.berg> (sfid-20080416_150727_330132_DA046179)
+Received: from mx1.redhat.com ([66.187.233.31]:55826 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163AbYDTP2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2008 11:28:06 -0400
+Subject: Re: RE: iwl3945 problem with 2.6.25-rc9
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vincent C Jones <v.jones@networkingunlimited.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Brian Morrison <bdm@fenrir.org.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1208610565.26186.17.camel@johannes.berg>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com>
+	 <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com>
+	 <fu931e$k1b$1@ger.gmane.org>
+	 <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com>
+	 <1208555842.4848.56.camel@johannes.berg>
+	 <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com>
+	 <20080418232358.000fbdf7@peterson.fenrir.org.uk>
+	 <1208558255.4848.60.camel@johannes.berg>
+	 <1208558382.4848.63.camel@johannes.berg>
+	 <1ba2fa240804181728u7a3440cajbba7dcc696d02909@mail.gmail.com>
+	 <1208593973.26186.2.camel@johannes.berg>
+	 <1208608786.3980.7.camel@X61.NetworkingUnlimited.com>
+	 <1208610565.26186.17.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 20 Apr 2008 11:24:17 -0400
+Message-Id: <1208705057.5036.7.camel@localhost.localdomain> (sfid-20080420_162825_434793_161188A3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2008-04-19 at 15:09 +0200, Johannes Berg wrote:
+> > > Does anybody actually *want* that? I personally dislike the behaviour
+> > > of scanning for all previously known SSIDs actively when hidden SSIDs
+> > > are so uncommon, I see it as an information disclosure vulnerability.
+> > 
+> > I can't speak for what others may want, but the Payment Card Industry
+> > security guidelines include not broadcasting the SSID as one of their
+> > requirements, if that is what you mean by "hidden SSIDs." 
+> 
+> So how would you feel if I told you that, after you have once used that
+> hiddent network, your laptop will be broadcasting the SSID in probe
+> requests every time it scans, no matter where you are, even if you've
+> moved across the continent?
 
---=-z+lex4rEQuYLZTE5umqN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Unfortuately, I keep getting way too many reports about hidden SSIDs
+still.  I don't feel like it's something we can start ignoring (yet).
+Maybe in a few years, but we've still got to handle this for the
+forseeable future.
 
+Dan
 
-> I'll create a patch that changes it to the key_conf pointer then,
-> that sounds like the safest option to allow changes to key_conf later.
-
-Ok.
-
-> Note that this change (either adding the key_conf pointer or the hw_key_i=
-dx to u16)
-> will cause ieee80211_tx_control to exceed the 48 bytes. So that will make=
- it
-> harder to move it into the skb->cb array later.
-
-Yeah, well, tough luck, unless we can convince netdev to increase cb[]
-on 64-bit platforms.
-
-johannes
-
---=-z+lex4rEQuYLZTE5umqN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAYFwqVg1VMiehFYAQLFvQ//SBysAzdZ0rGoUmyIdjzSNbzKoiLXcZot
-uNEemwnephWj9OoKJd88xRqufZ4xnvfRlDIQ5A3QBM9Y0bN0BgFJ+pEBwXi1jPd4
-ICUnpB0UAmnA9g1PTvE/jUR6rFjjlqFSScFhI754Oiyi48bwa7gb3oU8HewpCtxF
-e6YYL/NXPthM2qVQoHJ70iFT2JZ4deA9UttG7j05Qcyrmlr7V8IH348GAnxfh3eZ
-BFE5cmp6Ic3xBjR3Q2p2O+ZEFX7qXfcJXQw9HWdX8Aq9TxJkB/P93Vh3jJ44IL6A
-AK7Snk9L7KvNHSDWzRHOxptiGt/ncOQsx9vpF561Lx/8KnP1vDU0sUrmyCKtCCN0
-6iLR1ADn0bspDu8DSWU/3EsyHPQbaTFfa8iYZiRNalk831+5wew4WPPyIIiooFSQ
-O4jOKyE1VBXrvuAe61MMkDW3yVJiq+oMiPzzP82l5EKeeJYWNXihIGGqMzS1SAKP
-cnsN6O6OSfm6jjfBk6tgXjEcG85wKYcd+/5CCy1XpBiz/uXP7Dv71SWXLSmB2yfX
-3iZ5WQi9v+Sknb8Uc8fgFxu70+pw9migsLYzIVpTb7CYYjGlsM4J0Prhy/c9Ks/9
-RsSCkz5N8BLQh7nnvmZ416fUyGOxDqW63T1UWjxdbLbZkJe/8Wav9O1OAG85yGVs
-Aa/RFwRLxcQ=
-=AYJK
------END PGP SIGNATURE-----
-
---=-z+lex4rEQuYLZTE5umqN--
 
