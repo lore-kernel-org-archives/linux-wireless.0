@@ -1,86 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:2353 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757595AbYD3Pah (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 11:30:37 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so196604fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2008 08:30:35 -0700 (PDT)
+Received: from mx1.redhat.com ([66.187.233.31]:54867 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754233AbYDUQ5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 12:57:19 -0400
+Subject: Re: [RFC: 2.6 patch] remove ieee80211_wx_{get,set}_auth()
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/RFT 4/4] mac80211: use multi-queue master netdevice
-Date: Wed, 30 Apr 2008 17:34:10 +0200
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-References: <20080430124055.091382000@sipsolutions.net> <1209566743.18659.30.camel@johannes.berg> <1209567609.18659.33.camel@johannes.berg>
-In-Reply-To: <1209567609.18659.33.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804301734.11804.IvDoorn@gmail.com> (sfid-20080430_173041_399724_C46A339F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <1208769074.26186.53.camel@johannes.berg>
+References: <20080421084834.GP26897@cs181133002.pp.htv.fi>
+	 (sfid-20080421_094928_883145_7CB9F947)  <1208769074.26186.53.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 21 Apr 2008 12:53:12 -0400
+Message-Id: <1208796792.30994.16.camel@localhost.localdomain> (sfid-20080421_185810_992202_5EDE9714)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2008-04-21 at 11:11 +0200, Johannes Berg wrote:
+> On Mon, 2008-04-21 at 11:48 +0300, Adrian Bunk wrote:
+> > After the bcm43xx removal ieee80211_wx_{get,set}_auth() were no longer 
+> > used.
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> > 
+> > ---
+> > 
+> >  include/net/ieee80211.h      |    8 ---
+> >  net/ieee80211/ieee80211_wx.c |   89 -----------------------------------
+> >  2 files changed, 97 deletions(-)
+> 
+> Interesting. I thought those would have been in softmac, removal sounds
+> fine to me but I don't use the ieee80211 stack.
 
-Don't want to spoil the fun, but the following part doesn't compile
-when CONFIG_MAC80211_QOS is not set.
+The only other two users of ieee80211 are ipw2100 and ipw2200, and they
+both appear to implement the SIOCxIWAUTH calls privately.  So I think
+these can go to the function slaughterhouse.  If somebody wants to unify
+them later it would be better to start fresh anyway.
 
-In the following occurences struct ieee80211_local *local needs to be defined.
+Dan
 
->  void ieee80211_start_queues(struct ieee80211_hw *hw)
->  {
-> -	struct ieee80211_local *local = hw_to_local(hw);
-> +#ifdef CONFIG_MAC80211_QOS
->  	int i;
->  
-> -	for (i = 0; i < local->hw.queues; i++)
-> -		clear_bit(IEEE80211_LINK_STATE_XOFF, &local->state[i]);
-> -	if (!ieee80211_qdisc_installed(local->mdev))
-> -		netif_start_queue(local->mdev);
-> +	for (i = 0; i < hw->queues; i++)
-> +		ieee80211_start_queue(hw, i);
-> +#else
 
-	struct ieee80211_local *local = hw_to_local(hw);
-
-> +	netif_start_queue(local->mdev);
-> +#endif
->  }
->  EXPORT_SYMBOL(ieee80211_start_queues);
->  
->  void ieee80211_stop_queues(struct ieee80211_hw *hw)
->  {
-> +#ifdef CONFIG_MAC80211_QOS
->  	int i;
->  
->  	for (i = 0; i < hw->queues; i++)
->  		ieee80211_stop_queue(hw, i);
-> +#else
-
-	struct ieee80211_local *local = hw_to_local(hw);
-
-> +	netif_stop_queue(local->mdev);
-> +#endif
->  }
->  EXPORT_SYMBOL(ieee80211_stop_queues);
->  
->  void ieee80211_wake_queues(struct ieee80211_hw *hw)
->  {
-> +#ifdef CONFIG_MAC80211_QOS
->  	int i;
->  
->  	for (i = 0; i < hw->queues; i++)
->  		ieee80211_wake_queue(hw, i);
-> +#else
-
-	struct ieee80211_local *local = hw_to_local(hw);
-
-> +	netif_wake_queue(local->mdev);
-> +#endif
->  }
->  EXPORT_SYMBOL(ieee80211_wake_queues);
-
-Ivo
