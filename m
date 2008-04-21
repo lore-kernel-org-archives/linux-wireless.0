@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from home.einfach.org ([80.86.92.145]:56845 "EHLO home.einfach.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbYDOJUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 05:20:44 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Subject: Re: AR5K_INT_SWBA can't generate interruption for sending beacons
-Date: Tue, 15 Apr 2008 10:59:05 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"cao jing" <caojing.china@gmail.com>
-References: <9f33c5230804142124g3c8f4a0ai28a6b5117e1034c9@mail.gmail.com> <200804151036.55216.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200804151036.55216.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804151059.06119.bruno@thinktube.com> (sfid-20080415_102055_244552_FE3433E5)
+Received: from wa-out-1112.google.com ([209.85.146.180]:13558 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbYDUFuj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 01:50:39 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so2863351waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 22:50:38 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: simplify code in util.c
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1208755440.2595.7.camel@debian.sh.intel.com>
+References: <1208745396.7941.14.camel@brick>
+	 <1208755440.2595.7.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Sun, 20 Apr 2008 22:50:54 -0700
+Message-Id: <1208757054.7941.18.camel@brick> (sfid-20080421_065042_684134_B63BF636)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 15 April 2008 10:36:55 Holger Schurig wrote:
-> > I'm working on mac80211 and ath5k. I found that the
-> > AR5K_INT_SWBA interruption can't be generated. So I can't send
-> > beacons by this interruption. Anyone knows what's going on
-> > with it?
+On Mon, 2008-04-21 at 13:24 +0800, Zhu Yi wrote:
+> On Sun, 2008-04-20 at 19:36 -0700, Harvey Harrison wrote:
+> > -		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
+> > -				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
+> > +		if (fc & IEEE80211_STYPE_QOS_DATA)
+> > +			hdrlen += 2;
+> 
+> You need also take other QoS types (i.e QOS_NULLFUNC) into
+> consideration. Please take a look at WLAN_FC_IS_QOS_DATA macro.
+> 
 
-the current code in wireless-testing uses SWBA not to send beacons but to keep 
-track of the next beacon time NBTT. this is necessary to work around certain 
-hardware limitations. once configured, the beacons are sent automatically by 
-the hardware at the right time. of course it would be possible to change the 
-code to generate a new beacon at every SWBA but as long as the beacon 
-contents don't change very often i don't see the point of doing so.
+Well, that would be a change from what's there now, I've just got a
+few pure cleanup patches I've done while making some changes in wpa.c
+I'm going to submit the cleanup patches on their own first, then
+patches with more substance.
 
-> ath5k didn't make it yet to wireless-testing. That is the git
-> tree for all wireless stuff that finally will make it into
-> mainline Linux. See http://linuxwireless.org for more detail.
+Cheers,
 
-i don't know how you come to that conclusion - ath5k *is* in wireless-testing 
-and there are a few people working on it.
+Harvey
 
-bruno
