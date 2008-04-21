@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:22304 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.185]:52877 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650AbYDTLCS (ORCPT
+	with ESMTP id S1762276AbYDURAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2008 07:02:18 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so1684913fkr.5
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 04:02:16 -0700 (PDT)
-Message-ID: <3efd34cc0804200402k4b18dbd8i37771d9c547d880b@mail.gmail.com> (sfid-20080420_120221_999661_E99D7255)
-Date: Sun, 20 Apr 2008 13:02:15 +0200
-From: "bert hubert" <bert.hubert@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: nl80211: state of mac80211 and hostapd ?
+	Mon, 21 Apr 2008 13:00:15 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so2556605fkr.5
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:00:14 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 9/9] rt2x00: Release rt2x00 2.1.5
+Date: Mon, 21 Apr 2008 19:02:35 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200804211858.46659.IvDoorn@gmail.com>
+In-Reply-To: <200804211858.46659.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804211902.35377.IvDoorn@gmail.com> (sfid-20080421_190108_225499_5DB5CD96)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 19, 2008 at 11:44 PM, bert hubert <bert.hubert@gmail.com> wrote:
->  I've trawled the web and found Johannes Berg's patches, but they
->  appear to indicate that recent hostap & linux kernels don't need any
->  patches.
->
->  Am I trying to do something that can't work? Or do I need patches? I'm
->  more than willing to patch & test.
 
-Ok, I've made a lot of progress. I now run the wireless-2.6.26 tree
-and the hostapd git tree, and use the 'nl80211' driver of hostapd.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This does get further, but only succeeds in killing my wireless
-connection and dumping core. Yet it feels like progress!
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 92656d0..48a9af4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.1.4"
++#define DRV_VERSION	"2.1.5"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
+-- 
+1.5.4.5
 
-Can you tell me if this is expected to work? Or what trees do I need?
-
-Thanks!
