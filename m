@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:65046 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbYDCFPw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754681AbYDUR4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 01:15:52 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2975613wff.4
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 22:15:51 -0700 (PDT)
-Message-ID: <1ba2fa240804022215q6fc006e5u2d11262221ac0f14@mail.gmail.com> (sfid-20080403_061600_040550_A79FFE1D)
-Date: Thu, 3 Apr 2008 08:15:51 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: Chr <chunkeey@web.de>
-Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <200804030051.02391.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200804012145.18294.chunkeey@web.de>
-	 <1207128858.10910.19.camel@johannes.berg>
-	 <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com>
-	 <200804030051.02391.chunkeey@web.de>
+	Mon, 21 Apr 2008 13:56:52 -0400
+Subject: Re: [PATCH 4/9] rt2x00: Use rt2x00 queue numbering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200804211958.31363.IvDoorn@gmail.com> (sfid-20080421_195225_482896_A8063A41)
+References: <200804211858.46659.IvDoorn@gmail.com>
+	 <1208798232.26186.121.camel@johannes.berg>
+	 <200804211930.31340.IvDoorn@gmail.com>
+	 <200804211958.31363.IvDoorn@gmail.com>
+	 (sfid-20080421_195225_482896_A8063A41)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CYO1AcmuqYmdFU9NRSzQ"
+Date: Mon, 21 Apr 2008 19:56:17 +0200
+Message-Id: <1208800577.26186.125.camel@johannes.berg> (sfid-20080421_195742_516698_3A8B7C58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 3, 2008 at 1:51 AM, Chr <chunkeey@web.de> wrote:
->
-> On Wednesday 02 April 2008 22:05:46 Tomas Winkler wrote:
->  > On Wed, Apr 2, 2008 at 12:34 PM, Johannes Berg
->  >
->  > <johannes@sipsolutions.net> wrote:
->  > >  On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
->  > >  > This patch is necessary for the upcoming Accesspoint patch for p54.
->  > >
->  > >  Hm. I don't like increasing the tx control structure size but I guess
->  > >  you really need that :)
->  > >
->  > >  > Signed-off-by: Christian Lamparter <chunkeey@web.de>
->  > >
->  > >  Acked-by: Johannes Berg <johannes@sipsolutions.net>
->  > >
->  > >  Please CC the appropriate maintainers (i.e. at least me for mac80211) on
->  > >  code changes.
->  >
->  > Not sure why this cannot be bookeeped in the driver.
->  > Upon association AID is delivered to driver, so every packet that will
->  > be sent to this AP has this AID?
->
->  hmm? where? sta_notify just gives us the mac-address and a command.
->  (maybe you have mixed it up with set_tim?!)
->
->  Or do I miss something obvious here?
 
-This patch series introduces this. It was posted week ago so I've
-assumed it was already merged.
-
->[PATCH 1/4] mac80211: eliminate conf_ht
-> [PATCH 2/4] iwlwifi: eliminate conf_ht
-> [PATCH 3/4] mac80211: add association capabilty and timing
-> info into bss_conf
-> [PATCH 4/4] iwlwifi: Eliminate association from beacon
+--=-CYO1AcmuqYmdFU9NRSzQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> > This function only exists to move the translation in a single location.
+> > When the translation isn't needed anymore because skb_get_queue_mapping=
+(skb)
+> > or something else is used, then this function can be removed completely=
+. :)
+>=20
+> Ps. Can I assume that skb_get_queue_mapping(skb) or whatever replacement
+> for control->queue will make sure the given queue will not exceed the max
+> number of supported queues as configured by the driver (through hw->queue=
+s)?
+>=20
+> Or should the driver drop such packets or resolve it to the highest queue=
+ available?
 
->  Regards,
->         Chr.
->
->
->
->
->
+Well there are two cases.
+
+(1) MQ is not configured -> it always returns 0
+(2) MQ is configured, mac80211 will create a device with hw->queues
+queues, so it'll be in the range [0 .. hw->queues-1]
+
+johannes
+
+--=-CYO1AcmuqYmdFU9NRSzQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASAzVP6Vg1VMiehFYAQLFthAAqmmxBpTvJSoWWxgZ4kCsNf4R3mNXAFjI
+apbRUuDteOIOAD2DMl+16JC+mflsG1CpxhQE3Eip0wQFfFVLfPp/E0WJgaDw7TRJ
+VSWQCuBdmDp58rHZ4XiQYIVJ5e9b1QySyNT24iPUrEe000e8ct4Ea+g7Nm7V5JEi
+xdgd5wJAUWyfj2ZXexUlYR4YS7HP8GgJOQeu4M6KlqKbqH80A2/aFHRXpu8ViHNk
+QRKg+7vkjjnuLV/4B9JUCaoq0AYaRbcZGEq7XYmoGRSRD5A4IWws9ue/h7uZRWpI
+tjnJ3HLCFLUQPBvDc2amfPTOk41x0/ax//GnL7YE4vg/BNVk1rdAdEehzsrUYe23
+3AT+vw/t4B7d63d2qFFAXOozuF/aqtvzq6cc38rHAsXT0ZAWU8kpFV6fapUI1d3F
+SHW5uH89aKfRc81wICkotHw/wQbQw7v3ke1EGugXuidKNZTcLpWTzPW3qK4mU7fM
+tKcZnz+w2Irw7vsN5edxK/XStfRyptlIacAAQ7WuybZpebFQH+5MSA2LoRRTSnvr
+70phLYlMizyghkYPCKbyOPCDlxLUMnQc4YLhJfKK70Ltd6haL2dovS5CQs99vu/L
+SQmnxu6ExDIha14km0z7MzcnLa9sIkTS1vltsj53gLdybCaWoifIIISnxn5LTJPn
+Jo7haFjEkNY=
+=O77k
+-----END PGP SIGNATURE-----
+
+--=-CYO1AcmuqYmdFU9NRSzQ--
+
