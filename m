@@ -1,97 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail184.messagelabs.com ([193.109.254.3]:61207 "HELO
-	mail184.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756756AbYDAOub (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 10:50:31 -0400
-Subject: Re: [PATCH] b43: Enable quantum cryptography support
-From: Mark Hagger <mark.hagger@m-spatial.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200804011613.06749.mb@bu3sch.de>
-References: <200804011613.06749.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 01 Apr 2008 15:50:19 +0100
-Message-Id: <1207061419.2879.298.camel@giga.cambridge.m-spatial.com> (sfid-20080401_155038_861201_C7B5181E)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:59302 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753292AbYDUWmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 18:42:14 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Guy Cohen <guy.cohen@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 06/11] iwlwifi: remove support for Narrow Channel (10Mhz)
+Date: Mon, 21 Apr 2008 15:41:56 -0700
+Message-Id: <1208817721-11333-7-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004343_057554_9F4AD0E4)
+In-Reply-To: <1208817721-11333-6-git-send-email-reinette.chatre@intel.com>
+References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-5-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Excellent, did you manage to implement the time travel support mode as
-well?
+From: Guy Cohen <guy.cohen@intel.com>
 
-Mark
+Setting Narrow Channel bit in the scan command caused the device
+not to send probe request on all the channels
 
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-4965.h     |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    6 ++----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +-----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ---
+ 7 files changed, 5 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index ad612a8..8821c26 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -126,7 +126,7 @@ enum {
+ 	EEPROM_CHANNEL_ACTIVE = (1 << 3),	/* active scanning allowed */
+ 	EEPROM_CHANNEL_RADAR = (1 << 4),	/* radar detection required */
+ 	EEPROM_CHANNEL_WIDE = (1 << 5),		/* 20 MHz channel okay */
+-	EEPROM_CHANNEL_NARROW = (1 << 6),	/* 10 MHz channel (not used) */
++	/* Bit 6 Reserved (was Narrow Channel) */
+ 	EEPROM_CHANNEL_DFS = (1 << 7),	/* dynamic freq selection candidate */
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 45c1c55..fb3247b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -925,11 +925,6 @@ static inline int is_channel_valid(const struct iwl3945_channel_info *ch_info)
+ 	return (ch_info->flags & EEPROM_CHANNEL_VALID) ? 1 : 0;
+ }
+ 
+-static inline int is_channel_narrow(const struct iwl3945_channel_info *ch_info)
+-{
+-	return (ch_info->flags & EEPROM_CHANNEL_NARROW) ? 1 : 0;
+-}
+-
+ static inline int is_channel_radar(const struct iwl3945_channel_info *ch_info)
+ {
+ 	return (ch_info->flags & EEPROM_CHANNEL_RADAR) ? 1 : 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 86de144..aaec064 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -1228,11 +1228,6 @@ static inline int is_channel_valid(const struct iwl_channel_info *ch_info)
+ 	return (ch_info->flags & EEPROM_CHANNEL_VALID) ? 1 : 0;
+ }
+ 
+-static inline int is_channel_narrow(const struct iwl_channel_info *ch_info)
+-{
+-	return (ch_info->flags & EEPROM_CHANNEL_NARROW) ? 1 : 0;
+-}
+-
+ static inline int is_channel_radar(const struct iwl_channel_info *ch_info)
+ {
+ 	return (ch_info->flags & EEPROM_CHANNEL_RADAR) ? 1 : 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index a436f87..efd48ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -377,7 +377,7 @@ static int iwl4965_set_fat_chan_info(struct iwl_priv *priv,
+ 	if (!is_channel_valid(ch_info))
+ 		return -1;
+ 
+-	IWL_DEBUG_INFO("FAT Ch. %d [%sGHz] %s%s%s%s%s%s(0x%02x"
++	IWL_DEBUG_INFO("FAT Ch. %d [%sGHz] %s%s%s%s%s(0x%02x"
+ 			" %ddBm): Ad-Hoc %ssupported\n",
+ 			ch_info->channel,
+ 			is_channel_a_band(ch_info) ?
+@@ -386,7 +386,6 @@ static int iwl4965_set_fat_chan_info(struct iwl_priv *priv,
+ 			CHECK_AND_PRINT(ACTIVE),
+ 			CHECK_AND_PRINT(RADAR),
+ 			CHECK_AND_PRINT(WIDE),
+-			CHECK_AND_PRINT(NARROW),
+ 			CHECK_AND_PRINT(DFS),
+ 			eeprom_ch->flags,
+ 			eeprom_ch->max_power_avg,
+@@ -490,7 +489,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			ch_info->scan_power = eeprom_ch_info[ch].max_power_avg;
+ 			ch_info->min_power = 0;
+ 
+-			IWL_DEBUG_INFO("Ch. %d [%sGHz] %s%s%s%s%s%s%s(0x%02x"
++			IWL_DEBUG_INFO("Ch. %d [%sGHz] %s%s%s%s%s%s(0x%02x"
+ 				       " %ddBm): Ad-Hoc %ssupported\n",
+ 				       ch_info->channel,
+ 				       is_channel_a_band(ch_info) ?
+@@ -500,7 +499,6 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 				       CHECK_AND_PRINT_I(ACTIVE),
+ 				       CHECK_AND_PRINT_I(RADAR),
+ 				       CHECK_AND_PRINT_I(WIDE),
+-				       CHECK_AND_PRINT_I(NARROW),
+ 				       CHECK_AND_PRINT_I(DFS),
+ 				       eeprom_ch_info[ch].flags,
+ 				       eeprom_ch_info[ch].max_power_avg,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 26a73e9..d576814 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -106,7 +106,7 @@ enum {
+ 	EEPROM_CHANNEL_ACTIVE = (1 << 3),	/* active scanning allowed */
+ 	EEPROM_CHANNEL_RADAR = (1 << 4),	/* radar detection required */
+ 	EEPROM_CHANNEL_WIDE = (1 << 5),		/* 20 MHz channel okay */
+-	EEPROM_CHANNEL_NARROW = (1 << 6),	/* 10 MHz channel (not used) */
++	/* Bit 6 Reserved (was Narrow Channel) */
+ 	EEPROM_CHANNEL_DFS = (1 << 7),	/* dynamic freq selection candidate */
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1351e91..94e6c49 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4840,7 +4840,7 @@ static int iwl3945_init_channel_map(struct iwl3945_priv *priv)
+ 			ch_info->scan_power = eeprom_ch_info[ch].max_power_avg;
+ 			ch_info->min_power = 0;
+ 
+-			IWL_DEBUG_INFO("Ch. %d [%sGHz] %s%s%s%s%s%s%s(0x%02x"
++			IWL_DEBUG_INFO("Ch. %d [%sGHz] %s%s%s%s%s%s(0x%02x"
+ 				       " %ddBm): Ad-Hoc %ssupported\n",
+ 				       ch_info->channel,
+ 				       is_channel_a_band(ch_info) ?
+@@ -4850,7 +4850,6 @@ static int iwl3945_init_channel_map(struct iwl3945_priv *priv)
+ 				       CHECK_AND_PRINT(ACTIVE),
+ 				       CHECK_AND_PRINT(RADAR),
+ 				       CHECK_AND_PRINT(WIDE),
+-				       CHECK_AND_PRINT(NARROW),
+ 				       CHECK_AND_PRINT(DFS),
+ 				       eeprom_ch_info[ch].flags,
+ 				       eeprom_ch_info[ch].max_power_avg,
+@@ -4997,9 +4996,6 @@ static int iwl3945_get_channels_for_scan(struct iwl3945_priv *priv,
+ 		if (scan_ch->type & 1)
+ 			scan_ch->type |= (direct_mask << 1);
+ 
+-		if (is_channel_narrow(ch_info))
+-			scan_ch->type |= (1 << 7);
+-
+ 		scan_ch->active_dwell = cpu_to_le16(active_dwell);
+ 		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index d6c5658..53c5c01 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4403,9 +4403,6 @@ static int iwl4965_get_channels_for_scan(struct iwl_priv *priv,
+ 		if (scan_ch->type & 1)
+ 			scan_ch->type |= (direct_mask << 1);
+ 
+-		if (is_channel_narrow(ch_info))
+-			scan_ch->type |= (1 << 7);
+-
+ 		scan_ch->active_dwell = cpu_to_le16(active_dwell);
+ 		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
+ 
+-- 
+1.5.3.4
 
-On Tue, 2008-04-01 at 16:13 +0200, Michael Buesch wrote:
-> This patch enables support for quantum cryptography on latest b43 devices.
-> The quantum cryptography algorithm is 100% backward compatible with the
-> standard CCMP algorithm, so no additional changes to the mac80211 stack
-> are needed. While staying compatible, it makes the unbreakable(!) WLAN connection
-> possible. Of course, that's only the case, if both ends use b43-qcrypto.
-> In the case where one STA uses legacy encryption, the card will automatically
-> detect this and switch back to plain old CCMP.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> ---
-> 
-> John, please queue this patch for linux-3.6.26
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/b43.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-03-22 15:44:00.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-01 15:53:40.000000000 +0200
-> @@ -270,6 +270,7 @@ enum {
->  #define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode (rev >= 13 only) */
->  #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
->  #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
-> +#define B43_HF_QUANTUMCRYPT	0x100000000000ULL /* Enable quantum cryptography in firmware. */
->  
->  /* MacFilter offsets. */
->  #define B43_MACFILTER_SELF		0x0000
-> @@ -439,6 +440,7 @@ enum {
->  	B43_SEC_ALGO_AES,
->  	B43_SEC_ALGO_WEP104,
->  	B43_SEC_ALGO_AES_LEGACY,
-> +	B43_SEC_ALGO_QUANTUM,
->  };
->  
->  struct b43_dmaring;
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-27 17:11:38.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-01 15:53:41.000000000 +0200
-> @@ -3215,6 +3215,13 @@ static int b43_op_set_key(struct ieee802
->  		break;
->  	case ALG_CCMP:
->  		algorithm = B43_SEC_ALGO_AES;
-> +		if (dev->dev->id.revision >= 20080401) {
-> +			/* Latest devices can do quantum cryptography
-> +			 * to encrypt/decrypt the data stream.
-> +			 * This is 100% backward compatible with the traditional
-> +			 * CCMP algorithm. */
-> +			algorithm = B43_SEC_ALGO_QUANTUM;
-> +		}
->  		break;
->  	default:
->  		B43_WARN_ON(1);
-> @@ -3254,6 +3261,10 @@ static int b43_op_set_key(struct ieee802
->  			b43_hf_write(dev,
->  				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
->  		}
-> +		if (algorithm == B43_SEC_ALGO_QUANTUM) {
-> +			b43_hf_write(dev, b43_hf_read(dev)
-> +				     | B43_HF_QUANTUMCRYPT);
-> +		}
->  		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
->  		break;
->  	case DISABLE_KEY: {
-> 
-
-
-________________________________________________________________________
-This email has been scanned for all known viruses by the MessageLabs SkyScan service.
