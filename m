@@ -1,61 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45523 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759147AbYDCD20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 23:28:26 -0400
-Subject: Re: [RFC] libertas: convert libertas driver to use an
-	event/cmdresp queue
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1207191923.9250.6.camel@localhost.localdomain>
-References: <200803271700.58477.hs4233@mail.mn-solutions.de>
-	 <1206722403.3392.9.camel@localhost.localdomain>
-	 <200804011439.54618.hs4233@mail.mn-solutions.de>
-	 <1207191923.9250.6.camel@localhost.localdomain>
+Received: from wa-out-1112.google.com ([209.85.146.181]:55560 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540AbYDUCdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2008 22:33:11 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so2758154waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 19:33:11 -0700 (PDT)
+Subject: [PATCH] mac80211: remove unnecessary byteshifts in frame control
+	testing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Wed, 02 Apr 2008 23:26:46 -0400
-Message-Id: <1207193206.9435.0.camel@localhost.localdomain> (sfid-20080403_042829_804189_1FB71FC6)
+Date: Sun, 20 Apr 2008 19:33:29 -0700
+Message-Id: <1208745209.7941.11.camel@brick> (sfid-20080421_033403_701359_8B23624F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-04-02 at 23:05 -0400, Dan Williams wrote:
-> On Tue, 2008-04-01 at 14:39 +0200, Holger Schurig wrote:
-> > > It's been tested lightly on USB, SDIO, and CF.  I'd like wider
-> > > testing on CF as this patch causes SSH transfers to stall
-> > > (only on CF!)
-> > 
-> > I've modified if_cs.c somewhat and did
-> > 
-> > $ scp inkscape inkview emacs-snapshot-x mtn \
-> >   emacs-snapshot-nox pgadmin3 quanta gs-gpl \
-> >   root@10.2.1.4:/tmp
-> > inkscape           100% 5856KB 650.7KB/s   00:09
-> > inkview            100% 5853KB 585.3KB/s   00:10
-> > emacs-snapshot-x   100% 5333KB 666.6KB/s   00:08
-> > mtn                100% 5263KB 657.9KB/s   00:08
-> > emacs-snapshot-nox 100% 4913KB 614.1KB/s   00:08
-> > pgadmin3           100% 3925KB 654.2KB/s   00:06
-> > quanta             100% 3597KB 719.5KB/s   00:05
-> > gs-gpl             100% 3597KB 599.4KB/s   00:06
-> > 
-> > I didn't notice any stall so far.  What test did you make?
-> 
-> Just tried a 300MB scp; got up to 37MB @ 715KB/s and then stalled.  I
-> think my card is somehow "special" or the controller sucks (Ricoh
-> RL5c476 II) or something.  I'll try to find another machine with a CF
-> slot.  No amount of ifconfig or iwconfig magic will help it, the card
-> accepts a TX packet with if_cs_send_data() and then apparently never
-> sends an interrupt to say the TX is done.  The driver then does the RSSI
-> thing to poke the firmware, which of course times out, and then all is
-> lost.
-> 
-> Maybe I have dodgy firmware?  Can you point me to some known working
-> stuff?
+Byteshift the constants rather than the data.
 
-I'm running 5.0.16.p0 BTW.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ include/linux/ieee80211.h |   32 +++++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 15 deletions(-)
 
-Dan
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index f27d11a..1068965 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -546,16 +546,17 @@ enum ieee80211_back_parties {
+  */
+ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
+ {
+-	u8 *raw = (u8 *) hdr;
+-	u8 tofrom = (*(raw+1)) & 3; /* get the TODS and FROMDS bits */
+-
+-	switch (tofrom) {
+-		case 2:
+-			return hdr->addr3;
+-		case 3:
+-			return hdr->addr4;
++	__le16 fc = hdr->frame_control;
++	fc &= __constant_cpu_to_le16(IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS);
++
++	switch (fc) {
++	case __constant_cpu_to_le16(IEEE80211_FCTL_FROMDS):
++		return hdr->addr3;
++	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS):
++		return hdr->addr4;
++	default:
++		return hdr->addr2;
+ 	}
+-	return hdr->addr2;
+ }
+ 
+ /**
+@@ -571,12 +572,13 @@ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
+  */
+ static inline u8 *ieee80211_get_DA(struct ieee80211_hdr *hdr)
+ {
+-	u8 *raw = (u8 *) hdr;
+-	u8 to_ds = (*(raw+1)) & 1; /* get the TODS bit */
++	__le16 fc = hdr->frame_control;
++	fc &= __constant_cpu_to_le16(IEEE80211_FCTL_TODS);
+ 
+-	if (to_ds)
++	if (fc)
+ 		return hdr->addr3;
+-	return hdr->addr1;
++	else
++		return hdr->addr1;
+ }
+ 
+ /**
+@@ -589,8 +591,8 @@ static inline u8 *ieee80211_get_DA(struct ieee80211_hdr *hdr)
+  */
+ static inline int ieee80211_get_morefrag(struct ieee80211_hdr *hdr)
+ {
+-	return (le16_to_cpu(hdr->frame_control) &
+-		IEEE80211_FCTL_MOREFRAGS) != 0;
++	__le16 fc = hdr->frame_control;
++	return !!(fc & __constant_cpu_to_le16(IEEE80211_FCTL_MOREFRAGS));
+ }
+ 
+ #endif /* IEEE80211_H */
+-- 
+1.5.5.144.g3e42
+
 
 
