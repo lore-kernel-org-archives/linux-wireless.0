@@ -1,194 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:52877 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758644AbYDURAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 13:00:11 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so2556605fkr.5
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:00:10 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH 7/9] rt2x00: Add helper macros
-Date: Mon, 21 Apr 2008 19:01:58 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200804211858.46659.IvDoorn@gmail.com>
-In-Reply-To: <200804211858.46659.IvDoorn@gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:56119 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298AbYDUS3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 14:29:46 -0400
+Date: Mon, 21 Apr 2008 21:28:24 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, bruno@thinktube.com, jirislaby@gmail.com,
+	mcgrof@gmail.com
+Subject: [PATCH] ath5k: Fix radio identification on AR5424/2424
+Message-ID: <20080421182824.GA3026@makis> (sfid-20080421_203042_382678_FA4F3E4A)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804211901.59134.IvDoorn@gmail.com> (sfid-20080421_190106_252988_878451DD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some helper macro's to help determining the
-the timeout for USB register access.
+ *Fix radio chip identification on AR5424/2424 during ath5k_hw_attach
+ *Try to assign an RF2413 radio on AR2424 for testing
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+ Changes-licensed-under: ISC
+
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
 ---
- drivers/net/wireless/rt2x00/rt2500usb.c |    8 ++++----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00usb.h |   19 ++++++++++++++++---
- drivers/net/wireless/rt2x00/rt73usb.c   |   18 ++++++++----------
- 4 files changed, 29 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 0dac1f5..80b34d4 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -76,10 +76,10 @@ static inline void rt2500usb_register_multiread(struct rt2x00_dev *rt2x00dev,
- 						const unsigned int offset,
- 						void *value, const u16 length)
- {
--	int timeout = REGISTER_TIMEOUT * (length / sizeof(u16));
- 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
- 				      USB_VENDOR_REQUEST_IN, offset,
--				      value, length, timeout);
-+				      value, length,
-+				      REGISTER_TIMEOUT16(length));
- }
- 
- static inline void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
-@@ -106,10 +106,10 @@ static inline void rt2500usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
- 						 const unsigned int offset,
- 						 void *value, const u16 length)
- {
--	int timeout = REGISTER_TIMEOUT * (length / sizeof(u16));
- 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
- 				      USB_VENDOR_REQUEST_OUT, offset,
--				      value, length, timeout);
-+				      value, length,
-+				      REGISTER_TIMEOUT16(length));
- }
- 
- static u16 rt2500usb_bbp_check(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 47f96b3..98aafc2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -344,7 +344,7 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	struct data_queue *queue;
- 	unsigned int i;
- 
--	rt2x00usb_vendor_request_sw(rt2x00dev, USB_RX_CONTROL, 0x0000, 0x0000,
-+	rt2x00usb_vendor_request_sw(rt2x00dev, USB_RX_CONTROL, 0, 0,
- 				    REGISTER_TIMEOUT);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
-index 11e5518..1efaaae 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-@@ -47,6 +47,20 @@
- #define REGISTER_TIMEOUT		500
- #define REGISTER_TIMEOUT_FIRMWARE	1000
- 
-+/**
-+ * REGISTER_TIMEOUT16 - Determine the timeout for 16bit register access
-+ * @__datalen: Data length
-+ */
-+#define REGISTER_TIMEOUT16(__datalen)	\
-+	( REGISTER_TIMEOUT * ((__datalen) / sizeof(u16)) )
-+
-+/**
-+ * REGISTER_TIMEOUT32 - Determine the timeout for 32bit register access
-+ * @__datalen: Data length
-+ */
-+#define REGISTER_TIMEOUT32(__datalen)	\
-+	( REGISTER_TIMEOUT * ((__datalen) / sizeof(u32)) )
-+
- /*
-  * Cache size
-  */
-@@ -187,11 +201,10 @@ static inline int rt2x00usb_vendor_request_sw(struct rt2x00_dev *rt2x00dev,
- static inline int rt2x00usb_eeprom_read(struct rt2x00_dev *rt2x00dev,
- 					__le16 *eeprom, const u16 lenght)
- {
--	int timeout = REGISTER_TIMEOUT * (lenght / sizeof(u16));
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 87e7822..5fb1ae6 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -304,14 +304,20 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		ah->ah_radio = AR5K_RF2413;
+ 		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC2) {
 -
- 	return rt2x00usb_vendor_request(rt2x00dev, USB_EEPROM_READ,
- 					USB_VENDOR_REQUEST_IN, 0, 0,
--					eeprom, lenght, timeout);
-+					eeprom, lenght,
-+					REGISTER_TIMEOUT16(lenght));
- }
+ 		ah->ah_radio = AR5K_RF5413;
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5133) {
  
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index a6419c9..351d95c 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -74,10 +74,10 @@ static inline void rt73usb_register_multiread(struct rt2x00_dev *rt2x00dev,
- 					      const unsigned int offset,
- 					      void *value, const u32 length)
- {
--	int timeout = REGISTER_TIMEOUT * (length / sizeof(u32));
- 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
- 				      USB_VENDOR_REQUEST_IN, offset,
--				      value, length, timeout);
-+				      value, length,
-+				      REGISTER_TIMEOUT32(length));
- }
- 
- static inline void rt73usb_register_write(struct rt2x00_dev *rt2x00dev,
-@@ -102,10 +102,10 @@ static inline void rt73usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
- 					       const unsigned int offset,
- 					       void *value, const u32 length)
- {
--	int timeout = REGISTER_TIMEOUT * (length / sizeof(u32));
- 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
- 				      USB_VENDOR_REQUEST_OUT, offset,
--				      value, length, timeout);
-+				      value, length,
-+				      REGISTER_TIMEOUT32(length));
- }
- 
- static u32 rt73usb_bbp_check(struct rt2x00_dev *rt2x00dev)
-@@ -876,7 +876,6 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
- 	char *ptr = data;
- 	char *cache;
- 	int buflen;
--	int timeout;
- 
+-		if (ah->ah_mac_srev <= AR5K_SREV_VER_AR5424 &&
+-			ah->ah_mac_srev >= AR5K_SREV_VER_AR2424)
++		/* AR5424 */
++		if (srev >= AR5K_SREV_VER_AR5424) {
++			ah->ah_radio = AR5K_RF5413;
+ 			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5424;
+-		else
++		/* AR2424 */
++		} else {
++			ah->ah_radio = AR5K_RF2413; /* For testing */
+ 			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++		}
++
  	/*
- 	 * Wait for stable hardware.
-@@ -907,14 +906,14 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
- 
- 	for (i = 0; i < len; i += CSR_CACHE_SIZE_FIRMWARE) {
- 		buflen = min_t(int, len - i, CSR_CACHE_SIZE_FIRMWARE);
--		timeout = REGISTER_TIMEOUT * (buflen / sizeof(u32));
- 
- 		memcpy(cache, ptr, buflen);
- 
- 		rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
- 					 USB_VENDOR_REQUEST_OUT,
- 					 FIRMWARE_IMAGE_BASE + i, 0,
--					 cache, buflen, timeout);
-+					 cache, buflen,
-+					 REGISTER_TIMEOUT32(buflen));
- 
- 		ptr += buflen;
- 	}
-@@ -1966,7 +1965,6 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
- 	struct skb_frame_desc *skbdesc;
- 	unsigned int beacon_base;
--	unsigned int timeout;
- 	u32 reg;
- 
- 	if (unlikely(!intf->beacon))
-@@ -2006,10 +2004,10 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 */
- 	rt2x00lib_write_tx_desc(rt2x00dev, skb, control);
- 	beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
--	timeout = REGISTER_TIMEOUT * (skb->len / sizeof(u32));
- 	rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
- 				 USB_VENDOR_REQUEST_OUT, beacon_base, 0,
--				 skb->data, skb->len, timeout);
-+				 skb->data, skb->len,
-+				 REGISTER_TIMEOUT32(skb->len));
- 	rt73usb_kick_tx_queue(rt2x00dev, QID_BEACON);
- 
- 	return 0;
--- 
-1.5.4.5
+ 	 * Register returns 0x4 for radio revision
+ 	 * so ath5k_hw_radio_revision doesn't parse the value
 
