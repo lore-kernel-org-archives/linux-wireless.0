@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:42666 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384AbYDCKlN (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:52877 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762283AbYDURAA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 06:41:13 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so2227069wra.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 03:41:12 -0700 (PDT)
-Message-ID: <1ba2fa240804030341v7d1c20ecva35cc169095deb3d@mail.gmail.com> (sfid-20080403_114421_573216_6369E0A3)
-Date: Thu, 3 Apr 2008 13:41:12 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
-Cc: Chr <chunkeey@web.de>, linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1207218083.3636.12.camel@johannes.berg>
+	Mon, 21 Apr 2008 13:00:00 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so2556605fkr.5
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:00:00 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 3/9] rt2x00: Don't enable short preamble for 1MBs
+Date: Mon, 21 Apr 2008 19:00:17 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200804211858.46659.IvDoorn@gmail.com>
+In-Reply-To: <200804211858.46659.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200804012145.18294.chunkeey@web.de>
-	 <1207128858.10910.19.camel@johannes.berg>
-	 <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com>
-	 <1207218083.3636.12.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200804211900.17323.IvDoorn@gmail.com> (sfid-20080421_190104_087795_29AD38CB)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 3, 2008 at 1:21 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  > >  On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
->  > >  > This patch is necessary for the upcoming Accesspoint patch for p54.
->  > >
->  > >  Hm. I don't like increasing the tx control structure size but I guess
->  > >  you really need that :)
->
->
-> > Not sure why this cannot be bookeeped in the driver.
->  > Upon association AID is delivered to driver, so every packet that will
->  > be sent to this AP has this AID?
->
->  We're talking about AP mode, and afaict to do that in the driver you'd
->  have to have a hash table from sta MAC -> AID.
+The timing settings for 1MBs should exclude
+the short preamble bit since that only applies
+to 2MBs, 5.5MBs and 11MBs.
 
-I see, AP mode is different story and in second thought it think we
-can use this to speed up TX path
-also for iwliwfi, we waste significant time on searching for STA based
-on MAC address.
-So it's ACK from me. Thanks for opening my eyes :)
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Another question is if there will be more info needed for station in the driver.
-Currently in iwlwifi we have STA representation, this is HW
-requirement but some data are kept twice in iwlwifi and mac.
-The question is whether STA mac80211 representation cannot be more
-accessible to the driver?  Not sure how this can be done
-without over complicated station book keeping.
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index b41187a..18e599e 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -363,7 +363,7 @@ static void rt2400pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+ 
+ 	rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
+-	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00 | preamble_mask);
++	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
+ 	rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
+ 	rt2x00_set_field32(&reg, ARCSR2_LENGTH, get_duration(ACK_SIZE, 10));
+ 	rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 5ade097..c54ea5a 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -370,7 +370,7 @@ static void rt2500pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+ 
+ 	rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
+-	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00 | preamble_mask);
++	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
+ 	rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
+ 	rt2x00_set_field32(&reg, ARCSR2_LENGTH, get_duration(ACK_SIZE, 10));
+ 	rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
+-- 
+1.5.4.5
 
-
-Thanks
-Tomas.
