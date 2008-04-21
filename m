@@ -1,64 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:6368 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762139AbYDCROv (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:55664 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756674AbYDUTFN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 13:14:51 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3718682wah.23
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 10:14:50 -0700 (PDT)
-Message-ID: <a44ae5cd0804031014h93e5778v2eda25945f23058@mail.gmail.com> (sfid-20080403_181512_699696_68C07780)
-Date: Thu, 3 Apr 2008 13:14:50 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Jouni Malinen" <j@w1.fi>
-Subject: Re: mac80211 -- My log files are filling up with: "wlan0: RX non-WEP frame, but expected encryption"
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080403165255.GI2025@jm.kir.nu>
+	Mon, 21 Apr 2008 15:05:13 -0400
+Message-ID: <480CE50A.1000200@lwfinger.net> (sfid-20080421_210605_263113_A4A0F745)
+Date: Mon, 21 Apr 2008 14:03:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a44ae5cd0804021732s6ae5ed81ma5e229ae0faf4aaf@mail.gmail.com>
-	 <1207226756.3636.66.camel@johannes.berg>
-	 <1207231313.3636.100.camel@johannes.berg>
-	 <20080403165255.GI2025@jm.kir.nu>
+To: Miles Lane <miles.lane@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+Subject: Re: b43 speed problem over 2.6.24
+References: <a44ae5cd0804161701k1014f3dkebaa1d35f1a8e20a@mail.gmail.com>	 <a44ae5cd0804181446g596daa2yd1be5b1ac7e5e472@mail.gmail.com>	 <1208555536.4848.54.camel@johannes.berg>	 <a44ae5cd0804190801n66035332ubedbae99a7b635ce@mail.gmail.com>	 <a44ae5cd0804190811g10335c22mf10b9ddb2ab568ec@mail.gmail.com>	 <a44ae5cd0804190814i434dc92bwba3bb33737fbec1f@mail.gmail.com>	 <a44ae5cd0804191905qb281d7ehf839f80cd753a82@mail.gmail.com>	 <1208766258.26186.35.camel@johannes.berg>	 <a44ae5cd0804210400o1ed662aeqb00b9ba5abc61126@mail.gmail.com>	 <1208779022.26186.91.camel@johannes.berg> <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
+In-Reply-To: <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBBcHIgMywgMjAwOCBhdCAxMjo1MiBQTSwgSm91bmkgTWFsaW5lbiA8akB3MS5maT4g
-d3JvdGU6Cj4gT24gVGh1LCBBcHIgMDMsIDIwMDggYXQgMDQ6MDE6NTNQTSArMDIwMCwgSm9oYW5u
-ZXMgQmVyZyB3cm90ZToKPgo+ICA+ID4gPiBNeSBsb2cgZmlsZXMgYXJlIGZpbGxpbmcgdXAgd2l0
-aCB0aGVzZSBtZXNzYWdlczoKPiAgPiA+ID4gICAgICAgIFsgODcyMi4xOTg5MjldIHdsYW4wOiBS
-WCBub24tV0VQIGZyYW1lLCBidXQgZXhwZWN0ZWQgZW5jcnlwdGlvbgo+ICA+ID4gPiAgICAgICAg
-WyA4NzI2LjUwNjM0NV0gX19yYXRlbGltaXQ6IDE0IG1lc3NhZ2VzIHN1cHByZXNzZWQKPgo+ICBJ
-cyB0aGUgbmV0d29yayB1c2luZyBXRVAgb3IgVEtJUC9DQ01QPwoKV1BBMiAvIEFFUwoKPiAgPiBP
-aywgSSBnb3QgcGFja2V0cyBmcm9tIE1pbGVzLCBhbmQgdGhpcyBpcyB3aGF0IEkgZm91bmQ6Cj4g
-ID4KPiAgPiBJRUVFIDgwMi4xMSBEYXRhLCBGbGFnczogLi4uLi4uRi4KPiAgPiAgICAgVHlwZS9T
-dWJ0eXBlOiBEYXRhICgweDIwKQo+ICA+ICAgICBGcmFtZSBDb250cm9sOiAweDAyMDggKE5vcm1h
-bCkKPgo+ID4gICAgIER1cmF0aW9uOiA0NAo+ICA+ICAgICBEZXN0aW5hdGlvbiBhZGRyZXNzOiA8
-aGlzIFNUQSBNQUM+Cj4gID4gICAgIEJTUyBJZDogPGhpcyBOZXRnZWFyIEFQPgo+ICA+ICAgICBT
-b3VyY2UgYWRkcmVzczogPGhpcyBOZXRnZWFyIEFQPgo+ICA+ICAgICBGcmFnbWVudCBudW1iZXI6
-IDAKPiAgPiAgICAgU2VxdWVuY2UgbnVtYmVyOiAzODc0Cj4gID4gTG9naWNhbC1MaW5rIENvbnRy
-b2wKPiAgPiAgICAgRFNBUDogTlVMTCBMU0FQICgweDAwKQo+Cj4gPiBEYXRhICgxNDcyIGJ5dGVz
-KQo+ICA+IDAwMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwICAgLi4uLi4uLi4uLi4uLi4uLgo+ICA+ICogYWxsIHplcm9lcwo+Cj4KPiA+IE5vdGUgaG93
-IHRoZSBMTEMgaGVhZGVyIGlzIGFsc28gYWxsLXplcm9lcy4g77u/QWxzbyBub3RlIGhvdyB0aGUg
-ZHVyYXRpb24KPiAgPiBmaWVsZCBpcyB0b3RhbGx5IGJvZ3VzLiBUaGUgc2VxdWVuY2UgbnVtYmVy
-IGlzIGFjdHVhbGx5IGNvcnJlY3QuCj4KPiAgV2hhdCdzIHdyb25nIHdpdGggdGhlIGR1cmF0aW9u
-IGZpZWxkIHZhbHVlPyBUaGUgZHVtcCBoZXJlIGRvZXMgbm90Cj4gIGluZGljYXRlIHdoaWNoIHRy
-YW5zbWl0IHJhdGUgd2FzIHVzZWQsIHNvIEkgZG9uJ3Qga25vdyB3aGF0IFRYIHJhdGUgdGhlCj4g
-IEFDSyB3b3VsZCB1c2UsIGJ1dCA0NCBzb3VuZHMgbGlrZSBhIHJlYXNvbmFibGUgZHVyYXRpb24g
-dmFsdWUgZm9yCj4gIDgwMi4xMWcgcmF0ZXMuLgoKVGhlIEFQIGlzIHNldCB1cCB0byBvbmx5IHVz
-ZSA4MDIuMTFnLgoKPiAgPiBEb2VzIGFueWJvZHkgaGF2ZSBhbiBleHBsYW5hdGlvbiBmb3IgdGhh
-dCBleGNlcHQgdGhhdCB0aGUgQVAgc29mdHdhcmUgaXMKPiAgPiBtZXNzaW5nIGl0IHVwPwo+Cj4g
-IExvb2tzIGxpa2UgYW4gaW50ZXJlc3RpbmcgQVAgYmVoYXZpb3IgdG8gbWUuLgo+Cj4gID4gSW4g
-YW55IGNhc2UsIEkgc3VwcG9zZSB0aGUgbWVzc2FnZSBpbiBxdWVzdGlvbiBpc24ndCBhY3R1YWxs
-eSBuZWNlc3NhcnkuCj4gID4gSSdsbCBtYWtlIGl0IGRlcGVuZCBvbiB2ZXJib3NlIGRlYnVnZ2lu
-ZyBtYXliZS4KPgo+ICBZZXMsIHRoYXQgc291bmRzIHJlYXNvbmFibGUuIFRoZSBBUCBzaG91bGQg
-bm90IGJlIHNlbmRpbmcgdGhpcyBraW5kIG9mCj4gIGNyYXAsIGJ1dCB3ZWxsLCB3aGF0IGNhbiB5
-b3UgZG8gaWYgaXQgZG9lcy4uIEluIHRoZW9yeSwgdGhpcyBjb3VsZCBhbHNvCj4gIGJlIHNob3dp
-bmcgdXAgaW4gbXVsdGktU1NJRCBjb25maWd1cmF0aW9uIHdoZW4gYW5vdGhlciBTU0lEIGlzCj4g
-IGNvbmZpZ3VyZWQgdG8gdXNlIHVuZW5jcnlwdGVkIGZyYW1lcyAodGhvdWdoLCB0aGF0IHdvdWxk
-IGNhdXNlIGludGVyb3AKPiAgaXNzdWVzIGluIGFzc29jaWF0aW9uIGZvciBudW1iZXIgb2YgY2xp
-ZW50cy4uKS4KClRoZSBsaW5rIHNlZW1zIHRvIHdvcmsgd2VsbC4gIElmIHlvdSBjYW4gbmFpbCBk
-b3duIGEgcHJvYmxlbSB3aXRoCnRoZWlyIEFQIHNvZnR3YXJlLCBJIHdpbGwgc3VibWl0IGEgYnVn
-IHJlcG9ydCB0byBOZXRHZWFyLgoKQ2hlZXJzLAogICAgICBNaWxlcwo=
+Miles Lane wrote:
+> On Mon, Apr 21, 2008 at 7:57 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> Hi,
+>>
+>>  Miles described a b43 speed problem in the thread
+>>
+>>         =EF=BB=BF2.6.25-rc9 -- bcm4306 performance is in the toilet
+>>
+>>  (over 2.6.24) and not being able to see anything from his logs/pack=
+et
+>>  captures/... I asked him to bisect. This resulted in
+>>
+>>  commit 61bca6eb85c863603d6054530e2f65c3b9aba85b
+>>  Author: Stefano Brivio <stefano.brivio@polimi.it>
+>>  Date:   Tue Nov 6 22:49:05 2007 +0100
+>>
+>>     b43: rewrite A PHY initialization
+>>
+>>  which is a huge commit and hence a bit of a problem. Does anyone ha=
+ve
+>>  suggestions how to proceed?
+>>
+>>  I have very similar hardware, maybe this card is affected by the
+>>  boardflags problems we found recently? Miles, can you give us
+>>   * lspci -vn -s =EF=BB=BF01:06.0
+>>   * the kernel init messages when ssb is built with debugging
+>=20
+> Here you go:
+>=20
+> # lspci -vn -s 01:06.0
+> 01:06.0 0280: 14e4:4320 (rev 03)
+> 	Subsystem: 1057:7110
+> 	Flags: bus master, fast devsel, latency 16, IRQ 5
+> 	Memory at ed000000 (32-bit, non-prefetchable) [size=3D8K]
+>=20
+> [    3.977930] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x04, ven=
+dor 0x4243)
+> [    3.977942] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x05,
+> vendor 0x4243)
+> [    3.977952] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x02, vendor =
+0x4243)
+> [    3.977962] ssb: Core 3 found: V90 (cc 0x807, rev 0x02, vendor 0x4=
+243)
+> [    3.977971] ssb: Core 4 found: PCI (cc 0x804, rev 0x09, vendor 0x4=
+243)
+> [    3.993965] ssb: SPROM revision 2 detected.
+> [    3.994816] ssb: Sonics Silicon Backplane found on PCI device 0000=
+:01:06.0
+>=20
+> Thanks,
+>       Miles
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD*=DE=95=EF=BF=BD,=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD=
+,j=07=EF=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=
+=BF=BDz=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=
+=BF=BD=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ=
++=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
+I don't know what got garbled, but we also need the b43 debugging=20
+information. In particular, what is the PHY rev?
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
