@@ -1,93 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:38855 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933669AbYDYTNW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2008 15:13:22 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Don't disable IRQs in mac_suspend
-Date: Fri, 25 Apr 2008 21:10:54 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:40987 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754620AbYDUIsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 04:48:19 -0400
+Date: Mon, 21 Apr 2008 11:47:51 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [2.6 patch] make sta_rx_agg_session_timer_expired() static
+Message-ID: <20080421084751.GI26897@cs181133002.pp.htv.fi> (sfid-20080421_094826_042377_F92BCDE4)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804252110.54456.mb@bu3sch.de> (sfid-20080425_211359_012971_C434ECBB)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the IRQ-disable from mac_suspend.
-The main advantage of this is to get rid of the IRQ-sync call in mac_suspend.
-We need to remove the MAC suspend bit from the IRQ service mask, as otherwise
-the IRQ handler would race with us.
+sta_rx_agg_session_timer_expired() can now become static.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
-John, this is for 2.6.27
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |    3 ++-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-04-25 19:28:42.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-25 21:05:29.000000000 +0200
-@@ -407,14 +407,13 @@ enum {
- #define B43_IRQ_RFKILL			0x10000000
- #define B43_IRQ_TX_OK			0x20000000
- #define B43_IRQ_PHY_G_CHANGED		0x40000000
- #define B43_IRQ_TIMEOUT			0x80000000
+64e9b87bbd66ecaad44e27fe3b02ea465d4be36d diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8e53ce7..a202cb6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -940,7 +940,6 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
  
- #define B43_IRQ_ALL			0xFFFFFFFF
--#define B43_IRQ_MASKTEMPLATE		(B43_IRQ_MAC_SUSPENDED | \
--					 B43_IRQ_TBTT_INDI | \
-+#define B43_IRQ_MASKTEMPLATE		(B43_IRQ_TBTT_INDI | \
- 					 B43_IRQ_ATIM_END | \
- 					 B43_IRQ_PMQ | \
- 					 B43_IRQ_MAC_TXERR | \
- 					 B43_IRQ_PHY_TXERR | \
- 					 B43_IRQ_DMA | \
- 					 B43_IRQ_TXFIFO_FLUSH_OK | \
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-25 18:47:08.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-25 21:05:29.000000000 +0200
-@@ -2319,17 +2319,12 @@ void b43_mac_enable(struct b43_wldev *de
- 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON,
- 			    B43_IRQ_MAC_SUSPENDED);
- 		/* Commit writes */
- 		b43_read32(dev, B43_MMIO_MACCTL);
- 		b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
- 		b43_power_saving_ctl_bits(dev, 0);
--
--		/* Re-enable IRQs. */
--		spin_lock_irq(&dev->wl->irq_lock);
--		b43_interrupt_enable(dev, dev->irq_savedstate);
--		spin_unlock_irq(&dev->wl->irq_lock);
- 	}
- }
+ void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *da,
+ 				u16 tid, u16 initiator, u16 reason);
+-void sta_rx_agg_session_timer_expired(unsigned long data);
+ void sta_addba_resp_timer_expired(unsigned long data);
+ void ieee80211_sta_tear_down_BA_sessions(struct net_device *dev, u8 *addr);
+ u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6b75cb6..43bcfe5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -87,6 +87,7 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 				    u8 *ssid, size_t ssid_len);
+ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta);
++static void sta_rx_agg_session_timer_expired(unsigned long data);
  
- /* http://bcm-specs.sipsolutions.net/SuspendMAC */
- void b43_mac_suspend(struct b43_wldev *dev)
+ 
+ void ieee802_11_parse_elems(u8 *start, size_t len,
+@@ -1616,7 +1617,7 @@ timer_expired_exit:
+  * resetting it after each frame that arrives from the originator.
+  * if this timer expires ieee80211_sta_stop_rx_ba_session will be executed.
+  */
+-void sta_rx_agg_session_timer_expired(unsigned long data)
++static void sta_rx_agg_session_timer_expired(unsigned long data)
  {
-@@ -2337,20 +2332,12 @@ void b43_mac_suspend(struct b43_wldev *d
- 	u32 tmp;
- 
- 	might_sleep();
- 	B43_WARN_ON(dev->mac_suspended < 0);
- 
- 	if (dev->mac_suspended == 0) {
--		/* Mask IRQs before suspending MAC. Otherwise
--		 * the MAC stays busy and won't suspend. */
--		spin_lock_irq(&dev->wl->irq_lock);
--		tmp = b43_interrupt_disable(dev, B43_IRQ_ALL);
--		spin_unlock_irq(&dev->wl->irq_lock);
--		b43_synchronize_irq(dev);
--		dev->irq_savedstate = tmp;
--
- 		b43_power_saving_ctl_bits(dev, B43_PS_AWAKE);
- 		b43_write32(dev, B43_MMIO_MACCTL,
- 			    b43_read32(dev, B43_MMIO_MACCTL)
- 			    & ~B43_MACCTL_ENABLED);
- 		/* force pci to flush the write */
- 		b43_read32(dev, B43_MMIO_MACCTL);
+ 	/* not an elegant detour, but there is no choice as the timer passes
+ 	 * only one argument, and verious sta_info are needed here, so init
+
