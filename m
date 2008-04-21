@@ -1,34 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:48916 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640AbYDYLPO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2008 07:15:14 -0400
-Date: Fri, 25 Apr 2008 13:15:56 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: =?iso-8859-1?Q?K=E1roly?= Kasza <kaszak@gmail.com>
-Cc: lcostantino@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: w35und: remove some more unneccessary code
-Message-ID: <20080425111556.GJ14903@elf.ucw.cz> (sfid-20080425_131546_750138_8C724831)
-References: <20080419202952.GA26630@elf.ucw.cz> <544ab8580804200956v43dfabf8p511f46eb2940093e@mail.gmail.com>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:35034 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755436AbYDUItE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 04:49:04 -0400
+Date: Mon, 21 Apr 2008 11:48:34 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [RFC: 2.6 patch] remove ieee80211_wx_{get,set}_auth()
+Message-ID: <20080421084834.GP26897@cs181133002.pp.htv.fi> (sfid-20080421_094928_883145_7CB9F947)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <544ab8580804200956v43dfabf8p511f46eb2940093e@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+After the bcm43xx removal ieee80211_wx_{get,set}_auth() were no longer 
+used.
 
-> I committed all your previous works, plus I created a branch for your
-> code, because You went another way than us. (linux subdir etc.).
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Ok, thanks!
+---
 
-> I have a question: what type of RF chip do You have with the w89c35d?
-> I have an Airoha 2230, and Im courius if You have the same.
+ include/net/ieee80211.h      |    8 ---
+ net/ieee80211/ieee80211_wx.c |   89 -----------------------------------
+ 2 files changed, 97 deletions(-)
 
-Do you have a good place where to put printk?
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+ec783a7fb0fdacebefd93c7bf40493467a825c70 diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
+index facd0ff..b31399e 100644
+--- a/include/net/ieee80211.h
++++ b/include/net/ieee80211.h
+@@ -1309,14 +1309,6 @@ extern int ieee80211_wx_set_encodeext(struct ieee80211_device *ieee,
+ extern int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
+ 				      struct iw_request_info *info,
+ 				      union iwreq_data *wrqu, char *extra);
+-extern int ieee80211_wx_set_auth(struct net_device *dev,
+-				 struct iw_request_info *info,
+-				 union iwreq_data *wrqu,
+-				 char *extra);
+-extern int ieee80211_wx_get_auth(struct net_device *dev,
+-				 struct iw_request_info *info,
+-				 union iwreq_data *wrqu,
+-				 char *extra);
+ 
+ static inline void ieee80211_increment_scans(struct ieee80211_device *ieee)
+ {
+diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
+index 623489a..822606b 100644
+--- a/net/ieee80211/ieee80211_wx.c
++++ b/net/ieee80211/ieee80211_wx.c
+@@ -744,98 +744,9 @@ int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
+ 	return 0;
+ }
+ 
+-int ieee80211_wx_set_auth(struct net_device *dev,
+-			  struct iw_request_info *info,
+-			  union iwreq_data *wrqu,
+-			  char *extra)
+-{
+-	struct ieee80211_device *ieee = netdev_priv(dev);
+-	unsigned long flags;
+-	int err = 0;
+-
+-	spin_lock_irqsave(&ieee->lock, flags);
+-
+-	switch (wrqu->param.flags & IW_AUTH_INDEX) {
+-	case IW_AUTH_WPA_VERSION:
+-	case IW_AUTH_CIPHER_PAIRWISE:
+-	case IW_AUTH_CIPHER_GROUP:
+-	case IW_AUTH_KEY_MGMT:
+-		/*
+-		 * Host AP driver does not use these parameters and allows
+-		 * wpa_supplicant to control them internally.
+-		 */
+-		break;
+-	case IW_AUTH_TKIP_COUNTERMEASURES:
+-		break;		/* FIXME */
+-	case IW_AUTH_DROP_UNENCRYPTED:
+-		ieee->drop_unencrypted = !!wrqu->param.value;
+-		break;
+-	case IW_AUTH_80211_AUTH_ALG:
+-		break;		/* FIXME */
+-	case IW_AUTH_WPA_ENABLED:
+-		ieee->privacy_invoked = ieee->wpa_enabled = !!wrqu->param.value;
+-		break;
+-	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+-		ieee->ieee802_1x = !!wrqu->param.value;
+-		break;
+-	case IW_AUTH_PRIVACY_INVOKED:
+-		ieee->privacy_invoked = !!wrqu->param.value;
+-		break;
+-	default:
+-		err = -EOPNOTSUPP;
+-		break;
+-	}
+-	spin_unlock_irqrestore(&ieee->lock, flags);
+-	return err;
+-}
+-
+-int ieee80211_wx_get_auth(struct net_device *dev,
+-			  struct iw_request_info *info,
+-			  union iwreq_data *wrqu,
+-			  char *extra)
+-{
+-	struct ieee80211_device *ieee = netdev_priv(dev);
+-	unsigned long flags;
+-	int err = 0;
+-
+-	spin_lock_irqsave(&ieee->lock, flags);
+-
+-	switch (wrqu->param.flags & IW_AUTH_INDEX) {
+-	case IW_AUTH_WPA_VERSION:
+-	case IW_AUTH_CIPHER_PAIRWISE:
+-	case IW_AUTH_CIPHER_GROUP:
+-	case IW_AUTH_KEY_MGMT:
+-	case IW_AUTH_TKIP_COUNTERMEASURES:		/* FIXME */
+-	case IW_AUTH_80211_AUTH_ALG:			/* FIXME */
+-		/*
+-		 * Host AP driver does not use these parameters and allows
+-		 * wpa_supplicant to control them internally.
+-		 */
+-		err = -EOPNOTSUPP;
+-		break;
+-	case IW_AUTH_DROP_UNENCRYPTED:
+-		wrqu->param.value = ieee->drop_unencrypted;
+-		break;
+-	case IW_AUTH_WPA_ENABLED:
+-		wrqu->param.value = ieee->wpa_enabled;
+-		break;
+-	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+-		wrqu->param.value = ieee->ieee802_1x;
+-		break;
+-	default:
+-		err = -EOPNOTSUPP;
+-		break;
+-	}
+-	spin_unlock_irqrestore(&ieee->lock, flags);
+-	return err;
+-}
+-
+ EXPORT_SYMBOL(ieee80211_wx_set_encodeext);
+ EXPORT_SYMBOL(ieee80211_wx_get_encodeext);
+ 
+ EXPORT_SYMBOL(ieee80211_wx_get_scan);
+ EXPORT_SYMBOL(ieee80211_wx_set_encode);
+ EXPORT_SYMBOL(ieee80211_wx_get_encode);
+-
+-EXPORT_SYMBOL_GPL(ieee80211_wx_set_auth);
+-EXPORT_SYMBOL_GPL(ieee80211_wx_get_auth);
+
