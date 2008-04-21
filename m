@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:42482 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756511AbYD3BIC (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:46838 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbYDUGm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 21:08:02 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so391916waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 18:08:02 -0700 (PDT)
-Subject: [PATCH 7/7] mac80211: tkip.c use struct tkip_ctx in phase 2 key
-	mixing
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+	Mon, 21 Apr 2008 02:42:56 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool statistics
+From: David Woodhouse <dwmw2@infradead.org>
+To: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <20080420191051.GA12136@Chamillionaire.breakpoint.cc>
+References: <1208448814.9212.270.camel@pmac.infradead.org>
+	 <200804181149.41838.hs4233@mail.mn-solutions.de>
+	 <1208517302.9212.324.camel@pmac.infradead.org>
+	 <200804181510.53412.hs4233@mail.mn-solutions.de>
+	 <20080420084101.GB7685@Chamillionaire.breakpoint.cc>
+	 <1208688992.9212.412.camel@pmac.infradead.org>
+	 <20080420191051.GA12136@Chamillionaire.breakpoint.cc>
 Content-Type: text/plain
-Date: Tue, 29 Apr 2008 18:07:37 -0700
-Message-Id: <1209517670.24729.56.camel@brick> (sfid-20080430_030757_802490_5D4FAF6D)
+Date: Mon, 21 Apr 2008 07:42:49 +0100
+Message-Id: <1208760169.9212.442.camel@pmac.infradead.org> (sfid-20080421_074300_815067_D25282C4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+On Sun, 2008-04-20 at 21:10 +0200, Sebastian Siewior wrote:
+> The comments were
+> - everything what deals with mesh should take the mash lock
+> - check for mesh support before calling lbs_ethtool_get_stats()
+> 
+> If your second patch deals with these than yes it should be fine.
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index e9ee247..a00cf1e 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -95,10 +95,12 @@ static void tkip_mixing_phase1(struct ieee80211_key *key, const u8 *ta,
- 	ctx->initialized = 1;
- }
- 
--static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
--			       u8 *rc4key)
-+static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
-+			       u16 tsc_IV16, u8 *rc4key)
- {
- 	u16 ppk[6];
-+	const u16 *p1k = ctx->p1k;
-+	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
- 	int i;
- 
- 	ppk[0] = p1k[0];
-@@ -152,9 +154,7 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
- 		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.tx.iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -197,8 +197,7 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
- 
-@@ -315,9 +314,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 		}
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.rx[queue], iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
- 	{
- 		int i;
+It deals with the latter. I don't believe we need any more locking here;
+we just submit our own request, wait for it to return and use the data
+in the reply.
+
 -- 
-1.5.5.144.g3e42
+dwmw2
 
