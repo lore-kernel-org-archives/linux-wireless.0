@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60566 "EHLO mga09.intel.com"
+Received: from ns.suse.de ([195.135.220.2]:38164 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750717AbYDPS2f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 14:28:35 -0400
+	id S1751839AbYDUQEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 12:04:42 -0400
+Received: from Relay2.suse.de (relay-ext.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 9124940B03
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 18:04:41 +0200 (CEST)
+From: Helmut Schaa <hschaa@suse.de>
+To: linux-wireless@vger.kernel.org
+Subject: Question about IEEE80211_PROBE_DELAY
+Date: Mon, 21 Apr 2008 18:04:37 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE:  iwl3945 problem with 2.6.25-rc9
-Date: Wed, 16 Apr 2008 11:28:34 -0700
-Message-ID: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> (sfid-20080416_192843_002006_9DC5C563)
-In-Reply-To: A<fu39uq$abv$1@ger.gmane.org>
-References: A<fu39uq$abv$1@ger.gmane.org>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Marcus Furlong" <furlongm@hotmail.com>,
-	<linux-wireless@vger.kernel.org>
+  charset="us-ascii"
+Message-Id: <200804211804.38060.hschaa@suse.de> (sfid-20080421_180539_631084_0CE5109B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Marcus Furlong  wrote:
+Hi,
 
-> Hi,
-> 
-> Have had a look through bugzilla and not sure if any of the
-> existing bugs
-> are exactly the same as mine, so thought I'd post here first
-> to make sure
-> I'm not missing anything obvious.
-> 
-> Kernel 2.6.25-rc9 (although the same thing seems to happen on 2.6.24
-> kernels, so I stuck with the ipw driver and 2.6.23 til now)
-> Using iwl3945 firmware 2.14.1.5
-> 
-> Machine doesn't associate with any AP (although it does seem to see
-> the closer ones) and I get lots of the following errors:
-> 
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> 
-> Also, and unsure if this is related or not, the mouse and
-> keyboard behave
-> erratically when the iwl3945 module is loaded. Both keyboard
-> and mouse lock
-> up, but store all input in a buffer and spurt it out after a
-> few seconds.
-> After between 1-10 minutes the machine hangs and the Caps Lock
-> and Scroll
-> Lock lights flash on and off (not the Num Lock one though).
-> 
-> Dmesg log is available here using netconsole on a wired
-> connection, up to
-> the point where it crashes:
-> 
-> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwlwifi-output.bz2
-> 
-> I also reloaded the module with debug=0x43ffb after booting,
-> so the output
-> becomes more verbose at that stage.
+I was just playing around with the mac80211 scan-code and stumbled across 
+IEEE80211_PROBE_DELAY. I'm a bit curious why this delay is needed due to the 
+fact that any driver can set the channel_change_time to any value it needs.
 
-Looks like the device is being brought up and down a lot ... are you
-perhaps running wpa_supplicant or some other user application that is
-doing this? Could you please give more information about what you were
-doing when these errors started to appear? 
+Therefore I simply removed the IEEE80211_PROBE_DELAY (see below) and only used 
+the channel_change_time exposed by the driver. I did some tests with the 
+iwl4965 and ath5k (reports AR5213A as chipset) driver and did not notice any 
+regression.
 
-Thank you very much for the detailed logs ... I'll pass it on to the
-firmware experts.
+Could somebody explain to me if the IEEE80211_PROBE_DELAY is needed anymore 
+and for which particular reason?
 
-Reinette
+Thanks,
+Helmut
+
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3853,8 +3853,7 @@ void ieee80211_sta_scan_work(struct work_struct *work)
+ 		if (skip)
+ 			break;
+ 
+-		next_delay = IEEE80211_PROBE_DELAY +
+-			     usecs_to_jiffies(local->hw.channel_change_time);
++		next_delay = usecs_to_jiffies(local->hw.channel_change_time);
+ 		local->scan_state = SCAN_SEND_PROBE;
+ 		break;
+ 	case SCAN_SEND_PROBE:
