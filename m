@@ -1,71 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.181]:34380 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509AbYDABBl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 21:01:41 -0400
-Received: by el-out-1112.google.com with SMTP id v27so701982ele.17
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 18:01:41 -0700 (PDT)
+Received: from main.gmane.org ([80.91.229.2]:52303 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752424AbYDUPiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 11:38:19 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Jny5t-0002vK-79
+	for linux-wireless@vger.kernel.org; Mon, 21 Apr 2008 15:38:13 +0000
+Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 15:38:13 +0000
+Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 15:38:13 +0000
 To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: akpm@linux-foundation.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Date: Mon, 31 Mar 2008 15:10:22 -0700
-Subject: [PATCH] mac80211: fix deadlocks in debugfs_netdev.c
-Message-ID: <47f18973.1498600a.3eb4.ffffbefb@mx.google.com> (sfid-20080401_020146_132504_4AAB59F7)
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: Re: [ipw3945-devel] iwl3945: Disabled channels
+Date: Mon, 21 Apr 2008 17:38:03 +0200
+Message-ID: <fuiccr$keo$1@ger.gmane.org> (sfid-20080421_173908_753289_77443476)
+References: <fuhkfp$mnk$1@ger.gmane.org> <480C5AFF.5020005@fenrir.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <480C5AFF.5020005@fenrir.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The bug shows up with CONFIG_PREEMPT enabled. Pointed out by Andrew Morton.
+Brian Morrison schrieb:
+> options cfg80211 ieee80211_regdom="JP"
 
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/debugfs_netdev.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+Band 1:
+	Frequencies:
+		* 2412 MHz
+		* 2417 MHz
+		* 2422 MHz
+		* 2427 MHz
+		* 2432 MHz
+		* 2437 MHz
+		* 2442 MHz
+		* 2447 MHz
+		* 2452 MHz
+		* 2457 MHz
+		* 2462 MHz
+		* 2467 MHz (passive scanning, no IBSS)
+		* 2472 MHz (passive scanning, no IBSS)
+	Bitrates:
+		* 1.0 Mbps
+		* 2.0 Mbps (short preamble supported)
+		* 5.5 Mbps (short preamble supported)
+		* 11.0 Mbps (short preamble supported)
+		* 6.0 Mbps
+		* 9.0 Mbps
+		* 12.0 Mbps
+		* 18.0 Mbps
+		* 24.0 Mbps
+		* 36.0 Mbps
+		* 48.0 Mbps
+		* 54.0 Mbps
+Band 2:
+	Frequencies:
+		* 5170 MHz (passive scanning, no IBSS)
+		* 5180 MHz
+		* 5190 MHz (passive scanning, no IBSS)
+		* 5200 MHz
+		* 5210 MHz (passive scanning, no IBSS)
+		* 5220 MHz
+		* 5230 MHz (passive scanning, no IBSS)
+		* 5240 MHz
+		* 5260 MHz (passive scanning, no IBSS, radar detection)
+		* 5280 MHz (passive scanning, no IBSS, radar detection)
+		* 5300 MHz (passive scanning, no IBSS, radar detection)
+		* 5320 MHz (passive scanning, no IBSS, radar detection)
+		* 5500 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5520 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5540 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5560 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5580 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5600 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5620 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5640 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5660 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5680 MHz (disabled, passive scanning, no IBSS, radar detection)
+		* 5700 MHz (disabled, passive scanning, no IBSS, radar detection)
+	Bitrates:
+		* 6.0 Mbps
+		* 9.0 Mbps
+		* 12.0 Mbps
+		* 18.0 Mbps
+		* 24.0 Mbps
+		* 36.0 Mbps
+		* 48.0 Mbps
+		* 54.0 Mbps
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 107b0fe..7454d0c 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -31,11 +31,13 @@ static ssize_t ieee80211_if_read(
- 	ssize_t ret = -EINVAL;
- 
- 	read_lock(&dev_base_lock);
--	if (sdata->dev->reg_state == NETREG_REGISTERED) {
-+	if (sdata->dev->reg_state == NETREG_REGISTERED)
- 		ret = (*format)(sdata, buf, sizeof(buf));
--		ret = simple_read_from_buffer(userbuf, count, ppos, buf, ret);
--	}
- 	read_unlock(&dev_base_lock);
-+
-+	if (ret != -EINVAL)
-+		ret = simple_read_from_buffer(userbuf, count, ppos, buf, ret);
-+
- 	return ret;
- }
- 
-@@ -51,13 +53,13 @@ static ssize_t ieee80211_if_write(
- 
- 	memset(buf, 0x00, sizeof(buf));
- 	buf_size = min(count, (sizeof(buf)-1));
--	read_lock(&dev_base_lock);
- 	if (copy_from_user(buf, userbuf, buf_size))
--		goto endwrite;
-+		return count;
-+	read_lock(&dev_base_lock);
- 	if (sdata->dev->reg_state == NETREG_REGISTERED)
- 		(*format)(sdata, buf);
--endwrite:
- 	read_unlock(&dev_base_lock);
-+
- 	return count;
- }
- #endif
--- 
-1.5.4.3
-
-
+This look better, although I have to wait until tomorrow to see if the 
+Access Point in question uses one of the now enabled 11a channels.
 
