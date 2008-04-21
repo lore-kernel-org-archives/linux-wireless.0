@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:5877 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752672AbYDAShv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 14:37:51 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050
-Date: Tue, 1 Apr 2008 11:33:02 -0700
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <200804011107.38563.inaky@linux.intel.com> <20080401111802.65fe259f@extreme>
-In-Reply-To: <20080401111802.65fe259f@extreme>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804011133.03333.inaky@linux.intel.com> (sfid-20080401_193804_014872_1E48E717)
+Received: from mx1.redhat.com ([66.187.233.31]:47541 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754603AbYDUSIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 14:08:50 -0400
+Subject: Re: iwl4965: slow scans
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kyle McMartin <kyle@mcmartin.ca>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080421174122.GA10857@tuxdriver.com>
+References: <20080421160318.GA19802@phobos.i.cabal.ca>
+	 <20080421174122.GA10857@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 21 Apr 2008 14:02:56 -0400
+Message-Id: <1208800976.32409.0.camel@localhost.localdomain> (sfid-20080421_200940_241226_12B3FAF1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 April 2008, Stephen Hemminger wrote:
-> On Tue, 1 Apr 2008 11:07:37 -0700
-> Inaky Perez-Gonzalez <inaky@linux.intel.com> wrote:
+On Mon, 2008-04-21 at 13:41 -0400, John W. Linville wrote:
+> On Mon, Apr 21, 2008 at 12:03:18PM -0400, Kyle McMartin wrote:
 > 
+> > I've noticed recently in rawhide that scanning for networks when I come
+> > back from suspend takes an age. It seems to be upwards of 3~4 minutes
+> > before I'm able to reassociate with my ap.
 > > 
-> > Intel would like to announce the initial release of a Linux WiMAX 
-> > common stack and drivers for its WiMAX devices (eg: Intel(r) 
-> > WiMAX/WiFi Link 5050, with estimated availability around third 
-> > quarter of 2008).
+> > I'm pulling a pile of rpms to figure out when the change to
+> > linux-2.6-wireless*.patch might have caused this (it doesn't *seem* to
+> > happen on upstream, but since the patch might make it to upstream soon,
+> > I figured I should keep linux-wireless@ in the loop.)
 > > 
-> > ...
+> > Willing to bash on whatever I need to to improve this.
 > 
-> Code review occurs on patch submittable not by pointing developers off
-> to an external project. Most likely there will be feedback that requires
-> changes to API and other choices so you want to do this soon.
+> Sounds like the issue here:
+> 
+> 	https://bugzilla.redhat.com/show_bug.cgi?id=441819
+> 
+> Perhaps you could post some iwevent info as Dan requested there as well?
 
-I know. Just wanted to get out the bits ASAP for whoever is interested to
-start looking at it.
+Yeah, could be an NM issue or a supplicant issue I guess.  Or, even if
+the card _is_ returning scan results, it might not be returning results
+for your AP.
 
-I am pondering how to do this because there is a lot of code and 
-I still don't have it ready for merging to mainline. 
+Do you have hardware or software scanning on (ie, is disable_hw_scan
+module option 1 or 0?)
 
-Eventually I'll have a git tree branching off netdev and will have to break 
-up the kernel part in patchbombs for review & submission and fix stuff as 
-we go.
+dan
 
-Thanks,
