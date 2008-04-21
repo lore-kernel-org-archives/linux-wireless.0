@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42717 "EHLO ciao.gmane.org"
+Received: from mx.fenrir.org.uk ([81.168.115.223]:33278 "EHLO mx.fenrir.org.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165AbYDPTBz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 15:01:55 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JmCtD-0006Mz-7F
-	for linux-wireless@vger.kernel.org; Wed, 16 Apr 2008 19:01:51 +0000
-Received: from 84-203-37-37.mysmart.ie ([84.203.37.37])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 19:01:51 +0000
-Received: from furlongm by 84-203-37-37.mysmart.ie with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 19:01:51 +0000
+	id S1752674AbYDUPBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 11:01:43 -0400
+Received: from [62.189.241.202] (helo=[10.104.10.102])
+	(TLSv1:AES256-SHA:256)
+	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
+	id 1JnxWY-0005li-7V
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 16:01:42 +0100
+Message-ID: <480CAC55.1000704@fenrir.org.uk> (sfid-20080421_170234_346603_44E35F3C)
+Date: Mon, 21 Apr 2008 16:01:41 +0100
+From: Brian Morrison <bdm@fenrir.org.uk>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-From: Marcus Furlong <furlongm@hotmail.com>
-Subject: RE:  iwl3945 problem with 2.6.25-rc9
-Date: Wed, 16 Apr 2008 20:01:31 +0100
-Message-ID: <fu5iel$c45$1@ger.gmane.org> (sfid-20080416_200204_315959_1789D0E7)
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [ipw3945-devel] iwl3945: Disabled channels
+References: <fuhkfp$mnk$1@ger.gmane.org>  <480C5AFF.5020005@fenrir.org.uk>	 (sfid-20080421_101455_395583_495A4EE6) <1208785818.26186.101.camel@johannes.berg>	 <480CA260.70506@fenrir.org.uk> (sfid-20080421_162006_486515_D95FEC5E) <1208788898.26186.105.camel@johannes.berg>
+In-Reply-To: <1208788898.26186.105.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 16 April 2008 19:28 in
-<D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>,
-Chatre, Reinette wrote:
-
-> On , Marcus Furlong  wrote:
+Johannes Berg wrote:
 > 
->> Hi,
->> 
->> Have had a look through bugzilla and not sure if any of the
->> existing bugs
->> are exactly the same as mine, so thought I'd post here first
->> to make sure
->> I'm not missing anything obvious.
->> 
->> Kernel 2.6.25-rc9 (although the same thing seems to happen on 2.6.24
->> kernels, so I stuck with the ipw driver and 2.6.23 til now)
->> Using iwl3945 firmware 2.14.1.5
->> 
->> Machine doesn't associate with any AP (although it does seem to see
->> the closer ones) and I get lots of the following errors:
->> 
->> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
->> 
->> Also, and unsure if this is related or not, the mouse and
->> keyboard behave
->> erratically when the iwl3945 module is loaded. Both keyboard
->> and mouse lock
->> up, but store all input in a buffer and spurt it out after a
->> few seconds.
->> After between 1-10 minutes the machine hangs and the Caps Lock
->> and Scroll
->> Lock lights flash on and off (not the Num Lock one though).
->> 
->> Dmesg log is available here using netconsole on a wired
->> connection, up to
->> the point where it crashes:
->> 
->> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwlwifi-output.bz2
->> 
->> I also reloaded the module with debug=0x43ffb after booting,
->> so the output
->> becomes more verbose at that stage.
-> 
-> Looks like the device is being brought up and down a lot ... are you
-> perhaps running wpa_supplicant or some other user application that is
-> doing this? Could you please give more information about what you were
-> doing when these errors started to appear?
+> I can't say I particularly care about France, but even from the
+> wikipedia page you linked previously it is rather clear that we cannot
+> define a "EU" regulatory domain because Spain and France are in the EU
+> yet have not adopted the "European" regulatory requirements.
 
-Yes, wpa_supplicant is running as part of the boot process. Should I use
-some other application? (Do wireless-tools support WPA?) Or should I just
-load the module on it's own and give the dmesg output from that?
+That makes it all very difficult, I think that an EU domain is OK 
+provided that there is also a Spanish domain. Or maybe the EU domain 
+should actually be named ETSI (which was my original preference, it was 
+John Linville that said EU hence why I used it).
 
-Marcus.
+I'll have to see if I can work out what the allowable domains are for 
+the Ralink RT2500 drivers, under Windows for instance. I know that are 
+are considerable number of choices, certainly more than US/EU/JP. That 
+might provide a good clue.
 
+I'm beginning to wonder if anyone has this correct in their shipping 
+products, especially from a power point of view. The regulatory stuff is 
+supposed to be prevented from manipulation by the user, but if I were in 
+the US and I entered "JP" for the regdom, then I can break the regs with 
+nothing to stop me anyway. You couldn't operate with a worldwide lowest 
+common denominator approach, it would be the equivalent of turning the 
+wireless hardware off!
+
+Does anyone know how the EEPROM contents are supposed to work for the 
+Intel hardware? How they are queried and compared with kernel and 
+userspace programs?
+
+-- 
+
+Brian
