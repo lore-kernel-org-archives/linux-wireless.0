@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.versatel.nl ([62.58.50.89]:43574 "EHLO smtp2.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750983AbYD3JuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 05:50:07 -0400
-Subject: Re: rt61pci current wireless testing git gives kernel oops
-From: Bas Hulsken <bhulsken@hotmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:25152 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762248AbYDURXr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 13:23:47 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so584512nfb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:23:44 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <1209406716.29025.18.camel@johannes.berg>
-References: <1209147056.2955.7.camel@Bas>
-	 <200804252031.56605.IvDoorn@gmail.com>
-	 (sfid-20080425_203116_969250_F59BCB3A)  <1209406716.29025.18.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 30 Apr 2008 11:45:33 +0200
-Message-Id: <1209548733.5814.3.camel@Bas> (sfid-20080430_115002_180485_4D575957)
-Mime-Version: 1.0
+Subject: Re: [PATCH 4/9] rt2x00: Use rt2x00 queue numbering
+Date: Mon, 21 Apr 2008 19:30:31 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+References: <200804211858.46659.IvDoorn@gmail.com> <200804211900.47216.IvDoorn@gmail.com> <1208798232.26186.121.camel@johannes.berg>
+In-Reply-To: <1208798232.26186.121.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200804211930.31340.IvDoorn@gmail.com> (sfid-20080421_192440_047304_71763CFA)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Mon, 2008-04-28 at 20:18 +0200, Johannes Berg wrote:
-> > > the interface goes up well, but I get an oops as soon as I run hostapd,
-> > > seems something with debugfs. This shows up in dmesg, let me know if you
-> > > need any more info.
+On Monday 21 April 2008, Johannes Berg wrote:
+> Hi Ivo,
 > 
-> Bas, can you reproduce this issue? Could you try the patch below?
+> On Mon, 2008-04-21 at 19:00 +0200, Ivo van Doorn wrote:
+> > Use the rt2x00 queue enumeration as much as possible,
+> > removing the usage of the mac80211 queue numbering
+> > wherever it is possible.
+> > 
+> > This makes it easier for mac80211 to change it queue
+> > identification scheme without having to deal with
+> > big changes in the rt2x00 code.
 > 
-> johannes
+> Cool, thanks a lot. One small note:
+> 
+> > +static inline enum data_queue_qid mac80211_queue_to_qid(unsigned int queue)
+> > +{
+> > +	/* Regular TX queues are mapped directly */
+> > +	if (queue < NUM_TX_DATA_QUEUES)
+> > +		return queue;
+> > +	else if (queue == IEEE80211_TX_QUEUE_BEACON)
+> > +		return QID_BEACON;
+> > +	else if (queue == IEEE80211_TX_QUEUE_AFTER_BEACON)
+> > +		return QID_ATIM;
+> > +	return QID_OTHER;
+> 
+> Are you actually using TX_QUEUE_AFTER_BEACON? That queue number is a
+> historical accident (imho) and not used, we actually use the
+> IEEE80211_TXCTL_SEND_AFTER_DTIM tx control flag.
 
-with your patch applied I can no longer reproduce this issue, and I've
-tried running hostapd at least 5 times. Without your patch, I could
-reproduce it two out of two times.
+Actually both the checks for IEEE80211_TX_QUEUE_BEACON and IEEE80211_TX_QUEUE_AFTER_BEACON
+are fake and only present for completeness.
+rt2x00 does check for IEEE80211_TXCTL_SEND_AFTER_DTIM and will resolve it to QID_ATIM
+if that queue is supported by the hardware (rt2400pci and rt2500pci) and resolves it to the control->queue
+in all other cases.
 
-thanks,
-Bas
+> Also, with the QoS patch, those queue numbers should finally go away and
+> mac80211 will not pass anything but the data queues, hence, this small
+> inline would probably be reduced to "return queue;" by the patch.
 
+This function only exists to move the translation in a single location.
+When the translation isn't needed anymore because skb_get_queue_mapping(skb)
+or something else is used, then this function can be removed completely. :)
 
+Ivo
