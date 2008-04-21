@@ -1,71 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765669AbYD1Ri4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46103 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755002AbYDUPGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 13:38:56 -0400
-Subject: Re: [REGRESSION] Trouble seeing some wireless networks in latest
-	git
+	Mon, 21 Apr 2008 11:06:13 -0400
+Subject: Re: [RFC 0/3] Examples for the new sparse context tracking
+	functionality
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Priit Laes <plaes@plaes.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1209315625.4095.4.camel@localhost> (sfid-20080427_190124_741883_54F863BD)
-References: <1209288298.3851.12.camel@localhost>
-	 <48149F2B.4000503@lwfinger.net>  <200804271748.49377.mb@bu3sch.de>
-	 <1209315625.4095.4.camel@localhost> (sfid-20080427_190124_741883_54F863BD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HDvOvdVi0Jbo2yWZ+Gn/"
-Date: Mon, 28 Apr 2008 19:38:45 +0200
-Message-Id: <1209404326.29025.5.camel@johannes.berg> (sfid-20080428_193905_382932_E60BF47D)
+To: paulmck@linux.vnet.ibm.com
+Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+In-Reply-To: <20080421145525.GB9153@linux.vnet.ibm.com>
+References: <20080410134810.629048000@sipsolutions.net>
+	 <20080419233338.GG20138@linux.vnet.ibm.com>
+	 <1208766355.26186.37.camel@johannes.berg>
+	 <20080421145525.GB9153@linux.vnet.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CV94L+f4brYivCkDyoUt"
+Date: Mon, 21 Apr 2008 17:05:33 +0200
+Message-Id: <1208790333.26186.112.camel@johannes.berg> (sfid-20080421_170705_875917_291509FF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HDvOvdVi0Jbo2yWZ+Gn/
-Content-Type: text/plain; charset=UTF-8
+--=-CV94L+f4brYivCkDyoUt
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2008-04-27 at 20:00 +0300, Priit Laes wrote:
-> =C3=9Chel kenal p=C3=A4eval, P, 2008-04-27 kell 17:48, kirjutas Michael B=
-uesch:
-> > > > Any hints how to debug this further?
-> > Nah, it's a regulatory setting issue.
-> > The default regdomain is US, which only allows chans 1-11.
-> > There's some module parameter to switch the regdomain.
-> > This is not a regression, but a feature.
-> >=20
-> Regdomain setting seems to be OK (and missing for b43):
-> =EF=BB=BFiwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
 
-This should really read "EEPROM tunable channels" instead, cfg80211 will
-further restrict it.
+> > my_specific_rcu_get() __acquires(RCU) __acquires(specificRCU);
+> >=20
+> > and then annotate whatever needs the specific RCU type with
+> > __requires(specificRCU)
+>=20
+> Cute!!!  I didn't realize you could mark a single interface with
+> multiple __acquires() markings.
+>=20
+> So if there is at least one match, sparse is happy?
+
+No, sparse requires all the given contexts to match. For example, say
+you have
+
+#define __requires_rcu __requires(RCU)
+
+#define __requires_special_rcu \
+	__requires(specificRCU)
+
+#define __acquires_special_rcu \
+	__acquires(RCU) __acquires(specificRCU)
+
+=EF=BB=BF#define __acquires_regular_rcu __acquires(RCU)
+
+Then a function marked "__acquires_special_rcu" with acquire *both*
+contexts, and a function marked __requires_special_rcu will require just
+the special one. And a function marked __requires_rcu just requires the
+regular one. So say you have
+
+rcu_special_lock __acquires_special_rcu
+=EF=BB=BFrcu_special_unlock __releases_special_rcu
+=EF=BB=BF
+rcu_regular_lock __acquires_rcu
+=EF=BB=BFrcu_regular_unlock __releases_rcu
+
+rcu_do_special __requires_special_rcu
+rcu_do_something __requires_rcu
+
+
+Then both this will be fine:
+
+
+rcu_special_lock()
+rcu_do_special()
+rcu_do_something()
+rcu_special_unlock()
+
+
+but this will result in a warning:
+
+
+rcu_regular_lock()
+rcu_do_special()
+rcu_regular_unlock()
+
+because the "specialRCU" context is missing.
+
+You could mark do_special with *both* __requires(RCU) and
+__requires(specialRCU) but as long as the acquires/releases parts have a
+strict dependency (=EF=BB=BFspecialRCU implies RCU) that isn't necessary.
 
 johannes
 
---=-HDvOvdVi0Jbo2yWZ+Gn/
+--=-CV94L+f4brYivCkDyoUt
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASBYLpKVg1VMiehFYAQLMOg//RcWupjJZsxUmMD1ia4jtoCCb915jPZfS
-/2L8KCC6db+YxPhoIj/1Rq2YogGh68x5mL0ugzctGYPkwA/W5XN1jWCh+aU4eiJg
-kjKv2uYKfqwMld7Ja/OMTcvehfISz04YgU3B5SDPooHRpHGZHzyFQZKbCCfUY6Ws
-dIULzK5bYqTpeCj8CCQ2JLM5Ukg8VMUeBWhRGm87jPdnc6CkUd1xY9zu/ZWFb6wv
-bfGdgW40lqPD4X7K4x4NP6MUMWsfDhnkSpsdyj1zA5k2/OIdQwZzWidyrb20uRky
-HS5ePHK8GxPfvrnQYmjb23mSS9Cztxk3J4aM7phXatJ9vl0s3PorXyEhHrBa15fK
-6TO3Ifz+YuTqx19jt7rnLB8/5nUVAalciy7dq5P0t9MXPgld1zytHFrO/qhsRAFu
-2TImlAdHhjgBKWCOYbJURUR8IZcxargAli5h8p65iYPpzXfDxn7NxKwmxXolxL7D
-9wfyaY54Yi3TEc6kBQEk90DJ46Lj4X09nQgaCINBFogZT9AdvoqB97ZlYqUIKo6L
-MEzB705PqXY43KUMjRlBVadL6fJv+V71WUP12FXq+kfWrQva6fnaI6ZPq/OUXHFE
-KMuPuyxu4maT42KNonTXf5Vz9mvo+uQV6NCXe1Sukm3ziD20iDov6+v/BrkWYeOe
-A6S6kOL6csE=
-=4NaT
+iQIVAwUASAytPKVg1VMiehFYAQIwTQ//QS8R7E3PBq027f4tO3NkphsHGilYCofv
+/4u4hq8B7DiyItML+ebNgPrl8xyozaxYOilnYMLsz36rQSJs5RYhVi6F1pAbwU8q
+Cv4RHJ6L3DNlxmR1B0G1HJcEcX6D8Y5ElXPN/HyU23tTATa1omTPJYBHfnzemzX3
+vz2xM+bwDEezCmsO8r7O1yOTo/GlERiOskdU2jKTgwAJkxHC/1Dbj0tTJ6pmWF9X
+aJtArFtCDEkoRZ5ySYIZq+cLpYNC+Yx9D1VwWT8+XEf4ybDTiuwbCVqiSKc/lXmW
+Lt35IiiPsvX1MNNl3m+BQAv2q0gLKlp2R8HR43llHSwsGfu33cHvqfjOQT+YD+KT
+AkQlVwm1cUtAu4DlI5qMqGPHXzBMhakxlY8sK1W5o12ffO09CiKL2MpJo3Ww++6X
+uwoUuc6i8OrDbcxkxYGCJeTf19BbWAWxA8j9YG0QRhYkqb4fqjbkiY5bMhPTRwdv
+ttvugB5GEj7Agml5Ch+d9WbN58eWsh81qTicjj9FSNFX66LfmPYuU6eONmLc4lto
+f804E/OtPdMLpRI4Ok5P8hk1wTXPzj1+goiF7DXAnNEiJW4kcCPPPOZR3Foi/TUV
+cs4vUjXW5KEflHze6RhWMgikhQHsTprQL0hJvCV6K547yYHdNcxf3D+HEP2rza0X
+0H5g9AjOsBM=
+=08Yo
 -----END PGP SIGNATURE-----
 
---=-HDvOvdVi0Jbo2yWZ+Gn/--
+--=-CV94L+f4brYivCkDyoUt--
 
