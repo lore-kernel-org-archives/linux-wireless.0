@@ -1,171 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41638 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555AbYDEAFC (ORCPT
+Received: from 206-248-169-182.dsl.ncf.ca ([206.248.169.182]:55507 "EHLO
+	phobos.cabal.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbYDUStO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 20:05:02 -0400
-Subject: Re: [PATCH v2] mac80211: notify mac from low level driver (iwlwifi)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mabbas@linux.intel.com>
-In-Reply-To: <1207353598-461-1-git-send-email-reinette.chatre@intel.com>
-References: <1207353598-461-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4rHN6lkW3gC2o/V8mscj"
-Date: Sat, 05 Apr 2008 02:04:55 +0200
-Message-Id: <1207353895.6675.7.camel@johannes.berg> (sfid-20080405_010508_289050_AEDFC44D)
-Mime-Version: 1.0
+	Mon, 21 Apr 2008 14:49:14 -0400
+Date: Mon, 21 Apr 2008 14:49:11 -0400
+From: Kyle McMartin <kyle@mcmartin.ca>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kyle McMartin <kyle@mcmartin.ca>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwl4965: slow scans
+Message-ID: <20080421184911.GB19802@phobos.i.cabal.ca> (sfid-20080421_205004_703357_5F7FC8EF)
+References: <20080421160318.GA19802@phobos.i.cabal.ca> <20080421174122.GA10857@tuxdriver.com> <1208800976.32409.0.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1208800976.32409.0.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Apr 21, 2008 at 02:02:56PM -0400, Dan Williams wrote:
+> Yeah, could be an NM issue or a supplicant issue I guess.  Or, even if
+> the card _is_ returning scan results, it might not be returning results
+> for your AP.
+> 
 
---=-4rHN6lkW3gC2o/V8mscj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm also poking the card with iwlist with NM off, and still see huge
+delays waiting for the network to show up.
 
+> Do you have hardware or software scanning on (ie, is disable_hw_scan
+> module option 1 or 0?)
+> 
 
-On Fri, 2008-04-04 at 16:59 -0700, Reinette Chatre wrote:
-> From: Mohamed Abbas <mabbas@linux.intel.com>
->=20
-> Add new API to MAC80211 to allow low level driver to
-> notify MAC with driver status.
+It's pretty invariant... disable_hw_scan=1 seems to be a bit faster, but
+also breaks the second suspend, unless you unload the module first.
 
-Looks ok to me now.
-
-> Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |    1 +
->  include/net/mac80211.h                      |   19 +++++++++++++++++++
->  net/mac80211/ieee80211_sta.c                |   23 +++++++++++++++++++++=
-++
->  4 files changed, 44 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wi=
-reless/iwlwifi/iwl3945-base.c
-> index d4daa04..19a14ad 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -5883,6 +5883,7 @@ static void iwl3945_alive_start(struct iwl3945_priv=
- *priv)
->  	if (priv->error_recovering)
->  		iwl3945_error_recovery(priv);
-> =20
-> +	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->  	return;
-> =20
->   restart:
-> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wi=
-reless/iwlwifi/iwl4965-base.c
-> index 4517e4c..4de81d8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> @@ -5711,6 +5711,7 @@ static void iwl4965_alive_start(struct iwl_priv *pr=
-iv)
->  		iwl4965_error_recovery(priv);
-> =20
->  	iwlcore_low_level_notify(priv, IWLCORE_START_EVT);
-> +	ieee80211_notify_mac(priv->hw, IEEE80211_NOTIFY_RE_ASSOC);
->  	return;
-> =20
->   restart:
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 01b3215..0bc73e2 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -74,6 +74,14 @@
->   */
-> =20
->  /**
-> + * enum ieee80211_notification_type - Low level driver notification
-> + * @IEEE80211_NOTIFY_RE_ASSOC: start the re-association sequence
-> + */
-> +enum ieee80211_notification_types {
-> +	IEEE80211_NOTIFY_RE_ASSOC,
-> +};
-> +
-> +/**
->   * struct ieee80211_ht_bss_info - describing BSS's HT characteristics
->   *
->   * This structure describes most essential parameters needed
-> @@ -1677,4 +1685,15 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *=
-hw, u8 *ra, u8 tid);
->  void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *=
-ra,
->  				     u16 tid);
-> =20
-> +/**
-> + * ieee80211_notify_mac - low level driver notification
-> + * @hw: pointer as obtained from ieee80211_alloc_hw().
-> + * @notification_types: enum ieee80211_notification_types
-> + *
-> + * This function must be called by low level driver to inform mac80211 o=
-f
-> + * low level driver status change or force mac80211 to re-assoc for low
-> + * level driver internal error that require re-assoc.
-> + */
-> +void ieee80211_notify_mac(struct ieee80211_hw *hw,
-> +			  enum ieee80211_notification_types  notif_type);
->  #endif /* MAC80211_H */
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index f3c8a21..833b225 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -4235,3 +4235,26 @@ int ieee80211_sta_disassociate(struct net_device *=
-dev, u16 reason)
->  	ieee80211_set_disassoc(dev, ifsta, 0);
->  	return 0;
->  }
-> +
-> +void ieee80211_notify_mac(struct ieee80211_hw *hw,
-> +			  enum ieee80211_notification_types  notif_type)
-> +{
-> +	struct ieee80211_local *local =3D hw_to_local(hw);
-> +	struct ieee80211_sub_if_data *sdata;
-> +
-> +	switch (notif_type) {
-> +	case IEEE80211_NOTIFY_RE_ASSOC:
-> +		rcu_read_lock();
-> +		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-> +
-> +			if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_STA) {
-> +				ieee80211_sta_req_auth(sdata->dev,
-> +						       &sdata->u.sta);
-> +			}
-> +
-> +		}
-> +		rcu_read_unlock();
-> +		break;
-> +	}
-> +}
-> +EXPORT_SYMBOL(ieee80211_notify_mac);
-
---=-4rHN6lkW3gC2o/V8mscj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/bCJqVg1VMiehFYAQJVJw//YpWTCvyGKwyPNq+InghpoETWH4aqcnxd
-Ly7Hn4zEjzstLBdmq1YrdXeQIcoKnVNobWBRV8M3c+OsEVMYnQs7hOYtOCEuMAyL
-8PYiARJxmkYYsi6SffPp5TA57VtAO4Xp3tCG4g5dCy9X17ERpbgGfLTjyzLeqoTp
-msziGiN8c0ee7EY6FsAAWoiYnFQjPPXDYr28FvOgRmmXgIvk3s61AxSuYZRe1nDA
-FO6hoM2UrB4jC3LuTXPfOue+KSINtUhfQlevWF3Em6UxE/qcbN95dTTHz+kCyKqt
-QgYXlVLrc3B7pGbnnZ5cFfIZKxGbDYmqfPwHdNZsMIsExKnpz50fK6Y+HAKKV7n+
-SerKwgWptrlWWjCWDQ6HieCrIl1des70O8x820P5unDSKmYo3wK6OTzO0TiSTriO
-bHv6Edfi4e4YdWbFbJz/voFsA+AwVrgU20WLLD/ivKdTZWuGmU6lYa/3QvNuzdO5
-XihnL+ClcwDMeKLOGriM0EBS1T0VB67et/+MHysEgLJF1lOlwr8o/8J0RnnT/xVL
-SSFfYxtbJZaB2BNdqyfOEw7u7sJCkEijPrMWAyhMeQWYlXeM9Hlotc0iSJ68aeVW
-t1FXvGXrvIaWXgxuqrHAAG7RUYsNrZ5iVuaqg2wJs5b58JOphkPYMR6wcX1txaJj
-sh67putK4Tc=
-=S8Xr
------END PGP SIGNATURE-----
-
---=-4rHN6lkW3gC2o/V8mscj--
-
+regards, Kyle
