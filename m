@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fenrir.org.uk ([81.168.115.223]:44521 "EHLO mx.fenrir.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755944AbYDCQuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 12:50:14 -0400
-Received: from [62.189.241.202] (helo=[10.104.10.102])
-	(TLSv1:AES256-SHA:256)
-	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
-	id 1JhSdg-0002uh-K1
-	for <linux-wireless@vger.kernel.org>; Thu, 03 Apr 2008 17:50:12 +0100
-Message-ID: <47F50AC4.5020801@fenrir.org.uk> (sfid-20080403_175017_842547_B4FB6411)
-Date: Thu, 03 Apr 2008 17:50:12 +0100
-From: Brian Morrison <bdm@fenrir.org.uk>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [REGRESSION] BCM4306 cannot associate with any version of b43
- driver
-References: <200804031115.52596.ace@staticwave.ca>
-In-Reply-To: <200804031115.52596.ace@staticwave.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753688AbYDUIaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 04:30:12 -0400
+Subject: Re: Does mac80211 support ap mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bas Hulsken <bhulsken@zonnet.nl>
+Cc: Dan Williams <dcbw@redhat.com>, cao jing <caojing.china@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1208627675.27478.7.camel@Bas>
+References: <9f33c5230804141218j5778195ajc1a7bae011eb9528@mail.gmail.com>
+	 <1208202280.12139.23.camel@localhost.localdomain>
+	 (sfid-20080414_204742_445593_54A5FE8E)  <1208257427.3502.28.camel@johannes.berg>
+	 <1208627675.27478.7.camel@Bas>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AsE6jjYRuG3kSMUwQejl"
+Date: Mon, 21 Apr 2008 10:29:16 +0200
+Message-Id: <1208766556.26186.42.camel@johannes.berg> (sfid-20080421_093016_664238_57C39FCD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabriel A. Devenyi wrote:
-> I feel I have to escalate this regression to the mailing lists because I've had 
-> no response on the kernel bugzilla from quite some time now.
-> 
-> With the release of the b43 driver, my card can no longer associate with its AP. 
-> I've been testing with 2.6.24 and the wireless-git tree hoping that someone 
-> would fix it, but I've had no requests for testing and no response.
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=9987
-> 
-> What else do I need to do to get someone to help me? More debugging information? 
-> Please ask me to do something, I'm trying to be an active participant in the 
-> process...
-> 
 
-Which channel is your AP on?
+--=-AsE6jjYRuG3kSMUwQejl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
+Hi Bas,
 
-Brian
+Thanks for the note.
+
+> rtl8187 does not come very far at all, hostapd can't switch it to master
+> mode apparently.. haven't investigated very much why this happens
+> though.. so it might be something trivial.
+
+That would probably be the driver not being prepared to handle beaconing
+etc. and thus rejecting AP mode interfaces in its add_interface()
+callback.
+
+johannes
+
+--=-AsE6jjYRuG3kSMUwQejl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASAxQW6Vg1VMiehFYAQKLShAAhRq9QsVIxCZ6/XkPVtmW/0/4yQFPkeBL
+0QupA6MhkZmLm+0npRDs7jnWNg+zahdr+gYelbT3yxKNNRoWKUw7QFUwmtuTBeAR
+kHUWAatsNMs0lb08Kx4zXuUn+OLp+3JYLXMbfIANm4nMKzxm8Sz5gMPsPGECfadW
+DN79HY8I3F39Cb0kpKx+JcIz21A7Xi8LYd4qNIp2/ni6jBmHgEN/0Q2M6gBYta/w
+8SwkrG8UUIbqQwbv2exrQREt+tvjf5QwAlueaR030wxslgK+/qxzdJ9uegHqH+TX
+p6n02o1Thk4BVHy54LVhHDD4gtFr79um/0nBhIIIWg3GBZkHcbJY/R4OLrqvl4uY
+wnrEBkiWp7hzIaZemngAfLKBlH8mM9SjBAd6qJg4B19mQuAMsiagEliU7GKZN4W5
+WO0Tqyeh2nJSsdiVvDUTpNvACtix7nd8kPqgRranbLnO0kI+r5606jP5fpTXod9Z
+rRF68Cf05RFCmjSDQujfrweLCt3f6Ip2FgNZKqRGQ+pOoioN33SWKzwl5Ca0eO41
+7xgG1OC9SyIMPDgCB71LOMhwe+AsB+mJjw+LAx+f5OaoHQxz376G+NNW9D8/LrUN
+XZPyRfIe7kNm3PZ0OQu6kn6QH4KeNbC5OsYpX7ehgvRlZ8WdgRxXVDb+y7TC0UL8
+gnY2NFymKik=
+=+4hz
+-----END PGP SIGNATURE-----
+
+--=-AsE6jjYRuG3kSMUwQejl--
 
