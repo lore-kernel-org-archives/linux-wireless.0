@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:31088 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbYDAFxb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 01:53:31 -0400
-Received: by py-out-1112.google.com with SMTP id u52so2831273pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 22:53:28 -0700 (PDT)
-Message-ID: <1ba2fa240803312253l4595ce43ya3a6812ceb216f12@mail.gmail.com> (sfid-20080401_065333_827715_A2F6F9FB)
-Date: Tue, 1 Apr 2008 08:53:27 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [ipw3945-devel] dynamic wep with mulitple keys
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0803311237w1b714034w8ba3cfd56aec9686@mail.gmail.com>
+Received: from mx.fenrir.org.uk ([81.168.115.223]:33497 "EHLO mx.fenrir.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751604AbYDUPgr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 11:36:47 -0400
+Received: from [62.189.241.202] (helo=[10.104.10.102])
+	(TLSv1:AES256-SHA:256)
+	by mx.fenrir.org.uk with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
+	id 1Jny4T-0005nJ-JH
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 16:36:45 +0100
+Message-ID: <480CB48C.2000503@fenrir.org.uk> (sfid-20080421_173744_802670_7DCB0FF0)
+Date: Mon, 21 Apr 2008 16:36:44 +0100
+From: Brian Morrison <bdm@fenrir.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0803311237w1b714034w8ba3cfd56aec9686@mail.gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [ipw3945-devel] iwl3945: Disabled channels
+References: <fuhkfp$mnk$1@ger.gmane.org>  <480C5AFF.5020005@fenrir.org.uk>	 (sfid-20080421_101455_395583_495A4EE6) <1208785818.26186.101.camel@johannes.berg>	 <480CA260.70506@fenrir.org.uk>	 (sfid-20080421_162006_486515_D95FEC5E) <1208788898.26186.105.camel@johannes.berg>	 <480CAC55.1000704@fenrir.org.uk> (sfid-20080421_170234_346603_44E35F3C) <1208790764.26186.115.camel@johannes.berg>
+In-Reply-To: <1208790764.26186.115.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/31/08, drago01 <drago01@gmail.com> wrote:
-> Hello,
->
-> I noticed that I can connect to some dynamic wep APs fine using
-> iwl3945 and with other it does not work, while ipw3945 work with all
-> of them.
-> Both driver associate fine but iwl3945 never gets an ip from dhcp.
-> I checked with iwlist key and it seems that this APs are using only
-> one key with iwl3945 but two with ipw3945.
-> The APs that work (I recognize them by BSSID) are using only one key
-> with both drivers.
-> Does this mean that mac80211/iwl3945 for some reason drops one key or
-> never sets it?  (broadcast key?)
-> Any idea how to get more infos to debug this? (Can attach both iwlist
-> key outputs if this is needed).
+Johannes Berg wrote:
+> [Can you please not drop CCs all the time? thanks]
+> 
+>> That makes it all very difficult, I think that an EU domain is OK 
+>> provided that there is also a Spanish domain. Or maybe the EU domain 
+>> should actually be named ETSI (which was my original preference, it was 
+>> John Linville that said EU hence why I used it).
+> 
+> I think we had ETSI in some of the original proposals and I think that
+> makes much more sense.
+> 
+>> I'll have to see if I can work out what the allowable domains are for 
+>> the Ralink RT2500 drivers, under Windows for instance. I know that are 
+>> are considerable number of choices, certainly more than US/EU/JP. That 
+>> might provide a good clue.
+> 
+> I'm not sure we care that much, we have a huge list somewhere (look for
+> softmac work in this area from Larry Finger)
 
-Currently iwl uses cryptom management provided by mac80211, we are
-preparing patches for using of HW acceleration till now you must look
-for
-problems mac80211.
-Some log prints will be useful to debug it anyway.
+Is it in the code?
 
-Tomas
+> 
+>> Does anyone know how the EEPROM contents are supposed to work for the 
+>> Intel hardware? How they are queried and compared with kernel and 
+>> userspace programs?
+> 
+> The EEPROM is queried once and that's all the channels you saw in your
+> iw dev wlan0 info output, then userspace restricts it further. The
+> hardware also assumes you never move out of the country you bought it
+> in.
 
+The 802.11d stuff is designed to allow an AP to tell you the reg domain 
+you're in, but I don't know how many implement it. This is included in 
+the rolled up 802.11-2007 document I think, although it's more difficult 
+to find. Ah, right, it's there, section 7.2.3.1 details it.
 
-> -------------------------------------------------------------------------
-> Check out the new SourceForge.net Marketplace.
-> It's the best place to buy or sell services for
-> just about anything Open Source.
-> http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+If this is commonly broadcast in AP beacons then I assume we should be 
+using it, but if the scan is restricted to the FCC allocation then APs 
+not set to FCC channels will never be found. That suggests the default 
+reg dom should actually cover all channels the hardware supports.
+
+-- 
+
+Brian
