@@ -1,72 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35339 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754290AbYDAMEI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:04:08 -0400
-Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4)
-	andtimeout, a solution
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net, abertensu@yahoo.com
-In-Reply-To: <1206999696.20744.2.camel@localhost.localdomain>
-References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>
-	 <1206999696.20744.2.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LBVp4vPa3OhIRtomfQe8"
-Date: Tue, 01 Apr 2008 14:03:54 +0200
-Message-Id: <1207051434.5143.58.camel@johannes.berg> (sfid-20080401_130412_142278_F1CC6FE1)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:22816 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752692AbYDUWmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 18:42:14 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 05/11] iwlwifi: remove uneeded callback
+Date: Mon, 21 Apr 2008 15:41:55 -0700
+Message-Id: <1208817721-11333-6-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004339_766013_A0CC3C3F)
+In-Reply-To: <1208817721-11333-5-git-send-email-reinette.chatre@intel.com>
+References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-LBVp4vPa3OhIRtomfQe8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch removes callbacks that can be replaced by the generic one.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   42 +--------------------------
+ 1 files changed, 1 insertions(+), 41 deletions(-)
 
-> > > After browsing the internet, I found a lot of people with the same
-> > > problem and no solution. So, I dived into the code and found a simple
-> > > solution: ignore disassociation. When a new request arrives to the
-> > > wireless, a reconnection is done automatically.
->=20
-> Ignoring the disassociation from the AP is suspect...  wouldn't the AP
-> be releasing resources associated with the station, requiring a
-> reassociate/reauth from the station?  Reason 4 seems to mean "Inactivity
-> timer expired and station was disassociated".
-
-Indeed.
-
-> A better solution would be to queue up a reassocation worker if the AP
-> kicked you off for reason 4, maybe?
-
-It would think so, yes.
-
-johannes
-
---=-LBVp4vPa3OhIRtomfQe8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/IkqaVg1VMiehFYAQLJLw//fzswL21aQNN2ctDStomw1o1A2hV07BLy
-UHHASytGra3mMOJveWLrHx9jGrrILPE1vhFK6LXb2TrD3KaHZGvl6gbt/lrcUB4n
-SGzwHullxBcY5bcmPoRcMnA9U3diSXqeHyy67s4bxi8arBQxqHGkow/ZJ64m8rPM
-1QtdWgqVw61s6lECtW533XXOmr/DUtQwYy1tLn5bFEIPcKEHt3IuqCCqWpZag/rQ
-4aTejE4n8z6fGJBxyRwL6ohJhDSMIPzfvaQwkZE3TVae9PevPxtftieGeIF8WKt9
-B1FjIV5u+IbxFq9cjFBtMBWEzncSsNU7UnO39+9iPgDXsFddlgfShz9taB8hfa7p
-zYgNmaaBXcnJCn3y74MPF755YGBvmefGEi8TZV+PeHefsKPI9fp4hl28xXL/lNGf
-ry5acLKOiKAKxe2IG7pVAxuBWCArwkxOPtipz5EQmbi/4len+DLf4HFZ6dXA52DO
-aCgjjjdz5sji67RatXusxQ5xP3fN4/2zj+LuvlxGPSXsa4nBE7+oUsf9iIQ3oPMT
-zc1RZhUdTGlC63vtyU+8FmvU1q6Ox3LT9HgG4Plq7Aaemz9tXldJyUMi1Y9qccDJ
-QP5LxCAD3g1IiCChyrd9lsgvn9sjSlRmFzby9JGMg7k83YTdSdzZCb6Pl6+NEwU8
-caB3+iZd0l8=
-=yfOn
------END PGP SIGNATURE-----
-
---=-LBVp4vPa3OhIRtomfQe8--
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 2e706be..d6c5658 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -941,13 +941,6 @@ static int iwl4965_send_scan_abort(struct iwl_priv *priv)
+ 	return rc;
+ }
+ 
+-static int iwl4965_card_state_sync_callback(struct iwl_priv *priv,
+-					struct iwl_cmd *cmd,
+-					struct sk_buff *skb)
+-{
+-	return 1;
+-}
+-
+ /*
+  * CARD_STATE_CMD
+  *
+@@ -967,40 +960,9 @@ static int iwl4965_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_fla
+ 		.meta.flags = meta_flag,
+ 	};
+ 
+-	if (meta_flag & CMD_ASYNC)
+-		cmd.meta.u.callback = iwl4965_card_state_sync_callback;
+-
+ 	return iwl_send_cmd(priv, &cmd);
+ }
+ 
+-static int iwl4965_add_sta_sync_callback(struct iwl_priv *priv,
+-				     struct iwl_cmd *cmd, struct sk_buff *skb)
+-{
+-	struct iwl4965_rx_packet *res = NULL;
+-
+-	if (!skb) {
+-		IWL_ERROR("Error: Response NULL in REPLY_ADD_STA.\n");
+-		return 1;
+-	}
+-
+-	res = (struct iwl4965_rx_packet *)skb->data;
+-	if (res->hdr.flags & IWL_CMD_FAILED_MSK) {
+-		IWL_ERROR("Bad return from REPLY_ADD_STA (0x%08X)\n",
+-			  res->hdr.flags);
+-		return 1;
+-	}
+-
+-	switch (res->u.add_sta.status) {
+-	case ADD_STA_SUCCESS_MSK:
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	/* We didn't cache the SKB; let the caller free it */
+-	return 1;
+-}
+-
+ int iwl4965_send_add_station(struct iwl_priv *priv,
+ 			 struct iwl4965_addsta_cmd *sta, u8 flags)
+ {
+@@ -1013,9 +975,7 @@ int iwl4965_send_add_station(struct iwl_priv *priv,
+ 		.data = sta,
+ 	};
+ 
+-	if (flags & CMD_ASYNC)
+-		cmd.meta.u.callback = iwl4965_add_sta_sync_callback;
+-	else
++	if (!(flags & CMD_ASYNC))
+ 		cmd.meta.flags |= CMD_WANT_SKB;
+ 
+ 	rc = iwl_send_cmd(priv, &cmd);
+-- 
+1.5.3.4
 
