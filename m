@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:29227 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751282AbYDABxd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 21:53:33 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211 bug? no data is being transmitted after interface is brought down and then up again
-Date: Tue, 1 Apr 2008 10:53:19 +0900
-Cc: Thomas =?iso-8859-1?q?B=E4chler?= <thomas@archlinux.org>,
-	linux-wireless@vger.kernel.org
-References: <fsm20k$usk$1@ger.gmane.org> <20080331190225.GA12933@tuxdriver.com>
-In-Reply-To: <20080331190225.GA12933@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200804011053.19675.bruno@thinktube.com> (sfid-20080401_025338_903545_9B6E0EB4)
+Received: from mga01.intel.com ([192.55.52.88]:59302 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667AbYDUWmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 18:42:13 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 04/11] iwlwifi: remove includes to net/ieee80211.h
+Date: Mon, 21 Apr 2008 15:41:54 -0700
+Message-Id: <1208817721-11333-5-git-send-email-reinette.chatre@intel.com> (sfid-20080422_004344_159339_D294DD29)
+In-Reply-To: <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
+References: <1208817721-11333-1-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-2-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-3-git-send-email-reinette.chatre@intel.com>
+ <1208817721-11333-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 April 2008 04:02:25 John W. Linville wrote:
-> On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
-> > My question is, should this be considered a bug in mac80211?
-> > IMO, when an interface is brought down and then up again, one of th=
-e
-> > following things should happen:
-> > 1) Everything works as before
-> > 2) Nothing works, but the card disassociates from the network.
->
-> #2 would be my vote.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-why is that? would it be so difficult to provide #1?
+this patch removes remaining includes to net/ieee80211.h
 
-from a usability point of view #1 would be clearly better. whatever the=
- state=20
-was before, when i bring the interface up it want it to work (associate=
-, join=20
-IBSS) and be able to transmit data.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
 
-bruno
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index 85c2264..e51eeef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -29,7 +29,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/wireless.h>
+ #include <net/mac80211.h>
+-#include <net/ieee80211.h>
+ 
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 557912a..e20c938 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -28,7 +28,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/wireless.h>
+ #include <net/mac80211.h>
+-#include <net/ieee80211.h>
+ 
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+-- 
+1.5.3.4
+
