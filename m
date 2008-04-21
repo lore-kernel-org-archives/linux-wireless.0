@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080AbYDDVkj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 17:40:39 -0400
-Subject: [PATCH] mac80211: fix ieee80211_ioctl_giwrate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1207345048.3625.15.camel@johannes.berg> (sfid-20080404_223733_489853_ED39E8D5)
-References: <1207345048.3625.15.camel@johannes.berg>
-	 (sfid-20080404_223733_489853_ED39E8D5)
-Content-Type: text/plain
-Date: Fri, 04 Apr 2008 23:40:35 +0200
-Message-Id: <1207345235.3625.20.camel@johannes.berg> (sfid-20080404_224046_349871_2F451E78)
+Received: from mga03.intel.com ([143.182.124.21]:45082 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753988AbYDUB33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Apr 2008 21:29:29 -0400
+Subject: Re: FYI: hostapd status
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1208454990.4066.42.camel@johannes.berg>
+References: <1208454990.4066.42.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 21 Apr 2008 09:28:39 +0800
+Message-Id: <1208741320.2452.22.camel@debian.sh.intel.com> (sfid-20080421_022946_301296_636FD25D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_ioctl_giwrate() ioctl handler doesn't rcu_read_lock()
-its access to the sta table, fix it.
+On Thu, 2008-04-17 at 19:56 +0200, Johannes Berg wrote:
+> Since we just talked about it on IRC and I made a list, here it is. T=
+his
+> lists what we're missing in mac80211 and nl80211 for proper AP suppor=
+t.
+>=20
+> =EF=BB=BF * short slot        =20
+>  * short preamble
+>  * basic rate set=20
+>  * rts/cts
+>  * channel flag/regulatory domain
+>  * tx queue params (the plan is to make them qdisc settings after
+>    Ron's/my qos patch)
+>  * multi-bss support (no kernel changes, just hostapd keep track of
+>    BSSes)
+>  * internal bridge setting (separated STAs in AP, local->bridge_packe=
+ts)
+>  * CTS-protect setting for AP
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-D'oh! Sorry for the noise.
+These looks good for a basic AP. But I'd like to add more advanced
+features for example 11n, WMM AC and u-APSD support (which we have
+already done).
 
- net/mac80211/ieee80211_ioctl.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+>  * check why we see data frames on cooked monitor
+>  * investigate the skb truesize bug
 
---- everything.orig/net/mac80211/ieee80211_ioctl.c	2008-04-04 17:48:11.000000000 +0200
-+++ everything/net/mac80211/ieee80211_ioctl.c	2008-04-04 17:48:56.000000000 +0200
-@@ -586,19 +586,25 @@ static int ieee80211_ioctl_giwrate(struc
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (sdata->vif.type == IEEE80211_IF_TYPE_STA)
--		sta = sta_info_get(local, sdata->u.sta.bssid);
--	else
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_STA)
- 		return -EOPNOTSUPP;
--	if (!sta)
--		return -ENODEV;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
--	if (sta->txrate_idx < sband->n_bitrates)
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, sdata->u.sta.bssid);
-+
-+	if (sta && sta->txrate_idx < sband->n_bitrates)
- 		rate->value = sband->bitrates[sta->txrate_idx].bitrate;
- 	else
- 		rate->value = 0;
-+
-+	rcu_read_unlock();
-+
-+	if (!sta)
-+		return -ENODEV;
-+
- 	rate->value *= 100000;
- 
- 	return 0;
+These are bugs must be fixed ASAP.
 
+Thanks,
+-yi
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
