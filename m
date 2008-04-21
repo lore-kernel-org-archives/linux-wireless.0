@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757073AbYDLI4s (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:63394 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609AbYDUCgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Apr 2008 04:56:48 -0400
-Subject: Re: [RFC 3/3] mac80211: annotate with __requires_rcu
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0804121050160.28120@vixen.sonytel.be>
-References: <20080410134810.629048000@sipsolutions.net>
-	 <20080410134829.412424000@sipsolutions.net>
-	 <Pine.LNX.4.64.0804121050160.28120@vixen.sonytel.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eLdB7X2w7Ui/c5zhNN5e"
-Date: Sat, 12 Apr 2008 10:56:29 +0200
-Message-Id: <1207990589.13354.123.camel@johannes.berg> (sfid-20080412_095652_993701_38543DBA)
+	Sun, 20 Apr 2008 22:36:16 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so2759706waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2008 19:36:15 -0700 (PDT)
+Subject: [PATCH] mac80211: simplify code in util.c
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 20 Apr 2008 19:36:36 -0700
+Message-Id: <1208745396.7941.14.camel@brick> (sfid-20080421_033634_222430_AF4A26F4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/util.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
 
---=-eLdB7X2w7Ui/c5zhNN5e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index cc9f715..9960372 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -101,16 +101,13 @@ int ieee80211_get_hdrlen(u16 fc)
+ 	switch (fc & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_DATA:
+ 		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
+-			hdrlen = 30; /* Addr4 */
++			hdrlen += ETH_ALEN; /* Addr4 */
+ 		/*
+ 		 * The QoS Control field is two bytes and its presence is
+-		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
+-		 * hdrlen if that bit is set.
+-		 * This works by masking out the bit and shifting it to
+-		 * bit position 1 so the result has the value 0 or 2.
++		 * indicated by the IEEE80211_STYPE_QOS_DATA bit.
+ 		 */
+-		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
+-				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
++		if (fc & IEEE80211_STYPE_QOS_DATA)
++			hdrlen += 2;
+ 		break;
+ 	case IEEE80211_FTYPE_CTL:
+ 		/*
+-- 
+1.5.5.144.g3e42
 
-On Sat, 2008-04-12 at 10:50 +0200, Geert Uytterhoeven wrote:
-> On Thu, 10 Apr 2008, Johannes Berg wrote:
-> > --- everything.orig/net/mac80211/key.h	2008-04-10 15:36:20.000000000 +0=
-200
-> > +++ everything/net/mac80211/key.h	2008-04-10 15:36:45.000000000 +0200
-> > @@ -146,7 +146,7 @@ struct ieee80211_key *ieee80211_key_allo
-> >   */
-> >  void ieee80211_key_link(struct ieee80211_key *key,
-> >  			struct ieee80211_sub_if_data *sdata,
-> > -			struct sta_info *sta);
-> > +			struct sta_info *sta) __requires(RCU);
->                                               ^^^^^^^^^^^^^^^
-> 					      __requires_rcu? (for consistency)
 
-Yeah, forgot to fix up this one, I had been playing with it locally
-without __requires_rcu first.
-
-Thanks,
-johannes
-
---=-eLdB7X2w7Ui/c5zhNN5e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAB5PKVg1VMiehFYAQLMAw/+N7qQr2NIQ7Pq2n58zFhvPKFvyswwGy13
-PPh2Apm/0qg9eIDfoCUsghs/OkNyclzRitfEcBol/QJzm/8tBpnhhY9F1lF4DZr1
-SOeH8tdiM0Ncj+CE27CSVz/8yDbXUZRYPvpQB4z16IfEGW1gyQpQlmCpBy139VUl
-Sg48L8DBdX91g7V44UngZKlQmOI/zv99+47X+vXc7vEkQe74I5T+pLt8BHiQhjRg
-vmANxijyVFZO6C6WmeQgbZe8CkTyzldzsC+RBKnt51ldWqRMHZvzf9fFPicGUDI7
-6/Ugd0fEqW82Sheyvp74uloS+KsV+NoITcaPiS7MoYrdznfM7ggLEBhuxbz6aEeH
-a3brZWpTkIetV6OCMpsj/lZ6iXd/g4nWh/60YRwSv5CGZdkMhNR26TTghLK4OkEa
-c8OFGxRtvPajDXBnyCbUP9HN2+mZ0aMSTFDfUC/xkH9svZ96vSI64gxwxDXlZbq5
-3zyfsCml5YTzq1OYugVE4lSz1BgOr96Vizc6vTYoyvcWoIZPMBcc3xHc/lTyJij3
-SM+8KT3YeBsa0yWzAV29NjqOXfyLFNcrmB3BE3L7F4muDskdVu3SPGXOYfoqWaYG
-hK7EswuKckAKTDZBQ6tT3h+3kTmXED4zPVMhqvSsdYAVU+cnjbSF0HASsRTmcHZ0
-PayuD7eGgxQ=
-=wtII
------END PGP SIGNATURE-----
-
---=-eLdB7X2w7Ui/c5zhNN5e--
 
