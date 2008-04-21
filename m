@@ -1,85 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43029 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754989AbYDAOOa (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:52877 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761287AbYDURAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 10:14:30 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Enable quantum cryptography support
-Date: Tue, 1 Apr 2008 16:13:06 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+	Mon, 21 Apr 2008 13:00:13 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so2556605fkr.5
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:00:12 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 8/9] rt2x00: Fix kernel-doc
+Date: Mon, 21 Apr 2008 19:02:17 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200804211858.46659.IvDoorn@gmail.com>
+In-Reply-To: <200804211858.46659.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804011613.06749.mb@bu3sch.de> (sfid-20080401_151434_906114_43AEBC44)
+  charset="utf-8"
+Message-Id: <200804211902.17790.IvDoorn@gmail.com> (sfid-20080421_190106_871593_7E32D828)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables support for quantum cryptography on latest b43 devices.
-The quantum cryptography algorithm is 100% backward compatible with the
-standard CCMP algorithm, so no additional changes to the mac80211 stack
-are needed. While staying compatible, it makes the unbreakable(!) WLAN connection
-possible. Of course, that's only the case, if both ends use b43-qcrypto.
-In the case where one STA uses legacy encryption, the card will automatically
-detect this and switch back to plain old CCMP.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Add missing kernel-doc variables for structures/functions.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    6 +++---
+ drivers/net/wireless/rt2x00/rt2x00pci.h |    6 ++++--
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    6 +++---
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-John, please queue this patch for linux-3.6.26
-
-
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-03-22 15:44:00.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-01 15:53:40.000000000 +0200
-@@ -270,6 +270,7 @@ enum {
- #define B43_HF_ANTSELMODE	0x000200000000ULL /* Antenna selection mode (rev >= 13 only) */
- #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
- #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
-+#define B43_HF_QUANTUMCRYPT	0x100000000000ULL /* Enable quantum cryptography in firmware. */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index d85553f..92656d0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -404,7 +404,7 @@ static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
+  * @supported_rates: Rate types which are supported (CCK, OFDM).
+  * @num_channels: Number of supported channels. This is used as array size
+  *	for @tx_power_a, @tx_power_bg and @channels.
+- * channels: Device/chipset specific channel values (See &struct rf_channel).
++ * @channels: Device/chipset specific channel values (See &struct rf_channel).
+  * @tx_power_a: TX power values for all 5.2GHz channels (may be NULL).
+  * @tx_power_bg: TX power values for all 2.4GHz channels (may be NULL).
+  * @tx_power_default: Default TX power value to use when either
+@@ -936,7 +936,7 @@ struct data_queue *rt2x00queue_get_queue(struct rt2x00_dev *rt2x00dev,
  
- /* MacFilter offsets. */
- #define B43_MACFILTER_SELF		0x0000
-@@ -439,6 +440,7 @@ enum {
- 	B43_SEC_ALGO_AES,
- 	B43_SEC_ALGO_WEP104,
- 	B43_SEC_ALGO_AES_LEGACY,
-+	B43_SEC_ALGO_QUANTUM,
- };
+ /**
+  * rt2x00queue_get_entry - Get queue entry where the given index points to.
+- * @rt2x00dev: Pointer to &struct rt2x00_dev.
++ * @queue: Pointer to &struct data_queue from where we obtain the entry.
+  * @index: Index identifier for obtaining the correct index.
+  */
+ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+@@ -945,7 +945,7 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+ /**
+  * rt2x00queue_index_inc - Index incrementation function
+  * @queue: Queue (&struct data_queue) to perform the action on.
+- * @action: Index type (&enum queue_index) to perform the action on.
++ * @index: Index type (&enum queue_index) to perform the action on.
+  *
+  * This function will increase the requested index on the queue,
+  * it will grab the appropriate locks and handle queue overflow events by
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
+index 9d1cdb9..2b0ef17 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
+@@ -98,8 +98,9 @@ int rt2x00pci_write_tx_data(struct rt2x00_dev *rt2x00dev,
+  * struct queue_entry_priv_pci_rx: Per RX entry PCI specific information
+  *
+  * @desc: Pointer to device descriptor.
++ * @desc_dma: DMA pointer to @desc.
+  * @data: Pointer to device's entry memory.
+- * @dma: DMA pointer to &data.
++ * @data_dma: DMA pointer to &data.
+  */
+ struct queue_entry_priv_pci_rx {
+ 	__le32 *desc;
+@@ -113,8 +114,9 @@ struct queue_entry_priv_pci_rx {
+  * struct queue_entry_priv_pci_tx: Per TX entry PCI specific information
+  *
+  * @desc: Pointer to device descriptor
++ * @desc_dma: DMA pointer to @desc.
+  * @data: Pointer to device's entry memory.
+- * @dma: DMA pointer to &data.
++ * @data_dma: DMA pointer to &data.
+  * @control: mac80211 control structure used to transmit data.
+  */
+ struct queue_entry_priv_pci_tx {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index 1efaaae..4da9eb3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -199,12 +199,12 @@ static inline int rt2x00usb_vendor_request_sw(struct rt2x00_dev *rt2x00dev,
+  * kmalloc for correct handling inside the kernel USB layer.
+  */
+ static inline int rt2x00usb_eeprom_read(struct rt2x00_dev *rt2x00dev,
+-					__le16 *eeprom, const u16 lenght)
++					__le16 *eeprom, const u16 length)
+ {
+ 	return rt2x00usb_vendor_request(rt2x00dev, USB_EEPROM_READ,
+ 					USB_VENDOR_REQUEST_IN, 0, 0,
+-					eeprom, lenght,
+-					REGISTER_TIMEOUT16(lenght));
++					eeprom, length,
++					REGISTER_TIMEOUT16(length));
+ }
  
- struct b43_dmaring;
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-03-27 17:11:38.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-01 15:53:41.000000000 +0200
-@@ -3215,6 +3215,13 @@ static int b43_op_set_key(struct ieee802
- 		break;
- 	case ALG_CCMP:
- 		algorithm = B43_SEC_ALGO_AES;
-+		if (dev->dev->id.revision >= 20080401) {
-+			/* Latest devices can do quantum cryptography
-+			 * to encrypt/decrypt the data stream.
-+			 * This is 100% backward compatible with the traditional
-+			 * CCMP algorithm. */
-+			algorithm = B43_SEC_ALGO_QUANTUM;
-+		}
- 		break;
- 	default:
- 		B43_WARN_ON(1);
-@@ -3254,6 +3261,10 @@ static int b43_op_set_key(struct ieee802
- 			b43_hf_write(dev,
- 				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
- 		}
-+		if (algorithm == B43_SEC_ALGO_QUANTUM) {
-+			b43_hf_write(dev, b43_hf_read(dev)
-+				     | B43_HF_QUANTUMCRYPT);
-+		}
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
- 		break;
- 	case DISABLE_KEY: {
-
+ /*
 -- 
-Greetings Michael.
+1.5.4.5
+
