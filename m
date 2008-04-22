@@ -1,109 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp239.poczta.interia.pl ([217.74.64.239]:26891 "EHLO
-	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754497AbYDJLdS (ORCPT
+Received: from mga14.intel.com ([143.182.124.37]:5092 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756957AbYDVXCN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2008 07:33:18 -0400
-Received: from poczta.interia.pl (mi02.poczta.interia.pl [10.217.12.2])
-	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id E5CF1D47A3
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:33:13 +0200 (CEST)
-Received: from [192.168.1.27] (d90-129-71-151.cust.tele2.pl [90.129.71.151])
-	by poczta.interia.pl (INTERIA.PL) with ESMTP id E7B2B2BF89E
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2008 13:33:12 +0200 (CEST)
-Message-ID: <47FDFB57.3010700@interia.pl> (sfid-20080410_123330_038534_DED0CD6A)
-Date: Thu, 10 Apr 2008 13:34:47 +0200
-From: Maciek Kaliszewski <mkalkal@interia.pl>
+	Tue, 22 Apr 2008 19:02:13 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Kismet shows no clients (drivers iwl3945.ko or p54pci.ko)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: iwl3945 problem with 2.6.25-rc9
+Date: Tue, 22 Apr 2008 16:02:11 -0700
+Message-ID: <D936D925018D154694D8A362EEB0892004415152@orsmsx416.amr.corp.intel.com> (sfid-20080423_010256_199650_7E9B2DB8)
+In-Reply-To: <BAY109-W5276443C777EAD90F53A43C9E70@phx.gbl>
+References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org> <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain> <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com> <D936D925018D154694D8A362EEB08920043539AE@orsmsx416.amr.corp.intel.com> A<fu931e$k1b$1@ger.gmane.org> <D936D925018D154694D8A362EEB089200438B6D6@orsmsx416.amr.corp.intel.com> (sfid-20080418_224627_648936_DECA7576) <1208555842.4848.56.camel@johannes.berg> <D936D925018D154694D8A362EEB089200438B728@orsmsx416.amr.corp.intel.com> <BAY109-W5276443C777EAD90F53A43C9E70@phx.gbl>
+From: "Chatre, Reinette" <reinette.chatre@intel.com>
+To: "Marcus Furlong" <furlongm@hotmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I have "02:00.0 Network controller: Intersil Corporation ISL3890 [Prism
-GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)"
-which does not work with prism54.ko driver . So I have to use p54pci.ko
-(from kernel 2.6.25-rc8) .
-When I run kismet ,it detects wifi networks , but shows there is no
-clients on the networks (I started data transfer on that network but it
-didn't help)
-Tcpdump on wlan0 interface (Monitor mode ) shows :
-
-tcpdump: WARNING: wlan0: no IPv4 address assigned
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on wlan0, link-type IEEE802_11_RADIO (802.11 plus BSD radio
-information header), capture size 96 bytes
-12:38:51.010818 490951797us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:51.317951 491258998us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:51.625134 491566198us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:51.932369 491873444us tsft 1.0 Mb/s 2457 MHz (0x0480) 79dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.034714 491975793us tsft 1.0 Mb/s 2457 MHz (0x0480) 83dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.137106 492078194us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.239481 492180591us tsft 1.0 Mb/s 2457 MHz (0x0480) 74dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.341902 492282991us tsft 1.0 Mb/s 2457 MHz (0x0480) 84dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.444271 492385391us tsft 1.0 Mb/s 2457 MHz (0x0480) 80dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.649064 492590193us tsft 1.0 Mb/s 2457 MHz (0x0480) 82dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.751479 492692596us tsft 1.0 Mb/s 2457 MHz (0x0480) 81dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.853861 492794991us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:52.956271 492897395us tsft 1.0 Mb/s 2457 MHz (0x0480) 68dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:53.161056 493102186us tsft 1.0 Mb/s 2457 MHz (0x0480) 88dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:53.263467 493204593us tsft 1.0 Mb/s 2457 MHz (0x0480) 87dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:53.365850 493306992us tsft 1.0 Mb/s 2457 MHz (0x0480) 86dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
-12:38:53.468229 493409393us tsft 1.0 Mb/s 2457 MHz (0x0480) 78dB signal
-[0x0000000e] Beacon (APTEKA) [1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0
-Mbit] ESS CH: 11, PRIVACY
+On Friday, April 18, 2008 7:33 PM, Marcus Furlong  wrote:
 
 
+> Both dmesg logs here:
+> 
+> https://www.cs.tcd.ie/~furlongm/iwlwifi/2.6.25-dmesg-with-patch
+> https://www.cs.tcd.ie/~furlongm/iwlwifi/2.6.25-dmesg-with-patch
+> -disable_hw_scan 
 
+This is very strange. Did anything change in your setup since you sent
+the logs that created the debug file named
+"2.6.25-dmesg-wirelesstools-only"? In the above log
+2.6.25-dmesg-with-patch hardware scanning is indeed being used ... while
+it was not in the previous test runs. Note the debug message
+"iwl3945_mac_hw_scan enter" and "iwl3945_mac_hw_scan leave". This
+message only appears in this log (2.6.25-dmesg-with-patch) and none of
+the others.
+I find it very hard to believe that this patch caused hw scanning to
+work all of a sudden. 
 
-As far as I can read the log , it show there is no traffic on net
-APTEKA, but I know there is a data transfer on the net.
-I had similar results on other computer ,intel wifi card with iwl3945.ko
-driver(kernel 2.6.24.2).
-
-Regards
-Maciek
-
-
-
-
-
-
-----------------------------------------------------------------------
-Sprawdz, czy jestes prawdziwym internauta!
-Kliknij http://link.interia.pl/f1d6e
-
+Reinette
