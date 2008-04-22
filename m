@@ -1,86 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56345 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:41323 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbYD1EN7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2008 00:13:59 -0400
-Subject: Re: [PATCH v2] prism54: prism54_get_encode() test below 0 on
-	unsigned index
+	id S1752351AbYDVOkc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2008 10:40:32 -0400
+Subject: Re: prism54 regression in current -git
 From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Roel Kluin <12o3l@tiscali.nl>, linux-wireless@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-In-Reply-To: <20080426043927.GE4810@ruslug.rutgers.edu>
-References: <480F9481.2040303@tiscali.nl>
-	 <1209056973.5224.0.camel@localhost.localdomain>
-	 <4811299A.7060407@tiscali.nl>  <20080426043927.GE4810@ruslug.rutgers.edu>
+To: Patrick McHardy <kaber@trash.net>
+Cc: Roy Marples <uberlord@gentoo.org>,
+	"Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <480D6CA4.8040205@trash.net>
+References: <480D6CA4.8040205@trash.net>
 Content-Type: text/plain
-Date: Mon, 28 Apr 2008 00:10:06 -0400
-Message-Id: <1209355806.20940.15.camel@localhost.localdomain> (sfid-20080428_061408_401428_32F288F6)
+Date: Tue, 22 Apr 2008 10:36:38 -0400
+Message-Id: <1208874998.17364.7.camel@localhost.localdomain> (sfid-20080422_164118_809199_A4A93C29)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-04-26 at 00:39 -0400, Luis R. Rodriguez wrote:
-> On Fri, Apr 25, 2008 at 02:45:14AM +0200, Roel Kluin wrote:
-> > Dan Williams wrote:
-> > > On Wed, 2008-04-23 at 21:56 +0200, Roel Kluin wrote:
-> > 
-> > >> u32 index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-> > > 
-> > > Probably should just change that to an 'int' instead of a u32.
-> > > 
-> > > Dan
-> > > 
-> > 
-> > Thanks, in that case use the patch below
-> > ---
-> > when left unsigned, the test 'if (index < 0)' will not work.
-> > 
-> > Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
-> > ---
-> > diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> > index e5b3c28..8076ead 100644
-> > --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> > +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> > @@ -1158,7 +1158,8 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
-> >  {
-> >  	islpci_private *priv = netdev_priv(ndev);
-> >  	struct obj_key *key;
-> > -	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-> > +	u32 devindex;
-> > +	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+On Tue, 2008-04-22 at 06:42 +0200, Patrick McHardy wrote:
+> The patch "prism54: set carrier flags correctly" makes my
+> prism54 device in AP mode come up without a carrier, which
+> in causes IPv6 to not add a link-local address, which in
+> turn causes radvd (configured to announce routes on that
+> device) to refuse to start, breaking IPv6 for the entire
+> network.
 > 
-> The check for -1 seems silly lets just remove its use.
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-> index 5b375b2..7e2d3b6 100644
-> --- a/drivers/net/wireless/prism54/isl_ioctl.c
-> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
-> @@ -1158,7 +1158,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
->  {
->  	islpci_private *priv = netdev_priv(ndev);
->  	struct obj_key *key;
-> -	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-> +	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX);
->  	u32 authen = 0, invoke = 0, exunencrypt = 0;
->  	int rvalue;
->  	union oid_res_t r;
-> @@ -1186,7 +1186,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
->  	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYID, 0, NULL, &r);
->  	devindex = r.u;
->  	/* Now get the key, return it */
-> -	if (index == -1 || index > 3)
-> +	if (!index || index > 3)
->  		/* no index provided, use the current one */
->  		index = devindex;
->  	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYX, index, NULL, &r);
+> I didn't check whether a carrier is detected once a client
+> associates, but in any case it seems to me that a device
+> in AP mode should always indicate a carrier.
 
-This won't allow you to select index 0 then.  Hence the reason why the
--1 is necessary, so you can distinguish 'no index specified' from 'use
-index 0'.  There's probably a better way to do it, but I don't think
-this patch will work.
+Should always indicate a carrier _when it's configured and up_.  If you
+just go 'iwconfig eth1 mode master' it shouldn't, but if you do:
+
+ifconfig eth1 up
+iwconfig eth1 mode master essid foobar
+
+then it should.
 
 Dan
 
