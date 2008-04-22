@@ -1,101 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:2558 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900AbYDUTiE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 15:38:04 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so3330625waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 12:38:03 -0700 (PDT)
-Message-ID: <a44ae5cd0804211238xdec1e0dq14b2c53917477901@mail.gmail.com> (sfid-20080421_213855_896702_73A9D1BA)
-Date: Mon, 21 Apr 2008 15:38:03 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: b43 speed problem over 2.6.24 (was: One more log file from when the network was unusable)
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <200804212124.05493.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a44ae5cd0804161701k1014f3dkebaa1d35f1a8e20a@mail.gmail.com>
-	 <1208779022.26186.91.camel@johannes.berg>
-	 <a44ae5cd0804211150l1ede6030t5844458e4f92c73c@mail.gmail.com>
-	 <200804212124.05493.mb@bu3sch.de>
+Received: from mga14.intel.com ([143.182.124.37]:62104 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751007AbYDVCBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Apr 2008 22:01:06 -0400
+Subject: Re: [Ipw2100-devel] ipw2200: queue direct scans
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1208800153.30994.25.camel@localhost.localdomain>
+References: <1208800153.30994.25.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 22 Apr 2008 09:50:43 +0800
+Message-Id: <1208829043.5327.13.camel@debian.sh.intel.com> (sfid-20080422_040155_932936_539C7819)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBBcHIgMjEsIDIwMDggYXQgMzoyNCBQTSwgTWljaGFlbCBCdWVzY2ggPG1iQGJ1M3Nj
-aC5kZT4gd3JvdGU6Cj4KPiBPbiBNb25kYXkgMjEgQXByaWwgMjAwOCAyMDo1MDowNiBNaWxlcyBM
-YW5lIHdyb3RlOgo+ICA+IE9uIE1vbiwgQXByIDIxLCAyMDA4IGF0IDc6NTcgQU0sIEpvaGFubmVz
-IEJlcmcKPiAgPiA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gID4gPiBIaSwK
-PiAgPiA+Cj4gID4gPiAgTWlsZXMgZGVzY3JpYmVkIGEgYjQzIHNwZWVkIHByb2JsZW0gaW4gdGhl
-IHRocmVhZAo+ICA+ID4KPiAgPiA+ICAgICAgICAg77u/Mi42LjI1LXJjOSAtLSBiY200MzA2IHBl
-cmZvcm1hbmNlIGlzIGluIHRoZSB0b2lsZXQKPiAgPiA+Cj4gID4gPiAgKG92ZXIgMi42LjI0KSBh
-bmQgbm90IGJlaW5nIGFibGUgdG8gc2VlIGFueXRoaW5nIGZyb20gaGlzIGxvZ3MvcGFja2V0Cj4g
-ID4gPiAgY2FwdHVyZXMvLi4uIEkgYXNrZWQgaGltIHRvIGJpc2VjdC4gVGhpcyByZXN1bHRlZCBp
-bgo+ICA+ID4KPiAgPiA+ICBjb21taXQgNjFiY2E2ZWI4NWM4NjM2MDNkNjA1NDUzMGUyZjY1YzNi
-OWFiYTg1Ygo+ICA+ID4gIEF1dGhvcjogU3RlZmFubyBCcml2aW8gPHN0ZWZhbm8uYnJpdmlvQHBv
-bGltaS5pdD4KPiAgPiA+ICBEYXRlOiAgIFR1ZSBOb3YgNiAyMjo0OTowNSAyMDA3ICswMTAwCj4g
-ID4gPgo+ICA+ID4gICAgIGI0MzogcmV3cml0ZSBBIFBIWSBpbml0aWFsaXphdGlvbgo+ICA+ID4K
-PiAgPiA+ICB3aGljaCBpcyBhIGh1Z2UgY29tbWl0IGFuZCBoZW5jZSBhIGJpdCBvZiBhIHByb2Js
-ZW0uIERvZXMgYW55b25lIGhhdmUKPiAgPiA+ICBzdWdnZXN0aW9ucyBob3cgdG8gcHJvY2VlZD8K
-PiAgPiA+Cj4gID4gPiAgSSBoYXZlIHZlcnkgc2ltaWxhciBoYXJkd2FyZSwgbWF5YmUgdGhpcyBj
-YXJkIGlzIGFmZmVjdGVkIGJ5IHRoZQo+ICA+ID4gIGJvYXJkZmxhZ3MgcHJvYmxlbXMgd2UgZm91
-bmQgcmVjZW50bHk/IE1pbGVzLCBjYW4geW91IGdpdmUgdXMKPiAgPiA+ICAgKiBsc3BjaSAtdm4g
-LXMg77u/MDE6MDYuMAo+ICA+ID4gICAqIHRoZSBrZXJuZWwgaW5pdCBtZXNzYWdlcyB3aGVuIHNz
-YiBpcyBidWlsdCB3aXRoIGRlYnVnZ2luZwo+ICA+Cj4gID4gSGVyZSB5b3UgZ286Cj4gID4KPiAg
-PiAjIGxzcGNpIC12biAtcyAwMTowNi4wCj4gID4gMDE6MDYuMCAwMjgwOiAxNGU0OjQzMjAgKHJl
-diAwMykKPiAgPiAgICAgICBTdWJzeXN0ZW06IDEwNTc6NzExMAo+ICA+ICAgICAgIEZsYWdzOiBi
-dXMgbWFzdGVyLCBmYXN0IGRldnNlbCwgbGF0ZW5jeSAxNiwgSVJRIDUKPiAgPiAgICAgICBNZW1v
-cnkgYXQgZWQwMDAwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9OEtdCj4gID4K
-PiAgPiBbICAgIDMuOTc3OTMwXSBzc2I6IENvcmUgMCBmb3VuZDogQ2hpcENvbW1vbiAoY2MgMHg4
-MDAsIHJldiAweDA0LCB2ZW5kb3IgMHg0MjQzKQo+ICA+IFsgICAgMy45Nzc5NDJdIHNzYjogQ29y
-ZSAxIGZvdW5kOiBJRUVFIDgwMi4xMSAoY2MgMHg4MTIsIHJldiAweDA1LAo+ICA+IHZlbmRvciAw
-eDQyNDMpCj4gID4gWyAgICAzLjk3Nzk1Ml0gc3NiOiBDb3JlIDIgZm91bmQ6IFBDTUNJQSAoY2Mg
-MHg4MEQsIHJldiAweDAyLCB2ZW5kb3IgMHg0MjQzKQo+ICA+IFsgICAgMy45Nzc5NjJdIHNzYjog
-Q29yZSAzIGZvdW5kOiBWOTAgKGNjIDB4ODA3LCByZXYgMHgwMiwgdmVuZG9yIDB4NDI0MykKPiAg
-PiBbICAgIDMuOTc3OTcxXSBzc2I6IENvcmUgNCBmb3VuZDogUENJIChjYyAweDgwNCwgcmV2IDB4
-MDksIHZlbmRvciAweDQyNDMpCj4gID4gWyAgICAzLjk5Mzk2NV0gc3NiOiBTUFJPTSByZXZpc2lv
-biAyIGRldGVjdGVkLgo+ICA+IFsgICAgMy45OTQ4MTZdIHNzYjogU29uaWNzIFNpbGljb24gQmFj
-a3BsYW5lIGZvdW5kIG9uIFBDSSBkZXZpY2UgMDAwMDowMTowNi4wCj4gID4KPiAgPiBUaGFua3Ms
-Cj4gID4gICAgICAgTWlsZXMKPiAgPgo+Cj4gIENhbiB5b3UgYWxzbyBwcm92aWRlIGFuIFNQUk9N
-IGR1bXA/Cj4gIGNhdCAkKGZpbmQgL3N5cyAtbmFtZSBzc2Jfc3Byb20pCgojIGNhdCAkKGZpbmQg
-L3N5cyAtbmFtZSBzc2Jfc3Byb20pCjAxNDAwMDAwMTA3MTU3MTAyMDQzMDA4MDAyMDAwMjAwMDAx
-MDAwMTgwMDAwMDAwMEZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZG
-RkZGRkZGRkZGRkZGRkZGRkZGRkYwMDAwRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRjBDMDA1
-M0U1M0UyQ0ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkYzNDEwQTIxNTg1RkE4OUZFRkZGRkZG
-RkY0QzAwRkZGRkZGRkZGRkZGM0UwMDQ5MEEwMkZGNTM1NTEwRkZGRkZGRkZGRjAyMjUKClsgICAz
-OC42NzgwMjNdIGI0My1waHkwOiBCcm9hZGNvbSA0MzA2IFdMQU4gZm91bmQKWyAgIDM4LjcwMTk1
-Ml0gYjQzLXBoeTAgZGVidWc6IEZvdW5kIFBIWTogQW5hbG9nIDIsIFR5cGUgMiwgUmV2aXNpb24g
-MgpbICAgMzguNzAxOTc3XSBiNDMtcGh5MCBkZWJ1ZzogRm91bmQgUmFkaW86IE1hbnVmIDB4MTdG
-LCBWZXJzaW9uCjB4MjA1MCwgUmV2aXNpb24gMgpbICAgMzguNzI2OTQzXSBwaHkwOiBTZWxlY3Rl
-ZCByYXRlIGNvbnRyb2wgYWxnb3JpdGhtICdwaWQnClsgICAzOS4yNjgzNjldIEJyb2FkY29tIDQz
-eHggZHJpdmVyIGxvYWRlZCBbIEZlYXR1cmVzOiBQUiwgRmlybXdhcmUtSUQ6IEZXMTMgXQpbICAg
-MzkuMzUzMDQzXSB3bGFuMCByZW5hbWVkIHRvIGV0aDIKWyAgIDM5LjM1Mzc3MV0gdWRldjogcmVu
-YW1lZCBuZXR3b3JrIGludGVyZmFjZSB3bGFuMCB0byBldGgyClsgICA1NS4zMTk2NjZdIGlucHV0
-OiBiNDMtcGh5MCBhcyAvZGV2aWNlcy92aXJ0dWFsL2lucHV0L2lucHV0NApbICAgNTUuNjgyODM2
-XSBiNDMtcGh5MDogTG9hZGluZyBmaXJtd2FyZSB2ZXJzaW9uIDM1MS4xMjYgKDIwMDYtMDctMjkg
-MDU6NTQ6MDIpClsgICA1NS42ODM0MDddIGI0My1waHkwIHdhcm5pbmc6IFlvdSBhcmUgdXNpbmcg
-YW4gb2xkIGZpcm13YXJlIGltYWdlLgpTdXBwb3J0IGZvciBvbGQgZmlybXdhcmUgd2lsbCBiZSBy
-ZW1vdmVkIGluIEp1bHkgMjAwOC4KWyAgIDU1LjY4Mzk5Ml0gYjQzLXBoeTAgd2FybmluZzogWW91
-IG11c3QgZ28gdG8KaHR0cDovL2xpbnV4d2lyZWxlc3Mub3JnL2VuL3VzZXJzL0RyaXZlcnMvYjQz
-I2RldmljZWZpcm13YXJlIGFuZApkb3dubG9hZCB0aGUgbGF0ZXN0IGZpcm13YXJlICh2ZXJzaW9u
-IDQpLgoKTk9URTogIEkgc2VlIHRoZSBzYW1lIHNsb3dkb3duIHdpdGggdGhlIG5ld2VyIGZpcm13
-YXJlLgoKWyAgIDU1Ljc5NTE0M10gYjQzLXBoeTAgZGVidWc6IENoaXAgaW5pdGlhbGl6ZWQKWyAg
-IDU1Ljc5NzA4Nl0gYjQzLXBoeTAgZGVidWc6IDMwLWJpdCBETUEgaW5pdGlhbGl6ZWQKWyAgIDU1
-LjgwMTcyN10gYjQzLXBoeTAgZGVidWc6IFdpcmVsZXNzIGludGVyZmFjZSBzdGFydGVkClsgICA1
-NS44MDE3MzddIGI0My1waHkwIGRlYnVnOiBBZGRpbmcgSW50ZXJmYWNlIHR5cGUgMgpbICAxMTIu
-NjUyMzIyXSBldGgyOiBJbml0aWFsIGF1dGhfYWxnPTAKWyAgMTEyLjY1MjMzM10gZXRoMjogYXV0
-aGVudGljYXRlIHdpdGggQVAgMDA6MWI6MmY6MGU6ZWQ6YmEKWyAgMTEyLjY1OTY2NV0gZXRoMjog
-UlggYXV0aGVudGljYXRpb24gZnJvbSAwMDoxYjoyZjowZTplZDpiYSAoYWxnPTAKdHJhbnNhY3Rp
-b249MiBzdGF0dXM9MCkKWyAgMTEyLjY1OTY3M10gZXRoMjogYXV0aGVudGljYXRlZApbICAxMTIu
-NjU5Njc4XSBldGgyOiBhc3NvY2lhdGUgd2l0aCBBUCAwMDoxYjoyZjowZTplZDpiYQpbICAxMTIu
-NjcwMDE5XSBldGgyOiBSWCBBc3NvY1Jlc3AgZnJvbSAwMDoxYjoyZjowZTplZDpiYSAoY2FwYWI9
-MHg0MzEKc3RhdHVzPTAgYWlkPTgpClsgIDExMi42NzAwMjhdIGV0aDI6IGFzc29jaWF0ZWQKWyAg
-MTEyLjY3MDA1MF0gZXRoMjogc3dpdGNoZWQgdG8gc2hvcnQgYmFya2VyIHByZWFtYmxlIChCU1NJ
-RD0wMDoxYjoyZjowZTplZDpiYSkKWyAgMTEyLjkwNjIzM10gcGFkbG9jazogVklBIFBhZExvY2sg
-bm90IGRldGVjdGVkLgpbICAxMTIuOTY0MDE3XSBiNDMtcGh5MCBkZWJ1ZzogVXNpbmcgaGFyZHdh
-cmUgYmFzZWQgZW5jcnlwdGlvbiBmb3IKa2V5aWR4OiAwLCBtYWM6IDAwOjFiOjJmOjBlOmVkOmJh
-ClsgIDExMi45NjQwNDNdIGI0My1waHkwIGRlYnVnOiBVc2luZyBoYXJkd2FyZSBiYXNlZCBlbmNy
-eXB0aW9uIGZvcgprZXlpZHg6IDEsIG1hYzogZmY6ZmY6ZmY6ZmY6ZmY6ZmYK
+On Mon, 2008-04-21 at 13:49 -0400, Dan Williams wrote:
+> When another scan is in progress, a direct scan gets dropped on the
+> floor.  However, that direct scan is usually the scan that's really
+> needed by userspace, and gets stomped on by all the broadcast scans
+> the
+> ipw2200 driver issues internally.  Make sure the direct scan happens
+> eventually, and as a bonus ensure that the passive scan worker is
+> cleaned up when appropriate.
+> 
+> The change of request_passive_scan form a struct work to struct
+> delayed_work is only to make the set_wx_scan() code a bit simpler,
+> it's
+> still only used with a delay of 0 to match previous behavior.
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+I agree with you the idea to split the current active request_scan into
+active direct scan and active broadcast scan. But can you merge your
+ipw_request_direct_scan_helper into ipw_request_scan_helper so that we
+don't duplicate the code?
+
+Thanks,
+-yi
+
