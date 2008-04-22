@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.store20.com ([212.7.7.16]:36765 "EHLO store20.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756799AbYD0RAb convert rfc822-to-8bit (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:40218 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760015AbYDVO4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2008 13:00:31 -0400
-Subject: Re: [REGRESSION] Trouble seeing some wireless networks in latest
-	git
-From: Priit Laes <plaes@plaes.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200804271748.49377.mb@bu3sch.de>
-References: <1209288298.3851.12.camel@localhost>
-	 <48149F2B.4000503@lwfinger.net>  <200804271748.49377.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 27 Apr 2008 20:00:25 +0300
-Message-Id: <1209315625.4095.4.camel@localhost> (sfid-20080427_190124_741883_54F863BD)
-Mime-Version: 1.0
+	Tue, 22 Apr 2008 10:56:48 -0400
+Message-ID: <480DFCB4.3040104@trash.net> (sfid-20080422_165740_861110_32672F95)
+Date: Tue, 22 Apr 2008 16:56:52 +0200
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Roy Marples <uberlord@gentoo.org>,
+	"Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: prism54 regression in current -git
+References: <480D6CA4.8040205@trash.net> <1208874998.17364.7.camel@localhost.localdomain>
+In-Reply-To: <1208874998.17364.7.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=C3=9Chel kenal p=C3=A4eval, P, 2008-04-27 kell 17:48, kirjutas Michael=
- Buesch:
-> > > Any hints how to debug this further?
-> Nah, it's a regulatory setting issue.
-> The default regdomain is US, which only allows chans 1-11.
-> There's some module parameter to switch the regdomain.
-> This is not a regression, but a feature.
->=20
-Regdomain setting seems to be OK (and missing for b43):
-=EF=BB=BFiwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+Dan Williams wrote:
+> On Tue, 2008-04-22 at 06:42 +0200, Patrick McHardy wrote:
+>> The patch "prism54: set carrier flags correctly" makes my
+>> prism54 device in AP mode come up without a carrier, which
+>> in causes IPv6 to not add a link-local address, which in
+>> turn causes radvd (configured to announce routes on that
+>> device) to refuse to start, breaking IPv6 for the entire
+>> network.
+>>
+>> I didn't check whether a carrier is detected once a client
+>> associates, but in any case it seems to me that a device
+>> in AP mode should always indicate a carrier.
+> 
+> Should always indicate a carrier _when it's configured and up_.  If you
+> just go 'iwconfig eth1 mode master' it shouldn't, but if you do:
+> 
+> ifconfig eth1 up
+> iwconfig eth1 mode master essid foobar
+> 
+> then it should.
 
-Where can I set the regdomain? I couldn't find any information under
-Documentation and with modinfo?
-
-Dmesg output for iwl3945 is:
-=2E..
-iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for
-Linux, 1.2.26ks
-iwl3945: Copyright(c) 2003-2008 Intel Corporation
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-iwl3945: Detected Intel Wireless WiFi Link 3945ABG
-iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-phy0: Selected rate control algorithm 'iwl-3945-rs'
-=2E..
-
-And b43:
-=2E..
-b43-pci-bridge 0000:16:00.0: enabling device (0000 -> 0002)
-ACPI: PCI Interrupt 0000:16:00.0[A] -> GSI 16 (level, low) -> IRQ 16
-PCI: Setting latency timer of device 0000:16:00.0 to 64
-ssb: Sonics Silicon Backplane found on PCI device 0000:16:00.0
-b43-phy1: Broadcom 4306 WLAN found
-phy1: Selected rate control algorithm 'pid'
-Broadcom 43xx driver loaded [ Features: PMLR, Firmware-ID: FW13 ]
-input: b43-phy1 as /devices/virtual/input/input9
-b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-Registered led device: b43-phy1::tx
-Registered led device: b43-phy1::rx
-Registered led device: b43-phy1::radio
-=2E..
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, it was up and running of course. No carrier though.
