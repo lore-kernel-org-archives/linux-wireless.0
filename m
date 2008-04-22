@@ -1,165 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54268 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751304AbYDOEQQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 00:16:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/12] iwlwifi: replace sprintf with scnprintf for debugfs output
-Date: Mon, 14 Apr 2008 21:16:04 -0700
-Message-Id: <1208232974-3828-3-git-send-email-reinette.chatre@intel.com> (sfid-20080415_051623_303330_3A0745C3)
-In-Reply-To: <1208232974-3828-2-git-send-email-reinette.chatre@intel.com>
-References: <1208232974-3828-1-git-send-email-reinette.chatre@intel.com>
- <1208232974-3828-2-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758259AbYDVR1Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Apr 2008 13:27:24 -0400
+Subject: Re: 11h IE conflicts with 11s
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Javier Cardona <javier@cozybit.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+In-Reply-To: <1ba2fa240804221003o25515740r71c3210d3c9ffb91@mail.gmail.com> (sfid-20080422_190449_448776_EBE38E9D)
+References: <1ba2fa240804221003o25515740r71c3210d3c9ffb91@mail.gmail.com>
+	 (sfid-20080422_190449_448776_EBE38E9D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BkgjBJMvrCrSduBO22zY"
+Date: Tue, 22 Apr 2008 19:26:47 +0200
+Message-Id: <1208885207.31429.43.camel@johannes.berg> (sfid-20080422_192810_768096_F5B78E3E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-The buffersize allocated is not accurate.
-Writing to these buffers with scnprintf is safer.
+--=-BkgjBJMvrCrSduBO22zY
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   71 +++++++++++++++++-----------
- 1 files changed, 43 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 23632e5..cbea477 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -102,10 +102,14 @@ static ssize_t iwl_dbgfs_tx_statistics_read(struct file *file,
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
- 	char buf[256];
- 	int pos = 0;
-+	const size_t bufsz = sizeof(buf);
- 
--	pos += sprintf(buf+pos, "mgmt: %u\n", priv->tx_stats[0].cnt);
--	pos += sprintf(buf+pos, "ctrl: %u\n", priv->tx_stats[1].cnt);
--	pos += sprintf(buf+pos, "data: %u\n", priv->tx_stats[2].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "mgmt: %u\n",
-+						priv->tx_stats[0].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "ctrl: %u\n",
-+						priv->tx_stats[1].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "data: %u\n",
-+						priv->tx_stats[2].cnt);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
-@@ -117,10 +121,14 @@ static ssize_t iwl_dbgfs_rx_statistics_read(struct file *file,
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
- 	char buf[256];
- 	int pos = 0;
-+	const size_t bufsz = sizeof(buf);
- 
--	pos += sprintf(buf+pos, "mgmt: %u\n", priv->rx_stats[0].cnt);
--	pos += sprintf(buf+pos, "ctrl: %u\n", priv->rx_stats[1].cnt);
--	pos += sprintf(buf+pos, "data: %u\n", priv->rx_stats[2].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "mgmt: %u\n",
-+						priv->rx_stats[0].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "ctrl: %u\n",
-+						priv->rx_stats[1].cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "data: %u\n",
-+						priv->rx_stats[2].cnt);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
-@@ -138,6 +146,7 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 	int i;
- 	int pos = 0;
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	const size_t bufsz = sizeof(buf);
- 
- 	printk(KERN_DEBUG "offset is: 0x%x\tlen is: 0x%x\n",
- 	priv->dbgfs->sram_offset, priv->dbgfs->sram_len);
-@@ -159,9 +168,9 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 				break;
- 			}
- 		}
--		pos += sprintf(buf+pos, "0x%08x ", val);
-+		pos += scnprintf(buf + pos, bufsz - pos, "0x%08x ", val);
- 	}
--	pos += sprintf(buf+pos, "\n");
-+	pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 	iwl_release_nic_access(priv);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-@@ -210,44 +219,50 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 	if(!buf)
- 		return -ENOMEM;
- 
--	pos += sprintf(buf+pos, "num of stations: %d\n\n",
-+	pos += scnprintf(buf + pos, bufsz - pos, "num of stations: %d\n\n",
- 			priv->num_stations);
- 
- 	for (i = 0; i < max_sta; i++) {
- 		station = &priv->stations[i];
- 		if (station->used) {
--			pos += sprintf(buf+pos, "station %d:\ngeneral data:\n",
--					i+1);
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"station %d:\ngeneral data:\n", i+1);
- 			print_mac(mac, station->sta.sta.addr);
--			pos += sprintf(buf+pos, "id: %u\n",
-+			pos += scnprintf(buf + pos, bufsz - pos, "id: %u\n",
- 					station->sta.sta.sta_id);
--			pos += sprintf(buf+pos, "mode: %u\n",
-+			pos += scnprintf(buf + pos, bufsz - pos, "mode: %u\n",
- 					station->sta.mode);
--			pos += sprintf(buf+pos, "flags: 0x%x\n",
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"flags: 0x%x\n",
- 					station->sta.station_flags_msk);
--			pos += sprintf(buf+pos, "ps_status: %u\n",
--					station->ps_status);
--
--			pos += sprintf(buf+pos, "tid data:\n");
--
--			pos += sprintf(buf+pos, "seq_num\t\ttxq_id\t");
--			pos += sprintf(buf+pos, "frame_count\twait_for_ba\t");
--			pos += sprintf(buf+pos, "start_idx\tbitmap0\t");
--			pos += sprintf(buf+pos, "bitmap1\trate_n_flags\n");
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"ps_status: %u\n", station->ps_status);
-+			pos += scnprintf(buf + pos, bufsz - pos, "tid data:\n");
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"seq_num\t\ttxq_id\t");
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"frame_count\twait_for_ba\t");
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"start_idx\tbitmap0\t");
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"bitmap1\trate_n_flags\n");
- 
- 			for (j = 0; j < MAX_TID_COUNT; j++) {
--				pos += sprintf(buf+pos, "[%d]:\t\t%u\t",
--						j, station->tid[j].seq_number);
--				pos += sprintf(buf+pos, "%u\t\t%u\t\t%u\t\t",
-+				pos += scnprintf(buf + pos, bufsz - pos,
-+						"[%d]:\t\t%u\t", j,
-+						station->tid[j].seq_number);
-+				pos += scnprintf(buf + pos, bufsz - pos,
-+						"%u\t\t%u\t\t%u\t\t",
- 						station->tid[j].agg.txq_id,
- 						station->tid[j].agg.frame_count,
- 						station->tid[j].agg.wait_for_ba);
--				pos += sprintf(buf+pos, "%u\t%llu\t%u\n",
-+				pos += scnprintf(buf + pos, bufsz - pos,
-+						"%u\t%llu\t%u\n",
- 						station->tid[j].agg.start_idx,
- 						(unsigned long long)station->tid[j].agg.bitmap,
- 						station->tid[j].agg.rate_n_flags);
- 			}
--			pos += sprintf(buf+pos, "\n");
-+			pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 		}
- 	}
- 
--- 
-1.5.3.4
+> I found this conflict in information elements in curse of 11h implementat=
+ion
+>=20
+> enum ieee80211_eid {
+> WLAN_EID_MESH_CONFIG =3D 36,      /* Pending IEEE 802.11 ANA approval */
+> WLAN_EID_MESH_ID =3D 37,          /* Pending IEEE 802.11 ANA approval */
+>=20
+> WLAN_EID_SUPPORTED_CHANNELS =3D 36,
+> WLAN_EID_CHANNEL_SWITCH =3D 37,
+> }
+>=20
+> I finding it very unlikely that this IDs will be assigned to MESH IEs
+> as 11h is already approved.
+
+Heh. Interesting. I just looked at the ANA spreadsheet
+(=EF=BB=BF11-08-0227-00-0000-ana-database-assigned-numbers.xls) and there T=
+Gs
+doesn't even have any tentative assignments although all other TGs do.
+But TGh is still listed there rather than being subsumed into
+802.11-2007, what's up with that? Is there a new TGh?
+
+johannes
+
+--=-BkgjBJMvrCrSduBO22zY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASA4f1aVg1VMiehFYAQKxARAAwKodAh89Y7H+StZII7w4nZu5IiZTzUny
+3/SxQqFfYtnTKuU41m/wpYJw8Y3KyiX/7+b3nAlOBhJDJVwxIR1hDzUOpDGuZh1E
+AWSYDoNNM/lCzDf9yOdieas1WlwvCuok42iFj3DC7utX+RKb+ebbogQ4iD+dz6VH
+HVBWxfzZFyiEuduNexc+H5b7U5KBvwDutxRG325ymgiO+2adJkgah1RVJ4lwNfeB
+mcZHFzirSNv2u/PM2vHKL1JFlJGY7a9T6cnzSeBDYnMLvTjKC7PuPRB1CeNn19N5
+QWmO7LgfmSEDIKnF6zOnb1vmCqCJ3Wi2jaPljqiIaJTM3k8R4TEOQq/hiCS3f2GM
+sr2gd0yZ+gPevGl16EeWiV8IQkxr641+2tSX5uzuRlNf9v6Czla5+O+41Asr1GAi
+DN0TUIAUGPxfWNqYjvkLj/Lcvfhwmd03NUZ7l8lXLITt4nHVI5paS59aClBk0f7d
+puTWawL4dVDb5AmxePujxSwz53/Y6jm37jOmLVIjlv5lvWb95eqWW7orPlBR7WrE
+ssdhL7JzL4+On+25SvNwOBixgGVC7QcXpvs1L+w9FgcWXHNhRrW3NvhsAGwkQVDz
+UJNjfT2d8uiCH0YKNMjD+GKiWsYlQjnzkjYLTdAIjYBRe61cyroBFA+d0S3Jvfqb
+2cG5E+hZREA=
+=EEf8
+-----END PGP SIGNATURE-----
+
+--=-BkgjBJMvrCrSduBO22zY--
 
