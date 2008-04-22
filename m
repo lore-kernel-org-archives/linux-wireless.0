@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51820 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbYDHI3J (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:58757 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbYDVEmT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 04:29:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb-pcicore: Fix IRQ TPS flag handling
-Date: Tue, 8 Apr 2008 10:28:24 +0200
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
+	Tue, 22 Apr 2008 00:42:19 -0400
+Message-ID: <480D6CA4.8040205@trash.net> (sfid-20080422_064316_030036_9B157C90)
+Date: Tue, 22 Apr 2008 06:42:12 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200804081028.25238.mb@bu3sch.de> (sfid-20080408_092914_119278_4F10DB35)
+To: Roy Marples <uberlord@gentoo.org>
+CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: prism54 regression in current -git
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <larry.finger@lwfinger.net>
+The patch "prism54: set carrier flags correctly" makes my
+prism54 device in AP mode come up without a carrier, which
+in causes IPv6 to not add a link-local address, which in
+turn causes radvd (configured to announce routes on that
+device) to refuse to start, breaking IPv6 for the entire
+network.
 
-This fixes the TPS flag handling for the SSB pcicore driver.
-This fixes interrupts on some devices.
+I didn't check whether a carrier is detected once a client
+associates, but in any case it seems to me that a device
+in AP mode should always indicate a carrier.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-John, this is an important bugfix for 2.6.25.
-
-
-Index: wireless-testing/drivers/ssb/driver_pcicore.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-04-08 00:39:12.000000000 +0200
-+++ wireless-testing/drivers/ssb/driver_pcicore.c	2008-04-08 00:41:11.000000000 +0200
-@@ -566,13 +566,13 @@ int ssb_pcicore_dev_irqvecs_enable(struc
- 			/* Workaround: On the BCM44XX the BPFLAG routing
- 			 * bit is wrong. Use a hardcoded constant. */
- 			intvec |= 0x00000002;
- 		} else {
- 			tmp = ssb_read32(dev, SSB_TPSFLAG);
- 			tmp &= SSB_TPSFLAG_BPFLAG;
--			intvec |= tmp;
-+			intvec |= (1 << tmp);
- 		}
- 		ssb_write32(pdev, SSB_INTVEC, intvec);
- 	}
- 
- 	/* Setup PCIcore operation. */
- 	if (pc->setup_done)
