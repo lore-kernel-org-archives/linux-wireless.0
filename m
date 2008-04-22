@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:51944 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753454AbYDLRWX (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:48245 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758046AbYDVUvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Apr 2008 13:22:23 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so132317ugc.16
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Apr 2008 10:22:21 -0700 (PDT)
-To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] Add rfkill to MAINTAINERS file
-Date: Sat, 12 Apr 2008 19:23:55 +0200
+	Tue, 22 Apr 2008 16:51:10 -0400
+Message-ID: <480E4FC2.5080909@trash.net> (sfid-20080422_225155_927768_84AEB6ED)
+Date: Tue, 22 Apr 2008 22:51:14 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804121923.55933.IvDoorn@gmail.com> (sfid-20080412_182238_805320_B62AF59A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	Dan Williams <dcbw@redhat.com>,
+	Roy Marples <uberlord@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: prism54 regression in current -git
+References: <480D6CA4.8040205@trash.net> <1208874998.17364.7.camel@localhost.localdomain> <480DFCB4.3040104@trash.net> <43e72e890804221050i47ba5974i59d89cde55645f4@mail.gmail.com> <20080422180332.GD4810@ruslug.rutgers.edu>
+In-Reply-To: <20080422180332.GD4810@ruslug.rutgers.edu>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have been acting as the maintainer since the rfkill introduction,
-so lets make it official by adding a rfkill entry in the MAINTAINERS file.
+Luis R. Rodriguez wrote:
+>> Good catch. The carrier is set upon a firmware trigger so it is
+>> possible that when in AP mode we don't hit the trigger in firmware. I
+>> left open the possibility for this happening and go figure it happens.
+>> Even if we had docs this probably wouldn't be documented :) I'll try
+>> to cook up an exception patch now.
+> 
+> Let me know if this fixes it.
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> 
+> diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+> index 04c2638..9196825 100644
+> --- a/drivers/net/wireless/prism54/islpci_dev.c
+> +++ b/drivers/net/wireless/prism54/islpci_dev.c
+> @@ -388,8 +388,15 @@ islpci_open(struct net_device *ndev)
+>  
+>  	netif_start_queue(ndev);
+>  
+> -	/* Turn off carrier unless we know we have associated */
+> -	netif_carrier_off(ndev);
+> +	/* Turn off carrier if in STA or Ad-hoc mode. It will be turned on
+> +	 * once the firmware receives a trap of being associated
+> +	 * (GEN_OID_LINKSTATE). In other modes (AP or WDS or monitor) we
+> +	 * should just leave the carrier on as its expected the firmware
+> +	 * won't send us a trigger. */
+> +	if (priv->iw_mode == IW_MODE_INFRA || priv->iw_mode == IW_MODE_ADHOC)
+> +		netif_carrier_off(ndev);
+> +	else
+> +		netif_carrier_on(ndev);
+>  
+>  	return 0;
+>  }
+> 
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
----
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9e63f16..9f5aaff 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3342,6 +3342,13 @@ L:	reiserfs-devel@vger.kernel.org
- W:	http://www.namesys.com
- S:	Supported
- 
-+RFKILL
-+P:	Ivo van Doorn
-+M:	IvDoorn@gmail.com
-+L:	netdev@vger.kernel.org
-+S:	Maintained
-+F:	net/rfkill
-+
- ROCKETPORT DRIVER
- P:	Comtrol Corp.
- W:	http://www.comtrol.com
+This will probably fix the error I'm seeing, but if I'm not
+mistaken the mode can be changed while the device is UP and
+this case is not handled by your patch.
