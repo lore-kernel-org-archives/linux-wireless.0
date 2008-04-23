@@ -1,65 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45201 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42538 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173AbYDALsK (ORCPT
+	with ESMTP id S1751391AbYDWHyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 07:48:10 -0400
-Subject: Re: [PATCH 2/8] iwlwifi: hook iwlwifi with Linux rfkill
+	Wed, 23 Apr 2008 03:54:31 -0400
+Subject: Re: [PATCH] mac80211: Fix race between ieee80211_rx_bss_put and
+	lookup routines.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mabbas@linux.intel.com>
-In-Reply-To: <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
-References: <1206746472-10443-1-git-send-email-reinette.chatre@intel.com>
-	 <1206746472-10443-2-git-send-email-reinette.chatre@intel.com>
-	 <1206746472-10443-3-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tqT6pm0jZ/eoPzfel/3s"
-Date: Mon, 31 Mar 2008 22:23:37 +0200
-Message-Id: <1206995017.5143.9.camel@johannes.berg> (sfid-20080401_124815_044445_34FC9507)
+To: Pavel Emelyanov <xemul@openvz.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <480EE983.4020209@openvz.org>
+References: <480EE983.4020209@openvz.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rRGNBGUfbN2oGHL1FeQ2"
+Date: Wed, 23 Apr 2008 09:53:49 +0200
+Message-Id: <1208937230.31429.60.camel@johannes.berg> (sfid-20080423_095511_531549_3D56BAB4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-tqT6pm0jZ/eoPzfel/3s
+--=-rRGNBGUfbN2oGHL1FeQ2
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2008-04-23 at 11:47 +0400, Pavel Emelyanov wrote:
+> The put routine first decrements the users counter and then
+> (if it is zero) locks the sta_bss_lock and removes one from
+> the list and the hash.
+>=20
+> Thus, any of ieee80211_sta_config_auth, ieee80211_rx_bss_get
+> or ieee80211_rx_mesh_bss_get can race with it by finding a
+> bss that is about to get kfree-ed.
+>=20
+> Using atomic_dec_and_lock in ieee80211_rx_bss_put takes care
+> of this race.
 
-> +ifeq ($(CONFIG_IWLCORE_RFKILL),y)
-> +	iwlcore-objs +=3D iwl-rfkill.o
-> +endif
+Good catch, thanks.
 
-Btw, you should be able to rewrite that as
+> Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
 
-iwlcore-objs-$(CONFIG_IWLCORE_RFKILL) +=3D iwl-rfkill.o
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-and make the Makefile much more concise.
+I think we will need this in -stable (different file, same contents)
 
-johannes
+> ---
+>=20
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 6b75cb6..dac3c2a 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2248,10 +2248,13 @@ static void ieee80211_rx_bss_put(struct net_devic=
+e *dev,
+>  				 struct ieee80211_sta_bss *bss)
+>  {
+>  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> -	if (!atomic_dec_and_test(&bss->users))
+> +
+> +	local_bh_disable();
+> +	if (!atomic_dec_and_lock(&bss->users, &local->sta_bss_lock)) {
+> +		local_bh_enable();
+>  		return;
+> +	}
+> =20
+> -	spin_lock_bh(&local->sta_bss_lock);
+>  	__ieee80211_rx_bss_hash_del(dev, bss);
+>  	list_del(&bss->list);
+>  	spin_unlock_bh(&local->sta_bss_lock);
+>=20
 
---=-tqT6pm0jZ/eoPzfel/3s
+--=-rRGNBGUfbN2oGHL1FeQ2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR/FISKVg1VMiehFYAQLMOQ//Xzh/OLWmrLbyMTXb8ArL93tOmpFPN9rA
-CPNbUeW/EY3otVVulLJT60IhYiTCQId3U1B+Ncm+VzbbKSDIsAbgoa4WY99cTPte
-s9lSrbCfCOK8qNZCE3b8CaPbdyI0dgJ13Epca0Ob3uiHKRWv+75ienymToNC3fAo
-viFIeg2Tky+BNJhc2vM+/D6u9/t1XCtc1rqbj6z2/sYR5BUe9XCxvTXTKQYfIZOr
-ASc/rODh6uFTjS0AsFlhK8qNCJtFRw6JUtMbMaHEMZh4tA8XUupKaHjzXqwS1RvL
-fe2f48/Jpj5yf7xl0GhgaLZWKC7hVtVbf2jaFjqIZrKXeS3dDaFcoeIt4v0X4JQ9
-ykL6rKDk6zd/s/McY6IzAedBrZceuM38jF+Cr5EPa1C/x9Lv9QU24pC5bU0Rftd0
-KaClVOTyh7DG1wiiqbcvkPuLI6kA3Dg8d9/WCr9A9R3rnH0nBCkDW/Imv7iVBbMg
-eq9XmV+to6AXZPK7p3T4JPpAjxoGjxpzKrrR3EjfMlbtydCuf1AXQ9H373Kfwjl1
-jnJ/2xapdr7Om+5yRESmtgPVmGDPynFVOg1vOH8GlXnA6vGktF1WImDtr9dFzngh
-LbDsVtdaoUQmYvHRjp7Vhe7vweRNCK5ReoIaoVsmyv5PSbs7j26BoC7PCUvKTZ+D
-bL5m8HdVwHg=
-=YcB0
+iQIVAwUASA7rDKVg1VMiehFYAQIGGBAAhI+C4JZYmVANKUiIC2BwY6LfB0eIlOCl
+xnB+fCsRMfW3Yv/+6KaEg8dYK+Nqyw9yuNo4wejpE51wtj6qHGRQGmQp8D8LwH/N
+9QsO/X2FhfQWU7tMe7/8fSdbIk1YFOC17WjAli8F0MHaIZwJ1w6gPSN6TrCdilWr
+ivYH/PAOXDtqjNG50ugE5BypSEXQFGNL4BhvGI1fphteQFe9wYmvfnVfmyuQxcdW
+xfJNDJFBrcA5w24QKPOWaHg3Ub8eIAVHP92h+mEMSJDj9lr9b/M060ebTSipcUwm
+qhEdUkiLghE/nOPYcjqkLd8fMlNLTcK5QlI9cbSjr3zStw0cL3W5wkojEIQvTe2t
+SMVoHTKuYjx71TAo3Ia9/qQlnK7Xh2/aBHg0n9xUwh9ZxA8AaOrzvXFr0GdBc92s
+lxM54kXvbMaoGeMsnqs7b0A7sdoB1v6e0E9GFStcEhok0Val7d0tBiMAjPHwUeCp
+fdDDZKZ8GWvY6xEXVx0oakgjz4l3C9sNRPt2zAvBKBavl0lHRJETZzF1ttSxp8PH
+NqbuyN1pvu5gkNOWSP8TrE+PiqVnPYYFrpbMqNjCM1JsT44MjSCT9rnOwj9lP5sl
+OZsmceWp1rNlVNtbPT5HW8Hg3ZJ94EG/4vxqgKC6BY2hu41/eQChSY0vfN5h/FWs
++bxCzndZBXo=
+=iFLl
 -----END PGP SIGNATURE-----
 
---=-tqT6pm0jZ/eoPzfel/3s--
+--=-rRGNBGUfbN2oGHL1FeQ2--
 
