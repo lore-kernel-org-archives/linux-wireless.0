@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:34530 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755794AbYD0DSO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbYDWLNV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 23:18:14 -0400
-Date: Sat, 26 Apr 2008 23:18:08 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: compat-2.6: rndis_wlan/rndis_host/usbnet problem(?)
-Message-ID: <20080427031808.GC17936@ruslug.rutgers.edu> (sfid-20080427_051828_655130_2688174B)
-References: <20080421200409.vvow4d67okcw84kg@hayate.ip6> <20080426045909.GA17936@ruslug.rutgers.edu> <20080426181848.foifd2bcw004kw4g@naisho.dyndns.info> <43e72e890804261126n7c4463c9y2d4bb4dc444be096@mail.gmail.com> <20080427004052.5sespv7h6o4wk8c0@hayate.ip6> <20080427025324.GB17936@ruslug.rutgers.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080427025324.GB17936@ruslug.rutgers.edu>
+	Wed, 23 Apr 2008 07:13:21 -0400
+Subject: RE: Roaming problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lars Ericsson <Lars_Ericsson@telia.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+In-Reply-To: <001101c8a51d$8e5997d0$0b3ca8c0@gotws1589> (sfid-20080423_114948_059414_17607EB2)
+References: <001101c8a51d$8e5997d0$0b3ca8c0@gotws1589>
+	 (sfid-20080423_114948_059414_17607EB2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VJ0GCoRMcUVaAaNO6b/u"
+Date: Wed, 23 Apr 2008 13:12:42 +0200
+Message-Id: <1208949162.31429.74.camel@johannes.berg> (sfid-20080423_131408_595316_4F446F1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 26, 2008 at 10:53:24PM -0400, Luis R. Rodriguez wrote:
-> On Sun, Apr 27, 2008 at 12:40:52AM +0300, Jussi Kivilinna wrote:
-> > Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
-> > 
-> > >
-> > >Does the driver rely on all the new stuff? Or just he one you mentioned?
-> > >
-> > 
-> > Driver rely on the patch adding 'driver_priv' pointer to 'struct  
-> > usbnet' and the cdc_ether.c patch. Without cdc_ether.c patch, device  
-> > fails to bind. With those patches + rndis_* changes, driver should  
-> > work (atleast) on 2.6.20 and up. I'll check this when I find some time.
-> 
-> Ok I added cdc_ether.c and it compiles now if you use
-> compat-wireless.git and wireles-testing.git to pull. I tested this
-> only on 2.6.24 though, 2.6.22 compile may be broken now. We'll have
-> to test that.
 
-I just tested cdc_ether.ko on 2.6.22 and it worked. Obviously the
-oops is still present though (#2). Pushed a new compat-wireless
-tarball if you want to try that.
+--=-VJ0GCoRMcUVaAaNO6b/u
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+
+> The below patch makes sure that we drop the BSSID when we disassociate.
+
+> --- a/ieee80211_sta.c	Wed Apr 23 10:14:30 2008
+> +++ b/ieee80211_sta.c	Wed Apr 23 08:41:23 2008
+> @@ -479,6 +479,9 @@ static void ieee80211_set_associated(str
+>  		netif_carrier_off(dev);
+>  		ieee80211_reset_erp_info(dev);
+>  		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
+> +
+> +		// make sure no association start before we got a new BSSID
+> +		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
+
+I don't think that patch makes sense, after all, userspace could request
+to disassociate and afterwards re-request to associate by setting the
+SSID and not setting the BSSID again, which would lose the fixed BSSID
+without userspace interaction.
+
+However, I'm not sure how to fix this.
+
+johannes
+
+--=-VJ0GCoRMcUVaAaNO6b/u
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASA8ZqaVg1VMiehFYAQJIWg/+MVge1tKZqBrFlxzk5ycmpIVjMwcB2SVH
+c/hPV2brlyr0/tiPb0u2x1z/mMcnvpZeOAXIvuVtcqD6hs8UxZiBkA1XHoPw6rLA
+bRGHbPi/n55HZKnBr8RvGaGMEPAxLR3aML+jBZXWzHG+jjponL+YgjH0NIEcJVDo
+cUvv1lCUYkApM1GGLZtiIremfjLAWX/BCRTrBrs5Lo5F6/VLNxkWfubKFhNqyE0n
+Rf3QjNAEeM7rosRnwD0rfYBUzzlzT9hFXHjLQJXs52YshSA93lSdAWaUKTGHV132
+4cbYKd4sEhZ/jczHtsaWDJJqTldUXMgtaHNuGxu6GsQWH5FsRgEsVqG3e2wwbzcu
+81YyqfKL3KRKT8s9LuoUS0M/LBZx7Sif+hLRxkV871g3ay1HcTRmTQUZ0gMDmH8f
+9cqJqFm8NVPR3DAxUC1n3PG8ZzDB81Q9fT1kN3Fyn3+NH/kdy4T8HzDF6e5B7zUz
+/Rfit+U3a8ITqeDec9Pam/jRJ6KcWpmJH3deIoMLxnyr+3n1Ysl7fVRN1IRc/FYG
+/K0tJN+7p/Tf/OQbVntIYULh4fzFTopgsEnnot0/LAgoV4CvcmDa787KIdnbYbWr
+8E4GvNyNdLr2/v51jtl1gBJ/XtfHDNO4+Snf6qAVgD/OWRNIxZ4Z/0HEBwhlrOWk
+MOSOawwowKw=
+=g4G+
+-----END PGP SIGNATURE-----
+
+--=-VJ0GCoRMcUVaAaNO6b/u--
+
