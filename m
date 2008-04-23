@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:59936 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934296AbYDQPwR (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:41757 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbYDWLCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 11:52:17 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so155870fkr.5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 08:52:16 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf
-Date: Thu, 17 Apr 2008 17:56:51 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>
-References: <200804171728.30188.IvDoorn@gmail.com> <200804171729.34583.mb@bu3sch.de>
-In-Reply-To: <200804171729.34583.mb@bu3sch.de>
+	Wed, 23 Apr 2008 07:02:35 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so4548563waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2008 04:02:34 -0700 (PDT)
+Message-ID: <1ba2fa240804230402q3d2cb68en61051431f946c903@mail.gmail.com> (sfid-20080423_130314_335187_D2B7C5E0)
+Date: Wed, 23 Apr 2008 14:02:34 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 1/1] iwlwifi: Fix built-in compilation of iwlcore
+Cc: torvalds@linux-foundation.org, linville@tuxdriver.com,
+	reinette.chatre@intel.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080423.040019.239111304.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804171756.51480.IvDoorn@gmail.com> (sfid-20080417_165222_215256_3FB68FA5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1208948327-23894-1-git-send-email-tomas.winkler@intel.com>
+	 <20080423.040019.239111304.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 17 April 2008, Michael Buesch wrote:
-> On Thursday 17 April 2008 17:28:29 Ivo van Doorn wrote:
-> > diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-> > index 19aefbf..2ee19cf 100644
-> > --- a/drivers/net/wireless/b43/xmit.c
-> > +++ b/drivers/net/wireless/b43/xmit.c
-> > @@ -235,7 +235,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
-> >  
-> >  	plcp_fragment_len = fragment_len + FCS_LEN;
-> >  	if (use_encryption) {
-> > -		u8 key_idx = (u16) (txctl->key_idx);
-> > +		u8 key_idx = (u16) (txctl->hw_key->hw_key_idx);
-> 
-> Can we actually remove that bogus cast while we are at it? :)
-> 
-> >  		struct b43_key *key;
-> >  		int wlhdr_len;
-> >  		size_t iv_len;
-> > diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
-> > index dcad249..ba50b68 100644
-> > --- a/drivers/net/wireless/b43legacy/xmit.c
-> > +++ b/drivers/net/wireless/b43legacy/xmit.c
-> > @@ -232,7 +232,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
-> >  
-> >  	plcp_fragment_len = fragment_len + FCS_LEN;
-> >  	if (use_encryption) {
-> > -		u8 key_idx = (u16)(txctl->key_idx);
-> > +		u8 key_idx = (u16)(txctl->hw_key->hw_key_idx);
-> 
-> Same here.
-
-Sure, updated patch on its way. :)
-
-Ivo
+On Wed, Apr 23, 2008 at 2:00 PM, David Miller <davem@davemloft.net> wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
+>  Date: Wed, 23 Apr 2008 13:58:47 +0300
+>
+>
+>  > This patch fixes problem in Makefile that prevented
+>  > built-in compilation of iwlcore
+>  >
+>  > Commit that caused this problem: eadd3c4b
+>  >
+>  > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>  > Signed-off-by: Yi Zhu <yi.zhu@intel.com>
+>
+>  I already applied the corrected version of your patch,
+>  no need to resend this.  See my reply to your first
+>  posting.
+>
+>
+Thanks
+Sorry for the mess
+Tomas
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
