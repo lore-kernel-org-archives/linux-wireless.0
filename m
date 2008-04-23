@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:49761 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752376AbYDFPLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Apr 2008 11:11:15 -0400
-Date: Sun, 6 Apr 2008 17:10:53 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH RFT] b43legacy: fix initvals loading on bcm4303
-Message-ID: <20080406171053.62008810@polimi.it> (sfid-20080406_161119_768853_BE7C94DE)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:36898 "EHLO smtp5.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752152AbYDWJwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Apr 2008 05:52:07 -0400
+Date: Wed, 23 Apr 2008 12:51:28 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [2.6 patch] net/mac80211/rx.c: fix off-by-one
+Message-ID: <20080423095128.GY28933@cs181133002.pp.htv.fi> (sfid-20080423_115301_785840_347A2309)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows for the correct initial values to be uploaded to bcm4303
-devices. It should be correct, but I can't reliably test this as I suspect
-there's something going wrong with an hardware rfkill switch on my laptop.
-Please test.
+This patch fixes an off-by-one in net/mac80211/rx.c introduced by
+commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+(cfg80211 API for channels/bitrates, mac80211 and driver conversion)
+and spotted by the Coverity checker.
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
 ---
-Please note that for this patch to be tested a previous patch:
-'b43legacy: fix bcm4303 crash'
-needs to be applied.
----
-Index: bcm-testing/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- bcm-testing.orig/drivers/net/wireless/b43legacy/main.c
-+++ bcm-testing/drivers/net/wireless/b43legacy/main.c
-@@ -1516,6 +1516,7 @@ static int b43legacy_request_firmware(st
+--- linux-2.6/net/mac80211/rx.c.old	2008-04-22 02:23:40.000000000 +0300
++++ linux-2.6/net/mac80211/rx.c	2008-04-22 02:24:23.000000000 +0300
+@@ -2168,11 +2168,11 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	u32 pkt_load;
+ 	struct ieee80211_rate *rate = NULL;
+ 	struct ieee80211_supported_band *sband;
+ 
+ 	if (status->band < 0 ||
+-	    status->band > IEEE80211_NUM_BANDS) {
++	    status->band >= IEEE80211_NUM_BANDS) {
+ 		WARN_ON(1);
+ 		return;
  	}
- 	if (!fw->initvals) {
- 		switch (dev->phy.type) {
-+		case B43legacy_PHYTYPE_B:
- 		case B43legacy_PHYTYPE_G:
- 			if ((rev >= 5) && (rev <= 10))
- 				filename = "b0g0initvals5";
-@@ -1533,6 +1534,7 @@ static int b43legacy_request_firmware(st
- 	}
- 	if (!fw->initvals_band) {
- 		switch (dev->phy.type) {
-+		case B43legacy_PHYTYPE_B:
- 		case B43legacy_PHYTYPE_G:
- 			if ((rev >= 5) && (rev <= 10))
- 				filename = "b0g0bsinitvals5";
-
-
---
-Ciao
-Stefano
+ 
+ 	sband = local->hw.wiphy->bands[status->band];
 
