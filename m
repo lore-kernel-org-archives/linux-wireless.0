@@ -1,89 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54444 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584AbYDAMZo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:25:44 -0400
-Subject: Re: mac80211 MLME scanning - BSS list trouble
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Bill Moss <bmoss@CLEMSON.EDU>, Daniel Drake <dsd@gentoo.org>,
-	Dan Williams <dcbw@redhat.com>, Vladimir Koutny <vlado@ksp.sk>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20080331200536.GA13799@tuxdriver.com> (sfid-20080331_213426_952103_78087899)
-References: <1206865999.22530.187.camel@johannes.berg>
-	 <20080331200536.GA13799@tuxdriver.com>
-	 (sfid-20080331_213426_952103_78087899)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OVR3YWmqOWmZmZR8Y56/"
-Date: Tue, 01 Apr 2008 14:25:39 +0200
-Message-Id: <1207052739.5143.73.camel@johannes.berg> (sfid-20080401_132547_258337_BD4C8BCF)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:40898 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750828AbYDXG1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2008 02:27:01 -0400
+Message-ID: <48102204.7040309@gmx.de> (sfid-20080424_082741_215510_05BD2B99)
+Date: Thu, 24 Apr 2008 08:00:36 +0200
+From: Florian Manschwetus <florianmanschwetus@gmx.de>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Donation: Two Atheros cards for free
+References: <200804231932.14645.mb@bu3sch.de>
+In-Reply-To: <200804231932.14645.mb@bu3sch.de>
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms010502010901070103030207"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a cryptographically signed message in MIME format.
 
---=-OVR3YWmqOWmZmZR8Y56/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--------------ms010502010901070103030207
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Michael Buesch schrieb:
+> I've got two cards with atheros chips that I don't
+> really need. So if you want to have them, I'll give them to you for free.
+> 
+> http://bu3sch.de/misc/atheros.JPG
+> It's one PC-Card and one PCI card.
+> 
+the PC-Card could be really interesting, but I live in Germany, so it 
+could be a problem to get in rl-contact.
 
-On Mon, 2008-03-31 at 16:05 -0400, John W. Linville wrote:
-> On Sun, Mar 30, 2008 at 10:33:19AM +0200, Johannes Berg wrote:
->=20
-> > The first one is that there is no actual expiration of BSS structs. Eac=
-h
-> > BSS struct has a 'last_update' member that contains (in jiffies) the
-> > time this item was last updated. This means that we accumulate BSS
-> > information forever, but due to the 'last_update' only the last few
-> > items will be returned to the user on asking for a scan result. This
-> > obviously has problems since a rogue station could bombard us with fake
-> > probe responses and cause us to build a huge BSS list which is never
-> > again freed until the hardware is deregistered. This will need to be
-> > fixed, of course.
->=20
-> Assuming this was fixed, does the rest of this issue go away?
-> It seems like it would.
+florian
 
-Sort of, it'll go away as soon as the info is expired, but you still
-won't be able to switch over right away.
+--------------ms010502010901070103030207
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-> Should we consider allowing the beacon to update the info if
-> last_update is old enough to keep the BSS out of the scan results?
-
-That, maybe, and maybe also if we don't want to associate with that
-network right away or something.
-
-Really, I think this needs somebody to dig into the specs, figure out
-which things can change from where, and mostly rewrite it all
-appropriately. I for sure won't have time to do that.
-
-johannes
-
---=-OVR3YWmqOWmZmZR8Y56/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/IpwqVg1VMiehFYAQI9Bg/+OD4o0cYPD3vxHoZ0EvyUpz1vUUcwT5Mg
-K05Q8P+1ApXWBsQD+SH1gnUchI08rH4oH8d5z2tOd6rX2zgFbVtZrE1F/qnEhoxu
-EjUgxuJE/2itKog85nRg9y+clSQj8/is52e+7vaHA0ScOnpz8rt+La3KuGPW74Ig
-+6OsQDc9lF6IaPVAqzMF4uSgoWvdqtLiZF5mck6HU5tOlAsiNXbGxFbzwEFqawdf
-5oNZNkSP+4yU0miVygxDLqHzSbZlW/XO79ibFkVX8wFcn1yQGLwyGsxN30vWBOj2
-Jmuid/bfhONuJY1o+lx0Bdnfa6wbpH8yd4j241u7b/OyxjhoOJUk0sr6QuNKafaq
-FPPVJgLLFcWmsBhdEapXBuOLbwvJ7LGREytdCNnvAFtR5dVAlnbYqTiPI7kgESs+
-jlgkbc8oH0sego6hInuAPX34dLLaHRIkEL15pGnafrJ/dK7HYLaZX6JGDVD3K07k
-QVdxUfKolW8yGyXYalWcF0mSNliVWOwGphtKk65KzFglNzwswZDGdy7r9Ijhc21g
-jcLAr/3g9Dzm5iz5ozGpbsFUF8Ij7W57O9xNcHhLtrKICSjm+8Ay46SxeHxHy8x/
-fglDcsNIh74Eyhn0zjjmEhyZunOWqWNu1rFN4kAO5qNa9aDLY4CQzgW3bjji/3/b
-y5NbTe23+yg=
-=72w9
------END PGP SIGNATURE-----
-
---=-OVR3YWmqOWmZmZR8Y56/--
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
+BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
+HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
+ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
+MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
+dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
+hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
+25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
+TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
+5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
+SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
+byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
+gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
+MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
+dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
+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
+Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
+cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
+MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
+2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MjQwNjAw
+MzZaMCMGCSqGSIb3DQEJBDEWBBRX4ZKdwFz5Hv5ZCx3GX9IQmMtTijBSBgkqhkiG9w0BCQ8x
+RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
+BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
+Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
+aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
+LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
+FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
+cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
+AQEBBQAEggEAVj2I9a2Q/fnt9TFHwuqE9F+2U318VDsUG9hP/60Bwo3sJlZHlzQquao8I9kP
+8r1VB3sdI4HCM9eXhagQVy20GkFp1ALoCGNRiyHNMTAtr0yq2EuaeZq+iiu7dNSFweSt+c0P
+qYV6RtZArHAniF2pUiD5jnvUmoKGuQtYueSWL468REApAjmvD5DL45brHooxXt0U7WvvZG9r
+1fW92OyXPiJutjDVrIBbMp60Ec0EEfQ6rbtbx58sRzP2wgO8199KKSdku3MLr/leUXTi0SUT
+QmdL9LC/UIo4kBpErchCd60yloXjKvdCBXjtQguKVd8dPXE4WaOApqxx/+o+FHDHeAAAAAAA
+AA==
+--------------ms010502010901070103030207--
 
