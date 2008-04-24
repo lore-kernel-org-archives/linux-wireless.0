@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:12996 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbYDBPaG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49658 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753694AbYDZPvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 11:30:06 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1162157nfb.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 08:30:04 -0700 (PDT)
-Message-ID: <47F3A67B.1040909@gmail.com> (sfid-20080402_163011_811536_EC872CE1)
-Date: Wed, 02 Apr 2008 17:30:03 +0200
-From: Luca Venturini <lucventurini@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: New IWL4935 driver for Intel Wireless Cards does not support
- WPA2 wireless network with PEAP - MSCHAPV2
-References: <adKlV-3WV-5@gated-at.bofh.it> <adS9O-4u9-1@gated-at.bofh.it> <adUY2-379-7@gated-at.bofh.it> <adVUj-5bx-81@gated-at.bofh.it> <47F38267.2040301@fenrir.org.uk>
-In-Reply-To: <47F38267.2040301@fenrir.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 26 Apr 2008 11:51:46 -0400
+Subject: HT info in probe requests?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M3WU3fUIqsgLbDjLiBjA"
+Date: Thu, 24 Apr 2008 17:09:28 +0200
+Message-Id: <1209049768.10943.3.camel@johannes.berg> (sfid-20080426_175203_820938_9FEFE60B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(I hope I am not making again something rude posting here, and if this 
-is the case, I apologize; I am sorry, but this is the first time ever I 
-write directly to Linux developers, and I am unsure of how to behave.)
 
-I thank everybody for your help and understanding. I will try to contact 
-Ubuntu developers and ask about current situation for this issue. In the 
-meantime, Filippo Zangheri of the Linux team was so kind as to give me 
-detailed instructions on how to install the latest modules for intel 
-wireless cards, so hopefully I will patch the problem well enough so to 
-actually update my box...and see if developers have indeed addressed the 
-problem in the meantime.
+--=-M3WU3fUIqsgLbDjLiBjA
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Thank you again, and keep up the awesome work!
+Hi,
 
-Luca Venturini
+I just found code in iwl4965 to add HT info to probe requests, shouldn't
+that also be in mac80211?
 
-Brian Morrison ha scritto:
-> Luca Venturini wrote:
->> I hope, then, that Linux 2.6.25.x stable will be out sooner than 24th 
->> april (Hardy release date) otherwise I (and I guess also many other 
->> people) will be in a very bad spot until the kernel is updated...(I 
->> am not proficient enough so to compile a whole Linux kernel for my 
->> distro).
->
-> I don't know about the Ubuntu situation, but in Fedora the current 
-> 2.6.24.x series kernels work just fine with the iwlwifi driver and 
-> 3945 and 4965 chipset firmware. Much of the 2.6.25 wireless changes 
-> are already in the Fedora kernels (that's where a lot of testing 
-> happens) and there is no reason that the Ubuntu maintainers cannot do 
-> the same thing. Testing of these changes and discussion of same occurs 
-> on the linux-wireless list, if you're seeing problems this is a good 
-> place to ask for help. I don't use PEAP with MSCHAPV2 myself, but I 
-> did see something on the NetworkManager mailing list from Bill Moss at 
-> Clemson University who has got some sort of certificate authentication 
-> working under Fedora (might be PEAP), you can probably find his post 
-> with help from Google.
->
-> I'd suggest asking the Ubuntu team what the status is for this issue 
-> and if they have any test kernels to try. The kernel ML is not a good 
-> place since they are concerned with the vanilla release and not with 
-> any distro specific changes. Linux wireless is under heavy development 
-> and 2.6.25 vanilla is the first release where anything like working 
-> code will appear from Linus, but the same code has been in the distros 
-> fro some time as they need to provide people with a working environment.
->
-> HTH :)
->
+Since the probe request building code in =EF=BB=BFieee80211_send_probe_req =
+and
+iwl4965_fill_probe_req are pretty much equivalent, shouldn't we refactor
+=EF=BB=BFieee80211_send_probe_req, export it the probe request building fun=
+ction
+and make iwlwifi use it?
+
+johannes
+
+--=-M3WU3fUIqsgLbDjLiBjA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBCip6Vg1VMiehFYAQLnEA/+Md1a6IY/WfGUHwtqQC/5RLdsdNLQWCB/
+l9oglggqptk3xeqhvVmOuHlAJwGOQ/ivCjBa9SkfBM0k4HbONsC4PxQAqiB3Ec+c
+84RnEZLhpEiAkWVICfEIxSz9FE+X3DkA6vQxLhpv8Wfs+bhPfuGUcvBHpa/41F2o
+yvyHbHJcGggWr+6BeyMiyZG/xazSa0qZiHX2mPN1lyDWFMHOR+oSo1qpx39hrsLM
+mXnowY8SfFV6S6jts8LY9cHQ1duim/k/TzDWQETL19mcJzmOW8DddL9Uy/3S39za
+bCJ4sy3IqldD/dJFL3X8dDLR7qpBISg8MJ4/s4yE9K/F5FlpZjqDpLy7EgrYG0xK
+ZX/J42/ODKvvA+qDw0LLvOcifK5kdBz9kPqZvBH+K9NI0R5icnBt6pgb925Pc4VQ
+x2/Q6VPsWnyMwhr3DjSY6jWyTDan828dRhIWDXFsZb40j4nqsCqSUqAWGBsPsHco
+JFxRRDtEzAJwh9S9SsYJgCF4zChRC/yK1lu2E41gJCCgTlJ7JyYTNnGmuJZs10qt
+K2emEHKB46VRqN+xprZahKY/OTAChNXw8KV/NTvTkz1n1jLH6ao8/idREfwrcfOT
+njH3jGe5tz58Cq/Ab3vCXqlpk0BeGpymoltmBKuAfibe48UGTio6KdvTJMgnnysO
+HHyNfxwih0o=
+=qmD0
+-----END PGP SIGNATURE-----
+
+--=-M3WU3fUIqsgLbDjLiBjA--
 
