@@ -1,39 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:64653 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755232AbYDSS0J (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:52703 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193AbYDXSJI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 14:26:09 -0400
-Message-ID: <480A38FA.3090300@lwfinger.net> (sfid-20080419_192613_738744_866B64B2)
-Date: Sat, 19 Apr 2008 13:24:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 24 Apr 2008 14:09:08 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable 2/4] b43: Workaround invalid bluetooth settings
+Date: Thu, 24 Apr 2008 20:02:41 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: akpm@linux-foundation.org
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	harvey.harrison@gmail.com, jbenc@suse.cz
-Subject: Re: [patch 6/7] mac80211: michael.c use unaligned/byteorder helpers
-References: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org>
-In-Reply-To: <200804182059.m3IKxqcu015604@imap1.linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200804242002.41684.mb@bu3sch.de> (sfid-20080424_200947_729342_94243079)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Rather than open-coding the get/put of little endian values, use
-> get/put_unaligned and the byteorder helpers.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: Jiri Benc <jbenc@suse.cz>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
+This adds a workaround for invalid bluetooth SPROM settings
+on ASUS PCI cards.
+This will stop the microcode from poking with the BT GPIO line.
+This fixes data transmission on this device, as the BT GPIO line
+is used for something TX related on this device
+(probably the power amplifier or the radio).
+This also adds a modparam knob to help debugging this in the future,
+as more devices with this bug may show up.
 
-The set of 7 patches break my system, which is x86_64 using WPA-PSK 
-TKIP. If I back out #6 and 7, then all is OK.
+This patch is in wireless-testing.git, commit
+5e0fa73f3f6d2aea9c0498dc8d7e621c8fb9e6aa
 
-Does this series have any prerequisites? I'm running the current 
-wireless-testing git tree.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Larry
+
+Index: linux-2.6.25/drivers/net/wireless/b43/main.c
+===================================================================
+--- linux-2.6.25.orig/drivers/net/wireless/b43/main.c	2008-04-17 17:11:26.000000000 +0200
++++ linux-2.6.25/drivers/net/wireless/b43/main.c	2008-04-19 17:58:40.000000000 +0200
+@@ -78,6 +78,11 @@ static int modparam_nohwcrypt;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ 
++static int modparam_btcoex = 1;
++module_param_named(btcoex, modparam_btcoex, int, 0444);
++MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistance (default on)");
++
++
+ static const struct ssb_device_id b43_ssb_tbl[] = {
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
+@@ -3339,6 +3344,8 @@ static void b43_bluetooth_coext_enable(s
+ 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
+ 	u32 hf;
+ 
++	if (!modparam_btcoex)
++		return;
+ 	if (!(sprom->boardflags_lo & B43_BFL_BTCOEXIST))
+ 		return;
+ 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
+@@ -3350,11 +3357,13 @@ static void b43_bluetooth_coext_enable(s
+ 	else
+ 		hf |= B43_HF_BTCOEX;
+ 	b43_hf_write(dev, hf);
+-	//TODO
+ }
+ 
+ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+-{				//TODO
++{
++	if (!modparam_btcoex)
++		return;
++	//TODO
+ }
+ 
+ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+@@ -4002,6 +4011,8 @@ static int b43_one_core_attach(struct ss
+ 
+ static void b43_sprom_fixup(struct ssb_bus *bus)
+ {
++	struct pci_dev *pdev;
++
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
+@@ -4009,6 +4020,14 @@ static void b43_sprom_fixup(struct ssb_b
+ 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
+ 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
+ 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
++	if (bus->bustype == SSB_BUSTYPE_PCI) {
++		pdev = bus->host_pci;
++		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
++		    pdev->device == 0x4318 &&
++		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
++		    pdev->subsystem_device == 0x100F)
++			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
++	}
+ }
+ 
+ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
