@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17274 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753242AbYDWXaO convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40775 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbYDXI5j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 19:30:14 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 1/1] iwlwifi: Fix built-in compilation of iwlcore
-Date: Wed, 23 Apr 2008 16:30:12 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200444B0C8@orsmsx416.amr.corp.intel.com> (sfid-20080424_013051_328396_DEFB6EA8)
-In-Reply-To: <20080423205159.GB30048@tuxdriver.com>
-References: <1208947121-22640-1-git-send-email-tomas.winkler@intel.com> <20080423.034943.15067739.davem@davemloft.net> <20080423205159.GB30048@tuxdriver.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"David Miller" <davem@davemloft.net>
-Cc: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	<torvalds@linux-foundation.org>, "Zhu, Yi" <yi.zhu@intel.com>,
-	<linux-wireless@vger.kernel.org>
+	Thu, 24 Apr 2008 04:57:39 -0400
+Subject: Re: [PATCH] wireless: rndis_wlan: modparam_workaround_interval is
+	never below 0.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: jussi.kivilinna@mbnet.fi, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+In-Reply-To: <480F97B5.9030009@tiscali.nl> (sfid-20080423_221109_783456_35B212E0)
+References: <480F97B5.9030009@tiscali.nl>
+	 (sfid-20080423_221109_783456_35B212E0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-elk0awi/LJdjBsMIIy/d"
+Date: Thu, 24 Apr 2008 10:57:31 +0200
+Message-Id: <1209027451.3357.49.camel@johannes.berg> (sfid-20080424_105812_905856_9EE245C3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 23, 2008 1:52 PM, John W. Linville  wrote:
 
-> On Wed, Apr 23, 2008 at 03:49:43AM -0700, David Miller wrote:
->> From: Tomas Winkler <tomas.winkler@intel.com>
-> 
->>> --- a/drivers/net/wireless/iwlwifi/Makefile
->>> +++ b/drivers/net/wireless/iwlwifi/Makefile
->>> @@ -1,4 +1,4 @@
->>> -obj-$(CONFIG_IWLCORE)	:= iwlcore.o
->>> +obj-$(CONFIG_IWLCORE)	+= iwlcore.o
->>>  iwlcore-objs 		:= iwl-core.o iwl-eeprom.o iwl-hcmd.o
-iwl-power.o
->> 
->> I had to apply this patch by hand because "iwl-power.o" is not
->> present in the iwlcore-objs line in the current tree.
->> 
->> Does it exist in John's wireless tree or something like that?  This
->> new iwl-power.o object looks like it would be new code and a new
->> feature, which we wouldn't be able to add into the tree at this time
->> as all networking new features have gone into the merge window
->> already.
-> 
-> FWIW, I don't have an iwl-power.c either.  Please be careful to
-> send patches against the actual upstream tree rather than a working
-> tree. :-) 
+--=-elk0awi/LJdjBsMIIy/d
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We submitted this patch on top of patches we have already submitted.
-iwl-power is introduced in patch "iwlwifi: Add power level support"
-submitted on 04/21/2008
-(http://marc.info/?l=linux-wireless&m=120881778101353&w=2)
+On Wed, 2008-04-23 at 22:10 +0200, Roel Kluin wrote:
+> priv->param_workaround_interval is unsigned,
+> modparam_workaround_interval not.
+> the former is never < 0.
 
-Reinette
+> -	priv->param_workaround_interval =3D modparam_workaround_interval;
+> =20
+> -	if (priv->param_workaround_interval < 0)
+> +	if (modparam_workaround_interval < 0)
+>  		priv->param_workaround_interval =3D 500;
+> +	else
+> +		priv->param_workaround_interval =3D modparam_workaround_interval;
+
+Eh, why not make the modparam unsigned and default to 500?
+
+johannes
+
+--=-elk0awi/LJdjBsMIIy/d
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBBLeqVg1VMiehFYAQIpKg//SWw4D0YZo9M9stw0llJljNhDTlzv+eGP
+41gf/bm7Hi8VAnPc2Lkf/CmrhOQAd33Cb/w6PNZq5/rt70MJUE8o3HHpPmsXjYqN
+s70Rz7qKtVY9eSLIWb7AW9w3HPYNEwbDwiE8/WmAbTbHizXXbplwdQbP6FuMXEiI
+bRwRdQPiBp22CCY5Nq7U6vQMS51Y+7nMH2AwCh/qnkZraIFrlyzaCEqP76OxuH56
+Zyq+Sfg479/Z6RJnHFGJF5IzjJSSRnPtErn96iTS3fpbunskJnYC+oPFDeTXDuyw
+1nB9h6vgFNVVg20cTPbUsgJ4K0BfF92OzLJaHSbXXnJdbgXdAwwsdP5F0VrMSyf1
+vmH45Irqc4/B/1gmvU7Hp/LR3y7qn66ocH4K1oJQtG48T8WsrEN029JWG5HeWAxC
+XRD6sc7u6P91alPWn/FrOZ3rhrsygbUse/S8ytMgPrQAvYXUgetlX1/VjoaJ9VUS
+oTq0n79wynEmHibWJlf/ywvnMg1YkxpuEpZWq8vRAhIb3magUK8L8LoI2nqu4/SZ
+sqJdGNeKKEiwi4cdK0c2e42/RxSQ3tnaIgQInKE/PMXUjqym9LhFDtBuAvZ3gfAm
+Jd5HZJqISKff6u5d+FEYmR30Gva50AoS8MDAuX3RTl+L8I7GdQeW3hGngHjL9roF
+YgpB9deszCQ=
+=J7yc
+-----END PGP SIGNATURE-----
+
+--=-elk0awi/LJdjBsMIIy/d--
+
