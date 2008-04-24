@@ -1,76 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:52194 "EHLO mx1.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:51299 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758905AbYD2RV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 13:21:27 -0400
-Date: Tue, 29 Apr 2008 10:18:48 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Gabor Stefanik <netrolller.3d@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [22/37] ssb: Fix all-ones boardflags
-Message-ID: <20080429171848.GW14724@suse.de> (sfid-20080429_192146_018341_F61B36E5)
-References: <20080429171222.073929148@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080429171730.GA14724@suse.de>
+	id S1757797AbYDXSzv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2008 14:55:51 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 19/21] iwlwifi-5000: add nic config handler for 5000 HW
+Date: Thu, 24 Apr 2008 11:55:36 -0700
+Message-Id: <1209063338-6572-20-git-send-email-reinette.chatre@intel.com> (sfid-20080424_205637_492576_C98A405E)
+In-Reply-To: <1209063338-6572-19-git-send-email-reinette.chatre@intel.com>
+References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-3-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-4-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-5-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-6-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-7-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-8-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-9-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-10-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-11-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-12-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-13-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-14-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-15-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-16-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-17-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-18-git-send-email-reinette.chatre@intel.com>
+ <1209063338-6572-19-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
+This patch adds nic config handler for 5000 HW Family
 
-------------------
-From: Larry Finger <Larry.Finger@lwfinger.net>
-
-commit 4503183aa32e6886400d82282292934fa64a81b0 upstream
-
-In the SSB SPROM a field set to all ones means the value
-is not defined in the SPROM.
-In case of the boardflags, we need to set them to zero
-to avoid confusing drivers. Drivers will only check the
-flags by ANDing.
-
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Gabor Stefanik <netrolller.3d@gmail.com>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/ssb/pci.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |   33 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -482,6 +482,11 @@ static int sprom_extract(struct ssb_bus 
- 			goto unsupported;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index d8e3dd7..df62835 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -86,6 +86,38 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	return ret;
+ }
  
-+	if (out->boardflags_lo == 0xFFFF)
-+		out->boardflags_lo = 0;  /* per specs */
-+	if (out->boardflags_hi == 0xFFFF)
-+		out->boardflags_hi = 0;  /* per specs */
++static void iwl5000_nic_init(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	u16 radio_cfg;
++	u8 val_link;
 +
- 	return 0;
- unsupported:
- 	ssb_printk(KERN_WARNING PFX "Unsupported SPROM revision %d "
-
++	spin_lock_irqsave(&priv->lock, flags);
++
++	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
++
++	/* disable L1 entry -- workaround for pre-B1 */
++	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
++
++	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
++
++	/* write radio config values to register */
++	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) < EEPROM_5000_RF_CFG_TYPE_MAX)
++		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
++
++	/* set CSR_HW_CONFIG_REG for uCode use */
++	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
++		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++
++	spin_unlock_irqrestore(&priv->lock, flags);
++}
++
++
++
+ /*
+  * EEPROM
+  */
+@@ -407,6 +439,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+ 	.apm_ops = {
+ 		.init =	iwl5000_apm_init,
++		.config = iwl5000_nic_init,
+ 		.set_pwr_src = iwl4965_set_pwr_src,
+ 	},
+ 	.eeprom_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 06ed300..dc1f027 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -295,6 +295,7 @@ struct iwl_eeprom_calib_info {
+ 
+ #define EEPROM_3945_RF_CFG_TYPE_MAX  0x0
+ #define EEPROM_4965_RF_CFG_TYPE_MAX  0x1
++#define EEPROM_5000_RF_CFG_TYPE_MAX  0x3
+ 
+ /*
+  * Per-channel regulatory data.
 -- 
+1.5.3.4
+
