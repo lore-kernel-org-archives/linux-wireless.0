@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:3837 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757685AbYDGOnH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 10:43:07 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2086968mue.5
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2008 07:43:02 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 hardware encryption
-Date: Mon, 7 Apr 2008 16:45:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200804051931.58895.IvDoorn@gmail.com> <200804071626.37799.IvDoorn@gmail.com> <1207578963.12481.27.camel@johannes.berg>
-In-Reply-To: <1207578963.12481.27.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3876 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751680AbYDXM7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2008 08:59:35 -0400
+Date: Thu, 24 Apr 2008 08:16:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Roel Kluin <12o3l@tiscali.nl>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wireless: rndis_wlan: modparam_workaround_interval is
+	never below 0.
+Message-ID: <20080424121613.GA3879@tuxdriver.com> (sfid-20080424_150008_988678_22114EB3)
+References: <480F97B5.9030009@tiscali.nl> <1209027451.3357.49.camel@johannes.berg> <20080424122628.zioaht24o4ko4ww8@naisho.dyndns.info>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804071645.43604.IvDoorn@gmail.com> (sfid-20080407_155326_202480_CDBA3079)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080424122628.zioaht24o4ko4ww8@naisho.dyndns.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 April 2008, Johannes Berg wrote:
-> 
-> > Ok, so just to summarize (so I have everything right :) )
-> > 
-> > TX path)
-> > rt2x00 sets the IEEE80211_KEY_FLAG_GENERATE_IV flag
-> > grabs the IV/EIV from behind the ieee80211 header
-> > memmove ieee80211 header to remove the IV/EIV
-> > 
-> > TX done path)
-> > memmove ieee80211 header to make room for IV/EIV
-> > reinsert IV/EIV behind ieee80211 header
-> > call ieee80211_tx_status() for mac80211
-> > 
-> > RX path)
-> > memmove ieee80211 header to make room for IV/EIV
-> > insert IV/EIV behind ieee80211 header
-> > call ieee80211_rx() for mac80211
-> 
-> Yes, that looks right.
+On Thu, Apr 24, 2008 at 12:26:28PM +0300, Jussi Kivilinna wrote:
+> Quoting Johannes Berg <johannes@sipsolutions.net>:
+>
+>>
+>> Eh, why not make the modparam unsigned and default to 500?
+>>
+>> johannes
+>>
+>
+> Now that I stop and think about it, that would be better option. The 
+> modparam already has default value of 500.
+>
+> Reason why workaround modparam is signed, is that value -1 did have some 
+> functionality in some early version. That then changed and 
+> priv->param_workaround_interval changed to unsigned and forgot about 
+> modparam.
 
-Excellent, thanks. :)
+I merged the patch, so if you want that behavior we need a new patch.
 
-Ivo
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
