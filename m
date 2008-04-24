@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42150 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbYDPUH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 16:07:57 -0400
-Subject: RE:  iwl3945 problem with 2.6.25-rc9
-From: Dan Williams <dcbw@redhat.com>
-To: Marcus Furlong <furlongm@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <fu5l5r$pm8$1@ger.gmane.org>
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>
-	 <fu5iel$c45$1@ger.gmane.org>   <fu5l5r$pm8$1@ger.gmane.org>
-Content-Type: text/plain
-Date: Wed, 16 Apr 2008 16:04:52 -0400
-Message-Id: <1208376292.27708.3.camel@localhost.localdomain> (sfid-20080416_210808_753599_7F0532ED)
-Mime-Version: 1.0
+Received: from smtp1.dnainternet.fi ([87.94.96.108]:58653 "EHLO
+	smtp1.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991AbYDXGQe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Apr 2008 02:16:34 -0400
+Message-ID: <20080424091631.4lh9op46jkg4gg84@naisho.dyndns.info> (sfid-20080424_081710_876265_4F2E99F4)
+Date: Thu, 24 Apr 2008 09:16:31 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wireless: rndis_wlan: modparam_workaround_interval is
+	never below 0.
+References: <480F97B5.9030009@tiscali.nl>
+In-Reply-To: <480F97B5.9030009@tiscali.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-04-16 at 20:48 +0100, Marcus Furlong wrote:
-> On Wednesday 16 April 2008 20:01 in <fu5iel$c45$1@ger.gmane.org>, Marcus
-> Furlong wrote:
-> 
-> > On Wednesday 16 April 2008 19:28 in
-> >
-> <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com>,
-> > Chatre, Reinette wrote:
-> > 
-> >> Looks like the device is being brought up and down a lot ... are you
-> >> perhaps running wpa_supplicant or some other user application that is
-> >> doing this? Could you please give more information about what you were
-> >> doing when these errors started to appear?
-> > 
-> > Yes, wpa_supplicant is running as part of the boot process. Should I use
-> > some other application? (Do wireless-tools support WPA?) Or should I just
-> > load the module on it's own and give the dmesg output from that?
-> 
-> Here is the output from the module loading without wpa_supplicant, then me
-> reloading it with debug flags, and running ifconfig wlan0 and iwlist
-> scanning. Still some Microcode SW and FW errors in there, but there's a lot
-> less noise.
-> 
-> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwl3945-output-no-wpasupplicant.bz2
+Quoting Roel Kluin <12o3l@tiscali.nl>:
 
-Interesting; can you run wpa_supplicant again but dump it's detailed
-output using "-dddt" for us so we can see what it's doing and if it's
-causing the restarts?
+> priv->param_workaround_interval is unsigned,   
+> modparam_workaround_interval not.
+> the former is never < 0.
+>
+> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
 
-Dan
+Thanks.
+
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+> ---
+> diff --git a/drivers/net/wireless/rndis_wlan.c   
+> b/drivers/net/wireless/rndis_wlan.c
+> index 977751f..d0b1fb1 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -2402,7 +2402,6 @@ static int bcm4320_early_init(struct usbnet *dev)
+>  	priv->param_power_output = modparam_power_output;
+>  	priv->param_roamtrigger  = modparam_roamtrigger;
+>  	priv->param_roamdelta    = modparam_roamdelta;
+> -	priv->param_workaround_interval = modparam_workaround_interval;
+>
+>  	priv->param_country[0] = toupper(priv->param_country[0]);
+>  	priv->param_country[1] = toupper(priv->param_country[1]);
+> @@ -2425,8 +2424,10 @@ static int bcm4320_early_init(struct usbnet *dev)
+>  	else if (priv->param_roamdelta > 2)
+>  		priv->param_roamdelta = 2;
+>
+> -	if (priv->param_workaround_interval < 0)
+> +	if (modparam_workaround_interval < 0)
+>  		priv->param_workaround_interval = 500;
+> +	else
+> +		priv->param_workaround_interval = modparam_workaround_interval;
+>
+>  	rndis_set_config_parameter_str(dev, "Country", priv->param_country);
+>  	rndis_set_config_parameter_str(dev, "FrameBursting",
+>
+>
+
+
 
 
