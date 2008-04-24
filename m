@@ -1,66 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32173 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:18293 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754722AbYDQXFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 19:05:15 -0400
+	id S1752812AbYDXAPM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Apr 2008 20:15:12 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] mac80211: correct skb allocation
-Date: Thu, 17 Apr 2008 16:05:14 -0700
-Message-Id: <1208473514-16688-1-git-send-email-reinette.chatre@intel.com> (sfid-20080418_000520_553284_D6063D59)
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/16] iwlwifi: reorganize TX RX constatns
+Date: Wed, 23 Apr 2008 17:15:00 -0700
+Message-Id: <1208996108-15326-9-git-send-email-reinette.chatre@intel.com> (sfid-20080424_021610_354911_06D9E6AB)
+In-Reply-To: <1208996108-15326-8-git-send-email-reinette.chatre@intel.com>
+References: <1208996108-15326-1-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-2-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-3-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-4-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-5-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-6-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-7-git-send-email-reinette.chatre@intel.com>
+ <1208996108-15326-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ester Kummer <ester.kummer@intel.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch corrects the allocation of skb in ADDBA req/resp and DELBA
-it removes redundant space u.addba_* are already counted in sizeof(*mgmt)
+This patch moves TX/RX constants in 4969 headers
 
-Signed-off-by: Ester Kummer <ester.kummer@intel.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/mlme.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965-commands.h |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c          |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-4965.h          |    7 +++++--
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c0a5345..b0b079c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1098,8 +1098,8 @@ static void ieee80211_send_addba_resp(struct net_device *dev, u8 *da, u16 tid,
- 	struct ieee80211_mgmt *mgmt;
- 	u16 capab;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
+index 7ffae05..6b2d6bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-commands.h
+@@ -1101,6 +1101,14 @@ struct iwl4965_rx_mpdu_res_start {
+ #define TX_CMD_SEC_KEY128	0x08
  
--	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
--					sizeof(mgmt->u.action.u.addba_resp));
-+	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+ /*
++ * security overhead sizes
++ */
++#define WEP_IV_LEN 4
++#define WEP_ICV_LEN 4
++#define CCMP_MIC_LEN 8
++#define TKIP_ICV_LEN 4
 +
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer "
- 		       "for addba resp frame\n", dev->name);
-@@ -1147,9 +1147,7 @@ void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
- 	struct ieee80211_mgmt *mgmt;
- 	u16 capab;
++/*
+  * 4965 uCode updates these Tx attempt count values in host DRAM.
+  * Used for managing Tx retries when expecting block-acks.
+  * Driver should set these fields to 0.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e80f602..f5796b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2502,9 +2502,6 @@ static void iwl4965_free_shared_mem(struct iwl_priv *priv)
+ 				    priv->shared_phys);
+ }
  
--	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
--				sizeof(mgmt->u.action.u.addba_req));
+-#define IWL_TX_CRC_SIZE		4
+-#define IWL_TX_DELIMITER_SIZE	4
 -
-+	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+ /**
+  * iwl4965_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
+  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.h b/drivers/net/wireless/iwlwifi/iwl-4965.h
+index 1ab4e2e..e357263 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.h
+@@ -803,8 +803,8 @@ struct iwl4965_kw {
+ #define IWL_EXT_CHANNEL_OFFSET_RESERVE1  2
+ #define IWL_EXT_CHANNEL_OFFSET_BELOW     3
  
- 	if (!skb) {
- 		printk(KERN_ERR "%s: failed to allocate buffer "
-@@ -1411,8 +1409,7 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 	struct ieee80211_mgmt *mgmt;
- 	u16 params;
+-#define NRG_NUM_PREV_STAT_L     20
+-#define NUM_RX_CHAINS           (3)
++#define IWL_TX_CRC_SIZE 4
++#define IWL_TX_DELIMITER_SIZE 4
  
--	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom + 1 +
--					sizeof(mgmt->u.action.u.delba));
-+	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+ #define TX_POWER_IWL_ILLEGAL_VOLTAGE -10000
  
- 	if (!skb) {
- 		printk(KERN_ERR "%s: failed to allocate buffer "
+@@ -854,6 +854,9 @@ struct iwl4965_lq_mngr {
+ #define IN_BAND_FILTER			0xFF
+ #define MIN_AVERAGE_NOISE_MAX_VALUE	0xFFFFFFFF
+ 
++#define NRG_NUM_PREV_STAT_L     20
++#define NUM_RX_CHAINS           3
++
+ enum iwl4965_false_alarm_state {
+ 	IWL_FA_TOO_MANY = 0,
+ 	IWL_FA_TOO_FEW = 1,
 -- 
 1.5.3.4
 
