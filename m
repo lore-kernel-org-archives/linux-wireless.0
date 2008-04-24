@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15104 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758488AbYDKO4g convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:9018 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755188AbYDXTCJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2008 10:56:36 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: iwlwifi integer overflow warnings
-Date: Fri, 11 Apr 2008 07:55:25 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200428A233@orsmsx416.amr.corp.intel.com> (sfid-20080411_155639_050534_B4B53F9C)
-In-Reply-To: <1207916204.13354.63.camel@johannes.berg>
-References: <Pine.SOC.4.64.0804101121160.13294@math.ut.ee> <D936D925018D154694D8A362EEB0892004289DB4@orsmsx416.amr.corp.intel.com> <1207916204.13354.63.camel@johannes.berg>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Meelis Roos" <mroos@linux.ee>, <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
+	Thu, 24 Apr 2008 15:02:09 -0400
+Received: by an-out-0708.google.com with SMTP id d31so865570and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2008 12:02:06 -0700 (PDT)
+Message-ID: <43e72e890804241202q7a8d99faj482be3803fc3bc07@mail.gmail.com> (sfid-20080424_210246_970589_CB74DB5C)
+Date: Thu, 24 Apr 2008 12:02:03 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: New URL for Linux wireless project page - wireless.kernel.org
+Cc: "Florian Manschwetus" <florianmanschwetus@gmx.de>,
+	"Alejandro Bonilla" <abonilla@linuxwireless.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, April 11, 2008 5:17 AM, Johannes Berg  wrote:
+Update your bookmarks, or packages (gentoo has one I think for
+compat-wireless), what used to be:
 
->>> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
->>> 'iwl3945_enqueue_hcmd':
->>> drivers/net/wireless/iwlwifi/iwl3945-base.c:719: warning: integer
->>> overflow in expression drivers/net/wireless/iwlwifi/iwl-3945.c: In
->>> function 'iwl3945_add_radiotap':
->>> drivers/net/wireless/iwlwifi/iwl-3945.c:326: warning: integer
->>> overflow in expression drivers/net/wireless/iwlwifi/iwl4965-base.c:
->>> In function 'iwl4965_enqueue_hcmd':
->>> drivers/net/wireless/iwlwifi/iwl4965-base.c:723: warning: integer
->>> overflow in expression drivers/net/wireless/iwlwifi/iwl-4965.c: In
->>> function 'iwl4965_add_radiotap':
->>> drivers/net/wireless/iwlwifi/iwl-4965.c:3617: warning: integer
->>> overflow in expression  
->>> 
->> 
->> (adding Johannes and John)
->> 
->> These problems have been fixed by Johannes with his patch
->> "iwlwifi:fix some warnings". If this is an issue in 2.6.25 then that
->> kernel may take this patch to address the problem.
-> 
-> That patch never was applied though and Tomas had
-> reservations. I didn't
-> have time to look at it again.
+http://linuxwireless.org
 
-I did find it in the current wireless-testing as commit
-cb08e71a7bc92a5ad518758584f077ed81d62b5c
+is now at
 
-Reinette
+http://wireless.kernel.org
+
+Johannes recently moved his server to a different provider and thus
+got a new IP. The DNS A record for linuxwireless.org hasn't been
+updated yet, hoping Alejandro will get to it eventually. We have more
+control over wireless.kernel.org so we'll use that now.
+
+  Luis
