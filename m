@@ -1,74 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55904 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49633 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbYDEJJQ (ORCPT
+	with ESMTP id S1753467AbYDZPvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2008 05:09:16 -0400
-Subject: Re: [PATCH RFT] b43: We need lots of regression testing
+	Sat, 26 Apr 2008 11:51:06 -0400
+Subject: [PATCH] mac80211: insert WDS peer after adding interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1207364787.2115.16.camel@dv> (sfid-20080405_040635_154207_9EE40F90)
-References: <200804041612.18840.mb@bu3sch.de>  <1207364787.2115.16.camel@dv>
-	 (sfid-20080405_040635_154207_9EE40F90)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Bl3fEXUUEXxyyfW3RcRv"
-Date: Sat, 05 Apr 2008 11:09:06 +0200
-Message-Id: <1207386546.3860.5.camel@johannes.berg> (sfid-20080405_100928_594801_D1A6AF3A)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 24 Apr 2008 14:18:37 +0200
+Message-Id: <1209039517.3357.75.camel@johannes.berg> (sfid-20080426_175125_007920_8CCC34E0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This reorders the open code so that WDS peer STA info entries
+are added after the corresponding interface is added to the
+driver so that driver callbacks aren't invoked out of order.
+Also make any master device startup fatal.
 
---=-Bl3fEXUUEXxyyfW3RcRv
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/main.c |   44 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 27 insertions(+), 17 deletions(-)
 
+--- everything.orig/net/mac80211/main.c	2008-04-24 13:56:39.000000000 +0200
++++ everything/net/mac80211/main.c	2008-04-24 13:57:13.000000000 +0200
+@@ -257,20 +257,6 @@ static int ieee80211_open(struct net_dev
+ 	case IEEE80211_IF_TYPE_WDS:
+ 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
+ 			return -ENOLINK;
+-
+-		/* Create STA entry for the WDS peer */
+-		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
+-				     GFP_KERNEL);
+-		if (!sta)
+-			return -ENOMEM;
+-
+-		sta->flags |= WLAN_STA_AUTHORIZED;
+-
+-		res = sta_info_insert(sta);
+-		if (res) {
+-			/* STA has been freed */
+-			return res;
+-		}
+ 		break;
+ 	case IEEE80211_IF_TYPE_VLAN:
+ 		if (!sdata->u.vlan.ap)
+@@ -337,10 +323,8 @@ static int ieee80211_open(struct net_dev
+ 		conf.type = sdata->vif.type;
+ 		conf.mac_addr = dev->dev_addr;
+ 		res = local->ops->add_interface(local_to_hw(local), &conf);
+-		if (res && !local->open_count && local->ops->stop)
+-			local->ops->stop(local_to_hw(local));
+ 		if (res)
+-			return res;
++			goto err_stop;
+ 
+ 		ieee80211_if_config(dev);
+ 		ieee80211_reset_erp_info(dev);
+@@ -353,9 +337,29 @@ static int ieee80211_open(struct net_dev
+ 			netif_carrier_on(dev);
+ 	}
+ 
++	if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
++		/* Create STA entry for the WDS peer */
++		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
++				     GFP_KERNEL);
++		if (!sta) {
++			res = -ENOMEM;
++			goto err_del_interface;
++		}
++
++		sta->flags |= WLAN_STA_AUTHORIZED;
++
++		res = sta_info_insert(sta);
++		if (res) {
++			/* STA has been freed */
++			goto err_del_interface;
++		}
++	}
++
+ 	if (local->open_count == 0) {
+ 		res = dev_open(local->mdev);
+ 		WARN_ON(res);
++		if (res)
++			goto err_del_interface;
+ 		tasklet_enable(&local->tx_pending_tasklet);
+ 		tasklet_enable(&local->tasklet);
+ 	}
+@@ -390,6 +394,12 @@ static int ieee80211_open(struct net_dev
+ 	netif_start_queue(dev);
+ 
+ 	return 0;
++ err_del_interface:
++	local->ops->remove_interface(local_to_hw(local), &conf);
++ err_stop:
++	if (!local->open_count && local->ops->stop)
++		local->ops->stop(local_to_hw(local));
++	return res;
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
 
-> Another unrelated bug (sorry, testing often finds unrelated bugs) is
-> that scanning with specific ESSID was returning non-matching APs.  I
-> mean "iwlist wlan0 scan my_essid", which would still report many
-> different ESSIDs.  It's inconvenient when the driver can sense 22 APs at
-> once :)
-
-Heh. I'm not sure what the desired behaviour is, if you do that scan
-we'll give you everything we found but will scan actively for that
-particular SSID. The man page (sigh) only says:
-
-=EF=BB=BF              This command take optional arguments, however most d=
-rivers  will
-              ignore  those.  The  option essid is used to specify a scan o=
-n a
-              specific ESSID. The option last do not trigger a scan  and  r=
-ead
-              left-over scan results.
-
-Which isn't quite clear, but seems to match what we do. Maybe iwlist
-should filter it?
-
-johannes
-
---=-Bl3fEXUUEXxyyfW3RcRv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/dBsaVg1VMiehFYAQJiKhAAubpkRnRKSWMAagr7jCdz82lvB/1HyDDD
-AcLLtj7K7Cjn3clxfvfWxoER9t1XShx2Z8ZT0dc2Au2OBFMpT1IQk8IB4iF1GEin
-U/M/bQ6MS4IUC6G2QXvqEOEP/uQIZir3yF1dguiSaBV19WOpZpyV7L2otzqqHTB0
-M5L3PqexC2Oh0WeBKQmluyx3z28s6CwgEzupUEOYTiOByMLErm1ptMiFmHxvA4np
-vavzXUM7MTaaeXKs6eyQwXHIktYlffi9qQ/x0U073MTRlOZyVPhHrwmZN5NoTMgL
-pB5RHgH7GBkreT/rmuCIFzqAHpK6FxYA2DdS/YfQPx+KCT0hCVcnwXdB6AucV3pU
-YGn+87gTs1gkHsiNQ84lqR9cIT08QYv48DfwZJRGt04wUMp51Zbpbe5Wj8KNPRx5
-OBEdxIJCJgdW2P3tng95e7FHq4fgPOV+QDWkuwOMu8IYx8twYzSlaUIlR3TzgaRy
-tYfQWKPZJ5KJm9NRkzZLU/fz3FMcHKbB0bRQJTEHZSRXOlyZDXinuPQ/2dx4fDRm
-q39VaUvH3xAa64RS3CJeZmww9bL1/0rC0GZ/rhWvJyg9lIaF/Dd2+HUaAEtcmfqS
-Xt8OxEl/Vil69SQclzyEn5fFGQSz7+7NMbqi+df5KrIlwVRj2s3EMt1vNU0fqlyg
-8uLEgmCDk+A=
-=8mez
------END PGP SIGNATURE-----
-
---=-Bl3fEXUUEXxyyfW3RcRv--
 
