@@ -1,26 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.250]:53942 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757551AbYD3I3C (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:35493 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756054AbYDXPoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 04:29:02 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so220762rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Apr 2008 01:29:01 -0700 (PDT)
-Message-ID: <911e063c0804300129j4043e889i4fb670fcb10f4963@mail.gmail.com> (sfid-20080430_102900_497654_F2179A9B)
-Date: Wed, 30 Apr 2008 10:29:01 +0200
-From: "Maxime COSTE" <frrrwww@gmail.com>
+	Thu, 24 Apr 2008 11:44:54 -0400
+Received: from t0a01.t.pppool.de ([89.55.10.1] helo=powermac.local)
+	by vs166246.vserver.de with esmtpa (Exim 4.63)
+	(envelope-from <mb@bu3sch.de>)
+	id 1Jp3cz-0007GF-Pb
+	for linux-wireless@vger.kernel.org; Thu, 24 Apr 2008 15:44:53 +0000
+From: Michael Buesch <mb@bu3sch.de>
 To: linux-wireless@vger.kernel.org
-Subject: willing to work on a configfs interface
+Subject: Re: Donation: Two Atheros cards for free
+Date: Thu, 24 Apr 2008 17:44:32 +0200
+References: <200804231932.14645.mb@bu3sch.de>
+In-Reply-To: <200804231932.14645.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804241744.32988.mb@bu3sch.de> (sfid-20080424_174553_325528_24D5CFA8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday 23 April 2008 19:32:14 Michael Buesch wrote:
+> I've got two cards with atheros chips that I don't
+> really need. So if you want to have them, I'll give them to you for free.
+> 
+> http://bu3sch.de/misc/atheros.JPG
+> It's one PC-Card and one PCI card.
 
-I'm willing to work on the linux kernel, and I thought that a configfs
-interface for the cfg80211 module would be great, I would like to know
-if someone is already working on that, and if there is any reason not
-to do it.
+Ok, I sent them to the madwifi project. That seemed to be the
+best solution to me. I'm sorry for all the other people that
+wanted to have the cards. Too bad I can't send cards to all of you. :)
 
-Maxime COSTE.
+-- 
+Greetings Michael.
