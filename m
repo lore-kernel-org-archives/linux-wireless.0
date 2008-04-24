@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43135 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbYDEA0M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 20:26:12 -0400
-Subject: Re: [PATCH 5/5] p54: update Makefile and Kconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chr <chunkeey@web.de>
-Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net
-In-Reply-To: <200804050219.32270.chunkeey@web.de>
-References: <E1Jhv2j-0006LQ-3j@debian64.daheim>
-	 <1207351939.6675.2.camel@johannes.berg>
-	 <200804050219.32270.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BbSsLmXDkT5BKHp3l4gH"
-Date: Sat, 05 Apr 2008 02:26:07 +0200
-Message-Id: <1207355167.6675.9.camel@johannes.berg> (sfid-20080405_012616_221210_0875861C)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:30954 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752563AbYDXAPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Apr 2008 20:15:10 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/16] iwlwifi driver updates
+Date: Wed, 23 Apr 2008 17:14:52 -0700
+Message-Id: <1208996108-15326-1-git-send-email-reinette.chatre@intel.com> (sfid-20080424_021602_145141_5673B029)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series continues the reorganization work on iwlwifi driver. We also
+include a few fixes.
 
---=-BbSsLmXDkT5BKHp3l4gH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[PATCH 01/16] iwlwifi: add apm init handler
+[PATCH 02/16] iwlwifi: add iwl_hw_detect function to iwl core
+[PATCH 03/16] iwlwifi: check eeprom version in pci probe time
+[PATCH 04/16] iwlwifi: handle shared memory
+[PATCH 05/16] iwlwifi: TLC modifications
+[PATCH 06/16] iwlwifi: rate scale module cleanups
+[PATCH 07/16] iwlwifi: rate scale restructure toggle_antenna functions
+[PATCH 08/16] iwlwifi: reorganize TX RX constatns
+[PATCH 09/16] iwlwifi: rs fix wrong parenthesizing in rs_get_lower_rate function
+[PATCH 10/16] iwlwifi: rate sacaling fixes
+[PATCH 11/16] iwlwifi: more RS improvements
+[PATCH 12/16] iwlwifi: clean up register names and defines
+[PATCH 13/16] iwlwifi: unify init driver flow
+[PATCH 14/16] iwlwifi: iwl-sta redundant includes clean up
+[PATCH 15/16] iwlwifi: move Flow Handlers define to iwl-fh.h
+[PATCH 16/16] iwlwifi: 3945 remove unused SCD definitions
 
+Thank you
 
-> John? can you please do the git mv?
-> I have attached a diff to make checkpatch.pl happy, so you don't have to =
-do=20
-> it. ;-)
-
-Uh, I think you need at least a small patch that modifies the
-drivers/net/wireless/{Makefile,Kconfig} as appropriate. From what I
-could see, your original patch didn't even add the wireless/p54/Kconfig
-into wireless/Kconfig so it wouldn't be useful?
-
-johannes
-
---=-BbSsLmXDkT5BKHp3l4gH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/bHHqVg1VMiehFYAQLSmRAAnuQHpTfUmkFqp5HNhSqytNrjzTOWGuuc
-GXzpU/oLEjxGHlvcNWOvYgLpvi7oSDdVbEDXjW7GtoDokj8ggLnbcZOSUAuK1tY2
-pMi8YdldbmNEPwp/sQ6GMkTzRbWBuBeuY3LtLoVdjpS63aELu767Glpg6wqJIKOB
-G1VyxIdcoKWb4dbrreZegYKVWLfWBAlYeg6w1SMElS/3JQFFVQcg1K5OReUpAOCF
-XWF/WBoH2jW/gitJ0FcYo4I77U6CTJ8MmfqRyWEGBTOmscNJZkCUHbcOrZ+p41xg
-cY2QlQtU5ny0KyRqXbA1BDDngwNn2KcvSokav7U8AeJdVD4h2F/7QZRgz024JnFR
-arwi/45tF5P0hokHiY63+O5b0Rs2yUMmBeYGyFX0dYu8XNzNi+2xAXc8ptK3Fqa3
-hjpkEfhcmcvd6QNgQm6i0qQ8ynjSuQXx49DHq8U2EnNPilD+JdOyPDFH4gmLegJ1
-qD3nEeLaEwtmAcVNCpI/5WWjG53MY830q0tQfS8BmE65vh00pCgEp4hIwbUwDhIV
-swxVZl5PM6asPcaC7L9fzQoiwPwT9Km3pJLaprVwQVQnCgwtnShj1E6f6E+hQK1C
-sVVyH+yH8T6dql6jb1ytvq5cvXtstnWES76Iy8gF/gnniF92ZiUbVQUCPLLBylxe
-KtYjej/+Omw=
-=2Xa+
------END PGP SIGNATURE-----
-
---=-BbSsLmXDkT5BKHp3l4gH--
+Reinette
 
