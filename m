@@ -1,63 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759016AbYDDOnh (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:52708 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbYDXSJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 10:43:37 -0400
-Subject: Re: mac80211: ieee80211_ops.bss_info_changed question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <D936D925018D154694D8A362EEB08920041CC3C6@orsmsx416.amr.corp.intel.com>
-References: <D936D925018D154694D8A362EEB08920041CC3C6@orsmsx416.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+Nq8rCGLP3nkmfwhOun9"
-Date: Fri, 04 Apr 2008 16:43:25 +0200
-Message-Id: <1207320205.19189.25.camel@johannes.berg> (sfid-20080404_154409_934891_129A1631)
-Mime-Version: 1.0
+	Thu, 24 Apr 2008 14:09:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable 4/4] b43: Workaround DMA quirks
+Date: Thu, 24 Apr 2008 20:06:11 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200804242006.12088.mb@bu3sch.de> (sfid-20080424_200947_105861_5378F5D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some mainboards/CPUs don't allow DMA masks bigger than a certain limit.
+Some VIA crap^h^h^h^hdevices have an upper limit of 0xFFFFFFFF. So in this
+case a 64-bit b43 device would always fail to acquire the mask.
+Implement a workaround to fallback to lower DMA mask, as we can always
+also support a lower mask.
 
---=-+Nq8rCGLP3nkmfwhOun9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch is in wireless-testing.git, commit
+91725545159f81f1c9dc738dfc329199583f649a
 
-Reinette,
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> In the comments about bss_info_changed it is said that the callback has
-> to be atomic. I was looking at it and could only find that it is called
-> either from the workqueue or an ioctl. It thus seems that we may be able
-> to sleep in there. I likely missed the spot where it needs to be atomic
-> ... could you please direct me to it?
 
-I think you may be right, I can't find any spots either. I was likely
-mislead when writing that by the fact that much of the code in
-ieee80211_sta.c uses GFP_ATOMIC while it actually runs from a workqueue,
-which is actually confusing me still.
-
-johannes
-
---=-+Nq8rCGLP3nkmfwhOun9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/Y+jKVg1VMiehFYAQJKuxAArMapINowUhCg1vlMjHRQ8Xb96wBALGEA
-54TpV8BY1o/WcXyme7hqh1ZuPee0afNDBiXj3vhi4gVaSWMkzonCpS9YniB4B8Zn
-dI6TCOVV8XHdXEFzR8yX3/DKkYJurasezils3E6bwMXOFoL5z+OeVPg2FZh9tM7k
-o0StRlFIJVZXLzun0Isz+tC0lBIxhoz7Pw+V0Dz0vQmOpHTH5tV18LnP06gLeewA
-46AEzjJoKzONCjgK+pAdaNikMMRAu3VeUM4gsh/2lWmTQHqnltdMGeCaT2dpDtBg
-H0+gJ9+ymUGmKcdEhiuK0aYiVQIPs/k5IKrKDSUVjHq9dNDjrZlqA07VFqz4bkKq
-CtrK5Fyaa13ccf0tmhD4zfT+6azg/7ytX8vKpQH5aONlyfTBFF4g8G/vlhaGIgPY
-3u3TqW/qsQJAuQ0rP+AJNgn+lvDTiLkIyswkQBcml4i8fjH4aV+kIH12blYkEUbs
-0xTO/Knr5ULgSzFSIApRqyaCB+BTnabqzhZKCZwZNcUmJGIbtqQC3I7rXhZKb8Ah
-GPU0KGtYeGw+EaAF43clWfqVWVNoeLeqOymVvJ1OgZGqlUMFM5X3k6BwR4mgEu4X
-etG11xc9yR+zjZQlJXZIJIG3AaUYNQhXRHHfBKg2aO0Ft2/Liv9WxpBCcywgwoEK
-iNzCjdVgF2A=
-=6DN1
------END PGP SIGNATURE-----
-
---=-+Nq8rCGLP3nkmfwhOun9--
-
+Index: linux-2.6.25/drivers/net/wireless/b43/dma.c
+===================================================================
+--- linux-2.6.25.orig/drivers/net/wireless/b43/dma.c	2008-04-19 18:29:16.000000000 +0200
++++ linux-2.6.25/drivers/net/wireless/b43/dma.c	2008-04-23 18:35:33.000000000 +0200
+@@ -819,12 +819,24 @@ static u64 supported_dma_mask(struct b43
+ 	if (tmp & B43_DMA32_TXADDREXT_MASK)
+ 		return DMA_32BIT_MASK;
+ 
+ 	return DMA_30BIT_MASK;
+ }
+ 
++static enum b43_dmatype dma_mask_to_engine_type(u64 dmamask)
++{
++	if (dmamask == DMA_30BIT_MASK)
++		return B43_DMA_30BIT;
++	if (dmamask == DMA_32BIT_MASK)
++		return B43_DMA_32BIT;
++	if (dmamask == DMA_64BIT_MASK)
++		return B43_DMA_64BIT;
++	B43_WARN_ON(1);
++	return B43_DMA_30BIT;
++}
++
+ /* Main initialization function. */
+ static
+ struct b43_dmaring *b43_setup_dmaring(struct b43_wldev *dev,
+ 				      int controller_index,
+ 				      int for_tx,
+ 				      enum b43_dmatype type)
+@@ -979,42 +991,61 @@ void b43_dma_free(struct b43_wldev *dev)
+ 	b43_destroy_dmaring(dma->tx_ring1);
+ 	dma->tx_ring1 = NULL;
+ 	b43_destroy_dmaring(dma->tx_ring0);
+ 	dma->tx_ring0 = NULL;
+ }
+ 
++static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
++{
++	u64 orig_mask = mask;
++	bool fallback = 0;
++	int err;
++
++	/* Try to set the DMA mask. If it fails, try falling back to a
++	 * lower mask, as we can always also support a lower one. */
++	while (1) {
++		err = ssb_dma_set_mask(dev->dev, mask);
++		if (!err)
++			break;
++		if (mask == DMA_64BIT_MASK) {
++			mask = DMA_32BIT_MASK;
++			fallback = 1;
++			continue;
++		}
++		if (mask == DMA_32BIT_MASK) {
++			mask = DMA_30BIT_MASK;
++			fallback = 1;
++			continue;
++		}
++		b43err(dev->wl, "The machine/kernel does not support "
++		       "the required %u-bit DMA mask\n",
++		       (unsigned int)dma_mask_to_engine_type(orig_mask));
++		return -EOPNOTSUPP;
++	}
++	if (fallback) {
++		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
++			(unsigned int)dma_mask_to_engine_type(orig_mask),
++			(unsigned int)dma_mask_to_engine_type(mask));
++	}
++
++	return 0;
++}
++
+ int b43_dma_init(struct b43_wldev *dev)
+ {
+ 	struct b43_dma *dma = &dev->dma;
+ 	struct b43_dmaring *ring;
+ 	int err;
+ 	u64 dmamask;
+ 	enum b43_dmatype type;
+ 
+ 	dmamask = supported_dma_mask(dev);
+-	switch (dmamask) {
+-	default:
+-		B43_WARN_ON(1);
+-	case DMA_30BIT_MASK:
+-		type = B43_DMA_30BIT;
+-		break;
+-	case DMA_32BIT_MASK:
+-		type = B43_DMA_32BIT;
+-		break;
+-	case DMA_64BIT_MASK:
+-		type = B43_DMA_64BIT;
+-		break;
+-	}
+-	err = ssb_dma_set_mask(dev->dev, dmamask);
+-	if (err) {
+-		b43err(dev->wl, "The machine/kernel does not support "
+-		       "the required DMA mask (0x%08X%08X)\n",
+-		       (unsigned int)((dmamask & 0xFFFFFFFF00000000ULL) >> 32),
+-		       (unsigned int)(dmamask & 0x00000000FFFFFFFFULL));
+-		return -EOPNOTSUPP;
+-	}
++	type = dma_mask_to_engine_type(dmamask);
++	err = b43_dma_set_mask(dev, dmamask);
++	if (err)
++		return err;
+ 
+ 	err = -ENOMEM;
+ 	/* setup TX DMA channels. */
+ 	ring = b43_setup_dmaring(dev, 0, 1, type);
+ 	if (!ring)
+ 		goto out;
