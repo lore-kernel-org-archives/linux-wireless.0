@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:53927 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237AbYDNVFD (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.229]:1931 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298AbYDXJNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2008 17:05:03 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so1702353fgb.17
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2008 14:04:59 -0700 (PDT)
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: mac80211 hardware encryption
-Date: Mon, 14 Apr 2008 23:07:48 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <200804051931.58895.IvDoorn@gmail.com> <200804141827.50991.IvDoorn@gmail.com> <1ba2fa240804141139ua5f6f26k6920001ceb59443e@mail.gmail.com>
-In-Reply-To: <1ba2fa240804141139ua5f6f26k6920001ceb59443e@mail.gmail.com>
+	Thu, 24 Apr 2008 05:13:36 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2601890wxd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2008 02:13:35 -0700 (PDT)
+Message-ID: <1ba2fa240804240213p77f0b96do4da6a2504fac1c65@mail.gmail.com> (sfid-20080424_111435_289439_30859A7D)
+Date: Thu, 24 Apr 2008 12:13:34 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
+Subject: Re: iwl4965 regression since 2.6.24
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <20080423233904.GD14412@ics.muni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200804142307.48550.IvDoorn@gmail.com> (sfid-20080414_220655_459325_212C3ADC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
+References: <20080423124105.GA4783@ics.muni.cz>
+	 <D936D925018D154694D8A362EEB0892004415BC8@orsmsx416.amr.corp.intel.com>
+	 <20080423233904.GD14412@ics.muni.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 April 2008, Tomas Winkler wrote:
-> On Mon, Apr 14, 2008 at 7:27 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > Hi,
-> >
-> > I've implemented the steps for hardware encryption
-> > including the part where the IV/EIV is being moved around.
-> >
-> > I now have a different problem, the hw_key_idx is u8,
-> > so is very limited to what can be stored in it. I am trying
-> > to find a solution for the following problem without increasing
-> > the size of hw_key_idx since it is also used in the ieee80211_tx_control
-> > structure which should remain as small as possible to fix in skb->cb.
-> >
-> > The problem is as follows:
-> > rt61pci, rt73usb, rt2800pci and rt2800usb support both shared keys
-> > as well as pairwise keys. When the "address" argument of set_key()
-> > is a valid MAC address, then the key is considered to be pairwise,
-> > otherwise it is a shared key.
-> >
-> > rt61pci and rt73usb supports:
-> > shared keys: 16 (4 per allowed virtual interface)
-> > pairwise keys: 64 (16 per allowed virtual interface)
-> >
-> > rt2800pci and rt2800usb supports:
-> > shared keys: 32 (4 per allowed virtual interface)
-> > pairwise keys: 256 (32 per allowed virtual interface)
-> >
-> > This means that the hw_key_idx with rt2800 hardware is already
-> > full when all keys are being supported. I am thinking of adding a flag
-> > to the key structure and ieee80211_tx_control structure to indicate
-> > if the key is shared or pairwise. This will safe 1 bit that otherwise has
-> > to be reserved from the hw_key_idx.
-> > Do you agree with such a flag addition, or should the driver not care
-> > about pairwise vs. shared.
-> >
-> > But now the fun part begins, the hardware needs the ieee80211_key_alg value
-> > for encryption (don't ask why, the algorithm is also stored in the register
-> > so it should be easy for the hardware to look it up directly).
-> > What should be the best way to obtain this algorithm, should a callback
-> > function be added, or should the driver keep a list in memory for all
-> > added keys (which would be memory duplication since mac80211 also
-> > has it in memory).
-> >
-> > Thanks,
-> >
-> >
-> Not sure what was intention for hw_key_idx but currently there are assignment
-> from key->conf.keyidx to hw_key_idx and visa versa.  keyidx is used
-> for 802.11 key index [1..4]
-> So it's quit risky to use it for something else
-
-That souds like a bug in mac80211 then. hw_key_idx is for internal use for the driver,
-and mac80211 should never expect the driver to set it to a particular value.
-Otherwise drivers won't be able to differentiate between keys for particular interfaces,
-or pairwise keys, which should be supported since mac80211 passes the address argument
-for a reason ;)
-
-Ivo
+MjAwOC80LzI0IEx1a2FzIEhlanRtYW5layA8eGhlanRtYW5AaWNzLm11bmkuY3o+Ogo+IE9uIFdl
+ZCwgQXByIDIzLCAyMDA4IGF0IDAyOjI5OjE0UE0gLTA3MDAsIENoYXRyZSwgUmVpbmV0dGUgd3Jv
+dGU6Cj4gID4gQ291bGQgeW91IHBsZWFzZSBzZW5kIHVzIHNvbWUgbG9ncyB0aGF0IGNhbiBoZWxw
+IHVzIGRlYnVnIHRoaXMgcHJvYmxlbT8KPiAgPiBQbGVhc2UgbG9hZCB0aGUgZHJpdmVyIHdpdGgg
+ZGVidWdnaW5nIChtb2Rwcm9iZSBpd2w0OTY1IGRlYnVnPTB4NDNmZmIpCj4gID4gdG8gZ2V0IGRl
+dGFpbGVkIGxvZ3MgYW5kIGFkZCBhIGRldGFpbGVkIGRlc2NyaXB0aW9uIGFib3V0IHdoYXQgeW91
+IGFyZQo+ICA+IHRyeWluZyB0byBkbyB3aXRoIHRoZSBkcml2ZXIgYXMgdGhlIGxvZ3MgYXJlIGNy
+ZWF0ZWQuIEFsc28sIHBsZWFzZQo+ICA+IGNvbnNpZGVyIGZpbGluZyBhIGJ1ZyBhdCBodHRwOi8v
+d3d3LmludGVsbGludXh3aXJlbGVzcy5vcmcvYnVnemlsbGEvCj4gID4gd2l0aCB0aGVzZSBsb2dz
+IGF0dGFjaGVkLgo+Cj4gIGRvbmUgYXQ6Cj4gIGh0dHA6Ly93d3cuaW50ZWxsaW51eHdpcmVsZXNz
+Lm9yZy9idWd6aWxsYS9zaG93X2J1Zy5jZ2k/aWQ9MTY1OQo+Cj4gIC0tCj4gIEx1a+G5IEhlanRt
+4W5lawo+ICAtLQo+ICBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
+ZSAidW5zdWJzY3JpYmUgbGludXgtd2lyZWxlc3MiIGluCj4KClRoYW5rcwpTaW5jZSB3ZSBtb3Zl
+ZCBhc3NvY2lhdGlvbiBwcm9jZXNzIG91dCBvZiB0aGUgZHJpdmVyIGFuZCByZWxheWluZyBvbgpt
+YWM4MDIxMSBhc3NvY2lhdGlvbiwgaXQgbG9va3MKbGlrZSBkaXNhc3NvY2lhdGlvbiBpcyBub3Qg
+aGFuZGxlZCBwcm9wZXJseSBhbmQgcHJldmlvdXMgY29uZmlndXJhdGlvbgppcyBub3QgY2xlYXJl
+ZCBjb3JyZWN0bHkuICBQcm9iYWJseSBpbiBib3RoIGxldmVscwptYWMgYW5kIHRoZSBkcml2ZXIu
+CkludmVzdGlnYXRpbmcuLi4uCgpUaGFua3MKVG9tYXMKCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
+IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiAgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAg
+aHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4K
