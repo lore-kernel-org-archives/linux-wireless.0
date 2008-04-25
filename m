@@ -1,485 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:46336 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758974AbYDAVju (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:50721 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757866AbYDYOgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 17:39:50 -0400
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][PATCH 2/4] p54: p54pci updates
-Cc: Michael Wu <flamingice@sourmilk.net>
+	Fri, 25 Apr 2008 10:36:40 -0400
+Date: Fri, 25 Apr 2008 16:37:20 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: w35und: remove warnings
+Message-ID: <20080425143720.GB30033@elf.ucw.cz> (sfid-20080425_163707_808146_21E32A69)
 MIME-Version: 1.0
-Date: Tue, 1 Apr 2008 23:39:46 +0200
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_juq8Hxi0FJHE88h"
-Message-Id: <200804012339.47171.chunkeey@web.de> (sfid-20080401_223953_851020_E50C6072)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_juq8Hxi0FJHE88h
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-This patch puts the rx-code into a tasklet and enables
-the ring-buffers for control/management frames...
+Remove some warnings.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+commit b8ad3cb3e88202aea88c7fca3d4adfd1a0940808
+tree eddd540a2b5779a95d05d6ad0ed1c2185d075631
+parent dde5f03291e3dd8cb1f958134c57cfcd406ab748
+author Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 16:35:36 +0200
+committer Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 16:35:36 +0200
 
---Boundary-00=_juq8Hxi0FJHE88h
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="p54-tasklets-v3.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-tasklets-v3.diff"
+ .../net/wireless/winbond/winbondport/linux/wbusb.c |    4 +---
+ drivers/net/wireless/winbond/winbondport/mds.c     |    8 --------
+ drivers/net/wireless/winbond/winbondport/wbhal.c   |    4 ----
+ drivers/net/wireless/winbond/winbondport/wblinux.c |    2 --
+ 4 files changed, 1 insertions(+), 17 deletions(-)
 
-diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
---- a/drivers/net/wireless/p54common.c	2008-04-01 22:18:08.000000000 +0200
-+++ b/drivers/net/wireless/p54common.c	2008-04-01 22:30:05.000000000 +0200
-@@ -3,7 +3,7 @@
-  * Common code for mac80211 Prism54 drivers
-  *
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-- * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-+ * Copyright (c) 2007, 2008, Christian Lamparter <chunkeey@web.de>
-  *
-  * Based on the islsm (softmac prism54) driver, which is:
-  * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-@@ -66,7 +66,6 @@ static struct ieee80211_supported_band b
- 	.n_bitrates = ARRAY_SIZE(p54_rates),
- };
- 
--
- void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+diff --git a/drivers/net/wireless/winbond/winbondport/linux/wbusb.c b/drivers/net/wireless/winbond/winbondport/linux/wbusb.c
+index d883873..8c9451a 100644
+--- a/drivers/net/wireless/winbond/winbondport/linux/wbusb.c
++++ b/drivers/net/wireless/winbond/winbondport/linux/wbusb.c
+@@ -78,7 +78,6 @@ static void wbsoft_configure_filter(stru
+ 				     unsigned int *total_flags,
+ 				     int mc_count, struct dev_mc_list *mclist)
  {
- 	struct p54_common *priv = dev->priv;
-@@ -388,12 +387,15 @@ static void p54_rx_frame_sent(struct iee
- 	struct p54_common *priv = dev->priv;
- 	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
- 	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
--	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
-+	struct sk_buff *entry;
-+	unsigned long flags;
- 	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
- 	struct memrecord *range = NULL;
- 	u32 freed = 0;
- 	u32 last_addr = priv->rx_start;
+-	static const u8 bcast[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ 	unsigned int bit_nr, new_flags;
+ 	u32 mc_filter[2];
+ 	int i;
+@@ -129,9 +128,8 @@ static int wbsoft_start(struct ieee80211
  
-+	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-+	entry = (struct sk_buff *) priv->tx_queue.next;
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
- 		range = (struct memrecord *)&entry->cb;
- 		if (range->start_addr == addr) {
-@@ -409,9 +411,11 @@ static void p54_rx_frame_sent(struct iee
- 
- 			last_addr = range->end_addr;
- 			__skb_unlink(entry, &priv->tx_queue);
-+			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-+
- 			if (!range->control) {
- 				kfree_skb(entry);
--				break;
-+				goto out;
- 			}
- 			memset(&status, 0, sizeof(status));
- 			memcpy(&status.control, range->control,
-@@ -434,12 +438,14 @@ static void p54_rx_frame_sent(struct iee
- 			status.ack_signal = le16_to_cpu(payload->ack_rssi);
- 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
- 			ieee80211_tx_status_irqsafe(dev, entry, &status);
--			break;
-+			goto out;
- 		} else
- 			last_addr = range->end_addr;
- 		entry = entry->next;
- 	}
- 
-+	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-+out:
- 	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
- 	    sizeof(struct p54_control_hdr))
- 		p54_wake_free_queues(dev);
-@@ -610,7 +616,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	txhdr->magic4 = 0;
- 	txhdr->antenna = (control->antenna_sel_tx == 0) ?
- 		2 : control->antenna_sel_tx - 1;
--	txhdr->output_power = 0x7f; // HW Maximum
-+	txhdr->output_power = 0x7f;
- 	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
- 		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
- 	if (padding)
-diff -Nurp a/drivers/net/wireless/p54common.h b/drivers/net/wireless/p54common.h
---- a/drivers/net/wireless/p54common.h	2008-04-01 22:21:49.000000000 +0200
-+++ b/drivers/net/wireless/p54common.h	2008-04-01 22:30:14.000000000 +0200
-@@ -5,7 +5,7 @@
-  * Common code specific definitions for mac80211 Prism54 drivers
-  *
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-- * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-+ * Copyright (c) 2007, 2008, Christian Lamparter <chunkeey@web.de>
-  *
-  * Based on the islsm (softmac prism54) driver, which is:
-  * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-diff -Nurp a/drivers/net/wireless/p54pci.c b/drivers/net/wireless/p54pci.c
---- a/drivers/net/wireless/p54pci.c	2008-04-01 22:22:38.000000000 +0200
-+++ b/drivers/net/wireless/p54pci.c	2008-04-01 22:27:45.000000000 +0200
-@@ -3,6 +3,7 @@
-  * Linux device driver for PCI based Prism54
-  *
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright (c) 2008, Christian Lamparter <chunkeey@web.de>
-  *
-  * Based on the islsm (softmac prism54) driver, which is:
-  * Copyright 2004-2006 Jean-Baptiste Note <jean-baptiste.note@m4x.org>, et al.
-@@ -237,20 +238,22 @@ static int p54p_read_eeprom(struct ieee8
- 	return err;
- }
- 
--static void p54p_refill_rx_ring(struct ieee80211_hw *dev)
-+static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
-+	int ring_index, struct p54p_desc *ring, u32 ring_limit,
-+	struct sk_buff **rx_buf)
+ static int wbsoft_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
  {
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
--	u32 limit, host_idx, idx;
-+	u32 limit, idx, i;
+-	printk("wbsoft_config called\n");
+-
+ 	ChanInfo ch;
++	printk("wbsoft_config called\n");
  
--	host_idx = le32_to_cpu(ring_control->host_idx[0]);
--	limit = host_idx;
--	limit -= le32_to_cpu(ring_control->device_idx[0]);
--	limit = ARRAY_SIZE(ring_control->rx_data) - limit;
-+	idx = le32_to_cpu(ring_control->host_idx[ring_index]);
-+	limit = idx;
-+	limit -= le32_to_cpu(ring_control->device_idx[ring_index]);
-+	limit = ring_limit - limit;
+ 	ch.band = 1;
+ 	ch.ChanNo = 1;	/* Should use channel_num, or something, as that is already pre-translated */
+diff --git a/drivers/net/wireless/winbond/winbondport/mds.c b/drivers/net/wireless/winbond/winbondport/mds.c
+index 743a2f2..66def9b 100644
+--- a/drivers/net/wireless/winbond/winbondport/mds.c
++++ b/drivers/net/wireless/winbond/winbondport/mds.c
+@@ -219,19 +219,12 @@ Mds_SendComplete(PADAPTER Adapter, PT02_
+ {
+ 	PMDS	pMds = &Adapter->Mds;
+ 	phw_data_t	pHwData = &Adapter->sHwData;
+-	PUCHAR	pTxBuffer;
+ 	u8	PacketId = (u8)pT02->T02_Tx_PktID;
+ 	unsigned char	SendOK = TRUE;
+ 	u8	RetryCount, TxRate;
+-	u16	wIndex, wReasonCode;
+-
  
--	idx = host_idx % ARRAY_SIZE(ring_control->rx_data);
-+	i = idx % ring_limit;
- 	while (limit-- > 1) {
--		struct p54p_desc *desc = &ring_control->rx_data[idx];
-+		struct p54p_desc *desc = &ring[i];
+ 	if (pT02->T02_IgnoreResult) // Don't care the result
+ 		return;
+-    #ifdef _PE_TX_DUMP_
+-	WBDEBUG(("###  Tx complete, PacketId =%x, pT02->T02_Tx_PktID =%x\n",
+-							PacketId, pT02->T02_Tx_PktID));
+-    #endif	
+ 	if (pT02->T02_IsLastMpdu) {
+ 		//TODO: DTO -- get the retry count and fragment count
+ 		// Tx rate
+@@ -300,7 +293,6 @@ Mds_HeaderCopy(PADAPTER Adapter, PDESCRI
+ {
+ 	PMDS	pMds = &Adapter->Mds;
+ 	PUCHAR	src_buffer = pDes->buffer_address[0];//931130.5.g
+-	PUCHAR	buffer;
+ 	PT00_DESCRIPTOR	pT00;
+ 	PT01_DESCRIPTOR	pT01;
+ 	u16	stmp;
+diff --git a/drivers/net/wireless/winbond/winbondport/wbhal.c b/drivers/net/wireless/winbond/winbondport/wbhal.c
+index 6cdc162..1cdd10c 100644
+--- a/drivers/net/wireless/winbond/winbondport/wbhal.c
++++ b/drivers/net/wireless/winbond/winbondport/wbhal.c
+@@ -211,8 +211,6 @@ void hal_set_current_channel_ex(  phw_da
+ //---------------------------------------------------------------------------------------------------
+ void hal_set_current_channel(  phw_data_t pHwData,  ChanInfo channel )
+ {
+-	PADAPTER	Adapter = pHwData->Adapter;
+-
+ 	hal_set_current_channel_ex( pHwData, channel );
+ }
+ //---------------------------------------------------------------------------------------------------
+@@ -867,8 +865,6 @@ void hal_rate_change(  phw_data_t pHwDat
  
- 		if (!desc->host_addr) {
- 			struct sk_buff *skb;
-@@ -267,16 +270,107 @@ static void p54p_refill_rx_ring(struct i
- 			desc->device_addr = 0;	// FIXME: necessary?
- 			desc->len = cpu_to_le16(MAX_RX_SIZE);
- 			desc->flags = 0;
--			priv->rx_buf[idx] = skb;
-+			rx_buf[i] = skb;
- 		}
- 
-+		i++;
- 		idx++;
--		host_idx++;
--		idx %= ARRAY_SIZE(ring_control->rx_data);
-+		i %= ring_limit;
- 	}
- 
- 	wmb();
--	ring_control->host_idx[0] = cpu_to_le32(host_idx);
-+	ring_control->host_idx[ring_index] = cpu_to_le32(idx);
-+}
-+
-+static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
-+	int ring_index, struct p54p_desc *ring, u32 ring_limit,
-+	struct sk_buff **rx_buf)
-+{
-+	struct p54p_priv *priv = dev->priv;
-+	struct p54p_ring_control *ring_control = priv->ring_control;
-+	struct p54p_desc *desc;
-+	u32 idx, i;
-+
-+	i = (*index) % ring_limit;
-+	(*index) = idx = le32_to_cpu(ring_control->device_idx[ring_index]);
-+	idx %= ring_limit;
-+	while (i != idx) {
-+		u16 len;
-+		struct sk_buff *skb;
-+		desc = &ring[i];
-+		len = le16_to_cpu(desc->len);
-+		skb = rx_buf[i];
-+
-+		skb_put(skb, len);
-+
-+		if (p54_rx(dev, skb)) {
-+			pci_unmap_single(priv->pdev,
-+					 le32_to_cpu(desc->host_addr),
-+					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+			/* TODO: refill queue here */
-+			rx_buf[i] = NULL;
-+			desc->host_addr = 0;
-+		} else {
-+			skb_trim(skb, 0);
-+			desc->len = cpu_to_le16(MAX_RX_SIZE);
-+		}
-+
-+		i++;
-+		i %= ring_limit;
-+	}
-+
-+	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
-+}
-+
-+/* caller must hold priv->lock */
-+static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
-+	int ring_index, struct p54p_desc *ring, u32 ring_limit,
-+	void **tx_buf)
-+{
-+	struct p54p_priv *priv = dev->priv;
-+	struct p54p_ring_control *ring_control = priv->ring_control;
-+	struct p54p_desc *desc;
-+	u32 idx, i;
-+
-+	i = (*index) % ring_limit;
-+	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
-+	idx %= ring_limit;
-+
-+	while (i != idx) {
-+		desc = &ring[i];
-+		if (tx_buf[i]) {
-+			kfree(tx_buf[i]);
-+			tx_buf[i] = NULL;
-+		}
-+
-+		pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
-+				 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
-+
-+		desc->host_addr = 0;
-+		desc->device_addr = 0;
-+		desc->len = 0;
-+		desc->flags = 0;
-+
-+		i++;
-+		i %= ring_limit;
-+	}
-+}
-+
-+static void p54p_rx_tasklet(unsigned long dev_id)
-+{
-+	struct ieee80211_hw *dev = (struct ieee80211_hw *)dev_id;
-+	struct p54p_priv *priv = dev->priv;
-+	struct p54p_ring_control *ring_control = priv->ring_control;
-+
-+	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
-+		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
-+
-+	p54p_check_rx_ring(dev, &priv->rx_idx_data, 0, ring_control->rx_data,
-+		ARRAY_SIZE(ring_control->rx_data), priv->rx_buf_data);
-+
-+	wmb();
-+	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
-+
+ void hal_set_rf_power(phw_data_t pHwData, u8 PowerIndex)
+ {
+-	PADAPTER Adapter = pHwData->Adapter;
+-
+ 	RFSynthesizer_SetPowerIndex( pHwData, PowerIndex );
  }
  
- static irqreturn_t p54p_interrupt(int irq, void *dev_id)
-@@ -298,65 +392,18 @@ static irqreturn_t p54p_interrupt(int ir
- 	reg &= P54P_READ(int_enable);
- 
- 	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE)) {
--		struct p54p_desc *desc;
--		u32 idx, i;
--		i = priv->tx_idx;
--		i %= ARRAY_SIZE(ring_control->tx_data);
--		priv->tx_idx = idx = le32_to_cpu(ring_control->device_idx[1]);
--		idx %= ARRAY_SIZE(ring_control->tx_data);
+diff --git a/drivers/net/wireless/winbond/winbondport/wblinux.c b/drivers/net/wireless/winbond/winbondport/wblinux.c
+index fd07130..d486508 100644
+--- a/drivers/net/wireless/winbond/winbondport/wblinux.c
++++ b/drivers/net/wireless/winbond/winbondport/wblinux.c
+@@ -79,8 +79,6 @@ WBLINUX_GetNextPacketCompleted(PADAPTER 
+ void
+ WBLINUX_Destroy(PADAPTER Adapter)
+ {
+-	PWBLINUX pWbLinux = &Adapter->WbLinux;
 -
--		while (i != idx) {
--			desc = &ring_control->tx_data[i];
--			if (priv->tx_buf[i]) {
--				kfree(priv->tx_buf[i]);
--				priv->tx_buf[i] = NULL;
--			}
-+		p54p_check_tx_ring(dev, &priv->tx_idx_mgmt,
-+				   3, ring_control->tx_mgmt,
-+				   ARRAY_SIZE(ring_control->tx_mgmt),
-+				   priv->tx_buf_mgmt);
-+
-+		p54p_check_tx_ring(dev, &priv->tx_idx_data,
-+				   1, ring_control->tx_data,
-+				   ARRAY_SIZE(ring_control->tx_data),
-+				   priv->tx_buf_data);
- 
--			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
--					 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
-+		tasklet_schedule(&priv->rx_tasklet);
- 
--			desc->host_addr = 0;
--			desc->device_addr = 0;
--			desc->len = 0;
--			desc->flags = 0;
--
--			i++;
--			i %= ARRAY_SIZE(ring_control->tx_data);
--		}
--
--		i = priv->rx_idx;
--		i %= ARRAY_SIZE(ring_control->rx_data);
--		priv->rx_idx = idx = le32_to_cpu(ring_control->device_idx[0]);
--		idx %= ARRAY_SIZE(ring_control->rx_data);
--		while (i != idx) {
--			u16 len;
--			struct sk_buff *skb;
--			desc = &ring_control->rx_data[i];
--			len = le16_to_cpu(desc->len);
--			skb = priv->rx_buf[i];
--
--			skb_put(skb, len);
--
--			if (p54_rx(dev, skb)) {
--				pci_unmap_single(priv->pdev,
--						 le32_to_cpu(desc->host_addr),
--						 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
--
--				priv->rx_buf[i] = NULL;
--				desc->host_addr = 0;
--			} else {
--				skb_trim(skb, 0);
--				desc->len = cpu_to_le16(MAX_RX_SIZE);
--			}
--
--			i++;
--			i %= ARRAY_SIZE(ring_control->rx_data);
--		}
--
--		p54p_refill_rx_ring(dev);
--
--		wmb();
--		P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
- 	} else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
- 		complete(&priv->boot_comp);
- 
-@@ -392,7 +439,7 @@ static void p54p_tx(struct ieee80211_hw 
- 	ring_control->host_idx[1] = cpu_to_le32(idx + 1);
- 
- 	if (free_on_tx)
--		priv->tx_buf[i] = data;
-+		priv->tx_buf_data[i] = data;
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-@@ -420,8 +467,14 @@ static int p54p_open(struct ieee80211_hw
- 	}
- 
- 	memset(priv->ring_control, 0, sizeof(*priv->ring_control));
--	priv->rx_idx = priv->tx_idx = 0;
--	p54p_refill_rx_ring(dev);
-+	priv->rx_idx_data = priv->tx_idx_data = 0;
-+	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
-+
-+	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
-+		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
-+
-+	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
-+		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
- 
- 	p54p_upload_firmware(dev);
- 
-@@ -465,6 +518,8 @@ static void p54p_stop(struct ieee80211_h
- 	unsigned int i;
- 	struct p54p_desc *desc;
- 
-+	tasklet_kill(&priv->rx_tasklet);
-+
- 	P54P_WRITE(int_enable, cpu_to_le32(0));
- 	P54P_READ(int_enable);
- 	udelay(10);
-@@ -473,26 +528,51 @@ static void p54p_stop(struct ieee80211_h
- 
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
- 
--	for (i = 0; i < ARRAY_SIZE(priv->rx_buf); i++) {
-+	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_data); i++) {
- 		desc = &ring_control->rx_data[i];
- 		if (desc->host_addr)
--			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
-+			pci_unmap_single(priv->pdev,
-+					 le32_to_cpu(desc->host_addr),
-+					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+		kfree_skb(priv->rx_buf_data[i]);
-+		priv->rx_buf_data[i] = NULL;
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_mgmt); i++) {
-+		desc = &ring_control->rx_mgmt[i];
-+		if (desc->host_addr)
-+			pci_unmap_single(priv->pdev,
-+					 le32_to_cpu(desc->host_addr),
- 					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
--		kfree_skb(priv->rx_buf[i]);
--		priv->rx_buf[i] = NULL;
-+		kfree_skb(priv->rx_buf_mgmt[i]);
-+		priv->rx_buf_mgmt[i] = NULL;
- 	}
- 
--	for (i = 0; i < ARRAY_SIZE(priv->tx_buf); i++) {
-+	for (i = 0; i < ARRAY_SIZE(priv->tx_buf_data); i++) {
- 		desc = &ring_control->tx_data[i];
- 		if (desc->host_addr)
--			pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
--					 le16_to_cpu(desc->len), PCI_DMA_TODEVICE);
-+			pci_unmap_single(priv->pdev,
-+					 le32_to_cpu(desc->host_addr),
-+					 le16_to_cpu(desc->len),
-+					 PCI_DMA_TODEVICE);
- 
--		kfree(priv->tx_buf[i]);
--		priv->tx_buf[i] = NULL;
-+		kfree(priv->tx_buf_data[i]);
-+		priv->tx_buf_data[i] = NULL;
- 	}
- 
--	memset(ring_control, 0, sizeof(ring_control));
-+	for (i = 0; i < ARRAY_SIZE(priv->tx_buf_mgmt); i++) {
-+		desc = &ring_control->tx_mgmt[i];
-+		if (desc->host_addr)
-+			pci_unmap_single(priv->pdev,
-+					 le32_to_cpu(desc->host_addr),
-+					 le16_to_cpu(desc->len),
-+					 PCI_DMA_TODEVICE);
-+
-+		kfree(priv->tx_buf_mgmt[i]);
-+		priv->tx_buf_mgmt[i] = NULL;
-+	}
-+
-+	memset(ring_control, 0, sizeof(*ring_control));
- }
- 
- static int __devinit p54p_probe(struct pci_dev *pdev,
-@@ -585,6 +665,7 @@ static int __devinit p54p_probe(struct p
- 	priv->common.tx = p54p_tx;
- 
- 	spin_lock_init(&priv->lock);
-+	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
- 
- 	err = ieee80211_register_hw(dev);
- 	if (err) {
-diff -Nurp a/drivers/net/wireless/p54pci.h b/drivers/net/wireless/p54pci.h
---- a/drivers/net/wireless/p54pci.h	2008-04-01 22:21:31.000000000 +0200
-+++ b/drivers/net/wireless/p54pci.h	2008-04-01 22:27:05.000000000 +0200
-@@ -92,13 +92,17 @@ struct p54p_priv {
- 	struct p54_common common;
- 	struct pci_dev *pdev;
- 	struct p54p_csr __iomem *map;
-+	struct tasklet_struct rx_tasklet;
- 
- 	spinlock_t lock;
- 	struct p54p_ring_control *ring_control;
- 	dma_addr_t ring_control_dma;
--	u32 rx_idx, tx_idx;
--	struct sk_buff *rx_buf[8];
--	void *tx_buf[32];
-+	u32 rx_idx_data, tx_idx_data;
-+	u32 rx_idx_mgmt, tx_idx_mgmt;
-+	struct sk_buff *rx_buf_data[8];
-+	struct sk_buff *rx_buf_mgmt[4];
-+	void *tx_buf_data[32];
-+	void *tx_buf_mgmt[4];
- 	struct completion boot_comp;
- };
- 
+ 	WBLINUX_stop( Adapter );
+ 	OS_SPIN_LOCK_FREE( &pWbNdis->SpinLock );
+ #ifdef _PE_USB_INI_DUMP_
 
---Boundary-00=_juq8Hxi0FJHE88h--
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
