@@ -1,2835 +1,451 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:33491 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681AbYDDXGR (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:54364 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761596AbYDYLmC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 19:06:17 -0400
-To: mcgrof@gmail.com
-Subject: [PATCH 1/5] p54: move p54common
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	flamingice@sourmilk.net, johannes@sipsolutions.net
-Message-Id: <E1Jhuz7-0000nh-Q4@debian64.daheim> (sfid-20080405_000625_411067_5D634CB4)
-From: Christian Lamparter <chunkeey@web.de>
-Date: Sat, 05 Apr 2008 01:06:13 +0200
+	Fri, 25 Apr 2008 07:42:02 -0400
+Date: Fri, 25 Apr 2008 13:42:44 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: w35und: remove unused parts of wbhal.c
+Message-ID: <20080425114244.GO14903@elf.ucw.cz> (sfid-20080425_134235_644637_E04119D4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+
+Remove unused parts of wbhal.c
+
 ---
- drivers/net/wireless/p54.h           |   77 --
- drivers/net/wireless/p54/p54.h       |   77 ++
- drivers/net/wireless/p54/p54common.c | 1051 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/p54/p54common.h |  254 ++++++++
- drivers/net/wireless/p54common.c     | 1051 -----------------------------------
- drivers/net/wireless/p54common.h     |  254 --------
- 6 files changed, 1382 insertions(+), 1382 deletions(-)
- delete mode 100644 drivers/net/wireless/p54.h
- create mode 100644 drivers/net/wireless/p54/p54.h
- create mode 100644 drivers/net/wireless/p54/p54common.c
- create mode 100644 drivers/net/wireless/p54/p54common.h
- delete mode 100644 drivers/net/wireless/p54common.c
- delete mode 100644 drivers/net/wireless/p54common.h
+commit f2b3c87836825f5c8edbd3e1f9dd23f1154d5feb
+tree 3e8c492905baf11d5526a03150b2856b31b60031
+parent c706b0c0bdb700920b7679afad37a397e9e30bf3
+author Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 13:41:41 +0200
+committer Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 13:41:41 +0200
 
-diff --git a/drivers/net/wireless/p54.h b/drivers/net/wireless/p54.h
-deleted file mode 100644
-index 06d2c67..0000000
---- a/drivers/net/wireless/p54.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--#ifndef PRISM54_H
--#define PRISM54_H
--
--/*
-- * Shared defines for all mac80211 Prism54 code
-- *
-- * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-- *
-- * Based on the islsm (softmac prism54) driver, which is:
-- * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--enum control_frame_types {
--	P54_CONTROL_TYPE_FILTER_SET = 0,
--	P54_CONTROL_TYPE_CHANNEL_CHANGE,
--	P54_CONTROL_TYPE_FREQDONE,
--	P54_CONTROL_TYPE_DCFINIT,
--	P54_CONTROL_TYPE_FREEQUEUE = 7,
--	P54_CONTROL_TYPE_TXDONE,
--	P54_CONTROL_TYPE_PING,
--	P54_CONTROL_TYPE_STAT_READBACK,
--	P54_CONTROL_TYPE_BBP,
--	P54_CONTROL_TYPE_EEPROM_READBACK,
--	P54_CONTROL_TYPE_LED
--};
--
--struct p54_control_hdr {
--	__le16 magic1;
--	__le16 len;
--	__le32 req_id;
--	__le16 type;	/* enum control_frame_types */
--	u8 retry1;
--	u8 retry2;
--	u8 data[0];
--} __attribute__ ((packed));
--
--#define EEPROM_READBACK_LEN (sizeof(struct p54_control_hdr) + 4 /* p54_eeprom_lm86 */)
--#define MAX_RX_SIZE (IEEE80211_MAX_RTS_THRESHOLD + sizeof(struct p54_control_hdr) + 20 /* length of struct p54_rx_hdr */ + 16 )
--
--#define ISL38XX_DEV_FIRMWARE_ADDR 0x20000
--
--struct p54_common {
--	u32 rx_start;
--	u32 rx_end;
--	struct sk_buff_head tx_queue;
--	void (*tx)(struct ieee80211_hw *dev, struct p54_control_hdr *data,
--		   size_t len, int free_on_tx);
--	int (*open)(struct ieee80211_hw *dev);
--	void (*stop)(struct ieee80211_hw *dev);
--	int mode;
--	u8 mac_addr[ETH_ALEN];
--	u8 bssid[ETH_ALEN];
--	struct pda_iq_autocal_entry *iq_autocal;
--	unsigned int iq_autocal_len;
--	struct pda_channel_output_limit *output_limit;
--	unsigned int output_limit_len;
--	struct pda_pa_curve_data *curve_data;
--	__le16 rxhw;
--	u8 version;
--	unsigned int tx_hdr_len;
--	void *cached_vdcf;
--	unsigned int fw_var;
--	struct ieee80211_tx_queue_stats tx_stats;
--};
--
--int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
--void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw);
--int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len);
--void p54_fill_eeprom_readback(struct p54_control_hdr *hdr);
--struct ieee80211_hw *p54_init_common(size_t priv_data_len);
--void p54_free_common(struct ieee80211_hw *dev);
--
--#endif /* PRISM54_H */
-diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
-new file mode 100644
-index 0000000..06d2c67
---- /dev/null
-+++ b/drivers/net/wireless/p54/p54.h
-@@ -0,0 +1,77 @@
-+#ifndef PRISM54_H
-+#define PRISM54_H
-+
-+/*
-+ * Shared defines for all mac80211 Prism54 code
-+ *
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ *
-+ * Based on the islsm (softmac prism54) driver, which is:
-+ * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+enum control_frame_types {
-+	P54_CONTROL_TYPE_FILTER_SET = 0,
-+	P54_CONTROL_TYPE_CHANNEL_CHANGE,
-+	P54_CONTROL_TYPE_FREQDONE,
-+	P54_CONTROL_TYPE_DCFINIT,
-+	P54_CONTROL_TYPE_FREEQUEUE = 7,
-+	P54_CONTROL_TYPE_TXDONE,
-+	P54_CONTROL_TYPE_PING,
-+	P54_CONTROL_TYPE_STAT_READBACK,
-+	P54_CONTROL_TYPE_BBP,
-+	P54_CONTROL_TYPE_EEPROM_READBACK,
-+	P54_CONTROL_TYPE_LED
-+};
-+
-+struct p54_control_hdr {
-+	__le16 magic1;
-+	__le16 len;
-+	__le32 req_id;
-+	__le16 type;	/* enum control_frame_types */
-+	u8 retry1;
-+	u8 retry2;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+#define EEPROM_READBACK_LEN (sizeof(struct p54_control_hdr) + 4 /* p54_eeprom_lm86 */)
-+#define MAX_RX_SIZE (IEEE80211_MAX_RTS_THRESHOLD + sizeof(struct p54_control_hdr) + 20 /* length of struct p54_rx_hdr */ + 16 )
-+
-+#define ISL38XX_DEV_FIRMWARE_ADDR 0x20000
-+
-+struct p54_common {
-+	u32 rx_start;
-+	u32 rx_end;
-+	struct sk_buff_head tx_queue;
-+	void (*tx)(struct ieee80211_hw *dev, struct p54_control_hdr *data,
-+		   size_t len, int free_on_tx);
-+	int (*open)(struct ieee80211_hw *dev);
-+	void (*stop)(struct ieee80211_hw *dev);
-+	int mode;
-+	u8 mac_addr[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
-+	struct pda_iq_autocal_entry *iq_autocal;
-+	unsigned int iq_autocal_len;
-+	struct pda_channel_output_limit *output_limit;
-+	unsigned int output_limit_len;
-+	struct pda_pa_curve_data *curve_data;
-+	__le16 rxhw;
-+	u8 version;
-+	unsigned int tx_hdr_len;
-+	void *cached_vdcf;
-+	unsigned int fw_var;
-+	struct ieee80211_tx_queue_stats tx_stats;
-+};
-+
-+int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
-+void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw);
-+int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len);
-+void p54_fill_eeprom_readback(struct p54_control_hdr *hdr);
-+struct ieee80211_hw *p54_init_common(size_t priv_data_len);
-+void p54_free_common(struct ieee80211_hw *dev);
-+
-+#endif /* PRISM54_H */
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-new file mode 100644
-index 0000000..63f9bad
---- /dev/null
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -0,0 +1,1051 @@
-+
-+/*
-+ * Common code for mac80211 Prism54 drivers
-+ *
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-+ *
-+ * Based on the islsm (softmac prism54) driver, which is:
-+ * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/firmware.h>
-+#include <linux/etherdevice.h>
-+
-+#include <net/mac80211.h>
-+
-+#include "p54.h"
-+#include "p54common.h"
-+
-+MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
-+MODULE_DESCRIPTION("Softmac Prism54 common code");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("prism54common");
-+
-+static struct ieee80211_rate p54_rates[] = {
-+	{ .bitrate = 10, .hw_value = 0, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 20, .hw_value = 1, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55, .hw_value = 2, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110, .hw_value = 3, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 60, .hw_value = 4, },
-+	{ .bitrate = 90, .hw_value = 5, },
-+	{ .bitrate = 120, .hw_value = 6, },
-+	{ .bitrate = 180, .hw_value = 7, },
-+	{ .bitrate = 240, .hw_value = 8, },
-+	{ .bitrate = 360, .hw_value = 9, },
-+	{ .bitrate = 480, .hw_value = 10, },
-+	{ .bitrate = 540, .hw_value = 11, },
-+};
-+
-+static struct ieee80211_channel p54_channels[] = {
-+	{ .center_freq = 2412, .hw_value = 1, },
-+	{ .center_freq = 2417, .hw_value = 2, },
-+	{ .center_freq = 2422, .hw_value = 3, },
-+	{ .center_freq = 2427, .hw_value = 4, },
-+	{ .center_freq = 2432, .hw_value = 5, },
-+	{ .center_freq = 2437, .hw_value = 6, },
-+	{ .center_freq = 2442, .hw_value = 7, },
-+	{ .center_freq = 2447, .hw_value = 8, },
-+	{ .center_freq = 2452, .hw_value = 9, },
-+	{ .center_freq = 2457, .hw_value = 10, },
-+	{ .center_freq = 2462, .hw_value = 11, },
-+	{ .center_freq = 2467, .hw_value = 12, },
-+	{ .center_freq = 2472, .hw_value = 13, },
-+	{ .center_freq = 2484, .hw_value = 14, },
-+};
-+
-+static struct ieee80211_supported_band band_2GHz = {
-+	.channels = p54_channels,
-+	.n_channels = ARRAY_SIZE(p54_channels),
-+	.bitrates = p54_rates,
-+	.n_bitrates = ARRAY_SIZE(p54_rates),
-+};
-+
-+
-+void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct bootrec_exp_if *exp_if;
-+	struct bootrec *bootrec;
-+	u32 *data = (u32 *)fw->data;
-+	u32 *end_data = (u32 *)fw->data + (fw->size >> 2);
-+	u8 *fw_version = NULL;
-+	size_t len;
-+	int i;
-+
-+	if (priv->rx_start)
-+		return;
-+
-+	while (data < end_data && *data)
-+		data++;
-+
-+	while (data < end_data && !*data)
-+		data++;
-+
-+	bootrec = (struct bootrec *) data;
-+
-+	while (bootrec->data <= end_data &&
-+	       (bootrec->data + (len = le32_to_cpu(bootrec->len))) <= end_data) {
-+		u32 code = le32_to_cpu(bootrec->code);
-+		switch (code) {
-+		case BR_CODE_COMPONENT_ID:
-+			switch (be32_to_cpu(*(__be32 *)bootrec->data)) {
-+			case FW_FMAC:
-+				printk(KERN_INFO "p54: FreeMAC firmware\n");
-+				break;
-+			case FW_LM20:
-+				printk(KERN_INFO "p54: LM20 firmware\n");
-+				break;
-+			case FW_LM86:
-+				printk(KERN_INFO "p54: LM86 firmware\n");
-+				break;
-+			case FW_LM87:
-+				printk(KERN_INFO "p54: LM87 firmware - not supported yet!\n");
-+				break;
-+			default:
-+				printk(KERN_INFO "p54: unknown firmware\n");
-+				break;
-+			}
-+			break;
-+		case BR_CODE_COMPONENT_VERSION:
-+			/* 24 bytes should be enough for all firmwares */
-+			if (strnlen((unsigned char*)bootrec->data, 24) < 24)
-+				fw_version = (unsigned char*)bootrec->data;
-+			break;
-+		case BR_CODE_DESCR:
-+			priv->rx_start = le32_to_cpu(((__le32 *)bootrec->data)[1]);
-+			/* FIXME add sanity checking */
-+			priv->rx_end = le32_to_cpu(((__le32 *)bootrec->data)[2]) - 0x3500;
-+			break;
-+		case BR_CODE_EXPOSED_IF:
-+			exp_if = (struct bootrec_exp_if *) bootrec->data;
-+			for (i = 0; i < (len * sizeof(*exp_if) / 4); i++)
-+				if (exp_if[i].if_id == cpu_to_le16(0x1a))
-+					priv->fw_var = le16_to_cpu(exp_if[i].variant);
-+			break;
-+		case BR_CODE_DEPENDENT_IF:
-+			break;
-+		case BR_CODE_END_OF_BRA:
-+		case LEGACY_BR_CODE_END_OF_BRA:
-+			end_data = NULL;
-+			break;
-+		default:
-+			break;
-+		}
-+		bootrec = (struct bootrec *)&bootrec->data[len];
-+	}
-+
-+	if (fw_version)
-+		printk(KERN_INFO "p54: FW rev %s - Softmac protocol %x.%x\n",
-+			fw_version, priv->fw_var >> 8, priv->fw_var & 0xff);
-+
-+	if (priv->fw_var >= 0x300) {
-+		/* Firmware supports QoS, use it! */
-+		priv->tx_stats.data[0].limit = 3;
-+		priv->tx_stats.data[1].limit = 4;
-+		priv->tx_stats.data[2].limit = 3;
-+		priv->tx_stats.data[3].limit = 1;
-+		dev->queues = 4;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(p54_parse_firmware);
-+
-+static int p54_convert_rev0_to_rev1(struct ieee80211_hw *dev,
-+				    struct pda_pa_curve_data *curve_data)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct pda_pa_curve_data_sample_rev1 *rev1;
-+	struct pda_pa_curve_data_sample_rev0 *rev0;
-+	size_t cd_len = sizeof(*curve_data) +
-+		(curve_data->points_per_channel*sizeof(*rev1) + 2) *
-+		 curve_data->channels;
-+	unsigned int i, j;
-+	void *source, *target;
-+
-+	priv->curve_data = kmalloc(cd_len, GFP_KERNEL);
-+	if (!priv->curve_data)
-+		return -ENOMEM;
-+
-+	memcpy(priv->curve_data, curve_data, sizeof(*curve_data));
-+	source = curve_data->data;
-+	target = priv->curve_data->data;
-+	for (i = 0; i < curve_data->channels; i++) {
-+		__le16 *freq = source;
-+		source += sizeof(__le16);
-+		*((__le16 *)target) = *freq;
-+		target += sizeof(__le16);
-+		for (j = 0; j < curve_data->points_per_channel; j++) {
-+			rev1 = target;
-+			rev0 = source;
-+
-+			rev1->rf_power = rev0->rf_power;
-+			rev1->pa_detector = rev0->pa_detector;
-+			rev1->data_64qam = rev0->pcv;
-+			/* "invent" the points for the other modulations */
-+#define SUB(x,y) (u8)((x) - (y)) > (x) ? 0 : (x) - (y)
-+			rev1->data_16qam = SUB(rev0->pcv, 12);
-+			rev1->data_qpsk  = SUB(rev1->data_16qam, 12);
-+			rev1->data_bpsk  = SUB(rev1->data_qpsk, 12);
-+			rev1->data_barker= SUB(rev1->data_bpsk, 14);
-+#undef SUB
-+			target += sizeof(*rev1);
-+			source += sizeof(*rev0);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct eeprom_pda_wrap *wrap = NULL;
-+	struct pda_entry *entry;
-+	unsigned int data_len, entry_len;
-+	void *tmp;
-+	int err;
-+	u8 *end = (u8 *)eeprom + len;
-+
-+	wrap = (struct eeprom_pda_wrap *) eeprom;
-+	entry = (void *)wrap->data + le16_to_cpu(wrap->len);
-+
-+	/* verify that at least the entry length/code fits */
-+	while ((u8 *)entry <= end - sizeof(*entry)) {
-+		entry_len = le16_to_cpu(entry->len);
-+		data_len = ((entry_len - 1) << 1);
-+
-+		/* abort if entry exceeds whole structure */
-+		if ((u8 *)entry + sizeof(*entry) + data_len > end)
-+			break;
-+
-+		switch (le16_to_cpu(entry->code)) {
-+		case PDR_MAC_ADDRESS:
-+			SET_IEEE80211_PERM_ADDR(dev, entry->data);
-+			break;
-+		case PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS:
-+			if (data_len < 2) {
-+				err = -EINVAL;
-+				goto err;
-+			}
-+
-+			if (2 + entry->data[1]*sizeof(*priv->output_limit) > data_len) {
-+				err = -EINVAL;
-+				goto err;
-+			}
-+
-+			priv->output_limit = kmalloc(entry->data[1] *
-+				sizeof(*priv->output_limit), GFP_KERNEL);
-+
-+			if (!priv->output_limit) {
-+				err = -ENOMEM;
-+				goto err;
-+			}
-+
-+			memcpy(priv->output_limit, &entry->data[2],
-+			       entry->data[1]*sizeof(*priv->output_limit));
-+			priv->output_limit_len = entry->data[1];
-+			break;
-+		case PDR_PRISM_PA_CAL_CURVE_DATA:
-+			if (data_len < sizeof(struct pda_pa_curve_data)) {
-+				err = -EINVAL;
-+				goto err;
-+			}
-+
-+			if (((struct pda_pa_curve_data *)entry->data)->cal_method_rev) {
-+				priv->curve_data = kmalloc(data_len, GFP_KERNEL);
-+				if (!priv->curve_data) {
-+					err = -ENOMEM;
-+					goto err;
-+				}
-+
-+				memcpy(priv->curve_data, entry->data, data_len);
-+			} else {
-+				err = p54_convert_rev0_to_rev1(dev, (struct pda_pa_curve_data *)entry->data);
-+				if (err)
-+					goto err;
-+			}
-+
-+			break;
-+		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
-+			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
-+			if (!priv->iq_autocal) {
-+				err = -ENOMEM;
-+				goto err;
-+			}
-+
-+			memcpy(priv->iq_autocal, entry->data, data_len);
-+			priv->iq_autocal_len = data_len / sizeof(struct pda_iq_autocal_entry);
-+			break;
-+		case PDR_INTERFACE_LIST:
-+			tmp = entry->data;
-+			while ((u8 *)tmp < entry->data + data_len) {
-+				struct bootrec_exp_if *exp_if = tmp;
-+				if (le16_to_cpu(exp_if->if_id) == 0xF)
-+					priv->rxhw = exp_if->variant & cpu_to_le16(0x07);
-+				tmp += sizeof(struct bootrec_exp_if);
-+			}
-+			break;
-+		case PDR_HARDWARE_PLATFORM_COMPONENT_ID:
-+			priv->version = *(u8 *)(entry->data + 1);
-+			break;
-+		case PDR_END:
-+			/* make it overrun */
-+			entry_len = len;
-+			break;
-+		default:
-+			printk(KERN_INFO "p54: unknown eeprom code : 0x%x\n",
-+				le16_to_cpu(entry->code));
-+			break;
-+		}
-+
-+		entry = (void *)entry + (entry_len + 1)*2;
-+	}
-+
-+	if (!priv->iq_autocal || !priv->output_limit || !priv->curve_data) {
-+		printk(KERN_ERR "p54: not all required entries found in eeprom!\n");
-+		err = -EINVAL;
-+		goto err;
-+	}
-+
-+	return 0;
-+
-+  err:
-+	if (priv->iq_autocal) {
-+		kfree(priv->iq_autocal);
-+		priv->iq_autocal = NULL;
-+	}
-+
-+	if (priv->output_limit) {
-+		kfree(priv->output_limit);
-+		priv->output_limit = NULL;
-+	}
-+
-+	if (priv->curve_data) {
-+		kfree(priv->curve_data);
-+		priv->curve_data = NULL;
-+	}
-+
-+	printk(KERN_ERR "p54: eeprom parse failed!\n");
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(p54_parse_eeprom);
-+
-+void p54_fill_eeprom_readback(struct p54_control_hdr *hdr)
-+{
-+	struct p54_eeprom_lm86 *eeprom_hdr;
-+
-+	hdr->magic1 = cpu_to_le16(0x8000);
-+	hdr->len = cpu_to_le16(sizeof(*eeprom_hdr) + 0x2000);
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_EEPROM_READBACK);
-+	hdr->retry1 = hdr->retry2 = 0;
-+	eeprom_hdr = (struct p54_eeprom_lm86 *) hdr->data;
-+	eeprom_hdr->offset = 0x0;
-+	eeprom_hdr->len = cpu_to_le16(0x2000);
-+}
-+EXPORT_SYMBOL_GPL(p54_fill_eeprom_readback);
-+
-+static void p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
-+{
-+	struct p54_rx_hdr *hdr = (struct p54_rx_hdr *) skb->data;
-+	struct ieee80211_rx_status rx_status = {0};
-+	u16 freq = le16_to_cpu(hdr->freq);
-+
-+	rx_status.ssi = hdr->rssi;
-+	/* XX correct? */
-+	rx_status.rate_idx = hdr->rate & 0xf;
-+	rx_status.freq = freq;
-+	rx_status.band = IEEE80211_BAND_2GHZ;
-+	rx_status.antenna = hdr->antenna;
-+	rx_status.mactime = le64_to_cpu(hdr->timestamp);
-+	rx_status.flag |= RX_FLAG_TSFT;
-+
-+	skb_pull(skb, sizeof(*hdr));
-+	skb_trim(skb, le16_to_cpu(hdr->len));
-+
-+	ieee80211_rx_irqsafe(dev, skb, &rx_status);
-+}
-+
-+static void inline p54_wake_free_queues(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	int i;
-+
-+	/* ieee80211_start_queues is great if all queues are really empty.
-+	 * But, what if some are full? */
-+
-+	for (i = 0; i < dev->queues; i++)
-+		if (priv->tx_stats.data[i].len < priv->tx_stats.data[i].limit)
-+			ieee80211_wake_queue(dev, i);
-+}
-+
-+static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
-+	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
-+	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
-+	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
-+	struct memrecord *range = NULL;
-+	u32 freed = 0;
-+	u32 last_addr = priv->rx_start;
-+
-+	while (entry != (struct sk_buff *)&priv->tx_queue) {
-+		range = (struct memrecord *)&entry->cb;
-+		if (range->start_addr == addr) {
-+			struct ieee80211_tx_status status;
-+			struct p54_control_hdr *entry_hdr;
-+			struct p54_tx_control_allocdata *entry_data;
-+			int pad = 0;
-+
-+			if (entry->next != (struct sk_buff *)&priv->tx_queue)
-+				freed = ((struct memrecord *)&entry->next->cb)->start_addr - last_addr;
-+			else
-+				freed = priv->rx_end - last_addr;
-+
-+			last_addr = range->end_addr;
-+			__skb_unlink(entry, &priv->tx_queue);
-+			if (!range->control) {
-+				kfree_skb(entry);
-+				break;
-+			}
-+			memset(&status, 0, sizeof(status));
-+			memcpy(&status.control, range->control,
-+			       sizeof(status.control));
-+			kfree(range->control);
-+			priv->tx_stats.data[status.control.queue].len--;
-+
-+			entry_hdr = (struct p54_control_hdr *) entry->data;
-+			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
-+			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
-+				pad = entry_data->align[0];
-+
-+			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
-+				if (!(payload->status & 0x01))
-+					status.flags |= IEEE80211_TX_STATUS_ACK;
-+				else
-+					status.excessive_retries = 1;
-+			}
-+			status.retry_count = payload->retries - 1;
-+			status.ack_signal = le16_to_cpu(payload->ack_rssi);
-+			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-+			ieee80211_tx_status_irqsafe(dev, entry, &status);
-+			break;
-+		} else
-+			last_addr = range->end_addr;
-+		entry = entry->next;
-+	}
-+
-+	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
-+	    sizeof(struct p54_control_hdr))
-+		p54_wake_free_queues(dev);
-+}
-+
-+static void p54_rx_control(struct ieee80211_hw *dev, struct sk_buff *skb)
-+{
-+	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
-+
-+	switch (le16_to_cpu(hdr->type)) {
-+	case P54_CONTROL_TYPE_TXDONE:
-+		p54_rx_frame_sent(dev, skb);
-+		break;
-+	case P54_CONTROL_TYPE_BBP:
-+		break;
-+	default:
-+		printk(KERN_DEBUG "%s: not handling 0x%02x type control frame\n",
-+		       wiphy_name(dev->wiphy), le16_to_cpu(hdr->type));
-+		break;
-+	}
-+}
-+
-+/* returns zero if skb can be reused */
-+int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
-+{
-+	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
-+	switch (type) {
-+	case 0x00:
-+	case 0x01:
-+		p54_rx_data(dev, skb);
-+		return -1;
-+	case 0x4d:
-+		/* TODO: do something better... but then again, I've never seen this happen */
-+		printk(KERN_ERR "%s: Received fault. Probably need to restart hardware now..\n",
-+		       wiphy_name(dev->wiphy));
-+		break;
-+	case 0x80:
-+		p54_rx_control(dev, skb);
-+		break;
-+	default:
-+		printk(KERN_ERR "%s: unknown frame RXed (0x%02x)\n",
-+		       wiphy_name(dev->wiphy), type);
-+		break;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(p54_rx);
-+
-+/*
-+ * So, the firmware is somewhat stupid and doesn't know what places in its
-+ * memory incoming data should go to. By poking around in the firmware, we
-+ * can find some unused memory to upload our packets to. However, data that we
-+ * want the card to TX needs to stay intact until the card has told us that
-+ * it is done with it. This function finds empty places we can upload to and
-+ * marks allocated areas as reserved if necessary. p54_rx_frame_sent frees
-+ * allocated areas.
-+ */
-+static void p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
-+			       struct p54_control_hdr *data, u32 len,
-+			       struct ieee80211_tx_control *control)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *entry = priv->tx_queue.next;
-+	struct sk_buff *target_skb = NULL;
-+	struct memrecord *range;
-+	u32 last_addr = priv->rx_start;
-+	u32 largest_hole = 0;
-+	u32 target_addr = priv->rx_start;
-+	unsigned long flags;
-+	unsigned int left;
-+	len = (len + 0x170 + 3) & ~0x3; /* 0x70 headroom, 0x100 tailroom */
-+
-+	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-+	left = skb_queue_len(&priv->tx_queue);
-+	while (left--) {
-+		u32 hole_size;
-+		range = (struct memrecord *)&entry->cb;
-+		hole_size = range->start_addr - last_addr;
-+		if (!target_skb && hole_size >= len) {
-+			target_skb = entry->prev;
-+			hole_size -= len;
-+			target_addr = last_addr;
-+		}
-+		largest_hole = max(largest_hole, hole_size);
-+		last_addr = range->end_addr;
-+		entry = entry->next;
-+	}
-+	if (!target_skb && priv->rx_end - last_addr >= len) {
-+		target_skb = priv->tx_queue.prev;
-+		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
-+		if (!skb_queue_empty(&priv->tx_queue)) {
-+			range = (struct memrecord *)&target_skb->cb;
-+			target_addr = range->end_addr;
-+		}
-+	} else
-+		largest_hole = max(largest_hole, priv->rx_end - last_addr);
-+
-+	if (skb) {
-+		range = (struct memrecord *)&skb->cb;
-+		range->start_addr = target_addr;
-+		range->end_addr = target_addr + len;
-+		range->control = control;
-+		__skb_queue_after(&priv->tx_queue, target_skb, skb);
-+		if (largest_hole < IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
-+				   sizeof(struct p54_control_hdr))
-+			ieee80211_stop_queues(dev);
-+	}
-+	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-+
-+	data->req_id = cpu_to_le32(target_addr + 0x70);
-+}
-+
-+static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
-+		  struct ieee80211_tx_control *control)
-+{
-+	struct ieee80211_tx_queue_stats_data *current_queue;
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_allocdata *txhdr;
-+	struct ieee80211_tx_control *control_copy;
-+	size_t padding, len;
-+	u8 rate;
-+
-+	current_queue = &priv->tx_stats.data[control->queue];
-+	if (unlikely(current_queue->len > current_queue->limit))
-+		return NETDEV_TX_BUSY;
-+	current_queue->len++;
-+	current_queue->count++;
-+	if (current_queue->len == current_queue->limit)
-+		ieee80211_stop_queue(dev, control->queue);
-+
-+	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
-+	len = skb->len;
-+
-+	control_copy = kmalloc(sizeof(*control), GFP_ATOMIC);
-+	if (control_copy)
-+		memcpy(control_copy, control, sizeof(*control));
-+
-+	txhdr = (struct p54_tx_control_allocdata *)
-+			skb_push(skb, sizeof(*txhdr) + padding);
-+	hdr = (struct p54_control_hdr *) skb_push(skb, sizeof(*hdr));
-+
-+	if (padding)
-+		hdr->magic1 = cpu_to_le16(0x4010);
-+	else
-+		hdr->magic1 = cpu_to_le16(0x0010);
-+	hdr->len = cpu_to_le16(len);
-+	hdr->type = (control->flags & IEEE80211_TXCTL_NO_ACK) ? 0 : cpu_to_le16(1);
-+	hdr->retry1 = hdr->retry2 = control->retry_limit;
-+	p54_assign_address(dev, skb, hdr, skb->len, control_copy);
-+
-+	memset(txhdr->wep_key, 0x0, 16);
-+	txhdr->padding = 0;
-+	txhdr->padding2 = 0;
-+
-+	/* TODO: add support for alternate retry TX rates */
-+	rate = control->tx_rate->hw_value;
-+	if (control->flags & IEEE80211_TXCTL_SHORT_PREAMBLE)
-+		rate |= 0x10;
-+	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
-+		rate |= 0x40;
-+	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
-+		rate |= 0x20;
-+	memset(txhdr->rateset, rate, 8);
-+	txhdr->wep_key_present = 0;
-+	txhdr->wep_key_len = 0;
-+	txhdr->frame_type = cpu_to_le32(control->queue + 4);
-+	txhdr->magic4 = 0;
-+	txhdr->antenna = (control->antenna_sel_tx == 0) ?
-+		2 : control->antenna_sel_tx - 1;
-+	txhdr->output_power = 0x7f; // HW Maximum
-+	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
-+		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
-+	if (padding)
-+		txhdr->align[0] = padding;
-+
-+	priv->tx(dev, hdr, skb->len, 0);
-+	return 0;
-+}
-+
-+static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
-+			  const u8 *dst, const u8 *src, u8 antenna,
-+			  u32 magic3, u32 magic8, u32 magic9)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_filter *filter;
-+
-+	hdr = kzalloc(sizeof(*hdr) + sizeof(*filter) +
-+		      priv->tx_hdr_len, GFP_ATOMIC);
-+	if (!hdr)
-+		return -ENOMEM;
-+
-+	hdr = (void *)hdr + priv->tx_hdr_len;
-+
-+	filter = (struct p54_tx_control_filter *) hdr->data;
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*filter));
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*filter), NULL);
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_FILTER_SET);
-+
-+	filter->filter_type = cpu_to_le16(filter_type);
-+	memcpy(filter->dst, dst, ETH_ALEN);
-+	if (!src)
-+		memset(filter->src, ~0, ETH_ALEN);
-+	else
-+		memcpy(filter->src, src, ETH_ALEN);
-+	filter->antenna = antenna;
-+	filter->magic3 = cpu_to_le32(magic3);
-+	filter->rx_addr = cpu_to_le32(priv->rx_end);
-+	filter->max_rx = cpu_to_le16(0x0620);	/* FIXME: for usb ver 1.. maybe */
-+	filter->rxhw = priv->rxhw;
-+	filter->magic8 = cpu_to_le16(magic8);
-+	filter->magic9 = cpu_to_le16(magic9);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*filter), 1);
-+	return 0;
-+}
-+
-+static int p54_set_freq(struct ieee80211_hw *dev, __le16 freq)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_channel *chan;
-+	unsigned int i;
-+	size_t payload_len = sizeof(*chan) + sizeof(u32)*2 +
-+			     sizeof(*chan->curve_data) *
-+			     priv->curve_data->points_per_channel;
-+	void *entry;
-+
-+	hdr = kzalloc(sizeof(*hdr) + payload_len +
-+		      priv->tx_hdr_len, GFP_KERNEL);
-+	if (!hdr)
-+		return -ENOMEM;
-+
-+	hdr = (void *)hdr + priv->tx_hdr_len;
-+
-+	chan = (struct p54_tx_control_channel *) hdr->data;
-+
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*chan));
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_CHANNEL_CHANGE);
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + payload_len, NULL);
-+
-+	chan->magic1 = cpu_to_le16(0x1);
-+	chan->magic2 = cpu_to_le16(0x0);
-+
-+	for (i = 0; i < priv->iq_autocal_len; i++) {
-+		if (priv->iq_autocal[i].freq != freq)
-+			continue;
-+
-+		memcpy(&chan->iq_autocal, &priv->iq_autocal[i],
-+		       sizeof(*priv->iq_autocal));
-+		break;
-+	}
-+	if (i == priv->iq_autocal_len)
-+		goto err;
-+
-+	for (i = 0; i < priv->output_limit_len; i++) {
-+		if (priv->output_limit[i].freq != freq)
-+			continue;
-+
-+		chan->val_barker = 0x38;
-+		chan->val_bpsk = priv->output_limit[i].val_bpsk;
-+		chan->val_qpsk = priv->output_limit[i].val_qpsk;
-+		chan->val_16qam = priv->output_limit[i].val_16qam;
-+		chan->val_64qam = priv->output_limit[i].val_64qam;
-+		break;
-+	}
-+	if (i == priv->output_limit_len)
-+		goto err;
-+
-+	chan->pa_points_per_curve = priv->curve_data->points_per_channel;
-+
-+	entry = priv->curve_data->data;
-+	for (i = 0; i < priv->curve_data->channels; i++) {
-+		if (*((__le16 *)entry) != freq) {
-+			entry += sizeof(__le16);
-+			entry += sizeof(struct pda_pa_curve_data_sample_rev1) *
-+				 chan->pa_points_per_curve;
-+			continue;
-+		}
-+
-+		entry += sizeof(__le16);
-+		memcpy(chan->curve_data, entry, sizeof(*chan->curve_data) *
-+		       chan->pa_points_per_curve);
-+		break;
-+	}
-+
-+	memcpy(hdr->data + payload_len - 4, &chan->val_bpsk, 4);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + payload_len, 1);
-+	return 0;
-+
-+ err:
-+	printk(KERN_ERR "%s: frequency change failed\n", wiphy_name(dev->wiphy));
-+	kfree(hdr);
-+	return -EINVAL;
-+}
-+
-+static int p54_set_leds(struct ieee80211_hw *dev, int mode, int link, int act)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_led *led;
-+
-+	hdr = kzalloc(sizeof(*hdr) + sizeof(*led) +
-+		      priv->tx_hdr_len, GFP_KERNEL);
-+	if (!hdr)
-+		return -ENOMEM;
-+
-+	hdr = (void *)hdr + priv->tx_hdr_len;
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*led));
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_LED);
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*led), NULL);
-+
-+	led = (struct p54_tx_control_led *) hdr->data;
-+	led->mode = cpu_to_le16(mode);
-+	led->led_permanent = cpu_to_le16(link);
-+	led->led_temporary = cpu_to_le16(act);
-+	led->duration = cpu_to_le16(1000);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*led), 1);
-+
-+	return 0;
-+}
-+
-+#define P54_SET_QUEUE(queue, ai_fs, cw_min, cw_max, _txop)	\
-+do {	 							\
-+	queue.aifs = cpu_to_le16(ai_fs);			\
-+	queue.cwmin = cpu_to_le16(cw_min);			\
-+	queue.cwmax = cpu_to_le16(cw_max);			\
-+	queue.txop = cpu_to_le16(_txop);			\
-+} while(0)
-+
-+static void p54_init_vdcf(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_vdcf *vdcf;
-+
-+	/* all USB V1 adapters need a extra headroom */
-+	hdr = (void *)priv->cached_vdcf + priv->tx_hdr_len;
-+	hdr->magic1 = cpu_to_le16(0x8001);
-+	hdr->len = cpu_to_le16(sizeof(*vdcf));
-+	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_DCFINIT);
-+	hdr->req_id = cpu_to_le32(priv->rx_start);
-+
-+	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
-+
-+	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 47);
-+	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 94);
-+	P54_SET_QUEUE(vdcf->queue[2], 0x0003, 0x000f, 0x03ff, 0);
-+	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0);
-+}
-+
-+static void p54_set_vdcf(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_control_hdr *hdr;
-+	struct p54_tx_control_vdcf *vdcf;
-+
-+	hdr = (void *)priv->cached_vdcf + priv->tx_hdr_len;
-+
-+	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*vdcf), NULL);
-+
-+	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
-+
-+	if (dev->conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
-+		vdcf->slottime = 9;
-+		vdcf->magic1 = 0x00;
-+		vdcf->magic2 = 0x10;
-+	} else {
-+		vdcf->slottime = 20;
-+		vdcf->magic1 = 0x0a;
-+		vdcf->magic2 = 0x06;
-+	}
-+
-+	/* (see prism54/isl_oid.h for further details) */
-+	vdcf->frameburst = cpu_to_le16(0);
-+
-+	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*vdcf), 0);
-+}
-+
-+static int p54_start(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	int err;
-+
-+	err = priv->open(dev);
-+	if (!err)
-+		priv->mode = IEEE80211_IF_TYPE_MNTR;
-+
-+	return err;
-+}
-+
-+static void p54_stop(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct sk_buff *skb;
-+	while ((skb = skb_dequeue(&priv->tx_queue))) {
-+		struct memrecord *range = (struct memrecord *)&skb->cb;
-+		if (range->control)
-+			kfree(range->control);
-+		kfree_skb(skb);
-+	}
-+	priv->stop(dev);
-+	priv->mode = IEEE80211_IF_TYPE_INVALID;
-+}
-+
-+static int p54_add_interface(struct ieee80211_hw *dev,
-+			     struct ieee80211_if_init_conf *conf)
-+{
-+	struct p54_common *priv = dev->priv;
-+
-+	if (priv->mode != IEEE80211_IF_TYPE_MNTR)
-+		return -EOPNOTSUPP;
-+
-+	switch (conf->type) {
-+	case IEEE80211_IF_TYPE_STA:
-+		priv->mode = conf->type;
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
-+
-+	p54_set_filter(dev, 0, priv->mac_addr, NULL, 0, 1, 0, 0xF642);
-+	p54_set_filter(dev, 0, priv->mac_addr, NULL, 1, 0, 0, 0xF642);
-+
-+	switch (conf->type) {
-+	case IEEE80211_IF_TYPE_STA:
-+		p54_set_filter(dev, 1, priv->mac_addr, NULL, 0, 0x15F, 0x1F4, 0);
-+		break;
-+	default:
-+		BUG();	/* impossible */
-+		break;
-+	}
-+
-+	p54_set_leds(dev, 1, 0, 0);
-+
-+	return 0;
-+}
-+
-+static void p54_remove_interface(struct ieee80211_hw *dev,
-+				 struct ieee80211_if_init_conf *conf)
-+{
-+	struct p54_common *priv = dev->priv;
-+	priv->mode = IEEE80211_IF_TYPE_MNTR;
-+	memset(priv->mac_addr, 0, ETH_ALEN);
-+	p54_set_filter(dev, 0, priv->mac_addr, NULL, 2, 0, 0, 0);
-+}
-+
-+static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
-+{
-+	int ret;
-+
-+	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
-+	p54_set_vdcf(dev);
-+	return ret;
-+}
-+
-+static int p54_config_interface(struct ieee80211_hw *dev,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_if_conf *conf)
-+{
-+	struct p54_common *priv = dev->priv;
-+
-+	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 0, 1, 0, 0xF642);
-+	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 2, 0, 0, 0);
-+	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
-+	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-+	return 0;
-+}
-+
-+static void p54_configure_filter(struct ieee80211_hw *dev,
-+				 unsigned int changed_flags,
-+				 unsigned int *total_flags,
-+				 int mc_count, struct dev_mc_list *mclist)
-+{
-+	struct p54_common *priv = dev->priv;
-+
-+	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
-+
-+	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
-+		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
-+			p54_set_filter(dev, 0, priv->mac_addr,
-+				       NULL, 2, 0, 0, 0);
-+		else
-+			p54_set_filter(dev, 0, priv->mac_addr,
-+				       priv->bssid, 2, 0, 0, 0);
-+	}
-+}
-+
-+static int p54_conf_tx(struct ieee80211_hw *dev, int queue,
-+		       const struct ieee80211_tx_queue_params *params)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_tx_control_vdcf *vdcf;
-+
-+	vdcf = (struct p54_tx_control_vdcf *)(((struct p54_control_hdr *)
-+		((void *)priv->cached_vdcf + priv->tx_hdr_len))->data);
-+
-+	if ((params) && !((queue < 0) || (queue > 4))) {
-+		P54_SET_QUEUE(vdcf->queue[queue], params->aifs,
-+			params->cw_min, params->cw_max, params->txop);
-+	} else
-+		return -EINVAL;
-+
-+	p54_set_vdcf(dev);
-+
-+	return 0;
-+}
-+
-+static int p54_get_stats(struct ieee80211_hw *dev,
-+			 struct ieee80211_low_level_stats *stats)
-+{
-+	/* TODO */
-+	return 0;
-+}
-+
-+static int p54_get_tx_stats(struct ieee80211_hw *dev,
-+			    struct ieee80211_tx_queue_stats *stats)
-+{
-+	struct p54_common *priv = dev->priv;
-+	unsigned int i;
-+
-+	for (i = 0; i < dev->queues; i++)
-+		memcpy(&stats->data[i], &priv->tx_stats.data[i],
-+			sizeof(stats->data[i]));
-+
-+	return 0;
-+}
-+
-+static const struct ieee80211_ops p54_ops = {
-+	.tx			= p54_tx,
-+	.start			= p54_start,
-+	.stop			= p54_stop,
-+	.add_interface		= p54_add_interface,
-+	.remove_interface	= p54_remove_interface,
-+	.config			= p54_config,
-+	.config_interface	= p54_config_interface,
-+	.configure_filter	= p54_configure_filter,
-+	.conf_tx		= p54_conf_tx,
-+	.get_stats		= p54_get_stats,
-+	.get_tx_stats		= p54_get_tx_stats
-+};
-+
-+struct ieee80211_hw *p54_init_common(size_t priv_data_len)
-+{
-+	struct ieee80211_hw *dev;
-+	struct p54_common *priv;
-+
-+	dev = ieee80211_alloc_hw(priv_data_len, &p54_ops);
-+	if (!dev)
-+		return NULL;
-+
-+	priv = dev->priv;
-+	priv->mode = IEEE80211_IF_TYPE_INVALID;
-+	skb_queue_head_init(&priv->tx_queue);
-+	dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
-+	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
-+		    IEEE80211_HW_RX_INCLUDES_FCS;
-+	dev->channel_change_time = 1000;	/* TODO: find actual value */
-+	dev->max_rssi = 127;
-+
-+	priv->tx_stats.data[0].limit = 5;
-+	dev->queues = 1;
-+
-+	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
-+				 sizeof(struct p54_tx_control_allocdata);
-+
-+        priv->cached_vdcf = kzalloc(sizeof(struct p54_tx_control_vdcf) +
-+              priv->tx_hdr_len + sizeof(struct p54_control_hdr), GFP_KERNEL);
-+
-+	if (!priv->cached_vdcf) {
-+		ieee80211_free_hw(dev);
-+		return NULL;
-+	}
-+
-+	p54_init_vdcf(dev);
-+
-+	return dev;
-+}
-+EXPORT_SYMBOL_GPL(p54_init_common);
-+
-+void p54_free_common(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	kfree(priv->iq_autocal);
-+	kfree(priv->output_limit);
-+	kfree(priv->curve_data);
-+	kfree(priv->cached_vdcf);
-+}
-+EXPORT_SYMBOL_GPL(p54_free_common);
-+
-+static int __init p54_init(void)
-+{
-+	return 0;
-+}
-+
-+static void __exit p54_exit(void)
-+{
-+}
-+
-+module_init(p54_init);
-+module_exit(p54_exit);
-diff --git a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
-new file mode 100644
-index 0000000..c15b56e
---- /dev/null
-+++ b/drivers/net/wireless/p54/p54common.h
-@@ -0,0 +1,254 @@
-+#ifndef PRISM54COMMON_H
-+#define PRISM54COMMON_H
-+
-+/*
-+ * Common code specific definitions for mac80211 Prism54 drivers
-+ *
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-+ *
-+ * Based on the islsm (softmac prism54) driver, which is:
-+ * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+struct bootrec {
-+	__le32 code;
-+	__le32 len;
-+	u32 data[0];
-+} __attribute__((packed));
-+
-+struct bootrec_exp_if {
-+	__le16 role;
-+	__le16 if_id;
-+	__le16 variant;
-+	__le16 btm_compat;
-+	__le16 top_compat;
-+} __attribute__((packed));
-+
-+#define BR_CODE_MIN			0x80000000
-+#define BR_CODE_COMPONENT_ID		0x80000001
-+#define BR_CODE_COMPONENT_VERSION	0x80000002
-+#define BR_CODE_DEPENDENT_IF		0x80000003
-+#define BR_CODE_EXPOSED_IF		0x80000004
-+#define BR_CODE_DESCR			0x80000101
-+#define BR_CODE_MAX			0x8FFFFFFF
-+#define BR_CODE_END_OF_BRA		0xFF0000FF
-+#define LEGACY_BR_CODE_END_OF_BRA	0xFFFFFFFF
-+
-+#define FW_FMAC 0x464d4143
-+#define FW_LM86 0x4c4d3836
-+#define FW_LM87 0x4c4d3837
-+#define FW_LM20 0x4c4d3230
-+
-+/* PDA defines are Copyright (C) 2005 Nokia Corporation (taken from islsm_pda.h) */
-+
-+struct pda_entry {
-+	__le16 len;	/* includes both code and data */
-+	__le16 code;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+struct eeprom_pda_wrap {
-+	__le32 magic;
-+	__le16 pad;
-+	__le16 len;
-+	__le32 arm_opcode;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+struct pda_iq_autocal_entry {
-+        __le16 freq;
-+        __le16 iq_param[4];
-+} __attribute__ ((packed));
-+
-+struct pda_channel_output_limit {
-+	__le16 freq;
-+	u8 val_bpsk;
-+	u8 val_qpsk;
-+	u8 val_16qam;
-+	u8 val_64qam;
-+	u8 rate_set_mask;
-+	u8 rate_set_size;
-+} __attribute__ ((packed));
-+
-+struct pda_pa_curve_data_sample_rev0 {
-+	u8 rf_power;
-+	u8 pa_detector;
-+	u8 pcv;
-+} __attribute__ ((packed));
-+
-+struct pda_pa_curve_data_sample_rev1 {
-+	u8 rf_power;
-+	u8 pa_detector;
-+	u8 data_barker;
-+	u8 data_bpsk;
-+	u8 data_qpsk;
-+	u8 data_16qam;
-+	u8 data_64qam;
-+	u8 padding;
-+} __attribute__ ((packed));
-+
-+struct pda_pa_curve_data {
-+	u8 cal_method_rev;
-+	u8 channels;
-+	u8 points_per_channel;
-+	u8 padding;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+/*
-+ * this defines the PDR codes used to build PDAs as defined in document
-+ * number 553155. The current implementation mirrors version 1.1 of the
-+ * document and lists only PDRs supported by the ARM platform.
-+ */
-+
-+/* common and choice range (0x0000 - 0x0fff) */
-+#define PDR_END					0x0000
-+#define PDR_MANUFACTURING_PART_NUMBER		0x0001
-+#define PDR_PDA_VERSION				0x0002
-+#define PDR_NIC_SERIAL_NUMBER			0x0003
-+
-+#define PDR_MAC_ADDRESS				0x0101
-+#define PDR_REGULATORY_DOMAIN_LIST		0x0103
-+#define PDR_TEMPERATURE_TYPE			0x0107
-+
-+#define PDR_PRISM_PCI_IDENTIFIER		0x0402
-+
-+/* ARM range (0x1000 - 0x1fff) */
-+#define PDR_COUNTRY_INFORMATION			0x1000
-+#define PDR_INTERFACE_LIST			0x1001
-+#define PDR_HARDWARE_PLATFORM_COMPONENT_ID	0x1002
-+#define PDR_OEM_NAME				0x1003
-+#define PDR_PRODUCT_NAME			0x1004
-+#define PDR_UTF8_OEM_NAME			0x1005
-+#define PDR_UTF8_PRODUCT_NAME			0x1006
-+#define PDR_COUNTRY_LIST			0x1007
-+#define PDR_DEFAULT_COUNTRY			0x1008
-+
-+#define PDR_ANTENNA_GAIN			0x1100
-+
-+#define PDR_PRISM_INDIGO_PA_CALIBRATION_DATA	0x1901
-+#define PDR_RSSI_LINEAR_APPROXIMATION		0x1902
-+#define PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS	0x1903
-+#define PDR_PRISM_PA_CAL_CURVE_DATA		0x1904
-+#define PDR_RSSI_LINEAR_APPROXIMATION_DUAL_BAND	0x1905
-+#define PDR_PRISM_ZIF_TX_IQ_CALIBRATION		0x1906
-+#define PDR_REGULATORY_POWER_LIMITS		0x1907
-+#define PDR_RSSI_LINEAR_APPROXIMATION_EXTENDED	0x1908
-+#define PDR_RADIATED_TRANSMISSION_CORRECTION	0x1909
-+#define PDR_PRISM_TX_IQ_CALIBRATION		0x190a
-+
-+/* reserved range (0x2000 - 0x7fff) */
-+
-+/* customer range (0x8000 - 0xffff) */
-+#define PDR_BASEBAND_REGISTERS			0x8000
-+#define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
-+
-+/* stored in skb->cb */
-+struct memrecord {
-+	u32 start_addr;
-+	u32 end_addr;
-+	struct ieee80211_tx_control *control;
-+};
-+
-+struct p54_eeprom_lm86 {
-+	__le16 offset;
-+	__le16 len;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+struct p54_rx_hdr {
-+	__le16 magic;
-+	__le16 len;
-+	__le16 freq;
-+	u8 antenna;
-+	u8 rate;
-+	u8 rssi;
-+	u8 quality;
-+	u16 unknown2;
-+	__le64 timestamp;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
-+struct p54_frame_sent_hdr {
-+	u8 status;
-+	u8 retries;
-+	__le16 ack_rssi;
-+	__le16 seq;
-+	u16 rate;
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_allocdata {
-+	u8 rateset[8];
-+	u16 padding;
-+	u8 wep_key_present;
-+	u8 wep_key_len;
-+	u8 wep_key[16];
-+	__le32 frame_type;
-+	u32 padding2;
-+	__le16 magic4;
-+	u8 antenna;
-+	u8 output_power;
-+	__le32 magic5;
-+	u8 align[0];
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_filter {
-+	__le16 filter_type;
-+	u8 dst[ETH_ALEN];
-+	u8 src[ETH_ALEN];
-+	u8 antenna;
-+	u8 debug;
-+	__le32 magic3;
-+	u8 rates[8];	// FIXME: what's this for?
-+	__le32 rx_addr;
-+	__le16 max_rx;
-+	__le16 rxhw;
-+	__le16 magic8;
-+	__le16 magic9;
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_channel {
-+	__le16 magic1;
-+	__le16 magic2;
-+	u8 padding1[20];
-+	struct pda_iq_autocal_entry iq_autocal;
-+	u8 pa_points_per_curve;
-+	u8 val_barker;
-+	u8 val_bpsk;
-+	u8 val_qpsk;
-+	u8 val_16qam;
-+	u8 val_64qam;
-+	struct pda_pa_curve_data_sample_rev1 curve_data[0];
-+	/* additional padding/data after curve_data */
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_led {
-+	__le16 mode;
-+	__le16 led_temporary;
-+	__le16 led_permanent;
-+	__le16 duration;
-+} __attribute__ ((packed));
-+
-+struct p54_tx_vdcf_queues {
-+	__le16 aifs;
-+	__le16 cwmin;
-+	__le16 cwmax;
-+	__le16 txop;
-+} __attribute__ ((packed));
-+
-+struct p54_tx_control_vdcf {
-+	u8 padding;
-+	u8 slottime;
-+	u8 magic1;
-+	u8 magic2;
-+	struct p54_tx_vdcf_queues queue[8];
-+	u8 pad2[4];
-+	__le16 frameburst;
-+} __attribute__ ((packed));
-+
-+#endif /* PRISM54COMMON_H */
-diff --git a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
-deleted file mode 100644
-index 63f9bad..0000000
---- a/drivers/net/wireless/p54common.c
-+++ /dev/null
-@@ -1,1051 +0,0 @@
--
--/*
-- * Common code for mac80211 Prism54 drivers
-- *
-- * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-- * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-- *
-- * Based on the islsm (softmac prism54) driver, which is:
-- * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--#include <linux/init.h>
--#include <linux/firmware.h>
--#include <linux/etherdevice.h>
--
--#include <net/mac80211.h>
--
--#include "p54.h"
--#include "p54common.h"
--
--MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
--MODULE_DESCRIPTION("Softmac Prism54 common code");
--MODULE_LICENSE("GPL");
--MODULE_ALIAS("prism54common");
--
--static struct ieee80211_rate p54_rates[] = {
--	{ .bitrate = 10, .hw_value = 0, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
--	{ .bitrate = 20, .hw_value = 1, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
--	{ .bitrate = 55, .hw_value = 2, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
--	{ .bitrate = 110, .hw_value = 3, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
--	{ .bitrate = 60, .hw_value = 4, },
--	{ .bitrate = 90, .hw_value = 5, },
--	{ .bitrate = 120, .hw_value = 6, },
--	{ .bitrate = 180, .hw_value = 7, },
--	{ .bitrate = 240, .hw_value = 8, },
--	{ .bitrate = 360, .hw_value = 9, },
--	{ .bitrate = 480, .hw_value = 10, },
--	{ .bitrate = 540, .hw_value = 11, },
--};
--
--static struct ieee80211_channel p54_channels[] = {
--	{ .center_freq = 2412, .hw_value = 1, },
--	{ .center_freq = 2417, .hw_value = 2, },
--	{ .center_freq = 2422, .hw_value = 3, },
--	{ .center_freq = 2427, .hw_value = 4, },
--	{ .center_freq = 2432, .hw_value = 5, },
--	{ .center_freq = 2437, .hw_value = 6, },
--	{ .center_freq = 2442, .hw_value = 7, },
--	{ .center_freq = 2447, .hw_value = 8, },
--	{ .center_freq = 2452, .hw_value = 9, },
--	{ .center_freq = 2457, .hw_value = 10, },
--	{ .center_freq = 2462, .hw_value = 11, },
--	{ .center_freq = 2467, .hw_value = 12, },
--	{ .center_freq = 2472, .hw_value = 13, },
--	{ .center_freq = 2484, .hw_value = 14, },
--};
--
--static struct ieee80211_supported_band band_2GHz = {
--	.channels = p54_channels,
--	.n_channels = ARRAY_SIZE(p54_channels),
--	.bitrates = p54_rates,
--	.n_bitrates = ARRAY_SIZE(p54_rates),
--};
+ drivers/net/wireless/winbond/winbondport/wbhal.c |  348 ----------------------
+ 1 files changed, 0 insertions(+), 348 deletions(-)
+
+diff --git a/drivers/net/wireless/winbond/winbondport/wbhal.c b/drivers/net/wireless/winbond/winbondport/wbhal.c
+index 439023c..6cdc162 100644
+--- a/drivers/net/wireless/winbond/winbondport/wbhal.c
++++ b/drivers/net/wireless/winbond/winbondport/wbhal.c
+@@ -1,13 +1,5 @@
+ #include "os_common.h"
+ 
 -
 -
--void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+-void hal_start_tx0(phw_data_t pHwData)
 -{
--	struct p54_common *priv = dev->priv;
--	struct bootrec_exp_if *exp_if;
--	struct bootrec *bootrec;
--	u32 *data = (u32 *)fw->data;
--	u32 *end_data = (u32 *)fw->data + (fw->size >> 2);
--	u8 *fw_version = NULL;
--	size_t len;
--	int i;
--
--	if (priv->rx_start)
--		return;
--
--	while (data < end_data && *data)
--		data++;
--
--	while (data < end_data && !*data)
--		data++;
--
--	bootrec = (struct bootrec *) data;
--
--	while (bootrec->data <= end_data &&
--	       (bootrec->data + (len = le32_to_cpu(bootrec->len))) <= end_data) {
--		u32 code = le32_to_cpu(bootrec->code);
--		switch (code) {
--		case BR_CODE_COMPONENT_ID:
--			switch (be32_to_cpu(*(__be32 *)bootrec->data)) {
--			case FW_FMAC:
--				printk(KERN_INFO "p54: FreeMAC firmware\n");
--				break;
--			case FW_LM20:
--				printk(KERN_INFO "p54: LM20 firmware\n");
--				break;
--			case FW_LM86:
--				printk(KERN_INFO "p54: LM86 firmware\n");
--				break;
--			case FW_LM87:
--				printk(KERN_INFO "p54: LM87 firmware - not supported yet!\n");
--				break;
--			default:
--				printk(KERN_INFO "p54: unknown firmware\n");
--				break;
--			}
--			break;
--		case BR_CODE_COMPONENT_VERSION:
--			/* 24 bytes should be enough for all firmwares */
--			if (strnlen((unsigned char*)bootrec->data, 24) < 24)
--				fw_version = (unsigned char*)bootrec->data;
--			break;
--		case BR_CODE_DESCR:
--			priv->rx_start = le32_to_cpu(((__le32 *)bootrec->data)[1]);
--			/* FIXME add sanity checking */
--			priv->rx_end = le32_to_cpu(((__le32 *)bootrec->data)[2]) - 0x3500;
--			break;
--		case BR_CODE_EXPOSED_IF:
--			exp_if = (struct bootrec_exp_if *) bootrec->data;
--			for (i = 0; i < (len * sizeof(*exp_if) / 4); i++)
--				if (exp_if[i].if_id == cpu_to_le16(0x1a))
--					priv->fw_var = le16_to_cpu(exp_if[i].variant);
--			break;
--		case BR_CODE_DEPENDENT_IF:
--			break;
--		case BR_CODE_END_OF_BRA:
--		case LEGACY_BR_CODE_END_OF_BRA:
--			end_data = NULL;
--			break;
--		default:
--			break;
--		}
--		bootrec = (struct bootrec *)&bootrec->data[len];
--	}
--
--	if (fw_version)
--		printk(KERN_INFO "p54: FW rev %s - Softmac protocol %x.%x\n",
--			fw_version, priv->fw_var >> 8, priv->fw_var & 0xff);
--
--	if (priv->fw_var >= 0x300) {
--		/* Firmware supports QoS, use it! */
--		priv->tx_stats.data[0].limit = 3;
--		priv->tx_stats.data[1].limit = 4;
--		priv->tx_stats.data[2].limit = 3;
--		priv->tx_stats.data[3].limit = 1;
--		dev->queues = 4;
--	}
--}
--EXPORT_SYMBOL_GPL(p54_parse_firmware);
--
--static int p54_convert_rev0_to_rev1(struct ieee80211_hw *dev,
--				    struct pda_pa_curve_data *curve_data)
--{
--	struct p54_common *priv = dev->priv;
--	struct pda_pa_curve_data_sample_rev1 *rev1;
--	struct pda_pa_curve_data_sample_rev0 *rev0;
--	size_t cd_len = sizeof(*curve_data) +
--		(curve_data->points_per_channel*sizeof(*rev1) + 2) *
--		 curve_data->channels;
--	unsigned int i, j;
--	void *source, *target;
--
--	priv->curve_data = kmalloc(cd_len, GFP_KERNEL);
--	if (!priv->curve_data)
--		return -ENOMEM;
--
--	memcpy(priv->curve_data, curve_data, sizeof(*curve_data));
--	source = curve_data->data;
--	target = priv->curve_data->data;
--	for (i = 0; i < curve_data->channels; i++) {
--		__le16 *freq = source;
--		source += sizeof(__le16);
--		*((__le16 *)target) = *freq;
--		target += sizeof(__le16);
--		for (j = 0; j < curve_data->points_per_channel; j++) {
--			rev1 = target;
--			rev0 = source;
--
--			rev1->rf_power = rev0->rf_power;
--			rev1->pa_detector = rev0->pa_detector;
--			rev1->data_64qam = rev0->pcv;
--			/* "invent" the points for the other modulations */
--#define SUB(x,y) (u8)((x) - (y)) > (x) ? 0 : (x) - (y)
--			rev1->data_16qam = SUB(rev0->pcv, 12);
--			rev1->data_qpsk  = SUB(rev1->data_16qam, 12);
--			rev1->data_bpsk  = SUB(rev1->data_qpsk, 12);
--			rev1->data_barker= SUB(rev1->data_bpsk, 14);
--#undef SUB
--			target += sizeof(*rev1);
--			source += sizeof(*rev0);
--		}
--	}
--
--	return 0;
+-	if (!pHwData->SurpriseRemove)
+-		Wb35Tx_start( pHwData );
 -}
 -
--int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ void hal_get_ethernet_address( phw_data_t pHwData, PUCHAR current_address )
+ {
+ 	if( pHwData->SurpriseRemove ) return;
+@@ -42,7 +34,6 @@ u8 hal_init_hardware(phw_data_t pHwData,
+ 	pHwData->Adapter = Adapter;
+ 
+ 	// Initial the variable
+-	pHwData->mapping_key_replace_index = MAPPING_KEY_START_INDEX; // Setting the default mapping key index
+ 	pHwData->MaxReceiveLifeTime = DEFAULT_MSDU_LIFE_TIME; // Setting Rx maximum MSDU life time
+ 	pHwData->FragmentThreshold = DEFAULT_FRAGMENT_THRESHOLD; // Setting default fragment threshold
+ 
+@@ -97,72 +88,6 @@ void hal_halt(phw_data_t pHwData, void *
+ 	}
+ }
+ 
+-void
+-hal_set_power_save_mode(phw_data_t pHwData, unsigned char power_save, unsigned char wakeup,  unsigned char dtim )
 -{
--	struct p54_common *priv = dev->priv;
--	struct eeprom_pda_wrap *wrap = NULL;
--	struct pda_entry *entry;
--	unsigned int data_len, entry_len;
--	void *tmp;
--	int err;
--	u8 *end = (u8 *)eeprom + len;
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		Value;
 -
--	wrap = (struct eeprom_pda_wrap *) eeprom;
--	entry = (void *)wrap->data + le16_to_cpu(wrap->len);
+-	if( pHwData->SurpriseRemove ) return;
 -
--	/* verify that at least the entry length/code fits */
--	while ((u8 *)entry <= end - sizeof(*entry)) {
--		entry_len = le16_to_cpu(entry->len);
--		data_len = ((entry_len - 1) << 1);
+-	// Power save setting
+-	pWb35Reg->M24_MacControl &= ~0x0200c000;	//clear ps-poll and pwr active/save bits
 -
--		/* abort if entry exceeds whole structure */
--		if ((u8 *)entry + sizeof(*entry) + data_len > end)
--			break;
--
--		switch (le16_to_cpu(entry->code)) {
--		case PDR_MAC_ADDRESS:
--			SET_IEEE80211_PERM_ADDR(dev, entry->data);
--			break;
--		case PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS:
--			if (data_len < 2) {
--				err = -EINVAL;
--				goto err;
--			}
--
--			if (2 + entry->data[1]*sizeof(*priv->output_limit) > data_len) {
--				err = -EINVAL;
--				goto err;
--			}
--
--			priv->output_limit = kmalloc(entry->data[1] *
--				sizeof(*priv->output_limit), GFP_KERNEL);
--
--			if (!priv->output_limit) {
--				err = -ENOMEM;
--				goto err;
--			}
--
--			memcpy(priv->output_limit, &entry->data[2],
--			       entry->data[1]*sizeof(*priv->output_limit));
--			priv->output_limit_len = entry->data[1];
--			break;
--		case PDR_PRISM_PA_CAL_CURVE_DATA:
--			if (data_len < sizeof(struct pda_pa_curve_data)) {
--				err = -EINVAL;
--				goto err;
--			}
--
--			if (((struct pda_pa_curve_data *)entry->data)->cal_method_rev) {
--				priv->curve_data = kmalloc(data_len, GFP_KERNEL);
--				if (!priv->curve_data) {
--					err = -ENOMEM;
--					goto err;
--				}
--
--				memcpy(priv->curve_data, entry->data, data_len);
--			} else {
--				err = p54_convert_rev0_to_rev1(dev, (struct pda_pa_curve_data *)entry->data);
--				if (err)
--					goto err;
--			}
--
--			break;
--		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
--			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
--			if (!priv->iq_autocal) {
--				err = -ENOMEM;
--				goto err;
--			}
--
--			memcpy(priv->iq_autocal, entry->data, data_len);
--			priv->iq_autocal_len = data_len / sizeof(struct pda_iq_autocal_entry);
--			break;
--		case PDR_INTERFACE_LIST:
--			tmp = entry->data;
--			while ((u8 *)tmp < entry->data + data_len) {
--				struct bootrec_exp_if *exp_if = tmp;
--				if (le16_to_cpu(exp_if->if_id) == 0xF)
--					priv->rxhw = exp_if->variant & cpu_to_le16(0x07);
--				tmp += sizeof(struct bootrec_exp_if);
--			}
--			break;
--		case PDR_HARDWARE_PLATFORM_COMPONENT_ID:
--			priv->version = *(u8 *)(entry->data + 1);
--			break;
--		case PDR_END:
--			/* make it overrun */
--			entry_len = len;
--			break;
--		default:
--			printk(KERN_INFO "p54: unknown eeprom code : 0x%x\n",
--				le16_to_cpu(entry->code));
--			break;
--		}
--
--		entry = (void *)entry + (entry_len + 1)*2;
--	}
--
--	if (!priv->iq_autocal || !priv->output_limit || !priv->curve_data) {
--		printk(KERN_ERR "p54: not all required entries found in eeprom!\n");
--		err = -EINVAL;
--		goto err;
--	}
--
--	return 0;
--
--  err:
--	if (priv->iq_autocal) {
--		kfree(priv->iq_autocal);
--		priv->iq_autocal = NULL;
--	}
--
--	if (priv->output_limit) {
--		kfree(priv->output_limit);
--		priv->output_limit = NULL;
--	}
--
--	if (priv->curve_data) {
--		kfree(priv->curve_data);
--		priv->curve_data = NULL;
--	}
--
--	printk(KERN_ERR "p54: eeprom parse failed!\n");
--	return err;
--}
--EXPORT_SYMBOL_GPL(p54_parse_eeprom);
--
--void p54_fill_eeprom_readback(struct p54_control_hdr *hdr)
--{
--	struct p54_eeprom_lm86 *eeprom_hdr;
--
--	hdr->magic1 = cpu_to_le16(0x8000);
--	hdr->len = cpu_to_le16(sizeof(*eeprom_hdr) + 0x2000);
--	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_EEPROM_READBACK);
--	hdr->retry1 = hdr->retry2 = 0;
--	eeprom_hdr = (struct p54_eeprom_lm86 *) hdr->data;
--	eeprom_hdr->offset = 0x0;
--	eeprom_hdr->len = cpu_to_le16(0x2000);
--}
--EXPORT_SYMBOL_GPL(p54_fill_eeprom_readback);
--
--static void p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
--{
--	struct p54_rx_hdr *hdr = (struct p54_rx_hdr *) skb->data;
--	struct ieee80211_rx_status rx_status = {0};
--	u16 freq = le16_to_cpu(hdr->freq);
--
--	rx_status.ssi = hdr->rssi;
--	/* XX correct? */
--	rx_status.rate_idx = hdr->rate & 0xf;
--	rx_status.freq = freq;
--	rx_status.band = IEEE80211_BAND_2GHZ;
--	rx_status.antenna = hdr->antenna;
--	rx_status.mactime = le64_to_cpu(hdr->timestamp);
--	rx_status.flag |= RX_FLAG_TSFT;
--
--	skb_pull(skb, sizeof(*hdr));
--	skb_trim(skb, le16_to_cpu(hdr->len));
--
--	ieee80211_rx_irqsafe(dev, skb, &rx_status);
--}
--
--static void inline p54_wake_free_queues(struct ieee80211_hw *dev)
--{
--	struct p54_common *priv = dev->priv;
--	int i;
--
--	/* ieee80211_start_queues is great if all queues are really empty.
--	 * But, what if some are full? */
--
--	for (i = 0; i < dev->queues; i++)
--		if (priv->tx_stats.data[i].len < priv->tx_stats.data[i].limit)
--			ieee80211_wake_queue(dev, i);
--}
--
--static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
--	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
--	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
--	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
--	struct memrecord *range = NULL;
--	u32 freed = 0;
--	u32 last_addr = priv->rx_start;
--
--	while (entry != (struct sk_buff *)&priv->tx_queue) {
--		range = (struct memrecord *)&entry->cb;
--		if (range->start_addr == addr) {
--			struct ieee80211_tx_status status;
--			struct p54_control_hdr *entry_hdr;
--			struct p54_tx_control_allocdata *entry_data;
--			int pad = 0;
--
--			if (entry->next != (struct sk_buff *)&priv->tx_queue)
--				freed = ((struct memrecord *)&entry->next->cb)->start_addr - last_addr;
--			else
--				freed = priv->rx_end - last_addr;
--
--			last_addr = range->end_addr;
--			__skb_unlink(entry, &priv->tx_queue);
--			if (!range->control) {
--				kfree_skb(entry);
--				break;
--			}
--			memset(&status, 0, sizeof(status));
--			memcpy(&status.control, range->control,
--			       sizeof(status.control));
--			kfree(range->control);
--			priv->tx_stats.data[status.control.queue].len--;
--
--			entry_hdr = (struct p54_control_hdr *) entry->data;
--			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
--			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
--				pad = entry_data->align[0];
--
--			if (!(status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
--				if (!(payload->status & 0x01))
--					status.flags |= IEEE80211_TX_STATUS_ACK;
--				else
--					status.excessive_retries = 1;
--			}
--			status.retry_count = payload->retries - 1;
--			status.ack_signal = le16_to_cpu(payload->ack_rssi);
--			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
--			ieee80211_tx_status_irqsafe(dev, entry, &status);
--			break;
--		} else
--			last_addr = range->end_addr;
--		entry = entry->next;
--	}
--
--	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
--	    sizeof(struct p54_control_hdr))
--		p54_wake_free_queues(dev);
--}
--
--static void p54_rx_control(struct ieee80211_hw *dev, struct sk_buff *skb)
--{
--	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
--
--	switch (le16_to_cpu(hdr->type)) {
--	case P54_CONTROL_TYPE_TXDONE:
--		p54_rx_frame_sent(dev, skb);
--		break;
--	case P54_CONTROL_TYPE_BBP:
--		break;
--	default:
--		printk(KERN_DEBUG "%s: not handling 0x%02x type control frame\n",
--		       wiphy_name(dev->wiphy), le16_to_cpu(hdr->type));
--		break;
--	}
--}
--
--/* returns zero if skb can be reused */
--int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb)
--{
--	u8 type = le16_to_cpu(*((__le16 *)skb->data)) >> 8;
--	switch (type) {
--	case 0x00:
--	case 0x01:
--		p54_rx_data(dev, skb);
--		return -1;
--	case 0x4d:
--		/* TODO: do something better... but then again, I've never seen this happen */
--		printk(KERN_ERR "%s: Received fault. Probably need to restart hardware now..\n",
--		       wiphy_name(dev->wiphy));
--		break;
--	case 0x80:
--		p54_rx_control(dev, skb);
--		break;
--	default:
--		printk(KERN_ERR "%s: unknown frame RXed (0x%02x)\n",
--		       wiphy_name(dev->wiphy), type);
--		break;
--	}
--	return 0;
--}
--EXPORT_SYMBOL_GPL(p54_rx);
--
--/*
-- * So, the firmware is somewhat stupid and doesn't know what places in its
-- * memory incoming data should go to. By poking around in the firmware, we
-- * can find some unused memory to upload our packets to. However, data that we
-- * want the card to TX needs to stay intact until the card has told us that
-- * it is done with it. This function finds empty places we can upload to and
-- * marks allocated areas as reserved if necessary. p54_rx_frame_sent frees
-- * allocated areas.
-- */
--static void p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
--			       struct p54_control_hdr *data, u32 len,
--			       struct ieee80211_tx_control *control)
--{
--	struct p54_common *priv = dev->priv;
--	struct sk_buff *entry = priv->tx_queue.next;
--	struct sk_buff *target_skb = NULL;
--	struct memrecord *range;
--	u32 last_addr = priv->rx_start;
--	u32 largest_hole = 0;
--	u32 target_addr = priv->rx_start;
--	unsigned long flags;
--	unsigned int left;
--	len = (len + 0x170 + 3) & ~0x3; /* 0x70 headroom, 0x100 tailroom */
--
--	spin_lock_irqsave(&priv->tx_queue.lock, flags);
--	left = skb_queue_len(&priv->tx_queue);
--	while (left--) {
--		u32 hole_size;
--		range = (struct memrecord *)&entry->cb;
--		hole_size = range->start_addr - last_addr;
--		if (!target_skb && hole_size >= len) {
--			target_skb = entry->prev;
--			hole_size -= len;
--			target_addr = last_addr;
--		}
--		largest_hole = max(largest_hole, hole_size);
--		last_addr = range->end_addr;
--		entry = entry->next;
--	}
--	if (!target_skb && priv->rx_end - last_addr >= len) {
--		target_skb = priv->tx_queue.prev;
--		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
--		if (!skb_queue_empty(&priv->tx_queue)) {
--			range = (struct memrecord *)&target_skb->cb;
--			target_addr = range->end_addr;
--		}
--	} else
--		largest_hole = max(largest_hole, priv->rx_end - last_addr);
--
--	if (skb) {
--		range = (struct memrecord *)&skb->cb;
--		range->start_addr = target_addr;
--		range->end_addr = target_addr + len;
--		range->control = control;
--		__skb_queue_after(&priv->tx_queue, target_skb, skb);
--		if (largest_hole < IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
--				   sizeof(struct p54_control_hdr))
--			ieee80211_stop_queues(dev);
--	}
--	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
--
--	data->req_id = cpu_to_le32(target_addr + 0x70);
--}
--
--static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
--		  struct ieee80211_tx_control *control)
--{
--	struct ieee80211_tx_queue_stats_data *current_queue;
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_allocdata *txhdr;
--	struct ieee80211_tx_control *control_copy;
--	size_t padding, len;
--	u8 rate;
--
--	current_queue = &priv->tx_stats.data[control->queue];
--	if (unlikely(current_queue->len > current_queue->limit))
--		return NETDEV_TX_BUSY;
--	current_queue->len++;
--	current_queue->count++;
--	if (current_queue->len == current_queue->limit)
--		ieee80211_stop_queue(dev, control->queue);
--
--	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
--	len = skb->len;
--
--	control_copy = kmalloc(sizeof(*control), GFP_ATOMIC);
--	if (control_copy)
--		memcpy(control_copy, control, sizeof(*control));
--
--	txhdr = (struct p54_tx_control_allocdata *)
--			skb_push(skb, sizeof(*txhdr) + padding);
--	hdr = (struct p54_control_hdr *) skb_push(skb, sizeof(*hdr));
--
--	if (padding)
--		hdr->magic1 = cpu_to_le16(0x4010);
--	else
--		hdr->magic1 = cpu_to_le16(0x0010);
--	hdr->len = cpu_to_le16(len);
--	hdr->type = (control->flags & IEEE80211_TXCTL_NO_ACK) ? 0 : cpu_to_le16(1);
--	hdr->retry1 = hdr->retry2 = control->retry_limit;
--	p54_assign_address(dev, skb, hdr, skb->len, control_copy);
--
--	memset(txhdr->wep_key, 0x0, 16);
--	txhdr->padding = 0;
--	txhdr->padding2 = 0;
--
--	/* TODO: add support for alternate retry TX rates */
--	rate = control->tx_rate->hw_value;
--	if (control->flags & IEEE80211_TXCTL_SHORT_PREAMBLE)
--		rate |= 0x10;
--	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
--		rate |= 0x40;
--	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
--		rate |= 0x20;
--	memset(txhdr->rateset, rate, 8);
--	txhdr->wep_key_present = 0;
--	txhdr->wep_key_len = 0;
--	txhdr->frame_type = cpu_to_le32(control->queue + 4);
--	txhdr->magic4 = 0;
--	txhdr->antenna = (control->antenna_sel_tx == 0) ?
--		2 : control->antenna_sel_tx - 1;
--	txhdr->output_power = 0x7f; // HW Maximum
--	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
--		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
--	if (padding)
--		txhdr->align[0] = padding;
--
--	priv->tx(dev, hdr, skb->len, 0);
--	return 0;
--}
--
--static int p54_set_filter(struct ieee80211_hw *dev, u16 filter_type,
--			  const u8 *dst, const u8 *src, u8 antenna,
--			  u32 magic3, u32 magic8, u32 magic9)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_filter *filter;
--
--	hdr = kzalloc(sizeof(*hdr) + sizeof(*filter) +
--		      priv->tx_hdr_len, GFP_ATOMIC);
--	if (!hdr)
--		return -ENOMEM;
--
--	hdr = (void *)hdr + priv->tx_hdr_len;
--
--	filter = (struct p54_tx_control_filter *) hdr->data;
--	hdr->magic1 = cpu_to_le16(0x8001);
--	hdr->len = cpu_to_le16(sizeof(*filter));
--	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*filter), NULL);
--	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_FILTER_SET);
--
--	filter->filter_type = cpu_to_le16(filter_type);
--	memcpy(filter->dst, dst, ETH_ALEN);
--	if (!src)
--		memset(filter->src, ~0, ETH_ALEN);
--	else
--		memcpy(filter->src, src, ETH_ALEN);
--	filter->antenna = antenna;
--	filter->magic3 = cpu_to_le32(magic3);
--	filter->rx_addr = cpu_to_le32(priv->rx_end);
--	filter->max_rx = cpu_to_le16(0x0620);	/* FIXME: for usb ver 1.. maybe */
--	filter->rxhw = priv->rxhw;
--	filter->magic8 = cpu_to_le16(magic8);
--	filter->magic9 = cpu_to_le16(magic9);
--
--	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*filter), 1);
--	return 0;
--}
--
--static int p54_set_freq(struct ieee80211_hw *dev, __le16 freq)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_channel *chan;
--	unsigned int i;
--	size_t payload_len = sizeof(*chan) + sizeof(u32)*2 +
--			     sizeof(*chan->curve_data) *
--			     priv->curve_data->points_per_channel;
--	void *entry;
--
--	hdr = kzalloc(sizeof(*hdr) + payload_len +
--		      priv->tx_hdr_len, GFP_KERNEL);
--	if (!hdr)
--		return -ENOMEM;
--
--	hdr = (void *)hdr + priv->tx_hdr_len;
--
--	chan = (struct p54_tx_control_channel *) hdr->data;
--
--	hdr->magic1 = cpu_to_le16(0x8001);
--	hdr->len = cpu_to_le16(sizeof(*chan));
--	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_CHANNEL_CHANGE);
--	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + payload_len, NULL);
--
--	chan->magic1 = cpu_to_le16(0x1);
--	chan->magic2 = cpu_to_le16(0x0);
--
--	for (i = 0; i < priv->iq_autocal_len; i++) {
--		if (priv->iq_autocal[i].freq != freq)
--			continue;
--
--		memcpy(&chan->iq_autocal, &priv->iq_autocal[i],
--		       sizeof(*priv->iq_autocal));
--		break;
--	}
--	if (i == priv->iq_autocal_len)
--		goto err;
--
--	for (i = 0; i < priv->output_limit_len; i++) {
--		if (priv->output_limit[i].freq != freq)
--			continue;
--
--		chan->val_barker = 0x38;
--		chan->val_bpsk = priv->output_limit[i].val_bpsk;
--		chan->val_qpsk = priv->output_limit[i].val_qpsk;
--		chan->val_16qam = priv->output_limit[i].val_16qam;
--		chan->val_64qam = priv->output_limit[i].val_64qam;
--		break;
--	}
--	if (i == priv->output_limit_len)
--		goto err;
--
--	chan->pa_points_per_curve = priv->curve_data->points_per_channel;
--
--	entry = priv->curve_data->data;
--	for (i = 0; i < priv->curve_data->channels; i++) {
--		if (*((__le16 *)entry) != freq) {
--			entry += sizeof(__le16);
--			entry += sizeof(struct pda_pa_curve_data_sample_rev1) *
--				 chan->pa_points_per_curve;
--			continue;
--		}
--
--		entry += sizeof(__le16);
--		memcpy(chan->curve_data, entry, sizeof(*chan->curve_data) *
--		       chan->pa_points_per_curve);
--		break;
--	}
--
--	memcpy(hdr->data + payload_len - 4, &chan->val_bpsk, 4);
--
--	priv->tx(dev, hdr, sizeof(*hdr) + payload_len, 1);
--	return 0;
--
-- err:
--	printk(KERN_ERR "%s: frequency change failed\n", wiphy_name(dev->wiphy));
--	kfree(hdr);
--	return -EINVAL;
--}
--
--static int p54_set_leds(struct ieee80211_hw *dev, int mode, int link, int act)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_led *led;
--
--	hdr = kzalloc(sizeof(*hdr) + sizeof(*led) +
--		      priv->tx_hdr_len, GFP_KERNEL);
--	if (!hdr)
--		return -ENOMEM;
--
--	hdr = (void *)hdr + priv->tx_hdr_len;
--	hdr->magic1 = cpu_to_le16(0x8001);
--	hdr->len = cpu_to_le16(sizeof(*led));
--	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_LED);
--	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*led), NULL);
--
--	led = (struct p54_tx_control_led *) hdr->data;
--	led->mode = cpu_to_le16(mode);
--	led->led_permanent = cpu_to_le16(link);
--	led->led_temporary = cpu_to_le16(act);
--	led->duration = cpu_to_le16(1000);
--
--	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*led), 1);
--
--	return 0;
--}
--
--#define P54_SET_QUEUE(queue, ai_fs, cw_min, cw_max, _txop)	\
--do {	 							\
--	queue.aifs = cpu_to_le16(ai_fs);			\
--	queue.cwmin = cpu_to_le16(cw_min);			\
--	queue.cwmax = cpu_to_le16(cw_max);			\
--	queue.txop = cpu_to_le16(_txop);			\
--} while(0)
--
--static void p54_init_vdcf(struct ieee80211_hw *dev)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_vdcf *vdcf;
--
--	/* all USB V1 adapters need a extra headroom */
--	hdr = (void *)priv->cached_vdcf + priv->tx_hdr_len;
--	hdr->magic1 = cpu_to_le16(0x8001);
--	hdr->len = cpu_to_le16(sizeof(*vdcf));
--	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_DCFINIT);
--	hdr->req_id = cpu_to_le32(priv->rx_start);
--
--	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
--
--	P54_SET_QUEUE(vdcf->queue[0], 0x0002, 0x0003, 0x0007, 47);
--	P54_SET_QUEUE(vdcf->queue[1], 0x0002, 0x0007, 0x000f, 94);
--	P54_SET_QUEUE(vdcf->queue[2], 0x0003, 0x000f, 0x03ff, 0);
--	P54_SET_QUEUE(vdcf->queue[3], 0x0007, 0x000f, 0x03ff, 0);
--}
--
--static void p54_set_vdcf(struct ieee80211_hw *dev)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_control_hdr *hdr;
--	struct p54_tx_control_vdcf *vdcf;
--
--	hdr = (void *)priv->cached_vdcf + priv->tx_hdr_len;
--
--	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*vdcf), NULL);
--
--	vdcf = (struct p54_tx_control_vdcf *) hdr->data;
--
--	if (dev->conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
--		vdcf->slottime = 9;
--		vdcf->magic1 = 0x00;
--		vdcf->magic2 = 0x10;
+-	if (power_save) {
+-		pWb35Reg->M24_MacControl |= 0x02004000;	//enable ps-poll and pwr save
 -	} else {
--		vdcf->slottime = 20;
--		vdcf->magic1 = 0x0a;
--		vdcf->magic2 = 0x06;
+-		// Force MAC active
+-		pWb35Reg->M24_MacControl |= 0x8000;
+-		dtim = 0; // Reset dtim set
 -	}
 -
--	/* (see prism54/isl_oid.h for further details) */
--	vdcf->frameburst = cpu_to_le16(0);
+-	// Receive DTIM set
+-	pHwData->dtim = dtim;
+-	pWb35Reg->M24_MacControl &= ~0x00002000;
+-	if (pHwData->dtim)
+-		pWb35Reg->M24_MacControl |= 0x00002000;
 -
--	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*vdcf), 0);
+-	Value = pWb35Reg->M24_MacControl;
+-	//M24_MacControl should not record the bits FMACA(force active), FMACPS(force power save)
+-	//These h/w bits will be cleared after set. If the s/w M24_MacControl records them, other places
+-	//set M24 will set them again. The NULL packets will be sent by h/w.
+-	pWb35Reg->M24_MacControl &= ~0x0000c000;
+-	// Writing into M24
+-	Wb35Reg_Write( pHwData, 0x0824, Value );
 -}
 -
--static int p54_start(struct ieee80211_hw *dev)
+-//----------------------------------------------------------------------------------
+-void hal_get_power_save_mode(  phw_data_t pHwData,   PBOOLEAN pin_pwr_save )
 -{
--	struct p54_common *priv = dev->priv;
--	int err;
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
 -
--	err = priv->open(dev);
--	if (!err)
--		priv->mode = IEEE80211_IF_TYPE_MNTR;
+-	if( pHwData->SurpriseRemove ) return;
 -
--	return err;
+-	Wb35Reg_Read( pHwData, 0x084c, &pWb35Reg->M4C_MacStatus );
+-	pHwData->power_save_point = pin_pwr_save;
 -}
 -
--static void p54_stop(struct ieee80211_hw *dev)
+-void hal_set_slot_time( phw_data_t pHwData,  u8 type )
 -{
--	struct p54_common *priv = dev->priv;
--	struct sk_buff *skb;
--	while ((skb = skb_dequeue(&priv->tx_queue))) {
--		struct memrecord *range = (struct memrecord *)&skb->cb;
--		if (range->control)
--			kfree(range->control);
--		kfree_skb(skb);
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	// Slot time setting
+-	pHwData->slot_time_select =  20; // default set to long
+-	pWb35Reg->M78_ERPInformation &= ~0x8; // the same setting in ERP
+-	if( WLAN_SLOT_TIME_TYPE_SHORT == type )
+-	{
+-		pHwData->slot_time_select =  9; // Set to short slot time
+-		pWb35Reg->M78_ERPInformation |= 0x8; // the sam setting in ERP
 -	}
--	priv->stop(dev);
--	priv->mode = IEEE80211_IF_TYPE_INVALID;
+-
+-	pWb35Reg->M40_MacControl &= ~0x3f;
+-	pWb35Reg->M40_MacControl |= pHwData->slot_time_select;
+-	Wb35Reg_Write( pHwData, 0x0840, pWb35Reg->M40_MacControl );
+-
+-	Wb35Reg_Write( pHwData, 0x0878, pWb35Reg->M78_ERPInformation );
+-}
+ //---------------------------------------------------------------------------------------------------
+ void hal_set_rates(phw_data_t pHwData, PUCHAR pbss_rates, 
+ 		   u8 length, unsigned char basic_rate_set)
+@@ -247,109 +172,8 @@ void hal_set_rates(phw_data_t pHwData, P
+ 	pWb35Reg->M78_ERPInformation |= tmp;
+ 	Wb35Reg_Write( pHwData, 0x0878, pWb35Reg->M78_ERPInformation );
+ }
+-//---------------------------------------------------------------------------------------------------
+-void hal_start_bss(  phw_data_t pHwData,  u8 mac_op_mode )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->bss_type = 1; // Default set to Infrastructure
+-	if( mac_op_mode == WLAN_BSSTYPE_INDEPENDENT )
+-		pHwData->bss_type = 0; // IBSS
+-
+-	// Start bss
+-	pWb35Reg->M24_MacControl &= ~0xf0000000; // Clear the bit mask
+-	if( !pHwData->bss_type )
+-		pWb35Reg->M24_MacControl |= 0x40000000; //IBSS mode
+-
+-	pWb35Reg->M24_MacControl |= 0x20000000; // Start BSS or IBSS bit
+-	Wb35Reg_Write( pHwData, 0x0824, pWb35Reg->M24_MacControl );
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_join_request(  phw_data_t pHwData,  u8 bss_type )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->IsWaitJoinComplete = TRUE;
+-
+-	pHwData->bss_type = 1; // Default set to Infrastructure
+-
+-	if( bss_type == WLAN_BSSTYPE_INDEPENDENT )
+-		pHwData->bss_type = 0; // IBSS
+-
+-	// Join BSS or IBSS request
+-	pWb35Reg->M24_MacControl &= ~0xf0000000; // Clear the bit mask
+-	if( !pHwData->bss_type )
+-		pWb35Reg->M24_MacControl |= 0x40000000; //IBSS mode
+-
+-	pWb35Reg->M24_MacControl |= 0x10000000; // Join request bit
+-	Wb35Reg_Write( pHwData, 0x0824, pWb35Reg->M24_MacControl ); 
+-
+-	#ifdef _PE_STATE_DUMP_
+-	WBDEBUG(("The join channel is %d\n", Adapter->sHwData.Channel));
+-	#endif
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_stop_sync_bss(  phw_data_t pHwData )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pWb35Reg->M24_MacControl &= ~0x30000000; // clear STASS and JOR bits
+-	Wb35Reg_Write( pHwData, 0x0824, pWb35Reg->M24_MacControl );
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_resume_sync_bss(  phw_data_t pHwData)
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	if (pHwData->bss_type == 1)	//infrastructure mode
+-		pWb35Reg->M24_MacControl |= 0x10000000;
+-	else
+-		pWb35Reg->M24_MacControl |= 0x20000000;	//IBSS mode alway use STASS
+-	Wb35Reg_Write( pHwData, 0x0824, pWb35Reg->M24_MacControl );
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_set_aid(  phw_data_t pHwData,  u16 aid )
+-{
+-	u32	tmp;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->AID = aid;
+-	tmp = pHwData->AID << 16;
+-	tmp |= cpu_to_le16( *(PUSHORT)(pHwData->bssid + 4) ); //20060926 anson's endian
+-	Wb35Reg_Write( pHwData, 0x0834, tmp );
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_set_bssid(  phw_data_t pHwData,  PUCHAR pbssid )
+-{
+-	u32	pltmp[2];
+-
+-	if( pHwData->SurpriseRemove ) return;
+ 
+-	memcpy( pHwData->bssid, pbssid, ETH_LENGTH_OF_ADDRESS );
+-	pltmp[0] = cpu_to_le32( *(PULONG)pHwData->bssid ); //20060926 anson's endian
+-	pltmp[1] = pHwData->AID << 16;
+-	pltmp[1] |=cpu_to_le16(*(PUSHORT)(pHwData->bssid + 4) );  //20060926 anson;s endian
+-	Wb35Reg_BurstWrite( pHwData, 0x0830, pltmp, 2, AUTO_INCREMENT );
+-}
+-//---------------------------------------------------------------------------------------------------
+-// Memory space pointer pbssid must be kept valid until hal_get_bssid_complete() fired
+-void hal_get_bssid(  phw_data_t pHwData,  PUCHAR pbssid )
+-{
+-	if( pHwData->SurpriseRemove ) return;
+ 
+-		Wb35Reg_Read( pHwData, 0x0834, (PULONG)(pHwData->bssid + 4));
+-		Wb35Reg_Read( pHwData, 0x0830, (PULONG)pHwData->bssid );
+-		pHwData->bssid_pointer = pbssid;
+-}
+ //---------------------------------------------------------------------------------------------------
+ void hal_set_beacon_period(  phw_data_t pHwData,  u16 beacon_period )
+ {
+@@ -362,66 +186,7 @@ void hal_set_beacon_period(  phw_data_t 
+ 	tmp |= pHwData->ProbeDelay;
+ 	Wb35Reg_Write( pHwData, 0x0848, tmp );
+ }
+-//---------------------------------------------------------------------------------------------------
+-void hal_set_listen_interval(  phw_data_t pHwData,  u16 listen_interval )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		tmp;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->ListenInterval = listen_interval;
+-	pWb35Reg->M2C_MacControl &= 0x0000ffff;//Clear the origial value
+-	tmp = pHwData->ListenInterval << 16;
+-	pWb35Reg->M2C_MacControl |= tmp;
+-	Wb35Reg_Write( pHwData, 0x082c, pWb35Reg->M2C_MacControl );
+-}
+-//---------------------------------------------------------------------------------------------------
+-void hal_set_cap_info(  phw_data_t pHwData,  u16 capability_info )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		tmp;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->CapabilityInformation = capability_info;
+-	pWb35Reg->M38_MacControl &= 0x0000ffff;//Clear the origial value
+-	tmp = pHwData->CapabilityInformation << 16;
+-	pWb35Reg->M38_MacControl |= tmp;
+-	Wb35Reg_Write( pHwData, 0x0838, pWb35Reg->M38_MacControl );
 -}
 -
--static int p54_add_interface(struct ieee80211_hw *dev,
--			     struct ieee80211_if_init_conf *conf)
+-void hal_set_ssid(phw_data_t pHwData,  PUCHAR pssid,  u8 ssid_len)
 -{
--	struct p54_common *priv = dev->priv;
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		pltmp[9]; // 1 burst command + 8 DW SSID max
+-	u32		tmp;
+-	u8		i, j;
 -
--	if (priv->mode != IEEE80211_IF_TYPE_MNTR)
--		return -EOPNOTSUPP;
+-	if( pHwData->SurpriseRemove ) return;
+ 
+-	memcpy( pHwData->ssid, pssid, ssid_len );
+-	memset( (PUCHAR)pltmp, 0, 36 );
+-	//NOTE [WK endian]: ssid values will be tranfered by cpu_to_le32 in Wb35Reg_BurstWrite().
+-	//			 The ssid values must be tranfered first but burst cmd is not necessary.
+-	
+-	pHwData->ssid_length = ssid_len;
 -
--	switch (conf->type) {
--	case IEEE80211_IF_TYPE_STA:
--		priv->mode = conf->type;
+-	j = (pHwData->ssid_length + 3) & ~0x03;
+-	j >>= 2;
+-	j += 1;// 1 DW burst command
+-	pltmp[0] = 0x10000000; // burst ssid command
+-	//[WK endian] 
+-	for (i= 1; i<j; i++)
+-		pltmp[i] = cpu_to_le32( *(PULONG)(pssid + ((i-1)<<2)) );
+-	Wb35Reg_BurstWrite( pHwData,0x881c, pltmp, j, AUTO_INCREMENT );
+-
+-	// SSID length setting
+-	pWb35Reg->M4C_MacStatus &= ~0x003f0000;
+-	tmp = pHwData->ssid_length << 16;
+-	pWb35Reg->M4C_MacStatus |= tmp;
+-	Wb35Reg_Write( pHwData, 0x084c, pWb35Reg->M4C_MacStatus );
+-}
+ 
+ void hal_set_current_channel_ex(  phw_data_t pHwData,  ChanInfo channel )
+ {
+@@ -593,62 +358,6 @@ void hal_set_cwmin(  phw_data_t pHwData,
+ 	pWb35Reg->M2C_MacControl |= (pHwData->cwmin<<10);
+ 	Wb35Reg_Write( pHwData, 0x082c, pWb35Reg->M2C_MacControl );
+ }
+-//---------------------------------------------------------------------------------------------------
+-void hal_set_cwmax(  phw_data_t pHwData,  u16 cwin_max )
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-	pHwData->cwmax = cwin_max;
+-	pWb35Reg->M2C_MacControl &= ~0x3ff;	//bit 0 ~ 9
+-	pWb35Reg->M2C_MacControl |= pHwData->cwmax;
+-	Wb35Reg_Write( pHwData, 0x082c, pWb35Reg->M2C_MacControl );
+-}
+-
+-void hal_set_rsn_wpa(  phw_data_t pHwData,  u32 * RSN_IE_Bitmap , u32 * RSN_OUI_type,  unsigned char bDesiredAuthMode)
+-{
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		pltmp[2];
+-
+-	if( pHwData->SurpriseRemove ) return;
+-
+-#ifdef _PE_STATE_DUMP_
+-	WBDEBUG(("[WS]hal_set_rsn_wpa\n"));
+-	WBDEBUG(("[WS]hal_RSN_IE_Bitmap=%x\n",*RSN_IE_Bitmap));
+-	WBDEBUG(("[WS]hal_RSN_OUI_type=%x\n",*RSN_OUI_type));
+-#endif
+-
+-	pWb35Reg->M24_MacControl &= ~0x500000;
+-	switch (bDesiredAuthMode)
+-	{
+-	case OPEN_AUTH:
+-	case SHARE_AUTH:break;
+-
+-	case WPA_AUTH:
+-	case WPAPSK_AUTH:
+-	case WPANONE_AUTH:
+-		pWb35Reg->M24_MacControl |= 0x500000;
 -		break;
+-#ifdef _WPA2_
+-	case WPA2_AUTH:
+-	case WPA2PSK_AUTH:
+-		pWb35Reg->M24_MacControl |= 0x100000;
+-		break;
+-#endif //_WPA2_
+-        
 -	default:
--		return -EOPNOTSUPP;
--	}
--
--	memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
--
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 0, 1, 0, 0xF642);
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 1, 0, 0, 0xF642);
--
--	switch (conf->type) {
--	case IEEE80211_IF_TYPE_STA:
--		p54_set_filter(dev, 1, priv->mac_addr, NULL, 0, 0x15F, 0x1F4, 0);
--		break;
--	default:
--		BUG();	/* impossible */
 -		break;
 -	}
+-	Wb35Reg_Write( pHwData, 0x0824, pWb35Reg->M24_MacControl );
 -
--	p54_set_leds(dev, 1, 0, 0);
--
--	return 0;
+-	//pWb35Reg->M24_MacControl = 0x00140042;
+-	memcpy( &pltmp[0], RSN_IE_Bitmap, sizeof(u32) );
+-	memcpy( &pltmp[1], RSN_OUI_type, sizeof(u32) );
+-	pWb35Reg->M70_MacControl = pltmp[0];
+-	pWb35Reg->M74_MacControl = pltmp[1];
+-	Wb35Reg_BurstWrite( pHwData, 0x0870, pltmp, 2, AUTO_INCREMENT );
 -}
--
--static void p54_remove_interface(struct ieee80211_hw *dev,
--				 struct ieee80211_if_init_conf *conf)
+ 
+ s32 hal_get_rssi(  phw_data_t pHwData,  u32 *HalRssiArry,  u8 Count )
+ {
+@@ -728,19 +437,6 @@ #endif
+ 	return ltmp;
+ }
+ 
+-//----------------------------------------------------------------------------
+-//Info the hardware connection or disconnection
+-void hal_set_connect_info(  phw_data_t pHwData,  unsigned char boConnect )
 -{
--	struct p54_common *priv = dev->priv;
--	priv->mode = IEEE80211_IF_TYPE_MNTR;
--	memset(priv->mac_addr, 0, ETH_ALEN);
--	p54_set_filter(dev, 0, priv->mac_addr, NULL, 2, 0, 0, 0);
--}
+-	if( pHwData->SurpriseRemove ) return;
 -
--static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
--{
--	int ret;
--
--	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
--	p54_set_vdcf(dev);
--	return ret;
--}
--
--static int p54_config_interface(struct ieee80211_hw *dev,
--				struct ieee80211_vif *vif,
--				struct ieee80211_if_conf *conf)
--{
--	struct p54_common *priv = dev->priv;
--
--	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 0, 1, 0, 0xF642);
--	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 2, 0, 0, 0);
--	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
--	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
--	return 0;
--}
--
--static void p54_configure_filter(struct ieee80211_hw *dev,
--				 unsigned int changed_flags,
--				 unsigned int *total_flags,
--				 int mc_count, struct dev_mc_list *mclist)
--{
--	struct p54_common *priv = dev->priv;
--
--	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
--
--	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
--			p54_set_filter(dev, 0, priv->mac_addr,
--				       NULL, 2, 0, 0, 0);
--		else
--			p54_set_filter(dev, 0, priv->mac_addr,
--				       priv->bssid, 2, 0, 0, 0);
--	}
--}
--
--static int p54_conf_tx(struct ieee80211_hw *dev, int queue,
--		       const struct ieee80211_tx_queue_params *params)
--{
--	struct p54_common *priv = dev->priv;
--	struct p54_tx_control_vdcf *vdcf;
--
--	vdcf = (struct p54_tx_control_vdcf *)(((struct p54_control_hdr *)
--		((void *)priv->cached_vdcf + priv->tx_hdr_len))->data);
--
--	if ((params) && !((queue < 0) || (queue > 4))) {
--		P54_SET_QUEUE(vdcf->queue[queue], params->aifs,
--			params->cw_min, params->cw_max, params->txop);
+-	if (boConnect) {
+-		pHwData->LED_LinkOn = 1;
+-		pHwData->NullPacketCount = 0;
 -	} else
--		return -EINVAL;
--
--	p54_set_vdcf(dev);
--
--	return 0;
+-		pHwData->LED_LinkOn = 0;
 -}
 -
--static int p54_get_stats(struct ieee80211_hw *dev,
--			 struct ieee80211_low_level_stats *stats)
+ //---------------------------------------------------------------------------
+ void hal_led_control_1a(  phw_data_t pHwData )
+ {
+@@ -1030,33 +726,6 @@ void hal_led_control(  void* S1,  phw_da
+ 	OS_TIMER_SET( &pHwData->LEDTimer, TimeInterval ); // 20060623.1
+ }
+ 
+-//--------------------------------------------------------------------------
+-u8 hal_get_est_sq3(  phw_data_t pHwData, u8 Count )
 -{
--	/* TODO */
--	return 0;
--}
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		ltmp = 0, i;
 -
--static int p54_get_tx_stats(struct ieee80211_hw *dev,
--			    struct ieee80211_tx_queue_stats *stats)
--{
--	struct p54_common *priv = dev->priv;
--	unsigned int i;
+-	if( pHwData->SurpriseRemove ) return 0;
 -
--	for (i = 0; i < dev->queues; i++)
--		memcpy(&stats->data[i], &priv->tx_stats.data[i],
--			sizeof(stats->data[i]));
--
--	return 0;
--}
--
--static const struct ieee80211_ops p54_ops = {
--	.tx			= p54_tx,
--	.start			= p54_start,
--	.stop			= p54_stop,
--	.add_interface		= p54_add_interface,
--	.remove_interface	= p54_remove_interface,
--	.config			= p54_config,
--	.config_interface	= p54_config_interface,
--	.configure_filter	= p54_configure_filter,
--	.conf_tx		= p54_conf_tx,
--	.get_stats		= p54_get_stats,
--	.get_tx_stats		= p54_get_tx_stats
--};
--
--struct ieee80211_hw *p54_init_common(size_t priv_data_len)
--{
--	struct ieee80211_hw *dev;
--	struct p54_common *priv;
--
--	dev = ieee80211_alloc_hw(priv_data_len, &p54_ops);
--	if (!dev)
--		return NULL;
--
--	priv = dev->priv;
--	priv->mode = IEEE80211_IF_TYPE_INVALID;
--	skb_queue_head_init(&priv->tx_queue);
--	dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
--	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
--		    IEEE80211_HW_RX_INCLUDES_FCS;
--	dev->channel_change_time = 1000;	/* TODO: find actual value */
--	dev->max_rssi = 127;
--
--	priv->tx_stats.data[0].limit = 5;
--	dev->queues = 1;
--
--	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
--				 sizeof(struct p54_tx_control_allocdata);
--
--        priv->cached_vdcf = kzalloc(sizeof(struct p54_tx_control_vdcf) +
--              priv->tx_hdr_len + sizeof(struct p54_control_hdr), GFP_KERNEL);
--
--	if (!priv->cached_vdcf) {
--		ieee80211_free_hw(dev);
--		return NULL;
+-	if( pWb35Reg->BB50 & 0xe0 )
+-	{
+-		pWb35Reg->BB50 &= ~0xe0;	//EST_SQ3
+-		Wb35Reg_Write( pHwData, 0x1050, pWb35Reg->BB50 );
 -	}
 -
--	p54_init_vdcf(dev);
+-	Wb35Reg_Read( pHwData, 0x1060, &pWb35Reg->BB60 );
 -
--	return dev;
+-	if( Count > MAX_SQ3_FILTER_SIZE )
+-		Count = MAX_SQ3_FILTER_SIZE;
+-	pWb35Reg->SQ3_filter[ pWb35Reg->SQ3_index ] = pWb35Reg->BB60 & 0x7f;
+-	pWb35Reg->SQ3_index++;
+-	pWb35Reg->SQ3_index %= Count;
+-
+-	for( i=0; i<Count; i++ )
+-		ltmp += pWb35Reg->SQ3_filter[i];
+-
+-	return (u8)(ltmp/Count);
 -}
--EXPORT_SYMBOL_GPL(p54_init_common);
--
--void p54_free_common(struct ieee80211_hw *dev)
+ 
+ void hal_set_phy_type(  phw_data_t pHwData,  u8 PhyType )
+ {
+@@ -1120,23 +789,6 @@ #ifdef _PE_STATE_DUMP_
+ #endif
+ }
+ 
+-u32 hal_get_bss_pk_cnt(  phw_data_t pHwData )
 -{
--	struct p54_common *priv = dev->priv;
--	kfree(priv->iq_autocal);
--	kfree(priv->output_limit);
--	kfree(priv->curve_data);
--	kfree(priv->cached_vdcf);
--}
--EXPORT_SYMBOL_GPL(p54_free_common);
+-	PWB35REG	pWb35Reg = &pHwData->Wb35Reg;
+-	u32		val;
 -
--static int __init p54_init(void)
--{
--	return 0;
--}
+-	if( pHwData->SurpriseRemove ) return 0;
 -
--static void __exit p54_exit(void)
--{
+-	val = pWb35Reg->BB50;
+-	val &= 0xffffff1f;
+-	val |= 0x0000003f;	//BSS_PK_CNT
+-	pWb35Reg->BB50 = val;
+-	Wb35Reg_Write( pHwData, 0x1050, pWb35Reg->BB50 );
+-
+-	Wb35Reg_Read( pHwData, 0x1060, &pWb35Reg->BB60 );
+-	return (pWb35Reg->BB60);
 -}
 -
--module_init(p54_init);
--module_exit(p54_exit);
-diff --git a/drivers/net/wireless/p54common.h b/drivers/net/wireless/p54common.h
-deleted file mode 100644
-index c15b56e..0000000
---- a/drivers/net/wireless/p54common.h
-+++ /dev/null
-@@ -1,254 +0,0 @@
--#ifndef PRISM54COMMON_H
--#define PRISM54COMMON_H
--
--/*
-- * Common code specific definitions for mac80211 Prism54 drivers
-- *
-- * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-- * Copyright (c) 2007, Christian Lamparter <chunkeey@web.de>
-- *
-- * Based on the islsm (softmac prism54) driver, which is:
-- * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--struct bootrec {
--	__le32 code;
--	__le32 len;
--	u32 data[0];
--} __attribute__((packed));
--
--struct bootrec_exp_if {
--	__le16 role;
--	__le16 if_id;
--	__le16 variant;
--	__le16 btm_compat;
--	__le16 top_compat;
--} __attribute__((packed));
--
--#define BR_CODE_MIN			0x80000000
--#define BR_CODE_COMPONENT_ID		0x80000001
--#define BR_CODE_COMPONENT_VERSION	0x80000002
--#define BR_CODE_DEPENDENT_IF		0x80000003
--#define BR_CODE_EXPOSED_IF		0x80000004
--#define BR_CODE_DESCR			0x80000101
--#define BR_CODE_MAX			0x8FFFFFFF
--#define BR_CODE_END_OF_BRA		0xFF0000FF
--#define LEGACY_BR_CODE_END_OF_BRA	0xFFFFFFFF
--
--#define FW_FMAC 0x464d4143
--#define FW_LM86 0x4c4d3836
--#define FW_LM87 0x4c4d3837
--#define FW_LM20 0x4c4d3230
--
--/* PDA defines are Copyright (C) 2005 Nokia Corporation (taken from islsm_pda.h) */
--
--struct pda_entry {
--	__le16 len;	/* includes both code and data */
--	__le16 code;
--	u8 data[0];
--} __attribute__ ((packed));
--
--struct eeprom_pda_wrap {
--	__le32 magic;
--	__le16 pad;
--	__le16 len;
--	__le32 arm_opcode;
--	u8 data[0];
--} __attribute__ ((packed));
--
--struct pda_iq_autocal_entry {
--        __le16 freq;
--        __le16 iq_param[4];
--} __attribute__ ((packed));
--
--struct pda_channel_output_limit {
--	__le16 freq;
--	u8 val_bpsk;
--	u8 val_qpsk;
--	u8 val_16qam;
--	u8 val_64qam;
--	u8 rate_set_mask;
--	u8 rate_set_size;
--} __attribute__ ((packed));
--
--struct pda_pa_curve_data_sample_rev0 {
--	u8 rf_power;
--	u8 pa_detector;
--	u8 pcv;
--} __attribute__ ((packed));
--
--struct pda_pa_curve_data_sample_rev1 {
--	u8 rf_power;
--	u8 pa_detector;
--	u8 data_barker;
--	u8 data_bpsk;
--	u8 data_qpsk;
--	u8 data_16qam;
--	u8 data_64qam;
--	u8 padding;
--} __attribute__ ((packed));
--
--struct pda_pa_curve_data {
--	u8 cal_method_rev;
--	u8 channels;
--	u8 points_per_channel;
--	u8 padding;
--	u8 data[0];
--} __attribute__ ((packed));
--
--/*
-- * this defines the PDR codes used to build PDAs as defined in document
-- * number 553155. The current implementation mirrors version 1.1 of the
-- * document and lists only PDRs supported by the ARM platform.
-- */
--
--/* common and choice range (0x0000 - 0x0fff) */
--#define PDR_END					0x0000
--#define PDR_MANUFACTURING_PART_NUMBER		0x0001
--#define PDR_PDA_VERSION				0x0002
--#define PDR_NIC_SERIAL_NUMBER			0x0003
--
--#define PDR_MAC_ADDRESS				0x0101
--#define PDR_REGULATORY_DOMAIN_LIST		0x0103
--#define PDR_TEMPERATURE_TYPE			0x0107
--
--#define PDR_PRISM_PCI_IDENTIFIER		0x0402
--
--/* ARM range (0x1000 - 0x1fff) */
--#define PDR_COUNTRY_INFORMATION			0x1000
--#define PDR_INTERFACE_LIST			0x1001
--#define PDR_HARDWARE_PLATFORM_COMPONENT_ID	0x1002
--#define PDR_OEM_NAME				0x1003
--#define PDR_PRODUCT_NAME			0x1004
--#define PDR_UTF8_OEM_NAME			0x1005
--#define PDR_UTF8_PRODUCT_NAME			0x1006
--#define PDR_COUNTRY_LIST			0x1007
--#define PDR_DEFAULT_COUNTRY			0x1008
--
--#define PDR_ANTENNA_GAIN			0x1100
--
--#define PDR_PRISM_INDIGO_PA_CALIBRATION_DATA	0x1901
--#define PDR_RSSI_LINEAR_APPROXIMATION		0x1902
--#define PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS	0x1903
--#define PDR_PRISM_PA_CAL_CURVE_DATA		0x1904
--#define PDR_RSSI_LINEAR_APPROXIMATION_DUAL_BAND	0x1905
--#define PDR_PRISM_ZIF_TX_IQ_CALIBRATION		0x1906
--#define PDR_REGULATORY_POWER_LIMITS		0x1907
--#define PDR_RSSI_LINEAR_APPROXIMATION_EXTENDED	0x1908
--#define PDR_RADIATED_TRANSMISSION_CORRECTION	0x1909
--#define PDR_PRISM_TX_IQ_CALIBRATION		0x190a
--
--/* reserved range (0x2000 - 0x7fff) */
--
--/* customer range (0x8000 - 0xffff) */
--#define PDR_BASEBAND_REGISTERS			0x8000
--#define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
--
--/* stored in skb->cb */
--struct memrecord {
--	u32 start_addr;
--	u32 end_addr;
--	struct ieee80211_tx_control *control;
--};
--
--struct p54_eeprom_lm86 {
--	__le16 offset;
--	__le16 len;
--	u8 data[0];
--} __attribute__ ((packed));
--
--struct p54_rx_hdr {
--	__le16 magic;
--	__le16 len;
--	__le16 freq;
--	u8 antenna;
--	u8 rate;
--	u8 rssi;
--	u8 quality;
--	u16 unknown2;
--	__le64 timestamp;
--	u8 data[0];
--} __attribute__ ((packed));
--
--struct p54_frame_sent_hdr {
--	u8 status;
--	u8 retries;
--	__le16 ack_rssi;
--	__le16 seq;
--	u16 rate;
--} __attribute__ ((packed));
--
--struct p54_tx_control_allocdata {
--	u8 rateset[8];
--	u16 padding;
--	u8 wep_key_present;
--	u8 wep_key_len;
--	u8 wep_key[16];
--	__le32 frame_type;
--	u32 padding2;
--	__le16 magic4;
--	u8 antenna;
--	u8 output_power;
--	__le32 magic5;
--	u8 align[0];
--} __attribute__ ((packed));
--
--struct p54_tx_control_filter {
--	__le16 filter_type;
--	u8 dst[ETH_ALEN];
--	u8 src[ETH_ALEN];
--	u8 antenna;
--	u8 debug;
--	__le32 magic3;
--	u8 rates[8];	// FIXME: what's this for?
--	__le32 rx_addr;
--	__le16 max_rx;
--	__le16 rxhw;
--	__le16 magic8;
--	__le16 magic9;
--} __attribute__ ((packed));
--
--struct p54_tx_control_channel {
--	__le16 magic1;
--	__le16 magic2;
--	u8 padding1[20];
--	struct pda_iq_autocal_entry iq_autocal;
--	u8 pa_points_per_curve;
--	u8 val_barker;
--	u8 val_bpsk;
--	u8 val_qpsk;
--	u8 val_16qam;
--	u8 val_64qam;
--	struct pda_pa_curve_data_sample_rev1 curve_data[0];
--	/* additional padding/data after curve_data */
--} __attribute__ ((packed));
--
--struct p54_tx_control_led {
--	__le16 mode;
--	__le16 led_temporary;
--	__le16 led_permanent;
--	__le16 duration;
--} __attribute__ ((packed));
--
--struct p54_tx_vdcf_queues {
--	__le16 aifs;
--	__le16 cwmin;
--	__le16 cwmax;
--	__le16 txop;
--} __attribute__ ((packed));
--
--struct p54_tx_control_vdcf {
--	u8 padding;
--	u8 slottime;
--	u8 magic1;
--	u8 magic2;
--	struct p54_tx_vdcf_queues queue[8];
--	u8 pad2[4];
--	__le16 frameburst;
--} __attribute__ ((packed));
--
--#endif /* PRISM54COMMON_H */
--- 
-1.5.4.5
+ //----------------------------------------------------------------------------------------------------
+ //0 : radio on; 1: radio off
+ u8 hal_get_hw_radio_off(  phw_data_t pHwData )
 
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
