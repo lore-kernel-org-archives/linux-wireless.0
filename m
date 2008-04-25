@@ -1,179 +1,542 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6913 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759227AbYDXSzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 05/21] iwlwifi: wrapping nic configuration in iwl core handler
-Date: Thu, 24 Apr 2008 11:55:22 -0700
-Message-Id: <1209063338-6572-6-git-send-email-reinette.chatre@intel.com> (sfid-20080424_210547_933155_F3689F35)
-In-Reply-To: <1209063338-6572-5-git-send-email-reinette.chatre@intel.com>
-References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-3-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-4-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-5-git-send-email-reinette.chatre@intel.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:42525 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765920AbYDYSJM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Apr 2008 14:09:12 -0400
+Date: Fri, 25 Apr 2008 20:09:50 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: w35und: transmit optimalization is not neccessary for now
+Message-ID: <20080425180950.GA28558@elf.ucw.cz> (sfid-20080425_200946_009858_F07D8C51)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch wraps nic hw configuration in a iwl core handler
+Remove unused code.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+More junk removal.
+
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c   |   57 ++++++++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-core.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |   12 ++++++
- 3 files changed, 48 insertions(+), 22 deletions(-)
+commit 225d43f2a1a29a12295c5b9b9c390e7a481b116c
+tree 6bdd83b69ad3036451be59c8be85bfe82c1f53be
+parent 8a641ec6e230af50cb72311a49a69d76f56c4acd
+author Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 20:08:44 +0200
+committer Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 20:08:44 +0200
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index a98f00f..8aaac16 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -579,22 +579,13 @@ out:
- 	return ret;
- }
- 
--int iwl4965_hw_nic_init(struct iwl_priv *priv)
-+
-+static void iwl4965_nic_config(struct iwl_priv *priv)
+ .../net/wireless/winbond/winbondport/mlmetxrx.c    |   53 +----
+ drivers/net/wireless/winbond/winbondport/mto.c     |  262 --------------------
+ drivers/net/wireless/winbond/winbondport/wbhal_s.h |   60 +----
+ 3 files changed, 19 insertions(+), 356 deletions(-)
+
+diff --git a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
+index 7dea640..04bcbaa 100644
+--- a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
++++ b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
+@@ -101,8 +101,18 @@ #endif
+ void
+ MLME_GetNextPacket(PADAPTER Adapter, PDESCRIPTOR pDes)
  {
- 	unsigned long flags;
--	struct iwl4965_rx_queue *rxq = &priv->rxq;
--	u8 val_link;
- 	u32 val;
--	int ret;
--
--	/* nic_init */
--	priv->cfg->ops->lib->apm_ops.init(priv);
--
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_write32(priv, CSR_INT_COALESCING, 512 / 32);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	ret = priv->cfg->ops->lib->apm_ops.set_pwr_src(priv, IWL_PWR_SRC_VMAIN);
-+	u16 radio_cfg;
-+	u8 val_link;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -605,24 +596,49 @@ int iwl4965_hw_nic_init(struct iwl_priv *priv)
- 				       val & ~(1 << 11));
- 	}
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
--
- 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
- 
- 	/* disable L1 entry -- workaround for pre-B1 */
- 	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
- 
--	/* set CSR_HW_CONFIG_REG for uCode use */
-+	/* write radio config values to register */
-+	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) == EEPROM_4965_RF_CFG_TYPE_MAX)
-+		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
-+			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
-+			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
-+			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
- 
-+	/* set CSR_HW_CONFIG_REG for uCode use */
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
--		    CSR49_HW_IF_CONFIG_REG_BIT_4965_R |
- 		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
- 		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
- 
-+	priv->calib_info = (struct iwl_eeprom_calib_info *)
-+		iwl_eeprom_query_addr(priv, EEPROM_4965_CALIB_TXPOWER_OFFSET);
-+
-+	spin_unlock_irqrestore(&priv->lock, flags);
++#define DESCRIPTOR_ADD_BUFFER( _D, _A, _S ) \
++{\
++	_D->InternalUsed = _D->buffer_start_index + _D->buffer_number; \
++	_D->InternalUsed %= MAX_DESCRIPTOR_BUFFER_INDEX; \
++	_D->buffer_address[ _D->InternalUsed ] = _A; \
++	_D->buffer_size[ _D->InternalUsed ] = _S; \
++	_D->buffer_total_size += _S; \
++	_D->buffer_number++;\
 +}
 +
-+
-+int iwl4965_hw_nic_init(struct iwl_priv *priv)
-+{
-+	unsigned long flags;
-+	struct iwl4965_rx_queue *rxq = &priv->rxq;
-+	int ret;
-+
-+	/* nic_init */
-+	priv->cfg->ops->lib->apm_ops.init(priv);
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	iwl_write32(priv, CSR_INT_COALESCING, 512 / 32);
- 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	DESCRIPTOR_ADD_BUFFER( pDes, Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len );
+-	DESCRIPTOR_SET_TYPE( pDes, Adapter->sMlmeFrame.DataType );
++	pDes->Type = Adapter->sMlmeFrame.DataType;
+ }
  
-+	ret = priv->cfg->ops->lib->apm_ops.set_pwr_src(priv, IWL_PWR_SRC_VMAIN);
-+
-+	priv->cfg->ops->lib->apm_ops.config(priv);
-+
- 	iwl4965_hw_card_show_info(priv);
+ void MLMEfreeMMPDUBuffer(PWB32_ADAPTER Adapter, PCHAR pData)
+@@ -129,62 +139,23 @@ MLME_SendComplete(PADAPTER Adapter, u8 P
+ 	u8		DataTmp[200];
  
- 	/* end nic_init */
-@@ -646,10 +662,6 @@ int iwl4965_hw_nic_init(struct iwl_priv *priv)
- 	rxq->need_update = 1;
- 	iwl4965_rx_queue_update_write_ptr(priv, rxq);
+ 	memcpy(DataTmp, Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len);
+-    #ifdef _PE_TX_DUMP_
+-	WBDEBUG(( "dump tx callback, len=%d\n", Adapter->sMlmeFrame.len ));
+-	DataDmp( Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len, 0 );
+-    #endif
  
--	/* init the txpower calibration pointer */
--	priv->calib_info = (struct iwl_eeprom_calib_info *)
--		iwl_eeprom_query_addr(priv, EEPROM_4965_CALIB_TXPOWER_OFFSET);
+     // Reclaim the data buffer
+ 	Adapter->sMlmeFrame.len = 0;
+ 	MLMEfreeMMPDUBuffer( Adapter, Adapter->sMlmeFrame.pMMPDU );
+ 
+ 
+-	//TxCallback.wFrameType = pData[0];  //&0xf0;
+ 	//TODO : ?? The pData has been returned, but we still use it to know what kind
+ 	//			of mlme frame it is. Will it be dangerous??
+-	//TxCallback.psFramePtr = pData;
+ 	TxCallback.psFramePtr = DataTmp;
+-	if( SendOK )
++	if (SendOK)
+ 		TxCallback.bResult = MLME_SUCCESS;
+ 	else
+ 		TxCallback.bResult = TRANSMIT_FRAME_FAIL;
+ 
+ 	// Return resource
+ 	Adapter->sMlmeFrame.IsInUsed = PACKET_FREE_TO_USE;
+-	#ifdef _PE_TX_DUMP_
+-	WBDEBUG(("!!Return MLME tx packet\n"));
+-	#endif
+ }
+ 
+-//===========================================================================
+-//	Function:
+-//		MLMERcvFrame()
+-//
+-//	Description:
+-//      To receive and ready to process the MLME frame, excluding the FCS
+-//      field.
+-//      MDS usually passes the MMPDU, which may be segmented and stored into
+-//      several Rx data buffers, to this function with a pointer to an array
+-//      of the RXBUFFER structure and the number of entries in the array.
+-//
+-//  Arguments:
+-//      Adapter         - Pointer to the Miniport Adatper Context.
+-//      pRxBufferArray  - Pointer to the first RXBUFFER for the Rx frame.
+-//      NumOfBuffer     - Number of the buffer segment.
+-//      ReturnSlotIndex - Reserved for Rx handler
+-//
+-//	Return value:
+-//      None.
+-//===========================================================================
+-void
+-MLMERcvFrame(
+-     PWB32_ADAPTER    Adapter,
+-     PRXBUFFER        pRxBufferArray,
+-     u8             NumOfBuffer,
+-     u8            SlotIndex)
+-{
+-	BUG();
+-    return;
+-}
+ 
+ 
+diff --git a/drivers/net/wireless/winbond/winbondport/mto.c b/drivers/net/wireless/winbond/winbondport/mto.c
+index d81e06a..5bc04d2 100644
+--- a/drivers/net/wireless/winbond/winbondport/mto.c
++++ b/drivers/net/wireless/winbond/winbondport/mto.c
+@@ -196,7 +196,6 @@ #define RSSI2RATE_SIZE 9
+ static TXRETRY_REC TxRateRec={MTO_MAX_DATA_RATE_LEVELS - 1, 0};   //new record=>TxRateRec
+ static int TxRetryRate;
+ //static int SQ3, BSS_PK_CNT, NIDLESLOT, SLOT_CNT, INTERF_CNT, GAP_CNT, DS_EVM;
+-static int RXRATE=1;// RxBytes, TxBytes;
+ static s32 RSSIBuf[RSSIBUF_NUM]={-70, -70, -70, -70, -70, -70, -70, -70, -70, -70};
+ static s32 RSSISmoothed=-700;
+ static int RSSIBufIndex=0;
+@@ -215,10 +214,6 @@ static int retryrate_rec[MTO_MAX_DATA_RA
+ 
+ static int PeriodTotalTxPkt = 0;
+ static int PeriodTotalTxPktRetry = 0;
+-static u8 TxCheckCycle = 0;
 -
- 	spin_unlock_irqrestore(&priv->lock, flags);
+-static int inc_tx_retry_count = 0;
+-static int inc_tx_frag_count = 0;
  
- 	/* Allocate and init all Tx and Command queues */
-@@ -4112,6 +4124,7 @@ static struct iwl_lib_ops iwl4965_lib = {
- 	.load_ucode = iwl4965_load_bsm,
- 	.apm_ops = {
- 		.init = iwl4965_apm_init,
-+		.config = iwl4965_nic_config,
- 		.set_pwr_src = iwl4965_set_pwr_src,
- 	},
- 	.eeprom_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index fc0c276..369f182 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -120,6 +120,7 @@ struct iwl_lib_ops {
- 	 /* power management */
- 	struct {
- 		int (*init)(struct iwl_priv *priv);
-+		void (*config)(struct iwl_priv *priv);
- 		int (*set_pwr_src)(struct iwl_priv *priv, enum iwl_pwr_src src);
- 	} apm_ops;
- 	/* power */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 57fb89d..0c42e5a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -247,9 +247,21 @@ struct iwl_eeprom_calib_info {
- #define EEPROM_LEDS_MODE                    (2*0x45+1)	/* 1  bytes */
- #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
- #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
-+#define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
- #define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
- #define EEPROM_ANTENNA_SWITCH_TYPE          (2*0x4A+1)	/* 1  bytes */
+ typedef struct
+ {
+@@ -244,7 +239,6 @@ static u8 last_rate_ant; //this is used 
+ u8	boSparseTxTraffic = FALSE;
  
-+/* The following masks are to be applied on EEPROM_RADIO_CONFIG */
-+#define EEPROM_RF_CFG_TYPE_MSK(x)   (x & 0x3)         /* bits 0-1   */
-+#define EEPROM_RF_CFG_STEP_MSK(x)   ((x >> 2)  & 0x3) /* bits 2-3   */
-+#define EEPROM_RF_CFG_DASH_MSK(x)   ((x >> 4)  & 0x3) /* bits 4-5   */
-+#define EEPROM_RF_CFG_PNUM_MSK(x)   ((x >> 6)  & 0x3) /* bits 6-7   */
-+#define EEPROM_RF_CFG_TX_ANT_MSK(x) ((x >> 8)  & 0xF) /* bits 8-11  */
-+#define EEPROM_RF_CFG_RX_ANT_MSK(x) ((x >> 12) & 0xF) /* bits 12-15 */
+ void MTO_Init(MTO_FUNC_INPUT);
+-void MTO_PeriodicTimerExpired(MTO_FUNC_INPUT);
+ void AntennaToggleInitiator(MTO_FUNC_INPUT);
+ void AntennaToggleState(MTO_FUNC_INPUT);
+ void TxPwrControl(MTO_FUNC_INPUT);
+@@ -254,15 +248,12 @@ void TxRateReductionCtrl(MTO_FUNC_INPUT)
+ //void MTO_SetDTORateRange(int type);
+ void MTO_SetDTORateRange(MTO_FUNC_INPUT, u8 *pRateArray, u8 ArraySize);
+ void MTO_SetTxCount(MTO_FUNC_INPUT, u8 t0, u8 index);
+-void MTO_GetRxRate(int rate_index);
+ void MTO_TxFailed(MTO_FUNC_INPUT);
+ void SmoothRSSI(s32 new_rssi);
+ void hal_get_dto_para(MTO_FUNC_INPUT, char *buffer);
+ u8 CalcNewRate(MTO_FUNC_INPUT, u8 old_rate, u32 retry_cnt, u32 tx_frag_cnt);
+ u8 GetMaxRateLevelFromRSSI(void);
+-u8 MTO_GetTxRate(MTO_FUNC_INPUT, u32 fpdu_len);
+ u8 MTO_GetTxFallbackRate(MTO_FUNC_INPUT);
+-void MTO_CalFallbackRate(MTO_FUNC_INPUT);
+ int Divide(int a, int b);
+ void multiagc(MTO_FUNC_INPUT, u8 high_gain_mode);
+ 
+@@ -479,84 +470,6 @@ void MTO_Init(MTO_FUNC_INPUT)
+ 	MTO_DATA().RSSI_low = -60;
+ }
+ 
+-//===========================================================================
+-//  MTO_PeriodicTimerExpired --
+-//
+-//  Description:
+-//    In HW-MAC architecture, MTO adjusts performance affecting parameters
+-//    periodically. This is accomplished by starting a periodic timer and
+-//    invoking this function when the timer expires.
+-//
+-//  Arguments:
+-//    Adapter      - The pointer to the Miniport Adapter Context
+-//
+-//  Return Value:
+-//    None
+-//============================================================================
+-void MTO_PeriodicTimerExpired(MTO_FUNC_INPUT)
+-{
+-	MTO_TMR_CNT()++;
+-
+-	if (LOCAL_IS_CONNECTED() == FALSE)//when AP disconnected
+-	{
+-		
+-		u8      x;
+-		x = hal_get_antenna_number(MTO_HAL());
+-		
+-		old_antenna[0] = x;
+-		old_antenna[2] = x;
+-		x = (~x) & 0x01;
+-		old_antenna[1] = x;
+-		old_antenna[3] = x;
+-		MTO_RATE_LEVEL()= 0;//MTO_DataRateAvailableLevel - 8;
+-		MTO_FALLBACK_RATE_LEVEL()	= MTO_RATE_LEVEL();
+-		untogglecount=0;
+-		multiagc(MTO_FUNC_INPUT_DATA, 1);
+-	}
+-	else
+-	{
+-		switch(MTO_TMR_CNT() % 50)
+-		{
+-			case 1:
+-				AntennaToggleState(MTO_FUNC_INPUT_DATA);
+-				break;
+-			case 2:
+-			case 3:
+-			case 4:
+-			case 5:
+-			case 6:
+-				AntennaToggleState(MTO_FUNC_INPUT_DATA);
+-				break;
+-			case 7:
+-				TxPwrControl(MTO_FUNC_INPUT_DATA);
+-				break;
+-			case 0:
+-				GetFreshAntennaData(MTO_FUNC_INPUT_DATA);
+-				TxCheckCycle = 0;
+-
+-				//Check the tx traffic
+-				{
+-					if (MTO_TXFLOWCOUNT() < 30)
+-					{
+-						boSparseTxTraffic = TRUE;
+-						#ifdef _PE_DTO_DUMP_
+-						WBDEBUG(("***** sparse traffic\n"));
+-						#endif
+-					}
+-					else
+-						boSparseTxTraffic = FALSE;
+-					MTO_TXFLOWCOUNT() = 0;
+-				}
+-				break;
+-			default:
+-				break;
+-		}
+-		if ((MTO_TMR_CNT() % 50)>6)  //stop at 0~6
+-			TxRateReductionCtrl(MTO_FUNC_INPUT_DATA);
+-		return;
+-	}
+-}
+-
+ //---------------------------------------------------------------------------//
+ static u32 DTO_Rx_Info[13][3];
+ static u32 DTO_RxCRCFail_Info[13][3];
+@@ -1028,137 +941,6 @@ void TxPwrControl(MTO_FUNC_INPUT)
+ 	}
+ }
+ 
+-void TxRateReductionCtrl(MTO_FUNC_INPUT)
+-{
+-    static u8      rate_level[3];
+-	s32		rssi;
+-	int i;
+-	u32 retry_rate;
+-	int	SuccessRate;
+-
+-	TxCheckCycle++;
+-	TxCheckCycle %= 5;
+-	if (TxCheckCycle == 0)
+-	{
+-		SuccessRate = Divide(PeriodTotalTxPkt*100,PeriodTotalTxPktRetry);
+-		#ifdef _PE_DTO_DUMP_
+-		WBDEBUG(("PeriodTotalTxPkt =%d, PeriodTotalTxPktRetry =%d, Rate = %d\n",
+-						PeriodTotalTxPkt, PeriodTotalTxPktRetry, SuccessRate));
+-		#endif
+-		//if (PeriodTotalTxPktRetry > 100)
+-		if (PeriodTotalTxPktRetry > 70)
+-		{
+-			if (SuccessRate < 40)
+-			{
+-				#ifdef _PE_DTO_DUMP_
+-				WBDEBUG(("The Current antenna may not work fine, change antenna.\n"));
+-				#endif
+-				ResetDTO_RxInfo(MTO_ANT_MAC(), MTO_FUNC_INPUT_DATA);
+-				MTO_TOGGLE_STATE() = TOGGLE_STATE_WAIT0;
+-				MTO_TMR_CNT() = 3;
+-				MTO_BACKOFF_TMR() = 0;
+-			}
+-		}
+-	}
+-
+-	sme_get_rssi(MTO_FUNC_INPUT_DATA, &rssi);
+-	SmoothRSSI(rssi);
+-	switch(MTO_TX_RATE_REDUCTION_STATE())
+-	{
+-	case RATE_CHGSTATE_IDLE:
+-		MTO_HAL()->dto_tx_retry_count = 0;
+-		MTO_HAL()->dto_tx_frag_count = 0;
+-		#ifdef _PE_DTO_DUMP_
+-		WBDEBUG(("dto_tx_retry_count clear 1\n"));
+-		#endif
+-		MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_CALCULATE;
+-		break;
+-	case RATE_CHGSTATE_CALCULATE:
+-		//PDEBUG(("[HHDTODATARATE]:rate calculate start===\n"));
+-		if(MTO_RATE_CHANGE_ENABLE()==1)
+-		{
+-			rate_level[2] = rate_level[1];
+-			rate_level[1] = rate_level[0];
+-		}
+-		rate_level[0] = CalcNewRate(MTO_FUNC_INPUT_DATA, MTO_RATE_LEVEL(),
+-						MTO_HAL()->dto_tx_retry_count, MTO_HAL()->dto_tx_frag_count);
+-		if(rate_level[0] == 0xff) //means that too few packets received
+-		{
+-		//	PDEBUG(("[HHDTODATARATE]:too few packets,rate=%d total packets=%d\n",MTO_DATA_RATE(),MTO_HAL()->dto_tx_frag_count));
+-			#ifdef _PE_DTO_DUMP_
+-			WBDEBUG(("Too few packets, retry count=%d , total count=%d\n",
+-					MTO_HAL()->dto_tx_retry_count,
+-					MTO_HAL()->dto_tx_frag_count));
+-			#endif
+-		}
+-		else if(rate_level[0] != MTO_RATE_LEVEL())
+-		{
+-			MTO_RATE_LEVEL() = rate_level[0];
+-			hal_rate_change( &Adapter->sHwData ); // 20060613.1 Add
+-			#ifdef _USE_FALLBACK_RATE_
+-			MTO_CalFallbackRate(MTO_FUNC_INPUT_DATA);
+-			#endif
+-			#ifdef _PE_DTO_DUMP_
+-			WBDEBUG(("New calculated tx level =%x, Rate =%dM\n", rate_level[0], MTO_DATA_RATE()>>1));
+-			#endif
+-			//MTO_PREAMBLE_TYPE() = MTO_PREAMBLE_SHORT;
+-			//MTO_SET_PREAMBLE_TYPE(MTO_PREAMBLE_TYPE());
+-			MTO_HAL()->dto_tx_retry_count = 0;
+-			MTO_HAL()->dto_tx_frag_count = 0;
+-		}
+-		else if(rate_level[1] == rate_level[2])
+-		{
+-			MTO_BACKOFF_TMR() = (MTOPARA_TXRATE_BACKOFF()<<MTO_CO_EFFICENT());
+-			MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_BACKOFF;
+-			MTO_HAL()->dto_tx_retry_count = 0;
+-			MTO_HAL()->dto_tx_frag_count = 0;
+-			inc_tx_retry_count = 0;
+-			inc_tx_frag_count = 0;
+-		}
+-		#ifdef _PE_DTO_DUMP_
+-		WBDEBUG(("[HHDTODATARATE]:MTO_RATE_LEVEL=%d",MTO_RATE_LEVEL()));
+-		#endif
+-		break;
+-	case RATE_CHGSTATE_BACKOFF:
+-		//following is check the retry rate change reset the backoff timer
+-		retry_rate = Divide(MTO_HAL()->dto_tx_retry_count * 100, MTO_HAL()->dto_tx_frag_count);
+-		inc_tx_retry_count = MTO_HAL()->dto_tx_retry_count;
+-		inc_tx_frag_count = MTO_HAL()->dto_tx_frag_count;
+-		#ifdef _PE_DTO_DUMP_
+-		WBDEBUG(("[HHDTODATARATE]:tx_retry_count =%d, tx_frag_count =%d\n",
+-					MTO_HAL()->dto_tx_retry_count, MTO_HAL()->dto_tx_frag_count));
+-		WBDEBUG(("[HHDTODATARATE]:retry rate at mem is %d and the now retry rate %d\n",TxRateRec.tx_retry_rate,retry_rate));
+-		WBDEBUG(("[HHDTODATARATE]:data rate=%d,Backoff Timer=%d",MTO_Data_Rate_Tbl[MTO_RATE_LEVEL()]>>1,MTO_BACKOFF_TMR()));
+-		#endif
+-		if (abs(retry_rate-TxRateRec.tx_retry_rate)>10)//retry rate different th
+-			MTO_BACKOFF_TMR()=0;
+-
+-		if(MTO_BACKOFF_TMR()==0)
+-		{
+-			if(MTO_LAST_RATE() == MTO_RATE_LEVEL())
+-			{
+-				MTO_CO_EFFICENT() = (MTO_CO_EFFICENT() + 1) % 3;
+-			}
+-			else
+-			{
+-				MTO_CO_EFFICENT() = 0;
+-			}
+-			MTO_LAST_RATE() = MTO_RATE_LEVEL();
+-			MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_IDLE;
+-			for (i=0;i<MTO_MAX_DATA_RATE_LEVELS;i++)
+-				retryrate_rec[i]=3;
+-		}
+-		else
+-			MTO_BACKOFF_TMR()--;
+-		break;
+-	}
+-
+-	if (TxCheckCycle == 0)
+-	{
+-		PeriodTotalTxPkt = 0;
+-		PeriodTotalTxPktRetry = 0;
+-	}
+-}
+ 
+ u8 CalcNewRate(MTO_FUNC_INPUT, u8 old_rate, u32 retry_cnt, u32 tx_frag_cnt)
+ {
+@@ -1413,55 +1195,11 @@ void MTO_SetTxCount(MTO_FUNC_INPUT, u8 t
+ 	PeriodTotalTxPktRetry += (index+1);
+ }
+ 
+-u8 MTO_GetTxRate(MTO_FUNC_INPUT, u32 fpdu_len)
+-{
+-	//added by JOHN, short packet less than 120 bytes will use 24Mpbs
+-	if(fpdu_len > 120)
+-		return MTO_DATA_RATE();
+-	else
+-	{
+-		if(MTO_DATA_RATE() >= 48 )
+-			return 48;   //24M
+-		else
+-			return MTO_DATA_RATE();
+-	}
+-}
+-
+-//get the fallback rate from current tx rate
+-void MTO_CalFallbackRate(MTO_FUNC_INPUT)
+-{
+-	u8	RateIdx, OfdmRateIdx, FallbackRateIdx;
+-
+-	RateIdx = MTO_RATE_LEVEL();
+-	OfdmRateIdx = MTO_OFDM_RATE_LEVEL();
+-	if (RateIdx >= OfdmRateIdx)
+-	{
+-		//Current tx rate belongs to OFDM rates
+-		if (RateIdx != OfdmRateIdx)
+-			FallbackRateIdx = RateIdx-1;
+-		else
+-			FallbackRateIdx = RateIdx;
+-	}
+-	else
+-	{
+-		//Current tx rate belongs to DSSS rates
+-		if (RateIdx > 0)
+-			FallbackRateIdx = RateIdx-1;
+-		else
+-			FallbackRateIdx = RateIdx;
+-	}
+-	MTO_FALLBACK_RATE_LEVEL() = FallbackRateIdx;
+-}
+ u8 MTO_GetTxFallbackRate(MTO_FUNC_INPUT)
+ {
+ 	return MTO_DATA_FALLBACK_RATE();
+ }
+ 
+-void MTO_GetRxRate(int rate_index)
+-{
+-	RXRATE = rate_index;
+-}
+-
+ 
+ //===========================================================================
+ //  MTO_TxFailed --
+diff --git a/drivers/net/wireless/winbond/winbondport/wbhal_s.h b/drivers/net/wireless/winbond/winbondport/wbhal_s.h
+index 7e98669..104f081 100644
+--- a/drivers/net/wireless/winbond/winbondport/wbhal_s.h
++++ b/drivers/net/wireless/winbond/winbondport/wbhal_s.h
+@@ -20,15 +20,6 @@ #define RF_DECIDE_BY_INF	255
+ // The follow define connect to upper layer
+ //	User must modify for connection between HAL and upper layer
+ //----------------------------------------------------------------
+-#define hal_join_OK( _H ) BUG()
+-
+-
+-// Notifying upper module for BSSID read completed
+-#define hal_get_bssid_complete( _A )			BUG()
+-// Notifying upper module for power mode read completed
+-#define hal_get_power_save_mode_complete( _A )		BUG()
+-// Notify upper module channel setting had been completed
+-#define hal_set_chan_complete( _A, _B )			BUG()
+ 
+ 
+ 
+@@ -409,44 +400,12 @@ typedef struct _DESCRIPTOR {		// Skip le
+ } DESCRIPTOR, *PDESCRIPTOR;
+ 
+ 
+-//=======================================================
+-// Common operation for DESCRIPTOR
+-//=======================================================
+-#define DESCRIPTOR_ADD_BUFFER( _D, _A, _S ) \
+-{\
+-	_D->InternalUsed = _D->buffer_start_index + _D->buffer_number; \
+-	_D->InternalUsed %= MAX_DESCRIPTOR_BUFFER_INDEX; \
+-	_D->buffer_address[ _D->InternalUsed ] = _A; \
+-	_D->buffer_size[ _D->InternalUsed ] = _S; \
+-	_D->buffer_total_size += _S; \
+-	_D->buffer_number++;\
+-}
+-#define DESCRIPTOR_GET_TYPE( _D ) _D->Type
+-#define DESCRIPTOR_SET_TYPE( _D, _T ) _D->Type = _T
+-#define DESCRIPTOR_GET_ID( _D ) _D->Descriptor_ID
+-#define DESCRIPTOR_GET_FRAGMENT_COUNT( _D ) _D->FragmentCount
+-#define DESCRIPTOR_SET_FRAGMENT_COUNT( _D, _T ) _D->FragmentCount = _T
+-#define DESCRIPTOR_GET_FRAGMENT_THRESHOLD( _D ) _D->FragmentThreshold
+-#define DESCRIPTOR_SET_FRAGMENT_THRESHOLD( _D, _T ) _D->FragmentThreshold = _T
+-#define DESCRIPTOR_GET_TX_RATE( _D ) _D->TxRate
+-#define DESCRIPTOR_SET_TX_RATE( _D, _T ) _D->TxRate = _T
+-#define DESCRIPTOR_GET_PREAMBLE_MODE( _D ) _D->PreambleMode
+-#define DESCRIPTOR_SET_PREAMBLE_MODE( _D, _T ) _D->PreambleMode = _T
+-
+-#define DESCRIPTOR_STATUS_RESOURCES( _D )	(_D->Descriptor_ID==(MAX_USB_RX_BUFFER_NUMBER-1))
+-#define DESCRIPTOR_RX_STATUS_ERROR( _D )	(_D->R01.value & FLAG_ERROR_RX_MASK)
+-#define DESCRIPTOR_TX_STATUS_ERROR( _D )	(_D->T02.value & FLAG_ERROR_TX_MASK)
+-#define DESCRIPTOR_RX_DECRYPTION_METHOD( _D ) ((u8)_D->R01.R01_decryption_method)
+-#define DESCRIPTOR_RX_RECEIVE_TIME( _D )	((u16)_D->R00.R00_receive_time_index)
+-#define DESCRIPTOR_RX_STATUS_BAND( _D )		(_D->R01.value & FLAG_BAND_RX_MASK)
+-
+ #define DEFAULT_NULL_PACKET_COUNT		180000	//20060828.1 Add. 180 seconds
+ 
+ #define MAX_TXVGA_EEPROM	9	//How many word(u16) of EEPROM will be used for TxVGA
+ #define MAX_RF_PARAMETER	32
+ 
+-typedef struct _TXVGA_FOR_50
+-{
++typedef struct _TXVGA_FOR_50 {
+ 	u8	ChanNo;
+ 	u8	TxVgaValue;
+ } TXVGA_FOR_50;
+@@ -455,17 +414,12 @@ typedef struct _TXVGA_FOR_50
+ //=====================================================================
+ // Device related include
+ //=====================================================================
+-#ifdef WB_LINUX
+-	#include "linux/wbusb_s.h"
+-	#include "linux/wb35reg_s.h"
+-	#include "linux/wb35tx_s.h"
+-	#include "linux/wb35rx_s.h"
+-#else
+-	#include "wbusb_s.h"
+-	#include "wb35reg_s.h"
+-	#include "wb35tx_s.h"
+-	#include "wb35rx_s.h"
+-#endif
 +
-+#define EEPROM_3945_RF_CFG_TYPE_MAX  0x0
-+#define EEPROM_4965_RF_CFG_TYPE_MAX  0x1
++#include "linux/wbusb_s.h"
++#include "linux/wb35reg_s.h"
++#include "linux/wb35tx_s.h"
++#include "linux/wb35rx_s.h"
 +
- /*
-  * Per-channel regulatory data.
-  *
--- 
-1.5.3.4
+ 
+ // For Hal using ==================================================================
+ typedef struct _HW_DATA_T
 
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
