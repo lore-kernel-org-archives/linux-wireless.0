@@ -1,66 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbYD3PlE (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:38855 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933669AbYDYTNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 11:41:04 -0400
-Subject: Re: [RFC/RFT 4/4] mac80211: use multi-queue master netdevice
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-In-Reply-To: <200804301734.11804.IvDoorn@gmail.com> (sfid-20080430_173024_071316_D8372DE5)
-References: <20080430124055.091382000@sipsolutions.net>
-	 <1209566743.18659.30.camel@johannes.berg>
-	 <1209567609.18659.33.camel@johannes.berg>
-	 <200804301734.11804.IvDoorn@gmail.com>
-	 (sfid-20080430_173024_071316_D8372DE5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RKP+TU59Pp4u6iRPrD75"
-Date: Wed, 30 Apr 2008 17:38:14 +0200
-Message-Id: <1209569894.18659.53.camel@johannes.berg> (sfid-20080430_174108_204267_8570D8D6)
-Mime-Version: 1.0
+	Fri, 25 Apr 2008 15:13:22 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Don't disable IRQs in mac_suspend
+Date: Fri, 25 Apr 2008 21:10:54 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200804252110.54456.mb@bu3sch.de> (sfid-20080425_211359_012971_C434ECBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes the IRQ-disable from mac_suspend.
+The main advantage of this is to get rid of the IRQ-sync call in mac_suspend.
+We need to remove the MAC suspend bit from the IRQ service mask, as otherwise
+the IRQ handler would race with us.
 
---=-RKP+TU59Pp4u6iRPrD75
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Wed, 2008-04-30 at 17:34 +0200, Ivo van Doorn wrote:
-> Hi,
->=20
-> Don't want to spoil the fun, but the following part doesn't compile
-> when CONFIG_MAC80211_QOS is not set.
+---
 
-Oh! I hadn't tried that yet, thanks. I had tried not configuring it and
-tested the Kconfig for it, but evidently not compiling.
+John, this is for 2.6.27
 
-johannes
 
---=-RKP+TU59Pp4u6iRPrD75
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBiSZaVg1VMiehFYAQKO0hAAoYp2hYa8py8lyGWT2fKZB/CWC5UaaJGd
-2MhczNlJzQKDDQlqoo4eO1pN/vbeZbShjuWe8+py7kWzgKN4cPNDwFVJ6hK0ruQr
-0doKW6w/XPiD3AAwCXfcjXw5qwEO477gDQ+m5nXfK1KXn9fQCv9odUOGx7u2Z08i
-hWGCqL86kDEgHrVInZ8XmPyDg/Ul/rL5FwnkxnKOrnsAf+zOHiNRQwJXZOri8FPd
-oC6LWKkRMQWqceQHNILxgv+H/CyycIMLzqyVjKMxk/5Td36hu0YHrTV2lhcoCCND
-CiLx+6peCJw0PlxlKSVKw1/+nOKRzSJO/X6dP7br5pB1ALDwyGbIiPnab91IKbE0
-3nOo7o+/4UX5I3SBue3/x7DD4yXEABafeH2qXR4ZYGu7QRbj/IFBHPCSSsH32YTd
-CtGXOvjhjq25pug15ya3mS2DB8onKobnvfHui5II/jUWdauc2Xp6JnWVQQJ8laZ/
-/tz5I3nxHb11Q3xjGtKD2A37OHJ/2SlJbcMtYxy4Z0Pi7NmMqVBFg8bP9glhdr2c
-WDou4ngNPOJ/4LkWemQm3yDdYyUvN7wxa7HcWlcl0oBRh7RWAR6gQk6ypNH63dKL
-8vqH26AJMtEtF0txKdtqZ5UDb2ss1C9XJP9FF9GBeOmiIM52czf5Zn+nzuSMfmYI
-7r2BH8ihu+M=
-=U6Hp
------END PGP SIGNATURE-----
-
---=-RKP+TU59Pp4u6iRPrD75--
-
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-04-25 19:28:42.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-25 21:05:29.000000000 +0200
+@@ -407,14 +407,13 @@ enum {
+ #define B43_IRQ_RFKILL			0x10000000
+ #define B43_IRQ_TX_OK			0x20000000
+ #define B43_IRQ_PHY_G_CHANGED		0x40000000
+ #define B43_IRQ_TIMEOUT			0x80000000
+ 
+ #define B43_IRQ_ALL			0xFFFFFFFF
+-#define B43_IRQ_MASKTEMPLATE		(B43_IRQ_MAC_SUSPENDED | \
+-					 B43_IRQ_TBTT_INDI | \
++#define B43_IRQ_MASKTEMPLATE		(B43_IRQ_TBTT_INDI | \
+ 					 B43_IRQ_ATIM_END | \
+ 					 B43_IRQ_PMQ | \
+ 					 B43_IRQ_MAC_TXERR | \
+ 					 B43_IRQ_PHY_TXERR | \
+ 					 B43_IRQ_DMA | \
+ 					 B43_IRQ_TXFIFO_FLUSH_OK | \
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-25 18:47:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-25 21:05:29.000000000 +0200
+@@ -2319,17 +2319,12 @@ void b43_mac_enable(struct b43_wldev *de
+ 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON,
+ 			    B43_IRQ_MAC_SUSPENDED);
+ 		/* Commit writes */
+ 		b43_read32(dev, B43_MMIO_MACCTL);
+ 		b43_read32(dev, B43_MMIO_GEN_IRQ_REASON);
+ 		b43_power_saving_ctl_bits(dev, 0);
+-
+-		/* Re-enable IRQs. */
+-		spin_lock_irq(&dev->wl->irq_lock);
+-		b43_interrupt_enable(dev, dev->irq_savedstate);
+-		spin_unlock_irq(&dev->wl->irq_lock);
+ 	}
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/SuspendMAC */
+ void b43_mac_suspend(struct b43_wldev *dev)
+ {
+@@ -2337,20 +2332,12 @@ void b43_mac_suspend(struct b43_wldev *d
+ 	u32 tmp;
+ 
+ 	might_sleep();
+ 	B43_WARN_ON(dev->mac_suspended < 0);
+ 
+ 	if (dev->mac_suspended == 0) {
+-		/* Mask IRQs before suspending MAC. Otherwise
+-		 * the MAC stays busy and won't suspend. */
+-		spin_lock_irq(&dev->wl->irq_lock);
+-		tmp = b43_interrupt_disable(dev, B43_IRQ_ALL);
+-		spin_unlock_irq(&dev->wl->irq_lock);
+-		b43_synchronize_irq(dev);
+-		dev->irq_savedstate = tmp;
+-
+ 		b43_power_saving_ctl_bits(dev, B43_PS_AWAKE);
+ 		b43_write32(dev, B43_MMIO_MACCTL,
+ 			    b43_read32(dev, B43_MMIO_MACCTL)
+ 			    & ~B43_MACCTL_ENABLED);
+ 		/* force pci to flush the write */
+ 		b43_read32(dev, B43_MMIO_MACCTL);
