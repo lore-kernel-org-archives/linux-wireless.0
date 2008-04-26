@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27573 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752494AbYDIPn3 convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.240]:20476 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbYDZFIe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 11:43:29 -0400
+	Sat, 26 Apr 2008 01:08:34 -0400
+Received: by an-out-0708.google.com with SMTP id d31so1016526and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 22:08:33 -0700 (PDT)
+Message-ID: <43e72e890804252208g2d19acedh1ceff3aa209489ad@mail.gmail.com> (sfid-20080426_070904_616530_DD435259)
+Date: Fri, 25 Apr 2008 22:08:32 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Pavel Machek" <pavel@ucw.cz>
+Subject: Re: w35und: one more unneccessary function
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080419194206.GA17558@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] [PATCH] Make IWLCORE a silent option not toconfuse iwl3945	users.
-Date: Wed, 9 Apr 2008 08:38:31 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200424DA91@orsmsx416.amr.corp.intel.com> (sfid-20080409_164337_861196_372EB60B)
-In-Reply-To: <20080409083025.GB17458@infradead.org>
-References: <874pakhist.fsf@sparse.dyndns.org> <20080409083025.GB17458@infradead.org>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Christoph Hellwig" <hch@infradead.org>,
-	"Jason Riedy" <jason@acm.org>
-Cc: <linux-wireless@vger.kernel.org>,
-	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
+References: <20080419194206.GA17558@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Christoph Hellwig  wrote:
+On Sat, Apr 19, 2008 at 12:42 PM, Pavel Machek <pavel@ucw.cz> wrote:
+> Remove one more unnecessary function.
+>
+>  ---
+>  commit 8cf2b466620bd533acf20596be1fabfc0b46d992
+>  tree e0bf7b039e545bede22980048669557fc49490e4
+>  parent 6627ff26a459db3e792ec4dc194122c133c150a5
+>  author Pavel <pavel@amd.ucw.cz> Sat, 19 Apr 2008 21:41:31 +0200
+>  committer Pavel <pavel@amd.ucw.cz> Sat, 19 Apr 2008 21:41:31 +0200
+>
+>   .../net/wireless/winbond/winbondport/mlmetxrx.c    |   57 -----------------------
+>   1 files changed, 0 insertions(+), 57 deletions(-)
+>
+>  diff --git a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
+>  index dcfdfd4..f58e458 100644
+>  --- a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
+>  +++ b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
 
-> On Tue, Apr 01, 2008 at 11:28:34PM -0700, Jason Riedy wrote:
->> The iwl3945 (currently?) does not use iwlcore.  Either the iwlcore
->> documentation should change or the option should be silent.  This
->> patch follows the latter route.  IWL4965 already SELECTs IWLCORE,
->> so there should be no new problems.  Note that IWLWIFI_DEBUGFS and
->> IWLCORE_RFKILL have no suboptions for 4965, so they are grouped
->> together and given a description that includes "4965+" to indicate
->> they're not for the 3945 adapters.
-> 
-> Just kill the option entirely and build the core module for both in
-> the makefile. 
+drivers/net/wireless/winbond/ ? What tree is this in?
 
-iwlcore is not currently needed for 3945. We'll clean up the Kconfig
-dependencies.
-
-Thanks
-
-Reinette
+  Luis
