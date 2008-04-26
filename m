@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6916 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758556AbYDXSzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:55:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 04/21] iwlwifi: remove unnecessary apmg settings
-Date: Thu, 24 Apr 2008 11:55:21 -0700
-Message-Id: <1209063338-6572-5-git-send-email-reinette.chatre@intel.com> (sfid-20080424_205623_128803_80913FA3)
-In-Reply-To: <1209063338-6572-4-git-send-email-reinette.chatre@intel.com>
-References: <1209063338-6572-1-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-2-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-3-git-send-email-reinette.chatre@intel.com>
- <1209063338-6572-4-git-send-email-reinette.chatre@intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:36976 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755096AbYDZRMk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Apr 2008 13:12:40 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so6735841waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 10:12:39 -0700 (PDT)
+Message-ID: <1ba2fa240804261012v1702e33fmf863e8189809392d@mail.gmail.com> (sfid-20080426_191307_588636_A5F98400)
+Date: Sat, 26 Apr 2008 20:12:39 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: HT info in probe requests?
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209049768.10943.3.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1209049768.10943.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-
-This patch remove settings of APMG_PS_CTRL_VAL_RESET_REQ
-from 4965 this should be used only for 3945
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 2587773..a98f00f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -621,19 +621,6 @@ int iwl4965_hw_nic_init(struct iwl_priv *priv)
- 		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
- 		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
- 
--	ret = iwl_grab_nic_access(priv);
--	if (ret < 0) {
--		spin_unlock_irqrestore(&priv->lock, flags);
--		IWL_DEBUG_INFO("Failed to init the card\n");
--		return ret;
--	}
--
--	iwl_read_prph(priv, APMG_PS_CTRL_REG);
--	iwl_set_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
--	udelay(5);
--	iwl_clear_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
--
--	iwl_release_nic_access(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	iwl4965_hw_card_show_info(priv);
--- 
-1.5.3.4
-
+T24gVGh1LCBBcHIgMjQsIDIwMDggYXQgNjowOSBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gSGksCj4KPiAgSSBqdXN0IGZvdW5kIGNvZGUgaW4g
+aXdsNDk2NSB0byBhZGQgSFQgaW5mbyB0byBwcm9iZSByZXF1ZXN0cywgc2hvdWxkbid0Cj4gIHRo
+YXQgYWxzbyBiZSBpbiBtYWM4MDIxMT8KPgo+ICBTaW5jZSB0aGUgcHJvYmUgcmVxdWVzdCBidWls
+ZGluZyBjb2RlIGluIO+7v2llZWU4MDIxMV9zZW5kX3Byb2JlX3JlcSBhbmQKPiAgaXdsNDk2NV9m
+aWxsX3Byb2JlX3JlcSBhcmUgcHJldHR5IG11Y2ggZXF1aXZhbGVudCwgc2hvdWxkbid0IHdlIHJl
+ZmFjdG9yCj4gIO+7v2llZWU4MDIxMV9zZW5kX3Byb2JlX3JlcSwgZXhwb3J0IGl0IHRoZSBwcm9i
+ZSByZXF1ZXN0IGJ1aWxkaW5nIGZ1bmN0aW9uCj4gIGFuZCBtYWtlIGl3bHdpZmkgdXNlIGl0Pwo+
+ClNvdW5kcyBnb29kIHRvIG1lLCBidXQgdGhlcmUgYXJlIGxpdHRsZSBxdWlya3MgYXMgaXdsd2lm
+aSBzdXBwb3J0cwpzY2FubmluZyB3aXRoIG11bHRpcGxlIFNTSURzIGluIHByb2JlCkkgd291bGQg
+bGlrZSB0byB2ZXJ5IG11Y2ggcHJlc2VydmUuIFRoaXMgc3BlZWRzIHVwIHNjYW5uaW5nCnNpZ25p
+ZmljYW50bHkuIEhvcGVmdWxseSBpdCB3aWxsIGJlIHV0aWxpemVkIGluIG5sODAyMTEuCgpUb21h
+cwo=
