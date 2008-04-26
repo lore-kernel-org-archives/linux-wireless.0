@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:40524 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756056AbYDDDVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 23:21:25 -0400
-Subject: Re: [PATCH] rtl8187b work in progress...
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-In-Reply-To: <1207074268-16335-1-git-send-email-linville@tuxdriver.com>
-References: <pan.2008.04.01.18.07.31.772700@gimpelevich.san-francisco.ca.us>
-	 <1207074268-16335-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 03 Apr 2008 23:21:23 -0400
-Message-Id: <1207279283.2585.11.camel@dv> (sfid-20080404_042134_935806_E1B954E0)
-Mime-Version: 1.0
+Received: from smtp1.dnainternet.fi ([87.94.96.108]:49946 "EHLO
+	smtp1.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753620AbYDZPSv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Apr 2008 11:18:51 -0400
+Message-ID: <20080426181848.foifd2bcw004kw4g@naisho.dyndns.info> (sfid-20080426_171915_716285_C638B5D7)
+Date: Sat, 26 Apr 2008 18:18:48 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: compat-2.6: rndis_wlan/rndis_host/usbnet problem(?)
+References: <20080421200409.vvow4d67okcw84kg@hayate.ip6>
+	<20080426045909.GA17936@ruslug.rutgers.edu>
+In-Reply-To: <20080426045909.GA17936@ruslug.rutgers.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-04-01 at 14:24 -0400, John W. Linville wrote:
-> No idea if it even compiles...
+Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+>
+> Will this really do the trick? It depends who allocates the
+> struture -- kernel code using the old kernel headers or compat-wireless
+> code using the replacable headers.
+>
+> In the earlier case then code using it can't be ported unless we
+> come up with an backward-compatible solution, this is possible using
+> compat.diff, we can add anything there for this effort.
+>
 
-Sorry for delay.  Thanks for the code!  It needs some minor changes to
-compile:
+Actually it doesn't after all. There's been other changes on 'struct usbnet'
+that my trick doesn't account for, it might only work on 2.6.24 but  
+that's not helpful at all.
 
-diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
-index 4c297d1..35c6486 100644
---- a/drivers/net/wireless/rtl8187.h
-+++ b/drivers/net/wireless/rtl8187.h
-@@ -50,6 +50,13 @@ struct rtl8187_tx_info {
- 	struct ieee80211_hw *dev;
- };
- 
-+enum {
-+	DEVICE_RTL8187,
-+	DEVICE_RTL8187B
-+};
-+
-+#define RTL818X_MSR_ENEDCA		(1 << 4)
-+
- /* Tx flags are common between rtl8187 and rtl8187b */
- #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
- #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index ec7f80b..b1b2548 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -224,7 +224,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
- 	info->urb = urb;
- 	info->dev = dev;
- 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
--			  priv->is_rtl8187b ? hdr_b : hdr,
-+			  priv->is_rtl8187b ? (void *)hdr_b : (void *)hdr,
- 			  skb->len, rtl8187_tx_cb, skb);
- 	usb_submit_urb(urb, GFP_ATOMIC);
- 
+>
+> Heh fun, so now all usb wireless devices are named wlan%d, all
+> mac80211 devices are named wlan%d, and yet a few PCI ones (prism54,
+> etc), still will get their wlan%d. Should we care about just sticking to
+> one or not bother for old stuff and just moving forward stick to
+> wlan%d for both all fullmac and softmac devices?
 
-Plus there are spurious messages about uninitialized hdr and hdr_b in
-rtl8187_tx().  Perhaps a cleaner solution would be to use a union or
-separate functions to populate the header, but that's details.  sparse
-doesn't report anything serious.
+I thought all wireless devices should have wlan%d names.
 
-Anyway, the module loads fine:
+>
+>> Also rndis_host should include this patch:
+>>   http://marc.info/?l=linux-netdev&m=120626915222918&w=2
+>
+> drivers/net/usb/rndis_host.c is included as part of compat-wireless.
+> I don't provide additional patches but just rely on what is already
+> merged. This has the advantage of pushing people to push
+> patches directly upstream and getting maintainers to merge them.
 
-rtl8187 1-1:1.0: usb_probe_interface
-rtl8187 1-1:1.0: usb_probe_interface - got id
-phy2: Selected rate control algorithm 'pid'
-phy2: hwaddr 00:14:d1:45:a9:0b, rtl8187 V0 + rtl8225
-usbcore: registered new interface driver rtl8187
+Patch was merged into 2.6.25.
 
-But if I bring the interface up, it takes a lot of time, and I get this
-in the kernel log:
+  - Jussi
 
-phy2: RF Calibration Failed! 0
 
-Scanning causes immediate kernel panic in
-ieee80211_generic_frame_duration(), which is called from rtl8187_tx().
-Sorry, no time to capture the backtrace now, but it's the code added by
-you.
-
--- 
-Regards,
-Pavel Roskin
