@@ -1,92 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756894AbYDALrA (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:50417 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbYDZE7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 07:47:00 -0400
-Subject: Re: mac80211 MLME scanning - BSS list trouble
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Bill Moss <bmoss@clemson.edu>, Daniel Drake <dsd@gentoo.org>,
-	Dan Williams <dcbw@redhat.com>, Vladimir Koutny <vlado@ksp.sk>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240803310710w24a057j7687411cb20985db@mail.gmail.com> (sfid-20080331_151036_058996_694F6D84)
-References: <1206865999.22530.187.camel@johannes.berg>
-	 <1ba2fa240803310710w24a057j7687411cb20985db@mail.gmail.com>
-	 (sfid-20080331_151036_058996_694F6D84)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-giKjmk9sXKEovoBretF1"
-Date: Mon, 31 Mar 2008 20:40:40 +0200
-Message-Id: <1206988840.5143.5.camel@johannes.berg> (sfid-20080401_124723_517033_FDA0BA48)
-Mime-Version: 1.0
+	Sat, 26 Apr 2008 00:59:10 -0400
+Date: Sat, 26 Apr 2008 00:59:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compat-2.6: rndis_wlan/rndis_host/usbnet problem(?)
+Message-ID: <20080426045909.GA17936@ruslug.rutgers.edu> (sfid-20080426_065932_185869_D9CC14BF)
+References: <20080421200409.vvow4d67okcw84kg@hayate.ip6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080421200409.vvow4d67okcw84kg@hayate.ip6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Apr 21, 2008 at 08:04:09PM +0300, Jussi Kivilinna wrote:
+> Hello,
+> 
+> I just checked how rndis_wlan was included in  
+> compat-wireless-2008-04-01 and noticed small problem. Patchset that  
+> was required for rndis_wlan to work modified 'struct usbnet' in  
+> usbnet.h, added 'void *driver_priv' at almost head:
+>   http://marc.info/?l=linux-wireless&m=120130189428293&w=2
+> 
+> Compat-wireless includes new modified usbnet.h but doesn't include not  
+> usbnet.c and cdc_ether.c on which rndis_host/rndis_wlan depend on to.  
+> Also cdc_ether.c had another update:
+>   http://marc.info/?l=linux-wireless&m=120130189928350&w=2
 
---=-giKjmk9sXKEovoBretF1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I tend to replace kernel stuff if the structures haven't changed.
+Otherwise then you are allocating different sized structures or
+accessing items which shouldn't be there and will segfault or get
+the wrong data.
 
+> So to have rndis_wlan working, you should include cdc_ether.c and  
+> usbnet.c. But this would broke all the rest drivers in  
+> 'drivers/net/usb' that depend on usbnet.c. To fix this is ofcourse to  
+> move 'void *driver_info' at end of 'struct usbnet'.
 
-> >  The second problem is the one Bill Moss and Vladimir Koutny were runni=
-ng
-> >  into. As soon as we receive a probe response from a BSS, we never agai=
-n
-> >  update it from beacons, hence userspace can never find an AP during
-> >  passive scanning if we've seen that BSSID before during an active scan=
-.
+Will this really do the trick? It depends who allocates the
+struture -- kernel code using the old kernel headers or compat-wireless
+code using the replacable headers.
 
-[...]
+In the earlier case then code using it can't be ported unless we
+come up with an backward-compatible solution, this is possible using
+compat.diff, we can add anything there for this effort.
 
-> For example WMM parameters are not present in beacon but are present
-> in probe response.
-> What is needed here is being selective what is updated and what not.
-> What is for sure you need at least one probe response before you can asso=
-ciate.
+> Ok, I haven't tested this myself, but this is how it seems to me. If  
+> you add usbnet.c you might want to add this patch too and change flag  
+> in rndis_wlan for 'wlanX' device names:
+>   http://marc.info/?l=linux-wireless&m=120130189728322&w=2
 
-Hm, isn't that particular information also contained in association
-responses? I don't think receiving probe responses is really required,
-which IEs do you have in mind that aren't also part of the association
-exchange?
+Heh fun, so now all usb wireless devices are named wlan%d, all
+mac80211 devices are named wlan%d, and yet a few PCI ones (prism54,
+etc), still will get their wlan%d. Should we care about just sticking to
+one or not bother for old stuff and just moving forward stick to
+wlan%d for both all fullmac and softmac devices?
 
-It does seem that the current code is not correct if we allow going from
-"have IE" to "don't have IE" when updating from beacons, but I don't see
-why probe responses should actually be required, and we certainly do not
-try to enforce that.
+> Also rndis_host should include this patch:
+>   http://marc.info/?l=linux-netdev&m=120626915222918&w=2
 
-In any case, do you have any idea how to fix this problem? Simply update
-things selectively? Do you want to take over handling it? :)
+drivers/net/usb/rndis_host.c is included as part of compat-wireless.
+I don't provide additional patches but just rely on what is already
+merged. This has the advantage of pushing people to push 
+patches directly upstream and getting maintainers to merge them.
 
-Also, I'm not sure why it shows up with iwlwifi but no other hardware,
-does iwlwifi filter out probe responses if it got a beacon for the same
-BSSID or something like that?
-
-johannes
-
---=-giKjmk9sXKEovoBretF1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/EwJqVg1VMiehFYAQK2+RAAwsJcHagto1nLL6kYq52zo1knIsrk/3nL
-7lGCwZIJoXw99PU6ZGT95dRyQ21TlAk7lPCcm/xgu2hakeLStKub2yX7G/iW1oL+
-Q21msyfzx3OyLV+AT+/OlwNUvvetUOG35c96xg3yVcyt1TWOjt85Rf8gPbsd+0QF
-bSbEt81S+YeYm/iDRS01maNX/fB+mgo3IrcvJkdB+pHMwnNg6qgx0uaQ8K0hvBYI
-H4I0Zn9FUZFX9E8jcg6uFqkafCw2pRBYaxZ4Kr36R5noiWU8V7R64tDtqFlkttsx
-NNiZgZHfLwt7fEv37zv4fdGyIMguZimNE/mLqIHOGEs3XkQD3/Trdx/kizKt84a9
-580YMHorLvIxOc9PvFHKGPN65xqaLQENeV/hNCGqFLMcFsvxap0Cv4PtcVfeaqg2
-09xVuY6fA3L3g4a5E9Oy2ZoHrxInbX6sJjT0qLpC0wyq2A4BsqxkQcoESSlO7mNH
-fWnfVhiAU3GPw8DDk0guC/lvfWc5pDXwZsaqU7I2A7cMviSrF5gP8kYvR2nO7ocu
-zMEdfq5e7v84R0+tIiXEsOt+RmE7HG/IPQGHhw5Q8CYO6ZqyojZjvK+YTYLPFQyI
-LJ/Mab5tlAfhKq8UvbQpMj2TzMYbNu4D2ysTVztsoxNXp4/2DCotBGP5/GrzPbEd
-4zlwaGhvK1o=
-=3wot
------END PGP SIGNATURE-----
-
---=-giKjmk9sXKEovoBretF1--
-
+  Luis
