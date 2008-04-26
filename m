@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52922 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753748AbYD3OJK (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:54766 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393AbYDZEj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 10:09:10 -0400
-Subject: Re: rt61pci current wireless testing git gives kernel oops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bas Hulsken <bhulsken@hotmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <1209548733.5814.3.camel@Bas>
-References: <1209147056.2955.7.camel@Bas>
-	 <200804252031.56605.IvDoorn@gmail.com>
-	 (sfid-20080425_203116_969250_F59BCB3A)  <1209406716.29025.18.camel@johannes.berg>
-	 <1209548733.5814.3.camel@Bas>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DF9PWS1cG06+r2bBLVTy"
-Date: Wed, 30 Apr 2008 16:08:08 +0200
-Message-Id: <1209564488.18659.7.camel@johannes.berg> (sfid-20080430_160902_422823_F721F6DF)
-Mime-Version: 1.0
+	Sat, 26 Apr 2008 00:39:27 -0400
+Date: Sat, 26 Apr 2008 00:39:27 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] prism54: prism54_get_encode() test below 0 on unsigned index
+Message-ID: <20080426043927.GE4810@ruslug.rutgers.edu> (sfid-20080426_063949_565318_E43B7F6D)
+References: <480F9481.2040303@tiscali.nl> <1209056973.5224.0.camel@localhost.localdomain> <4811299A.7060407@tiscali.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4811299A.7060407@tiscali.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Apr 25, 2008 at 02:45:14AM +0200, Roel Kluin wrote:
+> Dan Williams wrote:
+> > On Wed, 2008-04-23 at 21:56 +0200, Roel Kluin wrote:
+> 
+> >> u32 index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+> > 
+> > Probably should just change that to an 'int' instead of a u32.
+> > 
+> > Dan
+> > 
+> 
+> Thanks, in that case use the patch below
+> ---
+> when left unsigned, the test 'if (index < 0)' will not work.
+> 
+> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+> ---
+> diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+> index e5b3c28..8076ead 100644
+> --- a/drivers/net/wireless/prism54/isl_ioctl.c
+> +++ b/drivers/net/wireless/prism54/isl_ioctl.c
+> @@ -1158,7 +1158,8 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
+>  {
+>  	islpci_private *priv = netdev_priv(ndev);
+>  	struct obj_key *key;
+> -	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+> +	u32 devindex;
+> +	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
 
---=-DF9PWS1cG06+r2bBLVTy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The check for -1 seems silly lets just remove its use.
 
-On Wed, 2008-04-30 at 11:45 +0200, Bas Hulsken wrote:
-> Hi,
->=20
-> On Mon, 2008-04-28 at 20:18 +0200, Johannes Berg wrote:
-> > > > the interface goes up well, but I get an oops as soon as I run host=
-apd,
-> > > > seems something with debugfs. This shows up in dmesg, let me know i=
-f you
-> > > > need any more info.
-> >=20
-> > Bas, can you reproduce this issue? Could you try the patch below?
-> >=20
-> > johannes
->=20
-> with your patch applied I can no longer reproduce this issue, and I've
-> tried running hostapd at least 5 times. Without your patch, I could
-> reproduce it two out of two times.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Thanks for testing. That patch causes another problem but now I know
-where to look.
-
-johannes
-
---=-DF9PWS1cG06+r2bBLVTy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBh9R6Vg1VMiehFYAQLaCRAAtiItQxlv2e2aNtaLkoNPfooUeIRuIYZW
-fn1oomzSgy+EQf5V1NuAbdID37X+yFQia5R7gJee9qqFTk2FxzSwKcE5SFl6u1GM
-dTxvnG6/KG7s6K7GKSx+Gc61Z7xyI1VjteYe8OOQKKTCrhXcyQLXEGW8TmF/a+3Y
-gpZ0FR+UbCKOmCahFkcCyJiNuMOSeufrSoO23px0/MsOQkl7CCtuKfHFeM5Nibi2
-NoETCOGuuLJhZYGqQ2ol2Ur6rylOmzWrSMPFjkc+tS1OuhLZ4pBoKkwiuJ7MpPDx
-Ef4uPY7Zfg5ZH9Kj5wr1yeP3dj2cTrN7oGWe1mdp7zTKrJXyZ/NA5EtvlxguVBJD
-8zbiOQPg/Sz4RLx3peo+Uf9IDHoLIWZxPt9JRDFrJC/vcK2QBospfvSwe2QhYwO+
-A/U1UyGhd7L3rt3HxLpGoXqpP93Rb01XIrmiEe44D7LzKeMrGsa5yQUjYciymWuf
-NK5Pmhz9BlvV02mzT6XOxUOvv7EKbHwtK3BHokHzWezDG7/EbMp/Mj8Bvy5wSUjX
-niD4uv6GPb42DkfYZ0dadvDa+gkIFRq8/lXMcgj9TUu95yU4slEJry6GlIHN+1e5
-f8Sz32zLQethfA5Uuml+s7/EjZYE2C8350ooZilmkWIpt3WgQ8s3Xw1Bt1P5V8AH
-7KKjpHut0uo=
-=2LfX
------END PGP SIGNATURE-----
-
---=-DF9PWS1cG06+r2bBLVTy--
-
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 5b375b2..7e2d3b6 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -1158,7 +1158,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
+ {
+ 	islpci_private *priv = netdev_priv(ndev);
+ 	struct obj_key *key;
+-	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
++	u32 devindex, index = (dwrq->flags & IW_ENCODE_INDEX);
+ 	u32 authen = 0, invoke = 0, exunencrypt = 0;
+ 	int rvalue;
+ 	union oid_res_t r;
+@@ -1186,7 +1186,7 @@ prism54_get_encode(struct net_device *ndev, struct iw_request_info *info,
+ 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYID, 0, NULL, &r);
+ 	devindex = r.u;
+ 	/* Now get the key, return it */
+-	if (index == -1 || index > 3)
++	if (!index || index > 3)
+ 		/* no index provided, use the current one */
+ 		index = devindex;
+ 	rvalue |= mgt_get_request(priv, DOT11_OID_DEFKEYX, index, NULL, &r);
