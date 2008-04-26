@@ -1,114 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56341 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761159AbYDRVAk (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:23124 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbYDZX01 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 17:00:40 -0400
-Message-Id: <200804182059.m3IKxpkY015601@imap1.linux-foundation.org> (sfid-20080418_221701_041805_491D5F98)
-Subject: [patch 5/7] mac80211: michael.c replace macro with function
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, jbenc@suse.cz
-From: akpm@linux-foundation.org
-Date: Fri, 18 Apr 2008 13:59:51 -0700
+	Sat, 26 Apr 2008 19:26:27 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so6917324waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 16:26:26 -0700 (PDT)
+Message-ID: <1ba2fa240804261626s4b491ac4y920e8996840fabfa@mail.gmail.com> (sfid-20080427_012709_933655_B92DA777)
+Date: Sun, 27 Apr 2008 02:26:25 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luca Tettamanti" <kronos.it@gmail.com>
+Subject: Re: [PATCH] Fix compile error with wifi & leds
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <20080426203408.GA12074@dreamland.darkstar.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080426203408.GA12074@dreamland.darkstar.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+On Sat, Apr 26, 2008 at 11:34 PM, Luca Tettamanti <kronos.it@gmail.com> wrote:
+> Hi,
+>  I encountered a build error with current git tree:
+>
+>   CC [M]  net/mac80211/led.o
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c: In function 'ieee80211_led_init':
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:58: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:62: error: dereferencing pointer to incomplete type
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:63: error: implicit declaration of function 'led_trigger_register'
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:69: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:73: error: dereferencing pointer to incomplete type
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:80: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:84: error: dereferencing pointer to incomplete type
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:91: error: invalid application of 'sizeof' to incomplete type 'struct led_trigger'
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:95: error: dereferencing pointer to incomplete type
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c: In function 'ieee80211_led_exit':
+>  /home/kronos/src/linux-2.6.git/net/mac80211/led.c:106: error: implicit declaration of function 'led_trigger_unregister'
+>  make[3]: *** [net/mac80211/led.o] Error 1
+>  make[2]: *** [net/mac80211] Error 2
+>  make[1]: *** [net] Error 2
+>  make: *** [sub-make] Error 2
+>
+>  This has been caused by commit e82404ad612ebabc65d15c3d59b971cb35c3ff36
+>  from David Miller:
+>
+>   config IWL4965_LEDS
+>         bool "Enable LEDS features in iwl4965 driver"
+>  -       depends on IWL4965 && MAC80211_LEDS && LEDS_CLASS
+>  +       depends on IWL4965
+>  +       select MAC80211_LEDS
+>  +       select LEDS_CLASS
+>
+>
+>  the problem is that MAC80211_LEDS *depends* on LEDS_TRIGGER but does not
+>  _select_ it. IOW enabling IWL4965_LEDS enables MAC80211_LEDS which in
+>  turn does not compile if LEDS_TRIGGER is not enabled.
+>
+>  LEDS_TRIGGER is not enough though, NEW_LEDS (which is a menuconfig
+>  guarding the aforementioned symbol) must also be selected.
+>
+>  ---
+>
+>  Since MAC80211_LEDS is selected by wireless drivers it must select its
+>  own dependencies otherwise a build error may occur (kbuild will select
+>  the symbol regardless of "depends" constraints).
+>
+>  Signed-Off-By: Luca Tettamanti <kronos.it@gmail.com>
+>
+>  ---
+>
+>   net/mac80211/Kconfig |    4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+>
+>  diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+>  index 520a518..a24b459 100644
+>  --- a/net/mac80211/Kconfig
+>  +++ b/net/mac80211/Kconfig
+>  @@ -73,7 +73,9 @@ config MAC80211_MESH
+>
+>   config MAC80211_LEDS
+>         bool "Enable LED triggers"
+>  -       depends on MAC80211 && LEDS_TRIGGERS
+>  +       depends on MAC80211
+>  +       select NEW_LEDS
+>  +       select LEDS_TRIGGERS
+>         ---help---
+>           This option enables a few LED triggers for different
+>           packet receive/transmit events.
+>
 
-This series cuts the size of michael.o from 0x280 to 0x125 on X86_32
-and cuts lines from michael.c.
-
-
-This patch:
-
-Make michael_block a function to avoid it being unrolled everywhere, cuts a
-third off of the michael.o size.
-
-Fold xswap into michael_block and remove xswap.
-
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- net/mac80211/michael.c |   37 ++++++++++++++++---------------------
- 1 file changed, 16 insertions(+), 21 deletions(-)
-
-diff -puN net/mac80211/michael.c~mac80211-michaelc-replace-macro-with-function net/mac80211/michael.c
---- a/net/mac80211/michael.c~mac80211-michaelc-replace-macro-with-function
-+++ a/net/mac80211/michael.c
-@@ -12,23 +12,18 @@
- 
- #include "michael.h"
- 
--static inline u32 xswap(u32 val)
-+static void michael_block(u32 *l, u32 *r)
- {
--	return ((val & 0xff00ff00) >> 8) | ((val & 0x00ff00ff) << 8);
-+	*r ^= rol32(*l, 17);
-+	*l += *r;
-+	*r ^= ((*l & 0xff00ff00) >> 8) | ((*l & 0x00ff00ff) << 8);
-+	*l += *r;
-+	*r ^= rol32(*l, 3);
-+	*l += *r;
-+	*r ^= ror32(*l, 2);
-+	*l += *r;
- }
- 
--#define michael_block(l, r) \
--do { \
--	r ^= rol32(l, 17); \
--	l += r; \
--	r ^= xswap(l); \
--	l += r; \
--	r ^= rol32(l, 3); \
--	l += r; \
--	r ^= ror32(l, 2); \
--	l += r; \
--} while (0)
--
- 
- static inline u32 michael_get32(u8 *data)
- {
-@@ -57,13 +52,13 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
- 	/* A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
- 	 * calculation, but it is _not_ transmitted */
- 	l ^= michael_get32(da);
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 	l ^= da[4] | (da[5] << 8) | (sa[0] << 16) | (sa[1] << 24);
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 	l ^= michael_get32(&sa[2]);
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 	l ^= priority;
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 
- 	/* Real data */
- 	blocks = data_len / 4;
-@@ -71,7 +66,7 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
- 
- 	for (block = 0; block < blocks; block++) {
- 		l ^= michael_get32(&data[block * 4]);
--		michael_block(l, r);
-+		michael_block(&l, &r);
- 	}
- 
- 	/* Partial block of 0..3 bytes and padding: 0x5a + 4..7 zeros to make
-@@ -83,9 +78,9 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
- 		val |= data[blocks * 4 + left];
- 	}
- 	l ^= val;
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 	/* last block is zero, so l ^ 0 = l */
--	michael_block(l, r);
-+	michael_block(&l, &r);
- 
- 	michael_put32(l, mic);
- 	michael_put32(r, mic + 4);
-_
+This one was already posted
+Thanks
+Tomas
