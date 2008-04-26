@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:62613 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755052AbYDBUFt (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.242]:39449 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbYDZS0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 16:05:49 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so366438ywb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:05:46 -0700 (PDT)
-Message-ID: <1ba2fa240804021305o502d7e22o5ffebd0f466e4188@mail.gmail.com> (sfid-20080402_210616_909031_D98A33F8)
-Date: Wed, 2 Apr 2008 23:05:46 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: add station aid into ieee80211_tx_control
-Cc: Chr <chunkeey@web.de>, linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1207128858.10910.19.camel@johannes.berg>
+	Sat, 26 Apr 2008 14:26:11 -0400
+Received: by an-out-0708.google.com with SMTP id d31so1061790and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 11:26:10 -0700 (PDT)
+Message-ID: <43e72e890804261126n7c4463c9y2d4bb4dc444be096@mail.gmail.com> (sfid-20080426_202639_392025_7D0A743B)
+Date: Sat, 26 Apr 2008 11:26:09 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+Subject: Re: compat-2.6: rndis_wlan/rndis_host/usbnet problem(?)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080426181848.foifd2bcw004kw4g@naisho.dyndns.info>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200804012145.18294.chunkeey@web.de>
-	 <1207128858.10910.19.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20080421200409.vvow4d67okcw84kg@hayate.ip6>
+	 <20080426045909.GA17936@ruslug.rutgers.edu>
+	 <20080426181848.foifd2bcw004kw4g@naisho.dyndns.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 2, 2008 at 12:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Sat, Apr 26, 2008 at 8:18 AM, Jussi Kivilinna
+<jussi.kivilinna@mbnet.fi> wrote:
+> Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
 >
->  On Tue, 2008-04-01 at 21:45 +0200, Chr wrote:
->  > This patch is necessary for the upcoming Accesspoint patch for p54.
+> >
+> > Will this really do the trick? It depends who allocates the
+> > struture -- kernel code using the old kernel headers or compat-wireless
+> > code using the replacable headers.
+> >
+> > In the earlier case then code using it can't be ported unless we
+> > come up with an backward-compatible solution, this is possible using
+> > compat.diff, we can add anything there for this effort.
+> >
+> >
 >
->  Hm. I don't like increasing the tx control structure size but I guess
->  you really need that :)
->
->
->  > Signed-off-by: Christian Lamparter <chunkeey@web.de>
->
->  Acked-by: Johannes Berg <johannes@sipsolutions.net>
->
->  Please CC the appropriate maintainers (i.e. at least me for mac80211) on
->  code changes.
->
+>  Actually it doesn't after all. There's been other changes on 'struct
+> usbnet'
+>  that my trick doesn't account for, it might only work on 2.6.24 but that's
+> not helpful at all.
 
-Not sure why this cannot be bookeeped in the driver.
-Upon association AID is delivered to driver, so every packet that will
-be sent to this AP has this AID?
+Does the driver rely on all the new stuff? Or just he one you mentioned?
+
+> >
+> > Heh fun, so now all usb wireless devices are named wlan%d, all
+> > mac80211 devices are named wlan%d, and yet a few PCI ones (prism54,
+> > etc), still will get their wlan%d. Should we care about just sticking to
+> > one or not bother for old stuff and just moving forward stick to
+> > wlan%d for both all fullmac and softmac devices?
+> >
+>
+>  I thought all wireless devices should have wlan%d names.
+
+Well I would agree with this statement now. The arguments I've seen
+before against this was:
+
+ * if its not broken don't fix it
+ * scripts who rely on device names may be broken
+
+I'm all for just being consistent and sticking wlan%d though. Script
+breaking consideration is important though.
+
+> >
+> >
+> > > Also rndis_host should include this patch:
+> > >  http://marc.info/?l=linux-netdev&m=120626915222918&w=2
+> > >
+> >
+> > drivers/net/usb/rndis_host.c is included as part of compat-wireless.
+> > I don't provide additional patches but just rely on what is already
+> > merged. This has the advantage of pushing people to push
+> > patches directly upstream and getting maintainers to merge them.
+> >
+>
+>  Patch was merged into 2.6.25.
+
+Cool, then compat picked it up. If I have time I'll try to test the
+driver on 2.6.22 and see if I can backport any changes.
+
+  Luis
