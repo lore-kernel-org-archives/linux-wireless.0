@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:63312 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:17379 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755519AbYDAG1G convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1758504AbYDZRFd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 02:27:06 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2451586wah.23
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 23:27:06 -0700 (PDT)
-Message-ID: <1ba2fa240803312327vcedd4a5y520e3d42f9dc3452@mail.gmail.com> (sfid-20080401_072725_150985_DAD70408)
-Date: Tue, 1 Apr 2008 09:27:06 +0300
+	Sat, 26 Apr 2008 13:05:33 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so6732199waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 10:05:33 -0700 (PDT)
+Message-ID: <1ba2fa240804261005h25d17fd4n72b6b07fee835ae3@mail.gmail.com> (sfid-20080426_190559_261540_9742BF2A)
+Date: Sat, 26 Apr 2008 20:05:32 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "bruno randolf" <bruno@thinktube.com>
-Subject: Re: mac80211 bug? no data is being transmitted after interface is brought down and then up again
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"=?ISO-8859-1?Q?Thomas_B=E4chler?=" <thomas@archlinux.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200804011053.19675.bruno@thinktube.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH RFT] tkip: fix iv32 calculation in ieee80211_get_tkip_key()
+Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1209226228.10943.45.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <fsm20k$usk$1@ger.gmane.org> <20080331190225.GA12933@tuxdriver.com>
-	 <200804011053.19675.bruno@thinktube.com>
+References: <1209081653.12561.50.camel@dv>
+	 <1ba2fa240804260825qcae5777qddd2d1e91a0277dc@mail.gmail.com>
+	 <1209226228.10943.45.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/1/08, bruno randolf <bruno@thinktube.com> wrote:
-> On Tuesday 01 April 2008 04:02:25 John W. Linville wrote:
-> > On Sat, Mar 29, 2008 at 07:32:51PM +0100, Thomas B=E4chler wrote:
-> > > My question is, should this be considered a bug in mac80211?
-> > > IMO, when an interface is brought down and then up again, one of =
-the
-> > > following things should happen:
-> > > 1) Everything works as before
-> > > 2) Nothing works, but the card disassociates from the network.
-> >
-> > #2 would be my vote.
+On Sat, Apr 26, 2008 at 7:10 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> why is that? would it be so difficult to provide #1?
-
-Driver should not take policy decision. It should be user controled app=
-lincation
-such as NM or ifup script of whatever to decide if to reconnect or not.
-
+>  > >  It's a side product of testing a sparse patch by Linus Torvalds.
+>  > >  Compile tested only.
 >
-> from a usability point of view #1 would be clearly better. whatever t=
-he state
-> was before, when i bring the interface up it want it to work (associa=
-te, join
-> IBSS) and be able to transmit data.
+>
+> > >         iv32 = data[hdr_len + 4] +
+>  > >  -               (data[hdr_len + 5] >> 8) +
+>  > >  -               (data[hdr_len + 6] >> 16) +
+>  > >  -               (data[hdr_len + 7] >> 24);
+>  > >  +               (data[hdr_len + 5] << 8) +
+>  > >  +               (data[hdr_len + 6] << 16) +
+>  > >  +               (data[hdr_len + 7] << 24);
+>  > >
+>  > >   #ifdef CONFIG_TKIP_DEBUG
+>  > >         printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+>  > >
+>  > >
+>  >
+>  > We've tested TKIP code well and I'm not sure we wouldn't pay attention
+>  > to such mistake.
+>
+>  But the code does look a bit fishy. I'm confused.
 
-=46or usuablity point of view you should configure your applicantion or
-script to do reconnection, but it should not be driver call to do
-that.
-There are security issues with this that just get more and more compilc=
-ated.
-In application level you have more options to discover your
-environment and handle user preferences. and take the correct call
+It  looks bad. Frankly  Pavel's version looks more correct but as
+black box TKIP is working.
+Maybe we never tested more then 256 wrapparounds.... will need to dig into more
 
+Thanks
 Tomas
 
-> bruno
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  johannes
 >
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
