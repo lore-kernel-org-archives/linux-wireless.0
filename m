@@ -1,81 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.249]:54275 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753178AbYDQUNu (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:51174 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbYDZEqI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 16:13:50 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so112329rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2008 13:13:50 -0700 (PDT)
-Subject: [PATCH 7/7] mac80211: tkip.c use struct tkip_ctx in phase 2 key
-	mixing
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 17 Apr 2008 13:13:50 -0700
-Message-Id: <1208463230.17196.29.camel@brick> (sfid-20080417_211453_442726_A2A67CBE)
-Mime-Version: 1.0
+	Sat, 26 Apr 2008 00:46:08 -0400
+Received: by an-out-0708.google.com with SMTP id d31so1015506and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2008 21:46:04 -0700 (PDT)
+Message-ID: <43e72e890804252146y600b6b40x738e0826bc492b0@mail.gmail.com> (sfid-20080426_064632_469493_58A857F6)
+Date: Fri, 25 Apr 2008 21:46:04 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Charles Figura" <charles.figura@wartburg.edu>
+Subject: Re: Problems loading from compat-wireless-2008-04-24
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4810F9BC.7030104@wartburg.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <4810F9BC.7030104@wartburg.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+On Thu, Apr 24, 2008 at 2:21 PM, Charles Figura
+<charles.figura@wartburg.edu> wrote:
+> Greetings -
+>
+>  I just tried to build, install and load the 2008-04-24 release of the
+>  compat-wireless project.  The make and installation seemed to work just
+>  fine (a couple of warnings, along the line of
+>
+>  include/asm/io_32.h: In function 'memcpy_toio':
+>  include/asm/io_32.h:217: warning: passing argument 1 of '__memcpy' discards
+> qualifiers from pointer target type
+>   CC [M]
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index e9ee247..a00cf1e 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -95,10 +95,12 @@ static void tkip_mixing_phase1(struct ieee80211_key *key, const u8 *ta,
- 	ctx->initialized = 1;
- }
- 
--static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
--			       u8 *rc4key)
-+static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
-+			       u16 tsc_IV16, u8 *rc4key)
- {
- 	u16 ppk[6];
-+	const u16 *p1k = ctx->p1k;
-+	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
- 	int i;
- 
- 	ppk[0] = p1k[0];
-@@ -152,9 +154,7 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
- 		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.tx.iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -197,8 +197,7 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
- 
-@@ -315,9 +314,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 		}
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.rx[queue], iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
- 	{
- 		int i;
--- 
-1.5.5.144.g3e42
+This comes from your current kernel, so we don't provide update for
+those kernel headers. Its safe though.
 
+> /home/figura/compat-wireless-2008-04-24/drivers/net/wireless/rt2x00/rt2500pci.o
+>  and
+>  /home/figura/compat-wireless-2008-04-24/net/mac80211/wme.c:580: warning:
+> initialization from incompatible pointer type
+>  and make install showed no errors.
+>
+>  HOWEVER -
+>  when I try to load the modules I get:
+>  figura@nightfall:~/compat-wireless-2008-04-24$ sudo modprobe iwl3945
+>  WARNING: Error inserting iwlwifi_mac80211
+> (/lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/mac80211/compatible/net/mac80211/iwlwifi_mac80211.ko):
+> Unknown symbol in module, or unknown parameter (see dmesg)
+>  FATAL: Error inserting iwl3945
+> (/lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/iwlwifi/compatible/iwl3945.ko):
+> Unknown symbol in module, or unknown parameter (see dmesg)
+>
+>  If I do a 'make load', I get the above plus a boatload of other similar
+>  error messages for iwl4965, rt2x_mac80211, rt2x00lib, rt2x00pci, etc...
+>
+>  I've attached the relevant parts of dmesg.  Any ideas what's going on
+>  here?
+
+Did you do make unload first? If not try that first and then try just
+loading one module you are sure you need. I should probably remove
+make load... hmm...
+
+  Luis
