@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59717 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43143 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbYDAMJd (ORCPT
+	with ESMTP id S1755314AbYDZUwO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:09:33 -0400
-Subject: Re: is adm8211 capable of sending arbitrary frames?
+	Sat, 26 Apr 2008 16:52:14 -0400
+Subject: Re: [PATCH 2/2] mac80211: make rx radiotap header more flexible
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200803311438.41956.flamingice@sourmilk.net>
-References: <1206449800.16475.255.camel@johannes.berg>
-	 <200803311438.41956.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rRCtaEuDNekezr10t8lp"
-Date: Tue, 01 Apr 2008 14:09:28 +0200
-Message-Id: <1207051768.5143.62.camel@johannes.berg> (sfid-20080401_130936_632495_EF456298)
+To: Bruno Randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <20080407042549.9026.81997.stgit@localhost>
+References: <20080407042541.9026.59360.stgit@localhost>
+	 <20080407042549.9026.81997.stgit@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5z6RYwrVTh9DEuI6a38Q"
+Date: Sat, 26 Apr 2008 22:51:50 +0200
+Message-Id: <1209243111.10943.61.camel@johannes.berg> (sfid-20080426_225230_588235_70DA1400)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-rRCtaEuDNekezr10t8lp
+--=-5z6RYwrVTh9DEuI6a38Q
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> > This appears to mean that it can send neither QoS frames properly nor
-> > can actually communicate with an AP other than the one it is associated
-> > to. The latter isn't much of a problem, but it seems that the driver
-> > will fall over with QoS AP since it doesn't strip the QoS-data bit from
-> > the frame control. Or does the hardware do that? In any case, mac80211
-> > shouldn't be announcing QoS support for this driver, should it?
-> >
-> ADM8211A does not support QoS.. ADM8211B might and ADM8211C does for sure=
-, but=20
-> that revision was never sold AFAIK.
+> +static void
+> +ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+> +				 struct sk_buff *skb,
+> +				 struct ieee80211_rx_status *status,
+> +				 struct ieee80211_rate *rate,
+> +				 int rtap_len)
+> +{
+> +	struct ieee80211_radiotap_header *rthdr;
+> +	unsigned char *pos;
+> +
+> +	rthdr =3D (struct ieee80211_radiotap_header *)skb_push(skb, rtap_len);
+> +	memset(rthdr, 0, rtap_len);
+> +
+> +	/* radiotap header, set always present flags */
+> +	rthdr->it_present =3D
+> +		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
+> +			    (1 << IEEE80211_RADIOTAP_RATE) |
+> +			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+> +			    (1 << IEEE80211_RADIOTAP_ANTENNA) |
+> +			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
 
-Right.
+Is all this alignment-safe now? Not sure it was before but it'd be nice
+if we could fix it up.
 
-> At any rate, there is no QoS support for this driver.
-
-Yeah but afaict mac80211 is buggy, it can send QoS frames even if the
-driver only has one queue...
+Radiotap explicitly allows you to have a longer length than you need so
+maybe we should just make sure to align things?
 
 johannes
 
---=-rRCtaEuDNekezr10t8lp
+--=-5z6RYwrVTh9DEuI6a38Q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIUAwUAR/Il96Vg1VMiehFYAQI+KA/2Lwh0EMo3/4d1SWwJmuDbmWLYVqeMH2aL
-3R+XXo/PuP2QYyGeXlV7M0cB4ApFXjNVFPrqcnEVICdD10Bl10fQrTSifGTP0kNc
-uKSnexXc0JVFQN3s3SHH79i3LUd+XqCaOpQ3837kmptkCAWAUZ00N+ZFXvBCZeea
-gspF1E+vQFH3pC6cV7KJ1sY4WVEJqqoUnd6TeOf6LyYZR2jmQREiiIz6kfraWnuK
-cFycUnDijlSrW9k5EExImIKlA6FWER/aVFEop3noHJtWNpU44g2Vsk5i6QqBlJGl
-YslRvfCMXxdvwZsbFFI4P6HLuj9FVeRo7/HeAvBy2TLQ7XizjwY8T2ahnWbkYsfR
-dNG6r3c52muMc6ikbYiVQynz18WKrkgOldWtjmMRKuoOfrOpKGJojScbvaw3N3Q0
-d9iEP01zUXAeha/oXXsrXm2dJwmp+7qKdjb0sRKu1UUaWf641mEn8u3WiXSwsjKM
-fjEBA65IecVx7BSenRuvrhPBlzhcZnYe5S3R4VxTBeo2tUWkaIqrXYJ/KeazYmc2
-fRR5WEguVsJ+Ar4LC54+pbyPg9xDzkmdLvrodNTtCJNDPQAt4eO/OJ1Jfu8z2arP
-S4ORzqzrc6f1LmSfAh9GQOyF4luRZSbHekosU4HbBwB13F7kqwyu7jz9tCJRYcUv
-BTR5zWYIMA==
-=wV+x
+iQIVAwUASBOV5aVg1VMiehFYAQJkcg/9GUEG6iIvuZW6tpBcpCYWqdUaZAGoVI7A
+KQ7u1r7bSODuggB5rPSvpdtk9c1516paOH7qCwDiGPHU76mlv+E89LR1lga/30hU
+LErrt8bP5xkpfXxhNOWNPEaC+92udjfvAo/bChn51Bn2GGcXgQukyestroQuVKwF
+fVEbOgQtrhw6LiQhOravGnHtmiCMzuPVy0AS4f0f+/fdHsd9T5lVPi4ErK93Rk3z
+mrDjpMQpy4nNeiFPwT3GzYVJKma5P271Ew8fXOSnUWXfRt4xc+nhuWIWfJXjCWGF
+RXdQQC/jhM0TlusP1SMG2P2o5UkapgsuiSJ3w5ZRF6ghKV2Oynxak0D0tQRIbQIy
+stGAdzPwfbJ/QrJVd/M1eVHMsK7BRMe6wjWDUtUzBu3EN1I49Tg/T2sHVeeI43C2
+SZvMclZz3xcaCYRhmDDQwhLi42f8LPZtKJi+cSU52oaVRpz7eBhzjHXMWDBo2aGs
+WubX2bKKdm03RW7T5oRUoV/5IoewJplV/Ma9KO7TXwCvWgx3ablH6qnH1y//bpSe
+2Gh3L2ceHEDi1kIsY+tqyHKXurXyGtikHGpQYQBEKjvx/Ffsrm4G2brYeSiJtjvJ
+UOT5UTKpRUpYxAdUQwT5OCAM5FAstcicnUexsa28mPpkdKLCdez87rI8G52evZOL
+ByhJNimpRLY=
+=eP4W
 -----END PGP SIGNATURE-----
 
---=-rRCtaEuDNekezr10t8lp--
+--=-5z6RYwrVTh9DEuI6a38Q--
 
