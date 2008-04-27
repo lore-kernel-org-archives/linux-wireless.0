@@ -1,137 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3980 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751673AbYDHDbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2008 23:31:07 -0400
-Date: Mon, 7 Apr 2008 23:06:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2008-04-07
-Message-ID: <20080408030651.GA8849@tuxdriver.com> (sfid-20080408_043132_563316_DD274487)
+Received: from be2.wartburg.edu ([216.159.168.186]:19163 "EHLO
+	WARTBURG-EVS-01.wartburg.edu" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752122AbYD0OcR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Apr 2008 10:32:17 -0400
+Message-ID: <48148E6F.3080703@wartburg.edu> (sfid-20080427_163231_994796_A4F7BF7D)
+Date: Sun, 27 Apr 2008 09:32:15 -0500
+From: Charles Figura <charles.figura@wartburg.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: [Fwd: Re: Problems loading from compat-wireless-2008-04-24]
+Content-Type: multipart/mixed;
+ boundary="------------050606010908020706070606"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+This is a multi-part message in MIME format.
+--------------050606010908020706070606
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Here is another batch of fixes intended for 2.6.25 if at all possible.
-We are mostly down to a smattering of one-liners, but there is a little
-fix that keeps b43legacy from crashing with certain bcm4303 hardware.
+I'm running Ubuntu Hardy with the 2.6.24-16-generic kernel.
+I've followed the log approach laid out by Luis Rodriguez below,
+and attached the corresponding dmesg output.
 
-Let me know if there are problems!
+As you see, the modprobe FAILS due to lots of unknown symbols.
 
-Thanks,
+Oh, one other note that I hadn't mentioned before.  I've found
+that a 'sudo make uninstall' doesn't get rid of the module - at
+least, it doesn't reset the module list.  If I follow a 'sudo make
+uninstall' by 'sudo modprobe iwl3945', it tries to insert the same
+(faulty) module.  Only by rebooting is the original restored.
+How do I update the module list after doing a make uninstall?
 
-John
+Thanks - hope this helps!
 
----
 
-Individual patches are available here:
+-------- Original Message --------
+Subject: Re: Problems loading from compat-wireless-2008-04-24
+Date: Sat, 26 Apr 2008 11:14:20 -0700
+From: Luis R. Rodriguez <mcgrof@gmail.com>
+To: Charles Figura <charles.figura@wartburg.edu>
+References: <4810F9BC.7030104@wartburg.edu>	 
+<43e72e890804252146y600b6b40x738e0826bc492b0@mail.gmail.com>	 
+<4813700F.5050108@wartburg.edu>
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+On Sat, Apr 26, 2008 at 11:10 AM, Charles Figura
+<charles.figura@wartburg.edu> wrote:
+> Luis -
+>
+>  Thanks for the response.  I did, actually, do a 'make unload' before
+>  loading the new module.  And the error I sent you was actually from
+>  loading the single module I need - the iwl3945 module.
+>
+>  So I'm still back where I started, I think.
 
----
+Please reply to the list explaining this, Intel reads linux-wireless
+so they can help if its their driver.
 
-The following changes since commit bfe87dbc7b4da5b05a1a78480e996787a500cc6f:
-  David S. Miller (1):
-        Merge branch 'upstream-davem' of master.kernel.org:/.../jgarzik/netdev-2.6
+Do this:
 
-are available in the git repository at:
+Reboot.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+sudo dmesg -c > log1
+less log1 # review it to make sure there are no oops
+sudo make unload
+sudo dmesg -c
+sudo modprobe iwl4965
+# Try to connect or whatever to try to replicate your oops
+sudo dmesg -c > oops.txt
 
-Abhijeet Kolekar (1):
-      iwlwifi: fix n-band association problem
+copy and paste the oops.txt into your e-mail, that will give a cleaner
+log. Also be sure to mention your kernel you are using.
 
-Daniel Drake (1):
-      ipw2200: set MAC address on radiotap interface
+   Luis
 
-Holger Schurig (1):
-      libertas: fix mode initialization problem
 
-Johannes Berg (1):
-      nl80211: fix STA AID bug
 
-Stefano Brivio (1):
-      b43legacy: fix bcm4303 crash
-
- drivers/net/wireless/ipw2200.c        |    1 +
- drivers/net/wireless/iwlwifi/Kconfig  |    1 -
- drivers/net/wireless/libertas/assoc.c |    2 +-
- drivers/ssb/main.c                    |    6 ++++++
- net/wireless/nl80211.c                |    2 +-
- 5 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index a56d9fc..b34c275 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -11576,6 +11576,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
- 	priv->prom_priv->priv = priv;
- 
- 	strcpy(priv->prom_net_dev->name, "rtap%d");
-+	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
- 
- 	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 	priv->prom_net_dev->open = ipw_prom_open;
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index b79a35a..b54ff71 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -35,7 +35,6 @@ config IWL4965_HT
- 	bool "Enable 802.11n HT features in iwl4965 driver"
- 	depends on EXPERIMENTAL
- 	depends on IWL4965 && IWL4965_QOS
--	depends on n
- 	---help---
- 	  This option enables IEEE 802.11n High Throughput features
- 	  for the iwl4965 driver.
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index 87e145f..6a24ed6 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -541,7 +541,7 @@ void lbs_association_worker(struct work_struct *work)
- 	}
- 
- 	if (find_any_ssid) {
--		u8 new_mode;
-+		u8 new_mode = assoc_req->mode;
- 
- 		ret = lbs_find_best_network_ssid(priv, assoc_req->ssid,
- 				&assoc_req->ssid_len, assoc_req->mode, &new_mode);
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index bedb2b4..72017bf 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1044,6 +1044,12 @@ int ssb_bus_may_powerdown(struct ssb_bus *bus)
- 		goto out;
- 
- 	cc = &bus->chipco;
-+
-+	if (!cc->dev)
-+		goto out;
-+	if (cc->dev->id.revision < 5)
-+		goto out;
-+
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_SLOW);
- 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 0);
- 	if (err)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e3a214f..f68a5c8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -945,7 +945,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
- 	params.listen_interval =
- 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
--	params.listen_interval = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-+	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
- 
- 	if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
- 				&params.station_flags))
 -- 
-John W. Linville
-linville@tuxdriver.com
+Charles Figura                      charles.figura@wartburg.edu
+Associate Professor of Physics    http://mcsp.wartburg.edu/figura
+Director, Wartburg Platte Observatory    (319) 352-8373
+                                          (319) 352-8606 (fax)
+
+--------------050606010908020706070606
+Content-Type: text/plain;
+ name="oops.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="oops.txt"
+
+WyAgMjE5LjA0NjY2OV0gaXdsd2lmaV9tYWM4MDIxMTogZGlzYWdyZWVzIGFib3V0IHZlcnNp
+b24gb2Ygc3ltYm9sIHdpcGh5X3JlZ2lzdGVyClsgIDIxOS4wNDY2ODFdIGl3bHdpZmlfbWFj
+ODAyMTE6IFVua25vd24gc3ltYm9sIHdpcGh5X3JlZ2lzdGVyClsgIDIxOS4wNDY3NDJdIGl3
+bHdpZmlfbWFjODAyMTE6IGRpc2FncmVlcyBhYm91dCB2ZXJzaW9uIG9mIHN5bWJvbCB3aXBo
+eV9uZXcKWyAgMjE5LjA0Njc0N10gaXdsd2lmaV9tYWM4MDIxMTogVW5rbm93biBzeW1ib2wg
+d2lwaHlfbmV3ClsgIDIxOS4wNDc3NjVdIGl3bHdpZmlfbWFjODAyMTE6IGRpc2FncmVlcyBh
+Ym91dCB2ZXJzaW9uIG9mIHN5bWJvbCB3aXBoeV91bnJlZ2lzdGVyClsgIDIxOS4wNDc3NzFd
+IGl3bHdpZmlfbWFjODAyMTE6IFVua25vd24gc3ltYm9sIHdpcGh5X3VucmVnaXN0ZXIKWyAg
+MjE5LjA0OTA2MF0gaXdsd2lmaV9tYWM4MDIxMTogZGlzYWdyZWVzIGFib3V0IHZlcnNpb24g
+b2Ygc3ltYm9sIHdpcGh5X2ZyZWUKWyAgMjE5LjA0OTA2Nl0gaXdsd2lmaV9tYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgd2lwaHlfZnJlZQpbICAyMTkuMDUwNDgzXSBpd2wzOTQ1OiBVbmtu
+b3duIHN5bWJvbCBpd2x3aWZpX2llZWU4MDIxMV9yeF9pcnFzYWZlClsgIDIxOS4wNTA2MTZd
+IGl3bDM5NDU6IFVua25vd24gc3ltYm9sIGl3bHdpZmlfaWVlZTgwMjExX2dldF9oZHJsZW4K
+WyAgMjE5LjA1MDg0N10gaXdsMzk0NTogVW5rbm93biBzeW1ib2wgaXdsd2lmaV9pd2x3aWZp
+X2llZWU4MDIxMV90eF9zdGF0dXNfaXJxc2FmZQpbICAyMTkuMDUxMDE1XSBpd2wzOTQ1OiBV
+bmtub3duIHN5bWJvbCBpd2x3aWZpX2l3bHdpZmlfaWVlZTgwMjExX3N0b3BfcXVldWVzClsg
+IDIxOS4wNTExMTJdIGl3bDM5NDU6IFVua25vd24gc3ltYm9sIGl3bHdpZmlfX19pZWVlODAy
+MTFfZ2V0X3J4X2xlZF9uYW1lClsgIDIxOS4wNTEzNTFdIGl3bDM5NDU6IFVua25vd24gc3lt
+Ym9sIGl3bHdpZmlfaWVlZTgwMjExX3R4X3N0YXR1cwpbICAyMTkuMDUxNDQwXSBpd2wzOTQ1
+OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2llZWU4MDIxMV9yYXRlX2NvbnRyb2xfdW5yZWdp
+c3RlcgpbICAyMTkuMDUxNzEwXSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2ll
+ZWU4MDIxMV9zdG9wX3F1ZXVlClsgIDIxOS4wNTE3OTldIGl3bDM5NDU6IFVua25vd24gc3lt
+Ym9sIGl3bHdpZmlfc3RhX2luZm9fcHV0ClsgIDIxOS4wNTE5ODldIGl3bDM5NDU6IFVua25v
+d24gc3ltYm9sIGl3bHdpZmlfaWVlZTgwMjExX2ZyZWVfaHcKWyAgMjE5LjA1MjA3OV0gaXds
+Mzk0NTogVW5rbm93biBzeW1ib2wgaXdsd2lmaV9pZWVlODAyMTFfYmVhY29uX2dldApbICAy
+MTkuMDUyMTc5XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX3N0YV9pbmZvX2dl
+dApbICAyMTkuMDUyMzc0XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2llZWU4
+MDIxMV9hbGxvY19odwpbICAyMTkuMDUyNTA0XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBp
+d2x3aWZpX19faWVlZTgwMjExX2dldF90eF9sZWRfbmFtZQpbICAyMTkuMDUyNTkzXSBpd2wz
+OTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2llZWU4MDIxMV9zY2FuX2NvbXBsZXRlZApb
+ICAyMTkuMDUyODU0XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2llZWU4MDIx
+MV9yZWdpc3Rlcl9odwpbICAyMTkuMDUzMTE4XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBp
+d2x3aWZpX2llZWU4MDIxMV93YWtlX3F1ZXVlClsgIDIxOS4wNTMyMTJdIGl3bDM5NDU6IFVu
+a25vd24gc3ltYm9sIGl3bHdpZmlfaWVlZTgwMjExX3JhdGVfY29udHJvbF9yZWdpc3Rlcgpb
+ICAyMTkuMDUzMzc4XSBpd2wzOTQ1OiBVbmtub3duIHN5bWJvbCBpd2x3aWZpX2l3bHdpZmlf
+aWVlZTgwMjExX3JlZ2lzdGVyX2h3bW9kZQpbICAyMTkuMDUzNzU4XSBpd2wzOTQ1OiBVbmtu
+b3duIHN5bWJvbCBpd2x3aWZpX2llZWU4MDIxMV91bnJlZ2lzdGVyX2h3ClsgIDIxOS4wNTM5
+MTBdIGl3bDM5NDU6IFVua25vd24gc3ltYm9sIGl3bHdpZmlfaWVlZTgwMjExX3N0YXJ0X3F1
+ZXVlcwo=
+--------------050606010908020706070606--
