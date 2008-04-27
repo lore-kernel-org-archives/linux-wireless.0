@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n12c.bullet.scd.yahoo.com ([66.218.67.49]:26394 "HELO
-	n12c.bullet.scd.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755054AbYDCRsM (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:56058 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbYD0PAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 13:48:12 -0400
-Message-ID: <47F5144C.6000800@yahoo.it> (sfid-20080403_184819_052657_3FC668BF)
-Date: Thu, 03 Apr 2008 19:30:52 +0200
-From: Filippo Zangheri <filippo.zangheri@yahoo.it>
+	Sun, 27 Apr 2008 11:00:06 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so7284036waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2008 08:00:05 -0700 (PDT)
+Message-ID: <1ba2fa240804270800t15c02830p56470fa8996b50d3@mail.gmail.com> (sfid-20080427_170042_719660_BBBCD27B)
+Date: Sun, 27 Apr 2008 18:00:05 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: incorrect shift direction
+Cc: "Harvey Harrison" <harvey.harrison@gmail.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1209295470.10943.65.camel@johannes.berg>
 MIME-Version: 1.0
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: add missing include in iwl-3945-led.c
-References: <47F4AFE8.4020405@yahoo.it> <D936D925018D154694D8A362EEB089200419511C@orsmsx416.amr.corp.intel.com>
-In-Reply-To: <D936D925018D154694D8A362EEB089200419511C@orsmsx416.amr.corp.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1209293320.14173.63.camel@brick>
+	 <1209295470.10943.65.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chatre, Reinette ha scritto:
-> On Thursday, April 03, 2008 3:23 AM, Filippo Zangheri  wrote:
-> 
->> iwl-3945-led.c does not include a relevant file.
->>
->> Signed-off-by: Filippo Zangheri <filippo.zangheri@yahoo.it> ---
->> drivers/net/wireless/iwlwifi/iwl-3945-led.c |    1 +
->> 1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> index d200d08..7743cac 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> @@ -40,6 +40,7 @@
->> #include <asm/unaligned.h>
->>
->> #include "iwl-3945.h"
->> +#include "iwl-3945-led.h"
->> #include "iwl-helpers.h"
->>
->> #define IWL_1MB_RATE (128 * 1024)
->>
-> 
-> ... but iwl-3945.h which is just above the line you added already
-> includes this header file.
-
-Right, but here it refused to compile without this.. I apologize,
-I'm really sorry!
-
--- 
-Filippo Zangheri
-
-GPG key ID: 0xE1D879FA
-Key fingerprint: 816B CE57 D43C 0A47 EF35 3378 EA5F A72A E1D8 79FA
-Key server: pgp.mit.edu
-
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GE d- s+:- a-- C++ UL+++ P+ L+++ E-- W+ N* o-- K- w--- O-- M--
-V- PS++ PE+ Y+ PGP++ t 5-- X++ R* tv b+ DI-- D---- G-- e++ h--
-r++ z*
-------END GEEK CODE BLOCK------
-
+On Sun, Apr 27, 2008 at 2:24 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-04-27 at 03:48 -0700, Harvey Harrison wrote:
+>  > Looks like  5d2cdcd4e85c5187db30a6b29f79fbbe59f39f78 got the
+>  > shifts wrong.
+>
+>  Aha! Thanks for tracking this down. We had a patch to fix this but were
+>  confused why the bug hadn't been noticed before. So it looks like it
+>  wasn't *present* before :)
+>
+What to say.... Shame on me.
+Tomas
