@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp107.prem.mail.ac4.yahoo.com ([76.13.13.46]:38489 "HELO
-	smtp107.prem.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754746AbYDANwG (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:45327 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753825AbYD0RLp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 09:52:06 -0400
-Message-ID: <47F23C6B.6060205@yahoo.com> (sfid-20080401_145210_897585_A9C95B1A)
-Date: Tue, 01 Apr 2008 09:45:15 -0400
-From: Andres Bertens <abertensu@yahoo.com>
+	Sun, 27 Apr 2008 13:11:45 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix dual-PHY devices
+Date: Sun, 27 Apr 2008 19:06:18 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Richard Jonsson <richie@coderworld.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4)
- andtimeout, a solution
-References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>	 <1206999696.20744.2.camel@localhost.localdomain> <1207051434.5143.58.camel@johannes.berg>
-In-Reply-To: <1207051434.5143.58.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200804271906.18856.mb@bu3sch.de> (sfid-20080427_191156_002067_FFD4180E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes operation of dual-PHY (A/B/G) devices.
+Do not anounce the A-PHY to mac80211, as that's not supported, yet.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, this is 2.6.26 material.
 
 
-Johannes Berg wrote:
->>>> After browsing the internet, I found a lot of people with the same
->>>> problem and no solution. So, I dived into the code and found a simple
->>>> solution: ignore disassociation. When a new request arrives to the
->>>> wireless, a reconnection is done automatically.
->> Ignoring the disassociation from the AP is suspect...  wouldn't the AP
->> be releasing resources associated with the station, requiring a
->> reassociate/reauth from the station?  Reason 4 seems to mean "Inactivity
->> timer expired and station was disassociated".
-> 
-> Indeed.
-> 
->> A better solution would be to queue up a reassocation worker if the AP
->> kicked you off for reason 4, maybe?
-> 
-> It would think so, yes.
-> 
-> johannes
-
-Reason=4 is in fact "Inactivity timer expired and station was 
-disassociated". According to my router log:
-"Tuesday April 01, 2008 09:08:54 Disassociated: 00-19-D2-4F-22-4D 
-because idle 300 seconds"
-
-Indeed, the default behaviour goes for a reassocation but my hw/sw 
-combination (intel3945/dlink/wep) fails with a status=17 (AP unable to 
-handle new status). After 3 tries, it dies with an AP association 
-timeout. From there is no recovery till I set the interface down and up.
-
-That's why I solved it (perhaps not in the best way) ignoring the 
-disassociation. Now it works.
-
-Andres
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-27 17:47:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-27 17:47:50.000000000 +0200
+@@ -4308,12 +4308,20 @@ static int b43_wireless_core_attach(stru
+ 	if (dev->phy.type == B43_PHYTYPE_A) {
+ 		/* FIXME */
+ 		b43err(wl, "IEEE 802.11a devices are unsupported\n");
+ 		err = -EOPNOTSUPP;
+ 		goto err_powerdown;
+ 	}
++	if (1 /* disable A-PHY */) {
++		/* FIXME: For now we disable the A-PHY on multi-PHY devices. */
++		if (dev->phy.type != B43_PHYTYPE_N) {
++			have_2ghz_phy = 1;
++			have_5ghz_phy = 0;
++		}
++	}
++
+ 	dev->phy.gmode = have_2ghz_phy;
+ 	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
+ 	b43_wireless_core_reset(dev, tmp);
+ 
+ 	err = b43_validate_chipaccess(dev);
+ 	if (err)
