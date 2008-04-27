@@ -1,33 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30266 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754273AbYDBQwc convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41517
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757077AbYD0AkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 12:52:32 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] drivers/net/wireless/iwlwifi/iwl-3945.h: correct CONFIG_IWL4965_LEDS typo
-Date: Wed, 2 Apr 2008 09:52:18 -0700
-Message-ID: <D936D925018D154694D8A362EEB089200415A66F@orsmsx416.amr.corp.intel.com> (sfid-20080402_175234_267888_E74B05C3)
-In-Reply-To: <1207150532-30440-1-git-send-email-linville@tuxdriver.com>
-References: <47F38D53.3020901@tilanus.com> <1207150532-30440-1-git-send-email-linville@tuxdriver.com>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Cc: <ipw3945-devel@lists.sourceforge.net>
+	Sat, 26 Apr 2008 20:40:08 -0400
+Date: Sat, 26 Apr 2008 17:40:08 -0700 (PDT)
+Message-Id: <20080426.174008.212982189.davem@davemloft.net> (sfid-20080427_024056_889881_908499BC)
+To: kronos.it@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fix compile error with wifi & leds
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080426203408.GA12074@dreamland.darkstar.lan>
+References: <20080426203408.GA12074@dreamland.darkstar.lan>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , John W. Linville  wrote:
+From: Luca Tettamanti <kronos.it@gmail.com>
+Date: Sat, 26 Apr 2008 22:34:08 +0200
 
-> Thakns to Winfried Tilanus <winfried@tilanus.com> for identifying the
-> problem! 
+> Since MAC80211_LEDS is selected by wireless drivers it must select its
+> own dependencies otherwise a build error may occur (kbuild will select
+> the symbol regardless of "depends" constraints).
 > 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com> ---
+> Signed-Off-By: Luca Tettamanti <kronos.it@gmail.com>
 
-Thanks! I just sent the same patch myself.
+There are various ways to solve this problem, and I'll adopt one of
+them, perhaps your's, over the weekend.
 
-Reinette
-
-
+Thanks!
