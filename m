@@ -1,210 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:51964 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756843AbYDURAK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 13:00:10 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1525656mue.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2008 10:00:07 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH 6/9] rt2x00: Clarify supported chipsets in Kconfig
-Date: Mon, 21 Apr 2008 19:01:40 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200804211858.46659.IvDoorn@gmail.com>
-In-Reply-To: <200804211858.46659.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200804211901.40523.IvDoorn@gmail.com> (sfid-20080421_190104_895845_13041FA0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:32997 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752498AbYD0WZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Apr 2008 18:25:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1JqFIs-0004C1-Gb
+	for linux-wireless@vger.kernel.org; Sun, 27 Apr 2008 22:25:02 +0000
+Received: from p5B10DC71.dip.t-dialin.net ([91.16.220.113])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2008 22:25:02 +0000
+Received: from nbd by p5B10DC71.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2008 22:25:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: airgo wireless drivers
+Date: Sun, 27 Apr 2008 21:50:18 +0000 (UTC)
+Message-ID: <loom.20080427T214719-928@post.gmane.org> (sfid-20080428_002516_877907_770D0743)
+References: <13ed5f4a0804250050k2384ed22m3df9dd7bd18974c4@mail.gmail.com> <3cc280290804262233o1b44dd33if4a9802d19506761@mail.gmail.com>,<1197ff4c0804262359r4fa5f94em350c987278c417fe@mail.gmail.com> <A60A684EB5844943950A980569765A0C014C30998345@XMAIL2.sooner.net.ou.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Filipus Klutiero <chealer@gmail.com>,
-the rt2x00 Kconfig entries should be updated with
-specific chipset notifications.
+Williams, Jeffrey D. <angelbane@...> writes:
+> I've already got a lot of it reverse engineered. I'd share the
+> sources with you that I do have, but they will be inaccessable
+> to me for at least 4-6 weeks. All I can offer you is to get in
+> touch with Felix Fietkau (nbd) of the openwrt project, he has
+> some source code for the agn300 that you can look at. You'll 
+> also need a cross-compiled toolchain for the mips chipset, not
+> the standard objdump. Use crossdev for gentoo, or ubuntu has 
+> them in its repos.
 
-This cleans up Kconfig by explicitly mentioning the
-supported chipsets for each drivers, and uses the
-same chipset family names as mentioned on the Ralink website.
+The stuff that I have was pulled from a public GPL tarball which
+is no longer available on the ASUS FTP. Feel free to contact me
+privately for more information.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/Kconfig |   55 ++++++++++++++++++++--------------
- 1 files changed, 32 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index a1e3938..8dfc6e0 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -5,12 +5,16 @@ config RT2X00
- 	  This will enable the experimental support for the Ralink drivers,
- 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
- 
--	  These drivers will make use of the mac80211 stack.
-+	  These drivers make use of the mac80211 stack.
- 
- 	  When building one of the individual drivers, the rt2x00 library
- 	  will also be created. That library (when the driver is built as
- 	  a module) will be called "rt2x00lib.ko".
- 
-+	  Additionally PCI and USB libraries will also be build depending
-+	  on the types of drivers being selected, these libraries will be
-+	  called "rt2x00pci.ko" and "rt2x00usb.ko".
-+
- if RT2X00
- 
- config RT2X00_LIB
-@@ -40,114 +44,119 @@ config RT2X00_LIB_LEDS
- 	depends on RT2X00_LIB
- 
- config RT2400PCI
--	tristate "Ralink rt2400 pci/pcmcia support"
-+	tristate "Ralink rt2400 (PCI/PCMCIA) support"
- 	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select EEPROM_93CX6
- 	---help---
--	  This is an experimental driver for the Ralink rt2400 wireless chip.
-+	  This adds support for rt2400 wireless chipset family.
-+	  Supported chips: RT2460.
- 
- 	  When compiled as a module, this driver will be called "rt2400pci.ko".
- 
- config RT2400PCI_RFKILL
--	bool "RT2400 rfkill support"
-+	bool "Ralink rt2400 rfkill support"
- 	depends on RT2400PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
--	  This adds support for integrated rt2400 devices that feature a
-+	  This adds support for integrated rt2400 hardware that features a
- 	  hardware button to control the radio state.
- 	  This feature depends on the RF switch subsystem rfkill.
- 
- config RT2400PCI_LEDS
--	bool "RT2400 leds support"
-+	bool "Ralink rt2400 leds support"
- 	depends on RT2400PCI && LEDS_CLASS
- 	select RT2X00_LIB_LEDS
- 	---help---
- 	  This adds support for led triggers provided my mac80211.
- 
- config RT2500PCI
--	tristate "Ralink rt2500 pci/pcmcia support"
-+	tristate "Ralink rt2500 (PCI/PCMCIA) support"
- 	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select EEPROM_93CX6
- 	---help---
--	  This is an experimental driver for the Ralink rt2500 wireless chip.
-+	  This adds support for rt2500 wireless chipset family.
-+	  Supported chips: RT2560.
- 
- 	  When compiled as a module, this driver will be called "rt2500pci.ko".
- 
- config RT2500PCI_RFKILL
--	bool "RT2500 rfkill support"
-+	bool "Ralink rt2500 rfkill support"
- 	depends on RT2500PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
--	  This adds support for integrated rt2500 devices that feature a
-+	  This adds support for integrated rt2500 hardware that features a
- 	  hardware button to control the radio state.
- 	  This feature depends on the RF switch subsystem rfkill.
- 
- config RT2500PCI_LEDS
--	bool "RT2500 leds support"
-+	bool "Ralink rt2500 leds support"
- 	depends on RT2500PCI && LEDS_CLASS
- 	select RT2X00_LIB_LEDS
- 	---help---
- 	  This adds support for led triggers provided my mac80211.
- 
- config RT61PCI
--	tristate "Ralink rt61 pci/pcmcia support"
-+	tristate "Ralink rt2501/rt61 (PCI/PCMCIA) support"
- 	depends on PCI
- 	select RT2X00_LIB_PCI
- 	select RT2X00_LIB_FIRMWARE
- 	select CRC_ITU_T
- 	select EEPROM_93CX6
- 	---help---
--	  This is an experimental driver for the Ralink rt61 wireless chip.
-+	  This adds support for rt2501 wireless chipset family.
-+	  Supported chips: RT2561, RT2561S & RT2661.
- 
- 	  When compiled as a module, this driver will be called "rt61pci.ko".
- 
- config RT61PCI_RFKILL
--	bool "RT61 rfkill support"
-+	bool "Ralink rt2501/rt61 rfkill support"
- 	depends on RT61PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
--	  This adds support for integrated rt61 devices that feature a
-+	  This adds support for integrated rt61 hardware that features a
- 	  hardware button to control the radio state.
- 	  This feature depends on the RF switch subsystem rfkill.
- 
- config RT61PCI_LEDS
--	bool "RT61 leds support"
-+	bool "Ralink rt2501/rt61 leds support"
- 	depends on RT61PCI && LEDS_CLASS
- 	select RT2X00_LIB_LEDS
- 	---help---
- 	  This adds support for led triggers provided my mac80211.
- 
- config RT2500USB
--	tristate "Ralink rt2500 usb support"
-+	tristate "Ralink rt2500 (USB) support"
- 	depends on USB
- 	select RT2X00_LIB_USB
- 	---help---
--	  This is an experimental driver for the Ralink rt2500 wireless chip.
-+	  This adds support for rt2500 wireless chipset family.
-+	  Supported chips: RT2571 & RT2572.
- 
- 	  When compiled as a module, this driver will be called "rt2500usb.ko".
- 
- config RT2500USB_LEDS
--	bool "RT2500 leds support"
-+	bool "Ralink rt2500 leds support"
- 	depends on RT2500USB && LEDS_CLASS
- 	select RT2X00_LIB_LEDS
- 	---help---
- 	  This adds support for led triggers provided my mac80211.
- 
- config RT73USB
--	tristate "Ralink rt73 usb support"
-+	tristate "Ralink rt2501/rt73 (USB) support"
- 	depends on USB
- 	select RT2X00_LIB_USB
- 	select RT2X00_LIB_FIRMWARE
- 	select CRC_ITU_T
- 	---help---
--	  This is an experimental driver for the Ralink rt73 wireless chip.
-+	  This adds support for rt2501 wireless chipset family.
-+	  Supported chips: RT2571W, RT2573 & RT2671.
- 
- 	  When compiled as a module, this driver will be called "rt73usb.ko".
- 
- config RT73USB_LEDS
--	bool "RT73 leds support"
-+	bool "Ralink rt2501/rt73 leds support"
- 	depends on RT73USB && LEDS_CLASS
- 	select RT2X00_LIB_LEDS
- 	---help---
-@@ -159,7 +168,7 @@ config RT2X00_LIB_DEBUGFS
- 	---help---
- 	  Enable creation of debugfs files for the rt2x00 drivers.
- 	  These debugfs files support both reading and writing of the
--	  most important register types of the rt2x00 devices.
-+	  most important register types of the rt2x00 hardware.
- 
- config RT2X00_DEBUG
- 	bool "Ralink debug output"
--- 
-1.5.4.5
+- Felix
 
