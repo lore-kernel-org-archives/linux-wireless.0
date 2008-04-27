@@ -1,68 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:19445 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319AbYDABCW (ORCPT
+Received: from smtp2.dnainternet.fi ([87.94.96.112]:60376 "EHLO
+	smtp2.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbYD0HkM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 21:02:22 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1061450rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 18:02:21 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: johannes@sipsolutions.net
-Date: Mon, 31 Mar 2008 15:21:23 -0700
-Subject: [PATCH] mac80211: fix spinlock recursion on sta expiration
-Message-ID: <47f1899c.02578c0a.0489.586f@mx.google.com> (sfid-20080401_020225_352005_ABD8BB5D)
+	Sun, 27 Apr 2008 03:40:12 -0400
+Message-ID: <20080427104009.d4zldn1eoks8s8g4@hayate.ip6> (sfid-20080427_094027_638619_EC3AD713)
+Date: Sun, 27 Apr 2008 10:40:09 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: compat-2.6: rndis_wlan/rndis_host/usbnet problem(?)
+References: <20080421200409.vvow4d67okcw84kg@hayate.ip6>
+	<20080426045909.GA17936@ruslug.rutgers.edu>
+	<20080426181848.foifd2bcw004kw4g@naisho.dyndns.info>
+	<43e72e890804261126n7c4463c9y2d4bb4dc444be096@mail.gmail.com>
+	<20080427004052.5sespv7h6o4wk8c0@hayate.ip6>
+	<20080427025324.GB17936@ruslug.rutgers.edu>
+In-Reply-To: <20080427025324.GB17936@ruslug.rutgers.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/ieee80211_sta.c |    2 +-
- net/mac80211/sta_info.c      |    2 +-
- net/mac80211/sta_info.h      |    1 +
- 3 files changed, 3 insertions(+), 2 deletions(-)
+> Ok I added cdc_ether.c and it compiles now if you use
+> compat-wireless.git and wireles-testing.git to pull. I tested this
+> only on 2.6.24 though, 2.6.22 compile may be broken now. We'll have
+> to test that.
+>
+> OK so regardless I ran into issues with a 13b1:0026 Linksys
+> (WUSB54GSC). Either I'm really not understanding this driver well or
+> it wasn't tested well. I take it its the first... The first oops I
+> run into is with access to the net_device on rndis_wext_bind(). I fixed
+> that (patch at the bottom) but then I run into a bug on
+> generic_rndis_bind() when accessing the net_device ....
+> I just didn't get that as I am sure to be setting it.
+>
+> I then note that somehow generic_rndis_bind() is being run first
+> than rndis_wext_bind()! How is this happening?
+>
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index f9cf2f1..cfe6fcc 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3081,7 +3081,7 @@ static void ieee80211_sta_expire(struct net_device *dev, unsigned long exp_time)
- 		if (time_after(jiffies, sta->last_rx + exp_time)) {
- 			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
- 			       dev->name, print_mac(mac, sta->addr));
--			sta_info_unlink(&sta);
-+			__sta_info_unlink(&sta);
- 			if (sta)
- 				list_add(&sta->list, &tmp_list);
- 		}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f708367..ba02b43 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -409,7 +409,7 @@ static struct sta_info *__sta_info_unpin(struct sta_info *sta)
- 	return ret;
- }
- 
--static void __sta_info_unlink(struct sta_info **sta)
-+void __sta_info_unlink(struct sta_info **sta)
- {
- 	struct ieee80211_local *local = (*sta)->local;
- 	struct ieee80211_sub_if_data *sdata = (*sta)->sdata;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 5e39a41..d4d6dcb 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -347,6 +347,7 @@ int sta_info_insert(struct sta_info *sta);
-  * has already unlinked it.
-  */
- void sta_info_unlink(struct sta_info **sta);
-+void __sta_info_unlink(struct sta_info **sta);
- 
- void sta_info_destroy(struct sta_info *sta);
- void sta_info_set_tim_bit(struct sta_info *sta);
--- 
-1.5.4.3
+Ok, I'll try to explain usbnet framework. usbnet framework allows usb  
+netdevices to share common code. Drivers depend depend on usbnet.c as  
+tree:
+
+  usbnet
+    |
+    |\------------cdc_ether-----------rndis_host
+    |                |                     |
+  drivers        drivers that         drivers that
+  that only      need cdc_ether       need rndis_host
+  need usbnet    (and usbnet)         functions (rndis_wlan)
+  functions      functions
+
+Drivers depending on usbnet are called minidriver in usbnet framework. Each
+minidriver has list of devices supported and points probe function to  
+usbnet:usbnet_probe(). If minidriver needs quirks over usbnet, this  
+done in bind function. rndis_wlan, rndis_host and cdc_ether all have  
+own modified bind function. So when rndis_wlan is loaded,  
+usbnet:usbnet_probe() calls rndis_wext:rndis_wext_bind() calls  
+rndis_host:generic_rndis_bind() which finally calls  
+cdc_ether:usbnet_generic_cdc_bind(). Netdevice (and struct usbnet) is  
+allocated in usbnet:usbnet_probe().
+
+So usbnet.c should be included to compat-wireless, but modified  
+usbnet.c would cause problems to other minidriver that aren't included  
+in compat-wireless. Maybe this could be worked around with compat.diff  
+and #ifdef's (?)
+
+Because there isn't standard way to detect wireless RNDIS device from  
+non-wireless, rndis_host and rndis_wext both have same usb_device_id.  
+When rndis_host is loaded on wireless device,  
+rndis_host:generic_rndis_bind() fails and lets rndis_wlan probe next.  
+If rndis_wlan is loaded on non-wireless device,  
+rndis_host:generic_rndis_bind() fails and lets rndis_host be probed.  
+Detection is done with checking device media type with RNDIS command.
+
+  - Jussi
 
 
 
