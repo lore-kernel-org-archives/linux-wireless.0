@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45149 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38368 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbYDUIVU (ORCPT
+	with ESMTP id S1765669AbYD1Ri4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 04:21:20 -0400
-Subject: Re: [PATCH] mac80211: remove unnecessary byteshifts in frame
-	control testing
+	Mon, 28 Apr 2008 13:38:56 -0400
+Subject: Re: [REGRESSION] Trouble seeing some wireless networks in latest
+	git
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1208745209.7941.11.camel@brick> (sfid-20080421_033544_733702_6DA132C4)
-References: <1208745209.7941.11.camel@brick>
-	 (sfid-20080421_033544_733702_6DA132C4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fqGWZ6P4ADeOt4ceK7Xu"
-Date: Mon, 21 Apr 2008 10:20:13 +0200
-Message-Id: <1208766013.26186.30.camel@johannes.berg> (sfid-20080421_092123_168955_4E51AFBE)
+To: Priit Laes <plaes@plaes.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1209315625.4095.4.camel@localhost> (sfid-20080427_190124_741883_54F863BD)
+References: <1209288298.3851.12.camel@localhost>
+	 <48149F2B.4000503@lwfinger.net>  <200804271748.49377.mb@bu3sch.de>
+	 <1209315625.4095.4.camel@localhost> (sfid-20080427_190124_741883_54F863BD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HDvOvdVi0Jbo2yWZ+Gn/"
+Date: Mon, 28 Apr 2008 19:38:45 +0200
+Message-Id: <1209404326.29025.5.camel@johannes.berg> (sfid-20080428_193905_382932_E60BF47D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fqGWZ6P4ADeOt4ceK7Xu
-Content-Type: text/plain
+--=-HDvOvdVi0Jbo2yWZ+Gn/
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2008-04-20 at 19:33 -0700, Harvey Harrison wrote:
-> Byteshift the constants rather than the data.
+On Sun, 2008-04-27 at 20:00 +0300, Priit Laes wrote:
+> =C3=9Chel kenal p=C3=A4eval, P, 2008-04-27 kell 17:48, kirjutas Michael B=
+uesch:
+> > > > Any hints how to debug this further?
+> > Nah, it's a regulatory setting issue.
+> > The default regdomain is US, which only allows chans 1-11.
+> > There's some module parameter to switch the regdomain.
+> > This is not a regression, but a feature.
+> >=20
+> Regdomain setting seems to be OK (and missing for b43):
+> =EF=BB=BFiwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index f27d11a..1068965 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -546,16 +546,17 @@ enum ieee80211_back_parties {
->   */
->  static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
->  {
-> -	u8 *raw =3D (u8 *) hdr;
-> -	u8 tofrom =3D (*(raw+1)) & 3; /* get the TODS and FROMDS bits */
-> -
-> -	switch (tofrom) {
-> -		case 2:
-> -			return hdr->addr3;
-> -		case 3:
-> -			return hdr->addr4;
-> +	__le16 fc =3D hdr->frame_control;
-> +	fc &=3D __constant_cpu_to_le16(IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMD=
-S);
-
-Can you use the non-underscore versions except where necessary (i.e. for
-"case ...")
+This should really read "EEPROM tunable channels" instead, cfg80211 will
+further restrict it.
 
 johannes
 
---=-fqGWZ6P4ADeOt4ceK7Xu
+--=-HDvOvdVi0Jbo2yWZ+Gn/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASAxOPKVg1VMiehFYAQI9YQ//b6ToHrh3iPq+Jk9sgl23yprhPX08VC8G
-4SpBjfpkJG7uRze5VNBFPPH2pJjrOR00tdIR3Zbrt1oT1PyEM8JGwuV+Bdet8B/8
-CeXrFb2TDhPKTFbL8elYayebYrKV1nDFX7gW9sNiCGdeCW82or+30+TOkr3AvUjs
-WFPSV4TUZxKYRhxPruk/9wnFENYa7h1jFIGI4mEzHWpltehMhUA8V9Wn+sOxZ8FJ
-I6sqEnpjdYmjH/6r0oLYtI36AFTO9/gxpWBXvuQIjVis7I3IBkGqvCo2x2RezjIG
-y8ceNi4QOnAdvl5H1REOeRm3nywyEkKp5EIQjy5b3hogd3fb2gTMRbDmiMcXMe5Y
-NVTbBbWtNVzBlHW1Zx6T7l6mKaSQMn8N3tZ9/pWlr+rcDjTJ6K0ehKSadbEy4uG+
-8lUUhDMH4Luvq/yDbGIpMmf+Kb3dX2WAr7UA1qjPyX1nfl7JWwVP24lEIXhMBNmA
-vxuc2oOG8SfYtNGwQuSCIBsgpcXOipMkVvDH3sh0xyZ2mjCji5UXYUr1tGutvOHk
-ZB44RMQR2Wnsmnl2qZ5Zi7HLzMBIeh2HL28CUO/0LgwdJ+W/mo0HfaeJHmLSIYbj
-FD7icWFZ0k0v+aDksAu6jd6V/HVbs0YLKaGSIJoJHc+TNc3HxW+jfsI89dEBLK1W
-3JdoVc0RJRI=
-=nPr5
+iQIVAwUASBYLpKVg1VMiehFYAQLMOg//RcWupjJZsxUmMD1ia4jtoCCb915jPZfS
+/2L8KCC6db+YxPhoIj/1Rq2YogGh68x5mL0ugzctGYPkwA/W5XN1jWCh+aU4eiJg
+kjKv2uYKfqwMld7Ja/OMTcvehfISz04YgU3B5SDPooHRpHGZHzyFQZKbCCfUY6Ws
+dIULzK5bYqTpeCj8CCQ2JLM5Ukg8VMUeBWhRGm87jPdnc6CkUd1xY9zu/ZWFb6wv
+bfGdgW40lqPD4X7K4x4NP6MUMWsfDhnkSpsdyj1zA5k2/OIdQwZzWidyrb20uRky
+HS5ePHK8GxPfvrnQYmjb23mSS9Cztxk3J4aM7phXatJ9vl0s3PorXyEhHrBa15fK
+6TO3Ifz+YuTqx19jt7rnLB8/5nUVAalciy7dq5P0t9MXPgld1zytHFrO/qhsRAFu
+2TImlAdHhjgBKWCOYbJURUR8IZcxargAli5h8p65iYPpzXfDxn7NxKwmxXolxL7D
+9wfyaY54Yi3TEc6kBQEk90DJ46Lj4X09nQgaCINBFogZT9AdvoqB97ZlYqUIKo6L
+MEzB705PqXY43KUMjRlBVadL6fJv+V71WUP12FXq+kfWrQva6fnaI6ZPq/OUXHFE
+KMuPuyxu4maT42KNonTXf5Vz9mvo+uQV6NCXe1Sukm3ziD20iDov6+v/BrkWYeOe
+A6S6kOL6csE=
+=4NaT
 -----END PGP SIGNATURE-----
 
---=-fqGWZ6P4ADeOt4ceK7Xu--
+--=-HDvOvdVi0Jbo2yWZ+Gn/--
 
