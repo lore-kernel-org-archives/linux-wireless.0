@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.251]:56550 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752765AbYDPDH0 (ORCPT
+Received: from pne-smtpout2-sn2.hy.skanova.net ([81.228.8.164]:58339 "EHLO
+	pne-smtpout2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933769AbYD1UXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2008 23:07:26 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so947566hsl.5
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Apr 2008 20:07:24 -0700 (PDT)
-Message-ID: <43e72e890804152007k4e9daea6jb1cb6da11ca89e1f@mail.gmail.com> (sfid-20080416_040811_075116_0ED6DB0D)
-Date: Tue, 15 Apr 2008 20:07:24 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Latest compat-wireless build fails
-Cc: "Brian Morrison" <bdm@fenrir.org.uk>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1208176113.522.4.camel@dv>
+	Mon, 28 Apr 2008 16:23:46 -0400
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: "'John W. Linville'" <linville@tuxdriver.com>,
+	"'Dan Williams'" <dcbw@redhat.com>,
+	"'Holger Schurig'" <hs4233@mail.mn-solutions.de>,
+	<linux-wireless@vger.kernel.org>
+Subject: RE: Roaming problems
+Date: Mon, 28 Apr 2008 22:22:42 +0200
+Message-ID: <00ab01c8a96d$9d9360b0$0b3ca8c0@gotws1589> (sfid-20080428_222350_224466_3895857E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080412012305.76f1b7eb@fangio.fenrir.org.uk>
-	 <20080412104207.478f9f14@fangio.fenrir.org.uk>
-	 <1208138233.5319.36.camel@dv>
-	 <20080414085918.5116823b@peterson.fenrir.org.uk>
-	 <1208176113.522.4.camel@dv>
+Content-Type: text/plain;
+	charset="us-ascii"
+In-Reply-To: <1209407657.29025.21.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 14, 2008 at 5:28 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Mon, 2008-04-14 at 08:59 +0100, Brian Morrison wrote:
->
->  > > blink_set is defined in include/linux/led.h in the wireless-testing
->  > > kernel.  I assume it's missing in the kernel you are using.
->  > >
->  >
->  > Looks like it isn't, so possibly there needs to be a way of providing
->  > missing headers for kernels without their own complete set. Not sure
->  > how
->  > that might be done.
->
->  I'm leaving it to Luis.  Most drivers do something with the LEDs, but
->  only rt2x00 uses the new interface.  Either CONFIG_RT2500PCI_LEDS and
->  CONFIG_RT2500USB_LEDS should be explicitly disabled (I guess they are
->  enabled in your kernel), or the drivers should be patched, or the latest
->  LED code should be backported to the older kernels.
 
-I'm sorry I've been a bit busy lately moving myself to the West coast,
-but today I managed to start catching up. I've updated compat-wireless
-to reflect the latest changes and tested a build and load. Please give
-it a run and let me know if you still have issues. I'd like to address
-them if still present.
+> That would be doable as well (though I would argue it should 
+> be done in addition), we could use Holger's approach and 
+> delay the actual association sequence start until a commit 
+> wext ioctl is received or a timer expires. Then 
+> wpa_supplicant can call the commit explicitly after doing everything.
 
-  Luis
+Yes I like this. A commit ioctl issued from the wpa_supplicant when all
+configuration is done is the preferred solution. 
+The commit ioctl that will speed up the roaming and the timer that will trig
+the association if no commit ioctl is received which gives backwards
+compatibility.
+But, we then need to change the current implementation where 3 ioctls trigs
+an immediate association start.
+
+/Lars
+
+
+
