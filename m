@@ -1,178 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:57506 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbYDDLq3 (ORCPT
+Received: from be2.wartburg.edu ([216.159.168.186]:33185 "EHLO
+	WARTBURG-EVS-01.wartburg.edu" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S935635AbYD1QBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2008 07:46:29 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so21291rng.1
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2008 04:46:28 -0700 (PDT)
-Message-ID: <1ba2fa240804040446r2ad9f7ffrb4ba67f77f1af3a3@mail.gmail.com> (sfid-20080404_124636_768711_AF8FEFFE)
-Date: Fri, 4 Apr 2008 14:46:25 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Andres Bertens" <abertensu@yahoo.com>
-Subject: Re: FW: [ipw3945-devel] iwl3945: disassociation from AP (reason=4) andtimeout, a solution
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <47F55436.1070405@yahoo.com>
+	Mon, 28 Apr 2008 12:01:18 -0400
+Message-ID: <4815F4CB.1060508@wartburg.edu> (sfid-20080428_180127_299722_AF715A47)
+Date: Mon, 28 Apr 2008 11:01:15 -0500
+From: Charles Figura <charles.figura@wartburg.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <D936D925018D154694D8A362EEB08920040FA26C@orsmsx416.amr.corp.intel.com>
-	 <1206999696.20744.2.camel@localhost.localdomain>
-	 <1207051434.5143.58.camel@johannes.berg> <47F23C6B.6060205@yahoo.com>
-	 <1207068153.5143.137.camel@johannes.berg> <47F55436.1070405@yahoo.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [Fwd: Re: Problems loading from compat-wireless-2008-04-24]
+References: <48148E6F.3080703@wartburg.edu> <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com>
+In-Reply-To: <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 4, 2008 at 1:03 AM, Andres Bertens <abertensu@yahoo.com> wrote:
->
->
->
->  Johannes Berg wrote:
->
-> >
-> > > Reason=4 is in fact "Inactivity timer expired and station was
-> disassociated". According to my router log:
-> > > "Tuesday April 01, 2008 09:08:54 Disassociated: 00-19-D2-4F-22-4D
-> because idle 300 seconds"
-> > >
-> > > Indeed, the default behaviour goes for a reassocation
-> > >
-> >
-> > Right, I just checked, we try to reassociate after one second.
-> >
-> >
-> > > but my hw/sw combination (intel3945/dlink/wep) fails with a status=17
-> (AP unable to handle new status).
-> > >
-> >
-> > 17 actually is WLAN_REASON_IE_DIFFERENT, i.e. the WPA/RSN IE we send is
-> > no longer appropriate, something for wpa_supplicant to handle then. Are
-> > you using encryption?
-> >
-> >
-> > > After 3 tries, it dies with an AP association timeout. From there is no
-> recovery till I set the interface down and up.
-> > >
-> > > That's why I solved it (perhaps not in the best way) ignoring the
-> disassociation. Now it works.
-> > >
-> >
-> > Your AP is broken. After it disassociates you and you ignore this
-> > status, it complains that it deauthenticated (!) you and then
-> > deauthenticates you again (with reason=6 meaning that you weren't
-> > authenticated.)
-> > The thing is, it's disassociating you and thinks it actually
-> > deauthenticated you since when you ignore the disassociation and
-> > continue sending it frames it starts complaining that you weren't
-> > authenticated (reason=6.)
-> >
-> > Your fix is obviously wrong, and only fixes the problem for you because
-> > it works around your broken AP that needs a re-authentication after it
-> > disassociated you.
-> >
-> > I'm not sure what we can do about that. Assuming we're deauthenticated
-> > seems completely wrong, and I fear that if we assume deauthentication if
-> > the association times out then we may easily end up in a loop there.
-> >
-> > johannes
-> >
->
->  Hi,
->
->  Taking your advice in order to avoid ignoring disassociation, I looked for
-> another way to achieve the same result.
->
->  As you recall, my AP sends a disassociation message due to inactivity
->  after 300 seconds. A plain re-association ends with a AP timeout due to
->  the re-association fails with a code=17 after three tries.
->
->
->  wlan0: RX disassociation from 00:17:9a:63:d2:21 (reason=4)
->  wlan0: disassociated
->  wlan0: associate with AP 00:17:9a:63:d2:21
->  wlan0: RX ReassocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17 aid=1)
->  wlan0: AP denied association (code=17)
->  wlan0: associate with AP 00:17:9a:63:d2:21
->  wlan0: RX AssocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17 aid=1073)
->  wlan0: AP denied association (code=17)
->  wlan0: associate with AP 00:17:9a:63:d2:21
->  wlan0: RX AssocResp from 00:17:9a:63:d2:21 (capab=0x431 status=17 aid=1073)
->  wlan0: AP denied association (code=17)
->  wlan0: association with AP 00:17:9a:63:d2:21 timed out
->
->  When I ignore the disassociation, from the trace I read that process
->  goes through an authentication/association pair and the link is restored
-> ok.
->
->  In order to do not ignore disassociation and following the previous
->  sequence, after the disassociation is handled I changed the state to
->  un-authenticated instead of un-associated in order to force an
->  authentication first (I assume I'am already deauthenticated by
->  disassociation). It works and the trace is as follows:
->
->
->  wlan0: RX disassociation from 00:17:9a:63:d2:21 (reason=4)
->  wlan0: disassociated
->  wlan0: authenticate with AP 00:17:9a:63:d2:21
->  wlan0: RX authentication from 00:17:9a:63:d2:21 (alg=0 transaction=2
->  status=0)
->  wlan0: authenticated
->  wlan0: associate with AP 00:17:9a:63:d2:21
->  wlan0: RX ReassocResp from 00:17:9a:63:d2:21 (capab=0x431 status=0 aid=1)
->  wlan0: associated
->
->  Patch attached.
->
->  Is this a better solution than to ignore disassociation?
->
->  Regards,
->  Andres
->
->
-> diff -Naur compat-wireless-2008-03-28/net/mac80211/ieee80211_sta.c
-> compat-wireless-2008-03-28-new/net/mac80211/ieee80211_sta.c
->  --- compat-wireless-2008-03-28/net/mac80211/ieee80211_sta.c     2008-03-28
-> 02:14:15.000000000 -0300
->  +++ compat-wireless-2008-03-28-new/net/mac80211/ieee80211_sta.c 2008-04-03
-> 16:47:33.000000000 -0400
->  @@ -1823,6 +1823,16 @@
->         }
->
->         ieee80211_set_disassoc(dev, ifsta, 0);
->  +
->  +       /* Set state to un-authenticated when receive
->  +          a disassociation request from the AP by inactivity */
->  +       if( reason_code == 4 ) {
->  +               ifsta->auth_tries = 0;
->  +               ifsta->flags &= ~IEEE80211_STA_AUTHENTICATED;
->  +               ifsta->state = IEEE80211_AUTHENTICATE;
->  +               mod_timer(&ifsta->timer, jiffies +
->  +                       IEEE80211_RETRY_AUTH_INTERVAL);
->  +       }
->   }
+Thanks, Luis, that seems to do the trick.  The new module installed
+and loaded with no errors, and appears to be working correctly!
 
-This would be wrong to do there  can be other issues this is happening.
-Can you get a sniffer capture of this problem.
-1. Is there any traffic activity happaning during.
-2. What is the listen interval announced by AP (should be present in
-association response)
-4. What is the frequency mac8011 sends its probe request?
+Thanks again!
 
-In general it is OK if AP dissociates inactive station the problem why
-is  happening with this driver.
-Usually this is triggered if there are many station connected to the
-AP or station doesn't ACK traffic.
+-CF
 
-The sniff capture will be really important here?
+Luis R. Rodriguez wrote:
+> On Sun, Apr 27, 2008 at 7:32 AM, Charles Figura
+> <charles.figura@wartburg.edu> wrote:
+>> I'm running Ubuntu Hardy with the 2.6.24-16-generic kernel.
+>>  I've followed the log approach laid out by Luis Rodriguez below,
+>>  and attached the corresponding dmesg output.
+>>
+>>  As you see, the modprobe FAILS due to lots of unknown symbols.
+>>
+>>  Oh, one other note that I hadn't mentioned before.  I've found
+>>  that a 'sudo make uninstall' doesn't get rid of the module - at
+>>  least, it doesn't reset the module list.  If I follow a 'sudo make
+>>  uninstall' by 'sudo modprobe iwl3945', it tries to insert the same
+>>  (faulty) module.  Only by rebooting is the original restored.
+>>  How do I update the module list after doing a make uninstall?
+>>
+>>  Thanks - hope this helps!
+>>
+>>
+>>
+>>
+>>  -------- Original Message --------
+>>  Subject: Re: Problems loading from compat-wireless-2008-04-24
+>>  Date: Sat, 26 Apr 2008 11:14:20 -0700
+>>  From: Luis R. Rodriguez <mcgrof@gmail.com>
+>>  To: Charles Figura <charles.figura@wartburg.edu>
+>>  References: <4810F9BC.7030104@wartburg.edu>
+>> <43e72e890804252146y600b6b40x738e0826bc492b0@mail.gmail.com>
+>> <4813700F.5050108@wartburg.edu>
+>>
+>>  On Sat, Apr 26, 2008 at 11:10 AM, Charles Figura
+>>  <charles.figura@wartburg.edu> wrote:
+>>
+>>> Luis -
+>>>
+>>>  Thanks for the response.  I did, actually, do a 'make unload' before
+>>>  loading the new module.  And the error I sent you was actually from
+>>>  loading the single module I need - the iwl3945 module.
+>>>
+>>>  So I'm still back where I started, I think.
+>>>
+>>  Please reply to the list explaining this, Intel reads linux-wireless
+>>  so they can help if its their driver.
+>>
+>>  Do this:
+>>
+>>  Reboot.
+>>
+>>  sudo dmesg -c > log1
+>>  less log1 # review it to make sure there are no oops
+>>  sudo make unload
+>>  sudo dmesg -c
+>>  sudo modprobe iwl4965
+>>  # Try to connect or whatever to try to replicate your oops
+>>  sudo dmesg -c > oops.txt
+>>
+>>  copy and paste the oops.txt into your e-mail, that will give a cleaner
+>>  log. Also be sure to mention your kernel you are using.
+>>
+>>   Luis
+>>
+>>
+>>
+>>  --
+>>  Charles Figura                      charles.figura@wartburg.edu
+>>
+>>  Associate Professor of Physics    http://mcsp.wartburg.edu/figura
+>>  Director, Wartburg Platte Observatory    (319) 352-8373
+>>                                          (319) 352-8606 (fax)
+>>
+>> [  219.046669] iwlwifi_mac80211: disagrees about version of symbol
+>> wiphy_register
+>>  [  219.046681] iwlwifi_mac80211: Unknown symbol wiphy_register
+>>  [  219.046742] iwlwifi_mac80211: disagrees about version of symbol
+>> wiphy_new
+>>  [  219.046747] iwlwifi_mac80211: Unknown symbol wiphy_new
+>>  [  219.047765] iwlwifi_mac80211: disagrees about version of symbol
+>> wiphy_unregister
+>>  [  219.047771] iwlwifi_mac80211: Unknown symbol wiphy_unregister
+>>  [  219.049060] iwlwifi_mac80211: disagrees about version of symbol
+>> wiphy_free
+>>  [  219.049066] iwlwifi_mac80211: Unknown symbol wiphy_free
+> 
+> You have iwlwifi's mac8011 making the calls here. Please do after make
+> install and after make uninstall:
+> 
+> sudo modprobe -l iwl4965
+> sudo modprobe -l mac80211
+> sudo modprobe -l iwlwifi_mac80211
+> 
+> Also inspect your /lib/modules/ directory and /lib/modules/$(uname -r)/
+> 
+>   Luis
+> 
+> 
 
-Tomas
->
->
->
->
->
->
->
+-- 
+Charles Figura                      charles.figura@wartburg.edu
+Associate Professor of Physics    http://mcsp.wartburg.edu/figura
+Director, Wartburg Platte Observatory    (319) 352-8373
+                                          (319) 352-8606 (fax)
