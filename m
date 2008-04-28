@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60234 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756149AbYDQSTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2008 14:19:54 -0400
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-From: Dan Williams <dcbw@redhat.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1208448814.9212.270.camel@pmac.infradead.org>
-References: <1208448814.9212.270.camel@pmac.infradead.org>
-Content-Type: text/plain
-Date: Thu, 17 Apr 2008 14:02:43 -0400
-Message-Id: <1208455363.20193.3.camel@localhost.localdomain> (sfid-20080417_192000_223345_5C85B3F9)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.241]:1920 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbYD1D6m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Apr 2008 23:58:42 -0400
+Received: by an-out-0708.google.com with SMTP id d31so1176198and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2008 20:58:41 -0700 (PDT)
+Message-ID: <43e72e890804272058v4158ce42x9a58684865d85398@mail.gmail.com> (sfid-20080428_055900_809340_6FEC5CE5)
+Date: Sun, 27 Apr 2008 20:58:41 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Charles Figura" <charles.figura@wartburg.edu>
+Subject: Re: [Fwd: Re: Problems loading from compat-wireless-2008-04-24]
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <48152DDB.9050702@wartburg.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <48148E6F.3080703@wartburg.edu>
+	 <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com>
+	 <48152DDB.9050702@wartburg.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-04-17 at 17:13 +0100, David Woodhouse wrote:
-> We removed CMD_MESH_ACCESS from the big case statements and provided
-> lbs_mesh_access() instead.... but we missed one user. Fix it.
-> 
-> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+On Sun, Apr 27, 2008 at 6:52 PM, Charles Figura
+<charles.figura@wartburg.edu> wrote:
+> Okay, so I think I have an idea what might be going on.  I've attached
+>  the modprobe -l for the various modules involved both after installation
+>  and after uninstallation.  I note that after uninstallation, there are
+>  still a few modules from the /lib/modules/2.6.24-16-generic/updates
+>  folder.  Is this possibly due to an older self-installed compat-wireless
+>  update?
+>  Has monkeying around with non-apt packages goofed me up here?
+>  If so, how can I fix it?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Maybe.
 
-> 
-> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-> index 21e6f98..9460300 100644
-> --- a/drivers/net/wireless/libertas/ethtool.c
-> +++ b/drivers/net/wireless/libertas/ethtool.c
-> @@ -106,8 +106,8 @@ done:
->          return ret;
->  }
->  
-> -static void lbs_ethtool_get_stats(struct net_device * dev,
-> -				struct ethtool_stats * stats, u64 * data)
-> +static void lbs_ethtool_get_stats(struct net_device *dev,
-> +				  struct ethtool_stats *stats, u64 *data)
->  {
->  	struct lbs_private *priv = dev->priv;
->  	struct cmd_ds_mesh_access mesh_access;
-> @@ -116,9 +116,7 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
->  	lbs_deb_enter(LBS_DEB_ETHTOOL);
->  
->  	/* Get Mesh Statistics */
-> -	ret = lbs_prepare_and_send_command(priv,
-> -			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
-> -			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
-> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
->  
->  	if (ret)
->  		return;
-> 
+> figura@nightfall:~/compat-wireless-2008-04-27$ sudo modprobe -l iwl4965
+>
+> /lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/iwlwifi/compatible/iwl4965.ko
+>  figura@nightfall:~/compat-wireless-2008-04-27$ sudo modprobe -l mac80211
+>  /lib/modules/2.6.24-16-generic/updates/net/mac80211/mac80211.ko
+>  figura@nightfall:~/compat-wireless-2008-04-27$ sudo modprobe -l
+> iwlwifi_mac80211/lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/mac80211/compatible/net/mac80211/iwlwifi_mac80211.ko
+>  figura@nightfall:~/compat-wireless-2008-04-27$
+>
+> figura@nightfall:/lib/modules/2.6.24-16-generic$ sudo modprobe -l
+> iwlwifi_mac80211
+>
+> /lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/mac80211/compatible/net/mac80211/iwlwifi_mac80211.ko
+>  figura@nightfall:/lib/modules/2.6.24-16-generic$ sudo modprobe -l mac80211
+>  /lib/modules/2.6.24-16-generic/kernel/net/mac80211/mac80211.ko
+>  figura@nightfall:/lib/modules/2.6.24-16-generic$ sudo modprobe -l iwl4965
+>
+> /lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/iwlwifi/compatible/iwl4965.ko
+>  figura@nightfall:/lib/modules/2.6.24-16-generic$ sudo modprobe -l iwl3945
+>
+> /lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/iwlwifi/compatible/iwl3945.ko
+>  figura@nightfall:/lib/modules/2.6.24-16-generic$
 
+Do this:
+
+dpkg -S  /lib/modules/2.6.24-16-generic/updates/wireless/iwlwifi/
+
+keep note of that package and remote it, or just do
+
+sudo make unload
+sudo make uninstall
+sudo rm -rf  /lib/modules/2.6.24-16-generic/updates/wireless/
+sudo depmod -ae
+sudo make install
+sudo make unlaod
+lsmod | grep iwl
+# remove iwl mac80211 or any other stuff which make unload would not
+have picked up on
+# like modules from other packages
+sudo modprobe iwl4965
+
+Now you should be good.
+
+  Luis
