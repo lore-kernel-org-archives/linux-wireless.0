@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:7922 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbYDABDP (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:32153 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763573AbYD1ISL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2008 21:03:15 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so1054936wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2008 18:03:12 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: johannes@sipsolutions.net
-Date: Mon, 31 Mar 2008 16:00:13 -0700
-Subject: [PATCH 1/2] mac80211: check for mesh_config length on incoming management frames
-Message-ID: <47f189ce.0a528c0a.4608.0322@mx.google.com> (sfid-20080401_020317_021930_45A006D3)
+	Mon, 28 Apr 2008 04:18:11 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so7842162waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 01:18:09 -0700 (PDT)
+Message-ID: <1ba2fa240804280118l5f813b38n8291789342b1d802@mail.gmail.com> (sfid-20080428_101818_789538_EB59254C)
+Date: Mon, 28 Apr 2008 11:18:08 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Adrian Bunk" <bunk@kernel.org>
+Subject: Re: [PATCH] Fix compile error with wifi & leds
+Cc: "Luca Tettamanti" <kronos.it@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"Priit Laes" <plaes@plaes.org>
+In-Reply-To: <20080428075452.GB16379@cs181133002.pp.htv.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080426203408.GA12074@dreamland.darkstar.lan>
+	 <20080428074531.GA16379@cs181133002.pp.htv.fi>
+	 <20080428075452.GB16379@cs181133002.pp.htv.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Apr 28, 2008 at 10:54 AM, Adrian Bunk <bunk@kernel.org> wrote:
+> On Mon, Apr 28, 2008 at 10:45:31AM +0300, Adrian Bunk wrote:
+>  > Can you send the .config that gives this problem?
+>
+>  Scrap that, I already got the problem (and your patch looks right).
+>
+>
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/ieee80211_sta.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+I think it's time to be applied so we won't get another 5 of them.
+Please add also  Priit Laes <plaes@plaes.org>  as he was first to
+provide a patch
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index cfe6fcc..feec201 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2153,11 +2153,14 @@ ieee80211_rx_mesh_bss_get(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
- 
- static struct ieee80211_sta_bss *
- ieee80211_rx_mesh_bss_add(struct net_device *dev, u8 *mesh_id, int mesh_id_len,
--			  u8 *mesh_cfg, int freq)
-+			  u8 *mesh_cfg, int mesh_config_len, int freq)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sta_bss *bss;
- 
-+	if (mesh_config_len != MESH_CFG_LEN)
-+		return NULL;
-+
- 	bss = kzalloc(sizeof(*bss), GFP_ATOMIC);
- 	if (!bss)
- 		return NULL;
-@@ -2530,7 +2533,8 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- #ifdef CONFIG_MAC80211_MESH
- 		if (elems.mesh_config)
- 			bss = ieee80211_rx_mesh_bss_add(dev, elems.mesh_id,
--				elems.mesh_id_len, elems.mesh_config, freq);
-+				elems.mesh_id_len, elems.mesh_config,
-+				elems.mesh_config_len, freq);
- 		else
- #endif
- 			bss = ieee80211_rx_bss_add(dev, mgmt->bssid, freq,
--- 
-1.5.4.3
+Thanks
+Tomas
 
+>  cu
 
-
+>  Adrian
+>
+>  --
+>
+>        "Is there not promise of rain?" Ling Tan asked suddenly out
+>         of the darkness. There had been need of rain for many days.
+>        "Only a promise," Lao Er said.
+>                                        Pearl S. Buck - Dragon Seed
+>
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>
+> the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
