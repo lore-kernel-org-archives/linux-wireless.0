@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:60925 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:64248 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754841AbYDZPZq (ORCPT
+	with ESMTP id S1764962AbYD1I3d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2008 11:25:46 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so6682137waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2008 08:25:45 -0700 (PDT)
-Message-ID: <1ba2fa240804260825qcae5777qddd2d1e91a0277dc@mail.gmail.com> (sfid-20080426_172604_795906_4CB85248)
-Date: Sat, 26 Apr 2008 18:25:45 +0300
+	Mon, 28 Apr 2008 04:29:33 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so7848541waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 01:29:33 -0700 (PDT)
+Message-ID: <1ba2fa240804280129r48762639jac501a3010e132a6@mail.gmail.com> (sfid-20080428_102941_011231_99E0EC18)
+Date: Mon, 28 Apr 2008 11:29:32 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH RFT] tkip: fix iv32 calculation in ieee80211_get_tkip_key()
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1209081653.12561.50.camel@dv>
+To: "Adrian Bunk" <bunk@kernel.org>
+Subject: Re: [PATCH] Fix compile error with wifi & leds
+Cc: "Luca Tettamanti" <kronos.it@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"Priit Laes" <plaes@plaes.org>
+In-Reply-To: <20080428082030.GD16379@cs181133002.pp.htv.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1209081653.12561.50.camel@dv>
+References: <20080426203408.GA12074@dreamland.darkstar.lan>
+	 <20080428074531.GA16379@cs181133002.pp.htv.fi>
+	 <20080428075452.GB16379@cs181133002.pp.htv.fi>
+	 <1ba2fa240804280118l5f813b38n8291789342b1d802@mail.gmail.com>
+	 <20080428082030.GD16379@cs181133002.pp.htv.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 25, 2008 at 3:00 AM, Pavel Roskin <proski@gnu.org> wrote:
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
->  ---
->  It's a side product of testing a sparse patch by Linus Torvalds.
->  Compile tested only.
+On Mon, Apr 28, 2008 at 11:20 AM, Adrian Bunk <bunk@kernel.org> wrote:
+> On Mon, Apr 28, 2008 at 11:18:08AM +0300, Tomas Winkler wrote:
+>  > On Mon, Apr 28, 2008 at 10:54 AM, Adrian Bunk <bunk@kernel.org> wrote:
+>  > > On Mon, Apr 28, 2008 at 10:45:31AM +0300, Adrian Bunk wrote:
+>  > >  > Can you send the .config that gives this problem?
+>  > >
+>  > >  Scrap that, I already got the problem (and your patch looks right).
+>  > >
+>  > >
+>  >
+>  > I think it's time to be applied so we won't get another 5 of them.
+>  > Please add also  Priit Laes <plaes@plaes.org>  as he was first to
+>  > provide a patch
 >
->   net/mac80211/tkip.c |    6 +++---
->   1 files changed, 3 insertions(+), 3 deletions(-)
+>  David already sent a pull request that includes Luca's patch to Linus.
 >
+>  My question was due to me first misunderstanding what's happening here.
 >
->  diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
->  index dddbfd6..b9ecd65 100644
->  --- a/net/mac80211/tkip.c
->  +++ b/net/mac80211/tkip.c
->  @@ -231,9 +231,9 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
->         iv16 = data[hdr_len] << 8;
->         iv16 += data[hdr_len + 2];
->         iv32 = data[hdr_len + 4] +
->  -               (data[hdr_len + 5] >> 8) +
->  -               (data[hdr_len + 6] >> 16) +
->  -               (data[hdr_len + 7] >> 24);
->  +               (data[hdr_len + 5] << 8) +
->  +               (data[hdr_len + 6] << 16) +
->  +               (data[hdr_len + 7] << 24);
->
->   #ifdef CONFIG_TKIP_DEBUG
->         printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
->
->
+I see... I wasn't subscribed so I missed that.
+Anyhow what is happening is that I've assumed that 'select' is
+transitive and selecting MAC80211_LEDs is enough.
 
-We've tested TKIP code well and I'm not sure we wouldn't pay attention
-to such mistake.
 Tomas
-
->  Regards,
->  Pavel Roskin
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
