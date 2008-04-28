@@ -1,150 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:35034 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755436AbYDUItE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2008 04:49:04 -0400
-Date: Mon, 21 Apr 2008 11:48:34 +0300
-From: Adrian Bunk <bunk@kernel.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [RFC: 2.6 patch] remove ieee80211_wx_{get,set}_auth()
-Message-ID: <20080421084834.GP26897@cs181133002.pp.htv.fi> (sfid-20080421_094928_883145_7CB9F947)
+Received: from py-out-1112.google.com ([64.233.166.177]:45675 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756391AbYD1LE6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Apr 2008 07:04:58 -0400
+Received: by py-out-1112.google.com with SMTP id u52so7687950pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 04:04:57 -0700 (PDT)
+Message-ID: <ac542ca00804280404h20db4b1cn56a2c5fefc119760@mail.gmail.com> (sfid-20080428_130505_792009_248F6EF8)
+Date: Mon, 28 Apr 2008 13:04:57 +0200
+From: "Francis Galiegue" <fgaliegue@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: BCM4308 rev 3 owner, willing to help (want to make an access point)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the bcm43xx removal ieee80211_wx_{get,set}_auth() were no longer 
-used.
+Hello everyone,
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+I have a BCM4308 rev 3 based PCI wireless card and eventually want to
+make it an access point.
 
----
+Right now, I use a stock 2.6.25 kernel, with the stock b43 driver and
+appropriate firmware. I use an up to date Gentoo, x86-32 (even though
+my CPU could do 64).
 
- include/net/ieee80211.h      |    8 ---
- net/ieee80211/ieee80211_wx.c |   89 -----------------------------------
- 2 files changed, 97 deletions(-)
+I've started reading documentation on wireless.kernel.org, and don't
+understand much of it (nl80211, mac80211, cfg80211... Many things to
+learn about).
 
-ec783a7fb0fdacebefd93c7bf40493467a825c70 diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
-index facd0ff..b31399e 100644
---- a/include/net/ieee80211.h
-+++ b/include/net/ieee80211.h
-@@ -1309,14 +1309,6 @@ extern int ieee80211_wx_set_encodeext(struct ieee80211_device *ieee,
- extern int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
- 				      struct iw_request_info *info,
- 				      union iwreq_data *wrqu, char *extra);
--extern int ieee80211_wx_set_auth(struct net_device *dev,
--				 struct iw_request_info *info,
--				 union iwreq_data *wrqu,
--				 char *extra);
--extern int ieee80211_wx_get_auth(struct net_device *dev,
--				 struct iw_request_info *info,
--				 union iwreq_data *wrqu,
--				 char *extra);
- 
- static inline void ieee80211_increment_scans(struct ieee80211_device *ieee)
- {
-diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
-index 623489a..822606b 100644
---- a/net/ieee80211/ieee80211_wx.c
-+++ b/net/ieee80211/ieee80211_wx.c
-@@ -744,98 +744,9 @@ int ieee80211_wx_get_encodeext(struct ieee80211_device *ieee,
- 	return 0;
- }
- 
--int ieee80211_wx_set_auth(struct net_device *dev,
--			  struct iw_request_info *info,
--			  union iwreq_data *wrqu,
--			  char *extra)
--{
--	struct ieee80211_device *ieee = netdev_priv(dev);
--	unsigned long flags;
--	int err = 0;
--
--	spin_lock_irqsave(&ieee->lock, flags);
--
--	switch (wrqu->param.flags & IW_AUTH_INDEX) {
--	case IW_AUTH_WPA_VERSION:
--	case IW_AUTH_CIPHER_PAIRWISE:
--	case IW_AUTH_CIPHER_GROUP:
--	case IW_AUTH_KEY_MGMT:
--		/*
--		 * Host AP driver does not use these parameters and allows
--		 * wpa_supplicant to control them internally.
--		 */
--		break;
--	case IW_AUTH_TKIP_COUNTERMEASURES:
--		break;		/* FIXME */
--	case IW_AUTH_DROP_UNENCRYPTED:
--		ieee->drop_unencrypted = !!wrqu->param.value;
--		break;
--	case IW_AUTH_80211_AUTH_ALG:
--		break;		/* FIXME */
--	case IW_AUTH_WPA_ENABLED:
--		ieee->privacy_invoked = ieee->wpa_enabled = !!wrqu->param.value;
--		break;
--	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
--		ieee->ieee802_1x = !!wrqu->param.value;
--		break;
--	case IW_AUTH_PRIVACY_INVOKED:
--		ieee->privacy_invoked = !!wrqu->param.value;
--		break;
--	default:
--		err = -EOPNOTSUPP;
--		break;
--	}
--	spin_unlock_irqrestore(&ieee->lock, flags);
--	return err;
--}
--
--int ieee80211_wx_get_auth(struct net_device *dev,
--			  struct iw_request_info *info,
--			  union iwreq_data *wrqu,
--			  char *extra)
--{
--	struct ieee80211_device *ieee = netdev_priv(dev);
--	unsigned long flags;
--	int err = 0;
--
--	spin_lock_irqsave(&ieee->lock, flags);
--
--	switch (wrqu->param.flags & IW_AUTH_INDEX) {
--	case IW_AUTH_WPA_VERSION:
--	case IW_AUTH_CIPHER_PAIRWISE:
--	case IW_AUTH_CIPHER_GROUP:
--	case IW_AUTH_KEY_MGMT:
--	case IW_AUTH_TKIP_COUNTERMEASURES:		/* FIXME */
--	case IW_AUTH_80211_AUTH_ALG:			/* FIXME */
--		/*
--		 * Host AP driver does not use these parameters and allows
--		 * wpa_supplicant to control them internally.
--		 */
--		err = -EOPNOTSUPP;
--		break;
--	case IW_AUTH_DROP_UNENCRYPTED:
--		wrqu->param.value = ieee->drop_unencrypted;
--		break;
--	case IW_AUTH_WPA_ENABLED:
--		wrqu->param.value = ieee->wpa_enabled;
--		break;
--	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
--		wrqu->param.value = ieee->ieee802_1x;
--		break;
--	default:
--		err = -EOPNOTSUPP;
--		break;
--	}
--	spin_unlock_irqrestore(&ieee->lock, flags);
--	return err;
--}
--
- EXPORT_SYMBOL(ieee80211_wx_set_encodeext);
- EXPORT_SYMBOL(ieee80211_wx_get_encodeext);
- 
- EXPORT_SYMBOL(ieee80211_wx_get_scan);
- EXPORT_SYMBOL(ieee80211_wx_set_encode);
- EXPORT_SYMBOL(ieee80211_wx_get_encode);
--
--EXPORT_SYMBOL_GPL(ieee80211_wx_set_auth);
--EXPORT_SYMBOL_GPL(ieee80211_wx_get_auth);
+Right now I'm stuck at the "setting the card to master mode": iwconfig
+wlan0 mode master returns "Invalid argument". The card works fine with
+other modes though.
 
+I'm a rookie. However, I'm willing to answer questions/read further
+documentation/downloading, compiling kernel, modules, user utilities,
+and testing the lot. So, feel free to mail me!
+
+Have fun,
+--=20
+=46rancis Galiegue, fgaliegue@gmail.com
+"It seems obvious [...] that at least some 'business intelligence'
+tools invest so much intelligence on the business side that they have
+nothing left for generating SQL queries" (St=E9phane Faroult, in "The
+Art of SQL", ISBN 0-596-00894-5)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
