@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.dnainternet.fi ([87.94.96.108]:58653 "EHLO
-	smtp1.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbYDXGQe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 02:16:34 -0400
-Message-ID: <20080424091631.4lh9op46jkg4gg84@naisho.dyndns.info> (sfid-20080424_081710_876265_4F2E99F4)
-Date: Thu, 24 Apr 2008 09:16:31 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Roel Kluin <12o3l@tiscali.nl>
-Cc: linux-wireless@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] wireless: rndis_wlan: modparam_workaround_interval is
-	never below 0.
-References: <480F97B5.9030009@tiscali.nl>
-In-Reply-To: <480F97B5.9030009@tiscali.nl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:35946 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965286AbYD1Srx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Apr 2008 14:47:53 -0400
+Subject: RE: Roaming problems
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
+	"'John W. Linville'" <linville@tuxdriver.com>,
+	"'Holger Schurig'" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1209407657.29025.21.camel@johannes.berg>
+References: <009d01c8a95d$b73b0410$0b3ca8c0@gotws1589>
+	 <1209407657.29025.21.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 28 Apr 2008 14:43:28 -0400
+Message-Id: <1209408208.23868.3.camel@localhost.localdomain> (sfid-20080428_204758_424215_0CFA52B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Roel Kluin <12o3l@tiscali.nl>:
+On Mon, 2008-04-28 at 20:34 +0200, Johannes Berg wrote:
+> On Mon, 2008-04-28 at 20:28 +0200, Lars Ericsson wrote:
+> > > > - Driver authenticating with new AP while having a valid 
+> > > > association with and other AP.
+> > > 
+> > > Yes, that is the problem, we should disassociate first. If 
+> > > you can come up with a patch to send a disassoc packet in 
+> > > that case (and test it,
+> > > preferably) that would be much welcome.
+> > 
+> > OK. I understood that there has been a discussion about the way the driver
+> > should handle this situation and the current behaviour is according to that
+> > discussion. 
+> 
+> Yeah but that was mostly just sidetrack.
+> 
+> > Is there any information document available describing the
+> > selected design path or is it only the code that document the design ? 
+> > I think need that information if I should be able to create the patch
+> > requested above.
+> 
+> Unfortunately, there is nothing about mac80211's mlme other than the
+> code.
+> 
+> > On the other hand, that patch will only keep track of 'dual association'
+> > problem. 
+> 
+> Well, no, that would mean we disassociate first and then only have a
+> single association.
+> 
+> > With the current wpa_supplicant, we will still have the problem
+> > with the driver start an association sequence as soon as 'trig' ioctl
+> > arrives. I think the wpa_supplicant need to modified to better cooperate
+> > with the driver.
+> 
+> That would be doable as well (though I would argue it should be done in
+> addition), we could use Holger's approach and delay the actual
+> association sequence start until a commit wext ioctl is received or a
+> timer expires. Then wpa_supplicant can call the commit explicitly after
+> doing everything.
 
-> priv->param_workaround_interval is unsigned,   
-> modparam_workaround_interval not.
-> the former is never < 0.
->
-> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+This is the best approach really; it's the one I took in the libertas
+driver and turned out to work quite well.  It completely avoids issues
+with iwconfig argument ordering and the timer is long enough that it'll
+pick up almost everything you can throw at it programmatically as long
+as you don't do something stupid like sleep(2)...
 
-Thanks.
-
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
-> ---
-> diff --git a/drivers/net/wireless/rndis_wlan.c   
-> b/drivers/net/wireless/rndis_wlan.c
-> index 977751f..d0b1fb1 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -2402,7 +2402,6 @@ static int bcm4320_early_init(struct usbnet *dev)
->  	priv->param_power_output = modparam_power_output;
->  	priv->param_roamtrigger  = modparam_roamtrigger;
->  	priv->param_roamdelta    = modparam_roamdelta;
-> -	priv->param_workaround_interval = modparam_workaround_interval;
->
->  	priv->param_country[0] = toupper(priv->param_country[0]);
->  	priv->param_country[1] = toupper(priv->param_country[1]);
-> @@ -2425,8 +2424,10 @@ static int bcm4320_early_init(struct usbnet *dev)
->  	else if (priv->param_roamdelta > 2)
->  		priv->param_roamdelta = 2;
->
-> -	if (priv->param_workaround_interval < 0)
-> +	if (modparam_workaround_interval < 0)
->  		priv->param_workaround_interval = 500;
-> +	else
-> +		priv->param_workaround_interval = modparam_workaround_interval;
->
->  	rndis_set_config_parameter_str(dev, "Country", priv->param_country);
->  	rndis_set_config_parameter_str(dev, "FrameBursting",
->
->
-
-
-
+Dan
 
