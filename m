@@ -1,169 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17399 "EHLO mga02.intel.com"
+Received: from mx1.suse.de ([195.135.220.2]:52240 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753503AbYDCXFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 19:05:48 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mabbas@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/5] iwlwifi: fix rfkill memory error
-Date: Thu,  3 Apr 2008 16:05:24 -0700
-Message-Id: <1207263924-25385-6-git-send-email-reinette.chatre@intel.com> (sfid-20080404_000605_999617_815CDDB5)
-In-Reply-To: <1207263924-25385-5-git-send-email-reinette.chatre@intel.com>
-References: <1207263924-25385-1-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-2-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-3-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-4-git-send-email-reinette.chatre@intel.com>
- <1207263924-25385-5-git-send-email-reinette.chatre@intel.com>
+	id S1758959AbYD2RVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Apr 2008 13:21:31 -0400
+Date: Tue, 29 Apr 2008 10:18:50 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [23/37] b43: Workaround invalid bluetooth settings
+Message-ID: <20080429171850.GX14724@suse.de> (sfid-20080429_192148_325967_6689ED3E)
+References: <20080429171222.073929148@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080429171730.GA14724@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mabbas@linux.intel.com>
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
-Do not free reference to device twice. After rfkill registration succeeds
-we only need to call rfkill_unregister() and not rfkill_free().
-Also add some debugging.
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+commit 1855ba7812dbd294fcfc083dc7d3b14d3b1f38db upstream.
+
+This adds a workaround for invalid bluetooth SPROM settings
+on ASUS PCI cards.
+This will stop the microcode from poking with the BT GPIO line.
+This fixes data transmission on this device, as the BT GPIO line
+is used for something TX related on this device
+(probably the power amplifier or the radio).
+This also adds a modparam knob to help debugging this in the future,
+as more devices with this bug may show up.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c   |    7 ++++-
- drivers/net/wireless/iwlwifi/iwl-rfkill.c |   31 +++++++++++++++-------------
- drivers/net/wireless/iwlwifi/iwl-rfkill.h |    2 -
- 3 files changed, 22 insertions(+), 18 deletions(-)
+ drivers/net/wireless/b43/main.c |   23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f122307..d8a226e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -256,9 +256,13 @@ EXPORT_SYMBOL(iwl_setup);
- int iwlcore_low_level_notify(struct iwl_priv *priv,
- 			      enum iwlcore_card_notify notify)
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -78,6 +78,11 @@ static int modparam_nohwcrypt;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ 
++static int modparam_btcoex = 1;
++module_param_named(btcoex, modparam_btcoex, int, 0444);
++MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistance (default on)");
++
++
+ static const struct ssb_device_id b43_ssb_tbl[] = {
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
+@@ -3339,6 +3344,8 @@ static void b43_bluetooth_coext_enable(s
+ 	struct ssb_sprom *sprom = &dev->dev->bus->sprom;
+ 	u32 hf;
+ 
++	if (!modparam_btcoex)
++		return;
+ 	if (!(sprom->boardflags_lo & B43_BFL_BTCOEXIST))
+ 		return;
+ 	if (dev->phy.type != B43_PHYTYPE_B && !dev->phy.gmode)
+@@ -3350,11 +3357,13 @@ static void b43_bluetooth_coext_enable(s
+ 	else
+ 		hf |= B43_HF_BTCOEX;
+ 	b43_hf_write(dev, hf);
+-	//TODO
+ }
+ 
+ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+-{				//TODO
++{
++	if (!modparam_btcoex)
++		return;
++	//TODO
+ }
+ 
+ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+@@ -4002,6 +4011,8 @@ static int b43_one_core_attach(struct ss
+ 
+ static void b43_sprom_fixup(struct ssb_bus *bus)
  {
-+	int ret;
- 	switch (notify) {
- 	case IWLCORE_INIT_EVT:
--		iwl_rfkill_init(priv);
-+		ret = iwl_rfkill_init(priv);
-+		if (ret)
-+			IWL_ERROR("Unable to initialize RFKILL system. "
-+				  "Ignoring error: %d\n", ret);
- 		break;
- 	case IWLCORE_START_EVT:
- 		break;
-@@ -266,7 +270,6 @@ int iwlcore_low_level_notify(struct iwl_priv *priv,
- 		break;
- 	case IWLCORE_REMOVE_EVT:
- 		iwl_rfkill_unregister(priv);
--		iwl_rfkill_free(priv);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index 308d69b..8f38c24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -75,8 +75,10 @@ int iwl_rfkill_init(struct iwl_priv *priv)
- 
- 	BUG_ON(device == NULL);
- 
-+	IWL_DEBUG_RF_KILL("Initializing RFKILL.\n");
- 	priv->rfkill_mngr.rfkill = rfkill_allocate(device, RFKILL_TYPE_WLAN);
- 	if (!priv->rfkill_mngr.rfkill) {
-+		IWL_ERROR("Unable to allocate rfkill device.\n");
- 		ret = -ENOMEM;
- 		goto error;
- 	}
-@@ -92,6 +94,7 @@ int iwl_rfkill_init(struct iwl_priv *priv)
- 
- 	priv->rfkill_mngr.input_dev = input_allocate_device();
- 	if (!priv->rfkill_mngr.input_dev) {
-+		IWL_ERROR("Unable to allocate rfkill input device.\n");
- 		ret = -ENOMEM;
- 		goto freed_rfkill;
- 	}
-@@ -105,27 +108,35 @@ int iwl_rfkill_init(struct iwl_priv *priv)
- 	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
- 
- 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
--	if (ret)
-+	if (ret) {
-+		IWL_ERROR("Unable to register rfkill: %d\n", ret);
- 		goto free_input_dev;
++	struct pci_dev *pdev;
++
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
+@@ -4009,6 +4020,14 @@ static void b43_sprom_fixup(struct ssb_b
+ 	if (bus->boardinfo.vendor == PCI_VENDOR_ID_APPLE &&
+ 	    bus->boardinfo.type == 0x4E && bus->boardinfo.rev > 0x40)
+ 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
++	if (bus->bustype == SSB_BUSTYPE_PCI) {
++		pdev = bus->host_pci;
++		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
++		    pdev->device == 0x4318 &&
++		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
++		    pdev->subsystem_device == 0x100F)
++			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
 +	}
- 
- 	ret = input_register_device(priv->rfkill_mngr.input_dev);
--	if (ret)
-+	if (ret) {
-+		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
- 		goto unregister_rfkill;
-+	}
- 
-+	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
- 
- unregister_rfkill:
- 	rfkill_unregister(priv->rfkill_mngr.rfkill);
-+	priv->rfkill_mngr.rfkill = NULL;
- 
- free_input_dev:
- 	input_free_device(priv->rfkill_mngr.input_dev);
- 	priv->rfkill_mngr.input_dev = NULL;
- 
- freed_rfkill:
--	rfkill_free(priv->rfkill_mngr.rfkill);
-+	if (priv->rfkill_mngr.rfkill != NULL)
-+		rfkill_free(priv->rfkill_mngr.rfkill);
- 	priv->rfkill_mngr.rfkill = NULL;
- 
- error:
-+	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
  }
- EXPORT_SYMBOL(iwl_rfkill_init);
-@@ -138,19 +149,11 @@ void iwl_rfkill_unregister(struct iwl_priv *priv)
  
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
--}
--EXPORT_SYMBOL(iwl_rfkill_unregister);
- 
--
--void iwl_rfkill_free(struct iwl_priv *priv)
--{
--	if (priv->rfkill_mngr.input_dev)
--		input_free_device(priv->rfkill_mngr.input_dev);
--
--	if (priv->rfkill_mngr.rfkill)
--		rfkill_free(priv->rfkill_mngr.rfkill);
-+	priv->rfkill_mngr.input_dev = NULL;
-+	priv->rfkill_mngr.rfkill = NULL;
- }
--EXPORT_SYMBOL(iwl_rfkill_free);
-+EXPORT_SYMBOL(iwl_rfkill_unregister);
- 
- /* set rf-kill to the right state. */
- void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.h b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-index a5cbc5a..e7aa51a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-@@ -41,12 +41,10 @@ struct iwl_rfkill_mngr {
- };
- 
- void iwl_rfkill_set_hw_state(struct iwl_priv *priv);
--void iwl_rfkill_free(struct iwl_priv *priv);
- void iwl_rfkill_unregister(struct iwl_priv *priv);
- int iwl_rfkill_init(struct iwl_priv *priv);
- #else
- static inline void iwl_rfkill_set_hw_state(struct iwl_priv *priv) {}
--static inline void iwl_rfkill_free(struct iwl_priv *priv) {}
- static inline void iwl_rfkill_unregister(struct iwl_priv *priv) {}
- static inline int iwl_rfkill_init(struct iwl_priv *priv) { return 0; }
- #endif
--- 
-1.5.3.4
+ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
 
+-- 
