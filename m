@@ -1,65 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53581 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752931AbYDCKqT (ORCPT
+Received: from smtp-roam.Stanford.EDU ([171.64.10.152]:57008 "EHLO
+	smtp-roam.Stanford.EDU" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094AbYD2Xar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2008 06:46:19 -0400
-Subject: RE: [PATCH 0/4] mac80211 and iwlwifi driver updates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <D936D925018D154694D8A362EEB0892004194A96@orsmsx416.amr.corp.intel.com>
-References: <1206747215-10640-1-git-send-email-reinette.chatre@intel.com>
-	 <D936D925018D154694D8A362EEB0892004194A96@orsmsx416.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GakSmA6965Nyb7fbOm8B"
-Date: Thu, 03 Apr 2008 12:46:13 +0200
-Message-Id: <1207219573.3636.36.camel@johannes.berg> (sfid-20080403_114623_134629_CFBB9C3E)
-Mime-Version: 1.0
+	Tue, 29 Apr 2008 19:30:47 -0400
+Received: from localhost (SW-90-728-259-1.Stanford.EDU [171.66.159.123])
+	(authenticated bits=0)
+	by smtp-roam.Stanford.EDU (8.12.11/8.12.11) with ESMTP id m3TNUjvG000693
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 16:30:46 -0700
+Date: Tue, 29 Apr 2008 16:30:45 -0700
+From: Gautam Iyer <gi1242@stanford.edu>
+To: linux-wireless@vger.kernel.org
+Subject: Re: b43 reduced performance in Linux-2.6.25
+Message-ID: <20080429233045.GA26484@stanford.edu> (sfid-20080430_013044_170017_B8678040)
+References: <20080429215629.GC17790@stanford.edu> <4817A28E.2050309@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
+In-Reply-To: <4817A28E.2050309@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GakSmA6965Nyb7fbOm8B
-Content-Type: text/plain
+--envbJBWh7q8WU6mo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+On Tue, Apr 29, 2008 at 05:34:54PM -0500, Larry Finger wrote:
 
-> > [PATCH 1/4] mac80211: eliminate conf_ht
-> > [PATCH 2/4] iwlwifi: eliminate conf_ht
-> > [PATCH 3/4] mac80211: add association capabilty and timing
-> > info into bss_conf
-> > [PATCH 4/4] iwlwifi: Eliminate association from beacon
+>> I saw a few threads about reduced performance in b43 in the 2.6.24 /
+>> 2.6.25_rcXX kernels, but couldn't manage to fix the problem myself:
+>> On my system, using ndiswrapper and the windows drivers gives me about
+>> 1.5 times the performance of the in kernel b43 drivers.
+>> Here are my system specs:
+>>     Broadcom Corporation BCM4312 802.11a/b/g [14e4:4312] (rev 02)
+>>     Linux 2.6.25 (gentoo-sources-2.6.25-r1).
+>>     b43 wireless driver with firmware 410.2160 (2007-05-26 15:32:10)
+>> I measured the performance by running "ttcp" between my Laptop and my
+>> router. Using b43 on my Laptop gives about 2MB/s reported, and using
+>> ndiswrapper gives me about 3MB/s under exactly the same situations.
+>> Any ideas about what's going on? (I would be happy to provide you with
+>> any further specs on my computer).
+>
+> Yes. Broadcom wrote the Windows drivers, but never gave the specification=
+s=20
+> to anyone else. Obvious those specs from their engineers are better than=
+=20
+> those from the _reverse_ engineers for your card.
 
-> This patch series seems to have slipped through unnoticed. Could you
-> please consider it for merging to wireless-testing?
+Thanks for the explanation! I'm certainly happy that b43 works with good
+speeds. Many thanks to you and the other avid hackers that made this
+possible...
 
-Sorry, I probably read it, thought it looked fine and forgot to reply.
-The mac80211 parts look good to me.
+> On my BCM4311/2 I get better throughput with the b43 driver than I get
+> when running Windows. I _NEVER_ use ndiswrapper. Now that b43 works,
+> why would I want to taint my kernel?
 
-johannes
+I don't have Windows so can't compare to it. But even though I use b43
+by default, I sometimes have to revert to ndiswrapper on weak signals or
+large file transfers. Also ndiswrapper has the power management and
+LED's working correctly, which I could not get working with the b43
+driver.
 
---=-GakSmA6965Nyb7fbOm8B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> The only specs that we are interested in are those that come from reverse=
+=20
+> engineering. If you can provide them, we are very interested.
+
+I'll poke around a little with this during Summer. It would certainly
+make me a lot happier to use the native b43 drivers than Windows
+drivers...
+
+Thanks,
+
+GI
+
+--=20
+Will Micro$oft go bankrupt in 1901 because of the Year 2000 Problem?
+
+--envbJBWh7q8WU6mo
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-iQIVAwUAR/S1dKVg1VMiehFYAQIKVRAAoMtsB4W6AOaNfk9Nhn8fZ205GS60hleh
-7n3bpKxHbN2pVU30psPgBgszLSFB6ZTexlomm5hZkx9ZTddOkd5LpGBlL5Xg1yGH
-qfB2I90iyL4cU5639n56CbNFL9lcYnSyZLtFIgBR5wfCLyUVdXFNeWgBqcXgcVG+
-lm55aDIIbVkRW4xYu9DVM3ievtKrOh7ij4I6iz+j2wa3mshjvmc2YyIb132IgH+F
-gIJp6PhbAmYH2VO+OohjTSH2dAwgdvPMyzzK40W/JAaC4WcOgUkFNrYteC5K12r1
-W1/DVB+2WcUFERMndvCrzPk1mPyXOo/ZQ7g5E6ZvmsZxUj4FquBsJTM6eH1e0Erl
-JxPhgMzqKTUSkdjV1ty76ZSM8sMaIjXnbYw7N1IgzLz78inFVgOrg7aaEB2BbpU0
-JFDNmBA+B1B6uIDLm8525Ktxag6tjbsiHh8Vxtfs4Zlws/kUaLZ3Y+sESncDPOg0
-kbE0LNzFlTd3k/x4f3V4lge7qHNleuvp6hEUFRmxDwHX5ZfGgESJ7jqI6nQ+u7OY
-ZsF59nQfaIQ6D/6wLVwgFW4WUA7Z8Qar5SHv6Xwjaq7pR1PmYladrqlWsCRNk4Hm
-0u6H1/pGOQwYXybKQdcWkY4K9Uar1DwpHhrupQIEmee7T97sQmsTpLSsHHWK14KV
-Hbuk9ObOfXM=
-=GKNF
+iEYEARECAAYFAkgXr6UACgkQ6plSLtsExHE9tQCeKoSqPcvfaTwWFh9whtcGDzCC
+b2cAn0mVsUN71ioj1EaRbU5B51h1Rb4/
+=4/UC
 -----END PGP SIGNATURE-----
 
---=-GakSmA6965Nyb7fbOm8B--
-
+--envbJBWh7q8WU6mo--
