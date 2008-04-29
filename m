@@ -1,72 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-roam.Stanford.EDU ([171.64.10.152]:48487 "EHLO
-	smtp-roam.Stanford.EDU" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbYD3BFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 21:05:05 -0400
-Received: from localhost (SW-90-728-259-1.Stanford.EDU [171.66.159.123])
-	(authenticated bits=0)
-	by smtp-roam.Stanford.EDU (8.12.11/8.12.11) with ESMTP id m3U153t7023120
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 18:05:04 -0700
-Date: Tue, 29 Apr 2008 18:05:02 -0700
-From: Gautam Iyer <gi1242@stanford.edu>
-To: linux-wireless@vger.kernel.org
-Subject: b43 LED status (was Re: b43 reduced performance in Linux-2.6.25)
-Message-ID: <20080430010502.GA17871@stanford.edu> (sfid-20080430_030504_906708_AC8B4530)
-References: <20080429215629.GC17790@stanford.edu> <4817A28E.2050309@lwfinger.net> <20080429233045.GA26484@stanford.edu> <4817B548.30303@lwfinger.net>
+Received: from ns2.suse.de ([195.135.220.15]:43375 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759194AbYD2RVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Apr 2008 13:21:39 -0400
+Date: Tue, 29 Apr 2008 10:18:55 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [25/37] b43: Workaround DMA quirks
+Message-ID: <20080429171855.GZ14724@suse.de> (sfid-20080429_192149_279880_8203C2AA)
+References: <20080429171222.073929148@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zhXaljGHf11kAtnf"
-In-Reply-To: <4817B548.30303@lwfinger.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080429171730.GA14724@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
---zhXaljGHf11kAtnf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-On Tue, Apr 29, 2008 at 06:54:48PM -0500, Larry Finger wrote:
+commit 1033b3ea11820ea1fb1b877207bd6724e9aaedc3 upstream
 
->> I don't have Windows so can't compare to it. But even though I use b43
->> by default, I sometimes have to revert to ndiswrapper on weak signals or
->> large file transfers. Also ndiswrapper has the power management and
->> LED's working correctly, which I could not get working with the b43
->> driver.
->
-> What LEDS does your interface, and what do they not do? If the only
-> LED you have is the one attached to the rfkill switch, then you have
-> not properly configured the LED parameters.
+Some mainboards/CPUs don't allow DMA masks bigger than a certain limit.
+Some VIA crap^h^h^h^hdevices have an upper limit of 0xFFFFFFFF. So in this
+case a 64-bit b43 device would always fail to acquire the mask.
+Implement a workaround to fallback to lower DMA mask, as we can always
+also support a lower mask.
 
-Yes, the only LED I have is attached to my rfkill switch. It becomes
-blue when I load the b43 kernel module, and becomes red when I unload
-it. I was hoping I could set it so that it becomes blue when in use
-(i.e. associated), and red otherwise. (This happens with ndiswrapper).
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-I remember messing with the LED power / brightness files in /sys. But
-nothing I echoed in there changed the state of the LED. Is there some
-parameter I'm missing?
 
-Thanks,
+---
+ drivers/net/wireless/b43/dma.c |   73 +++++++++++++++++++++++++++++------------
+ 1 file changed, 52 insertions(+), 21 deletions(-)
 
-GI
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -822,6 +822,18 @@ static u64 supported_dma_mask(struct b43
+ 	return DMA_30BIT_MASK;
+ }
+ 
++static enum b43_dmatype dma_mask_to_engine_type(u64 dmamask)
++{
++	if (dmamask == DMA_30BIT_MASK)
++		return B43_DMA_30BIT;
++	if (dmamask == DMA_32BIT_MASK)
++		return B43_DMA_32BIT;
++	if (dmamask == DMA_64BIT_MASK)
++		return B43_DMA_64BIT;
++	B43_WARN_ON(1);
++	return B43_DMA_30BIT;
++}
++
+ /* Main initialization function. */
+ static
+ struct b43_dmaring *b43_setup_dmaring(struct b43_wldev *dev,
+@@ -982,6 +994,42 @@ void b43_dma_free(struct b43_wldev *dev)
+ 	dma->tx_ring0 = NULL;
+ }
+ 
++static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
++{
++	u64 orig_mask = mask;
++	bool fallback = 0;
++	int err;
++
++	/* Try to set the DMA mask. If it fails, try falling back to a
++	 * lower mask, as we can always also support a lower one. */
++	while (1) {
++		err = ssb_dma_set_mask(dev->dev, mask);
++		if (!err)
++			break;
++		if (mask == DMA_64BIT_MASK) {
++			mask = DMA_32BIT_MASK;
++			fallback = 1;
++			continue;
++		}
++		if (mask == DMA_32BIT_MASK) {
++			mask = DMA_30BIT_MASK;
++			fallback = 1;
++			continue;
++		}
++		b43err(dev->wl, "The machine/kernel does not support "
++		       "the required %u-bit DMA mask\n",
++		       (unsigned int)dma_mask_to_engine_type(orig_mask));
++		return -EOPNOTSUPP;
++	}
++	if (fallback) {
++		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
++			(unsigned int)dma_mask_to_engine_type(orig_mask),
++			(unsigned int)dma_mask_to_engine_type(mask));
++	}
++
++	return 0;
++}
++
+ int b43_dma_init(struct b43_wldev *dev)
+ {
+ 	struct b43_dma *dma = &dev->dma;
+@@ -991,27 +1039,10 @@ int b43_dma_init(struct b43_wldev *dev)
+ 	enum b43_dmatype type;
+ 
+ 	dmamask = supported_dma_mask(dev);
+-	switch (dmamask) {
+-	default:
+-		B43_WARN_ON(1);
+-	case DMA_30BIT_MASK:
+-		type = B43_DMA_30BIT;
+-		break;
+-	case DMA_32BIT_MASK:
+-		type = B43_DMA_32BIT;
+-		break;
+-	case DMA_64BIT_MASK:
+-		type = B43_DMA_64BIT;
+-		break;
+-	}
+-	err = ssb_dma_set_mask(dev->dev, dmamask);
+-	if (err) {
+-		b43err(dev->wl, "The machine/kernel does not support "
+-		       "the required DMA mask (0x%08X%08X)\n",
+-		       (unsigned int)((dmamask & 0xFFFFFFFF00000000ULL) >> 32),
+-		       (unsigned int)(dmamask & 0x00000000FFFFFFFFULL));
+-		return -EOPNOTSUPP;
+-	}
++	type = dma_mask_to_engine_type(dmamask);
++	err = b43_dma_set_mask(dev, dmamask);
++	if (err)
++		return err;
+ 
+ 	err = -ENOMEM;
+ 	/* setup TX DMA channels. */
 
---=20
-Twenty Ways To Maintain A Healthy Level of Insanity
-7. Finish all your sentences with "In Accordance with the Prophecy."
-
---zhXaljGHf11kAtnf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkgXxb4ACgkQ6plSLtsExHGROACfVYPq7iRN2dQWqyXatJyDCrh2
-KmAAni/H20nuRiflK/sEQERhMkUa55Jw
-=KAi+
------END PGP SIGNATURE-----
-
---zhXaljGHf11kAtnf--
+-- 
