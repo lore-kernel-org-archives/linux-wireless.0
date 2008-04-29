@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:42476 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbYDHWGK (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61126 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755781AbYD2Wez (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2008 18:06:10 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so2063517fgb.17
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2008 15:06:08 -0700 (PDT)
-Message-ID: <47FBEC4B.7030205@gmail.com> (sfid-20080408_230633_755757_4DC0DEBD)
-Date: Wed, 09 Apr 2008 00:06:03 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Tue, 29 Apr 2008 18:34:55 -0400
+Message-ID: <4817A28E.2050309@lwfinger.net> (sfid-20080430_003452_312081_04CAD81C)
+Date: Tue, 29 Apr 2008 17:34:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 1/2] mac80211: fix recursive locking in	ieee80211_sta_expire
-References: <1207598029-20000-1-git-send-email-jirislaby@gmail.com> <20080408183556.GC8183@tuxdriver.com>
-In-Reply-To: <20080408183556.GC8183@tuxdriver.com>
+To: Gautam Iyer <gi1242@stanford.edu>, linux-wireless@vger.kernel.org
+Subject: Re: b43 reduced performance in Linux-2.6.25
+References: <20080429215629.GC17790@stanford.edu>
+In-Reply-To: <20080429215629.GC17790@stanford.edu>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2008 08:35 PM, John W. Linville wrote:
-> On Mon, Apr 07, 2008 at 09:53:48PM +0200, Jiri Slaby wrote:
->> Hi,
->>
->> it's against -mm, what's current mac80211 git tree? It seems that
->> -mm has fresher material, than wireless-2.6...
+Gautam Iyer wrote:
+> Hi All,
 > 
-> As it should.  The wireless-2.6 tree is for feeding the linux-2.6 tree
-> (by way of the net-2.6 tree).  Similarly, wireless-2.6.26 feeds -mm
-> by way of the net-2.6.26 tree.
+> I saw a few threads about reduced performance in b43 in the 2.6.24 /
+> 2.6.25_rcXX kernels, but couldn't manage to fix the problem myself:
+> 
+> On my system, using ndiswrapper and the windows drivers gives me about
+> 1.5 times the performance of the in kernel b43 drivers.
+> 
+> Here are my system specs:
+> 
+>     Broadcom Corporation BCM4312 802.11a/b/g [14e4:4312] (rev 02)
+>     Linux 2.6.25 (gentoo-sources-2.6.25-r1).
+>     b43 wireless driver with firmware 410.2160 (2007-05-26 15:32:10)
+> 
+> I measured the performance by running "ttcp" between my Laptop and my
+> router. Using b43 on my Laptop gives about 2MB/s reported, and using
+> ndiswrapper gives me about 3MB/s under exactly the same situations.
+> 
+> Any ideas about what's going on? (I would be happy to provide you with
+> any further specs on my computer).
 
-Wow, too many trees even with their branches to know the ropes.
+Yes. Broadcom wrote the Windows drivers, but never gave the specifications to 
+anyone else. Obvious those specs from their engineers are better than those 
+from the _reverse_ engineers for your card. On my BCM4311/2 I get better 
+throughput with the b43 driver than I get when running Windows. I _NEVER_ use 
+ndiswrapper. Now that b43 works, why would I want to taint my kernel?
 
-> Please use the wireless-testing tree for development, as it contains
-> both sets of patches (fixes for the current release and updates for the
-> future) as well as a few extras (like drivers still in development).
-> Plus it is somewhat more stable, being based off the most a recent
-> -rc release rather than just whatever someone last pulled.
+The only loss of performance that we look at is those that happen between 
+release n and n+1. Those we call regressions and take them seriously.
 
-Ok, thanks.
+The only specs that we are interested in are those that come from reverse 
+engineering. If you can provide them, we are very interested.
+
+Larry
