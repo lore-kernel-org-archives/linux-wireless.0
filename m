@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63740 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627AbYDSPnj (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:31760 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757407AbYD2SmV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 11:43:39 -0400
-Date: Sat, 19 Apr 2008 10:42:28 -0500
-From: Larry.Finger@lwfinger.net
-To: mb@bu3sch.de, linville@tuxdriver.com
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] ssb: Fix case where board flags are unset in SPROM
-Message-ID: <480a12e4.JW4WMtJZAF8ZXHLq%Larry.Finger@lwfinger.net> (sfid-20080419_164345_235110_21F435C6)
+	Tue, 29 Apr 2008 14:42:21 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: Vladimir Koutny <vlado@work.ksp.sk>
+Subject: Re: [RFC] WARNING: at net/mac80211/ieee80211_rate.h:159 rate_lowest_index()
+Date: Tue, 29 Apr 2008 20:42:20 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <48174652.6080909@work.ksp.sk>
+In-Reply-To: <48174652.6080909@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200804292042.20500.bruno@thinktube.com> (sfid-20080429_204241_952560_ADB95C87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The specifications call for the low 16 bits of the board flags to
-be cleared if unset (== 0xFFFF). This step was taken in bcm43xx,
-but was missed when ssb was coded. With this patch, Linksys WMP11
-cards with a BCM4301 now work.
+On Tuesday 29 April 2008 18:01:22 Vladimir Koutny wrote:
+> Hi,
+> the warning in $subj can pop up in the following scenario:
+>
+> - iwconfig wlan0 mode ad-hoc; ifconfig wlan0 up
+> - a frame arrives from an unknown station which triggers
+>   ieee80211_ibss_sta_add() (called from prepare_for_handlers())
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+yep, i have seen this warning too, just didn't get around to look into it...
 
-John,
+> In this case, we create a new sta entry, fill in supp_rates field,
+> initialize rate_control algo, and insert this sta entry into the list.
+>
+> The problem is the assignment for supp_rates:
+>
+> sta->supp_rates[local->hw.conf.channel->band] =
+> 	sdata->u.sta.supp_rates_bits[local->hw.conf.channel->band];
+>
+> because sdata->u.sta.supp_rates_bits is set only when we actually
+> join an ibss, which is not the case in this scenario; so we assign
+> zero here. Then, the code in rate_control_pid_rate_init() calls
+> rate_lowest_index() for some reason, and since no supported rate is
+> found, this warning is issued.
+>
+>
+> The question is how sta->supp_rates should be initialized:
+>
+> - we could initialize it to our sta's rates, but then we could
+>   probably transmit to a station at unsupported rate
 
-This is 2.6.26 material.
+isn't this what is done right now, and the rateset is zero sometimes and then 
+we get the warning?
 
-Larry
----
+this might be wrong anyways: as you said it could make us send frames at an 
+unsupported rate.
 
+> - add new ibss station only on received beacon, not on a data frame;
+>   currently, beacons are ignored for this purpose (they just update
+>   the bss list later on)
 
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c
-+++ wireless-testing/drivers/ssb/pci.c
-@@ -483,6 +483,11 @@ static int sprom_extract(struct ssb_bus 
- 		if (out->revision >= 5)
- 			goto unsupported;
- 	}
-+	/* check for board flags not set (0xFFFF) and make 0 as per specs */
-+	if (out->boardflags_lo == 0xFFFF)
-+		out->boardflags_lo = 0;
-+	if (out->boardflags_hi == 0xFFFF)
-+		out->boardflags_hi = 0;
- 
- 	return 0;
- unsupported:
+i think stations should be added on reception of both beacons and data frames.
+
+> - something else (like 1Mbps only)?
+
+what about the rate of the currently received data frame (and maybe any other 
+rates we could safely deduce from that)?
+
+bruno
