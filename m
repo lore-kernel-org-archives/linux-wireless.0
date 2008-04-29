@@ -1,81 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56178 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675AbYDMHnU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2008 03:43:20 -0400
-Subject: Re: [RFC 1/2] b43: Fixes injection speed (up to 350 pps)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Jory A. Pratt" <geekypenguin@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4800BBAF.7000609@gmail.com> (sfid-20080412_144023_643919_8FFFD65F)
-References: <4800BBAF.7000609@gmail.com>
-	 (sfid-20080412_144023_643919_8FFFD65F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c1Sg/+3ZdSao2noyZwAO"
-Date: Sun, 13 Apr 2008 09:43:13 +0200
-Message-Id: <1208072593.4111.12.camel@johannes.berg> (sfid-20080413_084324_500902_F8403E5D)
-Mime-Version: 1.0
+Received: from ns.suse.de ([195.135.220.2]:52282 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759062AbYD2RVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Apr 2008 13:21:35 -0400
+Date: Tue, 29 Apr 2008 10:18:53 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [24/37] b43: Add more btcoexist workarounds
+Message-ID: <20080429171853.GY14724@suse.de> (sfid-20080429_192148_544577_C900F189)
+References: <20080429171222.073929148@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080429171730.GA14724@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
---=-c1Sg/+3ZdSao2noyZwAO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
+commit 9fc38458355525f801cd2ab403ac89850489a05e upstream
 
-> +       if (ctl->type =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> +               ctl->flags |=3D IEEE80211_TXCTL_NO_ACK;
-> +       }
-> +
->         /* TX is done without a global lock. */
->         if (b43_using_pio_transfers(dev))
->                 err =3D b43_pio_tx(dev, skb, ctl);
-> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/x=
-mit.c
-> index 19aefbf..85e446b 100644
-> --- a/drivers/net/wireless/b43/xmit.c
-> +++ b/drivers/net/wireless/b43/xmit.c
-> @@ -318,7 +318,8 @@ int b43_generate_txhdr(struct b43_wldev *dev,
->         /* MAC control */
->         if (!(txctl->flags & IEEE80211_TXCTL_NO_ACK))
->                 mac_ctl |=3D B43_TXH_MAC_ACK;
-> -       if (!(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_CTL) =
-&&
-> +       if ( (txctl->type !=3D IEEE80211_IF_TYPE_MNTR) &&
-> +             !(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_CTL=
-) &&
->               ((fctl & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PSPOL=
-L)))
->                 mac_ctl |=3D B43_TXH_MAC_HWSEQ;
->         if (txctl->flags & IEEE80211_TXCTL_FIRST_FRAGMENT)
+This adds more workarounds for devices with broken BT bits.
 
-FWIW, Michael meant this one too, it's not acceptable and we've
-previously said why.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-johannes
+---
+ drivers/net/wireless/b43/main.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
---=-c1Sg/+3ZdSao2noyZwAO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4009,6 +4009,12 @@ static int b43_one_core_attach(struct ss
+ 	return err;
+ }
+ 
++#define IS_PDEV(pdev, _vendor, _device, _subvendor, _subdevice)		( \
++	(pdev->vendor == PCI_VENDOR_ID_##_vendor) &&			\
++	(pdev->device == _device) &&					\
++	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
++	(pdev->subsystem_device == _subdevice)				)
++
+ static void b43_sprom_fixup(struct ssb_bus *bus)
+ {
+ 	struct pci_dev *pdev;
+@@ -4022,10 +4028,9 @@ static void b43_sprom_fixup(struct ssb_b
+ 		bus->sprom.boardflags_lo |= B43_BFL_PACTRL;
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 		pdev = bus->host_pci;
+-		if (pdev->vendor == PCI_VENDOR_ID_BROADCOM &&
+-		    pdev->device == 0x4318 &&
+-		    pdev->subsystem_vendor == PCI_VENDOR_ID_ASUSTEK &&
+-		    pdev->subsystem_device == 0x100F)
++		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
++		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
++		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
+ 			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
+ 	}
+ }
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASAG5kKVg1VMiehFYAQJ57Q//cP23B0P0q4CnAhBCQ+EAxK9OT6XywXyz
-EFu3iVSqAUx0NpVWwIDW6qNY9lrcxLanI/z8MbVFHJJpEgQSDCVZ4ubxDpdqJfXo
-ASpKsX5Qg8T/o4QGt4paWM7PGxehNxci0i8i6jfBj+vMsATPhkHXuP2ZX9hlzpcM
-nUiShBnNkT5gtk496TyM/D7b7yXeNXJRGbQA4AbcsSE9h/2MPJUvOpB40UfyFiHw
-ZtPr0LwkTFJuImpl5OBA7+D4IXbFcQTHt/OcLZdyQXdhLgv8w0wxGLC3ep3mrsUD
-Jbmz1Y1xgZBIDit6pfnKgHRNOrn8FFMvm3HblXh6LvLGXOpNtTRb2QbkHTYU+KTd
-sJWMFd9gvG/8OMgNyQ2S56gctff+zZheVQQP11YoqQGGLMYN2kOF4pxQMWJcYO53
-+NNTWOhEnCk0ZaSxpKrqOHoUGXIHpclKaQkuRoc6swqVPwXAOqPOTaHtSJSxjaVz
-dCNcfYy1zyTJkp5OndaXkn9Qa8Iw9/OcYBFU/d4stH0AM6zS3qbpIyFtkvVQQyGx
-ScLaGuvHLdJq1j2dMT+ivfvXQNnc/o+MMs8FeASUFR8tRPOL795G99ZLwzdJgPn+
-mWSAkakdXAgnLikdia7ixxtCBKCcl4P86oo9kb2Z2uEyKaUCchsptIxxeQ56pPbi
-TeHUH7KRvgw=
-=v1O9
------END PGP SIGNATURE-----
-
---=-c1Sg/+3ZdSao2noyZwAO--
-
+-- 
