@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52819 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756196AbYD3OHU (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:43028 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbYD2BHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 10:07:20 -0400
-Message-Id: <20080430124055.091382000@sipsolutions.net> (sfid-20080430_160721_275559_FFCDF0B6)
-Date: Wed, 30 Apr 2008 14:40:55 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Subject: [RFC/RFT 0/4] mac80211 QoS-related enhancements
-Mime-Version: 1.0
+	Mon, 28 Apr 2008 21:07:52 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so8402384waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2008 18:07:52 -0700 (PDT)
+Message-ID: <1ba2fa240804281807u2162bf28red586ae61fd881a@mail.gmail.com> (sfid-20080429_030756_008190_6A61AF89)
+Date: Tue, 29 Apr 2008 03:07:51 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [2.6 patch] iwlwifi: move the selects to the tristate drivers
+Cc: "Adrian Bunk" <bunk@kernel.org>,
+	"David Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	reinette.chatre@intel.com, torvalds@linux-foundation.org,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20080428234548.GB3075@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080428054700.GA16177@Pilar.virtua.com.br>
+	 <20080427.233507.261574307.davem@davemloft.net>
+	 <20080428073212.GA7260@Pilar.virtua.com.br>
+	 <20080428131552.GI16379@cs181133002.pp.htv.fi>
+	 <20080428142129.GA5679@beyonder.ift.unesp.br>
+	 <20080428205849.GB2813@cs181133002.pp.htv.fi>
+	 <20080428234548.GB3075@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: This patch series requires a number of other patches, notably Ivo's
-rt2x00 update and Ivo's mac80211 patch
-	"mac80211: Replace ieee80211_tx_control->key_idx with ieee80211_key_conf"
+On 4/29/08, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Apr 28, 2008 at 11:58:49PM +0300, Adrian Bunk wrote:
+>
+> > This patch moves the following select's:
+> > - RFKILL        : IWLWIFI_RFKILL -> IWLCORE
+> > - RFKILL_INPUT  : IWLWIFI_RFKILL -> IWLCORE
+> > - MAC80211_LEDS : IWL4965_LEDS   -> IWLCORE
+> > - LEDS_CLASS    : IWL4965_LEDS   -> IWLCORE
+> > - MAC80211_LEDS : IWL3945_LEDS   -> IWL3945
+> > - LEDS_CLASS    : IWL3945_LEDS   -> IWL3945
+> >
+> > The effects are:
+> > - with IWLCORE=m and/or IWL3945=m RFKILL/RFKILL_INPUT/MAC80211_LEDS/LEDS_CLASS
+> >   are no longer wrongly forced to y
+> > - fixes a build error with IWLCORE=y, IWL4965=m
+> >   might be a bug in kconfig causing it, but doing this change that is
+> >   anyway the right thing fixes it
+> >
+> > Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+>
+> This seems sane to me -- I'm sorry I let so much Kconfig mess slip
+> through on this driver in the first place!
 
-Any testing of this series is welcome, even just the first patch by itself
-(especially with drivers other than b43), it doesn't make sense to test with
-patch 2 and not 3 though, so if you're going to test one by one treat 2/3 as
-a set.
+I'm sorry too, this is just so no intuitive... I'm really amazed where
+it get into yet constrain computation is always complex.  Next time I
+put more effort in this.
 
-This series of patches reworks mac80211 step-by-step to use more generic
-code instead of having implementations of everything built-in.
+Tomas
 
-The first patch (mac80211: use rate index in TX control) is just preparation
-(but I'm not entirely sure about the iwlwifi changes, haven't tested them yet.)
+> > ---
+> >
+> > BTW: There's no correlation between IWL3945_LEDS and IWLWIFI_LEDS.
+> >      That seems to be intended?
+>
+> Yes.  IWLWIFI_LEDS used to be IWL4965_LEDS, and I have the impression
+> that eventually it will subsume IWL3945_LEDS as well.
+>
+True, not yet.
 
-The second patch I want input from netdev from, what do people think about
-using the GSO code that way? It does seem like a bit of an abuse to fill the
-skb->next pointer from within ->hard_start_xmit() but it works and allows
-me to get rid of all the weird retry logic in mac80211 (patch three). Finally,
-the fourth patch converts mac80211 and drivers to be multiqueue aware.
 
-There are still a number of things missing in this series:
- * we need to rework the classification function to be a real classifier
-   that we install on our wme qdisc
- * we should allow tuning the medium access parameters via the wme qdisc
 
-johannes
-
+Thanks
+Tomas
