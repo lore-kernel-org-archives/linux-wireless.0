@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57258 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752278AbYDIPrA (ORCPT
+Received: from rv-out-0708.google.com ([209.85.198.248]:10683 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756063AbYD2INw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2008 11:47:00 -0400
-Message-ID: <47FCE4ED.9010308@lwfinger.net> (sfid-20080409_164705_167236_9F5BDDC8)
-Date: Wed, 09 Apr 2008 10:46:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 29 Apr 2008 04:13:52 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so3153992rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 01:13:51 -0700 (PDT)
+Message-ID: <41960ccf0804290113k33e322f0se045d47bc654b90@mail.gmail.com> (sfid-20080429_101410_411054_48658439)
+Date: Tue, 29 Apr 2008 10:13:51 +0200
+From: "Lorenzo Nava" <navalorenx@gmail.com>
+To: "Francis Galiegue" <fgaliegue@gmail.com>
+Subject: Re: BCM4308 rev 3 owner, willing to help (want to make an access point)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4816D790.50302@gmail.com>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] Add Realtek 8187B support
-References: <200804081931.07638.herton@mandriva.com.br>
-In-Reply-To: <200804081931.07638.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <ac542ca00804280404h20db4b1cn56a2c5fefc119760@mail.gmail.com>
+	 <4816D790.50302@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Hi, this patch (made against wireless-testing repository) adds support for
-> 8187B to the rtl8187 module.
+Francis Galiegue wrote:
 
-Thanks for your efforts. If this driver had been available two months 
-ago, it would have made my life much simpler.
+> I've started reading documentation on wireless.kernel.org, and don't
+> understand much of it (nl80211, mac80211, cfg80211... Many things to
+> learn about).
+>
+> Right now I'm stuck at the "setting the card to master mode": iwconfig
+> wlan0 mode master returns "Invalid argument". The card works fine with
+> other modes though.
+>
 
-Don't get too discouraged about the negative comments - that kind of 
-diligence is what makes Linux so robust, and keeps this open-source 
-project from chaos.
+If you look for the thread "Does mac80211 support ap mode" in the
+mailing list archive you can find some infos.
+You have to download the patch "allow-ap-vlan-mode.patch" that you can
+find at http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
+Then you have to install hostapd (version 0.6.3) with nl80211 driver
+(you can find all the informations that you need in the hostapd site).
+At the moment you can't enable master mode with iwconfig, you can do
+it only with hostapd.
 
-Once your patches get more stabilized, I will be submitting one to 
-handle my hardware, which is a LevelOne WNC-0301USB. For some reason, 
-it has an idProduct code of 0x8187, not 0x8189, and one has to look at 
-the iProduct value. For early testing, I am just forcing it to be an 
-8187B. For my information, what is the iProduct value for your device?
 
-I did only minimal testing. The USB device was only about 1 meter from 
-the AP. It connected with a WPA-encrypted network in about the same 
-time as my BCM43xx devices do.
+Now here is my problem: I have a BCM4306 (b43 driver) with kernel
+2.6.25-rc9 and hostapd-0.6.3 installed. I tested the card performance
+with a simple test. The configuration of the network for the test was:
+an access point (my computer with BCM4306) and 2 clients (both using
+b43 driver). I used no encryption and work with 11M rate.
+I sent a CBR traffic (11M) from the 2 clients to the access point.
+When I started transmit packets from clients they disconnected from
+the AP until I didn't stop the transmission. Hostapd print this
+message that I've never seen before:
+ _Failed to set beacon head/tail_
 
-I do have one minor comment - I prefer to see signal and noise values 
-in dBm, not as xx/65.
+The problem is related to hostapd? Maybe when the AP processes a lot
+of traffic it was unable to generate beacons correctly?
 
-Good job,
+As the final goal of the experiment was to try 80211e performance, I
+tried the ad-hoc network mode, but I saw that the stations don't use
+qos support. Can I use qos with ad-hoc network?
 
-Larry
+ Thank you
+
+ regards
