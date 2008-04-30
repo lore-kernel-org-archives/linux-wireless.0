@@ -1,95 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fenrir.org.uk ([81.168.115.223]:53119 "EHLO mx.fenrir.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756622AbYDNH7W convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56293 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756672AbYD3OUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2008 03:59:22 -0400
-Date: Mon, 14 Apr 2008 08:59:18 +0100
-From: Brian Morrison <bdm@fenrir.org.uk>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Latest compat-wireless build fails
-Message-ID: <20080414085918.5116823b@peterson.fenrir.org.uk> (sfid-20080414_085930_202386_03ED10B1)
-In-Reply-To: <1208138233.5319.36.camel@dv>
-References: <20080412012305.76f1b7eb@fangio.fenrir.org.uk>
-	<20080412104207.478f9f14@fangio.fenrir.org.uk>
-	<1208138233.5319.36.camel@dv>
+	Wed, 30 Apr 2008 10:20:25 -0400
+Subject: Re: [RFC] WARNING: at net/mac80211/ieee80211_rate.h:159
+	rate_lowest_index()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Koutny <vlado@work.ksp.sk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48174652.6080909@work.ksp.sk> (sfid-20080429_180141_582175_8C7B6399)
+References: <48174652.6080909@work.ksp.sk>
+	 (sfid-20080429_180141_582175_8C7B6399)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PFD2j0IKPRx7EHeGfMym"
+Date: Wed, 30 Apr 2008 16:20:15 +0200
+Message-Id: <1209565215.18659.26.camel@johannes.berg> (sfid-20080430_162017_586248_D00379B8)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 13 Apr 2008 21:57:13 -0400
-Pavel Roskin <proski@gnu.org> wrote:
 
-> Hello!
+--=-PFD2j0IKPRx7EHeGfMym
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> because sdata->u.sta.supp_rates_bits is set only when we actually
+> join an ibss, which is not the case in this scenario; so we assign
+> zero here. Then, the code in rate_control_pid_rate_init() calls
+> rate_lowest_index() for some reason, and since no supported rate is
+> found, this warning is issued.
 >=20
-> Please don't use bcc: in public emails.  Put your addressees to to: a=
-nd
-> cc: so that nobody wonders why he or she is getting your e-mail.
-
-Yes, it was an error on my part when I accidentally sent the mail back
-to myself and then I did a redirect to the list rather than re-address
-the mail. Not intentional, but I didn't think it through as I was in a
-hurry.
-
 >=20
-> On Sat, 2008-04-12 at 10:42 +0100, Brian Morrison wrote:
-> > On Sat, 12 Apr 2008 01:23:05 +0100
-> > Brian Morrison <bdm@fenrir.org.uk> wrote:
-> >=20
-> > > If anyone is interested, the latest compat-wireless tarball fails=
- to
-> > > build. It complains about some missing led defines in the rt2x00
-> > > directory.
-> > >=20
-> > > I don't have the exact error messages to hand, but I imagine it's
-> > > trivial for someone to type make and find out.
+> The question is how sta->supp_rates should be initialized:
 >=20
-> It would be still useful if you provided the kernel version.
-> compat-wireless tries to support the latest kernels, but occasionally
-> new changes in the driver can break compatibility with the older
-> kernels, and need to be patched.
-
-This was with 2.6.24.4-64.fc8 on Fedora 8.
-
+> - we could initialize it to our sta's rates, but then we could
+>   probably transmit to a station at unsupported rate
 >=20
-> > FWIW, the 2008-04-04 and later compat-wireless tarballs fail in the
-> > same way.
-> >=20
-> > The error is:
-> >=20
-> > CC
-> > [M]  /home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x=
-00/rt2x00leds.o
-> > /home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x00/rt=
-2x00leds.c: In function =E2=80=98rt2x00leds_register=E2=80=99:
-> > /home/bdm/compat-wireless-2008-04-04/drivers/net/wireless/rt2x00/rt=
-2x00leds.c:171: error: =E2=80=98struct led_classdev=E2=80=99 has no mem=
-ber named =E2=80=98blink_set=E2=80=99
+> - add new ibss station only on received beacon, not on a data frame;
+>   currently, beacons are ignored for this purpose (they just update
+>   the bss list later on)
 >=20
-> blink_set is defined in include/linux/led.h in the wireless-testing
-> kernel.  I assume it's missing in the kernel you are using.
+> - something else (like 1Mbps only)?
 >=20
+> As soon as we do sta_join_ibss(), this warning won't happen again.
+>=20
+>=20
+> Note that once we have sta entry (in our ibss), we will update its
+> supported rates based on beacons it sends (in rx_bss_info()).
+>=20
+> Any thoughts?
 
-Looks like it isn't, so possibly there needs to be a way of providing
-missing headers for kernels without their own complete set. Not sure ho=
-w
-that might be done.
+I don't know. I don't use IBSS nor am I intimately familiar with the
+specs for it.
 
---=20
+johannes
 
-Brian Morrison
+--=-PFD2j0IKPRx7EHeGfMym
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-bdm at fenrir dot org dot uk
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-   "Arguing with an engineer is like wrestling with a pig in the mud;
-    after a while you realize you are muddy and the pig is enjoying it.=
-"
-   =20
-GnuPG key ID DE32E5C5 - http://wwwkeys.uk.pgp.net/pgpnet/wwwkeys.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUASBiAHqVg1VMiehFYAQLR9A/9EXX2K7CXcnThxd9JGSVe31HS42HvrXSH
+cnvowErynHwTKOjo08OmMXrm/z85d7y82pdNA+spdessIUlRbqkVY+Cj+6tnnMNB
+B4qokmPlmEHO5/HdUaFX06rKxZ4DFWcMj/NLD7s/Eplf6xE0h2iwXXUnvEYupgZ6
+5Iz6KG28HUMJODMJ7PbXabzZ95orpjcs1G4bJoZa14l1QIvonhN0HIfXE18ZvTfz
+G+lNjg+X16pp9d5qYY+DUfxCgyi9NURN23y4eFqN27JDJTUkeBrVmQ+2rRyzmoPx
+2EPNaGWKJ0hxPldsAgZSeGJSIIZFWKINwwep3BEsl+WF+YzLKN5YBLctQ5pEkq/I
+kniLoUeNsyDIvephCIsx9KH/wx5Dbi+0xG3KuGiNgsVT6ehFljG22/s7cSMzNHgg
+V3TgwL8lsiT6wdT8A84ixfcMlKksDPwhJj/6qhxwMdOWL7qglFdnfcXdiHcYVV+C
+anKsumX/IaC4amTSNHqvScP172f7qXUXT1m4Q9T25CeBZ/z0+JQpff10q0ukczN7
+pSsQS1WUZpJnFtnUKVjU2rvFWrr69pHxhb1GkH8Y2I5OKNkJZsX3OcDwJk8V1sY2
+U6KsVm93UPzV7s8Ek7niqPHfDXt6htJJIE6ChahBjXkjhmztJxW5ZKnivitrB1eM
+j86ZTElcuvU=
+=J0Rd
+-----END PGP SIGNATURE-----
+
+--=-PFD2j0IKPRx7EHeGfMym--
+
