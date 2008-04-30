@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:39365 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752305AbYDPVWL convert rfc822-to-8bit (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:20927 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbYD3IxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 17:22:11 -0400
+	Wed, 30 Apr 2008 04:53:06 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: debug output tweaks for lbs_thread
+Date: Wed, 30 Apr 2008 10:50:07 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: iwl3945 problem with 2.6.25-rc9
-Date: Wed, 16 Apr 2008 14:22:09 -0700
-Message-ID: <D936D925018D154694D8A362EEB0892004353826@orsmsx416.amr.corp.intel.com> (sfid-20080416_222226_469882_9FC73C4C)
-In-Reply-To: <1208376292.27708.3.camel@localhost.localdomain>
-References: <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.intel.com> <fu5iel$c45$1@ger.gmane.org>   <fu5l5r$pm8$1@ger.gmane.org> <1208376292.27708.3.camel@localhost.localdomain>
-From: "Chatre, Reinette" <reinette.chatre@intel.com>
-To: "Dan Williams" <dcbw@redhat.com>,
-	"Marcus Furlong" <furlongm@hotmail.com>
-Cc: <linux-wireless@vger.kernel.org>
+  charset="us-ascii"
+Message-Id: <200804301050.07808.hs4233@mail.mn-solutions.de> (sfid-20080430_105302_580529_4FDCB1A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 16, 2008 1:05 PM, Dan Williams  wrote:
+* make debug output match the variable name
+* always report that lbs_remove_rtap() has has been exited
 
-> On Wed, 2008-04-16 at 20:48 +0100, Marcus Furlong wrote:
->> On Wednesday 16 April 2008 20:01 in
-> <fu5iel$c45$1@ger.gmane.org>, Marcus
->> Furlong wrote:
->> 
->>> On Wednesday 16 April 2008 19:28 in
->>> 
->> 
-> <D936D925018D154694D8A362EEB08920043535A1@orsmsx416.amr.corp.in
-tel.com>,
->>> Chatre, Reinette wrote:
->>> 
->>>> Looks like the device is being brought up and down a lot ... are
->>>> you perhaps running wpa_supplicant or some other user application
->>>> that is doing this? Could you please give more information about
->>>> what you were doing when these errors started to appear?
->>> 
->>> Yes, wpa_supplicant is running as part of the boot process. Should
->>> I use some other application? (Do wireless-tools support WPA?) Or
->>> should I just load the module on it's own and give the dmesg output
->>> from that? 
->> 
->> Here is the output from the module loading without wpa_supplicant,
->> then me reloading it with debug flags, and running ifconfig wlan0
->> and iwlist scanning. Still some Microcode SW and FW errors in there,
->> but there's a lot less noise. 
->> 
->> 
-> https://www.cs.tcd.ie/~furlongm/iwlwifi/iwl3945-output-no-wpasu
-> pplicant.bz2 
-> 
-> Interesting; can you run wpa_supplicant again but dump it's detailed
-> output using "-dddt" for us so we can see what it's doing and if it's
-> causing the restarts? 
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-The driver itself is responsible for many of the restarts because of the
-firmware errors. A wpa_supplicant log will still be useful. 
-
-Could you please give more information about what the system is trying
-to do here? In the first log you sent most failures appear to occur when
-A band channels are configured ... does this match with what you are
-trying to do? Can you explain why the BSSID is all zeroes? 
-
-Thanks
-
-Reinette
+Index: wireless-testing/drivers/net/wireless/libertas/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-04-30 09:21:45.000000000 +0200
++++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-04-30 09:24:05.000000000 +0200
+@@ -703,7 +703,7 @@ static int lbs_thread(void *data)
+ 
+ 		if (shouldsleep) {
+ 			lbs_deb_thread("sleeping, connect_status %d, "
+-				"ps_mode %d, ps_state %d\n",
++				"psmode %d, psstate %d\n",
+ 				priv->connect_status,
+ 				priv->psmode, priv->psstate);
+ 			spin_unlock_irq(&priv->driver_lock);
+@@ -1532,10 +1532,11 @@ static void lbs_remove_rtap(struct lbs_p
+ {
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 	if (priv->rtap_net_dev == NULL)
+-		return;
++		goto out;
+ 	unregister_netdev(priv->rtap_net_dev);
+ 	free_netdev(priv->rtap_net_dev);
+ 	priv->rtap_net_dev = NULL;
++out:
+ 	lbs_deb_leave(LBS_DEB_MAIN);
+ }
+ 
