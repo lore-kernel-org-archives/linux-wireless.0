@@ -1,142 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52708 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbYDXSJK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52845 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756676AbYD3OHp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2008 14:09:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable 4/4] b43: Workaround DMA quirks
-Date: Thu, 24 Apr 2008 20:06:11 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200804242006.12088.mb@bu3sch.de> (sfid-20080424_200947_105861_5378F5D3)
+	Wed, 30 Apr 2008 10:07:45 -0400
+Message-Id: <20080430130049.359549000@sipsolutions.net> (sfid-20080430_160737_937304_CEF0FFEA)
+References: <20080430124055.091382000@sipsolutions.net>
+Date: Wed, 30 Apr 2008 14:40:57 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>
+Subject: [RFC/RFT 2/4] GSO: generalize for mac80211
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some mainboards/CPUs don't allow DMA masks bigger than a certain limit.
-Some VIA crap^h^h^h^hdevices have an upper limit of 0xFFFFFFFF. So in this
-case a 64-bit b43 device would always fail to acquire the mask.
-Implement a workaround to fallback to lower DMA mask, as we can always
-also support a lower mask.
+This patch adds a new function dev_skb_segment() that generalises
+the existing dev_gso_segment() by allowing to give a segmentation
+function. mac80211 will use that function using the segmentation
+function skb_segment().
 
-This patch is in wireless-testing.git, commit
-91725545159f81f1c9dc738dfc329199583f649a
+This patch also changes dev_gso_skb_destructor() to be safe when
+the skb no longer has any segments, this will happen when mac80211
+has internally passed off all the fragments to the driver instead
+of asking dev_hard_start_xmit() to do it (which protects against
+this by resetting the destructor if it has sent all fragments.)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+---
+ include/linux/netdevice.h |    1 +
+ net/core/dev.c            |   38 ++++++++++++++++++++++++++++++--------
+ 2 files changed, 31 insertions(+), 8 deletions(-)
 
-
-Index: linux-2.6.25/drivers/net/wireless/b43/dma.c
-===================================================================
---- linux-2.6.25.orig/drivers/net/wireless/b43/dma.c	2008-04-19 18:29:16.000000000 +0200
-+++ linux-2.6.25/drivers/net/wireless/b43/dma.c	2008-04-23 18:35:33.000000000 +0200
-@@ -819,12 +819,24 @@ static u64 supported_dma_mask(struct b43
- 	if (tmp & B43_DMA32_TXADDREXT_MASK)
- 		return DMA_32BIT_MASK;
- 
- 	return DMA_30BIT_MASK;
- }
- 
-+static enum b43_dmatype dma_mask_to_engine_type(u64 dmamask)
-+{
-+	if (dmamask == DMA_30BIT_MASK)
-+		return B43_DMA_30BIT;
-+	if (dmamask == DMA_32BIT_MASK)
-+		return B43_DMA_32BIT;
-+	if (dmamask == DMA_64BIT_MASK)
-+		return B43_DMA_64BIT;
-+	B43_WARN_ON(1);
-+	return B43_DMA_30BIT;
-+}
-+
- /* Main initialization function. */
- static
- struct b43_dmaring *b43_setup_dmaring(struct b43_wldev *dev,
- 				      int controller_index,
- 				      int for_tx,
- 				      enum b43_dmatype type)
-@@ -979,42 +991,61 @@ void b43_dma_free(struct b43_wldev *dev)
- 	b43_destroy_dmaring(dma->tx_ring1);
- 	dma->tx_ring1 = NULL;
- 	b43_destroy_dmaring(dma->tx_ring0);
- 	dma->tx_ring0 = NULL;
- }
- 
-+static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
-+{
-+	u64 orig_mask = mask;
-+	bool fallback = 0;
-+	int err;
-+
-+	/* Try to set the DMA mask. If it fails, try falling back to a
-+	 * lower mask, as we can always also support a lower one. */
-+	while (1) {
-+		err = ssb_dma_set_mask(dev->dev, mask);
-+		if (!err)
-+			break;
-+		if (mask == DMA_64BIT_MASK) {
-+			mask = DMA_32BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		if (mask == DMA_32BIT_MASK) {
-+			mask = DMA_30BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		b43err(dev->wl, "The machine/kernel does not support "
-+		       "the required %u-bit DMA mask\n",
-+		       (unsigned int)dma_mask_to_engine_type(orig_mask));
-+		return -EOPNOTSUPP;
-+	}
-+	if (fallback) {
-+		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
-+			(unsigned int)dma_mask_to_engine_type(orig_mask),
-+			(unsigned int)dma_mask_to_engine_type(mask));
-+	}
-+
-+	return 0;
-+}
-+
- int b43_dma_init(struct b43_wldev *dev)
+--- everything.orig/net/core/dev.c	2008-04-30 01:52:23.000000000 +0200
++++ everything/net/core/dev.c	2008-04-30 03:46:33.000000000 +0200
+@@ -1491,13 +1491,13 @@ static void dev_gso_skb_destructor(struc
  {
- 	struct b43_dma *dma = &dev->dma;
- 	struct b43_dmaring *ring;
- 	int err;
- 	u64 dmamask;
- 	enum b43_dmatype type;
+ 	struct dev_gso_cb *cb;
  
- 	dmamask = supported_dma_mask(dev);
--	switch (dmamask) {
--	default:
--		B43_WARN_ON(1);
--	case DMA_30BIT_MASK:
--		type = B43_DMA_30BIT;
--		break;
--	case DMA_32BIT_MASK:
--		type = B43_DMA_32BIT;
--		break;
--	case DMA_64BIT_MASK:
--		type = B43_DMA_64BIT;
--		break;
--	}
--	err = ssb_dma_set_mask(dev->dev, dmamask);
--	if (err) {
--		b43err(dev->wl, "The machine/kernel does not support "
--		       "the required DMA mask (0x%08X%08X)\n",
--		       (unsigned int)((dmamask & 0xFFFFFFFF00000000ULL) >> 32),
--		       (unsigned int)(dmamask & 0x00000000FFFFFFFFULL));
--		return -EOPNOTSUPP;
--	}
-+	type = dma_mask_to_engine_type(dmamask);
-+	err = b43_dma_set_mask(dev, dmamask);
-+	if (err)
-+		return err;
+-	do {
++	while (skb->next) {
+ 		struct sk_buff *nskb = skb->next;
  
- 	err = -ENOMEM;
- 	/* setup TX DMA channels. */
- 	ring = b43_setup_dmaring(dev, 0, 1, type);
- 	if (!ring)
- 		goto out;
+ 		skb->next = nskb->next;
+ 		nskb->next = NULL;
+ 		kfree_skb(nskb);
+-	} while (skb->next);
++	}
+ 
+ 	cb = DEV_GSO_CB(skb);
+ 	if (cb->destructor)
+@@ -1505,22 +1505,31 @@ static void dev_gso_skb_destructor(struc
+ }
+ 
+ /**
+- *	dev_gso_segment - Perform emulated hardware segmentation on skb.
++ *	dev_skb_segment - Perform segmentation on skb.
+  *	@skb: buffer to segment
++ *	@segmfn: function that does the actual segmentation
+  *
+- *	This function segments the given skb and stores the list of segments
+- *	in skb->next.
++ *	This function segments the given skb and stores the list
++ *	of segments in skb->next. The segmentation function is
++ *	used to do the actual segmentation, it must return the
++ *	list of segments as chained via the returned skb's @next
++ *	pointer. The segmentation function is given the skb to
++ *	segment and the features of the device the skb is going
++ *	to. The segmentation function needs to return an ERR_PTR
++ *	or a valid sk_buff pointer (or NULL for no segments.)
++ *
++ *	Note that segmentation needs the skbs @cb data.
+  */
+-static int dev_gso_segment(struct sk_buff *skb)
++int dev_skb_segment(struct sk_buff *skb, struct sk_buff *(segmfn)(struct sk_buff *skb, int feat))
+ {
+ 	struct net_device *dev = skb->dev;
+ 	struct sk_buff *segs;
+ 	int features = dev->features & ~(illegal_highdma(dev, skb) ?
+ 					 NETIF_F_SG : 0);
+ 
+-	segs = skb_gso_segment(skb, features);
++	segs = segmfn(skb, features);
+ 
+-	/* Verifying header integrity only. */
++	/* Verifying header integrity only/no segments required. */
+ 	if (!segs)
+ 		return 0;
+ 
+@@ -1533,6 +1542,19 @@ static int dev_gso_segment(struct sk_buf
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(dev_skb_segment);
++
++/**
++ *	dev_gso_segment - Perform emulated hardware segmentation on skb.
++ *	@skb: buffer to segment
++ *
++ *	This function segments the given skb and stores the list of segments
++ *	in skb->next.
++ */
++static int dev_gso_segment(struct sk_buff *skb)
++{
++	return dev_skb_segment(skb, skb_gso_segment);
++}
+ 
+ int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+--- everything.orig/include/linux/netdevice.h	2008-04-30 01:52:23.000000000 +0200
++++ everything/include/linux/netdevice.h	2008-04-30 01:52:26.000000000 +0200
+@@ -1454,6 +1454,7 @@ extern int		weight_p;
+ extern int		netdev_set_master(struct net_device *dev, struct net_device *master);
+ extern int skb_checksum_help(struct sk_buff *skb);
+ extern struct sk_buff *skb_gso_segment(struct sk_buff *skb, int features);
++extern int dev_skb_segment(struct sk_buff *skb, struct sk_buff *(segmfn)(struct sk_buff *skb, int feat));
+ #ifdef CONFIG_BUG
+ extern void netdev_rx_csum_fault(struct net_device *dev);
+ #else
+
+-- 
+
