@@ -1,542 +1,652 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:42525 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765920AbYDYSJM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52834 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756076AbYD3OHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2008 14:09:12 -0400
-Date: Fri, 25 Apr 2008 20:09:50 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
-	lcostantino@gmail.com, linux-wireless@vger.kernel.org
-Subject: w35und: transmit optimalization is not neccessary for now
-Message-ID: <20080425180950.GA28558@elf.ucw.cz> (sfid-20080425_200946_009858_F07D8C51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 30 Apr 2008 10:07:34 -0400
+Message-Id: <20080430130051.397094000@sipsolutions.net> (sfid-20080430_160732_760587_3A31AB06)
+References: <20080430124055.091382000@sipsolutions.net>
+Date: Wed, 30 Apr 2008 14:40:59 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+Subject: [RFC/RFT 4/4] mac80211: use multi-queue master netdevice
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch updates mac80211 and drivers to be multi-queue aware and
+use that instead of the internal queue mapping.
 
-Remove unused code.
-
-More junk removal.
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-commit 225d43f2a1a29a12295c5b9b9c390e7a481b116c
-tree 6bdd83b69ad3036451be59c8be85bfe82c1f53be
-parent 8a641ec6e230af50cb72311a49a69d76f56c4acd
-author Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 20:08:44 +0200
-committer Pavel <pavel@amd.ucw.cz> Fri, 25 Apr 2008 20:08:44 +0200
+This is just ground-work. We'll be able to play with Qos much more now.
 
- .../net/wireless/winbond/winbondport/mlmetxrx.c    |   53 +----
- drivers/net/wireless/winbond/winbondport/mto.c     |  262 --------------------
- drivers/net/wireless/winbond/winbondport/wbhal_s.h |   60 +----
- 3 files changed, 19 insertions(+), 356 deletions(-)
+ drivers/net/wireless/ath5k/base.c           |    2 -
+ drivers/net/wireless/b43/dma.c              |    7 ++-
+ drivers/net/wireless/b43/pio.c              |    8 ++--
+ drivers/net/wireless/b43legacy/dma.c        |    2 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 +-
+ drivers/net/wireless/p54/p54common.c        |   10 ++---
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |   12 +++---
+ drivers/net/wireless/rt2x00/rt2x00pci.c     |    2 -
+ drivers/net/wireless/rt2x00/rt2x00queue.h   |   13 ------
+ drivers/net/wireless/rtl8180_dev.c          |    4 +-
+ include/net/mac80211.h                      |   12 ++++--
+ net/mac80211/Kconfig                        |   14 ++++++-
+ net/mac80211/Makefile                       |    2 -
+ net/mac80211/ieee80211_i.h                  |    7 ---
+ net/mac80211/main.c                         |   21 ++++++----
+ net/mac80211/tx.c                           |    9 ----
+ net/mac80211/util.c                         |   54 +++++++++++++++++++---------
+ net/mac80211/wme.c                          |   13 ++----
+ net/mac80211/wme.h                          |    2 -
+ 20 files changed, 109 insertions(+), 93 deletions(-)
 
-diff --git a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
-index 7dea640..04bcbaa 100644
---- a/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
-+++ b/drivers/net/wireless/winbond/winbondport/mlmetxrx.c
-@@ -101,8 +101,18 @@ #endif
- void
- MLME_GetNextPacket(PADAPTER Adapter, PDESCRIPTOR pDes)
- {
-+#define DESCRIPTOR_ADD_BUFFER( _D, _A, _S ) \
-+{\
-+	_D->InternalUsed = _D->buffer_start_index + _D->buffer_number; \
-+	_D->InternalUsed %= MAX_DESCRIPTOR_BUFFER_INDEX; \
-+	_D->buffer_address[ _D->InternalUsed ] = _A; \
-+	_D->buffer_size[ _D->InternalUsed ] = _S; \
-+	_D->buffer_total_size += _S; \
-+	_D->buffer_number++;\
-+}
-+
- 	DESCRIPTOR_ADD_BUFFER( pDes, Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len );
--	DESCRIPTOR_SET_TYPE( pDes, Adapter->sMlmeFrame.DataType );
-+	pDes->Type = Adapter->sMlmeFrame.DataType;
- }
- 
- void MLMEfreeMMPDUBuffer(PWB32_ADAPTER Adapter, PCHAR pData)
-@@ -129,62 +139,23 @@ MLME_SendComplete(PADAPTER Adapter, u8 P
- 	u8		DataTmp[200];
- 
- 	memcpy(DataTmp, Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len);
--    #ifdef _PE_TX_DUMP_
--	WBDEBUG(( "dump tx callback, len=%d\n", Adapter->sMlmeFrame.len ));
--	DataDmp( Adapter->sMlmeFrame.pMMPDU, Adapter->sMlmeFrame.len, 0 );
--    #endif
- 
-     // Reclaim the data buffer
- 	Adapter->sMlmeFrame.len = 0;
- 	MLMEfreeMMPDUBuffer( Adapter, Adapter->sMlmeFrame.pMMPDU );
- 
- 
--	//TxCallback.wFrameType = pData[0];  //&0xf0;
- 	//TODO : ?? The pData has been returned, but we still use it to know what kind
- 	//			of mlme frame it is. Will it be dangerous??
--	//TxCallback.psFramePtr = pData;
- 	TxCallback.psFramePtr = DataTmp;
--	if( SendOK )
-+	if (SendOK)
- 		TxCallback.bResult = MLME_SUCCESS;
- 	else
- 		TxCallback.bResult = TRANSMIT_FRAME_FAIL;
- 
- 	// Return resource
- 	Adapter->sMlmeFrame.IsInUsed = PACKET_FREE_TO_USE;
--	#ifdef _PE_TX_DUMP_
--	WBDEBUG(("!!Return MLME tx packet\n"));
--	#endif
- }
- 
--//===========================================================================
--//	Function:
--//		MLMERcvFrame()
--//
--//	Description:
--//      To receive and ready to process the MLME frame, excluding the FCS
--//      field.
--//      MDS usually passes the MMPDU, which may be segmented and stored into
--//      several Rx data buffers, to this function with a pointer to an array
--//      of the RXBUFFER structure and the number of entries in the array.
--//
--//  Arguments:
--//      Adapter         - Pointer to the Miniport Adatper Context.
--//      pRxBufferArray  - Pointer to the first RXBUFFER for the Rx frame.
--//      NumOfBuffer     - Number of the buffer segment.
--//      ReturnSlotIndex - Reserved for Rx handler
--//
--//	Return value:
--//      None.
--//===========================================================================
--void
--MLMERcvFrame(
--     PWB32_ADAPTER    Adapter,
--     PRXBUFFER        pRxBufferArray,
--     u8             NumOfBuffer,
--     u8            SlotIndex)
--{
--	BUG();
--    return;
--}
- 
- 
-diff --git a/drivers/net/wireless/winbond/winbondport/mto.c b/drivers/net/wireless/winbond/winbondport/mto.c
-index d81e06a..5bc04d2 100644
---- a/drivers/net/wireless/winbond/winbondport/mto.c
-+++ b/drivers/net/wireless/winbond/winbondport/mto.c
-@@ -196,7 +196,6 @@ #define RSSI2RATE_SIZE 9
- static TXRETRY_REC TxRateRec={MTO_MAX_DATA_RATE_LEVELS - 1, 0};   //new record=>TxRateRec
- static int TxRetryRate;
- //static int SQ3, BSS_PK_CNT, NIDLESLOT, SLOT_CNT, INTERF_CNT, GAP_CNT, DS_EVM;
--static int RXRATE=1;// RxBytes, TxBytes;
- static s32 RSSIBuf[RSSIBUF_NUM]={-70, -70, -70, -70, -70, -70, -70, -70, -70, -70};
- static s32 RSSISmoothed=-700;
- static int RSSIBufIndex=0;
-@@ -215,10 +214,6 @@ static int retryrate_rec[MTO_MAX_DATA_RA
- 
- static int PeriodTotalTxPkt = 0;
- static int PeriodTotalTxPktRetry = 0;
--static u8 TxCheckCycle = 0;
--
--static int inc_tx_retry_count = 0;
--static int inc_tx_frag_count = 0;
- 
- typedef struct
- {
-@@ -244,7 +239,6 @@ static u8 last_rate_ant; //this is used 
- u8	boSparseTxTraffic = FALSE;
- 
- void MTO_Init(MTO_FUNC_INPUT);
--void MTO_PeriodicTimerExpired(MTO_FUNC_INPUT);
- void AntennaToggleInitiator(MTO_FUNC_INPUT);
- void AntennaToggleState(MTO_FUNC_INPUT);
- void TxPwrControl(MTO_FUNC_INPUT);
-@@ -254,15 +248,12 @@ void TxRateReductionCtrl(MTO_FUNC_INPUT)
- //void MTO_SetDTORateRange(int type);
- void MTO_SetDTORateRange(MTO_FUNC_INPUT, u8 *pRateArray, u8 ArraySize);
- void MTO_SetTxCount(MTO_FUNC_INPUT, u8 t0, u8 index);
--void MTO_GetRxRate(int rate_index);
- void MTO_TxFailed(MTO_FUNC_INPUT);
- void SmoothRSSI(s32 new_rssi);
- void hal_get_dto_para(MTO_FUNC_INPUT, char *buffer);
- u8 CalcNewRate(MTO_FUNC_INPUT, u8 old_rate, u32 retry_cnt, u32 tx_frag_cnt);
- u8 GetMaxRateLevelFromRSSI(void);
--u8 MTO_GetTxRate(MTO_FUNC_INPUT, u32 fpdu_len);
- u8 MTO_GetTxFallbackRate(MTO_FUNC_INPUT);
--void MTO_CalFallbackRate(MTO_FUNC_INPUT);
- int Divide(int a, int b);
- void multiagc(MTO_FUNC_INPUT, u8 high_gain_mode);
- 
-@@ -479,84 +470,6 @@ void MTO_Init(MTO_FUNC_INPUT)
- 	MTO_DATA().RSSI_low = -60;
- }
- 
--//===========================================================================
--//  MTO_PeriodicTimerExpired --
--//
--//  Description:
--//    In HW-MAC architecture, MTO adjusts performance affecting parameters
--//    periodically. This is accomplished by starting a periodic timer and
--//    invoking this function when the timer expires.
--//
--//  Arguments:
--//    Adapter      - The pointer to the Miniport Adapter Context
--//
--//  Return Value:
--//    None
--//============================================================================
--void MTO_PeriodicTimerExpired(MTO_FUNC_INPUT)
--{
--	MTO_TMR_CNT()++;
--
--	if (LOCAL_IS_CONNECTED() == FALSE)//when AP disconnected
--	{
--		
--		u8      x;
--		x = hal_get_antenna_number(MTO_HAL());
--		
--		old_antenna[0] = x;
--		old_antenna[2] = x;
--		x = (~x) & 0x01;
--		old_antenna[1] = x;
--		old_antenna[3] = x;
--		MTO_RATE_LEVEL()= 0;//MTO_DataRateAvailableLevel - 8;
--		MTO_FALLBACK_RATE_LEVEL()	= MTO_RATE_LEVEL();
--		untogglecount=0;
--		multiagc(MTO_FUNC_INPUT_DATA, 1);
--	}
--	else
--	{
--		switch(MTO_TMR_CNT() % 50)
--		{
--			case 1:
--				AntennaToggleState(MTO_FUNC_INPUT_DATA);
--				break;
--			case 2:
--			case 3:
--			case 4:
--			case 5:
--			case 6:
--				AntennaToggleState(MTO_FUNC_INPUT_DATA);
--				break;
--			case 7:
--				TxPwrControl(MTO_FUNC_INPUT_DATA);
--				break;
--			case 0:
--				GetFreshAntennaData(MTO_FUNC_INPUT_DATA);
--				TxCheckCycle = 0;
--
--				//Check the tx traffic
--				{
--					if (MTO_TXFLOWCOUNT() < 30)
--					{
--						boSparseTxTraffic = TRUE;
--						#ifdef _PE_DTO_DUMP_
--						WBDEBUG(("***** sparse traffic\n"));
--						#endif
--					}
--					else
--						boSparseTxTraffic = FALSE;
--					MTO_TXFLOWCOUNT() = 0;
--				}
--				break;
--			default:
--				break;
--		}
--		if ((MTO_TMR_CNT() % 50)>6)  //stop at 0~6
--			TxRateReductionCtrl(MTO_FUNC_INPUT_DATA);
--		return;
--	}
--}
--
- //---------------------------------------------------------------------------//
- static u32 DTO_Rx_Info[13][3];
- static u32 DTO_RxCRCFail_Info[13][3];
-@@ -1028,137 +941,6 @@ void TxPwrControl(MTO_FUNC_INPUT)
+--- everything.orig/drivers/net/wireless/ath5k/base.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/ath5k/base.c	2008-04-30 14:02:34.000000000 +0200
+@@ -2677,7 +2677,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct
+ 	if (list_empty(&sc->txbuf)) {
+ 		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
+ 		spin_unlock_irqrestore(&sc->txbuflock, flags);
+-		ieee80211_stop_queue(hw, ctl->queue);
++		ieee80211_stop_queue(hw, skb_get_queue_mapping(skb));
+ 		return -1;
  	}
- }
+ 	bf = list_first_entry(&sc->txbuf, struct ath5k_buf, list);
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-04-30 14:02:34.000000000 +0200
+@@ -2562,7 +2562,7 @@ static int iwl3945_tx_skb(struct iwl3945
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct iwl3945_tfd_frame *tfd;
+ 	u32 *control_flags;
+-	int txq_id = ctl->queue;
++	int txq_id = skb_get_queue_mapping(skb);
+ 	struct iwl3945_tx_queue *txq = NULL;
+ 	struct iwl3945_queue *q = NULL;
+ 	dma_addr_t phys_addr;
+@@ -2776,7 +2776,7 @@ static int iwl3945_tx_skb(struct iwl3945
+ 			spin_unlock_irqrestore(&priv->lock, flags);
+ 		}
  
--void TxRateReductionCtrl(MTO_FUNC_INPUT)
--{
--    static u8      rate_level[3];
--	s32		rssi;
--	int i;
--	u32 retry_rate;
--	int	SuccessRate;
+-		ieee80211_stop_queue(priv->hw, ctl->queue);
++		ieee80211_stop_queue(priv->hw, skb_get_queue_mapping(skb));
+ 	}
+ 
+ 	return 0;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-04-30 14:02:34.000000000 +0200
+@@ -2126,7 +2126,7 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct iwl4965_tfd_frame *tfd;
+ 	u32 *control_flags;
+-	int txq_id = ctl->queue;
++	int txq_id = skb_get_queue_mapping(skb);
+ 	struct iwl4965_tx_queue *txq = NULL;
+ 	struct iwl4965_queue *q = NULL;
+ 	dma_addr_t phys_addr;
+@@ -2350,7 +2350,7 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 			spin_unlock_irqrestore(&priv->lock, flags);
+ 		}
+ 
+-		ieee80211_stop_queue(priv->hw, ctl->queue);
++		ieee80211_stop_queue(priv->hw, skb_get_queue_mapping(skb));
+ 	}
+ 
+ 	return 0;
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-04-30 14:02:34.000000000 +0200
+@@ -417,7 +417,7 @@ static void p54_rx_frame_sent(struct iee
+ 			memcpy(&status.control, range->control,
+ 			       sizeof(status.control));
+ 			kfree(range->control);
+-			priv->tx_stats[status.control.queue].len--;
++			priv->tx_stats[skb_get_queue_mapping(skb)].len--;
+ 			entry_hdr = (struct p54_control_hdr *) entry->data;
+ 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+ 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
+@@ -562,13 +562,13 @@ static int p54_tx(struct ieee80211_hw *d
+ 	size_t padding, len;
+ 	u8 rate;
+ 
+-	current_queue = &priv->tx_stats[control->queue];
++	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb)];
+ 	if (unlikely(current_queue->len > current_queue->limit))
+ 		return NETDEV_TX_BUSY;
+ 	current_queue->len++;
+ 	current_queue->count++;
+ 	if (current_queue->len == current_queue->limit)
+-		ieee80211_stop_queue(dev, control->queue);
++		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
+ 
+ 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
+ 	len = skb->len;
+@@ -605,7 +605,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	memset(txhdr->rateset, rate, 8);
+ 	txhdr->wep_key_present = 0;
+ 	txhdr->wep_key_len = 0;
+-	txhdr->frame_type = cpu_to_le32(control->queue + 4);
++	txhdr->frame_type = cpu_to_le32(skb_get_queue_mapping(skb) + 4);
+ 	txhdr->magic4 = 0;
+ 	txhdr->antenna = (control->antenna_sel_tx == 0) ?
+ 		2 : control->antenna_sel_tx - 1;
+@@ -944,7 +944,7 @@ static int p54_conf_tx(struct ieee80211_
+ 	vdcf = (struct p54_tx_control_vdcf *)(((struct p54_control_hdr *)
+ 		((void *)priv->cached_vdcf + priv->tx_hdr_len))->data);
+ 
+-	if ((params) && !((queue < 0) || (queue > 4))) {
++	if (params && queue < dev->queues) {
+ 		P54_SET_QUEUE(vdcf->queue[queue], params->aifs,
+ 			params->cw_min, params->cw_max, params->txop);
+ 	} else
+--- everything.orig/drivers/net/wireless/rtl8180_dev.c	2008-04-30 14:02:31.000000000 +0200
++++ everything/drivers/net/wireless/rtl8180_dev.c	2008-04-30 14:02:34.000000000 +0200
+@@ -251,7 +251,7 @@ static int rtl8180_tx(struct ieee80211_h
+ 	u16 plcp_len = 0;
+ 	__le16 rts_duration = 0;
+ 
+-	prio = control->queue;
++	prio = skb_get_queue_mapping(skb);
+ 	ring = &priv->tx_ring[prio];
+ 
+ 	mapping = pci_map_single(priv->pdev, skb->data,
+@@ -306,7 +306,7 @@ static int rtl8180_tx(struct ieee80211_h
+ 	entry->flags = cpu_to_le32(tx_flags);
+ 	__skb_queue_tail(&ring->queue, skb);
+ 	if (ring->entries - skb_queue_len(&ring->queue) < 2)
+-		ieee80211_stop_queue(dev, control->queue);
++		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	rtl818x_iowrite8(priv, &priv->map->TX_DMA_POLLING, (1 << (prio + 4)));
+--- everything.orig/include/net/mac80211.h	2008-04-30 14:02:31.000000000 +0200
++++ everything/include/net/mac80211.h	2008-04-30 14:02:34.000000000 +0200
+@@ -282,9 +282,6 @@ struct ieee80211_tx_control {
+ 				 * This could be used when set_retry_limit
+ 				 * is not implemented by the driver */
+ 
+-	u16 queue;		/* hardware queue to use for this frame;
+-				 * 0 = highest, hw->queues-1 = lowest */
 -
--	TxCheckCycle++;
--	TxCheckCycle %= 5;
--	if (TxCheckCycle == 0)
--	{
--		SuccessRate = Divide(PeriodTotalTxPkt*100,PeriodTotalTxPktRetry);
--		#ifdef _PE_DTO_DUMP_
--		WBDEBUG(("PeriodTotalTxPkt =%d, PeriodTotalTxPktRetry =%d, Rate = %d\n",
--						PeriodTotalTxPkt, PeriodTotalTxPktRetry, SuccessRate));
--		#endif
--		//if (PeriodTotalTxPktRetry > 100)
--		if (PeriodTotalTxPktRetry > 70)
--		{
--			if (SuccessRate < 40)
--			{
--				#ifdef _PE_DTO_DUMP_
--				WBDEBUG(("The Current antenna may not work fine, change antenna.\n"));
--				#endif
--				ResetDTO_RxInfo(MTO_ANT_MAC(), MTO_FUNC_INPUT_DATA);
--				MTO_TOGGLE_STATE() = TOGGLE_STATE_WAIT0;
--				MTO_TMR_CNT() = 3;
--				MTO_BACKOFF_TMR() = 0;
--			}
--		}
--	}
--
--	sme_get_rssi(MTO_FUNC_INPUT_DATA, &rssi);
--	SmoothRSSI(rssi);
--	switch(MTO_TX_RATE_REDUCTION_STATE())
--	{
--	case RATE_CHGSTATE_IDLE:
--		MTO_HAL()->dto_tx_retry_count = 0;
--		MTO_HAL()->dto_tx_frag_count = 0;
--		#ifdef _PE_DTO_DUMP_
--		WBDEBUG(("dto_tx_retry_count clear 1\n"));
--		#endif
--		MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_CALCULATE;
--		break;
--	case RATE_CHGSTATE_CALCULATE:
--		//PDEBUG(("[HHDTODATARATE]:rate calculate start===\n"));
--		if(MTO_RATE_CHANGE_ENABLE()==1)
--		{
--			rate_level[2] = rate_level[1];
--			rate_level[1] = rate_level[0];
--		}
--		rate_level[0] = CalcNewRate(MTO_FUNC_INPUT_DATA, MTO_RATE_LEVEL(),
--						MTO_HAL()->dto_tx_retry_count, MTO_HAL()->dto_tx_frag_count);
--		if(rate_level[0] == 0xff) //means that too few packets received
--		{
--		//	PDEBUG(("[HHDTODATARATE]:too few packets,rate=%d total packets=%d\n",MTO_DATA_RATE(),MTO_HAL()->dto_tx_frag_count));
--			#ifdef _PE_DTO_DUMP_
--			WBDEBUG(("Too few packets, retry count=%d , total count=%d\n",
--					MTO_HAL()->dto_tx_retry_count,
--					MTO_HAL()->dto_tx_frag_count));
--			#endif
--		}
--		else if(rate_level[0] != MTO_RATE_LEVEL())
--		{
--			MTO_RATE_LEVEL() = rate_level[0];
--			hal_rate_change( &Adapter->sHwData ); // 20060613.1 Add
--			#ifdef _USE_FALLBACK_RATE_
--			MTO_CalFallbackRate(MTO_FUNC_INPUT_DATA);
--			#endif
--			#ifdef _PE_DTO_DUMP_
--			WBDEBUG(("New calculated tx level =%x, Rate =%dM\n", rate_level[0], MTO_DATA_RATE()>>1));
--			#endif
--			//MTO_PREAMBLE_TYPE() = MTO_PREAMBLE_SHORT;
--			//MTO_SET_PREAMBLE_TYPE(MTO_PREAMBLE_TYPE());
--			MTO_HAL()->dto_tx_retry_count = 0;
--			MTO_HAL()->dto_tx_frag_count = 0;
--		}
--		else if(rate_level[1] == rate_level[2])
--		{
--			MTO_BACKOFF_TMR() = (MTOPARA_TXRATE_BACKOFF()<<MTO_CO_EFFICENT());
--			MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_BACKOFF;
--			MTO_HAL()->dto_tx_retry_count = 0;
--			MTO_HAL()->dto_tx_frag_count = 0;
--			inc_tx_retry_count = 0;
--			inc_tx_frag_count = 0;
--		}
--		#ifdef _PE_DTO_DUMP_
--		WBDEBUG(("[HHDTODATARATE]:MTO_RATE_LEVEL=%d",MTO_RATE_LEVEL()));
--		#endif
--		break;
--	case RATE_CHGSTATE_BACKOFF:
--		//following is check the retry rate change reset the backoff timer
--		retry_rate = Divide(MTO_HAL()->dto_tx_retry_count * 100, MTO_HAL()->dto_tx_frag_count);
--		inc_tx_retry_count = MTO_HAL()->dto_tx_retry_count;
--		inc_tx_frag_count = MTO_HAL()->dto_tx_frag_count;
--		#ifdef _PE_DTO_DUMP_
--		WBDEBUG(("[HHDTODATARATE]:tx_retry_count =%d, tx_frag_count =%d\n",
--					MTO_HAL()->dto_tx_retry_count, MTO_HAL()->dto_tx_frag_count));
--		WBDEBUG(("[HHDTODATARATE]:retry rate at mem is %d and the now retry rate %d\n",TxRateRec.tx_retry_rate,retry_rate));
--		WBDEBUG(("[HHDTODATARATE]:data rate=%d,Backoff Timer=%d",MTO_Data_Rate_Tbl[MTO_RATE_LEVEL()]>>1,MTO_BACKOFF_TMR()));
--		#endif
--		if (abs(retry_rate-TxRateRec.tx_retry_rate)>10)//retry rate different th
--			MTO_BACKOFF_TMR()=0;
--
--		if(MTO_BACKOFF_TMR()==0)
--		{
--			if(MTO_LAST_RATE() == MTO_RATE_LEVEL())
--			{
--				MTO_CO_EFFICENT() = (MTO_CO_EFFICENT() + 1) % 3;
--			}
--			else
--			{
--				MTO_CO_EFFICENT() = 0;
--			}
--			MTO_LAST_RATE() = MTO_RATE_LEVEL();
--			MTO_TX_RATE_REDUCTION_STATE() = RATE_CHGSTATE_IDLE;
--			for (i=0;i<MTO_MAX_DATA_RATE_LEVELS;i++)
--				retryrate_rec[i]=3;
--		}
--		else
--			MTO_BACKOFF_TMR()--;
--		break;
--	}
--
--	if (TxCheckCycle == 0)
--	{
--		PeriodTotalTxPkt = 0;
--		PeriodTotalTxPktRetry = 0;
--	}
--}
+ 	struct ieee80211_vif *vif;
  
- u8 CalcNewRate(MTO_FUNC_INPUT, u8 old_rate, u32 retry_cnt, u32 tx_frag_cnt)
- {
-@@ -1413,55 +1195,11 @@ void MTO_SetTxCount(MTO_FUNC_INPUT, u8 t
- 	PeriodTotalTxPktRetry += (index+1);
- }
+ 	/* Key used for hardware encryption
+@@ -1575,6 +1572,15 @@ void ieee80211_wake_queue(struct ieee802
+ void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue);
  
--u8 MTO_GetTxRate(MTO_FUNC_INPUT, u32 fpdu_len)
--{
--	//added by JOHN, short packet less than 120 bytes will use 24Mpbs
--	if(fpdu_len > 120)
--		return MTO_DATA_RATE();
--	else
--	{
--		if(MTO_DATA_RATE() >= 48 )
--			return 48;   //24M
--		else
--			return MTO_DATA_RATE();
--	}
--}
--
--//get the fallback rate from current tx rate
--void MTO_CalFallbackRate(MTO_FUNC_INPUT)
--{
--	u8	RateIdx, OfdmRateIdx, FallbackRateIdx;
--
--	RateIdx = MTO_RATE_LEVEL();
--	OfdmRateIdx = MTO_OFDM_RATE_LEVEL();
--	if (RateIdx >= OfdmRateIdx)
--	{
--		//Current tx rate belongs to OFDM rates
--		if (RateIdx != OfdmRateIdx)
--			FallbackRateIdx = RateIdx-1;
--		else
--			FallbackRateIdx = RateIdx;
--	}
--	else
--	{
--		//Current tx rate belongs to DSSS rates
--		if (RateIdx > 0)
--			FallbackRateIdx = RateIdx-1;
--		else
--			FallbackRateIdx = RateIdx;
--	}
--	MTO_FALLBACK_RATE_LEVEL() = FallbackRateIdx;
--}
- u8 MTO_GetTxFallbackRate(MTO_FUNC_INPUT)
- {
- 	return MTO_DATA_FALLBACK_RATE();
- }
- 
--void MTO_GetRxRate(int rate_index)
--{
--	RXRATE = rate_index;
--}
--
- 
- //===========================================================================
- //  MTO_TxFailed --
-diff --git a/drivers/net/wireless/winbond/winbondport/wbhal_s.h b/drivers/net/wireless/winbond/winbondport/wbhal_s.h
-index 7e98669..104f081 100644
---- a/drivers/net/wireless/winbond/winbondport/wbhal_s.h
-+++ b/drivers/net/wireless/winbond/winbondport/wbhal_s.h
-@@ -20,15 +20,6 @@ #define RF_DECIDE_BY_INF	255
- // The follow define connect to upper layer
- //	User must modify for connection between HAL and upper layer
- //----------------------------------------------------------------
--#define hal_join_OK( _H ) BUG()
--
--
--// Notifying upper module for BSSID read completed
--#define hal_get_bssid_complete( _A )			BUG()
--// Notifying upper module for power mode read completed
--#define hal_get_power_save_mode_complete( _A )		BUG()
--// Notify upper module channel setting had been completed
--#define hal_set_chan_complete( _A, _B )			BUG()
- 
- 
- 
-@@ -409,44 +400,12 @@ typedef struct _DESCRIPTOR {		// Skip le
- } DESCRIPTOR, *PDESCRIPTOR;
- 
- 
--//=======================================================
--// Common operation for DESCRIPTOR
--//=======================================================
--#define DESCRIPTOR_ADD_BUFFER( _D, _A, _S ) \
--{\
--	_D->InternalUsed = _D->buffer_start_index + _D->buffer_number; \
--	_D->InternalUsed %= MAX_DESCRIPTOR_BUFFER_INDEX; \
--	_D->buffer_address[ _D->InternalUsed ] = _A; \
--	_D->buffer_size[ _D->InternalUsed ] = _S; \
--	_D->buffer_total_size += _S; \
--	_D->buffer_number++;\
--}
--#define DESCRIPTOR_GET_TYPE( _D ) _D->Type
--#define DESCRIPTOR_SET_TYPE( _D, _T ) _D->Type = _T
--#define DESCRIPTOR_GET_ID( _D ) _D->Descriptor_ID
--#define DESCRIPTOR_GET_FRAGMENT_COUNT( _D ) _D->FragmentCount
--#define DESCRIPTOR_SET_FRAGMENT_COUNT( _D, _T ) _D->FragmentCount = _T
--#define DESCRIPTOR_GET_FRAGMENT_THRESHOLD( _D ) _D->FragmentThreshold
--#define DESCRIPTOR_SET_FRAGMENT_THRESHOLD( _D, _T ) _D->FragmentThreshold = _T
--#define DESCRIPTOR_GET_TX_RATE( _D ) _D->TxRate
--#define DESCRIPTOR_SET_TX_RATE( _D, _T ) _D->TxRate = _T
--#define DESCRIPTOR_GET_PREAMBLE_MODE( _D ) _D->PreambleMode
--#define DESCRIPTOR_SET_PREAMBLE_MODE( _D, _T ) _D->PreambleMode = _T
--
--#define DESCRIPTOR_STATUS_RESOURCES( _D )	(_D->Descriptor_ID==(MAX_USB_RX_BUFFER_NUMBER-1))
--#define DESCRIPTOR_RX_STATUS_ERROR( _D )	(_D->R01.value & FLAG_ERROR_RX_MASK)
--#define DESCRIPTOR_TX_STATUS_ERROR( _D )	(_D->T02.value & FLAG_ERROR_TX_MASK)
--#define DESCRIPTOR_RX_DECRYPTION_METHOD( _D ) ((u8)_D->R01.R01_decryption_method)
--#define DESCRIPTOR_RX_RECEIVE_TIME( _D )	((u16)_D->R00.R00_receive_time_index)
--#define DESCRIPTOR_RX_STATUS_BAND( _D )		(_D->R01.value & FLAG_BAND_RX_MASK)
--
- #define DEFAULT_NULL_PACKET_COUNT		180000	//20060828.1 Add. 180 seconds
- 
- #define MAX_TXVGA_EEPROM	9	//How many word(u16) of EEPROM will be used for TxVGA
- #define MAX_RF_PARAMETER	32
- 
--typedef struct _TXVGA_FOR_50
--{
-+typedef struct _TXVGA_FOR_50 {
- 	u8	ChanNo;
- 	u8	TxVgaValue;
- } TXVGA_FOR_50;
-@@ -455,17 +414,12 @@ typedef struct _TXVGA_FOR_50
- //=====================================================================
- // Device related include
- //=====================================================================
--#ifdef WB_LINUX
--	#include "linux/wbusb_s.h"
--	#include "linux/wb35reg_s.h"
--	#include "linux/wb35tx_s.h"
--	#include "linux/wb35rx_s.h"
--#else
--	#include "wbusb_s.h"
--	#include "wb35reg_s.h"
--	#include "wb35tx_s.h"
--	#include "wb35rx_s.h"
--#endif
+ /**
++ * ieee80211_start_queue - start specific queue
++ * @hw: pointer as obtained from ieee80211_alloc_hw().
++ * @queue: queue number (counted from zero).
++ *
++ * Drivers should use this function instead of netif_start_queue.
++ */
++void ieee80211_start_queue(struct ieee80211_hw *hw, int queue);
 +
-+#include "linux/wbusb_s.h"
-+#include "linux/wb35reg_s.h"
-+#include "linux/wb35tx_s.h"
-+#include "linux/wb35rx_s.h"
-+
++/**
+  * ieee80211_start_queues - start all queues
+  * @hw: pointer to as obtained from ieee80211_alloc_hw().
+  *
+--- everything.orig/net/mac80211/Kconfig	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/Kconfig	2008-04-30 14:25:39.000000000 +0200
+@@ -7,11 +7,23 @@ config MAC80211
+ 	select CRC32
+ 	select WIRELESS_EXT
+ 	select CFG80211
+-	select NET_SCH_FIFO
+ 	---help---
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
  
- // For Hal using ==================================================================
- typedef struct _HW_DATA_T
++config MAC80211_QOS
++	def_bool y
++	depends on MAC80211
++	depends on NET_SCHED
++	depends on NETDEVICES_MULTIQUEUE
++
++comment "QoS/HT support disabled"
++	depends on !MAC80211_QOS
++comment "QoS/HT support needs CONFIG_NET_SCHED"
++	depends on MAC80211 && !NET_SCHED
++comment "QoS/HT support needs CONFIG_NETDEVICES_MULTIQUEUE"
++	depends on MAC80211 && !NETDEVICES_MULTIQUEUE
++
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
+ 
+--- everything.orig/net/mac80211/Makefile	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/Makefile	2008-04-30 14:02:34.000000000 +0200
+@@ -29,7 +29,7 @@ mac80211-y := \
+ 	event.o
+ 
+ mac80211-$(CONFIG_MAC80211_LEDS) += led.o
+-mac80211-$(CONFIG_NET_SCHED) += wme.o
++mac80211-$(CONFIG_MAC80211_QOS) += wme.o
+ mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
+ 	debugfs.o \
+ 	debugfs_sta.o \
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-04-30 14:02:34.000000000 +0200
+@@ -213,7 +213,6 @@ struct ieee80211_rx_data {
+ struct ieee80211_tx_packet_data {
+ 	u32 flags;
+ 	int ifindex;
+-	u16 queue;
+ 	unsigned long jiffies;
+ };
+ 
+@@ -605,8 +604,6 @@ struct ieee80211_local {
+ 	struct sta_info *sta_hash[STA_HASH_SIZE];
+ 	struct timer_list sta_cleanup;
+ 
+-	unsigned long state[IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
+-
+ 	/* number of interfaces with corresponding IFF_ flags */
+ 	atomic_t iff_allmultis, iff_promiscs;
+ 
+@@ -836,10 +833,6 @@ static inline struct ieee80211_hw *local
+ 	return &local->hw;
+ }
+ 
+-enum ieee80211_link_state_t {
+-	IEEE80211_LINK_STATE_XOFF = 0,
+-};
+-
+ struct sta_attribute {
+ 	struct attribute attr;
+ 	ssize_t (*show)(const struct sta_info *, char *buf);
+--- everything.orig/net/mac80211/main.c	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/main.c	2008-04-30 14:18:53.000000000 +0200
+@@ -1313,7 +1313,6 @@ static void ieee80211_remove_tx_extra(st
+ 		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
+ 	if (control->flags & IEEE80211_TXCTL_EAPOL_FRAME)
+ 		pkt_data->flags |= IEEE80211_TXPD_EAPOL_FRAME;
+-	pkt_data->queue = control->queue;
+ 
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+ 
+@@ -1713,9 +1712,20 @@ int ieee80211_register_hw(struct ieee802
+ 	if (result < 0)
+ 		return result;
+ 
++#ifdef CONFIG_MAC80211_QOS
++	if (hw->queues > IEEE80211_MAX_QUEUES)
++		hw->queues = IEEE80211_MAX_QUEUES;
++	if (hw->ampdu_queues > IEEE80211_MAX_AMPDU_QUEUES)
++		hw->ampdu_queues = IEEE80211_MAX_AMPDU_QUEUES;
++#else
++	hw->queues = 1;
++	hw->ampdu_queues = 0;
++#endif
++
+ 	/* for now, mdev needs sub_if_data :/ */
+-	mdev = alloc_netdev(sizeof(struct ieee80211_sub_if_data),
+-			    "wmaster%d", ether_setup);
++	mdev = alloc_netdev_mq(sizeof(struct ieee80211_sub_if_data),
++			       "wmaster%d", ether_setup,
++			       hw->queues + hw->ampdu_queues);
+ 	if (!mdev)
+ 		goto fail_mdev_alloc;
+ 
+@@ -1807,11 +1817,6 @@ int ieee80211_register_hw(struct ieee802
+ 		goto fail_wep;
+ 	}
+ 
+-	if (hw->queues > IEEE80211_MAX_QUEUES)
+-		hw->queues = IEEE80211_MAX_QUEUES;
+-	if (hw->ampdu_queues > IEEE80211_MAX_AMPDU_QUEUES)
+-		hw->ampdu_queues = IEEE80211_MAX_AMPDU_QUEUES;
+-
+ 	ieee80211_install_qdisc(local->mdev);
+ 
+ 	/* add one default STA interface */
+--- everything.orig/net/mac80211/tx.c	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-04-30 14:02:34.000000000 +0200
+@@ -210,12 +210,6 @@ static u16 ieee80211_duration(struct iee
+ 	return dur;
+ }
+ 
+-static inline int __ieee80211_queue_stopped(const struct ieee80211_local *local,
+-					    int queue)
+-{
+-	return test_bit(IEEE80211_LINK_STATE_XOFF, &local->state[queue]);
+-}
+-
+ static int inline is_ieee80211_device(struct net_device *dev,
+ 				      struct net_device *master)
+ {
+@@ -1066,7 +1060,7 @@ static int ___ieee80211_tx(struct ieee80
+ 	print_control(control, skb);
+ 
+ 	if (unlikely(netif_queue_stopped(local->mdev) ||
+-		     __ieee80211_queue_stopped(local, control->queue)))
++		     netif_subqueue_stopped(local->mdev, skb)))
+ 		return NETDEV_TX_BUSY;
+ 
+ 	ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
+@@ -1354,7 +1348,6 @@ int ieee80211_master_start_xmit(struct s
+ 		control.flags |= IEEE80211_TXCTL_EAPOL_FRAME;
+ 	if (pkt_data->flags & IEEE80211_TXPD_AMPDU)
+ 		control.flags |= IEEE80211_TXCTL_AMPDU;
+-	control.queue = pkt_data->queue;
+ 
+ 	memset(skb->cb, 0, sizeof(skb->cb));
+ 	ret = ieee80211_tx(odev, skb, &control);
+--- everything.orig/net/mac80211/util.c	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/util.c	2008-04-30 14:20:06.000000000 +0200
+@@ -323,18 +323,28 @@ __le16 ieee80211_ctstoself_duration(stru
+ }
+ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+ 
++void ieee80211_start_queue(struct ieee80211_hw *hw, int queue)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++#ifdef CONFIG_MAC80211_QOS
++	netif_start_subqueue(local->mdev, queue);
++#else
++	WARN_ON(queue != 0);
++	netif_start_queue(local->mdev);
++#endif
++}
++EXPORT_SYMBOL(ieee80211_start_queue);
++
+ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-	if (test_and_clear_bit(IEEE80211_LINK_STATE_XOFF,
+-			       &local->state[queue])) {
+-		if (!ieee80211_qdisc_installed(local->mdev)) {
+-			if (queue == 0)
+-				netif_wake_queue(local->mdev);
+-		} else
+-			__netif_schedule(local->mdev);
+-	}
++#ifdef CONFIG_MAC80211_QOS
++	netif_wake_subqueue(local->mdev, queue);
++#else
++	WARN_ON(queue != 0);
++	netif_wake_queue(local->mdev);
++#endif
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queue);
+ 
+@@ -342,39 +352,51 @@ void ieee80211_stop_queue(struct ieee802
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-	if (!ieee80211_qdisc_installed(local->mdev) && queue == 0)
+-		netif_stop_queue(local->mdev);
+-	set_bit(IEEE80211_LINK_STATE_XOFF, &local->state[queue]);
++#ifdef CONFIG_MAC80211_QOS
++	netif_stop_subqueue(local->mdev, queue);
++#else
++	WARN_ON(queue != 0);
++	netif_stop_queue(local->mdev);
++#endif
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queue);
+ 
+ void ieee80211_start_queues(struct ieee80211_hw *hw)
+ {
+-	struct ieee80211_local *local = hw_to_local(hw);
++#ifdef CONFIG_MAC80211_QOS
+ 	int i;
+ 
+-	for (i = 0; i < local->hw.queues; i++)
+-		clear_bit(IEEE80211_LINK_STATE_XOFF, &local->state[i]);
+-	if (!ieee80211_qdisc_installed(local->mdev))
+-		netif_start_queue(local->mdev);
++	for (i = 0; i < hw->queues; i++)
++		ieee80211_start_queue(hw, i);
++#else
++	netif_start_queue(local->mdev);
++#endif
+ }
+ EXPORT_SYMBOL(ieee80211_start_queues);
+ 
+ void ieee80211_stop_queues(struct ieee80211_hw *hw)
+ {
++#ifdef CONFIG_MAC80211_QOS
+ 	int i;
+ 
+ 	for (i = 0; i < hw->queues; i++)
+ 		ieee80211_stop_queue(hw, i);
++#else
++	netif_stop_queue(local->mdev);
++#endif
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
+ void ieee80211_wake_queues(struct ieee80211_hw *hw)
+ {
++#ifdef CONFIG_MAC80211_QOS
+ 	int i;
+ 
+ 	for (i = 0; i < hw->queues; i++)
+ 		ieee80211_wake_queue(hw, i);
++#else
++	netif_wake_queue(local->mdev);
++#endif
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queues);
+ 
+--- everything.orig/net/mac80211/wme.c	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/wme.c	2008-04-30 14:35:44.000000000 +0200
+@@ -160,7 +160,7 @@ static int wme_qdiscop_enqueue(struct sk
+ 	u8 tid;
+ 
+ 	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
+-		queue = pkt_data->queue;
++		queue = skb_get_queue_mapping(skb);
+ 		rcu_read_lock();
+ 		sta = sta_info_get(local, hdr->addr1);
+ 		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
+@@ -221,7 +221,7 @@ static int wme_qdiscop_enqueue(struct sk
+ 			err = NET_XMIT_DROP;
+ 	} else {
+ 		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
+-		pkt_data->queue = (unsigned int) queue;
++		skb_set_queue_mapping(skb, queue);
+ 		qdisc = q->queues[queue];
+ 		err = qdisc->enqueue(skb, qdisc);
+ 		if (err == NET_XMIT_SUCCESS) {
+@@ -239,13 +239,10 @@ static int wme_qdiscop_enqueue(struct sk
+ static int wme_qdiscop_requeue(struct sk_buff *skb, struct Qdisc* qd)
+ {
+ 	struct ieee80211_sched_data *q = qdisc_priv(qd);
+-	struct ieee80211_tx_packet_data *pkt_data =
+-		(struct ieee80211_tx_packet_data *) skb->cb;
+ 	struct Qdisc *qdisc;
+ 	int err;
+ 
+-	/* We recorded which queue to use earlier. */
+-	qdisc = q->queues[pkt_data->queue];
++	qdisc = q->queues[skb_get_queue_mapping(skb)];
+ 
+ 	if ((err = qdisc->ops->requeue(skb, qdisc)) == 0) {
+ 		qd->q.qlen++;
+@@ -269,9 +266,7 @@ static struct sk_buff *wme_qdiscop_deque
+ 	/* check all the h/w queues in numeric/priority order */
+ 	for (queue = 0; queue < QD_NUM(hw); queue++) {
+ 		/* see if there is room in this hardware queue */
+-		if ((test_bit(IEEE80211_LINK_STATE_XOFF,
+-				&local->state[queue])) ||
+-		    (!test_bit(queue, q->qdisc_pool)))
++		if (__netif_subqueue_stopped(local->mdev, queue))
+ 			continue;
+ 
+ 		/* there is space - try and get a frame */
+--- everything.orig/net/mac80211/wme.h	2008-04-30 14:02:31.000000000 +0200
++++ everything/net/mac80211/wme.h	2008-04-30 14:02:34.000000000 +0200
+@@ -31,7 +31,7 @@ static inline int WLAN_FC_IS_QOS_DATA(u1
+ 	return (fc & 0x8C) == 0x88;
+ }
+ 
+-#ifdef CONFIG_NET_SCHED
++#ifdef CONFIG_MAC80211_QOS
+ void ieee80211_install_qdisc(struct net_device *dev);
+ int ieee80211_qdisc_installed(struct net_device *dev);
+ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
+--- everything.orig/drivers/net/wireless/b43/dma.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/b43/dma.c	2008-04-30 14:02:34.000000000 +0200
+@@ -1298,7 +1298,8 @@ int b43_dma_tx(struct b43_wldev *dev,
+ 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 	} else {
+ 		/* Decide by priority where to put this frame. */
+-		ring = select_ring_by_priority(dev, ctl->queue);
++		ring = select_ring_by_priority(
++			dev, skb_get_queue_mapping(skb));
+ 	}
+ 
+ 	spin_lock_irqsave(&ring->lock, flags);
+@@ -1316,7 +1317,7 @@ int b43_dma_tx(struct b43_wldev *dev,
+ 	/* Assign the queue number to the ring (if not already done before)
+ 	 * so TX status handling can use it. The queue to ring mapping is
+ 	 * static, so we don't need to store it per frame. */
+-	ring->queue_prio = ctl->queue;
++	ring->queue_prio = skb_get_queue_mapping(skb);
+ 
+ 	err = dma_tx_fragment(ring, skb, ctl);
+ 	if (unlikely(err == -ENOKEY)) {
+@@ -1334,7 +1335,7 @@ int b43_dma_tx(struct b43_wldev *dev,
+ 	if ((free_slots(ring) < SLOTS_PER_PACKET) ||
+ 	    should_inject_overflow(ring)) {
+ 		/* This TX ring is full. */
+-		ieee80211_stop_queue(dev->wl->hw, ctl->queue);
++		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
+ 		ring->stopped = 1;
+ 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+ 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+--- everything.orig/drivers/net/wireless/b43/pio.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/b43/pio.c	2008-04-30 14:02:34.000000000 +0200
+@@ -510,7 +510,7 @@ int b43_pio_tx(struct b43_wldev *dev,
+ 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 	} else {
+ 		/* Decide by priority where to put this frame. */
+-		q = select_queue_by_priority(dev, ctl->queue);
++		q = select_queue_by_priority(dev, skb_get_queue_mapping(skb));
+ 	}
+ 
+ 	spin_lock_irqsave(&q->lock, flags);
+@@ -533,7 +533,7 @@ int b43_pio_tx(struct b43_wldev *dev,
+ 	if (total_len > (q->buffer_size - q->buffer_used)) {
+ 		/* Not enough memory on the queue. */
+ 		err = -EBUSY;
+-		ieee80211_stop_queue(dev->wl->hw, ctl->queue);
++		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
+ 		q->stopped = 1;
+ 		goto out_unlock;
+ 	}
+@@ -541,7 +541,7 @@ int b43_pio_tx(struct b43_wldev *dev,
+ 	/* Assign the queue number to the ring (if not already done before)
+ 	 * so TX status handling can use it. The mac80211-queue to b43-queue
+ 	 * mapping is static, so we don't need to store it per frame. */
+-	q->queue_prio = ctl->queue;
++	q->queue_prio = skb_get_queue_mapping(skb);
+ 
+ 	err = pio_tx_frame(q, skb, ctl);
+ 	if (unlikely(err == -ENOKEY)) {
+@@ -561,7 +561,7 @@ int b43_pio_tx(struct b43_wldev *dev,
+ 	if (((q->buffer_size - q->buffer_used) < roundup(2 + 2 + 6, 4)) ||
+ 	    (q->free_packet_slots == 0)) {
+ 		/* The queue is full. */
+-		ieee80211_stop_queue(dev->wl->hw, ctl->queue);
++		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
+ 		q->stopped = 1;
+ 	}
+ 
+--- everything.orig/drivers/net/wireless/b43legacy/dma.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/dma.c	2008-04-30 14:02:34.000000000 +0200
+@@ -1330,7 +1330,7 @@ int b43legacy_dma_tx(struct b43legacy_wl
+ 	int err = 0;
+ 	unsigned long flags;
+ 
+-	ring = priority_to_txring(dev, ctl->queue);
++	ring = priority_to_txring(dev, skb_get_queue_mapping(skb));
+ 	spin_lock_irqsave(&ring->lock, flags);
+ 	B43legacy_WARN_ON(!ring->tx);
+ 	if (unlikely(free_slots(ring) < SLOTS_PER_PACKET)) {
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-04-30 14:02:34.000000000 +0200
+@@ -81,7 +81,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+-	enum data_queue_qid qid = mac80211_queue_to_qid(control->queue);
++	enum data_queue_qid qid = skb_get_queue_mapping(skb);
+ 	struct data_queue *queue;
+ 	struct skb_frame_desc *skbdesc;
+ 	u16 frame_control;
+@@ -129,12 +129,14 @@ int rt2x00mac_tx(struct ieee80211_hw *hw
+ 			       IEEE80211_TXCTL_USE_CTS_PROTECT)) &&
+ 	    !rt2x00dev->ops->hw->set_rts_threshold) {
+ 		if (rt2x00queue_available(queue) <= 1) {
+-			ieee80211_stop_queue(rt2x00dev->hw, control->queue);
++			ieee80211_stop_queue(
++				rt2x00dev->hw, skb_get_queue_mapping(skb));
+ 			return NETDEV_TX_BUSY;
+ 		}
+ 
+ 		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb, control)) {
+-			ieee80211_stop_queue(rt2x00dev->hw, control->queue);
++			ieee80211_stop_queue(
++				rt2x00dev->hw, skb_get_queue_mapping(skb));
+ 			return NETDEV_TX_BUSY;
+ 		}
+ 	}
+@@ -146,12 +148,12 @@ int rt2x00mac_tx(struct ieee80211_hw *hw
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 
+ 	if (rt2x00dev->ops->lib->write_tx_data(rt2x00dev, queue, skb, control)) {
+-		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
++		ieee80211_stop_queue(rt2x00dev->hw, skb_get_queue_mapping(skb));
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 
+ 	if (rt2x00queue_full(queue))
+-		ieee80211_stop_queue(rt2x00dev->hw, control->queue);
++		ieee80211_stop_queue(rt2x00dev->hw, skb_get_queue_mapping(skb));
+ 
+ 	if (rt2x00dev->ops->lib->kick_tx_queue)
+ 		rt2x00dev->ops->lib->kick_tx_queue(rt2x00dev, qid);
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00pci.c	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00pci.c	2008-04-30 14:02:34.000000000 +0200
+@@ -178,7 +178,7 @@ void rt2x00pci_txdone(struct rt2x00_dev 
+ 	 * is reenabled when the txdone handler has finished.
+ 	 */
+ 	if (!rt2x00queue_full(entry->queue))
+-		ieee80211_wake_queue(rt2x00dev->hw, priv_tx->control.queue);
++		ieee80211_wake_queue(rt2x00dev->hw, entry->queue->qid);
+ 
+ }
+ EXPORT_SYMBOL_GPL(rt2x00pci_txdone);
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00queue.h	2008-04-30 14:02:32.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00queue.h	2008-04-30 14:02:34.000000000 +0200
+@@ -80,19 +80,6 @@ enum data_queue_qid {
+ };
+ 
+ /**
+- * mac80211_queue_to_qid - Convert mac80211 queue to rt2x00 qid
+- * @queue: mac80211 queue.
+- */
+-static inline enum data_queue_qid mac80211_queue_to_qid(unsigned int queue)
+-{
+-	/* Regular TX queues are mapped directly */
+-	if (queue < 4)
+-		return queue;
+-	WARN_ON(1);
+-	return QID_OTHER;
+-}
+-
+-/**
+  * enum skb_frame_desc_flags: Flags for &struct skb_frame_desc
+  *
+  * @FRAME_DESC_DRIVER_GENERATED: Frame was generated inside driver
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
