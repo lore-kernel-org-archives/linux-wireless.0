@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-roam.Stanford.EDU ([171.64.10.152]:57008 "EHLO
-	smtp-roam.Stanford.EDU" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094AbYD2Xar (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55658 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755907AbYD3UIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2008 19:30:47 -0400
-Received: from localhost (SW-90-728-259-1.Stanford.EDU [171.66.159.123])
-	(authenticated bits=0)
-	by smtp-roam.Stanford.EDU (8.12.11/8.12.11) with ESMTP id m3TNUjvG000693
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 16:30:46 -0700
-Date: Tue, 29 Apr 2008 16:30:45 -0700
-From: Gautam Iyer <gi1242@stanford.edu>
-To: linux-wireless@vger.kernel.org
-Subject: Re: b43 reduced performance in Linux-2.6.25
-Message-ID: <20080429233045.GA26484@stanford.edu> (sfid-20080430_013044_170017_B8678040)
-References: <20080429215629.GC17790@stanford.edu> <4817A28E.2050309@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
-In-Reply-To: <4817A28E.2050309@lwfinger.net>
+	Wed, 30 Apr 2008 16:08:17 -0400
+Subject: RE: [RFC/RFT 4/4] mac80211: use multi-queue master netdevice
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <D5C1322C3E673F459512FB59E0DDC32904FE144F@orsmsx414.amr.corp.intel.com>
+References: <20080430124055.091382000@sipsolutions.net>
+	 <20080430130051.397094000@sipsolutions.net>
+	 <D5C1322C3E673F459512FB59E0DDC32904FE144F@orsmsx414.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IfX5slhbi/cr/hHkbFhB"
+Date: Wed, 30 Apr 2008 22:07:27 +0200
+Message-Id: <1209586047.18659.93.camel@johannes.berg> (sfid-20080430_220808_027952_FEECB17D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---envbJBWh7q8WU6mo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-IfX5slhbi/cr/hHkbFhB
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Apr 29, 2008 at 05:34:54PM -0500, Larry Finger wrote:
 
->> I saw a few threads about reduced performance in b43 in the 2.6.24 /
->> 2.6.25_rcXX kernels, but couldn't manage to fix the problem myself:
->> On my system, using ndiswrapper and the windows drivers gives me about
->> 1.5 times the performance of the in kernel b43 drivers.
->> Here are my system specs:
->>     Broadcom Corporation BCM4312 802.11a/b/g [14e4:4312] (rev 02)
->>     Linux 2.6.25 (gentoo-sources-2.6.25-r1).
->>     b43 wireless driver with firmware 410.2160 (2007-05-26 15:32:10)
->> I measured the performance by running "ttcp" between my Laptop and my
->> router. Using b43 on my Laptop gives about 2MB/s reported, and using
->> ndiswrapper gives me about 3MB/s under exactly the same situations.
->> Any ideas about what's going on? (I would be happy to provide you with
->> any further specs on my computer).
->
-> Yes. Broadcom wrote the Windows drivers, but never gave the specification=
-s=20
-> to anyone else. Obvious those specs from their engineers are better than=
-=20
-> those from the _reverse_ engineers for your card.
+> > +void ieee80211_start_queue(struct ieee80211_hw *hw, int queue)
+> > +{
+> > +	struct ieee80211_local *local =3D hw_to_local(hw);
+> > +#ifdef CONFIG_MAC80211_QOS
+> > +	netif_start_subqueue(local->mdev, queue);
+> > +#else
+> > +	WARN_ON(queue !=3D 0);
+> > +	netif_start_queue(local->mdev);
+> > +#endif
+> > +}
+> > +EXPORT_SYMBOL(ieee80211_start_queue);
+> > +
+>=20
+> I would suggest that you enable the netdev feature flag for
+> NETIF_F_MULTI_QUEUE on devices when you create them.  That way you can
+> have things like ieee80211_start_queue() key on that instead of a
+> compile-time option, in case wireless devices come along that won't
+> support multiple queues, if that's possible.=20
 
-Thanks for the explanation! I'm certainly happy that b43 works with good
-speeds. Many thanks to you and the other avid hackers that made this
-possible...
+Ah. I thought that then I'd just create a device with alloc_mq with a
+single queue.
 
-> On my BCM4311/2 I get better throughput with the b43 driver than I get
-> when running Windows. I _NEVER_ use ndiswrapper. Now that b43 works,
-> why would I want to taint my kernel?
+> If you think this is a decent idea, I'd suggest that any function that
+> has a compile-time check for multiqueue being changed to use the runtime
+> check.  Then in your device setup, where you call netdev_alloc_mq(),
+> there you set the flag NETIF_F_MULTI_QUEUE based on the device features.
 
-I don't have Windows so can't compare to it. But even though I use b43
-by default, I sometimes have to revert to ndiswrapper on weak signals or
-large file transfers. Also ndiswrapper has the power management and
-LED's working correctly, which I could not get working with the b43
-driver.
+Hah, indeed, I don't currently set it at all. Yes, I guess I should do
+it that way.
 
-> The only specs that we are interested in are those that come from reverse=
-=20
-> engineering. If you can provide them, we are very interested.
+> Other than that, this patch looks great.  Exciting to see this starting
+> to take flight.
 
-I'll poke around a little with this during Summer. It would certainly
-make me a lot happier to use the native b43 drivers than Windows
-drivers...
+:)
 
-Thanks,
+johannes
 
-GI
-
---=20
-Will Micro$oft go bankrupt in 1901 because of the Year 2000 Problem?
-
---envbJBWh7q8WU6mo
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+--=-IfX5slhbi/cr/hHkbFhB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEARECAAYFAkgXr6UACgkQ6plSLtsExHE9tQCeKoSqPcvfaTwWFh9whtcGDzCC
-b2cAn0mVsUN71ioj1EaRbU5B51h1Rb4/
-=4/UC
+iQIVAwUASBjRfqVg1VMiehFYAQKn7A/9F/HBqLJyKCqADyvK255Mw5JmrSvlg461
+HAyS4LxgcvgVRZz8P6EQMzWvSvLC+A2mvuCkgoDtu3jLwmt5w2uLz+zJBxUtAeJN
+pDM0FruiUnzJ4s2YkNRLnn3xePtwVs4HfX99p9ipv3FPAIHRGYnHOHwya/9bpVWD
+LMLPUA3Mc4rOeyzObG2TNEPsFWE1r8XFG9TmGwFN1myxA+DO7evYXLhxFLcw/5qW
+WqGp6lbLsUW3HzhPlPJQkjgjS5Nlb7Fa4RMcmfKRZybmCZefufaVOWVYazTQt9cV
+ozXeUfc7VprfRysWO9pTbib9bVOC+6H+HKyXoZ3Qbn6eoWqQUeHu46L7Qx3rQkH9
+LV9jAlqlUt8eJZSmljH09AP4yeT01mzi+m4CPnVPxvIH/jVNeapNEfxEfwDQUEle
+GAFTEksEBZlDyalXdIIOHs2vovvkkzxFMQmZWlkghSlNGaezRdk0XQGQVabvUTCN
++LfeitTAY5Esu/jm6c3ytdNF1zwCzaY08MYPjZfigjGIQoShfCFxjPCfbIzmQVL4
+sfp2qgFYR+E7dzZOUpJCXdpAE4TJCD3aTgit9l/oIsLyvIA6bl/nr9CdCLJ28ClF
+NivDO0cbqZGUngs7x5/xeMD4If0eUCIgXpxPa0DjKRpQh7esVkJhXv35luUhVBuE
+8kzSLVYwXX8=
+=mP4V
 -----END PGP SIGNATURE-----
 
---envbJBWh7q8WU6mo--
+--=-IfX5slhbi/cr/hHkbFhB--
+
