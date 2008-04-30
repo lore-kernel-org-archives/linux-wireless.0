@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:40902 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756240AbYDLIu4 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41889 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751078AbYD3DFe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Apr 2008 04:50:56 -0400
-Date: Sat, 12 Apr 2008 10:50:51 +0200 (CEST)
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: linux-kernel@vger.kernel.org, Josh Triplett <josh@freedesktop.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-Subject: Re: [RFC 3/3] mac80211: annotate with __requires_rcu
-In-Reply-To: <20080410134829.412424000@sipsolutions.net>
-Message-ID: <Pine.LNX.4.64.0804121050160.28120@vixen.sonytel.be> (sfid-20080412_095146_416711_EE6C74E4)
-References: <20080410134810.629048000@sipsolutions.net>
- <20080410134829.412424000@sipsolutions.net>
+	Tue, 29 Apr 2008 23:05:34 -0400
+Message-ID: <4817E1FE.30407@lwfinger.net> (sfid-20080430_050530_672702_022657FE)
+Date: Tue, 29 Apr 2008 22:05:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1964633417-1207990251=:28120"
+To: Gautam Iyer <gi1242@stanford.edu>, linux-wireless@vger.kernel.org
+Subject: Re: b43 LED status (was Re: b43 reduced performance in Linux-2.6.25)
+References: <20080429215629.GC17790@stanford.edu> <4817A28E.2050309@lwfinger.net> <20080429233045.GA26484@stanford.edu> <4817B548.30303@lwfinger.net> <20080430010502.GA17871@stanford.edu>
+In-Reply-To: <20080430010502.GA17871@stanford.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Gautam Iyer wrote:
+> On Tue, Apr 29, 2008 at 06:54:48PM -0500, Larry Finger wrote:
+> 
+>>> I don't have Windows so can't compare to it. But even though I use b43
+>>> by default, I sometimes have to revert to ndiswrapper on weak signals or
+>>> large file transfers. Also ndiswrapper has the power management and
+>>> LED's working correctly, which I could not get working with the b43
+>>> driver.
+>> What LEDS does your interface, and what do they not do? If the only
+>> LED you have is the one attached to the rfkill switch, then you have
+>> not properly configured the LED parameters.
+> 
+> Yes, the only LED I have is attached to my rfkill switch. It becomes
+> blue when I load the b43 kernel module, and becomes red when I unload
+> it. I was hoping I could set it so that it becomes blue when in use
+> (i.e. associated), and red otherwise. (This happens with ndiswrapper).
+> 
+> I remember messing with the LED power / brightness files in /sys. But
+> nothing I echoed in there changed the state of the LED. Is there some
+> parameter I'm missing?
 
----584349381-1964633417-1207990251=:28120
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+You need the following LED- and rfkill-related parameters in your configuration:
 
-On Thu, 10 Apr 2008, Johannes Berg wrote:
-> --- everything.orig/net/mac80211/key.h	2008-04-10 15:36:20.000000000 +0200
-> +++ everything/net/mac80211/key.h	2008-04-10 15:36:45.000000000 +0200
-> @@ -146,7 +146,7 @@ struct ieee80211_key *ieee80211_key_allo
->   */
->  void ieee80211_key_link(struct ieee80211_key *key,
->  			struct ieee80211_sub_if_data *sdata,
-> -			struct sta_info *sta);
-> +			struct sta_info *sta) __requires(RCU);
-                                              ^^^^^^^^^^^^^^^
-					      __requires_rcu? (for consistency)
+CONFIG_MAC80211_LEDS=y
+CONFIG_RFKILL=m
+CONFIG_RFKILL_INPUT=m
+CONFIG_RFKILL_LEDS=y
+CONFIG_B43_LEDS=y
+CONFIG_B43_RFKILL=y
+CONFIG_NEW_LEDS=y
+CONFIG_LEDS_CLASS=m
+CONFIG_LEDS_TRIGGERS=y
 
-With kind regards,
+The last one may not be necessary, but the others are. With this setup, the 
+LED will be blue when b43 is loaded _AND_ the rfkill switch is on, and red 
+when the rfkill switch is off, or b43 is unloaded.
 
-Geert Uytterhoeven
-Software Architect
+Larry
 
-Sony Network and Software Technology Center Europe
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
-
-Phone:    +32 (0)2 700 8453
-Fax:      +32 (0)2 700 8622
-E-mail:   Geert.Uytterhoeven@sonycom.com
-Internet: http://www.sony-europe.com/
-
-Sony Network and Software Technology Center Europe
-A division of Sony Service Centre (Europe) N.V.
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
-VAT BE 0413.825.160 · RPR Brussels
-Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584349381-1964633417-1207990251=:28120--
