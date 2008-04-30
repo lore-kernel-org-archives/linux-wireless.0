@@ -1,106 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58379 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbYDWRN0 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:42482 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756348AbYD3BHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 13:13:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Workaround DMA quirks
-Date: Wed, 23 Apr 2008 19:13:01 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-MIME-Version: 1.0
-Message-Id: <200804231913.01788.mb@bu3sch.de> (sfid-20080423_191402_401034_2B660FB7)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Tue, 29 Apr 2008 21:07:50 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so391916waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 18:07:50 -0700 (PDT)
+Subject: [PATCH 4/7] mac80211: add const, remove unused function, make one
+	function static
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain
+Date: Tue, 29 Apr 2008 18:07:35 -0700
+Message-Id: <1209517663.24729.52.camel@brick> (sfid-20080430_030745_082879_5B473459)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some mainboards/CPUs don't allow DMA masks bigger than a certain limit.
-Some VIA crap^h^h^h^hdevices have an upper limit of 0xFFFFFFFF. So in this
-case a 64-bit b43 device would always fail to acquire the mask.
-Implement a workaround to fallback to lower DMA mask, as we can always
-also support a lower mask.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ net/mac80211/michael.c |    7 +++----
+ net/mac80211/michael.h |    4 ++--
+ net/mac80211/tkip.c    |   12 ++----------
+ net/mac80211/tkip.h    |    6 +-----
+ 4 files changed, 8 insertions(+), 21 deletions(-)
 
-John, this is a bugfix for 2.6.26
-Stefano, we might probably want to backport this to legacy.
-
-
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-04-16 20:27:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-04-23 18:35:06.000000000 +0200
-@@ -977,29 +977,60 @@ void b43_dma_free(struct b43_wldev *dev)
- 	destroy_ring(dma, tx_ring_AC_BE);
- 	destroy_ring(dma, tx_ring_AC_VI);
- 	destroy_ring(dma, tx_ring_AC_VO);
- 	destroy_ring(dma, tx_ring_mcast);
+diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
+index 4e151e0..1fcdf38 100644
+--- a/net/mac80211/michael.c
++++ b/net/mac80211/michael.c
+@@ -6,7 +6,6 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  */
+-
+ #include <linux/types.h>
+ #include <linux/bitops.h>
+ #include <asm/unaligned.h>
+@@ -28,7 +27,7 @@ static void michael_block(struct michael_mic_ctx *mctx, u32 val)
  }
  
-+static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
-+{
-+	u64 orig_mask = mask;
-+	bool fallback = 0;
-+	int err;
-+
-+	/* Try to set the DMA mask. If it fails, try falling back to a
-+	 * lower mask, as we can always also support a lower one. */
-+	while (1) {
-+		err = ssb_dma_set_mask(dev->dev, mask);
-+		if (!err)
-+			break;
-+		if (mask == DMA_64BIT_MASK) {
-+			mask = DMA_32BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		if (mask == DMA_32BIT_MASK) {
-+			mask = DMA_30BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		b43err(dev->wl, "The machine/kernel does not support "
-+		       "the required %u-bit DMA mask\n",
-+		       (unsigned int)dma_mask_to_engine_type(orig_mask));
-+		return -EOPNOTSUPP;
-+	}
-+	if (fallback) {
-+		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
-+			(unsigned int)dma_mask_to_engine_type(orig_mask),
-+			(unsigned int)dma_mask_to_engine_type(mask));
-+	}
-+
-+	return 0;
-+}
-+
- int b43_dma_init(struct b43_wldev *dev)
+ static void michael_mic_hdr(struct michael_mic_ctx *mctx,
+-			    u8 *key, u8 *da, u8 *sa, u8 priority)
++			const u8 *key, const u8 *da, const u8 *sa, u8 priority)
  {
- 	struct b43_dma *dma = &dev->dma;
- 	int err;
- 	u64 dmamask;
- 	enum b43_dmatype type;
+ 	mctx->l = get_unaligned_le32(key);
+ 	mctx->r = get_unaligned_le32(key + 4);
+@@ -44,8 +43,8 @@ static void michael_mic_hdr(struct michael_mic_ctx *mctx,
+ 	michael_block(mctx, priority);
+ }
  
- 	dmamask = supported_dma_mask(dev);
- 	type = dma_mask_to_engine_type(dmamask);
--	err = ssb_dma_set_mask(dev->dev, dmamask);
--	if (err) {
--		b43err(dev->wl, "The machine/kernel does not support "
--		       "the required DMA mask (0x%08X%08X)\n",
--		       (unsigned int)((dmamask & 0xFFFFFFFF00000000ULL) >> 32),
--		       (unsigned int)(dmamask & 0x00000000FFFFFFFFULL));
--		return -EOPNOTSUPP;
--	}
-+	err = b43_dma_set_mask(dev, dmamask);
-+	if (err)
-+		return err;
+-void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+-		 u8 *data, size_t data_len, u8 *mic)
++void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
++		 const u8 *data, size_t data_len, u8 *mic)
+ {
+ 	u32 val;
+ 	size_t block, blocks, left;
+diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
+index 7d5707b..69b4501 100644
+--- a/net/mac80211/michael.h
++++ b/net/mac80211/michael.h
+@@ -18,7 +18,7 @@ struct michael_mic_ctx {
+ 	u32 l, r;
+ };
  
- 	err = -ENOMEM;
- 	/* setup TX DMA channels. */
- 	dma->tx_ring_AC_BK = b43_setup_dmaring(dev, 0, 1, type);
- 	if (!dma->tx_ring_AC_BK)
- 		goto out;
+-void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+-		 u8 *data, size_t data_len, u8 *mic);
++void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
++		 const u8 *data, size_t data_len, u8 *mic);
+ 
+ #endif /* MICHAEL_H */
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index a7c3feb..8cdf053 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -6,7 +6,6 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  */
+-
+ #include <linux/kernel.h>
+ #include <linux/bitops.h>
+ #include <linux/types.h>
+@@ -132,7 +131,7 @@ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+ /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
+  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
+  * the packet payload). */
+-u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2)
+ {
+ 	*pos++ = iv0;
+@@ -143,14 +142,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 	return pos + 4;
+ }
+ 
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key)
+-{
+-	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv32, phase1key);
+-}
+-
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
++static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index b7c2ee7..7cfdb23 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -13,12 +13,8 @@
+ #include <linux/crypto.h>
+ #include "key.h"
+ 
+-u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2);
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key);
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+-			       u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+-- 
+1.5.5.144.g3e42
+
+
