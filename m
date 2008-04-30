@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:60738 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932373AbYDPRMu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbYD3ONO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2008 13:12:50 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so1430076wra.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2008 10:12:47 -0700 (PDT)
-Message-ID: <a44ae5cd0804161012w7c07efb0w68f9a8664f077556@mail.gmail.com> (sfid-20080416_181325_307669_A96F226B)
-Date: Wed, 16 Apr 2008 13:12:45 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: 2.6.25-rc9 -- bcm4306 performance is in the toilet
-Cc: "Jiri Benc" <jbenc@suse.cz>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48060D71.6020507@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48056406.2060502@gmail.com> <48060D71.6020507@lwfinger.net>
+	Wed, 30 Apr 2008 10:13:14 -0400
+Subject: Re: [PATCH 2/2] mac80211: make rx radiotap header more flexible
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bruno randolf <bruno@thinktube.com>
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+In-Reply-To: <200804292010.21367.bruno@thinktube.com>
+References: <20080407042541.9026.59360.stgit@localhost>
+	 <20080407042549.9026.81997.stgit@localhost>
+	 <1209243111.10943.61.camel@johannes.berg>
+	 <200804292010.21367.bruno@thinktube.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XvV247FRuTdvTwc1g289"
+Date: Wed, 30 Apr 2008 16:12:52 +0200
+Message-Id: <1209564773.18659.14.camel@johannes.berg> (sfid-20080430_161307_067246_5BCA3FE6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2008 at 10:30 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> Miles Lane wrote:
->
-> > Hi,
-> >
-> > I have a bcm4306 card in my desktop machine.  I am running a build of
-> 2.6.25-rc9.  I have tried fiddling with the network build options and no
-> matter what I select, my network performance is absolutely terrible (between
-> 0 - 24KBps).  Connections take around 10-20 seconds to establish.  I have a
-> cable modem, and usually see nearly instantaneous connections and between
-> 65-600KBps throughput.  I just tried downloading something and am seeing
-> this:  223B/s.  Everything is intermittent and and often times out.
-> >
-> > I am attempting to collect a log for you to analyze.  However, I am
-> running into some snags.
-> > 1)  The latest firmware, which is called for in the latest kernel code,
-> won't work with my Ubuntu 8.10 kernel (2.6.24-16-386).  I got the latest iw
-> git code downloaded, but it won't build for me:
-> >
->
->  Which revision of the BCM4306 do you have? Which driver (b43, b43legacy, or
-> bcm43xx) are you running?
->
->  Based on comment 1) above, I think you are using b43, but why should I have
-> to guess?
 
-Point taken.
+--=-XvV247FRuTdvTwc1g289
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This information is collected while running the Ubuntu 2.6.24-16-386 kernel:
-b43                   113952  0
-ssb                    31236  1 b43
-mac80211              162708  1 b43
-led_class               5124  1 b43
-input_polldev           5000  1 b43
-rfkill                  7568  3 b43,rfkill_input
 
-01:06.0 Network controller: Broadcom Corporation BCM4306 802.11b/g
-Wireless LAN Controller (rev 03)
+> > Radiotap explicitly allows you to have a longer length than you need so
+> > maybe we should just make sure to align things?
+>=20
+> are you talking about the alignment of the radiotap header itself? no, i =
+just=20
+> took care about the alignment requirements of the radiotap fields, relati=
+ve=20
+> to the start of radiotap. but it would be easy to add some additional len=
+gth=20
+> in ieee80211_rx_radiotap_len() and just leave that empty at the end.
+>=20
+> i think i don't understand all alignment requirements though...
 
-[   80.331869] b43-phy0: Broadcom 4306 WLAN found
-[   80.404197] phy0: Selected rate control algorithm 'simple'
-...
-[   94.554107] input: b43-phy0 as /devices/virtual/input/input6
-[   96.164622] Registered led device: b43-phy0:tx
-[   96.165130] Registered led device: b43-phy0:rx
-[   96.165535] Registered led device: b43-phy0:radio
-...
+Well all those stores there are usual 32/16-bit stores which will fault
+on some architectures. See Documentation/unaligned-access.txt. Adding
+some padding to make the radiotap header start at a mod8 boundary would
+help.
 
-Any idea why iw won't build?
+johannes
 
-interface.c: In function 'get_if_type':
-interface.c:50: error: 'NL80211_IFTYPE_MESH_POINT' undeclared (first
-use in this function)
-interface.c:50: error: (Each undeclared identifier is reported only once
-interface.c:50: error: for each function it appears in.)
-interface.c: In function 'handle_interface_add':
-interface.c:121: error: 'NL80211_ATTR_MESH_ID' undeclared (first use
-in this function)
+--=-XvV247FRuTdvTwc1g289
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBh+Y6Vg1VMiehFYAQIjaBAAxGylnaNDCMVQSl2eVCOMtUBH80IJ8jAe
++K7LuS2cZLXacS9KHu5SSrzjmYXMNvn5sd+gF3+z3gdwdN5xnIq/YmqpfQ5/uW2A
+xnzn9Bp78nPv8/XQxrD5cc9b0D1ARyQpHWhlBaSPHGJElJT2F55KmpFcPqkvkkA0
+j21elaYJ0iB+1fjhAerH76xCQ5Uv8Yr0Z79UTvlfly5HFk/2A12tm5aiSg2asiNC
+Vg/jQu7FA5XpfD8TqjIYKKAJClnaN6vvN4rqZKVG1qCUGEj1LHFNkDTaw7DFXubE
+HujwDOvZMOEs0xRaeVVrlbU6Hih4icxoBARUckyJM7z3H2WpOAUj63ApVLRha3Vf
+yW0YIzdlSYgbaqRPojRufvIQORzdQUiJYcPugFYG5iSubaAJMfXV3zndU9dzDCaj
+gU+AHkTZWfZxOgoXkP9zOjZVpFTB8lfOC3/FVBdtyBtsyqLVBbqfTH+SGWtdKGJm
+UNPJHc7Hxs5LOWKNYtGoHb5kqN2UmK+L5G6I24M0HRaVXwbAfjFAm/evJGEBjaUY
+KRtHOgkru4bb+fSqlS+8xYLI+6CfgUUkVSUc0jLqxvf8PYU3iJTCNHKW2M9e768a
+6Tb81a+qAm0Iv8Zj3+fncCupH6d33e6LKjsG4OEAIDFGZikDetL+sqYrnP1XOQMu
+po9IpE3xMFI=
+=nVMy
+-----END PGP SIGNATURE-----
+
+--=-XvV247FRuTdvTwc1g289--
+
