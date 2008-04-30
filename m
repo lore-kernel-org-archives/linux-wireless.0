@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:17662 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761594AbYDBURU (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57390
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756777AbYD3Faz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2008 16:17:20 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so1808967rng.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Apr 2008 13:17:18 -0700 (PDT)
-Message-ID: <1ba2fa240804021317v1ffc4d0br856ae6657683b656@mail.gmail.com> (sfid-20080402_211743_159836_CFF51331)
-Date: Wed, 2 Apr 2008 23:17:18 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Reinette Chatre" <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: fix incorrect config variable
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1207154358-29025-1-git-send-email-reinette.chatre@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1207154358-29025-1-git-send-email-reinette.chatre@intel.com>
+	Wed, 30 Apr 2008 01:30:55 -0400
+Date: Tue, 29 Apr 2008 22:30:54 -0700 (PDT)
+Message-Id: <20080429.223054.167583182.davem@davemloft.net> (sfid-20080430_073107_893570_F2E13F96)
+To: bunk@kernel.org
+Cc: linux-kernel@vger.kernel.org, reinette.chatre@intel.com,
+	linville@tuxdriver.com, torvalds@linux-foundation.org,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [2.6 patch] iwlwifi: move the selects to the tristate drivers
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080428205849.GB2813@cs181133002.pp.htv.fi>
+References: <20080428131552.GI16379@cs181133002.pp.htv.fi>
+	<20080428142129.GA5679@beyonder.ift.unesp.br>
+	<20080428205849.GB2813@cs181133002.pp.htv.fi>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 2, 2008 at 7:39 PM, Reinette Chatre
-<reinette.chatre@intel.com> wrote:
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
->  ---
->   drivers/net/wireless/iwlwifi/iwl-3945.h |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
->  diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
->  index ac12269..8114d05 100644
->  --- a/drivers/net/wireless/iwlwifi/iwl-3945.h
->  +++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
->  @@ -779,7 +779,7 @@ struct iwl3945_priv {
->         struct iwl3945_init_alive_resp card_alive_init;
->         struct iwl3945_alive_resp card_alive;
->
->  -#ifdef CONFIG_IWL4965_LEDS
->  +#ifdef CONFIG_IWL3945_LEDS
->         struct iwl3945_led led[IWL_LED_TRG_MAX];
->         unsigned long last_blink_time;
->         u8 last_blink_rate;
+From: Adrian Bunk <bunk@kernel.org>
+Date: Mon, 28 Apr 2008 23:58:49 +0300
 
+> This patch moves the following select's:
+> - RFKILL        : IWLWIFI_RFKILL -> IWLCORE
+> - RFKILL_INPUT  : IWLWIFI_RFKILL -> IWLCORE
+> - MAC80211_LEDS : IWL4965_LEDS   -> IWLCORE
+> - LEDS_CLASS    : IWL4965_LEDS   -> IWLCORE
+> - MAC80211_LEDS : IWL3945_LEDS   -> IWL3945
+> - LEDS_CLASS    : IWL3945_LEDS   -> IWL3945
+> 
+> The effects are:
+> - with IWLCORE=m and/or IWL3945=m RFKILL/RFKILL_INPUT/MAC80211_LEDS/LEDS_CLASS
+>   are no longer wrongly forced to y
+> - fixes a build error with IWLCORE=y, IWL4965=m
+>   might be a bug in kconfig causing it, but doing this change that is 
+>   anyway the right thing fixes it
+> 
+> Reported-by: Carlos R. Mafra <crmafra2@gmail.com>
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-How this one slipped out from the original patch?!
-Tomas
-ACK
->
->
->  -------------------------------------------------------------------------
->  Check out the new SourceForge.net Marketplace.
->  It's the best place to buy or sell services for
->  just about anything Open Source.
->  http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
->  _______________________________________________
->  Ipw3945-devel mailing list
->  Ipw3945-devel@lists.sourceforge.net
->  https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+Applied, thanks a lot Adrian.
