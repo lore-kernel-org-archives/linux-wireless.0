@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59750 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbYDAMKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 08:10:25 -0400
-Subject: Re: [PATCH] rt2x00: TO_DS filter depends on intf_ap_count
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bas Hulsken <bhulsken@hotmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <1206987819.3085.7.camel@Bas>
-References: <200803311524.53768.IvDoorn@gmail.com>
-	 <1206987819.3085.7.camel@Bas>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eCDeybjS07Kt+j5xWhOL"
-Date: Tue, 01 Apr 2008 14:10:18 +0200
-Message-Id: <1207051818.5143.64.camel@johannes.berg> (sfid-20080401_131028_028357_63AAF620)
+Received: from mx1.redhat.com ([66.187.233.31]:47143 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932503AbYD3U2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2008 16:28:03 -0400
+Subject: Re: [PATCH] libertas: allow removal of card at any time
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200804301051.15420.hs4233@mail.mn-solutions.de>
+References: <200804301051.15420.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 30 Apr 2008 16:23:55 -0400
+Message-Id: <1209587035.16194.14.camel@localhost.localdomain> (sfid-20080430_222804_317496_7BED8CCA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-04-30 at 10:51 +0200, Holger Schurig wrote:
+> This fixes several problems I had:
+> 
+> * when removing the card while the card was scanning or associtating,
+>   it could happen that destroy_workqueue() stuck and didn't return.
+> * make sure the command function doesn't run while we remove the list
+>   of pending commands
+> * for still unknown reason, I had calls to lbs_stop_card() with
+>   priv==NULL
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
---=-eCDeybjS07Kt+j5xWhOL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-
-> unfortunately I still don't have a working AP, since hostapd crashes
-> when receiving the EAPOL key from the client. I'm still trying to find
-> out what exactly happens, I'll post more info in a new thread. I'm
-> inclined to think that the problem lies on the driver side, since this
-> used to work at the 31st of January this year, with hostapd-0.6.2, which
-> is the version I've tested with now.
-
-What exactly happens? I guess you have my (single) hostapd patch
-applied?
-
-johannes
-
---=-eCDeybjS07Kt+j5xWhOL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUAR/ImKqVg1VMiehFYAQJirg//RJLyUHqAHOI13pGOsIVdsC9OhXbdbPxE
-JbbVxy8wwRDiQ7wFdKlwSfjNPvB7sGG63tElbBn0M2Pm3HddkvYbsfDm939Pg3lF
-JhRi0yM067sJFvDTMN5lj0jWzRCh82YLlgq2U8gs9UHUsMT2Dsdt9qiFo72fCCfv
-vynEAZMd2L1H/9/ooByX+uF0VfPeULvScd2i58IlR4l50U8S91UWcn2CSONII437
-PPWBPNMrCEkn7WqQIRtxQIBeOw1YFay16YPefvLbcHsAYA0Nlpp857b9NrKfWNBI
-ZvjHcJKgS2N2/OsBpfV0uW7P5qLFKOiyJOToAETeO3PpuNVzit8Wato5YVg0mhRw
-BGAuiJeyDMvGPMm62Mko8yd5NwprpVBmyew00I8cMWN9F9abQDR0TNDnyHyUdDVf
-NChITiMvEwmWSD3M8iHpLt8Ycey5V8lYBtBOrv4bfR5nAjv3oSMsGbfiLCaY9Uap
-UZ8UvjTRUq40cwhZy3iUW9sJCOV1EkKMqyXCXxEy3KQpFMaT8DskKwBZnAUSg8I0
-ICHMGH/XkzTyCFAYwo+BwZWx9fEyNQ238FiXIutwSFofGrhlRgIDIma/Ae7XLWAu
-Hd+Bf1vgugT91SA+8sx/1O7Tb3MLaz8fLh4LjajE3f4dtOVeYtoLvUmZw+GVrzXj
-582po08m9AI=
-=qs2P
------END PGP SIGNATURE-----
-
---=-eCDeybjS07Kt+j5xWhOL--
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-04-30 09:28:50.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-04-30 09:33:56.000000000 +0200
+> @@ -1166,8 +1166,8 @@ void lbs_remove_card(struct lbs_private 
+>  
+>  	dev = priv->dev;
+>  
+> -	cancel_delayed_work(&priv->scan_work);
+> -	cancel_delayed_work(&priv->assoc_work);
+> +	cancel_delayed_work_sync(&priv->scan_work);
+> +	cancel_delayed_work_sync(&priv->assoc_work);
+>  	destroy_workqueue(priv->work_thread);
+>  
+>  	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+> @@ -1267,6 +1267,9 @@ void lbs_stop_card(struct lbs_private *p
+>  
+>  	lbs_deb_enter(LBS_DEB_MAIN);
+>  
+> +	if (!priv)
+> +		goto out;
+> +
+>  	netif_stop_queue(priv->dev);
+>  	netif_carrier_off(priv->dev);
+>  
+> @@ -1276,6 +1279,7 @@ void lbs_stop_card(struct lbs_private *p
+>  		device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
+>  
+>  	/* Flush pending command nodes */
+> +	del_timer_sync(&priv->command_timer);
+>  	spin_lock_irqsave(&priv->driver_lock, flags);
+>  	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
+>  		cmdnode->result = -ENOENT;
+> @@ -1286,6 +1290,7 @@ void lbs_stop_card(struct lbs_private *p
+>  
+>  	unregister_netdev(dev);
+>  
+> +out:
+>  	lbs_deb_leave(LBS_DEB_MAIN);
+>  }
+>  EXPORT_SYMBOL_GPL(lbs_stop_card);
 
