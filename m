@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:29056 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429AbYDRNNw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2008 09:13:52 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-Date: Fri, 18 Apr 2008 15:10:53 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-References: <1208448814.9212.270.camel@pmac.infradead.org> <200804181149.41838.hs4233@mail.mn-solutions.de> <1208517302.9212.324.camel@pmac.infradead.org>
-In-Reply-To: <1208517302.9212.324.camel@pmac.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804181510.53412.hs4233@mail.mn-solutions.de> (sfid-20080418_141356_873005_EF70785A)
+Received: from smtp2.versatel.nl ([62.58.50.89]:43574 "EHLO smtp2.versatel.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750983AbYD3JuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2008 05:50:07 -0400
+Subject: Re: rt61pci current wireless testing git gives kernel oops
+From: Bas Hulsken <bhulsken@hotmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1209406716.29025.18.camel@johannes.berg>
+References: <1209147056.2955.7.camel@Bas>
+	 <200804252031.56605.IvDoorn@gmail.com>
+	 (sfid-20080425_203116_969250_F59BCB3A)  <1209406716.29025.18.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 30 Apr 2008 11:45:33 +0200
+Message-Id: <1209548733.5814.3.camel@Bas> (sfid-20080430_115002_180485_4D575957)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I wrote "if (ret) return ret", not "if (ret) return;".
->
-> I know you did, but I don't know why. The
-> lbs_ethtool_get_stats() function returns void. Sebastian's
-> patch which memsets it to zero makes sense, but it can't
-> return an error.
+Hi,
 
-Ahh, I stand corrected.
+On Mon, 2008-04-28 at 20:18 +0200, Johannes Berg wrote:
+> > > the interface goes up well, but I get an oops as soon as I run hostapd,
+> > > seems something with debugfs. This shows up in dmesg, let me know if you
+> > > need any more info.
+> 
+> Bas, can you reproduce this issue? Could you try the patch below?
+> 
+> johannes
+
+with your patch applied I can no longer reproduce this issue, and I've
+tried running hostapd at least 5 times. Without your patch, I could
+reproduce it two out of two times.
+
+thanks,
+Bas
 
 
-> They're separate problems, really. With or without the patch I
-> first posted, you're getting crap back when you ask for
-> statistics on a non-mesh device. The second patch fixes that,
-> and stands alone.
-
-Yes, this is separate. That's why I wrote "The ultimate patch 
-would be".
-
-BTW, I like your two patches combined more than Sebastians memset 
-approach. Because with Sebastians patch on on ethX we would get 
-zeroed nonsense instead of uninitialized nonsense.
-
-The memset should possible there anyway in the case of a firmware 
-that can mshX, but not CMD_ACT_MESH_GET_STATS or which would 
-return some error for another reason.
