@@ -1,114 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:26276 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbYD0VSs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55349 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753532AbYD3OYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2008 17:18:48 -0400
-Received: by an-out-0708.google.com with SMTP id d31so1148298and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2008 14:18:47 -0700 (PDT)
-Message-ID: <43e72e890804271418ted6360bm88f1b1f29aec6790@mail.gmail.com> (sfid-20080427_231905_076767_7A0533CB)
-Date: Sun, 27 Apr 2008 14:18:47 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Charles Figura" <charles.figura@wartburg.edu>
-Subject: Re: [Fwd: Re: Problems loading from compat-wireless-2008-04-24]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <48148E6F.3080703@wartburg.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <48148E6F.3080703@wartburg.edu>
+	Wed, 30 Apr 2008 10:24:32 -0400
+Subject: Re: [PATCH 1/7] mac80211: michael.c use kernel-provided
+	infrastructure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209517656.24729.49.camel@brick> (sfid-20080430_030730_990562_D23D69F0)
+References: <1209517656.24729.49.camel@brick>
+	 (sfid-20080430_030730_990562_D23D69F0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tZg0CfVl1Kveiwyg2vc7"
+Date: Wed, 30 Apr 2008 16:24:12 +0200
+Message-Id: <1209565452.18659.28.camel@johannes.berg> (sfid-20080430_162424_255151_206045B1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 27, 2008 at 7:32 AM, Charles Figura
-<charles.figura@wartburg.edu> wrote:
-> I'm running Ubuntu Hardy with the 2.6.24-16-generic kernel.
->  I've followed the log approach laid out by Luis Rodriguez below,
->  and attached the corresponding dmesg output.
->
->  As you see, the modprobe FAILS due to lots of unknown symbols.
->
->  Oh, one other note that I hadn't mentioned before.  I've found
->  that a 'sudo make uninstall' doesn't get rid of the module - at
->  least, it doesn't reset the module list.  If I follow a 'sudo make
->  uninstall' by 'sudo modprobe iwl3945', it tries to insert the same
->  (faulty) module.  Only by rebooting is the original restored.
->  How do I update the module list after doing a make uninstall?
->
->  Thanks - hope this helps!
->
->
->
->
->  -------- Original Message --------
->  Subject: Re: Problems loading from compat-wireless-2008-04-24
->  Date: Sat, 26 Apr 2008 11:14:20 -0700
->  From: Luis R. Rodriguez <mcgrof@gmail.com>
->  To: Charles Figura <charles.figura@wartburg.edu>
->  References: <4810F9BC.7030104@wartburg.edu>
-> <43e72e890804252146y600b6b40x738e0826bc492b0@mail.gmail.com>
-> <4813700F.5050108@wartburg.edu>
->
->  On Sat, Apr 26, 2008 at 11:10 AM, Charles Figura
->  <charles.figura@wartburg.edu> wrote:
->
-> > Luis -
-> >
-> >  Thanks for the response.  I did, actually, do a 'make unload' before
-> >  loading the new module.  And the error I sent you was actually from
-> >  loading the single module I need - the iwl3945 module.
-> >
-> >  So I'm still back where I started, I think.
-> >
->
->  Please reply to the list explaining this, Intel reads linux-wireless
->  so they can help if its their driver.
->
->  Do this:
->
->  Reboot.
->
->  sudo dmesg -c > log1
->  less log1 # review it to make sure there are no oops
->  sudo make unload
->  sudo dmesg -c
->  sudo modprobe iwl4965
->  # Try to connect or whatever to try to replicate your oops
->  sudo dmesg -c > oops.txt
->
->  copy and paste the oops.txt into your e-mail, that will give a cleaner
->  log. Also be sure to mention your kernel you are using.
->
->   Luis
->
->
->
->  --
->  Charles Figura                      charles.figura@wartburg.edu
->
->  Associate Professor of Physics    http://mcsp.wartburg.edu/figura
->  Director, Wartburg Platte Observatory    (319) 352-8373
->                                          (319) 352-8606 (fax)
->
-> [  219.046669] iwlwifi_mac80211: disagrees about version of symbol
-> wiphy_register
->  [  219.046681] iwlwifi_mac80211: Unknown symbol wiphy_register
->  [  219.046742] iwlwifi_mac80211: disagrees about version of symbol
-> wiphy_new
->  [  219.046747] iwlwifi_mac80211: Unknown symbol wiphy_new
->  [  219.047765] iwlwifi_mac80211: disagrees about version of symbol
-> wiphy_unregister
->  [  219.047771] iwlwifi_mac80211: Unknown symbol wiphy_unregister
->  [  219.049060] iwlwifi_mac80211: disagrees about version of symbol
-> wiphy_free
->  [  219.049066] iwlwifi_mac80211: Unknown symbol wiphy_free
 
-You have iwlwifi's mac8011 making the calls here. Please do after make
-install and after make uninstall:
+--=-tZg0CfVl1Kveiwyg2vc7
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-sudo modprobe -l iwl4965
-sudo modprobe -l mac80211
-sudo modprobe -l iwlwifi_mac80211
+=EF=BB=BFOn Tue, 2008-04-29 at 18:07 -0700, Harvey Harrison wrote:
 
-Also inspect your /lib/modules/ directory and /lib/modules/$(uname -r)/
+> seven patches
 
-  Luis
+Semantically, this looks fine to me, but I haven't (yet) reviewed the
+details.
+
+johannes
+
+--=-tZg0CfVl1Kveiwyg2vc7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBiBC6Vg1VMiehFYAQKljxAApKFrELKzy4IeDwuJWhxn8ycHDn0CwYDH
+QhYVr+Fd250ZufIT3cP/WwF4DxYE5CzDbmuY0NoZTUbDsCE8uOyN99+HVFOf3NA3
+HsYLx6uyQcYdb02VL3B/B+/I1AEPLVNsUlJ3ZCtjo5R30l7fapL3miYRey74VqKl
+Vl8zz1+DijLK4szJRn4DLozcItdtdMDTswkQs/BOwUM3aQ81ib9dPhjDvgMZyRxK
+fCI83SefSsd/3xAFsClvmFlLg8Nde9pSJP+oG3wp52kXEaVXh1rbSZWf/dDxC3CP
+XjDoNQcEi5KwG0LIeAAEtJK5/qtwI4DJxa7AqEmA/Tq9rDVQlRPBtdaQNY5GNkKs
+TPMP2J4jRPdsJMKdwLhLTaPPI+FEYrZOQio4YCMNyPepWJg0AREIlpsosEN+xQtb
+Z4PS6yRkmsKT0WZxwdocn+mbZArzUOFXyN6S5lbYb2SmpSipk7O2jVte2Hykewko
+nH7ILJarWiquCY1Bj7YoVjNVOIRx0hWLWmYg9AZRVyhRhKwhfbWexEeXmh4098uT
+FPs2V2uOU8zO2OXQh10Z98gSY/eM5Z85GTiwP9bl0NSS92Od+FnaI+74C3DZ1nu0
+8dDM1xyW6jwjgHisbbWAVk/pdhiwHw50+6V3oF+WU99dNE7r+Hjnv0yPPjXU0lu7
+8PwGO3ztW8o=
+=OIP5
+-----END PGP SIGNATURE-----
+
+--=-tZg0CfVl1Kveiwyg2vc7--
+
