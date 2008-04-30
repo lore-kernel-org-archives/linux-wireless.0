@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55519 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752290AbYDAPmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2008 11:42:07 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JgicZ-00013k-LG
-	for linux-wireless@vger.kernel.org; Tue, 01 Apr 2008 15:41:59 +0000
-Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 15:41:59 +0000
-Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2008 15:41:59 +0000
-To: linux-wireless@vger.kernel.org
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Problems with RTL8187 USB device
-Date: Tue, 01 Apr 2008 08:41:48 -0700
-Message-ID: <pan.2008.04.01.15.41.45.711513@gimpelevich.san-francisco.ca.us> (sfid-20080401_164210_927527_EA1BBE9A)
-References: <47C49D21.1030905@lwfinger.net> <20080227010732.GB3066@tuxdriver.com> <pan.2008.03.25.20.31.22.955127@gimpelevich.san-francisco.ca.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from vs166246.vserver.de ([62.75.166.246]:48742 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932874AbYD3VAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2008 17:00:11 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT 0/4] mac80211 QoS-related enhancements
+Date: Wed, 30 Apr 2008 22:59:47 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20080430124055.091382000@sipsolutions.net> <1209560849.18659.1.camel@johannes.berg>
+In-Reply-To: <1209560849.18659.1.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200804302259.47950.mb@bu3sch.de> (sfid-20080430_230009_713472_1970555C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 25 Mar 2008 14:31:23 -0700, Daniel Gimpelevich wrote:
-
-> On Tue, 26 Feb 2008 20:07:32 -0500, John W. Linville wrote:
+On Wednesday 30 April 2008 15:07:29 Johannes Berg wrote:
 > 
->> As for rtl8187b support in general, I've been looking at porting
->> support for those devices form the vendor-provided driver.  But the
->> patch is incomplete ATM -- hopefully soon, depending on events. :-(
->> 
->> I'm sorry you are caught in the middle.  I'll try to get that b support
->> patch done soon -- hopefully we can get something working for you then.
+> > Any testing of this series is welcome, even just the first patch by itself
+> > (especially with drivers other than b43), it doesn't make sense to test with
+> > patch 2 and not 3 though, so if you're going to test one by one treat 2/3 as
+> > a set.
 > 
-> What's the current status of this patch? Thanx
+> I have, of course, tested this series with b43 (and founds dozens of
+> bugs...) Michael, thanks for your dma overflow injection feature :)
 
-Well?
+:)
 
+> One thing that turned up was that if I enable dma overflow with this
+> patchset then b43 hardware spews lots of PHY TX errors. I have verified
+> that the ieee80211_tx_control info is correct, and the frame data is
+> also fine, so I'm not sure what's up there. Could that be unrelated to
+> this patch? I haven't tested dma overflow injection w/o this series yet.
+
+Hm, not sure. It could be a b43 bug, of course. But last time I tested
+the overflow injection, it worked fine. And that's not too long ago.
+Probably 3 or 4 weeks. Of course, we should test this again with the QOS
+patch applied and removed now. If that patch does actually trigger it,
+then we probably still need to search for a b43 bug.
+Is the QOS callback (forgot its name) called when we have an overflow?
+
+-- 
+Greetings Michael.
