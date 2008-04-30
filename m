@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:7460 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbYDSVoE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2008 17:44:04 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so1467367fkr.5
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2008 14:44:02 -0700 (PDT)
-Message-ID: <3efd34cc0804191444y458a74bdy3ffbebd806809677@mail.gmail.com> (sfid-20080419_224411_853462_63DDAD65)
-Date: Sat, 19 Apr 2008 23:44:02 +0200
-From: "bert hubert" <bert.hubert@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: linux 2.6.25 mainline: state of mac80211 and hostapd ?
+Received: from element.ksp.sk ([158.195.16.154]:49651 "EHLO element.ksp.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754398AbYD3PrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2008 11:47:06 -0400
+Message-ID: <48189473.8060506@work.ksp.sk> (sfid-20080430_174657_956605_FF6D47F0)
+Date: Wed, 30 Apr 2008 17:46:59 +0200
+From: Vladimir Koutny <vlado@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: bruno randolf <bruno@thinktube.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] WARNING: at net/mac80211/ieee80211_rate.h:159	rate_lowest_index()
+References: <48174652.6080909@work.ksp.sk>	 <200804292042.20500.bruno@thinktube.com>  <48188A3D.70707@work.ksp.sk> <1209567945.18659.35.camel@johannes.berg>
+In-Reply-To: <1209567945.18659.35.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigBCC9449FF2B53015FAE37041"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everybody,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigBCC9449FF2B53015FAE37041
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-My trusty ASUS WL-300G is dying on me and I'm hoping to use my new
-low-power VIA C7 linux server as an access point.
+Johannes Berg wrote:
+>> Yes, that would be a reasonable option - providing that we have the ra=
+te
+>> (which we should - there is a WARN_ON(1) in rx-path if it is not set c=
+orrectly)
+>=20
+> the packet is also dropped in that case so you don't see it.
+Oh yes. Should have read one more line of code :)
 
-I run Linux 2.6.25, with:
-00:08.0 Network controller: RaLink RT2561/RT61 802.11g PCI
-Based on:
-rt61pci                23808  0
-rt2x00pci              11008  1 rt61pci
-rt2x00lib              23808  2 rt61pci,rt2x00pci
-rfkill                  7700  1 rt2x00lib
-input_polldev           5256  1 rt2x00lib
-crc_itu_t               2304  1 rt2x00lib
-eeprom_93cx6            2432  1 rt61pci
+>=20
+>> As I think about that, I would suggest:
+>> - no sta info is being collected prior to join/create
+>> - sta entry is added/updated on each beacon with reported rateset
+>> - sta entry is added/updated on data frames with just the received-rat=
+e
+>=20
+> Want to do the patch?
 
-And it works very well. I've tried 'hostapd' 0.5.9 and 0.5.10 in
-various modes but all of them fail very early with warnings about:
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-ioctl[PRISM2_IOCTL_PRISM2_PARAM]: Operation not supported
-Could not enable hostapd mode for interface wlan0
+I'll try. Hope we have rx-rate on hand where needed :)
 
-# Driver interface type (hostap/wired/madwifi/prism54; default: hostap)
-driver=hostap
+Vlado
 
-I've trawled the web and found Johannes Berg's patches, but they
-appear to indicate that recent hostap & linux kernels don't need any
-patches.
 
-Am I trying to do something that can't work? Or do I need patches? I'm
-more than willing to patch & test.
+--------------enigBCC9449FF2B53015FAE37041
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-Thanks for your attention - if I figure out how this works I'll write
-a small HOWTO.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-     Bert
+iQCVAwUBSBiUc7rYBI/WS7s0AQIBiAP/cmPX8AxyTBeq9GqQdXnIo3gEKWGPWD4i
+SiqpDiA3pnN1zIxKl+rrBzTrJMMFws9y7X4SwHUxyU1xPbNwROzgWjziiqJ+38EN
+lpQjddP1XfEO05ySIg1T2JzMxrah8zF+q16lFPzHutp05ATUneN9IdBlmeDSCzvF
+Qe8zuYeYXEU=
+=ogus
+-----END PGP SIGNATURE-----
+
+--------------enigBCC9449FF2B53015FAE37041--
