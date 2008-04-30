@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:26015 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092AbYDNQZH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2008 12:25:07 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so1748436fkr.5
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2008 09:25:03 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 hardware encryption
-Date: Mon, 14 Apr 2008 18:27:50 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200804051931.58895.IvDoorn@gmail.com> <1207578963.12481.27.camel@johannes.berg> <200804071645.43604.IvDoorn@gmail.com>
-In-Reply-To: <200804071645.43604.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200804141827.50991.IvDoorn@gmail.com> (sfid-20080414_172512_351601_674B5C95)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:47084 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754579AbYD3U0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Apr 2008 16:26:15 -0400
+Subject: Re: [PATCH] libertas: debug output tweaks for lbs_thread
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200804301050.07808.hs4233@mail.mn-solutions.de>
+References: <200804301050.07808.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 30 Apr 2008 16:22:05 -0400
+Message-Id: <1209586925.16194.10.camel@localhost.localdomain> (sfid-20080430_222611_278207_EFD41A16)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2008-04-30 at 10:50 +0200, Holger Schurig wrote:
+> * make debug output match the variable name
+> * always report that lbs_remove_rtap() has has been exited
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I've implemented the steps for hardware encryption
-including the part where the IV/EIV is being moved around.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-I now have a different problem, the hw_key_idx is u8,
-so is very limited to what can be stored in it. I am trying
-to find a solution for the following problem without increasing
-the size of hw_key_idx since it is also used in the ieee80211_tx_control
-structure which should remain as small as possible to fix in skb->cb.
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-04-30 09:21:45.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-04-30 09:24:05.000000000 +0200
+> @@ -703,7 +703,7 @@ static int lbs_thread(void *data)
+>  
+>  		if (shouldsleep) {
+>  			lbs_deb_thread("sleeping, connect_status %d, "
+> -				"ps_mode %d, ps_state %d\n",
+> +				"psmode %d, psstate %d\n",
+>  				priv->connect_status,
+>  				priv->psmode, priv->psstate);
+>  			spin_unlock_irq(&priv->driver_lock);
+> @@ -1532,10 +1532,11 @@ static void lbs_remove_rtap(struct lbs_p
+>  {
+>  	lbs_deb_enter(LBS_DEB_MAIN);
+>  	if (priv->rtap_net_dev == NULL)
+> -		return;
+> +		goto out;
+>  	unregister_netdev(priv->rtap_net_dev);
+>  	free_netdev(priv->rtap_net_dev);
+>  	priv->rtap_net_dev = NULL;
+> +out:
+>  	lbs_deb_leave(LBS_DEB_MAIN);
+>  }
+>  
 
-The problem is as follows:
-rt61pci, rt73usb, rt2800pci and rt2800usb support both shared keys
-as well as pairwise keys. When the "address" argument of set_key()
-is a valid MAC address, then the key is considered to be pairwise,
-otherwise it is a shared key.
-
-rt61pci and rt73usb supports:
-shared keys: 16 (4 per allowed virtual interface)
-pairwise keys: 64 (16 per allowed virtual interface)
-
-rt2800pci and rt2800usb supports:
-shared keys: 32 (4 per allowed virtual interface)
-pairwise keys: 256 (32 per allowed virtual interface)
-
-This means that the hw_key_idx with rt2800 hardware is already
-full when all keys are being supported. I am thinking of adding a flag
-to the key structure and ieee80211_tx_control structure to indicate
-if the key is shared or pairwise. This will safe 1 bit that otherwise has
-to be reserved from the hw_key_idx.
-Do you agree with such a flag addition, or should the driver not care
-about pairwise vs. shared.
-
-But now the fun part begins, the hardware needs the ieee80211_key_alg value
-for encryption (don't ask why, the algorithm is also stored in the register
-so it should be easy for the hardware to look it up directly).
-What should be the best way to obtain this algorithm, should a callback
-function be added, or should the driver keep a list in memory for all
-added keys (which would be memory duplication since mac80211 also
-has it in memory).
-
-Thanks,
-
-Ivo
