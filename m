@@ -1,791 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30959 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753267AbYDXAPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2008 20:15:14 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 15/16] iwlwifi: move Flow Handlers define to iwl-fh.h
-Date: Wed, 23 Apr 2008 17:15:07 -0700
-Message-Id: <1208996108-15326-16-git-send-email-reinette.chatre@intel.com> (sfid-20080424_023545_902598_A8CC3EF8)
-In-Reply-To: <1208996108-15326-15-git-send-email-reinette.chatre@intel.com>
-References: <1208996108-15326-1-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-2-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-3-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-4-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-5-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-6-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-7-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-8-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-9-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-10-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-11-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-12-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-13-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-14-git-send-email-reinette.chatre@intel.com>
- <1208996108-15326-15-git-send-email-reinette.chatre@intel.com>
+Received: from wr-out-0506.google.com ([64.233.184.228]:35404 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756375AbYD3BHz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Apr 2008 21:07:55 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so273268wra.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2008 18:07:54 -0700 (PDT)
+Subject: [PATCH 5/7] mac80211: add a struct to hold tkip context
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 29 Apr 2008 18:07:36 -0700
+Message-Id: <1209517665.24729.53.camel@brick> (sfid-20080430_030750_299029_6589FE36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-This patch moves Flow Handlers define to a new file iwl-fh.h
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |  288 +--------------------
- drivers/net/wireless/iwlwifi/iwl-4965.c    |   14 +-
- drivers/net/wireless/iwlwifi/iwl-fh.h      |  391 ++++++++++++++++++++++++++++
- 3 files changed, 400 insertions(+), 293 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-fh.h
+ net/mac80211/cfg.c         |    4 +-
+ net/mac80211/debugfs_key.c |    8 +++---
+ net/mac80211/key.h         |   17 +++++++------
+ net/mac80211/tkip.c        |   54 ++++++++++++++++++++++----------------------
+ net/mac80211/wpa.c         |   16 ++++++------
+ 5 files changed, 50 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index 3862704..bea03f6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -69,6 +69,8 @@
- #ifndef __iwl_4965_hw_h__
- #define __iwl_4965_hw_h__
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 699d97b..17d0656 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -256,8 +256,8 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 	case ALG_TKIP:
+ 		params.cipher = WLAN_CIPHER_SUITE_TKIP;
  
-+#include "iwl-fh.h"
+-		iv32 = key->u.tkip.iv32;
+-		iv16 = key->u.tkip.iv16;
++		iv32 = key->u.tkip.tx.iv32;
++		iv16 = key->u.tkip.tx.iv16;
+ 
+ 		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
+ 		    sdata->local->ops->get_tkip_seq)
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 879e721..c13b08b 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -97,8 +97,8 @@ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
+ 		break;
+ 	case ALG_TKIP:
+ 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
+-				key->u.tkip.iv32,
+-				key->u.tkip.iv16);
++				key->u.tkip.tx.iv32,
++				key->u.tkip.tx.iv16);
+ 		break;
+ 	case ALG_CCMP:
+ 		tpn = key->u.ccmp.tx_pn;
+@@ -128,8 +128,8 @@ static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
+ 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
+ 			p += scnprintf(p, sizeof(buf)+buf-p,
+ 				       "%08x %04x\n",
+-				       key->u.tkip.iv32_rx[i],
+-				       key->u.tkip.iv16_rx[i]);
++				       key->u.tkip.rx[i].iv32,
++				       key->u.tkip.rx[i].iv16);
+ 		len = p - buf;
+ 		break;
+ 	case ALG_CCMP:
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index f52c3df..a0f774a 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -69,6 +69,13 @@ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
+ };
+ 
++struct tkip_ctx {
++	u32 iv32;
++	u16 iv16;
++	u16 p1k[5];
++	int initialized;
++};
 +
- /* EERPROM */
- #define IWL4965_EEPROM_IMG_SIZE			1024
+ struct ieee80211_key {
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -85,16 +92,10 @@ struct ieee80211_key {
+ 	union {
+ 		struct {
+ 			/* last used TSC */
+-			u32 iv32;
+-			u16 iv16;
+-			u16 p1k[5];
+-			int tx_initialized;
++			struct tkip_ctx tx;
  
-@@ -786,292 +788,6 @@ enum {
+ 			/* last received RSC */
+-			u32 iv32_rx[NUM_RX_DATA_QUEUES];
+-			u16 iv16_rx[NUM_RX_DATA_QUEUES];
+-			u16 p1k_rx[NUM_RX_DATA_QUEUES][5];
+-			int rx_initialized[NUM_RX_DATA_QUEUES];
++			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
+ 		} tkip;
+ 		struct {
+ 			u8 tx_pn[6];
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 8cdf053..d74c91e 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -138,7 +138,7 @@ u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 	*pos++ = iv1;
+ 	*pos++ = iv2;
+ 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+-	put_unaligned_le32(key->u.tkip.iv32, pos);
++	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
+ 	return pos + 4;
+ }
  
- /********************* END TXPOWER *****************************************/
- 
--/****************************/
--/* Flow Handler Definitions */
--/****************************/
--
--/**
-- * This I/O area is directly read/writable by driver (e.g. Linux uses writel())
-- * Addresses are offsets from device's PCI hardware base address.
-- */
--#define FH_MEM_LOWER_BOUND                   (0x1000)
--#define FH_MEM_UPPER_BOUND                   (0x1EF0)
--
--/**
-- * Keep-Warm (KW) buffer base address.
-- *
-- * Driver must allocate a 4KByte buffer that is used by 4965 for keeping the
-- * host DRAM powered on (via dummy accesses to DRAM) to maintain low-latency
-- * DRAM access when 4965 is Txing or Rxing.  The dummy accesses prevent host
-- * from going into a power-savings mode that would cause higher DRAM latency,
-- * and possible data over/under-runs, before all Tx/Rx is complete.
-- *
-- * Driver loads IWL_FH_KW_MEM_ADDR_REG with the physical address (bits 35:4)
-- * of the buffer, which must be 4K aligned.  Once this is set up, the 4965
-- * automatically invokes keep-warm accesses when normal accesses might not
-- * be sufficient to maintain fast DRAM response.
-- *
-- * Bit fields:
-- *  31-0:  Keep-warm buffer physical base address [35:4], must be 4K aligned
-- */
--#define IWL_FH_KW_MEM_ADDR_REG		     (FH_MEM_LOWER_BOUND + 0x97C)
--
--
--/**
-- * TFD Circular Buffers Base (CBBC) addresses
-- *
-- * 4965 has 16 base pointer registers, one for each of 16 host-DRAM-resident
-- * circular buffers (CBs/queues) containing Transmit Frame Descriptors (TFDs)
-- * (see struct iwl_tfd_frame).  These 16 pointer registers are offset by 0x04
-- * bytes from one another.  Each TFD circular buffer in DRAM must be 256-byte
-- * aligned (address bits 0-7 must be 0).
-- *
-- * Bit fields in each pointer register:
-- *  27-0: TFD CB physical base address [35:8], must be 256-byte aligned
-- */
--#define FH_MEM_CBBC_LOWER_BOUND              (FH_MEM_LOWER_BOUND + 0x9D0)
--#define FH_MEM_CBBC_UPPER_BOUND              (FH_MEM_LOWER_BOUND + 0xA10)
--
--/* Find TFD CB base pointer for given queue (range 0-15). */
--#define FH_MEM_CBBC_QUEUE(x)  (FH_MEM_CBBC_LOWER_BOUND + (x) * 0x4)
--
--
--/**
-- * Rx SRAM Control and Status Registers (RSCSR)
-- *
-- * These registers provide handshake between driver and 4965 for the Rx queue
-- * (this queue handles *all* command responses, notifications, Rx data, etc.
-- * sent from 4965 uCode to host driver).  Unlike Tx, there is only one Rx
-- * queue, and only one Rx DMA/FIFO channel.  Also unlike Tx, which can
-- * concatenate up to 20 DRAM buffers to form a Tx frame, each Receive Buffer
-- * Descriptor (RBD) points to only one Rx Buffer (RB); there is a 1:1
-- * mapping between RBDs and RBs.
-- *
-- * Driver must allocate host DRAM memory for the following, and set the
-- * physical address of each into 4965 registers:
-- *
-- * 1)  Receive Buffer Descriptor (RBD) circular buffer (CB), typically with 256
-- *     entries (although any power of 2, up to 4096, is selectable by driver).
-- *     Each entry (1 dword) points to a receive buffer (RB) of consistent size
-- *     (typically 4K, although 8K or 16K are also selectable by driver).
-- *     Driver sets up RB size and number of RBDs in the CB via Rx config
-- *     register FH_MEM_RCSR_CHNL0_CONFIG_REG.
-- *
-- *     Bit fields within one RBD:
-- *     27-0:  Receive Buffer physical address bits [35:8], 256-byte aligned
-- *
-- *     Driver sets physical address [35:8] of base of RBD circular buffer
-- *     into FH_RSCSR_CHNL0_RBDCB_BASE_REG [27:0].
-- *
-- * 2)  Rx status buffer, 8 bytes, in which 4965 indicates which Rx Buffers
-- *     (RBs) have been filled, via a "write pointer", actually the index of
-- *     the RB's corresponding RBD within the circular buffer.  Driver sets
-- *     physical address [35:4] into FH_RSCSR_CHNL0_STTS_WPTR_REG [31:0].
-- *
-- *     Bit fields in lower dword of Rx status buffer (upper dword not used
-- *     by driver; see struct iwl4965_shared, val0):
-- *     31-12:  Not used by driver
-- *     11- 0:  Index of last filled Rx buffer descriptor
-- *             (4965 writes, driver reads this value)
-- *
-- * As the driver prepares Receive Buffers (RBs) for 4965 to fill, driver must
-- * enter pointers to these RBs into contiguous RBD circular buffer entries,
-- * and update the 4965's "write" index register, FH_RSCSR_CHNL0_RBDCB_WPTR_REG.
-- *
-- * This "write" index corresponds to the *next* RBD that the driver will make
-- * available, i.e. one RBD past the tail of the ready-to-fill RBDs within
-- * the circular buffer.  This value should initially be 0 (before preparing any
-- * RBs), should be 8 after preparing the first 8 RBs (for example), and must
-- * wrap back to 0 at the end of the circular buffer (but don't wrap before
-- * "read" index has advanced past 1!  See below).
-- * NOTE:  4965 EXPECTS THE WRITE INDEX TO BE INCREMENTED IN MULTIPLES OF 8.
-- *
-- * As the 4965 fills RBs (referenced from contiguous RBDs within the circular
-- * buffer), it updates the Rx status buffer in host DRAM, 2) described above,
-- * to tell the driver the index of the latest filled RBD.  The driver must
-- * read this "read" index from DRAM after receiving an Rx interrupt from 4965.
-- *
-- * The driver must also internally keep track of a third index, which is the
-- * next RBD to process.  When receiving an Rx interrupt, driver should process
-- * all filled but unprocessed RBs up to, but not including, the RB
-- * corresponding to the "read" index.  For example, if "read" index becomes "1",
-- * driver may process the RB pointed to by RBD 0.  Depending on volume of
-- * traffic, there may be many RBs to process.
-- *
-- * If read index == write index, 4965 thinks there is no room to put new data.
-- * Due to this, the maximum number of filled RBs is 255, instead of 256.  To
-- * be safe, make sure that there is a gap of at least 2 RBDs between "write"
-- * and "read" indexes; that is, make sure that there are no more than 254
-- * buffers waiting to be filled.
-- */
--#define FH_MEM_RSCSR_LOWER_BOUND	(FH_MEM_LOWER_BOUND + 0xBC0)
--#define FH_MEM_RSCSR_UPPER_BOUND	(FH_MEM_LOWER_BOUND + 0xC00)
--#define FH_MEM_RSCSR_CHNL0		(FH_MEM_RSCSR_LOWER_BOUND)
--
--/**
-- * Physical base address of 8-byte Rx Status buffer.
-- * Bit fields:
-- *  31-0: Rx status buffer physical base address [35:4], must 16-byte aligned.
-- */
--#define FH_RSCSR_CHNL0_STTS_WPTR_REG		(FH_MEM_RSCSR_CHNL0)
--
--/**
-- * Physical base address of Rx Buffer Descriptor Circular Buffer.
-- * Bit fields:
-- *  27-0:  RBD CD physical base address [35:8], must be 256-byte aligned.
-- */
--#define FH_RSCSR_CHNL0_RBDCB_BASE_REG		(FH_MEM_RSCSR_CHNL0 + 0x004)
--
--/**
-- * Rx write pointer (index, really!).
-- * Bit fields:
-- *  11-0:  Index of driver's most recent prepared-to-be-filled RBD, + 1.
-- *         NOTE:  For 256-entry circular buffer, use only bits [7:0].
-- */
--#define FH_RSCSR_CHNL0_RBDCB_WPTR_REG		(FH_MEM_RSCSR_CHNL0 + 0x008)
--#define FH_RSCSR_CHNL0_WPTR        (FH_RSCSR_CHNL0_RBDCB_WPTR_REG)
--
--
--/**
-- * Rx Config/Status Registers (RCSR)
-- * Rx Config Reg for channel 0 (only channel used)
-- *
-- * Driver must initialize FH_MEM_RCSR_CHNL0_CONFIG_REG as follows for
-- * normal operation (see bit fields).
-- *
-- * Clearing FH_MEM_RCSR_CHNL0_CONFIG_REG to 0 turns off Rx DMA.
-- * Driver should poll FH_MEM_RSSR_RX_STATUS_REG	for
-- * FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE (bit 24) before continuing.
-- *
-- * Bit fields:
-- * 31-30: Rx DMA channel enable: '00' off/pause, '01' pause at end of frame,
-- *        '10' operate normally
-- * 29-24: reserved
-- * 23-20: # RBDs in circular buffer = 2^value; use "8" for 256 RBDs (normal),
-- *        min "5" for 32 RBDs, max "12" for 4096 RBDs.
-- * 19-18: reserved
-- * 17-16: size of each receive buffer; '00' 4K (normal), '01' 8K,
-- *        '10' 12K, '11' 16K.
-- * 15-14: reserved
-- * 13-12: IRQ destination; '00' none, '01' host driver (normal operation)
-- * 11- 4: timeout for closing Rx buffer and interrupting host (units 32 usec)
-- *        typical value 0x10 (about 1/2 msec)
-- *  3- 0: reserved
-- */
--#define FH_MEM_RCSR_LOWER_BOUND      (FH_MEM_LOWER_BOUND + 0xC00)
--#define FH_MEM_RCSR_UPPER_BOUND      (FH_MEM_LOWER_BOUND + 0xCC0)
--#define FH_MEM_RCSR_CHNL0            (FH_MEM_RCSR_LOWER_BOUND)
--
--#define FH_MEM_RCSR_CHNL0_CONFIG_REG	(FH_MEM_RCSR_CHNL0)
--
--#define FH_RCSR_CHNL0_RX_CONFIG_RB_TIMEOUT_MASK   (0x00000FF0) /* bit 4-11 */
--#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_MASK     (0x00001000) /* bit 12 */
--#define FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME_MASK (0x00008000) /* bit 15 */
--#define FH_RCSR_CHNL0_RX_CONFIG_RB_SIZE_MASK	  (0x00030000) /* bits 16-17 */
--#define FH_RCSR_CHNL0_RX_CONFIG_RBDBC_SIZE_MASK   (0x00F00000) /* bits 20-23 */
--#define FH_RCSR_CHNL0_RX_CONFIG_DMA_CHNL_EN_MASK  (0xC0000000) /* bits 30-31 */
--
--#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT	(20)
--#define FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_BITSHIFT	(4)
--#define RX_RB_TIMEOUT	(0x10)
--
--#define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_VAL         (0x00000000)
--#define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_EOF_VAL     (0x40000000)
--#define FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL        (0x80000000)
--
--#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K    (0x00000000)
--#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K    (0x00010000)
--#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_12K   (0x00020000)
--#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_16K   (0x00030000)
--
--#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL       (0x00000000)
--#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL     (0x00001000)
--
--
--/**
-- * Rx Shared Status Registers (RSSR)
-- *
-- * After stopping Rx DMA channel (writing 0 to FH_MEM_RCSR_CHNL0_CONFIG_REG),
-- * driver must poll FH_MEM_RSSR_RX_STATUS_REG until Rx channel is idle.
-- *
-- * Bit fields:
-- *  24:  1 = Channel 0 is idle
-- *
-- * FH_MEM_RSSR_SHARED_CTRL_REG and FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV contain
-- * default values that should not be altered by the driver.
-- */
--#define FH_MEM_RSSR_LOWER_BOUND                	(FH_MEM_LOWER_BOUND + 0xC40)
--#define FH_MEM_RSSR_UPPER_BOUND               	(FH_MEM_LOWER_BOUND + 0xD00)
--
--#define FH_MEM_RSSR_SHARED_CTRL_REG           	(FH_MEM_RSSR_LOWER_BOUND)
--#define FH_MEM_RSSR_RX_STATUS_REG	(FH_MEM_RSSR_LOWER_BOUND + 0x004)
--#define FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV  (FH_MEM_RSSR_LOWER_BOUND + 0x008)
--
--#define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
--
--
--/**
-- * Transmit DMA Channel Control/Status Registers (TCSR)
-- *
-- * 4965 has one configuration register for each of 8 Tx DMA/FIFO channels
-- * supported in hardware (don't confuse these with the 16 Tx queues in DRAM,
-- * which feed the DMA/FIFO channels); config regs are separated by 0x20 bytes.
-- *
-- * To use a Tx DMA channel, driver must initialize its
-- * IWL_FH_TCSR_CHNL_TX_CONFIG_REG(chnl) with:
-- *
-- * IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-- * IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL
-- *
-- * All other bits should be 0.
-- *
-- * Bit fields:
-- * 31-30: Tx DMA channel enable: '00' off/pause, '01' pause at end of frame,
-- *        '10' operate normally
-- * 29- 4: Reserved, set to "0"
-- *     3: Enable internal DMA requests (1, normal operation), disable (0)
-- *  2- 0: Reserved, set to "0"
-- */
--#define IWL_FH_TCSR_LOWER_BOUND  (FH_MEM_LOWER_BOUND + 0xD00)
--#define IWL_FH_TCSR_UPPER_BOUND  (FH_MEM_LOWER_BOUND + 0xE60)
--
--/* Find Control/Status reg for given Tx DMA/FIFO channel */
--#define IWL_FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
--	(IWL_FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
--
--#define IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE_VAL    (0x00000000)
--#define IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL     (0x00000008)
--
--#define IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE            (0x00000000)
--#define IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE_EOF        (0x40000000)
--#define IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE           (0x80000000)
--
--/**
-- * Tx Shared Status Registers (TSSR)
-- *
-- * After stopping Tx DMA channel (writing 0 to
-- * IWL_FH_TCSR_CHNL_TX_CONFIG_REG(chnl)), driver must poll
-- * IWL_FH_TSSR_TX_STATUS_REG until selected Tx channel is idle
-- * (channel's buffers empty | no pending requests).
-- *
-- * Bit fields:
-- * 31-24:  1 = Channel buffers empty (channel 7:0)
-- * 23-16:  1 = No pending requests (channel 7:0)
-- */
--#define IWL_FH_TSSR_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xEA0)
--#define IWL_FH_TSSR_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xEC0)
--
--#define IWL_FH_TSSR_TX_STATUS_REG	(IWL_FH_TSSR_LOWER_BOUND + 0x010)
--
--#define IWL_FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl)	\
--	((1 << (_chnl)) << 24)
--#define IWL_FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl) \
--	((1 << (_chnl)) << 16)
--
--#define IWL_FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(_chnl) \
--	(IWL_FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) | \
--	IWL_FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl))
--
- static inline u8 iwl4965_hw_get_rate(__le32 rate_n_flags)
+@@ -146,16 +146,16 @@ static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
  {
- 	return le32_to_cpu(rate_n_flags) & 0xFF;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 93f4cdb..99c08ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -435,7 +435,7 @@ static int iwl4965_kw_init(struct iwl_priv *priv)
- 	if (rc)
- 		goto out;
+ 	/* Calculate per-packet key */
+-	if (key->u.tkip.iv16 == 0 || !key->u.tkip.tx_initialized) {
++	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   key->u.tkip.iv32, key->u.tkip.p1k);
+-		key->u.tkip.tx_initialized = 1;
++				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
++		key->u.tkip.tx.initialized = 1;
+ 	}
  
--	iwl_write_direct32(priv, IWL_FH_KW_MEM_ADDR_REG,
-+	iwl_write_direct32(priv, FH_KW_MEM_ADDR_REG,
- 			     priv->kw.dma_addr >> 4);
- 	iwl_release_nic_access(priv);
- out:
-@@ -726,9 +726,9 @@ void iwl4965_hw_txq_ctx_stop(struct iwl_priv *priv)
+-	tkip_mixing_phase2(key->u.tkip.p1k,
++	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+ 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv16, rc4key);
++			   key->u.tkip.tx.iv16, rc4key);
+ }
+ 
+ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+@@ -179,9 +179,9 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+ 			iv16, iv32);
+ 
+-	if (iv32 != key->u.tkip.iv32) {
++	if (iv32 != key->u.tkip.tx.iv32) {
+ 		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
+-			iv32, key->u.tkip.iv32);
++			iv32, key->u.tkip.tx.iv32);
+ 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
+ 			"fragmented packet\n");
+ 	}
+@@ -190,19 +190,19 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+ 	 * fragmented packets. */
+-	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
++	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			iv32, key->u.tkip.p1k);
+-		key->u.tkip.tx_initialized = 1;
++			iv32, key->u.tkip.tx.p1k);
++		key->u.tkip.tx.initialized = 1;
+ 	}
+ 
+ 	if (type == IEEE80211_TKIP_P1_KEY) {
+-		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
++		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
+ 		return;
+ 	}
+ 
+-	tkip_mixing_phase2(key->u.tkip.p1k,
++	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+ 		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+@@ -263,33 +263,33 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 	if ((keyid >> 6) != key->conf.keyidx)
+ 		return TKIP_DECRYPT_INVALID_KEYIDX;
+ 
+-	if (key->u.tkip.rx_initialized[queue] &&
+-	    (iv32 < key->u.tkip.iv32_rx[queue] ||
+-	     (iv32 == key->u.tkip.iv32_rx[queue] &&
+-	      iv16 <= key->u.tkip.iv16_rx[queue]))) {
++	if (key->u.tkip.rx[queue].initialized &&
++	    (iv32 < key->u.tkip.rx[queue].iv32 ||
++	     (iv32 == key->u.tkip.rx[queue].iv32 &&
++	      iv16 <= key->u.tkip.rx[queue].iv16))) {
+ #ifdef CONFIG_TKIP_DEBUG
+ 		DECLARE_MAC_BUF(mac);
+ 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
+ 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
+ 		       print_mac(mac, ta),
+-		       iv32, iv16, key->u.tkip.iv32_rx[queue],
+-		       key->u.tkip.iv16_rx[queue]);
++		       iv32, iv16, key->u.tkip.rx[queue].iv32,
++		       key->u.tkip.rx[queue].iv16);
+ #endif /* CONFIG_TKIP_DEBUG */
+ 		return TKIP_DECRYPT_REPLAY;
+ 	}
+ 
+ 	if (only_iv) {
+ 		res = TKIP_DECRYPT_OK;
+-		key->u.tkip.rx_initialized[queue] = 1;
++		key->u.tkip.rx[queue].initialized = 1;
+ 		goto done;
+ 	}
+ 
+-	if (!key->u.tkip.rx_initialized[queue] ||
+-	    key->u.tkip.iv32_rx[queue] != iv32) {
+-		key->u.tkip.rx_initialized[queue] = 1;
++	if (!key->u.tkip.rx[queue].initialized ||
++	    key->u.tkip.rx[queue].iv32 != iv32) {
++		key->u.tkip.rx[queue].initialized = 1;
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   iv32, key->u.tkip.p1k_rx[queue]);
++				   iv32, key->u.tkip.rx[queue].p1k);
+ #ifdef CONFIG_TKIP_DEBUG
+ 		{
+ 			int i;
+@@ -303,7 +303,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 			printk("\n");
+ 			printk(KERN_DEBUG "TKIP decrypt: P1K=");
+ 			for (i = 0; i < 5; i++)
+-				printk("%04x ", key->u.tkip.p1k_rx[queue][i]);
++				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
+ 			printk("\n");
  		}
+ #endif /* CONFIG_TKIP_DEBUG */
+@@ -318,11 +318,11 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
  
- 		iwl_write_direct32(priv,
--				   IWL_FH_TCSR_CHNL_TX_CONFIG_REG(txq_id), 0x0);
--		iwl_poll_direct_bit(priv, IWL_FH_TSSR_TX_STATUS_REG,
--				    IWL_FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE
-+				   FH_TCSR_CHNL_TX_CONFIG_REG(txq_id), 0x0);
-+		iwl_poll_direct_bit(priv, FH_TSSR_TX_STATUS_REG,
-+				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE
- 				    (txq_id), 200);
- 		iwl_release_nic_access(priv);
- 		spin_unlock_irqrestore(&priv->lock, flags);
-@@ -2256,9 +2256,9 @@ int iwl4965_hw_tx_queue_init(struct iwl_priv *priv, struct iwl4965_tx_queue *txq
+ 			key->local->ops->update_tkip_key(
+ 				local_to_hw(key->local), &key->conf,
+-				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
++				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
+ 		}
+ 	}
  
- 	/* Enable DMA channel, using same id as for TFD queue */
- 	iwl_write_direct32(
--		priv, IWL_FH_TCSR_CHNL_TX_CONFIG_REG(txq_id),
--		IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
--		IWL_FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL);
-+		priv, FH_TCSR_CHNL_TX_CONFIG_REG(txq_id),
-+		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-+		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL);
- 	iwl_release_nic_access(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
+-	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
++	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
+ 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+ 			   iv16, rc4key);
+ #ifdef CONFIG_TKIP_DEBUG
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 45709ad..fbd9299 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -176,8 +176,8 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-new file mode 100644
-index 0000000..9446424
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -0,0 +1,391 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2005 - 2008 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2005 - 2008 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+
-+/****************************/
-+/* Flow Handler Definitions */
-+/****************************/
-+
-+/**
-+ * This I/O area is directly read/writable by driver (e.g. Linux uses writel())
-+ * Addresses are offsets from device's PCI hardware base address.
-+ */
-+#define FH_MEM_LOWER_BOUND                   (0x1000)
-+#define FH_MEM_UPPER_BOUND                   (0x1EF0)
-+
-+/**
-+ * Keep-Warm (KW) buffer base address.
-+ *
-+ * Driver must allocate a 4KByte buffer that is used by 4965 for keeping the
-+ * host DRAM powered on (via dummy accesses to DRAM) to maintain low-latency
-+ * DRAM access when 4965 is Txing or Rxing.  The dummy accesses prevent host
-+ * from going into a power-savings mode that would cause higher DRAM latency,
-+ * and possible data over/under-runs, before all Tx/Rx is complete.
-+ *
-+ * Driver loads FH_KW_MEM_ADDR_REG with the physical address (bits 35:4)
-+ * of the buffer, which must be 4K aligned.  Once this is set up, the 4965
-+ * automatically invokes keep-warm accesses when normal accesses might not
-+ * be sufficient to maintain fast DRAM response.
-+ *
-+ * Bit fields:
-+ *  31-0:  Keep-warm buffer physical base address [35:4], must be 4K aligned
-+ */
-+#define FH_KW_MEM_ADDR_REG		     (FH_MEM_LOWER_BOUND + 0x97C)
-+
-+
-+/**
-+ * TFD Circular Buffers Base (CBBC) addresses
-+ *
-+ * 4965 has 16 base pointer registers, one for each of 16 host-DRAM-resident
-+ * circular buffers (CBs/queues) containing Transmit Frame Descriptors (TFDs)
-+ * (see struct iwl_tfd_frame).  These 16 pointer registers are offset by 0x04
-+ * bytes from one another.  Each TFD circular buffer in DRAM must be 256-byte
-+ * aligned (address bits 0-7 must be 0).
-+ *
-+ * Bit fields in each pointer register:
-+ *  27-0: TFD CB physical base address [35:8], must be 256-byte aligned
-+ */
-+#define FH_MEM_CBBC_LOWER_BOUND          (FH_MEM_LOWER_BOUND + 0x9D0)
-+#define FH_MEM_CBBC_UPPER_BOUND          (FH_MEM_LOWER_BOUND + 0xA10)
-+
-+/* Find TFD CB base pointer for given queue (range 0-15). */
-+#define FH_MEM_CBBC_QUEUE(x)  (FH_MEM_CBBC_LOWER_BOUND + (x) * 0x4)
-+
-+
-+/**
-+ * Rx SRAM Control and Status Registers (RSCSR)
-+ *
-+ * These registers provide handshake between driver and 4965 for the Rx queue
-+ * (this queue handles *all* command responses, notifications, Rx data, etc.
-+ * sent from 4965 uCode to host driver).  Unlike Tx, there is only one Rx
-+ * queue, and only one Rx DMA/FIFO channel.  Also unlike Tx, which can
-+ * concatenate up to 20 DRAM buffers to form a Tx frame, each Receive Buffer
-+ * Descriptor (RBD) points to only one Rx Buffer (RB); there is a 1:1
-+ * mapping between RBDs and RBs.
-+ *
-+ * Driver must allocate host DRAM memory for the following, and set the
-+ * physical address of each into 4965 registers:
-+ *
-+ * 1)  Receive Buffer Descriptor (RBD) circular buffer (CB), typically with 256
-+ *     entries (although any power of 2, up to 4096, is selectable by driver).
-+ *     Each entry (1 dword) points to a receive buffer (RB) of consistent size
-+ *     (typically 4K, although 8K or 16K are also selectable by driver).
-+ *     Driver sets up RB size and number of RBDs in the CB via Rx config
-+ *     register FH_MEM_RCSR_CHNL0_CONFIG_REG.
-+ *
-+ *     Bit fields within one RBD:
-+ *     27-0:  Receive Buffer physical address bits [35:8], 256-byte aligned
-+ *
-+ *     Driver sets physical address [35:8] of base of RBD circular buffer
-+ *     into FH_RSCSR_CHNL0_RBDCB_BASE_REG [27:0].
-+ *
-+ * 2)  Rx status buffer, 8 bytes, in which 4965 indicates which Rx Buffers
-+ *     (RBs) have been filled, via a "write pointer", actually the index of
-+ *     the RB's corresponding RBD within the circular buffer.  Driver sets
-+ *     physical address [35:4] into FH_RSCSR_CHNL0_STTS_WPTR_REG [31:0].
-+ *
-+ *     Bit fields in lower dword of Rx status buffer (upper dword not used
-+ *     by driver; see struct iwl4965_shared, val0):
-+ *     31-12:  Not used by driver
-+ *     11- 0:  Index of last filled Rx buffer descriptor
-+ *             (4965 writes, driver reads this value)
-+ *
-+ * As the driver prepares Receive Buffers (RBs) for 4965 to fill, driver must
-+ * enter pointers to these RBs into contiguous RBD circular buffer entries,
-+ * and update the 4965's "write" index register,
-+ * FH_RSCSR_CHNL0_RBDCB_WPTR_REG.
-+ *
-+ * This "write" index corresponds to the *next* RBD that the driver will make
-+ * available, i.e. one RBD past the tail of the ready-to-fill RBDs within
-+ * the circular buffer.  This value should initially be 0 (before preparing any
-+ * RBs), should be 8 after preparing the first 8 RBs (for example), and must
-+ * wrap back to 0 at the end of the circular buffer (but don't wrap before
-+ * "read" index has advanced past 1!  See below).
-+ * NOTE:  4965 EXPECTS THE WRITE INDEX TO BE INCREMENTED IN MULTIPLES OF 8.
-+ *
-+ * As the 4965 fills RBs (referenced from contiguous RBDs within the circular
-+ * buffer), it updates the Rx status buffer in host DRAM, 2) described above,
-+ * to tell the driver the index of the latest filled RBD.  The driver must
-+ * read this "read" index from DRAM after receiving an Rx interrupt from 4965.
-+ *
-+ * The driver must also internally keep track of a third index, which is the
-+ * next RBD to process.  When receiving an Rx interrupt, driver should process
-+ * all filled but unprocessed RBs up to, but not including, the RB
-+ * corresponding to the "read" index.  For example, if "read" index becomes "1",
-+ * driver may process the RB pointed to by RBD 0.  Depending on volume of
-+ * traffic, there may be many RBs to process.
-+ *
-+ * If read index == write index, 4965 thinks there is no room to put new data.
-+ * Due to this, the maximum number of filled RBs is 255, instead of 256.  To
-+ * be safe, make sure that there is a gap of at least 2 RBDs between "write"
-+ * and "read" indexes; that is, make sure that there are no more than 254
-+ * buffers waiting to be filled.
-+ */
-+#define FH_MEM_RSCSR_LOWER_BOUND	(FH_MEM_LOWER_BOUND + 0xBC0)
-+#define FH_MEM_RSCSR_UPPER_BOUND	(FH_MEM_LOWER_BOUND + 0xC00)
-+#define FH_MEM_RSCSR_CHNL0		(FH_MEM_RSCSR_LOWER_BOUND)
-+
-+/**
-+ * Physical base address of 8-byte Rx Status buffer.
-+ * Bit fields:
-+ *  31-0: Rx status buffer physical base address [35:4], must 16-byte aligned.
-+ */
-+#define FH_RSCSR_CHNL0_STTS_WPTR_REG	(FH_MEM_RSCSR_CHNL0)
-+
-+/**
-+ * Physical base address of Rx Buffer Descriptor Circular Buffer.
-+ * Bit fields:
-+ *  27-0:  RBD CD physical base address [35:8], must be 256-byte aligned.
-+ */
-+#define FH_RSCSR_CHNL0_RBDCB_BASE_REG	(FH_MEM_RSCSR_CHNL0 + 0x004)
-+
-+/**
-+ * Rx write pointer (index, really!).
-+ * Bit fields:
-+ *  11-0:  Index of driver's most recent prepared-to-be-filled RBD, + 1.
-+ *         NOTE:  For 256-entry circular buffer, use only bits [7:0].
-+ */
-+#define FH_RSCSR_CHNL0_RBDCB_WPTR_REG	(FH_MEM_RSCSR_CHNL0 + 0x008)
-+#define FH_RSCSR_CHNL0_WPTR        (FH_RSCSR_CHNL0_RBDCB_WPTR_REG)
-+
-+
-+/**
-+ * Rx Config/Status Registers (RCSR)
-+ * Rx Config Reg for channel 0 (only channel used)
-+ *
-+ * Driver must initialize FH_MEM_RCSR_CHNL0_CONFIG_REG as follows for
-+ * normal operation (see bit fields).
-+ *
-+ * Clearing FH_MEM_RCSR_CHNL0_CONFIG_REG to 0 turns off Rx DMA.
-+ * Driver should poll FH_MEM_RSSR_RX_STATUS_REG	for
-+ * FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE (bit 24) before continuing.
-+ *
-+ * Bit fields:
-+ * 31-30: Rx DMA channel enable: '00' off/pause, '01' pause at end of frame,
-+ *        '10' operate normally
-+ * 29-24: reserved
-+ * 23-20: # RBDs in circular buffer = 2^value; use "8" for 256 RBDs (normal),
-+ *        min "5" for 32 RBDs, max "12" for 4096 RBDs.
-+ * 19-18: reserved
-+ * 17-16: size of each receive buffer; '00' 4K (normal), '01' 8K,
-+ *        '10' 12K, '11' 16K.
-+ * 15-14: reserved
-+ * 13-12: IRQ destination; '00' none, '01' host driver (normal operation)
-+ * 11- 4: timeout for closing Rx buffer and interrupting host (units 32 usec)
-+ *        typical value 0x10 (about 1/2 msec)
-+ *  3- 0: reserved
-+ */
-+#define FH_MEM_RCSR_LOWER_BOUND      (FH_MEM_LOWER_BOUND + 0xC00)
-+#define FH_MEM_RCSR_UPPER_BOUND      (FH_MEM_LOWER_BOUND + 0xCC0)
-+#define FH_MEM_RCSR_CHNL0            (FH_MEM_RCSR_LOWER_BOUND)
-+
-+#define FH_MEM_RCSR_CHNL0_CONFIG_REG	(FH_MEM_RCSR_CHNL0)
-+
-+#define FH_RCSR_CHNL0_RX_CONFIG_RB_TIMEOUT_MSK (0x00000FF0) /* bits 4-11 */
-+#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_MSK   (0x00001000) /* bits 12 */
-+#define FH_RCSR_CHNL0_RX_CONFIG_SINGLE_FRAME_MSK (0x00008000) /* bit 15 */
-+#define FH_RCSR_CHNL0_RX_CONFIG_RB_SIZE_MSK   (0x00030000) /* bits 16-17 */
-+#define FH_RCSR_CHNL0_RX_CONFIG_RBDBC_SIZE_MSK (0x00F00000) /* bits 20-23 */
-+#define FH_RCSR_CHNL0_RX_CONFIG_DMA_CHNL_EN_MSK (0xC0000000) /* bits 30-31*/
-+
-+#define FH_RCSR_RX_CONFIG_RBDCB_SIZE_BITSHIFT	(20)
-+#define FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_BITSHIFT	(4)
-+#define RX_RB_TIMEOUT	(0x10)
-+
-+#define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_VAL         (0x00000000)
-+#define FH_RCSR_RX_CONFIG_CHNL_EN_PAUSE_EOF_VAL     (0x40000000)
-+#define FH_RCSR_RX_CONFIG_CHNL_EN_ENABLE_VAL        (0x80000000)
-+
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K    (0x00000000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K    (0x00010000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_12K   (0x00020000)
-+#define FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_16K   (0x00030000)
-+
-+#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL       (0x00000000)
-+#define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL     (0x00001000)
-+
-+
-+/**
-+ * Rx Shared Status Registers (RSSR)
-+ *
-+ * After stopping Rx DMA channel (writing 0 to
-+ * FH_MEM_RCSR_CHNL0_CONFIG_REG), driver must poll
-+ * FH_MEM_RSSR_RX_STATUS_REG until Rx channel is idle.
-+ *
-+ * Bit fields:
-+ *  24:  1 = Channel 0 is idle
-+ *
-+ * FH_MEM_RSSR_SHARED_CTRL_REG and FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV
-+ * contain default values that should not be altered by the driver.
-+ */
-+#define FH_MEM_RSSR_LOWER_BOUND           (FH_MEM_LOWER_BOUND + 0xC40)
-+#define FH_MEM_RSSR_UPPER_BOUND           (FH_MEM_LOWER_BOUND + 0xD00)
-+
-+#define FH_MEM_RSSR_SHARED_CTRL_REG       (FH_MEM_RSSR_LOWER_BOUND)
-+#define FH_MEM_RSSR_RX_STATUS_REG	(FH_MEM_RSSR_LOWER_BOUND + 0x004)
-+#define FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV\
-+					(FH_MEM_RSSR_LOWER_BOUND + 0x008)
-+
-+#define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
-+
-+
-+/**
-+ * Transmit DMA Channel Control/Status Registers (TCSR)
-+ *
-+ * 4965 has one configuration register for each of 8 Tx DMA/FIFO channels
-+ * supported in hardware (don't confuse these with the 16 Tx queues in DRAM,
-+ * which feed the DMA/FIFO channels); config regs are separated by 0x20 bytes.
-+ *
-+ * To use a Tx DMA channel, driver must initialize its
-+ * FH_TCSR_CHNL_TX_CONFIG_REG(chnl) with:
-+ *
-+ * FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-+ * FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL
-+ *
-+ * All other bits should be 0.
-+ *
-+ * Bit fields:
-+ * 31-30: Tx DMA channel enable: '00' off/pause, '01' pause at end of frame,
-+ *        '10' operate normally
-+ * 29- 4: Reserved, set to "0"
-+ *     3: Enable internal DMA requests (1, normal operation), disable (0)
-+ *  2- 0: Reserved, set to "0"
-+ */
-+#define FH_TCSR_LOWER_BOUND  (FH_MEM_LOWER_BOUND + 0xD00)
-+#define FH_TCSR_UPPER_BOUND  (FH_MEM_LOWER_BOUND + 0xE60)
-+
-+/* Find Control/Status reg for given Tx DMA/FIFO channel */
-+#define FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
-+	(FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
-+
-+#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE_VAL    (0x00000000)
-+#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_ENABLE_VAL     (0x00000008)
-+
-+#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE            (0x00000000)
-+#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE_EOF        (0x40000000)
-+#define FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE           (0x80000000)
-+
-+#define FH_TCSR_CHNL_NUM                            (7)
-+
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_EMPTY          (0x00000000)
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_WAIT           (0x00002000)
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID          (0x00000003)
-+
-+#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_NOINT           (0x00000000)
-+#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD          (0x00100000)
-+#define FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_IFTFD           (0x00200000)
-+
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM      (20)
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX      (12)
-+#define FH_TCSR_CHNL_TX_CONFIG_REG(_chnl) \
-+	(FH_TCSR_LOWER_BOUND + 0x20 * _chnl)
-+#define FH_TCSR_CHNL_TX_CREDIT_REG(_chnl) \
-+	  (FH_TCSR_LOWER_BOUND + 0x20 * _chnl + 0x4)
-+#define FH_TCSR_CHNL_TX_BUF_STS_REG(_chnl) \
-+	 (FH_TCSR_LOWER_BOUND + 0x20 * _chnl + 0x8)
-+
-+/**
-+ * Tx Shared Status Registers (TSSR)
-+ *
-+ * After stopping Tx DMA channel (writing 0 to
-+ * FH_TCSR_CHNL_TX_CONFIG_REG(chnl)), driver must poll
-+ * FH_TSSR_TX_STATUS_REG until selected Tx channel is idle
-+ * (channel's buffers empty | no pending requests).
-+ *
-+ * Bit fields:
-+ * 31-24:  1 = Channel buffers empty (channel 7:0)
-+ * 23-16:  1 = No pending requests (channel 7:0)
-+ */
-+#define FH_TSSR_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xEA0)
-+#define FH_TSSR_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xEC0)
-+
-+#define FH_TSSR_TX_STATUS_REG	(FH_TSSR_LOWER_BOUND + 0x010)
-+
-+#define FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) ((1 << (_chnl)) << 24)
-+#define FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl) ((1 << (_chnl)) << 16)
-+
-+#define FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(_chnl) \
-+	(FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) | \
-+	FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl))
-+
-+
-+
-+#define FH_REGS_LOWER_BOUND		     (0x1000)
-+#define FH_REGS_UPPER_BOUND		     (0x2000)
-+
-+/* Tx service channels */
-+#define FH_SRVC_CHNL                                (9)
-+#define FH_SRVC_LOWER_BOUND          (FH_REGS_LOWER_BOUND + 0x9C8)
-+#define FH_SRVC_UPPER_BOUND          (FH_REGS_LOWER_BOUND + 0x9D0)
-+#define FH_SRVC_CHNL_SRAM_ADDR_REG(_chnl) \
-+		(FH_SRVC_LOWER_BOUND + ((_chnl) - 9) * 0x4)
-+
-+/* TFDB  Area - TFDs buffer table */
-+#define FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK      (0xFFFFFFFF)
-+#define FH_TFDIB_LOWER_BOUND       (FH_REGS_LOWER_BOUND + 0x900)
-+#define FH_TFDIB_UPPER_BOUND       (FH_REGS_LOWER_BOUND + 0x958)
-+#define FH_TFDIB_CTRL0_REG(_chnl)  (FH_TFDIB_LOWER_BOUND + 0x8 * (_chnl))
-+#define FH_TFDIB_CTRL1_REG(_chnl)  (FH_TFDIB_LOWER_BOUND + 0x8 * (_chnl) + 0x4)
-+
-+/* TCSR: tx_config register values */
-+#define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
-+
+ 	/* update IV in key information to be able to detect replays */
+-	rx->key->u.tkip.iv32_rx[rx->queue] = rx->tkip_iv32;
+-	rx->key->u.tkip.iv16_rx[rx->queue] = rx->tkip_iv16;
++	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
++	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
+ 
+ 	return RX_CONTINUE;
+ }
+@@ -214,19 +214,19 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx,
+ 	pos += hdrlen;
+ 
+ 	/* Increase IV for the frame */
+-	key->u.tkip.iv16++;
+-	if (key->u.tkip.iv16 == 0)
+-		key->u.tkip.iv32++;
++	key->u.tkip.tx.iv16++;
++	if (key->u.tkip.tx.iv16 == 0)
++		key->u.tkip.tx.iv32++;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 		/* hwaccel - with preallocated room for IV */
+ 		ieee80211_tkip_add_iv(pos, key,
+-				      (u8) (key->u.tkip.iv16 >> 8),
+-				      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
++				      (u8) (key->u.tkip.tx.iv16 >> 8),
++				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
+ 					    0x7f),
+-				      (u8) key->u.tkip.iv16);
++				      (u8) key->u.tkip.tx.iv16);
+ 
+ 		tx->control->key_idx = tx->key->conf.hw_key_idx;
+ 		return 0;
 -- 
-1.5.3.4
+1.5.5.144.g3e42
+
 
