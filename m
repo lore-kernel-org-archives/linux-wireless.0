@@ -1,77 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55401 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755263AbYETACb (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:50667 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755157AbYEAPgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 20:02:31 -0400
-Subject: Re: [2.6 patch] strip: remove dead URL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Bunk <bunk@kernel.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20080519232237.GF17716@cs181133002.pp.htv.fi>
-References: <20080519221006.GZ17716@cs181133002.pp.htv.fi>
-	 <1211235365.6252.68.camel@johannes.berg>
-	 <20080519232237.GF17716@cs181133002.pp.htv.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eHTQTeS0QK3ghinnbdZb"
-Date: Tue, 20 May 2008 02:01:29 +0200
-Message-Id: <1211241689.6252.72.camel@johannes.berg> (sfid-20080520_020235_488438_EAF01694)
-Mime-Version: 1.0
+	Thu, 1 May 2008 11:36:38 -0400
+Date: Thu, 1 May 2008 11:36:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Message-ID: <20080501153618.GA470@infradead.org> (sfid-20080501_173625_070134_0D1887D5)
+References: <200805011638.15910.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200805011638.15910.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 01, 2008 at 04:38:15PM +0200, Michael Buesch wrote:
+> This patchset adds API and one user for a "weak" dma_set_mask().
+> Weak means that it will fallback to smaller masks in case the
+> DMA subsystem rejects a big mask.
+> Currently such rejection may happen if the driver requests a 64bit
+> mask on a VIA machine, for example. dma_set_mask_weak() will fallback
+> to 32bit, in that case, and tell the caller about it by modifying the
+> passed mask.
 
---=-eHTQTeS0QK3ghinnbdZb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-05-20 at 02:22 +0300, Adrian Bunk wrote:
-> On Tue, May 20, 2008 at 12:16:05AM +0200, Johannes Berg wrote:
-> > On Tue, 2008-05-20 at 01:10 +0300, Adrian Bunk wrote:
-> > > http://mosquitonet.Stanford.EDU/strip.html no longer exists.
-> >=20
-> > Out of curiosity, does anybody even have this hardware? Does it even
-> > exist still? I mean, cell-phone sized 100kbit/sec wireless hardware? Wh=
-o
-> > would use that? :)
->=20
-> And don't forget that this "about the size and weight of a cellular=20
-> telephone" was written back in 1996...
-
-Heh yes, I knew it was ancient but didn't bother to check the file as to
-how ancient :)
-
-> I was very near at suggesting removal of this driver, but at least
-> five years ago someone tried to use it (without success). [1]
->=20
-> But if the general opinion is it should be removed I'd be glad to send
-> a patch.
-
-If five years ago it wasn't possible to use, what sorry state must it be
-in now? But then again, I can't say I care much either way.
-
-johannes
-
---=-eHTQTeS0QK3ghinnbdZb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDIU2KVg1VMiehFYAQIrYQ//aquB3iYqvQHFZVY1MRQn2BmMMxLZGW2+
-UN74l52GwBuzS2EkZ/2tQDqK3z4EWatdGd1oaFnwxo/23xNtHKIzESCO+pR5G+sT
-x9s7vHq+GWl4U300S1JbtEFby5bWMKrvl6VddRXDMv+UQyXMKzrM+ZYtWcmR1UDO
-/vkXNx/uPmJNNvTTh277nl9qZ9NLVWPe+B1uJ5ylStThhW+0exSLDmnFThepMryM
-YDXxqrp71YcmCFCi9oknV5/z+ozywosd/gzFegFP4uxFdDfxxOD9UPFglSMs5iNR
-dT63oUgK5qt4u3KZvjVzkAkIfmErEoaUtBxg9z8hF6XJENt/t/Vn3qf3mAuzzQ+O
-3jSQ1io6ypID5OFkH7bPXiLhYZvZyo7utavtApX3JNGG3fQiVM6+wlHQuuT3BjaM
-pt1e2RmIYhxtb5he70vAeHe9iYr0p+FFIj+nZDId6lckp1hw6+ZFn1P0381HduwW
-Gl0Kl3sdYThw4xObhhnttOiGSqSYO31Fh5Oa6cjBGhtiqN2+4SdTFWArjRQ1yyPK
-H5tSJQ2g1+wbX1itXfA1BJWFj9ZABjvtjTne7EttRyAzj9QcBHLA9aOuT7RpgsAb
-XZe0rMjrrB0Gjb9X8ZI97q5td3+r1yi33enpmssy6UBbk12lp6tK7WfpfnzxnxLE
-JJrGfo39+o4=
-=+UZc
------END PGP SIGNATURE-----
-
---=-eHTQTeS0QK3ghinnbdZb--
+Why do we need it?  Is the call to set the 32bit mask when it fails
+a too big burden for the driver author?
 
