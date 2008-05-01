@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754325AbYEZOqP (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:58792 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753182AbYEAKhK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 10:46:15 -0400
-Subject: [PATCH] p54: fix skb->cb tx info conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chr <chunkeey@web.de>
-Content-Type: text/plain
-Date: Mon, 26 May 2008 16:44:59 +0200
-Message-Id: <1211813099.4843.12.camel@johannes.berg> (sfid-20080526_164617_554554_82F5FACA)
-Mime-Version: 1.0
+	Thu, 1 May 2008 06:37:10 -0400
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: davem@davemloft.net (David Miller)
+Subject: Re: mac80211 truesize bugs
+Cc: johannes@sipsolutions.net, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080501.024320.212547875.davem@davemloft.net>
+Message-Id: <E1JrW9h-0001tI-00@gondolin.me.apana.org.au> (sfid-20080501_123658_010978_5E62512E)
+Date: Thu, 01 May 2008 18:36:49 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I moved the TX info into skb->cb apparently I forgot to change a
-few places to put the p54-internal data into info->driver_data rather
-than skb->cb. This should fix it.
+David Miller <davem@davemloft.net> wrote:
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 9ad4e36..de2e904 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -1485,6 +1485,9 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+>        rthdr = (struct ieee80211_tx_status_rtap_hdr*)
+>                                skb_push(skb, sizeof(*rthdr));
+> ^M
+> +       /* This is safe because the buffer has been orphaned.  */
+> +       skb->truesize += sizeof(*rthdr);
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/p54/p54common.c |   14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+skb->truesize should always account the skb->head area in its
+entirety so we should never need to adjust it when pushing or
+pulling.  So I suggest we find the place that expanded the head
+area and make the adjustment there.  Alternative we could adjust
+it right after the orphan call if the expansion occurs where we
+can't adjust the truesize.
 
---- everything.orig/drivers/net/wireless/p54/p54common.c	2008-05-26 09:42:49.000000000 +0200
-+++ everything/drivers/net/wireless/p54/p54common.c	2008-05-26 09:44:40.000000000 +0200
-@@ -392,16 +392,20 @@ static void p54_rx_frame_sent(struct iee
- 	u32 last_addr = priv->rx_start;
- 
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
--		range = (struct memrecord *)&entry->cb;
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
-+		range = (void *)info->driver_data;
- 		if (range->start_addr == addr) {
--			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
- 			struct p54_control_hdr *entry_hdr;
- 			struct p54_tx_control_allocdata *entry_data;
- 			int pad = 0;
- 
--			if (entry->next != (struct sk_buff *)&priv->tx_queue)
--				freed = ((struct memrecord *)&entry->next->cb)->start_addr - last_addr;
--			else
-+			if (entry->next != (struct sk_buff *)&priv->tx_queue) {
-+				struct ieee80211_tx_info *ni;
-+
-+				ni = IEEE80211_SKB_CB(entry->next);
-+				freed = ((void *)ni->driver_data)->start_addr
-+						- last_addr;
-+			} else
- 				freed = priv->rx_end - last_addr;
- 
- 			last_addr = range->end_addr;
-
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
