@@ -1,27 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:59097 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754875AbYEZUFx (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:38412 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbYEARMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 16:05:53 -0400
-Message-ID: <483B181F.3010802@scherping.de> (sfid-20080526_220556_973924_5B78DC29)
-Date: Mon, 26 May 2008 22:05:51 +0200
-From: Richard Scherping <richard@scherping.de>
+	Thu, 1 May 2008 13:12:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/3] Add dma_set_mask_weak() API
+Date: Thu, 1 May 2008 19:11:40 +0200
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <200805011638.15910.mb@bu3sch.de> <200805011640.17281.mb@bu3sch.de> <20080501172045.35686f43@core>
+In-Reply-To: <20080501172045.35686f43@core>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: ath5k: 10 MHz channels?
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805011911.41388.mb@bu3sch.de> (sfid-20080501_191208_671846_A12663A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello list!
+On Thursday 01 May 2008 18:20:45 Alan Cox wrote:
+> On Thu, 1 May 2008 16:40:16 +0200
+> Michael Buesch <mb@bu3sch.de> wrote:
+> 
+> > This adds a new DMA subsystem API call for "weak" setting
+> > of the DMA mask
+> 
+> weak is an odd term - and we use weak for things like weak symbols so it
+> might be confusing. dma_request_mask() ?
 
-I have been testing ath5k with some different Atheros devices (Cardbus bg, MiniPCI HighPower abg, MiniPCI HighPower a - exact models available if needed) and found that it works quite well now. Test systems were running Debian 4.0 with Kernel 2.6.22 from backports and compat-wireless 2008-05-17.
+Yeah, as a non-native english speaker I couldn't come up with a good
+name for it. But request seems pretty good to me.
 
-While using arbitrary channels worked quite well (got ad-hoc working at 6.1 GHz - in development lab, so no legal problems with that) I do miss the possibility to switch to 10 MHz wide channel operation as it is possible with MadWifi and needed for some 11j modes.
 
-Are there any hints how this might be possible to enable? I can provide analysis of the systems running with MadWifi and 10 MHz channels if needed - just direct me to the right tools ;-)
-
-Thanks in advance for any help!
-
-Richard
+-- 
+Greetings Michael.
