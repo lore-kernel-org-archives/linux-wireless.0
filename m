@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout03-winn.ispmail.ntl.com ([81.103.221.33]:11601 "EHLO
-	queueout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754202AbYEDTvI (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13926 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758334AbYEAVbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 15:51:08 -0400
-Message-ID: <481E11B5.4070100@ntlworld.com> (sfid-20080504_215033_665356_907D55E0)
-Date: Sun, 04 May 2008 20:42:45 +0100
-From: ael <law_ence.dev@ntlworld.com>
-Reply-To: law_ence.dev@ntlworld.com
+	Thu, 1 May 2008 17:31:05 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: reduce command retry time
+Date: Thu, 1 May 2008 23:30:57 +0200
+Cc: David Woodhouse <dwmw2@redhat.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200804301644.29927.hs4233@mail.mn-solutions.de> <1209587692.16194.22.camel@localhost.localdomain> <1209588196.25560.443.camel@pmac.infradead.org>
+In-Reply-To: <1209588196.25560.443.camel@pmac.infradead.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: iw: NL80211_IFTYPE_MESH_POINT not defined
-References: <fvksqp$blq$1@ger.gmane.org>	 (sfid-20080504_194934_131530_1EA0F365) <1209923734.3655.4.camel@johannes.berg>
-In-Reply-To: <1209923734.3655.4.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805012330.57750.hs4233@mail.mn-solutions.de> (sfid-20080501_233049_432049_83A2CCFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->> interface.c: In function 'get_if_type':
->> interface.c:50: error: 'NL80211_IFTYPE_MESH_POINT' undeclared (first use
->> in this function)
->>
->> I guess that this should be defined in /usr/include/linux/nl80211.h but
->> it is not present there nor in nl80211.h in kernel 2.6.25.1 which I have
->> installed.
-> 
-> You'll need the header from the wireless-testing git tree, if you really
-> want iw.
-> 
->> I am just trying to get a usb-wifi device running with 2.6.25.x where
->> the driver has moved to mac80211. iwconfig appears to work no longer and
->> I found documentation to the effect that iw was required instead. Hence
->> my attempts to compile it.
-> 
-> iwconfig will definitely work, in fact, iw right now has totally
-> orthogonal functionality.
+> I think I've seen it take a few of the 5-second timeouts.
 
-Thanks very much for the reply. I conclude then that the problems that I
-am having are more likely to be with the driver (zd1211rw) or some
-configuration that needs changing to match the new version. I will
-investigate further and probably report to the zd1211 list if that is
-really the problem.
+Do you you know for which commands this has been?
 
-A Lawrence
+
+> I wouldn't like to decrease the maximum so drastically.
+
+How far would you go?
+
+Or: maybe there is another way to make "pccardctl eject"
+work reasonably fast in the case of a retrying command. Any
+idea?
+
+BTW, it's easy to force this kind of error, in cmdresp.c:
+
+if (resp->seqnum==5) {
+   lbs_deb_cmd("forced FAIL\n");
+   spin_unlock_irqrestore(&priv->driver_lock, flags);
+   ret = -1;
+   goto out;
+}
+
+
+> Also, that del_timer_sync() happens in the module unload path, doesn't
+> it? I'd want to see why you think it isn't needed.
+
+I thought that del_timer_sync() waits until the timer has been executed? If yes, then that's the wrong thing here, I want to unload quickly. Makes no sense to wait till the command_timer finally fires and re-sends the failed command.
