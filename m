@@ -1,101 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45731 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751684AbYENXbA (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:52901 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753467AbYEALDF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:31:00 -0400
-Message-Id: <200805142330.m4ENUb2F027287@imap1.linux-foundation.org> (sfid-20080515_013104_494980_58D858C5)
-Subject: [patch for 2.6.26? 1/1] hostap: procfs fix for hostap_fw.c
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	mchouque@free.fr, jkmaline@cc.hut.fi
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:30:37 -0700
+	Thu, 1 May 2008 07:03:05 -0400
+Date: Thu, 1 May 2008 19:02:53 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+Message-ID: <20080501110253.GC7490@gondor.apana.org.au> (sfid-20080501_130253_478151_86734B02)
+References: <20080501.024320.212547875.davem@davemloft.net> <E1JrW9h-0001tI-00@gondolin.me.apana.org.au> <20080501.034950.261408566.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mathieu Chouquet-Stringer <mchouque@free.fr>
+On Thu, May 01, 2008 at 03:49:50AM -0700, David Miller wrote:
+>
+> Once that is cured, I think we can detect this better, by adding a
+> carefully constructed assertion to pskb_expand_head().  Basically, the
+> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
+> still attached to the SKB, print a warning message.
+> 
+> Something like:
+> 
+> diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+> index 4fe605f..9bfca08 100644
+> --- a/net/core/skbuff.c
+> +++ b/net/core/skbuff.c
+> @@ -699,6 +699,12 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
+>  	if (skb_shared(skb))
+>  		BUG();
+>  
+> +	if (unlikely((nhead || ntail) && skb->sk)) {
+> +		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
+> +		       "with socket attached\n",
+> +		       nhead, ntail);
+> +	}
 
-I've been toying with hostap_pci and found a bug that is triggered when you
-unload/reload the module.
+This could actually work :) I was worried about tunnelling doing
+a genuine expansion on such a packet but it turns that it does a
+skb_clone first.  So perhaps we should just require that if a
+packet is to be expanded while attached to a socket then it must
+be cloned first.
 
-If you don't have PRISM2_NO_PROCFS_DEBUG defined (which is the default, as per
-hostap_config.h), the driver creates a "registers" file in /proc used to dump
-PRISM registers (function prism2_init_local_data):
-
-#ifndef PRISM2_NO_PROCFS_DEBUG
-        create_proc_read_entry("registers", 0, local->proc,
-                               prism2_registers_proc_read, local);
-#endif /* PRISM2_NO_PROCFS_DEBUG */
-
-Note that create_proc_read_entry is being called with local->proc which isn't
-defined at the time: "registers" ends up being created as /proc/registers.
-
-When hostap_pci is done initializing the hardware, it calls hostap_hw_ready
-which in turns creates all the files in /proc through hostap_init_proc
-(hostap_proc.c):
-
-        local->proc = NULL;
-
-        if (hostap_proc == NULL) {
-                printk(KERN_WARNING "%s: hostap proc directory not created\n",
-                       local->dev->name);
-                return;
-        }
-
-        local->proc = proc_mkdir(local->ddev->name, hostap_proc);
-
-So far so good, well sort of...  When you unload the module,
-prism2_free_local_data does this:
-
-#ifndef PRISM2_NO_PROCFS_DEBUG
-        if (local->proc != NULL)
-                remove_proc_entry("registers", local->proc);
-#endif /* PRISM2_NO_PROCFS_DEBUG */
-        hostap_remove_proc(local);
-
-Problem is local->proc has now been overwritten by hostap_init_proc meaning
-"registers" isn't removed.  When you reload the module you get an error
-telling you "registers" already exists (and you then get duplicate "registers"
-files in /proc).
-
-So in a nutshell "registers" should be created after calling hostap_init_proc
-(this way it'll be created where it belongs - /proc/net/hostap/%s) making it
-removable at module unload.
-
-Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
-Cc: Jouni Malinen <jkmaline@cc.hut.fi>
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/net/wireless/hostap/hostap_hw.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
-diff -puN drivers/net/wireless/hostap/hostap_hw.c~hostap-procfs-fix-for-hostap_fwc drivers/net/wireless/hostap/hostap_hw.c
---- a/drivers/net/wireless/hostap/hostap_hw.c~hostap-procfs-fix-for-hostap_fwc
-+++ a/drivers/net/wireless/hostap/hostap_hw.c
-@@ -3276,11 +3276,6 @@ while (0)
- 	}
- 	printk(KERN_INFO "%s: Registered netdevice %s\n", dev_info, dev->name);
- 
--#ifndef PRISM2_NO_PROCFS_DEBUG
--	create_proc_read_entry("registers", 0, local->proc,
--			       prism2_registers_proc_read, local);
--#endif /* PRISM2_NO_PROCFS_DEBUG */
--
- 	hostap_init_data(local);
- 	return dev;
- 
-@@ -3307,6 +3302,10 @@ static int hostap_hw_ready(struct net_de
- 			netif_carrier_off(local->ddev);
- 		}
- 		hostap_init_proc(local);
-+#ifndef PRISM2_NO_PROCFS_DEBUG
-+		create_proc_read_entry("registers", 0, local->proc,
-+				prism2_registers_proc_read, local);
-+#endif /* PRISM2_NO_PROCFS_DEBUG */
- 		hostap_init_ap_proc(local);
- 		return 0;
- 	}
-_
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
