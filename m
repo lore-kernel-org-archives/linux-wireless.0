@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3679 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752015AbYE3P6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 11:58:43 -0400
-Date: Fri, 30 May 2008 11:41:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH, take 2] libertas: unify various CF-related defines
-Message-ID: <20080530154113.GB9490@tuxdriver.com> (sfid-20080530_175847_420388_A789B42C)
-References: <200805261250.50363.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805261250.50363.hs4233@mail.mn-solutions.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:56180 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752224AbYEBHBg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2008 03:01:36 -0400
+Date: Thu, 1 May 2008 02:00:55 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Message-ID: <20080501020055.4ebb6393@infradead.org> (sfid-20080502_090119_625830_B0337B74)
+In-Reply-To: <200805011638.15910.mb@bu3sch.de>
+References: <200805011638.15910.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 12:50:50PM +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Thu, 1 May 2008 16:38:15 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-git says:
+> This patchset adds API and one user for a "weak" dma_set_mask().
+> Weak means that it will fallback to smaller masks in case the
+> DMA subsystem rejects a big mask.
+> Currently such rejection may happen if the driver requests a 64bit
+> mask on a VIA machine, for example. dma_set_mask_weak() will fallback
+> to 32bit, in that case, and tell the caller about it by modifying the
+> passed mask.
 
-Applying libertas: don't spin_unlock_irq() twice
-Applying libertas: speeds up downloading of CF firmware
-Applying libertas: use lbs_pr_XX instead of printk
-Applying libertas: before sleeping, check for a command result
-Applying libertas: unify various CF-related defines
-error: patch failed: drivers/net/wireless/libertas/if_cs.c:221
-error: drivers/net/wireless/libertas/if_cs.c: patch does not apply
-
-patch says:
-
-/home/linville/git/wireless-testing
-[linville-t43.local]:> patch -p1 < tmp.mbox
-patching file drivers/net/wireless/libertas/if_cs.c
-Hunk #2 succeeded at 360 with fuzz 1 (offset 155 lines).
-Hunk #3 FAILED at 383.
-Hunk #4 FAILED at 393.
-Hunk #5 FAILED at 426.
-Hunk #6 FAILED at 450.
-Hunk #7 FAILED at 496.
-Hunk #8 FAILED at 511.
-Hunk #9 FAILED at 533.
-Hunk #10 FAILED at 546.
-Hunk #11 FAILED at 557.
-Hunk #12 FAILED at 580.
-Hunk #13 succeeded at 344 (offset -152 lines).
-Hunk #14 succeeded at 712 (offset 155 lines).
-Hunk #15 succeeded at 431 (offset -152 lines).
-Hunk #16 succeeded at 975 (offset 155 lines).
-10 out of 16 hunks FAILED -- saving rejects to file drivers/net/wireless/libertas/if_cs.c.rej
-
-It looks like a lot of fiddly changes that I (and probably everyone
-else) would rather get fixed-up by someone closer to the driver.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+can we just make the existing API do this instead?
