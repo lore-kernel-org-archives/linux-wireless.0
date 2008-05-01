@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.187]:16183 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbYEUTGO (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:57698 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757376AbYEAPmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 15:06:14 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so879421gvc.37
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 12:06:08 -0700 (PDT)
-Message-ID: <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com> (sfid-20080521_210619_004993_6A6CAA13)
-Date: Wed, 21 May 2008 11:59:48 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	carrano@laptop.org, dilinger@queued.net
-In-Reply-To: <1211292718.21380.238.camel@pmac.infradead.org>
+	Thu, 1 May 2008 11:42:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Date: Thu, 1 May 2008 17:42:04 +0200
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <200805011638.15910.mb@bu3sch.de> <20080501153618.GA470@infradead.org>
+In-Reply-To: <20080501153618.GA470@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4832422a.20018e0a.6b37.3217@mx.google.com>
-	 <1211292718.21380.238.camel@pmac.infradead.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805011742.05302.mb@bu3sch.de> (sfid-20080501_174239_381109_C2F3F592)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David,
+On Thursday 01 May 2008 17:36:18 Christoph Hellwig wrote:
+> On Thu, May 01, 2008 at 04:38:15PM +0200, Michael Buesch wrote:
+> > This patchset adds API and one user for a "weak" dma_set_mask().
+> > Weak means that it will fallback to smaller masks in case the
+> > DMA subsystem rejects a big mask.
+> > Currently such rejection may happen if the driver requests a 64bit
+> > mask on a VIA machine, for example. dma_set_mask_weak() will fallback
+> > to 32bit, in that case, and tell the caller about it by modifying the
+> > passed mask.
+> 
+> Why do we need it?  Is the call to set the 32bit mask when it fails
+> a too big burden for the driver author?
 
-On Tue, May 20, 2008 at 7:11 AM, David Woodhouse <dwmw2@infradead.org> wrote:
-> On Sat, 2008-05-17 at 21:01 -0700, Javier Cardona wrote:
->> +     /* A too small boot time will result in the device booting into
->> +      * standalone (no-host) mode before the host can take control of it,
->> +      * so the change will be hard to revert.  This may be a desired
->> +      * feature (e.g to configure a very fast boot time for devices that
->> +      * will not be attached to a host), but dangerous.  So I'm enforcing a
->> +      * lower limit of 20 seconds:  remove and recompile the driver if this
->> +      * does not work for you.
->> +      */
->> +     datum = (datum < 20) ? 20 : datum;
->
-> Hm. The driver should be able to cope with a device which is already
-> booted -- it sends it a reset command and then initialises it. I don't
-> think we have to be so paranoid, do we? If there's a lower limit on the
-> boottime, it would be the time it takes for an already-active driver to
-> react when the device resets. Which is much less than 20 seconds.
-
-If the boottime is set smaller than the host boot time, the device
-will transition into standalone mode before it is detected by the
-host.  The only recovery when that happens is to either reset the
-device via an external reset line or to re-insert it.  That lower
-boundary was just intended to avoid support issues of users seeing
-their devices disappear after a reboot.
-
-Javier
-
+Yeah. because it has to be done in every driver.
+So we put the implementation into a central place, instead of
+reimplementing the wheel over and over again. This way we avoid bugs,
+like the "b43 broken on VIA boards" in the first place.
+Currently every driver requesting a >32bit mask and not retrying with
+a lower mask is broken on VIA hardware. I dunno how many of the current
+drivers that are, but everybody can easily see that is not a b43-specific
+problem that we should solve for b43 only.
 
 -- 
-Javier Cardona
-cozybit Inc.
+Greetings Michael.
