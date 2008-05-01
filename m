@@ -1,60 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41783 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754172AbYEECYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Yi Zhu <yi.zhu@intel.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 11/25] iwlwifi: Fix built-in compilation of iwlcore (part 2)
-Date: Mon,  5 May 2008 10:22:38 +0800
-Message-Id: <1209954172-3092-12-git-send-email-yi.zhu@intel.com> (sfid-20080505_044417_696182_9B5D181D)
-In-Reply-To: <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:51334 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756424AbYEALjV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 07:39:21 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
+References: <20080501.024320.212547875.davem@davemloft.net>
+	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+	 <20080501.034950.261408566.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wDIw3NS3dGv42rxbB5ci"
+Date: Thu, 01 May 2008 13:38:33 +0200
+Message-Id: <1209641914.3904.0.camel@johannes.berg> (sfid-20080501_133908_152591_239C8338)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yi Zhu <yi.zhu@intel.com>
 
-On Wed, 2008-04-23 at 13:38 +0300, Tomas Winkler wrote:
-> This patch fixes problem in Makefile that prevented
-> built-in compilation of iwlcore
+--=-wDIw3NS3dGv42rxbB5ci
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Here is the second part. Without this,
-drivers/net/wireless/iwlwifi/build-in.o will not be linked into
-vmlinux.
 
-Signed-off-by: Yi Zhu <yi.zhu@intel.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/wireless/Makefile |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> That makes more sense, good catch Herbert.
+>=20
+> I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
+> I suspect we'll need to orphan early in order to accomodate these
+> adjustments, otherwise socket memory buffer allocations will
+> be corrupted.
+>=20
+> Once that is cured, I think we can detect this better, by adding a
+> carefully constructed assertion to pskb_expand_head().  Basically, the
+> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
+> still attached to the SKB, print a warning message.
+>=20
+> Something like:
+>=20
+> diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+> index 4fe605f..9bfca08 100644
+> --- a/net/core/skbuff.c
+> +++ b/net/core/skbuff.c
+> @@ -699,6 +699,12 @@ int pskb_expand_head(struct sk_buff *skb, int nhead,=
+ int ntail,
+>  	if (skb_shared(skb))
+>  		BUG();
+> =20
+> +	if (unlikely((nhead || ntail) && skb->sk)) {
+> +		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
+> +		       "with socket attached\n",
+> +		       nhead, ntail);
+> +	}
+> +
+>  	size =3D SKB_DATA_ALIGN(size);
 
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 300fc68..41eb08e 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -58,8 +58,7 @@ obj-$(CONFIG_RTL8187)	+= rtl8187.o
- 
- obj-$(CONFIG_ADM8211)	+= adm8211.o
- 
--obj-$(CONFIG_IWL3945)	+= iwlwifi/
--obj-$(CONFIG_IWL4965)	+= iwlwifi/
-+obj-$(CONFIG_IWLCORE)	+= iwlwifi/
- obj-$(CONFIG_RT2X00)	+= rt2x00/
- 
- obj-$(CONFIG_P54_COMMON)	+= p54/
--- 
-1.5.3.6
+Ok I think I'm starting to understand this a little better. However,
+shouldn't this function update skb->truesize so if the skb is later
+attached to a different socket again it has the right size?
+
+johannes
+
+--=-wDIw3NS3dGv42rxbB5ci
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBmruKVg1VMiehFYAQIzlw//WgVpTDMA4vCcbfucAH2Wi8H3jQnSZJUR
+8M3PCwdyigHkKofzLV7kg8N5fG6gkSdzNyYFj8PbFlWI6Ab8i3SUcaffBTUzcSAG
+TOemBWdKETeXoeEICQzGIj8rye3oG6nowwKCxohjsrHmcrXv1ETux8bqo1nZWACz
+KzXDGQqWUNFw/Z6gPPDWN5TZAdehDkQOtx38pC7OwuQlGEkQH3JkJjyWRUwWNur5
+Rukx/KpgsUiIcncRJGxDFHwWu9awg9e3qw5IaTDu6jxA4idcaWXm5FAeXsPMtw2U
+re/Zkdm6pxlRialE/ztMrFkces5ZVqdMMYre8/fAVB6gftmwc9XHNUnsppGiLpkl
+VLyWoZmiL8cLC8YzS3o6FdaI/jUPTzM0YpvZVCsa/zCYur0KDIkqHRo8xsBWuOFg
+kTN+iIbc59KlXojW/Nc6HrCPJkagSkIY3/CvrsOZ/ibpgyO0ED5KDVV04+8klmAd
+WQrFuj587o7apddyosqb4pRPsS31U3rCYkJr29xX+p5kZ2+uhXWqil3hm0Y+j+Ov
+ZZUHgPCy/7aVbI5Owbl6PkShk69WlD1qIFL+lj1+jG4v2pRGHrSrkrQa48GG2Bif
+Vw8ps3RSbyzhQdKSlj6DrGNYwkczjsESorlK+4X5fGGwtshut6qV3jOxOA7K9ADP
+/27SnmcTmAA=
+=0gg5
+-----END PGP SIGNATURE-----
+
+--=-wDIw3NS3dGv42rxbB5ci--
 
