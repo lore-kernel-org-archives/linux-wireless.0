@@ -1,91 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35377 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762064AbYESPr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 11:47:59 -0400
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-From: Dan Williams <dcbw@redhat.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Sebastian Siewior <liber+tas@ml.breakpoint.cc>
-In-Reply-To: <1211211122.21380.167.camel@pmac.infradead.org>
-References: <1211211122.21380.167.camel@pmac.infradead.org>
-Content-Type: text/plain
-Date: Mon, 19 May 2008 11:47:50 -0400
-Message-Id: <1211212070.12187.8.camel@localhost.localdomain> (sfid-20080519_174814_484120_C5C8591E)
-Mime-Version: 1.0
+Received: from rhun.apana.org.au ([64.62.148.172]:52908 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754825AbYEALDy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 07:03:54 -0400
+Date: Thu, 1 May 2008 19:03:41 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+Message-ID: <20080501110341.GD7490@gondor.apana.org.au> (sfid-20080501_130340_686681_C9F2BD03)
+References: <20080501.024320.212547875.davem@davemloft.net> <E1JrW9h-0001tI-00@gondolin.me.apana.org.au> <20080501.034950.261408566.davem@davemloft.net> <20080501.035335.216935614.davem@davemloft.net> <1209639500.7067.0.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1209639500.7067.0.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-05-19 at 16:32 +0100, David Woodhouse wrote:
-> Fix various problems:
->  - We converted MESH_ACCESS to a direct command but missed this caller.
->  - We were trying to access mesh stats even on meshless firmware.
->  - We should really zero the buffer if something goes wrong.
-> 
-> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+On Thu, May 01, 2008 at 12:58:20PM +0200, Johannes Berg wrote:
+>
+> Indeed. But then why did we never see this bug w/o monitor interfaces
+> and this reinjection?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+The debugging only catches it if the expanded area actually
+gets used, e.g., by skb_push.
 
-> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-> index dcfdb40..688d60d 100644
-> --- a/drivers/net/wireless/libertas/ethtool.c
-> +++ b/drivers/net/wireless/libertas/ethtool.c
-> @@ -73,8 +73,8 @@ out:
->          return ret;
->  }
->  
-> -static void lbs_ethtool_get_stats(struct net_device * dev,
-> -				struct ethtool_stats * stats, u64 * data)
-> +static void lbs_ethtool_get_stats(struct net_device *dev,
-> +				  struct ethtool_stats *stats, uint64_t *data)
->  {
->  	struct lbs_private *priv = dev->priv;
->  	struct cmd_ds_mesh_access mesh_access;
-> @@ -83,12 +83,12 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
->  	lbs_deb_enter(LBS_DEB_ETHTOOL);
->  
->  	/* Get Mesh Statistics */
-> -	ret = lbs_prepare_and_send_command(priv,
-> -			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
-> -			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
-> +	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
->  
-> -	if (ret)
-> +	if (ret) {
-> +		memset(data, 0, MESH_STATS_NUM*(sizeof(uint64_t)));
->  		return;
-> +	}
->  
->  	priv->mstats.fwd_drop_rbt = le32_to_cpu(mesh_access.data[0]);
->  	priv->mstats.fwd_drop_ttl = le32_to_cpu(mesh_access.data[1]);
-> @@ -111,19 +111,18 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
->  	lbs_deb_enter(LBS_DEB_ETHTOOL);
->  }
->  
-> -static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
-> +static int lbs_ethtool_get_sset_count(struct net_device *dev, int sset)
->  {
-> -	switch (sset) {
-> -	case ETH_SS_STATS:
-> +	struct lbs_private *priv = dev->priv;
-> +
-> +	if (sset == ETH_SS_STATS && dev == priv->mesh_dev)
->  		return MESH_STATS_NUM;
-> -	default:
-> -		return -EOPNOTSUPP;
-> -	}
-> +
-> +	return -EOPNOTSUPP;
->  }
->  
->  static void lbs_ethtool_get_strings(struct net_device *dev,
-> -					  u32 stringset,
-> -					  u8 * s)
-> +				    uint32_t stringset, uint8_t *s)
->  {
->  	int i;
->  
-> 
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
