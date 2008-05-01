@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58905 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49121 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760251AbYEXSIR (ORCPT
+	with ESMTP id S1752353AbYEACD1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2008 14:08:17 -0400
-Subject: [PATCH] b43legacy: fix build errors when DMA or PIO are not
-	selected
+	Wed, 30 Apr 2008 22:03:27 -0400
+Subject: mac80211 truesize bugs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <rdunlap@xenotime.net>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-next@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080523102811.1dfc50df.rdunlap@xenotime.net> (sfid-20080523_192821_931342_75EA810D)
-References: <20080523102811.1dfc50df.rdunlap@xenotime.net>
-	 (sfid-20080523_192821_931342_75EA810D)
-Content-Type: text/plain
-Date: Sat, 24 May 2008 20:07:55 +0200
-Message-Id: <1211652475.18247.4.camel@johannes.berg> (sfid-20080524_200821_225063_D9B82F33)
+To: netdev <netdev@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Dpc07RSskzhXXMFJW4Ta"
+Date: Thu, 01 May 2008 04:02:48 +0200
+Message-Id: <1209607368.7173.20.camel@johannes.berg> (sfid-20080501_040316_946673_DB8C2769)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, b43legacy is broken due to
 
-commit fbad4598ca826b994d0fd4ce3deebc9cd1960b31
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu May 15 12:55:29 2008 +0200
+--=-Dpc07RSskzhXXMFJW4Ta
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-    mac80211: move TX info into skb->cb
+Hi,
 
-when compiled with only PIO or only DMA because I forgot to update two
-stubs. This patch fixes it.
+Whenever you run a monitor interface in mac80211, you can see lots of
+truesize bugs:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43legacy/dma.h |    3 +--
- drivers/net/wireless/b43legacy/pio.h |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+SKB BUG: Invalid truesize (464) len=3D307, sizeof(sk_buff)=3D176
 
---- everything.orig/drivers/net/wireless/b43legacy/dma.h	2008-05-24 20:01:48.000000000 +0200
-+++ everything/drivers/net/wireless/b43legacy/dma.h	2008-05-24 20:01:55.000000000 +0200
-@@ -321,8 +321,7 @@ void b43legacy_dma_get_tx_stats(struct b
- }
- static inline
- int b43legacy_dma_tx(struct b43legacy_wldev *dev,
--		     struct sk_buff *skb,
--		     struct ieee80211_tx_control *ctl)
-+		     struct sk_buff *skb)
- {
- 	return 0;
- }
---- everything.orig/drivers/net/wireless/b43legacy/pio.h	2008-05-24 20:02:05.000000000 +0200
-+++ everything/drivers/net/wireless/b43legacy/pio.h	2008-05-24 20:02:12.000000000 +0200
-@@ -130,8 +130,7 @@ void b43legacy_pio_free(struct b43legacy
- }
- static inline
- int b43legacy_pio_tx(struct b43legacy_wldev *dev,
--		   struct sk_buff *skb,
--		   struct ieee80211_tx_control *ctl)
-+		   struct sk_buff *skb)
- {
- 	return 0;
- }
+It appears to be caused by mac80211's re-injection of the transmitted
+frame. For those not familiar, here's what happens:
 
+When a frame comes in on say wlan0's hard_start_xmit(), it is prepared
+for transmission by the code there (802.11 headers added etc.) and then
+scheduled to the master interface. Once it arrives on the master
+(wmaster0) interface's hard_start_xmit(), it is modified again and
+finally handed to the driver.
+
+When the driver has transmitted the frame (successfully or not) it
+reports the status of the transmission to mac80211 including the skb the
+driver was given. At that point, things go different depending on
+circumstances.
+
+If no monitor interfaces are present, mac80211 simply orphans the skb
+and destroys it. If there are monitor interfaces, it pushes some data
+into the skb (the radiotap transmit status) and hands clones of the skb
+to netif_rx() for each monitor interface, or the skb itself for the last
+interface in the list.
+
+All this is in net/mac80211/main.c:ieee80211_tx_status.
+
+Now, the thing is that the skb truesize bug ONLY occurs when the last
+part here is done when a radiotap monitor interface is present, if you
+add
+
+	dev_kfree_skb(skb);
+	return;
+
+in that function somewhere before the skb_orphan() call it never
+happens. Hence, I'm confused. Since I only have a single monitor
+interface when this happens, it can't be due to af_packet either,
+afaict.
+
+Can anyone help me diagnose this?
+
+johannes
+
+--=-Dpc07RSskzhXXMFJW4Ta
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBkkxqVg1VMiehFYAQIGaxAAt9J6H/MUKjLU+yt9gg7/s9BKvsBm5X26
+H2x8LbxOW5Sj0isvtslWIav3Z5+mnXsXOpN7jgEGm3s+W+pc0++sLWcCaj4Nsett
+NxwVMKIVNXmEFFuvGUpFv5BhXwlC1BAlt7Pw7z/w497uqrY8gaHnqvWTigGl6oE0
+RomflSf7S8VsLhZlcO5fM2HbXapb0FYq8/JFnfTaxbQHSn3KAQpec7a3J43LWMHj
+m2SpmObgaIRfM1stbEKPYqLC7jD/+5ijAu88CFAd8wkcGIcFHZqEvImazxomO7SD
+6UxXjg8xxTVIYtLoVENWg/dwYnZv7uo18NvODarYCkOsl96yVMAzGXQ5cNGqL8fL
+VVNHmA6WuFCVfcPlV234feNgVc/BnmFOzg9COzlpEGzADukFBftV/iW1MfqAZzui
+8nmQRQMf31JteTql1NL5feUsDQs85HUsJPenL9HlL8c+IrcubyKAbERbpS5whvME
+LVknwt6VeCxI9L7W/FndAP6zZNnR2sJiaUT5FxGhZ0GXmKgrHsDJoEe/J+7rBkEH
+NTqDh8tFYfyqH5Bk5fkCjqu0vs8zNXkiV8F4jBbq34DWKskqjiCMyy6eLY40BKfZ
+YUjgYpVSoyphjBXuMseKBKBAHvYTSMyRBhnOTHZbB5Jrtdnxb8PbJ/088+cpFgyr
+beX/00QJ9jU=
+=a4Qa
+-----END PGP SIGNATURE-----
+
+--=-Dpc07RSskzhXXMFJW4Ta--
 
