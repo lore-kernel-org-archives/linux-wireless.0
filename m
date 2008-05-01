@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.infocity.de ([80.64.180.66]:55350 "EHLO mail2.ccgmbh.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670AbYE1WGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 18:06:52 -0400
-Received: from [192.168.111.106] (i577B65C0.versanet.de [87.123.101.192])
-	by mail2.ccgmbh.net (Postfix) with ESMTP id 4AE66B3AA4
-	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 23:52:40 +0200 (CEST)
-From: Waldemar Krzok <waldemar@krzok.de>
-To: linux-wireless@vger.kernel.org
-Subject: bug(?) compat_wireless
-Date: Wed, 28 May 2008 23:51:44 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805282351.44721.waldemar@krzok.de> (sfid-20080529_000656_200808_7357789B)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47793
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752563AbYEAKtv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 06:49:51 -0400
+Date: Thu, 01 May 2008 03:49:50 -0700 (PDT)
+Message-Id: <20080501.034950.261408566.davem@davemloft.net> (sfid-20080501_124938_126820_FC621617)
+To: herbert@gondor.apana.org.au
+Cc: johannes@sipsolutions.net, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+References: <20080501.024320.212547875.davem@davemloft.net>
+	<E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks,
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Thu, 01 May 2008 18:36:49 +0800
 
-I tried to install the newest compat_wireless driver for ZyDAS wifi adapter 
-(buit-in USB wifi module) but without success. After downloading and 
-unpacking the distribution 'make' terminated with error in file 
-rtl8180_dev.c:249: "implicit declaration of function skb_get_queue_mapping". 
-There is no declaration of this function neither in this file nor in the 
-includes. Any hints?
+> David Miller <davem@davemloft.net> wrote:
+> > +       /* This is safe because the buffer has been orphaned.  */
+> > +       skb->truesize += sizeof(*rthdr);
+> 
+> skb->truesize should always account the skb->head area in its
+> entirety so we should never need to adjust it when pushing or
+> pulling.  So I suggest we find the place that expanded the head
+> area and make the adjustment there.  Alternative we could adjust
+> it right after the orphan call if the expansion occurs where we
+> can't adjust the truesize.
 
-My config: Medion Laptop, Linux Suse 10.3 distribution,  kernel 
-2.6.22.5-31-default
+That makes more sense, good catch Herbert.
 
-many thanks for your fb work && greetings from Berlin
+I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
+I suspect we'll need to orphan early in order to accomodate these
+adjustments, otherwise socket memory buffer allocations will
+be corrupted.
 
-Waldemar
+Once that is cured, I think we can detect this better, by adding a
+carefully constructed assertion to pskb_expand_head().  Basically, the
+idea is, if "nhead" or "ntail" are non-zero, and there is a socket
+still attached to the SKB, print a warning message.
+
+Something like:
+
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index 4fe605f..9bfca08 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -699,6 +699,12 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
+ 	if (skb_shared(skb))
+ 		BUG();
+ 
++	if (unlikely((nhead || ntail) && skb->sk)) {
++		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
++		       "with socket attached\n",
++		       nhead, ntail);
++	}
++
+ 	size = SKB_DATA_ALIGN(size);
+ 
+ 	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
+
