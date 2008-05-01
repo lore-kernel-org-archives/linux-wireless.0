@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:49110 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbYEDHBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 03:01:49 -0400
-Message-ID: <481D5D79.5080702@openvz.org> (sfid-20080504_090138_061807_460CEEB6)
-Date: Sun, 04 May 2008 10:53:45 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:38129 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbYEAP6o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 11:58:44 -0400
+Date: Thu, 1 May 2008 11:58:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Message-ID: <20080501155826.GA11188@infradead.org> (sfid-20080501_175829_698905_10B790DE)
+References: <200805011638.15910.mb@bu3sch.de> <200805011742.05302.mb@bu3sch.de> <20080501154358.GA3318@infradead.org> <200805011747.27469.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: [PATCH][MAC80211]: Do not free net device after it is unregistered.
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200805011747.27469.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The error path in ieee80211_register_hw() may call the unregister_netdev()
-and right after it - the free_netdev(), which is wrong, since the
-unregister releases the device itself.
+On Thu, May 01, 2008 at 05:47:26PM +0200, Michael Buesch wrote:
+> We've discussed that and this behaviour is not acceptable, as the driver
+> must know about a possible fallback in case it can do 32bit DMA
+> more efficiently than 64bit DMA, for example.
 
-So the proposed fix is to NULL the local->mdev after unregister is done
-and check this before calling free_netdev().
-
-I checked - no code uses the local->mdev after unregister in this error
-path (but even if some did this would be a BUG).
-
-Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
-
----
- net/mac80211/main.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 9ad4e36..915afad 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1766,6 +1766,7 @@ fail_wep:
- fail_rate:
- 	ieee80211_debugfs_remove_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
- 	unregister_netdevice(local->mdev);
-+	local->mdev = NULL;
- fail_dev:
- 	rtnl_unlock();
- 	sta_info_stop(local);
-@@ -1773,8 +1774,10 @@ fail_sta_info:
- 	debugfs_hw_del(local);
- 	destroy_workqueue(local->hw.workqueue);
- fail_workqueue:
--	ieee80211_if_free(local->mdev);
--	local->mdev = NULL;
-+	if (local->mdev != NULL) {
-+		ieee80211_if_free(local->mdev);
-+		local->mdev = NULL;
-+	}
- fail_mdev_alloc:
- 	wiphy_unregister(local->hw.wiphy);
- 	return result;
--- 
-1.5.3.4
+That's what we have dma_get_required_mask() for.  See
+Documentation/DMA-API.txt.
 
