@@ -1,27 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38604
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755423AbYEAXNe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755939AbYEAMGL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 19:13:34 -0400
-Date: Thu, 01 May 2008 16:13:34 -0700 (PDT)
-Message-Id: <20080501.161334.227855567.davem@davemloft.net> (sfid-20080502_011319_145194_12680648)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-05-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080501221822.GA13489@tuxdriver.com>
-References: <20080501221822.GA13489@tuxdriver.com>
+	Thu, 1 May 2008 08:06:11 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
+References: <20080501.024320.212547875.davem@davemloft.net>
+	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+	 <20080501.034950.261408566.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mSGq/OzWjJoamPSStMpE"
+Date: Thu, 01 May 2008 14:05:24 +0200
+Message-Id: <1209643524.3904.5.camel@johannes.berg> (sfid-20080501_140559_243810_2B8861BE)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 1 May 2008 18:18:22 -0400
 
-> Another quick round of wireless fixes for 2.6.26...let me know if there
-> are problems!
+--=-mSGq/OzWjJoamPSStMpE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Pulled and pushed back out to net-2.6, thanks!
+
+> That makes more sense, good catch Herbert.
+>=20
+> I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
+> I suspect we'll need to orphan early in order to accomodate these
+> adjustments, otherwise socket memory buffer allocations will
+> be corrupted.
+>=20
+> Once that is cured, I think we can detect this better, by adding a
+> carefully constructed assertion to pskb_expand_head().  Basically, the
+> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
+> still attached to the SKB, print a warning message.
+
+I'm confused now. I added this patch:
+
+--- everything.orig/net/core/skbuff.c	2008-05-01 13:21:52.000000000 +0200
++++ everything/net/core/skbuff.c	2008-05-01 13:29:57.000000000 +0200
+@@ -683,6 +683,14 @@ int pskb_expand_head(struct sk_buff *skb
+ 	if (!data)
+ 		goto nodata;
+=20
++	if (unlikely((nhead || ntail) && skb->sk)) {
++		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
++				"with socket attached\n",
++		       nhead, ntail);
++                dump_stack();
++	} else
++		skb->truesize =3D size + sizeof(struct sk_buff);
++
+ 	/* Copy only real data... and, alas, header. This should be
+ 	 * optimized for the cases when header is void. */
+ #ifdef NET_SKBUFF_DATA_USES_OFFSET
+--- everything.orig/net/mac80211/tx.c	2008-05-01 13:01:09.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-05-01 13:16:50.000000000 +0200
+@@ -1279,6 +1279,8 @@ int ieee80211_master_start_xmit(struct s
+ 	int headroom;
+ 	int ret;
+=20
++	skb_orphan(skb);
++
+ 	if (info->flags & IEEE80211_TX_CTL_READY_FOR_TX) {
+ 		/*
+ 		 * We set the IEEE80211_TX_CTL_READY_FOR_TX bit in all skbs
+@@ -1581,6 +1583,7 @@ int ieee80211_subif_start_xmit(struct sk
+ 	 * us broadcast frames. */
+=20
+ 	if (head_need > 0 || skb_cloned(skb)) {
++		skb_orphan(skb);
+ #if 0
+ 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+ 		       "of headroom\n", dev->name, head_need);
+
+
+and the assertion never triggers, however I get a number of bugs like this:
+
+=EF=BB=BFSKB BUG: Invalid truesize (4294963740) len=3D44, sizeof(sk_buff)=
+=3D176, skb=3D0xeecb6620
+
+and definitely cannot explain that number (-3556).
+
+johannes
+
+--=-mSGq/OzWjJoamPSStMpE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBmyA6Vg1VMiehFYAQKLKQ/5ARGbyNzzj/ahajOCL67uiiCv9ppV2OV+
+ZKgPZyouqXI1nYhFFE/IM1xzD24yxLYP0i/YySIx29RWDRPNnQGUy1/Shx9um9T5
+5wriQoku4gFgUenS20lJfc8Sxhfb275pFMfvcdAzCJgPAk1qy8324kFOLs92Oc55
+AH1y3CH/p1y/LlyyckJlme9pdveC8EN5QU1i/fOUhfCRJh7S8h6MafhTa+TX18JD
+hBv5lbNHQbxbCqepwQ1uZwI1FtUMbiuVbuW+3+sNGwsmmU+NYLKxaJRMbDIoQiI4
+WzWaq2tRG+M680wFkBPAFB0HBYseFMW1S4mVEu44G2pDJbIb9RdyeW3tmPmK917T
+X769tSCitMGCie6sYTo5SCt30EVR7c8K8V3ohH1L22ZpwDuhnQFvJhm+S9blK65C
+JkDQZ6byqskQLoz+8uSGtzZlvLQhRd4LOnLs0Yivl10K9A8Xxe147iNbDdyr4nz2
+eyhc3DPARRcyWs+6SP1iX/XJPwxrLJniPy/xAT2YCmnlgntx8AIqcfUdGXzeXQf8
+Mbt55xCD792MZ2O29rRHXi2T7bXDAvfbtCzH40bxpdRwPNQteKOS5Bo5Ml2QJ/19
+53lhVRhzSZLoLRvjD0vqEfFMjXMivA55V/nnpf7bx4P1ouErlBDFJLNGNa9vS9S5
+bcY9JdpNsKA=
+=BBDZ
+-----END PGP SIGNATURE-----
+
+--=-mSGq/OzWjJoamPSStMpE--
+
