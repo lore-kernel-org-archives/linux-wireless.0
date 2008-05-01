@@ -1,79 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:37407 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755535AbYEGP6w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 11:58:52 -0400
-Message-ID: <4821D10F.4020702@openvz.org> (sfid-20080507_175758_956904_3249BC19)
-Date: Wed, 07 May 2008 19:55:59 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
+Received: from vs166246.vserver.de ([62.75.166.246]:51794 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754761AbYEAOpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 10:45:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH 0/3] Add API for weak DMA masks
+Date: Thu, 1 May 2008 16:38:15 +0200
+Cc: Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: [PATCH 6/7][MAC80211]: Merge error paths in mesh_table_grow().
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200805011638.15910.mb@bu3sch.de> (sfid-20080501_164457_457052_1AEB245A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the first (of two) clean ups after the fixes above.
+This patchset adds API and one user for a "weak" dma_set_mask().
+Weak means that it will fallback to smaller masks in case the
+DMA subsystem rejects a big mask.
+Currently such rejection may happen if the driver requests a 64bit
+mask on a VIA machine, for example. dma_set_mask_weak() will fallback
+to 32bit, in that case, and tell the caller about it by modifying the
+passed mask.
 
-The err variable is not even required after this cleaning.
+I'm not sure how we should merge this patchset.
+I'd suggest we merge it all through John Linville for 2.6.27, as the
+only current user of the API is the b43 wireless driver.
+We could split it and push the nonwireless parts to somebody else's tree,
+but I'm not sure it's worth the trouble.
 
-Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
-
----
- net/mac80211/mesh.c |   16 ++++------------
- 1 files changed, 4 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 273f0b6..f46fbdb 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -350,20 +350,15 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
- 	struct mesh_table *newtbl;
- 	struct hlist_head *oldhash;
- 	struct hlist_node *p, *q;
--	int err = 0;
- 	int i;
- 
- 	if (atomic_read(&tbl->entries)
--			< tbl->mean_chain_len * (tbl->hash_mask + 1)) {
--		err = -EPERM;
-+			< tbl->mean_chain_len * (tbl->hash_mask + 1))
- 		goto endgrow;
--	}
- 
- 	newtbl = mesh_table_alloc(tbl->size_order + 1);
--	if (!newtbl) {
--		err = -ENOMEM;
-+	if (!newtbl)
- 		goto endgrow;
--	}
- 
- 	newtbl->free_node = tbl->free_node;
- 	newtbl->mean_chain_len = tbl->mean_chain_len;
-@@ -376,11 +371,7 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
- 			if (tbl->copy_node(p, newtbl) < 0)
- 				goto errcopy;
- 
--endgrow:
--	if (err)
--		return NULL;
--	else
--		return newtbl;
-+	return newtbl;
- 
- errcopy:
- 	for (i = 0; i <= newtbl->hash_mask; i++) {
-@@ -390,6 +381,7 @@ errcopy:
- 	kfree(newtbl->hash_buckets);
- 	kfree(newtbl->hashwlock);
- 	kfree(newtbl);
-+endgrow:
- 	return NULL;
- }
- 
 -- 
-1.5.3.4
-
+Greetings Michael.
