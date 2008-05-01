@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47368
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754349AbYELJLv (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:38816 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbYEARQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 05:11:51 -0400
-Date: Mon, 12 May 2008 02:11:45 -0700 (PDT)
-Message-Id: <20080512.021145.265455571.davem@davemloft.net> (sfid-20080512_111153_740595_BCE08C01)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, IvDoorn@gmail.com
-Subject: Re: [RFT/C 7/7] mac80211: move TX info into skb->cb
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080510221908.875473000@sipsolutions.net>
-References: <20080510221845.340428000@sipsolutions.net>
-	<20080510221908.875473000@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 1 May 2008 13:16:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Date: Thu, 1 May 2008 19:16:06 +0200
+Cc: Christoph Hellwig <hch@infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <200805011638.15910.mb@bu3sch.de> <200805011807.26036.mb@bu3sch.de> <200805010930.04799.jbarnes@virtuousgeek.org>
+In-Reply-To: <200805010930.04799.jbarnes@virtuousgeek.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805011916.07340.mb@bu3sch.de> (sfid-20080501_191628_328410_0C3FDFC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sun, 11 May 2008 00:18:52 +0200
-
-> This patch converts mac80211 and all drivers to have transmit
-> information and status in skb->cb rather than allocating extra
-> memory for it and copying all the data around. To make it fit,
-> a union is used where only data that is necessary for all steps
-> is kept outside of the union.
+On Thursday 01 May 2008 18:30:04 Jesse Barnes wrote:
+> On Thursday, May 01, 2008 9:07 am Michael Buesch wrote:
+> > On Thursday 01 May 2008 17:58:26 Christoph Hellwig wrote:
+> > > On Thu, May 01, 2008 at 05:47:26PM +0200, Michael Buesch wrote:
+> > > > We've discussed that and this behaviour is not acceptable, as the
+> > > > driver must know about a possible fallback in case it can do 32bit DMA
+> > > > more efficiently than 64bit DMA, for example.
+> > >
+> > > That's what we have dma_get_required_mask() for.  See
+> > > Documentation/DMA-API.txt.
+> >
+> > So well. I'm still unsure about the advantage of having some opencoded
+> > probe loop in the driver, instead of implementing it in a common place
+> > and doing all of it with a single API call.
+> > We can still call dma_get_required_mask() and adjust the mask to that
+> > in dma_set_mask_weak(). That can _additionally_ be done there.
 > 
-> A number of fixes were done by Ivo, as well as the rt2x00 part
-> of this patch.
-> 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> So I think we're agreed that we want some core function to fall back to 
+> different mask values, but yeah, making it take dma_get_required_mask into 
+> account would also be good.
 
-Please create an IEEE80211_SKB_CB() or similar macro to wrap
-these casts around with, like all other SKB CB users do.
+Ok, will redo the patches with that added and the name changed.
 
-Otherwise:
+> Most drivers just do the fallback themselves, right?
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Right.
+
+> So it makes sense to  
+> just update the current code to fallback, and update drivers wanting specific 
+> mask values to check afterwards.  I hate to inflict that kind of driver wide 
+> update on Michael though... :)
+
+Well, that's a lot of work and I'm not sure it's worth it.
+I could live with having dma_set_mask as an API that fails on bad masks
+and dma_request_mask as an API above that which retries. I think that's
+just fine. Drivers can be migrated over time to the new API (or not. That
+can be the driver maintainer's choice).
+
+-- 
+Greetings Michael.
