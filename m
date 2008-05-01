@@ -1,90 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:11110 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487AbYEaOX6 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43732 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756AbYEAKpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 10:23:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so239315wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 07:23:58 -0700 (PDT)
-Message-ID: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> (sfid-20080531_162404_155209_C36DAB46)
-Date: Sat, 31 May 2008 16:23:58 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 1 May 2008 06:45:53 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080501.033221.193705040.davem@davemloft.net>
+References: <1209635299.4008.21.camel@johannes.berg>
+	 <20080501.025635.216053297.davem@davemloft.net>
+	 <1209636494.4008.24.camel@johannes.berg>
+	 <20080501.033221.193705040.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gmfiKpb7HG1wU42IwC2F"
+Date: Thu, 01 May 2008 12:45:13 +0200
+Message-Id: <1209638713.4008.32.camel@johannes.berg> (sfid-20080501_124541_234907_E0328AFC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the latest wireless-testing kernel, I get a panic when I try to
-connect to a network or inject a packet in monitor mode using b43
-(stack obtained using kdump and crash):
 
-crash> bt -l
-PID: 0      TASK: c0431340  CPU: 0   COMMAND: "swapper"
- #0 [c04617bc] crash_kexec at c015ce2a
-    /usr/src/wl-hack/wireless-testing/kernel/kexec.c: 1077
- #1 [c046180c] die at c01054ba
-    /usr/src/wl-hack/wireless-testing/arch/x86/kernel/traps_32.c: 476
- #2 [c0461828] do_page_fault at c034ef1f
-    /usr/src/wl-hack/wireless-testing/arch/x86/mm/fault.c: 858
- #3 [c0461994] error_code (via page_fault) at c034d2e8
-    /usr/src/wl-hack/wireless-testing/arch/i386/kernel/entry.S
-    EAX: 00000000  EBX: 00000000  ECX: f6103000  EDX: f75ed4a0  EBP: c0=
-461a58
-    DS:  007b      ESI: 00000002  ES:  007b      EDI: 00000074
-    CS:  0060      EIP: f8dd3a99  ERR: ffffffff  EFLAGS: 00010046
- #4 [c04619c8] b43_generate_txhdr at f8dd3a99
- #5 [c0461a5c] b43_dma_tx at f8dd83d7
- #6 [c0461ae4] b43_op_tx at f8dc4d32
- #7 [c0461afc] __ieee80211_tx at f89c3ed4
- #8 [c0461b14] ieee80211_master_start_xmit at f89c4b6d
- #9 [c0461b74] dev_hard_start_xmit at c02d4cb5
-    /usr/src/wl-hack/wireless-testing/net/core/dev.c: 1558
-#10 [c0461ba0] __qdisc_run at c02e678d
-    /usr/src/wl-hack/wireless-testing/net/sched/sch_generic.c: 155
-#11 [c0461bd8] dev_queue_xmit at c02d5172
-    include/net/pkt_sched.h: 89
-#12 [c0461c04] ieee80211_subif_start_xmit at f89c45db
-#13 [c0461cc0] dev_hard_start_xmit at c02d4cb5
-    /usr/src/wl-hack/wireless-testing/net/core/dev.c: 1558
-#14 [c0461cec] __qdisc_run at c02e678d
-    /usr/src/wl-hack/wireless-testing/net/sched/sch_generic.c: 155
-#15 [c0461d24] dev_queue_xmit at c02d5172
-    include/net/pkt_sched.h: 89
-#16 [c0461d50] neigh_resolve_output at c02dac3e
-    /usr/src/wl-hack/wireless-testing/net/core/neighbour.c: 1215
-#17 [c0461d90] ip6_output_finish at f8d55c9e
-#18 [c0461db0] ip6_output2 at f8d57e63
-#19 [c0461dd4] ip6_output at f8d58418
-#20 [c0461e50] mld_sendpack at f8d70d8d
-#21 [c0461ebc] mld_ifc_timer_expire at f8d71a94
-#22 [c0461ef0] run_timer_softirq at c0138547
-    /usr/src/wl-hack/wireless-testing/kernel/timer.c: 798
-#23 [c0461f34] __do_softirq at c0134230
-    /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 234
-#24 [c0461f50] do_softirq at c0134318
-    /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 271
-#25 [c0461f5c] irq_exit at c01344b0
-    /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 310
-#26 [c0461f64] smp_apic_timer_interrupt at c0113583
-    /usr/src/wl-hack/wireless-testing/arch/x86/kernel/apic_32.c: 619
-#27 [c0461f7c] apic_timer_interrupt at c0104963
-    include/linux/kdev_t.h: 52
-#28 [c0461fbc] cpu_idle at c0102d69
-    /usr/src/wl-hack/wireless-testing/arch/x86/kernel/process_32.c: 188
+--=-gmfiKpb7HG1wU42IwC2F
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-No out-of-tree patches applied on b43. (I used to have a patch
-applied, but I removed it to test reproducibility of this crash.)
+On Thu, 2008-05-01 at 03:32 -0700, David Miller wrote:
 
-Any ideas why this happens?
+> Right you are.
+>=20
+> So, I wonder what's causing the problem...  Could you "remember" the
+> length and truesize at the skb_orphan() point in mac80211, right
+> after the skb_push(), then in the truesize warning, print those
+> "remembered" values as well as the current ones.
 
-Thanks,
-G=E1bor
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was just playing with af_packet and added some debugging there that
+prints out the len of all packets it gets (for a certain ifidx)
+
+That's confusing me even more now. I get
+
+[ 7650.792004] packet_recv eda9e8c0 (len=3D137)
+[ 7650.792015] snaplen(eda9e8c0)=3D137
+[ 7650.792027] free eda9e8c0, len =3D 137
+[ 7650.792031] new skb: eda9e540
+[ 7650.792039] packet_recv eda9e8c0 (len=3D137)
+[ 7650.792044] snaplen(eda9e8c0)=3D137
+[ 7650.792048] new skb: eda9e8c0
+[ 7650.819464] packet_recv d1f4e9a0 (len=3D124)
+[ 7650.819478] snaplen(d1f4e9a0)=3D124
+[ 7650.819489] free d1f4e9a0, len =3D 124
+[ 7650.819493] new skb: d1f4e8c0
+[ 7650.819502] packet_recv d1f4e9a0 (len=3D124)
+[ 7650.819507] snaplen(d1f4e9a0)=3D124
+[ 7650.819511] new skb: d1f4e9a0
+[ 7651.215631] packet_recv e9ecc2a0 (len=3D376)
+[ 7651.215645] snaplen(e9ecc2a0)=3D376
+[ 7651.215657] free e9ecc2a0, len =3D 376
+[ 7651.215662] new skb: ede04b60
+[ 7651.215671] packet_recv e9ecc2a0 (len=3D376)
+[ 7651.215675] snaplen(e9ecc2a0)=3D376
+[ 7651.215680] new skb: e9ecc2a0
+
+[ 7651.760751] SKB BUG: Invalid truesize (528) len=3D357, sizeof(sk_buff)=
+=3D176
+
+
+528-176 is 352 which doesn't occur in that list... Maybe I should print
+it in mac80211.
+
+
+johannes
+
+--=-gmfiKpb7HG1wU42IwC2F
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBmfOKVg1VMiehFYAQKQpg//Z9t1bgHdH1mIqnDO8X+fBbCoZX4WMIhz
+jsKFvc1EYuNeI9Rsg06/aY5iMmwTra+6rBiBhdTPE0gEyOa04cipXrvZnLm/jLD6
+/cTXS1hw+tgtxYt2hzu1LBSBY7ksUQdWLZ9xJZ7VLbLjHrbDIyRcHchM5C2Qbv+S
+3PdeEAukm+1xiRwtZUu2s+44dYMpIqii01E/vhmVACBJ3ZoePOxmuGdyat4D0YCv
+Vxn6KaQeXgnvN5GkAwUnBOpCZint73bnlKBWr66yXJIxKRDTq4oaB3dReuTT8KsZ
+pePV4XKDfgyNu8i5NibLZfg+ihaYHsMBBQRus18HybLrgn54tyBh6ck5hJdlS0BO
+vG66PmzYXRDsQzamajKilaBBt1s3Yqn3zp87cgqYFu6Obx6M9G7tgkZn8957Wuz/
+3TCRGmeG62KdwSCg21nr+nBlkXia3ZDJypI/EcwEMykDsQMH1vysWzSanpnXppJI
+YYkDbF1Et/ncWpza0mpchJF06ZLaE5JVvdTPPqCXWF+JRv0yggQy0RUCHB+NEAL8
+Oc6z97s5NdQmOacTWQ3cUxAFoPQKPBR3MxbPODUN9OE4USLSzlZScx+75YUiHth2
+UiFhyneNa6E4hOXRegDCfjzLHHQXE518nqWlRaC1bZNSGI4tMW3MhZSaz3lhKakp
+pZeMBEFMMyc=
+=Apgk
+-----END PGP SIGNATURE-----
+
+--=-gmfiKpb7HG1wU42IwC2F--
+
