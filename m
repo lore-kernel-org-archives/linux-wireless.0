@@ -1,117 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24096 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753783AbYEECYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:09 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: [PATCH 05/25] iwlwifi: debugfs EEPROM dump
-Date: Mon,  5 May 2008 10:22:32 +0800
-Message-Id: <1209954172-3092-6-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_807599_744C46D1)
-In-Reply-To: <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:40467 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbYEARdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 13:33:53 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Date: Thu, 1 May 2008 19:33:08 +0200
+Cc: Christoph Hellwig <hch@infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <200805011638.15910.mb@bu3sch.de> <200805011916.07340.mb@bu3sch.de> <200805011027.36252.jbarnes@virtuousgeek.org>
+In-Reply-To: <200805011027.36252.jbarnes@virtuousgeek.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805011933.09061.mb@bu3sch.de> (sfid-20080501_193338_600144_3D7013DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Thursday 01 May 2008 19:27:35 Jesse Barnes wrote:
+> On Thursday, May 01, 2008 10:16 am Michael Buesch wrote:
+> > > So it makes sense to
+> > > just update the current code to fallback, and update drivers wanting
+> > > specific mask values to check afterwards.  I hate to inflict that kind of
+> > > driver wide update on Michael though... :)
+> >
+> > Well, that's a lot of work and I'm not sure it's worth it.
+> > I could live with having dma_set_mask as an API that fails on bad masks
+> > and dma_request_mask as an API above that which retries. I think that's
+> > just fine. Drivers can be migrated over time to the new API (or not. That
+> > can be the driver maintainer's choice).
+> 
+> Oh and for dma_set_mask specifically I don't see that many callers, so 
+> updating the tree appears doable (meye, aic7xxx, lasai700, qla2xxx, 
+> sni_53c710, ssb & ehci in my quick look). pci_set_dma_mask otoh is used in 
+> lots more places (and iirc some platforms implement pci_set_dma_mask in terms 
+> of dma_set_mask, so small updates would be needed there).
 
-This patch adds EEPROM dump in debugfs.
+I was thinking about also adding a "request" call to the PCI DMA API,
+as we have the same retry-issue there.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   42 ++++++++++++++++++++++++++++
- 2 files changed, 43 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index c60724c..7e68d24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -57,6 +57,7 @@ struct iwl_debugfs {
- 	struct dentry *dir_data;
- 	struct dir_data_files{
- 		struct dentry *file_sram;
-+		struct dentry *file_eeprom;
- 		struct dentry *file_stations;
- 		struct dentry *file_rx_statistics;
- 		struct dentry *file_tx_statistics;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index e28c31d..b310f70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -271,8 +271,48 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 	return ret;
- }
- 
-+static ssize_t iwl_dbgfs_eeprom_read(struct file *file,
-+				       char __user *user_buf,
-+				       size_t count,
-+				       loff_t *ppos)
-+{
-+	ssize_t ret;
-+	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	int pos = 0, ofs = 0, buf_size = 0;
-+	const u8 *ptr;
-+	char *buf;
-+	size_t eeprom_len = priv->cfg->eeprom_size;
-+	buf_size = 4 * eeprom_len + 256;
-+
-+	if (eeprom_len % 16) {
-+		IWL_ERROR("EEPROM size is not multiple of 16.\n");
-+		return -ENODATA;
-+	}
-+
-+	/* 4 characters for byte 0xYY */
-+	buf = kzalloc(buf_size, GFP_KERNEL);
-+	if (!buf) {
-+		IWL_ERROR("Can not allocate Buffer\n");
-+		return -ENOMEM;
-+	}
-+
-+	ptr = priv->eeprom;
-+	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
-+		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
-+		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
-+				   buf_size - pos, 0);
-+		pos += strlen(buf);
-+		if (buf_size - pos > 0)
-+			buf[pos++] = '\n';
-+	}
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+	kfree(buf);
-+	return ret;
-+}
- 
- DEBUGFS_READ_WRITE_FILE_OPS(sram);
-+DEBUGFS_READ_FILE_OPS(eeprom);
- DEBUGFS_READ_FILE_OPS(stations);
- DEBUGFS_READ_FILE_OPS(rx_statistics);
- DEBUGFS_READ_FILE_OPS(tx_statistics);
-@@ -298,6 +338,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	}
- 
- 	DEBUGFS_ADD_DIR(data, dbgfs->dir_drv);
-+	DEBUGFS_ADD_FILE(eeprom, data);
- 	DEBUGFS_ADD_FILE(sram, data);
- 	DEBUGFS_ADD_FILE(stations, data);
- 	DEBUGFS_ADD_FILE(rx_statistics, data);
-@@ -321,6 +362,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
- 	if (!(priv->dbgfs))
- 		return;
- 
-+	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_eeprom);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_rx_statistics);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_tx_statistics);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_sram);
 -- 
-1.5.3.6
-
+Greetings Michael.
