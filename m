@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:50376 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbYEOTtQ (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32891 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758930AbYEAQhl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 15:49:16 -0400
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andreamrl@tiscali.it>
-Subject: [patch] resource leak in error case in rtl8187 #2
-From: Oliver Neukum <oliver@neukum.org>
-Date: Thu, 15 May 2008 21:49:16 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805152149.16876.oliver@neukum.org> (sfid-20080515_214920_898797_5CC6C53C)
+	Thu, 1 May 2008 12:37:41 -0400
+Date: Thu, 1 May 2008 17:29:13 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	John Linville <linville@tuxdriver.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	David Miller <davem@davemloft.net>,
+	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Add API for weak DMA masks
+Message-ID: <20080501172913.08975881@core> (sfid-20080501_183725_209704_43B7C56A)
+In-Reply-To: <20080501153618.GA470@infradead.org>
+References: <200805011638.15910.mb@bu3sch.de>
+	<20080501153618.GA470@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> Why do we need it?  Is the call to set the 32bit mask when it fails
+> a too big burden for the driver author?
 
-this fixes resource leaks in error cases due to urb submission failures.
+We have tons of drivers that go
 
-	Regards
-		Oliver
+	try and set 64bit 
+	oh failed
+	try and set 32 bit
+	oh worked
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
+When what most actually want is "set it no more than this wide" - a
+request or even a "pci_set_best_mask()" type idea.
 
----
-
---- linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c.alt	2008-05-15 15:53:58.000000000 +0200
-+++ linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c	2008-05-15 21:42:02.000000000 +0200
-@@ -92,6 +92,7 @@ static void rtl8187_iowrite_async(struct
- 		u8 data[4];
- 		struct usb_ctrlrequest dr;
- 	} *buf;
-+	int rc;
- 
- 	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
- 	if (!buf)
-@@ -116,7 +117,11 @@ static void rtl8187_iowrite_async(struct
- 	usb_fill_control_urb(urb, priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			     (unsigned char *)dr, buf, len,
- 			     rtl8187_iowrite_async_cb, buf);
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	rc = usb_submit_urb(urb, GFP_ATOMIC);
-+	if (rc < 0) {
-+		kfree(buf);
-+		usb_free_urb(urb);
-+	}
- }
- 
- static inline void rtl818x_iowrite32_async(struct rtl8187_priv *priv,
-@@ -169,6 +174,7 @@ static int rtl8187_tx(struct ieee80211_h
- 	struct urb *urb;
- 	__le16 rts_dur = 0;
- 	u32 flags;
-+	int rc;
- 
- 	urb = usb_alloc_urb(0, GFP_ATOMIC);
- 	if (!urb) {
-@@ -208,7 +214,11 @@ static int rtl8187_tx(struct ieee80211_h
- 	info->dev = dev;
- 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
- 			  hdr, skb->len, rtl8187_tx_cb, skb);
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	rc = usb_submit_urb(urb, GFP_ATOMIC);
-+	if (rc < 0) {
-+		usb_free_urb(urb);
-+		kfree_skb(skb);
-+	}
- 
- 	return 0;
- }
+Lots less code duplication.
