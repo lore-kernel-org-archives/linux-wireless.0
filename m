@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:57657 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753694AbYESRPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 13:15:51 -0400
-Date: Mon, 19 May 2008 10:03:47 -0700
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-Message-ID: <20080519170347.GB21500@bougret.hpl.hp.com> (sfid-20080519_191605_021178_34815BBE)
-Reply-To: jt@hpl.hp.com
-References: <1211026337.3827.25.camel@johannes.berg> <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> <1211032475.6252.2.camel@johannes.berg> <1211117795.686.15.camel@localhost.localdomain> <1211199368.6252.19.camel@johannes.berg> <1211210686.12187.6.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1211210686.12187.6.camel@localhost.localdomain>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37534 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754690AbYEAK7N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 May 2008 06:59:13 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080501.035335.216935614.davem@davemloft.net>
+References: <20080501.024320.212547875.davem@davemloft.net>
+	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+	 <20080501.034950.261408566.davem@davemloft.net>
+	 <20080501.035335.216935614.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-esTyxMHr2gaQOOnWU6as"
+Date: Thu, 01 May 2008 12:58:20 +0200
+Message-Id: <1209639500.7067.0.camel@johannes.berg> (sfid-20080501_125902_822037_6B4A6E96)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2008 at 11:24:46AM -0400, Dan Williams wrote:
-> On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
-> > > Instead of testing for wireless/, best thing would probably be to call
-> > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-> > > wireless.  Some drivers may have to load firmware to figure out
-> > > supported rates and encryption capabilities, but to be honest, NM does
-> > > this to detect wireless devices and I haven't run into any issues in 4
-> > > years using it.  If there are issues with drivers, then we need to fix
-> > > the driver too.
-> > 
-> > I was about to propose calling SIOCGIWNAME since that is what
-> > wireless-tools do and that linux/wireless.h indicates.
-> 
-> Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
-> that NAME return _something_ at least.  NAME should never ever be used
-> for anything more, but since wireless-tools appears to do this that's
-> fine.
-> 
-> Dan
 
-	It's not useless, it's supposed to tell you about the protocol
-capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg".
+--=-esTyxMHr2gaQOOnWU6as
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	Have fun...
+On Thu, 2008-05-01 at 03:53 -0700, David Miller wrote:
+> From: David Miller <davem@davemloft.net>
+> Date: Thu, 01 May 2008 03:49:50 -0700 (PDT)
+>=20
+> > I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
+> > I suspect we'll need to orphan early in order to accomodate these
+> > adjustments, otherwise socket memory buffer allocations will
+> > be corrupted.
+>=20
+> I think the mac80211 encryption paths on TX could be doing this as
+> well, just something I noticed meanwhile.
 
-	Jean
+Indeed. But then why did we never see this bug w/o monitor interfaces
+and this reinjection?
+
+johannes
+
+--=-esTyxMHr2gaQOOnWU6as
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBmiS6Vg1VMiehFYAQIpIQ//WXatDQJJSe+aqpDwZ9vsNG3qDEByrNGb
+ceo636ub1gMSfJ6MnR1PA7Y7qIKwLw7S1FH9dIrn4a2TDa/RuV2h3fDL80OI58ls
+LIaZRopKC4irCa48aCfbp/kuSRcMff/gFl4hJjPijzF33D/lX3CKT7opqtn0YArP
+qNp7H4PPtUGoWCtMSZCgxQzcisD83erBxIF5BPBmfJclxB0fwW10HWbeg+Xp4k/8
+lEoshh9YsfiT0jt7HErpE5Pr0papYIQQ79cDBDTZNPitYj5IwEbYNehAw0JUwTsc
+stsf3qOfq4KAZND0RC2tIVjJc46qPsk0MYjKBQsvCPJB3AZArWl/m/YhYNeQNTQl
+NZI+SRYNoh6p4uAzOQ7fGmr7duKWiTh35GOSaWKiiHfLi4M/cH2cD+SwCwePyjMI
+ScaxGust5Gilm0A/jATYf6sYHlV+2KyrpLOskQupC39wMDSoSNjBx3jwhHMdiphJ
+zLEjYUvhEnMDRx1OheYHGkW9qcRFBo/IpkmxGCFreKUCEEx8QmE/QvIikx/6w0Ve
+WyDqWXvWpUXOsqVVCZ1j+wKifNOcmPTL/8ikZblXF5lHlX67KPVid2RxUMYK8Y+E
+01f15Nlych4YNzbW0kJM78OneKCRa7QoQpRe0B7GkNGxLRWsQv/+/ph6O+ABfvMy
+pw1Z+6/rVkQ=
+=hoxx
+-----END PGP SIGNATURE-----
+
+--=-esTyxMHr2gaQOOnWU6as--
 
