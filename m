@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51777 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934198AbYEBWoR (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:22233 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752795AbYEBIdX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 18:44:17 -0400
-Subject: [PATCH v2] mac80211: fix wme code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1209767749.3608.23.camel@johannes.berg> (sfid-20080503_003536_334347_3B50118C)
-References: <1209767749.3608.23.camel@johannes.berg>
-	 (sfid-20080503_003536_334347_3B50118C)
-Content-Type: text/plain
-Date: Sat, 03 May 2008 00:44:09 +0200
-Message-Id: <1209768249.3608.25.camel@johannes.berg> (sfid-20080503_004354_206661_FC39EF9A)
-Mime-Version: 1.0
+	Fri, 2 May 2008 04:33:23 -0400
+Received: by py-out-1112.google.com with SMTP id u52so2145368pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2008 01:33:22 -0700 (PDT)
+Message-ID: <ac542ca00805020133n7cf550f6k39998a23017e5843@mail.gmail.com> (sfid-20080502_103304_421484_0596D8EE)
+Date: Fri, 2 May 2008 10:33:22 +0200
+From: "Francis Galiegue" <fgaliegue@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: BCM4308 rev 3 owner, willing to help (want to make an access point)
+In-Reply-To: <ac542ca00804301418k5d74476fnd4ed6f342f82bffa@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <ac542ca00804280404h20db4b1cn56a2c5fefc119760@mail.gmail.com>
+	 <4816D790.50302@gmail.com>
+	 <41960ccf0804290113k33e322f0se045d47bc654b90@mail.gmail.com>
+	 <ac542ca00804301418k5d74476fnd4ed6f342f82bffa@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 31ccc476b77234f6afb3 (mac80211: QoS related cleanups) I
-accidentally changed a variable from int to u16 causing a warning
-that a comparison for < 0 was always false. John thought this was
-a missing deletion of code and removed the warning by deleting the
-never executed branch of code in commit 13e5f0888caddf7a020dcd918
-(wireless: fix warning introduced by "mac80211: QoS related cleanups")
-but the problem really was my mistake of using a u16 variable for
-the queue variable when that variable can also contain an error
-code. This patch restores the original code and variable type.
+2008/4/30 Francis Galiegue <fgaliegue@gmail.com>:
+>
+>  OK, I got it all working with:
+>
+>  - wireless-testing kernel,
+>  - libnl 1.1,
+>  - git master branch of hostapd.
+>
+>  But I cannot do WPA, only "clear text".
+>
+>  The thing is, my wlan interface is part of a bridge, and the bridge =
+is
+>  set up as:
+>
+>  brctl addif br0 eth0
+>  brctl addif br0 wlan0
+>
+>  where wlan0 is the b43. I know nada about WPA, but can this have an
+>  influence? The MAC address of the bridge is the one of the Ethernet
+>  card, not the wireless one, and I specified wlan0 in hostapd.conf as
+>  the interface to grab...
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-No functional change, just give it a subject...
+It looks like the bridge makes hostapd (well, WPA at least) unhappy.
 
- net/mac80211/wme.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+If the b43 is not in a bridge, WPA works... Is that a hostapd problem o=
+nly?
 
---- everything.orig/net/mac80211/wme.c	2008-05-03 00:29:07.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-05-03 00:32:01.000000000 +0200
-@@ -155,8 +155,7 @@ static int wme_qdiscop_enqueue(struct sk
- 	unsigned short fc = le16_to_cpu(hdr->frame_control);
- 	struct Qdisc *qdisc;
- 	struct sta_info *sta;
--	int err;
--	u16 queue;
-+	int err, queue;
- 	u8 tid;
- 
- 	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
-@@ -216,15 +215,20 @@ static int wme_qdiscop_enqueue(struct sk
- 		rcu_read_unlock();
- 	}
- 
--	tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
--	pkt_data->queue = (unsigned int) queue;
--	qdisc = q->queues[queue];
--	err = qdisc->enqueue(skb, qdisc);
--	if (err == NET_XMIT_SUCCESS) {
--		qd->q.qlen++;
--		qd->bstats.bytes += skb->len;
--		qd->bstats.packets++;
--		return NET_XMIT_SUCCESS;
-+	if (unlikely(queue < 0)) {
-+			kfree_skb(skb);
-+			err = NET_XMIT_DROP;
-+	} else {
-+		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
-+		pkt_data->queue = (unsigned int) queue;
-+		qdisc = q->queues[queue];
-+		err = qdisc->enqueue(skb, qdisc);
-+		if (err == NET_XMIT_SUCCESS) {
-+			qd->q.qlen++;
-+			qd->bstats.bytes += skb->len;
-+			qd->bstats.packets++;
-+			return NET_XMIT_SUCCESS;
-+		}
- 	}
- 	qd->qstats.drops++;
- 	return err;
-
-
+--=20
+=46rancis Galiegue, fgaliegue@gmail.com
+"It seems obvious [...] that at least some 'business intelligence'
+tools invest so much intelligence on the business side that they have
+nothing left for generating SQL queries" (St=E9phane Faroult, in "The
+Art of SQL", ISBN 0-596-00894-5)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
