@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:33689 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751699AbYEGJAo (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:14261 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960AbYEBGKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 05:00:44 -0400
-Date: Wed, 7 May 2008 17:00:40 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Subject: Re: [RFC/RFT 3/4] mac80211: use GSO for fragmentation
-Message-ID: <20080507090040.GA25186@gondor.apana.org.au> (sfid-20080507_110015_473431_17815D38)
-References: <20080430124055.091382000@sipsolutions.net> <20080430130050.105344000@sipsolutions.net> <20080507071026.GA24407@gondor.apana.org.au> <1210150217.9305.39.camel@johannes.berg>
+	Fri, 2 May 2008 02:10:40 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] libertas: reduce command retry time
+Date: Fri, 2 May 2008 08:07:44 +0200
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200804301644.29927.hs4233@mail.mn-solutions.de> <200805012330.57750.hs4233@mail.mn-solutions.de> <1209679021.25560.594.camel@pmac.infradead.org>
+In-Reply-To: <1209679021.25560.594.camel@pmac.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1210150217.9305.39.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805020807.44472.hs4233@mail.mn-solutions.de> (sfid-20080502_081022_012587_9CFAFB36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 07, 2008 at 10:50:17AM +0200, Johannes Berg wrote:
+> > Or: maybe there is another way to make "pccardctl eject"
+> > work reasonably fast in the case of a retrying command. Any
+> > idea?
 >
-> But you're right, it doesn't work this way. I'll have to think of
-> something. Maybe I can rip out all the retry logic and just store an skb
-> myself (like dev->gso_skb) and return NETDEV_TX_BUSY when I used that
-> one and the queue got full because of it. That'll requeue a lot when
-> non-gso skbs are coming in, but mind you this is not a common case, most
-> of the time fragmentation will not be enabled and even when it is device
-> queues should be long enough.
+> Does it set priv->surpriseremoved? We should honour that.
 
-Yes keeping your own gso_skb sounds like a good solution.
+Unfortunately not. Manually ejecting the card sets this (via 
+ISR). Then the driver very quickly disables the card, retrying 
+commands or not. It's just "pccardctl eject" that can, under 
+circumstances, take ages. Unfortunately this circumstances 
+happen in my (embedded) hardware setup, e.g. when 
+suspending/resuming.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+At resume time, I simply do "pccardctl eject" / "pccardctl 
+insert" to get the driver correctly initialized again and 
+associating. Because doing "real" suspend/resume is currently 
+impossible for me with my knowledge of the firmware.
+
+
+> No, it just waits until the timer has been properly removed.
+> If the timer was set for some time in the future, it doesn't
+> wait for it to happen naturally.
+
+Oh, this is what I thought would happen. In this case, it 
+{c/sh}ould stay at del_timer_sync().
