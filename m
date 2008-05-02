@@ -1,274 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42800 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759406AbYEWCL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:28 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56702 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934970AbYEBUsg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2008 16:48:36 -0400
+Message-Id: <200805022047.m42Klmke014230@imap1.linux-foundation.org> (sfid-20080502_224812_885484_BC468601)
+Subject: [patch 8/9] b43: replace limit_value macro with clamp_val
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: add ucode init flow handling for iwl5000
-Date: Fri, 23 May 2008 10:08:59 +0800
-Message-Id: <1211508569-3163-22-git-send-email-yi.zhu@intel.com> (sfid-20080523_042835_133272_6AE67A77)
-In-Reply-To: <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com, mb@bu3sch.de
+From: akpm@linux-foundation.org
+Date: Fri, 02 May 2008 13:47:48 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-This patch adds all the handlers and functions needed for ucode
-initialization flow.
+kernel-provided clamp_val is identical, delete the private limit_value helper.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c |  157 +++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-prph.h |   28 ++++++
- 2 files changed, 185 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index b6bdffc..5e818ee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -46,6 +46,16 @@
+ drivers/net/wireless/b43/b43.h  |   16 ----------------
+ drivers/net/wireless/b43/lo.c   |    4 ++--
+ drivers/net/wireless/b43/main.c |    8 ++++----
+ drivers/net/wireless/b43/phy.c  |   24 ++++++++++++------------
+ 4 files changed, 18 insertions(+), 34 deletions(-)
+
+diff -puN drivers/net/wireless/b43/b43.h~b43-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43/b43.h
+--- a/drivers/net/wireless/b43/b43.h~b43-replace-limit_value-macro-with-clamp_val
++++ a/drivers/net/wireless/b43/b43.h
+@@ -940,22 +940,6 @@ static inline bool __b43_warn_on_dummy(b
+ # define B43_WARN_ON(x)	__b43_warn_on_dummy(unlikely(!!(x)))
+ #endif
  
- #define IWL5000_UCODE_API  "-1"
+-/** Limit a value between two limits */
+-#ifdef limit_value
+-# undef limit_value
+-#endif
+-#define limit_value(value, min, max)  \
+-	({						\
+-		typeof(value) __value = (value);	\
+-		typeof(value) __min = (min);		\
+-		typeof(value) __max = (max);		\
+-		if (__value < __min)			\
+-			__value = __min;		\
+-		else if (__value > __max)		\
+-			__value = __max;		\
+-		__value;				\
+-	})
+-
+ /* Convert an integer to a Q5.2 value */
+ #define INT_TO_Q52(i)	((i) << 2)
+ /* Convert a Q5.2 value to an integer (precision loss!) */
+diff -puN drivers/net/wireless/b43/lo.c~b43-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43/lo.c
+--- a/drivers/net/wireless/b43/lo.c~b43-replace-limit_value-macro-with-clamp_val
++++ a/drivers/net/wireless/b43/lo.c
+@@ -366,7 +366,7 @@ static void lo_measure_txctl_values(stru
+ 		if (lb_gain > 10) {
+ 			radio_pctl_reg = 0;
+ 			pga = abs(10 - lb_gain) / 6;
+-			pga = limit_value(pga, 0, 15);
++			pga = clamp_val(pga, 0, 15);
+ 		} else {
+ 			int cmp_val;
+ 			int tmp;
+@@ -510,7 +510,7 @@ static void lo_measure_gain_values(struc
+ 			phy->lna_lod_gain = 1;
+ 			trsw_rx_gain -= 8;
+ 		}
+-		trsw_rx_gain = limit_value(trsw_rx_gain, 0, 0x2D);
++		trsw_rx_gain = clamp_val(trsw_rx_gain, 0, 0x2D);
+ 		phy->pga_gain = trsw_rx_gain / 3;
+ 		if (phy->pga_gain >= 5) {
+ 			phy->pga_gain -= 5;
+diff -puN drivers/net/wireless/b43/main.c~b43-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43/main.c
+--- a/drivers/net/wireless/b43/main.c~b43-replace-limit_value-macro-with-clamp_val
++++ a/drivers/net/wireless/b43/main.c
+@@ -1182,10 +1182,10 @@ static void handle_irq_noise(struct b43_
+ 	/* Get the noise samples. */
+ 	B43_WARN_ON(dev->noisecalc.nr_samples >= 8);
+ 	i = dev->noisecalc.nr_samples;
+-	noise[0] = limit_value(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[1] = limit_value(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[2] = limit_value(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+-	noise[3] = limit_value(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[0] = clamp_val(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[1] = clamp_val(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[2] = clamp_val(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
++	noise[3] = clamp_val(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
+ 	dev->noisecalc.samples[i][0] = phy->nrssi_lt[noise[0]];
+ 	dev->noisecalc.samples[i][1] = phy->nrssi_lt[noise[1]];
+ 	dev->noisecalc.samples[i][2] = phy->nrssi_lt[noise[2]];
+diff -puN drivers/net/wireless/b43/phy.c~b43-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43/phy.c
+--- a/drivers/net/wireless/b43/phy.c~b43-replace-limit_value-macro-with-clamp_val
++++ a/drivers/net/wireless/b43/phy.c
+@@ -1572,7 +1572,7 @@ static void b43_phy_initg(struct b43_wld
+ 		 * the value 0x7FFFFFFF here. I think that is some weird
+ 		 * compiler optimization in the original driver.
+ 		 * Essentially, what we do here is resetting all NRSSI LT
+-		 * entries to -32 (see the limit_value() in nrssi_hw_update())
++		 * entries to -32 (see the clamp_val() in nrssi_hw_update())
+ 		 */
+ 		b43_nrssi_hw_update(dev, 0xFFFF);	//FIXME?
+ 		b43_calc_nrssi_threshold(dev);
+@@ -1634,13 +1634,13 @@ static s8 b43_phy_estimate_power_out(str
+ 	switch (phy->type) {
+ 	case B43_PHYTYPE_A:
+ 		tmp += 0x80;
+-		tmp = limit_value(tmp, 0x00, 0xFF);
++		tmp = clamp_val(tmp, 0x00, 0xFF);
+ 		dbm = phy->tssi2dbm[tmp];
+ 		//TODO: There's a FIXME on the specs
+ 		break;
+ 	case B43_PHYTYPE_B:
+ 	case B43_PHYTYPE_G:
+-		tmp = limit_value(tmp, 0x00, 0x3F);
++		tmp = clamp_val(tmp, 0x00, 0x3F);
+ 		dbm = phy->tssi2dbm[tmp];
+ 		break;
+ 	default:
+@@ -1699,8 +1699,8 @@ void b43_put_attenuation_into_ranges(str
+ 		break;
+ 	}
  
-+static const u16 iwl5000_default_queue_to_tx_fifo[] = {
-+	IWL_TX_FIFO_AC3,
-+	IWL_TX_FIFO_AC2,
-+	IWL_TX_FIFO_AC1,
-+	IWL_TX_FIFO_AC0,
-+	IWL50_CMD_FIFO_NUM,
-+	IWL_TX_FIFO_HCCA_1,
-+	IWL_TX_FIFO_HCCA_2
-+};
-+
- static int iwl5000_apm_init(struct iwl_priv *priv)
- {
- 	int ret = 0;
-@@ -420,6 +430,151 @@ static int iwl5000_load_ucode(struct iwl_priv *priv)
- 	return ret;
+-	*_rfatt = limit_value(rfatt, rf_min, rf_max);
+-	*_bbatt = limit_value(bbatt, bb_min, bb_max);
++	*_rfatt = clamp_val(rfatt, rf_min, rf_max);
++	*_bbatt = clamp_val(bbatt, bb_min, bb_max);
  }
  
-+static void iwl5000_init_alive_start(struct iwl_priv *priv)
-+{
-+	int ret = 0;
-+
-+	/* Check alive response for "valid" sign from uCode */
-+	if (priv->card_alive_init.is_valid != UCODE_VALID_OK) {
-+		/* We had an error bringing up the hardware, so take it
-+		 * all the way back down so we can try again */
-+		IWL_DEBUG_INFO("Initialize Alive failed.\n");
-+		goto restart;
-+	}
-+
-+	/* initialize uCode was loaded... verify inst image.
-+	 * This is a paranoid check, because we would not have gotten the
-+	 * "initialize" alive if code weren't properly loaded.  */
-+	if (iwl_verify_ucode(priv)) {
-+		/* Runtime instruction load was bad;
-+		 * take it all the way back down so we can try again */
-+		IWL_DEBUG_INFO("Bad \"initialize\" uCode load.\n");
-+		goto restart;
-+	}
-+
-+	iwlcore_clear_stations_table(priv);
-+	ret = priv->cfg->ops->lib->alive_notify(priv);
-+	if (ret) {
-+		IWL_WARNING("Could not complete ALIVE transition: %d\n", ret);
-+		goto restart;
-+	}
-+
-+	return;
-+
-+restart:
-+	/* real restart (first load init_ucode) */
-+	queue_work(priv->workqueue, &priv->restart);
-+}
-+
-+static void iwl5000_set_wr_ptrs(struct iwl_priv *priv,
-+				int txq_id, u32 index)
-+{
-+	iwl_write_direct32(priv, HBUS_TARG_WRPTR,
-+			(index & 0xff) | (txq_id << 8));
-+	iwl_write_prph(priv, IWL50_SCD_QUEUE_RDPTR(txq_id), index);
-+}
-+
-+static void iwl5000_tx_queue_set_status(struct iwl_priv *priv,
-+					struct iwl_tx_queue *txq,
-+					int tx_fifo_id, int scd_retry)
-+{
-+	int txq_id = txq->q.id;
-+	int active = test_bit(txq_id, &priv->txq_ctx_active_msk)?1:0;
-+
-+	iwl_write_prph(priv, IWL50_SCD_QUEUE_STATUS_BITS(txq_id),
-+			(active << IWL50_SCD_QUEUE_STTS_REG_POS_ACTIVE) |
-+			(tx_fifo_id << IWL50_SCD_QUEUE_STTS_REG_POS_TXF) |
-+			(1 << IWL50_SCD_QUEUE_STTS_REG_POS_WSL) |
-+			IWL50_SCD_QUEUE_STTS_REG_MSK);
-+
-+	txq->sched_retry = scd_retry;
-+
-+	IWL_DEBUG_INFO("%s %s Queue %d on AC %d\n",
-+		       active ? "Activate" : "Deactivate",
-+		       scd_retry ? "BA" : "AC", txq_id, tx_fifo_id);
-+}
-+
-+static int iwl5000_alive_notify(struct iwl_priv *priv)
-+{
-+	u32 a;
-+	int i = 0;
-+	unsigned long flags;
-+	int ret;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+
-+	ret = iwl_grab_nic_access(priv);
-+	if (ret) {
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+		return ret;
-+	}
-+
-+	priv->scd_base_addr = iwl_read_prph(priv, IWL50_SCD_SRAM_BASE_ADDR);
-+	a = priv->scd_base_addr + IWL50_SCD_CONTEXT_DATA_OFFSET;
-+	for (; a < priv->scd_base_addr + IWL50_SCD_TX_STTS_BITMAP_OFFSET;
-+		a += 4)
-+		iwl_write_targ_mem(priv, a, 0);
-+	for (; a < priv->scd_base_addr + IWL50_SCD_TRANSLATE_TBL_OFFSET;
-+		a += 4)
-+		iwl_write_targ_mem(priv, a, 0);
-+	for (; a < sizeof(u16) * priv->hw_params.max_txq_num; a += 4)
-+		iwl_write_targ_mem(priv, a, 0);
-+
-+	iwl_write_prph(priv, IWL50_SCD_DRAM_BASE_ADDR,
-+		(priv->shared_phys +
-+		 offsetof(struct iwl5000_shared, queues_byte_cnt_tbls)) >> 10);
-+	iwl_write_prph(priv, IWL50_SCD_QUEUECHAIN_SEL,
-+		IWL50_SCD_QUEUECHAIN_SEL_ALL(
-+			priv->hw_params.max_txq_num));
-+	iwl_write_prph(priv, IWL50_SCD_AGGR_SEL, 0);
-+
-+	/* initiate the queues */
-+	for (i = 0; i < priv->hw_params.max_txq_num; i++) {
-+		iwl_write_prph(priv, IWL50_SCD_QUEUE_RDPTR(i), 0);
-+		iwl_write_direct32(priv, HBUS_TARG_WRPTR, 0 | (i << 8));
-+		iwl_write_targ_mem(priv, priv->scd_base_addr +
-+				IWL50_SCD_CONTEXT_QUEUE_OFFSET(i), 0);
-+		iwl_write_targ_mem(priv, priv->scd_base_addr +
-+				IWL50_SCD_CONTEXT_QUEUE_OFFSET(i) +
-+				sizeof(u32),
-+				((SCD_WIN_SIZE <<
-+				IWL50_SCD_QUEUE_CTX_REG2_WIN_SIZE_POS) &
-+				IWL50_SCD_QUEUE_CTX_REG2_WIN_SIZE_MSK) |
-+				((SCD_FRAME_LIMIT <<
-+				IWL50_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS) &
-+				IWL50_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK));
-+	}
-+
-+	iwl_write_prph(priv, IWL50_SCD_INTERRUPT_MASK,
-+				 (1 << priv->hw_params.max_txq_num) - 1);
-+
-+	iwl_write_prph(priv, IWL50_SCD_TXFACT,
-+				 SCD_TXFACT_REG_TXFIFO_MASK(0, 7));
-+
-+	iwl5000_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
-+	/* map qos queues to fifos one-to-one */
-+	for (i = 0; i < ARRAY_SIZE(iwl5000_default_queue_to_tx_fifo); i++) {
-+		int ac = iwl5000_default_queue_to_tx_fifo[i];
-+		iwl_txq_ctx_activate(priv, i);
-+		iwl5000_tx_queue_set_status(priv, &priv->txq[i], ac, 0);
-+	}
-+	/* TODO - need to initialize those FIFOs inside the loop above,
-+	 * not only mark them as active */
-+	iwl_txq_ctx_activate(priv, 4);
-+	iwl_txq_ctx_activate(priv, 7);
-+	iwl_txq_ctx_activate(priv, 8);
-+	iwl_txq_ctx_activate(priv, 9);
-+
-+	iwl_release_nic_access(priv);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+
-+	/* Ask for statistics now, the uCode will send notification
-+	 * periodically after association */
-+	iwl_send_statistics_request(priv, CMD_ASYNC);
-+
-+	return 0;
-+}
-+
- static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	if ((priv->cfg->mod_params->num_of_queues > IWL50_NUM_QUEUES) ||
-@@ -622,6 +777,8 @@ static struct iwl_lib_ops iwl5000_lib = {
- 	.disable_tx_fifo = iwl5000_disable_tx_fifo,
- 	.rx_handler_setup = iwl5000_rx_handler_setup,
- 	.load_ucode = iwl5000_load_ucode,
-+	.init_alive_start = iwl5000_init_alive_start,
-+	.alive_notify = iwl5000_alive_notify,
- 	.apm_ops = {
- 		.init =	iwl5000_apm_init,
- 		.config = iwl5000_nic_config,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index acac629..d6a04f6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -517,6 +517,34 @@
- #define IWL49_SCD_QUEUE_RA_TID_MAP_RATID_MSK	(0x01FF)
+ /* http://bcm-specs.sipsolutions.net/RecalculateTransmissionPower */
+@@ -1795,7 +1795,7 @@ void b43_phy_xmitpower(struct b43_wldev 
+ 			/* Get desired power (in Q5.2) */
+ 			desired_pwr = INT_TO_Q52(phy->power_level);
+ 			/* And limit it. max_pwr already is Q5.2 */
+-			desired_pwr = limit_value(desired_pwr, 0, max_pwr);
++			desired_pwr = clamp_val(desired_pwr, 0, max_pwr);
+ 			if (b43_debug(dev, B43_DBG_XMITPOWER)) {
+ 				b43dbg(dev->wl,
+ 				       "Current TX power output: " Q52_FMT
+@@ -1908,7 +1908,7 @@ static inline
+ 		f = q;
+ 		i++;
+ 	} while (delta >= 2);
+-	entry[index] = limit_value(b43_tssi2dbm_ad(m1 * f, 8192), -127, 128);
++	entry[index] = clamp_val(b43_tssi2dbm_ad(m1 * f, 8192), -127, 128);
+ 	return 0;
+ }
  
- /* 5000 SCD */
-+#define IWL50_SCD_QUEUE_STTS_REG_POS_TXF	(0)
-+#define IWL50_SCD_QUEUE_STTS_REG_POS_ACTIVE	(3)
-+#define IWL50_SCD_QUEUE_STTS_REG_POS_WSL	(4)
-+#define IWL50_SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN (19)
-+#define IWL50_SCD_QUEUE_STTS_REG_MSK		(0x00FF0000)
-+
-+#define IWL50_SCD_QUEUE_CTX_REG1_CREDIT_POS		(8)
-+#define IWL50_SCD_QUEUE_CTX_REG1_CREDIT_MSK		(0x00FFFF00)
-+#define IWL50_SCD_QUEUE_CTX_REG1_SUPER_CREDIT_POS	(24)
-+#define IWL50_SCD_QUEUE_CTX_REG1_SUPER_CREDIT_MSK	(0xFF000000)
-+#define IWL50_SCD_QUEUE_CTX_REG2_WIN_SIZE_POS		(0)
-+#define IWL50_SCD_QUEUE_CTX_REG2_WIN_SIZE_MSK		(0x0000007F)
-+#define IWL50_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS	(16)
-+#define IWL50_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK	(0x007F0000)
-+
-+#define IWL50_SCD_CONTEXT_DATA_OFFSET		(0x600)
-+#define IWL50_SCD_TX_STTS_BITMAP_OFFSET		(0x7B1)
-+#define IWL50_SCD_TRANSLATE_TBL_OFFSET		(0x7E0)
-+
-+#define IWL50_SCD_CONTEXT_QUEUE_OFFSET(x)\
-+	(IWL50_SCD_CONTEXT_DATA_OFFSET + ((x) * 8))
-+
-+#define IWL50_SCD_TRANSLATE_TBL_OFFSET_QUEUE(x) \
-+	((IWL50_SCD_TRANSLATE_TBL_OFFSET + ((x) * 2)) & 0xfffc)
-+
-+#define IWL50_SCD_QUEUECHAIN_SEL_ALL(x)		(((1<<(x)) - 1) &\
-+	(~(1<<IWL_CMD_QUEUE_NUM)))
-+
- #define IWL50_SCD_BASE			(PRPH_BASE + 0xa02c00)
+@@ -2452,7 +2452,7 @@ void b43_nrssi_hw_update(struct b43_wlde
+ 	for (i = 0; i < 64; i++) {
+ 		tmp = b43_nrssi_hw_read(dev, i);
+ 		tmp -= val;
+-		tmp = limit_value(tmp, -32, 31);
++		tmp = clamp_val(tmp, -32, 31);
+ 		b43_nrssi_hw_write(dev, i, tmp);
+ 	}
+ }
+@@ -2469,7 +2469,7 @@ void b43_nrssi_mem_update(struct b43_wld
+ 		tmp = (i - delta) * phy->nrssislope;
+ 		tmp /= 0x10000;
+ 		tmp += 0x3A;
+-		tmp = limit_value(tmp, 0, 0x3F);
++		tmp = clamp_val(tmp, 0, 0x3F);
+ 		phy->nrssi_lt[i] = tmp;
+ 	}
+ }
+@@ -2906,7 +2906,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 			} else
+ 				threshold = phy->nrssi[1] - 5;
  
- #define IWL50_SCD_SRAM_BASE_ADDR         (IWL50_SCD_BASE + 0x0)
--- 
-1.5.3.6
-
+-			threshold = limit_value(threshold, 0, 0x3E);
++			threshold = clamp_val(threshold, 0, 0x3E);
+ 			b43_phy_read(dev, 0x0020);	/* dummy read */
+ 			b43_phy_write(dev, 0x0020,
+ 				      (((u16) threshold) << 8) | 0x001C);
+@@ -2957,7 +2957,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 			else
+ 				a += 32;
+ 			a = a >> 6;
+-			a = limit_value(a, -31, 31);
++			a = clamp_val(a, -31, 31);
+ 
+ 			b = b * (phy->nrssi[1] - phy->nrssi[0]);
+ 			b += (phy->nrssi[0] << 6);
+@@ -2966,7 +2966,7 @@ void b43_calc_nrssi_threshold(struct b43
+ 			else
+ 				b += 32;
+ 			b = b >> 6;
+-			b = limit_value(b, -31, 31);
++			b = clamp_val(b, -31, 31);
+ 
+ 			tmp_u16 = b43_phy_read(dev, 0x048A) & 0xF000;
+ 			tmp_u16 |= ((u32) b & 0x0000003F);
+_
