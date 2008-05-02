@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43229 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757000AbYEMIgA (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:36602 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932803AbYEBVsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:36:00 -0400
-Subject: Re: [RFC PATCH] mac80211 : Association with 11n hidden ssid ap.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1210641995.2506.200.camel@debian.sh.intel.com>
-References: <12103509413156-git-send-email-abhijeet.kolekar@intel.com>
-	 <1210641995.2506.200.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AJg2XK5J4fkZBpkqbIB5"
-Date: Tue, 13 May 2008 10:35:47 +0200
-Message-Id: <1210667747.3646.32.camel@johannes.berg> (sfid-20080513_103602_816894_0A8AB5A6)
-Mime-Version: 1.0
+	Fri, 2 May 2008 17:48:33 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1063685fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2008 14:48:31 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt61pci/rt73usb: Hardware decryption IV/EIV
+Date: Fri, 2 May 2008 23:53:46 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805022141.28351.IvDoorn@gmail.com> <1209762178.3608.21.camel@johannes.berg> <200805022328.00185.IvDoorn@gmail.com>
+In-Reply-To: <200805022328.00185.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805022353.47018.IvDoorn@gmail.com> (sfid-20080502_234811_421602_616121EC)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> *however* with the "reserved" descriptor field added to the tail of the frame,
+> made the device come to live again. The rx_handlers_drop counter now stays at the
+> usual level of 3, and pings are getting through.
+> I haven't checked if the descriptor field actually contains any data, but then again
+> mac80211 doesn't check the value either (with WEP anyway). ;)
+> So either the descriptor field is indeed the ICV,
+> or just appending 4 random bytes at the end of the frame did the trick.
+> Somehow I think the second idea has the highest probability. :S
 
---=-AJg2XK5J4fkZBpkqbIB5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hmm, looking at the data coming from the hardware,
+one would really think the third column looks random enough
+to have something to do with encryption. ;)
 
+RX: 00744ef3 00000000 511beb8f
+RX: 00bc6056 00000000 9ba5d723
+RX: 00384c30 00000000 32f2d121
+RX: 00a57027 00000000 9278a11c
+RX: 008ff83d 00000000 8f9cd735
+RX: 00c4d0a6 00000000 efa740b8
+RX: 00dbe43e 00000000 0383ed8d
+RX: 00d3b2cd 00000000 367d1648
+RX: 00029e40 00000000 de4c3589
+RX: 00a1cea7 00000000 825a88cc
+RX: 006d325c 00000000 e1f7be5d
+RX: 00ca0a8b 00000000 32165233
+RX: 003a6811 00000000 635ab7db
+RX: 00c7224c 00000000 9d19d071
+RX: 009992c5 00000000 577bc5e3
+RX: 0059da01 00000000 c2a4e66e
+RX: 00ff7459 00000000 f3c6e38b
+RX: 00d1b68f 00000000 511beb8f
+RX: 00073a8a 00000000 e1f7be5d
 
-> Johannes, can you please take a look at this patch? The original code
-> looks like a shortcut to start authentication/association when all the
-> three parameters (BSSID/SSID/CHANNEL) are provided. But this is not
-> sufficient in the case of associate with an 11N hidden SSID AP. The 11n
-> and wmm information must be retrieved by an active probe request. Not
-> doing so will cause the 11N AP refuse to associate with the client.
-
-
-> > -	if (!(ifsta->flags & (IEEE80211_STA_AUTO_SSID_SEL |
-> > -	    IEEE80211_STA_AUTO_BSSID_SEL | IEEE80211_STA_AUTO_CHANNEL_SEL))) =
-{
-> > -		ifsta->state =3D IEEE80211_AUTHENTICATE;
-> > -		ieee80211_sta_reset_auth(dev, ifsta);
-> > -		return 0;
-> > -	}
-> > -
-> >  	spin_lock_bh(&local->sta_bss_lock);
-
-Well, I'm not sure I'm the right person to look at this, I'm very
-unfamiliar with the code in question. For all I care we can put it in
-and revert/fixup when we get bug reports from it.
-
-johannes
-
---=-AJg2XK5J4fkZBpkqbIB5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASClS4qVg1VMiehFYAQJfHQ/+LFppHrKfiufqUEuuOgKVnOiPTZTdrMv7
-iysZEun8swqh3tYLgPihjJeIs0o4XI4K9o/39mDxhquAsLfl1ahrLLqD4mUb8Oau
-AYGLunhACEPr7PbQDQtjm09OHmhRBuMSrLxblytOFxWlWpqS82JhgD/bywXWsR5f
-thJDDHK0hw3lWefrqGzR6gUQ+MEdWv04Ql8j1QuiramdbUCsuLRsNWvA4foI/HVu
-5qZYrIXnWLral/2wlYSFicXaTzWnugnzUU3gKoK8tvLE+3ukcHOlXadxOC20RuEM
-aAdinpvDJpZ/9JgdIs+MWQwbA5PfyGwQy/APaKeH4E9e0PKdqVMtJB/C6PaYefUC
-EmnpsdhWP37xSEqfty/vdaH6ftmAov0p3ogwgmVD9gGI/YBt9sb7q1n/FExgO0u5
-uL8SQ8H5XLj7KbYpNM0KFpHoDubmrlv7txV6hyK8dlz54uy8LMYe4QCYXr94RvSh
-R2H11H/sZwU40lO1m2ra8r/e/D2bkpw/IX7ulTfx8fkP50U4SdnRfDK4iBuDJGSk
-t/ZkA4Ui4m9aCAbvAPzeEf/YQfNHAGTcbZB1JfVj4oYlb2fuLunosqoYF4fQNOsF
-+LlZm/bZ7wVw4VXeBS10EsOfrPqctY5Xvw8/gKFnDGDtlbCds45GkhnjQyYYlwon
-TxNh0zZLWWo=
-=GGjQ
------END PGP SIGNATURE-----
-
---=-AJg2XK5J4fkZBpkqbIB5--
-
+Ivo
