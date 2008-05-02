@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:9972 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383AbYESNKr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 09:10:47 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so701071wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2008 06:10:46 -0700 (PDT)
-Message-ID: <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com> (sfid-20080519_151053_621777_43954549)
-Date: Mon, 19 May 2008 09:10:44 -0400
-From: "John Goulah" <jgoulah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi Makefile issue in compat-wireless-2008-05-18
-In-Reply-To: <1211168475.31033.9.camel@debian.sh.intel.com>
+Received: from bay0-omc3-s37.bay0.hotmail.com ([65.54.246.237]:50490 "EHLO
+	bay0-omc3-s37.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965204AbYEBVLD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2008 17:11:03 -0400
+Message-ID: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl> (sfid-20080502_231048_102561_7623F690)
+From: Scott White <nwi_sub@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Re: Please pull 'upstream' branch of rt2x00
+Date: Fri, 2 May 2008 16:04:52 -0500
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <183c1cc10805181143v526fcc86l4bec27b12805748f@mail.gmail.com>
-	 <1211168475.31033.9.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 18, 2008 at 11:41 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Sun, 2008-05-18 at 14:43 -0400, John Goulah wrote:
->> Hello,
->>
->>  Went to install the new version and found that it wasn't installing
->> the iwl4965 driver.  I did a diff against my last good version (back
->> in April so not sure how long its been like this)
+
+>Was this patch series in time for the 2.6.26 merge window?
 >
-> We introduced the virtual CONFIG_IWLWIFI in recent wireless-testing. It
-> is a tristate when either CONFIG_IWL3945 or CONFIG_IWLCORE is selected.
-> It doesn't appear in the old kernel you are compiling against. Maybe
-> someone need to make a patch for Kconfig in compact-wireless?
+>If not, please consider merging at least the following patches since
+>they are real bugfixes:
 >
+>>       rt2x00: Don't enable short preamble for 1MBs
+>>       rt2x00: Fix quality/activity led handling
+>>       rt2x00: Clarify supported chipsets in Kconfig
+>
+>The others are code cleanups which are "nice to have", but could otherwise
+>wait for 2.6.27.
 
+The merge window is still open at this time.  I haven't seen a rc1 yet.  Anyway I saw that only the 3 bugfixes are currently in the queue.  As the owner of several (10 by the university and 2 personal) rt73 usb wireless cards, I would really like it if the latest version 2.1.5 made into 2.6.26.  As someone who has used 2.6.24 and finished compiling 2.6.25 two days ago I find that the driver in both kernels is not good.  Not good means I get a wireless signal and I get data transfers, but the speed fluctuates and have other issues.  However with each release, the problems I have are slowing decreasing.  I have been waiting patiently for 2.6.25-rc1 to have 2.1.5 since 2.1.5 was announced.  I really think all of 2.1.5 should get in 2.6.25-rc1.
 
-Thats odd, my kernel is fairly new -- 2.6.24.4
-
-I custom compiled it, and I dont see anything related to IWL  in my
-.config file strangely enough.  I guess its possible my .config got
-out of sync somehow, or is this what you would consider "old" ?
-
-
-Thanks!
-John
+Thanks,
+_________________________________________________________________
+Windows Live SkyDrive lets you share files with faraway friends.
+http://www.windowslive.com/skydrive/overview.html?ocid=TXT_TAGLM_WL_Refresh_skydrive_052008
