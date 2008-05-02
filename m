@@ -1,113 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:46053 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744AbYEFO4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 10:56:53 -0400
-Message-ID: <482070F7.5060506@openvz.org> (sfid-20080506_165605_423131_BA7E1706)
-Date: Tue, 06 May 2008 18:53:43 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: [PATCH 4/4 (optional)][MAC80211]: Brush up error paths in mesh_path_add.
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55203 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756991AbYEBUsH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2008 16:48:07 -0400
+Message-Id: <200805022047.m42KljLr014211@imap1.linux-foundation.org> (sfid-20080502_224744_365753_5A52732A)
+Subject: [patch 2/9] mac80211: introduce struct michael_mic_ctx and static helpers
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Fri, 02 May 2008 13:47:44 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are already tree paths, that do incremental rollbacks, so
-merge them together, rename labels and format the code to look a
-bit nicer.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-(I do not mind dropping/delaying this patch however).
+Replace the existing macro with a static function, significantly shrinks the
+size of the produced object file.
 
-Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- net/mac80211/mesh_pathtbl.c |   42 ++++++++++++++++++++----------------------
- 1 files changed, 20 insertions(+), 22 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 99c2d36..7097ef9 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -158,19 +158,14 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
- 	if (atomic_add_unless(&sdata->u.sta.mpaths, 1, MESH_MAX_MPATHS) == 0)
- 		return -ENOSPC;
+ net/mac80211/michael.c |   75 ++++++++++++++++++++-------------------
+ net/mac80211/michael.h |    4 ++
+ 2 files changed, 44 insertions(+), 35 deletions(-)
+
+diff -puN net/mac80211/michael.c~mac80211-introduce-struct-michael_mic_ctx-and-static-helpers net/mac80211/michael.c
+--- a/net/mac80211/michael.c~mac80211-introduce-struct-michael_mic_ctx-and-static-helpers
++++ a/net/mac80211/michael.c
+@@ -13,46 +13,52 @@
  
-+	err = -ENOMEM;
- 	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
--	if (!new_mpath) {
--		atomic_dec(&sdata->u.sta.mpaths);
--		err = -ENOMEM;
--		goto endadd2;
--	}
-+	if (!new_mpath)
-+		goto err_path_alloc;
+ #include "michael.h"
+ 
+-#define michael_block(l, r) \
+-do { \
+-	r ^= rol32(l, 17); \
+-	l += r; \
+-	r ^= ((l & 0xff00ff00) >> 8) | ((l & 0x00ff00ff) << 8); \
+-	l += r; \
+-	r ^= rol32(l, 3); \
+-	l += r; \
+-	r ^= ror32(l, 2); \
+-	l += r; \
+-} while (0)
++static void michael_block(struct michael_mic_ctx *mctx, u32 val)
++{
++	mctx->l ^= val;
++	mctx->r ^= rol32(mctx->l, 17);
++	mctx->l += mctx->r;
++	mctx->r ^= ((mctx->l & 0xff00ff00) >> 8) |
++		   ((mctx->l & 0x00ff00ff) << 8);
++	mctx->l += mctx->r;
++	mctx->r ^= rol32(mctx->l, 3);
++	mctx->l += mctx->r;
++	mctx->r ^= ror32(mctx->l, 2);
++	mctx->l += mctx->r;
++}
 +
- 	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
--	if (!new_node) {
--		kfree(new_mpath);
--		atomic_dec(&sdata->u.sta.mpaths);
--		err = -ENOMEM;
--		goto endadd2;
--	}
-+	if (!new_node)
-+		goto err_node_alloc;
- 
- 	read_lock(&pathtbl_resize_lock);
- 	memcpy(new_mpath->dst, dst, ETH_ALEN);
-@@ -189,16 +184,11 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
- 
- 	spin_lock(&mesh_paths->hashwlock[hash_idx]);
- 
-+	err = -EEXIST;
- 	hlist_for_each_entry(node, n, bucket, list) {
- 		mpath = node->mpath;
--		if (mpath->dev == dev && memcmp(dst, mpath->dst, ETH_ALEN)
--				== 0) {
--			err = -EEXIST;
--			atomic_dec(&sdata->u.sta.mpaths);
--			kfree(new_node);
--			kfree(new_mpath);
--			goto endadd;
--		}
-+		if (mpath->dev == dev && memcmp(dst, mpath->dst, ETH_ALEN) == 0)
-+			goto err_exists;
- 	}
- 
- 	hlist_add_head_rcu(&new_node->list, bucket);
-@@ -206,10 +196,9 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
- 		mesh_paths->mean_chain_len * (mesh_paths->hash_mask + 1))
- 		grow = 1;
- 
--endadd:
- 	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
- 	read_unlock(&pathtbl_resize_lock);
--	if (!err && grow) {
-+	if (grow) {
- 		struct mesh_table *oldtbl, *newtbl;
- 
- 		write_lock(&pathtbl_resize_lock);
-@@ -225,7 +214,16 @@ endadd:
- 		synchronize_rcu();
- 		mesh_table_free(oldtbl, false);
- 	}
--endadd2:
-+	return 0;
++static void michael_mic_hdr(struct michael_mic_ctx *mctx,
++			    u8 *key, u8 *da, u8 *sa, u8 priority)
++{
++	mctx->l = get_unaligned_le32(key);
++	mctx->r = get_unaligned_le32(key + 4);
 +
-+err_exists:
-+	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
-+	read_unlock(&pathtbl_resize_lock);
-+	kfree(new_node);
-+err_node_alloc:
-+	kfree(new_mpath);
-+err_path_alloc:
-+	atomic_dec(&sdata->u.sta.mpaths);
- 	return err;
++	/*
++	 * A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
++	 * calculation, but it is _not_ transmitted
++	 */
++	michael_block(mctx, get_unaligned_le32(da));
++	michael_block(mctx, get_unaligned_le16(&da[4]) |
++			    (get_unaligned_le16(sa) << 16));
++	michael_block(mctx, get_unaligned_le32(&sa[2]));
++	michael_block(mctx, priority);
++}
+ 
+ void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+ 		 u8 *data, size_t data_len, u8 *mic)
+ {
+-	u32 l, r, val;
++	u32 val;
+ 	size_t block, blocks, left;
++	struct michael_mic_ctx mctx;
+ 
+-	l = get_unaligned_le32(key);
+-	r = get_unaligned_le32(key + 4);
+-
+-	/* A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
+-	 * calculation, but it is _not_ transmitted */
+-	l ^= get_unaligned_le32(da);
+-	michael_block(l, r);
+-	l ^= get_unaligned_le16(&da[4]) | (get_unaligned_le16(sa) << 16);
+-	michael_block(l, r);
+-	l ^= get_unaligned_le32(&sa[2]);
+-	michael_block(l, r);
+-	l ^= priority;
+-	michael_block(l, r);
++	michael_mic_hdr(&mctx, key, da, sa, priority);
+ 
+ 	/* Real data */
+ 	blocks = data_len / 4;
+ 	left = data_len % 4;
+ 
+-	for (block = 0; block < blocks; block++) {
+-		l ^= get_unaligned_le32(&data[block * 4]);
+-		michael_block(l, r);
+-	}
++	for (block = 0; block < blocks; block++)
++		michael_block(&mctx, get_unaligned_le32(&data[block * 4]));
+ 
+ 	/* Partial block of 0..3 bytes and padding: 0x5a + 4..7 zeros to make
+ 	 * total length a multiple of 4. */
+@@ -62,11 +68,10 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
+ 		left--;
+ 		val |= data[blocks * 4 + left];
+ 	}
+-	l ^= val;
+-	michael_block(l, r);
+-	/* last block is zero, so l ^ 0 = l */
+-	michael_block(l, r);
+ 
+-	put_unaligned_le32(l, mic);
+-	put_unaligned_le32(r, mic + 4);
++	michael_block(&mctx, val);
++	michael_block(&mctx, 0);
++
++	put_unaligned_le32(mctx.l, mic);
++	put_unaligned_le32(mctx.r, mic + 4);
  }
+diff -puN net/mac80211/michael.h~mac80211-introduce-struct-michael_mic_ctx-and-static-helpers net/mac80211/michael.h
+--- a/net/mac80211/michael.h~mac80211-introduce-struct-michael_mic_ctx-and-static-helpers
++++ a/net/mac80211/michael.h
+@@ -14,6 +14,10 @@
  
--- 
-1.5.3.4
-
+ #define MICHAEL_MIC_LEN 8
+ 
++struct michael_mic_ctx {
++	u32 l, r;
++};
++
+ void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+ 		 u8 *data, size_t data_len, u8 *mic);
+ 
+_
