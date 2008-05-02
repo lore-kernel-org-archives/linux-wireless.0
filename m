@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38477
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751431AbYEEXYY (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:1320 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932653AbYEBUdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 19:24:24 -0400
-Date: Mon, 05 May 2008 16:24:24 -0700 (PDT)
-Message-Id: <20080505.162424.176435653.davem@davemloft.net> (sfid-20080506_012341_792174_B31C30AD)
-To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210029435.8012.25.camel@johannes.berg>
-References: <1210000923.8245.26.camel@johannes.berg>
-	<20080505.160328.203996832.davem@davemloft.net>
-	<1210029435.8012.25.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 2 May 2008 16:33:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1042654fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2008 13:33:08 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt61pci/rt73usb: Hardware decryption IV/EIV
+Date: Fri, 2 May 2008 22:38:20 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805022141.28351.IvDoorn@gmail.com> <1209759116.3608.8.camel@johannes.berg>
+In-Reply-To: <1209759116.3608.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805022238.21066.IvDoorn@gmail.com> (sfid-20080502_223251_721599_17FA687F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 06 May 2008 01:17:14 +0200
-
-> Also, should there be some sort of timer that resets the rx_alloc_extra
-> again so that when you bridge it once with p54 (needs heaps of headroom)
-> you don't suffer forever?
-
-We're talking about, what, up to 128 bytes or something like that?
-If you're bridging over your wireless device you've already invested
-in assuming those kinds of costs.
-
-I don't think this aspect is really worth worrying about.  The current
-behavior is so much incredibly worse. :-)
-
-> > @@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
-> >  		unsigned int length, gfp_t gfp_mask)
-> >  {
-> >  	int node = dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
-> > +	unsigned int extra = dev->rx_alloc_extra + NET_SKB_PAD;
-> >  	struct sk_buff *skb;
-> >  
-> > -	skb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
-> > +	skb = __alloc_skb(length + extra, gfp_mask, 0, node);
-> >  	if (likely(skb)) {
-> > -		skb_reserve(skb, NET_SKB_PAD);
-> > +		skb_reserve(skb, extra);
+On Friday 02 May 2008, Johannes Berg wrote:
 > 
-> Doesn't that break alignment though?
+> > Does anybody have any hint on where I should start looking about where
+> > these frames come from, or what the cause might be of the disappearing frames?
+> 
+> What are the protection bits in the header? I'd have to look at the key
+> selection code again I think. What about the ICV, are you adding that
+> too at the end?
 
-Good catch, we'll have to align the rx_alloc_extra to some modulus or
-similar.  Ideally, at the spot where rx_alloc_extra is set instead
-of here.
+Now there you mention something. Looking at the Legacy driver, they only mention
+ICV during the TX, but never during RX. I did find that the MMIC is appended at the
+end of the frame, which is good, but they never do anything that looks like the
+stripping of the ICV data...
+So I assume it is stripped in the hardware, but no descriptor definition indicates
+a ICV field like there is for IV and EIV. Unless.... they do have a 32bits "reserved" field
+located directly after the IV/EIV fields.. makes one curious if that accidently contains ICV data. ;)
 
+I'll add some debugging to dump more information about the header,
+and what the contents is of that reserved field.
+
+Thanks :)
+
+Ivo
