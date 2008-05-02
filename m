@@ -1,136 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14451 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758AbYEOF4Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 01:56:25 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59547 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935862AbYEBUsi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 May 2008 16:48:38 -0400
+Message-Id: <200805022047.m42KllfR014224@imap1.linux-foundation.org> (sfid-20080502_224816_243622_FA30E01C)
+Subject: [patch 6/9] mac80211: tkip.c use struct tkip_ctx in phase 1 key mixing
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 11/26] iwlwifi: move iwl_bcast_addr to iwlcore
-Date: Thu, 15 May 2008 13:54:03 +0800
-Message-Id: <1210830858-3410-12-git-send-email-yi.zhu@intel.com> (sfid-20080515_081614_240650_D1319893)
-In-Reply-To: <1210830858-3410-11-git-send-email-yi.zhu@intel.com>
-References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-7-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-8-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-9-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-10-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-11-git-send-email-yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Fri, 02 May 2008 13:47:47 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-This patch renames iwl4965_broadcast_addr to iwl_bcast_addr
-and moves it to iwlcore.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   11 +++++------
- 4 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 1ec53a3..44215a7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2029,7 +2029,7 @@ unsigned int iwl4965_hw_get_beacon_cmd(struct iwl_priv *priv,
+ net/mac80211/tkip.c |   27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
+
+diff -puN net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-1-key-mixing net/mac80211/tkip.c
+--- a/net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-1-key-mixing
++++ a/net/mac80211/tkip.c
+@@ -71,10 +71,12 @@ static u16 tkipS(u16 val)
+  * TSC = TKIP sequence counter (48 bits, only 32 msb bits used)
+  * P1K: 80 bits
+  */
+-static void tkip_mixing_phase1(const u8 *ta, const u8 *tk, u32 tsc_IV32,
+-			       u16 *p1k)
++static void tkip_mixing_phase1(struct ieee80211_key *key, const u8 *ta,
++			       struct tkip_ctx *ctx, u32 tsc_IV32)
+ {
+ 	int i, j;
++	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	u16 *p1k = ctx->p1k;
  
- 	frame_size = iwl4965_fill_beacon_frame(priv,
- 				tx_beacon_cmd->frame,
--				iwl4965_broadcast_addr,
-+				iwl_bcast_addr,
- 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
- 
- 	BUG_ON(frame_size > MAX_MPDU_SIZE);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8e411de..79e46c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -85,6 +85,11 @@ const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
- };
- EXPORT_SYMBOL(iwl_rates);
- 
-+
-+const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-+EXPORT_SYMBOL(iwl_bcast_addr);
-+
-+
- /* This function both allocates and initializes hw and priv. */
- struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
- 		struct ieee80211_ops *hw_ops)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 60a8f06..8809fe3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -659,7 +659,7 @@ int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src);
- int iwl4965_init_geos(struct iwl_priv *priv);
- void iwl4965_free_geos(struct iwl_priv *priv);
- 
--extern const u8 iwl4965_broadcast_addr[ETH_ALEN];
-+extern const u8 iwl_bcast_addr[ETH_ALEN];
- int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index edde814..bb820f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -207,7 +207,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
- 	return index & (q->n_window - 1);
+ 	p1k[0] = tsc_IV32 & 0xFFFF;
+ 	p1k[1] = tsc_IV32 >> 16;
+@@ -90,6 +92,7 @@ static void tkip_mixing_phase1(const u8 
+ 		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
+ 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+ 	}
++	ctx->initialized = 1;
  }
  
--const u8 iwl4965_broadcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+@@ -146,12 +149,8 @@ static void ieee80211_tkip_gen_rc4key(st
+ 			       u8 *rc4key)
+ {
+ 	/* Calculate per-packet key */
+-	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
+-		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
+-		key->u.tkip.tx.initialized = 1;
+-	}
++	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
++		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
  
- /*************** STATION TABLE MANAGEMENT ****
-  * mac80211 should be examined to determine if sta_info is duplicating
-@@ -692,7 +691,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 	}
+ 	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+ 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+@@ -190,12 +189,8 @@ void ieee80211_get_tkip_key(struct ieee8
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+ 	 * fragmented packets. */
+-	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
+-		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			iv32, key->u.tkip.tx.p1k);
+-		key->u.tkip.tx.initialized = 1;
+-	}
++	if (iv16 == 0 || !key->u.tkip.tx.initialized)
++		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, iv32);
  
- 	/* Add the broadcast address so we can send broadcast frames */
--	if (iwl4965_rxon_add_station(priv, iwl4965_broadcast_addr, 0) ==
-+	if (iwl4965_rxon_add_station(priv, iwl_bcast_addr, 0) ==
- 	    IWL_INVALID_STATION) {
- 		IWL_ERROR("Error adding BROADCAST address for transmit.\n");
- 		return -EIO;
-@@ -1059,9 +1058,9 @@ static u16 iwl4965_fill_probe_req(struct iwl_priv *priv,
- 	len += 24;
+ 	if (type == IEEE80211_TKIP_P1_KEY) {
+ 		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
+@@ -286,10 +281,8 @@ int ieee80211_tkip_decrypt_data(struct c
  
- 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--	memcpy(frame->da, iwl4965_broadcast_addr, ETH_ALEN);
-+	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
- 	memcpy(frame->sa, priv->mac_addr, ETH_ALEN);
--	memcpy(frame->bssid, iwl4965_broadcast_addr, ETH_ALEN);
-+	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
- 	frame->seq_ctrl = 0;
- 
- 	/* fill in our indirect SSID IE */
-@@ -4912,7 +4911,7 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
- 		/* clear out the station table */
- 		iwlcore_clear_stations_table(priv);
- 
--		iwl4965_rxon_add_station(priv, iwl4965_broadcast_addr, 0);
-+		iwl4965_rxon_add_station(priv, iwl_bcast_addr, 0);
- 		iwl4965_rxon_add_station(priv, priv->bssid, 0);
- 		iwl4965_rate_scale_init(priv->hw, IWL_STA_ID);
- 		iwl4965_send_beacon_cmd(priv);
-@@ -5324,7 +5323,7 @@ static void iwl4965_config_ap(struct iwl_priv *priv)
- 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		iwl4965_commit_rxon(priv);
- 		iwl4965_activate_qos(priv, 1);
--		iwl4965_rxon_add_station(priv, iwl4965_broadcast_addr, 0);
-+		iwl4965_rxon_add_station(priv, iwl_bcast_addr, 0);
- 	}
- 	iwl4965_send_beacon_cmd(priv);
- 
--- 
-1.5.3.6
-
+ 	if (!key->u.tkip.rx[queue].initialized ||
+ 	    key->u.tkip.rx[queue].iv32 != iv32) {
+-		key->u.tkip.rx[queue].initialized = 1;
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+-		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-				   iv32, key->u.tkip.rx[queue].p1k);
++		tkip_mixing_phase1(key, ta, &key->u.tkip.rx[queue], iv32);
+ #ifdef CONFIG_TKIP_DEBUG
+ 		{
+ 			int i;
+_
