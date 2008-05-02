@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41928 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55860 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbYETRQf (ORCPT
+	with ESMTP id S1764515AbYEBVDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 13:16:35 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+	Fri, 2 May 2008 17:03:09 -0400
+Subject: Re: rt61pci/rt73usb: Hardware decryption IV/EIV
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> (sfid-20080517_154639_384202_6D3479C2)
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5JHaC54Ie6AKHA8YnikR"
-Date: Tue, 20 May 2008 19:15:31 +0200
-Message-Id: <1211303731.6252.105.camel@johannes.berg> (sfid-20080520_191649_449268_B3E4E7E0)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200805022259.20118.IvDoorn@gmail.com> (sfid-20080502_225342_248676_C435DBF1)
+References: <200805022141.28351.IvDoorn@gmail.com>
+	 <200805022238.21066.IvDoorn@gmail.com>
+	 <1209760939.3608.20.camel@johannes.berg>
+	 <200805022259.20118.IvDoorn@gmail.com>
+	 (sfid-20080502_225342_248676_C435DBF1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Byp0BoPGxakB2Rz79F/u"
+Date: Fri, 02 May 2008 23:02:58 +0200
+Message-Id: <1209762178.3608.21.camel@johannes.berg> (sfid-20080502_230247_133278_149BD639)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-5JHaC54Ie6AKHA8YnikR
+--=-Byp0BoPGxakB2Rz79F/u
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-05-17 at 15:45 +0200, Marcel Holtmann wrote:
-> Hi Johannes,
+On Fri, 2008-05-02 at 22:59 +0200, Ivo van Doorn wrote:
+> On Friday 02 May 2008, Johannes Berg wrote:
+> >=20
+> > > Now there you mention something. Looking at the Legacy driver, they o=
+nly mention
+> > > ICV during the TX, but never during RX. I did find that the MMIC is a=
+ppended at the
+> > > end of the frame, which is good, but they never do anything that look=
+s like the
+> > > stripping of the ICV data...
+> > > So I assume it is stripped in the hardware, but no descriptor definit=
+ion indicates
+> > > a ICV field like there is for IV and EIV. Unless.... they do have a 3=
+2bits "reserved" field
+> > > located directly after the IV/EIV fields.. makes one curious if that =
+accidently contains ICV data. ;)
+> >=20
+> > Heh. Maybe the hardware actually does replay protection so it doesn't
+> > matter?
 >=20
-> > The /sys/class/net/*/wireless/ direcory is, as far as I know, not
-> > used by anyone. Additionally, the same data is available via wext
-> > ioctls. Hence the sysfs files are pretty much useless. This patch
-> > makes them optional and schedules them for removal.
->=20
-> it is used by HAL to classify WiFi network cards as net.80211 instead =20
-> of net.80203 and so we do have an actual user. However HAL only tests =20
-> for the existence of the directory wireless/.
->=20
-> Please fix HAL first before submitting such a patch.
+> The comments in the legacy driver indicates the IV/EIV data was provided =
+for replay attack checking,
+> and I do see a lot of ReplayCounters being memcpy'ed and memcmp() in the =
+driver.
+> What is missing is the intialization of those counters to anything other =
+then 0, and
+> the actual usage of the IV/EIV data in the Rx descriptor. ;)
 
-I have filed a patch to fix HAL to use the canonical SIOCGIWNAME at
-https://bugs.freedesktop.org/show_bug.cgi?id=3D16037. Any further
-objections to this patch?
+Heh. Actually, yes, if the device does ICV checking then replay
+detection can be easily done in software w/o the ICV, but mac80211
+doesn't support that. You could probably just implement it in the driver
+though.
 
 johannes
 
---=-5JHaC54Ie6AKHA8YnikR
+--=-Byp0BoPGxakB2Rz79F/u
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASDMHMqVg1VMiehFYAQIRCRAAha1B0TCHwCXxxe0Is+3Ld007hKV2n8kk
-0VF3N4Q2bLxKemj4rlyIBltc7fNy0qkNMwybjv0L+Qr8MievBdog31t+nSs5+UnA
-twu2OcjYPdDqYwEq/Umfhlsv775z7+E/qdQ1YUVJUrCKHL2M2WKVuNhXJJXX2OJL
-PjO3xio5r6A0KiIZpbTgUsIK0rKbM0ATvlswNFnuG0efuydWfnNoLjoMQifWtrfJ
-LgR/XziOdO/nmmAaygARjt7uSW9/uI384L8Y6ar4C1eoYmgZXzk4PRak4X8GcSaj
-rpVTzdH9SKGQ6J+oBot2YPKAFitivpEGlF2IVxje6suQlYZ0CMdGC2NyPDiW/MTv
-VjMtQH33unXxzz0WXaAJBARjbGVqdhVaadJWNRmws3iF+3uHe2aW3l92IpsFPYjy
-4b47xAcZisvL8mvDTqaCKqOQRKBbj1fKiYE6p1CwHomzdm/9MGmNOjmu2Vjrohc1
-nKHiMQfqbUwFqeYweU1MW4hv03M+jDv2GjFGJYSEjByL3AB9cI2GeqB2mKA6W34H
-WgG8UrTBIWqupkjGxPb2Q7U3JcoOF/R2ikMr4vCmQLY1m3se2Bni42d+0jYjIn+J
-NAnMJ1nzUMpzs0YLUFti62xzI7HQuOonjezxTVA76m0oe/2UaJotlytAhmaH5dMK
-kWNWwyhmyOg=
-=r45u
+iQIVAwUASBuBgaVg1VMiehFYAQLUZxAAgMSh/3BPImQLBQ00uyESPY8cwrsjnUNH
+OBDKFEya3rqur6l9guqBo6+xFeuPY14eGqD3rEefEaS0mntrfQJxpmUZq/bT6Rv9
+8Z3tFnAbYg2HeRVPyRq/fWWU2pR1uLYfftViESgAhRfPV0FAzyUJ6tRa5KZfJvV/
+f6A3CR+fcetpzx8CAWaz1BrgALdJ3zCYtNzpWntkgb4WqDXilc1FRJHsH0macsvz
+WUsuhW2yyX/84jnywW9ii+6hWNPF2k68Y1wtMpQCcNSN6s3/s4ST14UmSF7al3f4
+jgzSeNDD93CnJnSWYnq4Syq0WaYkAzteNVUw785d0GAWzoxeBSw05UeosO7wyVRh
+FrRVWMU71TfUkzktkeUyyg3somVYWU3zqWuaZawnV1P1JBwh7obuqkZHa10qEOR7
+/2zrT5qC4TnGkl+mpVrMsOBlwXC/Cex5Eo0qAPWRcf0zamOAcy+jBxPFJN7Yovdh
+T6juZWbGYfZS2TurAaq6rF9OnKiv+gESdetUoh6jsDahXwQe4DWi3NOiuIJt4/dH
+rQAd9tKWGMjqRK7EiGEmzcXLBC97VKqwdBR+eERcKCBuc5yFWkt7/vI/reoz7iN0
+l6RxKj/v2pH0Eet4J/7qOMjJxBrRYIwtxkm/CHHTemP2OTLtGrAvH6FdFs9FBZIX
+dMwvE2rcHY0=
+=WdaJ
 -----END PGP SIGNATURE-----
 
---=-5JHaC54Ie6AKHA8YnikR--
+--=-Byp0BoPGxakB2Rz79F/u--
 
