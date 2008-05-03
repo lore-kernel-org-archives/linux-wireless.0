@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53692 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50997 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbYEPUb0 (ORCPT
+	with ESMTP id S1752026AbYECLw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 16:31:26 -0400
-Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
+	Sat, 3 May 2008 07:52:27 -0400
+Subject: Re: mac80211 truesize bugs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1210966704.5915.51.camel@brick> (sfid-20080516_213833_934385_1E372539)
-References: <1210966154.5915.50.camel@brick>
-	 <1210966704.5915.51.camel@brick> (sfid-20080516_213833_934385_1E372539)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-INUYnybLZLnAqY7Yl41v"
-Date: Fri, 16 May 2008 22:31:06 +0200
-Message-Id: <1210969866.6381.46.camel@johannes.berg> (sfid-20080516_223131_709907_6A706BD2)
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080502.163334.148944203.davem@davemloft.net>
+References: <1209639500.7067.0.camel@johannes.berg>
+	 <20080501110341.GD7490@gondor.apana.org.au>
+	 <1209760731.3608.17.camel@johannes.berg>
+	 <20080502.163334.148944203.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HAMbGV0fR9LyZuZZG4vU"
+Date: Sat, 03 May 2008 13:52:13 +0200
+Message-Id: <1209815533.3987.21.camel@johannes.berg> (sfid-20080503_135201_391781_DD13E25A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-INUYnybLZLnAqY7Yl41v
+--=-HAMbGV0fR9LyZuZZG4vU
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> +static inline int ieee80211_fctl_tods(struct ieee80211_hdr *hdr)
+> We can't update skb->truesize during arbitray skb->data reallocations,
+> because it could corrupt the socket accounting.
+>=20
+> On the other hand, if we provide ways for users to subvert the socket
+> buffer limits, we might as well not try to limit anything.
 
-> +static inline int ieee80211_fctl_fromds(struct ieee80211_hdr *hdr)
+Why don't we update the socket allocation when doing pskb_expand_head()?
+Sure, it could become negative, but is that so bad?
 
-These seem fine though I don't see why you implement them with a > 0
-rather than !=3D 0 comparison?
+> Take a look at some ethernet drivers that implement TSO in a way that
+> requires munging the IP headers for whatever reason.  If they need to
+> COW the packet data in order to modify it, they always do this with
+> pskb_expand_head(skb, 0, 0, GFP_*) exactly so that they don't modify
+> the SKB data size, and exactly so that the skb->truesize value stays
+> accurate.
 
-> +static inline int ieee80211_fctl_has_a4(struct ieee80211_hdr *hdr)
-
-That seems fine too.
-
-> +static inline int ieee80211_ftype(struct ieee80211_hdr *hdr, u16 ftype)
-
-That, I think, is misnamed, it should be ieee80211_is_ftype()
-
-> +static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u16 stype)
-> +{
-> +	return (hdr->frame_control & cpu_to_le16(stype)) !=3D 0;
-> +}
-
-And that even seems implemented wrongly? stype is a 4-bit field, this
-doesn't make much sense to me.
-
-> +static inline int ieee80211_ftype_mgmt(struct ieee80211_hdr *hdr)
-
-> +static inline int ieee80211_ftype_ctl(struct ieee80211_hdr *hdr)
-
-> +static inline int ieee80211_ftype_data(struct ieee80211_hdr *hdr)
-
-similarly, ieee80211_is_data() (remove the ftype, everybody hacking
-wireless should know that data/mgmt/ctl are frame types)
+We need more space though. Should we then just increase the built-in
+headroom?
 
 johannes
 
---=-INUYnybLZLnAqY7Yl41v
+--=-HAMbGV0fR9LyZuZZG4vU
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASC3vCaVg1VMiehFYAQLbAg/+KOEvVyBg5Odm3+6r7/cEcU+kpmB1Jp8N
-8JjEYf30l0qY6jeOw1ggEyR8jvblrk5J/vIAnS+BWQaFtjvooiIYFHivEnSACyT7
-19pRlhN79JS7XcE9SpCPVXfzhRKLRnCsMhaswo4a6OeejjNmeuhxI7G/tN62OYnM
-vkSGwtXNWPTqctFaCrfhV1tallXHIF4aj9RgXajueHX99sPQ2KUlBc6Cuumt3GoN
-LOv62qdiF7IBFei/y4eOmtK2uxfLIboNt06RZXGoYx+fVeVTtYdjiI+uBPPJnKyI
-JkP98kDiwto1P0iGr77AmQUy+qJOvW9Pjgp3qu/zlc6UAVaCpdYzDa/W7mEk/ql4
-jQAythEmyuxYUkcUbQLXhsmTSf0DBEuo/1ga6PA9CnXYtyADz5i8YXSzXBgP8Krr
-689XkpJDHLZv8FkSo2Hne//noNKdEczGxi6jwW5jGGRuTfRT0kxzP90asmDViJ8Y
-EbKLB9Gga8hxbXPveqGe1YEKjDeR/PTUGZASVUWfdaydxzIVvYWPmqiZ7f57unPe
-Tt5mFri97aoCLpuUhcDacOZpHYjClstFAYXktUoIjnx3dxQbMAaY4U0FtSbutyZ+
-v95whdryCKPXZHTpli1pMy8EqPvUfb71r19z9SSC9oA9SMaagJl1rks0DNKBXgAl
-B2MQVTcFgjQ=
-=kCRo
+iQIVAwUASBxR7KVg1VMiehFYAQIG6A/+LN7tnSrj2GWgprqCBlUEo7SJLnGQ7BVE
+BiRas6WVxYIUKjquPF5c3qWLaCDMPkRwV1j4tt3dfCXLckGDNMrb/TNESKL+TEqo
+psLnzV8gWcjIlfnt4FCb6d0G/N/P0w+R94tQC5Q9c55QTVU7BL9rwXsUmh3NKZx+
+N9PmtQrdLne8lzEKTUzRblH28rQ/yffn0blrnZhw7vc0wcYzo1IvdV/LCphSbQwu
+VCJhcVmZEQZAi6ezN+yI8Ap/RSzsdL1MVzquVjf1CkU1oeTT7z8vPX19qcqrSJp5
+DNn1L3bg5/fTF3bkeMKPKY7hccszC0iuflBA2jHGPGlMpJTxa92DMn10prZMEpM6
+DDZ4W+BpjUJtLO9PD921wWk02hrgrQIT/2XFEpLe8oPsE7RLiU+FkQgazgho2Pjb
+AlD2ixApQW45H2kM74iYq/4WJU4LdQ73fai04h9CWz6Q5T4O0cVZMCPoO4UXWlr/
+Eu6YJ9/500GuM1IrxcqBwZF96sbxRq5zAmaqsHfhHtU3R8JRiielYHgGk4KZhZ+4
+VdCeJnh+9S+WXCoTiNLrv/gAGqJFjqJHvNe4OJDA2nhR89WGmRgLZJIDVwHCjW8P
+D7hQwV74L0+OPvkOITfZLZpYZU7PTTP9LhzRebG5bC29xw1QLpJiroeOv1mJnhCb
+cKTH3ss5qRo=
+=wAUQ
 -----END PGP SIGNATURE-----
 
---=-INUYnybLZLnAqY7Yl41v--
+--=-HAMbGV0fR9LyZuZZG4vU--
 
