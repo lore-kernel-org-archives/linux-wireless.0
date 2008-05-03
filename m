@@ -1,59 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta2.srv.hcvlny.cv.net ([167.206.4.197]:58376 "EHLO
-	mta2.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbYEJVsd (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34777
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753455AbYECXHF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 17:48:33 -0400
-Received: from X61.NetworkingUnlimited.com
- (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta2.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K0O00FS39WWF420@mta2.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Sat, 10 May 2008 17:48:32 -0400 (EDT)
-Date: Sat, 10 May 2008 17:48:30 -0400
-From: Vincent C Jones <v.jones@networkingunlimited.com>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies -	2.6.26-rc1
- kernel
-In-reply-to: <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Message-id: <1210456110.3787.26.camel@X61.NetworkingUnlimited.com> (sfid-20080510_234837_687832_85B11BA1)
-MIME-version: 1.0
-Content-type: text/plain
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
- <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
- <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
- <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
- <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
- <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
- <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	Sat, 3 May 2008 19:07:05 -0400
+Date: Sat, 03 May 2008 16:07:05 -0700 (PDT)
+Message-Id: <20080503.160705.78111001.davem@davemloft.net> (sfid-20080504_010636_272504_A9214809)
+To: johannes@sipsolutions.net
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1209855383.3649.3.camel@johannes.berg>
+References: <20080503125940.GA26199@gondor.apana.org.au>
+	<1209830582.3673.8.camel@johannes.berg>
+	<1209855383.3649.3.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Sat, 2008-05-10 at 21:56 +0300, Tomas Winkler wrote:
-> >
-> > May be more to this than just missing 802.11a channel reporting...
-> > walked to within range of a NetGear dual-band 802.11N 5GHz/11G 2.4GHz AP
-> > and could not even see the 802.11A side of the AP, (while another
-> > machine was associated with it, so both halves of the AP were up).
-> > I associated on the G channel, then tried to force an association on the
-> > A channel by setting the frequency with iwconfig. At some point, I got
-> > the following (note that I could still associate with the G channel when
-> > done):
-> >
-> > ay 10 11:20:04 X61 kernel: ------------[ cut here ]------------
-> > May 10 11:20:04 X61 kernel: WARNING: at
-> > include/../net/mac80211/rate.h:153 rs_get_rate+0x159/0x194 [iwl4965]()
-> 
-> Something went wrong with station management.  Do you use same BSSID
-> on the both interfaces A and G?
-> 
-> Thanks
-> Tomas
-
-No. 
-1st Floor-NetGear Dual Band AGN A/N on 36, BSSID = NetworkingUnlimited 
-                                  G on 11, BSSID = NetworkingUnlimited-G
-2nd Floor - 3Com POE A/G in A modeA on 48, BSSID = NetworkingUnlimited
-
-
+RnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCkRhdGU6IFN1
+biwgMDQgTWF5IDIwMDggMDA6NTY6MjMgKzAyMDANCg0KPiBUaGlzIHdhcyBhIHN0dXBpZCBtaXN0
+YWtlLCBpZiB5b3UgZG8gaXQgY29ycmVjdGx5IGl0IGFjdHVhbGx5IHdvcmtzIGFuZA0KPiBzbyBm
+YXIgaGFzIG9ubHkgdHJpZ2dlcmVkIGEgc2luZ2xlIHdhcm5pbmcgb24gbXkgc3lzdGVtOg0KPiAN
+Cj4gWyAgMjE3LjUwNzA0OF0gU0tCIEJVRzogSW52YWxpZCB0cnVlc2l6ZSAoNDI5NDk2NDEyMCkg
+c2l6ZT00MzIsIHNpemVvZihza19idWZmKT0xNzYNCj4g77u/DQo+IHRoYXQgd2FzIHdpdGggbXkg
+cGF0Y2ggdGhvdWdoIHRvIHVwZGF0ZSBza2ItPnRydWVzaXplIGR1cmluZyAhc2tiLT5zaw0KPiBw
+c2tiX2V4cGFuZF9oZWFkKCkgY2FsbHMuDQoNClRoYW5rcyBhIGxvdCBmb3IgdHJhY2tpbmcgdGhp
+cyBkb3duIEpvaGFubmVzLg0K
