@@ -1,109 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mr1.bfh.ch ([147.87.250.50]:36456 "EHLO mr1.bfh.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755575AbYEPNsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 09:48:35 -0400
-From: Michael Bernhard <michael.bernhard@bfh.ch>
-To: mcgrof@winlab.rutgers.edu
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] compat-2.6: Add some missing functions and macros
-Date: Fri, 16 May 2008 15:48:44 +0200
-Message-Id: <12109457272730-git-send-email-michael.bernhard@bfh.ch> (sfid-20080516_154840_418674_0485727E)
-In-Reply-To: <1210945725582-git-send-email-michael.bernhard@bfh.ch>
-References: <1210945725582-git-send-email-michael.bernhard@bfh.ch>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754294AbYECOZi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 10:25:38 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1209807477.3987.9.camel@johannes.berg> (sfid-20080503_113754_273925_A55099EA)
+References: <1209639500.7067.0.camel@johannes.berg>
+	 <20080501110341.GD7490@gondor.apana.org.au>
+	 <1209760731.3608.17.camel@johannes.berg>
+	 <20080502.163334.148944203.davem@davemloft.net>
+	 <1209807477.3987.9.camel@johannes.berg>
+	 (sfid-20080503_113754_273925_A55099EA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-11Ive5RmNQe028WNXGGp"
+Date: Sat, 03 May 2008 16:25:20 +0200
+Message-Id: <1209824720.1475.6.camel@johannes.berg> (sfid-20080503_162511_647605_8109A2D3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Bernhard <michael.bernhard@bfh.ch>
----
- compat/compat.h         |   31 +++++++++++++++++++++++++++++++
- scripts/admin-update.sh |   10 ++++++++++
- 2 files changed, 41 insertions(+), 0 deletions(-)
 
-diff --git a/compat/compat.h b/compat/compat.h
-index 4ae26ac..78e19da 100644
---- a/compat/compat.h
-+++ b/compat/compat.h
-@@ -30,6 +30,9 @@
- #include <linux/init.h>
- #include <linux/uaccess.h>
- 
-+#include <linux/unaligned/access_ok.h>
-+#include <linux/unaligned/generic.h>
-+
- #include <net/arp.h>
- #include <net/neighbour.h>
- 
-@@ -403,6 +406,34 @@ static inline void led_classdev_unregister_suspended(struct led_classdev *lcd)
- 	led_classdev_unregister(lcd);
- }
- 
-+/* From include/linux/device.h */
-+static inline const char *dev_name(struct device *dev)
-+{
-+	/* will be changed into kobject_name(&dev->kobj) in the near future */
-+	return dev->bus_id;
-+}
-+
-+/* From include/linux/kernel.h */
-+/**
-+ * clamp_val - return a value clamped to a given range using val's type
-+ * @val: current value
-+ * @min: minimum allowable value
-+ * @max: maximum allowable value
-+ *
-+ * This macro does no typechecking and uses temporary variables of whatever
-+ * type the input argument 'val' is.  This is useful when val is an unsigned
-+ * type and min and max are literals that will otherwise be assigned a signed
-+ * integer type.
-+ */
-+#define clamp_val(val, min, max) ({		\
-+	typeof(val) __val = (val);		\
-+	typeof(val) __min = (min);		\
-+	typeof(val) __max = (max);		\
-+	__val = __val < __min ? __min: __val;	\
-+	__val > __max ? __max: __val; })
-+
-+/* Undef BIT() which is defined in include/linux/bitops.h */
-+#undef BIT
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
- #endif /* LINUX_26_COMPAT_H */
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 555c1e8..55ef211 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -23,6 +23,9 @@ INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h bitops.h eeprom_93cx6.h pm_qos_params.h"
- # For rndis_wext
- INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
- 
-+# Unaligned access
-+INCLUDE_LINUX_UNALIGNED="access_ok.h generic.h"
-+
- # Stuff that should die or be merged, only ipw uses it
- INCLUDE_NET_OLD="ieee80211.h ieee80211_crypt.h"
- # The good new yummy stuff
-@@ -73,6 +76,7 @@ DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
- DRIVER_FILES="$DRIVER_FILES at76_usb.h at76_usb.c"
- 
- mkdir -p include/linux/ include/net/ include/linux/usb \
-+	include/linux/unaligned \
- 	net/mac80211/ net/wireless/ net/ieee80211/ \
- 	drivers/ssb/ \
- 	drivers/net/usb/ \
-@@ -100,6 +104,12 @@ for i in $INCLUDE_LINUX_USB; do
- 	cp $GIT_TREE/$DIR/$i $DIR/
- done
- 
-+DIR="include/linux/unaligned"
-+for i in $INCLUDE_LINUX_UNALIGNED; do
-+	echo "Copying $GIT_TREE/$DIR/$i"
-+	cp $GIT_TREE/$DIR/$i $DIR/
-+done
-+
- # net/wireless and net/mac80211
- for i in $NET_DIRS; do
- 	echo "Copying $GIT_TREE/net/$i/*.[ch]"
--- 
-1.5.2.5
+--=-11Ive5RmNQe028WNXGGp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> One of the worst devices is the Broadcom one with 82 header and nowadays
+> actually DMAs this header from a separate memory location, so there this
+> won't happen, but can we guarantee that all devices are programmable
+> that way? We've seen lots of rather strange devices unfortunately...
+
+The worst case is probably prism54 usb devices which by itself need 76
+bytes headroom for the USB buffer, and then when we say run mesh on top
+of it we'll need a total of 122 bytes. Needless to say, it cannot do s/g
+operation.
+
+The question is: how do we handle that? Do we reallocate the buffer in
+the driver? That is well possible but makes it rather inconvenient for
+driver authors. Also, mac80211 will still need 46 bytes of headroom and
+12 bytes of tailroom in the worst case (so far, HT might require four
+more.) If we skb_orphan() the skb right away we have essentially removed
+all socket memory accounting, so that's pretty pointless.
+
+Should we increase the LL_MAX_HEADER constant to 40 (no mesh networking)
+or 46 for when 802.11 (with mesh networking) is configured into the
+kernel? Most people probably don't run an IPIP tunnel over wireless yet
+configure them in (especially distros) so that might be why we never saw
+the problem before.
+
+johannes
+
+--=-11Ive5RmNQe028WNXGGp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBx1zqVg1VMiehFYAQIIQBAApesfhz/xvWrvVyoWzW1b5XEgahdtBolr
+fd53DgW6u4hkAiCvveNWgOUgEBL0/g7ryhfDTc0Lkgdp51o8tNHwXpv7tcQHERJN
+dpYvS/Q5eOXxxPfVqHUJEXQLCpjLJO6yYv2I+mhVHpheyvqknCKl90LAGID+kXAd
+tGq5ZbH1AT7LLFdVtboFSY+tpYR86A2qwzP+6p19fPQ+MbvhkGy8cXZrumWNtxNE
+ZyrMF64OhV7zphrt973SJV2h7htzfIJcJ9mpChE5hMvPFaqtuejL1ep6h+K49Ka5
+462Dcvd+38A2XwtHgeSfd2H8J/6XtI8yO5b8TRGsrtyLl6FK+5atMzbevHknZdvL
+ki9a6kqhcDdA8uomwXPfo03uI+XUU7uqybmPwVX8fYO4MD+Xz/a+cOf13ZdsVqY+
+ILF73gE6ZTyM3NplgL/dayEhIfemwdimV8zYcE4o/hnIjQ1EClP7M1oMOmVyo4TK
+jfcvH9DtiL5aKcwEis3gLJVX1CjRo5yVfBQ3qEIUSqy6sNcSnhN6IpDvg17AR60H
+wSuo4qDziQjOjoYnCTEQlEGCoge5ClCQCHFiae3O6hF8vn9lTQ1HmBhOSCjTJ60y
+GfC9Zj5NvxQmxmnGkaOM/yaoUCSgrCyKQRe/5284+jlhAI2zz8AKo7JXeqaI+RJg
+TmQKgM7tG28=
+=SIjw
+-----END PGP SIGNATURE-----
+
+--=-11Ive5RmNQe028WNXGGp--
 
