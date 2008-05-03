@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:19706 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbYE1RHu (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:18653 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774AbYECO4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 13:07:50 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so2016291ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 10:07:45 -0700 (PDT)
-Message-ID: <1ba2fa240805281007x40ded8b1rd68f80c4ce5d79f@mail.gmail.com> (sfid-20080528_190754_014164_23E82CAD)
-Date: Wed, 28 May 2008 20:07:44 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>
-Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ron.rindjunsky@intel.com" <ron.rindjunsky@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C483351723447@CHEXMB-01.global.atheros.com>
+	Sat, 3 May 2008 10:56:48 -0400
+Received: by ug-out-1314.google.com with SMTP id h3so312928ugf.16
+        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2008 07:56:46 -0700 (PDT)
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: Please pull 'upstream' branch of rt2x00
+Date: Sat, 3 May 2008 17:02:20 +0200
+Cc: Scott White <nwi_sub@hotmail.com>, linux-wireless@vger.kernel.org
+References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl> <200805031158.43072.IvDoorn@gmail.com> <1209809936.10921.9.camel@localhost>
+In-Reply-To: <1209809936.10921.9.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080528145048.GB5244@senthil-lnx.users.atheros.com>
-	 <20080528151651.GA13461@tuxdriver.com>
-	 <44EE5C37ADC36343B0625A05DD408C483351723447@CHEXMB-01.global.atheros.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805031702.20416.IvDoorn@gmail.com> (sfid-20080503_165631_067313_B10C7019)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 28, 2008 at 7:50 PM, Senthilkumar Balasubramanian
-<Senthilkumar.Balasubramanian@atheros.com> wrote:
-> ________________________________________
-> From: John W. Linville [linville@tuxdriver.com]
-> Sent: Wednesday, May 28, 2008 8:46 PM
-> To: Senthilkumar Balasubramanian
-> Cc: johannes@sipsolutions.net; ron.rindjunsky@intel.com; linux-wireless@vger.kernel.org; Luis Rodriguez
-> Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
->
-> On Wed, May 28, 2008 at 08:20:48PM +0530, Senthil Balasubramanian wrote:
->> This addresses an alignment issue with compare_ether_addr().
->> The addresses passed to compare_ether_addr should be two bytes aligned.
->> It may function properly in x86 platform. However may not work properly
->> on IA-64 or ARM processor.
->
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -1116,7 +1116,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->>       u16 fc, hdrlen, ethertype;
->>       u8 *payload;
->>       u8 dst[ETH_ALEN];
->> -     u8 src[ETH_ALEN];
->> +     /* Should be aligned on 2 bytes for compare_ether_addr() */
->> +     u16 src_aligned[ETH_ALEN >> 1];
->> +     u8 *src = (u8 *)src_aligned;
->>       struct sk_buff *skb = rx->skb;
->>       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->>       DECLARE_MAC_BUF(mac);
->
-> Any reason you couldn't just do this?
->
-> I just thought of using the type u16 instead of attribute here. that's all. No specific reason.
->
-> @@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->        u16 fc, hdrlen, ethertype;
->        u8 *payload;
->        u8 dst[ETH_ALEN];
-> -       u8 src[ETH_ALEN];
-> +       u8 src[ETH_ALEN] __attribute__ ((aligned(2)));
->        struct sk_buff *skb = rx->skb;
->        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        DECLARE_MAC_BUF(mac);
->
-> It seems to compile w/o errors on i686, and it seems more clear to me.
-> Will that not work?
->
-> Yes. It should also work. I will re-create the patch and send it to you. I will also include Johannes suggestion of just using __aligned macro.
->
-Can we split the two issues in seperate patches. It's better for tracking.
+> > > For rt73? IIRC the rate selection algo does not work at all for that
+> > > device, because we cannot report failed frames. Or have you done
+> > > anything about that I might have missed, Ivo? If not, the rate is
+> > > probably fixed at 54Mbit anyway.
+> > 
+> > Well I didn't do anything new, but this line will report rt2x00lib that the
+> > frame was succesfully send or failed to send:
+> > 	txdesc.status = !urb->status ? TX_SUCCESS : TX_FAIL_RETRY;
+> > What is missing is the retry count, since that is something that
+> > the USB drivers cannot report. (Unless I grab the max retry count
+> > as configured by mac80211 as the number of retries on failure)
+> 
+> Well, I have just put my rt73 into a metal box. Many frames do fail,
+> only very few get through pinging my AP. The rate control still keeps
+> the rate at 54Mbit/s :-) So it seems neither excessive_retries nor the
+> retry_count in the tx_status struct is set at all.
 
-Thanks
-Tomas
+Hmm, perhaps we need some way the driver can inform the rate selection
+module about statistics. I mean the hardware does measure the number
+of failed TX frames, and the number of retries, but it doesn't set them
+in the descriptor but in the hardware.
+
+Ivo
