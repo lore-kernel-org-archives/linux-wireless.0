@@ -1,147 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms6.Sony.CO.JP ([211.125.136.204]:52394 "EHLO ms6.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757025AbYE0H1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 03:27:01 -0400
-Date: Tue, 27 May 2008 16:24:31 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: Daniel Walker <dwalker@mvista.com>
-Subject: Re: [PATCH 1/3] ps3: gelic: scan_lock semaphore to mutex
-Cc: netdev@vger.kernel.org, jgarzik@pobox.com, netdev@vger.kernel.org,
-	matthew@wil.cx, rusty@rustcorp.com.au, mingo@elte.hu,
-	linux-kernel@vger.kernel.org, arjan@infradead.org,
-	geoffrey.levand@am.sony.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20080522195404.061391772@mvista.com>
-References: <20080522195404.061391772@mvista.com>
-Message-Id: <20080527161710.0149.40F06B3A@sm.sony.co.jp> (sfid-20080527_092742_716531_2D1C5CB3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from mail.gmx.net ([213.165.64.20]:56102 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757495AbYECPio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 11:38:44 -0400
+Subject: Re: Please pull 'upstream' branch of rt2x00
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Scott White <nwi_sub@hotmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1209828478.3673.2.camel@johannes.berg>
+References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
+	 <200805031158.43072.IvDoorn@gmail.com> <1209809936.10921.9.camel@localhost>
+	 <200805031702.20416.IvDoorn@gmail.com>
+	 (sfid-20080503_165631_067313_B10C7019)  <1209828478.3673.2.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 03 May 2008 15:38:41 +0000
+Message-Id: <1209829121.27386.1.camel@localhost> (sfid-20080503_173816_512141_186C40F8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added CC: linux-wireless
-
-On Thu, 22 May 2008 00:00:01 -0700
-Daniel Walker <dwalker@mvista.com> wrote:
-
-> Signed-off-by: Daniel Walker <dwalker@mvista.com>
+On Sat, 2008-05-03 at 17:27 +0200, Johannes Berg wrote:
+> > Hmm, perhaps we need some way the driver can inform the rate selection
+> > module about statistics. I mean the hardware does measure the number
+> > of failed TX frames, and the number of retries, but it doesn't set them
+> > in the descriptor but in the hardware.
 > 
+> Yes we should have this.
 
-patches #1 - #3:
+New rate control algorithm probably. Or even better: Split what is
+currently the rate control algorithm into an link quality estimation
+part (failed frames percentage and such) and the actual rate control
+that interprets that value and acts accordingly.
 
-Acked-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-
-> ---
->  drivers/net/ps3_gelic_wireless.c |   18 +++++++++---------
->  drivers/net/ps3_gelic_wireless.h |    2 +-
->  2 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> Index: linux-2.6.25/drivers/net/ps3_gelic_wireless.c
-> ===================================================================
-> --- linux-2.6.25.orig/drivers/net/ps3_gelic_wireless.c
-> +++ linux-2.6.25/drivers/net/ps3_gelic_wireless.c
-> @@ -695,7 +695,7 @@ static int gelic_wl_get_scan(struct net_
->  	unsigned long this_time = jiffies;
->  
->  	pr_debug("%s: <-\n", __func__);
-> -	if (down_interruptible(&wl->scan_lock))
-> +	if (mutex_lock_interruptible(&wl->scan_lock))
->  		return -EAGAIN;
->  
->  	switch (wl->scan_stat) {
-> @@ -733,7 +733,7 @@ static int gelic_wl_get_scan(struct net_
->  	wrqu->data.length = ev - extra;
->  	wrqu->data.flags = 0;
->  out:
-> -	up(&wl->scan_lock);
-> +	mutex_unlock(&wl->scan_lock);
->  	pr_debug("%s: -> %d %d\n", __func__, ret, wrqu->data.length);
->  	return ret;
->  }
-> @@ -1554,7 +1554,7 @@ static int gelic_wl_start_scan(struct ge
->  	int ret = 0;
->  
->  	pr_debug("%s: <- always=%d\n", __func__, always_scan);
-> -	if (down_interruptible(&wl->scan_lock))
-> +	if (mutex_lock_interruptible(&wl->scan_lock))
->  		return -ERESTARTSYS;
->  
->  	/*
-> @@ -1588,7 +1588,7 @@ static int gelic_wl_start_scan(struct ge
->  	}
->  	kfree(cmd);
->  out:
-> -	up(&wl->scan_lock);
-> +	mutex_unlock(&wl->scan_lock);
->  	pr_debug("%s: ->\n", __func__);
->  	return ret;
->  }
-> @@ -1610,7 +1610,7 @@ static void gelic_wl_scan_complete_event
->  	DECLARE_MAC_BUF(mac);
->  
->  	pr_debug("%s:start\n", __func__);
-> -	down(&wl->scan_lock);
-> +	mutex_lock(&wl->scan_lock);
->  
->  	if (wl->scan_stat != GELIC_WL_SCAN_STAT_SCANNING) {
->  		/*
-> @@ -1727,7 +1727,7 @@ static void gelic_wl_scan_complete_event
->  			    NULL);
->  out:
->  	complete(&wl->scan_done);
-> -	up(&wl->scan_lock);
-> +	mutex_unlock(&wl->scan_lock);
->  	pr_debug("%s:end\n", __func__);
->  }
->  
-> @@ -2282,7 +2282,7 @@ static void gelic_wl_assoc_worker(struct
->  	wait_for_completion(&wl->scan_done);
->  
->  	pr_debug("%s: scan done\n", __func__);
-> -	down(&wl->scan_lock);
-> +	mutex_lock(&wl->scan_lock);
->  	if (wl->scan_stat != GELIC_WL_SCAN_STAT_GOT_LIST) {
->  		gelic_wl_send_iwap_event(wl, NULL);
->  		pr_info("%s: no scan list. association failed\n", __func__);
-> @@ -2302,7 +2302,7 @@ static void gelic_wl_assoc_worker(struct
->  	if (ret)
->  		pr_info("%s: association failed %d\n", __func__, ret);
->  scan_lock_out:
-> -	up(&wl->scan_lock);
-> +	mutex_unlock(&wl->scan_lock);
->  out:
->  	up(&wl->assoc_stat_lock);
->  }
-> @@ -2431,7 +2431,7 @@ static struct net_device *gelic_wl_alloc
->  
->  	INIT_DELAYED_WORK(&wl->event_work, gelic_wl_event_worker);
->  	INIT_DELAYED_WORK(&wl->assoc_work, gelic_wl_assoc_worker);
-> -	init_MUTEX(&wl->scan_lock);
-> +	mutex_init(&wl->scan_lock);
->  	init_MUTEX(&wl->assoc_stat_lock);
->  
->  	init_completion(&wl->scan_done);
-> Index: linux-2.6.25/drivers/net/ps3_gelic_wireless.h
-> ===================================================================
-> --- linux-2.6.25.orig/drivers/net/ps3_gelic_wireless.h
-> +++ linux-2.6.25/drivers/net/ps3_gelic_wireless.h
-> @@ -241,7 +241,7 @@ enum gelic_wl_assoc_state {
->  #define GELIC_WEP_KEYS 4
->  struct gelic_wl_info {
->  	/* bss list */
-> -	struct semaphore scan_lock;
-> +	struct mutex scan_lock;
->  	struct list_head network_list;
->  	struct list_head network_free_list;
->  	struct gelic_wl_scan_info *networks;
-> 
-> -- 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Masakazu Mokuno
+Mattias
 
