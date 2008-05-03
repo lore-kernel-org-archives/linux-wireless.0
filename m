@@ -1,168 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:37417 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760092AbYEWCMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:12:07 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: activate status ready timeout only for run time ucode
-Date: Fri, 23 May 2008 10:09:25 +0800
-Message-Id: <1211508569-3163-48-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_987934_5ECB4742)
-In-Reply-To: <1211508569-3163-47-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-38-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-40-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-41-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-42-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-43-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-44-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-45-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-46-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-47-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48565 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755254AbYECMiR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 08:38:17 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080501110341.GD7490@gondor.apana.org.au>
+References: <20080501.024320.212547875.davem@davemloft.net>
+	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
+	 <20080501.034950.261408566.davem@davemloft.net>
+	 <20080501.035335.216935614.davem@davemloft.net>
+	 <1209639500.7067.0.camel@johannes.berg>
+	 <20080501110341.GD7490@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2MBmCFTkYWKaSIOdYB2Q"
+Date: Sat, 03 May 2008 14:38:01 +0200
+Message-Id: <1209818282.3987.23.camel@johannes.berg> (sfid-20080503_143750_221520_9F2F3239)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch makes driver state timeout checks on ucode alive response
-only if run time ucode have been loaded.
+--=-2MBmCFTkYWKaSIOdYB2Q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   26 ++++++++++++++------------
- 3 files changed, 20 insertions(+), 17 deletions(-)
+On Thu, 2008-05-01 at 19:03 +0800, Herbert Xu wrote:
+> On Thu, May 01, 2008 at 12:58:20PM +0200, Johannes Berg wrote:
+> >
+> > Indeed. But then why did we never see this bug w/o monitor interfaces
+> > and this reinjection?
+>=20
+> The debugging only catches it if the expanded area actually
+> gets used, e.g., by skb_push.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 8c83384..d657b43 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -156,6 +156,8 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO("Begin load bsm\n");
- 
-+	priv->ucode_type = UCODE_RT;
-+
- 	/* make sure bootstrap program is no larger than BSM's SRAM size */
- 	if (len > IWL_MAX_BSM_SIZE)
- 		return -EINVAL;
-@@ -221,8 +223,6 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	iwl_release_nic_access(priv);
- 
--	priv->ucode_type = UCODE_INIT;
--
- 	return 0;
- }
- 
-@@ -269,8 +269,6 @@ static int iwl4965_set_ucode_ptrs(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO("Runtime uCode pointers are set.\n");
- 
--	priv->ucode_type = UCODE_RT;
--
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index eb6141e..685a84e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -804,8 +804,11 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 
- 	iwl5000_send_Xtal_calib(priv);
- 
--	if (priv->ucode_type == UCODE_RT)
-+	if (priv->ucode_type == UCODE_RT) {
- 		iwl5000_send_calib_results(priv);
-+		set_bit(STATUS_READY, &priv->status);
-+		priv->is_open = 1;
-+	}
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 1a94574..e46bdb1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4082,21 +4082,23 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 	if (test_bit(STATUS_IN_SUSPEND, &priv->status))
- 		return 0;
- 
--	/* Wait for START_ALIVE from ucode. Otherwise callbacks from
-+	/* Wait for START_ALIVE from Run Time ucode. Otherwise callbacks from
- 	 * mac80211 will not be run successfully. */
--	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
--			test_bit(STATUS_READY, &priv->status),
--			UCODE_READY_TIMEOUT);
--	if (!ret) {
--		if (!test_bit(STATUS_READY, &priv->status)) {
--			IWL_ERROR("Wait for START_ALIVE timeout after %dms.\n",
--				  jiffies_to_msecs(UCODE_READY_TIMEOUT));
--			ret = -ETIMEDOUT;
--			goto out_release_irq;
-+	if (priv->ucode_type == UCODE_RT) {
-+		ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+				test_bit(STATUS_READY, &priv->status),
-+				UCODE_READY_TIMEOUT);
-+		if (!ret) {
-+			if (!test_bit(STATUS_READY, &priv->status)) {
-+				IWL_ERROR("START_ALIVE timeout after %dms.\n",
-+					jiffies_to_msecs(UCODE_READY_TIMEOUT));
-+				ret = -ETIMEDOUT;
-+				goto out_release_irq;
-+			}
- 		}
--	}
- 
--	priv->is_open = 1;
-+		priv->is_open = 1;
-+	}
- 	IWL_DEBUG_MAC80211("leave\n");
- 	return 0;
- 
--- 
-1.5.3.6
+Why, btw? It's not too hard to check the allocated size, no?
+
+johannes
+
+--=-2MBmCFTkYWKaSIOdYB2Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASBxcqKVg1VMiehFYAQItkBAAiJJrEPIsnAgHMNPZuR3cSlh1T1H7mKsb
+Lk5C3Vz4fQsOqJ6grNCFxPtBtRxDuPoIHMWuB7/7rGIWhTALRtW/pBugQ6FWRiw+
+mhPYp+nbp4HijcbfZkPzGPNzCf74u53DQ6rg043LfIEfN2cKPZ9QkFOJlXcEddgG
+ujE9J9WGDCuMrfKCRM8BdHrcUC6iUtYJbcuj0Cq9zN05XzN3QkxqmFsSAsiVLFyC
+ciLkp+yLhcbzm5h0Ao2b3zPlmFbi/RNWQKLy0QQcDL/pmHdnyRdrLzh5KsslguDg
+AftF89hvV9ixl6DW/gCzj/iRClYsjGEoaHjO6FSgqpx61MfWbAnsGE71JSu3uPJx
+qaKr76tZQX2Q77mWd9URpiB7WSqDbMoA1wiZGeS6iaJInbDZl/OVYgnNOZstVg9i
+FyHB6tz+g480gIN94zFjItOi9lXjm4qDLkNrADUvkS+d+aOZL9f5MGFKEWggeNDN
+VNHAO+GPw+1UrS53kveebCsCw90hd+JfbDuv1KpTUCAou9S1Jl/XSQb+9NpF3RxC
+cpYvRVZGGuB/4jiNVrpkOtg2JrYJcK+RwYuoBNoOc+CzYU7hLhsK1hko2Nyvo4mf
+ArzOz+tKNVXaLSameVXfxkKhJHiBKur07LWhGtP2cvaYF5jEFeDDmTI/4G8jRnoy
+Xnh7FWF6t4A=
+=5ov6
+-----END PGP SIGNATURE-----
+
+--=-2MBmCFTkYWKaSIOdYB2Q--
 
