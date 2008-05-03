@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hd0.us ([89.234.6.27]:36159 "EHLO hd0.us"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754679AbYEOPYP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 11:24:15 -0400
-Message-ID: <482C530C.8060101@f-box.org> (sfid-20080515_172418_631234_BF01D3FC)
-Date: Thu, 15 May 2008 16:13:16 +0100
-From: Daniel <dan@f-box.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: Re: 4311 v2 Bail - 2.6.26-rc2
-References: <48294F0B.4040908@f-box.org>	<1210721604.4279.40.camel@johannes.berg>	<1210721764.4279.41.camel@johannes.berg>	<200805140146.06910.mb@bu3sch.de>	<1210722537.4279.43.camel@johannes.berg>	(sfid-20080514_014950_992691_D85478C3) <1210722731.4279.45.camel@johannes.berg>
-In-Reply-To: <1210722731.4279.45.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:35993 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945AbYECWjJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 18:39:09 -0400
+Subject: Re: multiqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200805040035.05512.IvDoorn@gmail.com> (sfid-20080504_002842_649419_AE776B2B)
+References: <200805040035.05512.IvDoorn@gmail.com>
+	 (sfid-20080504_002842_649419_AE776B2B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QXXkOcokSTNYmxYscaVh"
+Date: Sun, 04 May 2008 00:39:00 +0200
+Message-Id: <1209854340.3673.23.camel@johannes.berg> (sfid-20080504_003842_600777_B34A64BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-Johannes Berg wrote:
-> We really need a raw monitor frame capture.
+--=-QXXkOcokSTNYmxYscaVh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Not sure how I go about that one?
+Hi Ivo,
 
-I have an external RTL8187 device I can stick into monitor mode? But 
-then it wouldn't be associated/encryption keys...
+> Below is a warning I get with your latest QOS patch series,
+> rt61pci registers 4 queues, but apparently the WARN_ON()
+> in ieee80211_wake_queue is being triggered.
+>=20
+> void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+> {
+> 	struct ieee80211_local *local =3D hw_to_local(hw);
+>=20
+> 	if (netif_is_multiqueue(local->mdev)) {
+> 		netif_wake_subqueue(local->mdev, queue);
+> 	} else {
+> 		WARN_ON(queue !=3D 0);
+> 		netif_wake_queue(local->mdev);
+> 	}
+> }
+>=20
+> CONFIG_MAC80211_QOS is enabled in the kernel configuration,
+> and debugfs shows that rt2x00 is serving frames over multiple
+> TX queues, so the multiqueue is working...
 
-Tips anyone?
+Strange. Can you verify that the master device has the
+NETIF_F_MULTI_QUEUE flag set? Since that config symbol got enabled you
+must have multiqueue code compiled in. Or maybe I put the setting of the
+MULTI_QUEUE flag into a wrong patch by accident? Check
+net/mac80211/main.c please
 
+johannes
 
+--=-QXXkOcokSTNYmxYscaVh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Cheers,
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Dan.
+iQIVAwUASBzpg6Vg1VMiehFYAQKtCRAAxUFvYy5XoqlWaDrfTunus9nWQrzNdd5P
+WCTMgKfE2/geKYe1/g+mtA0Vg9llz2oBp8POcXfJUfjw2tsPIHjfvQPNLt+6mc32
+iWegoq8RekXR3LLpz1OutIRrzWnOnMezV0cH4eoGh6i8hoRUvcPLw9ykGvV9FTWf
+DFUGAXSetv917IBKXZgC0e+KCAAn9A2caEssONsuxQf+YC8+YT23wTLNOP4r2NN0
+ynT0mfh68a/vCvskIHpSOBaqhhIcV98ulrC4fZtGbXiEvLy6pcyWSAorKrJAm7hZ
+zyIua2DoDNmPEVV6DwU8hALqi5cCAxQs9KfKJn3lr2GXDpw8si142i/2AP9Sgctm
+tYjbzSjIe7xF8WJI45ABb4Sr+VKjtjX3sUsn6KClhXyhF5AezoeXY0aeEspBR3WS
+9CT4Isx0952/DqVDBVDifV8wp6mKNXlq9hXj6KW2zbIbn2iVx3pdyZ2+PA38rwWQ
+vq7d9rf9PGtqVy6UFV9i0OCp0r26jn10j3PB6L1OqOn0+UFfgazuM36I0hZNrPeH
+UI5Sd9WgSPnalFUS3hMHGrdx49R63UXA9NU0A/0c1MDu7gvsp5mksYY9yXR+mA6X
+PXhdUFkehqseu9lH910xYAw7eG184D8fBhP3oocko38Fx6+M+gMQHtA+jKi+eg3d
+0n6GfnCX4uY=
+=b/qr
+-----END PGP SIGNATURE-----
+
+--=-QXXkOcokSTNYmxYscaVh--
+
