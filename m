@@ -1,70 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Received: from ra.tuxdriver.com ([70.61.120.52]:4845 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758204AbYEBOa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 10:30:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: danielm77@spray.se, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wavelan: avoid index past end of array if DEBUG_SHOW_UNUSED is defined
-Date: Fri,  2 May 2008 09:56:34 -0400
-Message-Id: <1209736594-9510-1-git-send-email-linville@tuxdriver.com> (sfid-20080502_163039_854995_64960508)
+Received: from xc.sipsolutions.net ([83.246.72.84]:50664 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078AbYEDCIt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 22:08:49 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080504020203.GA30514@gondor.apana.org.au>
+References: <1209760731.3608.17.camel@johannes.berg>
+	 <20080502.163334.148944203.davem@davemloft.net>
+	 <1209815533.3987.21.camel@johannes.berg>
+	 <20080503.180300.10562559.davem@davemloft.net>
+	 <1209865354.6210.23.camel@johannes.berg>
+	 <20080504020203.GA30514@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GuQHjY1piMMh7lxTGlRN"
+Date: Sun, 04 May 2008 04:08:36 +0200
+Message-Id: <1209866916.6210.39.camel@johannes.berg> (sfid-20080504_040838_706411_C26A6B31)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported by Daniel Marjam=C3=A4ki <danielm77@spray.se> here:
 
-	http://bugzilla.kernel.org/show_bug.cgi?id=3D10588
+--=-GuQHjY1piMMh7lxTGlRN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wavelan.c    |    4 ++--
- drivers/net/wireless/wavelan_cs.c |    6 ++----
- 2 files changed, 4 insertions(+), 6 deletions(-)
+On Sun, 2008-05-04 at 10:02 +0800, Herbert Xu wrote:
+> On Sun, May 04, 2008 at 03:42:34AM +0200, Johannes Berg wrote:
+> >
+> > I'm still not sure about the dependencies between LL_MAX_HEADER,
+> > dev->hard_header_len and similar. Why, for example, does ipip set it to
+> > LL_MAX_HEADER + sizeof(struct iphdr)? Because it doesn't know better
+> > since the packets it creates could be routed anywhere?
+>=20
+> The difference between LL_MAX_HEADER and hard_header_len is that
+> the former is a system-wide hint of how big the header can be
+> and the latter is a device-specific value.
+>=20
+> In other words, we use the former when we don't know where we
+> create a packet since we don't know where it'll end up.  As such
+> we allocate a generous amount of header space so that hopefully
+> nobody will have to expand the header later.  However, it would
+> be OK for someone to expand it but obviously it this happened
+> for the majority of your traffic then you've done something wrong
+> since expanding it wastes CPU resources by copying the data.
+>=20
+> The value of hard_header_len on the other hand is used for two
+> purposes at least.  First of all it is a hint of how much free
+> header space there should be in a packet before it goes into a
+> device (but don't rely on it).  More importantly it's the length
+> of the hardware header in the packet.  The definition of the
+> hardware header varies with each type of device.
 
-diff --git a/drivers/net/wireless/wavelan.c b/drivers/net/wireless/wave=
-lan.c
-index 03384a4..49ae970 100644
---- a/drivers/net/wireless/wavelan.c
-+++ b/drivers/net/wireless/wavelan.c
-@@ -908,9 +908,9 @@ static void wv_psa_show(psa_t * p)
- 	     p->psa_call_code[3], p->psa_call_code[4], p->psa_call_code[5],
- 	     p->psa_call_code[6], p->psa_call_code[7]);
- #ifdef DEBUG_SHOW_UNUSED
--	printk(KERN_DEBUG "psa_reserved[]: %02X:%02X:%02X:%02X\n",
-+	printk(KERN_DEBUG "psa_reserved[]: %02X:%02X\n",
- 	       p->psa_reserved[0],
--	       p->psa_reserved[1], p->psa_reserved[2], p->psa_reserved[3]);
-+	       p->psa_reserved[1]);
- #endif				/* DEBUG_SHOW_UNUSED */
- 	printk(KERN_DEBUG "psa_conf_status: %d, ", p->psa_conf_status);
- 	printk("psa_crc: 0x%02x%02x, ", p->psa_crc[0], p->psa_crc[1]);
-diff --git a/drivers/net/wireless/wavelan_cs.c b/drivers/net/wireless/w=
-avelan_cs.c
-index baf7401..b584c0e 100644
---- a/drivers/net/wireless/wavelan_cs.c
-+++ b/drivers/net/wireless/wavelan_cs.c
-@@ -1074,11 +1074,9 @@ wv_psa_show(psa_t *	p)
- 	 p->psa_call_code[6],
- 	 p->psa_call_code[7]);
- #ifdef DEBUG_SHOW_UNUSED
--  printk(KERN_DEBUG "psa_reserved[]: %02X:%02X:%02X:%02X\n",
-+  printk(KERN_DEBUG "psa_reserved[]: %02X:%02X\n",
- 	 p->psa_reserved[0],
--	 p->psa_reserved[1],
--	 p->psa_reserved[2],
--	 p->psa_reserved[3]);
-+	 p->psa_reserved[1]);
- #endif	/* DEBUG_SHOW_UNUSED */
-   printk(KERN_DEBUG "psa_conf_status: %d, ", p->psa_conf_status);
-   printk("psa_crc: 0x%02x%02x, ", p->psa_crc[0], p->psa_crc[1]);
---=20
-1.5.3.3
+Ok, thanks for the explanation. The latter probably means that I cannot
+use hard_header_len since mac80211 really needs devices to show up as
+ethernet devices. However, it wouldn't really help anyway if I cannot
+rely on it being available.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, what is mac80211 supposed to do? It needs up to 54 bytes of
+available headroom (for an encrypted mesh packet which currently can't
+really happen, but anyway) yet it cannot pskb_expand_head() either.
+Cloning each packet seems even more expensive, and just like skb_orphan
+subverts the purpose of the socket accounting.
+
+johannes
+
+--=-GuQHjY1piMMh7lxTGlRN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB0ao6Vg1VMiehFYAQLB3hAAqi7ELI0q6fXWP+V4Q2UEoI0fs/lgILJJ
+vUj5H9GTPunylhPneT+1spPVThOPEx7lyJF+vW9KEr65rOQfkbuNhdSBDscR98pp
+HwhTbq5iag7LqgiDBDsI7RHd8bmkKOIgI3lRP6Yc5VeT8p8gZ84XA0yjwl6qudV/
+0aldF+H+4ztCbeBLoYQAcBWUqbUTQatlojrMIgiG8jD2ns91hSZo0Nyv2+2sQVYa
+EqCZeUpqHSiXCYOhX7Ff7lRl5fLdrZdlrSUv3n5VQcebW3E6cF9jdtJT5LO6K82i
+CSYP7GE3ybTAWgdUaf2hxCBgkaj4IuemQjaiw2kMhT4Zh/qIADhNr7VplDf8law0
+DLno8g3Gh17nC/xMUDX/PDLOA40C/oz1PkU45u7Y+rTe1Kfa4/Y6yGULeafjUz3A
++QEH4GgXDYbRRqek05OWEu21sAU9MqTx24sC5QRWcLhfwnDwJdQjzWG+fcZHh88k
+O0lzIGjP1LZTrT7Q14Vua1gtmqQEG0wlBD74t5oKxC4HfwOHEyWJ6LaU5juDmkYo
+RO0ytPFp7iSFnQPoCv4pe+u3fKv9T0i1d94b9kkqKA8JQIpHZFwQpyb7JPO152rF
+mv55YRhroi/K7pzRYemOzkI7ssJSi3AqWygua3hsyfopd37YHKHweYeMHSNBTEdm
+Cg3nIdEnxdU=
+=rRJK
+-----END PGP SIGNATURE-----
+
+--=-GuQHjY1piMMh7lxTGlRN--
+
