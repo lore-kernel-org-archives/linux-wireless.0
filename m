@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57042 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751805AbYESP5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 11:57:54 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211211547.6252.54.camel@johannes.berg>
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
-	 <1211117795.686.15.camel@localhost.localdomain>
-	 <1211199368.6252.19.camel@johannes.berg>
-	 <1211210686.12187.6.camel@localhost.localdomain>
-	 <1211211547.6252.54.camel@johannes.berg>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39802 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754027AbYEDVcg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 17:32:36 -0400
+Subject: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209936253.7304.10.camel@johannes.berg> (sfid-20080504_232356_925288_0C998746)
+References: <1209936253.7304.10.camel@johannes.berg>
+	 (sfid-20080504_232356_925288_0C998746)
 Content-Type: text/plain
-Date: Mon, 19 May 2008 11:53:58 -0400
-Message-Id: <1211212438.12187.13.camel@localhost.localdomain> (sfid-20080519_175815_770712_9188F80D)
+Date: Sun, 04 May 2008 23:32:25 +0200
+Message-Id: <1209936745.7304.16.camel@johannes.berg> (sfid-20080504_233200_556404_25CC410F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-05-19 at 17:39 +0200, Johannes Berg wrote:
-> On Mon, 2008-05-19 at 11:24 -0400, Dan Williams wrote:
-> > On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
-> > > > Instead of testing for wireless/, best thing would probably be to call
-> > > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-> > > > wireless.  Some drivers may have to load firmware to figure out
-> > > > supported rates and encryption capabilities, but to be honest, NM does
-> > > > this to detect wireless devices and I haven't run into any issues in 4
-> > > > years using it.  If there are issues with drivers, then we need to fix
-> > > > the driver too.
-> > > 
-> > > I was about to propose calling SIOCGIWNAME since that is what
-> > > wireless-tools do and that linux/wireless.h indicates.
-> > 
-> > Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
-> > that NAME return _something_ at least.  NAME should never ever be used
-> > for anything more, but since wireless-tools appears to do this that's
-> > fine.
-> 
-> Yes, I realise it is completely useless, but wext seems to require that
-> it be implemented. RANGE would work as well but typically has much more
-> complexity in the kernel.
+This assigns the netdev's needed_headroom/tailroom members
+to take advantage of pre-allocated space for 802.11 headers.
 
-Yup; NAME's better for this even though it's useless.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/iface.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Dan
+--- everything.orig/net/mac80211/iface.c	2008-05-04 23:24:17.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-05-04 23:31:46.000000000 +0200
+@@ -53,6 +53,15 @@ int ieee80211_if_add(struct net_device *
+ 	if (!ndev)
+ 		return -ENOMEM;
+ 
++	ndev->needed_headroom = local->tx_headroom +
++				4*6 /* four MAC addresses */
++				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
++				+ 6 /* mesh */
++				+ 8 /* rfc1042/bridge tunnel */
++				- ETH_HLEN /* ethernet hard_header_len */
++				+ IEEE80211_ENCRYPT_HEADROOM;
++	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
++
+ 	ret = dev_alloc_name(ndev, ndev->name);
+ 	if (ret < 0)
+ 		goto fail;
+
 
