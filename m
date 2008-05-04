@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:58331 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753481AbYEPLK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 07:10:26 -0400
-Message-ID: <482D6A80.6030804@openvz.org> (sfid-20080516_131031_293994_541829E4)
-Date: Fri, 16 May 2008 15:05:36 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/7][MAC8021]: Fix one more call to synchronize_rcu in
- atomic context.
-References: <4821CE54.9000401@openvz.org>
-In-Reply-To: <4821CE54.9000401@openvz.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:52508 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754363AbYEDVb3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 17:31:29 -0400
+Subject: Re: [RFC] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209936253.7304.10.camel@johannes.berg> (sfid-20080504_232356_925288_0C998746)
+References: <1209936253.7304.10.camel@johannes.berg>
+	 (sfid-20080504_232356_925288_0C998746)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iC2or/KMOk3LqaZ5oiLH"
+Date: Sun, 04 May 2008 23:31:18 +0200
+Message-Id: <1209936678.7304.14.camel@johannes.berg> (sfid-20080504_233054_902153_FC71B31B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, John. 
 
-Sorry for bothering you, I guess that you're very busy now, 
-but what are you plans about this set?
+--=-iC2or/KMOk3LqaZ5oiLH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-After I saw my first set included in some wireless git update,
-I thought this one would be in some of the next ones (since
-this set fixes some bugs in mesh tables), and started waiting.
-
-Here's a new wireless git update and this set is still not in.
-Shall I resubmit one?
-
-Thanks,
-Pavel
-
-> (This set applies OK without the previous one of 4 patches,
->  but with some fuzz in the 7th one)
-> 
-> 
-> The mesh_path_node_free() does so under hashwlock.
-> 
-> But, this one is called
-> 1. from mesh_path_add() after an old hash is hidden and
->    synchronize_rcu() is calld
-> 2. mesh_pathtbl_unregister(), when the module is being
->    unloaded and no devices exist to mess with this hash.
-> 
-> So, it seems to me, that simply removing the call is OK.
-> 
-> Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
-> 
+On Sun, 2008-05-04 at 23:24 +0200, Johannes Berg wrote:
+> This assigns the netdev's needed_headroom/tailroom members
+> to take advantage of pre-allocated space for 802.11 headers.
+>=20
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->  net/mac80211/mesh_pathtbl.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-> index 7097ef9..0b6c4bf 100644
-> --- a/net/mac80211/mesh_pathtbl.c
-> +++ b/net/mac80211/mesh_pathtbl.c
-> @@ -458,7 +458,6 @@ static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
->  	struct mpath_node *node = hlist_entry(p, struct mpath_node, list);
->  	mpath = node->mpath;
->  	hlist_del_rcu(p);
-> -	synchronize_rcu();
->  	if (free_leafs)
->  		kfree(mpath);
->  	kfree(node);
+> Builds on my other patch to add those fields, of course!
+>=20
+>  net/mac80211/iface.c |    8 ++++++++
+>  net/mac80211/tx.c    |   14 +++++++++-----
+>  2 files changed, 17 insertions(+), 5 deletions(-)
+>=20
+> --- everything.orig/net/mac80211/iface.c	2008-05-04 15:40:53.000000000 +0=
+200
+> +++ everything/net/mac80211/iface.c	2008-05-04 16:08:45.000000000 +0200
+> @@ -53,6 +53,14 @@ int ieee80211_if_add(struct net_device *
+>  	if (!ndev)
+>  		return -ENOMEM;
+> =20
+> +	ndev->needed_headroom =3D local->tx_headroom +
+> +				4*6 /* four MAC addresses */
+> +				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
+> +				+ 6 /* mesh */
+> +				- ETH_HLEN /* ethernet hard_header_len */
+> +				+ IEEE80211_ENCRYPT_HEADROOM;
+
+Although this seems to have worked for me, that was most likely
+coincidence because I had two bytes extra headroom and no fourth MAC
+address, I actually forgot 8 bytes here (rfc1042/bridge tunnel
+encapsulation)
+
+johannes
+
+--=-iC2or/KMOk3LqaZ5oiLH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB4rJaVg1VMiehFYAQISGA/+Ld0iBrt4IOvUdNvlDjhE7YRGIFcdUri9
+hMmYP+kbHsWCSqz8ZA1QQC6opOwNtmpQCcpcruVq8m5LxWn/jGukgyYP5ccVh3ho
+NpG+8juR05ZyEAhX3ojFJcEx6/FOWasznVulSmYfUprVPjEJZyJ7HkCNNMcbZN3t
+ekUzIA9fiQNzSQJZKXLa51PzHp2z3gqj6P7dRJlweyp/Is4+CsFEYQF88qUp1SRY
+RFcF22SSAObLhshchBwMDt8cOCJsTLNtUg1o5jqox+cyf8/oTuS+9+K8vcrHJdST
+d3dRIgCnARkfPNl6XwCdZdvhg5UTkWu3Cg8Nm+SymoLA4NtSHW43ZEIIgrqtYRUn
+P0PZYU8m9lkW447zB3hjdFGLYZv2t4RQ06c54RQANfs2epnuBwXsoXJ7EtEozkGQ
+SVG4/PS5P+kl5LC5/LinRdb5X40Y/5HPB7zN9Tx1EmqTrkNtYglLJ8OPh4VoSPgc
+T/qAy3PHw0TBIj9RZ6oGFMbLjtQKZojJWtJdzJtcTTO+NMpo+UqlmALnViQWGnSh
+5T4Ji6KnA1jhI3mhlVPqhTmJywJMisAvQvpDuYYq0Qz9TcH3h0TxYN5txM1T4+e2
+cHD4KOCKwbYVcdpu9TJo2Srly1e8lLiZMMwcTXl35EjBCmGSaw1UGcwNndmU/DoZ
+ZUwHy3cPLEk=
+=8thD
+-----END PGP SIGNATURE-----
+
+--=-iC2or/KMOk3LqaZ5oiLH--
 
