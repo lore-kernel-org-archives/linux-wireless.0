@@ -1,129 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.dnainternet.fi ([87.94.96.112]:52825 "EHLO
-	smtp2.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752723AbYEZVGR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43002 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794AbYEDJws (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 17:06:17 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH] rndis_wlan: Make connections to TKIP PSK networks work
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Scott Ashcroft <scott.ashcroft@talk21.com>
-Date: Tue, 27 May 2008 00:06:15 +0300
-Message-ID: <20080526210615.18840.58055.stgit@fate.lan> (sfid-20080526_230638_424148_516994A1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 4 May 2008 05:52:48 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080504094444.GA541@gondor.apana.org.au>
+References: <1209815533.3987.21.camel@johannes.berg>
+	 <20080503.180300.10562559.davem@davemloft.net>
+	 <1209865354.6210.23.camel@johannes.berg>
+	 <20080504020203.GA30514@gondor.apana.org.au>
+	 <1209866916.6210.39.camel@johannes.berg>
+	 <20080504021213.GA30660@gondor.apana.org.au>
+	 <1209867740.6210.46.camel@johannes.berg>
+	 <20080504031652.GA30993@gondor.apana.org.au>
+	 <1209890847.6210.51.camel@johannes.berg>
+	 <1209892489.6210.56.camel@johannes.berg>
+	 <20080504094444.GA541@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nW8izu5q2PhVnX6uOKM5"
+Date: Sun, 04 May 2008 11:52:34 +0200
+Message-Id: <1209894754.6210.58.camel@johannes.berg> (sfid-20080504_115215_663728_A338AE69)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Scott Ashcroft <scott.ashcroft@talk21.com>
 
-This patch allows the rndis_wlan driver to connect to TKIP PSK networks.
-It uses the ASSOCIATION_INFORMATION RNDIS call to pull back the IEs and sends them back to userspace using wireless events. Tested on a few wireless networks I have access to. Based on the similar code in ndiswrapper.
+--=-nW8izu5q2PhVnX6uOKM5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
-Scott
+On Sun, 2008-05-04 at 17:44 +0800, Herbert Xu wrote:
+> On Sun, May 04, 2008 at 11:14:49AM +0200, Johannes Berg wrote:
+> >
+> > I just re-did the test, and I definitely need 29 more bytes on, for
+> > example, the IPv6 autodiscovery packets and ICMP packets generated with
+> > ping(8). Some of them even need additional tailroom.
+>=20
+> Could you find out the code path that created the skb in the
+> kernel so we can see why there isn't enough head room?
 
-Signed-off-by: Scott Ashcroft <scott.ashcroft@talk21.com>
-[edit: cleanups]
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+Yeah I was just considering putting a stacktrace into the skb when it's
+allocated. Haven't done, lunchtime now.
 
- drivers/net/wireless/rndis_wlan.c |   60 ++++++++++++++++++++++++++++++++++++-
- 1 files changed, 58 insertions(+), 2 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d0b1fb1..ac56f8d 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -116,6 +116,7 @@ MODULE_PARM_DESC(workaround_interval,
- #define OID_802_11_ENCRYPTION_STATUS		ccpu2(0x0d01011b)
- #define OID_802_11_ADD_KEY			ccpu2(0x0d01011d)
- #define OID_802_11_REMOVE_KEY			ccpu2(0x0d01011e)
-+#define OID_802_11_ASSOCIATION_INFORMATION	ccpu2(0x0d01011f)
- #define OID_802_11_PMKID			ccpu2(0x0d010123)
- #define OID_802_11_NETWORK_TYPES_SUPPORTED	ccpu2(0x0d010203)
- #define OID_802_11_NETWORK_TYPE_IN_USE		ccpu2(0x0d010204)
-@@ -271,6 +272,26 @@ struct ndis_config_param {
- 	__le32 value_length;
- } __attribute__((packed));
- 
-+struct ndis_80211_assoc_info {
-+	__le32 length;
-+	__le16 req_ies;
-+	struct req_ie {
-+		__le16 capa;
-+		__le16 listen_interval;
-+		u8 cur_ap_address[6];
-+	} req_ie;
-+	__le32 req_ie_length;
-+	__le32 offset_req_ies;
-+	__le16 resp_ies;
-+	struct resp_ie {
-+		__le16 capa;
-+		__le16 status_code;
-+		__le16 assoc_id;
-+	} resp_ie;
-+	__le32 resp_ie_length;
-+	__le32 offset_resp_ies;
-+} __attribute__((packed));
-+
- /* these have to match what is in wpa_supplicant */
- enum wpa_alg { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP };
- enum wpa_cipher { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
-@@ -674,6 +695,12 @@ static int get_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
- 	return ret;
- }
- 
-+static int get_association_info(struct usbnet *usbdev,
-+			struct ndis_80211_assoc_info *info, int len)
-+{
-+	return rndis_query_oid(usbdev, OID_802_11_ASSOCIATION_INFORMATION,
-+				info, &len);
-+}
- 
- static int is_associated(struct usbnet *usbdev)
- {
-@@ -2182,11 +2209,40 @@ static void rndis_wext_worker(struct work_struct *work)
- 	struct usbnet *usbdev = priv->usbdev;
- 	union iwreq_data evt;
- 	unsigned char bssid[ETH_ALEN];
--	int ret;
-+	struct ndis_80211_assoc_info *info;
-+	int assoc_size = sizeof(*info) + IW_CUSTOM_MAX + 32;
-+	int ret, offset;
- 
- 	if (test_and_clear_bit(WORK_CONNECTION_EVENT, &priv->work_pending)) {
--		ret = get_bssid(usbdev, bssid);
-+		info = kzalloc(assoc_size, GFP_KERNEL);
-+		if (!info)
-+			goto get_bssid;
- 
-+		/* Get association info IEs from device and send them back to
-+		 * userspace. */
-+		ret = get_association_info(usbdev, info, assoc_size);
-+		if (!ret) {
-+			evt.data.length = le32_to_cpu(info->req_ie_length);
-+			if (evt.data.length > 0) {
-+				offset = le32_to_cpu(info->offset_req_ies);
-+				wireless_send_event(usbdev->net,
-+					IWEVASSOCREQIE, &evt,
-+					(char *)info + offset);
-+			}
-+
-+			evt.data.length = le32_to_cpu(info->resp_ie_length);
-+			if (evt.data.length > 0) {
-+				offset = le32_to_cpu(info->offset_resp_ies);
-+				wireless_send_event(usbdev->net,
-+					IWEVASSOCRESPIE, &evt,
-+					(char *)info + offset);
-+			}
-+		}
-+
-+		kfree(info);
-+
-+get_bssid:
-+		ret = get_bssid(usbdev, bssid);
- 		if (!ret) {
- 			evt.data.flags = 0;
- 			evt.data.length = 0;
+--=-nW8izu5q2PhVnX6uOKM5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB2HYaVg1VMiehFYAQKdlxAAleEcN8BBFVgnJQmpB9lmft8fLD+Qxxns
+H/alt2Xu+3GlwHF7rRtPAH7YOI4x9u1pJeGIsMLV4yRQk5ykxfayAQfpxR2M4ZlW
+es+a4Ax5zGXoQHjmRRBz9LSKe3XV4XdSN51cv71Q051hSjBXSeQxTXTdeiiwMxsi
+08Xm3hP4DrnmBTw0vodJt4BHBvYeogCPcm53o7lMgkPIdNaWx/raIihNiPF1PR+N
+YO5H+P+o2n8k8aTB4qap52vonxUi/0Dlz/zPscmeANCS9PJL0N+l464ln77SELH8
+vOaB3EO91XCb4iSoxnPSFaB4cUTtoWwcOUaTpfqN2S50FqVg3SLoxaCJEQpwUo+O
+SMtIYJER7y/6jUAFHfZwjsUXXvC0iWvNyrxrzWhYp5iewHyI8iV/eBPpevWXimle
+7XNzvLRayxXiS+YcLUtULyXMCfgVvQeqZFwxUmh6L3rot/SDIyK5tcqr6Dl3EQ4Y
+Te8uY67RYiopPvQOHgjc7kMnv1kVi0AxpVqThhniKg3gQAtkWkX392GNHpqtemNU
+o8a7xYjsYETFMMXdk86q9xYqVBvsUEGrhDzekrpMZ0LPpnS4qz6B0fB+0EI05ipP
+9IzttdHa0J5OIpvct5ZA2A68ADy1bu2tB1Hlq/AyD+3v8O1oyYoZ1Wb2JMHI5Izw
+nGz9ffoOA8w=
+=0Rsz
+-----END PGP SIGNATURE-----
+
+--=-nW8izu5q2PhVnX6uOKM5--
 
