@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44767
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750951AbYEPTkp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754515AbYEDS6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 15:40:45 -0400
-Date: Fri, 16 May 2008 12:40:39 -0700 (PDT)
-Message-Id: <20080516.124039.253626477.davem@davemloft.net> (sfid-20080516_214048_947286_C3CB8811)
-To: rusty@rustcorp.com.au
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ron.rindjunsky@intel.com, tomasw@gmail.com,
-	ivdoorn@gmail.com, peter.p.waskiewicz.jr@intel.com
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200805162032.48469.rusty@rustcorp.com.au>
-References: <200805161201.48835.rusty@rustcorp.com.au>
-	<20080515.215823.28841530.davem@davemloft.net>
-	<200805162032.48469.rusty@rustcorp.com.au>
+	Sun, 4 May 2008 14:58:15 -0400
+Subject: Re: S/G operation, skb checksums, data copying
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209925725.3655.15.camel@johannes.berg> (sfid-20080504_202821_526459_C1C8EB56)
+References: <1209925725.3655.15.camel@johannes.berg>
+	 (sfid-20080504_202821_526459_C1C8EB56)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UKKlIBWuvwW8SBs5Equa"
+Date: Sun, 04 May 2008 20:58:03 +0200
+Message-Id: <1209927483.3655.23.camel@johannes.berg> (sfid-20080504_205740_737572_F3637A18)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rusty Russell <rusty@rustcorp.com.au>
-Date: Fri, 16 May 2008 20:32:48 +1000
 
-> On Friday 16 May 2008 14:58:23 David Miller wrote:
-> > In fact, I want to move things more and more towards the driver
-> > queueing TX packets internally instead of the networking mid-layer.
-> >
-> > That will ahve benefits for things like TX multiqueue, we won't
-> > need any locking at all, nor have any knowledge about multiple
-> > queues at all, if the driver takes care of providing the buffer
-> > between what the kernel gives it and what the device can handle
-> > at the moment.
-> 
-> That would be great: then I could shove the packet back on the queue myself 
-> and not have to ask you about it.  It's adding a *second* queue inside the 
-> driver which feels terribly ugly...
+--=-UKKlIBWuvwW8SBs5Equa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-My description describes how I want the mid-layer queue to disappear
-entirely.  Queueing would be done by the driver only.
 
-Only the driver knows all of these details about how much space there
-is, what packet chopping has to take place and what effects that has
-on queue space, multiqueue configurations, how one wants to hash to
-multiple queues, how to lock this stuff the most efficiently.
+> However, mac80211 needs to change the skb header before the skb is
+> handed to the hardware. Often enough, the skb it will get is cloned, so
+> it has to copy the header. Hence, it would benefit from having the
+> actual skb data not be in the header, but that is unavoidable currently
+> since we have no checksum features.
 
-The kernel should just get out of the way and let the driver take care
-of everything.
+I just realised that this wouldn't happen since the extra data is
+actually in a struct page *, so never mind.
 
-Sure, we can have some standard helpers to deal with the most common
-cases.  But anything non-trivial right now is painful because the
-mid-layer model tries to be too helpful when it should just get out
-of the way.
+johannes
+
+--=-UKKlIBWuvwW8SBs5Equa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB4HOqVg1VMiehFYAQKGoQ//SDoLYkJv6vAIOVoythT9++2WMuCwrYjd
+SIT3NBjq89oWbbSFyG/0LlgzTYH1U365aoX2zSOY+GL4KrT3njI4LSYTSZWaPvyg
+J2hrX5IuI1iwmX5OAPyoMNy78LE2TOy2N4XAFkkraIXik1bKEj4eoVkXsI8tgtaX
+uQvistl487tKt2bMbeWpWLQHItflaUJs81ANaEo/NAC/qHurxbJZ8xzDhSsWYQgc
+tuKfvzrQNqkGYJAHnGSata1OfubaYPdnr9jHUbtyvzVvWPtAxPdOEXPIrvDOx0Hi
+UkJZswW3xe50Po/UALimkOY8lyG6rGB7ILIhEYcOa8hh8xMEt62eP9vxMjgiaJkt
+MxP/VV3GK1XNWH9VamwRfcVAnwpAfeeKpoCCPSus5bQglTnibyD3KekTx/XuV+zQ
+VXxfURv5lzQET/5t/uNjm0glc4CiJ1OFdGihD8OuN8Lt1k3YTW1YN2Xh5gb55HhA
+ATxl2/7Du6xCYECdOduZYW3ssx2EdtonuBD29pNd7T6TY3nxayf3sA/lX+gusSc6
+tYf1jeTxDHhNEMxSB4Vt4KIxdDJPv/nLwqZViOSzaQjgZ9w0vZcmLpt6llvKbwKw
+OQs3VhsPgTGVktoz1DkinP9Tn7tVy7NorpSmEi1+aqKzJzm+rvj14O8MREZV87yr
+uxbx1ayinp8=
+=G7QG
+-----END PGP SIGNATURE-----
+
+--=-UKKlIBWuvwW8SBs5Equa--
+
