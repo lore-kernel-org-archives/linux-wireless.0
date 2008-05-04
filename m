@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:52543 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbYEMO6x (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41334 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755244AbYEDMsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 10:58:53 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so911259ugf.16
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 07:58:51 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: BUG: scheduling while atomic: rt73usb
-Date: Tue, 13 May 2008 17:10:13 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Christian =?iso-8859-1?q?Sch=E4fer?= <schaefer@in.tum.de>,
-	linux-wireless@vger.kernel.org
-References: <482952C3.9020209@in.tum.de> <200805131310.19980.IvDoorn@gmail.com> <20080513142826.GC6273@tuxdriver.com>
-In-Reply-To: <20080513142826.GC6273@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805131710.13417.IvDoorn@gmail.com> (sfid-20080513_165855_967583_E1F02F56)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sun, 4 May 2008 08:48:36 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080504124542.GA1455@gondor.apana.org.au>
+References: <1209866916.6210.39.camel@johannes.berg>
+	 <20080504021213.GA30660@gondor.apana.org.au>
+	 <1209867740.6210.46.camel@johannes.berg>
+	 <20080504031652.GA30993@gondor.apana.org.au>
+	 <1209890847.6210.51.camel@johannes.berg>
+	 <1209892489.6210.56.camel@johannes.berg>
+	 <20080504094444.GA541@gondor.apana.org.au>
+	 <1209894754.6210.58.camel@johannes.berg>
+	 <1209900355.6210.64.camel@johannes.berg>
+	 <1209904088.4065.11.camel@johannes.berg>
+	 <20080504124542.GA1455@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pT1LkiG4nSlouIyW10iU"
+Date: Sun, 04 May 2008 14:48:23 +0200
+Message-Id: <1209905303.4065.20.camel@johannes.berg> (sfid-20080504_144802_561821_BB795C04)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 May 2008, John W. Linville wrote:
-> On Tue, May 13, 2008 at 01:10:19PM +0200, Ivo van Doorn wrote:
-> > On Tuesday 13 May 2008, Johannes Berg wrote:
-> > > 
-> > > >   [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
-> > > >   [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
-> > > >   [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
-> > > 
-> > > If I read this correctly, it was recently fixed (but not committed yet
-> > > afaict)
-> > 
-> > Yes, the fix was send as part of a pull request from rt2x00.git,
-> > and I've requested it to be merged for 2.6.26 as well.
-> 
-> Hmmmm...is that "mac80211: Add RTNL version of
-> ieee80211_iterate_active_interfaces"?  I didn't see any indication
-> that one was for 2.6.26.  If it is, I'll get it out with the next
-> round of fixes.
 
-Yep, that is the one.
-I marked it as 2.6.26 material when I send it as separate patch,
-but didn't in the pull request of last saturday.
-But the subject didn't contain any hint about it being a bugfix,
-so it is easy to overlook. ;)
+--=-pT1LkiG4nSlouIyW10iU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+
+> Right hard_header_len is being overloaded with two meanings.
+> On the one hand it's used to indicate the length of the header
+> managed by the hardware header cache, on the other hand we use
+> it to indicate the head room for those devices that don't have
+> a cache.
+>=20
+> Since your device wants both, it fails miserably.
+
+Yeah I guess that is actually the root cause.
+
+> There are three ways out of this.  You could have your own cache
+> (I haven't looked at your headers so I don't know whether that
+> makes sense), have no cache at all, or add a new field that gets
+> added to hard_header_len for the purposes of calculating head
+> room.
+
+In fact, I should probably add another field for the needed tail length
+too since we need that as well.
+
+johannes
+
+--=-pT1LkiG4nSlouIyW10iU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB2wlqVg1VMiehFYAQLksQ//UFIWoH5yvL0itxrX+j+HGNHf+yFJHetE
+9y5NNQkmnDRhYsCmC/4Zb4x9SICMIcHnnyDZJsfkyeABGfvOIQFohtbLU3GRk1tX
+m62FZhz8Zd/+R4cy1MgDOBOGlujYEJn07lWOGD8H6eqWpKHcFkakGp3/xjRDcJq+
+EeAYED3nKFeecgdptRvBpJVq1K5BmXQWI8TKDI9g1JSTtQPYLbS5S2nX+NrUMMn2
+R87KU3jwXGJ/MJLJwopN7CBg5mmrUJfK9Irz1HpCeWCwcHA7vHU5V5tMicNXArzC
+Bmtb2ygBbEho7V/3MyipThSSIR6/+JIShOEQup9pa1dmutNv/qXeIzK6cooMn3Hk
+6a2D5nl2iMRkFQFs/hJ0IzHue/5aqXvsskHrWlDgZ/tPY0yCAgQa/LW1/UJY61nb
+c3QY+7eOYyAWMqvxLxyMTyx3VfJC6qUyIzAK/2KYVKWHU427xDL+TSs1v3IrD5IL
+m+y3A07hZ9Co34vqbJERNlt2bhg19YTbgoPZL/f0KMC6RFQ333nWUlM8YUDoJGze
+vahVHbuOaWfE85MmzpvfNhkGrOsGi/uat5VLERs7JaSnoriIMiFzPleydGu4ux+E
+KkjbUdFJuLopMjwrbCUtIEhAQ/zDUHV4/E91gWYCV1eqEhZtGSiIRTVbxAfL7Lv+
+ZtCxA/ZsOzc=
+=h0N6
+-----END PGP SIGNATURE-----
+
+--=-pT1LkiG4nSlouIyW10iU--
+
