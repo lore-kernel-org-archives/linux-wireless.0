@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52770
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42882
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751384AbYE2IwE (ORCPT
+	by vger.kernel.org with ESMTP id S1753537AbYEDWio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:52:04 -0400
-Date: Thu, 29 May 2008 01:52:00 -0700 (PDT)
-Message-Id: <20080529.015200.136186180.davem@davemloft.net> (sfid-20080529_105211_324933_4824629F)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-05-28
+	Sun, 4 May 2008 18:38:44 -0400
+Date: Sun, 04 May 2008 15:38:43 -0700 (PDT)
+Message-Id: <20080504.153843.218230160.davem@davemloft.net> (sfid-20080505_003809_324590_E34CB0F7)
+To: herbert@gondor.apana.org.au
+Cc: johannes@sipsolutions.net, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080528213831.GA3133@tuxdriver.com>
-References: <20080528213831.GA3133@tuxdriver.com>
+In-Reply-To: <20080504031652.GA30993@gondor.apana.org.au>
+References: <20080504021213.GA30660@gondor.apana.org.au>
+	<1209867740.6210.46.camel@johannes.berg>
+	<20080504031652.GA30993@gondor.apana.org.au>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 28 May 2008 17:38:31 -0400
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 4 May 2008 11:16:52 +0800
 
-> Another round of fixes for 2.6.26 follows...
+> On Sun, May 04, 2008 at 04:22:20AM +0200, Johannes Berg wrote:
+> >
+> > Yes, wireless always needs at least 24 bytes, but more likely 34
+> > (encryption+QoS). However, I just increased LL_MAX_HEADER to 54 and that
+> > doesn't seem to have helped.
 > 
-> Please let me know if there are problems!
+> How did you test it?
 
-Pulled, and I'll push out to net-2.6 after some build tests.
+I know what causes this problem, things like ARP.
 
-I'll deal with the merge issues with net-next-2.6 a few hours
-from now.
+They don't use LL_MAX_HEADER, and instead go:
 
-Thanks again!
+	skb = alloc_skb(arp_hdr_len(dev) + LL_RESERVED_SPACE(dev), GFP_ATOMIC);
+
+because they are reasonably sure what exact device they
+are sending out of :-)
+
+As mentioned elsewhere, there is a disconnect between how some
+of these values are used.  But I'm pretty sure I know why some
+of them are used this way.
