@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45093 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35088 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754968AbYEZTrK (ORCPT
+	with ESMTP id S1753521AbYEDCWc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 15:47:10 -0400
-Subject: Re: oops on b43 insertion on mips
+	Sat, 3 May 2008 22:22:32 -0400
+Subject: Re: mac80211 truesize bugs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <483B105E.4090800@wpkg.org> (sfid-20080526_214449_728839_4A2255E3)
-References: <483B105E.4090800@wpkg.org>
-	 (sfid-20080526_214449_728839_4A2255E3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-odKtvnxZ3piyNyp4h9q9"
-Date: Mon, 26 May 2008 21:46:00 +0200
-Message-Id: <1211831160.3930.0.camel@johannes.berg> (sfid-20080526_214713_162357_19FC0BA3)
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080504021213.GA30660@gondor.apana.org.au>
+References: <1209760731.3608.17.camel@johannes.berg>
+	 <20080502.163334.148944203.davem@davemloft.net>
+	 <1209815533.3987.21.camel@johannes.berg>
+	 <20080503.180300.10562559.davem@davemloft.net>
+	 <1209865354.6210.23.camel@johannes.berg>
+	 <20080504020203.GA30514@gondor.apana.org.au>
+	 <1209866916.6210.39.camel@johannes.berg>
+	 <20080504021213.GA30660@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u6bwjd8rB/4JZQJZajxq"
+Date: Sun, 04 May 2008 04:22:20 +0200
+Message-Id: <1209867740.6210.46.camel@johannes.berg> (sfid-20080504_042201_945225_2F4E0F44)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-odKtvnxZ3piyNyp4h9q9
+--=-u6bwjd8rB/4JZQJZajxq
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-05-26 at 21:32 +0200, Tomasz Chmielewski wrote:
-> I just compiled 2.6.25.4 for BCM47XX (little endian MIPS).
+On Sun, 2008-05-04 at 10:12 +0800, Herbert Xu wrote:
+> On Sun, May 04, 2008 at 04:08:36AM +0200, Johannes Berg wrote:
+> >
+> > So, what is mac80211 supposed to do? It needs up to 54 bytes of
+> > available headroom (for an encrypted mesh packet which currently can't
+> > really happen, but anyway) yet it cannot pskb_expand_head() either.
+> > Cloning each packet seems even more expensive, and just like skb_orphan
+> > subverts the purpose of the socket accounting.
 >=20
-> When I try to insert a b43 module, the kernel oopses. Are there any=20
-> fixes for that?
+> If all/the majority of your packets need the space then put it in
+> LL_MAX_HEADER. =20
 
-> Trace:[<c00681c4>]
+Yes, wireless always needs at least 24 bytes, but more likely 34
+(encryption+QoS). However, I just increased LL_MAX_HEADER to 54 and that
+doesn't seem to have helped.
 
-We'll need symbol info to answer your question.
+> In any case, you should always expand the packet
+> if necessary in your output routine since LL_MAX_HEADER is just a
+> hint.  Yes cloning is expensive compared to not having to do it,
+> but as long as this is only done for the exception then it's
+> irrelevant.
+
+What's wrong with, instead, doing skb_orphan() and then
+pskb_expand_head()? That seems to have the same effect.
 
 johannes
 
---=-odKtvnxZ3piyNyp4h9q9
+--=-u6bwjd8rB/4JZQJZajxq
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASDsTd6Vg1VMiehFYAQL+vA//b0poPFjZXNIR7nZLujzcVlqpUrAyo/aF
-rTZd4rb2vzlu9xwxgB0QMQuYcbIVHdFLG195vJRArUkzuyyRaSsnFyCyw6vrDy8Z
-pU562rrT/rq++A12dd33wWIFt3psaoWLplNAMhHcR5du9vvZF+AJ6eq/tZ4GN/JB
-bEYj4n6qK9brY2bRNkQZszUEVdaDju8XwuFycNx96s8HkVczETNCG0LQEyaIvdV4
-HpJauXjuqsNvLgAkbJKF+J47mh3UW65jYRv53DwrErJ2KtmV9MFvglcMXy9y69vD
-viigxNOnstj6kMgBMVcSZWk2oKPiNGOcQqLHiV/AnhI4BWx7Gqu/pXsfxyxlhSGM
-HA+QhEVK9qjOpzzEDGWe4Jlin8I3G6IHO4UnZyrCS8oiCqqOBI5DYeyH7StLOchj
-u2VHfz3no5WuBllwBPnqubdzvV1VoUgW2o/ync/dYpGNfpxuQbUqlExAE5+9PB7e
-KF96ZlB98RHCAjU/S3FFFhlyZBNSdIPW7cRB6EepzRVV+naN7e5AnwLthy9O5ZB/
-jE+K+AM/D/hWhIFANhZqCvlllCuxRYweQJmN7WrspNJEea/5+jBoFkggMqFdfaXe
-5hLIFfYrww6bhxeuwJ1IyhBnmjWy22ny3vQuErW5eXx7hySc3QoAVWRgAsjHsh0P
-Fm1IrEjWP/Y=
-=yrGn
+iQIVAwUASB0d26Vg1VMiehFYAQIPkQ/9EPHYRMvjda0ksMSfhj1qUzhQRrCSXYuC
+KVnOW2WKWP6WSK2mK9Vz+vLTvPlNsgQCqwM1kYZRZVmlcdfmTD14P/dVeZ1mBGPG
+Ij2udwlUTBEnTvIoytq5leMtmJ2uPxPj3dk4nwWCFpxtpHYR6xF/8hfkro3ijZCK
+9L52w05u4kJVhSXGxebL0D/xu1nBBhHugy/jPAAEeGBWE45+Z6XB3HFHs42VOo9M
+Y23j2oCKNI6oB9tZ9lTXSZVlTDT6CXrt5JF17Z1h3ByLm2WhprDnG0z0blAQqOll
++azgc26ZuQwQncuvmlxv+TqhgbJNqTb6QRHzrFdSBl2rNk3A9CI1QiO/Zmh5huVf
+hRb2HHhJtTfRw2XLD816POnSQf6ahnC1+uHMEcs35s5WF7PqctIQL3E9IDyc2aQx
+oYY9B3fd1GFfsjdu+gZagAmxAVCFvPtDkYIuaL83+jpcLq5oSBqWRHYDVHyoW4KO
+j7/+nop6aNed1x9f8wwnz36+gf4KWmoT4baYnq4kK+HsbzxY8QCdGG8xVRY40cNt
+lPGi462wdKjxrWN4uCNoQ4FmwOYpkXbA7PjfaqUtmVXa1ocdTBeo49RYWVZwaq6u
+R1jaWwIp6X0HpxVlgW437xRFNCPIdUtBP7p1vnR10l0QvlQy4bHCN7RIlfOx3w22
+5VgOcRCxFCU=
+=NEsH
 -----END PGP SIGNATURE-----
 
---=-odKtvnxZ3piyNyp4h9q9--
+--=-u6bwjd8rB/4JZQJZajxq--
 
