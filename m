@@ -1,75 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:65136 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752972AbYEaQsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 12:48:45 -0400
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet
-	transmit
-From: Pavel Roskin <proski@gnu.org>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Date: Sat, 31 May 2008 12:48:42 -0400
-Message-Id: <1212252522.2766.8.camel@rd> (sfid-20080531_184850_195017_58EB54BA)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39264
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753207AbYEDWpk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 18:45:40 -0400
+Date: Sun, 04 May 2008 15:45:40 -0700 (PDT)
+Message-Id: <20080504.154540.214129591.davem@davemloft.net> (sfid-20080505_004506_457145_60687AC9)
+To: johannes@sipsolutions.net
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1209909990.3753.0.camel@johannes.berg>
+References: <1209904088.4065.11.camel@johannes.berg>
+	<20080504124542.GA1455@gondor.apana.org.au>
+	<1209909990.3753.0.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 04 May 2008 16:06:30 +0200
 
-You beat me at reporting it.  I was about to report the same thing.
-Basically, my laptop with bcm4311 started crashing when using WEP in th=
-e
-last weeks.  Its runs the current wireless-testing.
+> [  256.241496] KERNEL: assertion (!atomic_read(&sk->sk_wmem_alloc))
+> failed at net/packet/af_packet.c (225)
+> 
+> any ideas about that?
 
-On Sat, 2008-05-31 at 16:23 +0200, Stefanik G=E1bor wrote:
->  #4 [c04619c8] b43_generate_txhdr at f8dd3a99
-
-Yes, that's where it happens.  This patch prevents the panic, but it's
-almost certainly not the right fix.
-
-diff --git a/drivers/net/wireless/b43/xmit.c
-b/drivers/net/wireless/b43/xmit.c
-index f9e1cff..5ec8d86 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -234,11 +234,14 @@ int b43_generate_txhdr(struct b43_wldev *dev,
-=20
- 	plcp_fragment_len =3D fragment_len + FCS_LEN;
- 	if (use_encryption) {
--		u8 key_idx =3D info->control.hw_key->hw_key_idx;
-+		u8 key_idx;
- 		struct b43_key *key;
- 		int wlhdr_len;
- 		size_t iv_len;
-=20
-+		if (!info->control.hw_key)
-+			return -ENOKEY;
-+		key_idx =3D info->control.hw_key->hw_key_idx;
- 		B43_WARN_ON(key_idx >=3D dev->max_nr_keys);
- 		key =3D &(dev->key[key_idx]);
-=20
-Another workaround is to use nohwcrypt=3D1 in the module options.
-
-It's strange that other drivers (b43legacy, ath5k) use
-info->control.hw_key->hw_key_idx under the same conditions (see how
-use_encryption is calculated), but don't have any problems on the same
-network (but I need to recheck).
-
-I'm using 40-bit WEP with wpa_supplicant (because it's configured to
-recognize many networks, some of which are with WPA).  I don't know if
-it's relevant.  It's Fedora 9 for x86_64, but NetworkManager is
-disabled.
-
---=20
-Regards,
-Pavel Roskin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is exactly what happens if you change skb->truesize
+when a socket is still attached to the skb.
