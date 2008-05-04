@@ -1,81 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta4.srv.hcvlny.cv.net ([167.206.4.199]:43976 "EHLO
-	mta4.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158AbYEJOMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 10:12:40 -0400
-Received: from X61.NetworkingUnlimited.com
- (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta4.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K0N00D63OT39XR0@mta4.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Sat, 10 May 2008 10:12:39 -0400 (EDT)
-Date: Fri, 09 May 2008 22:36:01 -0400
-From: Vincent C Jones <v.jones@networkingunlimited.com>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies -	2.6.26-rc1
- kernel
-In-reply-to: <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Message-id: <1210386961.3856.15.camel@X61.NetworkingUnlimited.com> (sfid-20080510_161300_307610_FCF0D4EA)
-MIME-version: 1.0
-Content-type: text/plain
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
- <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
- <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
- <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:28831 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754769AbYEDLsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 07:48:23 -0400
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, yi.zhu@intel.com,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
+Date: Sun,  4 May 2008 14:48:18 +0300
+Message-Id: <1209901698-10370-1-git-send-email-ron.rindjunsky@intel.com> (sfid-20080504_134757_697381_88E4B6FB)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
+in patch "mac80211: QoS related cleanups"), when trying to perform
+ieee80211_wake_queue.
 
-On Sat, 2008-05-10 at 03:12 +0300, Tomas Winkler wrote:
-> On Sat, May 10, 2008 at 2:41 AM, Vincent C Jones
-> <v.jones@networkingunlimited.com> wrote:
-> >
-> > On Sat, 2008-05-10 at 00:23 +0300, Tomas Winkler wrote:
-> >> On Fri, May 9, 2008 at 7:57 PM, Vincent C Jones
-> >> <v.jones@networkingunlimited.com> wrote:
-> >> > The channel/frequency reporting by iwlwifi is incompatible with
-> >> >  wpa_supplicant for 5GHz (802.11A) channels. Version numbers and iwlist
-> >> >  versus wpa_supplicant scan results are below. Association still works if
-> >> >  the correct channel is specified using iwconfig, but that is
-> >> >  incompatible with roaming.
-> >>
-> >> Fixed by the patch ' iwlwifi: Fix frequency in rx_status fill'
-> >>
-> >> Thanks
-> >> Tomas
-> >
-> > This patch did not apply cleanly to plain 2.6.26-rc1: off by -4 lines in
-> > iwl-3945.c and by 1078 lines in iwl-4965.c. More important, it did not
-> > fix the problem of wpa_supplicant thinking the 802.11A access points are
-> > on channel 0. Same results with 2.6.26-rc1-git7, with & without patch.
-> > Any idea when this patch (and the patches it appears to depend on) will
-> > make it into the 2.6.26 release?
-> >
-> 
-> This patch is against wireless-testing.git, it's just too lines and
-> doesn't really have logical dependencies on other patches so I didn't
-> create a separate patch for 2.6.26...It looks maybe I should.
-> Can you  try to eproduce your problem on wireless-testing kernel with
-> this patch?
-> Also some logs will be useful
-> 
-> Thanks
-> Tomas
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   23 +++++++++++------------
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-Am I looking at the right patch ? The one I found searching for
-'iwlwifi: Fix frequency in rx_status fill' was dated yesterday and
-changes one line in iwl-3945.c and a similar line in iwl-4965.c. See
-http://article.gmane.org/gmane.linux.kernel.wireless.general/14519
-
-Git clone of
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-is in progress. Will try to compile and test tomorrow. What kinds of
-logs do you have in mind?
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 9546582..70c0455 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3547,13 +3547,16 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	 * block-ack window (we assume that they've been successfully
+ 	 * transmitted ... if not, it's too late anyway). */
+ 	if (txq->q.read_ptr != (ba_resp_scd_ssn & 0xff)) {
++		/* calculate mac80211 ampdu sw queue to wake */
++		int ampdu_q =
++		   scd_flow - IWL_BACK_QUEUE_FIRST_ID + priv->hw->queues;
+ 		int freed = iwl4965_tx_queue_reclaim(priv, scd_flow, index);
+ 		priv->stations[ba_resp->sta_id].
+ 			tid[ba_resp->tid].tfds_in_queue -= freed;
+ 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+ 			priv->mac80211_registered &&
+ 			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+-			ieee80211_wake_queue(priv->hw, scd_flow);
++			ieee80211_wake_queue(priv->hw, ampdu_q);
+ 		iwl4965_check_empty_hw_queue(priv, ba_resp->sta_id,
+ 			ba_resp->tid, scd_flow);
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 4406fc7..5453427 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2568,12 +2568,6 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 		nfreed++;
+ 	}
+ 
+-/*	if (iwl4965_queue_space(q) > q->low_mark && (txq_id >= 0) &&
+-			(txq_id != IWL_CMD_QUEUE_NUM) &&
+-			priv->mac80211_registered)
+-		ieee80211_wake_queue(priv->hw, txq_id); */
+-
+-
+ 	return nfreed;
+ }
+ 
+@@ -2797,7 +2791,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		}
+ 
+ 		if (txq->q.read_ptr != (scd_ssn & 0xff)) {
+-			int freed;
++			int freed, ampdu_q;
+ 			index = iwl_queue_dec_wrap(scd_ssn & 0xff, txq->q.n_bd);
+ 			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim scd_ssn "
+ 					   "%d index %d\n", scd_ssn , index);
+@@ -2806,9 +2800,15 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 
+ 			if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+ 			    txq_id >= 0 && priv->mac80211_registered &&
+-			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+-				ieee80211_wake_queue(priv->hw, txq_id);
+-
++			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
++				/* calculate mac80211 ampdu sw queue to wake */
++				ampdu_q = txq_id - IWL_BACK_QUEUE_FIRST_ID +
++					  priv->hw->queues;
++				if (agg->state == IWL_AGG_OFF)
++					ieee80211_wake_queue(priv->hw, txq_id);
++				else
++					ieee80211_wake_queue(priv->hw, ampdu_q);
++			}
+ 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
+ 		}
+ 	} else {
+@@ -2833,8 +2833,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		if (tid != MAX_TID_COUNT)
+ 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+ 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+-			(txq_id >= 0) &&
+-			priv->mac80211_registered)
++			(txq_id >= 0) && priv->mac80211_registered)
+ 			ieee80211_wake_queue(priv->hw, txq_id);
+ 		if (tid != MAX_TID_COUNT)
+ 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
 -- 
-Dr. Vincent C. Jones, PE
-Networking Unlimited, Inc.
-Phone: +1 201 568-7810
-V.Jones@NetworkingUnlimited.com
+1.5.3.3
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
