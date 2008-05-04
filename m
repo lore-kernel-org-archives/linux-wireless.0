@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40484
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51542
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752799AbYEEXO6 (ORCPT
+	by vger.kernel.org with ESMTP id S1752097AbYEDBDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 19:14:58 -0400
-Date: Mon, 05 May 2008 16:14:58 -0700 (PDT)
-Message-Id: <20080505.161458.46071527.davem@davemloft.net> (sfid-20080506_011415_341585_815C6FB8)
+	Sat, 3 May 2008 21:03:00 -0400
+Date: Sat, 03 May 2008 18:03:00 -0700 (PDT)
+Message-Id: <20080503.180300.10562559.davem@davemloft.net> (sfid-20080504_030232_462272_82C67C49)
 To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+Subject: Re: mac80211 truesize bugs
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210027447.8012.15.camel@johannes.berg>
-References: <1210021066.4181.41.camel@johannes.berg>
-	<20080505.153730.186617868.davem@davemloft.net>
-	<1210027447.8012.15.camel@johannes.berg>
+In-Reply-To: <1209815533.3987.21.camel@johannes.berg>
+References: <1209760731.3608.17.camel@johannes.berg>
+	<20080502.163334.148944203.davem@davemloft.net>
+	<1209815533.3987.21.camel@johannes.berg>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 06 May 2008 00:44:07 +0200
+Date: Sat, 03 May 2008 13:52:13 +0200
 
-> Right, that makes sense. But will it ever return false? skb_cloned()
-> returns true often enough, and we only accept linear skbs, but I think I
-> don't understand yet what skb_header_cloned() vs. skb_cloned() refers
-> to. Which exactly is the header space I'm allowed to modify when
-> skb_header_cloned() returns false?
+> 
+> > We can't update skb->truesize during arbitray skb->data reallocations,
+> > because it could corrupt the socket accounting.
+> > 
+> > On the other hand, if we provide ways for users to subvert the socket
+> > buffer limits, we might as well not try to limit anything.
+> 
+> Why don't we update the socket allocation when doing pskb_expand_head()?
+> Sure, it could become negative, but is that so bad?
 
-skb_header_cloned() will return false always if the buffer is not
-cloned.
+The socket locked state at this time is variable and unknown.
 
-If it is cloned, it makes sure the data reference count allows
-for modification of the buffer.
+The socket must be locked in order to modify these values.
+And such locks cannot be taken, for example, from HW interrupt
+context, amongst other restrictions.
 
-For normal traffic, you should see skb_header_cloned() always return
-false unless a network tap like tcpdump is registered.
+> We need more space though. Should we then just increase the built-in
+> headroom?
+
+I simply don't know what to suggest at this point, that's why
+we are having this discussion :-)
