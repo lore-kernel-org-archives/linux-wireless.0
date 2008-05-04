@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:28214 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763385AbYEHPBc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51451 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750704AbYEDQDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 11:01:32 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so418768nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 08:01:30 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: 015-mac80211-tx-info-skb-cb.patch
-Date: Thu, 8 May 2008 17:10:03 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200805081503.41025.IvDoorn@gmail.com> <200805081657.27976.IvDoorn@gmail.com> <1210258216.3547.56.camel@johannes.berg>
-In-Reply-To: <1210258216.3547.56.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805081710.03869.IvDoorn@gmail.com> (sfid-20080508_170032_474553_F027E06A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sun, 4 May 2008 12:03:40 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1209909990.3753.0.camel@johannes.berg> (sfid-20080504_160619_267031_C8D61782)
+References: <1209866916.6210.39.camel@johannes.berg>
+	 <20080504021213.GA30660@gondor.apana.org.au>
+	 <1209867740.6210.46.camel@johannes.berg>
+	 <20080504031652.GA30993@gondor.apana.org.au>
+	 <1209890847.6210.51.camel@johannes.berg>
+	 <1209892489.6210.56.camel@johannes.berg>
+	 <20080504094444.GA541@gondor.apana.org.au>
+	 <1209894754.6210.58.camel@johannes.berg>
+	 <1209900355.6210.64.camel@johannes.berg>
+	 <1209904088.4065.11.camel@johannes.berg>
+	 <20080504124542.GA1455@gondor.apana.org.au>
+	 <1209909990.3753.0.camel@johannes.berg>
+	 (sfid-20080504_160619_267031_C8D61782)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VDIlIrNuz2WeYKL9qk1e"
+Date: Sun, 04 May 2008 18:03:26 +0200
+Message-Id: <1209917006.3753.2.camel@johannes.berg> (sfid-20080504_180307_553231_1D0CF66C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 May 2008, Johannes Berg wrote:
-> 
-> > No I haven't, I had been compiling mac80211 with VERBOSE_DEBUG on ever
-> > since I added the patches from your tree to rt2x00.git so I never noticed this
-> > bug. I just received the bugreport from somebody at the rt2x00 forum. :)
-> 
-> Then somebody else told me. Or I found it in your tree :)
 
-ok. :)
+--=-VDIlIrNuz2WeYKL9qk1e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > Since rt2x00.git contains your patches from a week ago, I did check if the
-> > bug was still present in your latest version.
-> > Anyway the important thing is that you have the fix. ;)
-> 
-> Right :) I'm pretty much done with the skb->cb conversion too except for
-> ath5k (nick) and rt2x00 (you)
+On Sun, 2008-05-04 at 16:06 +0200, Johannes Berg wrote:
+> > There are three ways out of this.  You could have your own cache
+> > (I haven't looked at your headers so I don't know whether that
+> > makes sense), have no cache at all, or add a new field that gets
+> > added to hard_header_len for the purposes of calculating head
+> > room.
+>=20
+> I tried the last option, patch below, didn't quite work out yet, but I
+> got:
+>=20
+> [  256.241496] KERNEL: assertion (!atomic_read(&sk->sk_wmem_alloc))
+> failed at net/packet/af_packet.c (225)
 
-I'm going to rebase rt2x00.git this weekend to update from wireless-testing,
-since the skb->cb patches now depends on HW crypto which is not ready
-for upstream yet, I am going to reverse the patch order so the skb->cb patches
-and some other updates can go upstream more easily.
+Except for that, the patch works fine with mac80211 setting the new
+netdev fields. I still get lots of reallocations though because I get a
+lot of cloned packets, not sure why.
 
-Ivo
+johannes
+
+--=-VDIlIrNuz2WeYKL9qk1e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB3eTKVg1VMiehFYAQJL1RAAnBugK+Fyyy5rdhWUCT4hBzS50xQGenD8
+bgILSKroo7HbOaoZ7jVsIK/A1hcLtD95t/+PU4Cv1Sz0O+5KA+jtroslffL/7oun
+1jP3pwb5NU4PRHMR8sG8LuC6fPH+HvhZjLMThYPZTMKFggEgyQIOOJGThl9qbBY0
+N/HfX20IqDJtdYOkgz4wg44tthMPzIdRUP1aByuNvHxqJB9pRKrJSodj2K7ke6qE
+EchsMICch3sxKPw8a9NY3oDom2Rn0k7vJKmGn/6zncfUJzRGOEvGCrc19xg28glb
+bnprpWhmbKMc3ATLaBhoswr2Qm9DeooQ0UkTRulshAhhW+EOy0PZXMqJljHDxSFk
+14oh3qdby40srnpJDq+w3gNv0FBcZCQSIJtv8+3Kvo3irRCgwl7a6CnU3ZIx3Nm0
+1uqRrz4RT5sRUP3IjAhtxcY+HUzeFpfxHzQH6ZM4pIP61AF0I8hLytLZZHrTQ4kG
+u+hv2pex8ldSUjwkXiT0JcVXwbTaDGlVgVh68bd0QR7ceauwM/haw3cZoATMHkdU
+lUsjHiqQo5u3ojb67twsL+R7mKGGUZdE2CzM4Qw5RAKOhPsGa//Td6JRsoIH5yQN
+NNtnUVIyYKIgswPRfUOFzhXjt7M0kfVXcswdYhEMjssdvyob/AowgaddSnH15cvt
+9yYjhQUYd4o=
+=VYyy
+-----END PGP SIGNATURE-----
+
+--=-VDIlIrNuz2WeYKL9qk1e--
+
