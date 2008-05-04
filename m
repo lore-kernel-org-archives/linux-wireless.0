@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47171 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755333AbYEMMzD (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53824
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751913AbYEDWur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 08:55:03 -0400
-Subject: libertas: fix command timeout after firmware failure
-From: David Woodhouse <dwmw2@infradead.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Brian Cavagnolo <brian@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain
-Date: Tue, 13 May 2008 13:54:59 +0100
-Message-Id: <1210683299.3582.240.camel@pmac.infradead.org> (sfid-20080513_145509_764628_F6EDD922)
+	Sun, 4 May 2008 18:50:47 -0400
+Date: Sun, 04 May 2008 15:50:47 -0700 (PDT)
+Message-Id: <20080504.155047.56630645.davem@davemloft.net> (sfid-20080505_005010_861453_D3A6B07C)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, herbert@gondor.apana.org.au,
+	linux-wireless@vger.kernel.org
+Subject: Re: S/G operation, skb checksums, data copying
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1209925725.3655.15.camel@johannes.berg>
+References: <1209925725.3655.15.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Cavagnolo <brian@cozybit.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 04 May 2008 20:28:45 +0200
 
-This is a fix for OLPC ticket #6586: "SCAN command fails, timer doesn't
-fire". In fact, the timer was firing; the problem was that the dnld_sent
-state variable was not being updated after the timer expired, so
-lbs_execute_next_command was not being called.
+> Should we do IP checksumming in software within mac80211, announce s/g
+> support and hardware checksumming to the rest of the networking layer
+> and hope that we only have to copy the header instead of the data for
+> many packets then, if the underlying hardware is capable enough?
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+No, this doesn't work.
 
----
-Bug fix, for 2.6.26 please.
+There is a correctness reason why we don't allow SG without HW
+checksum support.
 
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -756,6 +756,7 @@ static int lbs_thread(void *data)
- 				priv->nr_retries = 0;
- 			} else {
- 				priv->cur_cmd = NULL;
-+				priv->dnld_sent = DNLD_RES_RECEIVED;
- 				lbs_pr_info("requeueing command %x due to timeout (#%d)\n",
- 					    le16_to_cpu(cmdnode->cmdbuf->command), priv->nr_retries);
- 
+Those scatter-gather pages could be in the page cache for a sendfile()
+or similar operation.
 
--- 
-dwmw2
+Any process in the system can write into and change the contents of
+those pages while the packet is still in flight to the device.
 
+So the only way to always generate correct checksums is to enforce
+that the hardware do it once the full packet is in the device FIFO
+after being DMA'd.
+
+If you do the checksum in software, we'll generate incorrect checksums
+if another process is writing into the page at the same time, so we
+must not allow this.
