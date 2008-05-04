@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:18653 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752774AbYECO4s (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:40719 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753467AbYEDCCP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 10:56:48 -0400
-Received: by ug-out-1314.google.com with SMTP id h3so312928ugf.16
-        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2008 07:56:46 -0700 (PDT)
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: Please pull 'upstream' branch of rt2x00
-Date: Sat, 3 May 2008 17:02:20 +0200
-Cc: Scott White <nwi_sub@hotmail.com>, linux-wireless@vger.kernel.org
-References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl> <200805031158.43072.IvDoorn@gmail.com> <1209809936.10921.9.camel@localhost>
-In-Reply-To: <1209809936.10921.9.camel@localhost>
+	Sat, 3 May 2008 22:02:15 -0400
+Date: Sun, 4 May 2008 10:02:03 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+Message-ID: <20080504020203.GA30514@gondor.apana.org.au> (sfid-20080504_040145_287236_42F84A30)
+References: <1209760731.3608.17.camel@johannes.berg> <20080502.163334.148944203.davem@davemloft.net> <1209815533.3987.21.camel@johannes.berg> <20080503.180300.10562559.davem@davemloft.net> <1209865354.6210.23.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805031702.20416.IvDoorn@gmail.com> (sfid-20080503_165631_067313_B10C7019)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1209865354.6210.23.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > For rt73? IIRC the rate selection algo does not work at all for that
-> > > device, because we cannot report failed frames. Or have you done
-> > > anything about that I might have missed, Ivo? If not, the rate is
-> > > probably fixed at 54Mbit anyway.
-> > 
-> > Well I didn't do anything new, but this line will report rt2x00lib that the
-> > frame was succesfully send or failed to send:
-> > 	txdesc.status = !urb->status ? TX_SUCCESS : TX_FAIL_RETRY;
-> > What is missing is the retry count, since that is something that
-> > the USB drivers cannot report. (Unless I grab the max retry count
-> > as configured by mac80211 as the number of retries on failure)
-> 
-> Well, I have just put my rt73 into a metal box. Many frames do fail,
-> only very few get through pinging my AP. The rate control still keeps
-> the rate at 54Mbit/s :-) So it seems neither excessive_retries nor the
-> retry_count in the tx_status struct is set at all.
+On Sun, May 04, 2008 at 03:42:34AM +0200, Johannes Berg wrote:
+>
+> I'm still not sure about the dependencies between LL_MAX_HEADER,
+> dev->hard_header_len and similar. Why, for example, does ipip set it to
+> LL_MAX_HEADER + sizeof(struct iphdr)? Because it doesn't know better
+> since the packets it creates could be routed anywhere?
 
-Hmm, perhaps we need some way the driver can inform the rate selection
-module about statistics. I mean the hardware does measure the number
-of failed TX frames, and the number of retries, but it doesn't set them
-in the descriptor but in the hardware.
+The difference between LL_MAX_HEADER and hard_header_len is that
+the former is a system-wide hint of how big the header can be
+and the latter is a device-specific value.
 
-Ivo
+In other words, we use the former when we don't know where we
+create a packet since we don't know where it'll end up.  As such
+we allocate a generous amount of header space so that hopefully
+nobody will have to expand the header later.  However, it would
+be OK for someone to expand it but obviously it this happened
+for the majority of your traffic then you've done something wrong
+since expanding it wastes CPU resources by copying the data.
+
+The value of hard_header_len on the other hand is used for two
+purposes at least.  First of all it is a hint of how much free
+header space there should be in a packet before it goes into a
+device (but don't rely on it).  More importantly it's the length
+of the hardware header in the packet.  The definition of the
+hardware header varies with each type of device.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
