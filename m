@@ -1,86 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36630 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764849AbYETOMD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 10:12:03 -0400
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile
-	configuration.
-From: David Woodhouse <dwmw2@infradead.org>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	carrano@laptop.org, dilinger@queued.net
-In-Reply-To: <4832422a.20018e0a.6b37.3217@mx.google.com>
-References: <4832422a.20018e0a.6b37.3217@mx.google.com>
-Content-Type: text/plain
-Date: Tue, 20 May 2008 15:11:58 +0100
-Message-Id: <1211292718.21380.238.camel@pmac.infradead.org> (sfid-20080520_161226_497075_088F5D51)
-Mime-Version: 1.0
+Received: from et1.ou.edu ([129.15.0.239]:60504 "EHLO
+	it-rosebowl.sooner.net.ou.edu" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756038AbYEDOg2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 10:36:28 -0400
+From: "Williams, Jeffrey D." <angelbane@ou.edu>
+To: Cheney Tang <seerfar@gmail.com>
+CC: YanBo <dreamfly281@gmail.com>,
+	Wessam Baghdadi <wbaghdadi@gmail.com>,
+	"prjmgr@linuxdriverproject.org" <prjmgr@linuxdriverproject.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 4 May 2008 09:32:53 -0500
+Subject: RE: airgo wireless drivers
+Message-ID: <A60A684EB5844943950A980569765A0C014C3099837D@XMAIL2.sooner.net.ou.edu> (sfid-20080504_163554_878926_EDC0D2AD)
+References: <13ed5f4a0804250050k2384ed22m3df9dd7bd18974c4@mail.gmail.com>
+ <3cc280290804262233o1b44dd33if4a9802d19506761@mail.gmail.com>
+ <1197ff4c0804262359r4fa5f94em350c987278c417fe@mail.gmail.com>
+ <A60A684EB5844943950A980569765A0C014C30998345@XMAIL2.sooner.net.ou.edu>,<3cc280290805040727o4d8711c5nfec7f90676830071@mail.gmail.com>
+In-Reply-To: <3cc280290805040727o4d8711c5nfec7f90676830071@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-17 at 21:01 -0700, Javier Cardona wrote:
-> @@ -1218,6 +1219,7 @@ int lbs_start_card(struct lbs_private *priv)
->         if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
->                 lbs_pr_err("cannot register lbs_rtap attribute\n");
->  
-> +       lbs_persist_config_init(dev);
->         lbs_update_channel(priv);
->  
->         /* 5.0.16p0 is known to NOT support any mesh */
-> @@ -1278,6 +1280,7 @@ int lbs_stop_card(struct lbs_private *priv)
->  
->         lbs_debugfs_remove_one(priv);
->         device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
-> +       lbs_persist_config_remove(dev);
->         if (priv->mesh_tlv)
->                 device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
->  
 
-As Holger points out, we should call those only if (priv->mesh_tlv).
 
-> +	return snprintf(buf, 12, "0x%X\n",
-> +		le32_to_cpu(cpu_to_le32(defs.bootflag)));
+> I had got the cross compiled toolchain from Yanbo. Does crossdev work on Fedora?
+> Is the MIPS hardware required? I have only X86 hardware.
+> I had achieve greatly on reversing the driver on Windows, though there
+> is no good tool to disassemble it fully yet. I think I can overcome
+> it. The driver on Windows is for F5D8010 chipset. Some of its action
+> are identical with the driver on MIPS, otheres not so.
+> I guess they are not for same chipset and they are the same family chipset.
 
-Que? Sparse loves that one :)
+No, MIPS hardware isn't required, I did all of the reverse engineering on X86 machines. And from what I can tell, all of the drivers for airgo chipsets, whether on linux-based routers or windows are generated from the more or less the same sources. In fact, the AGN300 drivers use most of the original code written for the agn100.
 
-> +	*((uint32_t *)&cmd.data[0]) = cpu_to_le32(!!datum);
-
-Sparse doesn't much like that either. It should be (__le32 *)
-
-> +static ssize_t boottime_get(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct cmd_ds_mesh_config cmd;
-> +	struct mrvl_mesh_defaults *defs;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(struct cmd_ds_mesh_config));
-> +	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_GET,
-> +			CMD_TYPE_MESH_GET_DEFAULTS);
-> +
-> +	if (ret)
-> +		return -EOPNOTSUPP;
-
-Why not using mesh_get_default_parameters()? 
-
-> +	/* A too small boot time will result in the device booting into
-> +	 * standalone (no-host) mode before the host can take control of it,
-> +	 * so the change will be hard to revert.  This may be a desired
-> +	 * feature (e.g to configure a very fast boot time for devices that
-> +	 * will not be attached to a host), but dangerous.  So I'm enforcing a
-> +	 * lower limit of 20 seconds:  remove and recompile the driver if this
-> +	 * does not work for you.
-> +	 */
-> +	datum = (datum < 20) ? 20 : datum;
-
-Hm. The driver should be able to cope with a device which is already
-booted -- it sends it a reset command and then initialises it. I don't
-think we have to be so paranoid, do we? If there's a lower limit on the
-boottime, it would be the time it takes for an already-active driver to
-react when the device resets. Which is much less than 20 seconds.
-
--- 
-dwmw2
-
+Jeff
