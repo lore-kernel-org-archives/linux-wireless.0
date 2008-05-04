@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:19902 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbYEMLfU (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:57422 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756867AbYEDMpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 07:35:20 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1214970nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 04:35:19 -0700 (PDT)
+	Sun, 4 May 2008 08:45:55 -0400
+Date: Sun, 4 May 2008 20:45:42 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211: Set IEEE80211_TXPD_REQ_TX_STATUS for all TX frames
-Date: Tue, 13 May 2008 13:46:35 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <200805111434.19071.IvDoorn@gmail.com> <1210668171.3646.41.camel@johannes.berg>
-In-Reply-To: <1210668171.3646.41.camel@johannes.berg>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+Message-ID: <20080504124542.GA1455@gondor.apana.org.au> (sfid-20080504_144543_715831_4364C1DB)
+References: <1209866916.6210.39.camel@johannes.berg> <20080504021213.GA30660@gondor.apana.org.au> <1209867740.6210.46.camel@johannes.berg> <20080504031652.GA30993@gondor.apana.org.au> <1209890847.6210.51.camel@johannes.berg> <1209892489.6210.56.camel@johannes.berg> <20080504094444.GA541@gondor.apana.org.au> <1209894754.6210.58.camel@johannes.berg> <1209900355.6210.64.camel@johannes.berg> <1209904088.4065.11.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805131346.35897.IvDoorn@gmail.com> (sfid-20080513_133532_804468_2F03AAE2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1209904088.4065.11.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 May 2008, Johannes Berg wrote:
-> On Sun, 2008-05-11 at 14:34 +0200, Ivo van Doorn wrote:
-> > All interfaces should set the IEEE80211_TXPD_REQ_TX_STATUS flag for all TX frames
-> > which will force the master interface to set the IEEE80211_TX_CTL_REQ_TX_STATUS
-> > flag. This in turn will allow drivers to check for that flag before reporting
-> > the TX status to mac80211.
-> > 
-> > This is very usefull when frames (like beacons, RTS and CTS-to-self) should not
-> > be reported back to mac80211. Later we could add more extensive checks to
-> > exclude more frames from being reported, or let mac80211 decide if it wants
-> > the frame for status reporting or not.
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> > index f35eaea..0024892 100644
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -1617,6 +1617,9 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
-> >  	if (ethertype == ETH_P_PAE)
-> >  		pkt_data->flags |= IEEE80211_TXPD_EAPOL_FRAME;
-> >  
-> > +	/* Interfaces should always request a status report */
-> > +	pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
-> > +
-> 
-> What about monitor interfaces/injection? Do they already set it?
+On Sun, May 04, 2008 at 02:28:08PM +0200, Johannes Berg wrote:
+>
+> Now I see the problem. I increased the LL_MAX_HEADER constant, but all
+> code uses dev->hard_header_len to allocate the headroom (via
+> LL_RESERVED_SPACE), e.g. packet.c:
 
-No, should they?
+Right hard_header_len is being overloaded with two meanings.
+On the one hand it's used to indicate the length of the header
+managed by the hardware header cache, on the other hand we use
+it to indicate the head room for those devices that don't have
+a cache.
 
-> Other than that, looks good to me, as long as you're aware that in the
-> future this might be more dynamic and don't rely on it too much for
-> internal housekeeping (but you seem to be according to your changelog
-> entry) :)
+Since your device wants both, it fails miserably.
 
-Well it shouldn't matter if it will become more flexible, what I am looking
-for is making the flag actually mean something for drivers. ;)
-We could even make it so that the mac80211 tx_status handler will ignore
-the frame when the flag is set so drivers won't have to look at it at all.
+There are three ways out of this.  You could have your own cache
+(I haven't looked at your headers so I don't know whether that
+makes sense), have no cache at all, or add a new field that gets
+added to hard_header_len for the purposes of calculating head
+room.
 
-Ivo
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
