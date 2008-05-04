@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:10083 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751151AbYEGKjx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754010AbYEDS24 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 06:39:53 -0400
-From: bruno randolf <bruno@thinktube.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: make rx radiotap header more flexible
-Date: Wed, 7 May 2008 12:39:58 +0200
-Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
-	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
-References: <20080407042541.9026.59360.stgit@localhost> <200804292010.21367.bruno@thinktube.com> <1209564773.18659.14.camel@johannes.berg>
-In-Reply-To: <1209564773.18659.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805071239.58383.bruno@thinktube.com> (sfid-20080507_123900_813074_C0311B00)
+	Sun, 4 May 2008 14:28:56 -0400
+Subject: S/G operation, skb checksums, data copying
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jcANJZ6dPL89bXOgtnoP"
+Date: Sun, 04 May 2008 20:28:45 +0200
+Message-Id: <1209925725.3655.15.camel@johannes.berg> (sfid-20080504_202821_526459_C1C8EB56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 April 2008 16:12:52 Johannes Berg wrote:
-> > > Radiotap explicitly allows you to have a longer length than you need so
-> > > maybe we should just make sure to align things?
-> >
-> > are you talking about the alignment of the radiotap header itself? no, i
-> > just took care about the alignment requirements of the radiotap fields,
-> > relative to the start of radiotap. but it would be easy to add some
-> > additional length in ieee80211_rx_radiotap_len() and just leave that
-> > empty at the end.
-> >
-> > i think i don't understand all alignment requirements though...
->
-> Well all those stores there are usual 32/16-bit stores which will fault
-> on some architectures. See Documentation/unaligned-access.txt. Adding
-> some padding to make the radiotap header start at a mod8 boundary would
-> help.
 
-so if i assume that the skb already starts at such a mod8 boundary it should 
-be enough to make the length of the radiotap header a multiple of 8, right? 
-please check the patch which i will post shortly.
+--=-jcANJZ6dPL89bXOgtnoP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-bruno
+Hi,
+
+Another thought I had while looking into this: many wireless devices are
+actually able to do s/g operation but are not able to checksum IP (they
+already have to checksum 802.11.)
+
+Right now, we don't announce S/G support to the netstack, but as far as
+I know it wouldn't help us anyway since we cannot checksum packets, cf.
+register_netdevice:
+
+        /* Fix illegal SG+CSUM combinations. */
+        if ((dev->features & NETIF_F_SG) &&
+            !(dev->features & NETIF_F_ALL_CSUM)) {
+                printk(KERN_NOTICE "%s: Dropping NETIF_F_SG since no checks=
+um feature.\n",
+                       dev->name);
+                dev->features &=3D ~NETIF_F_SG;
+
+
+However, mac80211 needs to change the skb header before the skb is
+handed to the hardware. Often enough, the skb it will get is cloned, so
+it has to copy the header. Hence, it would benefit from having the
+actual skb data not be in the header, but that is unavoidable currently
+since we have no checksum features.
+
+
+Should we do IP checksumming in software within mac80211, announce s/g
+support and hardware checksumming to the rest of the networking layer
+and hope that we only have to copy the header instead of the data for
+many packets then, if the underlying hardware is capable enough?
+
+johannes
+
+--=-jcANJZ6dPL89bXOgtnoP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB4AXKVg1VMiehFYAQICyxAAoSMZqlD9Cs+kBrEAxWZFqPWyJ8q9Kujs
+7gwTKTcTRvaEo2fuwrczrkZGcf2/mqz57thO0YNXmyqtX5w56dqFa6JtL08w05l7
+3BqtXcIp3Z3ABfea3xBsmfdLDz7qC2/LVMYgxLn2T/+hYYoYyFL4C6Weg/+3jwQz
+epGy+9As+JICMvqW3jE+epjNmCw3cajfOT0PEFQpH7903+z8S139zHu/O8mqQJyg
+cBNcTf3xvXcTtlwFpQ7GWwebLkFp4Fo/fnIuQzegkFcL4b0f8T/i2FBhh2lZPsAp
+HmxcVe5fMAJ47cRQhvfoK+aBZkaJ9DtfGudK8xidena0Qm8XvAZCRJhf9ikodBwd
+PxWyCKvjN8fEvjbz662oV5FvMQp91mShtnUceL/9PpcskHMLkAT8KCwkJ/zdAMP1
+Yfbn1j4f8gPiXuHCL4rSCGsWYbJk0dmZWtBuFsD3rfE3zO51xqxOVVdoodS/ZEUY
+grxzm+KodQax/UzvF0peWW1rh4IvKSIIwJBbSd4zUz90/WxUjuGgv6xrGBNbM0Xk
+WMvl+luWyhwETD5MPqF+b7hGI04sfewfnAzn1Zp1CML8KqtxP3vuSSiZ1jyVbRUf
+rvu868XAkkFdFlPDGJ37VAreVSYATg518eoeVZQWNViEtwhJtqT7F9Keizjc6gb9
+ZVie5ZSAHEg=
+=BX49
+-----END PGP SIGNATURE-----
+
+--=-jcANJZ6dPL89bXOgtnoP--
+
