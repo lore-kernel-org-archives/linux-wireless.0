@@ -1,87 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41783 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753783AbYEECYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 09/25] iwlwifi: Fix unconditional access to station->tidp[].agg.
-Date: Mon,  5 May 2008 10:22:36 +0800
-Message-Id: <1209954172-3092-10-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_901266_9372B099)
-In-Reply-To: <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50702 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920AbYEDCJ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 May 2008 22:09:57 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1209865354.6210.23.camel@johannes.berg> (sfid-20080504_034221_325997_0547A6E8)
+References: <1209760731.3608.17.camel@johannes.berg>
+	 <20080502.163334.148944203.davem@davemloft.net>
+	 <1209815533.3987.21.camel@johannes.berg>
+	 <20080503.180300.10562559.davem@davemloft.net>
+	 <1209865354.6210.23.camel@johannes.berg>
+	 (sfid-20080504_034221_325997_0547A6E8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zfg8D9pxGIM6OLTwM5ek"
+Date: Sun, 04 May 2008 04:09:46 +0200
+Message-Id: <1209866986.6210.41.camel@johannes.berg> (sfid-20080504_040925_899042_A5969955)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David S. Miller <davem@davemloft.net>
 
-Reportred by Ingo Molnar:
+--=-zfg8D9pxGIM6OLTwM5ek
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-drivers/net/wireless/iwlwifi/iwl-debugfs.c: In function 'iwl_dbgfs_stations_read':
-drivers/net/wireless/iwlwifi/iwl-debugfs.c:256: error: 'struct iwl4965_tid_data' has no member named 'agg'
 
-Needs CONFIG_IWL4965_HT protection.
+> Ideally, we'd have enough headroom in the skb to start with, since right
+> now we're apparently reallocating a lot, especially encrypted frames.
+> Not that I understand why we don't get a truesize bug (without the
+> monitors) when we do that.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   18 ++++++++++++------
- 1 files changed, 12 insertions(+), 6 deletions(-)
+Hmm. I wonder if the reason might be that the skb itself is long enough,
+but has so much tailroom that it doesn't have enough headroom, but when
+we reallocate it to have more headroom we actually later don't use the
+extra tailroom. That would explain why I don't get truesize bugs
+although I do get a warning (from the modified pskb_expand_head()) that
+I mustn't reallocate the buffer.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index b310f70..ad25806 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -239,28 +239,34 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 					"ps_status: %u\n", station->ps_status);
- 			pos += scnprintf(buf + pos, bufsz - pos, "tid data:\n");
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"seq_num\t\ttxq_id\t");
-+					"seq_num\t\ttxq_id");
-+#ifdef CONFIG_IWL4965_HT
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"frame_count\twait_for_ba\t");
-+					"\tframe_count\twait_for_ba\t");
- 			pos += scnprintf(buf + pos, bufsz - pos,
- 					"start_idx\tbitmap0\t");
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"bitmap1\trate_n_flags\n");
-+					"bitmap1\trate_n_flags");
-+#endif
-+			pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 
- 			for (j = 0; j < MAX_TID_COUNT; j++) {
- 				pos += scnprintf(buf + pos, bufsz - pos,
--						"[%d]:\t\t%u\t", j,
-+						"[%d]:\t\t%u", j,
- 						station->tid[j].seq_number);
-+#ifdef CONFIG_IWL4965_HT
- 				pos += scnprintf(buf + pos, bufsz - pos,
--						"%u\t\t%u\t\t%u\t\t",
-+						"\t%u\t\t%u\t\t%u\t\t",
- 						station->tid[j].agg.txq_id,
- 						station->tid[j].agg.frame_count,
- 						station->tid[j].agg.wait_for_ba);
- 				pos += scnprintf(buf + pos, bufsz - pos,
--						"%u\t%llu\t%u\n",
-+						"%u\t%llu\t%u",
- 						station->tid[j].agg.start_idx,
- 						(unsigned long long)station->tid[j].agg.bitmap,
- 						station->tid[j].agg.rate_n_flags);
-+#endif
-+				pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 			}
- 			pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 		}
--- 
-1.5.3.6
+johannes
+
+--=-zfg8D9pxGIM6OLTwM5ek
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB0a6aVg1VMiehFYAQKbNBAAth0Q/uwPYlqHMVHmGo7+ouTYVzDgwACH
+Sv+xWVeBjOeeWrJB5aThhWhMKSJQORrsFogUQF1yYriXNPZAWBDW2VOjA/QhKEIP
+imJ5kZC9PvRyai85L8n83AUGM5xIsZwr5AxMCy3/xlxanjFV5Ct8DiD91WELEcpi
+35XEWQxFzB57tDONC5dEJvnLudWE/DeDAnxtwOPxfouxu1rt5ho8lpg0QujH5fWB
+iruGf1/YIUw4RYfjSapK06wfxdP2nYGVia+B6Vex/CHbTrlcHNfJ/k0WYPzuMN/C
+QVoJyoKEJvB2Pu3vXTStvOvVXaSvk7kRxeunNqwVdS6yG6Gaxaws0lOc/yWga8lR
+jOHY+qLTKEyvH5M1JQL4pqH0nZzEIA6qCBBp9toUqgdC7UAXDM/v7ea8lj2diNi2
+sgF9W5WyF5Dn1/Qfl7kQrPA6ASDD2anuZOnrurYvs9BVUovg+T0PGi6GClKPOh4v
+zloBVhuHx0/OC9FRYEM2oWof09pTqCgZ7yzktE7zkU5wmpAAQm9Wp4bUaI51g/8X
+f52cm8jyqE0wJT6XWWsfI1Gl28xBP5JOgn9PvJvVBaSk6uxp0aIjOgI6judKf+q7
+Az5VCgf4nT20URjjqrGKAxhf+U6wWnFM6lSdZ9xD/IApPVuNyd7OepabqdocURqY
+c/y1JbgSZT8=
+=xRH5
+-----END PGP SIGNATURE-----
+
+--=-zfg8D9pxGIM6OLTwM5ek--
 
