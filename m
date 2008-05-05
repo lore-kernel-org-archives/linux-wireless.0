@@ -1,24 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:23850 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756633AbYETHye (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56435
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753499AbYEETuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 03:54:34 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: Fix ethtool statistics
-Date: Tue, 20 May 2008 09:54:25 +0200
-Cc: David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
-	Sebastian Siewior <liber+tas@ml.breakpoint.cc>,
+	Mon, 5 May 2008 15:50:13 -0400
+Date: Mon, 05 May 2008 12:50:13 -0700 (PDT)
+Message-Id: <20080505.125013.129139559.davem@davemloft.net> (sfid-20080505_214932_730322_84FBADCE)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-References: <1211211122.21380.167.camel@pmac.infradead.org>
-In-Reply-To: <1211211122.21380.167.camel@pmac.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805200954.25508.hs4233@mail.mn-solutions.de> (sfid-20080520_095436_998016_5E737639)
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210014316.4181.14.camel@johannes.berg>
+References: <1210010254.4181.4.camel@johannes.berg>
+	<20080505.115855.137964071.davem@davemloft.net>
+	<1210014316.4181.14.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked for the CF card. Maybe I'll create a patch on top of this 
-that gives me ethtool -s support for the ethX interface as well.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 05 May 2008 21:05:15 +0200
+
+> On Mon, 2008-05-05 at 11:58 -0700, David Miller wrote:
+> > From: Johannes Berg <johannes@sipsolutions.net>
+> > Date: Mon, 05 May 2008 19:57:34 +0200
+> > 
+> > > NETIF_F_FRAGLIST I haven't understood, but it seems to apply mostly for
+> > > IP fragmentation?
+> > 
+> > That's right.  It's for cards that can do IP fragmentation in
+> > hardware.
+> 
+> What does "do IP fragmentation in hardware" mean?
+
+My bad, it merely allows for devices that can handle
+frag lists in sk_buff as transmit packets.
+
+I guess you could use this, btw, to take on arbitrary things
+to the front of frames to handle big headers.  But that's more
+expensive than just getting the LL header length right.
