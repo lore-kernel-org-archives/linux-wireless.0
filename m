@@ -1,112 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbYEDBmu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 21:42:50 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080503.180300.10562559.davem@davemloft.net>
-References: <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-	 <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mdUPoX/r1KBEaVloWJMB"
-Date: Sun, 04 May 2008 03:42:34 +0200
-Message-Id: <1209865354.6210.23.camel@johannes.berg> (sfid-20080504_034221_325997_0547A6E8)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:3844 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754473AbYEECYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:34 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
+Date: Mon,  5 May 2008 10:22:52 +0800
+Message-Id: <1209954172-3092-26-git-send-email-yi.zhu@intel.com> (sfid-20080505_044418_370130_EF6E85A6)
+In-Reply-To: <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
---=-mdUPoX/r1KBEaVloWJMB
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
+in patch "mac80211: QoS related cleanups"), when trying to perform
+ieee80211_wake_queue.
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   23 +++++++++++------------
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-> > Why don't we update the socket allocation when doing pskb_expand_head()=
-?
-> > Sure, it could become negative, but is that so bad?
->=20
-> The socket locked state at this time is variable and unknown.
->=20
-> The socket must be locked in order to modify these values.
-> And such locks cannot be taken, for example, from HW interrupt
-> context, amongst other restrictions.
-
-Ok, that makes sense.
-
-> > We need more space though. Should we then just increase the built-in
-> > headroom?
->=20
-> I simply don't know what to suggest at this point, that's why
-> we are having this discussion :-)
-
-I'm still not sure about the dependencies between LL_MAX_HEADER,
-dev->hard_header_len and similar. Why, for example, does ipip set it to
-LL_MAX_HEADER + sizeof(struct iphdr)? Because it doesn't know better
-since the packets it creates could be routed anywhere?
-
-Could mac80211 announce it needs a very long hard_header_len (say 48 (or
-54) bytes)? Am I right in thinking that then we'd have to increase
-LL_MAX_HEADER as well? I haven't found a check somewhere that warns you
-if you set dev->hard_header_len > LL_MAX_HEADER, should there be one?
-
-If I increase dev->hard_header_len, will that have any negative impact
-on the caching since I'm still just using regular ethernet headers?
-
-
-As far as I understand we have a few options:
-
- (a) go along with it as we do now, use pskb_expand_head, just call
-     skb_orphan before. I assume this has a number of requirements just
-     like sock size accounting would have, does this work from within a
-     hard_start_xmit path? I haven't seen any problems with it so far
-     anyway.
- (b) clone the skb and free the original. pretty much equivalent
- (c) increase hard_header_len/LL_MAX_HEADER constants to 48 (54).
-
-Options (a) and (b) make the accounting pretty useless since that would
-drop the charge to the socket quite early. (c) doesn't seem to work, I
-tried =EF=BB=BFjust increasing LL_MAX_HEADER doesn't seem to help although
-MAX_TCP_HEADER suggests it should be getting enough headroom then.
-
-Ideally, we'd have enough headroom in the skb to start with, since right
-now we're apparently reallocating a lot, especially encrypted frames.
-Not that I understand why we don't get a truesize bug (without the
-monitors) when we do that.
-
-With smart hardware like b43 we could even think about putting the
-802.11 header stuff into a separate buffer and have the hardware to
-gather-dma but there are so many dumb usb devices that this won't help
-much anyway.
-
-johannes
-
---=-mdUPoX/r1KBEaVloWJMB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB0UiaVg1VMiehFYAQLxIQ/6A7IrW6+mxn9GXwKy4SitmraNvJ1B1GIE
-a9U4n42lAT3Hhnfi+kulNVGXkbLIyZWshFr8qhErd7ryURkrxW8k1O+gXvzluwSL
-AnBPi0rVdHNWky1FI40wC2SGBK8X237QSjApoFAYu/eGA9cCGNJ1UgN6MuSJcmyt
-WWhE4d9oiYAzHW13Tk3ZbiV/aANjabePO5bTjCIvdUUvpnWJxQyue1CSo3duG3lB
-98k52Z15ufsnUd5G+Gfh6yQjpDxJ0rNmV7UrRprHo0x1tcnDJSCtOPgcaxiH/GRT
-rC1DKG4dlSKBq7EjA3WyZILguJQwAKD3WEz/fuCoCz5o4v1N3tyB8TgtHNIqu1fo
-4s5zcHh9/WixsqCTdq+WS4KuFeOew/c/sGr8GD5gb5ygQfq3qr7BWtijGCFbgxCA
-LAGSu641P325ELLf6145BGdJrohjJ5Z3dkAx2/OCQqgjQwtUyYAgCrwi3Bu16E8X
-DfXXNlsgDFUdQ+FgGpwdMeDOuAKNJJtO9J4zOpM64un0qEfIfetqxGyFmACQKOnm
-HKtWQN3n6KJU/CK0YWS06BEZFjKB0SKZHZL3lp8VwqQDWdY5BGbU92R9JiCfqyAW
-rhGRp6sT5roW7DCTNP3s8q1f7IL7jj4dxevdt1zR8Ew/E+//JygBfNWoCXQbk/uh
-tzd464Mvltc=
-=CaVE
------END PGP SIGNATURE-----
-
---=-mdUPoX/r1KBEaVloWJMB--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 554b0d6..0b44138 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3330,13 +3330,16 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	 * block-ack window (we assume that they've been successfully
+ 	 * transmitted ... if not, it's too late anyway). */
+ 	if (txq->q.read_ptr != (ba_resp_scd_ssn & 0xff)) {
++		/* calculate mac80211 ampdu sw queue to wake */
++		int ampdu_q =
++		   scd_flow - IWL_BACK_QUEUE_FIRST_ID + priv->hw->queues;
+ 		int freed = iwl4965_tx_queue_reclaim(priv, scd_flow, index);
+ 		priv->stations[ba_resp->sta_id].
+ 			tid[ba_resp->tid].tfds_in_queue -= freed;
+ 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+ 			priv->mac80211_registered &&
+ 			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+-			ieee80211_wake_queue(priv->hw, scd_flow);
++			ieee80211_wake_queue(priv->hw, ampdu_q);
+ 		iwl4965_check_empty_hw_queue(priv, ba_resp->sta_id,
+ 			ba_resp->tid, scd_flow);
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 3b091fc..45bbce7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2357,12 +2357,6 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 		nfreed++;
+ 	}
+ 
+-/*	if (iwl4965_queue_space(q) > q->low_mark && (txq_id >= 0) &&
+-			(txq_id != IWL_CMD_QUEUE_NUM) &&
+-			priv->mac80211_registered)
+-		ieee80211_wake_queue(priv->hw, txq_id); */
+-
+-
+ 	return nfreed;
+ }
+ 
+@@ -2586,7 +2580,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		}
+ 
+ 		if (txq->q.read_ptr != (scd_ssn & 0xff)) {
+-			int freed;
++			int freed, ampdu_q;
+ 			index = iwl_queue_dec_wrap(scd_ssn & 0xff, txq->q.n_bd);
+ 			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim scd_ssn "
+ 					   "%d index %d\n", scd_ssn , index);
+@@ -2595,9 +2589,15 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 
+ 			if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+ 			    txq_id >= 0 && priv->mac80211_registered &&
+-			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+-				ieee80211_wake_queue(priv->hw, txq_id);
+-
++			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
++				/* calculate mac80211 ampdu sw queue to wake */
++				ampdu_q = txq_id - IWL_BACK_QUEUE_FIRST_ID +
++					  priv->hw->queues;
++				if (agg->state == IWL_AGG_OFF)
++					ieee80211_wake_queue(priv->hw, txq_id);
++				else
++					ieee80211_wake_queue(priv->hw, ampdu_q);
++			}
+ 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
+ 		}
+ 	} else {
+@@ -2622,8 +2622,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		if (tid != MAX_TID_COUNT)
+ 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+ 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
+-			(txq_id >= 0) &&
+-			priv->mac80211_registered)
++			(txq_id >= 0) && priv->mac80211_registered)
+ 			ieee80211_wake_queue(priv->hw, txq_id);
+ 		if (tid != MAX_TID_COUNT)
+ 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
+-- 
+1.5.3.6
 
