@@ -1,111 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038AbYE2JjB (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44261
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754143AbYEEWha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 05:39:01 -0400
-Subject: Re: [PATCH 38/43] mac80211: allow disable FAT in specific
-	configurations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1212050128-17132-39-git-send-email-yi.zhu@intel.com> (sfid-20080529_103809_959161_C421771F)
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
-	 <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
-	 (sfid-20080529_103809_959161_C421771F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2nSt5aN39Sbfj9IpZ4wG"
-Date: Thu, 29 May 2008 11:37:50 +0200
-Message-Id: <1212053870.16917.39.camel@johannes.berg> (sfid-20080529_113906_068034_011D3E47)
+	Mon, 5 May 2008 18:37:30 -0400
+Date: Mon, 05 May 2008 15:37:30 -0700 (PDT)
+Message-Id: <20080505.153730.186617868.davem@davemloft.net> (sfid-20080506_003650_784495_136E7FEE)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210021066.4181.41.camel@johannes.berg>
+References: <1210018214.4181.27.camel@johannes.berg>
+	<20080505.134420.194001886.davem@davemloft.net>
+	<1210021066.4181.41.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 05 May 2008 22:57:46 +0200
 
---=-2nSt5aN39Sbfj9IpZ4wG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> But I cannot modify the ethernet header that'll live on in the skb data
+> so that's not useful.
 
-On Thu, 2008-05-29 at 16:35 +0800, Zhu Yi wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->=20
-> This patch allows to disable FAT channel in specific configurations.
->=20
-> For example the configuration (8, +1), (primary channel 8, extension
-> channel 12) isn't permitted in U.S., but (8, -1), (primary channel 8,
-> extension channel 4) is. When FAT channel configuration is not
-> permitted, FAT channel should be reported as not supported in the
-> capabilities of the HT IE in association request. And sssociation is
-> performed on 20Mhz channel.
+Actually, you can, if skb_header_cloned() returns false.
 
-Can you explain more in detail the underlying regulatory rules?
+When skb_header_cloned() returns false you can change the
+headers however you like.
 
-It seems to me that (12, -1) would be pretty much the same as (8, +1) as
-far as regulatory is concerned. I'm just thinking about how we should
-express this in the regulatory database where we're not really concerned
-with channels but rather allowed bands.
+I'm not sure if it helps the bridging case or not, but in
+any event, the following patch should work and reduce the
+number of cases where pskb_expand_head() is necessary on
+TX.
 
-johannes
-
---=-2nSt5aN39Sbfj9IpZ4wG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASD55baVg1VMiehFYAQJckxAAomcjmvRLN+S5HT5eVOrQjfproTD8PT0P
-QI76kosi0QHUmpfufemVkOXQym08Qoz0TJZIA7HuO0quXzv0TKFhCnnY6G73wSLZ
-ppTTKjJXGPc6NcN0W7l0b5yphY6jKnDDS8SKt1kQr/Eue5l06H3h3ZhuCijUzEFK
-WL/BVh9lsQGdDVEQE47JWXe4ANCuq6rure/ZZWYrjShKwWFhFa6Bj5MyKAp24HNH
-ZIy/KDvBG3CSwXzxeAlM60jLQVm4HYmAoHrUvKD/2vOcKH6g3n3OspAc1sDLQtMt
-TZTyLgHULSrAYQP0ku2u5XkdYNi65RFtXx7MKJPpa6kd6/FuBObeG3VAxYE42429
-3K59u1N7TJenrN5NzsL3UdyApE661hMSIaJbAN/l5bfwX1ffrIoj4IW62Pp/StE9
-NTm55Evei7xfADQnxyU4Clm20jDUbXye+cGsap6jj7q0tV4DZ/k8mKq/inXDT3SV
-d2wjGSUXThygKFcWceBnLIKcGZb3hATdqZJpF9X0aRowz3EaDuhjoLaol8MC53BQ
-rslym8HHbf2BQ6BFMKChnNmKC//67ZboOpoK+EAi5S9oO7uJX1vC0kbDHIrBAJDO
-iUiMES1lOgPT8RLy0RNPClXp19RwO1PBIU0zVs+HTJnXqF9LMYe1ZstV7/njlxo9
-Ge+cuLfKcCY=
-=t1kJ
------END PGP SIGNATURE-----
-
---=-2nSt5aN39Sbfj9IpZ4wG--
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f35eaea..86f0e36 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * be cloned. This could happen, e.g., with Linux bridge code passing
+ 	 * us broadcast frames. */
+ 
+-	if (head_need > 0 || skb_cloned(skb)) {
++	if (head_need > 0 || skb_header_cloned(skb)) {
+ #if 0
+ 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+ 		       "of headroom\n", dev->name, head_need);
+ #endif
+ 
+-		if (skb_cloned(skb))
++		if (skb_header_cloned(skb))
+ 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 		else
+ 			I802_DEBUG_INC(local->tx_expand_skb_head);
