@@ -1,169 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:40320 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757703AbYEMIfU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:35:20 -0400
-Received: from mail01.m-online.net (mail.m-online.net [192.168.3.149])
-	by mail-out.m-online.net (Postfix) with ESMTP id 5415921CF43
-	for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 10:35:18 +0200 (CEST)
-Received: from localhost (unknown [192.168.1.157])
-	by mail.m-online.net (Postfix) with ESMTP id 75C3F90337
-	for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 10:35:17 +0200 (CEST)
-Received: from localhost ([192.168.3.149])
-	by localhost (scanner1.m-online.net [192.168.1.157]) (amavisd-new, port 10024)
-	with ESMTP id ax2xjGFFsjSR for <linux-wireless@vger.kernel.org>;
-	Tue, 13 May 2008 10:35:16 +0200 (CEST)
-Received: from [192.168.0.100] (ppp-88-217-5-12.dynamic.mnet-online.de [88.217.5.12])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.mnet-online.de (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 10:35:16 +0200 (CEST)
-Message-ID: <482952C3.9020209@in.tum.de> (sfid-20080513_103525_899450_BDE1A917)
-Date: Tue, 13 May 2008 10:35:15 +0200
-From: =?ISO-8859-1?Q?Christian_Sch=E4fer?= <schaefer@in.tum.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: BUG: scheduling while atomic: rt73usb
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:15924 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754578AbYEECYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:25 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 17/25] iwlwifi: compile iwl-sta into iwlcore
+Date: Mon,  5 May 2008 10:22:44 +0800
+Message-Id: <1209954172-3092-18-git-send-email-yi.zhu@intel.com> (sfid-20080505_044416_565514_B9984194)
+In-Reply-To: <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-with vanilla kernel 2.6.26-rc1 and -rc2 I get the following in my dmesg. 
-The wireless card is a LogiLink USB card, lsusb gives
+This patch moves iwl-sta into iwl-core.
 
-Bus 002 Device 002: ID 148f:2573 Ralink Technology, Corp. RT2501USB 
-Wireless Adapter
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Makefile  |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-If you need further info like my .config, please let me know. And please 
-CC to me since I'm not on the list.
-
-
-
-usbcore: registered new interface driver rt73usb
-udev: renamed network interface wlan0 to wlan1
-firmware: requesting rt73.bin
-BUG: scheduling while atomic: rt73usb/1176/0x00000002
-Pid: 1176, comm: rt73usb Not tainted 2.6.26-rc1 #6
-  [dm_mod:schedule+0x25d/0x380] schedule+0x25d/0x320
-  [lp:schedule_timeout+0x49/0x300] schedule_timeout+0x49/0xc0
-  [xfs_iget_core+0x32e/0x5f0] xfs_iget_core+0x32e/0x5f0
-  [process_timeout+0x0/0x10] process_timeout+0x0/0x10
-  [lp:schedule_timeout+0x44/0x300] schedule_timeout+0x44/0xc0
-  [wait_for_common+0x81/0x170] wait_for_common+0x81/0x170
-  [<c0119b10>] default_wake_function+0x0/0x10
-  [usb_start_wait_urb+0x97/0xc0] usb_start_wait_urb+0x97/0xc0
-  [rt2x00usb:usb_control_msg+0xcb/0x5c480] usb_control_msg+0xcb/0x100
-  [<f92d0481>] rt2x00usb_vendor_request+0xa1/0x120 [rt2x00usb]
-  [ktime_get_ts+0x1e/0x50] ktime_get_ts+0x1e/0x50
-  [<f92d058b>] rt2x00usb_vendor_req_buff_lock+0x8b/0x170 [rt2x00usb]
-  [try_to_wake_up+0x90/0xa0] try_to_wake_up+0x90/0xa0
-  [<f92d06d0>] rt2x00usb_vendor_request_buff+0x60/0x80 [rt2x00usb]
-  [<f92e1718>] rt73usb_config_erp+0x38/0x110 [rt73usb]
-  [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
-  [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
-  [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
-  [<f92961a0>] rt2x00lib_intf_scheduled_iter+0x0/0xf0 [rt2x00lib]
-  [<f9295060>] rt2x00lib_intf_scheduled+0x0/0x20 [rt2x00lib]
-  [run_workqueue+0x81/0x130] run_workqueue+0x81/0x130
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [worker_thread+0x79/0xd0] worker_thread+0x79/0xd0
-  [<c0130270>] autoremove_wake_function+0x0/0x40
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [kthread+0x42/0x70] kthread+0x42/0x70
-  [kthread+0x0/0x70] kthread+0x0/0x70
-  [kernel_thread_helper+0x7/0x1c] kernel_thread_helper+0x7/0x1c
-  =======================
-BUG: scheduling while atomic: rt73usb/1176/0x00000002
-Pid: 1176, comm: rt73usb Not tainted 2.6.26-rc1 #6
-  [dm_mod:schedule+0x25d/0x380] schedule+0x25d/0x320
-  [lp:schedule_timeout+0x49/0x300] schedule_timeout+0x49/0xc0
-  [xfs_iget_core+0x32e/0x5f0] xfs_iget_core+0x32e/0x5f0
-  [process_timeout+0x0/0x10] process_timeout+0x0/0x10
-  [lp:schedule_timeout+0x44/0x300] schedule_timeout+0x44/0xc0
-  [wait_for_common+0x81/0x170] wait_for_common+0x81/0x170
-  [<c0119b10>] default_wake_function+0x0/0x10
-  [usb_start_wait_urb+0x97/0xc0] usb_start_wait_urb+0x97/0xc0
-  [rt2x00usb:usb_control_msg+0xcb/0x5c480] usb_control_msg+0xcb/0x100
-  [<f92d0481>] rt2x00usb_vendor_request+0xa1/0x120 [rt2x00usb]
-  [ktime_get_ts+0x1e/0x50] ktime_get_ts+0x1e/0x50
-  [<f92d061b>] rt2x00usb_vendor_req_buff_lock+0x11b/0x170 [rt2x00usb]
-  [<f92d06d0>] rt2x00usb_vendor_request_buff+0x60/0x80 [rt2x00usb]
-  [<f92e1766>] rt73usb_config_erp+0x86/0x110 [rt73usb]
-  [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
-  [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
-  [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
-  [<f92961a0>] rt2x00lib_intf_scheduled_iter+0x0/0xf0 [rt2x00lib]
-  [<f9295060>] rt2x00lib_intf_scheduled+0x0/0x20 [rt2x00lib]
-  [run_workqueue+0x81/0x130] run_workqueue+0x81/0x130
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [worker_thread+0x79/0xd0] worker_thread+0x79/0xd0
-  [<c0130270>] autoremove_wake_function+0x0/0x40
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [kthread+0x42/0x70] kthread+0x42/0x70
-  [kthread+0x0/0x70] kthread+0x0/0x70
-  [kernel_thread_helper+0x7/0x1c] kernel_thread_helper+0x7/0x1c
-  =======================
-BUG: scheduling while atomic: rt73usb/1176/0x00000002
-Pid: 1176, comm: rt73usb Not tainted 2.6.26-rc1 #6
-  [dm_mod:schedule+0x25d/0x380] schedule+0x25d/0x320
-  [lp:schedule_timeout+0x49/0x300] schedule_timeout+0x49/0xc0
-  [xfs_iget_core+0x32e/0x5f0] xfs_iget_core+0x32e/0x5f0
-  [process_timeout+0x0/0x10] process_timeout+0x0/0x10
-  [lp:schedule_timeout+0x44/0x300] schedule_timeout+0x44/0xc0
-  [wait_for_common+0x81/0x170] wait_for_common+0x81/0x170
-  [<c0119b10>] default_wake_function+0x0/0x10
-  [usb_start_wait_urb+0x97/0xc0] usb_start_wait_urb+0x97/0xc0
-  [rt2x00usb:usb_control_msg+0xcb/0x5c480] usb_control_msg+0xcb/0x100
-  [<f92d0481>] rt2x00usb_vendor_request+0xa1/0x120 [rt2x00usb]
-  [ktime_get+0x18/0x40] ktime_get+0x18/0x40
-  [<f92d058b>] rt2x00usb_vendor_req_buff_lock+0x8b/0x170 [rt2x00usb]
-  [<f92d06d0>] rt2x00usb_vendor_request_buff+0x60/0x80 [rt2x00usb]
-  [<f92e1792>] rt73usb_config_erp+0xb2/0x110 [rt73usb]
-  [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
-  [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
-  [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
-  [<f92961a0>] rt2x00lib_intf_scheduled_iter+0x0/0xf0 [rt2x00lib]
-  [<f9295060>] rt2x00lib_intf_scheduled+0x0/0x20 [rt2x00lib]
-  [run_workqueue+0x81/0x130] run_workqueue+0x81/0x130
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [worker_thread+0x79/0xd0] worker_thread+0x79/0xd0
-  [<c0130270>] autoremove_wake_function+0x0/0x40
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [kthread+0x42/0x70] kthread+0x42/0x70
-  [kthread+0x0/0x70] kthread+0x0/0x70
-  [kernel_thread_helper+0x7/0x1c] kernel_thread_helper+0x7/0x1c
-  =======================
-BUG: scheduling while atomic: rt73usb/1176/0x00000002
-Pid: 1176, comm: rt73usb Not tainted 2.6.26-rc1 #6
-  [dm_mod:schedule+0x25d/0x380] schedule+0x25d/0x320
-  [lp:schedule_timeout+0x49/0x300] schedule_timeout+0x49/0xc0
-  [xfs_iget_core+0x32e/0x5f0] xfs_iget_core+0x32e/0x5f0
-  [process_timeout+0x0/0x10] process_timeout+0x0/0x10
-  [lp:schedule_timeout+0x44/0x300] schedule_timeout+0x44/0xc0
-  [wait_for_common+0x81/0x170] wait_for_common+0x81/0x170
-  [<c0119b10>] default_wake_function+0x0/0x10
-  [usb_start_wait_urb+0x97/0xc0] usb_start_wait_urb+0x97/0xc0
-  [rt2x00usb:usb_control_msg+0xcb/0x5c480] usb_control_msg+0xcb/0x100
-  [<f92d0481>] rt2x00usb_vendor_request+0xa1/0x120 [rt2x00usb]
-  [ktime_get+0x18/0x40] ktime_get+0x18/0x40
-  [<f92d061b>] rt2x00usb_vendor_req_buff_lock+0x11b/0x170 [rt2x00usb]
-  [<f92d06d0>] rt2x00usb_vendor_request_buff+0x60/0x80 [rt2x00usb]
-  [<f92e17e5>] rt73usb_config_erp+0x105/0x110 [rt73usb]
-  [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
-  [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
-  [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
-  [<f92961a0>] rt2x00lib_intf_scheduled_iter+0x0/0xf0 [rt2x00lib]
-  [<f9295060>] rt2x00lib_intf_scheduled+0x0/0x20 [rt2x00lib]
-  [run_workqueue+0x81/0x130] run_workqueue+0x81/0x130
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [worker_thread+0x79/0xd0] worker_thread+0x79/0xd0
-  [<c0130270>] autoremove_wake_function+0x0/0x40
-  [worker_thread+0x0/0xd0] worker_thread+0x0/0xd0
-  [kthread+0x42/0x70] kthread+0x42/0x70
-  [kthread+0x0/0x70] kthread+0x0/0x70
-  [kernel_thread_helper+0x7/0x1c] kernel_thread_helper+0x7/0x1c
-  =======================
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index ab372fc..04da0d2 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -1,6 +1,6 @@
+ obj-$(CONFIG_IWLCORE)	+= iwlcore.o
+ iwlcore-objs 		= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
+-iwlcore-objs 		+= iwl-rx.o iwl-tx.o
++iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
+ iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+ iwlcore-$(CONFIG_IWLWIFI_LEDS) += iwl-led.o
+ iwlcore-$(CONFIG_IWLWIFI_RFKILL) += iwl-rfkill.o
+@@ -11,7 +11,7 @@ iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
+ iwl3945-$(CONFIG_IWL3945_LEDS) += iwl-3945-led.o
+ 
+ obj-$(CONFIG_IWL4965)	+= iwl4965.o
+-iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-4965-rs.o iwl-sta.o
++iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-4965-rs.o
+ 
+ ifeq ($(CONFIG_IWL5000),y)
+ 	iwl4965-objs += iwl-5000.o
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 34f5424..f226704 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -170,6 +170,7 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+ 	else
+ 		return 0;
+ }
++EXPORT_SYMBOL(iwl_send_static_wepkey_cmd);
+ 
+ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 			       struct ieee80211_key_conf *keyconf)
+@@ -190,6 +191,7 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(iwl_remove_default_wep_key);
+ 
+ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 			    struct ieee80211_key_conf *keyconf)
+@@ -217,6 +219,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(iwl_set_default_wep_key);
+ 
+ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *keyconf,
+@@ -391,6 +394,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return ret;
+ }
++EXPORT_SYMBOL(iwl_remove_dynamic_key);
+ 
+ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ 				struct ieee80211_key_conf *key, u8 sta_id)
+@@ -416,6 +420,7 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(iwl_set_dynamic_key);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ static void iwl_dump_lq_cmd(struct iwl_priv *priv,
+-- 
+1.5.3.6
 
