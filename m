@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:26833 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755317AbYEHStu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36900 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762696AbYEESer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 14:49:50 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so925499fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 11:49:48 -0700 (PDT)
-Message-ID: <8704f27d0805081149wa91072en32ce8912ba1a14ff@mail.gmail.com> (sfid-20080508_204851_997602_89CCF9AA)
-Date: Thu, 8 May 2008 21:49:43 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: "Volker Braun" <vbraun@physics.upenn.edu>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210271472.30724.43.camel@carrot.hep.upenn.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <1210271472.30724.43.camel@carrot.hep.upenn.edu>
+	Mon, 5 May 2008 14:34:47 -0400
+Subject: Re: [RFC] mac80211: Don't encrypt beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200805052036.07862.IvDoorn@gmail.com> (sfid-20080505_202834_583735_2C9067EC)
+References: <200805051841.51408.IvDoorn@gmail.com>
+	 <1210005414.8245.40.camel@johannes.berg>
+	 <200805052036.07862.IvDoorn@gmail.com>
+	 (sfid-20080505_202834_583735_2C9067EC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hD6sXcnpjl+sMIpimrxV"
+Date: Mon, 05 May 2008 20:33:44 +0200
+Message-Id: <1210012424.4181.9.camel@johannes.berg> (sfid-20080505_203439_811758_924DBB36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 8, 2008 at 9:31 PM, Volker Braun <vbraun@physics.upenn.edu> wrote:
-> Here is more data on my problem with dynamic wep.
->
-Thanks for that !
 
-> compat-wireless-2008-05-07 + iwl4965 + swcrypto=1: Associates and
-> obtains dhcp lease, works fine.
->
-> So it really is about the HW accelleration. I tried your patch (without
-> swcrypto=1). First, output of wpa_supplicant:
->
-
-Yep...
-
-> Your patch yields:
->
-> May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
-> May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=0 alg=0,keyid=3 static_key=0
->
-
-sta_id 31 is the broadcast station => key_idx = 1 for bcast station
-This really proves what Tomas said: you get the unicast key after the
-groupkey. Quite strange, we thought it couldn't happen, and actually,
-we hadn't any use case that led to this scenario. I am not sure I will
-be able to reproduce the bug here, in any case, I understand what the
-issue is and will try to send a patch shortly (next week)
-
-> Should static_key not be the other way round (key_idx 3 is unicast)? In
-> any case, after a while the broadcast key gets updated: wpa_supplicant
-> says
->
-
-{...}
-
-This is likely because your AP is configured to rekey the groupkey
-every ... minutes. So the groupkey is updated.
-
-> May  8 14:05:10 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=2 static_key=0
-
-Yep, the idx of the group key is now 2 (it was 1 before)
-
-> May  8 14:10:30 localhost kernel: iwl4965: disable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
-> May  8 14:10:30 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=0
-
-See ? now the group key idx and 1 again. This is normal, this the way
-the AP switches between the keys:
-
-1, 2, 1, 2, ....
-wpa_supp first install 1, then 2, then removes one (the disable
-hwcrypto line) and updates the "new" 1 etc....
+--=-hD6sXcnpjl+sMIpimrxV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-thanks
+> Hmm, your absolutely right, I hadn't checked the wireless-testing code ye=
+t. :)
+> I only noticed this bug since a user had hostapd running on rt2x00.git wi=
+th
+> rt61pci HW crypto enabled.
 
--- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+:)
+
+> I'll respin the patch to apply for wireless-testing ;)
+
+Send it to John, I'll port it over to tx-info when it arrives in my
+tree.
+
+johannes
+
+--=-hD6sXcnpjl+sMIpimrxV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB9TBqVg1VMiehFYAQJZGQ/7BvOGmJT7j/k23BtRK46/iknFDRl8Bfbw
+j66UBYc47dWwX7mFZ98O1bb0iXYSB90j/KIsWdgH3ndoMxWtS1TjLau9Zmu1XuY3
+ZMByVyj46zcHO50pnIMbSA2+tR1uLAaES001qDTYm/lAUp7UCisYbZZ6BU+XFFsF
+VNDmGliLKlgFfc2W/CQCoVPaS6k5EfsHeo6vbyQXC9LDZ89V6TgaAjjdjbl8KwFy
+c7poKTemwhaKGfRixt+oGsIDbgZF2+WcgOK0aAqiBqqQF/NFz6vAH/3qjT98FKFj
+RRgFMXTu721vW9mya8bnmVXgiI7N4uVDnQPVuvzjLHr5u5LmN1rgWKo3N+iLgQgC
+eQabmqjpZK8H488CaNaiVErm96ZnmBxKea/OSC9+hKoU77yTPk8mnw0iPJ4lSLpv
+rgHIl1Fpo1sspobylmxB8bnSMZ+fzhOhqsE0kUjxU5e6c89dy6IP/wUOkplhP5kB
+UXxHhM5MRQiiND3wfVDj4gfWhjvJXYbRf6EJa813FtA5+ZEQzrkFh2O4BVY9/38U
+bSu7xCCtrlMaiaV8z5I8q5scnFcXMe921PT9yqu85FAHUTknVvlxZUddyx0EU6nq
+XyMe0eOopxRQKWZ5miXk23p+gcojFVcIjKAUGHPuqzglTUtFkbmgS+AvO01ihrQL
+f64CwmZXsA8=
+=YmSv
+-----END PGP SIGNATURE-----
+
+--=-hD6sXcnpjl+sMIpimrxV--
+
