@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59788 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:41783 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753801AbYE0DbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 23:31:11 -0400
+	id S1754172AbYEECYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:17 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2.6.26 2/3] iwlwifi: fix exit from stay_in_table state
-Date: Tue, 27 May 2008 11:29:34 +0800
-Message-Id: <1211858975-21424-2-git-send-email-yi.zhu@intel.com> (sfid-20080527_053116_278424_31328279)
-In-Reply-To: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
-References: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org, Yi Zhu <yi.zhu@intel.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 11/25] iwlwifi: Fix built-in compilation of iwlcore (part 2)
+Date: Mon,  5 May 2008 10:22:38 +0800
+Message-Id: <1209954172-3092-12-git-send-email-yi.zhu@intel.com> (sfid-20080505_044417_696182_9B5D181D)
+In-Reply-To: <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guy Cohen <guy.cohen@intel.com>
+From: Yi Zhu <yi.zhu@intel.com>
 
-When exiting from stay in table state (e.g. timer expiration),
-all the statistics are reset and the RS flow should not continue
-but only after enough statistics are collected again.
+On Wed, 2008-04-23 at 13:38 +0300, Tomas Winkler wrote:
+> This patch fixes problem in Makefile that prevented
+> built-in compilation of iwlcore
 
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Here is the second part. Without this,
+drivers/net/wireless/iwlwifi/build-in.o will not be linked into
+vmlinux.
+
+Signed-off-by: Yi Zhu <yi.zhu@intel.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/Makefile |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index fa41ed1..838db19 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1980,7 +1980,7 @@ lq_update:
- 	 * 2)  Not just finishing up a search
- 	 * 3)  Allowing a new search
- 	 */
--	if (!update_lq && !done_search && !lq_sta->stay_in_tbl) {
-+	if (!update_lq && !done_search && !lq_sta->stay_in_tbl && window->counter) {
- 		/* Save current throughput to compare with "search" throughput*/
- 		lq_sta->last_tpt = current_tpt;
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 300fc68..41eb08e 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -58,8 +58,7 @@ obj-$(CONFIG_RTL8187)	+= rtl8187.o
  
+ obj-$(CONFIG_ADM8211)	+= adm8211.o
+ 
+-obj-$(CONFIG_IWL3945)	+= iwlwifi/
+-obj-$(CONFIG_IWL4965)	+= iwlwifi/
++obj-$(CONFIG_IWLCORE)	+= iwlwifi/
+ obj-$(CONFIG_RT2X00)	+= rt2x00/
+ 
+ obj-$(CONFIG_P54_COMMON)	+= p54/
 -- 
 1.5.3.6
 
