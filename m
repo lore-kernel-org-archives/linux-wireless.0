@@ -1,42 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24990 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:57565 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752522AbYE2SxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 14:53:08 -0400
-Subject: Re: ath5k can't connect on 5424
-From: Pavel Roskin <proski@gnu.org>
-To: "Jerry Quinn (ibm)" <jlquinn@optonline.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	mickflemm@gmail.com
-In-Reply-To: <483EC752.1040609@optonline.net>
-References: <4838A467.1000700@optonline.net>
-	 <20080528002814.GF7779@tuxdriver.com>  <483EC752.1040609@optonline.net>
-Content-Type: text/plain
-Date: Thu, 29 May 2008 14:52:59 -0400
-Message-Id: <1212087179.3808.2.camel@dv> (sfid-20080529_205313_045023_5ADDFDA2)
-Mime-Version: 1.0
+	id S1754413AbYEECYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:22 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 15/25] iwlwifi: create disable SCD Tx FIFOs handler
+Date: Mon,  5 May 2008 10:22:42 +0800
+Message-Id: <1209954172-3092-16-git-send-email-yi.zhu@intel.com> (sfid-20080505_044417_557151_BCFDDCD8)
+In-Reply-To: <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-05-29 at 11:10 -0400, Jerry Quinn (ibm) wrote:
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-> Mike, thanks for pointing me to the updated ath_info.
-> 
-> Here's the dump from my chip:
-> 
-> naga:~/ath_info# ./ath_info -v 0xedf00000
-> #DBG main: sleep_ctl reg 00000000   reset_ctl reg 00000000
->  -==Device Information==-
-> MAC Version:  2424  (0xa0)
-> MAC Revision: 5424  (0xa3)
-> Warning: Invalid EEPROM Magic number!
+This patch moves disabeling Tx FIFOs in NIC SCD to seperate handlers
+in 4965 and 5000 cards.
 
-If I understand correctly, it means that your device uses a new EEPROM
-layout that hasn't been reverse engineered yet.  Most of the remaining
-data cannot be trusted.  It's not surprising that your device is not
-working with ath5k.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   40 ++++++++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   22 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
+ 3 files changed, 50 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 3453e99..d5ee512 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -470,6 +470,27 @@ static void iwl4965_kw_free(struct iwl_priv *priv)
+ 	}
+ }
+ 
++static int iwl4965_disable_tx_fifo(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	int ret;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	ret = iwl_grab_nic_access(priv);
++	if (unlikely(ret)) {
++		IWL_ERROR("Tx fifo reset failed");
++		spin_unlock_irqrestore(&priv->lock, flags);
++		return ret;
++	}
++
++	iwl_write_prph(priv, IWL49_SCD_TXFACT, 0);
++	iwl_release_nic_access(priv);
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++
+ /**
+  * iwl4965_txq_ctx_reset - Reset TX queue context
+  * Destroys all DMA structures and initialise them again
+@@ -481,7 +502,6 @@ static int iwl4965_txq_ctx_reset(struct iwl_priv *priv)
+ {
+ 	int rc = 0;
+ 	int txq_id, slots_num;
+-	unsigned long flags;
+ 
+ 	iwl4965_kw_free(priv);
+ 
+@@ -495,19 +515,10 @@ static int iwl4965_txq_ctx_reset(struct iwl_priv *priv)
+ 		goto error_kw;
+ 	}
+ 
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	rc = iwl_grab_nic_access(priv);
+-	if (unlikely(rc)) {
+-		IWL_ERROR("TX reset failed");
+-		spin_unlock_irqrestore(&priv->lock, flags);
++	/* Turn off all Tx DMA fifos */
++	rc = priv->cfg->ops->lib->disable_tx_fifo(priv);
++	if (unlikely(rc))
+ 		goto error_reset;
+-	}
+-
+-	/* Turn off all Tx DMA channels */
+-	iwl_write_prph(priv, IWL49_SCD_TXFACT, 0);
+-	iwl_release_nic_access(priv);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	/* Tell 4965 where to find the keep-warm buffer */
+ 	rc = iwl4965_kw_init(priv);
+@@ -538,6 +549,7 @@ static int iwl4965_txq_ctx_reset(struct iwl_priv *priv)
+  error_kw:
+ 	return rc;
+ }
++
+ static int iwl4965_apm_init(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+@@ -621,7 +633,6 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+-
+ int iwl4965_hw_nic_init(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+@@ -4041,6 +4052,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.free_shared_mem = iwl4965_free_shared_mem,
+ 	.txq_update_byte_cnt_tbl = iwl4965_txq_update_byte_cnt_tbl,
+ 	.hw_nic_init = iwl4965_hw_nic_init,
++	.disable_tx_fifo = iwl4965_disable_tx_fifo,
+ 	.rx_handler_setup = iwl4965_rx_handler_setup,
+ 	.is_valid_rtc_data_addr = iwl4965_hw_valid_rtc_data_addr,
+ 	.alive_notify = iwl4965_alive_notify,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index f9c2274..feffcaf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -430,6 +430,27 @@ static u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+ }
+ 
+ 
++static int iwl5000_disable_tx_fifo(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	int ret;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	ret = iwl_grab_nic_access(priv);
++	if (unlikely(ret)) {
++		IWL_ERROR("Tx fifo reset failed");
++		spin_unlock_irqrestore(&priv->lock, flags);
++		return ret;
++	}
++
++	iwl_write_prph(priv, IWL50_SCD_TXFACT, 0);
++	iwl_release_nic_access(priv);
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++
+ static struct iwl_hcmd_ops iwl5000_hcmd = {
+ };
+ 
+@@ -446,6 +467,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.alloc_shared_mem = iwl5000_alloc_shared_mem,
+ 	.free_shared_mem = iwl5000_free_shared_mem,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
++	.disable_tx_fifo = iwl5000_disable_tx_fifo,
+ 	.apm_ops = {
+ 		.init =	iwl5000_apm_init,
+ 		.config = iwl5000_nic_config,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 1241806..c29f8b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -110,6 +110,8 @@ struct iwl_lib_ops {
+ 	void (*rx_handler_setup)(struct iwl_priv *priv);
+ 	/* nic init */
+ 	int (*hw_nic_init)(struct iwl_priv *priv);
++	/* nic Tx fifo handling */
++	int (*disable_tx_fifo)(struct iwl_priv *priv);
+ 	/* alive notification */
+ 	int (*alive_notify)(struct iwl_priv *priv);
+ 	/* check validity of rtc data address */
 -- 
-Regards,
-Pavel Roskin
+1.5.3.6
+
