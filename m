@@ -1,106 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:50997 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbYENKV3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47993 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760303AbYEET6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 06:21:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCHv2] b43: use the bitrev helpers rather than rolling a private one
-Date: Wed, 14 May 2008 12:21:00 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1210708518.6191.0.camel@brick> <200805140303.23590.mb@bu3sch.de> <1210727615.6191.20.camel@brick>
-In-Reply-To: <1210727615.6191.20.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805141221.00979.mb@bu3sch.de> (sfid-20080514_122152_128623_FB2CF339)
+	Mon, 5 May 2008 15:58:39 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080505.125013.129139559.davem@davemloft.net>
+References: <1210010254.4181.4.camel@johannes.berg>
+	 <20080505.115855.137964071.davem@davemloft.net>
+	 <1210014316.4181.14.camel@johannes.berg>
+	 <20080505.125013.129139559.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-20aGgLRMqfAipAY4HMzi"
+Date: Mon, 05 May 2008 21:57:36 +0200
+Message-Id: <1210017456.4181.23.camel@johannes.berg> (sfid-20080505_215815_853835_136783C7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 May 2008 03:13:35 Harvey Harrison wrote:
-> The 4-bit reversal flip_4bit is replaced with the bitrev helper
-> bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
-> where a register is read from for checking there.  The other caller
-> explicitly passes an array index which is guaranteed to be within range
-> and so a B43_WARN is not added there.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-Reviewed-off-by: Michael Buesch <mb@bu3sch.de>
-
-> ---
->  drivers/net/wireless/b43/phy.c |   27 ++++++---------------------
->  1 files changed, 6 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-> index de024dc..feea79f 100644
-> --- a/drivers/net/wireless/b43/phy.c
-> +++ b/drivers/net/wireless/b43/phy.c
-> @@ -28,6 +28,7 @@
->  #include <linux/delay.h>
->  #include <linux/io.h>
->  #include <linux/types.h>
-> +#include <linux/bitrev.h>
->  
->  #include "b43.h"
->  #include "phy.h"
-> @@ -83,25 +84,9 @@ const u8 b43_radio_channel_codes_bg[] = {
->  	72, 84,
->  };
->  
-> +#define bitrev4(tmp) (bitrev8(tmp) >> 4)
->  static void b43_phy_initg(struct b43_wldev *dev);
->  
-> -/* Reverse the bits of a 4bit value.
-> - * Example:  1101 is flipped 1011
-> - */
-> -static u16 flip_4bit(u16 value)
-> -{
-> -	u16 flipped = 0x0000;
-> -
-> -	B43_WARN_ON(value & ~0x000F);
-> -
-> -	flipped |= (value & 0x0001) << 3;
-> -	flipped |= (value & 0x0002) << 1;
-> -	flipped |= (value & 0x0004) >> 1;
-> -	flipped |= (value & 0x0008) >> 3;
-> -
-> -	return flipped;
-> -}
-> -
->  static void generate_rfatt_list(struct b43_wldev *dev,
->  				struct b43_rfatt_list *list)
->  {
-> @@ -3069,13 +3054,13 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
->  		}
->  		radio_stacksave(0x0078);
->  		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
-> -		flipped = flip_4bit(tmp);
-> +		B43_WARN_ON(tmp > 15);
-> +		flipped = bitrev4(tmp);
->  		if (flipped < 10 && flipped >= 8)
->  			flipped = 7;
->  		else if (flipped >= 10)
->  			flipped -= 3;
-> -		flipped = flip_4bit(flipped);
-> -		flipped = (flipped << 1) | 0x0020;
-> +		flipped = (bitrev4(flipped) << 1) | 0x0020;
->  		b43_radio_write16(dev, 0x0078, flipped);
->  
->  		b43_calc_nrssi_threshold(dev);
-> @@ -3708,7 +3693,7 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
->  	tmp1 >>= 9;
->  
->  	for (i = 0; i < 16; i++) {
-> -		radio78 = ((flip_4bit(i) << 1) | 0x20);
-> +		radio78 = (bitrev4(i) << 1) | 0x0020;
->  		b43_radio_write16(dev, 0x78, radio78);
->  		udelay(10);
->  		for (j = 0; j < 16; j++) {
+--=-20aGgLRMqfAipAY4HMzi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> My bad, it merely allows for devices that can handle
+> frag lists in sk_buff as transmit packets.
 
--- 
-Greetings Michael.
+:)
+
+> I guess you could use this, btw, to take on arbitrary things
+> to the front of frames to handle big headers.  But that's more
+> expensive than just getting the LL header length right.
+
+Not necessarily because we seem to be getting a lot of cloned frames
+that we need to copy all the time. If we would remove the ethernet
+header and stick that skb into the fraglist of a new skb we'd win.
+
+johannes
+
+--=-20aGgLRMqfAipAY4HMzi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB9mr6Vg1VMiehFYAQJjpw//Rl2TGzXcriQYbaWeFB9lfpioDyBpGPbw
+HvAvqDkK4/bgMhfkCkygk3TmnSgVl4hSC21mekK1eUUdyMEPPohs7iNYXikhnrvP
+e99JWYhoa1KqTDsNqPaZ4i4Xzl6fSMPxBU9Q/sPxhQqTMHd48k7no/hol7xLMr6V
+hlvumxgCE13yPUNjVCMBz+faoXxQ7aJHQ0TnFbom/Kmn2vcw67PUnnnplcnlP29+
+Qj7C69cqX+ggfhzE9QtDt0KjS71Sd5ZrMkkxilTpIgi5KSNBW779sVJdUTGiTlzg
+k2jlBV9nEUCuh5hYKwiq6x8WSq4jM0SH6v7hGXTErDQsMDGeloxrfO6u0zLL8g5h
+PJkuAYGPEcbasr5wFtSUP4cUjNmPQKE52aqAcx0GuIGmZE/G4r+zlG5AdgcB9DgW
+XPeysxRNfrSy2iiynvGyGPnOhieBCLcg0zXDcu/u5W8KSLlRX+x/ylfnEUXBt9dO
+XGAH6nR8raKlEzghYGzrCEVw5Nh1Nf1gQ7d3cozNV3ri2lY340v3bWwOFAPfx0SU
+4vt8aivjuTqnHqtBsFSk+vEcqnlmL/UuJwafj5WMO7bTtdUVApWFIXTIuOKQAbqm
+Teqzk2ESbmG42MTwjUhnRRAnHR0Nws8DGIKUVQvMJRI7v+YdV2e94+jo6WKxJ6kW
+9l3x483Fvxw=
+=oAco
+-----END PGP SIGNATURE-----
+
+--=-20aGgLRMqfAipAY4HMzi--
+
