@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37508 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44621 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbYEHVvi (ORCPT
+	with ESMTP id S1751862AbYEEXhN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 17:51:38 -0400
-Subject: Re: [PATCH/RFC v2] mac80211: fix association with some APs
+	Mon, 5 May 2008 19:37:13 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Helmut Schaa <hschaa@suse.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240805081445p4fb5e47cvf2743a868c7887ae@mail.gmail.com> (sfid-20080508_234453_219240_F85B7872)
-References: <200805081030.57966.hschaa@suse.de>
-	 <200805081334.07599.hschaa@suse.de>
-	 <1210246602.3547.45.camel@johannes.berg>
-	 <1ba2fa240805081445p4fb5e47cvf2743a868c7887ae@mail.gmail.com>
-	 (sfid-20080508_234453_219240_F85B7872)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TlpzMwc92owsc9UBnoEu"
-Date: Thu, 08 May 2008 23:51:24 +0200
-Message-Id: <1210283484.3547.73.camel@johannes.berg> (sfid-20080508_235035_569925_CDBCEBD6)
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080505.160328.203996832.davem@davemloft.net>
+References: <1209972139.3655.9.camel@johannes.berg>
+	 <1ba2fa240805050727r2060b0b4x3a9b3240647b66b1@mail.gmail.com>
+	 <1210000923.8245.26.camel@johannes.berg>
+	 <20080505.160328.203996832.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZMvnsLKNlz2K9NuY/S0s"
+Date: Tue, 06 May 2008 01:36:31 +0200
+Message-Id: <1210030591.8012.41.camel@johannes.berg> (sfid-20080506_013634_014040_FA6D0185)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-TlpzMwc92owsc9UBnoEu
+--=-ZMvnsLKNlz2K9NuY/S0s
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2008-05-05 at 16:03 -0700, David Miller wrote:
 
-> Are we sure there is no  firmware with the fix for this AP?
+> @@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_devic=
+e *dev,
+>  		unsigned int length, gfp_t gfp_mask)
+>  {
+>  	int node =3D dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
+> +	unsigned int extra =3D dev->rx_alloc_extra + NET_SKB_PAD;
+>  	struct sk_buff *skb;
+> =20
+> -	skb =3D __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
+> +	skb =3D __alloc_skb(length + extra, gfp_mask, 0, node);
+>  	if (likely(skb)) {
+> -		skb_reserve(skb, NET_SKB_PAD);
+> +		skb_reserve(skb, extra);
 
-Even if there is, does it matter? Will everybody install it? It's not
-like we're doing something that could cause problems since we announce
-the subset that both we and the AP can support.
+Come to think of it, if you want to bridge two wireless AP-mode devices
+with different headroom .... Nah.
+
+four-byte multiple isn't quite right though, but I'm not sure what would
+be, probably multiple of NET_SKB_PAD?
 
 johannes
 
---=-TlpzMwc92owsc9UBnoEu
+--=-ZMvnsLKNlz2K9NuY/S0s
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASCN126Vg1VMiehFYAQKgFQ//aLGVC3KTfQHfijXPopiBORqyu+4JbLsQ
-FQvfqoruaycSJJjznk8Qw73EWZgkev1KVcShK2O11whrovoBbgJWQtZwlKDwSams
-wFNBNozWfe4Tn5pe2kU5JX9CA2r8f6Xa0npJz6FIcxRsW5u5bntLKyS3ncadgE0V
-Htjb1wmU7MECSZ0CtPsDFEaK6/T6ExDz3x9GFkhHoTHY0Dn4q9SNW/Qb23lgfKJq
-yF4bWI50j5qNy/VurzGjxMAURO6URr/LR/dwnP2tCunA/CpSs1CDSEkz+DPAW2Y9
-i0a023st1vJrfz0g/AVkyIzoP0X+oZHMwtjIpwulXJjLZqdqz6uYEjTiF8adrAFT
-YkwkstiSjRI7IdbP4i8yPxmvA9WUF4WYXaVrXtAHSWMNIrUfxA71pRJV77OzAIN9
-v90fV0Dw8Bb+j3uMOQTqqxAZeSKpXb9McK79QFaBQjx5rIuhooxoweZUI1cz6X20
-w9xxoYIZYBugS3quv9Hz728pc8snxIupczNEZA6dEQfbpf/5wMVGKymr1WhPCjp8
-ZzZmrt7laIs0ZvwwPAUTTImgwNKz7XXX9yvuf/njiUd7wQxf/c6ZyC1bYSbPK8vS
-SDcg1urKJjcqfbVdmd9o9d45ru36+417PazW8qvkAoLrRnQ+npvXmwoe/xbZvKLk
-FA3lBxanFpE=
-=JO70
+iQIVAwUASB+Z/qVg1VMiehFYAQIksA//XiWdAjaJpqfBMmJBaAst9rEU7Gwssah9
+Oi/dtqYO7VKD5bHdQQQSDeglq4H7moUfdm9210pZz5h8psykHVrEBVhQmA9F/fHn
+FTm9FecBTu/JKY6xrg1B0+0gajSxcgEEUTuh3He6gKq69QHqduTkitSX/TSB73Up
+cYRon7lg3IAf62R83v+WAAp7o3PFUPM9hf914cbGdpi+WjGbu+iuPZtLmEMIzJIX
+HiVyb9oHcEBwAcLTrDRo2PVcjv5rzJMCBw2SBaLQhYSo5L1DRDibySB8ibuliFgz
+JasRjKNMqjtlbLXfdx0qMSyP+LKPjx5Lyl84mn0yDokMNLw/YXup61Zi6ajGje+O
+ae379f8FSLEY/00PJlTa+CKNRr6lJEefZhkpXH3Czo33AfdrPrAl72mMGrwOqjHz
+sGZDAeog+bFUMVLK9qZIFxNPbWrgAdb2vKlqUwwe5kqYFZnSNGaw8MID1jO1siNK
+X3hjDM1ReMZc+OwfFKyjD6t+0Ftkct77sz0muIERpajPfoG2tZGeu7C6SmzeeO+w
+q2ik0+Msv2iyq0CRXy5hBBkNEc/Iuj1qJPfrOfCorbeL0EpX5AwZAsBmAsOcf2hW
+lx2g3bX+KAT+oBv54Aik84ZN/2LThkkPnedSt6Ld2QA7Q2Q4dYT0mKWTeyZ6JhE5
+CKvEmsyMzuw=
+=MDQl
 -----END PGP SIGNATURE-----
 
---=-TlpzMwc92owsc9UBnoEu--
+--=-ZMvnsLKNlz2K9NuY/S0s--
 
