@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759638AbYEEULL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 16:11:11 -0400
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080505.130225.159803012.davem@davemloft.net>
-References: <1210014316.4181.14.camel@johannes.berg>
-	 <20080505.125013.129139559.davem@davemloft.net>
-	 <1210017456.4181.23.camel@johannes.berg>
-	 <20080505.130225.159803012.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZTs7XAeDZZT35+d9sBNl"
-Date: Mon, 05 May 2008 22:10:14 +0200
-Message-Id: <1210018214.4181.27.camel@johannes.berg> (sfid-20080505_221031_254294_F88D75CD)
+Received: from mga01.intel.com ([192.55.52.88]:5708 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751290AbYEEIHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2008 04:07:00 -0400
+Subject: Re: [PATCH 20/25] iwlwifi : Set monitor mode for 4965
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+In-Reply-To: <1209971503.3655.0.camel@johannes.berg>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080505_044417_821018_3824BECA)  <1209971503.3655.0.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 05 May 2008 16:05:39 +0800
+Message-Id: <1209974740.2827.124.camel@debian.sh.intel.com> (sfid-20080505_100623_025489_B35FBA76)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-05-05 at 09:11 +0200, Johannes Berg wrote:
+> Those conditions will never be true. 
 
---=-ZTs7XAeDZZT35+d9sBNl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why? I see mac80211 never passes IEEE80211_IF_TYPE_MNTR to
+add_interface(). But this patch passes the flag in configure_filter().
+Please take a look.
 
+> In the case of the latter, that is
+> a good thing, in the case of the former that isn't.
 
-> And the copy is necessary because you need more tailroom or something?
->=20
-> I don't understand why simply having all the space you need is not
-> better and faster :-)
->=20
-> Even if you have a clone, you can muck with the data in the IP and TCP
-> header areas, so long as skb_header_cloned() is false.
+Could you elaborate?
 
-I think it's probably all because I don't understand skb_cloned() vs.
-skb_header_cloned() and mac80211 came with checks for skb_cloned() that
-I didn't spot.
-
-So you're saying the check there to see if we can add 802.11 headers
-should depend on skb_header_cloned() and not skb_cloned()?
-
-> So I can only conclude that your problematic case is that of
-> encryption, right?  That's the only situation where I can imagine you
-> need to modify with packet data outside of the protocol headers.
-
-When is protocol header equivalent to skb header and when not?
-
-johannes
-
---=-ZTs7XAeDZZT35+d9sBNl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB9ppaVg1VMiehFYAQKrRg/7Bb7CD0xyv81194rsV4HdhdM3bSlelN6D
-XkXYgvWh5/WZwQKWUvzDd0VW+uOOAsPU578KXyGmNjH7XQRHT78DvAgppbxXi2Mb
-acyb4gDM7/FZSBCyrHcdEIZKvRJa5wwt9LSmWMoS7FDxkXkKj8ABmLsc7fiudY99
-YkGFcUe4n+ZsMKVwPQuFnLparqFVW4C3RHi08dwj4jPLTuxgZGxyEx7pJArze0Od
-NmVZTvamTSTiOsmu7mKRyoICqW7/gtZLX8dt8JAqO3Nw6wxDeknGF7oK371aYLOH
-WdJRe8a8VKcs/KC7C3ApfBbvGua0Il2w0KDaHnTQnMz0r1tzkjLm7JMbHDrvC/HP
-ByxosYF1+P0cBeeaB1adO+XlUm3m6nTrXlkQxeKqltt3LKCh7spByLuI4ZL59/sG
-Rd2v1eIUDDKoEg7B7T9DEF1XAyVMQOBWsxia/033OG409NQK+6qAre0tIq1ssXI4
-LW7y5Omy2acVFxornWSBHhmUuk3Go76Qa3Qj6EjJhElrpkX9tYF6uL2/h4pGG1I6
-SbFkeWjYwlhipiSqPgqQZprZqGz7A0x1WQSJyUepOR2DMd7BTUEV2Wf0ZoeozWnK
-yDv8k97LcyzPTJuZABB1CdgScBEe23CxYvaKWwUeS9H1AFIRiHXgylAzqIoQe4W2
-uEOyVnIskGM=
-=LeRX
------END PGP SIGNATURE-----
-
---=-ZTs7XAeDZZT35+d9sBNl--
+Thanks,
+-yi
 
