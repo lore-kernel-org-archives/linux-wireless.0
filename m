@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47993 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760303AbYEET6j (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:35100 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754344AbYEEQfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 15:58:39 -0400
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080505.125013.129139559.davem@davemloft.net>
-References: <1210010254.4181.4.camel@johannes.berg>
-	 <20080505.115855.137964071.davem@davemloft.net>
-	 <1210014316.4181.14.camel@johannes.berg>
-	 <20080505.125013.129139559.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-20aGgLRMqfAipAY4HMzi"
-Date: Mon, 05 May 2008 21:57:36 +0200
-Message-Id: <1210017456.4181.23.camel@johannes.berg> (sfid-20080505_215815_853835_136783C7)
-Mime-Version: 1.0
+	Mon, 5 May 2008 12:35:04 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so95220ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 09:35:03 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC] mac80211: Don't encrypt beacons
+Date: Mon, 5 May 2008 18:41:51 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805051841.51408.IvDoorn@gmail.com> (sfid-20080505_183426_433521_B121C9C6)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-20aGgLRMqfAipAY4HMzi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch is intended to for your experimental patch:
+	019-mac80211-tx-info-skb-cb.patch
 
+Beacons shouldn't be encryped, so mac80211 should set
+the IEEE80211_TX_CTL_DO_NOT_ENCRYPT flag in tx info flags.
+Otherwise the driver will cause a NULL pointer dereference
+when it tries to access the info->control.hw_key which isn't
+configured.
 
-> My bad, it merely allows for devices that can handle
-> frag lists in sk_buff as transmit packets.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-:)
-
-> I guess you could use this, btw, to take on arbitrary things
-> to the front of frames to handle big headers.  But that's more
-> expensive than just getting the LL header length right.
-
-Not necessarily because we seem to be getting a lot of cloned frames
-that we need to copy all the time. If we would remove the ethernet
-header and stick that skb into the fraglist of a new skb we'd win.
-
-johannes
-
---=-20aGgLRMqfAipAY4HMzi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB9mr6Vg1VMiehFYAQJjpw//Rl2TGzXcriQYbaWeFB9lfpioDyBpGPbw
-HvAvqDkK4/bgMhfkCkygk3TmnSgVl4hSC21mekK1eUUdyMEPPohs7iNYXikhnrvP
-e99JWYhoa1KqTDsNqPaZ4i4Xzl6fSMPxBU9Q/sPxhQqTMHd48k7no/hol7xLMr6V
-hlvumxgCE13yPUNjVCMBz+faoXxQ7aJHQ0TnFbom/Kmn2vcw67PUnnnplcnlP29+
-Qj7C69cqX+ggfhzE9QtDt0KjS71Sd5ZrMkkxilTpIgi5KSNBW779sVJdUTGiTlzg
-k2jlBV9nEUCuh5hYKwiq6x8WSq4jM0SH6v7hGXTErDQsMDGeloxrfO6u0zLL8g5h
-PJkuAYGPEcbasr5wFtSUP4cUjNmPQKE52aqAcx0GuIGmZE/G4r+zlG5AdgcB9DgW
-XPeysxRNfrSy2iiynvGyGPnOhieBCLcg0zXDcu/u5W8KSLlRX+x/ylfnEUXBt9dO
-XGAH6nR8raKlEzghYGzrCEVw5Nh1Nf1gQ7d3cozNV3ri2lY340v3bWwOFAPfx0SU
-4vt8aivjuTqnHqtBsFSk+vEcqnlmL/UuJwafj5WMO7bTtdUVApWFIXTIuOKQAbqm
-Teqzk2ESbmG42MTwjUhnRRAnHR0Nws8DGIKUVQvMJRI7v+YdV2e94+jo6WKxJ6kW
-9l3x483Fvxw=
-=oAco
------END PGP SIGNATURE-----
-
---=-20aGgLRMqfAipAY4HMzi--
-
+---
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a359b9a..3b3592f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1856,6 +1856,7 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+ 	info->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+ 	info->flags |= IEEE80211_TX_CTL_NO_ACK;
++	info->flags |= IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
+ 	info->control.retry_limit = 1;
+ 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	(*num_beacons)++;
