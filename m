@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.htl-leonding.ac.at ([192.88.24.5]:38824 "EHLO
-	postla2.htl-leonding.ac.at" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752401AbYE3OiI (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53040
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753813AbYEEUCZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 10:38:08 -0400
-From: Michael Grundmann <mgrundmann@htl-leonding.ac.at>
-To: linux-wireless@vger.kernel.org
-Subject: Re: suspend vs. b43
-Date: Fri, 30 May 2008 16:31:56 +0200
-References: <1212150713.4117.2.camel@johannes.berg>
-In-Reply-To: <1212150713.4117.2.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805301631.56899.mgrundmann@htl-leonding.ac.at> (sfid-20080530_163811_438107_A856D3A6)
+	Mon, 5 May 2008 16:02:25 -0400
+Date: Mon, 05 May 2008 13:02:25 -0700 (PDT)
+Message-Id: <20080505.130225.159803012.davem@davemloft.net> (sfid-20080505_220143_761303_DEE1E3DE)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210017456.4181.23.camel@johannes.berg>
+References: <1210014316.4181.14.camel@johannes.berg>
+	<20080505.125013.129139559.davem@davemloft.net>
+	<1210017456.4181.23.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 05 May 2008 21:57:36 +0200
 
-I can reproduce this too on my HP6715s 
-(b43-phy2: Broadcom 4311 WLAN found
-b43-phy2 debug: Found PHY: Analog 4, Type 2, Revision 9
-b43-phy2 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2)
-it hangs while hibernating with tuxonice.
+> Not necessarily because we seem to be getting a lot of cloned frames
+> that we need to copy all the time. If we would remove the ethernet
+> header and stick that skb into the fraglist of a new skb we'd win.
 
+And the copy is necessary because you need more tailroom or something?
 
-> Does anyone have a machine with b43 in it that can suspend and supports
-> the RTC-trace feature so we can narrow it down? Even reproducing might
-> help to make sure it's not just something weird with my powerbook.
+I don't understand why simply having all the space you need is not
+better and faster :-)
 
+Even if you have a clone, you can muck with the data in the IP and TCP
+header areas, so long as skb_header_cloned() is false.
 
-
+So I can only conclude that your problematic case is that of
+encryption, right?  That's the only situation where I can imagine you
+need to modify with packet data outside of the protocol headers.
