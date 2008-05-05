@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:3502 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760260AbYENTJO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 15:09:14 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so36557rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2008 12:09:13 -0700 (PDT)
-Message-ID: <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com> (sfid-20080514_210918_106237_696B3246)
-Date: Wed, 14 May 2008 15:09:13 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Zack Weinberg" <zackw@panix.com>
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
+Received: from ra.tuxdriver.com ([70.61.120.52]:3369 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752105AbYEER64 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2008 13:58:56 -0400
+Date: Mon, 5 May 2008 13:31:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Scott White <nwi_sub@hotmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
+Subject: Re: Please pull 'upstream' branch of rt2x00
+Message-ID: <20080505173147.GA18429@tuxdriver.com> (sfid-20080505_195814_192469_91FF1505)
+References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
-	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
-	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 14, 2008 at 2:45 PM, Zack Weinberg <zackw@panix.com> wrote:
-> On Wed, May 14, 2008 at 2:38 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Wed, May 14, 2008 at 1:24 PM, Zack Weinberg <zackw@panix.com> wrote:
->>> [15498.709195] ACPI: PCI interrupt for device 0000:03:00.0 disabled
->>> [15498.709205] ath5k_pci: probe of 0000:03:00.0 failed with error -5
->>
->> Did you try power-cycling your machine?  Looks like chip is hung.
->
-> exactly the same thing happens immediately after cold boot with
-> nothing else having touched the chip.
+On Fri, May 02, 2008 at 04:04:52PM -0500, Scott White wrote:
+> 
+> >Was this patch series in time for the 2.6.26 merge window?
+> >
+> >If not, please consider merging at least the following patches since
+> >they are real bugfixes:
+> >
+> >>       rt2x00: Don't enable short preamble for 1MBs
+> >>       rt2x00: Fix quality/activity led handling
+> >>       rt2x00: Clarify supported chipsets in Kconfig
+> >
+> >The others are code cleanups which are "nice to have", but could otherwise
+> >wait for 2.6.27.
+> 
+> The merge window is still open at this time.  I haven't seen
+> a rc1 yet.  Anyway I saw that only the 3 bugfixes are currently
+> in the queue.  As the owner of several (10 by the university and
+> 2 personal) rt73 usb wireless cards, I would really like it if the
+> latest version 2.1.5 made into 2.6.26.  As someone who has used 2.6.24
+> and finished compiling 2.6.25 two days ago I find that the driver in
+> both kernels is not good.  Not good means I get a wireless signal and
+> I get data transfers, but the speed fluctuates and have other issues.
+> However with each release, the problems I have are slowing decreasing.
+> I have been waiting patiently for 2.6.25-rc1 to have 2.1.5 since 2.1.5
+> was announced.  I really think all of 2.1.5 should get in 2.6.25-rc1.
 
-Interesting...  can you confirm that madwifi also will not start from a cold
-boot?  I only ask because I had a similar issue with my pci-e card that was
-fixed a while ago.  Madwifi would work from a cold boot, though, if ath5k
-had never been loaded.
+I'm sorry, but this isn't how the merge window is used.  The merge
+window is for merging code that is _already_ pending when the
+window opens.  No one should wait for the merge window to open before
+sending code to the upstream maintainers.  (I'm not suggesting that
+Ivo delayed on purpose, I'm just stating the policy.)
 
-Here's someone else with the same PCI ID, same symptom:
+Anything that fixes an actual bug can still go to 2.6.26 over the
+next several weeks.  But code that is simply new development will
+have to wait for 2.6.27's merge window before it gets to Linus.
 
-http://kerneltrap.org/mailarchive/linux-ath5k-devel/2007/12/12/496961
+Thanks,
 
-Perhaps the best thing to do is add printks to ath5k_hw_nic_wakeup and see
-where it hangs?
-
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville
+linville@tuxdriver.com
