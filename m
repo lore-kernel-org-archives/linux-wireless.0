@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:43745 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761690AbYENUGy (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:33577 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755032AbYEEPRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 16:06:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 5/5] b43: move the register write into radio2050_rfover_val
-Date: Wed, 14 May 2008 22:06:29 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <1210791396.6191.40.camel@brick> <200805142122.21635.mb@bu3sch.de> <1210793758.6191.43.camel@brick>
-In-Reply-To: <1210793758.6191.43.camel@brick>
+	Mon, 5 May 2008 11:17:34 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so75168ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 08:17:33 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Mon, 5 May 2008 17:23:11 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805142206.29881.mb@bu3sch.de> (sfid-20080514_220706_756615_BFDF81D1)
+  charset="utf-8"
+Message-Id: <200805051723.12127.IvDoorn@gmail.com> (sfid-20080505_171653_222379_503FB97D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 May 2008 21:35:57 Harvey Harrison wrote:
-> On Wed, 2008-05-14 at 21:22 +0200, Michael Buesch wrote:
-> > On Wednesday 14 May 2008 20:56:36 Harvey Harrison wrote:
-> > > It is always called with the same dev, register value as the
-> > > b43_phy_write that wraps around it, make it return void
-> > > and move the register write into radio2050_rfover_val.
-> > 
-> > NACK to the whole 5 patches.
-> > See the list archives for an explanation.
-> 
-> Any particular reference for nacking 5/5?
+Hi John,
 
-Well, I don't see a point.
-I designed the function to return the actual value. Therefore it's
-named foobar_val().
-You patches shuffle a lot of code around, but there's no real gain from it.
-There are only huge downsides, like the possibility of introducing a flipped
-bitmask or similiar bugs. That happened in the past. And I tell you, it's
-really hard to debug the PHY code. _Not_ because it's hard to read, but because
-nobody does understand what it really does.
-And guess what; it's _me_ who will have to debug it in case bugs appear... .
-But I already explained all this earlier.
+Here are 3 patches for rt2x00, they are all intended for 2.6.26 since
+they fix serious bugs. Patch 1 should prevent problems as reported by
+Johannes Berg regarding skb->truesize by removing the only pskb_expand_head()
+call in rt2x00 (and use a already existing buffer instead).
 
-> But if you apply all 5, just look at the two files side-by-side and it
-> is much easier to follow with them applied.
+Patches 2 and 3 fix problems when DMA allocation fails, that usually doesn't happen,
+hence the reason these problems have gone unnoticed for so long. :S
 
-Nobody is actually reading or touching this code. It's Good Code (tm).
-We don't know what it does and we must not modify its semantics. So I don't
-really see a point in making it more pretty. You won't understand it afterwards
-anyway.
+Ivo
 
-_Please_ try to do something more useful, like hacking mac80211 or something like
-that. There are lots of places in wireless that need work. But this certainly not
-one of them, as it's good and _working_ code.
+---
+The following changes since commit 0bacadffc86bcba2fdf2b989afc286a8184664a0:
+  Ivo van Doorn (1):
+        rt2x00: Fix quality/activity led handling
 
--- 
-Greetings Michael.
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Gertjan van Wingerde (1):
+      rt2x00: Clean up error handling of PCI queue DMA allocation.
+
+Ivo van Doorn (2):
+      rt2x00: Don't use pskb_expand_head()
+      rt2x00: Fix broken recover-on-error path
+
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   11 ++++-------
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    5 +++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |   31 +++++++++++--------------------
+ 3 files changed, 18 insertions(+), 29 deletions(-)
