@@ -1,45 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37087 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762130AbYESP27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 11:28:59 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211199368.6252.19.camel@johannes.berg>
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
-	 <1211117795.686.15.camel@localhost.localdomain>
-	 <1211199368.6252.19.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 19 May 2008 11:24:46 -0400
-Message-Id: <1211210686.12187.6.camel@localhost.localdomain> (sfid-20080519_172919_115411_8A2C09AC)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.188]:39015 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755640AbYEEPRg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2008 11:17:36 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1086908nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 08:17:34 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 1/3] rt2x00: Don't use pskb_expand_head()
+Date: Mon, 5 May 2008 17:23:31 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805051723.12127.IvDoorn@gmail.com>
+In-Reply-To: <200805051723.12127.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805051723.31488.IvDoorn@gmail.com> (sfid-20080505_171657_467192_15C98C48)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
-> > Instead of testing for wireless/, best thing would probably be to call
-> > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-> > wireless.  Some drivers may have to load firmware to figure out
-> > supported rates and encryption capabilities, but to be honest, NM does
-> > this to detect wireless devices and I haven't run into any issues in 4
-> > years using it.  If there are issues with drivers, then we need to fix
-> > the driver too.
-> 
-> I was about to propose calling SIOCGIWNAME since that is what
-> wireless-tools do and that linux/wireless.h indicates.
+rt2x00pci allocates DMA for descriptor and data,
+rt61pci doesn't use this for the beacon, but it can
+use the descriptor part as temporary buffer instead
+of using pskb_expand_head().
+Using this temporary buffer is obviously much better
+then reallocating the skb buffer...
 
-Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
-that NAME return _something_ at least.  NAME should never ever be used
-for anything more, but since wireless-tools appears to do this that's
-fine.
+At the same time we can set the data length for the
+beacon queue at 0, to make sure no DMA is allocated for
+data (but just for the descriptor).
 
-Dan
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   31 +++++++++++--------------------
+ 1 files changed, 11 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 98af4d2..b64f2f5 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2362,6 +2362,7 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
++	struct queue_entry_priv_pci_tx *priv_tx;
+ 	struct skb_frame_desc *skbdesc;
+ 	unsigned int beacon_base;
+ 	u32 reg;
+@@ -2369,21 +2370,8 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	if (unlikely(!intf->beacon))
+ 		return -ENOBUFS;
+ 
+-	/*
+-	 * We need to append the descriptor in front of the
+-	 * beacon frame.
+-	 */
+-	if (skb_headroom(skb) < intf->beacon->queue->desc_size) {
+-		if (pskb_expand_head(skb, intf->beacon->queue->desc_size,
+-				     0, GFP_ATOMIC))
+-			return -ENOMEM;
+-	}
+-
+-	/*
+-	 * Add the descriptor in front of the skb.
+-	 */
+-	skb_push(skb, intf->beacon->queue->desc_size);
+-	memset(skb->data, 0, intf->beacon->queue->desc_size);
++	priv_tx = intf->beacon->priv_data;
++	memset(priv_tx->desc, 0, intf->beacon->queue->desc_size);
+ 
+ 	/*
+ 	 * Fill in skb descriptor
+@@ -2391,9 +2379,9 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	skbdesc = get_skb_frame_desc(skb);
+ 	memset(skbdesc, 0, sizeof(*skbdesc));
+ 	skbdesc->flags |= FRAME_DESC_DRIVER_GENERATED;
+-	skbdesc->data = skb->data + intf->beacon->queue->desc_size;
+-	skbdesc->data_len = skb->len - intf->beacon->queue->desc_size;
+-	skbdesc->desc = skb->data;
++	skbdesc->data = skb->data;
++	skbdesc->data_len = skb->len;
++	skbdesc->desc = priv_tx->desc;
+ 	skbdesc->desc_len = intf->beacon->queue->desc_size;
+ 	skbdesc->entry = intf->beacon;
+ 
+@@ -2414,7 +2402,10 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	rt2x00lib_write_tx_desc(rt2x00dev, skb, control);
+ 	beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
+ 	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
+-				      skb->data, skb->len);
++				      skbdesc->desc, skbdesc->desc_len);
++	rt2x00pci_register_multiwrite(rt2x00dev,
++				      beacon_base + skbdesc->desc_len,
++				      skbdesc->data, skbdesc->data_len);
+ 	rt61pci_kick_tx_queue(rt2x00dev, QID_BEACON);
+ 
+ 	return 0;
+@@ -2479,7 +2470,7 @@ static const struct data_queue_desc rt61pci_queue_tx = {
+ 
+ static const struct data_queue_desc rt61pci_queue_bcn = {
+ 	.entry_num		= 4 * BEACON_ENTRIES,
+-	.data_size		= MGMT_FRAME_SIZE,
++	.data_size		= 0, /* No DMA required for beacons */
+ 	.desc_size		= TXINFO_SIZE,
+ 	.priv_size		= sizeof(struct queue_entry_priv_pci_tx),
+ };
+-- 
+1.5.5.1
 
