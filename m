@@ -1,285 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59832 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934970AbYEBUsi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 16:48:38 -0400
-Message-Id: <200805022047.m42Kllcp014221@imap1.linux-foundation.org> (sfid-20080502_224815_637010_33911D10)
-Subject: [patch 5/9] mac80211: add a struct to hold tkip context
+Received: from mga09.intel.com ([134.134.136.24]:45862 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753966AbYEECYF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:05 -0400
+From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Fri, 02 May 2008 13:47:46 -0700
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 02/25] iwlwifi-5000: rename iwl5000_init_nic to iwl5000_init_config
+Date: Mon,  5 May 2008 10:22:29 +0800
+Message-Id: <1209954172-3092-3-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_224423_E36AC4F7)
+In-Reply-To: <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- net/mac80211/cfg.c         |    4 +-
- net/mac80211/debugfs_key.c |    8 ++---
- net/mac80211/key.h         |   17 +++++------
- net/mac80211/tkip.c        |   54 +++++++++++++++++------------------
- net/mac80211/wpa.c         |   16 +++++-----
- 5 files changed, 50 insertions(+), 49 deletions(-)
-
-diff -puN net/mac80211/cfg.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/cfg.c
---- a/net/mac80211/cfg.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/cfg.c
-@@ -256,8 +256,8 @@ static int ieee80211_get_key(struct wiph
- 	case ALG_TKIP:
- 		params.cipher = WLAN_CIPHER_SUITE_TKIP;
- 
--		iv32 = key->u.tkip.iv32;
--		iv16 = key->u.tkip.iv16;
-+		iv32 = key->u.tkip.tx.iv32;
-+		iv16 = key->u.tkip.tx.iv16;
- 
- 		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
- 		    sdata->local->ops->get_tkip_seq)
-diff -puN net/mac80211/debugfs_key.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/debugfs_key.c
---- a/net/mac80211/debugfs_key.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/debugfs_key.c
-@@ -97,8 +97,8 @@ static ssize_t key_tx_spec_read(struct f
- 		break;
- 	case ALG_TKIP:
- 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
--				key->u.tkip.iv32,
--				key->u.tkip.iv16);
-+				key->u.tkip.tx.iv32,
-+				key->u.tkip.tx.iv16);
- 		break;
- 	case ALG_CCMP:
- 		tpn = key->u.ccmp.tx_pn;
-@@ -128,8 +128,8 @@ static ssize_t key_rx_spec_read(struct f
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 			p += scnprintf(p, sizeof(buf)+buf-p,
- 				       "%08x %04x\n",
--				       key->u.tkip.iv32_rx[i],
--				       key->u.tkip.iv16_rx[i]);
-+				       key->u.tkip.rx[i].iv32,
-+				       key->u.tkip.rx[i].iv16);
- 		len = p - buf;
- 		break;
- 	case ALG_CCMP:
-diff -puN net/mac80211/key.h~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/key.h
---- a/net/mac80211/key.h~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/key.h
-@@ -69,6 +69,13 @@ enum ieee80211_internal_key_flags {
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
- };
- 
-+struct tkip_ctx {
-+	u32 iv32;
-+	u16 iv16;
-+	u16 p1k[5];
-+	int initialized;
-+};
-+
- struct ieee80211_key {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -85,16 +92,10 @@ struct ieee80211_key {
- 	union {
- 		struct {
- 			/* last used TSC */
--			u32 iv32;
--			u16 iv16;
--			u16 p1k[5];
--			int tx_initialized;
-+			struct tkip_ctx tx;
- 
- 			/* last received RSC */
--			u32 iv32_rx[NUM_RX_DATA_QUEUES];
--			u16 iv16_rx[NUM_RX_DATA_QUEUES];
--			u16 p1k_rx[NUM_RX_DATA_QUEUES][5];
--			int rx_initialized[NUM_RX_DATA_QUEUES];
-+			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
-diff -puN net/mac80211/tkip.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/tkip.c
-@@ -138,7 +138,7 @@ u8 *ieee80211_tkip_add_iv(u8 *pos, struc
- 	*pos++ = iv1;
- 	*pos++ = iv2;
- 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
--	put_unaligned_le32(key->u.tkip.iv32, pos);
-+	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
- 	return pos + 4;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0d8ef63..83ed69d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -86,7 +86,7 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	return ret;
  }
  
-@@ -146,16 +146,16 @@ static void ieee80211_tkip_gen_rc4key(st
- 			       u8 *rc4key)
+-static void iwl5000_nic_init(struct iwl_priv *priv)
++static void iwl5000_nic_config(struct iwl_priv *priv)
  {
- 	/* Calculate per-packet key */
--	if (key->u.tkip.iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   key->u.tkip.iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv16, rc4key);
-+			   key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -179,9 +179,9 @@ void ieee80211_get_tkip_key(struct ieee8
- 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
- 			iv16, iv32);
- 
--	if (iv32 != key->u.tkip.iv32) {
-+	if (iv32 != key->u.tkip.tx.iv32) {
- 		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
--			iv32, key->u.tkip.iv32);
-+			iv32, key->u.tkip.tx.iv32);
- 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
- 			"fragmented packet\n");
- 	}
-@@ -190,19 +190,19 @@ void ieee80211_get_tkip_key(struct ieee8
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
- 	 * fragmented packets. */
--	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+			iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
- 	if (type == IEEE80211_TKIP_P1_KEY) {
--		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
-+		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
-@@ -263,33 +263,33 @@ int ieee80211_tkip_decrypt_data(struct c
- 	if ((keyid >> 6) != key->conf.keyidx)
- 		return TKIP_DECRYPT_INVALID_KEYIDX;
- 
--	if (key->u.tkip.rx_initialized[queue] &&
--	    (iv32 < key->u.tkip.iv32_rx[queue] ||
--	     (iv32 == key->u.tkip.iv32_rx[queue] &&
--	      iv16 <= key->u.tkip.iv16_rx[queue]))) {
-+	if (key->u.tkip.rx[queue].initialized &&
-+	    (iv32 < key->u.tkip.rx[queue].iv32 ||
-+	     (iv32 == key->u.tkip.rx[queue].iv32 &&
-+	      iv16 <= key->u.tkip.rx[queue].iv16))) {
- #ifdef CONFIG_TKIP_DEBUG
- 		DECLARE_MAC_BUF(mac);
- 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
- 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
- 		       print_mac(mac, ta),
--		       iv32, iv16, key->u.tkip.iv32_rx[queue],
--		       key->u.tkip.iv16_rx[queue]);
-+		       iv32, iv16, key->u.tkip.rx[queue].iv32,
-+		       key->u.tkip.rx[queue].iv16);
- #endif /* CONFIG_TKIP_DEBUG */
- 		return TKIP_DECRYPT_REPLAY;
- 	}
- 
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
--		key->u.tkip.rx_initialized[queue] = 1;
-+		key->u.tkip.rx[queue].initialized = 1;
- 		goto done;
- 	}
- 
--	if (!key->u.tkip.rx_initialized[queue] ||
--	    key->u.tkip.iv32_rx[queue] != iv32) {
--		key->u.tkip.rx_initialized[queue] = 1;
-+	if (!key->u.tkip.rx[queue].initialized ||
-+	    key->u.tkip.rx[queue].iv32 != iv32) {
-+		key->u.tkip.rx[queue].initialized = 1;
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   iv32, key->u.tkip.p1k_rx[queue]);
-+				   iv32, key->u.tkip.rx[queue].p1k);
- #ifdef CONFIG_TKIP_DEBUG
- 		{
- 			int i;
-@@ -303,7 +303,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 			printk("\n");
- 			printk(KERN_DEBUG "TKIP decrypt: P1K=");
- 			for (i = 0; i < 5; i++)
--				printk("%04x ", key->u.tkip.p1k_rx[queue][i]);
-+				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
- 			printk("\n");
- 		}
- #endif /* CONFIG_TKIP_DEBUG */
-@@ -318,11 +318,11 @@ int ieee80211_tkip_decrypt_data(struct c
- 
- 			key->local->ops->update_tkip_key(
- 				local_to_hw(key->local), &key->conf,
--				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
-+				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
- 		}
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
-+	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
- 			   iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
-diff -puN net/mac80211/wpa.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/wpa.c
---- a/net/mac80211/wpa.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/wpa.c
-@@ -176,8 +176,8 @@ ieee80211_rx_h_michael_mic_verify(struct
- 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
- 
- 	/* update IV in key information to be able to detect replays */
--	rx->key->u.tkip.iv32_rx[rx->queue] = rx->tkip_iv32;
--	rx->key->u.tkip.iv16_rx[rx->queue] = rx->tkip_iv16;
-+	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
-+	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
- 
- 	return RX_CONTINUE;
- }
-@@ -214,19 +214,19 @@ static int tkip_encrypt_skb(struct ieee8
- 	pos += hdrlen;
- 
- 	/* Increase IV for the frame */
--	key->u.tkip.iv16++;
--	if (key->u.tkip.iv16 == 0)
--		key->u.tkip.iv32++;
-+	key->u.tkip.tx.iv16++;
-+	if (key->u.tkip.tx.iv16 == 0)
-+		key->u.tkip.tx.iv32++;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* hwaccel - with preallocated room for IV */
- 		ieee80211_tkip_add_iv(pos, key,
--				      (u8) (key->u.tkip.iv16 >> 8),
--				      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
-+				      (u8) (key->u.tkip.tx.iv16 >> 8),
-+				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
- 					    0x7f),
--				      (u8) key->u.tkip.iv16);
-+				      (u8) key->u.tkip.tx.iv16);
- 
- 		tx->control->key_idx = tx->key->conf.hw_key_idx;
- 		return 0;
-_
+ 	unsigned long flags;
+ 	u16 radio_cfg;
+@@ -439,7 +439,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+ 	.apm_ops = {
+ 		.init =	iwl5000_apm_init,
+-		.config = iwl5000_nic_init,
++		.config = iwl5000_nic_config,
+ 		.set_pwr_src = iwl4965_set_pwr_src,
+ 	},
+ 	.eeprom_ops = {
+-- 
+1.5.3.6
+
