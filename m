@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30987 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751591AbYE1QuJ convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37687 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752792AbYEEXbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 12:50:09 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 09:50:09 -0700
-From: Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ron.rindjunsky@intel.com" <ron.rindjunsky@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Date: Wed, 28 May 2008 22:20:04 +0530
-Subject: RE: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
-Message-ID: <44EE5C37ADC36343B0625A05DD408C483351723447@CHEXMB-01.global.atheros.com> (sfid-20080528_185013_969792_27AD60B1)
-References: <20080528145048.GB5244@senthil-lnx.users.atheros.com>,<20080528151651.GA13461@tuxdriver.com>
-In-Reply-To: <20080528151651.GA13461@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 5 May 2008 19:31:13 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080505.162424.176435653.davem@davemloft.net>
+References: <1210000923.8245.26.camel@johannes.berg>
+	 <20080505.160328.203996832.davem@davemloft.net>
+	 <1210029435.8012.25.camel@johannes.berg>
+	 <20080505.162424.176435653.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PE7B3CToncZ0OpRA0gfQ"
+Date: Tue, 06 May 2008 01:30:30 +0200
+Message-Id: <1210030230.8012.35.camel@johannes.berg> (sfid-20080506_013041_988225_D37D84B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-________________________________________
-From: John W. Linville [linville@tuxdriver.com]
-Sent: Wednesday, May 28, 2008 8:46 PM
-To: Senthilkumar Balasubramanian
-Cc: johannes@sipsolutions.net; ron.rindjunsky@intel.com; linux-wireless@vger.kernel.org; Luis Rodriguez
-Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
 
-On Wed, May 28, 2008 at 08:20:48PM +0530, Senthil Balasubramanian wrote:
-> This addresses an alignment issue with compare_ether_addr().
-> The addresses passed to compare_ether_addr should be two bytes aligned.
-> It may function properly in x86 platform. However may not work properly
-> on IA-64 or ARM processor.
+--=-PE7B3CToncZ0OpRA0gfQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1116,7 +1116,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->       u16 fc, hdrlen, ethertype;
->       u8 *payload;
->       u8 dst[ETH_ALEN];
-> -     u8 src[ETH_ALEN];
-> +     /* Should be aligned on 2 bytes for compare_ether_addr() */
-> +     u16 src_aligned[ETH_ALEN >> 1];
-> +     u8 *src = (u8 *)src_aligned;
->       struct sk_buff *skb = rx->skb;
->       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->       DECLARE_MAC_BUF(mac);
+On Mon, 2008-05-05 at 16:24 -0700, David Miller wrote:
 
-Any reason you couldn't just do this?
+> > Also, should there be some sort of timer that resets the rx_alloc_extra
+> > again so that when you bridge it once with p54 (needs heaps of headroom=
+)
+> > you don't suffer forever?
+>=20
+> We're talking about, what, up to 128 bytes or something like that?
+> If you're bridging over your wireless device you've already invested
+> in assuming those kinds of costs.
 
-I just thought of using the type u16 instead of attribute here. that's all. No specific reason.
+About that much at most, yeah. But if you then decide that you don't
+want to bridge wireless after all... anyway doesn't matter, was just a
+thought.
 
-@@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
-        u16 fc, hdrlen, ethertype;
-        u8 *payload;
-        u8 dst[ETH_ALEN];
--       u8 src[ETH_ALEN];
-+       u8 src[ETH_ALEN] __attribute__ ((aligned(2)));
-        struct sk_buff *skb = rx->skb;
-        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-        DECLARE_MAC_BUF(mac);
+> I don't think this aspect is really worth worrying about.  The current
+> behavior is so much incredibly worse. :-)
 
-It seems to compile w/o errors on i686, and it seems more clear to me.
-Will that not work?
+That's true.
 
-Yes. It should also work. I will re-create the patch and send it to you. I will also include Johannes suggestion of just using __aligned macro.
+> > > @@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_d=
+evice *dev,
+> > >  		unsigned int length, gfp_t gfp_mask)
+> > >  {
+> > >  	int node =3D dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
+> > > +	unsigned int extra =3D dev->rx_alloc_extra + NET_SKB_PAD;
+> > >  	struct sk_buff *skb;
+> > > =20
+> > > -	skb =3D __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
+> > > +	skb =3D __alloc_skb(length + extra, gfp_mask, 0, node);
+> > >  	if (likely(skb)) {
+> > > -		skb_reserve(skb, NET_SKB_PAD);
+> > > +		skb_reserve(skb, extra);
+> >=20
+> > Doesn't that break alignment though?
+>=20
+> Good catch, we'll have to align the rx_alloc_extra to some modulus or
+> similar.  Ideally, at the spot where rx_alloc_extra is set instead
+> of here.
 
-John
---
-John W. Linville
-linville@tuxdriver.com
+Yeah, it just has to be a multiple of four I think.
+
+johannes
+
+--=-PE7B3CToncZ0OpRA0gfQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB+YlaVg1VMiehFYAQK9NQ/7BzlWhapNyQ+zLLD6dcM9vu8hz9U8kBgV
+yM4j0GtxlODprgkcSDY7eIkg2BaIV9Gj4X5iRJi8VSsaYd7wSN7smEvxIPg4rIuD
+uC8mbOKCEnSSG/yXXiyiiAgN9nCNsr63OO+qaiEdxcwOwqHPZ7AxbrZzeyLo7mXw
+eQpRQS5nMQVERTG/bopT8yB5UiZ//jnYVjMRSY9+Il1HpD1QwQBKDxsg3DxtgbVm
+tvxmQSSBDeNa+E/fZlQGELfjJbJ2yft3MVIFrSAvGA5wJno9qAPUJUlgd/JuFGzt
+kOA5bN2QJOi24r0FU6fta85DqkDbSgn3YmRCtVxfDqdDyjLTgODosTCImk8T8Rzt
+NKTbfZwEMy7aQ0CUOaWU0YR+D01I1WVjupwMZ6ZfL66XsOVIUC6KxxRBHW8csAqC
+Wa8AwmGakLKb1rpNs9lflpR/CPymFOjFKCPH+cAPdKZfpeLJsivuGsuMTNxcY/4c
+a+FMgnZFUI2Sogg1n1ShenTOWUC/9QrfYmN4qs3TITHrccvrprW63p8K+QP6eZGd
+tgfJAb+ediSUb0OHTGCnsY7vwH3dlDaNm0CLf8JHKMXHcsZCCzXtnGyud8KsKhhj
+CpV8tZE9cjvJIab31q7gAcysomRbAV1YPJxP8uf+joKXd34Mosw+w0wzD9m07EP7
+a4/41NO6M4A=
+=fvj7
+-----END PGP SIGNATURE-----
+
+--=-PE7B3CToncZ0OpRA0gfQ--
+
