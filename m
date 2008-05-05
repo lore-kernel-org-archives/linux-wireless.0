@@ -1,77 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58862 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756085AbYENX1W (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51411 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbYEEXYs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:22 -0400
-Message-Id: <200805142326.m4ENQKhZ027102@imap1.linux-foundation.org> (sfid-20080515_012725_234792_DE0F6A96)
-Subject: [patch 08/12] mac80211: tkip.c use struct tkip_ctx in phase 2 key mixing
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:20 -0700
+	Mon, 5 May 2008 19:24:48 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080505.161458.46071527.davem@davemloft.net>
+References: <1210021066.4181.41.camel@johannes.berg>
+	 <20080505.153730.186617868.davem@davemloft.net>
+	 <1210027447.8012.15.camel@johannes.berg>
+	 <20080505.161458.46071527.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GpBbEZhH4YPp3KVAxfc8"
+Date: Tue, 06 May 2008 01:23:55 +0200
+Message-Id: <1210029835.8012.30.camel@johannes.berg> (sfid-20080506_012404_631329_AE8BF0FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+--=-GpBbEZhH4YPp3KVAxfc8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- net/mac80211/tkip.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+On Mon, 2008-05-05 at 16:14 -0700, David Miller wrote:
 
-diff -puN net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-2-key-mixing net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-2-key-mixing
-+++ a/net/mac80211/tkip.c
-@@ -95,10 +95,12 @@ static void tkip_mixing_phase1(struct ie
- 	ctx->initialized = 1;
- }
- 
--static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
--			       u8 *rc4key)
-+static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
-+			       u16 tsc_IV16, u8 *rc4key)
- {
- 	u16 ppk[6];
-+	const u16 *p1k = ctx->p1k;
-+	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
- 	int i;
- 
- 	ppk[0] = p1k[0];
-@@ -152,9 +154,7 @@ static void ieee80211_tkip_gen_rc4key(st
- 	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
- 		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.tx.iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -197,8 +197,7 @@ void ieee80211_get_tkip_key(struct ieee8
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.tx.p1k,
--		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
-+	tkip_mixing_phase2(key, &key->u.tkip.tx, iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
- 
-@@ -315,9 +314,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 		}
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
--			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   iv16, rc4key);
-+	tkip_mixing_phase2(key, &key->u.tkip.rx[queue], iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
- 	{
- 		int i;
-_
+> > Right, that makes sense. But will it ever return false? skb_cloned()
+> > returns true often enough, and we only accept linear skbs, but I think =
+I
+> > don't understand yet what skb_header_cloned() vs. skb_cloned() refers
+> > to. Which exactly is the header space I'm allowed to modify when
+> > skb_header_cloned() returns false?
+>=20
+> skb_header_cloned() will return false always if the buffer is not
+> cloned.
+
+Right, it's less than skb_cloned().
+
+> If it is cloned, it makes sure the data reference count allows
+> for modification of the buffer.
+
+Which buffer? skb->data..skb->tail? And isn't that, in mac80211's case,
+at least currently all the buffer anyway?
+
+> For normal traffic, you should see skb_header_cloned() always return
+> false unless a network tap like tcpdump is registered.
+
+Interesting point. I'll have to see when socket filters are run,
+wpa_supplicant could have a tap open I think. Maybe that's why I'm
+seeing so many cloned packets. I think I'll stacktrace skb_clone and
+print that out.
+
+johannes
+
+--=-GpBbEZhH4YPp3KVAxfc8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB+XCqVg1VMiehFYAQKp1RAAhlAKc45MkvYo7TK4dhGkzjQVTn3B9dLO
+4MBPAvyL1Bphsf/AWIVVwcJOuGhy9SRGLmE4bpAq+rsN4IGQoFKmQDEMo+NH4dXG
+50TPuEHnQu5r+ti+NlvcFW72HR5RtPoQ5jz/9/rlYEBrhez/FjbJWRcmcSqC06ke
+qsvtuSZVMtC+7f5A3WL5MwPnrbHw2o6uvTLgsRHHO4xdzmX4wVaet+Eqw6e4eGV6
+DtjVWd4whKoQOumQTegGJI1lMAK8pQfGSrTX67acvbcfWmf2MUaa7Y+s1fVgMMkp
+BxZBOqVLvrrnQRYpbnIcM8vVQxZ8KDkIJbzcdUjjHAc6p/3yc34mpFdPUvf3wGyt
+aqR3wAKWgN42nVbX42rRbm5FnClJpT3WMOPh5Rw4LR1Mn1+TiOJxBxH4s5GX4iXK
+ybBCO/4DjrWEsgwpdNVYjB0DuJWHknJtNqoGOZJy0xAKtF2W02siXKGWwJGaXqMw
+iHlxTq/CV5J8wrjmondlJNqVGYSck2ilnYn4/R4ED9aTH7HcH9IorTYGjQRESYv7
+pZbE9h2wYHb6uXOXVaKhL44npkc+CTx07oK9CEfpI1bPV7D8nCzo3UfuCzYFsVb5
+BODxFGnGxPaILbXpqKe3xh/rZPrsORNdGqXpMKLYKH+snYoEY3DWDTm7yipbsoIR
+/sdtKOKkyHo=
+=RhVy
+-----END PGP SIGNATURE-----
+
+--=-GpBbEZhH4YPp3KVAxfc8--
+
