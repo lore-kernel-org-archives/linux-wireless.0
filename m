@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4488 "EHLO ra.tuxdriver.com"
+Received: from mga09.intel.com ([134.134.136.24]:41783 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751778AbYEHUCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 16:02:42 -0400
-Date: Thu, 8 May 2008 15:38:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org,
-	Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: Re: [patch 08/16] b43: Fix dual-PHY devices
-Message-ID: <20080508193803.GB9176@tuxdriver.com> (sfid-20080508_220142_955655_1E5E0242)
-References: <20080508173436.454278564@mini.kroah.org> <20080508174214.GI855@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080508174214.GI855@suse.de>
+	id S1754488AbYEECYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:18 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Jason Riedy <jason@acm.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 12/25] iwlwifi: Allow building iwl3945 without iwl4965.
+Date: Mon,  5 May 2008 10:22:39 +0800
+Message-Id: <1209954172-3092-13-git-send-email-yi.zhu@intel.com> (sfid-20080505_044418_253166_98890C9C)
+In-Reply-To: <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 08, 2008 at 10:42:14AM -0700, Greg KH wrote:
-> 2.6.25-stable review patch.  If anyone has any objections, please let us
-> know.
-> 
-> ------------------
-> From: Michael Buesch <mb@bu3sch.de>
-> 
-> commit 2e35af143a1380173ba292e48e9b4913ef16b4ee upstream
-> 
-> This fixes operation of dual-PHY (A/B/G) devices.
-> Do not anounce the A-PHY to mac80211, as that's not supported, yet.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+From: Jason Riedy <jason@acm.org>
 
-ACK
+iwlwifi: Allow building iwl3945 without iwl4965.
 
+If IWL3945 ever depends on IWLCORE, the silent, user-invisible
+IWLWIFI option can go away.
+
+Signed-off-by: Jason Riedy <jason@acm.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/wireless/Makefile        |    2 +-
+ drivers/net/wireless/iwlwifi/Kconfig |    6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 41eb08e..5026268 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -58,7 +58,7 @@ obj-$(CONFIG_RTL8187)	+= rtl8187.o
+ 
+ obj-$(CONFIG_ADM8211)	+= adm8211.o
+ 
+-obj-$(CONFIG_IWLCORE)	+= iwlwifi/
++obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
+ obj-$(CONFIG_RT2X00)	+= rt2x00/
+ 
+ obj-$(CONFIG_P54_COMMON)	+= p54/
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 7b9cfea..991ffc8 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -1,6 +1,11 @@
++config IWLWIFI
++	bool
++	default n
++
+ config IWLCORE
+ 	tristate "Intel Wireless Wifi Core"
+ 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	select IWLWIFI
+ 
+ config IWLWIFI_LEDS
+ 	bool
+@@ -132,6 +137,7 @@ config IWL3945
+ 	tristate "Intel PRO/Wireless 3945ABG/BG Network Connection"
+ 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	select FW_LOADER
++	select IWLWIFI
+ 	---help---
+ 	  Select to build the driver supporting the:
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.6
+
