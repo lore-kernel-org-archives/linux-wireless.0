@@ -1,87 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125AbYEDIrl (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40484
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752799AbYEEXO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 04:47:41 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080504031652.GA30993@gondor.apana.org.au>
-References: <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-	 <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-	 <1209865354.6210.23.camel@johannes.berg>
-	 <20080504020203.GA30514@gondor.apana.org.au>
-	 <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mLloipbxbIHC8cUG2Yz4"
-Date: Sun, 04 May 2008 10:47:27 +0200
-Message-Id: <1209890847.6210.51.camel@johannes.berg> (sfid-20080504_104709_030839_DDDB35A5)
+	Mon, 5 May 2008 19:14:58 -0400
+Date: Mon, 05 May 2008 16:14:58 -0700 (PDT)
+Message-Id: <20080505.161458.46071527.davem@davemloft.net> (sfid-20080506_011415_341585_815C6FB8)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210027447.8012.15.camel@johannes.berg>
+References: <1210021066.4181.41.camel@johannes.berg>
+	<20080505.153730.186617868.davem@davemloft.net>
+	<1210027447.8012.15.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 06 May 2008 00:44:07 +0200
 
---=-mLloipbxbIHC8cUG2Yz4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Right, that makes sense. But will it ever return false? skb_cloned()
+> returns true often enough, and we only accept linear skbs, but I think I
+> don't understand yet what skb_header_cloned() vs. skb_cloned() refers
+> to. Which exactly is the header space I'm allowed to modify when
+> skb_header_cloned() returns false?
 
-On Sun, 2008-05-04 at 11:16 +0800, Herbert Xu wrote:
-> On Sun, May 04, 2008 at 04:22:20AM +0200, Johannes Berg wrote:
-> >
-> > Yes, wireless always needs at least 24 bytes, but more likely 34
-> > (encryption+QoS). However, I just increased LL_MAX_HEADER to 54 and tha=
-t
-> > doesn't seem to have helped.
->=20
-> How did you test it?
+skb_header_cloned() will return false always if the buffer is not
+cloned.
 
-I stuck a WARN_ON((nhead || ntail) && skb->sk) into pskb_expand_head
-(which never triggered except from mac80211). And mac80211 has code that
-calculates the required header length and only calls pskb_expand_head()
-from that place when it needs more header space (or the skb is cloned. I
-should repeat this test)
+If it is cloned, it makes sure the data reference count allows
+for modification of the buffer.
 
-> > What's wrong with, instead, doing skb_orphan() and then
-> > pskb_expand_head()? That seems to have the same effect.
->=20
-> If you packet sticks around for long enough then this skews the
-> accounting.  In any case, thinking too much about optimising this
-> part is a waste of time because we should be thinking about having
-> enough head room in the packet so that we don't have to expand
-> it in the first place except for the odd packet.
-
-Very true. How about tail length? :)
-
-johannes
-
---=-mLloipbxbIHC8cUG2Yz4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB14HqVg1VMiehFYAQJauQ//eoYwc+fNheBaFa+NjMnIu7ulVvBoQCBf
-DjEPLVEJ1zC5vl+8KL2/1u2rgYuRsfPGnEEFW3mpuPt+9VKWAqt7e4RHtoLU8wZz
-jEQwBVoIkmBJ1RhidgqLcGIgEXTM25LERBx8h0BfLrx+2Nqc56zhcVO0H6h0cbDU
-DgmW8bocrtHlxqKe7fFceFoi80WwFDrXeq2N2KnJHUXMsAeqhe/yK7QpqZPZUFWV
-hPBe7vpCzMEhuznDIktxDsild3rNho3x6JBXwnPAbqt7BrFiXFcQliv2XtwU2hLT
-NoVwurGJptiu8/+Q9yKlfqesLM9r32vPas/gY2OhwtZhjZz332fv5/2YOrTNQDqI
-AqCjfKec5ayCipY2xdUGHdJyP11nr0pTb1aJqhK+zmBc91zHjti2se9DqXky+UxT
-sTB04nhPCBcZIld9wy27Ll7D42yxobB6zIjzN1UdM1APpYV7oXbNDKNG3qJZx5AC
-Cr9wLrmmH4VsYApg4Hf+YVU3JT5XaCGYdrqktQFUHsrN5TsahIsVT3qYOWRmXb0D
-4si3yTFBveGuI9dvWB5yooOzJ7AFQX9eW/EpuvR1pZoRUX/SM2htKgtipf3qes75
-1WHcmBfcH/j60L0o5Pc5gG02T53hUouvYQoZ6KtYpT2IVq+8bWbhRPULt+oZJbua
-27ikVPrIq6Y=
-=hmQl
------END PGP SIGNATURE-----
-
---=-mLloipbxbIHC8cUG2Yz4--
-
+For normal traffic, you should see skb_header_cloned() always return
+false unless a network tap like tcpdump is registered.
