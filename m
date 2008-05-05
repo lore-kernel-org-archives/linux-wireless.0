@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:40753 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbYELPEG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 11:04:06 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: mickflemm@gmail.com, mcgrof@gmail.com, jirislaby@gmail.com
-CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k: Fix loop variable initializations
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <E1JvZ2x-0005kb-TH@hash.localnet> (sfid-20080512_170411_624425_08F4C334)
-Date: Mon, 12 May 2008 10:30:35 -0400
+Received: from mga09.intel.com ([134.134.136.24]:41783 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753783AbYEECYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 May 2008 22:24:14 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 09/25] iwlwifi: Fix unconditional access to station->tidp[].agg.
+Date: Mon,  5 May 2008 10:22:36 +0800
+Message-Id: <1209954172-3092-10-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_901266_9372B099)
+In-Reply-To: <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+ <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
-Date: Mon, 12 May 2008 09:25:33 -0400
-Subject: [PATCH] ath5k: Fix loop variable initializations
+From: David S. Miller <davem@davemloft.net>
 
-In ath5k_tasklet_rx, both status structures 'rxs' and 'rs' are
-initialized at the top of the tasklet, but not within the loop.
-If the loop is executed multiple times in the tasklet, then the
-variables may see changes from previous packets.
+Reportred by Ingo Molnar:
 
-For TKIP, this results in 'Invalid Michael MIC' errors if two packets
-are processed in the tasklet: rxs.flag gets set to RX_DECRYPTED by
-mac80211 when it decrypts the first encrypted packet.  The subsequent
-packet will have RX_DECRYPTED set upon entry to mac80211, so mac80211
-will not try to decrypt it.
+drivers/net/wireless/iwlwifi/iwl-debugfs.c: In function 'iwl_dbgfs_stations_read':
+drivers/net/wireless/iwlwifi/iwl-debugfs.c:256: error: 'struct iwl4965_tid_data' has no member named 'agg'
 
-We currently initialize all but two fields in the structures, so fix
-the other two.
+Needs CONFIG_IWL4965_HT protection.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/net/wireless/ath5k/base.c |    2 +-
- drivers/net/wireless/ath5k/hw.c   |    2 ++
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 4e5c8fc..fd8537e 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1888,7 +1888,7 @@ accept:
- 		 * right now, so it's not too bad...
- 		 */
- 		rxs.mactime = ath5k_extend_tsf(sc->ah, rs.rs_tstamp);
--		rxs.flag |= RX_FLAG_TSFT;
-+		rxs.flag = RX_FLAG_TSFT;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index b310f70..ad25806 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -239,28 +239,34 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
+ 					"ps_status: %u\n", station->ps_status);
+ 			pos += scnprintf(buf + pos, bufsz - pos, "tid data:\n");
+ 			pos += scnprintf(buf + pos, bufsz - pos,
+-					"seq_num\t\ttxq_id\t");
++					"seq_num\t\ttxq_id");
++#ifdef CONFIG_IWL4965_HT
+ 			pos += scnprintf(buf + pos, bufsz - pos,
+-					"frame_count\twait_for_ba\t");
++					"\tframe_count\twait_for_ba\t");
+ 			pos += scnprintf(buf + pos, bufsz - pos,
+ 					"start_idx\tbitmap0\t");
+ 			pos += scnprintf(buf + pos, bufsz - pos,
+-					"bitmap1\trate_n_flags\n");
++					"bitmap1\trate_n_flags");
++#endif
++			pos += scnprintf(buf + pos, bufsz - pos, "\n");
  
- 		rxs.freq = sc->curchan->center_freq;
- 		rxs.band = sc->curband->band;
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 5fb1ae6..8137d82 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -4119,6 +4119,7 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
- 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
- 		AR5K_5210_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
- 	rs->rs_status = 0;
-+	rs->rs_phyerr = 0;
- 
- 	/*
- 	 * Key table status
-@@ -4193,6 +4194,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
- 		AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
- 	rs->rs_status = 0;
-+	rs->rs_phyerr = 0;
- 
- 	/*
- 	 * Key table status
+ 			for (j = 0; j < MAX_TID_COUNT; j++) {
+ 				pos += scnprintf(buf + pos, bufsz - pos,
+-						"[%d]:\t\t%u\t", j,
++						"[%d]:\t\t%u", j,
+ 						station->tid[j].seq_number);
++#ifdef CONFIG_IWL4965_HT
+ 				pos += scnprintf(buf + pos, bufsz - pos,
+-						"%u\t\t%u\t\t%u\t\t",
++						"\t%u\t\t%u\t\t%u\t\t",
+ 						station->tid[j].agg.txq_id,
+ 						station->tid[j].agg.frame_count,
+ 						station->tid[j].agg.wait_for_ba);
+ 				pos += scnprintf(buf + pos, bufsz - pos,
+-						"%u\t%llu\t%u\n",
++						"%u\t%llu\t%u",
+ 						station->tid[j].agg.start_idx,
+ 						(unsigned long long)station->tid[j].agg.bitmap,
+ 						station->tid[j].agg.rate_n_flags);
++#endif
++				pos += scnprintf(buf + pos, bufsz - pos, "\n");
+ 			}
+ 			pos += scnprintf(buf + pos, bufsz - pos, "\n");
+ 		}
 -- 
-1.5.4.2.182.gb3092
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+1.5.3.6
 
