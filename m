@@ -1,60 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47936 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759966AbYEBUME (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56157
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1761100AbYEEXD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 16:12:04 -0400
-Subject: Re: rt61pci/rt73usb: Hardware decryption IV/EIV
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200805022141.28351.IvDoorn@gmail.com> (sfid-20080502_213556_516117_4DC0B461)
-References: <200805022141.28351.IvDoorn@gmail.com>
-	 (sfid-20080502_213556_516117_4DC0B461)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V4kq0D5NgS4EiUMNYZZK"
-Date: Fri, 02 May 2008 22:11:56 +0200
-Message-Id: <1209759116.3608.8.camel@johannes.berg> (sfid-20080502_221143_356008_33AA6DAD)
+	Mon, 5 May 2008 19:03:29 -0400
+Date: Mon, 05 May 2008 16:03:28 -0700 (PDT)
+Message-Id: <20080505.160328.203996832.davem@davemloft.net> (sfid-20080506_010246_918137_AD07BA0A)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210000923.8245.26.camel@johannes.berg>
+References: <1209972139.3655.9.camel@johannes.berg>
+	<1ba2fa240805050727r2060b0b4x3a9b3240647b66b1@mail.gmail.com>
+	<1210000923.8245.26.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 05 May 2008 17:22:03 +0200
 
---=-V4kq0D5NgS4EiUMNYZZK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> > I've did some measurement of the TX path  on an embedded system (2.6.23 kernel)
+> > When bridging packets from an ethernet device to wireless  there is
+> > loss of 12% in the CPU utilization and equivalent throughput reduction
+> > in data packets that are checked and expanded in
+> > ieee80211_subif_start_xmit function.
+> 
+> Yeah, I figured.
 
+I think we can handle this without clones or copies.
 
-> Does anybody have any hint on where I should start looking about where
-> these frames come from, or what the cause might be of the disappearing fr=
-ames?
+First, the skb_header_cloned() patch I posted in another reply will
+get rid of copying due to clones.  I've included it below for
+completeness.
 
-What are the protection bits in the header? I'd have to look at the key
-selection code again I think. What about the ICV, are you adding that
-too at the end?
+The next problem is to make sure there is enough space available.  And
+all that's needed is some help from the bridging layer and some hooks
+into netdev_alloc_skb().
 
-johannes
+On bridge transmit, it knows the input and output devices, and the
+requirements of LL header space on the transmit side.
 
---=-V4kq0D5NgS4EiUMNYZZK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+If the transmit requirements are not met for the received packet, we
+can tag the difference into the input netdev.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Using that information we can allocate extra space in
+netdev_alloc_skb(), and do an skb_reserve().
 
-iQIVAwUASBt1iqVg1VMiehFYAQK8eQ//avlWo4ZPnIQTXuenObVWpvl44mN0YMeI
-FfRYrvpcLJokJWblASY+SESNu8eA4oUU5HKXVtfiaCc2lectsNni2xGaUXUiefnm
-qqkn1mV2Q8gazrE0Rl41nfgHLEUixeh/wGRF2uuGMkMv9dMOdYhw7kUWm/vMV4cA
-B0pSfOv7yDL5zEnJLKnWcwjWdIUkA/od8DGvH/iR5isRTHfBA0qHAWe8BNOTLhXf
-0MIa/4sk6HZEgpTDnkWoYYQq2bWZcq7oI9MlToBD/em5cdEk34B5wM3oeaEh4Try
-u+6r76s//MYySov6UPsMiTYWW1BdwjqUZaeh3/g/CCCEPOukwHLSMq5MYrLxU/cQ
-yVQPaq4NUgvzGnCRpiURlS/is25MeQTHEXyXUop+UnwfcPRiwzpilPfYDBQADmT+
-z3KVPqi4CQwOn1Hewd7jzjrgDoUmAP3EmGDjbxq6v+S8VHzvErEFwZt/xudJTPz1
-Jaki5Ii5/RnRJNwry3jUiF4ja149vPa3xc0cA7RGNpAgSJK25V5E8FtzwTYLkRp5
-JdjPdJA3r5zNbVdbVtCRGqpOlor8qQ29O3e2S8UI+iqs3jXCS1tteoOUVMldOR3E
-ST8hf+zXhYVhBoFS64RAIgSxCHMABfQ8NGIs278e8yKONRWXxMvacujQO+CWb3cI
-yRlM+3Wuc1U=
-=Uw3r
------END PGP SIGNATURE-----
+The only requirement is that the ethernet driver serving input packets
+uses netdev_alloc_skb().  The most important drivers already do, and
+those which do not are trivially converted.
 
---=-V4kq0D5NgS4EiUMNYZZK--
+The following along with Johannes's needed_header et al. patch should
+take care of the overhead.
 
+If this proves to be a working solution, we can do something similar
+for IPv4 and IPv6 forwarding.  At that point, we should make this
+"adjust input device extra space" a helper function that all of
+these spots can call.
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 7c1d446..6c06fba 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -600,6 +600,7 @@ struct net_device
+  * Cache line mostly used on receive path (including eth_type_trans())
+  */
+ 	unsigned long		last_rx;	/* Time of last Rx	*/
++	unsigned int		rx_alloc_extra;
+ 	/* Interface address info used in eth_type_trans() */
+ 	unsigned char		dev_addr[MAX_ADDR_LEN];	/* hw address, (before bcast 
+ 							because most packets are unicast) */
+diff --git a/net/bridge/br_forward.c b/net/bridge/br_forward.c
+index bdd7c35..d2b2272 100644
+--- a/net/bridge/br_forward.c
++++ b/net/bridge/br_forward.c
+@@ -42,6 +42,22 @@ int br_dev_queue_push_xmit(struct sk_buff *skb)
+ 		if (nf_bridge_maybe_copy_header(skb))
+ 			kfree_skb(skb);
+ 		else {
++			unsigned int headroom = skb_headroom(skb);
++			unsigned int hh_len = LL_RESERVED_SPACE(skb->dev);
++
++			if (headroom < hh_len) {
++				struct net_device *in_dev;
++				unsigned int extra;
++
++				in_dev = __dev_get_by_index(dev_net(skb->dev),
++							    skb->iif);
++				BUG_ON(!in_dev);
++
++				extra = hh_len - headroom;
++				if (extra >= in_dex->rx_alloc_extra)
++					in_dev->rx_alloc_extra = extra;
++			}
++
+ 			skb_push(skb, ETH_HLEN);
+ 
+ 			dev_queue_xmit(skb);
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index 5c459f2..74a2515 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
+ 		unsigned int length, gfp_t gfp_mask)
+ {
+ 	int node = dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
++	unsigned int extra = dev->rx_alloc_extra + NET_SKB_PAD;
+ 	struct sk_buff *skb;
+ 
+-	skb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
++	skb = __alloc_skb(length + extra, gfp_mask, 0, node);
+ 	if (likely(skb)) {
+-		skb_reserve(skb, NET_SKB_PAD);
++		skb_reserve(skb, extra);
+ 		skb->dev = dev;
+ 	}
+ 	return skb;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f35eaea..86f0e36 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * be cloned. This could happen, e.g., with Linux bridge code passing
+ 	 * us broadcast frames. */
+ 
+-	if (head_need > 0 || skb_cloned(skb)) {
++	if (head_need > 0 || skb_header_cloned(skb)) {
+ #if 0
+ 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+ 		       "of headroom\n", dev->name, head_need);
+ #endif
+ 
+-		if (skb_cloned(skb))
++		if (skb_header_cloned(skb))
+ 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 		else
+ 			I802_DEBUG_INC(local->tx_expand_skb_head);
