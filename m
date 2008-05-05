@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44351 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbYEDRr5 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.239]:51770 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbYEETit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 13:47:57 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1209917006.3753.2.camel@johannes.berg> (sfid-20080504_180307_553231_1D0CF66C)
-References: <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-	 <1209890847.6210.51.camel@johannes.berg>
-	 <1209892489.6210.56.camel@johannes.berg>
-	 <20080504094444.GA541@gondor.apana.org.au>
-	 <1209894754.6210.58.camel@johannes.berg>
-	 <1209900355.6210.64.camel@johannes.berg>
-	 <1209904088.4065.11.camel@johannes.berg>
-	 <20080504124542.GA1455@gondor.apana.org.au>
-	 <1209909990.3753.0.camel@johannes.berg>
-	 (sfid-20080504_160619_267031_C8D61782)  <1209917006.3753.2.camel@johannes.berg>
-	 (sfid-20080504_180307_553231_1D0CF66C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gpAn2hDt8EKy96+lvFWr"
-Date: Sun, 04 May 2008 19:47:40 +0200
-Message-Id: <1209923260.3655.2.camel@johannes.berg> (sfid-20080504_194721_979379_07EB6D7A)
-Mime-Version: 1.0
+	Mon, 5 May 2008 15:38:49 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so1339016wra.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 12:38:47 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Mon, 5 May 2008 12:02:35 -0700
+Subject: [PATCH] mac80211: fix incorrect mesh header length
+Message-ID: <481f6246.20038e0a.0ff3.fffff3d4@mx.google.com> (sfid-20080505_213806_846782_12B6148D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This should have been updated at the same time we were transitioning from 3 byte
+to 4 byte mesh sequence number. Pointed out by Johannes Berg.
 
---=-gpAn2hDt8EKy96+lvFWr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/mac80211/mesh.c |    2 +-
+ net/mac80211/util.c |   10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index f76bc26..697ef67 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -397,7 +397,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+ 	put_unaligned(cpu_to_le32(sdata->u.sta.mesh_seqnum), &meshhdr->seqnum);
+ 	sdata->u.sta.mesh_seqnum++;
+ 
+-	return 5;
++	return 6;
+ }
+ 
+ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index cc9f715..24a465c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -153,15 +153,15 @@ int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+ 	/* 7.1.3.5a.2 */
+ 	switch (ae) {
+ 	case 0:
+-		return 5;
++		return 6;
+ 	case 1:
+-		return 11;
++		return 12;
+ 	case 2:
+-		return 17;
++		return 18;
+ 	case 3:
+-		return 23;
++		return 24;
+ 	default:
+-		return 5;
++		return 6;
+ 	}
+ }
+ 
+-- 
+1.5.4.3
 
 
-> > [  256.241496] KERNEL: assertion (!atomic_read(&sk->sk_wmem_alloc))
-> > failed at net/packet/af_packet.c (225)
->=20
-> Except for that,=20
-
-Oddly, I haven't been able to reproduce this, so I'll clean up the
-patches now.
-
-
-If I have a device that needs 100 bytes headroom (not unheard of),
-there will of course still be packets that don't have enough headroom.
-Should we skb_orphan them?
-
-johannes
-
---=-gpAn2hDt8EKy96+lvFWr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB32u6Vg1VMiehFYAQIudw/+Na3Nw9rYuA7K4quD16gDGC+Z+yMKsqe2
-R6mRF9NPpKBnO+RyOEr6IPdA84CcMX8GJAc7lmlPTFq9C8M1qPrTO2cISfnNQbdI
-32T1CYsgbyDubO+N4/KApi1ehFkO7pr3NwRG6rHZvCZ7xFhR88gJI2BcCK0zslwk
-ONlNlh1gs49e7J9eJXUU+8dj6so88+dj6gWHiHjlTRWXwZxQ3RhJUJlJtj3NX8Hq
-71Adx+U5xX1goHLWcsHv8Zxch2jLlS7QI3gbBs+rD0Tw6vlYGrxH007VSzXxMgIE
-gpzVB1vMMidHz75erE7vzjmwlNggVyzlVQItD5TuEqXsPych8c39MyVUde/VoPL1
-3Z4fg31Eug1drNenr2l5RV9+87MvS3WJs9b2axiv2N19IH8auB9ZkJ+WafRoJgTM
-OrgIWcZurc74H+YRaaGkCPd6eoiqjD3fgyGv9kaLB5slovyCty2no5n4mvCAYozl
-4GfcQ83pikpIMRx6zjXhxYlDsRtyHiLsEPmkJohsgTHMwaTwsQbS9wZ418vC0UKd
-O9Nj7OUlp1px2nw+ch94oRSagiTSzarH3TU/sxpeAOJFERSuGqlExoA7GDjvmfOo
-fcYSaTwCRzqc7olvH1Emq3eXx3JAf1EbNhiidI4rdFrC6t16AyuU9ny7PGw+XOWp
-Tsp+CguoP9Q=
-=6eYc
------END PGP SIGNATURE-----
-
---=-gpAn2hDt8EKy96+lvFWr--
 
