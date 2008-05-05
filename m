@@ -1,151 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:8008 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbYEPT3T (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45756
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752928AbYEEXjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 15:29:19 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so541086wra.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 12:29:16 -0700 (PDT)
-Subject: [RFC-PATCH] mac80211: add helpers for frame control tests
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 16 May 2008 12:29:14 -0700
-Message-Id: <1210966154.5915.50.camel@brick> (sfid-20080516_212924_911455_53DADC35)
+	Mon, 5 May 2008 19:39:17 -0400
+Date: Mon, 05 May 2008 16:39:16 -0700 (PDT)
+Message-Id: <20080505.163916.239187195.davem@davemloft.net> (sfid-20080506_013832_875309_5BDF7775)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, herbert@gondor.apana.org.au
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210029835.8012.30.camel@johannes.berg>
+References: <1210027447.8012.15.camel@johannes.berg>
+	<20080505.161458.46071527.davem@davemloft.net>
+	<1210029835.8012.30.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid always byteswapping the hdr->frame_control value and testing
-against that.  Move the byteswapping into the constants and test
-directly against the __le16 value.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 06 May 2008 01:23:55 +0200
 
-One function in wpa.c moved to use some of the helpers as an example
-of what this transition will look like eliminating the local var fc.
+[ Herbert CC:'d ]
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
-More helpers could (should) be added to this, I just wanted to get some
-feedback regarding the approach before going through the drivers and
-mac80211 code.
+> On Mon, 2008-05-05 at 16:14 -0700, David Miller wrote:
+> 
+> > If it is cloned, it makes sure the data reference count allows
+> > for modification of the buffer.
+> 
+> Which buffer? skb->data..skb->tail? And isn't that, in mac80211's case,
+> at least currently all the buffer anyway?
 
-drivers/net/wireless/iwl/iwl-helpers.h has a lot of similar helpers, but
-takes the already byteswapped fc value rather than a struct ieee80211_hdr
-as they do the byteswapping before testing.  There are lots of places this
-could be avoided with a set of helpers like this.
+Right.
 
- include/linux/ieee80211.h |   41 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/wpa.c        |   18 +++++++-----------
- 2 files changed, 48 insertions(+), 11 deletions(-)
+For TSO or cases using frag lists of frag page vectors, it gets
+more complicated.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 0b5e03e..2382cd0 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -81,6 +81,47 @@
- #define IEEE80211_STYPE_QOS_CFPOLL		0x00E0
- #define IEEE80211_STYPE_QOS_CFACKPOLL		0x00F0
- 
-+static inline int ieee80211_fctl_tods(struct ieee80211_hdr *hdr)
-+{
-+	return hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_TODS);
-+}
-+
-+static inline int ieee80211_fctl_fromds(struct ieee80211_hdr *hdr)
-+{
-+	return hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FROMDS);
-+}
-+
-+static inline int ieee80211_fctl_has_a4(struct ieee80211_hdr *hdr)
-+{
-+	__le16 tmp = cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_TODS);
-+	return (hdr->frame_control & tmp) == tmp;
-+}
-+
-+static inline int ieee80211_ftype(struct ieee80211_hdr *hdr, u16 ftype)
-+{
-+	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
-+	       cpu_to_le16(ftype);
-+}
-+
-+static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u16 stype)
-+{
-+	return (hdr->frame_control & cpu_to_le16(stype)) != 0;
-+}
-+
-+static inline int ieee80211_ftype_mgmt(struct ieee80211_hdr *hdr)
-+{
-+	return ieee80211_ftype(hdr, IEEE80211_FTYPE_MGMT);
-+}
-+
-+static inline int ieee80211_ftype_ctl(struct ieee80211_hdr *hdr)
-+{
-+	return ieee80211_ftype(hdr, IEEE80211_FTYPE_CTL);
-+}
-+
-+static inline int ieee80211_ftype_data(struct ieee80211_hdr *hdr)
-+{
-+	return ieee80211_ftype(hdr, IEEE80211_FTYPE_DATA);
-+}
- 
- /* miscellaneous IEEE 802.11 constants */
- #define IEEE80211_MAX_FRAG_THRESHOLD	2352
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 45709ad..c37cc76 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -24,23 +24,21 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdrlen;
--	u16 fc;
- 	int a4_included;
- 	u8 *pos;
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
- 
- 	hdrlen = 24;
--	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
--	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
-+	if (ieee80211_fctl_has_a4(hdr)) {
- 		hdrlen += ETH_ALEN;
-+		a4_included = 1;
- 		*sa = hdr->addr4;
- 		*da = hdr->addr3;
--	} else if (fc & IEEE80211_FCTL_FROMDS) {
-+	} else if (ieee80211_fctl_fromds(hdr)) {
- 		*sa = hdr->addr3;
- 		*da = hdr->addr1;
--	} else if (fc & IEEE80211_FCTL_TODS) {
-+	} else if (ieee80211_fctl_tods(hdr)) {
- 		*sa = hdr->addr2;
- 		*da = hdr->addr3;
- 	} else {
-@@ -48,16 +46,14 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- 		*da = hdr->addr1;
- 	}
- 
--	if (fc & 0x80)
-+	if (ieee80211_stype(hdr, IEEE_STYPE_QOS_DATA))
- 		hdrlen += 2;
- 
- 	*data = skb->data + hdrlen;
- 	*data_len = skb->len - hdrlen;
- 
--	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
--		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
--	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
--	    fc & IEEE80211_STYPE_QOS_DATA) {
-+	if (ieee80211_ftype_data(hdr) &&
-+	    ieee80211_stype(hdr, IEEE_STYPE_QOS_DATA)) {
- 		pos = (u8 *) &hdr->addr4;
- 		if (a4_included)
- 			pos += 6;
--- 
-1.5.5.1.570.g26b5e
+Basically, skb_header_cloned()==false means that you can modify
+anything covered by skb->data..skb->tail
 
+> Interesting point. I'll have to see when socket filters are run,
+> wpa_supplicant could have a tap open I think. Maybe that's why I'm
+> seeing so many cloned packets. I think I'll stacktrace skb_clone and
+> print that out.
 
+Note that we can even optimize that case even further if we really
+have to.
+
+But try to see why the filter used by WPA Supplicant is not effective.
+If the filter fails to match, the packet is free'd immediately using
+kfree_skb() which should undo clone'age.
+
+Actually, I think I see a potential problem with how the
+->dataref bit fields are managed in this situation.  This is
+Herbert's creation, so let's ask him :-)
+
+It seems that if we have a TCP packet for which skb_header_cloned()
+is false, and this enters dev_hard_start_xmit(), if any network
+taps take the packet, we'll never return to skb_header_cloned()==false
+state even if every tap immediately kfree_skb(skb)'s the packet.
+
+When we clone, we'll increment only the low 16-bit part of ->dataref.
+
+On free, since skb->nohdr is set, we'll decrement both of (1 <<
+SKB_DATAREF_SHIFT) and the low 16-bit counter.
+
+Therefore the packet never becomes re-writable, right?  Is there some
+easy way to cure this Herbert?  Apparently having a tap registered
+constantly merely to watch for filtered traffic is quite common. :-/
 
