@@ -1,113 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54779 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755939AbYEAMGL (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:49751 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857AbYEEUIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 08:06:11 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
-References: <20080501.024320.212547875.davem@davemloft.net>
-	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
-	 <20080501.034950.261408566.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mSGq/OzWjJoamPSStMpE"
-Date: Thu, 01 May 2008 14:05:24 +0200
-Message-Id: <1209643524.3904.5.camel@johannes.berg> (sfid-20080501_140559_243810_2B8861BE)
-Mime-Version: 1.0
+	Mon, 5 May 2008 16:08:39 -0400
+Date: Mon, 5 May 2008 22:09:27 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: w35und: some more code removal
+Message-ID: <20080505200927.GA7273@elf.ucw.cz> (sfid-20080505_220757_049517_6BA6B525)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mSGq/OzWjJoamPSStMpE
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Remove some more unneccessary code
 
+---
+commit 5b251c6315097d5f9ab5d30c43813fe74c1db4e4
+tree 5ca21582f55886d5f0249f7ca139687450024581
+parent e44ccdabb97fa4a6cdc1a95adcad7bcc469d0c16
+author Pavel <pavel@amd.ucw.cz> Mon, 05 May 2008 22:08:51 +0200
+committer Pavel <pavel@amd.ucw.cz> Mon, 05 May 2008 22:08:51 +0200
 
-> That makes more sense, good catch Herbert.
->=20
-> I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
-> I suspect we'll need to orphan early in order to accomodate these
-> adjustments, otherwise socket memory buffer allocations will
-> be corrupted.
->=20
-> Once that is cured, I think we can detect this better, by adding a
-> carefully constructed assertion to pskb_expand_head().  Basically, the
-> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
-> still attached to the SKB, print a warning message.
+ drivers/net/wireless/winbond/winbondport/mds.c     |   46 +++-----------------
+ drivers/net/wireless/winbond/winbondport/wblinux.c |    8 +--
+ 2 files changed, 11 insertions(+), 43 deletions(-)
 
-I'm confused now. I added this patch:
-
---- everything.orig/net/core/skbuff.c	2008-05-01 13:21:52.000000000 +0200
-+++ everything/net/core/skbuff.c	2008-05-01 13:29:57.000000000 +0200
-@@ -683,6 +683,14 @@ int pskb_expand_head(struct sk_buff *skb
- 	if (!data)
- 		goto nodata;
-=20
-+	if (unlikely((nhead || ntail) && skb->sk)) {
-+		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
-+				"with socket attached\n",
-+		       nhead, ntail);
-+                dump_stack();
-+	} else
-+		skb->truesize =3D size + sizeof(struct sk_buff);
+diff --git a/drivers/net/wireless/winbond/winbondport/mds.c b/drivers/net/wireless/winbond/winbondport/mds.c
+index ad09d0b..44f3b61 100644
+--- a/drivers/net/wireless/winbond/winbondport/mds.c
++++ b/drivers/net/wireless/winbond/winbondport/mds.c
+@@ -46,10 +46,8 @@ Mds_Tx(PADAPTER Adapter)
+ 	unsigned char	BufferFilled = FALSE, MICAdd = 0;
+ 
+ 
+-	//931130.5.a
+ 	if (pMds->TxPause)
+ 		return;
+-	// 20060717.3 Add
+ 	if (!hal_driver_init_OK(pHwData))
+ 		return;
+ 
+@@ -195,9 +193,7 @@ Mds_SendComplete(PADAPTER Adapter, PT02_
+ 		RetryCount = (u8)pT02->T02_MPDU_Cnt;
+ 		if (pT02->value & FLAG_ERROR_TX_MASK) {
+ 			SendOK = FALSE;
+-			#ifdef _PE_DTO_DUMP_
+-			WBDEBUG(("Mds Tx Fail[%d] = %8x\n", PacketId, pT02->value ));
+-			#endif
 +
- 	/* Copy only real data... and, alas, header. This should be
- 	 * optimized for the cases when header is void. */
- #ifdef NET_SKBUFF_DATA_USES_OFFSET
---- everything.orig/net/mac80211/tx.c	2008-05-01 13:01:09.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-05-01 13:16:50.000000000 +0200
-@@ -1279,6 +1279,8 @@ int ieee80211_master_start_xmit(struct s
- 	int headroom;
- 	int ret;
-=20
-+	skb_orphan(skb);
-+
- 	if (info->flags & IEEE80211_TX_CTL_READY_FOR_TX) {
- 		/*
- 		 * We set the IEEE80211_TX_CTL_READY_FOR_TX bit in all skbs
-@@ -1581,6 +1583,7 @@ int ieee80211_subif_start_xmit(struct sk
- 	 * us broadcast frames. */
-=20
- 	if (head_need > 0 || skb_cloned(skb)) {
-+		skb_orphan(skb);
- #if 0
- 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
- 		       "of headroom\n", dev->name, head_need);
+ 			if (pT02->T02_transmit_abort || pT02->T02_out_of_MaxTxMSDULiftTime) {
+ 				//retry error
+ 				pHwData->dto_tx_retry_count += (RetryCount+1);
+@@ -226,25 +222,6 @@ Mds_SendComplete(PADAPTER Adapter, PT02_
+ 			MTO_SetTxCount(Adapter, TxRate, RetryCount);
+ 		}
+ 
+-		// Return result
+-		if( pMds->TxDesFrom[ PacketId ] == 3 )
+-			{ BUG(); }
+-		else if( pMds->TxDesFrom[ PacketId ] == 2 )
+-			{ }
+-		else if( pMds->TxDesFrom[ PacketId ] == 1 )
+-			{ BUG();  }
+-
+-		//The next 802.1x message callback after 2 MIC error occur within 60s
+-		//TODO: ?? Don't care whether the next 802.1x message is transmitted successfully??
+-		if (pMds->TxInfo[PacketId] == 1) {
+-			// It needs to send disassoc. frame no matter the connection is still
+-			// alive or not(AP disassoc. us).
+-			#ifdef _PE_STATE_DUMP_
+-			WBDEBUG(("!!Countermeasure, disassoc !!\n"));
+-			#endif
+-			pMds->TxInfo[PacketId] = 0;
+-			WARN_ON(1);
+-		}
+ 		// Clear send result buffer
+ 		pMds->TxResult[ PacketId ] = 0;
+ 	} else
+@@ -391,37 +368,31 @@ Mds_BodyCopy(PADAPTER Adapter, PDESCRIPT
+ 		stmp &= ~0x03;//4n Alignment
+ 		Size += stmp;// Current 4n offset of mpdu
+ 
+-		while( CopySize )
+-		{
++		while (CopySize) {
+ 			// Copy body
+ 			src_buffer = pDes->buffer_address[buf_index];
+ 			CopyLeft = CopySize;
+-			if( CopySize >= pDes->buffer_size[buf_index] )
+-			{
++			if (CopySize >= pDes->buffer_size[buf_index]) {
+ 				CopyLeft = pDes->buffer_size[buf_index];
+ 
+ 				// Get the next buffer of descriptor
+ 				buf_index++;
+ 				buf_index %= MAX_DESCRIPTOR_BUFFER_INDEX;
+-			}
+-			else
+-			{
++			} else {
+ 				PUCHAR	pctmp = pDes->buffer_address[buf_index];
+ 				pctmp += CopySize;
+ 				pDes->buffer_address[buf_index] = pctmp;
+ 				pDes->buffer_size[buf_index] -= CopySize;
+ 			}
+ 
+-			memcpy( buffer,	src_buffer, CopyLeft );
++			memcpy(buffer, src_buffer, CopyLeft);
+ 			buffer += CopyLeft;
+ 			CopySize -= CopyLeft;
+ 		}
+ 
+ 		// 931130.5.n
+-		if( pMds->MicAdd )
+-		{
+-			if( !SizeLeft ) //931130.5.o
+-			{
++		if (pMds->MicAdd) {
++			if (!SizeLeft) {
+ 				pMds->MicWriteAddress[ pMds->MicWriteIndex ] = buffer - pMds->MicAdd;
+ 				pMds->MicWriteSize[ pMds->MicWriteIndex ] = pMds->MicAdd;
+ 				pMds->MicAdd = 0;
+@@ -436,8 +407,7 @@ Mds_BodyCopy(PADAPTER Adapter, PDESCRIPT
+ 		}
+ 
+ 		// Does it need to generate the new header for next mpdu?
+-		if( SizeLeft )
+-		{
++		if (SizeLeft) {
+ 			buffer = TargetBuffer + Size; // Get the next 4n start address
+ 			memcpy( buffer, TargetBuffer, 32 );//Copy 8B USB +24B 802.11
+ 			pT00 = (PT00_DESCRIPTOR)buffer;
+diff --git a/drivers/net/wireless/winbond/winbondport/wblinux.c b/drivers/net/wireless/winbond/winbondport/wblinux.c
+index 3e6a0d3..d2b86cb 100644
+--- a/drivers/net/wireless/winbond/winbondport/wblinux.c
++++ b/drivers/net/wireless/winbond/winbondport/wblinux.c
+@@ -256,8 +256,7 @@ #endif
+ 	}
+ 	while(FALSE);
+ 
+-	switch( InitStep )
+-	{
++	switch (InitStep) {
+ 	case 5: 
+ 	case 4: 
+ 	case 3: Mds_Destroy( Adapter );
+@@ -270,11 +269,10 @@ #endif
+ 	return FALSE;
+ }
+ 
+-// 20060802
+ void WBLINUX_ConnectStatus(PADAPTER Adapter, u32 flag)
+ {
+-   PWBLINUX	pWbLinux = &Adapter->WbLinux;
++	PWBLINUX	pWbLinux = &Adapter->WbLinux;
+ 
+-   pWbLinux->LinkStatus = flag; // OS_DISCONNECTED	or  OS_CONNECTED
++	pWbLinux->LinkStatus = flag; // OS_DISCONNECTED	or  OS_CONNECTED
+ }
+ 
 
-
-and the assertion never triggers, however I get a number of bugs like this:
-
-=EF=BB=BFSKB BUG: Invalid truesize (4294963740) len=3D44, sizeof(sk_buff)=
-=3D176, skb=3D0xeecb6620
-
-and definitely cannot explain that number (-3556).
-
-johannes
-
---=-mSGq/OzWjJoamPSStMpE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBmyA6Vg1VMiehFYAQKLKQ/5ARGbyNzzj/ahajOCL67uiiCv9ppV2OV+
-ZKgPZyouqXI1nYhFFE/IM1xzD24yxLYP0i/YySIx29RWDRPNnQGUy1/Shx9um9T5
-5wriQoku4gFgUenS20lJfc8Sxhfb275pFMfvcdAzCJgPAk1qy8324kFOLs92Oc55
-AH1y3CH/p1y/LlyyckJlme9pdveC8EN5QU1i/fOUhfCRJh7S8h6MafhTa+TX18JD
-hBv5lbNHQbxbCqepwQ1uZwI1FtUMbiuVbuW+3+sNGwsmmU+NYLKxaJRMbDIoQiI4
-WzWaq2tRG+M680wFkBPAFB0HBYseFMW1S4mVEu44G2pDJbIb9RdyeW3tmPmK917T
-X769tSCitMGCie6sYTo5SCt30EVR7c8K8V3ohH1L22ZpwDuhnQFvJhm+S9blK65C
-JkDQZ6byqskQLoz+8uSGtzZlvLQhRd4LOnLs0Yivl10K9A8Xxe147iNbDdyr4nz2
-eyhc3DPARRcyWs+6SP1iX/XJPwxrLJniPy/xAT2YCmnlgntx8AIqcfUdGXzeXQf8
-Mbt55xCD792MZ2O29rRHXi2T7bXDAvfbtCzH40bxpdRwPNQteKOS5Bo5Ml2QJ/19
-53lhVRhzSZLoLRvjD0vqEfFMjXMivA55V/nnpf7bx4P1ouErlBDFJLNGNa9vS9S5
-bcY9JdpNsKA=
-=BBDZ
------END PGP SIGNATURE-----
-
---=-mSGq/OzWjJoamPSStMpE--
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
