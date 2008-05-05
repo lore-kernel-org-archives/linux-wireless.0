@@ -1,72 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56798 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758593AbYEMJYm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 05:24:42 -0400
-Subject: Re: dynamic wep with mulitple keys
-From: Johannes Berg <johannes@sipsolutions.net>
-To: drago01 <drago01@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Volker Braun <vbraun@physics.upenn.edu>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com> (sfid-20080512_143841_073042_7C547635)
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
-	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
-	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
-	 <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com>
-	 <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
-	 <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com>
-	 (sfid-20080512_143841_073042_7C547635)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MGFXYQpecB3fEYc6Wg1r"
-Date: Tue, 13 May 2008 11:24:28 +0200
-Message-Id: <1210670668.3646.56.camel@johannes.berg> (sfid-20080513_112446_313368_8586A3B1)
+Received: from main.gmane.org ([80.91.229.2]:43123 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752341AbYEETpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2008 15:45:03 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Jt6cQ-0007c9-Bc
+	for linux-wireless@vger.kernel.org; Mon, 05 May 2008 19:45:02 +0000
+Received: from 78-62-85-225.static.zebra.lt ([78.62.85.225])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 19:45:02 +0000
+Received: from paulius.zaleckas by 78-62-85-225.static.zebra.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 19:45:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
+Subject: [PATCH] airo: use netstats in net_device structure
+Date: Mon, 05 May 2008 22:38:34 +0300
+Message-ID: <fvnnnq$p1d$2@ger.gmane.org> (sfid-20080505_214423_159088_11DC8B86)
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------060602030707080707070504"
+Cc: netdev@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------060602030707080707070504
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
---=-MGFXYQpecB3fEYc6Wg1r
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Use net_device_stats from net_device structure instead of local.
+Changed airo_read_stats function parameter to net_device.
+
+Signed-off-by: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
 
 
-> >  SW crypto is handled by mac80211 so I ponder why it works above 4965
-> >  and not over 3945 but it has nothing to do with this particular change
->=20
-> OK, Johannes any idea why this happens?
+--------------060602030707080707070504
+Content-Type: text/x-patch;
+ name="airo_netstats.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="airo_netstats.patch"
 
-I don't even know what happens :)
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 45f47c1..8a78283 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1148,7 +1148,6 @@ static u8 airo_dbm_to_pct (tdsRssiEntry *rssi_rid, u8 dbm);
+ static void airo_networks_free(struct airo_info *ai);
+ 
+ struct airo_info {
+-	struct net_device_stats	stats;
+ 	struct net_device             *dev;
+ 	struct list_head              dev_list;
+ 	/* Note, we can have MAX_FIDS outstanding.  FIDs are 16-bits, so we
+@@ -1924,7 +1923,7 @@ static int mpi_start_xmit(struct sk_buff *skb, struct net_device *dev) {
+ 	if (npacks >= MAXTXQ - 1) {
+ 		netif_stop_queue (dev);
+ 		if (npacks > MAXTXQ) {
+-			ai->stats.tx_fifo_errors++;
++			dev->stats.tx_fifo_errors++;
+ 			return 1;
+ 		}
+ 		skb_queue_tail (&ai->txq, skb);
+@@ -2044,13 +2043,13 @@ static void get_tx_error(struct airo_info *ai, s32 fid)
+ 		bap_read(ai, &status, 2, BAP0);
+ 	}
+ 	if (le16_to_cpu(status) & 2) /* Too many retries */
+-		ai->stats.tx_aborted_errors++;
++		ai->dev->stats.tx_aborted_errors++;
+ 	if (le16_to_cpu(status) & 4) /* Transmit lifetime exceeded */
+-		ai->stats.tx_heartbeat_errors++;
++		ai->dev->stats.tx_heartbeat_errors++;
+ 	if (le16_to_cpu(status) & 8) /* Aid fail */
+ 		{ }
+ 	if (le16_to_cpu(status) & 0x10) /* MAC disabled */
+-		ai->stats.tx_carrier_errors++;
++		ai->dev->stats.tx_carrier_errors++;
+ 	if (le16_to_cpu(status) & 0x20) /* Association lost */
+ 		{ }
+ 	/* We produce a TXDROP event only for retry or lifetime
+@@ -2102,7 +2101,7 @@ static void airo_end_xmit(struct net_device *dev) {
+ 		for (; i < MAX_FIDS / 2 && (priv->fids[i] & 0xffff0000); i++);
+ 	} else {
+ 		priv->fids[fid] &= 0xffff;
+-		priv->stats.tx_window_errors++;
++		dev->stats.tx_window_errors++;
+ 	}
+ 	if (i < MAX_FIDS / 2)
+ 		netif_wake_queue(dev);
+@@ -2128,7 +2127,7 @@ static int airo_start_xmit(struct sk_buff *skb, struct net_device *dev) {
+ 		netif_stop_queue(dev);
+ 
+ 		if (i == MAX_FIDS / 2) {
+-			priv->stats.tx_fifo_errors++;
++			dev->stats.tx_fifo_errors++;
+ 			return 1;
+ 		}
+ 	}
+@@ -2167,7 +2166,7 @@ static void airo_end_xmit11(struct net_device *dev) {
+ 		for (; i < MAX_FIDS && (priv->fids[i] & 0xffff0000); i++);
+ 	} else {
+ 		priv->fids[fid] &= 0xffff;
+-		priv->stats.tx_window_errors++;
++		dev->stats.tx_window_errors++;
+ 	}
+ 	if (i < MAX_FIDS)
+ 		netif_wake_queue(dev);
+@@ -2199,7 +2198,7 @@ static int airo_start_xmit11(struct sk_buff *skb, struct net_device *dev) {
+ 		netif_stop_queue(dev);
+ 
+ 		if (i == MAX_FIDS) {
+-			priv->stats.tx_fifo_errors++;
++			dev->stats.tx_fifo_errors++;
+ 			return 1;
+ 		}
+ 	}
+@@ -2219,8 +2218,9 @@ static int airo_start_xmit11(struct sk_buff *skb, struct net_device *dev) {
+ 	return 0;
+ }
+ 
+-static void airo_read_stats(struct airo_info *ai)
++static void airo_read_stats(struct net_device *dev)
+ {
++	struct airo_info *ai = dev->priv;
+ 	StatsRid stats_rid;
+ 	__le32 *vals = stats_rid.vals;
+ 
+@@ -2232,23 +2232,24 @@ static void airo_read_stats(struct airo_info *ai)
+ 	readStatsRid(ai, &stats_rid, RID_STATS, 0);
+ 	up(&ai->sem);
+ 
+-	ai->stats.rx_packets = le32_to_cpu(vals[43]) + le32_to_cpu(vals[44]) +
++	dev->stats.rx_packets = le32_to_cpu(vals[43]) + le32_to_cpu(vals[44]) +
+ 			       le32_to_cpu(vals[45]);
+-	ai->stats.tx_packets = le32_to_cpu(vals[39]) + le32_to_cpu(vals[40]) +
++	dev->stats.tx_packets = le32_to_cpu(vals[39]) + le32_to_cpu(vals[40]) +
+ 			       le32_to_cpu(vals[41]);
+-	ai->stats.rx_bytes = le32_to_cpu(vals[92]);
+-	ai->stats.tx_bytes = le32_to_cpu(vals[91]);
+-	ai->stats.rx_errors = le32_to_cpu(vals[0]) + le32_to_cpu(vals[2]) +
++	dev->stats.rx_bytes = le32_to_cpu(vals[92]);
++	dev->stats.tx_bytes = le32_to_cpu(vals[91]);
++	dev->stats.rx_errors = le32_to_cpu(vals[0]) + le32_to_cpu(vals[2]) +
+ 			      le32_to_cpu(vals[3]) + le32_to_cpu(vals[4]);
+-	ai->stats.tx_errors = le32_to_cpu(vals[42]) + ai->stats.tx_fifo_errors;
+-	ai->stats.multicast = le32_to_cpu(vals[43]);
+-	ai->stats.collisions = le32_to_cpu(vals[89]);
++	dev->stats.tx_errors = le32_to_cpu(vals[42]) +
++			      dev->stats.tx_fifo_errors;
++	dev->stats.multicast = le32_to_cpu(vals[43]);
++	dev->stats.collisions = le32_to_cpu(vals[89]);
+ 
+ 	/* detailed rx_errors: */
+-	ai->stats.rx_length_errors = le32_to_cpu(vals[3]);
+-	ai->stats.rx_crc_errors = le32_to_cpu(vals[4]);
+-	ai->stats.rx_frame_errors = le32_to_cpu(vals[2]);
+-	ai->stats.rx_fifo_errors = le32_to_cpu(vals[0]);
++	dev->stats.rx_length_errors = le32_to_cpu(vals[3]);
++	dev->stats.rx_crc_errors = le32_to_cpu(vals[4]);
++	dev->stats.rx_frame_errors = le32_to_cpu(vals[2]);
++	dev->stats.rx_fifo_errors = le32_to_cpu(vals[0]);
+ }
+ 
+ static struct net_device_stats *airo_get_stats(struct net_device *dev)
+@@ -2261,10 +2262,10 @@ static struct net_device_stats *airo_get_stats(struct net_device *dev)
+ 			set_bit(JOB_STATS, &local->jobs);
+ 			wake_up_interruptible(&local->thr_wait);
+ 		} else
+-			airo_read_stats(local);
++			airo_read_stats(dev);
+ 	}
+ 
+-	return &local->stats;
++	return &dev->stats;
+ }
+ 
+ static void airo_set_promisc(struct airo_info *ai) {
+@@ -3092,7 +3093,7 @@ static int airo_thread(void *data) {
+ 		else if (test_bit(JOB_XMIT11, &ai->jobs))
+ 			airo_end_xmit11(dev);
+ 		else if (test_bit(JOB_STATS, &ai->jobs))
+-			airo_read_stats(ai);
++			airo_read_stats(dev);
+ 		else if (test_bit(JOB_WSTATS, &ai->jobs))
+ 			airo_read_wireless_stats(ai);
+ 		else if (test_bit(JOB_PROMISC, &ai->jobs))
+@@ -3288,7 +3289,7 @@ static irqreturn_t airo_interrupt(int irq, void *dev_id)
+ 
+ 			skb = dev_alloc_skb( len + hdrlen + 2 + 2 );
+ 			if ( !skb ) {
+-				apriv->stats.rx_dropped++;
++				dev->stats.rx_dropped++;
+ 				goto badrx;
+ 			}
+ 			skb_reserve(skb, 2); /* This way the IP header is aligned */
+@@ -3556,7 +3557,7 @@ static void mpi_receive_802_3(struct airo_info *ai)
+ 
+ 		skb = dev_alloc_skb(len);
+ 		if (!skb) {
+-			ai->stats.rx_dropped++;
++			ai->dev->stats.rx_dropped++;
+ 			goto badrx;
+ 		}
+ 		buffer = skb_put(skb,len);
+@@ -3649,7 +3650,7 @@ void mpi_receive_802_11 (struct airo_info *ai)
+ 
+ 	skb = dev_alloc_skb( len + hdrlen + 2 );
+ 	if ( !skb ) {
+-		ai->stats.rx_dropped++;
++		ai->dev->stats.rx_dropped++;
+ 		goto badrx;
+ 	}
+ 	buffer = (u16*)skb_put (skb, len + hdrlen);
 
-johannes
 
---=-MGFXYQpecB3fEYc6Wg1r
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCleS6Vg1VMiehFYAQKbPQ//a069EiFwmkok1yBJ/8Z2dB1rQrkg+ron
-SQaEVgi3g2si2tzBSOHTXUDqG2eeyCWd8Ypc3KelRG+zGNdqjOxRWo2fOPfZp6AW
-VY7D3+WBHhUkJaTJwSjSs1BGS3KaKLDnCv5T5BcgY+5ft404VDcH/sGyV6XVpx5I
-906YVe/Q2ellZg9ChNW4mjCV4cvFw15O22D9Obq4pKhyxV5dnuTliUV1uWHznRWO
-YwK8P3/ZSV37B78/0jSfzx9a54HRUPgf8y2VCPuk23s6zP62MnJ8qocyuyTp0J/9
-ET7g4BELV7xufJFJhJ5jfXitAW3GzzULGtFudmDSuvKq2+tFL+Dc9iDbEZlKscQ7
-ZmjxxTbX0WFnH2H2MLd0rqgDOjxWs/Y2j6X/m3SB2fpBggzlJdTsS7spgDJORBPP
-vosUc9IIrlZ7NDWXG4wRgdpDgaL5stCzPUMUnruT6tCXDp/ummldIRIi7UxXhdF+
-gTVe78zniFVoJAz7QPxZ4mcmMKIIumN0T87aJWAHdFqqm2W8o78oL/1w7VXaGGFM
-1Sg4xK7hsLe4RgzRa7n+awVNp+VNeCg3dN0n4w2VDRSG8wMDp9UjKWhVHII9d/Gq
-A8l/MKyhTMUar6FyIaCEJXTP5TGVrpca8drmclnvnhTKlAuTjpBzCNzByrsCOAoi
-eHzLY65VEEM=
-=yqFk
------END PGP SIGNATURE-----
-
---=-MGFXYQpecB3fEYc6Wg1r--
+--------------060602030707080707070504--
 
