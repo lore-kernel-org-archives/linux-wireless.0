@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54816
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751542AbYEAKcX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39666 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755236AbYEEVcP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 06:32:23 -0400
-Date: Thu, 01 May 2008 03:32:21 -0700 (PDT)
-Message-Id: <20080501.033221.193705040.davem@davemloft.net> (sfid-20080501_123210_370098_BB311BDE)
-To: johannes@sipsolutions.net
-Cc: mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209636494.4008.24.camel@johannes.berg>
-References: <1209635299.4008.21.camel@johannes.berg>
-	<20080501.025635.216053297.davem@davemloft.net>
-	<1209636494.4008.24.camel@johannes.berg>
+	Mon, 5 May 2008 17:32:15 -0400
+Subject: Re: w35und: driver now down to 16Kloc, and actually works a bit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@suse.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1210021369.4181.43.camel@johannes.berg> (sfid-20080505_232629_125911_14743E12)
+References: <20080505210138.GE7273@elf.ucw.cz>
+	 (sfid-20080505_230048_056688_3BEEDCE8)  <1210021369.4181.43.camel@johannes.berg>
+	 (sfid-20080505_232629_125911_14743E12)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TLVKADRIM/nEMUe1U54i"
+Date: Mon, 05 May 2008 23:31:30 +0200
+Message-Id: <1210023090.8012.2.camel@johannes.berg> (sfid-20080505_233132_438309_4D9673D6)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 01 May 2008 12:08:14 +0200
 
-> > Grrr, I bet it's coming from a combination of the
-> > skb_set_mac_header(skb, 0); call done by mac80211 and the skb_push()
-> > calls in net/packet/af_packet.c
-> > 
-> > davem@sunset:~/src/GIT/net-2.6$ egrep skb_push net/packet/af_packet.c
-> > 	skb_push(skb, skb->data - skb_mac_header(skb));
-> > 			skb_push(skb, skb->data - skb_mac_header(skb));
-> > 			skb_push(skb, skb->data - skb_mac_header(skb));
-> 
-> But mac80211 does set_mac_header(0) so this should just push zero bytes,
-> no?
+--=-TLVKADRIM/nEMUe1U54i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Right you are.
+On Mon, 2008-05-05 at 23:02 +0200, Johannes Berg wrote:
+> On Mon, 2008-05-05 at 23:01 +0200, Pavel Machek wrote:
+> > Hi!
+> >=20
+> > Ok, code is still extremely ugly, but at least it uses softmac (and
+>=20
+> why not mac80211? softmac has been deleted
 
-So, I wonder what's causing the problem...  Could you "remember" the
-length and truesize at the skb_orphan() point in mac80211, right
-after the skb_push(), then in the truesize warning, print those
-"remembered" values as well as the current ones.
+Never mind, a peek inside tells me it does use mac80211.
+
+However, the code gives me the creeps so I won't look any further.
+
+johannes
+
+--=-TLVKADRIM/nEMUe1U54i
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB98saVg1VMiehFYAQKExg//fkQ534s1+SD2K+8dnxEGy4K+4+B6c4ek
+X6r0mfl7gjmlRgTCjZvqaP8ckZ6vWV9dtprmPwHxdPlZrv5RZL7O6jS3DOTmWpg9
+kRl/Ky/IsyTfAiHi+DnWI1VlXNH3erqaIZuh7bWsXfVoKzaYLqNfTH+bfKZs4ZEP
+GpqIqNHFoiNu+UMxYMci7br5/JfBXWjOIN18mUk0g2G9610v7N5kpiUFwJ4EEte1
+9BPYS3NNPBWV/Y9UdtJyeX2gdbwtgQahDqKg06yQCENYvvA2B149/hPD/tNKxg/j
+TVPHFzRZzfmecIkz/ehfSXrGKVAa/5OIP3KH+oaveoFetdUegadMyDwV280yKATl
+Cafx87FfpnZCf5k+vC82MoKDuKqkCbr7fL9sS7i6tqZ/wPljdRR3wQWjf4aoxWHS
+FCET874WroNVSLtcaGKm/5o/rPjL1bGsZXuWCdJWdlGX1i6VLJq5hHPM/tST+uRd
+JjoJhU88DCnemQfzkviFMahGMueMTne03FRIkO8196xFGNMTYuGiR5DltVbM0s3A
+XrpKOW5zTn0vj0733bA6dG5XVxsYDe9zkOuISPyyDbYF7krAGmSb4mgnuHBnEaPj
+avRb9e5hesz6UHyDBzxkjsXUJpvdZjBGclO/wuncqqpEc8SEYIHRSzhV1yFURRYp
+tIgOOUm86XA=
+=LBDi
+-----END PGP SIGNATURE-----
+
+--=-TLVKADRIM/nEMUe1U54i--
 
