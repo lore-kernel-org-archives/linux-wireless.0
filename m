@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbYEOF4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 01:56:16 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 02/26] iwlwifi: remove iwl4965_nic_start function
-Date: Thu, 15 May 2008 13:53:54 +0800
-Message-Id: <1210830858-3410-3-git-send-email-yi.zhu@intel.com> (sfid-20080515_075622_237063_CA071B0A)
-In-Reply-To: <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
-References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38477
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751431AbYEEXYY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 May 2008 19:24:24 -0400
+Date: Mon, 05 May 2008 16:24:24 -0700 (PDT)
+Message-Id: <20080505.162424.176435653.davem@davemloft.net> (sfid-20080506_012341_792174_B31C30AD)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210029435.8012.25.camel@johannes.berg>
+References: <1210000923.8245.26.camel@johannes.berg>
+	<20080505.160328.203996832.davem@davemloft.net>
+	<1210029435.8012.25.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 06 May 2008 01:17:14 +0200
 
-This patch moves the contant of iwl4965_nic_start to the only place it is
-being used.
+> Also, should there be some sort of timer that resets the rx_alloc_extra
+> again so that when you bridge it once with p54 (needs heaps of headroom)
+> you don't suffer forever?
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+We're talking about, what, up to 128 bytes or something like that?
+If you're bridging over your wireless device you've already invested
+in assuming those kinds of costs.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index d0f948d..1a2d376 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3958,13 +3958,6 @@ static void iwl4965_dealloc_ucode_pci(struct iwl_priv *priv)
- 	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_boot);
- }
- 
--static void iwl4965_nic_start(struct iwl_priv *priv)
--{
--	/* Remove all resets to allow NIC to operate */
--	iwl_write32(priv, CSR_RESET, 0);
--}
--
--
- /**
-  * iwl4965_read_ucode - Read uCode images from disk file.
-  *
-@@ -4454,7 +4447,8 @@ static int __iwl4965_up(struct iwl_priv *priv)
- 		}
- 
- 		/* start card; "initialize" will load runtime ucode */
--		iwl4965_nic_start(priv);
-+		/* Remove all resets to allow NIC to operate */
-+		iwl_write32(priv, CSR_RESET, 0);
- 
- 		IWL_DEBUG_INFO(DRV_NAME " is coming up\n");
- 
--- 
-1.5.3.6
+I don't think this aspect is really worth worrying about.  The current
+behavior is so much incredibly worse. :-)
+
+> > @@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
+> >  		unsigned int length, gfp_t gfp_mask)
+> >  {
+> >  	int node = dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
+> > +	unsigned int extra = dev->rx_alloc_extra + NET_SKB_PAD;
+> >  	struct sk_buff *skb;
+> >  
+> > -	skb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
+> > +	skb = __alloc_skb(length + extra, gfp_mask, 0, node);
+> >  	if (likely(skb)) {
+> > -		skb_reserve(skb, NET_SKB_PAD);
+> > +		skb_reserve(skb, extra);
+> 
+> Doesn't that break alignment though?
+
+Good catch, we'll have to align the rx_alloc_extra to some modulus or
+similar.  Ideally, at the spot where rx_alloc_extra is set instead
+of here.
 
