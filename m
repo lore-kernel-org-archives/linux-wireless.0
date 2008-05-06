@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:48161 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757430AbYEFBdT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 21:33:19 -0400
-Date: Tue, 6 May 2008 09:32:53 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, tomasw@gmail.com,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-Message-ID: <20080506013253.GA13460@gondor.apana.org.au> (sfid-20080506_033241_046190_C5A67AE0)
-References: <1210027447.8012.15.camel@johannes.berg> <20080505.161458.46071527.davem@davemloft.net> <1210029835.8012.30.camel@johannes.berg> <20080505.163916.239187195.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080505.163916.239187195.davem@davemloft.net>
+Received: from main.gmane.org ([80.91.229.2]:55906 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751716AbYEFHrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 03:47:06 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JtHt9-00059T-3x
+	for linux-wireless@vger.kernel.org; Tue, 06 May 2008 07:47:03 +0000
+Received: from dslc-082-082-164-183.pools.arcor-ip.net ([82.82.164.183])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 07:47:03 +0000
+Received: from feldmann_markus by dslc-082-082-164-183.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 07:47:03 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: is there support for my Card
+Date: Tue, 06 May 2008 09:46:57 +0200
+Message-ID: <fvp2dg$d26$1@ger.gmane.org> (sfid-20080506_094632_475464_AEE8A029)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 05, 2008 at 04:39:16PM -0700, David Miller wrote:
-> 
-> On free, since skb->nohdr is set, we'll decrement both of (1 <<
-> SKB_DATAREF_SHIFT) and the low 16-bit counter.
+Hi All,
 
-skb->nohdr is cleared for clones.  Only the copy held by TCP
-should have it set.  So this should work correctly, in theory :)
+i only want to know if there is support in the next stable Kernel
+2.6.26 for my Card ?
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+My Wlan Card is,
+<lspci -v>
+01:00.0 Ethernet controller: Atheros Communications Inc. AR242x 
+802.11abg Wireless PCI Express Adapter (rev 01)
+	Subsystem: Atheros Communications Inc. AR5006EG 802.11bg NIC (2.4GHz, 
+PCI Express)
+	Flags: fast devsel, IRQ 16
+	Memory at dcff0000 (64-bit, non-prefetchable) [disabled] [size=64K]
+	Capabilities: <access denied>
+	Kernel modules: ath5k
+
+
+Regards Markus
+
