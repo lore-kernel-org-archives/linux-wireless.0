@@ -1,88 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:50362 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755375AbYENDO1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 23:14:27 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3025456wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 20:14:27 -0700 (PDT)
-Message-ID: <c785bba30805132014y56aafa7bi8788503f67a7c809@mail.gmail.com> (sfid-20080514_051434_355556_8D94AE6A)
-Date: Tue, 13 May 2008 20:14:26 -0700
-From: "Paul Thomas" <pthomas8589@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:60287 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759770AbYEFUul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 16:50:41 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JtU7S-0002mJ-6C
+	for linux-wireless@vger.kernel.org; Tue, 06 May 2008 20:50:38 +0000
+Received: from 78-62-85-225.static.zebra.lt ([78.62.85.225])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 20:50:38 +0000
+Received: from paulius.zaleckas by 78-62-85-225.static.zebra.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 20:50:38 +0000
 To: linux-wireless@vger.kernel.org
-Subject: newbie rtl8187 question
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
+Subject: [PATCH] atmel: use netstats in net_device structure
+Date: Tue, 06 May 2008 23:50:30 +0300
+Message-ID: <4820C496.1040204@teltonika.lt> (sfid-20080506_224952_848049_19D9E810)
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070806020003090804060808"
+Cc: netdev@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This is a multi-part message in MIME format.
+--------------070806020003090804060808
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I am trying to get the Trendnet TEW-424UB to work. I have hardware
-version 3.1R which is based on the Realtek RTL8187B chip. I got the
-latest wireless-testing git version. I added the Trendnet PID & VID to
-drivers/net/wireless/rtl8187_dev.c (shown below) but I still can't it
-to work.
+Use net_device_stats from net_device structure instead of local.
+Kill atmel_get_stats function, because by default it is used
+identical internal_stats function from net/core/dev.c
+No need to memset stats to 0, because they are allocated by kzalloc.
 
-static struct usb_device_id rtl8187_table[] __devinitdata = {
-        /* Realtek */
-        {USB_DEVICE(0x0bda, 0x8187)},
-        /* Netgear */
-        {USB_DEVICE(0x0846, 0x6100)},
-        {USB_DEVICE(0x0846, 0x6a00)},
-        /* HP */
-        {USB_DEVICE(0x03f0, 0xca02)},
-        /*Trendnet Vendor=0bda ProdID=8189*/
-        {USB_DEVICE(0x0bda, 0x8189)},
-        /* Sitecom */
-        {USB_DEVICE(0x0df6, 0x000d)},
-        {}
-};
+P.S. Someone should cleanup init_atmel_card function from unneeded
+initializations to 0/NULL. Out of scope for this patch.
 
-When I plug the adapter in I get this under /proc/bus/usb/devices
+Signed-off-by: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
 
-T:  Bus=02 Lev=01 Prnt=01 Port=03 Cnt=01 Dev#=  3 Spd=480 MxCh= 0
-D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-P:  Vendor=0bda ProdID=8189 Rev= 2.00
-S:  Manufacturer=Manufacturer_Realtek
-S:  Product=RTL8187B_WLAN_Adapter
-S:  SerialNumber=00e04c000001
-C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
-I:* If#= 0 Alt= 0 #EPs= 9 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8187
-E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+--------------070806020003090804060808
+Content-Type: text/x-patch;
+ name="atmel_netstats.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="atmel_netstats.patch"
 
-The only other time I used wireless stuff under linux I used a distros
-built in tools, so I hope I'm doing the config correctly. Here is what
-I'm doing:
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index ef2da40..f978a9d 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -433,7 +433,6 @@ struct atmel_private {
+ 	struct net_device *dev;
+ 	struct device *sys_dev;
+ 	struct iw_statistics wstats;
+-	struct net_device_stats	stats;	// device stats
+ 	spinlock_t irqlock, timerlock;	// spinlocks
+ 	enum { BUS_TYPE_PCCARD, BUS_TYPE_PCI } bus_type;
+ 	enum {
+@@ -694,9 +693,9 @@ static void tx_done_irq(struct atmel_private *priv)
+ 
+ 		if (type == TX_PACKET_TYPE_DATA) {
+ 			if (status == TX_STATUS_SUCCESS)
+-				priv->stats.tx_packets++;
++				priv->dev->stats.tx_packets++;
+ 			else
+-				priv->stats.tx_errors++;
++				priv->dev->stats.tx_errors++;
+ 			netif_wake_queue(priv->dev);
+ 		}
+ 	}
+@@ -792,13 +791,13 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	if (priv->card && priv->present_callback &&
+ 	    !(*priv->present_callback)(priv->card)) {
+-		priv->stats.tx_errors++;
++		dev->stats.tx_errors++;
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+ 
+ 	if (priv->station_state != STATION_STATE_READY) {
+-		priv->stats.tx_errors++;
++		dev->stats.tx_errors++;
+ 		dev_kfree_skb(skb);
+ 		return 0;
+ 	}
+@@ -815,7 +814,7 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
+ 	   initial + 18 (+30-12) */
+ 
+ 	if (!(buff = find_tx_buff(priv, len + 18))) {
+-		priv->stats.tx_dropped++;
++		dev->stats.tx_dropped++;
+ 		spin_unlock_irqrestore(&priv->irqlock, flags);
+ 		spin_unlock_bh(&priv->timerlock);
+ 		netif_stop_queue(dev);
+@@ -851,7 +850,7 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
+ 	/* low bit of first byte of destination tells us if broadcast */
+ 	tx_update_descriptor(priv, *(skb->data) & 0x01, len + 18, buff, TX_PACKET_TYPE_DATA);
+ 	dev->trans_start = jiffies;
+-	priv->stats.tx_bytes += len;
++	dev->stats.tx_bytes += len;
+ 
+ 	spin_unlock_irqrestore(&priv->irqlock, flags);
+ 	spin_unlock_bh(&priv->timerlock);
+@@ -895,7 +894,7 @@ static void fast_rx_path(struct atmel_private *priv,
+ 	}
+ 
+ 	if (!(skb = dev_alloc_skb(msdu_size + 14))) {
+-		priv->stats.rx_dropped++;
++		priv->dev->stats.rx_dropped++;
+ 		return;
+ 	}
+ 
+@@ -908,7 +907,7 @@ static void fast_rx_path(struct atmel_private *priv,
+ 		crc = crc32_le(crc, skbp + 12, msdu_size);
+ 		atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + 30 + msdu_size, 4);
+ 		if ((crc ^ 0xffffffff) != netcrc) {
+-			priv->stats.rx_crc_errors++;
++			priv->dev->stats.rx_crc_errors++;
+ 			dev_kfree_skb(skb);
+ 			return;
+ 		}
+@@ -924,8 +923,8 @@ static void fast_rx_path(struct atmel_private *priv,
+ 	skb->protocol = eth_type_trans(skb, priv->dev);
+ 	skb->ip_summed = CHECKSUM_NONE;
+ 	netif_rx(skb);
+-	priv->stats.rx_bytes += 12 + msdu_size;
+-	priv->stats.rx_packets++;
++	priv->dev->stats.rx_bytes += 12 + msdu_size;
++	priv->dev->stats.rx_packets++;
+ }
+ 
+ /* Test to see if the packet in card memory at packet_loc has a valid CRC
+@@ -991,7 +990,7 @@ static void frag_rx_path(struct atmel_private *priv,
+ 			crc = crc32_le(crc, &priv->rx_buf[12], msdu_size);
+ 			atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + msdu_size, 4);
+ 			if ((crc ^ 0xffffffff) != netcrc) {
+-				priv->stats.rx_crc_errors++;
++				priv->dev->stats.rx_crc_errors++;
+ 				memset(priv->frag_source, 0xff, 6);
+ 			}
+ 		}
+@@ -1009,7 +1008,7 @@ static void frag_rx_path(struct atmel_private *priv,
+ 				       msdu_size);
+ 			atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + msdu_size, 4);
+ 			if ((crc ^ 0xffffffff) != netcrc) {
+-				priv->stats.rx_crc_errors++;
++				priv->dev->stats.rx_crc_errors++;
+ 				memset(priv->frag_source, 0xff, 6);
+ 				more_frags = 1; /* don't send broken assembly */
+ 			}
+@@ -1021,7 +1020,7 @@ static void frag_rx_path(struct atmel_private *priv,
+ 		if (!more_frags) { /* last one */
+ 			memset(priv->frag_source, 0xff, 6);
+ 			if (!(skb = dev_alloc_skb(priv->frag_len + 14))) {
+-				priv->stats.rx_dropped++;
++				priv->dev->stats.rx_dropped++;
+ 			} else {
+ 				skb_reserve(skb, 2);
+ 				memcpy(skb_put(skb, priv->frag_len + 12),
+@@ -1031,8 +1030,8 @@ static void frag_rx_path(struct atmel_private *priv,
+ 				skb->protocol = eth_type_trans(skb, priv->dev);
+ 				skb->ip_summed = CHECKSUM_NONE;
+ 				netif_rx(skb);
+-				priv->stats.rx_bytes += priv->frag_len + 12;
+-				priv->stats.rx_packets++;
++				priv->dev->stats.rx_bytes += priv->frag_len + 12;
++				priv->dev->stats.rx_packets++;
+ 			}
+ 		}
+ 	} else
+@@ -1057,7 +1056,7 @@ static void rx_done_irq(struct atmel_private *priv)
+ 			if (status == 0xc1) /* determined by experiment */
+ 				priv->wstats.discard.nwid++;
+ 			else
+-				priv->stats.rx_errors++;
++				priv->dev->stats.rx_errors++;
+ 			goto next;
+ 		}
+ 
+@@ -1065,7 +1064,7 @@ static void rx_done_irq(struct atmel_private *priv)
+ 		rx_packet_loc = atmel_rmem16(priv, atmel_rx(priv, RX_DESC_MSDU_POS_OFFSET, priv->rx_desc_head));
+ 
+ 		if (msdu_size < 30) {
+-			priv->stats.rx_errors++;
++			priv->dev->stats.rx_errors++;
+ 			goto next;
+ 		}
+ 
+@@ -1123,7 +1122,7 @@ static void rx_done_irq(struct atmel_private *priv)
+ 				msdu_size -= 4;
+ 				crc = crc32_le(crc, (unsigned char *)&priv->rx_buf, msdu_size);
+ 				if ((crc ^ 0xffffffff) != (*((u32 *)&priv->rx_buf[msdu_size]))) {
+-					priv->stats.rx_crc_errors++;
++					priv->dev->stats.rx_crc_errors++;
+ 					goto next;
+ 				}
+ 			}
+@@ -1250,12 +1249,6 @@ static irqreturn_t service_interrupt(int irq, void *dev_id)
+ 	}
+ }
+ 
+-static struct net_device_stats *atmel_get_stats(struct net_device *dev)
+-{
+-	struct atmel_private *priv = netdev_priv(dev);
+-	return &priv->stats;
+-}
+-
+ static struct iw_statistics *atmel_get_wireless_stats(struct net_device *dev)
+ {
+ 	struct atmel_private *priv = netdev_priv(dev);
+@@ -1518,8 +1511,6 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 		priv->crc_ok_cnt = priv->crc_ko_cnt = 0;
+ 	} else
+ 		priv->probe_crc = 0;
+-	memset(&priv->stats, 0, sizeof(priv->stats));
+-	memset(&priv->wstats, 0, sizeof(priv->wstats));
+ 	priv->last_qual = jiffies;
+ 	priv->last_beacon_timestamp = 0;
+ 	memset(priv->frag_source, 0xff, sizeof(priv->frag_source));
+@@ -1568,7 +1559,6 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 	dev->change_mtu = atmel_change_mtu;
+ 	dev->set_mac_address = atmel_set_mac_address;
+ 	dev->hard_start_xmit = start_tx;
+-	dev->get_stats = atmel_get_stats;
+ 	dev->wireless_handlers = (struct iw_handler_def *)&atmel_handler_def;
+ 	dev->do_ioctl = atmel_ioctl;
+ 	dev->irq = irq;
 
-/sbin/iwconfig wlan0 key restricted MYKEY essid "ssid"
-/sbin/ifconfig wlan0 up
-/sbin/dhclient wlan0
+--------------070806020003090804060808--
 
-Now #/sbin/iwconfig gives me this:
-wlan0     IEEE 802.11  ESSID:""
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
-          Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:XXXX-XXXX-XX
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-I am using Fedora 8 on a x86_64 system. My initial goal in all this
-was to get the adapter to work with my embedded linux project
-(http://opencircuits.com/Linuxstamp), but when it didn't work there I
-figured I'd try it on my host machine.
-
-Has anyone else gotten the TEW-424UB to work?
-
-thanks
-Paul
