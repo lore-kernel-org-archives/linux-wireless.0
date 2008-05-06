@@ -1,57 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56672 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755210AbYEMQ0C (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51968 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753156AbYEFACD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 12:26:02 -0400
-Subject: Re: libertas: fix command timeout after firmware failure
-From: David Woodhouse <dwmw2@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org,
-	Brian Cavagnolo <brian@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1210695568.9976.3.camel@localhost.localdomain>
-References: <1210683299.3582.240.camel@pmac.infradead.org>
-	 <1210695568.9976.3.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Tue, 13 May 2008 17:25:48 +0100
-Message-Id: <1210695948.3582.267.camel@pmac.infradead.org> (sfid-20080513_182607_546782_180352AF)
+	Mon, 5 May 2008 20:02:03 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, herbert@gondor.apana.org.au
+In-Reply-To: <20080505.163916.239187195.davem@davemloft.net>
+References: <1210027447.8012.15.camel@johannes.berg>
+	 <20080505.161458.46071527.davem@davemloft.net>
+	 <1210029835.8012.30.camel@johannes.berg>
+	 <20080505.163916.239187195.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BvfQ5byRedqdwcCaM0lX"
+Date: Tue, 06 May 2008 02:01:16 +0200
+Message-Id: <1210032076.8012.49.camel@johannes.berg> (sfid-20080506_020122_918900_864E4FF1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-05-13 at 12:19 -0400, Dan Williams wrote:
-> On Tue, 2008-05-13 at 13:54 +0100, David Woodhouse wrote:
-> > From: Brian Cavagnolo <brian@cozybit.com>
-> > 
-> > This is a fix for OLPC ticket #6586: "SCAN command fails, timer doesn't
-> > fire". In fact, the timer was firing; the problem was that the dnld_sent
-> > state variable was not being updated after the timer expired, so
-> > lbs_execute_next_command was not being called.
-> > 
-> > Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-> > Signed-off-by: Javier Cardona <javier@cozybit.com>
-> > Signed-off-by: David Woodhouse <dwmw2@infradead.org>
-> > 
-> > ---
-> > Bug fix, for 2.6.26 please.
-> > 
-> > --- a/drivers/net/wireless/libertas/main.c
-> > +++ b/drivers/net/wireless/libertas/main.c
-> > @@ -756,6 +756,7 @@ static int lbs_thread(void *data)
-> >  				priv->nr_retries = 0;
-> >  			} else {
-> >  				priv->cur_cmd = NULL;
-> > +				priv->dnld_sent = DNLD_RES_RECEIVED;
-> >  				lbs_pr_info("requeueing command %x due to timeout (#%d)\n",
-> >  					    le16_to_cpu(cmdnode->cmdbuf->command), priv->nr_retries);
-> 
-> We really need to kill dnld_sent.
 
-Yes. I almost managed it at one point but I think I wanted to get set up
-to set on CF and SD hardware before I really did it.
+--=-BvfQ5byRedqdwcCaM0lX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-dwmw2
+
+> > Which buffer? skb->data..skb->tail? And isn't that, in mac80211's case,
+> > at least currently all the buffer anyway?
+>=20
+> Right.
+>=20
+> For TSO or cases using frag lists of frag page vectors, it gets
+> more complicated.
+
+Yeah, but at least right now we don't accept any of those. That might
+change, but even then we'll only care about the headroom (and maybe for
+TKIP the crypto MIC that's at the end, assuming the hardware does the
+encryption which it usually does), but we can stick that elsewhere and
+just DMA it on.
+
+> Basically, skb_header_cloned()=3D=3Dfalse means that you can modify
+> anything covered by skb->data..skb->tail
+
+Ok.
+
+> > Interesting point. I'll have to see when socket filters are run,
+> > wpa_supplicant could have a tap open I think. Maybe that's why I'm
+> > seeing so many cloned packets. I think I'll stacktrace skb_clone and
+> > print that out.
+>=20
+> Note that we can even optimize that case even further if we really
+> have to.
+>=20
+> But try to see why the filter used by WPA Supplicant is not effective.
+> If the filter fails to match, the packet is free'd immediately using
+> kfree_skb() which should undo clone'age.
+
+Right. I just checked, and realised I remembered wrongly, wpa_supplicant
+actually binds the socket to the ethertype it wants so
+dev_queue_xmit_nit() shouldn't be called. I'll have to check why I got
+so many cloned packets, best see if it still happens with the
+header_cloned() change.
+
+johannes
+
+--=-BvfQ5byRedqdwcCaM0lX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASB+fy6Vg1VMiehFYAQIGixAAlHbcLZR592ppU7gJuw23z5UYc+c9fOff
+UnYXOXxJatKZYAN3KwkNZ56knFqRnVUTA4xn7G2BYaftabMsAmJ9MovugCohWVcr
+RSUYntBXmoc51bzHW0WlsdHufDXJZzCNl43mBrpmNBbBZiDhSfFxg1WoDtDxuyJO
+0YWVg5he/E/p097czCn/Q782Qm6qCbtygVdFfOXjs9wsKvT36xqUXQ1Al23VN+9M
+gY9h1OEKI32IpazuY8Kv7K2UT5Oi2i282NRgRdctyHjnDIOK1fa1CFwW9EzQ9ZsV
+rnCEzRnMCZ2bvkrWY3fjlQ/pocj1vJjAbJyni6uRsXLugDEleIz4NrdR9QqpHOJM
+fA5nLSIIlBmPySsqmkYxhbKEdaY5lUQNTZ2gYxbf39I2OAXvyTx9zS0ol5rpThCH
+THUemukddTQJMLQxWKTrxKQj8FySvLxWvxYTNfss9hMWuL1fN8PK7RpBRTWrM0Eo
+Y2ebQjxFCn+pTxReuKJ9epGty/Z5um0FlAKy1pHqb6zsLvsx5fPL7RcEIUTJo7VA
+53OiosJniF+9ZXakQ9Zv6Vvo+2Zl4GmOUhkEXfEcZ1biAXrxK753F6pRd1Q8AH5n
+nEqQzkXkfCcPqDo9Zdugu20bMnX1W5UB9euYAwXwXzsYCY+JuFUhnAH1c5MAK5W0
+GX+Us1ytMbI=
+=N2Br
+-----END PGP SIGNATURE-----
+
+--=-BvfQ5byRedqdwcCaM0lX--
 
