@@ -1,285 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35504 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756027AbYENX1H (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:65185 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbYEFKMY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:07 -0400
-Message-Id: <200805142326.m4ENQJSN027096@imap1.linux-foundation.org> (sfid-20080515_012711_665953_B1C74508)
-Subject: [patch 06/12] mac80211: add a struct to hold tkip context
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:19 -0700
+	Tue, 6 May 2008 06:12:24 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1605752rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 03:12:24 -0700 (PDT)
+Message-ID: <a32f33a40805060312o1ace5e69m681f0a6a0e8c42e8@mail.gmail.com> (sfid-20080506_121147_357260_D7CC431C)
+Date: Tue, 6 May 2008 12:12:23 +0200
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [Rt2400-devel] rt2500usb current git BUG
+Cc: "Luis Correia" <luis.f.correia@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <1210067810.8012.80.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <efe7343f0804291454p40914cadpf06846270d080e2@mail.gmail.com>
+	 <a32f33a40805060206l1af71db0tced88dd3d3d08c30@mail.gmail.com>
+	 <1210066571.8012.73.camel@johannes.berg>
+	 <a32f33a40805060249s2e20455fk88825329386b7475@mail.gmail.com>
+	 <1210067810.8012.80.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+On 5/6/08, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> > But hadn't you removed the RTNL locking to make the multi-BSS code easier?
+>
+> Well, yes, but that applies mostly to mac80211's internal BSS/interface
+> list handling. We still use the RTNL for list updates so iterating the
+> list holding the RTNL is the way to go if you need schedulable access.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Ok excellent. I'll cook up a patch then. :)
 
- net/mac80211/cfg.c         |    4 +-
- net/mac80211/debugfs_key.c |    8 ++---
- net/mac80211/key.h         |   17 +++++------
- net/mac80211/tkip.c        |   54 +++++++++++++++++------------------
- net/mac80211/wpa.c         |   16 +++++-----
- 5 files changed, 50 insertions(+), 49 deletions(-)
+> > I think I can code around the problem to make the ERP configuration do
+> > a simple check if any interface has short preamble, and if that is the
+> > case all interfaces will have short preamble. The same would go for
+> > short slot time.
+> > Apparently the current code was broken in that respect anyway since it
+> > would assume the timing of the last interface in the list.
+>
+> I think that's not going to currently happen at all since we have no API
+> for hostapd to set short slot/preamble at all! :) And this sort of
+> complication is why we have no such setting, some hardware like b43 is
+> able to set short preamble per frame (!) so there the setting could be
+> per BSS, but hostapd would have to know.
 
-diff -puN net/mac80211/cfg.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/cfg.c
---- a/net/mac80211/cfg.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/cfg.c
-@@ -256,8 +256,8 @@ static int ieee80211_get_key(struct wiph
- 	case ALG_TKIP:
- 		params.cipher = WLAN_CIPHER_SUITE_TKIP;
- 
--		iv32 = key->u.tkip.iv32;
--		iv16 = key->u.tkip.iv16;
-+		iv32 = key->u.tkip.tx.iv32;
-+		iv16 = key->u.tkip.tx.iv16;
- 
- 		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
- 		    sdata->local->ops->get_tkip_seq)
-diff -puN net/mac80211/debugfs_key.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/debugfs_key.c
---- a/net/mac80211/debugfs_key.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/debugfs_key.c
-@@ -97,8 +97,8 @@ static ssize_t key_tx_spec_read(struct f
- 		break;
- 	case ALG_TKIP:
- 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
--				key->u.tkip.iv32,
--				key->u.tkip.iv16);
-+				key->u.tkip.tx.iv32,
-+				key->u.tkip.tx.iv16);
- 		break;
- 	case ALG_CCMP:
- 		tpn = key->u.ccmp.tx_pn;
-@@ -128,8 +128,8 @@ static ssize_t key_rx_spec_read(struct f
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 			p += scnprintf(p, sizeof(buf)+buf-p,
- 				       "%08x %04x\n",
--				       key->u.tkip.iv32_rx[i],
--				       key->u.tkip.iv16_rx[i]);
-+				       key->u.tkip.rx[i].iv32,
-+				       key->u.tkip.rx[i].iv16);
- 		len = p - buf;
- 		break;
- 	case ALG_CCMP:
-diff -puN net/mac80211/key.h~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/key.h
---- a/net/mac80211/key.h~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/key.h
-@@ -69,6 +69,13 @@ enum ieee80211_internal_key_flags {
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
- };
- 
-+struct tkip_ctx {
-+	u32 iv32;
-+	u16 iv16;
-+	u16 p1k[5];
-+	int initialized;
-+};
-+
- struct ieee80211_key {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -85,16 +92,10 @@ struct ieee80211_key {
- 	union {
- 		struct {
- 			/* last used TSC */
--			u32 iv32;
--			u16 iv16;
--			u16 p1k[5];
--			int tx_initialized;
-+			struct tkip_ctx tx;
- 
- 			/* last received RSC */
--			u32 iv32_rx[NUM_RX_DATA_QUEUES];
--			u16 iv16_rx[NUM_RX_DATA_QUEUES];
--			u16 p1k_rx[NUM_RX_DATA_QUEUES][5];
--			int rx_initialized[NUM_RX_DATA_QUEUES];
-+			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
-diff -puN net/mac80211/tkip.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/tkip.c
-@@ -138,7 +138,7 @@ u8 *ieee80211_tkip_add_iv(u8 *pos, struc
- 	*pos++ = iv1;
- 	*pos++ = iv2;
- 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
--	put_unaligned_le32(key->u.tkip.iv32, pos);
-+	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
- 	return pos + 4;
- }
- 
-@@ -146,16 +146,16 @@ static void ieee80211_tkip_gen_rc4key(st
- 			       u8 *rc4key)
- {
- 	/* Calculate per-packet key */
--	if (key->u.tkip.iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   key->u.tkip.iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+				   key->u.tkip.tx.iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv16, rc4key);
-+			   key->u.tkip.tx.iv16, rc4key);
- }
- 
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
-@@ -179,9 +179,9 @@ void ieee80211_get_tkip_key(struct ieee8
- 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
- 			iv16, iv32);
- 
--	if (iv32 != key->u.tkip.iv32) {
-+	if (iv32 != key->u.tkip.tx.iv32) {
- 		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
--			iv32, key->u.tkip.iv32);
-+			iv32, key->u.tkip.tx.iv32);
- 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
- 			"fragmented packet\n");
- 	}
-@@ -190,19 +190,19 @@ void ieee80211_get_tkip_key(struct ieee8
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
- 	 * fragmented packets. */
--	if (iv16 == 0 || !key->u.tkip.tx_initialized) {
-+	if (iv16 == 0 || !key->u.tkip.tx.initialized) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			iv32, key->u.tkip.p1k);
--		key->u.tkip.tx_initialized = 1;
-+			iv32, key->u.tkip.tx.p1k);
-+		key->u.tkip.tx.initialized = 1;
- 	}
- 
- 	if (type == IEEE80211_TKIP_P1_KEY) {
--		memcpy(outkey, key->u.tkip.p1k, sizeof(u16) * 5);
-+		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
- 		return;
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k,
-+	tkip_mixing_phase2(key->u.tkip.tx.p1k,
- 		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
-@@ -263,33 +263,33 @@ int ieee80211_tkip_decrypt_data(struct c
- 	if ((keyid >> 6) != key->conf.keyidx)
- 		return TKIP_DECRYPT_INVALID_KEYIDX;
- 
--	if (key->u.tkip.rx_initialized[queue] &&
--	    (iv32 < key->u.tkip.iv32_rx[queue] ||
--	     (iv32 == key->u.tkip.iv32_rx[queue] &&
--	      iv16 <= key->u.tkip.iv16_rx[queue]))) {
-+	if (key->u.tkip.rx[queue].initialized &&
-+	    (iv32 < key->u.tkip.rx[queue].iv32 ||
-+	     (iv32 == key->u.tkip.rx[queue].iv32 &&
-+	      iv16 <= key->u.tkip.rx[queue].iv16))) {
- #ifdef CONFIG_TKIP_DEBUG
- 		DECLARE_MAC_BUF(mac);
- 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
- 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
- 		       print_mac(mac, ta),
--		       iv32, iv16, key->u.tkip.iv32_rx[queue],
--		       key->u.tkip.iv16_rx[queue]);
-+		       iv32, iv16, key->u.tkip.rx[queue].iv32,
-+		       key->u.tkip.rx[queue].iv16);
- #endif /* CONFIG_TKIP_DEBUG */
- 		return TKIP_DECRYPT_REPLAY;
- 	}
- 
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
--		key->u.tkip.rx_initialized[queue] = 1;
-+		key->u.tkip.rx[queue].initialized = 1;
- 		goto done;
- 	}
- 
--	if (!key->u.tkip.rx_initialized[queue] ||
--	    key->u.tkip.iv32_rx[queue] != iv32) {
--		key->u.tkip.rx_initialized[queue] = 1;
-+	if (!key->u.tkip.rx[queue].initialized ||
-+	    key->u.tkip.rx[queue].iv32 != iv32) {
-+		key->u.tkip.rx[queue].initialized = 1;
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--				   iv32, key->u.tkip.p1k_rx[queue]);
-+				   iv32, key->u.tkip.rx[queue].p1k);
- #ifdef CONFIG_TKIP_DEBUG
- 		{
- 			int i;
-@@ -303,7 +303,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 			printk("\n");
- 			printk(KERN_DEBUG "TKIP decrypt: P1K=");
- 			for (i = 0; i < 5; i++)
--				printk("%04x ", key->u.tkip.p1k_rx[queue][i]);
-+				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
- 			printk("\n");
- 		}
- #endif /* CONFIG_TKIP_DEBUG */
-@@ -318,11 +318,11 @@ int ieee80211_tkip_decrypt_data(struct c
- 
- 			key->local->ops->update_tkip_key(
- 				local_to_hw(key->local), &key->conf,
--				sta_addr, iv32, key->u.tkip.p1k_rx[queue]);
-+				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
- 		}
- 	}
- 
--	tkip_mixing_phase2(key->u.tkip.p1k_rx[queue],
-+	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
- 			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
- 			   iv16, rc4key);
- #ifdef CONFIG_TKIP_DEBUG
-diff -puN net/mac80211/wpa.c~mac80211-add-a-struct-to-hold-tkip-context net/mac80211/wpa.c
---- a/net/mac80211/wpa.c~mac80211-add-a-struct-to-hold-tkip-context
-+++ a/net/mac80211/wpa.c
-@@ -176,8 +176,8 @@ ieee80211_rx_h_michael_mic_verify(struct
- 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
- 
- 	/* update IV in key information to be able to detect replays */
--	rx->key->u.tkip.iv32_rx[rx->queue] = rx->tkip_iv32;
--	rx->key->u.tkip.iv16_rx[rx->queue] = rx->tkip_iv16;
-+	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
-+	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
- 
- 	return RX_CONTINUE;
- }
-@@ -214,19 +214,19 @@ static int tkip_encrypt_skb(struct ieee8
- 	pos += hdrlen;
- 
- 	/* Increase IV for the frame */
--	key->u.tkip.iv16++;
--	if (key->u.tkip.iv16 == 0)
--		key->u.tkip.iv32++;
-+	key->u.tkip.tx.iv16++;
-+	if (key->u.tkip.tx.iv16 == 0)
-+		key->u.tkip.tx.iv32++;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* hwaccel - with preallocated room for IV */
- 		ieee80211_tkip_add_iv(pos, key,
--				      (u8) (key->u.tkip.iv16 >> 8),
--				      (u8) (((key->u.tkip.iv16 >> 8) | 0x20) &
-+				      (u8) (key->u.tkip.tx.iv16 >> 8),
-+				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
- 					    0x7f),
--				      (u8) key->u.tkip.iv16);
-+				      (u8) key->u.tkip.tx.iv16);
- 
- 		tx->control->hw_key = &tx->key->conf;
- 		return 0;
-_
+Good point, the only time it is set is when the STA interface associates,
+and since there is no support for multiple virtual STA interfaces or
+mixed AP and STA interface the problem won't surface.. :)
+
+> > As for the beaconing, the only location I cannot get around updating
+> > the beacon in the driver from scheduled context is in the
+> > suspend/resume path. And I believe resuming a mac80211 network
+> > interface is already a source of problems anyway...
+> > Well I'll dive a bit deeper into this and see what can be done about this.
+>
+> Feel free to add an iterator to mac80211 that uses the rtnl if that
+> helps, adding more code to workaround the fact that it doesn't exist
+> doesn't seem too hot since this was exactly added for that reason (and I
+> think you're the only user of that iterator...)
+
+Excellent, Thanks.
+
+Ivo
