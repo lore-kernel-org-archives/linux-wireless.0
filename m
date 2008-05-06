@@ -1,85 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57810 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbYE1UTL (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:49407 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364AbYEFHWc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 16:19:11 -0400
-Subject: Re: Linux 2.6.26-rc4
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
-	<ariveira@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <alpine.LFD.1.10.0805281307150.2958@woody.linux-foundation.org> (sfid-20080528_221047_669541_BE57D5DF)
-References: <alpine.LFD.1.10.0805261127030.2958@woody.linux-foundation.org>
-	 <20080527124315.131b1343@Varda>
-	 <alpine.LFD.1.10.0805281307150.2958@woody.linux-foundation.org>
-	 (sfid-20080528_221047_669541_BE57D5DF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9XnJ+yhkO3WoZphoPs9o"
-Date: Wed, 28 May 2008 22:17:57 +0200
-Message-Id: <1212005877.21624.47.camel@johannes.berg> (sfid-20080528_221915_577916_8035FB84)
-Mime-Version: 1.0
+	Tue, 6 May 2008 03:22:32 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1463491wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 00:22:31 -0700 (PDT)
+Message-ID: <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com> (sfid-20080506_092147_486596_DE0843A8)
+Date: Tue, 6 May 2008 09:22:31 +0200
+From: drago01 <drago01@gmail.com>
+To: "Emmanuel Grumbach" <egrumbach@gmail.com>
+Subject: Re: dynamic wep with mulitple keys
+Cc: "Volker Braun" <vbraun@physics.upenn.edu>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
+	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
+	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> >  I just tried compat-wireless-2008-05-05, which does contain
+>  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
+>  >
+>
+>  Thanks for trying this.
+>  Can you try to load the module with swcrypto=1 and try again ?
+>  This disables the HW encryption acceleration. Trying this will allow
+>  to make 100% sure that the bug is in iwlwifi. The bug is likely to be
+>  there, but I think it is worth to make this 100% sure.
 
---=-9XnJ+yhkO3WoZphoPs9o
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Well it happens for me with iwl3945 which uses swcrypto by default see:
 
-
-> >  4) if i try to run some sudo command it gets stuck (Crtl +C doesnt' he=
-lp)
-> >     "ip route" gets stuck too. User programs i tried wrok fine (only ls=
- and
-> >     htop). Network realted problem?
->=20
-> I assume it's related to the oops above - the oops probably happened whil=
-e=20
-> holding some mutex or other lock, which is why network-related stuff then=
-=20
-> blocks on that lock (which will never be released, since the oops killed=20
-> the process that held it).
-
-rtnl, in fact, I suspect.
-=EF=BB=BF
-> I suspect the oops is also why the bootup breaks, so it's likely all the=20
-> same issue. Please save the dmesg into a file, reboot into a working=20
-> setup, and send that. Along with hw information (it's likely related to=20
-> your network device driver, since I've not seen an uproar of these kinds=20
-> of problems from everybody else..).
-
-Actually, please apply the patch "=EF=BB=BFrt2x00: Use atomic interface
-iteration in irq context" before trying anything more, that'll fix it.
-I'm not sure where Linville is hiding ;)
-
-(http://article.gmane.org/gmane.linux.kernel.wireless.general/15268)
-
-johannes
-
---=-9XnJ+yhkO3WoZphoPs9o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASD299KVg1VMiehFYAQIiEg/8C+iLVxvWEFSi+C784nrvRe/3ZBxkVut2
-gtczpascZyZii9Xr6pNWoRvl4U70gOx37KMMXCL49vxhqsKFICu6IKl9lZbCLY/H
-8P/kl1vB/pFe7MoR+P3IsUIKFajHFKHeKApDSNpizRCZVXxHBg7vwF+ldni74ILQ
-kz8IXgi2TmUJ+GSQcEPzH0f0xwObILlCh1LrXOwRBC+hXE8qPY+S6ovJKHdkT4Zu
-e3fxGr2kGejzKvgOpnuL3NGThfqNpLwBnv0FQy09IjHBFAPvAhQHDeufmmCa9xIw
-ppi5BkY3uuAdKY5J+CbIPdu8eWTtWAOCKFDgYwmxPGd/WnODbVGaQ4T4E8y24YA0
-A0DRrtmvh6lJ83olfu/xSMyi2Wx1oDvoHO84KYvFwgXLT8lUMVstOx4tYUrb+Dnd
-t3OSc4GU2iBh8bjqD0dv5ZIMXEyReknwbocRTi7N9VQ446zmnf0GEEseU/N8Q5JZ
-4leTPFtSsDQr7MtAA2a610wcTH+v17NPFZ9UpeJ6Plujoe1TbW0DFNl1+Mko8az2
-yVWny7EyfF1UUBYnBuTok5B8UC3YmfTNRgFTYbF98DF+Hl+ydOFs4kB/sbYMLRLe
-8H+2ZCxif+n/YL4AWx3qVnuJQsyPpqwaIj2OPepOAZjFAyf1fmXOXiEo9y36fJlU
-RT2MvVW69Kg=
-=w69Z
------END PGP SIGNATURE-----
-
---=-9XnJ+yhkO3WoZphoPs9o--
-
+http://marc.info/?l=linux-wireless&m=120699235803881&w=2
