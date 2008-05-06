@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.188]:15965 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758208AbYEUT6M (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:48598 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393AbYEFHcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 15:58:12 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so904063gvc.37
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 12:58:11 -0700 (PDT)
-Message-ID: <445f43ac0805211251v12f49c26j540bf3763bc4dd27@mail.gmail.com> (sfid-20080521_215816_450933_4A9640CD)
-Date: Wed, 21 May 2008 12:51:20 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	carrano@laptop.org, dilinger@queued.net
-In-Reply-To: <1211398105.21380.371.camel@pmac.infradead.org>
+	Tue, 6 May 2008 03:32:06 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1047235fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 00:32:04 -0700 (PDT)
+Message-ID: <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com> (sfid-20080506_093124_576526_1AF77816)
+Date: Tue, 6 May 2008 10:32:04 +0300
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: drago01 <drago01@gmail.com>
+Subject: Re: dynamic wep with mulitple keys
+Cc: "Volker Braun" <vbraun@physics.upenn.edu>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <4832422a.20018e0a.6b37.3217@mx.google.com>
-	 <1211292718.21380.238.camel@pmac.infradead.org>
-	 <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com>
-	 <1211396780.21380.368.camel@pmac.infradead.org>
-	 <445f43ac0805211218v58d33458v41d0d11f98ed4f14@mail.gmail.com>
-	 <1211398105.21380.371.camel@pmac.infradead.org>
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
+	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
+	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
+	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David,
-
-On Wed, May 21, 2008 at 12:28 PM, David Woodhouse <dwmw2@infradead.org> wrote:
-> On Wed, 2008-05-21 at 12:18 -0700, Javier Cardona wrote:
->> You need a live endpoint to send a CMD_802_11_RESET, which you won't
->> have if the device did not respond to USB enumeration because it was
->> in standalone mode.
+On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
+> On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>  > >  I just tried compat-wireless-2008-05-05, which does contain
+>  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
+>  >  >
+>  >
+>  >  Thanks for trying this.
+>  >  Can you try to load the module with swcrypto=1 and try again ?
+>  >  This disables the HW encryption acceleration. Trying this will allow
+>  >  to make 100% sure that the bug is in iwlwifi. The bug is likely to be
+>  >  there, but I think it is worth to make this 100% sure.
 >
-> Hm, did that behaviour change recently? I'm sure this recovery was
-> working before.
+>  Well it happens for me with iwl3945 which uses swcrypto by default see:
+>
+>  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
+>
 
-I don't think we've ever been able to communicate over USB with a
-dongle that is in standalone mode.
-
-Javier
-
+Actually, I made quite a lot of changes in security in iwl4965 that
+are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
+The security code is not the same between 3945 and 4965
 
 -- 
-Javier Cardona
-cozybit Inc.
+Emmanuel Grumbach
+egrumbach@gmail.com
