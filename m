@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37012 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53263 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532AbYEDBzu (ORCPT
+	with ESMTP id S1764945AbYEFJSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 21:55:50 -0400
-Subject: frame status API? (was: mac80211 truesize bugs)
+	Tue, 6 May 2008 05:18:00 -0400
+Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU
+	SW queue
 From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1209607368.7173.20.camel@johannes.berg> (sfid-20080501_040316_946673_DB8C2769)
-References: <1209607368.7173.20.camel@johannes.berg>
-	 (sfid-20080501_040316_946673_DB8C2769)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vwzL6umTWv5BivgCQKHn"
-Date: Sun, 04 May 2008 03:55:41 +0200
-Message-Id: <1209866141.6210.32.camel@johannes.berg> (sfid-20080504_035519_677396_1B40CD72)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com> (sfid-20080506_110823_078106_5D0EDF31)
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
+	 (sfid-20080506_110823_078106_5D0EDF31)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cZU7JU+Fnt2v/Jsf3k1K"
+Date: Tue, 06 May 2008 11:16:56 +0200
+Message-Id: <1210065416.8012.56.camel@johannes.berg> (sfid-20080506_111731_516887_C43643ED)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vwzL6umTWv5BivgCQKHn
+--=-cZU7JU+Fnt2v/Jsf3k1K
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-
-> Whenever you run a monitor interface in mac80211, you can see lots of
-> truesize bugs:
+On Tue, 2008-05-06 at 12:09 +0300, Tomas Winkler wrote:
+> On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> >
+> >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introd=
+uced
+> >  in patch "mac80211: QoS related cleanups"), when trying to perform
+> >  ieee80211_wake_queue.
+> >
+> >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> >
 >=20
-> SKB BUG: Invalid truesize (464) len=3D307, sizeof(sk_buff)=3D176
->=20
-> It appears to be caused by mac80211's re-injection of the transmitted
-> frame.
+> Is this going to make it to 2.6.26?
+> Without this it will be hard to run 5000 under 2.6.26 as is.
 
-Regardless of the fact that I'm pretty sure that we have bugs with
-respect to pskb_expand_head in mac80211 that for some reason never show
-up unless you add monitors, this re-injection of frames is quite a hack.
-
-For one, it means that on a monitor interface you see every outgoing
-frame, even if it wasn't sent on that interface. That's actually quite
-nice, especially for debugging, but I think we can already see all
-transmitted packets on the master interface.
-
-Secondly, it means that actually injected packets show up twice, first
-via dev_queue_xmit_nit and then via the status reporting.
-
-Also, if we ever want to move towards an API where the driver need not
-give a TX status report for every frame (some hardware cannot do this)
-then this is at best a hack since we do not know the exact status for a
-frame.
-
-On the other hand, hostapd requires knowing whether a specific frame was
-acknowledged.
-
-Does anyone have any ideas how to implement such a status query for a
-frame that was sent? What hostapd does is open a raw socket and simply
-send a frame, but it needs to know whether that frame was acknowledged
-so currently it also listens on a monitor and checks all outgoing
-frames, which is suboptimal anyway.
-
-The only thing I could so far think of is like the socket timestamps but
-that seems rather bad to do for such a special case.
+The referenced QoS cleanup patch isn't in 2.6.26 is it?
 
 johannes
 
---=-vwzL6umTWv5BivgCQKHn
+--=-cZU7JU+Fnt2v/Jsf3k1K
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASB0XnKVg1VMiehFYAQKOoxAAwbzUBDKEIul2NZx8faDAN0AGcfE5qDa8
-ygAZ6WTnu+EZc5yfPZZn7qwjMrIi3Ff5W7juVzklVmVEXbNwdvEfTof9dKjvqDAM
-ZfvMBCb0JxOxXZfZU1OySDlktfiXQJd2PiXdPdTZ4Xi4+0+erO4A8SYOE61H5+5w
-rT4luH7qIf6c5dBZ9kv2pZB/w7dVyqJtUBPgaPCZe3qrhubfQcsOuSpt3o6PcTm/
-NH/iMujOXA5lPJKQw3eDYurlPzKqwEj5g+nO4fHIySyvGy84emUrwt++DBYB394w
-EJ7l4ox4ccKw6boRKr36F22jUptq7bpW/nKAllYxrStmv7Aefi3ABeSCVGJH+stL
-M06hFJXgUT65JRW4XK4Rk8tpuoYwD7WJbHVz9XBgVLjOJW1xxyjeTzPKanM8WvDj
-4qvVg+aUfrE0X7UJUumWQHlHXg+g6Ko6ZipMxxBZduNXBDlgQHCmtM3vWKh2VaVy
-xpZiMCTQ1CJjAdl4MxzoY6UF9V7Pn+07/hi91nzfqylzOAR2sy4gbAmNPCY00TG3
-u/QD5knq1vnPnEW7L2qI99YlDu2RS4P180HsvrqYtsg+Y/ENh3MI0MwAQxam+FDV
-Ol8BUd5cRC+iypTOARaLaKPzm8w+8bA3mOXt0um+ysYayyNuzwF83903u+W1chlk
-fFe8Hr7DXck=
-=RxM5
+iQIVAwUASCAiB6Vg1VMiehFYAQJ5mBAAhBCUUAdZHqRBfS1of2iKqzED5tRYo8rb
+e4/CqxvRGw9evB4jX2xXa3SZVVOlztIel3X4BBB8tGh4D8BCSNcKGUYdFh12P646
+q/IsraWvLS4OfSP1f7WPp3glaz1MUnEzL6lM7TBckHzs5Tt8zR1kCWcpNGTsTRoE
+UKuBOsLu3t+J2zCPOWPivDNMLLV5wGNpdldlWQiimMgqWl0T67y5gMgQuIkAqjBo
+nYcMS8VG4C5TciqHgV5STB8729m5pAjcHzwLln2vEYYFj9DxfhsuIzwhxh9LKtmC
+sADZtiMMzjX1BpLh2Dl5Hoy72xf9FMirIShcZhCP6XgMxfaVcfIYQGtPDAUJaJ+F
+X/4rgNzMz5FSm+oZ+nGc7qWDyVpjpeoeTpXltFdRPBgWYNqCxjlPJKOR354+B1d4
+Cc2H58GAxf8nEpTN+vzA/+BYX3IhqaMxdvsNurOUK3GyxjNAYXw1vfXsA/SOCrye
+eFylVqxpyxacv6QCliY19YGWAR2X9l94GzQ3mQt3p+MDvotEX9D8o4HzwRu6Nsz/
+5R+qpkAooHVd638i305cK5pUQZyKs4z0cAsR7+hD63Zq5eNp4kU9Z7D70bSMLEap
+dtmhBITXRUzAU6rPo7e9BlUkxehbqQ1Hwnx2ekr1yhUoCYTJE3mwtXq3lxqmKMWe
+8O4aQulG3yU=
+=ojS7
 -----END PGP SIGNATURE-----
 
---=-vwzL6umTWv5BivgCQKHn--
+--=-cZU7JU+Fnt2v/Jsf3k1K--
 
