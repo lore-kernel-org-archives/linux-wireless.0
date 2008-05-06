@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:27593 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754952AbYEYU2K (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43770
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753276AbYEFAIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 May 2008 16:28:10 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: before sleeping, check for a command result
-Date: Sun, 25 May 2008 22:28:05 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <002701c8bce1$04097010$0137550a@se.axis.com> <1211553146.31559.30.camel@localhost.localdomain>
-In-Reply-To: <1211553146.31559.30.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805252228.06316.hs4233@mail.mn-solutions.de> (sfid-20080525_222815_773837_88AF990D)
+	Mon, 5 May 2008 20:08:06 -0400
+Date: Mon, 05 May 2008 17:08:05 -0700 (PDT)
+Message-Id: <20080505.170805.127854312.davem@davemloft.net> (sfid-20080506_020723_205274_822CDDD7)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, herbert@gondor.apana.org.au
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210032076.8012.49.camel@johannes.berg>
+References: <1210029835.8012.30.camel@johannes.berg>
+	<20080505.163916.239187195.davem@davemloft.net>
+	<1210032076.8012.49.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The thing is: now I don't have the issue that I reported
-in the first message of this thread anymore. Libertas
-works as expected without the patch.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 06 May 2008 02:01:16 +0200
 
-I'm on wireless-testing v2.6.26-rc3-8056-gc2c4044 and have the
-following patches applied:
+> Right. I just checked, and realised I remembered wrongly, wpa_supplicant
+> actually binds the socket to the ethertype it wants so
+> dev_queue_xmit_nit() shouldn't be called. I'll have to check why I got
+> so many cloned packets, best see if it still happens with the
+> header_cloned() change.
 
-libertas-fix-lock.patch
-libertas-fix-printk.patch
-libertas-if-cs-speed-firmware.patch
-libertas-if-cs-int.patch
+skb_cloned() is fine, that's what every TCP packet is.
 
+skb_header_cloned() is what we expect to be false
 
-Compared to friday, I also turned on the following kernel debug
-options:
-
-+CONFIG_DEBUG_KERNEL=y
-+CONFIG_DETECT_SOFTLOCKUP=y
-+CONFIG_DEBUG_PREEMPT=y
-+CONFIG_DEBUG_RT_MUTEXES=y
-+CONFIG_DEBUG_PI_LIST=y
-+CONFIG_DEBUG_SPINLOCK=y
-+CONFIG_DEBUG_MUTEXES=y
-+CONFIG_DEBUG_LOCK_ALLOC=y
-+CONFIG_PROVE_LOCKING=y
-+CONFIG_LOCKDEP=y
-+CONFIG_LOCK_STAT=y
-+CONFIG_TRACE_IRQFLAGS=y
-+CONFIG_DEBUG_SPINLOCK_SLEEP=y
-
-Yet associating and executing of commands works fine. I
-did run "while true; do iwconfig eth1; sleep 0.2; done"
-quite long (up to sequence number 8804) and did not
-have any hickup.
-
-On friday, I even saw the hickup on the first commands/response ...
-
+I look forward to the results of your investigation :-)
