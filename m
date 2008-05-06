@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52202 "EHLO mx1.redhat.com"
+Received: from mail.axxeo.de ([82.100.226.146]:33297 "EHLO mail.axxeo.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751419AbYEWNkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 09:40:45 -0400
-Subject: Re: [PATCH] libertas: use lbs_pr_XX instead of printk
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200805231216.51953.hs4233@mail.mn-solutions.de>
-References: <200805231216.51953.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 23 May 2008 09:40:25 -0400
-Message-Id: <1211550025.31559.2.camel@localhost.localdomain> (sfid-20080523_154047_270183_11CE075A)
-Mime-Version: 1.0
+	id S1752940AbYEFRVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 13:21:22 -0400
+From: Ingo Oeser <netdev@axxeo.de>
+To: Pavel Emelyanov <xemul@openvz.org>
+Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock.
+Date: Tue, 6 May 2008 18:40:37 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+References: <48206F4C.5050105@openvz.org>
+In-Reply-To: <48206F4C.5050105@openvz.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805061840.37713.netdev@axxeo.de> (sfid-20080506_192034_284153_6A299460)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-05-23 at 12:16 +0200, Holger Schurig wrote:
-> ... because lbs_pr_XXX prefixes all messages with "libertas: "
+Hi Pavel,
+
+regarding:
+
+[PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock
+[PATCH 2/4][MAC80211]: Fix not checked kmalloc() result
+
+Pavel Emelyanov schrieb:
+> The mesh_path_add() read-locks the pathtbl_resize_lock and calls
+> kmalloc with GFP_KERNEL mask.
 > 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> Fix it and move the endadd2 label lower. It should be _before_ the
+> if() beyond, but it makes no sense for it being there, so I move it
+> right after this if().
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+What about doing both allocations in succession to local variables,
+share the failure path if an error occours an kfree them unconditionally 
+like this?
 
-> --- linux.orig/drivers/net/wireless/libertas/cmd.c
-> +++ linux/drivers/net/wireless/libertas/cmd.c
-> @@ -110,7 +110,7 @@
->  	 * CF card    firmware 5.0.16p0:   cap 0x00000303
->  	 * USB dongle firmware 5.110.17p2: cap 0x00000303
->  	 */
-> -	printk("libertas: %s, fw %u.%u.%up%u, cap 0x%08x\n",
-> +	lbs_pr_info("%s, fw %u.%u.%up%u, cap 0x%08x\n",
->  		print_mac(mac, cmd.permanentaddr),
->  		priv->fwrelease >> 24 & 0xff,
->  		priv->fwrelease >> 16 & 0xff,
-> --- linux.orig/drivers/net/wireless/libertas/persistcfg.c
-> +++ linux/drivers/net/wireless/libertas/persistcfg.c
-> @@ -188,7 +188,7 @@
->  		return ret;
->  
->  	if (defs.meshie.val.mesh_id_len > IW_ESSID_MAX_SIZE) {
-> -		printk(KERN_ERR "Inconsistent mesh ID length");
-> +		lbs_pr_err("inconsistent mesh ID length");
->  		defs.meshie.val.mesh_id_len = IW_ESSID_MAX_SIZE;
->  	}
->  
+new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
+new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
+if (!new_node || !new_mpath) {
+	kfree(new_mpath);
+	kfree(new_node);
+	atomic_dec(&sdata->u.sta.mpaths);
+	err = -ENOMEM;
+	goto endadd2;
+}
+...
+read_lock(...);
+...
 
+Rationale: Allocations are always likely to fail/succeed in close succession.
+
+
+Best Regards
+
+Ingo Oeser
