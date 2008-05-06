@@ -1,26 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34672 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755369AbYETTdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 15:33:22 -0400
-Subject: mrv8k: now gets scan results
-From: Dan Williams <dcbw@redhat.com>
-To: Markus Becker <mab@comnets.uni-bremen.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 20 May 2008 15:33:33 -0400
-Message-Id: <1211312013.10737.10.camel@localhost.localdomain> (sfid-20080520_213326_441619_2870D0B6)
-Mime-Version: 1.0
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:55910 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754141AbYEFMiu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 08:38:50 -0400
+Date: Tue, 6 May 2008 14:39:36 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: w35und: fixed nasty stack overflow, I can actually ssh over
+	this
+Message-ID: <20080506123936.GA4777@elf.ucw.cz> (sfid-20080506_143803_513455_F9ED5F12)
+References: <20080505205617.GD7273@elf.ucw.cz> <20080506123536.GM32591@elte.hu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080506123536.GM32591@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi!
+> > Removed nasty stack overflow, and got transmit of big packets to work. 
+> > I can now actually do ssh over softmac-based driver.
+> > 
+> > Unindent code to make it more readable.
+> 
+> > --- a/arch/x86/kernel/traps_32.c
+> > +++ b/arch/x86/kernel/traps_32.c
+> > @@ -146,11 +146,16 @@ static inline unsigned long print_contex
+> >  				unsigned long *stack, unsigned long bp,
+> >  				const struct stacktrace_ops *ops, void *data)
+> >  {
+> > +	int max = 5;
+> >  	struct stack_frame *frame = (struct stack_frame *)bp;
+> >  
+> >  	while (valid_stack_ptr(tinfo, stack, sizeof(*stack))) {
+> >  		unsigned long addr;
+> >  
+> > +		if (!max)
+> > +			return;
+> > +		max--;
+> > +
+> 
+> hm, you got into an infinite loop here, right? Could you please send 
+> this bit as a separate patch - and i guess it should use 
+> kstack_depth_to_print instead of '5'?
 
-I've gotten mrv8k to the point where I can get scan results with it on
-my 3COM 3CRGPC10075 CardBus card.  Data RX still doesn't work for some
-reason and WEP associations still fail with a mac80211 timeout.  Enough
-for today though.  All changes pushed to mrv8k.git on infradead.
+No, sorry, this should not have been in this patch. (And no, this is
+not the overflow I was talking about).
 
-Dan
+What happened to me is that current oops is too long even for vga=1,
+and I was trying to see where it dies.
 
-
+I was trying to only print first few lines of the backtrace, but then
+I fix the nasty bug...
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
