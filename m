@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:51621 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755349AbYEVRuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 13:50:09 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JzEvS-0005zC-Vc
-	for linux-wireless@vger.kernel.org; Thu, 22 May 2008 17:50:03 +0000
-Received: from c-67-190-34-252.hsd1.co.comcast.net ([67.190.34.252])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:50:02 +0000
-Received: from dann.church by c-67-190-34-252.hsd1.co.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:50:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Dann Church <dann.church@cassatt.com>
-Subject: Re: iwl4965 - =?utf-8?b?d3BhX3N1cHBsaWNhbnQ=?= can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Date: Thu, 22 May 2008 17:42:31 +0000 (UTC)
-Message-ID: <loom.20080522T173929-232@post.gmane.org> (sfid-20080522_195015_507128_F17F01CD)
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>  <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>  <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>  <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>  <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>  <1210617467.3792.4.camel@X61.DFGI.com> <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48169 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757413AbYEFVMx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 17:12:53 -0400
+Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read
+	lock.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ingo Oeser <netdev@axxeo.de>
+Cc: Pavel Emelyanov <xemul@openvz.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+In-Reply-To: <200805061840.37713.netdev@axxeo.de>
+References: <48206F4C.5050105@openvz.org>
+	 <200805061840.37713.netdev@axxeo.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xrBEP1cDTObt5DmJCrqK"
+Date: Tue, 06 May 2008 23:12:00 +0200
+Message-Id: <1210108320.9305.4.camel@johannes.berg> (sfid-20080506_231211_914449_681A93CD)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@...> writes:
 
-> 
-> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
-> <v.jones@...> wrote:
-> >
-> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
-> >
-> >> Meanwhile we've reproduced the wpa_supplicant issue...
-> >>
-> >
-> > That is great news. Let me know when it is time to test again...
-> 
-> Please try this one. I've just pasted that in so it's might be
-> white-space-wise broken
-
-I have this same issue running fedora core 9 with a kernel version
-2.6.25.3-18.fc9.i686.PAE.  Any chance this patch would work on such a kernel
-(assuming I recompiled it from source)?
+--=-xrBEP1cDTObt5DmJCrqK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> What about doing both allocations in succession to local variables,
+> share the failure path if an error occours an kfree them unconditionally=20
+> like this?
+>=20
+> new_node =3D kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
+> new_mpath =3D kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
 
+If the system is under enough pressure to fail the first allocation, do
+we really want to try another one just to free things again right away?
+I'm with Pavel here, let's rather clean up the failure code path.
+
+johannes
+
+--=-xrBEP1cDTObt5DmJCrqK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCDJnqVg1VMiehFYAQJZNQ/+LbbTTgghcC95yxYyiidrrN3H6AWGuDZc
+cqoLIa0Mz5uyLPe1sOYefWd7M7nR/CDHxdB5ouOizFfDR7HrRf/2NcTKwdiD7pgM
+n4B3MYXaiL2LEuXzeRwoKoI1Q8rog8iV+KXPM1lO0f8xNkP9YXlCZ6tiNnJEqYJ2
+rdewLsUVS+ngyxRZWlLkszXkIsnDtQzEOmHxVZVY1V0Uc44WZxKVv60BjEVbh0sx
+L4lmddHKF1pr4YMTo6q/N00JZnM1/pFlhqwwfkV8Q31uP9N0IcJToiNK+YynWXnR
+TtTuqUGyc4ctqP0Dh+5i6Zztsk9PjYJxvJKdmRVOtYcvZlub0g79r4kw9mRJ2rrA
+mseqJ6HDqOlR3ADh1oiDvCcE0kXKfEMYtmqx/1ZWEGHGD5oMNZ9L1gbahJVccvbV
+MTqZuMmZOQjnlWav9DYsCzpaLTbpBBxORN28xm+9Pom0SLvyQhx+eHPETp56SrFw
+Bs9nOmS9z0f9urYCjbZaRAK2L61qB1NOuWmLLNPLIOiob0EGXIHE7AQkSHhFMFxn
+/M+7u+UTg01U3qtOTGEZ2RIn+NZge00hTs+f69M48TwHggpw0eU3nNCkYLsqfBYq
+4GzQHksDiwsUgToP8o7yuRQK/zl+vWyrEjDry1J3gIwbUbmpmQJ4FEeOIoYyajGY
+HDmXjM8JprE=
+=eCJY
+-----END PGP SIGNATURE-----
+
+--=-xrBEP1cDTObt5DmJCrqK--
 
