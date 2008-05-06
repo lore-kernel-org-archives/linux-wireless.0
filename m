@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41566 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647AbYESOLM (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.235]:17966 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764634AbYEFJGa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 10:11:12 -0400
-Subject: Re: [PATCHv3] mac80211: fix NULL pointer dereference in
-	ieee80211_compatible_rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200805191541.49313.hschaa@suse.de>
-References: <200805191541.49313.hschaa@suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uga4l+Aui02nhGGjPnTF"
-Date: Mon, 19 May 2008 16:09:54 +0200
-Message-Id: <1211206194.6252.43.camel@johannes.berg> (sfid-20080519_161115_486682_A38BB267)
-Mime-Version: 1.0
+	Tue, 6 May 2008 05:06:30 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1581025rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 02:06:28 -0700 (PDT)
+Message-ID: <a32f33a40805060206l1af71db0tced88dd3d3d08c30@mail.gmail.com> (sfid-20080506_110553_846073_8255B8FB)
+Date: Tue, 6 May 2008 11:06:28 +0200
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Luis Correia" <luis.f.correia@gmail.com>
+Subject: Re: [Rt2400-devel] rt2500usb current git BUG
+Cc: rt2400-devel@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <efe7343f0804291454p40914cadpf06846270d080e2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <efe7343f0804291454p40914cadpf06846270d080e2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-uga4l+Aui02nhGGjPnTF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[Extended CC list with linux-wireless and Johannes Berg]
 
+>  CentOS 5.1, running with latest GIT kernel, rt2500usb, full dmesg
+>  output follows.
+>
+>  This is using NetworkManager to get things done.
+>
+>  The "BUG: scheduling while atomic: rt2500usb/3817/0x00000002" thing
+>  appears right after plugging in the stick.
 
-> +		rates_len =3D ieee80211_compatible_rates(bss, sband, &rates);
-> +	} else {
-> +		rates =3D ~0;
-> +		rates_len =3D sband->n_bitrates;
->  	}
-> =20
->  	mgmt =3D (struct ieee80211_mgmt *) skb_put(skb, 24);
-> @@ -755,7 +759,6 @@ static void ieee80211_send_assoc(struct net_device *d=
-ev,
->  	/* all supported rates should be added here but some APs
->  	 * (e.g. D-Link DAP 1353 in b-only mode) don't like that
->  	 * Therefore only add rates the AP supports */
-> -	rates_len =3D ieee80211_compatible_rates(bss, sband, &rates);
+I found the cause of this problem, rt2500usb and rt73usb require
+scheduled register access,
+this is a known fact, that is the reason why things like ERP and
+Beacon configuration
+which are per-interface settings are done within a workqueue.
+However, this is where the problem starts, in the workqueue rt2x00
+needs to iterate over
+all interfaces, because for each interface the configuration routine
+must be run. But
+to iterate over all interfaces, mac80211 grabs the rcu lock
+guaranteeing rt2x00 can no
+longer perform any register access even though it is running in a workqueue.
+For the ERP configuration we might work around this by storing the ERP
+settings in
+a temporary location and change the setting to something that matches
+most active
+interfaces best. This means that slot time and preamble settings will
+always be short
+when at least 1 interface has it set to short.
 
-Mind moving/rewriting the comment to indicate that at the place below
-the rates are added, but putting the comment about the compatibility
-thing to where the function is called?
+The real problem is with beaconing, the only way we could get around
+this issue is
+creating a local skb in which we store the beacons given to us, and
+after all iterations
+are over, write the beacons one by one to the hardware.
+Obviously this results in race conditions where the beacon might be
+written to the
+hardware while the interface is being removed... Which would mean we
+could end up
+having to cripple rt2x00 again and remove all support for virtual
+interfaces... :S
 
-johannes
+Johannes, do you have any suggestions?
 
---=-uga4l+Aui02nhGGjPnTF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDGKMKVg1VMiehFYAQLhWg/9GUjX/XYddgqo6Tthir8W3l5PJvpNvqNk
-5HS1rGmfX/FRBNpoiXyICesLF4ZPL06GsQ3I3QjClFmeK0dHFRTgVhLspv9bvPch
-Q/bdEjStvgTb7wXvj/YaEHv+PcKHjLAjH5qaHVY30T0crbsCM/LABFSCOmK+Dt/l
-im0sM/l8OoYvKfVJbBZaT1ijF0qTSDunpAwOuAPfEf2s5zd4DLmBTcQrt0Gt3TCk
-HzIT2+bc+OJq/6SITZpygsnYS34vU1xIOhMDu2inEr3OCA5ekD+vIVwe2MC4B/bX
-6sIjDUn3a+5jt1flB/LAs2bK9u4Ywxsd9fDMneFJlwq299if3kxnG6t/B1DnqfDW
-oPkFV2AtpOgH0k6II8C5FCM8OretVjD4jkj5T0q+3PDLnpKI4d3if/eG1z85OChw
-QaDK2q0h2ZgUr0nXSKTfPdzmgVTn08JLlwCQXXj9ltjC9sfWQs9YCAuCj0aN3JvU
-/UXSR9JJFT951b+ZEEcO5cFaenmo6Z/EPtCscrJYHMLzhFwZfdlw7EKa0vJy8w2k
-GmxIx93TIu90nhwVF0JcJ6VWHMD7W3KH6nugCi7Y0GeInxy2zxhrPDxZS/LS3bwA
-CpvyrWy6dpI4u+hyxjPqEI5mLzHiuw6w5XbJya+QvMnUq2aTRj7vAJYovTyMRkFw
-cOUEHBDwg6Y=
-=Lq9P
------END PGP SIGNATURE-----
-
---=-uga4l+Aui02nhGGjPnTF--
-
+Ivo
