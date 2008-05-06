@@ -1,28 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:27979 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbYEZJ0z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 05:26:55 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 2] libertas: fix compact flash interrupt handling
-Date: Mon, 26 May 2008 11:26:49 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200805231605.04168.hs4233@mail.mn-solutions.de> <1211566566.12312.4.camel@localhost.localdomain>
-In-Reply-To: <1211566566.12312.4.camel@localhost.localdomain>
+Received: from sacred.ru ([62.205.161.221]:60446 "EHLO sacred.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754248AbYEFOwG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 10:52:06 -0400
+Message-ID: <48206FDE.4040704@openvz.org> (sfid-20080506_165118_775981_F04C4AAC)
+Date: Tue, 06 May 2008 18:49:02 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805261126.49199.hs4233@mail.mn-solutions.de> (sfid-20080526_112658_886280_D88E4C70)
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: [PATCH 2/4][MAC80211]: Fix not checked kmalloc() result.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Weird error.
+The new_node kmallocation is not checked for success, so add
+this check.
 
-However, I just seem to fix my "hard lockups". In 
-if_cs_send_data() I need to call if_cs_disable_ints() / 
-if_cs_enable_ints(). After I did this, I can now run "scp 
-test.iso 10.2.1.4:/tmp" and "while true; do iwconfig eth1; sleep 
-0.2; done" simultanously.
+BTW, it also happens under the read_lock.
+
+Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+
+---
+ net/mac80211/mesh_pathtbl.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 727aa52..1d2d051 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -164,13 +164,19 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
+ 		err = -ENOMEM;
+ 		goto endadd2;
+ 	}
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	if (!new_node) {
++		kfree(new_mpath);
++		atomic_dec(&sdata->u.sta.mpaths);
++		err = -ENOMEM;
++		goto endadd2;
++	}
+ 
+ 	read_lock(&pathtbl_resize_lock);
+ 	memcpy(new_mpath->dst, dst, ETH_ALEN);
+ 	new_mpath->dev = dev;
+ 	new_mpath->flags = 0;
+ 	skb_queue_head_init(&new_mpath->frame_queue);
+-	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
+ 	new_node->mpath = new_mpath;
+ 	new_mpath->timer.data = (unsigned long) new_mpath;
+ 	new_mpath->timer.function = mesh_path_timer;
+-- 
+1.5.3.4
+
