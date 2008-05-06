@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:32812 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761976AbYETW4W (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:5596 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbYEFJLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 18:56:22 -0400
-Received: by py-out-1112.google.com with SMTP id u52so2650960pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 15:56:22 -0700 (PDT)
-Message-ID: <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com> (sfid-20080521_005657_448024_8DF054AD)
-Date: Tue, 20 May 2008 18:56:21 -0400
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Andy Green" <andy@warmcat.com>,
+	Tue, 6 May 2008 05:11:01 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1239412waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 02:11:00 -0700 (PDT)
+Message-ID: <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com> (sfid-20080506_111020_522574_FD732903)
+Date: Tue, 6 May 2008 12:11:00 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
 	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
+Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
+Cc: linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
-	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
-	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
-	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
-	 <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com>
-	 <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2008 at 6:45 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> Need to add if (sta_is != bcast)  otherwise this will drop all your
-> injected packets.
+On Tue, May 6, 2008 at 12:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+>  > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>  >
+>  >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
+>  >  in patch "mac80211: QoS related cleanups"), when trying to perform
+>  >  ieee80211_wake_queue.
+>  >
+>  >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>  >
+>
+>  Is this going to make it to 2.6.26?
+>  Without this it will be hard to run 5000 under 2.6.26 as is.
 
-Did you mean if (sta_id != priv->hw_setting.bcast_sta_id)? Because
-there is no "sta_is" variable.
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+I meant 'QoS related cleanups'
+>
+>  Thanks
+>  Tomas
+>
