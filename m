@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbYEDJws (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:31500 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbYEFKq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 05:52:48 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080504094444.GA541@gondor.apana.org.au>
-References: <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-	 <1209865354.6210.23.camel@johannes.berg>
-	 <20080504020203.GA30514@gondor.apana.org.au>
-	 <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-	 <1209890847.6210.51.camel@johannes.berg>
-	 <1209892489.6210.56.camel@johannes.berg>
-	 <20080504094444.GA541@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nW8izu5q2PhVnX6uOKM5"
-Date: Sun, 04 May 2008 11:52:34 +0200
-Message-Id: <1209894754.6210.58.camel@johannes.berg> (sfid-20080504_115215_663728_A338AE69)
-Mime-Version: 1.0
+	Tue, 6 May 2008 06:46:59 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1284582waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 03:46:58 -0700 (PDT)
+Message-ID: <1ba2fa240805060346r617a53d1qb421f3d71ec14a1d@mail.gmail.com> (sfid-20080506_124654_643661_7E501734)
+Date: Tue, 6 May 2008 13:46:58 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1210070251.13316.4.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
+	 <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com>
+	 <1210066688.8012.75.camel@johannes.berg>
+	 <1ba2fa240805060334y2add302aua2e4461451a3f95b@mail.gmail.com>
+	 <1210070251.13316.4.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 6, 2008 at 1:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>  > >  > >  Is this going to make it to 2.6.26?
+>  > >  > >  Without this it will be hard to run 5000 under 2.6.26 as is.
+>  > >  >
+>  > >  > I meant 'QoS related cleanups'
+>  > >
+>  > >  Oh. No, I don't think so, unless you can somehow sell it to Linus as a
+>  > >  bugfix ;)
+>  > >
+>  > I will think of a bug :)
+>
+>  And John and Davem too of course ;)
+>
+>
+>  > >  Disable the 5000 in that kernel and make people use compat?
+>  >
+>  > Huh, why disabling?
+>
+>  Well if it's not going to work then wouldn't disabling it be better so
+>  people realise it won't work?
 
---=-nW8izu5q2PhVnX6uOKM5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+5000 won't be in vanilla 2.6.26 so there is nothing to disable. Hoped
+just that I won't need
+compat so back porting will be reduced to driver and not to mac80211
+i.e. kernel.
 
-On Sun, 2008-05-04 at 17:44 +0800, Herbert Xu wrote:
-> On Sun, May 04, 2008 at 11:14:49AM +0200, Johannes Berg wrote:
-> >
-> > I just re-did the test, and I definitely need 29 more bytes on, for
-> > example, the IPv6 autodiscovery packets and ICMP packets generated with
-> > ping(8). Some of them even need additional tailroom.
->=20
-> Could you find out the code path that created the skb in the
-> kernel so we can see why there isn't enough head room?
+>
+>  Anyway, for all I care that patch can go into .26 but it's fairly large
+>  and probably depends on the other two too. Also, it's broken as-is, I
+>  sent a fix recently.
 
-Yeah I was just considering putting a stacktrace into the skb when it's
-allocated. Haven't done, lunchtime now.
+Got it.
 
-johannes
-
---=-nW8izu5q2PhVnX6uOKM5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB2HYaVg1VMiehFYAQKdlxAAleEcN8BBFVgnJQmpB9lmft8fLD+Qxxns
-H/alt2Xu+3GlwHF7rRtPAH7YOI4x9u1pJeGIsMLV4yRQk5ykxfayAQfpxR2M4ZlW
-es+a4Ax5zGXoQHjmRRBz9LSKe3XV4XdSN51cv71Q051hSjBXSeQxTXTdeiiwMxsi
-08Xm3hP4DrnmBTw0vodJt4BHBvYeogCPcm53o7lMgkPIdNaWx/raIihNiPF1PR+N
-YO5H+P+o2n8k8aTB4qap52vonxUi/0Dlz/zPscmeANCS9PJL0N+l464ln77SELH8
-vOaB3EO91XCb4iSoxnPSFaB4cUTtoWwcOUaTpfqN2S50FqVg3SLoxaCJEQpwUo+O
-SMtIYJER7y/6jUAFHfZwjsUXXvC0iWvNyrxrzWhYp5iewHyI8iV/eBPpevWXimle
-7XNzvLRayxXiS+YcLUtULyXMCfgVvQeqZFwxUmh6L3rot/SDIyK5tcqr6Dl3EQ4Y
-Te8uY67RYiopPvQOHgjc7kMnv1kVi0AxpVqThhniKg3gQAtkWkX392GNHpqtemNU
-o8a7xYjsYETFMMXdk86q9xYqVBvsUEGrhDzekrpMZ0LPpnS4qz6B0fB+0EI05ipP
-9IzttdHa0J5OIpvct5ZA2A68ADy1bu2tB1Hlq/AyD+3v8O1oyYoZ1Wb2JMHI5Izw
-nGz9ffoOA8w=
-=0Rsz
------END PGP SIGNATURE-----
-
---=-nW8izu5q2PhVnX6uOKM5--
-
+>  johannes
+>
