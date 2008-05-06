@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.183]:28350 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759641AbYEEO1W (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156AbYEFO6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 10:27:22 -0400
-Received: by el-out-1112.google.com with SMTP id n30so708785elf.21
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 07:27:21 -0700 (PDT)
-Message-ID: <1ba2fa240805050727r2060b0b4x3a9b3240647b66b1@mail.gmail.com> (sfid-20080505_162644_854898_5236F515)
-Date: Mon, 5 May 2008 17:27:20 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-Cc: "David Miller" <davem@davemloft.net>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1209972139.3655.9.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1209936253.7304.10.camel@johannes.berg>
-	 <1209936745.7304.16.camel@johannes.berg>
-	 <20080504.173051.133197507.davem@davemloft.net>
-	 <1209972139.3655.9.camel@johannes.berg>
+	Tue, 6 May 2008 10:58:45 -0400
+Subject: Re: [PATCH 4/4 (optional)][MAC80211]: Brush up error paths in
+	mesh_path_add.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Emelyanov <xemul@openvz.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+In-Reply-To: <482070F7.5060506@openvz.org>
+References: <482070F7.5060506@openvz.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T6T++Bww5nLxlKtqwALa"
+Date: Tue, 06 May 2008 16:58:00 +0200
+Message-Id: <1210085880.13316.31.camel@johannes.berg> (sfid-20080506_165803_584148_95E2BAE7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  > If we can ensure that, things like mac80211 and others will not need
->  > to skb_realloc_headroom() or anything like that unless they need to
->  > modify packet contents after skb->data and the packet is shared
->  > (ie. the pskb_expand_headroom(skb, 0, 0, GFP_*) case the TSO drivers
->  > use).
->
->  That would be nice, but I don't think it's possible.
->
-Not sure this is connected so sorry if I'm hijacking on wrong thread.
-I might miss some emails on this thread.
-I would like to request some comments on the following observation.
-I'm just diving into this part of the kernel so please fix me if I've
-missed something.
 
-I've did some measurement of the TX path  on an embedded system (2.6.23 kernel)
-When bridging packets from an ethernet device to wireless  there is
-loss of 12% in the CPU utilization and equivalent throughput reduction
-in data packets that are checked and expanded in
-ieee80211_subif_start_xmit function.
-The expansion is just due to bigger size of the 80211 header size, yet
-the whole packet is reallocated and copied. As we are reaching 11n
-rates 200bps and up this starts to be visible.
-When header was reserved to the  proper side already in the ethernet
-driver the overhead was gone. Yet this doesn't seems to be a correct
-solution for bridging or forwarding.
-For example Iwlwifi HW supports scattered packets this would allow
-just reallocate the header, providing data portion is aligned.
+--=-T6T++Bww5nLxlKtqwALa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2008-05-06 at 18:53 +0400, Pavel Emelyanov wrote:
+> There are already tree paths, that do incremental rollbacks, so
+> merge them together, rename labels and format the code to look a
+> bit nicer.
 
-Thanks
-Tomas
+Looks all (all four patches) good to me, Luis?
 
+johannes
 
+--=-T6T++Bww5nLxlKtqwALa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUASCBx96Vg1VMiehFYAQJdjg//VddMnzqzgfBxtREnsl3utB/WzX9167DZ
+IB6zq1D27UBoeslRp/kR2nxrAxmFFHMbzYlzXxYrsNXgag8ydF0JQoQcRNeqOI+q
+ROz0nqFyq4cX785kop+BiIZ0La/oQa0i9IrSeSqoCS6mE15s9FfJaO+VM9gkKI3r
+sh8vlM5214tjzVkjZxHiNf0hXeGVaJAt0NvAnqg8UFVRXSdZDrdue4vLtwe+IP6W
+/NlYNHKdolWBQWNzWt4xokT5zC4sbSH7ngg8JQrvDUDyIgL5t3Y4l/wP2AxI6+ue
+JTXu5xPvI9yybG69UTriMQNQaThmfibEXcndCZ5gbqqkHpnE3y/hHz75yzI5xVrT
+drQf1sQaFe0smJ+xFZYR7H8lXuthMhV3E1o4NXEuNtGnITVnQ5ffVpngO0LDBynG
+8NauAGybHecj2YF0b0yzLcFvDpeOfoM9AcaAsfcz0yXMjOKollrryPzHjY/Zyd8y
+ft2D5Z8XW8OhdfKEiEMNIfyn4+yANP9wWFmznfKSkDx9T66YFIT/aWCEqo+Ue3uV
+a+hiY4nKL8gttwM+mHxrTKW+asr74v4P7f0GrRIMOn+KSZya3duw8A9RbDeropj9
+5mK3Jbt2ujNr4LjDhIwz8dRXIW79QO+9s2gPeFUtPfReRichUW/H42nZIwx+BcMw
+v6YkcmUYlWU=
+=iMwS
+-----END PGP SIGNATURE-----
 
+--=-T6T++Bww5nLxlKtqwALa--
 
->  johannes
->
