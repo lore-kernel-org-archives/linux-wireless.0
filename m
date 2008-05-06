@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:27721 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568AbYEDJlc (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:9880 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765536AbYEFJZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 05:41:32 -0400
-Received: by ug-out-1314.google.com with SMTP id h3so489768ugf.16
-        for <linux-wireless@vger.kernel.org>; Sun, 04 May 2008 02:41:30 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: multiqueue
-Date: Sun, 4 May 2008 11:47:37 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200805040035.05512.IvDoorn@gmail.com> <200805040115.24553.IvDoorn@gmail.com> <1209856663.3920.2.camel@johannes.berg>
-In-Reply-To: <1209856663.3920.2.camel@johannes.berg>
+	Tue, 6 May 2008 05:25:22 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: BUG: sleeping function called from invalid context
+Date: Tue, 6 May 2008 11:22:21 +0200
+Cc: libertas-dev@lists.infradead.org
+References: <200805061104.43050.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200805061104.43050.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805041147.37334.IvDoorn@gmail.com> (sfid-20080504_114106_057803_D3FD19AF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200805061122.21968.hs4233@mail.mn-solutions.de> (sfid-20080506_112438_110566_D56C792A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 04 May 2008, Johannes Berg wrote:
-> 
-> > 	if (!mdev)
-> > 		goto fail_mdev_alloc;
-> > 	if (hw->queues > 1)
-> > 		mdev->flags |= NETIF_F_MULTI_QUEUE;
-> > 
-> > So theoretically this flag should be set.
-> > However /sys/class/net/wmaster1/features contains the value 0x0
-> 
-> Yes, umm, guess why. That line should be mdev->features |= ...
+> What I don't know is why something is calling
+> get_wireless_stats() when setting the essid. This happens way
+> before a call into lbs_set_essid() (the WEXT handler), as can
+> be seen from the log below.
 
-That did the trick. :)
+Okay, that question has now an answer: an strace of iwconfig 
+(wireless-tools 29~pre22-1~bpo40+1) does 
+open /proc/net/wireless, which in turn calls 
+lbs_get_wireless_stats().
 
-Thanks,
-
-Ivo
+This happens before the SIOCSIWESSID ioctl().
