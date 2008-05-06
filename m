@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13521 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbYEWO6A (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57233 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbYEFKiO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 10:58:00 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Johan Adolfsson" <Johan.Adolfsson@axis.com>
-Subject: Re: [PATCH] libertas: before sleeping, check for a command result
-Date: Fri, 23 May 2008 16:57:42 +0200
-Cc: libertas-dev@lists.infradead.org,
-	"'Dan Williams'" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"'John W. Linville'" <linville@tuxdriver.com>
-References: <002701c8bce1$04097010$0137550a@se.axis.com>
-In-Reply-To: <002701c8bce1$04097010$0137550a@se.axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805231657.42433.hs4233@mail.mn-solutions.de> (sfid-20080523_165806_879529_A973BB96)
+	Tue, 6 May 2008 06:38:14 -0400
+Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU
+	SW queue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240805060334y2add302aua2e4461451a3f95b@mail.gmail.com> (sfid-20080506_123327_973250_8DEE9791)
+References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
+	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
+	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
+	 <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com>
+	 <1210066688.8012.75.camel@johannes.berg>
+	 <1ba2fa240805060334y2add302aua2e4461451a3f95b@mail.gmail.com>
+	 (sfid-20080506_123327_973250_8DEE9791)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cDamgpavcSS/p0yfXxzc"
+Date: Tue, 06 May 2008 12:37:31 +0200
+Message-Id: <1210070251.13316.4.camel@johannes.berg> (sfid-20080506_123725_661254_42CC966B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I have experience a couple of timeout and resends and after
-> sending another commands I get the response from the previous
-> one, and the patch seems to solve a couple of those for me -
-> still se some problem fetching packet from  firmware with ret
-> = -22 though. And it could be dependant on how much debug I
-> have turned on..
 
-Keep in mind that maybe the firmware actually really takes ages 
-to complete a command. David Woodhouse reported this.
-
-In my case, because I had the proper debugging statements in my 
-interrupt handler, I knew for sure that I already received the 
-response. Can you verify that, for the comment timeouts you 
-noticed, if this did happen or not?
+--=-cDamgpavcSS/p0yfXxzc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-> But, shouldn't the above priv->event_fifo check move before
-> cur_cmd  as well?
+> >  > >  Is this going to make it to 2.6.26?
+> >  > >  Without this it will be hard to run 5000 under 2.6.26 as is.
+> >  >
+> >  > I meant 'QoS related cleanups'
+> >
+> >  Oh. No, I don't think so, unless you can somehow sell it to Linus as a
+> >  bugfix ;)
+> >
+> I will think of a bug :)
 
-Maybe, my change to the thread was just a shot into the dark, I 
-don't claim that I fully understand it. Maybe Dan or David can 
-help you with this.
+And John and Davem too of course ;)
 
-> I have no clue what kind of events we are talking about here
-> and if those can be processed independent of if a cmd is
-> running or not, just trigged on the comment.
+> >  Disable the 5000 in that kernel and make people use compat?
+>=20
+> Huh, why disabling?
 
-The kfifo contains hostevents (e.g. link lost, deauthenticated) 
-and command responses. Hmm, not sure if the latter is still 
-true.
+Well if it's not going to work then wouldn't disabling it be better so
+people realise it won't work?
+
+Anyway, for all I care that patch can go into .26 but it's fairly large
+and probably depends on the other two too. Also, it's broken as-is, I
+sent a fix recently.
+
+johannes
+
+--=-cDamgpavcSS/p0yfXxzc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCA06qVg1VMiehFYAQIZ3Q/9HvmriZJbKBVGbNvWk7K47ONAHrVFUp5h
+AZF9iRxPc/Q+0djjd/wVvtkRXrELR/RD8eJihm6xvAO2Kl8lvEZTWHUR85tbk2UN
+oE7Wg8vbnX+D1wrfJGKKHr0xGMwYhmcRdj7mn9kM+XWeMI0wXDFkkKkO26ShbBX+
+CwsOxHWjhRsxKxwHE6R0IldK2Wou3CImj/HIQxbKJHOb+tvxAYqOTaoeVHHJzODz
+B/Kv6BmB6rchlA7pieVWBEJlOmVgbKT1d6fAPZODKYNek4T7Uvr/ZCHZF/TkYQkC
+CqZWnZaPgir4DvSDMdS0nkuvPP97ZdHynTBaGBEc82892dL+Wv27B9Oxloe2xz6m
+8oo7Ju7iynzFsDRF7zEjPa9y/NqXTKwKm2KgLYJYnRHAvQ8wMsqElG8ZN6eVYQMX
+4rc7UbetcRLg87gIRjqamIZNqvZ2uH04vlulB2e61HG6kz8DaMfMDoc74EYwpwz1
++rTeZuSiOlycVpMxADPWxRyr/q8uAWneOumUSks7f0SjIgGQW5xa8eN2qI27C7qY
+UjDIf1uH3KnlEQX0dfZu78gBYqu3ZV8Z4WU3z5SIC89DZO3NQysMrqSnwhvRf8W8
+A5uDsBsocQl2hq6/eOPvNzFElaQ6+v5Qj3xgYjV60bc1h8Qg7qEpbw605Z+GzJbU
+/fzyE3Uk/7k=
+=GUus
+-----END PGP SIGNATURE-----
+
+--=-cDamgpavcSS/p0yfXxzc--
+
