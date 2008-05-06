@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51542
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752097AbYEDBDA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 21:03:00 -0400
-Date: Sat, 03 May 2008 18:03:00 -0700 (PDT)
-Message-Id: <20080503.180300.10562559.davem@davemloft.net> (sfid-20080504_030232_462272_82C67C49)
-To: johannes@sipsolutions.net
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209815533.3987.21.camel@johannes.berg>
-References: <1209760731.3608.17.camel@johannes.berg>
-	<20080502.163334.148944203.davem@davemloft.net>
-	<1209815533.3987.21.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from sacred.ru ([62.205.161.221]:60463 "EHLO sacred.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757324AbYEFOy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 10:54:27 -0400
+Message-ID: <48207073.6010600@openvz.org> (sfid-20080506_165351_957877_EFA66241)
+Date: Tue, 06 May 2008 18:51:31 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: [PATCH 3/4][MAC80211]: Fix potential scheduling while atomic in mesh_path_add.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 03 May 2008 13:52:13 +0200
+Calling synchronize_rcu() under write-lock-ed pathtbl_resize_lock may
+result in this warning (and other side effects).
 
-> 
-> > We can't update skb->truesize during arbitray skb->data reallocations,
-> > because it could corrupt the socket accounting.
-> > 
-> > On the other hand, if we provide ways for users to subvert the socket
-> > buffer limits, we might as well not try to limit anything.
-> 
-> Why don't we update the socket allocation when doing pskb_expand_head()?
-> Sure, it could become negative, but is that so bad?
+It looks safe just dropping this lock before calling synchronize_rcu.
 
-The socket locked state at this time is variable and unknown.
+Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
 
-The socket must be locked in order to modify these values.
-And such locks cannot be taken, for example, from HW interrupt
-context, amongst other restrictions.
+---
+ net/mac80211/mesh_pathtbl.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> We need more space though. Should we then just increase the built-in
-> headroom?
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 1d2d051..99c2d36 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -220,9 +220,10 @@ endadd:
+ 			return -ENOMEM;
+ 		}
+ 		rcu_assign_pointer(mesh_paths, newtbl);
++		write_unlock(&pathtbl_resize_lock);
++
+ 		synchronize_rcu();
+ 		mesh_table_free(oldtbl, false);
+-		write_unlock(&pathtbl_resize_lock);
+ 	}
+ endadd2:
+ 	return err;
+-- 
+1.5.3.4
 
-I simply don't know what to suggest at this point, that's why
-we are having this discussion :-)
