@@ -1,80 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:11959 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbYEPOE0 convert rfc822-to-8bit (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:49603 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752620AbYEFHbp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 10:04:26 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so150316wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 07:04:26 -0700 (PDT)
-Message-ID: <69e28c910805160704gb1e67c9q6283e9a9df6d6dfa@mail.gmail.com> (sfid-20080516_160431_151876_B6A8F78D)
-Date: Fri, 16 May 2008 16:04:26 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: [ipw3945-devel] Monitor mode on boot
-In-Reply-To: <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+	Tue, 6 May 2008 03:31:45 -0400
+Date: Tue, 6 May 2008 09:32:32 +0200
+From: Pavel Machek <pavel@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
+	lcostantino@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: w35und: driver now down to 16Kloc, and actually works a bit
+Message-ID: <20080506073232.GB4600@elf.ucw.cz> (sfid-20080506_093059_209440_3B5F222B)
+References: <20080505210138.GE7273@elf.ucw.cz> <1210021369.4181.43.camel@johannes.berg> <1210023090.8012.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com>
-	 <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com>
-	 <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com>
-	 <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1210023090.8012.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops... linux-wireless doesn't accept HTML.
+Hi!
 
----------- Forwarded message ----------
-=46rom: Stefanik G=E1bor <netrolller.3d@gmail.com>
-Date: Fri, May 16, 2008 at 4:03 PM
-Subject: Re: [ipw3945-devel] Monitor mode on boot
-To: Martin Dubuc <martind1111@gmail.com>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+> > > Ok, code is still extremely ugly, but at least it uses softmac (and
+> > 
+> > why not mac80211? softmac has been deleted
+> 
+> Never mind, a peek inside tells me it does use mac80211.
+> 
+> However, the code gives me the creeps so I won't look any further.
 
+Sorry about the creeps. I'll be sure to do big announcement when it is
+safe to look at ;-).
+									Pavel
 
-On Fri, May 16, 2008 at 3:27 PM, Martin Dubuc <martind1111@gmail.com> w=
-rote:
->
-> You are right pointing out that it is possible to perform monitor mod=
-e configuration using startup scripts. However, to fit nicely in existi=
-ng frameworks, such as the ones available from Fedora, it would be nice=
- that the driver be enhanced. Madwifi allows users to put a configurati=
-on like this one in the modprobe.conf.:
->
-> options ath_pci autocreate=3Dmonitor
->
-> The nice thing about such a configuration is that it decouples the de=
-vice type configuration from the interface management function. One doe=
-s not need to worry which interface (wlan0, wlan1, wlan2, etc.) a devic=
-e will come up on, the system configures any device of a given type usi=
-ng a common set of configuration. For systems that have only one Wi-Fi =
-device, your method is as good as this one, but for systems that have m=
-ore than one Wi-Fi device, some of them coming off and on while the sys=
-tem is running, possibly using different interface names, the modprobe.=
-conf solution is better.
->
-> Martin
-
-
-This might better be done in the stack, rather than the driver. This
-way, all drivers would get this functionality. CCing the
-linux-wireless mailing list.
-Also, since an userspace solution might be preferred by Linville and
-the other wireless maintainers, it might be wise to add an "aggregate
-device" or a "supermaster" which can be targeted by iw so that all
-devices governed by that driver get a new interface.
-Alternatively, a script can be made that creates a monitor interface
-on monX or rtapX for all wmasterX devices. This is equivalent to
-madwifi's solution, except that it's userspace, which is preferred
-now.
-
---
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
-
-
---
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
