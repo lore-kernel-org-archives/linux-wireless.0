@@ -1,145 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:57069 "EHLO ciao.gmane.org"
+Received: from main.gmane.org ([80.91.229.2]:38342 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752181AbYEFLp6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 07:45:58 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JtLcH-0008DF-Pz
-	for linux-wireless@vger.kernel.org; Tue, 06 May 2008 11:45:53 +0000
-Received: from 82-135-208-232.static.zebra.lt ([82.135.208.232])
+	id S1754146AbYEFHzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 May 2008 03:55:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1JtI0s-0005SH-RI
+	for linux-wireless@vger.kernel.org; Tue, 06 May 2008 07:55:03 +0000
+Received: from dslc-082-082-164-183.pools.arcor-ip.net ([82.82.164.183])
         by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
         id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 11:45:53 +0000
-Received: from paulius.zaleckas by 82-135-208-232.static.zebra.lt with local (Gmexim 0.1 (Debian))
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 07:55:02 +0000
+Received: from feldmann_markus by dslc-082-082-164-183.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
         id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 11:45:53 +0000
+        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 07:55:02 +0000
 To: linux-wireless@vger.kernel.org
-From: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-Subject: [PATCH] arlan: use netstats in net_device structure
-Date: Tue, 06 May 2008 14:44:08 +0300
-Message-ID: <48204488.5030609@teltonika.lt> (sfid-20080506_134512_943300_07FBADFA)
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: is there support for my Card
+Date: Tue, 06 May 2008 09:50:51 +0200
+Message-ID: <fvp2kq$d26$2@ger.gmane.org> (sfid-20080506_095418_832689_72B190F7)
+References: <fvp2dg$d26$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030807070409040403080809"
-Cc: netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <fvp2dg$d26$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030807070409040403080809
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Use net_device_stats from net_device structure instead of local.
-
-Signed-off-by: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-
---------------030807070409040403080809
-Content-Type: text/x-patch;
- name="arlan_netstats.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="arlan_netstats.patch"
-
-diff --git a/drivers/net/wireless/arlan-main.c b/drivers/net/wireless/arlan-main.c
-index dbdfc9e..dec5e87 100644
---- a/drivers/net/wireless/arlan-main.c
-+++ b/drivers/net/wireless/arlan-main.c
-@@ -125,7 +125,7 @@ static inline int arlan_drop_tx(struct net_device *dev)
- {
- 	struct arlan_private *priv = netdev_priv(dev);
- 
--	priv->stats.tx_errors++;
-+	dev->stats.tx_errors++;
- 	if (priv->Conf->tx_delay_ms)
- 	{
- 		priv->tx_done_delayed = jiffies + priv->Conf->tx_delay_ms * HZ / 1000 + 1;
-@@ -1269,7 +1269,7 @@ static void arlan_tx_done_interrupt(struct net_device *dev, int status)
- 		{
- 			IFDEBUG(ARLAN_DEBUG_TX_CHAIN)
- 				printk("arlan intr: transmit OK\n");
--			priv->stats.tx_packets++;
-+			dev->stats.tx_packets++;
- 			priv->bad = 0;
- 			priv->reset = 0;
- 			priv->retransmissions = 0;
-@@ -1496,7 +1496,7 @@ static void arlan_rx_interrupt(struct net_device *dev, u_char rxStatus, u_short
- 			if (skb == NULL)
- 			{
- 				printk(KERN_ERR "%s: Memory squeeze, dropping packet.\n", dev->name);
--				priv->stats.rx_dropped++;
-+				dev->stats.rx_dropped++;
- 				break;
- 			}
- 			skb_reserve(skb, 2);
-@@ -1536,14 +1536,14 @@ static void arlan_rx_interrupt(struct net_device *dev, u_char rxStatus, u_short
- 				}
- 			netif_rx(skb);
- 			dev->last_rx = jiffies;
--			priv->stats.rx_packets++;
--			priv->stats.rx_bytes += pkt_len;
-+			dev->stats.rx_packets++;
-+			dev->stats.rx_bytes += pkt_len;
- 		}
- 		break;
- 		
- 		default:
- 			printk(KERN_ERR "arlan intr: received unknown status\n");
--			priv->stats.rx_crc_errors++;
-+			dev->stats.rx_crc_errors++;
- 			break;
- 	}
- 	ARLAN_DEBUG_EXIT("arlan_rx_interrupt");
-@@ -1719,23 +1719,23 @@ static struct net_device_stats *arlan_statistics(struct net_device *dev)
- 
- 	/* Update the statistics from the device registers. */
- 
--	READSHM(priv->stats.collisions, arlan->numReTransmissions, u_int);
--	READSHM(priv->stats.rx_crc_errors, arlan->numCRCErrors, u_int);
--	READSHM(priv->stats.rx_dropped, arlan->numFramesDiscarded, u_int);
--	READSHM(priv->stats.rx_fifo_errors, arlan->numRXBufferOverflows, u_int);
--	READSHM(priv->stats.rx_frame_errors, arlan->numReceiveFramesLost, u_int);
--	READSHM(priv->stats.rx_over_errors, arlan->numRXOverruns, u_int);
--	READSHM(priv->stats.rx_packets, arlan->numDatagramsReceived, u_int);
--	READSHM(priv->stats.tx_aborted_errors, arlan->numAbortErrors, u_int);
--	READSHM(priv->stats.tx_carrier_errors, arlan->numStatusTimeouts, u_int);
--	READSHM(priv->stats.tx_dropped, arlan->numDatagramsDiscarded, u_int);
--	READSHM(priv->stats.tx_fifo_errors, arlan->numTXUnderruns, u_int);
--	READSHM(priv->stats.tx_packets, arlan->numDatagramsTransmitted, u_int);
--	READSHM(priv->stats.tx_window_errors, arlan->numHoldOffs, u_int);
-+	READSHM(dev->stats.collisions, arlan->numReTransmissions, u_int);
-+	READSHM(dev->stats.rx_crc_errors, arlan->numCRCErrors, u_int);
-+	READSHM(dev->stats.rx_dropped, arlan->numFramesDiscarded, u_int);
-+	READSHM(dev->stats.rx_fifo_errors, arlan->numRXBufferOverflows, u_int);
-+	READSHM(dev->stats.rx_frame_errors, arlan->numReceiveFramesLost, u_int);
-+	READSHM(dev->stats.rx_over_errors, arlan->numRXOverruns, u_int);
-+	READSHM(dev->stats.rx_packets, arlan->numDatagramsReceived, u_int);
-+	READSHM(dev->stats.tx_aborted_errors, arlan->numAbortErrors, u_int);
-+	READSHM(dev->stats.tx_carrier_errors, arlan->numStatusTimeouts, u_int);
-+	READSHM(dev->stats.tx_dropped, arlan->numDatagramsDiscarded, u_int);
-+	READSHM(dev->stats.tx_fifo_errors, arlan->numTXUnderruns, u_int);
-+	READSHM(dev->stats.tx_packets, arlan->numDatagramsTransmitted, u_int);
-+	READSHM(dev->stats.tx_window_errors, arlan->numHoldOffs, u_int);
- 
- 	ARLAN_DEBUG_EXIT("arlan_statistics");
- 
--	return &priv->stats;
-+	return &dev->stats;
- }
- 
- 
-diff --git a/drivers/net/wireless/arlan.h b/drivers/net/wireless/arlan.h
-index 3ed1df7..fb3ad51 100644
---- a/drivers/net/wireless/arlan.h
-+++ b/drivers/net/wireless/arlan.h
-@@ -330,7 +330,6 @@ struct TxParam
- #define TX_RING_SIZE 2
- /* Information that need to be kept for each board. */
- struct arlan_private {
--      struct net_device_stats stats;
-       struct arlan_shmem __iomem * card;
-       struct arlan_shmem * conf;
- 
-
---------------030807070409040403080809--
+Markus Feldmann schrieb:
+> Hi All,
+> 
+> i only want to know if there is support in the next stable Kernel
+> 2.6.26 for my Card ?
+> 
+> My Wlan Card is,
+I did forget to write the Chipset i readed directly,
+AR5BXB61
 
