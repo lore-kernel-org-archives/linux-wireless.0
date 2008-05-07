@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:52016 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752601AbYEVTI3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 15:08:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
-Date: Thu, 22 May 2008 21:08:05 +0200
-Cc: Stefanik =?iso-8859-15?q?G=E1bor?= <netrolller.3d@gmail.com>,
-	JMF <tolas_feup@hotmail.com>,
-	Alejandro Grijalba =?iso-8859-15?q?Mart=EDnez?=
-	<sud@latinsud.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <47FAB829.9010304@latinsud.com> <69e28c910805221152g199d83b9s225799d0e3e53bcd@mail.gmail.com> <1211482981.3698.61.camel@johannes.berg>
-In-Reply-To: <1211482981.3698.61.camel@johannes.berg>
+Received: from sacred.ru ([62.205.161.221]:36894 "EHLO sacred.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755913AbYEGPym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 11:54:42 -0400
+Message-ID: <4821D017.9050606@openvz.org> (sfid-20080507_175349_045593_D65BBDDD)
+Date: Wed, 07 May 2008 19:51:51 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Message-Id: <200805222108.06322.mb@bu3sch.de> (sfid-20080522_210833_489849_215D9483)
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: [PATCH 4/7][MAC80211]: Fix sleeping allocation under lock in mesh_path_node_copy.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 22 May 2008 21:03:01 Johannes Berg wrote:
-> On Thu, 2008-05-22 at 20:52 +0200, Stefanik G=E1bor wrote:
-> > On Thu, May 22, 2008 at 8:34 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > >> >> This does not work, since we use injection for other types of
-> > >> >>  frames. For example management frames from hostapd. We don't=
- want
-> > >> >>  (and can't) make hostapd keep track of sequence numbers.
-> > >> >> You'll have to contact radiotap people and add a flag for thi=
-s.
-> > >> >>  This would also solve the hardware counter problem then.
-> > >
-> > >> The flag is IEEE80211_TX_INJECTED. Here is a new patch, for the
-> > >> current wireless-testing:
-> > >
-> > > Reorder the two blocks and you have your answer. NO.
-> > >
-> > > johannes
-> > >
-> >=20
-> > Hmm, shouldn't this version fix the hostap and other non-monitor-mo=
-de cases?
->=20
-> No, because hostapd uses monitor interfaces. Give up, it doesn't work
-> without an extra radiotap flag.
+The mesh_path_node_copy() can be called like this:
+mesh_path_add
+ `- write_lock(&pathtbl_resize_lock); /* ! */
+ `- mesh_table_grow
+     `- ->copy_node
+           `- mesh_path_node_copy
 
-Well, don't give up, but please contact the radiotap people for adding =
-such
-a flag to the header. That's really the only way to go.
-There are more flags to be added, like we-are-not-interested-in-acks.
+thus, the GFP_KERNEL is not suitable here.
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The acceptable fix, I suppose, is make this allocation GPF_ATOMIC -
+the mpath_node being allocated is 4 pointers, i.e. this allocation
+is small enough to survive even under a moderate memory pressure.
+
+Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+
+---
+ net/mac80211/mesh_pathtbl.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index fe1ceee..1154398 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -469,7 +469,7 @@ static int mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
+ 	struct mpath_node *node, *new_node;
+ 	u32 hash_idx;
+ 
+-	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_ATOMIC);
+ 	if (new_node == NULL)
+ 		return -ENOMEM;
+ 
+-- 
+1.5.3.4
+
