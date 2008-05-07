@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54126 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756072AbYEKTmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 May 2008 15:42:14 -0400
-Subject: Re: BUG: scheduling while atomic: events/1/10/0x00000002 on
-	linux-next
-From: Mirco Tischler <mt-ml@gmx.de>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1ba2fa240805111226s6f900015n4144f5411957ef2a@mail.gmail.com>
-References: <1210524139.17521.5.camel@mtlp.tischlernetz>
-	 <1ba2fa240805111226s6f900015n4144f5411957ef2a@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/RUH5g1hwl1ebttekIbt"
-Date: Sun, 11 May 2008 21:39:38 +0200
-Message-Id: <1210534778.5052.3.camel@mtlp.tischlernetz> (sfid-20080511_214221_191877_A753ED9A)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.226]:27559 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbYEGX3K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 19:29:10 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so618973rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2008 16:29:10 -0700 (PDT)
+Message-ID: <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com> (sfid-20080508_012824_911250_254F858B)
+Date: Thu, 8 May 2008 02:29:09 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi and tx info in skb->cb
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1210197711.3547.1.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210197711.3547.1.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 8, 2008 at 1:01 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>  I was just trying to make iwlwifi work again with tx info in skb->cb,
+>  but am running into something I don't understand:
+>
+>  What is a TFD, and why can it have multiple SKBs with a single tx
+>  status? I'm referring to:
 
---=-/RUH5g1hwl1ebttekIbt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+TFD stands for TX File Descriptor
 
-> What exact git tree is this?
->   iwlcore:iwl_send_cmd_sync+0x154/0x24b waits for event so something
-> has changed in mac80211. Need to see the code.
->=20
-> Thanks
-> Tomas
->=20
-This is Stephen's linux-next tree from 2008-05-09. Checkout tag
-next-20080509.
 
---=-/RUH5g1hwl1ebttekIbt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+>  /* One for each TFD */
+>  struct iwl3945_tx_info {
+>         struct ieee80211_tx_status status;
+>         struct sk_buff *skb[MAX_NUM_OF_TBS];
+>  };
+>
+>  I would have expected something like this with 4965 that has aggregation
+>  support (and aggregation is reported just once) but here? Confused.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+This is for scatter gather. Nothing to do with aggregation. If you get
+fragmented frame you can send it out without linearizing in CPU. in
+numer of TB - TX buffers (which is limitted bu MAX_NUM_OF_TBS)  But
+I'm just over ever explaining :)
 
-iD8DBQBIJ0t6z+diZ7c2xfgRAnatAJ0eJcC0viauVKtl5ymYsxEfH/7TnACfYFsS
-03z4KRUNwbQzeH0pOJsqDx0=
-=CJNn
------END PGP SIGNATURE-----
 
---=-/RUH5g1hwl1ebttekIbt--
+Thanks
+Tomas
 
+>  johannes
+>
