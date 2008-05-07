@@ -1,83 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+Received: from sacred.ru ([62.205.161.221]:46626 "EHLO sacred.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759690AbYEWCLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:42 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: increase max payload of iwl_cmd
-Date: Fri, 23 May 2008 10:09:08 +0800
-Message-Id: <1211508569-3163-31-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_330381_B6CA19C9)
-In-Reply-To: <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+	id S1755902AbYEGPtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 11:49:55 -0400
+Message-ID: <4821CEF5.7020501@openvz.org> (sfid-20080507_174903_412050_A80B8381)
+Date: Wed, 07 May 2008 19:47:01 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: [PATCH 2/7][MAC80211]: Prepare mesh_table_grow to failing copy_node
+ callback.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+The mesh_path_node_copy() performs kmalloc() and thus - may fail
+(well, it does not now, but I'm fixing this right now). Its caller -
+the mesh_table_grow() - isn't prepared for such a trick yet.
 
-This patch increases iwl_cmd payload maximum size from 360 to 640
-to fit some of iwl5000 commands as well.
+This preparation is just flush the new hash and make copy_node()
+return an int value.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-dev.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ net/mac80211/mesh.c         |   15 +++++++++++++--
+ net/mac80211/mesh.h         |    2 +-
+ net/mac80211/mesh_pathtbl.c |    3 ++-
+ 3 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 820542b..b61c647 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -308,6 +308,8 @@ struct iwl_cmd_meta {
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index f76bc26..273f0b6 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -349,7 +349,7 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
+ {
+ 	struct mesh_table *newtbl;
+ 	struct hlist_head *oldhash;
+-	struct hlist_node *p;
++	struct hlist_node *p, *q;
+ 	int err = 0;
+ 	int i;
  
- } __attribute__ ((packed));
+@@ -373,13 +373,24 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
+ 	oldhash = tbl->hash_buckets;
+ 	for (i = 0; i <= tbl->hash_mask; i++)
+ 		hlist_for_each(p, &oldhash[i])
+-			tbl->copy_node(p, newtbl);
++			if (tbl->copy_node(p, newtbl) < 0)
++				goto errcopy;
  
-+#define IWL_CMD_MAX_PAYLOAD 640
+ endgrow:
+ 	if (err)
+ 		return NULL;
+ 	else
+ 		return newtbl;
 +
- /**
-  * struct iwl_cmd
-  *
-@@ -333,7 +335,7 @@ struct iwl_cmd {
- 		struct iwl4965_tx_beacon_cmd tx_beacon;
- 		struct iwl4965_rxon_assoc_cmd rxon_assoc;
- 		u8 *indirect;
--		u8 payload[360];
-+		u8 payload[IWL_CMD_MAX_PAYLOAD];
- 	} __attribute__ ((packed)) cmd;
- } __attribute__ ((packed));
++errcopy:
++	for (i = 0; i <= newtbl->hash_mask; i++) {
++		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
++			tbl->free_node(p, 0);
++	}
++	kfree(newtbl->hash_buckets);
++	kfree(newtbl->hashwlock);
++	kfree(newtbl);
++	return NULL;
+ }
  
+ /**
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 2e161f6..669eafa 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -109,7 +109,7 @@ struct mesh_table {
+ 	__u32 hash_rnd;			/* Used for hash generation */
+ 	atomic_t entries;		/* Up to MAX_MESH_NEIGHBOURS */
+ 	void (*free_node) (struct hlist_node *p, bool free_leafs);
+-	void (*copy_node) (struct hlist_node *p, struct mesh_table *newtbl);
++	int (*copy_node) (struct hlist_node *p, struct mesh_table *newtbl);
+ 	int size_order;
+ 	int mean_chain_len;
+ };
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 0b6c4bf..512bfa1 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -463,7 +463,7 @@ static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
+ 	kfree(node);
+ }
+ 
+-static void mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
++static int mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
+ {
+ 	struct mesh_path *mpath;
+ 	struct mpath_node *node, *new_node;
+@@ -476,6 +476,7 @@ static void mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
+ 	hash_idx = mesh_table_hash(mpath->dst, mpath->dev, newtbl);
+ 	hlist_add_head(&new_node->list,
+ 			&newtbl->hash_buckets[hash_idx]);
++	return 0;
+ }
+ 
+ int mesh_pathtbl_init(void)
 -- 
-1.5.3.6
+1.5.3.4
 
