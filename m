@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:10076 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbYEZJAg (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:33689 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751699AbYEGJAo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 05:00:36 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so776944rnd.17
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 02:00:35 -0700 (PDT)
-Message-ID: <1ba2fa240805260200j3ffaac03yf0966aacc57a65b6@mail.gmail.com> (sfid-20080526_110045_019991_0AA7EA94)
-Date: Mon, 26 May 2008 12:00:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-Subject: Re: regression iwl3945/mac80211: association times out since 2.6.26-rc1
-Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
-	flamingice@sourmilk.net
-In-Reply-To: <20080526054040.GA7207@robinhood.home>
+	Wed, 7 May 2008 05:00:44 -0400
+Date: Wed, 7 May 2008 17:00:40 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+Subject: Re: [RFC/RFT 3/4] mac80211: use GSO for fragmentation
+Message-ID: <20080507090040.GA25186@gondor.apana.org.au> (sfid-20080507_110015_473431_17815D38)
+References: <20080430124055.091382000@sipsolutions.net> <20080430130050.105344000@sipsolutions.net> <20080507071026.GA24407@gondor.apana.org.au> <1210150217.9305.39.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080520184859.GA8168@robinhood.home>
-	 <20080521054743.GA9910@robinhood.home>
-	 <20080524182852.GA9722@robinhood.home>
-	 <1ba2fa240805241624t4999d108uef78b30408a5c545@mail.gmail.com>
-	 <20080526054040.GA7207@robinhood.home>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1210150217.9305.39.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 8:42 AM, Michael S. Tsirkin
-<m.s.tsirkin@gmail.com> wrote:
-> On Sun, May 25, 2008 at 02:24:28AM +0300, Tomas Winkler wrote:
->> On Sat, May 24, 2008 at 9:29 PM, Michael S. Tsirkin
->> <m.s.tsirkin@gmail.com> wrote:
->> > On Wed, May 21, 2008 at 08:47:44AM +0300, Michael S. Tsirkin wrote:
->> >> FYI, I created an item in bugzilla to track this
->> >> http://bugzilla.kernel.org/show_bug.cgi?id=10765
->> >
->> > As requested, more configuration and log files have been attached
->> > to this item.
->>
->> It looks like also this issue should be fixed by ' mac80211: reorder
->> channel and freq reporting in wext scan report' patch.
->> http://article.gmane.org/gmane.linux.kernel.wireless.general/15177
->> Please try.
->> Thanks
->> Tomas
+On Wed, May 07, 2008 at 10:50:17AM +0200, Johannes Berg wrote:
 >
-> I can confirm that the patch linked above has solved the regression for me.
-> Is it queued for 2.6.26?
+> But you're right, it doesn't work this way. I'll have to think of
+> something. Maybe I can rip out all the retry logic and just store an skb
+> myself (like dev->gso_skb) and return NETDEV_TX_BUSY when I used that
+> one and the queue got full because of it. That'll requeue a lot when
+> non-gso skbs are coming in, but mind you this is not a common case, most
+> of the time fragmentation will not be enabled and even when it is device
+> queues should be long enough.
 
-Hope so, it should go also to 25 If I remember someone posted version
-that matched the old file name
-as well.
-Thanks
-Tomas
+Yes keeping your own gso_skb sounds like a good solution.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
