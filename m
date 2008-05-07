@@ -1,25 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:6529 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757096AbYEAVNE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 17:13:04 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: rename thread names
-Date: Thu, 1 May 2008 23:12:54 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200804301051.47028.hs4233@mail.mn-solutions.de> <1209587401.16194.20.camel@localhost.localdomain>
-In-Reply-To: <1209587401.16194.20.camel@localhost.localdomain>
+Received: from venema.h4ckr.net ([217.24.1.135]:36388 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752263AbYEGE4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 00:56:20 -0400
+Message-ID: <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org> (sfid-20080507_065529_786148_A3F6C94C)
+In-Reply-To: <fvp2kq$d26$2@ger.gmane.org>
+References: <fvp2dg$d26$1@ger.gmane.org> <fvp2kq$d26$2@ger.gmane.org>
+Date: Wed, 7 May 2008 06:23:35 +0200 (CEST)
+Subject: Re: is there support for my Card
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Markus Feldmann" <feldmann_markus@gmx.de>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805012312.54889.hs4233@mail.mn-solutions.de> (sfid-20080501_231250_021530_09CFD830)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I guess I'd rather go with those, seems odd to put a 'k' in front when
-> it's a driver thread and not too many other drivers put a 'k' in front.
+Hi.
 
-Ok, it was cosmetic anyway.
+Markus Feldmann wrote:
+>> i only want to know if there is support in the next stable Kernel
+>> 2.6.26 for my Card ?
+> AR5BXB61
+
+That's an AR5007-based card, for which Nick posted a patch recently [1]. I
+don't know whether this patch will make it into 2.6.26. But even if it
+does, support for AR5007 is still incomplete, as Nick states: "Add RF2425
+initvals (still no rx/tx)". So ath5k might recognize and initialize your
+card, but most probably won't work with it.
+
+Bye, Mike
