@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3476 "EHLO ra.tuxdriver.com"
+Received: from ms4.Sony.CO.JP ([211.125.136.198]:48005 "EHLO ms4.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932833AbYEHTax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 15:30:53 -0400
-Date: Thu, 8 May 2008 14:53:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: xemul@openvz.org, johannes@sipsolutions.net, netdev@axxeo.de,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read
-	lock.
-Message-ID: <20080508185323.GB7250@tuxdriver.com> (sfid-20080508_213016_918429_8115B4B7)
-References: <4820997E.1070305@openvz.org> <20080506.134047.86330538.davem@davemloft.net> <4821442D.8010801@openvz.org> <20080506.225950.181623233.davem@davemloft.net> <20080508185123.GA7250@tuxdriver.com>
+	id S1751523AbYEGKHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 06:07:38 -0400
+Date: Wed, 07 May 2008 19:06:23 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/3] RFC: Add support for passing PMK to WEXT
+Cc: geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1209355644.20940.12.camel@localhost.localdomain>
+References: <20080427063513.GB22481@jm.kir.nu> <1209355644.20940.12.camel@localhost.localdomain>
+Message-Id: <20080507184400.A01F.40F06B3A@sm.sony.co.jp> (sfid-20080507_120659_366554_CD21E2D8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080508185123.GA7250@tuxdriver.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 08, 2008 at 02:51:23PM -0400, John W. Linville wrote:
-> On Tue, May 06, 2008 at 10:59:50PM -0700, David Miller wrote:
-> 
-> > Whether you should resubmit your patch is up to the wireless
-> > folks :-)
-> 
-> If you don't do it Ingo Oeser's way then it looks like you would need
-> a patch like the one below.  And with the patch below, the last hunk
-> of your patch will probably need to be fixed-up to match.
 
-Ah, sorry -- I guess I should have read the whole series before
-commenting... :-)
+On Mon, 28 Apr 2008 00:07:24 -0400
+Dan Williams <dcbw@redhat.com> wrote:
 
-John
+> On Sun, 2008-04-27 at 09:35 +0300, Jouni Malinen wrote:
+> > On Sat, Apr 26, 2008 at 06:13:47PM +0200, Johannes Berg wrote:
+> > 
+> > > Looks fine to me. You might want to ask for Jouni's input since took
+> > > part in the original design and will have to take the wpa_supplicant
+> > > patch :)
+> > 
+> > Actually, I had already seen this (and the matching wpa_supplicant
+> > patch) and commented it before it was sent to linux-wireless. I'm fine
+> > with this version.
+> 
+> Yeah, looks good to me too.
+> 
+
+Thanks for your reviews!
+
+I've got Jouni's comments as already he mentioned.  This set was the
+revised version.
+
+I'll submit them as usual patches.
+
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Masakazu Mokuno
+
