@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:42253 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbYEOTpB (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:10083 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751151AbYEGKjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 15:45:01 -0400
-Received: by an-out-0708.google.com with SMTP id d40so128735and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 12:44:59 -0700 (PDT)
-Message-ID: <40f31dec0805151244o2438c3bfrbbe065ab58a7198@mail.gmail.com> (sfid-20080515_214521_760404_886935F7)
-Date: Thu, 15 May 2008 22:44:59 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Zack Weinberg" <zackw@panix.com>
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	Wed, 7 May 2008 06:39:53 -0400
+From: bruno randolf <bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: make rx radiotap header more flexible
+Date: Wed, 7 May 2008 12:39:58 +0200
+Cc: ath5k-devel@lists.ath5k.org, mcgrof@gmail.com, jirislaby@gmail.com,
+	mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, flamingice@sourmilk.net, jbenc@suse.cz
+References: <20080407042541.9026.59360.stgit@localhost> <200804292010.21367.bruno@thinktube.com> <1209564773.18659.14.camel@johannes.berg>
+In-Reply-To: <1209564773.18659.14.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805071239.58383.bruno@thinktube.com> (sfid-20080507_123900_813074_C0311B00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/5/14 Zack Weinberg <zackw@panix.com>:
-> I have a shiny new Thinkpad T61 and I'd like to get its wireless
-> chipset working with the ath5k driver.  I have tried
-> compat-wireless-2008-05-07 on top of kernel 2.6.25.1 -- I get this in
-> dmesg:
+On Wednesday 30 April 2008 16:12:52 Johannes Berg wrote:
+> > > Radiotap explicitly allows you to have a longer length than you need so
+> > > maybe we should just make sure to align things?
+> >
+> > are you talking about the alignment of the radiotap header itself? no, i
+> > just took care about the alignment requirements of the radiotap fields,
+> > relative to the start of radiotap. but it would be easy to add some
+> > additional length in ieee80211_rx_radiotap_len() and just leave that
+> > empty at the end.
+> >
+> > i think i don't understand all alignment requirements though...
 >
-> # modprobe ath5k
-> [15497.699573] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
-> low) -> IRQ 17
-> [15497.699607] PCI: Setting latency timer of device 0000:03:00.0 to 64
-> [15497.699665] ath5k_pci 0000:03:00.0: registered as 'phy0'
-> [15498.709122] ath5k phy0: failed to wakeup the MAC Chip
-> [15498.709195] ACPI: PCI interrupt for device 0000:03:00.0 disabled
-> [15498.709205] ath5k_pci: probe of 0000:03:00.0 failed with error -5
->
-> # lspci -vnn -s 0000:03:00.0
-> 03:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR5212
-> 802.11abg NIC [168c:1014] (rev 01)
->        Subsystem: IBM Device [1014:058a]
->        Flags: fast devsel, IRQ 17
->        Memory at df3f0000 (64-bit, non-prefetchable) [size=64K]
->        Capabilities: [40] Power Management version 2
->        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
->        Capabilities: [60] Express Legacy Endpoint, MSI 00
->        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
->        Capabilities: [100] Advanced Error Reporting <?>
->        Capabilities: [140] Virtual Channel <?>
->        Kernel modules: ath5k
->
-> ath_info does not work:
-> # ath_info df3f0000
-> Unable to read EEPROM Magic value!
->
-> The old madwifi drivers don't work with this chip either:
-> # modprobe ath_pci
-> [  392.367300] ath_hal: 0.9.18.0 (AR5210, AR5211, AR5212, RF5111,
-> RF5112, RF2413, RF5413)
-> [  392.379623] wlan: 0.9.4
-> [  392.381431] ath_pci: 0.9.4
-> [  392.381466] PCI: Enabling device 0000:03:00.0 (0000 -> 0002)
-> [  392.381472] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
-> low) -> IRQ 17
-> [  392.381488] PCI: Setting latency timer of device 0000:03:00.0 to 64
-> [  392.385856] wifi%d: unable to attach hardware: 'Hardware didn't
-> respond as expected' (HAL status 3)
-> [  392.385870] ACPI: PCI interrupt for device 0000:03:00.0 disabled
->
-> What can I do to help make this chip work in the near future?
->
-> zw
+> Well all those stores there are usual 32/16-bit stores which will fault
+> on some architectures. See Documentation/unaligned-access.txt. Adding
+> some padding to make the radiotap header start at a mod8 boundary would
+> help.
 
-Are you sure that ath5k from compat-wireless is being used and not the
-one that comes with 2.6.25 ?
-In ath5k that comes with 2.6.25 the fix Bob mentioned is not included
-and PCI-E cards hang.
-Have you tried blacklisting ath5k, power-cycle and only use
-madwifi/ndiswrapper ?
+so if i assume that the skb already starts at such a mod8 boundary it should 
+be enough to make the length of the radiotap header a multiple of 8, right? 
+please check the patch which i will post shortly.
 
-If your card doesn't work even after disabling ath5k and power-cycle
-(reboot won't work, you'll have to actually turn your system off and
-on) then you might have some hw problem.
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+bruno
