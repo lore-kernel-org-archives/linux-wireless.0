@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3091 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756317AbYEMA7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 20:59:08 -0400
-Date: Mon, 12 May 2008 20:43:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Mathieu Chouquet-Stringer <mchouque@free.fr>, j@w1.fi,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostap: procfs fix for hostap_fw.c
-Message-ID: <20080513004345.GB26418@tuxdriver.com> (sfid-20080513_025912_485418_7BA72B57)
-References: <20080506152354.GA3680@mobydick> <1210592626.3372.6.camel@dv>
+Received: from rhun.apana.org.au ([64.62.148.172]:35195 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758969AbYEGLl1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 07:41:27 -0400
+Date: Wed, 7 May 2008 19:41:23 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+Message-ID: <20080507114123.GA26073@gondor.apana.org.au> (sfid-20080507_134046_018331_474DED34)
+References: <20080430124055.091382000@sipsolutions.net> <20080430130050.105344000@sipsolutions.net> <20080507071026.GA24407@gondor.apana.org.au> <1210150217.9305.39.camel@johannes.berg> <20080507090040.GA25186@gondor.apana.org.au> <1210159339.5642.13.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1210592626.3372.6.camel@dv>
+In-Reply-To: <1210159339.5642.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 07:43:46AM -0400, Pavel Roskin wrote:
-> On Tue, 2008-05-06 at 17:23 +0200, Mathieu Chouquet-Stringer wrote:
-> 
-> > Problem is local->proc has now been overwritten by hostap_init_proc
-> > meaning "registers" isn't removed.  When you reload the module you get
-> > an error telling you "registers" already exists (and you then get
-> > duplicate "registers" files in /proc).
-> 
-> I've seen it many times.  Thanks for tracking it down!  I've tested the
-> patch with PCI and PCMCIA devices, and everything appears to be
-> correct.  /proc/registers is not created, "registers" is created
-> under /proc/net/hostap/wlan0/, no more warnings.
-> 
-> > Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
-> 
-> Acked-off-by: Pavel Roskin <proski@gnu.org>
-> 
-> If a more concise description needs to be written, I can do it.
+On Wed, May 07, 2008 at 01:22:19PM +0200, Johannes Berg wrote:
+>
+> +	if (unlikely(netif_queue_stopped(local->mdev) ||
+> +		     __ieee80211_queue_stopped(local, control->queue)))
+> +		return NETDEV_TX_BUSY;
 
-If you don't mind, I would appreciate a more concise description.
-I appreciate the full description of the bug, but I think it is a
-bit much for the changelog as-is.
+Returning busy should be avoided because not everything expects it.
+For example, this can cause tcpdump to see the same packet twice.
 
-Thanks!
+Besides, I'm not sure if this will even work if you're fiddling
+with skb->next.  Perhaps you can stash it in a pointer local to
+your device.
 
-John
+Cheers,
 -- 
-John W. Linville
-linville@tuxdriver.com
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
