@@ -1,194 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46177 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756085AbYENX13 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54690 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbYEGJN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:29 -0400
-Message-Id: <200805142326.m4ENQLig027108@imap1.linux-foundation.org> (sfid-20080515_012732_019446_623087CB)
-Subject: [patch 10/12] b43legacy: replace limit_value macro with clamp_val
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, mb@bu3sch.de
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:21 -0700
+	Wed, 7 May 2008 05:13:27 -0400
+Subject: [PATCH v3] mac80211: fix wme code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1209768249.3608.25.camel@johannes.berg> (sfid-20080503_004354_206661_FC39EF9A)
+References: <1209767749.3608.23.camel@johannes.berg>
+	 (sfid-20080503_003536_334347_3B50118C)  <1209768249.3608.25.camel@johannes.berg>
+	 (sfid-20080503_004354_206661_FC39EF9A)
+Content-Type: text/plain
+Date: Wed, 07 May 2008 11:12:44 +0200
+Message-Id: <1210151564.9305.42.camel@johannes.berg> (sfid-20080507_111234_934152_F42D0413)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+In commit 31ccc476b77234f6afb3 (mac80211: QoS related cleanups) I
+accidentally changed a variable from int to u16 causing a warning
+that a comparison for < 0 was always false. John thought this was
+a missing deletion of code and removed the warning by deleting the
+never executed branch of code in commit 13e5f0888caddf7a020dcd918
+(wireless: fix warning introduced by "mac80211: QoS related cleanups")
+but the problem really was my mistake of using a u16 variable for
+the queue variable when that variable can also contain an error
+code. This patch restores the original code and variable type.
 
-kernel-provided clamp_val is identical, delete the private limit_value helper.
+Additionally, this patch fixes a (currently) harmless mistake from
+the same patch in the declaration of two arrays in the internal
+header file.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/wme.c         |   26 +++++++++++++++-----------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
 
- drivers/net/wireless/b43legacy/b43legacy.h |   17 -----------------
- drivers/net/wireless/b43legacy/main.c      |    8 ++++----
- drivers/net/wireless/b43legacy/phy.c       |   14 +++++++-------
- drivers/net/wireless/b43legacy/radio.c     |   12 ++++++------
- 4 files changed, 17 insertions(+), 34 deletions(-)
+--- everything.orig/net/mac80211/wme.c	2008-05-03 00:29:07.000000000 +0200
++++ everything/net/mac80211/wme.c	2008-05-07 11:09:12.000000000 +0200
+@@ -155,8 +155,7 @@ static int wme_qdiscop_enqueue(struct sk
+ 	unsigned short fc = le16_to_cpu(hdr->frame_control);
+ 	struct Qdisc *qdisc;
+ 	struct sta_info *sta;
+-	int err;
+-	u16 queue;
++	int err, queue;
+ 	u8 tid;
+ 
+ 	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
+@@ -216,15 +215,20 @@ static int wme_qdiscop_enqueue(struct sk
+ 		rcu_read_unlock();
+ 	}
+ 
+-	tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
+-	pkt_data->queue = (unsigned int) queue;
+-	qdisc = q->queues[queue];
+-	err = qdisc->enqueue(skb, qdisc);
+-	if (err == NET_XMIT_SUCCESS) {
+-		qd->q.qlen++;
+-		qd->bstats.bytes += skb->len;
+-		qd->bstats.packets++;
+-		return NET_XMIT_SUCCESS;
++	if (unlikely(queue < 0)) {
++			kfree_skb(skb);
++			err = NET_XMIT_DROP;
++	} else {
++		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
++		pkt_data->queue = (unsigned int) queue;
++		qdisc = q->queues[queue];
++		err = qdisc->enqueue(skb, qdisc);
++		if (err == NET_XMIT_SUCCESS) {
++			qd->q.qlen++;
++			qd->bstats.bytes += skb->len;
++			qd->bstats.packets++;
++			return NET_XMIT_SUCCESS;
++		}
+ 	}
+ 	qd->qstats.drops++;
+ 	return err;
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-05-07 11:09:41.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-05-07 11:10:08.000000000 +0200
+@@ -611,8 +611,8 @@ struct ieee80211_local {
+ 	struct sta_info *sta_hash[STA_HASH_SIZE];
+ 	struct timer_list sta_cleanup;
+ 
+-	unsigned long state[IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
+-	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
++	unsigned long state[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
++	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
+ 
+ 	/* number of interfaces with corresponding IFF_ flags */
 
-diff -puN drivers/net/wireless/b43legacy/b43legacy.h~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/b43legacy.h
---- a/drivers/net/wireless/b43legacy/b43legacy.h~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -823,23 +823,6 @@ void b43legacydbg(struct b43legacy_wl *w
- # define b43legacydbg(wl, fmt...) do { /* nothing */ } while (0)
- #endif /* DEBUG */
- 
--
--/** Limit a value between two limits */
--#ifdef limit_value
--# undef limit_value
--#endif
--#define limit_value(value, min, max)  \
--	({						\
--		typeof(value) __value = (value);	\
--		typeof(value) __min = (min);		\
--		typeof(value) __max = (max);		\
--		if (__value < __min)			\
--			__value = __min;		\
--		else if (__value > __max)		\
--			__value = __max;		\
--		__value;				\
--	})
--
- /* Macros for printing a value in Q5.2 format */
- #define Q52_FMT		"%u.%u"
- #define Q52_ARG(q52)	((q52) / 4), (((q52) & 3) * 100 / 4)
-diff -puN drivers/net/wireless/b43legacy/main.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/main.c
---- a/drivers/net/wireless/b43legacy/main.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/main.c
-@@ -846,10 +846,10 @@ static void handle_irq_noise(struct b43l
- 	/* Get the noise samples. */
- 	B43legacy_WARN_ON(dev->noisecalc.nr_samples >= 8);
- 	i = dev->noisecalc.nr_samples;
--	noise[0] = limit_value(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[1] = limit_value(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[2] = limit_value(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[3] = limit_value(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[0] = clamp_val(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[1] = clamp_val(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[2] = clamp_val(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[3] = clamp_val(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
- 	dev->noisecalc.samples[i][0] = phy->nrssi_lt[noise[0]];
- 	dev->noisecalc.samples[i][1] = phy->nrssi_lt[noise[1]];
- 	dev->noisecalc.samples[i][2] = phy->nrssi_lt[noise[2]];
-diff -puN drivers/net/wireless/b43legacy/phy.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/phy.c
---- a/drivers/net/wireless/b43legacy/phy.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/phy.c
-@@ -1088,7 +1088,7 @@ static void b43legacy_phy_initg(struct b
- 		 * the value 0x7FFFFFFF here. I think that is some weird
- 		 * compiler optimization in the original driver.
- 		 * Essentially, what we do here is resetting all NRSSI LT
--		 * entries to -32 (see the limit_value() in nrssi_hw_update())
-+		 * entries to -32 (see the clamp_val() in nrssi_hw_update())
- 		 */
- 		b43legacy_nrssi_hw_update(dev, 0xFFFF);
- 		b43legacy_calc_nrssi_threshold(dev);
-@@ -1756,7 +1756,7 @@ static s8 b43legacy_phy_estimate_power_o
- 	switch (phy->type) {
- 	case B43legacy_PHYTYPE_B:
- 	case B43legacy_PHYTYPE_G:
--		tmp = limit_value(tmp, 0x00, 0x3F);
-+		tmp = clamp_val(tmp, 0x00, 0x3F);
- 		dbm = phy->tssi2dbm[tmp];
- 		break;
- 	default:
-@@ -1859,7 +1859,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 
- 	/* find the desired power in Q5.2 - power_level is in dBm
- 	 * and limit it - max_pwr is already in Q5.2 */
--	desired_pwr = limit_value(phy->power_level << 2, 0, max_pwr);
-+	desired_pwr = clamp_val(phy->power_level << 2, 0, max_pwr);
- 	if (b43legacy_debug(dev, B43legacy_DBG_XMITPOWER))
- 		b43legacydbg(dev->wl, "Current TX power output: " Q52_FMT
- 		       " dBm, Desired TX power output: " Q52_FMT
-@@ -1905,7 +1905,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 			radio_attenuation++;
- 		}
- 	}
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
- 
- 	txpower = phy->txctl1;
- 	if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
-@@ -1933,8 +1933,8 @@ void b43legacy_phy_xmitpower(struct b43l
- 	}
- 	/* Save the control values */
- 	phy->txctl1 = txpower;
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
--	radio_attenuation = limit_value(radio_attenuation, 0, 9);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
-+	radio_attenuation = clamp_val(radio_attenuation, 0, 9);
- 	phy->rfatt = radio_attenuation;
- 	phy->bbatt = baseband_attenuation;
- 
-@@ -1979,7 +1979,7 @@ s8 b43legacy_tssi2dbm_entry(s8 entry [],
- 		f = q;
- 		i++;
- 	} while (delta >= 2);
--	entry[index] = limit_value(b43legacy_tssi2dbm_ad(m1 * f, 8192),
-+	entry[index] = clamp_val(b43legacy_tssi2dbm_ad(m1 * f, 8192),
- 				   -127, 128);
- 	return 0;
- }
-diff -puN drivers/net/wireless/b43legacy/radio.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/radio.c
---- a/drivers/net/wireless/b43legacy/radio.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/radio.c
-@@ -357,7 +357,7 @@ void b43legacy_nrssi_hw_update(struct b4
- 	for (i = 0; i < 64; i++) {
- 		tmp = b43legacy_nrssi_hw_read(dev, i);
- 		tmp -= val;
--		tmp = limit_value(tmp, -32, 31);
-+		tmp = clamp_val(tmp, -32, 31);
- 		b43legacy_nrssi_hw_write(dev, i, tmp);
- 	}
- }
-@@ -375,7 +375,7 @@ void b43legacy_nrssi_mem_update(struct b
- 		tmp = (i - delta) * phy->nrssislope;
- 		tmp /= 0x10000;
- 		tmp += 0x3A;
--		tmp = limit_value(tmp, 0, 0x3F);
-+		tmp = clamp_val(tmp, 0, 0x3F);
- 		phy->nrssi_lt[i] = tmp;
- 	}
- }
-@@ -839,7 +839,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 		} else
- 			threshold = phy->nrssi[1] - 5;
- 
--		threshold = limit_value(threshold, 0, 0x3E);
-+		threshold = clamp_val(threshold, 0, 0x3E);
- 		b43legacy_phy_read(dev, 0x0020); /* dummy read */
- 		b43legacy_phy_write(dev, 0x0020, (((u16)threshold) << 8)
- 				    | 0x001C);
-@@ -892,7 +892,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 			else
- 				a += 32;
- 			a = a >> 6;
--			a = limit_value(a, -31, 31);
-+			a = clamp_val(a, -31, 31);
- 
- 			b = b * (phy->nrssi[1] - phy->nrssi[0]);
- 			b += (phy->nrssi[0] << 6);
-@@ -901,7 +901,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 			else
- 				b += 32;
- 			b = b >> 6;
--			b = limit_value(b, -31, 31);
-+			b = clamp_val(b, -31, 31);
- 
- 			tmp_u16 = b43legacy_phy_read(dev, 0x048A) & 0xF000;
- 			tmp_u16 |= ((u32)b & 0x0000003F);
-@@ -1905,7 +1905,7 @@ void b43legacy_radio_set_txpower_a(struc
- 	u16 dac;
- 	u16 ilt;
- 
--	txpower = limit_value(txpower, 0, 63);
-+	txpower = clamp_val(txpower, 0, 63);
- 
- 	pamp = b43legacy_get_txgain_freq_power_amp(txpower);
- 	pamp <<= 5;
-_
+
