@@ -1,38 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50667 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755157AbYEAPgi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765480AbYEGTUc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 11:36:38 -0400
-Date: Thu, 1 May 2008 11:36:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Message-ID: <20080501153618.GA470@infradead.org> (sfid-20080501_173625_070134_0D1887D5)
-References: <200805011638.15910.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805011638.15910.mb@bu3sch.de>
+	Wed, 7 May 2008 15:20:32 -0400
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+In-Reply-To: <20080507130548.GA26977@gondor.apana.org.au>
+References: <20080430124055.091382000@sipsolutions.net>
+	 <20080430130050.105344000@sipsolutions.net>
+	 <20080507071026.GA24407@gondor.apana.org.au>
+	 <1210150217.9305.39.camel@johannes.berg>
+	 <20080507090040.GA25186@gondor.apana.org.au>
+	 <1210159339.5642.13.camel@johannes.berg>
+	 <20080507114123.GA26073@gondor.apana.org.au>
+	 <1210161133.5642.19.camel@johannes.berg>
+	 <20080507130548.GA26977@gondor.apana.org.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9Axcf3WAuzXZ5Exyb1Em"
+Date: Wed, 07 May 2008 21:19:49 +0200
+Message-Id: <1210187989.5642.28.camel@johannes.berg> (sfid-20080507_211939_189751_EB72AA91)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 01, 2008 at 04:38:15PM +0200, Michael Buesch wrote:
-> This patchset adds API and one user for a "weak" dma_set_mask().
-> Weak means that it will fallback to smaller masks in case the
-> DMA subsystem rejects a big mask.
-> Currently such rejection may happen if the driver requests a 64bit
-> mask on a VIA machine, for example. dma_set_mask_weak() will fallback
-> to 32bit, in that case, and tell the caller about it by modifying the
-> passed mask.
 
-Why do we need it?  Is the call to set the 32bit mask when it fails
-a too big burden for the driver author?
+--=-9Axcf3WAuzXZ5Exyb1Em
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-05-07 at 21:05 +0800, Herbert Xu wrote:
+> On Wed, May 07, 2008 at 01:52:13PM +0200, Johannes Berg wrote:
+> >
+> > Hmm. Why does busy exist then? Historical accident? I really really
+>=20
+> Yes it's historical baggage.  These days the biggest users would
+> be LLTX drivers which should all be converted to non-LLTX and
+> drivers that don't keep track of queue status properly.
+
+Hmmm mmmm. I'll clean it up later, it gets easier with my patch that
+puts the control info into skb->cb so I'll do that later in a separate
+patch. The way I see it, this is actually *correct* from a "what hits
+the air" point of view and the current code is crappy.
+
+johannes
+
+--=-9Axcf3WAuzXZ5Exyb1Em
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCIA1KVg1VMiehFYAQKD2RAAhYKiUA0L9xunXFOq5N5Fq0jGs7oupoKa
+d6JTl1GcPVCqRocOrFAzmYdIxePvJpx59fUp4r58/4oSU2HOAYX2jkzQhYPqxytS
+r8/6Bx3kqsjlp0AdcMd636HtYquaG5vrxw8rbSgSF+5UqY/led5PTug8DIee8Ng3
+2AjrY49ZDUcDGknb2wxxCsVigwO+Qyejf9W60hH/8pe/9vsqkR5aY3ihYC76b2lo
+erHX31JrXVsaTFXlYpBVSaEpHZusyeufCGgD8PxsbfRwLON1iT9zJWaKhSpt+fzF
+A2o/tQFN00TPvA2u7kEaOenJ2GpFGOHehi9PxZPWqxh9P7GszOmdrhofPc9k1MaG
+ipWN9tsseFhLN5RFYoDzrfKPuqbKS3qJ4G9saK2/h3ojW3CYw8l8xfH4G+8V6EXN
+2EWN71QMw9ruNnALHmG3P/aVI9GKydDXbDSg/jSWN1c0n+D9oNSlHf1/KgOqW8wn
+bH211qdMmaCHoLkp8FtdeyZDkzEDH1xQjR0/elX4UsSC1nsCEjV6gvpyW5EJ5O39
+b8ohxbe0S+DJOAMzlPfvvWemUl4tsaElFuNQnEIAWubtlu20Y6nmbEVHAyxah11S
+PamYmt9fduuc5TEjk3+ZdlkrulBGBUdLdETH/9EGnsarzkgZaqLJzFwIcGPOqHrG
++zYEhdi+zFU=
+=HlvZ
+-----END PGP SIGNATURE-----
+
+--=-9Axcf3WAuzXZ5Exyb1Em--
 
