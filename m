@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4587 "EHLO ra.tuxdriver.com"
+Received: from sacred.ru ([62.205.161.221]:37407 "EHLO sacred.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752013AbYE3Q6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 12:58:22 -0400
-Date: Fri, 30 May 2008 12:15:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chr <chunkeey@web.de>
-Subject: Re: [PATCH] p54: fix skb->cb tx info conversion
-Message-ID: <20080530161511.GA24013@tuxdriver.com> (sfid-20080530_185826_273316_DB2B7484)
-References: <1211813099.4843.12.camel@johannes.berg>
+	id S1755535AbYEGP6w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 11:58:52 -0400
+Message-ID: <4821D10F.4020702@openvz.org> (sfid-20080507_175758_956904_3249BC19)
+Date: Wed, 07 May 2008 19:55:59 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1211813099.4843.12.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: [PATCH 6/7][MAC80211]: Merge error paths in mesh_table_grow().
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 04:44:59PM +0200, Johannes Berg wrote:
-> When I moved the TX info into skb->cb apparently I forgot to change a
-> few places to put the p54-internal data into info->driver_data rather
-> than skb->cb. This should fix it.
->=20
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  drivers/net/wireless/p54/p54common.c |   14 +++++++++-----
->  1 file changed, 9 insertions(+), 5 deletions(-)
->=20
-> --- everything.orig/drivers/net/wireless/p54/p54common.c	2008-05-26 0=
-9:42:49.000000000 +0200
-> +++ everything/drivers/net/wireless/p54/p54common.c	2008-05-26 09:44:=
-40.000000000 +0200
-> @@ -392,16 +392,20 @@ static void p54_rx_frame_sent(struct iee
->  	u32 last_addr =3D priv->rx_start;
-> =20
->  	while (entry !=3D (struct sk_buff *)&priv->tx_queue) {
-> -		range =3D (struct memrecord *)&entry->cb;
-> +		struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(entry);
-> +		range =3D (void *)info->driver_data;
->  		if (range->start_addr =3D=3D addr) {
-> -			struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(entry);
->  			struct p54_control_hdr *entry_hdr;
->  			struct p54_tx_control_allocdata *entry_data;
->  			int pad =3D 0;
-> =20
-> -			if (entry->next !=3D (struct sk_buff *)&priv->tx_queue)
-> -				freed =3D ((struct memrecord *)&entry->next->cb)->start_addr - l=
-ast_addr;
-> -			else
-> +			if (entry->next !=3D (struct sk_buff *)&priv->tx_queue) {
-> +				struct ieee80211_tx_info *ni;
-> +
-> +				ni =3D IEEE80211_SKB_CB(entry->next);
-> +				freed =3D ((void *)ni->driver_data)->start_addr
-> +						- last_addr;
-> +			} else
->  				freed =3D priv->rx_end - last_addr;
-> =20
->  			last_addr =3D range->end_addr;
+This is the first (of two) clean ups after the fixes above.
 
-  CC [M]  drivers/net/wireless/p54/p54common.o
-drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_rx_frame=
-_sent=E2=80=99:
-drivers/net/wireless/p54/p54common.c:406: warning: dereferencing =E2=80=
-=98void *=E2=80=99 pointer
-drivers/net/wireless/p54/p54common.c:406: error: request for member =E2=
-=80=98start_addr=E2=80=99 in something not a structure or union
+The err variable is not even required after this cleaning.
 
-Looks like you are missing a (struct memrecord *) for the freed
-assignment...?
+Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
 
-John
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ net/mac80211/mesh.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 273f0b6..f46fbdb 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -350,20 +350,15 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
+ 	struct mesh_table *newtbl;
+ 	struct hlist_head *oldhash;
+ 	struct hlist_node *p, *q;
+-	int err = 0;
+ 	int i;
+ 
+ 	if (atomic_read(&tbl->entries)
+-			< tbl->mean_chain_len * (tbl->hash_mask + 1)) {
+-		err = -EPERM;
++			< tbl->mean_chain_len * (tbl->hash_mask + 1))
+ 		goto endgrow;
+-	}
+ 
+ 	newtbl = mesh_table_alloc(tbl->size_order + 1);
+-	if (!newtbl) {
+-		err = -ENOMEM;
++	if (!newtbl)
+ 		goto endgrow;
+-	}
+ 
+ 	newtbl->free_node = tbl->free_node;
+ 	newtbl->mean_chain_len = tbl->mean_chain_len;
+@@ -376,11 +371,7 @@ struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
+ 			if (tbl->copy_node(p, newtbl) < 0)
+ 				goto errcopy;
+ 
+-endgrow:
+-	if (err)
+-		return NULL;
+-	else
+-		return newtbl;
++	return newtbl;
+ 
+ errcopy:
+ 	for (i = 0; i <= newtbl->hash_mask; i++) {
+@@ -390,6 +381,7 @@ errcopy:
+ 	kfree(newtbl->hash_buckets);
+ 	kfree(newtbl->hashwlock);
+ 	kfree(newtbl);
++endgrow:
+ 	return NULL;
+ }
+ 
+-- 
+1.5.3.4
+
