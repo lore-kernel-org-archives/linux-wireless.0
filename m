@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758481AbYEEI2Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 04:28:25 -0400
-Subject: Re: [PATCH 20/25] iwlwifi : Set monitor mode for 4965
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-In-Reply-To: <1209974740.2827.124.camel@debian.sh.intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 (sfid-20080505_044417_821018_3824BECA)  <1209971503.3655.0.camel@johannes.berg>
-	 <1209974740.2827.124.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y6FipiVTSpJ9rt3oxjPz"
-Date: Mon, 05 May 2008 10:28:16 +0200
-Message-Id: <1209976096.3655.19.camel@johannes.berg> (sfid-20080505_102801_992938_6D2D66DE)
+Received: from main.gmane.org ([80.91.229.2]:43740 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750934AbYEHOC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 10:02:58 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Ju6hy-00050b-BG
+	for linux-wireless@vger.kernel.org; Thu, 08 May 2008 14:02:54 +0000
+Received: from dslc-082-082-160-009.pools.arcor-ip.net ([82.82.160.9])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 14:02:54 +0000
+Received: from feldmann_markus by dslc-082-082-160-009.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 14:02:54 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: is there support for my Card
+Date: Thu, 08 May 2008 16:02:35 +0200
+Message-ID: <fvv15v$9jr$1@ger.gmane.org> (sfid-20080508_160157_974941_8C9143F3)
+References: <fvp2dg$d26$1@ger.gmane.org> <fvp2kq$d26$2@ger.gmane.org> <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Renzmann schrieb:
+> Hi.
+> 
+> Markus Feldmann wrote:
+>>> i only want to know if there is support in the next stable Kernel
+>>> 2.6.26 for my Card ?
+>> AR5BXB61
+> 
+> That's an AR5007-based card
+Are you sure. It looks like this Card,
+http://www.atheros.com/pt/AR5006EG.htm
 
---=-Y6FipiVTSpJ9rt3oxjPz
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+and not like this one,
+http://www.atheros.com/pt/AR5007EG.htm
 
-On Mon, 2008-05-05 at 16:05 +0800, Zhu Yi wrote:
-> On Mon, 2008-05-05 at 09:11 +0200, Johannes Berg wrote:
-> > Those conditions will never be true.=20
->=20
-> Why? I see mac80211 never passes IEEE80211_IF_TYPE_MNTR to
-> add_interface(). But this patch passes the flag in configure_filter().
-> Please take a look.
+However on Boot my System shows a W-Lan Card of the Type AR5006EG.
+Is this a Bug ?
+Wherefrom do you know that the Card with Chipset 'AR5BXB61' is from the
+Type AR5007 ?
 
-That's not a flag. Yes, I did miss that call
-	=EF=BB=BFiwl4965_set_mode(priv, IEEE80211_IF_TYPE_MNTR)
-but I still don't think you should treat monitors as a "mode" but rather
-as a reason to pass more frames up.
-
-> > In the case of the latter, that is
-> > a good thing, in the case of the former that isn't.
->=20
-> Could you elaborate?
-
-You're precluding doing any kind of useful monitor operation when the
-card is actually up&running, which is quite useful for debugging.
-
-By the second condition, you're short-cutting the RX path so that when a
-monitor is enabled any other type of interface won't operation properly,
-as far as I can tell.
-
-johannes
-
---=-Y6FipiVTSpJ9rt3oxjPz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB7FH6Vg1VMiehFYAQIr4BAAtGA2NzQGZRMUUSfDoJTyJX4ntNT2aRBM
-lo59SY8VMDBsY7lB+ewd9hJqHGUm//mxCmzrMmY+Y+mGoUr7GysQLjRQsXnmSvhn
-Bp1ZD+ITMkNdmKh1o6jPzaGauthuKcHtoFNMZGKMn/ZBDVFZsoHFDqmlfWjZQIDN
-/WDXXzZsEjnNGpZ49xnHVSqaBIbxG00wOtlsKlmztd5bw9GFK1kWjJCeVknDfJwt
-ItBNarCXDssPwujPvqydDD4s5IHcTT7LUwqY28teXOFZyrx7HL//0FfPt9DAg8FA
-pXZuOd2lqe1Wa9TDzaGPjYhQoLjdRaBiPpYVOhhmw+NzwUY5mPn29zAi3txEiGC4
-tNvig2Z5r0PT9ob322LHT0EvY/i3LRTeGG9KoFt4HLHKxSGE27rl6Ca7tj1KBkUd
-KkvOYxGAdadTSQJF1hOoku9T2RjNkznTX/iL21Xk4bRnWlxbOXhoQ1vZMUrhSthl
-e94W16YjB3Dqzkjh1CC4arofAmKZYqFxajemiStd5AdHYHWORVxC72oLBNGuQsSV
-gcU5Fota2P0v+GZUEQbH0cR/o4sQagkIAa0ddQ0crPkc5wKO8fm1NtmApiTQOKs2
-K7krHUOIeg/4MrH81B78X78cBgrGTDRgEmfSjy7UHBvP1CgSuhl2d0FaA5lDFknj
-vTRWV+F8LzA=
-=vcXA
------END PGP SIGNATURE-----
-
---=-Y6FipiVTSpJ9rt3oxjPz--
+Regards Markus
 
