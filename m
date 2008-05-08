@@ -1,106 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:43907 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755689AbYEMBQv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999AbYEHP2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 21:16:51 -0400
-Date: Mon, 12 May 2008 21:16:44 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: mcgrof@gmail.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH] ath5k: Fix loop variable initializations
-Message-ID: <20080513011644.GA23252@hash.localnet> (sfid-20080513_031654_845493_8B3CF467)
-References: <E1JvZ2x-0005kb-TH@hash.localnet> <40f31dec0805121618j4a2f8bedw78e2ce36d8158649@mail.gmail.com> <20080513001726.GA23128@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080513001726.GA23128@hash.localnet>
+	Thu, 8 May 2008 11:28:40 -0400
+Subject: Re: 015-mac80211-tx-info-skb-cb.patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200805081734.23354.IvDoorn@gmail.com> (sfid-20080508_172446_517725_0910B37D)
+References: <200805081503.41025.IvDoorn@gmail.com>
+	 <200805081710.03869.IvDoorn@gmail.com>
+	 <1210259130.3547.59.camel@johannes.berg>
+	 <200805081734.23354.IvDoorn@gmail.com>
+	 (sfid-20080508_172446_517725_0910B37D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MLW79PZ48PsCfwG6aM/k"
+Date: Thu, 08 May 2008 17:28:29 +0200
+Message-Id: <1210260509.3547.62.camel@johannes.berg> (sfid-20080508_172739_477509_2264D61F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 08:17:26PM -0400, Bob Copeland wrote:
-> On Tue, May 13, 2008 at 02:18:48AM +0300, Nick Kossifidis wrote:
-> > Why not doing a simple
-> > rxs.flag = 0 ;
-> > or a check of flags set by mac80211 at the start of the loop ?
 
-Here's an updated version:
+--=-MLW79PZ48PsCfwG6aM/k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In ath5k_tasklet_rx, both status structures 'rxs' and 'rs' are
-initialized at the top of the tasklet, but not within the loop.
-If the loop is executed multiple times in the tasklet then the
-variables may see changes from previous packets.
+On Thu, 2008-05-08 at 17:34 +0200, Ivo van Doorn wrote:
+> On Thursday 08 May 2008, Johannes Berg wrote:
+> >=20
+> > > > Right :) I'm pretty much done with the skb->cb conversion too excep=
+t for
+> > > > ath5k (nick) and rt2x00 (you)
+> > >=20
+> > > I'm going to rebase rt2x00.git this weekend to update from wireless-t=
+esting,
+> > > since the skb->cb patches now depends on HW crypto which is not ready
+> > > for upstream yet, I am going to reverse the patch order so the skb->c=
+b patches
+> > > and some other updates can go upstream more easily.
+> >=20
+> > Cool, thanks. If you have a single patch that can pretty much go into
+> > wireless-testing you can send it to me and I'll roll it into my patch.
+>=20
+> Well at the moment I have it split into 2 patches, one that is only
+> preperation work by splitting a particular function to guarentee the skb-=
+>cb
+> rules are being followed. And the second patch is the actual conversion.
+> Those 2 can easily be merged into a single patch which you can roll into =
+your
+> patch.
 
-For TKIP, this results in 'Invalid Michael MIC' errors if two packets
-are processed in the tasklet: rxs.flag gets set to RX_DECRYPTED by
-mac80211 when it decrypts the first encrypted packet.  The subsequent
-packet will have RX_DECRYPTED set upon entry to mac80211, so mac80211
-will not try to decrypt it.
+Whatever you like better. Maybe it's easier to follow the code/patch
+flow if your preparation patch goes in first on its own?
 
-We currently initialize all but two fields in the structures, so fix
-the other two.
+johannes
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |    2 ++
- drivers/net/wireless/ath5k/hw.c   |    6 ++++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+--=-MLW79PZ48PsCfwG6aM/k
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 4e5c8fc..635b9ac 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1787,6 +1787,8 @@ ath5k_tasklet_rx(unsigned long data)
- 
- 	spin_lock(&sc->rxbuflock);
- 	do {
-+		rxs.flag = 0;
-+
- 		if (unlikely(list_empty(&sc->rxbuf))) {
- 			ATH5K_WARN(sc, "empty rx buf pool\n");
- 			break;
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 5fb1ae6..77990b5 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -4119,6 +4119,7 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
- 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
- 		AR5K_5210_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
- 	rs->rs_status = 0;
-+	rs->rs_phyerr = 0;
- 
- 	/*
- 	 * Key table status
-@@ -4145,7 +4146,7 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
- 		if (rx_status->rx_status_1 &
- 				AR5K_5210_RX_DESC_STATUS1_PHY_ERROR) {
- 			rs->rs_status |= AR5K_RXERR_PHY;
--			rs->rs_phyerr = AR5K_REG_MS(rx_status->rx_status_1,
-+			rs->rs_phyerr |= AR5K_REG_MS(rx_status->rx_status_1,
- 					   AR5K_5210_RX_DESC_STATUS1_PHY_ERROR);
- 		}
- 
-@@ -4193,6 +4194,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
- 		AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
- 	rs->rs_status = 0;
-+	rs->rs_phyerr = 0;
- 
- 	/*
- 	 * Key table status
-@@ -4215,7 +4217,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 		if (rx_status->rx_status_1 &
- 				AR5K_5212_RX_DESC_STATUS1_PHY_ERROR) {
- 			rs->rs_status |= AR5K_RXERR_PHY;
--			rs->rs_phyerr = AR5K_REG_MS(rx_err->rx_error_1,
-+			rs->rs_phyerr |= AR5K_REG_MS(rx_err->rx_error_1,
- 					   AR5K_RX_DESC_ERROR1_PHY_ERROR_CODE);
- 		}
- 
--- 
-1.5.4.2.182.gb3092
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUASCMcHKVg1VMiehFYAQJu5RAAuhNo2K7Nk2J0yI1atjjXNbF10hDGkhdN
+31dv9zsxPDTzr5fYRSP5g2LDrUWPx1H6KsyZ7OqIDncodyUMbueDixp9d4dcPwHC
+mfjnjb1fU8MIDZWidUEdk7h2vikv6kOdq0PQb6yXMy5mdCK1hWECmAdtvz+bzpBv
+OWnfZuWFHnHB39bJAWjuIzbr18oszb/b4GFRP9rDXA2y8Vpc+NOl3+BUZgOgEKa6
+5uOkcmZGMn77AuDDOvJJnQCrnX9H8lgG5AMI99MN9o6GkVZb9hQ/cJMY0oKp0aqc
+uoPrEfXUcUHQj1gtyZ3NoMKHPXYRrhMOYno66GaEETnpEx7fz6brtjAPxmLM9hyn
+Re8ohou/33YxIkP35qWbl9WyQybcsy0++eN3IkhbckMFkL7f0SeK7bpPiNuFi0Nx
+93g15NrNQJ2mn98PXLVSb5YH3YaZFOoUYt56kQySkvCClj80FMM57/ZZJm1NROXs
+vhORBfy6fXGf6Wny2pL6t5swlDFdA/1/7dNscdfogBUTO2Y8tadgSVPvMPSdSZLO
+7vHPwwTJZCy/isN809dFXrzK+Me3fUqp0KXtTxEuGkDW21PkyVIqrIEHyq3qmAE8
+yXkH1ttYEOf/2zk7NOth5lKiLXo+IF4Z3RKOhvU89RzjWhBV8gxiuVU5fMjO17Ac
+AcdzONWzMUg=
+=yM+q
+-----END PGP SIGNATURE-----
 
--- 
-Bob Copeland %% www.bobcopeland.com 
+--=-MLW79PZ48PsCfwG6aM/k--
 
