@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:36154 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750965AbYEJHYe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 03:24:34 -0400
-Date: Sat, 10 May 2008 09:24:28 +0200
-From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH] [NET] libertas: check for mesh support before trying to
-	use it
-Message-ID: <20080510072428.GA1153@Chamillionaire.breakpoint.cc> (sfid-20080510_092458_605517_7B59DDDE)
-References: <1208448814.9212.270.camel@pmac.infradead.org> <1208455363.20193.3.camel@localhost.localdomain> <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3477 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932859AbYEHTax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 15:30:53 -0400
+Date: Thu, 8 May 2008 14:51:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: xemul@openvz.org, johannes@sipsolutions.net, netdev@axxeo.de,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read
+	lock.
+Message-ID: <20080508185123.GA7250@tuxdriver.com> (sfid-20080508_213016_411544_2BD398E3)
+References: <4820997E.1070305@openvz.org> <20080506.134047.86330538.davem@davemloft.net> <4821442D.8010801@openvz.org> <20080506.225950.181623233.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080506.225950.181623233.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Siewior <sebastian@breakpoint.cc>
+On Tue, May 06, 2008 at 10:59:50PM -0700, David Miller wrote:
 
-This will prevent the execution of lbs_ethtool_get_stats() via ethtool -S
-if there is no mesh support.
+> Whether you should resubmit your patch is up to the wireless
+> folks :-)
 
-Signed-off-by: Sebastian Siewior <sebastian@breakpoint.cc>
+If you don't do it Ingo Oeser's way then it looks like you would need
+a patch like the one below.  And with the patch below, the last hunk
+of your patch will probably need to be fixed-up to match.
+
+Should I apply the patch below and wait for you to rebase and
+resubmit yours?
+
 ---
-Dan, this will test prevent the usage of ethtool -S in case there is no
-mesh support. If you fine with this than we could apply my or David's
-other patch to enable the function again and then worry about the error
-path.
-David: I saw your patch that is doing this in a other way but I thing
-that one looks better :)
 
- drivers/net/wireless/libertas/ethtool.c |    6 ++++++
+From: John W. Linville <linville@tuxdriver.com>
+Subject: [PATCH] mac80211 mesh: add missing check for kmalloc failure
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/mesh_pathtbl.c |    6 ++++++
  1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-index dcfdb40..a79d698 100644
---- a/drivers/net/wireless/libertas/ethtool.c
-+++ b/drivers/net/wireless/libertas/ethtool.c
-@@ -113,8 +113,14 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
- 
- static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
- {
-+	struct lbs_private *priv = dev->priv;
-+
- 	switch (sset) {
- 	case ETH_SS_STATS:
-+
-+		if (!priv->mesh_tlv)
-+			return -EOPNOTSUPP;
-+
- 		return MESH_STATS_NUM;
- 	default:
- 		return -EOPNOTSUPP;
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 5845dc2..ab54f77 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -171,6 +171,12 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
+ 	new_mpath->flags = 0;
+ 	skb_queue_head_init(&new_mpath->frame_queue);
+ 	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	if (!new_node) {
++		atomic_dec(&sdata->u.sta.mpaths);
++		kfree(new_mpath);
++		err = -ENOMEM;
++		goto endadd2;
++	}
+ 	new_node->mpath = new_mpath;
+ 	new_mpath->timer.data = (unsigned long) new_mpath;
+ 	new_mpath->timer.function = mesh_path_timer;
 -- 
-1.5.4.3
+1.5.3.3
 
+-- 
+John W. Linville
+linville@tuxdriver.com
