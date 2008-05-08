@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:28542 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220AbYEJWGx (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:40011 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430AbYEHNOW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 18:06:53 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2589921waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 15:06:53 -0700 (PDT)
-Message-ID: <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com> (sfid-20080511_000719_133774_EF8E9ADC)
-Date: Sun, 11 May 2008 01:06:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Vincent C Jones" <v.jones@networkingunlimited.com>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	Thu, 8 May 2008 09:14:22 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+Date: Thu, 8 May 2008 15:13:56 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+References: <20080430124055.091382000@sipsolutions.net> <200805081500.00682.mb@bu3sch.de> <20080508130846.GA3769@gondor.apana.org.au>
+In-Reply-To: <20080508130846.GA3769@gondor.apana.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
-	 <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
-	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
-	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
-	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805081513.56521.mb@bu3sch.de> (sfid-20080508_151324_073760_59738F14)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 11, 2008 at 12:48 AM, Vincent C Jones
-<v.jones@networkingunlimited.com> wrote:
->
-> On Sat, 2008-05-10 at 21:56 +0300, Tomas Winkler wrote:
->> >
->> > May be more to this than just missing 802.11a channel reporting...
->> > walked to within range of a NetGear dual-band 802.11N 5GHz/11G 2.4GHz AP
->> > and could not even see the 802.11A side of the AP, (while another
->> > machine was associated with it, so both halves of the AP were up).
->> > I associated on the G channel, then tried to force an association on the
->> > A channel by setting the frequency with iwconfig. At some point, I got
->> > the following (note that I could still associate with the G channel when
->> > done):
->> >
->> > ay 10 11:20:04 X61 kernel: ------------[ cut here ]------------
->> > May 10 11:20:04 X61 kernel: WARNING: at
->> > include/../net/mac80211/rate.h:153 rs_get_rate+0x159/0x194 [iwl4965]()
->>
->> Something went wrong with station management.  Do you use same BSSID
->> on the both interfaces A and G?
->>
->> Thanks
->> Tomas
->
-> No.
-> 1st Floor-NetGear Dual Band AGN A/N on 36, BSSID = NetworkingUnlimited
->                                  G on 11, BSSID = NetworkingUnlimited-G
-> 2nd Floor - 3Com POE A/G in A modeA on 48, BSSID = NetworkingUnlimited
->
+On Thursday 08 May 2008 15:08:46 Herbert Xu wrote:
+> On Thu, May 08, 2008 at 03:00:00PM +0200, Michael Buesch wrote:
+> >
+> > Ok, what about DMA error. kmalloc error or something else?
+> > ring overflow was a bad example, of course.
+> 
+> If your NIC gets DMA errors all the time then I suggest you
+> invest in some new hardware.  Ditto if you fail to kmalloc all
+> the time.
+> 
+> If they're rare as they should be then dropping the packet is
+> perfectly reasonable.
 
-I'm asking for BSSID like mac address not SSID like network name
-Thanks
-Tomas
->
+Ok, why is nobody actually answering my _question_? :)
+So I'll try to answer it by myself: the hard_start_xmit callback
+is actually supposed to return "void", but it returns "int" just
+for historical reasons. So there is no way to fail in a TX handler.
+If a failure happens, the driver must free and drop the skb.
+How likely errors are is a completely different story. One could argue
+that errors are unlikely for any part of the kernel, except for very
+sone special cases.
+
+So does that also apply to the wireless stack? Should we change drivers
+to always return 0. later we can change the function prototype to return void.
+
+-- 
+Greetings Michael.
