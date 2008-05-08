@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:48816 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759587AbYEFJtG (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:26833 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755317AbYEHStu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 05:49:06 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so1597067rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 02:49:05 -0700 (PDT)
-Message-ID: <a32f33a40805060249s2e20455fk88825329386b7475@mail.gmail.com> (sfid-20080506_114900_897135_33C7C1AD)
-Date: Tue, 6 May 2008 11:49:05 +0200
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [Rt2400-devel] rt2500usb current git BUG
-Cc: "Luis Correia" <luis.f.correia@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210066571.8012.73.camel@johannes.berg>
+	Thu, 8 May 2008 14:49:50 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so925499fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 11:49:48 -0700 (PDT)
+Message-ID: <8704f27d0805081149wa91072en32ce8912ba1a14ff@mail.gmail.com> (sfid-20080508_204851_997602_89CCF9AA)
+Date: Thu, 8 May 2008 21:49:43 +0300
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: "Volker Braun" <vbraun@physics.upenn.edu>
+Subject: Re: dynamic wep with mulitple keys
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1210271472.30724.43.camel@carrot.hep.upenn.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <efe7343f0804291454p40914cadpf06846270d080e2@mail.gmail.com>
-	 <a32f33a40805060206l1af71db0tced88dd3d3d08c30@mail.gmail.com>
-	 <1210066571.8012.73.camel@johannes.berg>
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
+	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
+	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
+	 <1210271472.30724.43.camel@carrot.hep.upenn.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/6/08, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thu, May 8, 2008 at 9:31 PM, Volker Braun <vbraun@physics.upenn.edu> wrote:
+> Here is more data on my problem with dynamic wep.
 >
-> > The real problem is with beaconing, the only way we could get around
-> > this issue is
-> > creating a local skb in which we store the beacons given to us, and
-> > after all iterations
-> > are over, write the beacons one by one to the hardware.
-> > Obviously this results in race conditions where the beacon might be
-> > written to the
-> > hardware while the interface is being removed... Which would mean we
-> > could end up
-> > having to cripple rt2x00 again and remove all support for virtual
-> > interfaces... :S
-> >
-> > Johannes, do you have any suggestions?
+Thanks for that !
+
+> compat-wireless-2008-05-07 + iwl4965 + swcrypto=1: Associates and
+> obtains dhcp lease, works fine.
 >
-> Well you could
->  (a) keep your own BSS interfaces list but you might need a mutex and
->      two work structs to make it flawless
->  (b) provide, in mac80211, an iterator that takes the RTNL instead of
->      RCU, I think that should work
+> So it really is about the HW accelleration. I tried your patch (without
+> swcrypto=1). First, output of wpa_supplicant:
+>
 
-But hadn't you removed the RTNL locking to make the multi-BSS code easier?
-I think I can code around the problem to make the ERP configuration do
-a simple check if any interface has short preamble, and if that is the
-case all interfaces will have short preamble. The same would go for
-short slot time.
-Apparently the current code was broken in that respect anyway since it
-would assume the timing of the last interface in the list.
+Yep...
 
-As for the beaconing, the only location I cannot get around updating
-the beacon in the driver from scheduled context is in the
-suspend/resume path. And I believe resuming a mac80211 network
-interface is already a source of problems anyway...
-Well I'll dive a bit deeper into this and see what can be done about this.
+> Your patch yields:
+>
+> May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
+> May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=0 alg=0,keyid=3 static_key=0
+>
 
-Ivo
+sta_id 31 is the broadcast station => key_idx = 1 for bcast station
+This really proves what Tomas said: you get the unicast key after the
+groupkey. Quite strange, we thought it couldn't happen, and actually,
+we hadn't any use case that led to this scenario. I am not sure I will
+be able to reproduce the bug here, in any case, I understand what the
+issue is and will try to send a patch shortly (next week)
+
+> Should static_key not be the other way round (key_idx 3 is unicast)? In
+> any case, after a while the broadcast key gets updated: wpa_supplicant
+> says
+>
+
+{...}
+
+This is likely because your AP is configured to rekey the groupkey
+every ... minutes. So the groupkey is updated.
+
+> May  8 14:05:10 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=2 static_key=0
+
+Yep, the idx of the group key is now 2 (it was 1 before)
+
+> May  8 14:10:30 localhost kernel: iwl4965: disable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
+> May  8 14:10:30 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=0
+
+See ? now the group key idx and 1 again. This is normal, this the way
+the AP switches between the keys:
+
+1, 2, 1, 2, ....
+wpa_supp first install 1, then 2, then removes one (the disable
+hwcrypto line) and updates the "new" 1 etc....
+
+
+thanks
+
+-- 
+Emmanuel Grumbach
+egrumbach@gmail.com
