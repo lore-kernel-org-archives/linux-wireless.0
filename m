@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:25974 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756211AbYEMISa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:18:30 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2164607fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 01:18:29 -0700 (PDT)
-Message-ID: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com> (sfid-20080513_101834_911613_BEEE2E09)
-Date: Tue, 13 May 2008 11:18:29 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>
-Subject: 11n + wpa_supplicant
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Tomas Winkler" <tomasw@gmail.com>
+Received: from mx1.suse.de ([195.135.220.2]:47750 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762091AbYEHRnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 13:43:32 -0400
+Date: Thu, 8 May 2008 10:42:14 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 08/16] b43: Fix dual-PHY devices
+Message-ID: <20080508174214.GI855@suse.de> (sfid-20080508_194235_526656_1370271B)
+References: <20080508173436.454278564@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080508174122.GA855@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
-the spec of 11n makes the support on AES mandatory, but not TKIP.
-Meaning that a NIC can support WPA2 and 11n separately, but not TKIP
-in 11n. The RC4 encryption machine has a delay that makes difficult to
-encrypt in TKIP (or WEP) in 11n rates. Intel's 11n are such NICs, 11n
-+ TKIP/WEP is not supported.
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-The problem here is that the association (which can be 11n or not)
-occurs before the 4-way handshake. Let's say that I have an AP that
-publishes only TKIP in its WPA IE and 11n IE, I can understand that
-there is no way I should do 11n association. But what happens with an
-AP that publishes TKIP + AES in its RSN IE and 11n IE ? I could
-associate in 11n, but then wpa_supplicant might be configured to
-associate in TKIP (although the AP support AES), and I would be in an
-unsupported mode.
+commit 2e35af143a1380173ba292e48e9b4913ef16b4ee upstream
 
-One solution would be to make wpa_supplicant understand what 11n is,
-but that's not it's job.
-Another solution would be to make wpa_supplicant tell me that it
-intends to use TKIP before asking me to associate.
+This fixes operation of dual-PHY (A/B/G) devices.
+Do not anounce the A-PHY to mac80211, as that's not supported, yet.
 
-Any ideas ?
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-thanks
+---
+ drivers/net/wireless/b43/main.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3912,6 +3912,14 @@ static int b43_wireless_core_attach(stru
+ 		err = -EOPNOTSUPP;
+ 		goto err_powerdown;
+ 	}
++	if (1 /* disable A-PHY */) {
++		/* FIXME: For now we disable the A-PHY on multi-PHY devices. */
++		if (dev->phy.type != B43_PHYTYPE_N) {
++			have_2ghz_phy = 1;
++			have_5ghz_phy = 0;
++		}
++	}
++
+ 	dev->phy.gmode = have_2ghz_phy;
+ 	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
+ 	b43_wireless_core_reset(dev, tmp);
 
 -- 
-Emmanuel Grumbach
-egrumbach@gmail.com
