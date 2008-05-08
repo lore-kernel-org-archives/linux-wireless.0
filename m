@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39720 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758838AbYEAR0W (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57893
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756909AbYEHD0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 13:26:22 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Date: Thu, 1 May 2008 19:25:45 +0200
-Cc: Christoph Hellwig <hch@infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de> <200805011916.07340.mb@bu3sch.de> <200805011022.55390.jbarnes@virtuousgeek.org>
-In-Reply-To: <200805011022.55390.jbarnes@virtuousgeek.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011925.46200.mb@bu3sch.de> (sfid-20080501_192627_184057_1093BEB9)
+	Wed, 7 May 2008 23:26:13 -0400
+Date: Wed, 07 May 2008 20:26:06 -0700 (PDT)
+Message-Id: <20080507.202606.242037993.davem@davemloft.net> (sfid-20080508_052517_251398_44E7CFED)
+To: herbert@gondor.apana.org.au
+Cc: mb@bu3sch.de, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	ron.rindjunsky@intel.com, tomasw@gmail.com, ivdoorn@gmail.com,
+	peter.p.waskiewicz.jr@intel.com
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080508032208.GA401@gondor.apana.org.au>
+References: <20080507130548.GA26977@gondor.apana.org.au>
+	<200805071548.06693.mb@bu3sch.de>
+	<20080508032208.GA401@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 May 2008 19:22:55 Jesse Barnes wrote:
-> On Thursday, May 01, 2008 10:16 am Michael Buesch wrote:
-> > Ok, will redo the patches with that added and the name changed.
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Thu, 8 May 2008 11:22:08 +0800
+
+> On Wed, May 07, 2008 at 03:48:06PM +0200, Michael Buesch wrote:
 > >
-> > > Most drivers just do the fallback themselves, right?
-> >
-> > Right.
-> >
-> > > So it makes sense to
-> > > just update the current code to fallback, and update drivers wanting
-> > > specific mask values to check afterwards.  I hate to inflict that kind of
-> > > driver wide update on Michael though... :)
-> >
-> > Well, that's a lot of work and I'm not sure it's worth it.
-> > I could live with having dma_set_mask as an API that fails on bad masks
-> > and dma_request_mask as an API above that which retries. I think that's
-> > just fine. Drivers can be migrated over time to the new API (or not. That
-> > can be the driver maintainer's choice).
+> > So there's no way to actually fail in a TX handler? Drivers
+> > are doomed to drop the packet, if they cannot handle it due to
+> > ring overflow?
 > 
-> Can you also update the docs with the new call, indicating that it should 
-> probably used in all but special cases?
+> You're supposed to stop the queue before the ring overflows.
 
-Yeah sure. Forgot that.
+Right, and this is why drivers choose a TX wakeup threshold such
+that they can accept an arbitrarily sized TSO frame.
 
--- 
-Greetings Michael.
+For example, from drivers/net/tg3.c's ->hard_start_xmit():
+
+	if (unlikely(tg3_tx_avail(tp) <= (MAX_SKB_FRAGS + 1))) {
+		netif_stop_queue(dev);
+		if (tg3_tx_avail(tp) > TG3_TX_WAKEUP_THRESH(tp))
+			netif_wake_queue(tp->dev);
+	}
+
+The driver is responsible for stopping the queue _before_ it
+enters a state where there is not enough space in the queue
+to accept a packet.
+
+This is why most drivers make the following kind of BUG check
+at the start of their ->hard_start_xmit()
+
+	if (unlikely(tg3_tx_avail(tp) <= (skb_shinfo(skb)->nr_frags + 1))) {
+		if (!netif_queue_stopped(dev)) {
+			netif_stop_queue(dev);
+
+			/* This is a hard error, log it. */
+			printk(KERN_ERR PFX "%s: BUG! Tx Ring full when "
+			       "queue awake!\n", dev->name);
+		}
+		return NETDEV_TX_BUSY;
+	}
