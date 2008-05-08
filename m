@@ -1,114 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51535 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167AbYENK1A (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55187 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764054AbYEHOnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 06:27:00 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCHv2] b43: use the bitrev helpers rather than rolling a private one
-Date: Wed, 14 May 2008 12:26:37 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Thu, 8 May 2008 10:43:55 -0400
+Subject: Re: iwlwifi and tx info in skb->cb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1210708518.6191.0.camel@brick> <1210727615.6191.20.camel@brick> <200805141221.00979.mb@bu3sch.de>
-In-Reply-To: <200805141221.00979.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805141226.37481.mb@bu3sch.de> (sfid-20080514_122703_442693_D0A17AE4)
+In-Reply-To: <1ba2fa240805071721i3d1e3258s1e8c024c4cae9239@mail.gmail.com> (sfid-20080508_022003_250745_C12D08D3)
+References: <1210197711.3547.1.camel@johannes.berg>
+	 <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com>
+	 <1210203054.3547.12.camel@johannes.berg>
+	 <1ba2fa240805071721i3d1e3258s1e8c024c4cae9239@mail.gmail.com>
+	 (sfid-20080508_022003_250745_C12D08D3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XsVRIcx48nR8zfmCJkGX"
+Date: Thu, 08 May 2008 16:05:22 +0200
+Message-Id: <1210255522.3547.48.camel@johannes.berg> (sfid-20080508_164305_829833_A954823F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 May 2008 12:21:00 Michael Buesch wrote:
-> On Wednesday 14 May 2008 03:13:35 Harvey Harrison wrote:
-> > The 4-bit reversal flip_4bit is replaced with the bitrev helper
-> > bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
-> > where a register is read from for checking there.  The other caller
-> > explicitly passes an array index which is guaranteed to be within range
-> > and so a B43_WARN is not added there.
-> > 
-> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Reviewed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Reviewed-off bah :D
-That's when want to you change a Signed-off-by to a Reviewed-by. ;)
-
-> 
-> > ---
-> >  drivers/net/wireless/b43/phy.c |   27 ++++++---------------------
-> >  1 files changed, 6 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-> > index de024dc..feea79f 100644
-> > --- a/drivers/net/wireless/b43/phy.c
-> > +++ b/drivers/net/wireless/b43/phy.c
-> > @@ -28,6 +28,7 @@
-> >  #include <linux/delay.h>
-> >  #include <linux/io.h>
-> >  #include <linux/types.h>
-> > +#include <linux/bitrev.h>
-> >  
-> >  #include "b43.h"
-> >  #include "phy.h"
-> > @@ -83,25 +84,9 @@ const u8 b43_radio_channel_codes_bg[] = {
-> >  	72, 84,
-> >  };
-> >  
-> > +#define bitrev4(tmp) (bitrev8(tmp) >> 4)
-> >  static void b43_phy_initg(struct b43_wldev *dev);
-> >  
-> > -/* Reverse the bits of a 4bit value.
-> > - * Example:  1101 is flipped 1011
-> > - */
-> > -static u16 flip_4bit(u16 value)
-> > -{
-> > -	u16 flipped = 0x0000;
-> > -
-> > -	B43_WARN_ON(value & ~0x000F);
-> > -
-> > -	flipped |= (value & 0x0001) << 3;
-> > -	flipped |= (value & 0x0002) << 1;
-> > -	flipped |= (value & 0x0004) >> 1;
-> > -	flipped |= (value & 0x0008) >> 3;
-> > -
-> > -	return flipped;
-> > -}
-> > -
-> >  static void generate_rfatt_list(struct b43_wldev *dev,
-> >  				struct b43_rfatt_list *list)
-> >  {
-> > @@ -3069,13 +3054,13 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
-> >  		}
-> >  		radio_stacksave(0x0078);
-> >  		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
-> > -		flipped = flip_4bit(tmp);
-> > +		B43_WARN_ON(tmp > 15);
-> > +		flipped = bitrev4(tmp);
-> >  		if (flipped < 10 && flipped >= 8)
-> >  			flipped = 7;
-> >  		else if (flipped >= 10)
-> >  			flipped -= 3;
-> > -		flipped = flip_4bit(flipped);
-> > -		flipped = (flipped << 1) | 0x0020;
-> > +		flipped = (bitrev4(flipped) << 1) | 0x0020;
-> >  		b43_radio_write16(dev, 0x0078, flipped);
-> >  
-> >  		b43_calc_nrssi_threshold(dev);
-> > @@ -3708,7 +3693,7 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
-> >  	tmp1 >>= 9;
-> >  
-> >  	for (i = 0; i < 16; i++) {
-> > -		radio78 = ((flip_4bit(i) << 1) | 0x20);
-> > +		radio78 = (bitrev4(i) << 1) | 0x0020;
-> >  		b43_radio_write16(dev, 0x78, radio78);
-> >  		udelay(10);
-> >  		for (j = 0; j < 16; j++) {
-> 
-> 
-> 
+--=-XsVRIcx48nR8zfmCJkGX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> >  > This is for scatter gather. Nothing to do with aggregation. If you g=
+et
+> >  > fragmented frame you can send it out without linearizing in CPU. in
+> >  > numer of TB - TX buffers (which is limitted bu MAX_NUM_OF_TBS)  But
+> >  > I'm just over ever explaining :)
+> >
+> >  We don't support that in mac80211 right now, why do you have that ther=
+e?
+>=20
+> Currently we actively use 2 of them. First for TX command second for
+> actual frame.  It would be even worth if we need to expand
+> each packet also for TX command.
 
--- 
-Greetings Michael.
+We will no longer do that after davem and I figure out those allocation
+patches.
+
+You should implement TCP checksumming in the hardware. *that* would help
+a lot.
+
+johannes
+
+--=-XsVRIcx48nR8zfmCJkGX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCMIoaVg1VMiehFYAQLTJRAAxOMvlD5s89cNyMQzPSChRXHRaz6WairZ
+03s85bkJlO7UAN3kaLi1cd9HQMl1VQcpCdPKTpHptXHqiIqq+birdtbWgAb44mSB
+2Yu/3diVvpuaXE48HNRwFf7y9mhqr23kEFSeSbZroyqHa0rgeUBRgs3XYhXWn4KW
+yYvCSW2lIRG5zToEHCe/eO7EpLK9pOUWlXLGny8NT4gS8X+OsrhkcpCRG/S4cpIH
+JlJ7962t/qwMdqRQX7Y4Ej2Chhzi2tBmFEsUJzLL8qb84OjS3a7CzQnf+29X7ZVO
++ytou40bkZJFpEeR/cWIXIY9UESqM4O9rC1ZJNK5b0zB+/psKo6W9UDJYVg+YaLo
+VBw21vRKTepM1rJczhqKYWoJhk6MdJNmRh1ZaX4N6wKqAS434u/xy+IAKMZ+JPor
+c4bRNHG/VbvwqVZNyzOCwzZlroD2TLwfRYGFuhF4e7c/KjhpQLeUzDBO/zjSk4YI
+8F6wfrqHXAgV+L8s+wk9cR5aDvnblVyduXtnPHaaoI9rkkvuQRXNl7slCAUFXwdo
+0tMlTd82ytZa1l2c49sfAvQqDkKH8bRIM+xOsqfM2mZDzXBxv0+QmYD2kIHClV3x
+ZGcUpUk0mLtAPs/4f2sd6q0p1NbNWLgOpcT+N5O/tkUrm8REvbKmwCE5LPZLyV/4
+/a+rznAAz94=
+=NdCP
+-----END PGP SIGNATURE-----
+
+--=-XsVRIcx48nR8zfmCJkGX--
+
