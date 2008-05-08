@@ -1,27 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:24054 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751776AbYE3OtY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 10:49:24 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: suspend vs. b43
-Date: Fri, 30 May 2008 16:49:14 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-References: <1212150713.4117.2.camel@johannes.berg> <200805301606.25556.mb@bu3sch.de> <1212158238.4117.4.camel@johannes.berg>
-In-Reply-To: <1212158238.4117.4.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805301649.14445.hs4233@mail.mn-solutions.de> (sfid-20080530_164926_727854_C337BDA3)
+Received: from mx1.redhat.com ([66.187.233.31]:51879 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753802AbYEHOsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 10:48:09 -0400
+Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335
+	[Libertas]"
+From: Dan Williams <dcbw@redhat.com>
+To: Markus Becker <mab@comnets.uni-bremen.de>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, John Daiker <daikerjohn@gmail.com>,
+	David Woodhouse <David@woodhou.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	julian.calaby@gmail.com, andreamrl@tiscali.it
+In-Reply-To: <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
+References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
+	 <1209057680.9212.1065.camel@pmac.infradead.org>
+	 <4821F389.6070905@gmail.com>
+	 <200805080912.49903.hs4233@mail.mn-solutions.de>
+	 <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
+Content-Type: text/plain
+Date: Thu, 08 May 2008 10:43:42 -0400
+Message-Id: <1210257822.24803.0.camel@localhost.localdomain> (sfid-20080508_164709_122856_8F5ABDE9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Odd. Resume itself works just fine here, except when b43 is
-> up. But then again, you might not notice that this is the
-> problem because by default, nothing gets printed on the resume
-> console and then it will indeed hang with a black screen.
+On Thu, 2008-05-08 at 10:28 +0200, Markus Becker wrote:
+> Hi Dan,
+> 
+> are you creating a git tree for mrv8k at infradead? Or shall I ask David 
+> to create an account for me, so that I can set it up.
 
-pepper it with printk's and add netconsole ...
+Yeah, I'll get David to make a git tree.  You should still ask for an
+account and send him your SSH key so that you can push to the tree as
+well.
+
+Dan
+
+> BR,
+> Markus
+> 
+> On Thu, 8 May 2008, Holger Schurig wrote:
+> 
+> >> Do we have a git repo for this yet?  I just bought a NetGear
+> >> WG311v3 PCI Card (Marvell 88w8335), and desperately want this
+> >> card to work.
+> >
+> > You may create this repo by yourself at
+> > git/bomabil.infradead.org. David will "just" host this for you.
+> > You need an account on his server, for which you'll need to send
+> > your SSH public key to him.
+> >
+> > Docs on using git on git.infradead.org is at
+> > http://www.linux-mtd.infradead.org/doc/git.html
+> >
+> >
+> > I've an GIT tree there too, for libertas-tools.
+> >
+
