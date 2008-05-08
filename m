@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47160 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757744AbYEAJtA (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.186]:38036 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbYEHMzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 05:49:00 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080501.024320.212547875.davem@davemloft.net> (sfid-20080501_114312_341550_5D240026)
-References: <1209632886.4008.8.camel@johannes.berg>
-	 <20080501.022041.213526595.davem@davemloft.net>
-	 <1209634349.4008.15.camel@johannes.berg>
-	 <20080501.024320.212547875.davem@davemloft.net>
-	 (sfid-20080501_114312_341550_5D240026)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9FwqanWlyx98cv0+ZK1Y"
-Date: Thu, 01 May 2008 11:48:19 +0200
-Message-Id: <1209635299.4008.21.camel@johannes.berg> (sfid-20080501_114848_326022_B425132E)
-Mime-Version: 1.0
+	Thu, 8 May 2008 08:55:23 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so593271mue.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 05:55:22 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: 015-mac80211-tx-info-skb-cb.patch
+Date: Thu, 8 May 2008 15:03:40 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805081503.41025.IvDoorn@gmail.com> (sfid-20080508_145423_329164_3024D07A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-9FwqanWlyx98cv0+ZK1Y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The following patch is intended to be ontop or integrated into your patch:
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/015-mac80211-tx-info-skb-cb.patch
+This fixes a compilation error when mac80211 debug output is disabled.
 
-
-> I looked at the mac80211 code, the problem is the skb_push() you
-> guys do in this situation.
-
-Thanks.
-
-> Things like loopback, which also orphan then reinject, don't trigger
-> this problem because the re-input path trims things, never adds.
->=20
-> The good news is that this is easy to fix.
->=20
-> Since you've orphaned the SKB, simply adjust skb->truesize as you
-> do pushes.  Like this:
->=20
-> mac80211: Adjust truesize in ieee80211_tx_status() when reinjecting.
->=20
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-=20
-> +	/* This is safe because the buffer has been orphaned.  */
-> +	skb->truesize +=3D sizeof(*rthdr);
-
-Hmm. The disconnect between truesize and skb->len+sizeof(*skb) was
-usually 17 or 19 bytes and sizeof(*rthdr) is only 11. On the other hand,
-I don't see where the other bytes should be coming from. I'll give this
-a try, thanks.
-
-johannes
-
---=-9FwqanWlyx98cv0+ZK1Y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBmR4aVg1VMiehFYAQJfSA/+K3cDycwgM/DBgs36PXLy4f7dISGXwQwb
-o2N+zTSne27dUZyAF9Q+48IKr+hZWOT75ciLXQkAj9eFah5mB19LzsKoB8DNJUKK
-/lOMY8t+2zPGpHxNwZ6jw2qtolvsLlB4p+SwNOuEqfMxttF6tpWLbIvv75DeJ79B
-Vvkkljwq3Ev5/reYosnLjqkVpqnXPkmJFZ+WGKUJp5gVRgw/eH57s/VbHHHBHXj6
-FoNDrgcswrZ7XHeOwATaXfzW5At/YBMbcMpsPXkfzbRXbN4Gp3pqukCC1I9D2yfw
-LZNShCuyD00fSBpUwDJR3tVe3VT4l2QnbHwX4lrrCn9KNe4ULgWXx5eSoTVCxZzt
-JSyx2jhKwvfKX92C2X882wX76EX4ezmxigZAC0YGq5DEKC31//KeqmH/VN8hKHLR
-5rh8QeHzI28afj9mWr04pXXL5QHVOwTXLN7+gixsRnzlWreRja2xUgg4dnG/lisB
-AS0uGzJ4EzVhhsdiFLc/uEUYHkmYNEhWzUTAHL/yUqeiFOEyXTCBF5kEv7P+fOxP
-lw3F4B2Pm26ZDMjFNtDo/b2oLEy9DuAYi50Fl/jMUbb2MqI7oTMZBJhRT12OAOBt
-0TJUde9INOap3ewdbpJdoUyuRkAPW65Y+RuA16SlfiFpPUnF5mvZHiRndbrukALc
-DvXN55geSvI=
-=S0Ch
------END PGP SIGNATURE-----
-
---=-9FwqanWlyx98cv0+ZK1Y--
-
+Ivo
+---
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3b3592f..50edc9d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -223,10 +223,9 @@ static ieee80211_tx_result
+ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	struct sk_buff *skb = tx->skb;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+-	struct ieee80211_tx_info *info = (void *)skb->cb;
++	struct ieee80211_tx_info *info = (void *)tx->skb->cb;
+ 	u32 sta_flags;
+ 
+ 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
