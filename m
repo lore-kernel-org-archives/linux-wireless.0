@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:1897 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbYELMHG (ORCPT
+Received: from bugs.comnets.uni-bremen.de ([134.102.186.10]:53276 "EHLO
+	bugs.comnets.uni-bremen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752985AbYEHI2n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 08:07:06 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3449651waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 05:07:06 -0700 (PDT)
-Message-ID: <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com> (sfid-20080512_140711_414689_9436306E)
-Date: Mon, 12 May 2008 15:07:05 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Emmanuel Grumbach" <egrumbach@gmail.com>,
-	"Volker Braun" <vbraun@physics.upenn.edu>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
+	Thu, 8 May 2008 04:28:43 -0400
+Date: Thu, 8 May 2008 10:28:42 +0200 (CEST)
+From: Markus Becker <mab@comnets.uni-bremen.de>
+To: Dan Williams <dcbw@redhat.com>
+cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, John Daiker <daikerjohn@gmail.com>,
+	David Woodhouse <David@woodhou.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	julian.calaby@gmail.com, andreamrl@tiscali.it
+Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335 [Libertas]"
+In-Reply-To: <200805080912.49903.hs4233@mail.mn-solutions.de>
+Message-ID: <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de> (sfid-20080508_102746_426636_4E944C2A)
+References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
+ <1209057680.9212.1065.camel@pmac.infradead.org> <4821F389.6070905@gmail.com>
+ <200805080912.49903.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
-	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 2:47 PM, drago01 <drago01@gmail.com> wrote:
-> On Tue, May 6, 2008 at 2:14 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>
->> On Tue, May 6, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
->>  >
->>  > On Tue, May 6, 2008 at 9:32 AM, Emmanuel Grumbach
-<egrumbach@gmail.com> wrote:
->>  >  >
->>  >  > On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
->>  >  >  > On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach
-<egrumbach@gmail.com> wrote:
->>  >  >  >  > >  I just tried compat-wireless-2008-05-05, which does contain
->>  >  >  >  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
->>  >  >  >  >  >
->>  >  >  >  >
->>  >  >  >  >  Thanks for trying this.
->>  >  >  >  >  Can you try to load the module with swcrypto=1 and try again ?
->>  >  >  >  >  This disables the HW encryption acceleration. Trying
-this will allow
->>  >  >  >  >  to make 100% sure that the bug is in iwlwifi. The bug
-is likely to be
->>  >  >  >  >  there, but I think it is worth to make this 100% sure.
->>  >  >  >
->>  >  >  >  Well it happens for me with iwl3945 which uses swcrypto
-by default see:
->>  >  >  >
->>  >  >  >  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
->>  >  >  >
->>  >  >
->>  >  >  Actually, I made quite a lot of changes in security in iwl4965 that
->>  >  >  are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
->>  >  >  The security code is not the same between 3945 and 4965
->>  >
->>  >  OK, are you planning to port this changes/fixes to 3945 ?
->>  >
->>
->>  Well... Low priority...
+
+Hi Dan,
+
+are you creating a git tree for mrv8k at infradead? Or shall I ask David 
+to create an account for me, so that I can set it up.
+
+BR,
+Markus
+
+On Thu, 8 May 2008, Holger Schurig wrote:
+
+>> Do we have a git repo for this yet?  I just bought a NetGear
+>> WG311v3 PCI Card (Marvell 88w8335), and desperately want this
+>> card to work.
 >
-> This changes fix an important bug that otherwise make the driver
-> useless in some configurations.
-> So I think it should be backported to 3945 (even when development is
-> focused on newer hardware)
-
-But 3945 uses SW encryption this fix is for HW crypto
-
-Thanks
-Tomas
+> You may create this repo by yourself at
+> git/bomabil.infradead.org. David will "just" host this for you.
+> You need an account on his server, for which you'll need to send
+> your SSH public key to him.
+>
+> Docs on using git on git.infradead.org is at
+> http://www.linux-mtd.infradead.org/doc/git.html
+>
+>
+> I've an GIT tree there too, for libertas-tools.
+>
