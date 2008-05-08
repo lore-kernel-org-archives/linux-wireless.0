@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:57148 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755612AbYEGQ1v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 12:27:51 -0400
-Message-ID: <4821D7D6.1040005@openvz.org> (sfid-20080507_182658_571324_EB5BCE23)
-Date: Wed, 07 May 2008 20:24:54 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
+Received: from wa-out-1112.google.com ([209.85.146.181]:34078 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752558AbYEHW2p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 18:28:45 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1387604waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 15:28:44 -0700 (PDT)
+Message-ID: <1ba2fa240805081528t45d7810cjfd553bf99daff096@mail.gmail.com> (sfid-20080509_002742_123936_376DB97F)
+Date: Fri, 9 May 2008 01:28:44 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi and tx info in skb->cb
+Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1210284656.3547.76.camel@johannes.berg>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: Re: [PATCH 7/7][MAC80211]: Consolidate hash kfree-ing in mesh.c.
-References: <4821D157.90403@openvz.org> <200805071803.11291.mb@bu3sch.de>
-In-Reply-To: <200805071803.11291.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <1210197711.3547.1.camel@johannes.berg>
+	 <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com>
+	 <1210203054.3547.12.camel@johannes.berg>
+	 <1ba2fa240805071721i3d1e3258s1e8c024c4cae9239@mail.gmail.com>
+	 <1210255522.3547.48.camel@johannes.berg>
+	 <1ba2fa240805081507j7cf991ffo5bae443b0b77a39e@mail.gmail.com>
+	 <1210284656.3547.76.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 07 May 2008 17:57:11 Pavel Emelyanov wrote:
->> There are already two places, that kfree the mesh_table and
->> its buckets.
->>
->> Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
->>
->> ---
->>  net/mac80211/mesh.c |   15 +++++++++------
->>  1 files changed, 9 insertions(+), 6 deletions(-)
->>
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index f46fbdb..876ec18 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -315,6 +315,13 @@ struct mesh_table *mesh_table_alloc(int size_order)
->>  	return newtbl;
->>  }
->>  
->> +static void __mesh_table_free(struct mesh_table *tbl)
-> 
-> Why is this __double_underscored?
+>  Ah, no, I misread that. Well, I think it might still help to say you
+>  need N bytes headroom and use those since you wouldn't have to allocate
+>  an extra skb.
 
-To show, that this one is to be used "with care", i.e. - with all
-entries previously flushed.
+There actually might be a benefit in doing this but it is quite a
+change in design which means not now.
 
->> +{
->> +	kfree(tbl->hash_buckets);
->> +	kfree(tbl->hashwlock);
->> +	kfree(tbl);
->> +}
->> +
->>  void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
->>  {
->>  	struct hlist_head *mesh_hash;
->> @@ -330,9 +337,7 @@ void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
->>  		}
->>  		spin_unlock(&tbl->hashwlock[i]);
->>  	}
->> -	kfree(tbl->hash_buckets);
->> -	kfree(tbl->hashwlock);
->> -	kfree(tbl);
->> +	__mesh_table_free(tbl);
->>  }
->>  
->>  static void ieee80211_mesh_path_timer(unsigned long data)
->> @@ -378,9 +383,7 @@ errcopy:
->>  		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
->>  			tbl->free_node(p, 0);
->>  	}
->> -	kfree(newtbl->hash_buckets);
->> -	kfree(newtbl->hashwlock);
->> -	kfree(newtbl);
->> +	__mesh_table_free(tbl);
->>  endgrow:
->>  	return NULL;
->>  }
-> 
-> 
-> 
+>
+>  > >  You should implement TCP checksumming in the hardware. *that* would help
+>  > >  a lot.
+>  >
+>  > There is already pretty much deal of link layer in software to reduce
+>  > the cost and the complexity of the HW for these softmac NICs so
+>  > this would be kind of strange investment...but I didn't invest much
+>  > thoughts into yet.
+>  > There are probably other means to utilize scatter gather DMA then TCP
+>  > off loading. Are they any other source of scattered packets maybe
+>  > iovec?
+>
+>  Well as far as I know those too would be zero-copy IO which only works
+>  if you have TCP checksumming in hardware.
 
+I've just scanned the thread that was explaining why is this necessary
+I will read it more carefully... I have just feeling that all this
+wlan stuff just fits very awkwardly into current networking stack.
+
+Tomas
