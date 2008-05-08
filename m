@@ -1,28 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mr1.bfh.ch ([147.87.250.50]:36452 "EHLO mr1.bfh.ch"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2751 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754973AbYEPNse (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 09:48:34 -0400
-From: Michael Bernhard <michael.bernhard@bfh.ch>
-To: mcgrof@winlab.rutgers.edu
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] compat-2.6: Make it working with wireless-testing 2005-05-15
-Date: Fri, 16 May 2008 15:48:42 +0200
-Message-Id: <1210945725582-git-send-email-michael.bernhard@bfh.ch> (sfid-20080516_154839_315459_B5115365)
+	id S1755797AbYEHB7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 May 2008 21:59:42 -0400
+Date: Wed, 7 May 2008 21:43:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: sfr@canb.auug.org.au, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: New GIT net tree naming...
+Message-ID: <20080508014358.GE3412@tuxdriver.com> (sfid-20080508_035851_946793_8B727691)
+References: <20080419.173510.257216556.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080419.173510.257216556.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Apr 19, 2008 at 05:35:10PM -0700, David Miller wrote:
+> 
+> Based upon feedback from Andrew and others I'm now starting
+> to use a new naming scheme for my GIT trees:
+> 
+> For changes against Linus's current tree:
+> 
+>    master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6.git
+> 
+> For development meant to be merged in the next merge
+> window we have:
+> 
+>    master.kernel.org:/pub/scm/linux/kernel/git/davem/net-next-2.6.git
+> 
+> Andrew/Stephen, let me know if this works for you.  This way
+> the tree names will never change.
 
-I'working under Ubuntu 7.10 with kernel version 2.6.22. I tried to get the
-compat-wireless package running and had some problems this patch series
-addresses. However, I don't know if this arises problems for kernel higher
-than 2.6.22.
+I have adopted this same scheme for wireless as well:
 
-PATCH 1/3: Corrects the three failed hunks in compat/compat.diff.
-PATCH 2/3: Adds some missing functions and macros.
-PATCH 3/3: Enables iwlwifi build
+For changes against Linus's current tree:
 
-There remaines one problem. In kernel version 2.6.22 the BIT() macro is
-defined in include/linux/input.h. For iwlwifi which uses this header in
-iwl-rfkill.h this gives a redefinition of BIT() which is defined in
-include/linux/bitops.h now.
+   master.kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+
+For development meant to be merged in the next merge
+window we have:
+
+   master.kernel.org:/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
