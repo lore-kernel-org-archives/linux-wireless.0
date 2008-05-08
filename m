@@ -1,31 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47364
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755392AbYELJKT (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:8083 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881AbYEHOtA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 05:10:19 -0400
-Date: Mon, 12 May 2008 02:10:13 -0700 (PDT)
-Message-Id: <20080512.021013.255460150.davem@davemloft.net> (sfid-20080512_111022_170617_3686E642)
-To: johannes@sipsolutions.net
+	Thu, 8 May 2008 10:49:00 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so415432nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 07:48:54 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: 015-mac80211-tx-info-skb-cb.patch
+Date: Thu, 8 May 2008 16:57:27 +0200
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFT/C 4/7] mac80211: let drivers wake but not start queues
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080510221907.428400000@sipsolutions.net>
-References: <20080510221845.340428000@sipsolutions.net>
-	<20080510221907.428400000@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+References: <200805081503.41025.IvDoorn@gmail.com> <1210257820.3547.50.camel@johannes.berg>
+In-Reply-To: <1210257820.3547.50.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805081657.27976.IvDoorn@gmail.com> (sfid-20080508_164759_779133_A0A7D142)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sun, 11 May 2008 00:18:49 +0200
-
-> Having drivers start queues is just confusing, their ->start()
-> callback can block and do whatever is necessary, so let mac80211
-> start queues and have drivers wake queues when necessary (to get
-> packets flowing again right away.)
+On Thursday 08 May 2008, Johannes Berg wrote:
+> On Thu, 2008-05-08 at 15:03 +0200, Ivo van Doorn wrote:
+> > Hi Johannes,
+> > 
+> > The following patch is intended to be ontop or integrated into your patch:
+> > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/015-mac80211-tx-info-skb-cb.patch
+> > This fixes a compilation error when mac80211 debug output is disabled.
+> > 
+> > Ivo
+> > ---
+> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> > index 3b3592f..50edc9d 100644
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -223,10 +223,9 @@ static ieee80211_tx_result
+> >  ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+> >  {
+> >  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> > -	struct sk_buff *skb = tx->skb;
+> > -	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> > +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+> >  #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+> > -	struct ieee80211_tx_info *info = (void *)skb->cb;
+> > +	struct ieee80211_tx_info *info = (void *)tx->skb->cb;
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Did you send me that before? I seem to have a similar fix already.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+No I haven't, I had been compiling mac80211 with VERBOSE_DEBUG on ever
+since I added the patches from your tree to rt2x00.git so I never noticed this
+bug. I just received the bugreport from somebody at the rt2x00 forum. :)
+
+Since rt2x00.git contains your patches from a week ago, I did check if the
+bug was still present in your latest version.
+Anyway the important thing is that you have the fix. ;)
+
+Ivo
