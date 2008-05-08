@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:18500 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbYEWKRI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 06:17:08 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: use lbs_pr_XX instead of printk
-Date: Fri, 23 May 2008 12:16:51 +0200
+Received: from ra.tuxdriver.com ([70.61.120.52]:4488 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751778AbYEHUCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 16:02:42 -0400
+Date: Thu, 8 May 2008 15:38:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg KH <gregkh@suse.de>
+Cc: linux-kernel@vger.kernel.org, stable@kernel.org,
+	Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
+Subject: Re: [patch 08/16] b43: Fix dual-PHY devices
+Message-ID: <20080508193803.GB9176@tuxdriver.com> (sfid-20080508_220142_955655_1E5E0242)
+References: <20080508173436.454278564@mini.kroah.org> <20080508174214.GI855@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805231216.51953.hs4233@mail.mn-solutions.de> (sfid-20080523_121713_462047_23899C1D)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080508174214.GI855@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... because lbs_pr_XXX prefixes all messages with "libertas: "
+On Thu, May 08, 2008 at 10:42:14AM -0700, Greg KH wrote:
+> 2.6.25-stable review patch.  If anyone has any objections, please let us
+> know.
+> 
+> ------------------
+> From: Michael Buesch <mb@bu3sch.de>
+> 
+> commit 2e35af143a1380173ba292e48e9b4913ef16b4ee upstream
+> 
+> This fixes operation of dual-PHY (A/B/G) devices.
+> Do not anounce the A-PHY to mac80211, as that's not supported, yet.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+ACK
 
---- linux.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux/drivers/net/wireless/libertas/cmd.c
-@@ -110,7 +110,7 @@
- 	 * CF card    firmware 5.0.16p0:   cap 0x00000303
- 	 * USB dongle firmware 5.110.17p2: cap 0x00000303
- 	 */
--	printk("libertas: %s, fw %u.%u.%up%u, cap 0x%08x\n",
-+	lbs_pr_info("%s, fw %u.%u.%up%u, cap 0x%08x\n",
- 		print_mac(mac, cmd.permanentaddr),
- 		priv->fwrelease >> 24 & 0xff,
- 		priv->fwrelease >> 16 & 0xff,
---- linux.orig/drivers/net/wireless/libertas/persistcfg.c
-+++ linux/drivers/net/wireless/libertas/persistcfg.c
-@@ -188,7 +188,7 @@
- 		return ret;
- 
- 	if (defs.meshie.val.mesh_id_len > IW_ESSID_MAX_SIZE) {
--		printk(KERN_ERR "Inconsistent mesh ID length");
-+		lbs_pr_err("inconsistent mesh ID length");
- 		defs.meshie.val.mesh_id_len = IW_ESSID_MAX_SIZE;
- 	}
- 
+-- 
+John W. Linville
+linville@tuxdriver.com
