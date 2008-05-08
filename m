@@ -1,59 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:24252 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753278AbYE1GRL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 02:17:11 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3107085waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2008 23:17:10 -0700 (PDT)
-Message-ID: <1ba2fa240805272317t359e79d2xb1913779939ac7c9@mail.gmail.com> (sfid-20080528_081716_548167_E605A693)
-Date: Wed, 28 May 2008 09:17:10 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>
-Subject: Re: [PATCH 1/1] mac80211: sends HT IE to user level through wext
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1211909055.3930.23.camel@johannes.berg>
+Received: from mx2.suse.de ([195.135.220.15]:33524 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751842AbYEHRnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 May 2008 13:43:45 -0400
+Date: Thu, 8 May 2008 10:42:21 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 11/16] b43: Fix some TX/RX locking issues
+Message-ID: <20080508174221.GL855@suse.de> (sfid-20080508_194301_563025_AE8D4C40)
+References: <20080508173436.454278564@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211907611-27979-1-git-send-email-tomas.winkler@intel.com>
-	 <1211907892.3930.19.camel@johannes.berg>
-	 <20080527172032.GN4932@jm.kir.nu>
-	 <1211909055.3930.23.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080508174122.GA855@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2008 at 8:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> I would prefer to get all IEs in one blob (assuming WEXT does not have
->> length limits on this data that could be up to about 2250 bytes long).
->
-> Good point. That should actually be doable quite easily.
->
->> This would avoid need to add new IEs one by one in the future (e.g., for
->> IEEE 802.11r).
->
-> Yeah, precisely.
->
->> wpa_supplicant should be able to combine multiple IEs (or even multiple
->> IE groups) together, so I'm not too concerned of this being done
->> separately, but in general, it would be simpler to just pass all IEs as
->> a single blob. It might even be worthwhile to start storing the IEs as a
->> single buffer and have helper functions to fetch pointer to the
->> beginning of whatever IE is needed in the MLME code (this is how the
->> current wpa_supplicant processes IEs from scan results).
->
-> Actually, we do store them in one blob and then hand out pointers to the
-> various parts.
->
-> johannes
->
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
-Would this work with current and older version of  wpa_supplicant?.
-I'm concern with backward compatibility,
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-Thanks
-Tomas
+commit 21a75d7788f4e29b6c6d28e08f9f0310c4de828d upstream.
+
+This fixes some TX/RX related locking issues.
+With this patch applied, some of the PHY transmission errors are fixed.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/b43/b43.h  |    4 ++++
+ drivers/net/wireless/b43/main.c |   32 +++++++++++++++++++++++---------
+ 2 files changed, 27 insertions(+), 9 deletions(-)
+
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -628,6 +628,10 @@ struct b43_wl {
+ 
+ 	struct mutex mutex;
+ 	spinlock_t irq_lock;
++	/* R/W lock for data transmission.
++	 * Transmissions on 2+ queues can run concurrently, but somebody else
++	 * might sync with TX by write_lock_irqsave()'ing. */
++	rwlock_t tx_lock;
+ 	/* Lock for LEDs access. */
+ 	spinlock_t leds_lock;
+ 	/* Lock for SHM access. */
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -622,6 +622,7 @@ static void b43_synchronize_irq(struct b
+  */
+ void b43_dummy_transmission(struct b43_wldev *dev)
+ {
++	struct b43_wl *wl = dev->wl;
+ 	struct b43_phy *phy = &dev->phy;
+ 	unsigned int i, max_loop;
+ 	u16 value;
+@@ -648,6 +649,9 @@ void b43_dummy_transmission(struct b43_w
+ 		return;
+ 	}
+ 
++	spin_lock_irq(&wl->irq_lock);
++	write_lock(&wl->tx_lock);
++
+ 	for (i = 0; i < 5; i++)
+ 		b43_ram_write(dev, i * 4, buffer[i]);
+ 
+@@ -688,6 +692,9 @@ void b43_dummy_transmission(struct b43_w
+ 	}
+ 	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
+ 		b43_radio_write16(dev, 0x0051, 0x0037);
++
++	write_unlock(&wl->tx_lock);
++	spin_unlock_irq(&wl->irq_lock);
+ }
+ 
+ static void key_write(struct b43_wldev *dev,
+@@ -2592,15 +2599,21 @@ static int b43_op_tx(struct ieee80211_hw
+ {
+ 	struct b43_wl *wl = hw_to_b43_wl(hw);
+ 	struct b43_wldev *dev = wl->current_dev;
+-	int err = -ENODEV;
++	unsigned long flags;
++	int err;
+ 
+ 	if (unlikely(!dev))
+-		goto out;
+-	if (unlikely(b43_status(dev) < B43_STAT_STARTED))
+-		goto out;
+-	/* DMA-TX is done without a global lock. */
+-	err = b43_dma_tx(dev, skb, ctl);
+-out:
++		return NETDEV_TX_BUSY;
++
++	/* Transmissions on seperate queues can run concurrently. */
++	read_lock_irqsave(&wl->tx_lock, flags);
++
++	err = -ENODEV;
++	if (likely(b43_status(dev) >= B43_STAT_STARTED))
++		err = b43_dma_tx(dev, skb, ctl);
++
++	read_unlock_irqrestore(&wl->tx_lock, flags);
++
+ 	if (unlikely(err))
+ 		return NETDEV_TX_BUSY;
+ 	return NETDEV_TX_OK;
+@@ -3109,7 +3122,9 @@ static void b43_wireless_core_stop(struc
+ 	spin_unlock_irqrestore(&wl->irq_lock, flags);
+ 	b43_synchronize_irq(dev);
+ 
++	write_lock_irqsave(&wl->tx_lock, flags);
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
++	write_unlock_irqrestore(&wl->tx_lock, flags);
+ 
+ 	mutex_unlock(&wl->mutex);
+ 	/* Must unlock as it would otherwise deadlock. No races here.
+@@ -3117,8 +3132,6 @@ static void b43_wireless_core_stop(struc
+ 	cancel_delayed_work_sync(&dev->periodic_work);
+ 	mutex_lock(&wl->mutex);
+ 
+-	ieee80211_stop_queues(wl->hw);	//FIXME this could cause a deadlock, as mac80211 seems buggy.
+-
+ 	b43_mac_suspend(dev);
+ 	free_irq(dev->dev->irq, dev);
+ 	b43dbg(wl, "Wireless interface stopped\n");
+@@ -4084,6 +4097,7 @@ static int b43_wireless_init(struct ssb_
+ 	memset(wl, 0, sizeof(*wl));
+ 	wl->hw = hw;
+ 	spin_lock_init(&wl->irq_lock);
++	rwlock_init(&wl->tx_lock);
+ 	spin_lock_init(&wl->leds_lock);
+ 	spin_lock_init(&wl->shm_lock);
+ 	mutex_init(&wl->mutex);
+
+-- 
