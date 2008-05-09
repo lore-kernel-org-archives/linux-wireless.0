@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:50228 "EHLO sacred.ru"
+Received: from mx1.redhat.com ([66.187.233.31]:38373 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755658AbYEFOtw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 10:49:52 -0400
-Message-ID: <48206F4C.5050105@openvz.org> (sfid-20080506_164912_114721_DB712766)
-Date: Tue, 06 May 2008 18:46:36 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock.
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1756404AbYEIQaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 May 2008 12:30:25 -0400
+Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335
+	[Libertas]"
+From: Dan Williams <dcbw@redhat.com>
+To: Markus Becker <mab@comnets.uni-bremen.de>
+Cc: David Woodhouse <David@Woodhou.se>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, John Daiker <daikerjohn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	julian.calaby@gmail.com, andreamrl@tiscali.it
+In-Reply-To: <Pine.LNX.4.64.0805091604230.24384@bugs.comnets.uni-bremen.de>
+References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
+	 <1209057680.9212.1065.camel@pmac.infradead.org>
+	 <4821F389.6070905@gmail.com>
+	 <200805080912.49903.hs4233@mail.mn-solutions.de>
+	 <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
+	 <1210257822.24803.0.camel@localhost.localdomain>
+	 <1210258953.25560.1112.camel@pmac.infradead.org>
+	 <1210268717.24803.9.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0805091604230.24384@bugs.comnets.uni-bremen.de>
+Content-Type: text/plain
+Date: Fri, 09 May 2008 12:25:46 -0400
+Message-Id: <1210350346.23925.0.camel@localhost.localdomain> (sfid-20080509_182917_702687_D1EDD564)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh_path_add() read-locks the pathtbl_resize_lock and calls
-kmalloc with GFP_KERNEL mask.
+On Fri, 2008-05-09 at 16:10 +0200, Markus Becker wrote:
+> Hi,
+> 
+> I have just pushed the mrv8k patch sent to the mailing list to 
+> git://git.infradead.org/mrv8k-2.6.git.
 
-Fix it and move the endadd2 label lower. It should be _before_ the
-if() beyond, but it makes no sense for it being there, so I move it
-right after this if().
+Awesome.  Will work from that.
 
-Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+Dan
 
----
- net/mac80211/mesh_pathtbl.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 5845dc2..727aa52 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -158,14 +158,14 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
- 	if (atomic_add_unless(&sdata->u.sta.mpaths, 1, MESH_MAX_MPATHS) == 0)
- 		return -ENOSPC;
- 
--	read_lock(&pathtbl_resize_lock);
--
- 	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
- 	if (!new_mpath) {
- 		atomic_dec(&sdata->u.sta.mpaths);
- 		err = -ENOMEM;
- 		goto endadd2;
- 	}
-+
-+	read_lock(&pathtbl_resize_lock);
- 	memcpy(new_mpath->dst, dst, ETH_ALEN);
- 	new_mpath->dev = dev;
- 	new_mpath->flags = 0;
-@@ -202,7 +202,6 @@ int mesh_path_add(u8 *dst, struct net_device *dev)
- 
- endadd:
- 	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
--endadd2:
- 	read_unlock(&pathtbl_resize_lock);
- 	if (!err && grow) {
- 		struct mesh_table *oldtbl, *newtbl;
-@@ -219,6 +218,7 @@ endadd2:
- 		mesh_table_free(oldtbl, false);
- 		write_unlock(&pathtbl_resize_lock);
- 	}
-+endadd2:
- 	return err;
- }
- 
--- 
-1.5.3.4
+> Markus
+> 
+> On Thu, 8 May 2008, Dan Williams wrote:
+> 
+> > On Thu, 2008-05-08 at 16:02 +0100, David Woodhouse wrote:
+> >> On Thu, 2008-05-08 at 10:43 -0400, Dan Williams wrote:
+> >>> Yeah, I'll get David to make a git tree.  You should still ask for an
+> >>> account and send him your SSH key so that you can push to the tree as
+> >>> well.
+> >>
+> >> I've created git://git.infradead.org/mrv8k.git and the mrv8k group,
+> >> which has schurig,mab,dwmw2,dcbw in it.
+> >>
+> >> I'm a little confused by the request, because I thought wireless
+> >> development was stuck in the 1990s and didn't use git -- I thought it
+> >> was done by patches. But I'll let you work that one out for
+> >> yourselves. :)
+> >
+> > We've got a ways to go before we can upstream the driver.  There's still
+> > quite a bit of cleanup to do.  Best to do that with a git tree first
+> > before submitting the cleaned up patch set.
+> >
+> > Dan
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
