@@ -1,98 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:33859 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbYELMij (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.182]:12683 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753186AbYEJS43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 08:38:39 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2290871wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 05:38:37 -0700 (PDT)
-Message-ID: <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com> (sfid-20080512_143859_356441_D7E7CC6D)
-Date: Mon, 12 May 2008 14:38:37 +0200
-From: drago01 <drago01@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Emmanuel Grumbach" <egrumbach@gmail.com>,
-	"Volker Braun" <vbraun@physics.upenn.edu>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
+	Sat, 10 May 2008 14:56:29 -0400
+Received: by el-out-1112.google.com with SMTP id s27so417599ele.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 11:56:28 -0700 (PDT)
+Message-ID: <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com> (sfid-20080510_205650_857219_83A45649)
+Date: Sat, 10 May 2008 21:56:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Vincent C Jones" <v.jones@networkingunlimited.com>
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
-	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
-	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
-	 <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com>
-	 <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
+	 <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
+	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
+	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 2:22 PM, Tomas Winkler <tomasw@gmail.com> wrote:
 >
-> On Mon, May 12, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
->  > On Mon, May 12, 2008 at 2:07 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->  >>
->  >> On Mon, May 12, 2008 at 2:47 PM, drago01 <drago01@gmail.com> wrote:
->  >>  > On Tue, May 6, 2008 at 2:14 PM, Emmanuel Grumbach
->  <egrumbach@gmail.com> wrote:
->  >>  >>
->  >>  >> On Tue, May 6, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
->  >>  >>  >
->  >>  >>  > On Tue, May 6, 2008 at 9:32 AM, Emmanuel Grumbach
->  >>  <egrumbach@gmail.com> wrote:
->  >>  >>  >  >
->  >>  >>  >  > On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
->  >>  >>  >  >  > On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach
->  >>  <egrumbach@gmail.com> wrote:
->  >>  >>  >  >  >  > >  I just tried compat-wireless-2008-05-05, which
->  does contain
->  >>  >>  >  >  >  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
->  >>  >>  >  >  >  >  >
->  >>  >>  >  >  >  >
->  >>  >>  >  >  >  >  Thanks for trying this.
->  >>  >>  >  >  >  >  Can you try to load the module with swcrypto=1 and
->  try again ?
->  >>  >>  >  >  >  >  This disables the HW encryption acceleration. Trying
->  >>  this will allow
->  >>  >>  >  >  >  >  to make 100% sure that the bug is in iwlwifi. The bug
->  >>  is likely to be
->  >>  >>  >  >  >  >  there, but I think it is worth to make this 100% sure.
->  >>  >>  >  >  >
->  >>  >>  >  >  >  Well it happens for me with iwl3945 which uses swcrypto
->  >>  by default see:
->  >>  >>  >  >  >
->  >>  >>  >  >  >  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
->  >>  >>  >  >  >
->  >>  >>  >  >
->  >>  >>  >  >  Actually, I made quite a lot of changes in security in
->  iwl4965 that
->  >>  >>  >  >  are not in iwl3945 so I think it is worth trying with
->  iwl4965 in SW.
->  >>  >>  >  >  The security code is not the same between 3945 and 4965
->  >>  >>  >
->  >>  >>  >  OK, are you planning to port this changes/fixes to 3945 ?
->  >>  >>  >
->  >>  >>
->  >>  >>  Well... Low priority...
->  >>  >
->  >>  > This changes fix an important bug that otherwise make the driver
->  >>  > useless in some configurations.
->  >>  > So I think it should be backported to 3945 (even when development is
->  >>  > focused on newer hardware)
->  >>
->  >>  But 3945 uses SW encryption this fix is for HW crypto.
->  >
->  > I was talking about this:
->  > "Actually, I made quite a lot of changes in security in iwl4965 that
->  > are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
->  > The security code is not the same between 3945 and 4965"
->  > which seemed to work for Volker using swcrypto
+> May be more to this than just missing 802.11a channel reporting...
+> walked to within range of a NetGear dual-band 802.11N 5GHz/11G 2.4GHz AP
+> and could not even see the 802.11A side of the AP, (while another
+> machine was associated with it, so both halves of the AP were up).
+> I associated on the G channel, then tried to force an association on the
+> A channel by setting the frequency with iwconfig. At some point, I got
+> the following (note that I could still associate with the G channel when
+> done):
 >
->  SW crypto is handled by mac80211 so I ponder why it works above 4965
->  and not over 3945 but it has nothing to do with this particular change
+> ay 10 11:20:04 X61 kernel: ------------[ cut here ]------------
+> May 10 11:20:04 X61 kernel: WARNING: at
+> include/../net/mac80211/rate.h:153 rs_get_rate+0x159/0x194 [iwl4965]()
 
-OK, Johannes any idea why this happens?
+Something went wrong with station management.  Do you use same BSSID
+on the both interfaces A and G?
+
+Thanks
+Tomas
