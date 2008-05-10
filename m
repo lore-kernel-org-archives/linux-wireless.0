@@ -1,84 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from miranda.se.axis.com ([193.13.178.8]:55244 "EHLO
-	miranda.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159AbYEWOgz (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:36154 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750965AbYEJHYe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 10:36:55 -0400
-From: "Johan Adolfsson" <Johan.Adolfsson@axis.com>
-To: "'Holger Schurig'" <hs4233@mail.mn-solutions.de>,
-	<libertas-dev@lists.infradead.org>,
-	"'Dan Williams'" <dcbw@redhat.com>,
-	<linux-wireless@vger.kernel.org>,
-	"'John W. Linville'" <linville@tuxdriver.com>
-Subject: RE: [PATCH] libertas: before sleeping, check for a command result
-Date: Fri, 23 May 2008 16:26:40 +0200
-Message-ID: <002701c8bce1$04097010$0137550a@se.axis.com> (sfid-20080523_163658_572568_60C373F4)
+	Sat, 10 May 2008 03:24:34 -0400
+Date: Sat, 10 May 2008 09:24:28 +0200
+From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH] [NET] libertas: check for mesh support before trying to
+	use it
+Message-ID: <20080510072428.GA1153@Chamillionaire.breakpoint.cc> (sfid-20080510_092458_605517_7B59DDDE)
+References: <1208448814.9212.270.camel@pmac.infradead.org> <1208455363.20193.3.camel@localhost.localdomain> <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-In-Reply-To: <200805231604.13144.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <20080417194437.GA18291@Chamillionaire.breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sebastian Siewior <sebastian@breakpoint.cc>
 
-> -----Original Message-----
-> From: libertas-dev-bounces@lists.infradead.org 
-> [mailto:libertas-dev-bounces@lists.infradead.org] On Behalf 
-> Of Holger Schurig
-> Sent: den 23 maj 2008 16:04
-> To: libertas-dev@lists.infradead.org; Dan Williams; 
-> linux-wireless@vger.kernel.org; John W. Linville
-> Subject: [PATCH] libertas: before sleeping, check for a command result
-> 
-> 
-> If we don't check for a command response early, but rather sleep,
-> then we might sleep despite an already-received command response.
-> This will lead to a command-timeout.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
-> Index: wireless-testing/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- 
-> wireless-testing.orig/drivers/net/wireless/libertas/main.c	
-> 2008-05-23 14:25:16.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c	
-> 2008-05-23 14:25:51.000000000 +0200
-> @@ -722,14 +722,14 @@ static int lbs_thread(void *data)
->  			shouldsleep = 1;	/* Something is 
-> en route to the device already */
->  		else if (priv->tx_pending_len > 0)
->  			shouldsleep = 0;	/* We've a 
-> packet to send */
-> +		else if (priv->resp_len[priv->resp_idx])
-> +			shouldsleep = 0;	/* We have a 
-> command response */
->  		else if (priv->cur_cmd)
->  			shouldsleep = 1;	/* Can't send a 
-> command; one already running */
->  		else if (!list_empty(&priv->cmdpendingq))
->  			shouldsleep = 0;	/* We have a 
-> command to send */
->  		else if (__kfifo_len(priv->event_fifo))
->  			shouldsleep = 0;	/* We have an 
-> event to process */
+This will prevent the execution of lbs_ethtool_get_stats() via ethtool -S
+if there is no mesh support.
 
+Signed-off-by: Sebastian Siewior <sebastian@breakpoint.cc>
+---
+Dan, this will test prevent the usage of ethtool -S in case there is no
+mesh support. If you fine with this than we could apply my or David's
+other patch to enable the function again and then worry about the error
+path.
+David: I saw your patch that is doing this in a other way but I thing
+that one looks better :)
 
-Hi,
-I have experience a couple of timeout and resends and after 
-sending another commands I get the response from the previous one, 
-and the patch seems to solve a couple of those for me - 
-still se some problem fetching packet from  firmware with ret = -22 though.
-And it could be dependant on how much debug I have turned on..
+ drivers/net/wireless/libertas/ethtool.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-But, shouldn't the above priv->event_fifo check move before
-cur_cmd  as well?
-
-I have no clue what kind of events we are talking about here and
-if those can be processed independent of if a cmd is running or not,
-just trigged on the comment.
-
-Best regards
-/Johan
-
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index dcfdb40..a79d698 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -113,8 +113,14 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
+ 
+ static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
+ {
++	struct lbs_private *priv = dev->priv;
++
+ 	switch (sset) {
+ 	case ETH_SS_STATS:
++
++		if (!priv->mesh_tlv)
++			return -EOPNOTSUPP;
++
+ 		return MESH_STATS_NUM;
+ 	default:
+ 		return -EOPNOTSUPP;
+-- 
+1.5.4.3
 
