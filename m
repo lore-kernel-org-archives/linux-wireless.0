@@ -1,124 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55335 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755931AbYENX1G (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942AbYEJQLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:06 -0400
-Message-Id: <200805142326.m4ENQIWp027091@imap1.linux-foundation.org> (sfid-20080515_012710_228676_70B9FE14)
-Subject: [patch 05/12] mac80211: add const, remove unused function, make one function static
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:18 -0700
+	Sat, 10 May 2008 12:11:40 -0400
+Subject: Re: [PATCH 04/16] mac80211: Don't encrypt beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200805101340.15709.IvDoorn@gmail.com> (sfid-20080510_140955_120722_E6DC20F8)
+References: <200805101337.14536.IvDoorn@gmail.com>
+	 <200805101340.15709.IvDoorn@gmail.com>
+	 (sfid-20080510_140955_120722_E6DC20F8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0GcYBT/SoKnOWG+1V0tn"
+Date: Sat, 10 May 2008 18:11:22 +0200
+Message-Id: <1210435882.12837.3.camel@johannes.berg> (sfid-20080510_181143_998163_5FB8CCDC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+--=-0GcYBT/SoKnOWG+1V0tn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- net/mac80211/michael.c |    7 +++----
- net/mac80211/michael.h |    4 ++--
- net/mac80211/tkip.c    |   12 ++----------
- net/mac80211/tkip.h    |    4 ----
- 4 files changed, 7 insertions(+), 20 deletions(-)
+On Sat, 2008-05-10 at 13:40 +0200, Ivo van Doorn wrote:
+> Beacons shouldn't be encryped, so mac80211 should set
+> the IEEE80211_TX_CTL_DO_NOT_ENCRYPT flag in tx info flags.
+> Otherwise the driver will cause a NULL pointer dereference
+> when it tries to access the info->control.hw_key which isn't
+> configured.
+>=20
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff -puN net/mac80211/michael.c~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/michael.c
---- a/net/mac80211/michael.c~mac80211-add-const-remove-unused-function-make-one-function-static
-+++ a/net/mac80211/michael.c
-@@ -6,7 +6,6 @@
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-  */
--
- #include <linux/types.h>
- #include <linux/bitops.h>
- #include <asm/unaligned.h>
-@@ -28,7 +27,7 @@ static void michael_block(struct michael
- }
- 
- static void michael_mic_hdr(struct michael_mic_ctx *mctx,
--			    u8 *key, u8 *da, u8 *sa, u8 priority)
-+			const u8 *key, const u8 *da, const u8 *sa, u8 priority)
- {
- 	mctx->l = get_unaligned_le32(key);
- 	mctx->r = get_unaligned_le32(key + 4);
-@@ -44,8 +43,8 @@ static void michael_mic_hdr(struct micha
- 	michael_block(mctx, priority);
- }
- 
--void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
--		 u8 *data, size_t data_len, u8 *mic)
-+void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
-+		 const u8 *data, size_t data_len, u8 *mic)
- {
- 	u32 val;
- 	size_t block, blocks, left;
-diff -puN net/mac80211/michael.h~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/michael.h
---- a/net/mac80211/michael.h~mac80211-add-const-remove-unused-function-make-one-function-static
-+++ a/net/mac80211/michael.h
-@@ -18,7 +18,7 @@ struct michael_mic_ctx {
- 	u32 l, r;
- };
- 
--void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
--		 u8 *data, size_t data_len, u8 *mic);
-+void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
-+		 const u8 *data, size_t data_len, u8 *mic);
- 
- #endif /* MICHAEL_H */
-diff -puN net/mac80211/tkip.c~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-add-const-remove-unused-function-make-one-function-static
-+++ a/net/mac80211/tkip.c
-@@ -6,7 +6,6 @@
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-  */
--
- #include <linux/kernel.h>
- #include <linux/bitops.h>
- #include <linux/types.h>
-@@ -132,7 +131,7 @@ static void tkip_mixing_phase2(const u16
- /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
-  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
-  * the packet payload). */
--u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
-+u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 			   u8 iv0, u8 iv1, u8 iv2)
- {
- 	*pos++ = iv0;
-@@ -143,14 +142,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, stru
- 	return pos + 4;
- }
- 
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key)
--{
--	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
--			   key->u.tkip.iv32, phase1key);
--}
--
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
-+static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
- 			       u8 *rc4key)
- {
- 	/* Calculate per-packet key */
-diff -puN net/mac80211/tkip.h~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/tkip.h
---- a/net/mac80211/tkip.h~mac80211-add-const-remove-unused-function-make-one-function-static
-+++ a/net/mac80211/tkip.h
-@@ -15,10 +15,6 @@
- 
- u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
- 			  u8 iv0, u8 iv1, u8 iv2);
--void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
--				  u16 *phase1key);
--void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
--			       u8 *rc4key);
- void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta);
-_
+Thanks.
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/tx.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index f35eaea..28d8bd5 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1898,6 +1898,7 @@ struct sk_buff *ieee80211_beacon_get(struct ieee802=
+11_hw *hw,
+>  			control->flags |=3D IEEE80211_TXCTL_SHORT_PREAMBLE;
+>  		control->antenna_sel_tx =3D local->hw.conf.antenna_sel_tx;
+>  		control->flags |=3D IEEE80211_TXCTL_NO_ACK;
+> +		control->flags |=3D IEEE80211_TXCTL_DO_NOT_ENCRYPT;
+>  		control->retry_limit =3D 1;
+>  		control->flags |=3D IEEE80211_TXCTL_CLEAR_PS_FILT;
+>  	}
+
+--=-0GcYBT/SoKnOWG+1V0tn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCXJKaVg1VMiehFYAQIP4RAAqPQMpr0EHv81Mamam7cbC1moEswLWGLm
+bwoMEYAjyO0+k2yP0NAg9E8tQ7jbhSnp8G1NGRLV8Fgetl70wOTXTAsC96i7q5jL
+smLW/LexvuByq51IymOYMpafQ1Wka2tMnZjsE55ZmBVSKVrvQ2U0WPEGSX5OJ2jZ
+qkfmnBwJB1xMl5137b8SiIit691gin8jMFDsbM0j/pCj3ee+5pqLRTbC+pcNv2i+
+jAOdXzK4v5m4K+7ANq+5TX2KbsRnNcYJgYOY48P479YSgEfUrN63OvJSvGUvYY8A
++VjUVzbrGfi0bfe6QfUD+ShGuXGlPVNnUSPOih812t7QZImfz+w7rBnjkYVzs7B+
+2L7zCSYvFeqCNr/vLQBqwm2yt12faugqhVLAIRcFoMZAHkA+RBFnDn9lJSB/lQRf
+MBHNfhQU2DtbAnn0tCSUISkNUJ4FdkctY49vl6A6jTFLy2cTzkGhDRNsqjntgzzS
+P+Y4aeyR5ncIdudkuXBQ6txHF6M/+sHhg+X4sMbodNMpj4qOHFyxUPFFt/y0kQvu
+ZMB5xi79vUpYJASO+WFVcfnkjYDu5il+AKv0L8heT4dIJPvzNgpIj6doE+pDXsqI
+uLYjvEWwuPtImkQPyHy7Z/zPh1As+Tlch8KawG1xOzQL4VVhJ4fhVU4t9iT1hq+8
+WQbsl9hdrpo=
+=5IKY
+-----END PGP SIGNATURE-----
+
+--=-0GcYBT/SoKnOWG+1V0tn--
+
