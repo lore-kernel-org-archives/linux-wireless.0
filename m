@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:40719 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753467AbYEDCCP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752799AbYEJVUf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 22:02:15 -0400
-Date: Sun, 4 May 2008 10:02:03 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-Message-ID: <20080504020203.GA30514@gondor.apana.org.au> (sfid-20080504_040145_287236_42F84A30)
-References: <1209760731.3608.17.camel@johannes.berg> <20080502.163334.148944203.davem@davemloft.net> <1209815533.3987.21.camel@johannes.berg> <20080503.180300.10562559.davem@davemloft.net> <1209865354.6210.23.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1209865354.6210.23.camel@johannes.berg>
+	Sat, 10 May 2008 17:20:35 -0400
+Subject: Re: [PATCH 4/5] rt2x00: Convert rt2x00 to read control info from
+	skb->cb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200805101351.11467.IvDoorn@gmail.com> (sfid-20080510_141040_628124_2BF61C9B)
+References: <200805101349.19481.IvDoorn@gmail.com>
+	 <200805101351.11467.IvDoorn@gmail.com>
+	 (sfid-20080510_141040_628124_2BF61C9B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EMsKJdLpKFBDMP4OjyM5"
+Date: Sat, 10 May 2008 23:20:12 +0200
+Message-Id: <1210454412.12837.16.camel@johannes.berg> (sfid-20080510_232041_658710_085E1C19)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 04, 2008 at 03:42:34AM +0200, Johannes Berg wrote:
->
-> I'm still not sure about the dependencies between LL_MAX_HEADER,
-> dev->hard_header_len and similar. Why, for example, does ipip set it to
-> LL_MAX_HEADER + sizeof(struct iphdr)? Because it doesn't know better
-> since the packets it creates could be routed anywhere?
 
-The difference between LL_MAX_HEADER and hard_header_len is that
-the former is a system-wide hint of how big the header can be
-and the latter is a device-specific value.
+--=-EMsKJdLpKFBDMP4OjyM5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In other words, we use the former when we don't know where we
-create a packet since we don't know where it'll end up.  As such
-we allocate a generous amount of header space so that hopefully
-nobody will have to expand the header later.  However, it would
-be OK for someone to expand it but obviously it this happened
-for the majority of your traffic then you've done something wrong
-since expanding it wastes CPU resources by copying the data.
 
-The value of hard_header_len on the other hand is used for two
-purposes at least.  First of all it is a hint of how much free
-header space there should be in a packet before it goes into a
-device (but don't rely on it).  More importantly it's the length
-of the hardware header in the packet.  The definition of the
-hardware header varies with each type of device.
+> +	/*
+> +	 * Don't automatically kick the beacon queue.
+> +	 */
+> +	tx_info->flags &=3D ~IEEE80211_TX_CTL_READY_FOR_TX;
+> =20
+>  	/*
+>  	 * Fill in skb descriptor
+>  	 */
+>  	skbdesc =3D get_skb_frame_desc(skb);
+>  	memset(skbdesc, 0, sizeof(*skbdesc));
+> -	skbdesc->flags |=3D FRAME_DESC_DRIVER_GENERATED;
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Could you live w/o that change? I'm pondering removing that flag again
+since it doesn't have any meaning any more with the fragmentation/busy
+reschedule rewrite I'll do.
+
+johannes
+
+--=-EMsKJdLpKFBDMP4OjyM5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCYRi6Vg1VMiehFYAQLYlw//Sft3nl7yvN/eODL+FrZbIpuwN9J6abT4
+lmyjcjYO93Tw68+9U9dXp9wYgiFBIHJ6uDDQYZh6Ae4Y2qPk3VEcx/oEsWAPCMbF
+2Hb83ZJJeks4gmJFAebieKSLOYw4kN3C1khRCyTPH/PVXTC1iy+flk8xK7TN7txS
+ZmFu7izZv1NxEBTo0lAwD47FaMo2X1ggLquejxcqupp5Azw3c9qeDVqIMjHFBXnt
+LaNNq4THKdhQtCMOTd+NqEHvjjuriW8AcJ9C1mgjlHXkdAq8Us2A8KDfLdXRkVwj
+fJ654B9RykBnJXz1laFf0T5Aga587dO25+hBCT1fKPqlzvcA2AB0hZMWN9VYEuCi
+jiHu6DNJZqHmD2SwOp6DtRv4wTOcI/uRrDiFJwDhHLbdmNzAjT+26I17Eg7X64Fg
+cGKMdsPvAzGDfnWXnHbbHFzt6/fAm5fqp9Rf8uI07Lkgl/YNpUqWXRHOwYQADjVm
+1wlxxlhFedT3tTeRGqjhsNVNHQShwdMpj6AABhCTBpD+j7nFtZGSFMKBiQKTiNHg
+gIVxqQiopKnllj8tEvX6fkpc0fF6KQMOIzmHi5d3aNkOoYTmpzbfRc+3VVOJWe8b
+K0QQBOUuCCSWB+ErMbnikeBhoRhVFEO3NLM9p+n0uj2OAMZkHwoS+kuTgpJyiTmz
+RDj86mYTzXc=
+=38Ky
+-----END PGP SIGNATURE-----
+
+--=-EMsKJdLpKFBDMP4OjyM5--
+
