@@ -1,57 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49613 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202AbYEQMRC (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:54673 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161AbYEJMJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 08:17:02 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211026337.3827.25.camel@johannes.berg> (sfid-20080517_141325_034902_8C317B32)
-References: <1211026337.3827.25.camel@johannes.berg>
-	 (sfid-20080517_141325_034902_8C317B32)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IdAFoWTV/EuZM8mKtLmt"
-Date: Sat, 17 May 2008 14:16:43 +0200
-Message-Id: <1211026603.3827.27.camel@johannes.berg> (sfid-20080517_141712_372351_80F3B9AF)
-Mime-Version: 1.0
+	Sat, 10 May 2008 08:09:57 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1148254fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:09:56 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 05/16] mac80211: Add RTNL version of ieee80211_iterate_active_interfaces
+Date: Sat, 10 May 2008 13:40:49 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200805101337.14536.IvDoorn@gmail.com>
+In-Reply-To: <200805101337.14536.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805101340.49356.IvDoorn@gmail.com> (sfid-20080510_141014_817107_CC11AFF9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Since commit e38bad4766a110b61fa6038f10be16ced8c6cc38
+	mac80211: make ieee80211_iterate_active_interfaces not need rtnl
+rt2500usb and rt73usb broke down due to attempting register access
+in atomic context (which is not possible for USB hardware).
 
---=-IdAFoWTV/EuZM8mKtLmt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch restores ieee80211_iterate_active_interfaces() to use RTNL lock,
+and provides the non-RTNL version under a new name:
+	ieee80211_iterate_active_interfaces_atomic()
 
-Umm, wrong subject, should be
+So far only rt2x00 uses ieee80211_iterate_active_interfaces(), and those
+drivers require the RTNL version of ieee80211_iterate_active_interfaces().
+Since they already call that function directly, this patch will automatically
+fix the USB rt2x00 drivers.
 
-"make wext sysfs bits [...]"
+v2: Rename ieee80211_iterate_active_interfaces_rtnl
 
-johannes
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |   25 +++++++++++++++++++++++--
+ net/mac80211/util.c    |   37 ++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 59 insertions(+), 3 deletions(-)
 
---=-IdAFoWTV/EuZM8mKtLmt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC7MqqVg1VMiehFYAQIciQ/8DXYXFVVsYryIMUojLv4QMX7VmxRg01PT
-0Sdso8shUtIkwBO0LIa9AItIzU1SsWgkHlsU5NfW/wrMLUSGT2iutricuQOQS9dv
-p64qyWcaGzo53gEi1jzEn6rG7WEYDY0bH17P1BVlukJdTGT9B+e0x84A/palklmo
-VjLnYbwnmuGVuanpXUJ25txKN1Y/aSgFHzoOSTDwuD83L7RmVKk7xb46glmpTFm0
-dD2SslVXMzxw1mO3UHeqe9GDQ0v0cpKeqyA0+Pln+iwU4jaaEWa/ptqRGHIppNwq
-xFkWSubRQWBD4lJgeQNVO+Iwn1WnaEZfLvasHbuKvBTexl8KWaVZFBfGZxrIYo4R
-B352mWthPmtMD0vG105c6AmJuvGvaCbabDzBv8NziDwrDEN+51BlJnGDFpAcDOnb
-+v/dvfRbDdy1v9cPpzO8yGtCjfm+d2OG4E9TkAsdRUvHSbvdsSh67nXv/RX6Wxjm
-mjM7r1avcbmN5ZWqdWKSaqjJsM0FCbCFk7DoD0snzcWYlnScxzXhdpcRqC8fLPpz
-iubPKqaO6UaPTsREGTfSv3yPAopTmBdLFeA8dXAjGuhS1G5IMWt+kHU5BxXeFRR7
-2/DEezc8V1MOrjNWzKUkwMOSty497BxtNUNevE/As5eGjcFk3XJ+qdr/CvlBDopr
-xo2pzoI+VZ8=
-=dSr6
------END PGP SIGNATURE-----
-
---=-IdAFoWTV/EuZM8mKtLmt--
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 75a3460..68d709b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1581,13 +1581,16 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw);
+ void ieee80211_scan_completed(struct ieee80211_hw *hw);
+ 
+ /**
+- * ieee80211_iterate_active_interfaces - iterate active interfaces
++ * ieee80211_iterate_active_interfaces- iterate active interfaces
+  *
+  * This function iterates over the interfaces associated with a given
+  * hardware that are currently active and calls the callback for them.
++ * This function allows the iterator function to sleep, when the iterator
++ * function is atomic @ieee80211_iterate_active_interfaces_atomic can
++ * be used.
+  *
+  * @hw: the hardware struct of which the interfaces should be iterated over
+- * @iterator: the iterator function to call, cannot sleep
++ * @iterator: the iterator function to call
+  * @data: first argument of the iterator function
+  */
+ void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
+@@ -1596,6 +1599,24 @@ void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
+ 					 void *data);
+ 
+ /**
++ * ieee80211_iterate_active_interfaces_atomic - iterate active interfaces
++ *
++ * This function iterates over the interfaces associated with a given
++ * hardware that are currently active and calls the callback for them.
++ * This function requires the iterator callback function to be atomic,
++ * if that is not desired, use @ieee80211_iterate_active_interfaces instead.
++ *
++ * @hw: the hardware struct of which the interfaces should be iterated over
++ * @iterator: the iterator function to call, cannot sleep
++ * @data: first argument of the iterator function
++ */
++void ieee80211_iterate_active_interfaces_atomic(struct ieee80211_hw *hw,
++						void (*iterator)(void *data,
++						    u8 *mac,
++						    struct ieee80211_vif *vif),
++						void *data);
++
++/**
+  * ieee80211_start_tx_ba_session - Start a tx Block Ack session.
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @ra: receiver address of the BA session recipient
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index cc9f715..6039df6 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -389,6 +389,41 @@ void ieee80211_iterate_active_interfaces(
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+ 
++	rtnl_lock();
++
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		switch (sdata->vif.type) {
++		case IEEE80211_IF_TYPE_INVALID:
++		case IEEE80211_IF_TYPE_MNTR:
++		case IEEE80211_IF_TYPE_VLAN:
++			continue;
++		case IEEE80211_IF_TYPE_AP:
++		case IEEE80211_IF_TYPE_STA:
++		case IEEE80211_IF_TYPE_IBSS:
++		case IEEE80211_IF_TYPE_WDS:
++		case IEEE80211_IF_TYPE_MESH_POINT:
++			break;
++		}
++		if (sdata->dev == local->mdev)
++			continue;
++		if (netif_running(sdata->dev))
++			iterator(data, sdata->dev->dev_addr,
++				 &sdata->vif);
++	}
++
++	rtnl_unlock();
++}
++EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
++
++void ieee80211_iterate_active_interfaces_atomic(
++	struct ieee80211_hw *hw,
++	void (*iterator)(void *data, u8 *mac,
++			 struct ieee80211_vif *vif),
++	void *data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++
+ 	rcu_read_lock();
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+@@ -413,4 +448,4 @@ void ieee80211_iterate_active_interfaces(
+ 
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
++EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
+-- 
+1.5.5.1
 
