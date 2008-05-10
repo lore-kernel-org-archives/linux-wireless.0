@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57465 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbYEaQmL convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.247]:27605 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547AbYEJLcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 12:42:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-15?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Date: Sat, 31 May 2008 18:41:46 +0200
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <200805311711.16266.mb@bu3sch.de> <69e28c910805310934w7d2bc2ddkec27926a8c8033c4@mail.gmail.com>
-In-Reply-To: <69e28c910805310934w7d2bc2ddkec27926a8c8033c4@mail.gmail.com>
+	Sat, 10 May 2008 07:32:35 -0400
+Received: by an-out-0708.google.com with SMTP id d40so335226and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 04:32:34 -0700 (PDT)
+Message-ID: <c68f135e0805100432n5d90e9d1p26d2bd35ac99f994@mail.gmail.com> (sfid-20080510_133237_907939_2407A379)
+Date: Sat, 10 May 2008 13:32:34 +0200
+From: "Andrea Merello" <andrea.merello@gmail.com>
+Reply-To: andrea.merello@gmail.com
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: PATCH Rtl8180 ch14 [2/3]
+Cc: linux-wireless@vger.kernel.org,
+	"Alessandro Di Marco" <dmr@c0nc3pt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Message-Id: <200805311841.46740.mb@bu3sch.de> (sfid-20080531_184214_739549_F65D0AF7)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
-> "BUG: unable to handle kernel NULL pointer dereference at 00000004
-> IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
+Rtl8180: fix wrong parameter in RF code function invokation for maxim radio
 
-So can you put a few printks into the function to see where it derefere=
-nces
-a NULL pointer? (or use gdb to lookup the offset).
+The max2820 RF code needs to invoke max2820_write_phy_antenna every time the
+channel is being switch.
+
+This should be done passing the channel number to that function.
+Incorrectly we were passing the same value that is written on the
+channel RF register.
+This may cause problems when operating on ch 14.
+
+This patch fixes it.
+
+Thanks to Alessandro Di Marco who found this issue!
 
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+signed-off-by: Andrea Merello <andreamrl@tiscali.it>
+---
+
+--- a/drivers/net/wireless/rtl8180_max2820.c    2008-02-02
+14:48:52.000000000 +0100
++++ b/drivers/net/wireless/rtl8180_max2820.c    2008-02-02
+14:55:29.000000000 +0100
+@@ -86,7 +86,7 @@ static void max2820_rf_set_channel(struc
+         * sa2400, for MAXIM we do this directly from BB */
+        rtl8180_write_phy(dev, 3, txpw);
+
+-       max2820_write_phy_antenna(dev, chan);
++       max2820_write_phy_antenna(dev, chan_idx + 1);
+        write_max2820(dev, 3, chan);
+ }
