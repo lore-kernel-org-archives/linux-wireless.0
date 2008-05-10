@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:16611 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbYETXNp convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:54673 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbYEJMJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 19:13:45 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2616677waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 16:13:44 -0700 (PDT)
-Message-ID: <1ba2fa240805201613x84c62cdke2ac3a4970beb60b@mail.gmail.com> (sfid-20080521_011418_937415_5D0591E0)
-Date: Wed, 21 May 2008 02:13:44 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Andy Green" <andy@warmcat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-In-Reply-To: <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com>
+	Sat, 10 May 2008 08:09:55 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1148254fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:09:54 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 04/16] mac80211: Don't encrypt beacons
+Date: Sat, 10 May 2008 13:40:15 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200805101337.14536.IvDoorn@gmail.com>
+In-Reply-To: <200805101337.14536.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
-	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
-	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
-	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
-	 <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com>
-	 <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
-	 <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com>
+Message-Id: <200805101340.15709.IvDoorn@gmail.com> (sfid-20080510_141013_108972_E3BC630F)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2008 at 1:56 AM, Stefanik G=E1bor <netrolller.3d@gmail.=
-com> wrote:
-> On Tue, May 20, 2008 at 6:45 PM, Tomas Winkler <tomasw@gmail.com> wro=
-te:
->> Need to add if (sta_is !=3D bcast)  otherwise this will drop all you=
-r
->> injected packets.
->
-> Did you mean if (sta_id !=3D priv->hw_setting.bcast_sta_id)? Because
-> there is no "sta_is" variable.
+Beacons shouldn't be encryped, so mac80211 should set
+the IEEE80211_TX_CTL_DO_NOT_ENCRYPT flag in tx info flags.
+Otherwise the driver will cause a NULL pointer dereference
+when it tries to access the info->control.hw_key which isn't
+configured.
 
-j=F3 =E9jszak=E1t!
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/mac80211/tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f35eaea..28d8bd5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1898,6 +1898,7 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 			control->flags |= IEEE80211_TXCTL_SHORT_PREAMBLE;
+ 		control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+ 		control->flags |= IEEE80211_TXCTL_NO_ACK;
++		control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
+ 		control->retry_limit = 1;
+ 		control->flags |= IEEE80211_TXCTL_CLEAR_PS_FILT;
+ 	}
+-- 
+1.5.5.1
+
