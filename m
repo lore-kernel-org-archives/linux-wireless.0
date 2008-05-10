@@ -1,88 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39633 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762766AbYEHWLL (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:44076 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728AbYEJRG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 18:11:11 -0400
-Subject: Re: iwlwifi and tx info in skb->cb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240805081507j7cf991ffo5bae443b0b77a39e@mail.gmail.com> (sfid-20080509_000624_162294_5A80849B)
-References: <1210197711.3547.1.camel@johannes.berg>
-	 <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com>
-	 <1210203054.3547.12.camel@johannes.berg>
-	 <1ba2fa240805071721i3d1e3258s1e8c024c4cae9239@mail.gmail.com>
-	 <1210255522.3547.48.camel@johannes.berg>
-	 <1ba2fa240805081507j7cf991ffo5bae443b0b77a39e@mail.gmail.com>
-	 (sfid-20080509_000624_162294_5A80849B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ObmSmRyRb0L251KCmTE4"
-Date: Fri, 09 May 2008 00:10:56 +0200
-Message-Id: <1210284656.3547.76.camel@johannes.berg> (sfid-20080509_001007_903840_EE924F56)
-Mime-Version: 1.0
+	Sat, 10 May 2008 13:06:58 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2477619waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 10:06:57 -0700 (PDT)
+Message-ID: <1ba2fa240805101006t4b3362c8ja11e58db4634b0f9@mail.gmail.com> (sfid-20080510_190707_056984_59F9F303)
+Date: Sat, 10 May 2008 20:06:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Vincent C Jones" <v.jones@networkingunlimited.com>
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
+	 <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
+	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 10, 2008 at 5:39 PM, Vincent C Jones
+<v.jones@networkingunlimited.com> wrote:
+>
+> On Sat, 2008-05-10 at 03:12 +0300, Tomas Winkler wrote:
+>> On Sat, May 10, 2008 at 2:41 AM, Vincent C Jones
+>> <v.jones@networkingunlimited.com> wrote:
+>> >
+>> > On Sat, 2008-05-10 at 00:23 +0300, Tomas Winkler wrote:
+>> >> On Fri, May 9, 2008 at 7:57 PM, Vincent C Jones
+>> >> <v.jones@networkingunlimited.com> wrote:
+>> >> > The channel/frequency reporting by iwlwifi is incompatible with
+>> >> >  wpa_supplicant for 5GHz (802.11A) channels. Version numbers and iwlist
+>> >> >  versus wpa_supplicant scan results are below. Association still works if
+>> >> >  the correct channel is specified using iwconfig, but that is
+>> >> >  incompatible with roaming.
+>> >>
+>> >> Fixed by the patch ' iwlwifi: Fix frequency in rx_status fill'
+>> >>
+>> >> Thanks
+>> >> Tomas
+>> >
+>> > This patch did not apply cleanly to plain 2.6.26-rc1: off by -4 lines in
+>> > iwl-3945.c and by 1078 lines in iwl-4965.c. More important, it did not
+>> > fix the problem of wpa_supplicant thinking the 802.11A access points are
+>> > on channel 0. Same results with 2.6.26-rc1-git7, with & without patch.
+>> > Any idea when this patch (and the patches it appears to depend on) will
+>> > make it into the 2.6.26 release?
+>> >
+>>
+>> This patch is against wireless-testing.git, it's just too lines and
+>> doesn't really have logical dependencies on other patches so I didn't
+>> create a separate patch for 2.6.26...It looks maybe I should.
+>> Can you  try to eproduce your problem on wireless-testing kernel with
+>> this patch?
+>> Also some logs will be useful
+>>
+>> Thanks
+>> Tomas
+>
+> Tomas,
+>
+> No joy. Did I git the wrong tree?
+>
+> (git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git)
+>
+> Still had to apply your patch (offset 223 lines this time). Also applied
+> the media/built-in.o patch so my config would compile. Wpa_supplicant
+> (v0.6.3) still reports 0 for the channel of 11A stations:
 
---=-ObmSmRyRb0L251KCmTE4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It seems  to be correct.  There are some patches that come before this
+one yet Yi has reordered the series a bit and pushed this one first
+because of it's urgency. The later patches will come later, but there
+is no dependency. So that my explain the offset.
+
+>> scan_res
+> bssid / frequency / signal level / flags / ssid
+> 00:1a:c1:8a:23:40       0       208     [WPA-PSK-TKIP
+> +CCMP][WPA2-PSK-TKIP+CCMP-preauth] NetworkingUnlimited
+> 00:1e:2a:6c:93:d9       2462    169     [WPA-PSK-TKIP
+> +CCMP][WPA2-PSK-TKIP+CCMP]NetworkingUnlimited-G
+>>
+>
+> I've appended output of iwlist scan and dmesg. Any other logs of
+> interest?
+>
+>
+>          Cell 05 - Address: 00:1A:C1:8A:23:40
+>                    ESSID:"NetworkingUnlimited"
+>                    Mode:Master
+>                    Frequency:5.24 GHz (Channel 48)
+>                    Channel:48
+
+Looks like channel is reported correctly here
 
 
-> >  > Currently we actively use 2 of them. First for TX command second for
-> >  > actual frame.  It would be even worth if we need to expand
-> >  > each packet also for TX command.
-> >
-> >  We will no longer do that after davem and I figure out those allocatio=
-n
-> >  patches.
->=20
-> Not sure these things are connected. TX command is allocated fixed for ea=
-ch TFD.
+>>>>> issue command "iwconfig wlan0 chan 48"
 
-Ah, no, I misread that. Well, I think it might still help to say you
-need N bytes headroom and use those since you wouldn't have to allocate
-an extra skb.
+Not sure how wpa supplicant parses the scanning output
 
-> >  You should implement TCP checksumming in the hardware. *that* would he=
-lp
-> >  a lot.
->=20
-> There is already pretty much deal of link layer in software to reduce
-> the cost and the complexity of the HW for these softmac NICs so
-> this would be kind of strange investment...but I didn't invest much
-> thoughts into yet.
-> There are probably other means to utilize scatter gather DMA then TCP
-> off loading. Are they any other source of scattered packets maybe
-> iovec?
+The scan result is  build by ieee80211_sta_scan_result function
+defined in mlme.c file
 
-Well as far as I know those too would be zero-copy IO which only works
-if you have TCP checksumming in hardware.
+The code dealing with frequency is below. I currently I don't have 11a
+AP so if you can put some debug output in wpa_supplicant and mac80211
+we can learn more. Otherwise I will have to look at this tomorrow
 
-johannes
+memset(&iwe, 0, sizeof(iwe));
+        iwe.cmd = SIOCGIWFREQ;
+        iwe.u.freq.m = bss->freq;
+        iwe.u.freq.e = 6;
+        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+                                          IW_EV_FREQ_LEN);
 
---=-ObmSmRyRb0L251KCmTE4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+        memset(&iwe, 0, sizeof(iwe));
+        iwe.cmd = SIOCGIWFREQ;
+        iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+        iwe.u.freq.e = 0;
+        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+                                          IW_EV_FREQ_LEN);
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIVAwUASCN6b6Vg1VMiehFYAQKv+Q//U2o2IF2BFWvx6KizALx9ueo3ZoelKcqq
-9xLDgwxqjTWhUdgPkOMEp57tHKX4XK9UAybVou57sHk19bE1fM55bHtJ3h+YIuUU
-F5Iev8yH79oGG7EjzAAG/9+fSli8+2pcdNBz5ES+rrc8d2wa/nN9TJKDlHOg6JTY
-DeHe3Z5HxDmuD0TfXNirrClJ4xEDSOKZL7BMo2R57B7aZ4Y8dDtoJTXchGxbfCpv
-TaY1Zr1R/EXtKEw+lBd6qbXBcY0klRhcZWMVIr8gZ+oqnNgJe6M6IGb+ndgBzjgF
-kTgwim3jLWnzBbKnrcXpybMUjGIkt8gV0rCrS+vn8ak2pREUte3PRQ7nCnOvm8wd
-KdfiSKBm7tIp+dEB13dtOk4QLUVxpASr9aB+oIbo1JqFQxf/0fCHYLQBEDHXOVjQ
-mNmFOKpJYKyY+PU+FbOIK+dd5xnYzJQOObJ50N9EQk0VlmlCr9ZJVlS5kQ0em8ro
-QmyaNyvFAl30iYVZOayxLita5AWipn6U2o4IC+GSTSOAf6o45ntcDl4C5L1lgWnW
-1v4I9MhciHAnuFnRa2PSSIkWcSueahFE1Y6agtamlnSfiUCLHIEHXBbaQjXX0XHp
-DvmsLA6mbPLoGzN+kWKx6rSwF6vetWSlsW05ze6YzXp/4zqbrqfH9n+aoTAo57yF
-CJdD5cVECh8=
-=1Eu+
------END PGP SIGNATURE-----
-
---=-ObmSmRyRb0L251KCmTE4--
-
+Thanks
+Tomas
