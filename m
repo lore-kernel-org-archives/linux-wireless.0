@@ -1,43 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52917 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbYEQQuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 12:50:40 -0400
-Message-ID: <20080517185038.6w1m4n5n6s88ckgw@imap.suse.de> (sfid-20080517_185049_147497_B451CD53)
-Date: Sat, 17 May 2008 18:50:38 +0200
-From: Helmut Schaa <hschaa@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: NULL pointer in mac80211:ieee80211_associate
-References: <482DFC63.7050908@lwfinger.net>
-	<1210974434.6381.60.camel@johannes.berg> <482E1344.7080808@lwfinger.net>
-	(sfid-20080517_010547_496161_3AD36B80)
-	<1210979397.3827.4.camel@johannes.berg>
-In-Reply-To: <1210979397.3827.4.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Received: from xc.sipsolutions.net ([83.246.72.84]:50407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbYEJWWT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 May 2008 18:22:19 -0400
+Received: from [91.5.117.77] (helo=[10.0.0.127])
+	by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1JuxSL-0000zW-Uj
+	for linux-wireless@vger.kernel.org; Sun, 11 May 2008 00:22:18 +0200
+Message-Id: <20080510221906.261962000@sipsolutions.net> (sfid-20080511_002321_322648_F17BEA43)
+References: <20080510221845.340428000@sipsolutions.net>
+Date: Sun, 11 May 2008 00:18:47 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFT/C 2/7] mac80211: clean up skb reallocation code
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sa 17 Mai 2008 01:09:57 CEST schrieb Johannes Berg  
-<johannes@sipsolutions.net>:
+This cleans up the skb reallocation code to avoid problems with
+skb->truesize and not resize an skb twice for a single output
+path because we didn't expand it enough during the first copy.
 
->> > Can you try to find out what code this corresponds to?
->>
->>  From objdump with line numbers, it occurs at "for (i = 0; i <
->> bss->supp_rates_len; i++) {" in ieee80211_compatible_rates, which I think is
->> entered from ieee80211_send_assoc. It seems that bss is NULL. For testing, I
->> have placed a WARN_ON(!bss) statement just before the for loop.
->
-> That looks plausible. Helmut, any ideas how to avoid this? Skip the
-> compatible rates test completely and use all rates in this situation?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c  |   97 +++++++++++++++++++++++++++++++++++++----------------
+ net/mac80211/wep.c |   10 +----
+ net/mac80211/wpa.c |   50 ++++++++++-----------------
+ 3 files changed, 91 insertions(+), 66 deletions(-)
 
-Yes, that's most likely the best solution for it. If we do not have a  
-bss at this point we cannot adjust the rates anyway. Should I prepare  
-a patch?
+--- everything.orig/net/mac80211/tx.c	2008-05-10 23:00:37.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-05-10 23:06:30.000000000 +0200
+@@ -1244,6 +1244,45 @@ retry:
+ 
+ /* device xmit handlers */
+ 
++static int ieee80211_skb_resize(struct ieee80211_local *local,
++				struct sk_buff *skb,
++				int head_need, bool encrypt)
++{
++	int tail_need = 0;
++
++	/*
++	 * This could be optimised, devices that do full hardware
++	 * crypto need no tailroom... But we have no drivers for
++	 * such devices currently.
++	 */
++	if (encrypt) {
++		tail_need = IEEE80211_ENCRYPT_TAILROOM;
++		tail_need -= skb_tailroom(skb);
++		tail_need = max_t(int, tail_need, 0);
++	}
++
++	if (head_need || tail_need) {
++		/* Sorry. Can't account for this any more */
++		skb_orphan(skb);
++	}
++
++	if (skb_cloned(skb))
++		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
++	else
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++	if (pskb_expand_head(skb, head_need, tail_need, GFP_ATOMIC)) {
++		printk(KERN_DEBUG "%s: failed to reallocate TX buffer\n",
++		       wiphy_name(local->hw.wiphy));
++		return -ENOMEM;
++	}
++
++	/* update truesize too */
++	skb->truesize += head_need + tail_need;
++
++	return 0;
++}
++
+ int ieee80211_master_start_xmit(struct sk_buff *skb,
+ 				struct net_device *dev)
+ {
+@@ -1252,6 +1291,7 @@ int ieee80211_master_start_xmit(struct s
+ 	struct net_device *odev = NULL;
+ 	struct ieee80211_sub_if_data *osdata;
+ 	int headroom;
++	bool encrypt;
+ 	int ret;
+ 
+ 	/*
+@@ -1276,13 +1316,18 @@ int ieee80211_master_start_xmit(struct s
+ 	}
+ 	osdata = IEEE80211_DEV_TO_SUB_IF(odev);
+ 
+-	headroom = osdata->local->tx_headroom + IEEE80211_ENCRYPT_HEADROOM;
+-	if (skb_headroom(skb) < headroom) {
+-		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
+-			dev_kfree_skb(skb);
+-			dev_put(odev);
+-			return 0;
+-		}
++	encrypt = !(pkt_data->flags & IEEE80211_TXPD_DO_NOT_ENCRYPT);
++
++	headroom = osdata->local->tx_headroom;
++	if (encrypt)
++		headroom += IEEE80211_ENCRYPT_HEADROOM;
++	headroom -= skb_headroom(skb);
++	headroom = max_t(int, 0, headroom);
++
++	if (ieee80211_skb_resize(osdata->local, skb, headroom, encrypt)) {
++		dev_kfree_skb(skb);
++		dev_put(odev);
++		return 0;
+ 	}
+ 
+ 	control.vif = &osdata->vif;
+@@ -1556,32 +1601,26 @@ int ieee80211_subif_start_xmit(struct sk
+ 	 * build in headroom in __dev_alloc_skb() (linux/skbuff.h) and
+ 	 * alloc_skb() (net/core/skbuff.c)
+ 	 */
+-	head_need = hdrlen + encaps_len + meshhdrlen + local->tx_headroom;
+-	head_need -= skb_headroom(skb);
++	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
+ 
+-	/* We are going to modify skb data, so make a copy of it if happens to
+-	 * be cloned. This could happen, e.g., with Linux bridge code passing
+-	 * us broadcast frames. */
++	/*
++	 * So we need to modify the skb header and hence need a copy of
++	 * that. The head_need variable above doesn't, so far, include
++	 * the needed header space that we don't need right away. If we
++	 * can, then we don't reallocate right now but only after the
++	 * frame arrives at the master device (if it does...)
++	 *
++	 * If we cannot, however, then we will reallocate to include all
++	 * the ever needed space and, if necessary, orphan the skb. Also,
++	 * if the skb is cloned then copy only once.
++	 */
+ 
+ 	if (head_need > 0 || skb_header_cloned(skb)) {
+-#if 0
+-		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+-		       "of headroom\n", dev->name, head_need);
+-#endif
+-
+-		if (skb_header_cloned(skb))
+-			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+-		else
+-			I802_DEBUG_INC(local->tx_expand_skb_head);
+-		/* Since we have to reallocate the buffer, make sure that there
+-		 * is enough room for possible WEP IV/ICV and TKIP (8 bytes
+-		 * before payload and 12 after). */
+-		if (pskb_expand_head(skb, (head_need > 0 ? head_need + 8 : 8),
+-				     12, GFP_ATOMIC)) {
+-			printk(KERN_DEBUG "%s: failed to reallocate TX buffer"
+-			       "\n", dev->name);
++		head_need += IEEE80211_ENCRYPT_HEADROOM;
++		head_need += local->tx_headroom;
++		head_need = max_t(int, 0, head_need);
++		if (ieee80211_skb_resize(local, skb, head_need, 1))
+ 			goto fail;
+-		}
+ 	}
+ 
+ 	if (encaps_data) {
+--- everything.orig/net/mac80211/wep.c	2008-05-10 23:00:03.000000000 +0200
++++ everything/net/mac80211/wep.c	2008-05-10 23:05:44.000000000 +0200
+@@ -93,13 +93,9 @@ static u8 *ieee80211_wep_add_iv(struct i
+ 	fc |= IEEE80211_FCTL_PROTECTED;
+ 	hdr->frame_control = cpu_to_le16(fc);
+ 
+-	if ((skb_headroom(skb) < WEP_IV_LEN ||
+-	     skb_tailroom(skb) < WEP_ICV_LEN)) {
+-		I802_DEBUG_INC(local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, WEP_IV_LEN, WEP_ICV_LEN,
+-					      GFP_ATOMIC)))
+-			return NULL;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < WEP_ICV_LEN ||
++		    skb_headroom(skb) < WEP_IV_LEN))
++		return NULL;
+ 
+ 	hdrlen = ieee80211_get_hdrlen(fc);
+ 	newhdr = skb_push(skb, WEP_IV_LEN);
+--- everything.orig/net/mac80211/wpa.c	2008-05-10 23:00:03.000000000 +0200
++++ everything/net/mac80211/wpa.c	2008-05-10 23:05:44.000000000 +0200
+@@ -79,6 +79,7 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 	struct sk_buff *skb = tx->skb;
+ 	int authenticator;
+ 	int wpa_test = 0;
++	int tail;
+ 
+ 	fc = tx->fc;
+ 
+@@ -98,16 +99,13 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 		return TX_CONTINUE;
+ 	}
+ 
+-	if (skb_tailroom(skb) < MICHAEL_MIC_LEN) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, TKIP_IV_LEN,
+-					      MICHAEL_MIC_LEN + TKIP_ICV_LEN,
+-					      GFP_ATOMIC))) {
+-			printk(KERN_DEBUG "%s: failed to allocate more memory "
+-			       "for Michael MIC\n", tx->dev->name);
+-			return TX_DROP;
+-		}
+-	}
++	tail = MICHAEL_MIC_LEN;
++	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++		tail += TKIP_ICV_LEN;
++
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < TKIP_IV_LEN))
++		return TX_DROP;
+ 
+ #if 0
+ 	authenticator = fc & IEEE80211_FCTL_FROMDS; /* FIX */
+@@ -188,7 +186,7 @@ static int tkip_encrypt_skb(struct ieee8
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+-	int hdrlen, len, tailneed;
++	int hdrlen, len, tail;
+ 	u16 fc;
+ 	u8 *pos;
+ 
+@@ -197,17 +195,13 @@ static int tkip_encrypt_skb(struct ieee8
+ 	len = skb->len - hdrlen;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+-		tailneed = 0;
++		tail = 0;
+ 	else
+-		tailneed = TKIP_ICV_LEN;
++		tail = TKIP_ICV_LEN;
+ 
+-	if ((skb_headroom(skb) < TKIP_IV_LEN ||
+-	     skb_tailroom(skb) < tailneed)) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, TKIP_IV_LEN, tailneed,
+-					      GFP_ATOMIC)))
+-			return -1;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < TKIP_IV_LEN))
++		return TX_DROP;
+ 
+ 	pos = skb_push(skb, TKIP_IV_LEN);
+ 	memmove(pos, pos + TKIP_IV_LEN, hdrlen);
+@@ -434,7 +428,7 @@ static int ccmp_encrypt_skb(struct ieee8
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+-	int hdrlen, len, tailneed;
++	int hdrlen, len, tail;
+ 	u16 fc;
+ 	u8 *pos, *pn, *b_0, *aad, *scratch;
+ 	int i;
+@@ -448,17 +442,13 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	len = skb->len - hdrlen;
+ 
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+-		tailneed = 0;
++		tail = 0;
+ 	else
+-		tailneed = CCMP_MIC_LEN;
++		tail = CCMP_MIC_LEN;
+ 
+-	if ((skb_headroom(skb) < CCMP_HDR_LEN ||
+-	     skb_tailroom(skb) < tailneed)) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, CCMP_HDR_LEN, tailneed,
+-					      GFP_ATOMIC)))
+-			return -1;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < CCMP_HDR_LEN))
++		return TX_DROP;
+ 
+ 	pos = skb_push(skb, CCMP_HDR_LEN);
+ 	memmove(pos, pos + CCMP_HDR_LEN, hdrlen);
 
-Helmut
+-- 
+
