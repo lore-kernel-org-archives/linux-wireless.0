@@ -1,245 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42800 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759282AbYEWCL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:27 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:20731 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753297AbYEJMKL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 May 2008 08:10:11 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so883151nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:10 -0700 (PDT)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: add ucode loaders for iwl5000
-Date: Fri, 23 May 2008 10:08:58 +0800
-Message-Id: <1211508569-3163-21-git-send-email-yi.zhu@intel.com> (sfid-20080523_042832_524163_10EB7701)
-In-Reply-To: <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH 10/16] rt2x00: Preserve descriptor information after memmove()
+Date: Sat, 10 May 2008 13:43:38 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805101337.14536.IvDoorn@gmail.com>
+In-Reply-To: <200805101337.14536.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200805101343.39127.IvDoorn@gmail.com> (sfid-20080510_141526_823499_50AD2628)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Due to usage of memmove() in rt2x00usb the descriptor can become
+corrupted because it is being overwritten by the data part.
+Overall having the descriptor in front of the frame is a bad idea,
+we can however use the skb->cb array for this task, since that
+contains more then enough room to hold the entire descriptor and
+preserve the information long enough.
 
-This patch adds ucode initialization handler and functions to load
-ucode for iwl5000 NIC.
+After this we can also cleanup the alignment code a bit to make it
+work a bit more flexible to allow for all kinds of odd header lengths.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c     |  134 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    8 ++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +
- 3 files changed, 145 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2500usb.c |   23 ++++-------
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   62 +++++++++++++++++++++---------
+ drivers/net/wireless/rt2x00/rt73usb.c   |   26 +++++-------
+ 3 files changed, 63 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 00ad360..b6bdffc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -287,6 +287,139 @@ static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- 	return &priv->eeprom[address];
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 2fa3840..0a0727a 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1129,20 +1129,22 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
+ 	__le32 *rxd =
+ 	    (__le32 *)(entry->skb->data +
+ 		       (priv_rx->urb->actual_length - entry->queue->desc_size));
+-	unsigned int offset = entry->queue->desc_size + 2;
+ 	u32 word0;
+ 	u32 word1;
+ 
+ 	/*
+-	 * Copy descriptor to the available headroom inside the skbuffer.
++	 * Copy descriptor to the skb->cb array, this has 2 benefits:
++	 * 1) Each descriptor word is 4 byte aligned.
++	 * 2) Descriptor is safe  from moving of frame data in rt2x00usb.
+ 	 */
+-	skb_push(entry->skb, offset);
+-	memcpy(entry->skb->data, rxd, entry->queue->desc_size);
+-	rxd = (__le32 *)entry->skb->data;
++	skbdesc->desc_len =
++	    min_t(u16, entry->queue->desc_size, sizeof(entry->skb->cb));
++	memcpy(entry->skb->cb, rxd, skbdesc->desc_len);
++	skbdesc->desc = entry->skb->cb;
++	rxd = (__le32 *)skbdesc->desc;
+ 
+ 	/*
+-	 * The descriptor is now aligned to 4 bytes and thus it is
+-	 * now safe to read it on all architectures.
++	 * It is now safe to read the descriptor on all architectures.
+ 	 */
+ 	rt2x00_desc_read(rxd, 0, &word0);
+ 	rt2x00_desc_read(rxd, 1, &word1);
+@@ -1173,16 +1175,9 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
+ 	/*
+ 	 * Adjust the skb memory window to the frame boundaries.
+ 	 */
+-	skb_pull(entry->skb, offset);
+ 	skb_trim(entry->skb, rxdesc->size);
+-
+-	/*
+-	 * Set descriptor and data pointer.
+-	 */
+ 	skbdesc->data = entry->skb->data;
+ 	skbdesc->data_len = rxdesc->size;
+-	skbdesc->desc = rxd;
+-	skbdesc->desc_len = entry->queue->desc_size;
  }
  
-+/*
-+ * ucode
-+ */
-+static int iwl5000_load_section(struct iwl_priv *priv,
-+				struct fw_desc *image,
-+				u32 dst_addr)
-+{
-+	int ret = 0;
-+	unsigned long flags;
-+
-+	dma_addr_t phy_addr = image->p_addr;
-+	u32 byte_cnt = image->len;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	ret = iwl_grab_nic_access(priv);
-+	if (ret) {
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+		return ret;
-+	}
-+
-+	iwl_write_direct32(priv,
-+		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
-+		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE);
-+
-+	iwl_write_direct32(priv,
-+		FH_SRVC_CHNL_SRAM_ADDR_REG(FH_SRVC_CHNL), dst_addr);
-+
-+	iwl_write_direct32(priv,
-+		FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
-+		phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
-+
-+	/* FIME: write the MSB of the phy_addr in CTRL1
-+	 * iwl_write_direct32(priv,
-+		IWL_FH_TFDIB_CTRL1_REG(IWL_FH_SRVC_CHNL),
-+		((phy_addr & MSB_MSK)
-+			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_count);
-+	 */
-+	iwl_write_direct32(priv,
-+		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL), byte_cnt);
-+	iwl_write_direct32(priv,
-+		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
-+		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
-+		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX |
-+		FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID);
-+
-+	iwl_write_direct32(priv,
-+		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
-+		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE	|
-+		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE_VAL |
-+		FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
-+
-+	iwl_release_nic_access(priv);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+	return 0;
-+}
-+
-+static int iwl5000_load_given_ucode(struct iwl_priv *priv,
-+		struct fw_desc *inst_image,
-+		struct fw_desc *data_image)
-+{
-+	int ret = 0;
-+
-+	ret = iwl5000_load_section(
-+		priv, inst_image, RTC_INST_LOWER_BOUND);
-+	if (ret)
-+		return ret;
-+
-+	IWL_DEBUG_INFO("INST uCode section being loaded...\n");
-+	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+				priv->ucode_write_complete, 5 * HZ);
-+	if (ret == -ERESTARTSYS) {
-+		IWL_ERROR("Could not load the INST uCode section due "
-+			"to interrupt\n");
-+		return ret;
-+	}
-+	if (!ret) {
-+		IWL_ERROR("Could not load the INST uCode section\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	priv->ucode_write_complete = 0;
-+
-+	ret = iwl5000_load_section(
-+		priv, data_image, RTC_DATA_LOWER_BOUND);
-+	if (ret)
-+		return ret;
-+
-+	IWL_DEBUG_INFO("DATA uCode section being loaded...\n");
-+
-+	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+				priv->ucode_write_complete, 5 * HZ);
-+	if (ret == -ERESTARTSYS) {
-+		IWL_ERROR("Could not load the INST uCode section due "
-+			"to interrupt\n");
-+		return ret;
-+	} else if (!ret) {
-+		IWL_ERROR("Could not load the DATA uCode section\n");
-+		return -ETIMEDOUT;
-+	} else
-+		ret = 0;
-+
-+	priv->ucode_write_complete = 0;
-+
-+	return ret;
-+}
-+
-+static int iwl5000_load_ucode(struct iwl_priv *priv)
-+{
-+	int ret = 0;
-+
-+	/* check whether init ucode should be loaded, or rather runtime ucode */
-+	if (priv->ucode_init.len && (priv->ucode_type == UCODE_NONE)) {
-+		IWL_DEBUG_INFO("Init ucode found. Loading init ucode...\n");
-+		ret = iwl5000_load_given_ucode(priv,
-+			&priv->ucode_init, &priv->ucode_init_data);
-+		if (!ret) {
-+			IWL_DEBUG_INFO("Init ucode load complete.\n");
-+			priv->ucode_type = UCODE_INIT;
-+		}
-+	} else {
-+		IWL_DEBUG_INFO("Init ucode not found, or already loaded. "
-+			"Loading runtime ucode...\n");
-+		ret = iwl5000_load_given_ucode(priv,
-+			&priv->ucode_code, &priv->ucode_data);
-+		if (!ret) {
-+			IWL_DEBUG_INFO("Runtime ucode load complete.\n");
-+			priv->ucode_type = UCODE_RT;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index caee65e..955f7d9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -246,22 +246,35 @@ static struct sk_buff* rt2x00usb_alloc_rxskb(struct data_queue *queue)
  {
- 	if ((priv->cfg->mod_params->num_of_queues > IWL50_NUM_QUEUES) ||
-@@ -488,6 +621,7 @@ static struct iwl_lib_ops iwl5000_lib = {
- 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
- 	.disable_tx_fifo = iwl5000_disable_tx_fifo,
- 	.rx_handler_setup = iwl5000_rx_handler_setup,
-+	.load_ucode = iwl5000_load_ucode,
- 	.apm_ops = {
- 		.init =	iwl5000_apm_init,
- 		.config = iwl5000_nic_config,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 533479e..b1ff0af 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -876,6 +876,12 @@ struct statistics_general_data {
- 	u32 beacon_energy_c;
- };
+ 	struct sk_buff *skb;
+ 	unsigned int frame_size;
++	unsigned int reserved_size;
  
-+enum ucode_type {
-+	UCODE_NONE = 0,
-+	UCODE_INIT,
-+	UCODE_RT
-+};
+ 	/*
+-	 * As alignment we use 2 and not NET_IP_ALIGN because we need
+-	 * to be sure we have 2 bytes room in the head. (NET_IP_ALIGN
+-	 * can be 0 on some hardware). We use these 2 bytes for frame
+-	 * alignment later, we assume that the chance that
+-	 * header_size % 4 == 2 is bigger then header_size % 2 == 0
+-	 * and thus optimize alignment by reserving the 2 bytes in
+-	 * advance.
++	 * The frame size includes descriptor size, because the
++	 * hardware directly receive the frame into the skbuffer.
+ 	 */
+ 	frame_size = queue->data_size + queue->desc_size;
+-	skb = dev_alloc_skb(queue->desc_size + frame_size + 2);
 +
- #ifdef CONFIG_IWLWIFI_RUN_TIME_CALIB
- /* Sensitivity calib data */
- struct iwl_sensitivity_data {
-@@ -1010,6 +1016,8 @@ struct iwl_priv {
- 	struct fw_desc ucode_init;	/* initialization inst */
- 	struct fw_desc ucode_init_data;	/* initialization data */
- 	struct fw_desc ucode_boot;	/* bootstrap inst */
-+	enum ucode_type ucode_type;
-+	u8 ucode_write_complete;	/* the image write is complete */
++	/*
++	 * For the allocation we should keep a few things in mind:
++	 * 1) 4byte alignment of 802.11 payload
++	 *
++	 * For (1) we need at most 4 bytes to guarentee the correct
++	 * alignment. We are going to optimize the fact that the chance
++	 * that the 802.11 header_size % 4 == 2 is much bigger then
++	 * anything else. However since we need to move the frame up
++	 * to 3 bytes to the front, which means we need to preallocate
++	 * 6 bytes.
++	 */
++	reserved_size = 6;
++
++	/*
++	 * Allocate skbuffer.
++	 */
++	skb = dev_alloc_skb(frame_size + reserved_size);
+ 	if (!skb)
+ 		return NULL;
  
+-	skb_reserve(skb, queue->desc_size + 2);
++	skb_reserve(skb, reserved_size);
+ 	skb_put(skb, frame_size);
  
- 	struct iwl4965_rxon_time_cmd rxon_timing;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 40616db..e06142d 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2978,6 +2978,9 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
- 	if (inta & CSR_INT_BIT_FH_TX) {
- 		IWL_DEBUG_ISR("Tx interrupt\n");
- 		handled |= CSR_INT_BIT_FH_TX;
-+		/* FH finished to write, send event */
-+		priv->ucode_write_complete = 1;
-+		wake_up_interruptible(&priv->wait_command_queue);
+ 	return skb;
+@@ -274,7 +287,8 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	struct sk_buff *skb;
+ 	struct skb_frame_desc *skbdesc;
+ 	struct rxdone_entry_desc rxdesc;
+-	int header_size;
++	unsigned int header_size;
++	unsigned int align;
+ 
+ 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
+ 	    !test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+@@ -298,19 +312,29 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	memset(&rxdesc, 0, sizeof(rxdesc));
+ 	rt2x00dev->ops->lib->fill_rxdone(entry, &rxdesc);
+ 
++	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
++
+ 	/*
+ 	 * The data behind the ieee80211 header must be
+-	 * aligned on a 4 byte boundary.
+-	 */
+-	header_size = ieee80211_get_hdrlen_from_skb(entry->skb);
+-	if (header_size % 4 == 0) {
+-		skb_push(entry->skb, 2);
+-		memmove(entry->skb->data, entry->skb->data + 2,
+-			entry->skb->len - 2);
+-		skbdesc->data = entry->skb->data;
+-		skb_trim(entry->skb,entry->skb->len - 2);
++	 * aligned on a 4 byte boundary. We already reserved
++	 * 2 bytes for header_size % 4 == 2 optimization.
++	 * To determine the number of bytes which the data
++	 * should be moved to the left, we must add these
++	 * 2 bytes to the header_size.
++ 	 */
++	align = (header_size + 2) % 4;
++
++	if (align) {
++		skb_push(entry->skb, align);
++		/* Move entire frame in 1 command */
++		memmove(entry->skb->data, entry->skb->data + align,
++			rxdesc.size);
  	}
  
- 	if (inta & ~handled)
++	/* Update data pointers, trim buffer to correct size */
++	skbdesc->data = entry->skb->data;
++	skb_trim(entry->skb, rxdesc.size);
++
+ 	/*
+ 	 * Allocate a new sk buffer to replace the current one.
+ 	 * If allocation fails, we should drop the current frame
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 288d80a..6857d14 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1403,20 +1403,22 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	__le32 *rxd = (__le32 *)entry->skb->data;
+-	unsigned int offset = entry->queue->desc_size + 2;
+ 	u32 word0;
+ 	u32 word1;
+ 
+ 	/*
+-	 * Copy descriptor to the available headroom inside the skbuffer.
++	 * Copy descriptor to the skb->cb array, this has 2 benefits:
++	 * 1) Each descriptor word is 4 byte aligned.
++	 * 2) Descriptor is safe  from moving of frame data in rt2x00usb.
+ 	 */
+-	skb_push(entry->skb, offset);
+-	memcpy(entry->skb->data, rxd, entry->queue->desc_size);
+-	rxd = (__le32 *)entry->skb->data;
++	skbdesc->desc_len =
++	    min_t(u16, entry->queue->desc_size, sizeof(entry->skb->cb));
++	memcpy(entry->skb->cb, rxd, skbdesc->desc_len);
++	skbdesc->desc = entry->skb->cb;
++	rxd = (__le32 *)skbdesc->desc;
+ 
+ 	/*
+-	 * The descriptor is now aligned to 4 bytes and thus it is
+-	 * now safe to read it on all architectures.
++	 * It is now safe to read the descriptor on all architectures.
+ 	 */
+ 	rt2x00_desc_read(rxd, 0, &word0);
+ 	rt2x00_desc_read(rxd, 1, &word1);
+@@ -1442,18 +1444,12 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
+ 		rxdesc->dev_flags |= RXDONE_MY_BSS;
+ 
+ 	/*
+-	 * Adjust the skb memory window to the frame boundaries.
++	 * Set skb pointers, and update frame information.
+ 	 */
+-	skb_pull(entry->skb, offset + entry->queue->desc_size);
++	skb_pull(entry->skb, entry->queue->desc_size);
+ 	skb_trim(entry->skb, rxdesc->size);
+-
+-	/*
+-	 * Set descriptor and data pointer.
+-	 */
+ 	skbdesc->data = entry->skb->data;
+ 	skbdesc->data_len = rxdesc->size;
+-	skbdesc->desc = rxd;
+-	skbdesc->desc_len = entry->queue->desc_size;
+ }
+ 
+ /*
 -- 
-1.5.3.6
+1.5.5.1
 
