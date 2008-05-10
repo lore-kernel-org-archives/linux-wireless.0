@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40154 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589AbYERNkl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2008 09:40:41 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Dan Williams <dcbw@redhat.com>
+Received: from fg-out-1718.google.com ([72.14.220.152]:54673 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753468AbYEJMKn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 May 2008 08:10:43 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1148254fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:43 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211032475.6252.2.camel@johannes.berg>
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sun, 18 May 2008 09:36:35 -0400
-Message-Id: <1211117795.686.15.camel@localhost.localdomain> (sfid-20080518_154119_284851_552B3A25)
-Mime-Version: 1.0
+Subject: [PATCH 5/5] mac80211: Match define names in comments with actual defines
+Date: Sat, 10 May 2008 13:51:29 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805101349.19481.IvDoorn@gmail.com>
+In-Reply-To: <200805101349.19481.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805101351.30038.IvDoorn@gmail.com> (sfid-20080510_141529_173747_FC92DEBD)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-17 at 15:54 +0200, Johannes Berg wrote:
-> On Sat, 2008-05-17 at 15:45 +0200, Marcel Holtmann wrote:
-> > Hi Johannes,
-> > 
-> > > The /sys/class/net/*/wireless/ direcory is, as far as I know, not
-> > > used by anyone. Additionally, the same data is available via wext
-> > > ioctls. Hence the sysfs files are pretty much useless. This patch
-> > > makes them optional and schedules them for removal.
-> > 
-> > it is used by HAL to classify WiFi network cards as net.80211 instead  
-> > of net.80203 and so we do have an actual user. However HAL only tests  
-> > for the existence of the directory wireless/.
-> 
-> Oh, ok, I didn't know that, thanks.
-> 
-> > Please fix HAL first before submitting such a patch.
-> 
-> Sure, I'll take a look at that.
+The defines introduced in patch:
+	mac80211: tx-info skb->cb
+did not match the names wich were mentioned in the comment
+above the defines.
 
-Instead of testing for wireless/, best thing would probably be to call
-SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-wireless.  Some drivers may have to load firmware to figure out
-supported rates and encryption capabilities, but to be honest, NM does
-this to detect wireless devices and I haven't run into any issues in 4
-years using it.  If there are issues with drivers, then we need to fix
-the driver too.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ include/net/mac80211.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-dan
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1441105..684b42b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -235,10 +235,10 @@ struct ieee80211_bss_conf {
+  *	is handed to a driver.
+  * @IEEE80211_TX_CTL_INJECTED: Frame was injected (NOT for driver use!)
+  *
+- * @IEEE80211_TX_STATUS_TX_FILTERED: The frame was not transmitted
++ * @IEEE80211_TX_STAT_TX_FILTERED: The frame was not transmitted
+  *	because the destination STA was in powersave mode.
+- * @IEEE80211_TX_STATUS_ACK: Frame was acknowledged
+- * @IEEE80211_TX_STATUS_AMPDU: The frame was aggregated, so status
++ * @IEEE80211_TX_STAT_ACK: Frame was acknowledged
++ * @IEEE80211_TX_STAT_AMPDU: The frame was aggregated, so status
+  * 	is for the whole aggregation.
+  */
+ enum mac80211_tx_control_flags {
+-- 
+1.5.5.1
 
