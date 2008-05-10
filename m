@@ -1,107 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbYECW4i convert rfc822-to-8bit (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:20731 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbYEJMKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 18:56:38 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1209830582.3673.8.camel@johannes.berg> (sfid-20080503_180248_421223_067F1B11)
-References: <20080501.024320.212547875.davem@davemloft.net>
-	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
-	 <20080501.034950.261408566.davem@davemloft.net>
-	 <20080501.035335.216935614.davem@davemloft.net>
-	 <1209639500.7067.0.camel@johannes.berg>
-	 <20080501110341.GD7490@gondor.apana.org.au>
-	 <1209818282.3987.23.camel@johannes.berg>
-	 <20080503125940.GA26199@gondor.apana.org.au>
-	 <1209830582.3673.8.camel@johannes.berg>
-	 (sfid-20080503_180248_421223_067F1B11)
-Content-Type: text/plain; charset=utf-8
-Date: Sun, 04 May 2008 00:56:23 +0200
-Message-Id: <1209855383.3649.3.camel@johannes.berg> (sfid-20080504_005609_458630_8CFDE7B6)
-Mime-Version: 1.0
+	Sat, 10 May 2008 08:10:04 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so883151nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:02 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 07/16] rt2x00: Fix TX status reporting
+Date: Sat, 10 May 2008 13:42:06 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805101337.14536.IvDoorn@gmail.com>
+In-Reply-To: <200805101337.14536.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200805101342.07044.IvDoorn@gmail.com> (sfid-20080510_141019_562629_3EB5F33A)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-03 at 18:03 +0200, Johannes Berg wrote:
-> On Sat, 2008-05-03 at 20:59 +0800, Herbert Xu wrote:
-> > On Sat, May 03, 2008 at 02:38:01PM +0200, Johannes Berg wrote:
-> > >
-> > > Why, btw? It's not too hard to check the allocated size, no?
-> >=20
-> > Yes that would be a meaningful improvement although we'd need to
-> > audit/test this to make sure that we don't spam people's logs
-> > with it.
->=20
-> It does spam the log. A lot. And I don't know why, from this discussi=
-on
-> I only thought that it shouldn't.
+The tx_status enumeration was broken since the introduction
+of rt61pci. That driver uses different values to report the
+status of the tx action.
+This would lead to frames that were reported as success but
+actually failed to be send out, or frames that were neither
+successfull or failure which were reported as failure.
 
-This was a stupid mistake, if you do it correctly it actually works and
-so far has only triggered a single warning on my system:
+Fix this by change the TX status reporting and more explicitely
+check for failure or success. Note that a third possibility is
+added "unknown". Not all hardware (USB) can report the actual
+TX status, for rt61pci some frames will receive this status
+because the TXdone handler is never called for those frames.
+This unknown will now be handled as neither success or failure,
+so we no longer increment the failure counter while this conclusion
+could not be determined from the real status of the frame.
 
-[  217.507048] SKB BUG: Invalid truesize (4294964120) size=3D432, sizeo=
-f(sk_buff)=3D176
-=EF=BB=BF
-that was with my patch though to update skb->truesize during !skb->sk
-pskb_expand_head() calls.
-
-johannes
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/linux/skbuff.h |    8 ++++++--
- net/core/skbuff.c      |   10 ++++++++--
- 2 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c   |   13 ++++++++++++-
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   13 ++++++++++++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   24 +++++++++++-------------
+ drivers/net/wireless/rt2x00/rt2x00queue.h |   20 ++++++++++++++++++--
+ drivers/net/wireless/rt2x00/rt2x00reg.h   |   11 -----------
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   11 ++++++++++-
+ drivers/net/wireless/rt2x00/rt61pci.c     |   15 +++++++++++++--
+ 7 files changed, 76 insertions(+), 31 deletions(-)
 
---- everything.orig/include/linux/skbuff.h	2008-05-03 15:47:00.00000000=
-0 +0200
-+++ everything/include/linux/skbuff.h	2008-05-04 00:30:34.000000000 +02=
-00
-@@ -387,9 +387,13 @@ extern void	      skb_truesize_bug(struc
-=20
- static inline void skb_truesize_check(struct sk_buff *skb)
- {
--	int len =3D sizeof(struct sk_buff) + skb->len;
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+	int len =3D sizeof(struct sk_buff) + skb->end;
-+#else
-+	int len =3D sizeof(struct sk_buff) + (skb->end - skb->head);
-+#endif
-=20
--	if (unlikely((int)skb->truesize < len))
-+	if (unlikely((int)skb->truesize !=3D len))
- 		skb_truesize_bug(skb);
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 247fbbf..15cf224 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1137,7 +1137,18 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev,
+ 		/*
+ 		 * Obtain the status about this packet.
+ 		 */
+-		txdesc.status = rt2x00_get_field32(word, TXD_W0_RESULT);
++		txdesc.flags = 0;
++		switch (rt2x00_get_field32(word, TXD_W0_RESULT)) {
++		case 0: /* Success */
++		case 1: /* Success with retry */
++			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
++			break;
++		case 2: /* Failure, excessive retries */
++			__set_bit(TXDONE_EXCESSIVE_RETRY, &txdesc.flags);
++			/* Don't break, this is a failed frame! */
++		default: /* Failure */
++			__set_bit(TXDONE_FAILURE, &txdesc.flags);
++		}
+ 		txdesc.retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
+ 
+ 		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 0d53c75..234b5b7 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1292,7 +1292,18 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev,
+ 		/*
+ 		 * Obtain the status about this packet.
+ 		 */
+-		txdesc.status = rt2x00_get_field32(word, TXD_W0_RESULT);
++		txdesc.flags = 0;
++		switch (rt2x00_get_field32(word, TXD_W0_RESULT)) {
++		case 0: /* Success */
++		case 1: /* Success with retry */
++			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
++			break;
++		case 2: /* Failure, excessive retries */
++			__set_bit(TXDONE_EXCESSIVE_RETRY, &txdesc.flags);
++			/* Don't break, this is a failed frame! */
++		default: /* Failure */
++			__set_bit(TXDONE_FAILURE, &txdesc.flags);
++		}
+ 		txdesc.retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
+ 
+ 		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 1e7fefd..acc22df 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -496,38 +496,36 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct skb_frame_desc *skbdesc;
+ 	struct ieee80211_tx_status tx_status;
+-	int success = !!(txdesc->status == TX_SUCCESS ||
+-			 txdesc->status == TX_SUCCESS_RETRY);
+-	int fail = !!(txdesc->status == TX_FAIL_RETRY ||
+-		      txdesc->status == TX_FAIL_INVALID ||
+-		      txdesc->status == TX_FAIL_OTHER);
+ 
+ 	/*
+ 	 * Update TX statistics.
+ 	 */
+-	rt2x00dev->link.qual.tx_success += success;
+-	rt2x00dev->link.qual.tx_failed += txdesc->retry + fail;
++	rt2x00dev->link.qual.tx_success +=
++	    test_bit(TXDONE_SUCCESS, &txdesc->flags);
++	rt2x00dev->link.qual.tx_failed +=
++	    txdesc->retry + !!test_bit(TXDONE_FAILURE, &txdesc->flags);
+ 
+ 	/*
+ 	 * Initialize TX status
+ 	 */
+ 	tx_status.flags = 0;
+ 	tx_status.ack_signal = 0;
+-	tx_status.excessive_retries = (txdesc->status == TX_FAIL_RETRY);
++	tx_status.excessive_retries =
++	    test_bit(TXDONE_EXCESSIVE_RETRY, &txdesc->flags);
+ 	tx_status.retry_count = txdesc->retry;
+ 	memcpy(&tx_status.control, txdesc->control, sizeof(*txdesc->control));
+ 
+ 	if (!(tx_status.control.flags & IEEE80211_TXCTL_NO_ACK)) {
+-		if (success)
++		if (test_bit(TXDONE_SUCCESS, &txdesc->flags))
+ 			tx_status.flags |= IEEE80211_TX_STATUS_ACK;
+-		else
++		else if (test_bit(TXDONE_FAILURE, &txdesc->flags))
+ 			rt2x00dev->low_level_stats.dot11ACKFailureCount++;
+ 	}
+ 
+ 	if (tx_status.control.flags & IEEE80211_TXCTL_USE_RTS_CTS) {
+-		if (success)
++		if (test_bit(TXDONE_SUCCESS, &txdesc->flags))
+ 			rt2x00dev->low_level_stats.dot11RTSSuccessCount++;
+-		else
++		else if (test_bit(TXDONE_FAILURE, &txdesc->flags))
+ 			rt2x00dev->low_level_stats.dot11RTSFailureCount++;
+ 	}
+ 
+@@ -546,7 +544,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		ieee80211_tx_status_irqsafe(rt2x00dev->hw,
+ 					    entry->skb, &tx_status);
+ 	else
+-		dev_kfree_skb(entry->skb);
++		dev_kfree_skb_irq(entry->skb);
+ 	entry->skb = NULL;
  }
-=20
---- everything.orig/net/core/skbuff.c	2008-05-03 16:29:23.000000000 +02=
-00
-+++ everything/net/core/skbuff.c	2008-05-04 00:31:32.000000000 +0200
-@@ -151,9 +151,15 @@ void skb_under_panic(struct sk_buff *skb
-=20
- void skb_truesize_bug(struct sk_buff *skb)
- {
-+#ifdef NET_SKBUFF_DATA_USES_OFFSET
-+	int len =3D sizeof(struct sk_buff) + skb->end;
-+#else
-+	int len =3D sizeof(struct sk_buff) + (skb->end - skb->head);
-+#endif
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index c3493ed..f361f78 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -168,18 +168,34 @@ struct rxdone_entry_desc {
+ };
+ 
+ /**
++ * enum txdone_entry_desc_flags: Flags for &struct txdone_entry_desc
++ *
++ * @TXDONE_UNKNOWN: Hardware could not determine success of transmission.
++ * @TXDONE_SUCCESS: Frame was successfully send
++ * @TXDONE_FAILURE: Frame was not successfully send
++ * @TXDONE_EXCESSIVE_RETRY: In addition to &TXDONE_FAILURE, the
++ *	frame transmission failed due to excessive retries.
++ */
++enum txdone_entry_desc_flags {
++	TXDONE_UNKNOWN = 1 << 0,
++	TXDONE_SUCCESS = 1 << 1,
++	TXDONE_FAILURE = 1 << 2,
++	TXDONE_EXCESSIVE_RETRY = 1 << 3,
++};
 +
- 	printk(KERN_ERR "SKB BUG: Invalid truesize (%u) "
--	       "len=3D%u, sizeof(sk_buff)=3D%Zd\n",
--	       skb->truesize, skb->len, sizeof(struct sk_buff));
-+	       "size=3D%u, sizeof(sk_buff)=3D%Zd\n",
-+	       skb->truesize, len, sizeof(struct sk_buff));
- }
- EXPORT_SYMBOL(skb_truesize_bug);
-=20
++/**
+  * struct txdone_entry_desc: TX done entry descriptor
+  *
+  * Summary of information that has been read from the TX frame descriptor
+  * after the device is done with transmission.
+  *
+  * @control: Control structure which was used to transmit the frame.
+- * @status: TX status (See &enum tx_status).
++ * @flags: TX done flags (See &enum txdone_entry_desc_flags).
+  * @retry: Retry count.
+  */
+ struct txdone_entry_desc {
+ 	struct ieee80211_tx_control *control;
+-	int status;
++	unsigned long flags;
+ 	int retry;
+ };
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index 0325bed..3f255df 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -27,17 +27,6 @@
+ #define RT2X00REG_H
+ 
+ /*
+- * TX result flags.
+- */
+-enum tx_status {
+-	TX_SUCCESS = 0,
+-	TX_SUCCESS_RETRY = 1,
+-	TX_FAIL_RETRY = 2,
+-	TX_FAIL_INVALID = 3,
+-	TX_FAIL_OTHER = 4,
+-};
+-
+-/*
+  * Antenna values
+  */
+ enum antenna {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 98aafc2..caee65e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -147,8 +147,17 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 
+ 	/*
+ 	 * Obtain the status about this packet.
++	 * Note that when the status is 0 it does not mean the
++	 * frame was send out correctly. It only means the frame
++	 * was succesfully pushed to the hardware, we have no
++	 * way to determine the transmission status right now.
++	 * (Only indirectly by looking at the failed TX counters
++	 * in the register).
+ 	 */
+-	txdesc.status = !urb->status ? TX_SUCCESS : TX_FAIL_RETRY;
++	if (!urb->status)
++		__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
++	else
++		__set_bit(TXDONE_FAILURE, &txdesc.flags);
+ 	txdesc.retry = 0;
+ 	txdesc.control = &priv_tx->control;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index b64f2f5..907e67b 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1764,7 +1764,8 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 				"TX status report missed for entry %d\n",
+ 				entry_done->entry_idx);
+ 
+-			txdesc.status = TX_FAIL_OTHER;
++			txdesc.flags = 0;
++			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
+ 			txdesc.retry = 0;
+ 
+ 			rt2x00pci_txdone(rt2x00dev, entry_done, &txdesc);
+@@ -1774,7 +1775,17 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 		/*
+ 		 * Obtain the status about this packet.
+ 		 */
+-		txdesc.status = rt2x00_get_field32(reg, STA_CSR4_TX_RESULT);
++		txdesc.flags = 0;
++		switch (rt2x00_get_field32(reg, STA_CSR4_TX_RESULT)) {
++		case 0: /* Success, maybe with retry */
++			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
++			break;
++		case 6: /* Failure, excessive retries */
++			__set_bit(TXDONE_EXCESSIVE_RETRY, &txdesc.flags);
++			/* Don't break, this is a failed frame! */
++		default: /* Failure */
++			__set_bit(TXDONE_FAILURE, &txdesc.flags);
++		}
+ 		txdesc.retry = rt2x00_get_field32(reg, STA_CSR4_RETRY_COUNT);
+ 
+ 		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
+-- 
+1.5.5.1
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
