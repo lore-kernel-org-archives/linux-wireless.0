@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44846 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50395 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757634AbYETJOw (ORCPT
+	with ESMTP id S1753530AbYEJWWE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 05:14:52 -0400
-Subject: Re: iwlwifi injection bug
+	Sat, 10 May 2008 18:22:04 -0400
+Received: from [91.5.117.77] (helo=[10.0.0.127])
+	by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1JuxS7-0000zD-CH
+	for linux-wireless@vger.kernel.org; Sun, 11 May 2008 00:22:03 +0200
+Message-Id: <20080510221905.646038000@sipsolutions.net> (sfid-20080511_002228_245832_9AA59424)
+References: <20080510221845.340428000@sipsolutions.net>
+Date: Sun, 11 May 2008 00:18:46 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andy Green <andy@warmcat.com>
-In-Reply-To: <1211249729.2532.59.camel@debian.sh.intel.com>
-References: <1210945631.6381.11.camel@johannes.berg>
-	 <1211249729.2532.59.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yku3omZVQK80g7MGbB5H"
-Date: Tue, 20 May 2008 11:13:40 +0200
-Message-Id: <1211274820.6252.75.camel@johannes.berg> (sfid-20080520_111458_762799_399EFE6B)
+To: linux-wireless@vger.kernel.org
+Subject: [RFT/C 1/7] mac80211: use skb_header_cloned()
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+mac80211 doesn't need to care here about cloned status but rather
+about whether the skb header data area is modifiable.
 
---=-Yku3omZVQK80g7MGbB5H
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+--- everything.orig/net/mac80211/tx.c	2008-05-10 23:00:06.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-05-10 23:00:37.000000000 +0200
+@@ -1563,13 +1563,13 @@ int ieee80211_subif_start_xmit(struct sk
+ 	 * be cloned. This could happen, e.g., with Linux bridge code passing
+ 	 * us broadcast frames. */
+ 
+-	if (head_need > 0 || skb_cloned(skb)) {
++	if (head_need > 0 || skb_header_cloned(skb)) {
+ #if 0
+ 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+ 		       "of headroom\n", dev->name, head_need);
+ #endif
+ 
+-		if (skb_cloned(skb))
++		if (skb_header_cloned(skb))
+ 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 		else
+ 			I802_DEBUG_INC(local->tx_expand_skb_head);
 
-> >         if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> >                 IWL_DEBUG_MAC80211("leave - monitor\n");
-> >                 return -1;
-> >         }
-> >=20
-> > You see, this will cause mac80211 to resubmit the frame and most
-> > likely will totally mess up queue handling and various other things.
->=20
-> The monitor mode the driver is using currently is purely a "sniffer". We
-> will look into other promiscuous mode supported by the firmware to see
-> if we can enable that.
-
-Until then, however, you should return 0 and free the skb there to avoid
-messing up the whole networking layer's queuing.
-
-johannes
-
---=-Yku3omZVQK80g7MGbB5H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDKWQ6Vg1VMiehFYAQIo3Q/+PnrVhyRteRm+sahHvTZDU2CNaVSCMTP6
-gpNWPRUT5RPBZ2ASYC16bjyjpezhjdk0BuTGM/WhlM/Rwuw3sgqz3ZSNNqwXlZw+
-QcHq1qvUFVH+Qtx/tbEF53SCXkUgqNoRWTcToM8CtcmETmttG51bMwZqEo4p92eU
-/ZYtCzqFpvRH8hG/Aty35So6x28ViFsiPYelWarY/G1pWpOV8Rv0w8m1v6BlZaBM
-eAIMUd6LmDNNhhTEDOjkBtvKEVjq4HkLsGVJULJS3qRhgeWUGAaxNY/ajX8SI5KI
-vH5+VHWjVwCffqdi6o8dOmXoKtGt38+5AyF/CIW9Y/hfJ7BzsX5nxdnwxQVhZ8D4
-Ks+C2Qg0B8SPZkMJzfgzygSoBaCwD1PV0rTrgMrKnsd/HTutrd5ut5sMilQQfvRt
-XuqiAYLOptyM9rhmXQC3suNgQnhQhWDNuyTvG0TBlwu31HZXZErZw8HPGHXXFQI+
-xRWSz9rGdPuDysK68+EreXTHYWWfELD/Jwj1VFijmpPnwFE/CesTFa64/VVWcYVw
-SvvWFCRF5F/LEQlvyJpNk27XoS55DN1uB05JEA7Wy1vro/5GUk62sc6vH9e65pmY
-f9MBg8Oat5Z3WhjklWwVpAK+lL7BLgq0GTbS8xOkibM8ZiGuDy9BBwqwWE4zSzci
-W664+g+HSoU=
-=UOVM
------END PGP SIGNATURE-----
-
---=-Yku3omZVQK80g7MGbB5H--
+-- 
 
