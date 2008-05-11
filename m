@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbYEDRzn (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:30514 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753681AbYEKMDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 13:55:43 -0400
-Subject: Re: iw: NL80211_IFTYPE_MESH_POINT not defined
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ael <law_ence.dev@ntlworld.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <fvksqp$blq$1@ger.gmane.org> (sfid-20080504_194934_131530_1EA0F365)
-References: <fvksqp$blq$1@ger.gmane.org>
-	 (sfid-20080504_194934_131530_1EA0F365)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZKm9md3OjA+Va/PnAKnJ"
-Date: Sun, 04 May 2008 19:55:33 +0200
-Message-Id: <1209923734.3655.4.camel@johannes.berg> (sfid-20080504_195507_942472_EE8264C8)
-Mime-Version: 1.0
+	Sun, 11 May 2008 08:03:01 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so503425ugf.16
+        for <linux-wireless@vger.kernel.org>; Sun, 11 May 2008 05:02:59 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/5] rt2x00: Convert rt2x00 to read control info from skb->cb
+Date: Sun, 11 May 2008 14:13:07 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200805101349.19481.IvDoorn@gmail.com> <200805111333.14214.IvDoorn@gmail.com> <1210506545.3646.22.camel@johannes.berg>
+In-Reply-To: <1210506545.3646.22.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805111413.08012.IvDoorn@gmail.com> (sfid-20080511_140306_493691_E82F97EF)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 11 May 2008, Johannes Berg wrote:
+> On Sun, 2008-05-11 at 13:33 +0200, Ivo van Doorn wrote:
+> > On Sunday 11 May 2008, Ivo van Doorn wrote:
+> > > On Saturday 10 May 2008, Johannes Berg wrote:
+> > > > 
+> > > > > +	/*
+> > > > > +	 * Don't automatically kick the beacon queue.
+> > > > > +	 */
+> > > > > +	tx_info->flags &= ~IEEE80211_TX_CTL_READY_FOR_TX;
+> > > > >  
+> > > > >  	/*
+> > > > >  	 * Fill in skb descriptor
+> > > > >  	 */
+> > > > >  	skbdesc = get_skb_frame_desc(skb);
+> > > > >  	memset(skbdesc, 0, sizeof(*skbdesc));
+> > > > > -	skbdesc->flags |= FRAME_DESC_DRIVER_GENERATED;
+> > > > 
+> > > > Could you live w/o that change? I'm pondering removing that flag again
+> > > > since it doesn't have any meaning any more with the fragmentation/busy
+> > > > reschedule rewrite I'll do.
+> > > 
+> > > Not a problem, I had already removed a few instances where I used that,
+> > > and will remove the remaining bits as well.
+> > 
+> > Hmm, things could be much easier for rt2x00 if there was a mac80211 flag
+> > that would indicate if the tx_status should be called or not upon txdone.
+> > 
+> > I used the IEEE80211_TX_CTL_READY_FOR_TX to make sure RTS and CTS frames
+> > were not reported to mac80211 when they were send, but would it perhaps be
+> > better if I used the flag IEEE80211_TX_CTL_REQ_TX_STATUS for that?
+> > I remember that some time ago drivers weren't supposed to check for that
+> > flag, or at least not to determine if the tx_status should be called, but has
+> > this changed and can the flag be used or should rt2x00 keep track of what
+> > should be reported and what not?
+> 
+> Yes, it probably would be better, but we haven't figured out useful
+> settings for that flag yet. I'm fine with unconditionally adding it to
+> all frames for now though.
 
---=-ZKm9md3OjA+Va/PnAKnJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Excellent, I'll prepare a patch that will always set the
+IEEE80211_TX_CTL_REQ_TX_STATUS flag in mac80211 then. :)
 
-
-> interface.c: In function 'get_if_type':
-> interface.c:50: error: 'NL80211_IFTYPE_MESH_POINT' undeclared (first use
-> in this function)
->=20
-> I guess that this should be defined in /usr/include/linux/nl80211.h but
-> it is not present there nor in nl80211.h in kernel 2.6.25.1 which I have
-> installed.
-
-You'll need the header from the wireless-testing git tree, if you really
-want iw.
-
-> I am just trying to get a usb-wifi device running with 2.6.25.x where
-> the driver has moved to mac80211. iwconfig appears to work no longer and
-> I found documentation to the effect that iw was required instead. Hence
-> my attempts to compile it.
-
-iwconfig will definitely work, in fact, iw right now has totally
-orthogonal functionality.
-
-johannes
-
---=-ZKm9md3OjA+Va/PnAKnJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB34lKVg1VMiehFYAQI+fBAAu1nOmEmJp3QBx44vDiplZoyvfncgoxVq
-xL206P9WhO062NfZttCfFsJ/WpLpiNrOcCJhrxrMwyaBx28BiZFi8Ezwt2wM+/XY
-/i4WPCGJlo74hJhrzS2wQKUvZClmokNeb+FpnCqFK3aG8P6a+trskPxVOafNf7rn
-934B9RBT3EsyMSSc8fH28aWKqIE/qAdQwTSwGGx/oOwrEfDnsEV2plY6JqkqDzVf
-7SMISUHmvXCyhj1Bcj23ST5eFvtOi4outJxs+vKIhTnyK0tbfCjNJg5lPlOaLpx7
-09aOq0s2hycffP5v+8I1MnMceDDPv5tM/ukJwFMZOZHlNf6JQU+wrQW/MLW1l0CX
-DmiNNNI0XNzlBN44Hnn72SaTmB6biEtlHNRuRFG1L++MlpYQfd+GBeiZbZ1tWmBN
-Av0q6LBJBKCR4oBmHpOVffCy3rOe8koB1JtrvcYOS9AqTaoBC3Qw6P8VvQDLotx7
-RAygwDG6nXHT+if3azKVgH2pz+S1b14wW71U+pIhTcQ2S0lZIrUdhtdL2OndG/og
-84i1ZOOWPyXwRcV0JXSNOtGnd/IpHPxIdQSHPB+rXl77b0aIYz3GZhpWsAqbMbKN
-RxQqNRZcLwAWPd297tPTEqJYRqHcnuYEKEDF2LS9vVprlgXrhqC2xngJ++yQFDnh
-njc4U6PwJzU=
-=M/xi
------END PGP SIGNATURE-----
-
---=-ZKm9md3OjA+Va/PnAKnJ--
+Ivo
 
