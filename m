@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:65318 "EHLO ms5.sony.co.jp"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2651 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751318AbYE3Hlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 03:41:55 -0400
-Received: from mta5.sony.co.jp (mta5.Sony.CO.JP [137.153.71.6])
- by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7fqYl001327
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:41:52 +0900 (JST)
-Received: from mta5.sony.co.jp (localhost [127.0.0.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7fqFA012737
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:41:52 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7fpx9012726
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:41:52 +0900 (JST)
-Date: Fri, 30 May 2008 16:41:46 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] wireless: Add support for passing PMK to WEXT
-Cc: geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Message-Id: <20080530163019.4741.40F06B3A@sm.sony.co.jp> (sfid-20080530_094159_357049_487D1D2B)
+	id S1751635AbYELTad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 15:30:33 -0400
+Date: Mon, 12 May 2008 14:47:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
+	sfr@canb.auug.org.au, akpm@linux-foundation.org,
+	netdev@vger.kernel.org
+Subject: Re: New GIT net tree naming...
+Message-ID: <20080512184715.GA18910@tuxdriver.com> (sfid-20080512_213038_186141_1C77FEC8)
+References: <20080419.173510.257216556.davem@davemloft.net> <20080508014358.GE3412@tuxdriver.com> <200805080906.29603.hs4233@mail.mn-solutions.de> <20080508144046.GA3515@tuxdriver.com> <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi,
+On Mon, May 12, 2008 at 08:39:22PM +0300, Tomas Winkler wrote:
 
-I'd like to add support for passing PMK and capability flags to WEXT for
-the drivers which want to do 4-way handshake in the driver/firmware.
+> How would you want me to handle bug fixes to go both directions
+> wireless-testing and upstream?
+> Because of huge code movement we are now doing in iwlwifi they are
+> currently just not the same.
+> Shell I send two versions or you want to back port them not sure how
+> do you want to track this...somewhere in merging loop it will create a
+> conflict.  Maybe this is maintainer trivia anyhow
+> I would like to make sure there are not glitches.
 
-Prior to 2.6.25, none of the mainlined wireless drivers had been designed
-to do 4-way handshakes in the driver/firmware, thus WEXT does not define
-the way to do that. 
+It is a good question -- thanks for asking!
 
-The PS3 wireless device is such kind of device.  The current gelic
-driver included in 2.6.25 uses private WEXT ioctls to get the PSK
-because of the lack of a standard way in WEXT.
+If you think that two versions of the fix are appropriate, then please
+do send them.  If it is simply because the code moved I'll probably
+be able to figure it out, but if the code has actually changed it
+may be worthwhile.
 
-With this patch set we would be able to:
+We are now trying to avoid rebasing "-next" patches as much as possible.
+So the version for the current release will be merged to Linus and I or
+Dave will have to figure-out how to resolve the merge conflicts when
+current is pulled to -next.  Providing a "-next' version of the patch
+can help to make sure that those merge conflicts are handled correctly.
 
-  - define the standard way to pass the PMK to the driver
-  - let user space programs figure out whether the driver will do 4-way
-    handshakes
-  - eliminate the use of private ioctls from the gelic driver
-
-#1	Add support for passing PMK and capability flags to WEXT
-#2	Use the new PMK interface in the gelic driver
-#3	Deprecate the private ioctls in the gelic driver
-
-
-#1 adds the flags to WEXT, #2 and #3 let the gelic driver conform.
-
-This patch set is identical to my previous RFC post on Apr 25 in
-functionality.
-
-Best regards.
-
+John
 -- 
-Masakazu Mokuno
-
+John W. Linville
+linville@tuxdriver.com
