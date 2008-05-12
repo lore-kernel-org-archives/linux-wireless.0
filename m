@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:62519 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762397AbYEHWKn (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:20436 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbYELXSt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 18:10:43 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1378937waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 15:10:43 -0700 (PDT)
-Message-ID: <1ba2fa240805081510x13ca192bsa219736707a8119b@mail.gmail.com> (sfid-20080509_000941_252489_066105F9)
-Date: Fri, 9 May 2008 01:10:42 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH/RFC v2] mac80211: fix association with some APs
-Cc: "Helmut Schaa" <hschaa@suse.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1210283484.3547.73.camel@johannes.berg>
+	Mon, 12 May 2008 19:18:49 -0400
+Received: by an-out-0708.google.com with SMTP id d40so519020and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 16:18:48 -0700 (PDT)
+Message-ID: <40f31dec0805121618j4a2f8bedw78e2ce36d8158649@mail.gmail.com> (sfid-20080513_011901_139408_CF2ACAB0)
+Date: Tue, 13 May 2008 02:18:48 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [PATCH] ath5k: Fix loop variable initializations
+Cc: mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <E1JvZ2x-0005kb-TH@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200805081030.57966.hschaa@suse.de>
-	 <200805081334.07599.hschaa@suse.de>
-	 <1210246602.3547.45.camel@johannes.berg>
-	 <1ba2fa240805081445p4fb5e47cvf2743a868c7887ae@mail.gmail.com>
-	 <1210283484.3547.73.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <E1JvZ2x-0005kb-TH@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 9, 2008 at 12:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->  > Are we sure there is no  firmware with the fix for this AP?
->
->  Even if there is, does it matter? Will everybody install it? It's not
->  like we're doing something that could cause problems since we announce
->  the subset that both we and the AP can support.
+Have you checked this one...
 
-Fair enough.
-Tomas
+1838                         if (rs.rs_status & AR5K_RXERR_MIC) {
+1839                                 rxs.flag |= RX_FLAG_MMIC_ERROR;
+1840                                 goto accept;
+
+are you sure that doesn't happen ?
+
+Also why initialize rxs.flag here?
+> rxs.flag = RX_FLAG_TSFT;
+
+Why not doing a simple
+rxs.flag = 0 ;
+or a check of flags set by mac80211 at the start of the loop ?
+
+This way we'll also have a clean rxs.flag when doing
+rxs.flag |= RX_FLAG_MMIC_ERROR
+and we won't clear RX_FLAG_MMIC_ERROR when doing
+rxs.flag = RX_FLAG_TSFT;
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
