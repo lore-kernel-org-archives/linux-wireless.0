@@ -1,95 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52859 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756057AbYENX10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:26 -0400
-Message-Id: <200805142326.m4ENQN38027114@imap1.linux-foundation.org> (sfid-20080515_012729_403497_5DB1B4C1)
-Subject: [patch 12/12] b43: use the bitrev helpers rather than rolling a private one
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, mb@bu3sch.de
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:22 -0700
+Received: from c60.cesmail.net ([216.154.195.49]:3840 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751372AbYELLp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 07:45:29 -0400
+Subject: Re: is there support for my Card
+From: Pavel Roskin <proski@gnu.org>
+To: Markus Feldmann <feldmann_markus@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1210562893.2345.12.camel@dv>
+References: <fvp2dg$d26$1@ger.gmane.org> <fvp2kq$d26$2@ger.gmane.org>
+	 <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org>
+	 <fvv15v$9jr$1@ger.gmane.org>
+	 <58931.84.58.138.216.1210308615.squirrel@webmail.madwifi.org>
+	 <g01c9i$8ud$1@ger.gmane.org>  <1210562893.2345.12.camel@dv>
+Content-Type: text/plain
+Date: Mon, 12 May 2008 07:45:28 -0400
+Message-Id: <1210592728.3372.9.camel@dv> (sfid-20080512_134532_478690_8BC2FAAC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+On Sun, 2008-05-11 at 23:28 -0400, Pavel Roskin wrote:
 
-The 4-bit reversal flip_4bit is replaced with the bitrev helper bitrev8
-and a 4-bit shift.  The B43_WARN is moved to the location where a register
-is read from for checking there.  The other caller explicitly passes an
-array index which is guaranteed to be within range and so a B43_WARN is
-not added there.
+> It you want to figure out the exact MAC, I suggest that you load some
+> driver that can enable the card, such as the current version of madwifi
+> from Subversion.  If it works, it's AR5006, otherwise AR5007.  There is
+> also a special snapshot of madwifi with AR5007 support at 
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Acked-by: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+http://snapshots.madwifi.org/special/
 
- drivers/net/wireless/b43/phy.c |   26 +++++---------------------
- 1 file changed, 5 insertions(+), 21 deletions(-)
+Look for "ar5007" in the names.  Sorry, missed the link.
 
-diff -puN drivers/net/wireless/b43/phy.c~b43-use-the-bitrev-helpers-rather-than-rolling-a-private-one drivers/net/wireless/b43/phy.c
---- a/drivers/net/wireless/b43/phy.c~b43-use-the-bitrev-helpers-rather-than-rolling-a-private-one
-+++ a/drivers/net/wireless/b43/phy.c
-@@ -28,6 +28,7 @@
- #include <linux/delay.h>
- #include <linux/io.h>
- #include <linux/types.h>
-+#include <linux/bitrev.h>
- 
- #include "b43.h"
- #include "phy.h"
-@@ -85,23 +86,6 @@ const u8 b43_radio_channel_codes_bg[] = 
- 
- static void b43_phy_initg(struct b43_wldev *dev);
- 
--/* Reverse the bits of a 4bit value.
-- * Example:  1101 is flipped 1011
-- */
--static u16 flip_4bit(u16 value)
--{
--	u16 flipped = 0x0000;
--
--	B43_WARN_ON(value & ~0x000F);
--
--	flipped |= (value & 0x0001) << 3;
--	flipped |= (value & 0x0002) << 1;
--	flipped |= (value & 0x0004) >> 1;
--	flipped |= (value & 0x0008) >> 3;
--
--	return flipped;
--}
--
- static void generate_rfatt_list(struct b43_wldev *dev,
- 				struct b43_rfatt_list *list)
- {
-@@ -2891,13 +2875,13 @@ b43_radio_interference_mitigation_enable
- 		}
- 		radio_stacksave(0x0078);
- 		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
--		flipped = flip_4bit(tmp);
-+		B43_WARN_ON(tmp > 15);
-+		flipped = bitrev8(tmp) >> 4;
- 		if (flipped < 10 && flipped >= 8)
- 			flipped = 7;
- 		else if (flipped >= 10)
- 			flipped -= 3;
--		flipped = flip_4bit(flipped);
--		flipped = (flipped << 1) | 0x0020;
-+		flipped = (bitrev8(flipped) >> 3) | 0x0020;
- 		b43_radio_write16(dev, 0x0078, flipped);
- 
- 		b43_calc_nrssi_threshold(dev);
-@@ -3530,7 +3514,7 @@ u16 b43_radio_init2050(struct b43_wldev 
- 	tmp1 >>= 9;
- 
- 	for (i = 0; i < 16; i++) {
--		radio78 = ((flip_4bit(i) << 1) | 0x20);
-+		radio78 = (bitrev8(i) >> 3) | 0x0020;
- 		b43_radio_write16(dev, 0x78, radio78);
- 		udelay(10);
- 		for (j = 0; j < 16; j++) {
-_
+-- 
+Regards,
+Pavel Roskin
