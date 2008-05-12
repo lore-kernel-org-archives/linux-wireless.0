@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:27559 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbYEGX3K (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47368
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754349AbYELJLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 19:29:10 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so618973rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2008 16:29:10 -0700 (PDT)
-Message-ID: <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com> (sfid-20080508_012824_911250_254F858B)
-Date: Thu, 8 May 2008 02:29:09 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi and tx info in skb->cb
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210197711.3547.1.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1210197711.3547.1.camel@johannes.berg>
+	Mon, 12 May 2008 05:11:51 -0400
+Date: Mon, 12 May 2008 02:11:45 -0700 (PDT)
+Message-Id: <20080512.021145.265455571.davem@davemloft.net> (sfid-20080512_111153_740595_BCE08C01)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, IvDoorn@gmail.com
+Subject: Re: [RFT/C 7/7] mac80211: move TX info into skb->cb
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080510221908.875473000@sipsolutions.net>
+References: <20080510221845.340428000@sipsolutions.net>
+	<20080510221908.875473000@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 8, 2008 at 1:01 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
->  I was just trying to make iwlwifi work again with tx info in skb->cb,
->  but am running into something I don't understand:
->
->  What is a TFD, and why can it have multiple SKBs with a single tx
->  status? I'm referring to:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 11 May 2008 00:18:52 +0200
 
-TFD stands for TX File Descriptor
+> This patch converts mac80211 and all drivers to have transmit
+> information and status in skb->cb rather than allocating extra
+> memory for it and copying all the data around. To make it fit,
+> a union is used where only data that is necessary for all steps
+> is kept outside of the union.
+> 
+> A number of fixes were done by Ivo, as well as the rt2x00 part
+> of this patch.
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
+Please create an IEEE80211_SKB_CB() or similar macro to wrap
+these casts around with, like all other SKB CB users do.
 
->  /* One for each TFD */
->  struct iwl3945_tx_info {
->         struct ieee80211_tx_status status;
->         struct sk_buff *skb[MAX_NUM_OF_TBS];
->  };
->
->  I would have expected something like this with 4965 that has aggregation
->  support (and aggregation is reported just once) but here? Confused.
+Otherwise:
 
-This is for scatter gather. Nothing to do with aggregation. If you get
-fragmented frame you can send it out without linearizing in CPU. in
-numer of TB - TX buffers (which is limitted bu MAX_NUM_OF_TBS)  But
-I'm just over ever explaining :)
-
-
-Thanks
-Tomas
-
->  johannes
->
+Acked-by: David S. Miller <davem@davemloft.net>
