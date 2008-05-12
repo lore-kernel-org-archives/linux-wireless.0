@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759282AbYEWCLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:46 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: remove unused variable form __iwl4965_down
-Date: Fri, 23 May 2008 10:09:11 +0800
-Message-Id: <1211508569-3163-34-git-send-email-yi.zhu@intel.com> (sfid-20080523_042833_285250_40494D23)
-In-Reply-To: <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:44871 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277AbYELMPc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 08:15:32 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so674183ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 05:15:28 -0700 (PDT)
+To: johannes@sipsolutions.net
+Subject: Re: [RFT/C 7/7] mac80211: move TX info into skb->cb
+Date: Mon, 12 May 2008 14:26:12 +0200
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org
+References: <20080510221845.340428000@sipsolutions.net> <20080510221908.875473000@sipsolutions.net> <20080512.021145.265455571.davem@davemloft.net>
+In-Reply-To: <20080512.021145.265455571.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805121426.12656.IvDoorn@gmail.com> (sfid-20080512_141536_167357_C5D6DF72)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Monday 12 May 2008, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Sun, 11 May 2008 00:18:52 +0200
+> 
+> > This patch converts mac80211 and all drivers to have transmit
+> > information and status in skb->cb rather than allocating extra
+> > memory for it and copying all the data around. To make it fit,
+> > a union is used where only data that is necessary for all steps
+> > is kept outside of the union.
+> > 
+> > A number of fixes were done by Ivo, as well as the rt2x00 part
+> > of this patch.
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> Please create an IEEE80211_SKB_CB() or similar macro to wrap
+> these casts around with, like all other SKB CB users do.
 
-This patch removes unused variable from __iwl4965_down.
+Johannes, I have such a function in rt2x00queue.h:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+static inline struct ieee80211_tx_info* get_skb_tx_info(struct sk_buff *skb)
+{
+	return (struct ieee80211_tx_info *)skb->cb;
+}
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 038eea0..bf975cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3349,12 +3349,9 @@ static void __iwl4965_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
--	struct ieee80211_conf *conf = NULL;
- 
- 	IWL_DEBUG_INFO(DRV_NAME " is going down\n");
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
--
- 	if (!exit_pending)
- 		set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
--- 
-1.5.3.6
+You could rename it and move that one into mac80211.h
 
+Ivo
