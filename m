@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60930 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750726AbYE3WiP (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:59533 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754097AbYELMKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 18:38:15 -0400
-Subject: Re: suspend vs. b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200805302319.34173.rjw@sisk.pl>
-References: <1212150713.4117.2.camel@johannes.berg>
-	 <200805301720.49327.rjw@sisk.pl> <1212162163.7238.1.camel@johannes.berg>
-	 <200805302319.34173.rjw@sisk.pl>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-URCOGOqEgJAMHAhoLXWR"
-Date: Sat, 31 May 2008 00:38:10 +0200
-Message-Id: <1212187090.20421.2.camel@johannes.berg> (sfid-20080531_003818_867382_F15502D5)
-Mime-Version: 1.0
+	Mon, 12 May 2008 08:10:55 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2282376wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 05:10:55 -0700 (PDT)
+Message-ID: <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com> (sfid-20080512_141102_422394_5DFF21F4)
+Date: Mon, 12 May 2008 14:10:55 +0200
+From: drago01 <drago01@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: dynamic wep with mulitple keys
+Cc: "Emmanuel Grumbach" <egrumbach@gmail.com>,
+	"Volker Braun" <vbraun@physics.upenn.edu>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
+	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
+	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
+	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
+	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
+	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
+	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
+	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 12, 2008 at 2:07 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>
+> On Mon, May 12, 2008 at 2:47 PM, drago01 <drago01@gmail.com> wrote:
+>  > On Tue, May 6, 2008 at 2:14 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>  >>
+>  >> On Tue, May 6, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
+>  >>  >
+>  >>  > On Tue, May 6, 2008 at 9:32 AM, Emmanuel Grumbach
+>  <egrumbach@gmail.com> wrote:
+>  >>  >  >
+>  >>  >  > On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
+>  >>  >  >  > On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach
+>  <egrumbach@gmail.com> wrote:
+>  >>  >  >  >  > >  I just tried compat-wireless-2008-05-05, which does contain
+>  >>  >  >  >  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
+>  >>  >  >  >  >  >
+>  >>  >  >  >  >
+>  >>  >  >  >  >  Thanks for trying this.
+>  >>  >  >  >  >  Can you try to load the module with swcrypto=1 and try again ?
+>  >>  >  >  >  >  This disables the HW encryption acceleration. Trying
+>  this will allow
+>  >>  >  >  >  >  to make 100% sure that the bug is in iwlwifi. The bug
+>  is likely to be
+>  >>  >  >  >  >  there, but I think it is worth to make this 100% sure.
+>  >>  >  >  >
+>  >>  >  >  >  Well it happens for me with iwl3945 which uses swcrypto
+>  by default see:
+>  >>  >  >  >
+>  >>  >  >  >  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
+>  >>  >  >  >
+>  >>  >  >
+>  >>  >  >  Actually, I made quite a lot of changes in security in iwl4965 that
+>  >>  >  >  are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
+>  >>  >  >  The security code is not the same between 3945 and 4965
+>  >>  >
+>  >>  >  OK, are you planning to port this changes/fixes to 3945 ?
+>  >>  >
+>  >>
+>  >>  Well... Low priority...
+>  >
+>  > This changes fix an important bug that otherwise make the driver
+>  > useless in some configurations.
+>  > So I think it should be backported to 3945 (even when development is
+>  > focused on newer hardware)
+>
+>  But 3945 uses SW encryption this fix is for HW crypto.
 
---=-URCOGOqEgJAMHAhoLXWR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> It hangs for me either at read_unlock_irqrestore() in b43_op_tx() or some=
-where
-> in ieee80211_tx() (at various places).
-
-Huh. Why is it even getting into the tx path? And even then, why does it
-hang at an unlock?
-
-johannes
-
---=-URCOGOqEgJAMHAhoLXWR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASECB0aVg1VMiehFYAQIsGxAAqaxGdsLhRTg4WuPkatJLFrlVtrntPfsC
-9X/dIdQJK0010AgEwO3wucVWy+rfD74hcO4qy6WA50X2aNvwytsmw6F/XKWmL9dZ
-zHqsJO2zQnIgr4w91LaxNANur61SnhSbFAfKB7mhzNxkwUAAi2tuenKX5WngEYmG
-vvSQT2GjuGf2ohjA65+KykRF4RB6YrlIDNU0x/gjvpw3FkDoFopkFgQvRMh/xuhy
-tgS6ZEm4+s7dCBhvS4Vu8ts0CamGd5VKba+gkYyW66Jrh+79uJtWgRbpnKUMzTjF
-85E4djgam56psHoqqmCRLQFBkyxm7FU/DHooNvi1WpGsGMTf+kTYG3HtUKSIXo3y
-jVq41NXKmR4MioAbjcc2TCCKKiY7McqY8RZW7byuFMM5RwrIDek8TTQcVH9PLNrN
-IgmmbRNfn+L2/Bvs83jtnsY0ICq2mzWvkp94zjEgFKJoPvbal7bTyuschsAu/Qln
-ME/dpnczX4QQg2CoQW1bT8uUVKdX4csbHn+kwCb0pjfSen9tNrCKEMEtWvhLViwF
-vjFaaF0WW6K7bhoVyqecrw3acHT3EZSU9gNdGabuFW9HJg8AENcqb1Uawmx3YcrQ
-G786Z/QGAImYDaq2stEetI++E8+buJPH3Vi9P2Q1Fvgw4q7wM5ZXOVMtpwsPw9HW
-oQk5F6S4GN4=
-=ktJx
------END PGP SIGNATURE-----
-
---=-URCOGOqEgJAMHAhoLXWR--
-
+I was talking about this:
+"Actually, I made quite a lot of changes in security in iwl4965 that
+are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
+The security code is not the same between 3945 and 4965"
+which seemed to work for Volker using swcrypto
