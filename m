@@ -1,102 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36688 "EHLO mail.atheros.com"
+Received: from main.gmane.org ([80.91.229.2]:56303 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785AbYE1Rpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 13:45:38 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 10:45:38 -0700
-Date: Wed, 28 May 2008 23:15:32 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <ron.rindjunsky@intel.com>, <linux-wireless@vger.kernel.org>,
-	<Luis.Rodriguez@Atheros.com>, <tomasw@gmail.com>
-Subject: [PATCH]v1 mac80211: fix alignment issue with compare_ether_addr()
-Message-ID: <20080528174532.GA5575@senthil-lnx.users.atheros.com> (sfid-20080528_194542_984620_52429297)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1753765AbYELUkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 16:40:10 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1JveoU-0005Re-V3
+	for linux-wireless@vger.kernel.org; Mon, 12 May 2008 20:40:02 +0000
+Received: from mnhm-590e0d83.pool.einsundeins.de ([89.14.13.131])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 20:40:02 +0000
+Received: from deller by mnhm-590e0d83.pool.einsundeins.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 20:40:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Helge Deller <deller@gmx.de>
+Subject: Re: [PATCH] ath5k: Fix loop variable initializations
+Date: Mon, 12 May 2008 22:27:47 +0200
+Message-ID: <g0a983$ltb$1@ger.gmane.org> (sfid-20080512_224017_722342_B7337AC8)
+References: <E1JvZ2x-0005kb-TH@hash.localnet>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Cc: ath5k-devel@lists.ath5k.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This addresses an alignment issue with compare_ether_addr().
-The addresses passed to compare_ether_addr should be two bytes aligned.
-It may function properly in x86 platform. However may not work properly
-on IA-64 or ARM processor.
+Thanks Bob!
 
-This also fixes a typo in mlme.c where the sk_buff struct name is incorect.
-Though sizeof() works for any incorrect structure pointer name as its just
-a pointer length that we want, lets just fix it.
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=10605
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    4 ++--
- net/mac80211/rx.c   |    4 ++--
- net/mac80211/util.c |    4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+Helge
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c7819fd..4be7736 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1316,7 +1316,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
--		kmalloc(buf_size * sizeof(struct sk_buf *), GFP_ATOMIC);
-+		kmalloc(buf_size * sizeof(struct sk_buff *), GFP_ATOMIC);
- 	if (!tid_agg_rx->reorder_buf) {
- 		if (net_ratelimit())
- 			printk(KERN_ERR "can not allocate reordering buffer "
-@@ -1325,7 +1325,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 		goto end;
- 	}
- 	memset(tid_agg_rx->reorder_buf, 0,
--		buf_size * sizeof(struct sk_buf *));
-+		buf_size * sizeof(struct sk_buff *));
- 
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9400a97..a3643fd 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	u16 fc, hdrlen, ethertype;
- 	u8 *payload;
- 	u8 dst[ETH_ALEN];
--	u8 src[ETH_ALEN];
-+	u8 src[ETH_ALEN] __aligned(2);
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	DECLARE_MAC_BUF(mac);
-@@ -1259,7 +1259,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
-  */
- static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx)
- {
--	static const u8 pae_group_addr[ETH_ALEN]
-+	static const u8 pae_group_addr[ETH_ALEN] __aligned(2)
- 		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
- 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5a77e2c..6513bc2 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -34,11 +34,11 @@ void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
- 
- /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
- /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
--const unsigned char rfc1042_header[] =
-+const unsigned char rfc1042_header[] __aligned(2) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
- 
- /* Bridge-Tunnel header (for EtherTypes ETH_P_AARP and ETH_P_IPX) */
--const unsigned char bridge_tunnel_header[] =
-+const unsigned char bridge_tunnel_header[] __aligned(2) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
- 
- 
--- 
-1.5.2.2
+
+Bob Copeland wrote:
+
+> From: Bob Copeland <me@bobcopeland.com>
+> Date: Mon, 12 May 2008 09:25:33 -0400
+> Subject: [PATCH] ath5k: Fix loop variable initializations
+> 
+> In ath5k_tasklet_rx, both status structures 'rxs' and 'rs' are
+> initialized at the top of the tasklet, but not within the loop.
+> If the loop is executed multiple times in the tasklet, then the
+> variables may see changes from previous packets.
+> 
+> For TKIP, this results in 'Invalid Michael MIC' errors if two packets
+> are processed in the tasklet: rxs.flag gets set to RX_DECRYPTED by
+> mac80211 when it decrypts the first encrypted packet.  The subsequent
+> packet will have RX_DECRYPTED set upon entry to mac80211, so mac80211
+> will not try to decrypt it.
+> 
+> We currently initialize all but two fields in the structures, so fix
+> the other two.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |    2 +-
+>  drivers/net/wireless/ath5k/hw.c   |    2 ++
+>  2 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/base.c
+> b/drivers/net/wireless/ath5k/base.c index 4e5c8fc..fd8537e 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1888,7 +1888,7 @@ accept:
+>  * right now, so it's not too bad...
+>  */
+>  rxs.mactime = ath5k_extend_tsf(sc->ah, rs.rs_tstamp);
+> -             rxs.flag |= RX_FLAG_TSFT;
+> +             rxs.flag = RX_FLAG_TSFT;
+>  
+>  rxs.freq = sc->curchan->center_freq;
+>  rxs.band = sc->curband->band;
+> diff --git a/drivers/net/wireless/ath5k/hw.c
+> b/drivers/net/wireless/ath5k/hw.c index 5fb1ae6..8137d82 100644
+> --- a/drivers/net/wireless/ath5k/hw.c
+> +++ b/drivers/net/wireless/ath5k/hw.c
+> @@ -4119,6 +4119,7 @@ static int ath5k_hw_proc_5210_rx_status(struct
+> ath5k_hw *ah,
+>  rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+>  AR5K_5210_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+>  rs->rs_status = 0;
+> +     rs->rs_phyerr = 0;
+>  
+>  /*
+>  * Key table status
+> @@ -4193,6 +4194,7 @@ static int ath5k_hw_proc_5212_rx_status(struct
+> ath5k_hw *ah,
+>  rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+>  AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+>  rs->rs_status = 0;
+> +     rs->rs_phyerr = 0;
+>  
+>  /*
+>  * Key table status
+
 
