@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:53368 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758601AbYETUKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 16:10:03 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1JyY9q-0006l2-9q
-	for linux-wireless@vger.kernel.org; Tue, 20 May 2008 20:10:02 +0000
-Received: from pip0.ccm.ece.vt.edu ([128.173.52.3])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 20:10:02 +0000
-Received: from asohangh by pip0.ccm.ece.vt.edu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 20:10:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Ali Sohanghpurwala <asohangh@vt.edu>
-Subject: Re: hello
-Date: Tue, 20 May 2008 20:03:37 +0000 (UTC)
-Message-ID: <loom.20080520T195341-329@post.gmane.org> (sfid-20080520_221010_804792_791D8F46)
-References: <1211301911.25736.1.camel@ccm17>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:44394 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751141AbYELUvi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 16:51:38 -0400
+Date: Mon, 12 May 2008 22:51:36 +0200
+From: Sebastian Siewior <liber+tas@ml.breakpoint.cc>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] [NET] libertas: check for mesh support before trying
+	to use it
+Message-ID: <20080512205136.GA27705@Chamillionaire.breakpoint.cc> (sfid-20080512_225143_705714_2DD728DD)
+References: <1208448814.9212.270.camel@pmac.infradead.org> <1208455363.20193.3.camel@localhost.localdomain> <20080417194437.GA18291@Chamillionaire.breakpoint.cc> <20080510072428.GA1153@Chamillionaire.breakpoint.cc> <1210610056.23717.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1210610056.23717.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ali Asgar Sohanghpurwala <asohangh@...> writes:
+* Dan Williams | 2008-05-12 12:34:16 [-0400]:
 
-> 
-> subscribe linux-wireless
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+>> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+>> index dcfdb40..a79d698 100644
+>> --- a/drivers/net/wireless/libertas/ethtool.c
+>> +++ b/drivers/net/wireless/libertas/ethtool.c
+>> @@ -113,8 +113,14 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
+>>  
+>>  static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
+>>  {
+>> +	struct lbs_private *priv = dev->priv;
+>> +
+>>  	switch (sset) {
+>>  	case ETH_SS_STATS:
+>> +
+>> +		if (!priv->mesh_tlv)
+>> +
+>
+>We usually use
+>
+>if (!priv->mesh_dev)
+>
+>for checking whether mesh is open or not... Will that not work here?
+>
+Well, if this is the case than you can pick David's patch which does
+this [1]. If you fine with this than I could add a patch description and
+things like that :)
 
-Sorry about that, this is so embarassing.  I'm developing mac80211 based drivers
-for a very basic custom PHY on TI's DaVinci platform, so I'll be posting some
-questions  once I'm correctly registered for this listserv.
-
+[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/13707
+>Dan
+Sebastian
