@@ -1,95 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:55230 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbYE0FXM (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:47752 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbYELQe6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 01:23:12 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2494630waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 22:23:10 -0700 (PDT)
-Message-ID: <1ba2fa240805262223u4f884d16g5883dd6c7ba9c670@mail.gmail.com> (sfid-20080527_072315_212813_01B82758)
-Date: Tue, 27 May 2008 08:23:10 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: fix deadlock in sta->lock
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1211811554.4843.4.camel@johannes.berg>
+	Mon, 12 May 2008 12:34:58 -0400
+Message-ID: <48287189.8080706@trash.net> (sfid-20080512_183504_494673_EC8CA609)
+Date: Mon, 12 May 2008 18:34:17 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
-	 <1211811554.4843.4.camel@johannes.berg>
+To: "David S. Miller" <davem@davemloft.net>
+CC: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: prism54: revert "prism54: set carrier flags correctly"
+Content-Type: multipart/mixed;
+ boundary="------------050104050706020804010904"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 5:19 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-05-26 at 17:09 +0300, Tomas Winkler wrote:
->> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->>
->> This patch fixes a deadlock of sta->lock use, occuring while changing
->> tx aggregation states, as dev_queue_xmit end up in new function
->> test_and_clear_sta_flags that uses that lock thus leading to deadlock
->
-> Oh, good catch, thanks. Reminds me to debug the other deadlock I saw
-> (not mac80211 related though)
->
->> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
->
->> ---
->>  net/mac80211/main.c |   10 +++++++---
->>  1 files changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
->> index b0fddb7..5a9030c 100644
->> --- a/net/mac80211/main.c
->> +++ b/net/mac80211/main.c
->> @@ -662,6 +662,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
->>               goto start_ba_err;
->>       }
->>
->> +     spin_unlock_bh(&sta->lock);
->> +
->>       /* Will put all the packets in the new SW queue */
->>       ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
->>       spin_unlock_bh(&local->mdev->queue_lock);
->> @@ -688,9 +690,9 @@ start_ba_err:
->>       kfree(sta->ampdu_mlme.tid_tx[tid]);
->>       sta->ampdu_mlme.tid_tx[tid] = NULL;
->>       spin_unlock_bh(&local->mdev->queue_lock);
->> +     spin_unlock_bh(&sta->lock);
->>       ret = -EBUSY;
->>  start_ba_exit:
->> -     spin_unlock_bh(&sta->lock);
->>       rcu_read_unlock();
->>       return ret;
->>  }
->> @@ -829,10 +831,11 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
->>       }
->>       state = &sta->ampdu_mlme.tid_state_tx[tid];
->>
->> -     spin_lock_bh(&sta->lock);
->> +     /* no need to use sta->lock in this state check, as
->> +      * ieee80211_stop_tx_ba_session will let only
->> +      * one stop call to pass through per sta/tid */
->>       if ((*state & HT_AGG_STATE_REQ_STOP_BA_MSK) == 0) {
->>               printk(KERN_DEBUG "unexpected callback to A-MPDU stop\n");
->> -             spin_unlock_bh(&sta->lock);
->>               rcu_read_unlock();
->>               return;
->>       }
->> @@ -855,6 +858,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
->>        * ieee80211_wake_queue is not used here as this queue is not
->>        * necessarily stopped */
->>       netif_schedule(local->mdev);
->> +     spin_lock_bh(&sta->lock);
->>       *state = HT_AGG_STATE_IDLE;
->>       sta->ampdu_mlme.addba_req_num[tid] = 0;
->>       kfree(sta->ampdu_mlme.tid_tx[tid]);
->
+This is a multi-part message in MIME format.
+--------------050104050706020804010904
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch is wrong, it breaks error path.locking.Will resubmit
-Tomas
+
+--------------050104050706020804010904
+Content-Type: text/plain;
+ name="x"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="x"
+
+commit 47230a6beff4656a55bf23d92daee27f96c5b5a1
+Author: Patrick McHardy <kaber@trash.net>
+Date:   Mon May 12 18:25:51 2008 +0200
+
+    prism54: revert "prism54: set carrier flags correctly"
+
+    Commit 7b463ced6 (prism54: set carrier flags correctly) causes a
+    regression: in AP-mode, the device comes up without a carrier,
+    which (in my case) causes IPv6 to not add a link-local address,
+    which in turn causes radvd (configured to announce routes on that
+    device) to refuse to start, breaking IPv6 for the entire network.
+    Additionally it most likely will be unable to pass packets because
+    the queue in never started.
+
+    A patch that seems to fix the issue is available, however the
+    wireless developers have not merged it upstream for three weeks
+    now and not responded to further email, so this patch reverts
+    the faulty change.
+
+    Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 5b375b2..5d7951a 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -2081,7 +2081,6 @@ link_changed(struct net_device *ndev, u32 bitrate)
+ 	islpci_private *priv = netdev_priv(ndev);
+ 
+ 	if (bitrate) {
+-		netif_carrier_on(ndev);
+ 		if (priv->iw_mode == IW_MODE_INFRA) {
+ 			union iwreq_data uwrq;
+ 			prism54_get_wap(ndev, NULL, (struct sockaddr *) &uwrq,
+@@ -2090,10 +2089,8 @@ link_changed(struct net_device *ndev, u32 bitrate)
+ 		} else
+ 			send_simple_event(netdev_priv(ndev),
+ 					  "Link established");
+-	} else {
+-		netif_carrier_off(ndev);
++	} else
+ 		send_simple_event(netdev_priv(ndev), "Link lost");
+-	}
+ }
+ 
+ /* Beacon/ProbeResp payload header */
+diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+index 04c2638..eb7c1c6 100644
+--- a/drivers/net/wireless/prism54/islpci_dev.c
++++ b/drivers/net/wireless/prism54/islpci_dev.c
+@@ -387,9 +387,7 @@ islpci_open(struct net_device *ndev)
+ 	}
+ 
+ 	netif_start_queue(ndev);
+-
+-	/* Turn off carrier unless we know we have associated */
+-	netif_carrier_off(ndev);
++/*      netif_mark_up( ndev ); */
+ 
+ 	return 0;
+ }
+
+--------------050104050706020804010904--
