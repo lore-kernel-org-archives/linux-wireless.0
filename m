@@ -1,36 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:24033 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbYEaQyZ (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:40753 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752251AbYELPEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 12:54:25 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so273894wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 09:54:24 -0700 (PDT)
-Message-ID: <69e28c910805310954s6c478001h837415a6a63d26f0@mail.gmail.com> (sfid-20080531_185428_817992_62811A2E)
-Date: Sat, 31 May 2008 18:54:24 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1212252522.2766.8.camel@rd>
+	Mon, 12 May 2008 11:04:06 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: mickflemm@gmail.com, mcgrof@gmail.com, jirislaby@gmail.com
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k: Fix loop variable initializations
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
-	 <1212252522.2766.8.camel@rd>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <E1JvZ2x-0005kb-TH@hash.localnet> (sfid-20080512_170411_624425_08F4C334)
+Date: Mon, 12 May 2008 10:30:35 -0400
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 31, 2008 at 6:48 PM, Pavel Roskin <proski@gnu.org> wrote:
-> It's strange that other drivers (b43legacy, ath5k) use
-> info->control.hw_key->hw_key_idx under the same conditions (see how
-> use_encryption is calculated), but don't have any problems on the same
-> network (but I need to recheck).
+From: Bob Copeland <me@bobcopeland.com>
+Date: Mon, 12 May 2008 09:25:33 -0400
+Subject: [PATCH] ath5k: Fix loop variable initializations
 
-Hmm... does ath5k use hardware crypto? B43 does (but not with
-nohwcrypt - and that appears to be a valid workaround), b43legacy
-doesn't AFAIK.
+In ath5k_tasklet_rx, both status structures 'rxs' and 'rs' are
+initialized at the top of the tasklet, but not within the loop.
+If the loop is executed multiple times in the tasklet, then the
+variables may see changes from previous packets.
+
+For TKIP, this results in 'Invalid Michael MIC' errors if two packets
+are processed in the tasklet: rxs.flag gets set to RX_DECRYPTED by
+mac80211 when it decrypts the first encrypted packet.  The subsequent
+packet will have RX_DECRYPTED set upon entry to mac80211, so mac80211
+will not try to decrypt it.
+
+We currently initialize all but two fields in the structures, so fix
+the other two.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |    2 +-
+ drivers/net/wireless/ath5k/hw.c   |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4e5c8fc..fd8537e 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1888,7 +1888,7 @@ accept:
+ 		 * right now, so it's not too bad...
+ 		 */
+ 		rxs.mactime = ath5k_extend_tsf(sc->ah, rs.rs_tstamp);
+-		rxs.flag |= RX_FLAG_TSFT;
++		rxs.flag = RX_FLAG_TSFT;
+ 
+ 		rxs.freq = sc->curchan->center_freq;
+ 		rxs.band = sc->curband->band;
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 5fb1ae6..8137d82 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -4119,6 +4119,7 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
+ 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+ 		AR5K_5210_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+ 	rs->rs_status = 0;
++	rs->rs_phyerr = 0;
+ 
+ 	/*
+ 	 * Key table status
+@@ -4193,6 +4194,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
+ 		AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
+ 	rs->rs_status = 0;
++	rs->rs_phyerr = 0;
+ 
+ 	/*
+ 	 * Key table status
+-- 
+1.5.4.2.182.gb3092
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bob Copeland %% www.bobcopeland.com
+
+
