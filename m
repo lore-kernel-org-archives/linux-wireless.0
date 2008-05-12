@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbYEDVY3 (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:48200 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753828AbYELQ4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 17:24:29 -0400
-Subject: [RFC] mac80211: assign needed_headroom/tailroom for netdevs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 04 May 2008 23:24:13 +0200
-Message-Id: <1209936253.7304.10.camel@johannes.berg> (sfid-20080504_232356_925288_0C998746)
-Mime-Version: 1.0
+	Mon, 12 May 2008 12:56:20 -0400
+Message-ID: <4828768B.8020107@trash.net> (sfid-20080512_185630_038670_9B718708)
+Date: Mon, 12 May 2008 18:55:39 +0200
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: prism54: revert "prism54: set carrier flags correctly"
+References: <48287189.8080706@trash.net> <43e72e890805120952q5abca0c3sfe49dedd97ed772e@mail.gmail.com>
+In-Reply-To: <43e72e890805120952q5abca0c3sfe49dedd97ed772e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This assigns the netdev's needed_headroom/tailroom members
-to take advantage of pre-allocated space for 802.11 headers.
+Luis R. Rodriguez wrote:
+> Patick, thanks for staying on top of this, however NACK. The fix I
+> sumbitted and you tested should be merged. I nagged about it too, John
+> just wanted a resubmit with a log message.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Builds on my other patch to add those fields, of course!
 
- net/mac80211/iface.c |    8 ++++++++
- net/mac80211/tx.c    |   14 +++++++++-----
- 2 files changed, 17 insertions(+), 5 deletions(-)
-
---- everything.orig/net/mac80211/iface.c	2008-05-04 15:40:53.000000000 +0200
-+++ everything/net/mac80211/iface.c	2008-05-04 16:08:45.000000000 +0200
-@@ -53,6 +53,14 @@ int ieee80211_if_add(struct net_device *
- 	if (!ndev)
- 		return -ENOMEM;
- 
-+	ndev->needed_headroom = local->tx_headroom +
-+				4*6 /* four MAC addresses */
-+				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
-+				+ 6 /* mesh */
-+				- ETH_HLEN /* ethernet hard_header_len */
-+				+ IEEE80211_ENCRYPT_HEADROOM;
-+	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
-+
- 	ret = dev_alloc_name(ndev, ndev->name);
- 	if (ret < 0)
- 		goto fail;
-
+I'm happy either way, I just wanted to resurrect the interest in
+this bug :)
 
