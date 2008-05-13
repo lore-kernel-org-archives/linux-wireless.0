@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.158]:12951 "EHLO
-	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829AbYEZR70 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759496AbYEMVA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 13:59:26 -0400
-Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
-From: Daniel Walker <dwalker@mvista.com>
-To: Michal Schmidt <mschmidt@redhat.com>
-Cc: linville@tuxdriver.com, rusty@rustcorp.com.au, matthew@wil.cx,
-	mingo@elte.hu, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, arjan@infradead.org
-In-Reply-To: <20080526192914.31045d09@brian.englab.brq.redhat.com>
-References: <20080522232103.120033152@mvista.com>
-	 <20080526192914.31045d09@brian.englab.brq.redhat.com>
-Content-Type: text/plain
-Date: Mon, 26 May 2008 10:59:23 -0700
-Message-Id: <1211824763.18130.234.camel@localhost.localdomain> (sfid-20080526_200000_867079_12D31B18)
+	Tue, 13 May 2008 17:00:29 -0400
+Subject: Re: mac80211 truesize bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, herbert@gondor.apana.org.au,
+	mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080513203906.GB20269@tuxdriver.com>
+References: <20080502.163334.148944203.davem@davemloft.net>
+	 <1209807477.3987.9.camel@johannes.berg>
+	 <1209824720.1475.6.camel@johannes.berg>
+	 <20080512.201751.114868351.davem@davemloft.net>
+	 <20080513203906.GB20269@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DIUwSI2XblUv5q4YARDa"
+Date: Tue, 13 May 2008 22:59:16 +0200
+Message-Id: <1210712356.4279.22.camel@johannes.berg> (sfid-20080513_230033_810786_864252AD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Mon, 2008-05-26 at 19:29 +0200, Michal Schmidt wrote:
-> On Thu, 22 May 2008 16:21:03 -0700
-> Daniel Walker <dwalker@mvista.com> wrote:
-> 
-> > Signed-off-by: Daniel Walker <dwalker@mvista.com>
-> >  
-> > ---
-> >  drivers/net/wireless/airo.c |  107
-> > ++++++++++++++++++++++---------------------- 1 file changed, 54
-> > insertions(+), 53 deletions(-)
-> > 
-> > Index: linux-2.6.25/drivers/net/wireless/airo.c
-> > ===================================================================
-> > --- linux-2.6.25.orig/drivers/net/wireless/airo.c
-> > +++ linux-2.6.25/drivers/net/wireless/airo.c
-> 
-> > @@ -3211,7 +3212,7 @@ static irqreturn_t airo_interrupt(int ir
-> >  				set_bit(FLAG_UPDATE_UNI,
-> > &apriv->flags); set_bit(FLAG_UPDATE_MULTI, &apriv->flags);
-> >  
-> > -				if (down_trylock(&apriv->sem) != 0) {
-> > +				if (mutex_trylock(&apriv->lock) ==
-> > 0) { set_bit(JOB_EVENT, &apriv->jobs);
-> >  					wake_up_interruptible(&apriv->thr_wait);
-> >  				} else
-> 
-> 
-> Mutexes are not allowed in interrupt context, not even mutex_trylock.
+--=-DIUwSI2XblUv5q4YARDa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I know .. I must have missed that it was in ISR .. Thanks for noticing
-it.
+On Tue, 2008-05-13 at 16:39 -0400, John W. Linville wrote:
+> On Mon, May 12, 2008 at 08:17:51PM -0700, David Miller wrote:
+>=20
+> > Based upon them I will adjust LL_MAX_HEADER as follows:
+>=20
+> > @@ -93,14 +93,16 @@ struct wireless_dev;
+> >   *	used.
+> >   */
+> >  =20
+> > -#if !defined(CONFIG_AX25) && !defined(CONFIG_AX25_MODULE) && !defined(=
+CONFIG_TR)
+> > -#define LL_MAX_HEADER	32
+> > +#if defined(CONFIG_WLAN_80211) || defined(CONFIG_AX25) || defined(CONF=
+IG_AX25_MODULE)
+>=20
+> Is WLAN_80211 really the right symbol here?  It applies to more than
+> just mac80211, and I doubt if full MAC devices need higher values.
+> It seems like MAC80211 would be the right symbol to add.
 
-Daniel
+Most fullmac devices also need some space, whether they do things that
+way or not is a completely different thing, the ieee80211 stack for
+example copies every packet into a new skb anyway.
+
+johannes
+
+--=-DIUwSI2XblUv5q4YARDa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCoBI6Vg1VMiehFYAQLXYA//bCtWG+fbBk8tkUcmme2JAx5PeMVg3ekN
+myRzq/ZPYi/m5MVGECHBRwc09ePZhJlH1oXdZu5TWt3OGPJpCgL+OoQnB5DCy66d
+SDB8nExX0Mh9UniGrv3jC99cswrLE25AoPLoM+PDdVlWe3NpAR/+8pqorR3su+Bh
+NKNALvphmmOCqhq/oKKAva9rOURfkD3Fe6veGgB8vnm1OLce8MV4iqbBGXgcEAZS
+zbok1auNs/DLZRMpBtziVHpZjQ+adS/KoZ6UzmaFiHyretCfDnw1w/i6ZYlX4qGs
+0QiOfCI7UMosI8i7WrUYE2/gqPMqEd0G+HHLSLdpQktPAXpOnRjv7zs8lbH/Ox7J
+feARHFeZReuHQN+nKN62HuGfJCzD6EM8TAtxa6UB0GpbGklwCfNsYVHaUth1Poix
+/t7il0iZkZ0Q+WSZhCnDiDGYjuS1MBuG3OAXHa1uiiSq+cQS/Xp1r20pHjokxX/1
+RvPB+Z6F15Bthp3ji75TNKtGDNLghU0N1QuWRmUSQwzld9YnpKYpWQFhXJKJKUgR
+ct16M6IXSs7OSaquo60mEbZu1Ci1D5E/qNIjrfEnuJey0x2i5cgDOg4PKOpLRmCn
+MVg0qPZTgVqgFfcv3bqZyo2oRSevw/xD8UrM0qt7VInP4IRC9+TrMWBmEJsqb+Nx
+XyfaZ89Qhjg=
+=I6iQ
+-----END PGP SIGNATURE-----
+
+--=-DIUwSI2XblUv5q4YARDa--
 
