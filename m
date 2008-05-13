@@ -1,30 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37109 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753049AbYEaR7m (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56944
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753828AbYEMDIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 13:59:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Date: Sat, 31 May 2008 19:59:18 +0200
-Cc: Pavel Roskin <proski@gnu.org>,
-	Stefanik =?iso-8859-1?q?G=E1bor?= <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+	Mon, 12 May 2008 23:08:05 -0400
+Date: Mon, 12 May 2008 20:07:58 -0700 (PDT)
+Message-Id: <20080512.200758.181697941.davem@davemloft.net> (sfid-20080513_050824_068343_1907CE38)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <1212252522.2766.8.camel@rd>
-In-Reply-To: <1212252522.2766.8.camel@rd>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805311959.18475.mb@bu3sch.de> (sfid-20080531_195945_336624_60A24949)
+Subject: Re: pull request: wireless-2.6 2008-05-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080513020325.GA4006@tuxdriver.com>
+References: <20080513020325.GA4006@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 May 2008 18:48:42 Pavel Roskin wrote:
-> It's strange that other drivers (b43legacy, ath5k) use
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 12 May 2008 22:03:25 -0400
 
-b43legacy does not support hwcrypto, so it can't crash.
+> Here is a round of fixes intended for 2.6.26.  Most of these are fairly
+> obvious -- I don't think there is anything controversial here.
 
--- 
-Greetings Michael.
+Pulled and pushed back out to net-2.6, thanks!
