@@ -1,80 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3495 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759670AbYEWCLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:43 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: create drivers debugfs dir under wiphy->debugfsdir
-Date: Fri, 23 May 2008 10:09:09 +0800
-Message-Id: <1211508569-3163-32-git-send-email-yi.zhu@intel.com> (sfid-20080523_042833_431481_A681F67C)
-In-Reply-To: <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
+	id S1752001AbYEMTVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 15:21:01 -0400
+Date: Tue, 13 May 2008 14:54:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] mac80211 : Association with 11n hidden ssid ap.
+Message-ID: <20080513185429.GA11756@tuxdriver.com> (sfid-20080513_212106_675759_B87C8D20)
+References: <12103509413156-git-send-email-abhijeet.kolekar@intel.com> <1210641995.2506.200.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1210641995.2506.200.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch creates driver's debugfs tree under wiphy->debugfsdir.
-This patch fixes collision in debugfs if two or more NICs are plugged.
+On Tue, May 13, 2008 at 09:26:35AM +0800, Zhu Yi wrote:
+> On Fri, 2008-05-09 at 09:35 -0700, Abhijeet Kolekar wrote:
+> > This patch fixes the association problem with 11n hidden ssid ap.
+> > Patch fixes the problem of associating with hidden ssid when
+> > all three parameters ap,essid and channel are given to iwconfig.
+> > This patch removes the condition of checking three parameters
+> > and always checks for bss in bss list while associating.
+> 
+> Johannes, can you please take a look at this patch? The original code
+> looks like a shortcut to start authentication/association when all the
+> three parameters (BSSID/SSID/CHANNEL) are provided. But this is not
+> sufficient in the case of associate with an 11N hidden SSID AP. The 11n
+> and wmm information must be retrieved by an active probe request. Not
+> doing so will cause the 11N AP refuse to associate with the client.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I'll ACK this based on the above explanation and because I don't
+think it will do any harm. :-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index c64e602..29e16ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -367,6 +367,7 @@ DEBUGFS_READ_FILE_OPS(tx_statistics);
- int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- {
- 	struct iwl_debugfs *dbgfs;
-+	struct dentry *phyd = priv->hw->wiphy->debugfsdir;
- 
- 	dbgfs = kzalloc(sizeof(struct iwl_debugfs), GFP_KERNEL);
- 	if (!dbgfs) {
-@@ -375,7 +376,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 
- 	priv->dbgfs = dbgfs;
- 	dbgfs->name = name;
--	dbgfs->dir_drv = debugfs_create_dir(name, NULL);
-+	dbgfs->dir_drv = debugfs_create_dir(name, phyd);
- 	if (!dbgfs->dir_drv || IS_ERR(dbgfs->dir_drv)){
- 		goto err;
- 	}
+John
 -- 
-1.5.3.6
-
+John W. Linville
+linville@tuxdriver.com
