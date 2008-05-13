@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:48598 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752393AbYEFHcG (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:16869 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752833AbYEMK7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 03:32:06 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1047235fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 00:32:04 -0700 (PDT)
-Message-ID: <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com> (sfid-20080506_093124_576526_1AF77816)
-Date: Tue, 6 May 2008 10:32:04 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Volker Braun" <vbraun@physics.upenn.edu>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
+	Tue, 13 May 2008 06:59:00 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2112748fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 03:58:58 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: BUG: scheduling while atomic: rt73usb
+Date: Tue, 13 May 2008 13:10:19 +0200
+Cc: Christian =?iso-8859-15?q?Sch=E4fer?= <schaefer@in.tum.de>,
+	linux-wireless@vger.kernel.org
+References: <482952C3.9020209@in.tum.de> <1210669171.3646.49.camel@johannes.berg>
+In-Reply-To: <1210669171.3646.49.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805131310.19980.IvDoorn@gmail.com> (sfid-20080513_125905_009285_28992713)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
-> On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->  > >  I just tried compat-wireless-2008-05-05, which does contain
->  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
->  >  >
->  >
->  >  Thanks for trying this.
->  >  Can you try to load the module with swcrypto=1 and try again ?
->  >  This disables the HW encryption acceleration. Trying this will allow
->  >  to make 100% sure that the bug is in iwlwifi. The bug is likely to be
->  >  there, but I think it is worth to make this 100% sure.
->
->  Well it happens for me with iwl3945 which uses swcrypto by default see:
->
->  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
->
+On Tuesday 13 May 2008, Johannes Berg wrote:
+> 
+> >   [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
+> >   [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
+> >   [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
+> 
+> If I read this correctly, it was recently fixed (but not committed yet
+> afaict)
 
-Actually, I made quite a lot of changes in security in iwl4965 that
-are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
-The security code is not the same between 3945 and 4965
+Yes, the fix was send as part of a pull request from rt2x00.git,
+and I've requested it to be merged for 2.6.26 as well.
 
--- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+Ivo
