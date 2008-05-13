@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59874 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbYEGNsh (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59698
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751285AbYEMWJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 09:48:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-Date: Wed, 7 May 2008 15:48:06 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-References: <20080430124055.091382000@sipsolutions.net> <1210161133.5642.19.camel@johannes.berg> <20080507130548.GA26977@gondor.apana.org.au>
-In-Reply-To: <20080507130548.GA26977@gondor.apana.org.au>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805071548.06693.mb@bu3sch.de> (sfid-20080507_154745_960805_CE676FCC)
+	Tue, 13 May 2008 18:09:31 -0400
+Date: Tue, 13 May 2008 15:09:26 -0700 (PDT)
+Message-Id: <20080513.150926.114765212.davem@davemloft.net> (sfid-20080514_000937_286997_34D91E50)
+To: johannes@sipsolutions.net
+Cc: tomasw@gmail.com, linville@tuxdriver.com,
+	herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1210714643.4279.27.camel@johannes.berg>
+References: <1210712356.4279.22.camel@johannes.berg>
+	<1ba2fa240805131412i3bd1756bhb11d31742b326b2f@mail.gmail.com>
+	<1210714643.4279.27.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 07 May 2008 15:05:48 Herbert Xu wrote:
-> On Wed, May 07, 2008 at 01:52:13PM +0200, Johannes Berg wrote:
-> >
-> > Hmm. Why does busy exist then? Historical accident? I really really
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 13 May 2008 23:37:23 +0200
+
 > 
-> Yes it's historical baggage.  These days the biggest users would
-> be LLTX drivers which should all be converted to non-LLTX and
-> drivers that don't keep track of queue status properly.
+> > >  Most fullmac devices also need some space, whether they do things that
+> > >  way or not is a completely different thing, the ieee80211 stack for
+> > >  example copies every packet into a new skb anyway.
+> > 
+> > It's really depends on when is the 802.3 to 802.11 header translation
+> > made it doesn't matter whether it's fullmac or softmac. I would say
+> > that WLAN is OK.
+> 
+> True, some devices take 802.3 frames and do the translation and
+> everything themselves. I dunno. I guess it would make sense to make it
+> mac80211 anyway because ieee80211 doesn't care and the other drivers are
+> probably handling this in some other way anyway (if maybe even by using
+> different dma descriptors, or just not caring because transfer speeds
+> are low enough)
 
-So there's no way to actually fail in a TX handler? Drivers
-are doomed to drop the packet, if they cannot handle it due to
-ring overflow?
+We should fix ieee80211 (it's something I planned to look into today
+in fact), and the drivers that copy or do things incorrectly.
 
--- 
-Greetings Michael.
+It doesn't make sense to make this decision based upon which 80211
+stack or which drivers are enabled.  All of them in essence want this
+extra space, so let's give it to them.
