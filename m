@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:15163 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761981AbYEVKT2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 06:19:28 -0400
-Received: by el-out-1112.google.com with SMTP id s27so1038751ele.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 03:19:27 -0700 (PDT)
-Message-ID: <69e28c910805220319y52f13b55h5692be4c3d1788a4@mail.gmail.com> (sfid-20080522_121933_342359_3BF4DB0C)
-Date: Thu, 22 May 2008 12:19:27 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH V2] iwlwifi: Fix packet injection in iwl3945 and iwl4965
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Andy Green" <andy@warmcat.com>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1211447857.3698.52.camel@johannes.berg>
+Received: from hostap.isc.org ([149.20.54.63]:43582 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754322AbYEMNLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 09:11:24 -0400
+Date: Tue, 13 May 2008 16:10:40 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: 11n + wpa_supplicant
+Message-ID: <20080513131040.GG6309@jm.kir.nu> (sfid-20080513_151128_449685_E76C0457)
+References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com> <20080513122718.GA6309@jm.kir.nu> <1210682080.3646.73.camel@johannes.berg> <20080513125024.GD6309@jm.kir.nu> <8704f27d0805130603q798b1a2bw76319df1251e9e01@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
-	 <69e28c910805210819ye492edkc20b1ddccdf082ce@mail.gmail.com>
-	 <1211447545.7814.97.camel@debian.sh.intel.com>
-	 <1211447857.3698.52.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8704f27d0805130603q798b1a2bw76319df1251e9e01@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 11:17 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-05-22 at 17:12 +0800, Zhu Yi wrote:
->> On Wed, 2008-05-21 at 17:19 +0200, Stefanik G=E1bor wrote:
->> > also works in monitor-while-associated mode.
->>
->> How does it work? AFAICS, mac80211 wext.c blocks setting essid and b=
-ssid
->> in monitor mode. Did you patch it?
->
-> You just create two virtual interfaces. Which, incidentally, iwlwifi
-> seems to be quite buggy about: it will accept all types, even those i=
-t
-> doesn't support (mesh, ap, wds?)
->
-> johannes
->
+On Tue, May 13, 2008 at 04:03:19PM +0300, Emmanuel Grumbach wrote:
 
-Exactly. I should have wrote multi-VAP mode, since that's what it
-really is, except for that it doesn't panic, unlike madwifi's
-similarly named mode. Wext.c blocks setting ESSID and BSSID for
-monitor interfaces - but there is nothing that prevents a monitor and
-a station interface to coexist on the same wmaster - and even though
-setting ESSID and BSSID on the monitor interface (call it "rtap0") is
-blocked, they still work on the station interface (for example,
-"wlan0"). (This multi-interface mode is exposed by the iw tool, as
-well as aircrack-ng's airmon-ng script, which essentially acts as a
-front-end for iw.)
+> So, If I understand you well, we should pass the HT IE using IWEVGENIE
+> during scan, and wpa_supplicant will detect the conflict between
+> encryption method and HT, and will request association in legacy mode
+> (or won't allow the encryption method according to what has
+> precedence: security or 11n).
+> 
+> Am I correct ?
 
-G=E1bor
+Yes, I would expect the driver/mac80211 to do exactly that. You can
+actually pass full set of IEs received from Beacon/ProbeResp in one
+IWEVGENIE event and wpa_supplicant will parse the IEs from that data and
+there is no need for separate reporting of WPA/RSN IEs.
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The current version of wpa_supplicant would ignore the HT IE, but it
+sounds reasonable to add code there to take care of this new requirement
+in .11n on limiting the available pairwise ciphers.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
