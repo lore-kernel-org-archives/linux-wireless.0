@@ -1,113 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56840 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761745AbYEUOQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 10:16:08 -0400
-Subject: Re: [PATCH] libertas: sysfs interface for accessing default mesh
-	channel
-From: Dan Williams <dcbw@redhat.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <1211326991.2561.24.camel@shinybook.infradead.org>
-References: <1211326991.2561.24.camel@shinybook.infradead.org>
-Content-Type: text/plain
-Date: Wed, 21 May 2008 10:15:59 -0400
-Message-Id: <1211379359.25344.1.camel@localhost.localdomain> (sfid-20080521_161614_603131_0CB68E12)
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.177]:5566 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755517AbYEMIwW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 04:52:22 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4004580waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 01:52:19 -0700 (PDT)
+Message-ID: <1ba2fa240805130152va2e8f03i1f9291942776b311@mail.gmail.com> (sfid-20080513_105224_814290_9000C1E9)
+Date: Tue, 13 May 2008 11:52:18 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH] mac80211 : Association with 11n hidden ssid ap.
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Abhijeet Kolekar" <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1210667747.3646.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12103509413156-git-send-email-abhijeet.kolekar@intel.com>
+	 <1210641995.2506.200.camel@debian.sh.intel.com>
+	 <1210667747.3646.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-05-21 at 00:43 +0100, David Woodhouse wrote:
-> From: Javier Cardona <javier@cozybit.com>
-> 
-> This will create the following entry:
-> /sys/class/net/mshX
->             -- boot_options
->             |   |-- ...
->             |   `-- channel
->             ...
-> 
-> ... which I overlooked on my previous patch.
-> 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+On Tue, May 13, 2008 at 11:35 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>  > Johannes, can you please take a look at this patch? The original code
+>  > looks like a shortcut to start authentication/association when all the
+>  > three parameters (BSSID/SSID/CHANNEL) are provided. But this is not
+>  > sufficient in the case of associate with an 11N hidden SSID AP. The 11n
+>  > and wmm information must be retrieved by an active probe request. Not
+>  > doing so will cause the 11N AP refuse to associate with the client.
+>
+>
+>
+> > > -   if (!(ifsta->flags & (IEEE80211_STA_AUTO_SSID_SEL |
+>  > > -       IEEE80211_STA_AUTO_BSSID_SEL | IEEE80211_STA_AUTO_CHANNEL_SEL))) {
+>  > > -           ifsta->state = IEEE80211_AUTHENTICATE;
+>  > > -           ieee80211_sta_reset_auth(dev, ifsta);
+>  > > -           return 0;
+>  > > -   }
+>  > > -
+>  > >     spin_lock_bh(&local->sta_bss_lock);
+>
+>  Well, I'm not sure I'm the right person to look at this, I'm very
+>  unfamiliar with the code in question. For all I care we can put it in
+>  and revert/fixup when we get bug reports from it.
+>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+You should always had in hand at least one probe response before
+attempting association as mot all information elements are present in
+beacons.  This is not only case for 11n but for QoS in general.
+I would suggest that association process in BSS will always start with
+sending probe request.
 
-> ---
-> Added to git://git.infradead.org/~dwmw2/libertas-2.6.git
-> (from which I dropped the OLPC reset patch which Andres is going to improve on)
-> 
-> diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
-> index baa6627..6cf5e39 100644
-> --- a/drivers/net/wireless/libertas/persistcfg.c
-> +++ b/drivers/net/wireless/libertas/persistcfg.c
-> @@ -130,6 +130,49 @@ static ssize_t boottime_set(struct device *dev,
->  }
->  
->  /**
-> + * @brief Get function for sysfs attribute channel
-> + */
-> +static ssize_t channel_get(struct device *dev,
-> +			   struct device_attribute *attr, char *buf)
-> +{
-> +	struct mrvl_mesh_defaults defs;
-> +	int ret;
-> +
-> +	ret = mesh_get_default_parameters(dev, &defs);
-> +
-> +	if (ret)
-> +		return ret;
-> +
-> +	return snprintf(buf, 12, "0x%x\n", le16_to_cpu(defs.channel));
-> +}
-> +
-> +/**
-> + * @brief Set function for sysfs attribute channel
-> + */
-> +static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
-> +			   const char *buf, size_t count)
-> +{
-> +	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct cmd_ds_mesh_config cmd;
-> +	uint16_t datum;
-> +	int ret;
-> +
-> +	memset(&cmd, 0, sizeof(cmd));
-> +	ret = sscanf(buf, "%hx", &datum);
-> +	if (ret != 1 || datum < 1 || datum > 11)
-> +		return -EINVAL;
-> +
-> +	*((__le16 *)&cmd.data[0]) = cpu_to_le16(datum);
-> +	cmd.length = cpu_to_le16(sizeof(uint16_t));
-> +	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_SET,
-> +				   CMD_TYPE_MESH_SET_DEF_CHANNEL);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return strlen(buf);
-> +}
-> +
-> +/**
->   * @brief Get function for sysfs attribute mesh_id
->   */
->  static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
-> @@ -365,6 +408,7 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
->  
->  static DEVICE_ATTR(bootflag, 0644, bootflag_get, bootflag_set);
->  static DEVICE_ATTR(boottime, 0644, boottime_get, boottime_set);
-> +static DEVICE_ATTR(channel, 0644, channel_get, channel_set);
->  static DEVICE_ATTR(mesh_id, 0644, mesh_id_get, mesh_id_set);
->  static DEVICE_ATTR(protocol_id, 0644, protocol_id_get, protocol_id_set);
->  static DEVICE_ATTR(metric_id, 0644, metric_id_get, metric_id_set);
-> @@ -373,6 +417,7 @@ static DEVICE_ATTR(capability, 0644, capability_get, capability_set);
->  static struct attribute *boot_opts_attrs[] = {
->  	&dev_attr_bootflag.attr,
->  	&dev_attr_boottime.attr,
-> +	&dev_attr_channel.attr,
->  	NULL
->  };
->  
-> 
+Tomas
 
+
+>  johannes
+>
