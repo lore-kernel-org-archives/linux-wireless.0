@@ -1,156 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31371 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:60301 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752210AbYE2Ihj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:39 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 19/43] iwlwifi: move iwl_rx_missed_beacon_notif to iwl-rx.c
-Date: Thu, 29 May 2008 16:35:04 +0800
-Message-Id: <1212050128-17132-20-git-send-email-yi.zhu@intel.com> (sfid-20080529_110546_156827_CC2D0F58)
-In-Reply-To: <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+	id S1753455AbYEPPym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 11:54:42 -0400
+Subject: Re: [PATCH stable] libertas: Extend CMD_MESH_CONFIG to get and set
+	persistent mesh default params.
+From: Dan Williams <dcbw@redhat.com>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Brian Cavagnolo <brian@cozybit.com>, devel@laptop.org,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Andres Salomon <dilinger@queued.net>,
+	Javier Cardona <javier@cozybit.com>,
+	Ricardo Carrano <carrano@ricardocarrano.com>
+In-Reply-To: <69e28c910805160851v7be6ccd0qc5f8538748941e80@mail.gmail.com>
+References: <482c8eb8.0b97600a.08e2.ffff8ee3@mx.google.com>
+	 <1210946949.3008.16.camel@pmac.infradead.org>
+	 <1210949448.6381.13.camel@johannes.berg>
+	 <69e28c910805160851v7be6ccd0qc5f8538748941e80@mail.gmail.com>
+Content-Type: text/plain; charset=utf8
+Date: Tue, 13 May 2008 11:54:38 -0400
+Message-Id: <1210694078.24737.12.camel@localhost.localdomain> (sfid-20080516_175446_097541_22A9D5E9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Fri, 2008-05-16 at 17:51 +0200, Stefanik G=C3=A1bor wrote:
+> On Fri, May 16, 2008 at 4:50 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2008-05-16 at 15:09 +0100, David Woodhouse wrote:
+> >> On Thu, 2008-05-15 at 11:01 -0700, Brian Cavagnolo wrote:
+> >> > This patch is based on a patch from Shailendra Govardhan.  It in=
+troduces
+> >> > several new iwprivs: {get,set}_bootflag {get,set}_boottime {get,=
+set}_def_chan
+> >> > {get,set}_def_protid {get,set}_def_metid {get,set}_def_meshcap
+> >> > {get,set}_def_meshid.  These commands are only supported on Marv=
+ell hardware
+> >> > that implements persistent defaults, such as the OLPC Active Ant=
+enna.
+> >> > Accordingly, this patch may not be suitable for upstream merging=
+=2E
+> >
+> >> But this is the _one_ thing which might actually be OK to do with =
+a
+> >> private ioctl, since it's very hardware-specific. Unlike like all =
+the
+> >> mesh-mangling stuff where we really ought to be compatible with o1=
+1s.
+> >>
+> >> So maybe, just maybe, we _can_ do this with iwpriv and push that
+> >> upstream.
+> >
+> > Maybe we do, after all, need an iwpriv equivalent in cfg80211/nl802=
+11 so
+> > that we can kill wext at some point.
+> >
+> > Or maybe this should be in sysfs or so?
+> >
+> > johannes
+> >
+>=20
+> Or maybe in configfs? That's a better place for configuration options=
+=2E
+> (BTW rt2x00 uses debugfs as an iwpriv replacement, so that's another
+> possibility.)
 
-This patch moves iwl_rx_missed_beacon_notif rx handler to iwl-rx.c.
+I keep proposing debugfs too, but in some cases the commands aren't jus=
+t
+for poking around with stuff.  configfs is probably a better answer to
+tweakables that aren't just ricer-geekporn.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   22 ----------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +++
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   22 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +++
- 4 files changed, 28 insertions(+), 22 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 2f254c4..1b3e82f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2898,26 +2898,7 @@ static void iwl4965_rx_reply_rx_phy(struct iwl_priv *priv,
- 	memcpy(&priv->last_phy_res[1], &(pkt->u.raw[0]),
- 	       sizeof(struct iwl4965_rx_phy_res));
- }
--static void iwl4965_rx_missed_beacon_notif(struct iwl_priv *priv,
--					   struct iwl_rx_mem_buffer *rxb)
- 
--{
--#ifdef CONFIG_IWL4965_RUN_TIME_CALIB
--	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
--	struct iwl4965_missed_beacon_notif *missed_beacon;
--
--	missed_beacon = &pkt->u.missed_beacon;
--	if (le32_to_cpu(missed_beacon->consequtive_missed_beacons) > 5) {
--		IWL_DEBUG_CALIB("missed bcn cnsq %d totl %d rcd %d expctd %d\n",
--		    le32_to_cpu(missed_beacon->consequtive_missed_beacons),
--		    le32_to_cpu(missed_beacon->total_missed_becons),
--		    le32_to_cpu(missed_beacon->num_recvd_beacons),
--		    le32_to_cpu(missed_beacon->num_expected_beacons));
--		if (!test_bit(STATUS_SCANNING, &priv->status))
--			iwl_init_sensitivity(priv);
--	}
--#endif /*CONFIG_IWL4965_RUN_TIME_CALIB*/
--}
- #ifdef CONFIG_IWL4965_HT
- 
- /**
-@@ -3508,9 +3489,6 @@ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_RX_PHY_CMD] = iwl4965_rx_reply_rx_phy;
- 	priv->rx_handlers[REPLY_RX_MPDU_CMD] = iwl4965_rx_reply_rx;
- 
--	priv->rx_handlers[MISSED_BEACONS_NOTIFICATION] =
--	    iwl4965_rx_missed_beacon_notif;
--
- #ifdef CONFIG_IWL4965_HT
- 	priv->rx_handlers[REPLY_COMPRESSED_BA] = iwl4965_rx_reply_compressed_ba;
- #endif /* CONFIG_IWL4965_HT */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index d67b53c..0505491 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -204,6 +204,9 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
- int iwl_rx_queue_restock(struct iwl_priv *priv);
- int iwl_rx_queue_space(const struct iwl_rx_queue *q);
- void iwl_rx_allocate(struct iwl_priv *priv);
-+/* Handlers */
-+void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
-+			       struct iwl_rx_mem_buffer *rxb);
- 
- /*****************************************************
- * TX
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index ed63e5c..cc61c93 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -33,6 +33,7 @@
- #include "iwl-core.h"
- #include "iwl-sta.h"
- #include "iwl-io.h"
-+#include "iwl-calib.h"
- #include "iwl-helpers.h"
- /************************** RX-FUNCTIONS ****************************/
- /*
-@@ -446,3 +447,24 @@ int iwl_rxq_stop(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_rxq_stop);
- 
-+void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
-+				struct iwl_rx_mem_buffer *rxb)
-+
-+{
-+#ifdef CONFIG_IWLWIFI_RUN_TIME_CALIB
-+	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
-+	struct iwl4965_missed_beacon_notif *missed_beacon;
-+
-+	missed_beacon = &pkt->u.missed_beacon;
-+	if (le32_to_cpu(missed_beacon->consequtive_missed_beacons) > 5) {
-+		IWL_DEBUG_CALIB("missed bcn cnsq %d totl %d rcd %d expctd %d\n",
-+		    le32_to_cpu(missed_beacon->consequtive_missed_beacons),
-+		    le32_to_cpu(missed_beacon->total_missed_becons),
-+		    le32_to_cpu(missed_beacon->num_recvd_beacons),
-+		    le32_to_cpu(missed_beacon->num_expected_beacons));
-+		if (!test_bit(STATUS_SCANNING, &priv->status))
-+			iwl_init_sensitivity(priv);
-+	}
-+#endif /* CONFIG_IWLWIFI_RUN_TIME_CALIB */
-+}
-+EXPORT_SYMBOL(iwl_rx_missed_beacon_notif);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index f3815b7..b3c1807 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2255,6 +2255,9 @@ static void iwl4965_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[CARD_STATE_NOTIFICATION] = iwl4965_rx_card_state_notif;
- 	priv->rx_handlers[REPLY_TX] = iwl4965_rx_reply_tx;
- 
-+	priv->rx_handlers[MISSED_BEACONS_NOTIFICATION] =
-+	    iwl_rx_missed_beacon_notif;
-+
- 	/* Set up hardware specific Rx handlers */
- 	priv->cfg->ops->lib->rx_handler_setup(priv);
- }
--- 
-1.5.3.6
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
