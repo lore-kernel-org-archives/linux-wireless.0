@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21007 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbYEWISl (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:42247 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756376AbYEMARi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 04:18:41 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATH] libertas: speeds up downloading of CF firmware
-Date: Fri, 23 May 2008 10:18:26 +0200
+	Mon, 12 May 2008 20:17:38 -0400
+Date: Mon, 12 May 2008 20:17:26 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: mcgrof@gmail.com, jirislaby@gmail.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: Fix loop variable initializations
+Message-ID: <20080513001726.GA23128@hash.localnet> (sfid-20080513_021744_891689_48DFCE6E)
+References: <E1JvZ2x-0005kb-TH@hash.localnet> <40f31dec0805121618j4a2f8bedw78e2ce36d8158649@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805231018.26751.hs4233@mail.mn-solutions.de> (sfid-20080523_101846_540907_CCB96C61)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0805121618j4a2f8bedw78e2ce36d8158649@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keep the timeout the same (1000*500 == 100000 * 5), but take shorter
-naps. Makes downloading the firmware slightly faster.
+On Tue, May 13, 2008 at 02:18:48AM +0300, Nick Kossifidis wrote:
+> Why not doing a simple
+> rxs.flag = 0 ;
+> or a check of flags set by mac80211 at the start of the loop ?
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Yeah that's a better idea.  I'll respin the patch with this and the
+other suggestion.
 
---- linux.orig/drivers/net/wireless/libertas/if_cs.c
-+++ linux/drivers/net/wireless/libertas/if_cs.c
-@@ -148,11 +148,11 @@
- {
- 	int i;
- 
--	for (i = 0; i < 1000; i++) {
-+	for (i = 0; i < 100000; i++) {
- 		u8 val = if_cs_read8(card, addr);
- 		if (val == reg)
- 			return i;
--		udelay(500);
-+		udelay(5);
- 	}
- 	return -ETIME;
- }
+-- 
+Bob Copeland %% www.bobcopeland.com 
+
