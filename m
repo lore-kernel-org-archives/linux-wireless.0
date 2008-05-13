@@ -1,83 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38096 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51206 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbYEDJPC (ORCPT
+	with ESMTP id S1754304AbYEMMaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 05:15:02 -0400
-Subject: Re: mac80211 truesize bugs
+	Tue, 13 May 2008 08:30:05 -0400
+Subject: Re: mac80211: Set IEEE80211_TXPD_REQ_TX_STATUS for all TX frames
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1209890847.6210.51.camel@johannes.berg> (sfid-20080504_104709_030839_DDDB35A5)
-References: <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-	 <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-	 <1209865354.6210.23.camel@johannes.berg>
-	 <20080504020203.GA30514@gondor.apana.org.au>
-	 <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-	 <1209890847.6210.51.camel@johannes.berg>
-	 (sfid-20080504_104709_030839_DDDB35A5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BeyIogCxkM0n0O04BgNI"
-Date: Sun, 04 May 2008 11:14:49 +0200
-Message-Id: <1209892489.6210.56.camel@johannes.berg> (sfid-20080504_111431_770059_8DD6E32A)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200805131346.35897.IvDoorn@gmail.com> (sfid-20080513_133521_086212_042E3A5C)
+References: <200805111434.19071.IvDoorn@gmail.com>
+	 <1210668171.3646.41.camel@johannes.berg>
+	 <200805131346.35897.IvDoorn@gmail.com>
+	 (sfid-20080513_133521_086212_042E3A5C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VuQzEcvnpbHz11I0GDtF"
+Date: Tue, 13 May 2008 14:29:51 +0200
+Message-Id: <1210681791.3646.70.camel@johannes.berg> (sfid-20080513_143011_199514_8DD6A53D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-BeyIogCxkM0n0O04BgNI
+--=-VuQzEcvnpbHz11I0GDtF
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2008-05-04 at 10:47 +0200, Johannes Berg wrote:
-> On Sun, 2008-05-04 at 11:16 +0800, Herbert Xu wrote:
-> > On Sun, May 04, 2008 at 04:22:20AM +0200, Johannes Berg wrote:
-> > >
-> > > Yes, wireless always needs at least 24 bytes, but more likely 34
-> > > (encryption+QoS). However, I just increased LL_MAX_HEADER to 54 and t=
-hat
-> > > doesn't seem to have helped.
-> >=20
-> > How did you test it?
->=20
-> I stuck a WARN_ON((nhead || ntail) && skb->sk) into pskb_expand_head
-> (which never triggered except from mac80211). And mac80211 has code that
-> calculates the required header length and only calls pskb_expand_head()
-> from that place when it needs more header space (or the skb is cloned. I
-> should repeat this test)
 
-I just re-did the test, and I definitely need 29 more bytes on, for
-example, the IPv6 autodiscovery packets and ICMP packets generated with
-ping(8). Some of them even need additional tailroom.
+> > What about monitor interfaces/injection? Do they already set it?
+>=20
+> No, should they?
+
+Yes, I think so, since hostapd uses injection for frames and definitely
+needs status callback. We could later define a radiotap bit for that, of
+course.
+
+> > Other than that, looks good to me, as long as you're aware that in the
+> > future this might be more dynamic and don't rely on it too much for
+> > internal housekeeping (but you seem to be according to your changelog
+> > entry) :)
+>=20
+> Well it shouldn't matter if it will become more flexible, what I am looki=
+ng
+> for is making the flag actually mean something for drivers. ;)
+
+Right :)
+
+> We could even make it so that the mac80211 tx_status handler will ignore
+> the frame when the flag is set so drivers won't have to look at it at all=
+.
+
+You mean "when the flag is unset"? Not sure, maybe we should, but we'll
+see that when more uses for it come up/better rate control algorithms
+are developed.
 
 johannes
 
---=-BeyIogCxkM0n0O04BgNI
+--=-VuQzEcvnpbHz11I0GDtF
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASB1+h6Vg1VMiehFYAQLaXA/+KX923/3gIL6wqS1qhvM7NZJEsljFhsYe
-Z8B6kuHFSit3biUAv9taZpmWZozcQiMP78BShlTesuhhnrRDxTBxrbUi25OMv5FF
-GBODHUnY63aibZg/rRN30eo1mtty/DoEhf3bDpE4uho1faM/HFh4Ckfxzd4lzigt
-JuaaHncDFP6G7GA4Egp1Hzhvi924495ddDpLKrYm+uVyKw07qTmp1hfNctmpX5kl
-hdD7Iha4pcVCCZkeRsevgm3pZaEP7WckL4ndSaSnkIVV/87D3/P5BSXSof95NQBL
-Y+tSbJIVevXkDCAi9gjjBEjTYl8DKegf7ewc7KVMZGjZxP8ClmRp8X56sPeJTeNk
-Enfg2Q00trueTe+yB1tcDVPDABGHV87ATRIB9zNzwVyoFzEyuGbzHBd/x5h7Eir9
-5GzbwFInrim7KZdJD3PDDxAXzkC99373BOe5z1uGk+NXV46BKoZ6UC8H1zvNpxb2
-2cuMDCmDlBfha/r/tkKNcRq4ZwX2qfqV7E4xJ+3ni7n7fg2sqnt3iJvjBKwUJpFa
-0SRhDRVcRW4g8jgehp0sdy4oYSOfQ8bXiXNqi7W6twwKYzolu/SjnUtKfs+uBCoU
-dIknFfEtG/Ntu+jhMlHqG/+TjGrq3KBwO9zam51j7x4ub6r/wwM71zaK1vftd1yn
-kju0HNn6akw=
-=OFj/
+iQIVAwUASCmJvqVg1VMiehFYAQI1SRAAoivcnehDjnd3dJUAISzd8we/vDiTMAUO
+j/2tvcGgmchAzmj9BOI002ce6tLUyS3JE2VpZaEQiu4O2TVuMkXK0ktb3a1/5dJE
+8N/kVK7+txsU1/FIPRLMTpfOgB5jbDV/YN/BDDbuuakweFTwDoc/oBAVyfVIf7Tc
+Ktg63ixqav5fCSQBUbW2xoIqpvBnCrk9XQQIAzpy9QgrqBRcMyh8BMx6fCIFhrqh
+mM421mLa9ZKf7FAwMdpQOij9gVW8JcVVWvlMI+xt0yatQ1BncFPJ3UwUmGfPDOiT
++TE8Q9feI2s/e70loTF5xKgjZvFTI3t78VNNLdseLRTxzCjIptYV6UehrwC+YQN/
+dwwqwVpHbip+E0l4L194M0kat8fbwd+eCxzGqqqwOiQtgChdtv1KYgpsV68SKyPv
+1GvudD+XzURNan7MO5KMYDwsJ2DdaAJRDSXejfDiavPY/X6PQelwX7e2y97r8QP7
+8wBp3CFPsB9TNUj13LnRrUhHkhxiAAX4FI0IVuJJOIAuZHScTexGCMTuwsmKoPHU
+5TW8z3XNNCoYznfqpokRgNuKBo+FzRW0/tkGE9eKPgDrN01EkwwTxzsRlxuTEI/7
+0w0TcDSk+HJyvd3YASVqGXUUOuWtfGVKIE95qeesYSF330i789bqezAnS3OX5qg3
+nKQorB6LNwY=
+=f9cS
 -----END PGP SIGNATURE-----
 
---=-BeyIogCxkM0n0O04BgNI--
+--=-VuQzEcvnpbHz11I0GDtF--
 
