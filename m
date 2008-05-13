@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:54673 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102AbYEJMKa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 08:10:30 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1148254fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:29 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/5] rt2x00: use rate index in TX control
-Date: Sat, 10 May 2008 13:49:49 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200805101349.19481.IvDoorn@gmail.com>
-In-Reply-To: <200805101349.19481.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2930 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753393AbYEMOu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 10:50:56 -0400
+Date: Tue, 13 May 2008 10:28:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christian =?iso-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: BUG: scheduling while atomic: rt73usb
+Message-ID: <20080513142826.GC6273@tuxdriver.com> (sfid-20080513_165102_181933_9816274C)
+References: <482952C3.9020209@in.tum.de> <1210669171.3646.49.camel@johannes.berg> <200805131310.19980.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200805101349.49618.IvDoorn@gmail.com> (sfid-20080510_141041_162944_63C93A26)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200805131310.19980.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the new functions ieee80211_get_tx_rate() and
-ieee80211_get_rts_cts_rate() provided by patch:
-	mac80211: use rate index in TX control
+On Tue, May 13, 2008 at 01:10:19PM +0200, Ivo van Doorn wrote:
+> On Tuesday 13 May 2008, Johannes Berg wrote:
+> > 
+> > >   [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
+> > >   [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
+> > >   [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
+> > 
+> > If I read this correctly, it was recently fixed (but not committed yet
+> > afaict)
+> 
+> Yes, the fix was send as part of a pull request from rt2x00.git,
+> and I've requested it to be merged for 2.6.26 as well.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+Hmmmm...is that "mac80211: Add RTNL version of
+ieee80211_iterate_active_interfaces"?  I didn't see any indication
+that one was for 2.6.26.  If it is, I'll get it out with the next
+round of fixes.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 19c1062..5cf4c2f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -33,8 +33,10 @@ void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 				      struct txentry_desc *txdesc,
- 				      struct ieee80211_tx_control *control)
- {
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
--	struct ieee80211_rate *rate = control->tx_rate;
-+	struct ieee80211_rate *rate =
-+	    ieee80211_get_tx_rate(rt2x00dev->hw, control);
- 	const struct rt2x00_rate *hwrate;
- 	unsigned int data_length;
- 	unsigned int duration;
-@@ -77,8 +79,9 @@ void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 			__set_bit(ENTRY_TXD_CTS_FRAME, &txdesc->flags);
- 			__clear_bit(ENTRY_TXD_ACK, &txdesc->flags);
- 		}
--		if (control->rts_cts_rate)
--			rate = control->rts_cts_rate;
-+		if (control->rts_cts_rate_idx >= 0)
-+			rate =
-+			    ieee80211_get_rts_cts_rate(rt2x00dev->hw, control);
- 	}
- 
- 	/*
+John
 -- 
-1.5.5.1
-
+John W. Linville
+linville@tuxdriver.com
