@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3327 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4290 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753914AbYEOTUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 15:20:53 -0400
-Date: Thu, 15 May 2008 14:57:24 -0400
+	id S932649AbYEMUu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 16:50:58 -0400
+Date: Tue, 13 May 2008 16:39:06 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andreamrl@tiscali.it>
-Subject: Re: [patch] resource leak in error case in rtl8187
-Message-ID: <20080515185724.GA17690@tuxdriver.com> (sfid-20080515_212101_447777_FAA87E18)
-References: <200805151617.37968.oliver@neukum.org>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, herbert@gondor.apana.org.au,
+	mb@bu3sch.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 truesize bugs
+Message-ID: <20080513203906.GB20269@tuxdriver.com> (sfid-20080513_225111_250878_8D4CA094)
+References: <20080502.163334.148944203.davem@davemloft.net> <1209807477.3987.9.camel@johannes.berg> <1209824720.1475.6.camel@johannes.berg> <20080512.201751.114868351.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805151617.37968.oliver@neukum.org>
+In-Reply-To: <20080512.201751.114868351.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 15, 2008 at 04:17:36PM +0200, Oliver Neukum wrote:
-> Hi,
-> 
-> this fixes a resource leak in the error case of the write code path.
-> 
-> 	Regards
-> 		Oliver
-> 
-> Signed-off-by: Oliver Neukum <oneukum@suse.de>
-> 
-> ---
-> 
-> --- linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c.alt	2008-05-15 15:53:58.000000000 +0200
-> +++ linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c	2008-05-15 15:57:35.000000000 +0200
-> @@ -169,6 +169,7 @@ static int rtl8187_tx(struct ieee80211_h
->  	struct urb *urb;
->  	__le16 rts_dur = 0;
->  	u32 flags;
-> +	int rv;
->  
->  	urb = usb_alloc_urb(0, GFP_ATOMIC);
->  	if (!urb) {
-> @@ -208,7 +209,11 @@ static int rtl8187_tx(struct ieee80211_h
->  	info->dev = dev;
->  	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
->  			  hdr, skb->len, rtl8187_tx_cb, skb);
-> -	usb_submit_urb(urb, GFP_ATOMIC);
-> +	rv = usb_submit_urb(urb, GFP_ATOMIC);
-> +	if (rv < 0) {
-> +		usb_free_urb(urb);
-> +		kfree_skb(skb);
-> +	}
->  
->  	return 0;
->  }
+On Mon, May 12, 2008 at 08:17:51PM -0700, David Miller wrote:
 
-Don't we need the same type of fix applied to rtl8187_iowrite_async
-as well?  Would you like to resubmit (or submit a second patch)
-with that fix included?
+> Based upon them I will adjust LL_MAX_HEADER as follows:
 
-Also, a nit: I would prefer "rc" instead of "rv" just for idiomatic
-purposes.
+> @@ -93,14 +93,16 @@ struct wireless_dev;
+>   *	used.
+>   */
+>   
+> -#if !defined(CONFIG_AX25) && !defined(CONFIG_AX25_MODULE) && !defined(CONFIG_TR)
+> -#define LL_MAX_HEADER	32
+> +#if defined(CONFIG_WLAN_80211) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
+
+Is WLAN_80211 really the right symbol here?  It applies to more than
+just mac80211, and I doubt if full MAC devices need higher values.
+It seems like MAC80211 would be the right symbol to add.
 
 John
 -- 
