@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56964 "EHLO mx2.suse.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2923 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765909AbYESNlx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 09:41:53 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCHv3] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
-Date: Mon, 19 May 2008 15:41:48 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+	id S1755795AbYEMMwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 08:52:44 -0400
+Date: Tue, 13 May 2008 08:30:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>, Jouni Malinen <j@w1.fi>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+Subject: Re: 11n + wpa_supplicant
+Message-ID: <20080513123001.GA3279@tuxdriver.com> (sfid-20080513_145246_963681_55C6891A)
+References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com> <1210667328.3646.24.camel@johannes.berg> <8704f27d0805130141s403167b8q49eecb645d0461c1@mail.gmail.com> <1210668421.3646.43.camel@johannes.berg> <8704f27d0805130148t57a1dad5nf5ff535ae4ddf968@mail.gmail.com> <1210670248.3646.54.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805191541.49313.hschaa@suse.de> (sfid-20080519_154218_799043_96888785)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1210670248.3646.54.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a possible NULL pointer dereference in ieee80211_compatible_rates 
-introduced in the patch "mac80211: fix association with some APs". If no bss
-is available just use all supported rates in the association request.
+On Tue, May 13, 2008 at 11:17:28AM +0200, Johannes Berg wrote:
+> 
+> > >  Ah, so you mean if the user chose TKIP then we should associate as a
+> > >  legacy STA?
+> > >
+> > 
+> > I think so... If the AP is N-only we would be in trouble...
+> 
+> Hm. I don't really see much reason to do this. Technically, you could
+> configure it this way, but in practice most people will just enable all
+> algorithms they can support (i.e. all).
+> 
+> I don't really care, but I wouldn't want to complicate wext further for
+> this.
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
----
+Amen to that...
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 76ad4ed..277bbda 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -722,6 +722,10 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		if (bss->wmm_ie)
- 			wmm = 1;
- 		ieee80211_rx_bss_put(dev, bss);
-+		rates_len = ieee80211_compatible_rates(bss, sband, &rates);
-+	} else {
-+		rates = ~0;
-+		rates_len = sband->n_bitrates;
- 	}
- 
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
-@@ -755,7 +759,6 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 	/* all supported rates should be added here but some APs
- 	 * (e.g. D-Link DAP 1353 in b-only mode) don't like that
- 	 * Therefore only add rates the AP supports */
--	rates_len = ieee80211_compatible_rates(bss, sband, &rates);
- 	supp_rates_len = rates_len;
- 	if (supp_rates_len > 8)
- 		supp_rates_len = 8;
+-- 
+John W. Linville
+linville@tuxdriver.com
