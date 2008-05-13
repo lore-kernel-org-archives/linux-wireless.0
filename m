@@ -1,109 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39021 "EHLO mx1.redhat.com"
+Received: from hostap.isc.org ([149.20.54.63]:57961 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750AbYE3Rye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 13:54:34 -0400
-Subject: Re: [PATCH 3/3] PS3: gelic: Deprecate the private ioctls in the
-	gelic driver
-From: Dan Williams <dcbw@redhat.com>
-To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Cc: linux-wireless@vger.kernel.org, geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20080530164650.4750.40F06B3A@sm.sony.co.jp>
-References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
-	 <20080530164650.4750.40F06B3A@sm.sony.co.jp>
-Content-Type: text/plain
-Date: Fri, 30 May 2008 13:54:08 -0400
-Message-Id: <1212170048.8178.33.camel@localhost.localdomain> (sfid-20080530_195438_001305_9448C07B)
-Mime-Version: 1.0
+	id S1753333AbYEMM2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 08:28:03 -0400
+Date: Tue, 13 May 2008 15:27:18 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>
+Subject: Re: 11n + wpa_supplicant
+Message-ID: <20080513122718.GA6309@jm.kir.nu> (sfid-20080513_142808_443690_FD2B19E3)
+References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-05-30 at 16:52 +0900, Masakazu Mokuno wrote:
-> As the driver has the standard way to handle PSK, deprecate the old
-> interface.
-> 
-> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+On Tue, May 13, 2008 at 11:18:29AM +0300, Emmanuel Grumbach wrote:
 
-Yay, fewer private ioctls == better.
+> the spec of 11n makes the support on AES mandatory, but not TKIP.
+> Meaning that a NIC can support WPA2 and 11n separately, but not TKIP
+> in 11n. The RC4 encryption machine has a delay that makes difficult to
+> encrypt in TKIP (or WEP) in 11n rates. Intel's 11n are such NICs, 11n
+> + TKIP/WEP is not supported.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+This is not just a hardware support question; 11n explicitly disallows
+use of TKIP between HT STAs and this needs to be enforced somewhere.
 
-> ---
->  drivers/net/Kconfig              |   13 +++++++++++++
->  drivers/net/ps3_gelic_wireless.c |    6 ++++++
->  2 files changed, 19 insertions(+)
-> 
-> --- a/drivers/net/Kconfig
-> +++ b/drivers/net/Kconfig
-> @@ -2297,6 +2297,19 @@ config GELIC_WIRELESS
->  	  the driver automatically distinguishes the models, you can
->  	  safely enable this option even if you have a wireless-less model.
->  
-> +config GELIC_WIRELESS_OLD_PSK_INTERFACE
-> +       bool "PS3 Wireless private PSK interface (OBSOLETE)"
-> +       depends on GELIC_WIRELESS
-> +       help
-> +          This option retains the obsolete private interface to pass
-> +          the PSK from user space programs to the driver.  The PSK
-> +          stands for 'Pre Shared Key' and is used for WPA[2]-PSK
-> +          (WPA-Personal) environment.
-> +          If WPA[2]-PSK is used and you need to use old programs that
-> +          support only this old interface, say Y.  Otherwise N.
-> +
-> +          If unsure, say N.
-> +
->  config GIANFAR
->  	tristate "Gianfar Ethernet"
->  	depends on FSL_SOC
-> --- a/drivers/net/ps3_gelic_wireless.c
-> +++ b/drivers/net/ps3_gelic_wireless.c
-> @@ -1375,6 +1375,7 @@ static int gelic_wl_get_mode(struct net_
->  	return 0;
->  }
->  
-> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
->  /* SIOCIWFIRSTPRIV */
->  static int hex2bin(u8 *str, u8 *bin, unsigned int len)
->  {
-> @@ -1479,6 +1480,7 @@ static int gelic_wl_priv_get_psk(struct 
->  	pr_debug("%s:-> %d\n", __func__, data->data.length);
->  	return 0;
->  }
-> +#endif
->  
->  /* SIOCGIWNICKN */
->  static int gelic_wl_get_nick(struct net_device *net_dev,
-> @@ -2329,6 +2331,7 @@ static const iw_handler gelic_wl_wext_ha
->  	IW_IOCTL(SIOCGIWNICKN)		= gelic_wl_get_nick,
->  };
->  
-> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
->  static struct iw_priv_args gelic_wl_private_args[] =
->  {
->  	{
-> @@ -2350,15 +2353,18 @@ static const iw_handler gelic_wl_private
->  	gelic_wl_priv_set_psk,
->  	gelic_wl_priv_get_psk,
->  };
-> +#endif
->  
->  static const struct iw_handler_def gelic_wl_wext_handler_def = {
->  	.num_standard		= ARRAY_SIZE(gelic_wl_wext_handler),
->  	.standard		= gelic_wl_wext_handler,
->  	.get_wireless_stats	= gelic_wl_get_wireless_stats,
-> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
->  	.num_private		= ARRAY_SIZE(gelic_wl_private_handler),
->  	.num_private_args	= ARRAY_SIZE(gelic_wl_private_args),
->  	.private		= gelic_wl_private_handler,
->  	.private_args		= gelic_wl_private_args,
-> +#endif
->  };
->  
->  static struct net_device *gelic_wl_alloc(struct gelic_card *card)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The problem here is that the association (which can be 11n or not)
+> occurs before the 4-way handshake. Let's say that I have an AP that
+> publishes only TKIP in its WPA IE and 11n IE, I can understand that
+> there is no way I should do 11n association. But what happens with an
+> AP that publishes TKIP + AES in its RSN IE and 11n IE ? I could
+> associate in 11n, but then wpa_supplicant might be configured to
+> associate in TKIP (although the AP support AES), and I would be in an
+> unsupported mode.
 
+In most cases, the pairwise cipher is selected during association, not
+during 4-way handshake. Consequently, the driver/firmware should refuse
+to send an (Re)Association Request that requests TKIP as the pairwise
+cipher when using .11n.
+
+In the corner case (which I don't think I have even implemented yet in
+wpa_supplicant..) the AP/Authenticator could request the STA to use
+another pairwise cipher if security policy for that specific STA does
+not allow the pairwise cipher suite that the STA tried to select in
+(re)association request. In this particular case (should it ever be
+implemented), it could be useful for wpa_supplicant to know that .11n is
+used. However, no sane security policy would require TKIP as the
+pairwise cipher in such a case, so I don't think this is really going to
+ever happen in real networks and any kind of failure to use the network
+is suitable end result for such an attempt..
+
+> One solution would be to make wpa_supplicant understand what 11n is,
+> but that's not it's job.
+> Another solution would be to make wpa_supplicant tell me that it
+> intends to use TKIP before asking me to associate.
+
+The exact mechanism depends on whether ap_scan=1 or ap_scan=2 is being
+used, i.e., whether wpa_supplicant is responsible for selecting a BSS
+from scan results or not.
+
+In ap_scan=1, I would say that it would be useful for wpa_supplicant to
+know whether the BSS (and the local wlan driver/hardware for that
+matter!) supports .11n. If the scan results indicate this in some
+reliable way (e.g., all IEs are delivered to wpa_supplicant), the AP's
+support for 11n can be figured out. The local side support would need to
+be added, e.g., to driver capabilities reporting.
+
+In ap_scaqn=2, wpa_supplicant requests the driver to select a BSS based
+on configuration (SSID, security policy, including a specific cipher
+suite), i.e., the driver would be told about TKIP use before
+association and the driver would be responsible for not trying to use
+11n in that case. The corner case of AP/Authenticator requesting another
+pairwise cipher would still be possible here, but not really something
+that I would consider a real problem that needs to be solved.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
