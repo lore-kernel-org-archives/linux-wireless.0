@@ -1,102 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27461 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758798AbYEWCLJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:09 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: filling Tx MCS set
-Date: Fri, 23 May 2008 10:08:42 +0800
-Message-Id: <1211508569-3163-5-git-send-email-yi.zhu@intel.com> (sfid-20080523_041116_747136_9211FA57)
-In-Reply-To: <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+Received: from fk-out-0910.google.com ([209.85.128.189]:25974 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756211AbYEMISa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 04:18:30 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2164607fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 01:18:29 -0700 (PDT)
+Message-ID: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com> (sfid-20080513_101834_911613_BEEE2E09)
+Date: Tue, 13 May 2008 11:18:29 +0300
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Jouni Malinen" <j@w1.fi>
+Subject: 11n + wpa_supplicant
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Tomas Winkler" <tomasw@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Hi,
 
-This patch fills the needed data about HW capabilities in matters of
-possible HT Tx MCS.
+the spec of 11n makes the support on AES mandatory, but not TKIP.
+Meaning that a NIC can support WPA2 and 11n separately, but not TKIP
+in 11n. The RC4 encryption machine has a delay that makes difficult to
+encrypt in TKIP (or WEP) in 11n rates. Intel's 11n are such NICs, 11n
++ TKIP/WEP is not supported.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   33 +++++++++++++++++++++++++-----
- 1 files changed, 27 insertions(+), 6 deletions(-)
+The problem here is that the association (which can be 11n or not)
+occurs before the 4-way handshake. Let's say that I have an AP that
+publishes only TKIP in its WPA IE and 11n IE, I can understand that
+there is no way I should do 11n association. But what happens with an
+AP that publishes TKIP + AES in its RSN IE and 11n IE ? I could
+associate in 11n, but then wpa_supplicant might be configured to
+associate in TKIP (although the AP support AES), and I would be in an
+unsupported mode.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d3cbad2..a2f4f28 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -317,24 +317,33 @@ void iwl_reset_qos(struct iwl_priv *priv)
- EXPORT_SYMBOL(iwl_reset_qos);
- 
- #ifdef CONFIG_IWL4965_HT
-+#define MAX_BIT_RATE_40_MHZ 0x96; /* 150 Mbps */
-+#define MAX_BIT_RATE_20_MHZ 0x48; /* 72 Mbps */
- static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
- 			      struct ieee80211_ht_info *ht_info,
- 			      enum ieee80211_band band)
- {
-+	u16 max_bit_rate = 0;
-+	u8 rx_chains_num = priv->hw_params.rx_chains_num;
-+	u8 tx_chains_num = priv->hw_params.tx_chains_num;
-+
- 	ht_info->cap = 0;
- 	memset(ht_info->supp_mcs_set, 0, 16);
- 
- 	ht_info->ht_supported = 1;
- 
-+	ht_info->cap |= (u16)IEEE80211_HT_CAP_GRN_FLD;
-+	ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_20;
-+	ht_info->cap |= (u16)(IEEE80211_HT_CAP_MIMO_PS &
-+			     (IWL_MIMO_PS_NONE << 2));
-+
-+	max_bit_rate = MAX_BIT_RATE_20_MHZ;
- 	if (priv->hw_params.fat_channel & BIT(band)) {
- 		ht_info->cap |= (u16)IEEE80211_HT_CAP_SUP_WIDTH;
- 		ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_40;
- 		ht_info->supp_mcs_set[4] = 0x01;
-+		max_bit_rate = MAX_BIT_RATE_40_MHZ;
- 	}
--	ht_info->cap |= (u16)IEEE80211_HT_CAP_GRN_FLD;
--	ht_info->cap |= (u16)IEEE80211_HT_CAP_SGI_20;
--	ht_info->cap |= (u16)(IEEE80211_HT_CAP_MIMO_PS &
--			     (IWL_MIMO_PS_NONE << 2));
- 
- 	if (priv->cfg->mod_params->amsdu_size_8K)
- 		ht_info->cap |= (u16)IEEE80211_HT_CAP_MAX_AMSDU;
-@@ -343,10 +352,22 @@ static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
- 	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
- 
- 	ht_info->supp_mcs_set[0] = 0xFF;
--	if (priv->hw_params.tx_chains_num >= 2)
-+	if (rx_chains_num >= 2)
- 		ht_info->supp_mcs_set[1] = 0xFF;
--	if (priv->hw_params.tx_chains_num >= 3)
-+	if (rx_chains_num >= 3)
- 		ht_info->supp_mcs_set[2] = 0xFF;
-+
-+	/* Highest supported Rx data rate */
-+	max_bit_rate *= rx_chains_num;
-+	ht_info->supp_mcs_set[10] = (u8)(max_bit_rate & 0x00FF);
-+	ht_info->supp_mcs_set[11] = (u8)((max_bit_rate & 0xFF00) >> 8);
-+
-+	/* Tx MCS capabilities */
-+	ht_info->supp_mcs_set[12] = IEEE80211_HT_CAP_MCS_TX_DEFINED;
-+	if (tx_chains_num != rx_chains_num) {
-+		ht_info->supp_mcs_set[12] |= IEEE80211_HT_CAP_MCS_TX_RX_DIFF;
-+		ht_info->supp_mcs_set[12] |= ((tx_chains_num - 1) << 2);
-+	}
- }
- #else
- static inline void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
+One solution would be to make wpa_supplicant understand what 11n is,
+but that's not it's job.
+Another solution would be to make wpa_supplicant tell me that it
+intends to use TKIP before asking me to associate.
+
+Any ideas ?
+
+thanks
+
 -- 
-1.5.3.6
-
+Emmanuel Grumbach
+egrumbach@gmail.com
