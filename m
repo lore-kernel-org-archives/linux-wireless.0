@@ -1,115 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28831 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754769AbYEDLsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 07:48:23 -0400
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	tomas.winkler@intel.com, yi.zhu@intel.com,
+Received: from vs166246.vserver.de ([62.75.166.246]:39882 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbYEMXqb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 19:46:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: 4311 v2 Bail - 2.6.26-rc2
+Date: Wed, 14 May 2008 01:46:06 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
 	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/1] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
-Date: Sun,  4 May 2008 14:48:18 +0300
-Message-Id: <1209901698-10370-1-git-send-email-ron.rindjunsky@intel.com> (sfid-20080504_134757_697381_88E4B6FB)
-Content-Type: text/plain; charset="us-ascii"
+References: <48294F0B.4040908@f-box.org> <1210721604.4279.40.camel@johannes.berg> <1210721764.4279.41.camel@johannes.berg>
+In-Reply-To: <1210721764.4279.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805140146.06910.mb@bu3sch.de> (sfid-20080514_014634_896544_F70C8AB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
-in patch "mac80211: QoS related cleanups"), when trying to perform
-ieee80211_wake_queue.
+On Wednesday 14 May 2008 01:36:04 Johannes Berg wrote:
+> On Wed, 2008-05-14 at 01:33 +0200, Johannes Berg wrote:
+> > > Where does this "wrong buffer size" message come from, and what does it mean?
+> > > 
+> > > > b43-phy1 debug: Using hardware based encryption for keyidx: 1, mac: 
+> > > > ff:ff:ff:ff:ff:ff
+> > > > wlan0: wrong buffer size<7>wlan0: wrong buffer size<7>wlan0: wrong 
+> > > > buffer size<7>wlan0: wrong buffer size
+> > 
+> > It comes from mac80211 when the AP is sending invalid A-MSDU frames.
+> 
+> Wait. If this is with b43, why the hell is it sending A-MSDU frames in
+> the first place? Or maybe it's receiving totally corrupt data. A monitor
+> mode trace would help.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   23 +++++++++++------------
- 2 files changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 9546582..70c0455 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3547,13 +3547,16 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	 * block-ack window (we assume that they've been successfully
- 	 * transmitted ... if not, it's too late anyway). */
- 	if (txq->q.read_ptr != (ba_resp_scd_ssn & 0xff)) {
-+		/* calculate mac80211 ampdu sw queue to wake */
-+		int ampdu_q =
-+		   scd_flow - IWL_BACK_QUEUE_FIRST_ID + priv->hw->queues;
- 		int freed = iwl4965_tx_queue_reclaim(priv, scd_flow, index);
- 		priv->stations[ba_resp->sta_id].
- 			tid[ba_resp->tid].tfds_in_queue -= freed;
- 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
- 			priv->mac80211_registered &&
- 			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
--			ieee80211_wake_queue(priv->hw, scd_flow);
-+			ieee80211_wake_queue(priv->hw, ampdu_q);
- 		iwl4965_check_empty_hw_queue(priv, ba_resp->sta_id,
- 			ba_resp->tid, scd_flow);
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 4406fc7..5453427 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2568,12 +2568,6 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 		nfreed++;
- 	}
- 
--/*	if (iwl4965_queue_space(q) > q->low_mark && (txq_id >= 0) &&
--			(txq_id != IWL_CMD_QUEUE_NUM) &&
--			priv->mac80211_registered)
--		ieee80211_wake_queue(priv->hw, txq_id); */
--
--
- 	return nfreed;
- }
- 
-@@ -2797,7 +2791,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 		}
- 
- 		if (txq->q.read_ptr != (scd_ssn & 0xff)) {
--			int freed;
-+			int freed, ampdu_q;
- 			index = iwl_queue_dec_wrap(scd_ssn & 0xff, txq->q.n_bd);
- 			IWL_DEBUG_TX_REPLY("Retry scheduler reclaim scd_ssn "
- 					   "%d index %d\n", scd_ssn , index);
-@@ -2806,9 +2800,15 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 
- 			if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
- 			    txq_id >= 0 && priv->mac80211_registered &&
--			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
--				ieee80211_wake_queue(priv->hw, txq_id);
--
-+			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
-+				/* calculate mac80211 ampdu sw queue to wake */
-+				ampdu_q = txq_id - IWL_BACK_QUEUE_FIRST_ID +
-+					  priv->hw->queues;
-+				if (agg->state == IWL_AGG_OFF)
-+					ieee80211_wake_queue(priv->hw, txq_id);
-+				else
-+					ieee80211_wake_queue(priv->hw, ampdu_q);
-+			}
- 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
- 		}
- 	} else {
-@@ -2833,8 +2833,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 		if (tid != MAX_TID_COUNT)
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
--			(txq_id >= 0) &&
--			priv->mac80211_registered)
-+			(txq_id >= 0) && priv->mac80211_registered)
- 			ieee80211_wake_queue(priv->hw, txq_id);
- 		if (tid != MAX_TID_COUNT)
- 			iwl4965_check_empty_hw_queue(priv, sta_id, tid, txq_id);
+Here's the full dmesg.
+Also notice "tx_ring_AC_VO: Used slots 128/128" after about 17000 successfull
+frames. Weird.
+
+> b43-phy1: Broadcom 4311 WLAN found
+> b43-phy1 debug: Found PHY: Analog 4, Type 2, Revision 9
+> b43-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+> b43-phy1 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
+> phy1: Selected rate control algorithm 'pid'
+> Broadcom 43xx driver loaded [ Features: P, Firmware-ID: FW13 ]
+> firmware: requesting b43/ucode13.fw
+> firmware: requesting b43/lp0initvals13.fw
+> b43-phy1: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+> b43-phy1 debug: Chip initialized
+> b43-phy1 debug: 64-bit DMA initialized
+> b43-phy1 ERROR: PHY transmission error
+> b43-phy1 debug: Wireless interface started
+> b43-phy1 debug: Adding Interface type 2
+> wlan0: Initial auth_alg=0
+> wlan0: authenticate with AP 00:90:d0:f4:18:d4
+> wlan0: RX authentication from 00:90:d0:f4:18:d4 (alg=0 transaction=2
+> status=0)
+> wlan0: authenticated
+> wlan0: associate with AP 00:90:d0:f4:18:d4
+> wlan0: RX AssocResp from 00:90:d0:f4:18:d4 (capab=0x411 status=0 aid=1)
+> wlan0: associated
+> wlan0: switched to short barker preamble (BSSID=00:90:d0:f4:18:d4)
+> b43-phy1 debug: Using hardware based encryption for keyidx: 0, mac:
+> 00:90:d0:f4:18:d4
+> b43-phy1 debug: Using hardware based encryption for keyidx: 1, mac:
+> ff:ff:ff:ff:ff:ff
+> wlan0: wrong buffer size<7>wlan0: wrong buffer size<7>wlan0: wrong
+> buffer size<7>wlan0: wrong buffer size
+> b43-phy1 debug: Disabling hardware based encryption for keyidx: 1, mac:
+> ff:ff:ff:ff:ff:ff
+> b43-phy1 debug: Removing Interface type 2
+> b43-phy1 debug: Wireless interface stopped
+> b43-phy1 debug: DMA-64 rx_ring: Used slots 3/64, Failed frames 0/0 =
+> 0.0%, Average tries 0.00
+> b43-phy1 debug: DMA-64 tx_ring_AC_BK: Used slots 0/128, Failed frames
+> 0/0 = 0.0%, Average tries 0.00
+> b43-phy1 debug: DMA-64 tx_ring_AC_BE: Used slots 0/128, Failed frames
+> 0/0 = 0.0%, Average tries 0.00
+> b43-phy1 debug: DMA-64 tx_ring_AC_VI: Used slots 0/128, Failed frames
+> 0/0 = 0.0%, Average tries 0.00
+> b43-phy1 debug: DMA-64 tx_ring_AC_VO: Used slots 128/128, Failed frames
+> 106/17766 = 0.5%, Average tries 1
+> b43-phy1 debug: DMA-64 tx_ring_mcast: Used slots 0/128, Failed frames
+> 0/0 = 0.0%, Average tries 0.00
+> wlan0: deauthenticate(reason=3)
+
+
 -- 
-1.5.3.3
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Greetings Michael.
