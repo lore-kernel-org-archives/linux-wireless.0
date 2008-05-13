@@ -1,83 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759282AbYEWCLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:39 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: add RTC data address for iwl5000
-Date: Fri, 23 May 2008 10:09:06 +0800
-Message-Id: <1211508569-3163-29-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_197128_A4C9B742)
-In-Reply-To: <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42600 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757239AbYEMI7m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 04:59:42 -0400
+Subject: Re: BUG: scheduling while atomic: rt73usb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian =?ISO-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <482952C3.9020209@in.tum.de> (sfid-20080513_103525_899450_BDE1A917)
+References: <482952C3.9020209@in.tum.de>
+	 (sfid-20080513_103525_899450_BDE1A917)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z3lNhl2v1dIOZQ6WkBea"
+Date: Tue, 13 May 2008 10:59:31 +0200
+Message-Id: <1210669171.3646.49.camel@johannes.berg> (sfid-20080513_105945_523741_DD26F6F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch fills the valid_rtc_data_addr handler in iwl5000.
+--=-Z3lNhl2v1dIOZQ6WkBea
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 520c7ea..d6ffdee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -768,6 +768,12 @@ static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
- {
- }
- 
-+static int iwl5000_hw_valid_rtc_data_addr(u32 addr)
-+{
-+	return (addr >= RTC_DATA_LOWER_BOUND) &&
-+		(addr < IWL50_RTC_DATA_UPPER_BOUND);
-+}
-+
- static struct iwl_hcmd_ops iwl5000_hcmd = {
- };
- 
-@@ -788,6 +794,7 @@ static struct iwl_lib_ops iwl5000_lib = {
- 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
- 	.disable_tx_fifo = iwl5000_disable_tx_fifo,
- 	.rx_handler_setup = iwl5000_rx_handler_setup,
-+	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
- 	.load_ucode = iwl5000_load_ucode,
- 	.init_alive_start = iwl5000_init_alive_start,
- 	.alive_notify = iwl5000_alive_notify,
--- 
-1.5.3.6
+>   [<f929715a>] rt2x00lib_config_erp+0x7a/0xb0 [rt2x00lib]
+>   [<f929623c>] rt2x00lib_intf_scheduled_iter+0x9c/0xf0 [rt2x00lib]
+>   [<f9309841>] ieee80211_iterate_active_interfaces+0x71/0xa0 [mac80211]
+
+If I read this correctly, it was recently fixed (but not committed yet
+afaict)
+
+johannes
+
+--=-Z3lNhl2v1dIOZQ6WkBea
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASClYcqVg1VMiehFYAQK/5A//TXpIIHD+8d9DGM5DnXgHHxxlkEo8ieV5
+QbSpRmimO8VgrxPn2TmqD67hpj52Le09JG1AeUPWSnBIQDvXDsBBEGD2R3Reex5G
+ZRW7WmhCbGRYPMElLoj7MftP5Vov/VEKvTc21yawCau1fDYvKII0JnfjAbxmlmuh
+CMK2cnJC0IZoWZ5cAbyY08JH62qhVNPAlBBdqQj4E/kFuriJrbaGnWZbvWY0vI3l
+mhn9MYwSIQCi/RnlsyF4cMFDFV1ftrLZA2vpcs/DFbCXiBezEg/yhsKmPlX+srz+
+MxEqF7Sa7LL+Uk+tFDT1Eb0hrUf5ouziGot522hhDzOL4iKXFVsw5pEKXemF260Y
+WdMHEq95cK1U+gr1mKwNqYRlmUh9FMWmpXDoeBaR5eHtmN+x0ZQZutkgsNCq0hNx
+R4rFH1Fx4XEZqaUWvBjt5k5g4/arBal55FCWWuf6rolYc76lh7SJQXMVcbToR/gl
+4ZBWTUGVgyOr7BqW+4XDyNmQe29/C4qO2G3W1d/pgvBOYWa9zgh7ye7z8mBg03T3
+n8qM/dHizkxFAEGKmSIYR0gjIYNaS6VZLvJ/mo5gx7rHlT/7yUXyMOjidoIvEW6p
+kvqa3rU97qaJrRhwFL3OZNtEpWYOqElQ9TVzkSEnXpNUMTAB4iQAv51Ap/d1cFux
+YBaLf3QkBcM=
+=XsxQ
+-----END PGP SIGNATURE-----
+
+--=-Z3lNhl2v1dIOZQ6WkBea--
 
