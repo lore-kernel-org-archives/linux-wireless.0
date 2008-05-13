@@ -1,95 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759789AbYEWCLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:45 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: mark 4965 ucode types
-Date: Fri, 23 May 2008 10:09:10 +0800
-Message-Id: <1211508569-3163-33-git-send-email-yi.zhu@intel.com> (sfid-20080523_042833_526164_2F8FC2E4)
-In-Reply-To: <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.182]:32391 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbYEMKFZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 06:05:25 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4037867waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 03:05:23 -0700 (PDT)
+Message-ID: <1ba2fa240805130305q207067b0n572b95340a3745d6@mail.gmail.com> (sfid-20080513_120530_987854_D8506A68)
+Date: Tue, 13 May 2008 13:05:22 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"David Miller" <davem@davemloft.net>
+Subject: Re: New GIT net tree naming...
+Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
+	akpm@linux-foundation.org, netdev@vger.kernel.org
+In-Reply-To: <20080512184715.GA18910@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080419.173510.257216556.davem@davemloft.net>
+	 <20080508014358.GE3412@tuxdriver.com>
+	 <200805080906.29603.hs4233@mail.mn-solutions.de>
+	 <20080508144046.GA3515@tuxdriver.com>
+	 <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
+	 <20080512184715.GA18910@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Mon, May 12, 2008 at 9:47 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Mon, May 12, 2008 at 08:39:22PM +0300, Tomas Winkler wrote:
+>
+>  > How would you want me to handle bug fixes to go both directions
+>  > wireless-testing and upstream?
+>  > Because of huge code movement we are now doing in iwlwifi they are
+>  > currently just not the same.
+>  > Shell I send two versions or you want to back port them not sure how
+>  > do you want to track this...somewhere in merging loop it will create a
+>  > conflict.  Maybe this is maintainer trivia anyhow
+>  > I would like to make sure there are not glitches.
+>
+>  It is a good question -- thanks for asking!
+>
+>  If you think that two versions of the fix are appropriate, then please
+>  do send them.  If it is simply because the code moved I'll probably
+>  be able to figure it out, but if the code has actually changed it
+>  may be worthwhile.
+>
+>  We are now trying to avoid rebasing "-next" patches as much as possible.
+>  So the version for the current release will be merged to Linus and I or
+>  Dave will have to figure-out how to resolve the merge conflicts when
+>  current is pulled to -next.  Providing a "-next' version of the patch
+>  can help to make sure that those merge conflicts are handled correctly.
+>
+>  John
 
-This patch marks 4965 ucode types.
+I'm not able to clone neither wireless-2.6.git nor net-2.6.git through http
+I'm behind a firewall so git protocol is not an option
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index f848a5b..c92742c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -162,9 +162,10 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	/* Tell bootstrap uCode where to find the "Initialize" uCode
- 	 *   in host DRAM ... host DRAM physical address bits 35:4 for 4965.
--	 * NOTE:  iwl4965_initialize_alive_start() will replace these values,
-+	 * NOTE:  iwl_init_alive_start() will replace these values,
- 	 *        after the "initialize" uCode has run, to point to
--	 *        runtime/protocol instructions and backup data cache. */
-+	 *        runtime/protocol instructions and backup data cache.
-+	 */
- 	pinst = priv->ucode_init.p_addr >> 4;
- 	pdata = priv->ucode_init_data.p_addr >> 4;
- 	inst_len = priv->ucode_init.len;
-@@ -220,6 +221,8 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	iwl_release_nic_access(priv);
- 
-+	priv->ucode_type = UCODE_INIT;
-+
- 	return 0;
- }
- 
-@@ -266,6 +269,8 @@ static int iwl4965_set_ucode_ptrs(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO("Runtime uCode pointers are set.\n");
- 
-+	priv->ucode_type = UCODE_RT;
-+
- 	return ret;
- }
- 
--- 
-1.5.3.6
+git-clone  ttp://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
+Initialized empty Git repository in ....
+Cannot get remote repository information.
+Perhaps git-update-server-info needs to be run there?
 
+git-clone  http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.gi
+Getting pack list for
+http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+Getting index for pack 1c206683ae18d8f0b4833dcee50c8e1c76832df9
+Getting pack list for
+http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git/
+error: Unable to find 090b293b87792a815cf51aeccb590ec37c90cfa3 under
+http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+Cannot obtain needed blob 090b293b87792a815cf51aeccb590ec37c90cfa3
+while processing commit 6e40a915de82e00d18f75941e531b40c4e0d94c4.
+Waiting for http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git//objects/9a/eb872460a5dcab8b4baf13125d0177f865f393
+got 334974abd063c20dc64dd32724425be36b90cebc
+got 9aeb872460a5dcab8b4baf13125d0177f865f393
+Waiting for http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git//objects/ab/ef366d1ab8fe2ac484039976600938f6c76db3
+Received DONE message for unknown request!
+
+
+Thanks
+Tomas
