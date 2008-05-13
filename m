@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta2.srv.hcvlny.cv.net ([167.206.4.197]:41863 "EHLO
-	mta2.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbYEXX1g (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49642 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753671AbYEMKHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2008 19:27:36 -0400
-Received: from [192.168.1.10] (ool-44c60ac6.dyn.optonline.net [68.198.10.198])
- by mta2.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K1E0039GBTZBFX0@mta2.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Sat, 24 May 2008 19:27:35 -0400 (EDT)
-Date: Sat, 24 May 2008 19:27:35 -0400
-From: Jerry Quinn <jlquinn@optonline.net>
-Subject: ath5k can't connect on 5424
-To: linux-wireless@vger.kernel.org
-Message-id: <4838A467.1000700@optonline.net> (sfid-20080525_012739_536512_B139846E)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 13 May 2008 06:07:21 -0400
+Subject: Re: dynamic wep with mulitple keys
+From: Johannes Berg <johannes@sipsolutions.net>
+To: drago01 <drago01@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Volker Braun <vbraun@physics.upenn.edu>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <f6ca9fed0805130244x648325a3k2ae7b77fa610ca6d@mail.gmail.com> (sfid-20080513_114503_459511_D50D0D96)
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
+	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
+	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
+	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
+	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
+	 <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com>
+	 <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
+	 <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com>
+	 <1210670668.3646.56.camel@johannes.berg>
+	 <f6ca9fed0805130244x648325a3k2ae7b77fa610ca6d@mail.gmail.com>
+	 (sfid-20080513_114503_459511_D50D0D96)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FVvpqzGClEo7nVg3e/n7"
+Date: Tue, 13 May 2008 12:07:08 +0200
+Message-Id: <1210673228.3646.60.camel@johannes.berg> (sfid-20080513_120726_531351_575CFFA2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.  I just installed compat-wireless 2008-05-24.
 
-The good news is that ath5k now loads into the kernel and can talk to the 
-chip.  However, beyond that, the device doesn't do anything.  During modprobe 
-ath5k, I get
+--=-FVvpqzGClEo7nVg3e/n7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-ath5k_pci 0000:03:00.0: registered as 'phy1'
-phy1: Selected rate control algorithm 'pid'
-ath5k phy1: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
-udev: renamed network interface wlan0 to ath0
+> The problem is that when connecting to a dynamic wep network which
+> uses multiple keys iwl3945 fails to get a dhcp lease. (See
+> http://marc.info/?l=3Dlinux-wireless&m=3D120699235803881&w=3D2)
+> Volker had the same problem with iwl4965.  But when turning off
+> hwcrypto and therefore use the mac80211 code it works for him.
+> iwl3945 does not use hwcrypto by default (and when I enable it it does
+> not work either) but fails. Both should be using the same code
+> (mac80211) but one driver works and the other doesn't which is odd.
 
-The pci id for the chip is 168c:1014 (rev 01).  This is an IBM Thinkpad T60p, 
-running Debian testing with kernel 2.6.25-2-686, the latest dist kernel available.
+I haven't got a clue. Are those identical networks?
 
-When I try to bring up the interface I just get a link is not ready message in 
-the kernel log with no other info.  Also, iwlist ath0 scan gives me no results 
-either (I did ifconfig ath0 up beforehand).
+johannes
 
-Let me know if there's any further diagnosis I can provide to help out.
+--=-FVvpqzGClEo7nVg3e/n7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thanks,
-Jerry
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCloSqVg1VMiehFYAQL6Bg//U92w0HTk8tZMzCjnHx7FQ8oURZyplj6/
+Wn2F3reB4cFw/y4qHTnaQm0k90uRv5zgvxFbmqRIvuiQJ9AH1XvwAqCZr+k3hEZb
+vUTl98r3tYMHEGCJ5JqiI2zQu5oZyvj0uAUnQxlV/ifGpL6E11abB9ocnYftrCCw
+4JW6XT87kgkIYx63Krit0d0s9HoYKLPymFD7Hk38puiLJKPpHXPVGqaL4DQdy52F
+S0bG32SygPvlKlEbXB8SVSbCbMn/k2LtqEDYFxpJFPCyudi601pUwfq2KzdjIBim
+sw7qIb+PQn1CFxW1iqgbxjGRvYPwInSZazWmcDGUDqKy6F6RV8Qsdmd9ackiIu+8
+ubhaGIni2DXl9lEQjM0+sAjca9Jb4/6VIJzBWZYJAo9uXvr0cEdy1yTbLk+t2OtU
+vxIqNZP0GuKCxw38SAJqwOUN/+kepIZ4rpvzHHIBfuvaO/fXW5KHB8W0fHSxY7Uu
+cGYvv3jGEUE5KIZoh+OfJ3Iye4Wye3FNOY+MtLCWO0haN8oVoDCcDvk6AG1nx4tO
+uo/GtzdkWjJnHA2jLOBLPwBLI+ti/b1XqdrcjLAJUqDSXPgYedUg3aP1G+DiSfLq
+ia5TUP3s/mLNh0xvpr8LIhMUQlnn0+WoIVFkWYk/UMRv9pa1PXoX+BHtaiMvU1I1
+Pb24FUFKYTE=
+=XGSC
+-----END PGP SIGNATURE-----
+
+--=-FVvpqzGClEo7nVg3e/n7--
+
