@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:1785 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172AbYEHHPx (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:37896 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756284AbYEMXZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 03:15:53 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335 [Libertas]"
-Date: Thu, 8 May 2008 09:12:49 +0200
-Cc: John Daiker <daikerjohn@gmail.com>,
-	David Woodhouse <David@woodhou.se>,
-	Dan Williams <dcbw@redhat.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	julian.calaby@gmail.com, andreamrl@tiscali.it
-References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de> <1209057680.9212.1065.camel@pmac.infradead.org> <4821F389.6070905@gmail.com>
-In-Reply-To: <4821F389.6070905@gmail.com>
+	Tue, 13 May 2008 19:25:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH] b43: use the bitrev helpers rather than rolling a private one
+Date: Wed, 14 May 2008 01:24:07 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1210708518.6191.0.camel@brick>
+In-Reply-To: <1210708518.6191.0.camel@brick>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805080912.49903.hs4233@mail.mn-solutions.de> (sfid-20080508_091505_880997_2DB4596D)
+  charset="iso-8859-15"
+Message-Id: <200805140124.07982.mb@bu3sch.de> (sfid-20080514_012550_045801_B00D4541)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Do we have a git repo for this yet?  I just bought a NetGear
-> WG311v3 PCI Card (Marvell 88w8335), and desperately want this
-> card to work.
+On Tuesday 13 May 2008 21:55:18 Harvey Harrison wrote:
+> The 4-bit reversal flip_4bit is replaced with the bitrev helper
+> bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
+> where a register is read from for checking there.  The other caller
+> explicitly passes an array index which is guaranteed to be within range
+> and so a B43_WARN is not added there.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-You may create this repo by yourself at 
-git/bomabil.infradead.org. David will "just" host this for you. 
-You need an account on his server, for which you'll need to send 
-your SSH public key to him.
+ACK
 
-Docs on using git on git.infradead.org is at
-http://www.linux-mtd.infradead.org/doc/git.html
+But I'd prefer if we had something like the following
+and use that:
+
+#define bitrev4(x)	(bitrev8(x) >> 4)
+
+This way the confusing (confusing to me :) ) shifts in the code would go away.
+I have a hard time realizing that
+bitrev8(x) >> 3
+does actually mean
+bitrev4(x) << 1
+Maybe I'm just stupid, though. :)
+
+> @@ -3069,13 +3053,13 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
+>  		}
+>  		radio_stacksave(0x0078);
+>  		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
+> -		flipped = flip_4bit(tmp);
+> +		B43_WARN_ON(tmp > 15);
+> +		flipped = bitrev8(tmp) >> 4;
+>  		if (flipped < 10 && flipped >= 8)
 
 
-I've an GIT tree there too, for libertas-tools.
+-- 
+Greetings Michael.
