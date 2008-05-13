@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.229]:33022 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbYE0Ml7 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47171 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755333AbYEMMzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 08:41:59 -0400
-Received: by qb-out-0506.google.com with SMTP id q10so5887779qbq.15
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2008 05:41:57 -0700 (PDT)
-Message-ID: <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com> (sfid-20080527_144202_469890_E0A37FC6)
-Date: Tue, 27 May 2008 15:41:55 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: JMF <tolas_feup@hotmail.com>
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20080527T105701-941@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
-	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
-	 <loom.20080527T105701-941@post.gmane.org>
+	Tue, 13 May 2008 08:55:03 -0400
+Subject: libertas: fix command timeout after firmware failure
+From: David Woodhouse <dwmw2@infradead.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Brian Cavagnolo <brian@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain
+Date: Tue, 13 May 2008 13:54:59 +0100
+Message-Id: <1210683299.3582.240.camel@pmac.infradead.org> (sfid-20080513_145509_764628_F6EDD922)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2008 at 1:58 PM, JMF <tolas_feup@hotmail.com> wrote:
-> Tomas Winkler <tomasw@...> writes:
->
->> WEP key is of fixed size 13 or  5 bytes, this setting should be
->> refused somewhere in the mac wext handler.
->> NACK.
->> Tomas
->  What about 256-bit WEP key (232-bit key I think), it won't be supported?
->
-Not supported by iwlwifi HW, have to be done by SW, We need to check
-then probably in driver whether we support it or not and return error
-value in this case, in other cases I'm not sure how defensive the code
-should be....
-By the way isn't this a waste of bits. AES seams to be  secure enough.
-Who is implementing this at all?
+From: Brian Cavagnolo <brian@cozybit.com>
 
-Thanks
-Tomas
-Tomas
+This is a fix for OLPC ticket #6586: "SCAN command fails, timer doesn't
+fire". In fact, the timer was firing; the problem was that the dnld_sent
+state variable was not being updated after the timer expired, so
+lbs_execute_next_command was not being called.
+
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+
+---
+Bug fix, for 2.6.26 please.
+
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -756,6 +756,7 @@ static int lbs_thread(void *data)
+ 				priv->nr_retries = 0;
+ 			} else {
+ 				priv->cur_cmd = NULL;
++				priv->dnld_sent = DNLD_RES_RECEIVED;
+ 				lbs_pr_info("requeueing command %x due to timeout (#%d)\n",
+ 					    le16_to_cpu(cmdnode->cmdbuf->command), priv->nr_retries);
+ 
+
+-- 
+dwmw2
+
