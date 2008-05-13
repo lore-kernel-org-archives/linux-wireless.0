@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45704 "EHLO ogre.sisk.pl"
+Received: from mga14.intel.com ([143.182.124.37]:27391 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752970AbYE3PUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 11:20:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+	id S1757152AbYEMIu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 04:50:29 -0400
+Subject: Re: [RFC PATCH] mac80211 : Association with 11n hidden ssid ap.
+From: Zhu Yi <yi.zhu@intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: suspend vs. b43
-Date: Fri, 30 May 2008 17:20:48 +0200
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1212150713.4117.2.camel@johannes.berg> <200805301642.05248.mb@bu3sch.de> <1212158782.4117.8.camel@johannes.berg>
-In-Reply-To: <1212158782.4117.8.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805301720.49327.rjw@sisk.pl> (sfid-20080530_172038_361135_04C0088D)
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1210667747.3646.32.camel@johannes.berg>
+References: <12103509413156-git-send-email-abhijeet.kolekar@intel.com>
+	 <1210641995.2506.200.camel@debian.sh.intel.com>
+	 <1210667747.3646.32.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 13 May 2008 16:49:51 +0800
+Message-Id: <1210668591.2530.18.camel@debian.sh.intel.com> (sfid-20080513_105035_121867_01E14191)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, 30 of May 2008, Johannes Berg wrote:
-> On Fri, 2008-05-30 at 16:42 +0200, Michael Buesch wrote:
-> > On Friday 30 May 2008 16:37:18 Johannes Berg wrote:
-> > > Odd. Resume itself works just fine here, except when b43 is up. But then
-> > > again, you might not notice that this is the problem because by default,
-> > > nothing gets printed on the resume console and then it will indeed hang
-> > > with a black screen.
-> > 
-> > How can I change the printing?
-> 
-> Hmm. It seems I might have been wrong here. Rafael, do we still have
-> console suspend stuff?
+On Tue, 2008-05-13 at 10:35 +0200, Johannes Berg wrote:
+> Well, I'm not sure I'm the right person to look at this, I'm very
+> unfamiliar with the code in question. For all I care we can put it in
+> and revert/fixup when we get bug reports from it.
 
-Yes, we do.  Use "no_console_suspend" in the kernel command line to change
-that, but note that it's not generally safe (eg. if you are using netconsole at
-the same time).
+Thanks. Let's do it if no one NACK.
 
-Thanks,
-Rafael
+-yi
+
