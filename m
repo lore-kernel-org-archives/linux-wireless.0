@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:37726 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758983AbYETNrE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42058 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbYEMMex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 09:47:04 -0400
-Message-ID: <4832D661.60902@lwfinger.net> (sfid-20080520_154711_759299_7409BB75)
-Date: Tue, 20 May 2008 08:47:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Tomas Winkler <tomasw@gmail.com>, Helmut Schaa <hschaa@suse.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in	ieee80211_compatible_rates
-References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>	 <1211288251.6252.86.camel@johannes.berg>	 <1ba2fa240805200611o7c221c86na2c627242a2ce67@mail.gmail.com>	 <1211289769.6252.90.camel@johannes.berg>	 <1ba2fa240805200633y6730a1e3ufbc0adfedd3f8243@mail.gmail.com>	 (sfid-20080520_153405_359637_5B9C0929) <1211290714.6252.93.camel@johannes.berg>
-In-Reply-To: <1211290714.6252.93.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 13 May 2008 08:34:53 -0400
+Subject: Re: 11n + wpa_supplicant
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <20080513122718.GA6309@jm.kir.nu>
+References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
+	 <20080513122718.GA6309@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hb5JUxJ8SM1uQW8PekFZ"
+Date: Tue, 13 May 2008 14:34:40 +0200
+Message-Id: <1210682080.3646.73.camel@johannes.berg> (sfid-20080513_143456_579757_53AF3CE0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->>> Thing is, I'm not totally convinced it is wrong to the code while it may
->>> or may not be wrong...
->> Doesn't should be bss pinned int he bss list if you are associating to
->> it. If it's not there you don't have access to it's info It looks very
->> wrong to me.
-> 
-> Well, yes, it is a bit odd.
-> 
->>> I think this patch should go in first as it
->>> actually fixes the oops, and then we can discuss the merits of adding a
->>> warning there separately. Maybe after we look a bit at the code and try
->>> to figure out whether it can still happen after that patch from
->>> Abhijeet.
->> I'm not sure if this patch is complete without this warning. What is
->> in the else statement is a hack and it should be obvious.
-> 
-> Considering that the message won't help us at all, why bother? We know
-> it's triggering, we know this might be a problem, and we know we can
-> only solve it by auditing the code. So why add a message that will get
-> us countless emails/complaints from people we cannot do anything about
-> anyway without doing the audit?
 
-This argument could go on endlessly; however, it is clear that we need to 
-settle on a patch and get it upstream ASAP! Now that mainline is broken, the 
-urgency is _MUCH_ greater.
+--=-hb5JUxJ8SM1uQW8PekFZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+
+> In most cases, the pairwise cipher is selected during association, not
+> during 4-way handshake. Consequently, the driver/firmware should refuse
+> to send an (Re)Association Request that requests TKIP as the pairwise
+> cipher when using .11n.
+
+So to do this we should look at the associate IE(s) we get from
+userspace for association, right?
+
+> The exact mechanism depends on whether ap_scan=3D1 or ap_scan=3D2 is bein=
+g
+> used, i.e., whether wpa_supplicant is responsible for selecting a BSS
+> from scan results or not.
+>=20
+> In ap_scan=3D1, I would say that it would be useful for wpa_supplicant to
+> know whether the BSS (and the local wlan driver/hardware for that
+> matter!) supports .11n. If the scan results indicate this in some
+> reliable way (e.g., all IEs are delivered to wpa_supplicant), the AP's
+> support for 11n can be figured out. The local side support would need to
+> be added, e.g., to driver capabilities reporting.
+>=20
+> In ap_scaqn=3D2, wpa_supplicant requests the driver to select a BSS based
+> on configuration (SSID, security policy, including a specific cipher
+> suite), i.e., the driver would be told about TKIP use before
+> association and the driver would be responsible for not trying to use
+> 11n in that case. The corner case of AP/Authenticator requesting another
+> pairwise cipher would still be possible here, but not really something
+> that I would consider a real problem that needs to be solved.
+
+I'd think we can also just include the HT IE in the scan result. Or, why
+not just include all of them, parsers must be able to tell them apart
+anyway and NM could display an HT icon for example then.
+
+johannes
+
+--=-hb5JUxJ8SM1uQW8PekFZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCmK3qVg1VMiehFYAQKSOA/7BDBAlgmfi1cFLaZytFnp3TfXYPb4rTUR
++5jc+sZfj4vcmgYbkfMYKCS8ruNo5NDxTOh5zBFeXuNVTv+O2rIzQdIMxsx/TMAf
+dCrk8VNCFdx8QtR8MYxuVSMZ25iX+YHrPWPzG6wFVV/WaSpUcufi2lcZYKkrGTAJ
+BwwaQndDewJDNvYSJO1hwgo1A1DXruVaFy7+sy/IoLCllZvaRTG7NX2XjlR6sHdL
+JMw//6qyLorYU3r/EwhD9VuRjqoX5lrx7rv6H9X2QMKL6Q1qBXTfkS6lCT9Ald8J
+H3DcsPbIRv47vfsnfokWYP7CUI/yhrqHRtFhdJLTa5s0cV0fMoWak5IElOTb/FNC
+Dwu6p2StI92cihXalDDsQAdJnnea5UYPM60rqdcJ7B3BsXHOyLshIrCDl9ifSqnJ
+sgfTBaPDJPEOJuj3lH5h32pLxS3R519inhL6VzoIPfa4CGpAe/GNE1sjXx0CKlQ+
+eVIKIKiyBHVBlPHL0CJch5CWXtaqhTu8beZtMtL8U1GKhdV9iBVH8eTFPNvoC0u7
+f/lSdupcIZ49WFDOn3s8JDvKEPhZmWKgtY04L2cQFI3c6h3GGqsIWVE61dsTYcKZ
+v3Yd0yjyi4nWzo9JGwo52MBPhqZMypN1B7KKi/l235ggjhzRNGh8FJXpzePWNCzT
+j2DScSTyxnk=
+=OPo3
+-----END PGP SIGNATURE-----
+
+--=-hb5JUxJ8SM1uQW8PekFZ--
+
