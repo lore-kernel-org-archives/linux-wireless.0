@@ -1,105 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53154 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44538 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756442AbYEPXED (ORCPT
+	with ESMTP id S1752525AbYEMXeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 19:04:03 -0400
-Message-Id: <20080516230007.165503000@sipsolutions.net> (sfid-20080517_010407_893973_6A92703B)
-References: <20080516225712.794319000@sipsolutions.net>
-Date: Sat, 17 May 2008 00:57:13 +0200
+	Tue, 13 May 2008 19:34:17 -0400
+Subject: Re: 4311 v2 Bail - 2.6.26-rc2
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Ron Rindjunksi <ron.rindjunski@intel.com>
-Subject: [PATCH 1/2] mac80211: dont allow fragmentation and requeuing on
-	A-MPDU queues
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, Daniel <dan@f-box.org>,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <200805140127.22302.mb@bu3sch.de> (sfid-20080514_012747_829356_A0E41B5F)
+References: <48294F0B.4040908@f-box.org> <200805131119.09964.mb@bu3sch.de>
+	 <482A08A5.3000204@f-box.org>  <200805140127.22302.mb@bu3sch.de>
+	 (sfid-20080514_012747_829356_A0E41B5F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xlC/rfYPFNrHnSABVrwq"
+Date: Wed, 14 May 2008 01:33:23 +0200
+Message-Id: <1210721604.4279.40.camel@johannes.berg> (sfid-20080514_013420_793116_3CAFC237)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There really is no reason for a driver to reject a frame on
-an A-MPDU queue when it can stop that queue for any period
-of time and is given frames one by one. Hence, disallow it
-with a big warning and reduce mac80211-internal state.
 
-Also add a warning when we try to fragment a frame destined
-for an A-MPDU queue and drop it, the actual bug needs to be
-fixed elsewhere but I'm not exactly sure how to yet.
+--=-xlC/rfYPFNrHnSABVrwq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ron Rindjunski <ron.rindjunski@intel.com>
----
- include/net/mac80211.h     |    6 ++++--
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/tx.c          |   23 +++++++++++++++++++++--
- 3 files changed, 26 insertions(+), 5 deletions(-)
 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-05-16 15:39:55.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-05-16 15:40:03.000000000 +0200
-@@ -596,7 +596,7 @@ struct ieee80211_local {
- 	struct timer_list sta_cleanup;
- 
- 	unsigned long state[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
--	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
-+	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_QUEUES];
- 	struct tasklet_struct tx_pending_tasklet;
- 
- 	/* number of interfaces with corresponding IFF_ flags */
---- everything.orig/net/mac80211/tx.c	2008-05-16 15:34:45.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-05-16 15:42:16.000000000 +0200
-@@ -673,6 +673,16 @@ ieee80211_tx_h_fragment(struct ieee80211
- 	if (!(tx->flags & IEEE80211_TX_FRAGMENTED))
- 		return TX_CONTINUE;
- 
-+	/*
-+	 * Warn when submitting a fragmented A-MPDU frame and drop it.
-+	 * This is an error and needs to be fixed elsewhere, but when
-+	 * done needs to take care of monitor interfaces (injection)
-+	 * etc.
-+	 */
-+	if (WARN_ON(tx->flags & IEEE80211_TX_CTL_AMPDU ||
-+		    IEEE80211_SKB_CB(tx->skb)->queue >= tx->local->hw.queues))
-+		return TX_DROP;
-+
- 	first = tx->skb;
- 
- 	hdrlen = ieee80211_get_hdrlen(tx->fc);
-@@ -1216,8 +1226,17 @@ static int ieee80211_tx(struct net_devic
- retry:
- 	ret = __ieee80211_tx(local, skb, &tx);
- 	if (ret) {
--		struct ieee80211_tx_stored_packet *store =
--			&local->pending_packet[info->queue];
-+		struct ieee80211_tx_stored_packet *store;
-+
-+		/*
-+		 * Since there are no fragmented frames on A-MPDU
-+		 * queues, there's no reason for a driver to reject
-+		 * a frame there, warn and drop it.
-+		 */
-+		if (WARN_ON(queue >= local->hw.queues))
-+			goto drop;
-+
-+		store = &local->pending_packet[queue];
- 
- 		if (ret == IEEE80211_TX_FRAG_AGAIN)
- 			skb = NULL;
---- everything.orig/include/net/mac80211.h	2008-05-16 15:42:45.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-05-16 15:44:02.000000000 +0200
-@@ -986,8 +986,10 @@ enum ieee80211_ampdu_mlme_action {
-  * @tx: Handler that 802.11 module calls for each transmitted frame.
-  *	skb contains the buffer starting from the IEEE 802.11 header.
-  *	The low-level driver should send the frame out based on
-- *	configuration in the TX control data. Must be implemented and
-- *	atomic.
-+ *	configuration in the TX control data. This handler should,
-+ *	preferably, never fail and stop queues appropriately, more
-+ *	importantly, however, it must never fail for A-MPDU-queues.
-+ *	Must be implemented and atomic.
-  *
-  * @start: Called before the first netdevice attached to the hardware
-  *	is enabled. This should turn on the hardware and must turn on
+> Where does this "wrong buffer size" message come from, and what does it m=
+ean?
+>=20
+> > b43-phy1 debug: Using hardware based encryption for keyidx: 1, mac:=20
+> > ff:ff:ff:ff:ff:ff
+> > wlan0: wrong buffer size<7>wlan0: wrong buffer size<7>wlan0: wrong=20
+> > buffer size<7>wlan0: wrong buffer size
 
--- 
+It comes from mac80211 when the AP is sending invalid A-MSDU frames.
+
+johannes
+
+--=-xlC/rfYPFNrHnSABVrwq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASColQ6Vg1VMiehFYAQJI7Q/8DBtHB9KImz4M+sca95FQ2yJyyoKeoAqS
+y4vSWSoAeEHRZ/Qo6QmzLy8CcLA27U3g0uoCZeGW6CXyGe1a2WD/FhBL1vKE8DyO
+NlXGVfLEYOlSMHbt19LejmXAL95B7DHt7XxU5g7LX2Gvljx9xQcXwCbR3VCX+Cis
+x/W67n/KH74qwc5/jC9TJM7eUo+MldSmipoX4hxzeRBt/G/170LoGhaTiFm2Q4rD
+mI3TKnFylOkzxHOUSq6pg4ML8oGO0Rdsk8dup3uWmPq6EV/5J0zevfKkGnkOEwJF
+/po4RNuTrlMfO7sOx0gnZrbVaKOekDJDXDYmWB3JBiqsekGDQ3ii/MEkuqaLLsRQ
+DbUdBUThwV1v46aOeUNw9LJB4DzCzZ7KhxkHMrgSgtwh6UAGSueGQ+8uckddmi5V
+xCxvC98gVvKL1ToDZu/qPJwH8Pt0tDDtg9S6E7feKQORsPnR1qfKIHbm1RPchToB
+h4l50siiGN6In9nRU4K4hBigjznGAdo4IXTueYSbpAVknoumohO5DzuQV3wsfwy0
+KwwjN6r2qzC6pzCtIV3MVv7VaRup8jhXs+mdrO8k6XQGOY/OVvSqceaat9dIfrni
+DqWGBt8rLE3H/G+5Zb5l9256D4mewOOznf7MDqwBfiHJX3Xv15ztuYW1UejnuKKs
+WKkVfvQ/Soo=
+=IRwn
+-----END PGP SIGNATURE-----
+
+--=-xlC/rfYPFNrHnSABVrwq--
 
