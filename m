@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:50546 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750974AbYE0Eh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 00:37:58 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
-Date: Tue, 27 May 2008 14:37:22 +1000
-Cc: Michal Schmidt <mschmidt@redhat.com>,
-	Daniel Walker <dwalker@mvista.com>, linville@tuxdriver.com,
-	mingo@elte.hu, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, arjan@infradead.org
-References: <20080522232103.120033152@mvista.com> <200805271117.23051.rusty@rustcorp.com.au> <20080527021503.GH30894@parisc-linux.org>
-In-Reply-To: <20080527021503.GH30894@parisc-linux.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805271437.23114.rusty@rustcorp.com.au> (sfid-20080527_063802_062614_A91B0F4F)
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44429 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756407AbYEMNxt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 09:53:49 -0400
+Subject: Re: dynamic wep with mulitple keys
+From: Volker Braun <vbraun@physics.upenn.edu>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <8704f27d0805120213w197327b0r2fa490df1e5399d1@mail.gmail.com>
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
+	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
+	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
+	 <1210271472.30724.43.camel@carrot.hep.upenn.edu>
+	 <8704f27d0805081149wa91072en32ce8912ba1a14ff@mail.gmail.com>
+	 <8704f27d0805120213w197327b0r2fa490df1e5399d1@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 13 May 2008 09:53:47 -0400
+Message-Id: <1210686828.32590.15.camel@carrot.hep.upenn.edu> (sfid-20080513_155353_324749_701F8329)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 May 2008 12:15:03 Matthew Wilcox wrote:
-> On Tue, May 27, 2008 at 11:17:22AM +1000, Rusty Russell wrote:
-> > On Tuesday 27 May 2008 03:29:14 Michal Schmidt wrote:
-> > > Mutexes are not allowed in interrupt context, not even mutex_trylock.
-> >
-> > As an aside, does anyone know why?  I know the documentation says so, but
-> > it wasn't immediately obvious to me.  I asked before to no response...
->
-> Because mutexes have an owner.  In interrupt context, there is no owner.
-> This owner is used to do priority boosts as well as debugging.
+I tried the patch and now my wireless works perfectly. Thank you! Let me
+know when your "official" patch is ready then I'll test it as well.
 
-Shows how little I know, I didn't see priority boosting in my glance thru 
-mutex.c.
+Volker
 
-But it seems like mutex_trylock_irq would be easy to add if needed, if only 
-for clarity.
 
-Thanks!
-Rusty.
+On Mon, 2008-05-12 at 12:13 +0300, Emmanuel Grumbach wrote:
+> here is the patch I promised last week, can you please try it ?
+
+
