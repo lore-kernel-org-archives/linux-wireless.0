@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:5596 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315AbYEFJLB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49658 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbYEMKHr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 05:11:01 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1239412waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 02:11:00 -0700 (PDT)
-Message-ID: <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com> (sfid-20080506_111020_522574_FD732903)
-Date: Tue, 6 May 2008 12:11:00 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
-Cc: linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
+	Tue, 13 May 2008 06:07:47 -0400
+Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080513.024516.248213393.davem@davemloft.net>
+References: <1209936745.7304.16.camel@johannes.berg>
+	 <20080512.205224.12536510.davem@davemloft.net>
+	 <1210669273.3646.51.camel@johannes.berg>
+	 <20080513.024516.248213393.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ej6wYmUCugoKRhhFgeIL"
+Date: Tue, 13 May 2008 12:07:33 +0200
+Message-Id: <1210673253.3646.62.camel@johannes.berg> (sfid-20080513_120750_516366_4B13CC33)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 6, 2008 at 12:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->  > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->  >
->  >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
->  >  in patch "mac80211: QoS related cleanups"), when trying to perform
->  >  ieee80211_wake_queue.
->  >
->  >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
->  >
->
->  Is this going to make it to 2.6.26?
->  Without this it will be hard to run 5000 under 2.6.26 as is.
 
-I meant 'QoS related cleanups'
->
->  Thanks
->  Tomas
->
+--=-Ej6wYmUCugoKRhhFgeIL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-05-13 at 02:45 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 13 May 2008 11:01:13 +0200
+>=20
+> > Will you put in something like the patch that made dev_alloc_skb
+> > reserve more with the bridging headroom as well, or do you want (me)
+> > to look at routing first?
+>=20
+> I'm trying to do this one set of changes at a time. :-)
+>=20
+> I'll get to the netdev_alloc_skb() bits after this stuff
+> has had some time to cook.
+
+Sure, sounds good, thanks.
+
+johannes
+
+--=-Ej6wYmUCugoKRhhFgeIL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCloZKVg1VMiehFYAQI53Q//RkFGxtkBSPke7T2DolzEr1qQd/Qxr8xP
+/xh1m38ZuOMMy552gg7XtTNfwUxs/wx50nP3pT81pa7iFSuNySPY1ooh1F4FmleY
+MGC6IWLqBdPjAC1Y9lyNsii0LORpOi85H7tGnmVRUFsj5zIi/yjnvwgc7fXlMXEk
+n/uqkoW4jDOR8xFvQbY0PlpcGd5w/tPsU/1eTghPqZ1HK5AHPd+tsFb/b00+rso7
+pHevwpUN2+kpb8bqRM5W9a3Zk1yLFUpL1svdo2zXg//5tp33m+czwvZyhOkOW0GE
+3KvICe+gEIANesxN++/OudNE4C+Ncm+S90ul2ii2pBwYLY28LliwiS+OqACYsjwM
+mNfIm8oOEcDaOgW4KrtdJYIo/vH/fWReCe2UhxyqgPePobcoT4ttR9jhH6CKBGue
+h/XzSLmwQXb94HISVAtmcKSr+sDOlTQtq3oMgwCc/34PuMTsTZV/fC3yZExILKd5
+eyWTbYuOcRA1NsXKYprrimXQXeZ7yC/56Vn0UU0BPxYnrDXGVL8bvc+/oC/v80HF
+LRa3MsUrmhyuL979bPL4T8wUaWoG3LhU4RSzOR79qUrzOgte+Dtipl1iYCCyhEp6
+41V5XU0+gGlIFasJTOyB7sV0p+5jOZhQc1g2z78FC7Pg8wx3X9l6GWdh1X4irOp1
+aKTlYOawjI4=
+=xAz+
+-----END PGP SIGNATURE-----
+
+--=-Ej6wYmUCugoKRhhFgeIL--
+
