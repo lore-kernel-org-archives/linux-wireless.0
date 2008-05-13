@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbYEQQ5U (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:19902 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665AbYEMLfU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 12:57:20 -0400
-Subject: Re: NULL pointer in mac80211:ieee80211_associate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080517185038.6w1m4n5n6s88ckgw@imap.suse.de>
-References: <482DFC63.7050908@lwfinger.net>
-	 <1210974434.6381.60.camel@johannes.berg> <482E1344.7080808@lwfinger.net>
-	 (sfid-20080517_010547_496161_3AD36B80) <1210979397.3827.4.camel@johannes.berg>
-	 <20080517185038.6w1m4n5n6s88ckgw@imap.suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xW6v0B11vxc1MVsbf8rI"
-Date: Sat, 17 May 2008 18:56:56 +0200
-Message-Id: <1211043416.6252.14.camel@johannes.berg> (sfid-20080517_185725_511277_5CD1B573)
-Mime-Version: 1.0
+	Tue, 13 May 2008 07:35:20 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1214970nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 04:35:19 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: Set IEEE80211_TXPD_REQ_TX_STATUS for all TX frames
+Date: Tue, 13 May 2008 13:46:35 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200805111434.19071.IvDoorn@gmail.com> <1210668171.3646.41.camel@johannes.berg>
+In-Reply-To: <1210668171.3646.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805131346.35897.IvDoorn@gmail.com> (sfid-20080513_133532_804468_2F03AAE2)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 13 May 2008, Johannes Berg wrote:
+> On Sun, 2008-05-11 at 14:34 +0200, Ivo van Doorn wrote:
+> > All interfaces should set the IEEE80211_TXPD_REQ_TX_STATUS flag for all TX frames
+> > which will force the master interface to set the IEEE80211_TX_CTL_REQ_TX_STATUS
+> > flag. This in turn will allow drivers to check for that flag before reporting
+> > the TX status to mac80211.
+> > 
+> > This is very usefull when frames (like beacons, RTS and CTS-to-self) should not
+> > be reported back to mac80211. Later we could add more extensive checks to
+> > exclude more frames from being reported, or let mac80211 decide if it wants
+> > the frame for status reporting or not.
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > ---
+> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> > index f35eaea..0024892 100644
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -1617,6 +1617,9 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+> >  	if (ethertype == ETH_P_PAE)
+> >  		pkt_data->flags |= IEEE80211_TXPD_EAPOL_FRAME;
+> >  
+> > +	/* Interfaces should always request a status report */
+> > +	pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
+> > +
+> 
+> What about monitor interfaces/injection? Do they already set it?
 
---=-xW6v0B11vxc1MVsbf8rI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, should they?
 
-On Sat, 2008-05-17 at 18:50 +0200, Helmut Schaa wrote:
-> Am Sa 17 Mai 2008 01:09:57 CEST schrieb Johannes Berg =20
-> <johannes@sipsolutions.net>:
->=20
-> >> > Can you try to find out what code this corresponds to?
-> >>
-> >>  From objdump with line numbers, it occurs at "for (i =3D 0; i <
-> >> bss->supp_rates_len; i++) {" in ieee80211_compatible_rates, which I th=
-ink is
-> >> entered from ieee80211_send_assoc. It seems that bss is NULL. For test=
-ing, I
-> >> have placed a WARN_ON(!bss) statement just before the for loop.
-> >
-> > That looks plausible. Helmut, any ideas how to avoid this? Skip the
-> > compatible rates test completely and use all rates in this situation?
->=20
-> Yes, that's most likely the best solution for it. If we do not have a =20
-> bss at this point we cannot adjust the rates anyway. Should I prepare =20
-> a patch?
+> Other than that, looks good to me, as long as you're aware that in the
+> future this might be more dynamic and don't rely on it too much for
+> internal housekeeping (but you seem to be according to your changelog
+> entry) :)
 
-Please do, thanks.
+Well it shouldn't matter if it will become more flexible, what I am looking
+for is making the flag actually mean something for drivers. ;)
+We could even make it so that the mac80211 tx_status handler will ignore
+the frame when the flag is set so drivers won't have to look at it at all.
 
-johannes
-
---=-xW6v0B11vxc1MVsbf8rI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC8OVqVg1VMiehFYAQJW+hAAnXC8rjw2FvJY0L93zNxUOnZe6kBQl3Xd
-AKIPQR8/p7TVsVxO1+/ty/d8bwwfcmm6D5dgHhn7p3K2XV8VCKfYRO3cnAv1IKnG
-+AirDjKDatx7eHFcFiEDk5+9kidq/Pr/CejLTo+OzIn6X3X188T1Ok7T+/IotdHB
-kJw0PQOOngBgdzulzoSD79mghk/ZR8urBVu84ngs8GBZjtWjc0nd297lxliuHGqw
-mf3e3P7FP5TS2R8EWyuecs4EtbWnA9kRlfdrcuGM/KpkG4oVrIMsGJv6ZfaXUw62
-9UVcKuZNYkPI4/7a2E3uJIPM4ulp27dU9G35lEURXIJ69b+NhmaP8yUFrT2G+f9x
-ekAu5d1PHYMBceQREaWHZ1EDNe0g3UbGjtqko/9jfbuquev+7r8VTys7riXrkFF0
-DDu/wzl6gIua5C+2m5anDO8e6L4gb54IVKIjXvuCcrKUMpQc+007LiRLbxMliC4q
-7uNiOZ4lsVd/WnAd+eR+kL52aXqYaqNIfLdOPclOD4rf/lxNes4vto1AIJfYq/io
-j1Q1MFxothsfjrBQQq5i8guv3OoBiIgbEGloHEPneLI7Wrjy9lISVtllVFwDALOu
-pHr0m3h47bznju+kES3TVRuFDOn+Ni5+t5rRVs384aW4h8Dxc1PrxWPsu95rlG7A
-F5GTWFdZUOY=
-=rlmU
------END PGP SIGNATURE-----
-
---=-xW6v0B11vxc1MVsbf8rI--
-
+Ivo
