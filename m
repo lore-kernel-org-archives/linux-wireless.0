@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4494 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3091 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924AbYEPPUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 11:20:54 -0400
-Date: Fri, 16 May 2008 10:58:32 -0400
+	id S1756317AbYEMA7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 May 2008 20:59:08 -0400
+Date: Mon, 12 May 2008 20:43:45 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Association broken with wpa_supplicant
-Message-ID: <20080516145832.GA6510@tuxdriver.com> (sfid-20080516_172058_836861_E227B5B8)
-References: <200805160030.11244.mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Mathieu Chouquet-Stringer <mchouque@free.fr>, j@w1.fi,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostap: procfs fix for hostap_fw.c
+Message-ID: <20080513004345.GB26418@tuxdriver.com> (sfid-20080513_025912_485418_7BA72B57)
+References: <20080506152354.GA3680@mobydick> <1210592626.3372.6.camel@dv>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805160030.11244.mb@bu3sch.de>
+In-Reply-To: <1210592626.3372.6.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 16, 2008 at 12:30:10AM +0200, Michael Buesch wrote:
-> Hi John,
+On Mon, May 12, 2008 at 07:43:46AM -0400, Pavel Roskin wrote:
+> On Tue, 2008-05-06 at 17:23 +0200, Mathieu Chouquet-Stringer wrote:
 > 
-> Association is broken in latest wireless-testing when using
-> wpa_supplicant. It tells me
+> > Problem is local->proc has now been overwritten by hostap_init_proc
+> > meaning "registers" isn't removed.  When you reload the module you get
+> > an error telling you "registers" already exists (and you then get
+> > duplicate "registers" files in /proc).
 > 
-> Trying to associate with REAL_BSSID...
-> Authentication with 00:00:00:00:00:00 timed out.
+> I've seen it many times.  Thanks for tracking it down!  I've tested the
+> patch with PCI and PCMCIA devices, and everything appears to be
+> correct.  /proc/registers is not created, "registers" is created
+> under /proc/net/hostap/wlan0/, no more warnings.
 > 
-> The commit responsible for the breakage is
+> > Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
 > 
-> Author: Abhijeet Kolekar <abhijeet.kolekar@intel.com>  2008-05-09 18:35:41
-> Committer: John W. Linville <linville@tuxdriver.com>  2008-05-15 22:11:19
-> Parent: 6d7ef8714c227884346aebd9f4e5eea302db6d22 (hostap: fix "registers" registration in procfs)
-> Child:  d67ec7fb2b8ce69709def2421ab893517b101591 (libertas: fix command timeout after firmware failure)
-> Branches: master, remotes/origin/master
-> Follows: master-2008-05-14
-> Precedes: master-2008-05-15
+> Acked-off-by: Pavel Roskin <proski@gnu.org>
 > 
->     mac80211 : Association with 11n hidden ssid ap.
+> If a more concise description needs to be written, I can do it.
 
-Instead of reverting it, could you try applying this one on top of it?
+If you don't mind, I would appreciate a more concise description.
+I appreciate the full description of the bug, but I think it is a
+bit much for the changelog as-is.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 508f675..76ad4ed 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3440,8 +3440,11 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		if (!(bss->capability & WLAN_CAPABILITY_ESS))
- 			continue;
- 
--		if (!!(bss->capability & WLAN_CAPABILITY_PRIVACY) ^
--		    !!sdata->default_key)
-+		if ((ifsta->flags & (IEEE80211_STA_AUTO_SSID_SEL |
-+			IEEE80211_STA_AUTO_BSSID_SEL |
-+			IEEE80211_STA_AUTO_CHANNEL_SEL)) &&
-+		    (!!(bss->capability & WLAN_CAPABILITY_PRIVACY) ^
-+		     !!sdata->default_key))
- 			continue;
- 
- 		if (!(ifsta->flags & IEEE80211_STA_AUTO_CHANNEL_SEL) &&
+Thanks!
+
+John
 -- 
 John W. Linville
 linville@tuxdriver.com
