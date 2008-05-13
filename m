@@ -1,186 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52689 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751881AbYE2IhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 11/43] iwlwifi: setup correctly L1 L0S pi link values
-Date: Thu, 29 May 2008 16:34:56 +0800
-Message-Id: <1212050128-17132-12-git-send-email-yi.zhu@intel.com> (sfid-20080529_103726_898941_418C434A)
-In-Reply-To: <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.175]:45586 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbYEMKNU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 06:13:20 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2676327wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 03:13:19 -0700 (PDT)
+Message-ID: <f6ca9fed0805130313j62857b77iad18ecbba58f6b1b@mail.gmail.com> (sfid-20080513_121333_645371_109E9A36)
+Date: Tue, 13 May 2008 12:13:19 +0200
+From: drago01 <drago01@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: dynamic wep with mulitple keys
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Emmanuel Grumbach" <egrumbach@gmail.com>,
+	"Volker Braun" <vbraun@physics.upenn.edu>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1210673228.3646.60.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1208969544.3312.5.camel@localhost.localdomain>
+	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
+	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
+	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
+	 <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com>
+	 <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
+	 <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com>
+	 <1210670668.3646.56.camel@johannes.berg>
+	 <f6ca9fed0805130244x648325a3k2ae7b77fa610ca6d@mail.gmail.com>
+	 <1210673228.3646.60.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Tue, May 13, 2008 at 12:07 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>  > The problem is that when connecting to a dynamic wep network which
+>  > uses multiple keys iwl3945 fails to get a dhcp lease. (See
+>  > http://marc.info/?l=linux-wireless&m=120699235803881&w=2)
+>  > Volker had the same problem with iwl4965.  But when turning off
+>  > hwcrypto and therefore use the mac80211 code it works for him.
+>  > iwl3945 does not use hwcrypto by default (and when I enable it it does
+>  > not work either) but fails. Both should be using the same code
+>  > (mac80211) but one driver works and the other doesn't which is odd.
+>
+>  I haven't got a clue. Are those identical networks?
 
-This patch setups L1 L0S pci link values.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h |    7 ++++++-
- drivers/net/wireless/iwlwifi/iwl-4965.c    |   18 ++++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-5000.c    |   19 ++++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-csr.h     |    6 +++++-
- 4 files changed, 39 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index ee55b28..fc11833 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -100,9 +100,14 @@
- 
- #include "iwl-commands.h"
- 
--#define PCI_LINK_CTRL      0x0F0
-+/* PCI registers */
-+#define PCI_LINK_CTRL      0x0F0	/* 1 byte */
- #define PCI_POWER_SOURCE   0x0C8
- #define PCI_REG_WUM8       0x0E8
-+
-+/* PCI register values */
-+#define PCI_LINK_VAL_L0S_EN	0x01
-+#define PCI_LINK_VAL_L1_EN	0x02
- #define PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT         (0x80000000)
- 
- #define TFD_QUEUE_SIZE_MAX      (256)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index d548bda..bf0bd4a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -496,6 +496,10 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
- 			  CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
- 
-+	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
-+	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
-+			  CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
-+
- 	/* set "initialization complete" bit to move adapter
- 	 * D0U* --> D0A* state */
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
-@@ -514,11 +518,12 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
- 		goto out;
- 
- 	/* enable DMA */
--	iwl_write_prph(priv, APMG_CLK_CTRL_REG,
--			APMG_CLK_VAL_DMA_CLK_RQT | APMG_CLK_VAL_BSM_CLK_RQT);
-+	iwl_write_prph(priv, APMG_CLK_CTRL_REG, APMG_CLK_VAL_DMA_CLK_RQT |
-+						APMG_CLK_VAL_BSM_CLK_RQT);
- 
- 	udelay(20);
- 
-+	/* disable L1-Active */
- 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
- 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- 
-@@ -546,8 +551,13 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
- 
- 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
- 
--	/* disable L1 entry -- workaround for pre-B1 */
--	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
-+	/* L1 is enabled by BIOS */
-+	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
-+		/* diable L0S disabled L1A enabled */
-+		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
-+	else
-+		/* L0S enabled L1A disabled */
-+		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
- 
- 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 0355ccd..b1c5045 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -63,6 +63,10 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
- 		    CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
- 
-+	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
-+	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
-+		    CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
-+
- 	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
- 
- 	/* set "initialization complete" bit to move adapter
-@@ -83,13 +87,13 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
- 		return ret;
- 
- 	/* enable DMA */
--	iwl_write_prph(priv, APMG_CLK_EN_REG,
--			APMG_CLK_VAL_DMA_CLK_RQT);
-+	iwl_write_prph(priv, APMG_CLK_EN_REG, APMG_CLK_VAL_DMA_CLK_RQT);
- 
- 	udelay(20);
- 
-+	/* disable L1-Active */
- 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
--			APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
-+			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- 
- 	iwl_release_nic_access(priv);
- 
-@@ -106,8 +110,13 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
- 
- 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
- 
--	/* disable L1 entry -- workaround for pre-B1 */
--	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
-+	/* L1 is enabled by BIOS */
-+	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
-+		/* diable L0S disabled L1A enabled */
-+		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
-+	else
-+		/* L0S enabled L1A disabled */
-+		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
- 
- 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 9d6e5d2..545ed69 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -87,13 +87,14 @@
- /* EEPROM reads */
- #define CSR_EEPROM_REG          (CSR_BASE+0x02c)
- #define CSR_EEPROM_GP           (CSR_BASE+0x030)
-+#define CSR_GIO_REG		(CSR_BASE+0x03C)
- #define CSR_GP_UCODE		(CSR_BASE+0x044)
- #define CSR_UCODE_DRV_GP1       (CSR_BASE+0x054)
- #define CSR_UCODE_DRV_GP1_SET   (CSR_BASE+0x058)
- #define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
- #define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
--#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
- #define CSR_LED_REG             (CSR_BASE+0x094)
-+#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
- 
- /* Analog phase-lock-loop configuration  */
- #define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
-@@ -213,6 +214,9 @@
- #define CSR_EEPROM_GP_BAD_SIGNATURE	(0x00000000)
- #define CSR_EEPROM_GP_IF_OWNER_MSK	(0x00000180)
- 
-+/* CSR GIO */
-+#define CSR_GIO_REG_VAL_L0S_ENABLED	(0x00000002)
-+
- /* UCODE DRV GP */
- #define CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP             (0x00000001)
- #define CSR_UCODE_SW_BIT_RFKILL                     (0x00000002)
--- 
-1.5.3.6
-
+Judging from the settings yes. The only difference is that he is using
+PAP and I use MSCHAPv2 for phase 2. But this shouldn't make any
+difference.
+I don't know which kind of information I should provide to diagnose
+this ... wpa_supplicant output?
