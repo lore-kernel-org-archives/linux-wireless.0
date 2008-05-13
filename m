@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57057 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760740AbYEPOvF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 10:51:05 -0400
-Subject: iwlwifi injection bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andy Green <andy@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V1qlc81CBWPM8iOUuyuZ"
-Date: Fri, 16 May 2008 15:47:11 +0200
-Message-Id: <1210945631.6381.11.camel@johannes.berg> (sfid-20080516_165137_266097_F65A104F)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:60609 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754663AbYEMMvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 May 2008 08:51:06 -0400
+Date: Tue, 13 May 2008 15:50:24 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: 11n + wpa_supplicant
+Message-ID: <20080513125024.GD6309@jm.kir.nu> (sfid-20080513_145112_195700_F0D29E82)
+References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com> <20080513122718.GA6309@jm.kir.nu> <1210682080.3646.73.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1210682080.3646.73.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 13, 2008 at 02:34:40PM +0200, Johannes Berg wrote:
 
---=-V1qlc81CBWPM8iOUuyuZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > In most cases, the pairwise cipher is selected during association, not
+> > during 4-way handshake. Consequently, the driver/firmware should refuse
+> > to send an (Re)Association Request that requests TKIP as the pairwise
+> > cipher when using .11n.
+> 
+> So to do this we should look at the associate IE(s) we get from
+> userspace for association, right?
 
-I don't know why you want to disallow sending frames when in monitor
-mode (especially since reportedly it works), but this is not a good way
-to go about it:
+Well, at least in theory, yes, we could refuse to send the frame if
+WPA/RSN IE requests TKIP as the pairwise cipher and we would be using
+.11n (or alternatively, just drop to legacy mode). However, I think it
+would be better to leave this task to whatever component picks the BSS,
+i.e., in this particular case to userspace if the request is indeed to
+associate with a specific WPA/RSN IE and a selected BSSID.
 
-static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-{
-        struct iwl_priv *priv =3D hw->priv;
+If ap_scan=2 were to be used (I don't think this is supported in
+mac80211 or at least it wasn't originally), the task would be in kernel
+code, but in that case, the pairwise cipher would be configured as a
+separate parameter and there would be no need to parse IEs to figure it
+out.
 
-        IWL_DEBUG_MAC80211("enter\n");
+> I'd think we can also just include the HT IE in the scan result. Or, why
+> not just include all of them, parsers must be able to tell them apart
+> anyway and NM could display an HT icon for example then.
 
-        if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-                IWL_DEBUG_MAC80211("leave - monitor\n");
-                return -1;
-        }
+I would recommend to include all the IEs. This should have been the
+design from the beginning, but well, it wasn't at least enforced very
+strongly. I've changed wpa_supplicant to use full set of IEs internally
+and WPA/RSN IE(s) are already converted to this format if only those IEs
+are available and drivers should just report all the IEs from
+Beacon/ProbeResp frames with IWEVGENIE when using WEXT.
 
-You see, this will cause mac80211 to resubmit the frame and most likely
-will totally mess up queue handling and various other things.
-
-johannes
-
---=-V1qlc81CBWPM8iOUuyuZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC2QXqVg1VMiehFYAQJYNw//Vj6GOwtgrclY3efSeuv+5ZWBF+Cqsytm
-7z7RVkQwwxVIqSsd3z8FYgUFyh6aP7ZDM2d+SlRu1bsxBR3JO8x5oVyuzKq9bcDF
-eb3KcHZhhErU1V8MEkGHy+rabHPIi7RzaHW5bSCc/G/B354GcY9JQXecT0uM/Kou
-AhK1N/4vSW9P7sp6WQDe38+ET9mXuinE90YWmnfpvyg1DdJ/0VI+Y9PMGiepehJ8
-R8Q73rwl64gNLH9qzaqTXEJb947VZ8sOLH8EEtnZG7D4kJll/buywd2Mv5pDyP0s
-gglLniSOGdMmJBaJ4oC3Kha7YYFgr/ewo0tjiT5/foXZeMsK3aIYpssSPHOOfdnF
-VsDFfqmaaLJtu3hUzR/ZEmrb0ulmGJR637TtKvxotyFOGeeVaNZWd3+0OdUYDcE/
-mh2ltR6xfsImHA5KKX8heLWPcrmqy35It3g4FyYJ8Oq3OdbIHHN8GAp2LOXOTTi4
-NAzqZJFrsI/89GoKfaQIiN+18xNof440NifGIph9fkdhgMf5NcSwbGp/cyL7vh0H
-ck6ce9ypjGuxq3ZjtIUsnmX719rqtPDaXZkTdZjXMl7oAi6ZO6MG/wc4aikwy/Uf
-jlKP2p3IN1JrA616rdMKsFxkgHaOQ8WiT0FiSDJ+ECW8AZ6OHZKX6GkPWoIip56F
-bGnKpCTkYfU=
-=xug4
------END PGP SIGNATURE-----
-
---=-V1qlc81CBWPM8iOUuyuZ--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
