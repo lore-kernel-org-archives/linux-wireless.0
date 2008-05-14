@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2651 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751635AbYELTad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 15:30:33 -0400
-Date: Mon, 12 May 2008 14:47:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-	sfr@canb.auug.org.au, akpm@linux-foundation.org,
-	netdev@vger.kernel.org
-Subject: Re: New GIT net tree naming...
-Message-ID: <20080512184715.GA18910@tuxdriver.com> (sfid-20080512_213038_186141_1C77FEC8)
-References: <20080419.173510.257216556.davem@davemloft.net> <20080508014358.GE3412@tuxdriver.com> <200805080906.29603.hs4233@mail.mn-solutions.de> <20080508144046.GA3515@tuxdriver.com> <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.176]:51814 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753535AbYENR41 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 13:56:27 -0400
+Received: by py-out-1112.google.com with SMTP id u52so3011pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2008 10:56:26 -0700 (PDT)
+Message-ID: <482B27CE.2070700@gmail.com> (sfid-20080514_195631_318256_BF53AB48)
+Date: Wed, 14 May 2008 10:56:30 -0700
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
+To: Markus Becker <mab@comnets.uni-bremen.de>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: First patch to mrv8k driver?
+References: <482A3961.2010906@gmail.com> <1210739857.2721.51.camel@rd> <Pine.LNX.4.64.0805141506000.24384@bugs.comnets.uni-bremen.de>
+In-Reply-To: <Pine.LNX.4.64.0805141506000.24384@bugs.comnets.uni-bremen.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 08:39:22PM +0300, Tomas Winkler wrote:
+Markus Becker wrote:
+>
+> On Wed, 14 May 2008, Pavel Roskin wrote:
+>
+>> On Tue, 2008-05-13 at 17:59 -0700, John Daiker wrote:
+>>> Hey All,
+>>>
+>>> My first patch for the mrv8k driver.  My machine locks up when I try to
+>>> load a firmware, so I'm not sure if this patch helps anybody or not.
+>>
+>> I don't see any changes for mrv_reg_read32() claimed in the description.
+>
+> He is checking the return value to 0x5 instead of 5.
+Right... the aim here is for some sort of code consistency.  Makes 
+things easier to read, IMHO.
+>
+>> In fact, I don't see any changes to the code except comments and
+>> messages.  I don't see how it can help against lockups, unless you
+>> missed some part of the patch.
+>
+> It does not. But I pushed the comment and indent fixes to mrv8k 
+> nevertheless.
+Thanks.  I guess I mentioned that to solicit input from others on ideas 
+for debugging.
+>
+>> You may want to spell check your patch, including the description,
+>> especially if the patch is fixing spelling mistakes made by others.
+Duly noted.  I will keep an keen eye out next time for mistakes. :)
+>>
+>> -- 
+>> Regards,
+>> Pavel Roskin
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 
-> How would you want me to handle bug fixes to go both directions
-> wireless-testing and upstream?
-> Because of huge code movement we are now doing in iwlwifi they are
-> currently just not the same.
-> Shell I send two versions or you want to back port them not sure how
-> do you want to track this...somewhere in merging loop it will create a
-> conflict.  Maybe this is maintainer trivia anyhow
-> I would like to make sure there are not glitches.
-
-It is a good question -- thanks for asking!
-
-If you think that two versions of the fix are appropriate, then please
-do send them.  If it is simply because the code moved I'll probably
-be able to figure it out, but if the code has actually changed it
-may be worthwhile.
-
-We are now trying to avoid rebasing "-next" patches as much as possible.
-So the version for the current release will be merged to Linus and I or
-Dave will have to figure-out how to resolve the merge conflicts when
-current is pulled to -next.  Providing a "-next' version of the patch
-can help to make sure that those merge conflicts are handled correctly.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
