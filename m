@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from et1.ou.edu ([129.15.0.239]:60504 "EHLO
-	it-rosebowl.sooner.net.ou.edu" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756038AbYEDOg2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 10:36:28 -0400
-From: "Williams, Jeffrey D." <angelbane@ou.edu>
-To: Cheney Tang <seerfar@gmail.com>
-CC: YanBo <dreamfly281@gmail.com>,
-	Wessam Baghdadi <wbaghdadi@gmail.com>,
-	"prjmgr@linuxdriverproject.org" <prjmgr@linuxdriverproject.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 4 May 2008 09:32:53 -0500
-Subject: RE: airgo wireless drivers
-Message-ID: <A60A684EB5844943950A980569765A0C014C3099837D@XMAIL2.sooner.net.ou.edu> (sfid-20080504_163554_878926_EDC0D2AD)
-References: <13ed5f4a0804250050k2384ed22m3df9dd7bd18974c4@mail.gmail.com>
- <3cc280290804262233o1b44dd33if4a9802d19506761@mail.gmail.com>
- <1197ff4c0804262359r4fa5f94em350c987278c417fe@mail.gmail.com>
- <A60A684EB5844943950A980569765A0C014C30998345@XMAIL2.sooner.net.ou.edu>,<3cc280290805040727o4d8711c5nfec7f90676830071@mail.gmail.com>
-In-Reply-To: <3cc280290805040727o4d8711c5nfec7f90676830071@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.168]:34411 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbYENVxC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 17:53:02 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so90030wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2008 14:53:02 -0700 (PDT)
+Subject: Re: [PATCH 5/5] b43: move the register write into
+	radio2050_rfover_val
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1210795241.29705.26.camel@johannes.berg>
+References: <1210791396.6191.40.camel@brick>
+	 <200805142122.21635.mb@bu3sch.de>  <1210793758.6191.43.camel@brick>
+	 (sfid-20080514_213609_061251_8D4DC32D)  <1210795241.29705.26.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 14 May 2008 14:53:01 -0700
+Message-Id: <1210801981.6191.44.camel@brick> (sfid-20080514_235308_291623_1EB33A77)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-05-14 at 22:00 +0200, Johannes Berg wrote:
+> On Wed, 2008-05-14 at 12:35 -0700, Harvey Harrison wrote:
+> > On Wed, 2008-05-14 at 21:22 +0200, Michael Buesch wrote:
+> > > On Wednesday 14 May 2008 20:56:36 Harvey Harrison wrote:
+> > > > It is always called with the same dev, register value as the
+> > > > b43_phy_write that wraps around it, make it return void
+> > > > and move the register write into radio2050_rfover_val.
+> > > 
+> > > NACK to the whole 5 patches.
+> > > See the list archives for an explanation.
+> > 
+> > Any particular reference for nacking 5/5?
+> > 
+> > While I respectfully disagree with you Re: 1-4 I can't make you take it.
+> 
+> You could prove that those are correct:
+> 
+> make the function you're going to use an inline, compile &
+> objdump/md5sum, apply the patch conversion, compile & objdump/md5sum &
+> compare, make function out of line again
 
+At this point I'll let sleeping dogs lie, it's not worth fighting over.
 
-> I had got the cross compiled toolchain from Yanbo. Does crossdev work on Fedora?
-> Is the MIPS hardware required? I have only X86 hardware.
-> I had achieve greatly on reversing the driver on Windows, though there
-> is no good tool to disassemble it fully yet. I think I can overcome
-> it. The driver on Windows is for F5D8010 chipset. Some of its action
-> are identical with the driver on MIPS, otheres not so.
-> I guess they are not for same chipset and they are the same family chipset.
+Harvey
 
-No, MIPS hardware isn't required, I did all of the reverse engineering on X86 machines. And from what I can tell, all of the drivers for airgo chipsets, whether on linux-based routers or windows are generated from the more or less the same sources. In fact, the AGN300 drivers use most of the original code written for the agn100.
-
-Jeff
