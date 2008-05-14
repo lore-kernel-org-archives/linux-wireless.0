@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:27570 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbYEPAuT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 20:50:19 -0400
-Received: by an-out-0708.google.com with SMTP id d40so153309and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 17:50:18 -0700 (PDT)
-Message-ID: <40f31dec0805151750w7d1c8654jae7bc20064cbb16e@mail.gmail.com> (sfid-20080516_025026_761941_1AC16833)
-Date: Fri, 16 May 2008 03:50:18 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Zack Weinberg" <zackw@panix.com>
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:41191 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751664AbYENXDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 19:03:20 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] hostap: fix "registers" registration in procfs
+To: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 14 May 2008 19:03:18 -0400
+Message-ID: <20080514230318.2740.17511.stgit@dv.roinet.com> (sfid-20080515_010324_879061_A5FE1421)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> ath_info does not work:
-> # ath_info df3f0000
-> Unable to read EEPROM Magic value!
->
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
 
-Hm, have you tried latest ath_info from
-http://madwifi.org/browser/ath_info/trunk
+The "registers" entry was incorrectly created in the procfs root instead
+of the device specific directory.  Move "registers" registration
+immediately after the containing procfs directory is created.
 
-This one looks interesting, plz use ndiswrapper for your card and use
-mmiotrace to see
-what windows driver does in your situation that makes the card work.
+Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Follow the link Bob gave you, it has instructions for 2.6.25. Remember
-if you have enabled
-4K stacks on your kernel configuration to disable it otherwise
-ndiswrapper won't work.
+ drivers/net/wireless/hostap/hostap_hw.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 7be68db..cdf90c4 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -3276,11 +3276,6 @@ while (0)
+ 	}
+ 	printk(KERN_INFO "%s: Registered netdevice %s\n", dev_info, dev->name);
+ 
+-#ifndef PRISM2_NO_PROCFS_DEBUG
+-	create_proc_read_entry("registers", 0, local->proc,
+-			       prism2_registers_proc_read, local);
+-#endif /* PRISM2_NO_PROCFS_DEBUG */
+-
+ 	hostap_init_data(local);
+ 	return dev;
+ 
+@@ -3307,6 +3302,10 @@ static int hostap_hw_ready(struct net_device *dev)
+ 			netif_carrier_off(local->ddev);
+ 		}
+ 		hostap_init_proc(local);
++#ifndef PRISM2_NO_PROCFS_DEBUG
++		create_proc_read_entry("registers", 0, local->proc,
++				       prism2_registers_proc_read, local);
++#endif /* PRISM2_NO_PROCFS_DEBUG */
+ 		hostap_init_ap_proc(local);
+ 		return 0;
+ 	}
