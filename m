@@ -1,111 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:39015 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755640AbYEEPRg (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:50362 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755375AbYENDO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 11:17:36 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1086908nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 08:17:34 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH 1/3] rt2x00: Don't use pskb_expand_head()
-Date: Mon, 5 May 2008 17:23:31 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200805051723.12127.IvDoorn@gmail.com>
-In-Reply-To: <200805051723.12127.IvDoorn@gmail.com>
+	Tue, 13 May 2008 23:14:27 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3025456wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 20:14:27 -0700 (PDT)
+Message-ID: <c785bba30805132014y56aafa7bi8788503f67a7c809@mail.gmail.com> (sfid-20080514_051434_355556_8D94AE6A)
+Date: Tue, 13 May 2008 20:14:26 -0700
+From: "Paul Thomas" <pthomas8589@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: newbie rtl8187 question
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200805051723.31488.IvDoorn@gmail.com> (sfid-20080505_171657_467192_15C98C48)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00pci allocates DMA for descriptor and data,
-rt61pci doesn't use this for the beacon, but it can
-use the descriptor part as temporary buffer instead
-of using pskb_expand_head().
-Using this temporary buffer is obviously much better
-then reallocating the skb buffer...
+Hello,
 
-At the same time we can set the data length for the
-beacon queue at 0, to make sure no DMA is allocated for
-data (but just for the descriptor).
+I am trying to get the Trendnet TEW-424UB to work. I have hardware
+version 3.1R which is based on the Realtek RTL8187B chip. I got the
+latest wireless-testing git version. I added the Trendnet PID & VID to
+drivers/net/wireless/rtl8187_dev.c (shown below) but I still can't it
+to work.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |   31 +++++++++++--------------------
- 1 files changed, 11 insertions(+), 20 deletions(-)
+static struct usb_device_id rtl8187_table[] __devinitdata = {
+        /* Realtek */
+        {USB_DEVICE(0x0bda, 0x8187)},
+        /* Netgear */
+        {USB_DEVICE(0x0846, 0x6100)},
+        {USB_DEVICE(0x0846, 0x6a00)},
+        /* HP */
+        {USB_DEVICE(0x03f0, 0xca02)},
+        /*Trendnet Vendor=0bda ProdID=8189*/
+        {USB_DEVICE(0x0bda, 0x8189)},
+        /* Sitecom */
+        {USB_DEVICE(0x0df6, 0x000d)},
+        {}
+};
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 98af4d2..b64f2f5 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2362,6 +2362,7 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct rt2x00_intf *intf = vif_to_intf(control->vif);
-+	struct queue_entry_priv_pci_tx *priv_tx;
- 	struct skb_frame_desc *skbdesc;
- 	unsigned int beacon_base;
- 	u32 reg;
-@@ -2369,21 +2370,8 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
- 
--	/*
--	 * We need to append the descriptor in front of the
--	 * beacon frame.
--	 */
--	if (skb_headroom(skb) < intf->beacon->queue->desc_size) {
--		if (pskb_expand_head(skb, intf->beacon->queue->desc_size,
--				     0, GFP_ATOMIC))
--			return -ENOMEM;
--	}
--
--	/*
--	 * Add the descriptor in front of the skb.
--	 */
--	skb_push(skb, intf->beacon->queue->desc_size);
--	memset(skb->data, 0, intf->beacon->queue->desc_size);
-+	priv_tx = intf->beacon->priv_data;
-+	memset(priv_tx->desc, 0, intf->beacon->queue->desc_size);
- 
- 	/*
- 	 * Fill in skb descriptor
-@@ -2391,9 +2379,9 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	skbdesc = get_skb_frame_desc(skb);
- 	memset(skbdesc, 0, sizeof(*skbdesc));
- 	skbdesc->flags |= FRAME_DESC_DRIVER_GENERATED;
--	skbdesc->data = skb->data + intf->beacon->queue->desc_size;
--	skbdesc->data_len = skb->len - intf->beacon->queue->desc_size;
--	skbdesc->desc = skb->data;
-+	skbdesc->data = skb->data;
-+	skbdesc->data_len = skb->len;
-+	skbdesc->desc = priv_tx->desc;
- 	skbdesc->desc_len = intf->beacon->queue->desc_size;
- 	skbdesc->entry = intf->beacon;
- 
-@@ -2414,7 +2402,10 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	rt2x00lib_write_tx_desc(rt2x00dev, skb, control);
- 	beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
- 	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
--				      skb->data, skb->len);
-+				      skbdesc->desc, skbdesc->desc_len);
-+	rt2x00pci_register_multiwrite(rt2x00dev,
-+				      beacon_base + skbdesc->desc_len,
-+				      skbdesc->data, skbdesc->data_len);
- 	rt61pci_kick_tx_queue(rt2x00dev, QID_BEACON);
- 
- 	return 0;
-@@ -2479,7 +2470,7 @@ static const struct data_queue_desc rt61pci_queue_tx = {
- 
- static const struct data_queue_desc rt61pci_queue_bcn = {
- 	.entry_num		= 4 * BEACON_ENTRIES,
--	.data_size		= MGMT_FRAME_SIZE,
-+	.data_size		= 0, /* No DMA required for beacons */
- 	.desc_size		= TXINFO_SIZE,
- 	.priv_size		= sizeof(struct queue_entry_priv_pci_tx),
- };
--- 
-1.5.5.1
+When I plug the adapter in I get this under /proc/bus/usb/devices
 
+T:  Bus=02 Lev=01 Prnt=01 Port=03 Cnt=01 Dev#=  3 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=0bda ProdID=8189 Rev= 2.00
+S:  Manufacturer=Manufacturer_Realtek
+S:  Product=RTL8187B_WLAN_Adapter
+S:  SerialNumber=00e04c000001
+C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+I:* If#= 0 Alt= 0 #EPs= 9 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8187
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+
+The only other time I used wireless stuff under linux I used a distros
+built in tools, so I hope I'm doing the config correctly. Here is what
+I'm doing:
+
+/sbin/iwconfig wlan0 key restricted MYKEY essid "ssid"
+/sbin/ifconfig wlan0 up
+/sbin/dhclient wlan0
+
+Now #/sbin/iwconfig gives me this:
+wlan0     IEEE 802.11  ESSID:""
+          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
+          Tx-Power=27 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+          Encryption key:XXXX-XXXX-XX
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+I am using Fedora 8 on a x86_64 system. My initial goal in all this
+was to get the adapter to work with my embedded linux project
+(http://opencircuits.com/Linuxstamp), but when it didn't work there I
+figured I'd try it on my host machine.
+
+Has anyone else gotten the TEW-424UB to work?
+
+thanks
+Paul
