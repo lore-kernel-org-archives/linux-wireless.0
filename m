@@ -1,303 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44056 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390AbYEOLGr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 07:06:47 -0400
-Message-Id: <20080515105947.881681000@sipsolutions.net> (sfid-20080515_130650_037320_A7BBC793)
-References: <20080515105524.359863000@sipsolutions.net>
-Date: Thu, 15 May 2008 12:55:28 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] mac80211: reorder some transmit handlers
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3972 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750878AbYENVul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 17:50:41 -0400
+Date: Wed, 14 May 2008 17:42:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-05-14
+Message-ID: <20080514214234.GA11429@tuxdriver.com> (sfid-20080514_235101_685981_5F7060E2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The next patch will require that transmit handlers that are after
-fragmentation are aware of the fact that the control info is also
-fragmented. To make that easier, this patch moves a number of
-transmit handlers before fragmentation.
+David,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Here is another round of updates destined for 2.6.27.  These are
+mostly driver updates, especially for iwlwifi.
+
+Thanks,
+
+John
+
 ---
- net/mac80211/tx.c |  234 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 118 insertions(+), 116 deletions(-)
 
---- everything.orig/net/mac80211/tx.c	2008-05-10 23:07:45.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-05-10 23:10:27.000000000 +0200
-@@ -506,106 +506,6 @@ ieee80211_tx_h_select_key(struct ieee802
- }
- 
- static ieee80211_tx_result
--ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
--{
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
--	size_t hdrlen, per_fragm, num_fragm, payload_len, left;
--	struct sk_buff **frags, *first, *frag;
--	int i;
--	u16 seq;
--	u8 *pos;
--	int frag_threshold = tx->local->fragmentation_threshold;
--
--	if (!(tx->flags & IEEE80211_TX_FRAGMENTED))
--		return TX_CONTINUE;
--
--	first = tx->skb;
--
--	hdrlen = ieee80211_get_hdrlen(tx->fc);
--	payload_len = first->len - hdrlen;
--	per_fragm = frag_threshold - hdrlen - FCS_LEN;
--	num_fragm = DIV_ROUND_UP(payload_len, per_fragm);
--
--	frags = kzalloc(num_fragm * sizeof(struct sk_buff *), GFP_ATOMIC);
--	if (!frags)
--		goto fail;
--
--	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
--	seq = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ;
--	pos = first->data + hdrlen + per_fragm;
--	left = payload_len - per_fragm;
--	for (i = 0; i < num_fragm - 1; i++) {
--		struct ieee80211_hdr *fhdr;
--		size_t copylen;
--
--		if (left <= 0)
--			goto fail;
--
--		/* reserve enough extra head and tail room for possible
--		 * encryption */
--		frag = frags[i] =
--			dev_alloc_skb(tx->local->tx_headroom +
--				      frag_threshold +
--				      IEEE80211_ENCRYPT_HEADROOM +
--				      IEEE80211_ENCRYPT_TAILROOM);
--		if (!frag)
--			goto fail;
--		/* Make sure that all fragments use the same priority so
--		 * that they end up using the same TX queue */
--		frag->priority = first->priority;
--		skb_reserve(frag, tx->local->tx_headroom +
--				  IEEE80211_ENCRYPT_HEADROOM);
--		fhdr = (struct ieee80211_hdr *) skb_put(frag, hdrlen);
--		memcpy(fhdr, first->data, hdrlen);
--		if (i == num_fragm - 2)
--			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
--		fhdr->seq_ctrl = cpu_to_le16(seq | ((i + 1) & IEEE80211_SCTL_FRAG));
--		copylen = left > per_fragm ? per_fragm : left;
--		memcpy(skb_put(frag, copylen), pos, copylen);
--
--		pos += copylen;
--		left -= copylen;
--	}
--	skb_trim(first, hdrlen + per_fragm);
--
--	tx->num_extra_frag = num_fragm - 1;
--	tx->extra_frag = frags;
--
--	return TX_CONTINUE;
--
-- fail:
--	printk(KERN_DEBUG "%s: failed to fragment frame\n", tx->dev->name);
--	if (frags) {
--		for (i = 0; i < num_fragm - 1; i++)
--			if (frags[i])
--				dev_kfree_skb(frags[i]);
--		kfree(frags);
--	}
--	I802_DEBUG_INC(tx->local->tx_handlers_drop_fragment);
--	return TX_DROP;
--}
--
--static ieee80211_tx_result
--ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
--{
--	if (!tx->key)
--		return TX_CONTINUE;
--
--	switch (tx->key->conf.alg) {
--	case ALG_WEP:
--		return ieee80211_crypto_wep_encrypt(tx);
--	case ALG_TKIP:
--		return ieee80211_crypto_tkip_encrypt(tx);
--	case ALG_CCMP:
--		return ieee80211_crypto_ccmp_encrypt(tx);
--	}
--
--	/* not reached */
--	WARN_ON(1);
--	return TX_DROP;
--}
--
--static ieee80211_tx_result
- ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- {
- 	struct rate_selection rsel;
-@@ -747,26 +647,114 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
- 			control->rts_cts_rate_idx = 0;
- 	}
- 
--	if (tx->sta) {
-+	if (tx->sta)
- 		control->aid = tx->sta->aid;
--		tx->sta->tx_packets++;
--		tx->sta->tx_fragments++;
--		tx->sta->tx_bytes += tx->skb->len;
--		if (tx->extra_frag) {
--			int i;
--			tx->sta->tx_fragments += tx->num_extra_frag;
--			for (i = 0; i < tx->num_extra_frag; i++) {
--				tx->sta->tx_bytes +=
--					tx->extra_frag[i]->len;
--			}
--		}
-+
-+	return TX_CONTINUE;
-+}
-+
-+static ieee80211_tx_result
-+ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
-+	size_t hdrlen, per_fragm, num_fragm, payload_len, left;
-+	struct sk_buff **frags, *first, *frag;
-+	int i;
-+	u16 seq;
-+	u8 *pos;
-+	int frag_threshold = tx->local->fragmentation_threshold;
-+
-+	if (!(tx->flags & IEEE80211_TX_FRAGMENTED))
-+		return TX_CONTINUE;
-+
-+	first = tx->skb;
-+
-+	hdrlen = ieee80211_get_hdrlen(tx->fc);
-+	payload_len = first->len - hdrlen;
-+	per_fragm = frag_threshold - hdrlen - FCS_LEN;
-+	num_fragm = DIV_ROUND_UP(payload_len, per_fragm);
-+
-+	frags = kzalloc(num_fragm * sizeof(struct sk_buff *), GFP_ATOMIC);
-+	if (!frags)
-+		goto fail;
-+
-+	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
-+	seq = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ;
-+	pos = first->data + hdrlen + per_fragm;
-+	left = payload_len - per_fragm;
-+	for (i = 0; i < num_fragm - 1; i++) {
-+		struct ieee80211_hdr *fhdr;
-+		size_t copylen;
-+
-+		if (left <= 0)
-+			goto fail;
-+
-+		/* reserve enough extra head and tail room for possible
-+		 * encryption */
-+		frag = frags[i] =
-+			dev_alloc_skb(tx->local->tx_headroom +
-+				      frag_threshold +
-+				      IEEE80211_ENCRYPT_HEADROOM +
-+				      IEEE80211_ENCRYPT_TAILROOM);
-+		if (!frag)
-+			goto fail;
-+		/* Make sure that all fragments use the same priority so
-+		 * that they end up using the same TX queue */
-+		frag->priority = first->priority;
-+		skb_reserve(frag, tx->local->tx_headroom +
-+				  IEEE80211_ENCRYPT_HEADROOM);
-+		fhdr = (struct ieee80211_hdr *) skb_put(frag, hdrlen);
-+		memcpy(fhdr, first->data, hdrlen);
-+		if (i == num_fragm - 2)
-+			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
-+		fhdr->seq_ctrl = cpu_to_le16(seq | ((i + 1) & IEEE80211_SCTL_FRAG));
-+		copylen = left > per_fragm ? per_fragm : left;
-+		memcpy(skb_put(frag, copylen), pos, copylen);
-+
-+		pos += copylen;
-+		left -= copylen;
- 	}
-+	skb_trim(first, hdrlen + per_fragm);
-+
-+	tx->num_extra_frag = num_fragm - 1;
-+	tx->extra_frag = frags;
- 
- 	return TX_CONTINUE;
-+
-+ fail:
-+	printk(KERN_DEBUG "%s: failed to fragment frame\n", tx->dev->name);
-+	if (frags) {
-+		for (i = 0; i < num_fragm - 1; i++)
-+			if (frags[i])
-+				dev_kfree_skb(frags[i]);
-+		kfree(frags);
-+	}
-+	I802_DEBUG_INC(tx->local->tx_handlers_drop_fragment);
-+	return TX_DROP;
- }
- 
- static ieee80211_tx_result
--ieee80211_tx_h_load_stats(struct ieee80211_tx_data *tx)
-+ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
-+{
-+	if (!tx->key)
-+		return TX_CONTINUE;
-+
-+	switch (tx->key->conf.alg) {
-+	case ALG_WEP:
-+		return ieee80211_crypto_wep_encrypt(tx);
-+	case ALG_TKIP:
-+		return ieee80211_crypto_tkip_encrypt(tx);
-+	case ALG_CCMP:
-+		return ieee80211_crypto_ccmp_encrypt(tx);
-+	}
-+
-+	/* not reached */
-+	WARN_ON(1);
-+	return TX_DROP;
-+}
-+
-+static ieee80211_tx_result
-+ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_local *local = tx->local;
- 	struct sk_buff *skb = tx->skb;
-@@ -822,6 +810,20 @@ ieee80211_tx_h_load_stats(struct ieee802
- 		tx->sta->channel_use_raw += load;
- 	tx->sdata->channel_use_raw += load;
- 
-+	if (tx->sta) {
-+		tx->sta->tx_packets++;
-+		tx->sta->tx_fragments++;
-+		tx->sta->tx_bytes += tx->skb->len;
-+		if (tx->extra_frag) {
-+			int i;
-+			tx->sta->tx_fragments += tx->num_extra_frag;
-+			for (i = 0; i < tx->num_extra_frag; i++) {
-+				tx->sta->tx_bytes +=
-+					tx->extra_frag[i]->len;
-+			}
-+		}
-+	}
-+
- 	return TX_CONTINUE;
- }
- 
-@@ -834,11 +836,11 @@ static ieee80211_tx_handler ieee80211_tx
- 	ieee80211_tx_h_ps_buf,
- 	ieee80211_tx_h_select_key,
- 	ieee80211_tx_h_michael_mic_add,
--	ieee80211_tx_h_fragment,
--	ieee80211_tx_h_encrypt,
- 	ieee80211_tx_h_rate_ctrl,
- 	ieee80211_tx_h_misc,
--	ieee80211_tx_h_load_stats,
-+	ieee80211_tx_h_fragment,
-+	ieee80211_tx_h_encrypt,
-+	ieee80211_tx_h_stats,
- 	NULL
- };
- 
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+
+---
+
+The following changes since commit 99dd1a2b8347ac2ae802300b7862f6f7bcf17139:
+  David S. Miller (1):
+        Merge branch 'upstream-next' of master.kernel.org:/.../jgarzik/netdev-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Abhijeet Kolekar (2):
+      iwlwifi : Set monitor mode for 4965
+      iwlwifi : Set monitor mode for 3945
+
+Andrew Morton (1):
+      wireless: fix "iwlwifi: unify init driver flow"
+
+Bill Moss (1):
+      iwl3945: do not delay hardware scan if it is a direct scan
+
+Bob Copeland (1):
+      ath5k: Fix loop variable initializations
+
+Bruno Randolf (3):
+      zd1211rw: initial IBSS support
+      mac80211: use hardware flags for signal/noise units
+      mac80211: make rx radiotap header more flexible
+
+Emmanuel Grumbach (1):
+      iwlwifi: move iwl4965_init_alive_start to iwl-4965.c
+
+Eric W. Biederman (1):
+      wireless: Add missing locking to cfg80211_dev_rename
+
+Ester Kummer (4):
+      iwlwifi: move per driverdebug_level to per device
+      iwlwifi: move debug_level to sysfs/bus/pci/devices
+      iwlwifi: update levels of debug prints
+      iwlwifi: adding parameter of fw_restart
+
+Harvey Harrison (6):
+      mac80211: remove unnecessary byteshifts in frame control testing
+      wireless: use get/put_unaligned_* helpers
+      mac80211: tkip.c use kernel-provided infrastructure
+      b43: replace limit_value macro with clamp_val
+      b43legacy: replace limit_value macro with clamp_val
+      b43: use the bitrev helpers rather than rolling a private one
+
+Holger Schurig (1):
+      libertas: remove lbs_get_data_rate()
+
+Huang Weiyi (1):
+      b43: nphy.c remove duplicated include
+
+Ivo van Doorn (1):
+      mac80211: Set IEEE80211_TXPD_REQ_TX_STATUS for all TX frames
+
+Johannes Berg (3):
+      mac80211: require four hardware queues for QoS/HT
+      mac80211: proper STA info locking
+      mac80211: fix queue constant confusion
+
+Paulius Zaleckas (3):
+      airo: use netstats in net_device structure
+      arlan: use netstats in net_device structure
+      atmel: use netstats in net_device structure
+
+Ron Rindjunsky (7):
+      iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
+      iwlwifi-5000: rename iwl5000_init_nic to iwl5000_init_config
+      iwlwifi: create disable SCD Tx FIFOs handler
+      iwlwifi: move NIC init and Tx queues init to iwlcore
+      iwlwifi: handle shared memory Rx index access
+      iwlwifi: remove 4965 prefix from iwl4965_kw and iwl4965_tx_queue
+      iwlwifi: fix spinlock used before initialized
+
+Tomas Winkler (10):
+      iwlwifi: move RX code to iwl-rx.c
+      iwlwifi: don't override association channel with control channel
+      iwlwifi: remove 4965 from station_entry
+      iwlwifi: debugfs EEPROM dump
+      iwlwifi: remove 4965 from rx_packet
+      iwlwifi: generalize iwl4965_send_add_station function
+      iwlwifi-5000: add build_addsta_hcmd handler for 5000 HW
+      iwlwifi: move iwl4965_set_rxon_ht into iwlcore
+      iwlwifi: compile iwl-sta into iwlcore
+      iwlwifi: add device sysfs version entry
+
+ drivers/net/wireless/adm8211.c              |    7 +-
+ drivers/net/wireless/airo.c                 |   57 +-
+ drivers/net/wireless/arlan-main.c           |   40 +-
+ drivers/net/wireless/arlan.h                |    1 -
+ drivers/net/wireless/ath5k/base.c           |   25 +-
+ drivers/net/wireless/ath5k/hw.c             |    6 +-
+ drivers/net/wireless/atmel.c                |   46 +-
+ drivers/net/wireless/b43/b43.h              |   16 -
+ drivers/net/wireless/b43/lo.c               |    4 +-
+ drivers/net/wireless/b43/main.c             |   16 +-
+ drivers/net/wireless/b43/nphy.c             |    2 -
+ drivers/net/wireless/b43/phy.c              |   51 +-
+ drivers/net/wireless/b43/xmit.c             |    5 +-
+ drivers/net/wireless/b43legacy/b43legacy.h  |   17 -
+ drivers/net/wireless/b43legacy/main.c       |   15 +-
+ drivers/net/wireless/b43legacy/phy.c        |   14 +-
+ drivers/net/wireless/b43legacy/radio.c      |   12 +-
+ drivers/net/wireless/b43legacy/xmit.c       |    4 +-
+ drivers/net/wireless/iwlwifi/Kconfig        |    4 +-
+ drivers/net/wireless/iwlwifi/Makefile       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |  661 +++++-----------
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   51 ++-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   48 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  220 +++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   45 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   44 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |  101 ++--
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |  422 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   61 ++-
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |  373 +++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   58 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c | 1135 +++++++--------------------
+ drivers/net/wireless/libertas/cmd.c         |   32 -
+ drivers/net/wireless/libertas/cmd.h         |    1 -
+ drivers/net/wireless/libertas/main.c        |   12 +-
+ drivers/net/wireless/p54/p54common.c        |    7 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c     |    5 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c     |    6 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c     |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |    4 +-
+ drivers/net/wireless/rt2x00/rt61pci.c       |    5 +-
+ drivers/net/wireless/rt2x00/rt73usb.c       |    5 +-
+ drivers/net/wireless/rtl8180_dev.c          |    9 +-
+ drivers/net/wireless/rtl8187_dev.c          |   10 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c      |   29 +-
+ include/linux/ieee80211.h                   |   32 +-
+ include/net/mac80211.h                      |   47 +-
+ net/ieee80211/ieee80211_rx.c                |    2 +-
+ net/mac80211/cfg.c                          |    2 +
+ net/mac80211/debugfs_sta.c                  |   17 +-
+ net/mac80211/ieee80211_i.h                  |    6 +-
+ net/mac80211/iface.c                        |    3 +-
+ net/mac80211/key.c                          |    4 +-
+ net/mac80211/main.c                         |   41 +-
+ net/mac80211/mesh_hwmp.c                    |    2 +-
+ net/mac80211/mesh_plink.c                   |   88 +-
+ net/mac80211/mlme.c                         |   71 +-
+ net/mac80211/rx.c                           |  214 ++++--
+ net/mac80211/sta_info.c                     |   14 +-
+ net/mac80211/sta_info.h                     |   74 ++-
+ net/mac80211/tkip.c                         |  145 ++---
+ net/mac80211/tx.c                           |   30 +-
+ net/mac80211/wext.c                         |   28 +-
+ net/wireless/core.c                         |   33 +-
+ net/wireless/radiotap.c                     |   16 +-
+ 71 files changed, 2529 insertions(+), 2126 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-rx.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-tx.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-05-14.patch.gz
 
 -- 
-
+John W. Linville
+linville@tuxdriver.com
