@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2585 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751433AbYENUUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 16:20:43 -0400
-Date: Wed, 14 May 2008 16:07:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrea Merello <andreamrl@tiscali.it>
-Cc: linux-wireless@vger.kernel.org,
-	Alessandro Di Marco <dmr@c0nc3pt.com>
-Subject: Re: [PATCH] Rtl8180 sa2400 ch14
-Message-ID: <20080514200729.GA15712@tuxdriver.com> (sfid-20080514_222104_601830_4F4DAB57)
-References: <c68f135e0805100430s668492b0l56107f1fa4fc4ff7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <c68f135e0805100430s668492b0l56107f1fa4fc4ff7@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58862 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756085AbYENX1W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 19:27:22 -0400
+Message-Id: <200805142326.m4ENQKhZ027102@imap1.linux-foundation.org> (sfid-20080515_012725_234792_DE0F6A96)
+Subject: [patch 08/12] mac80211: tkip.c use struct tkip_ctx in phase 2 key mixing
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 14 May 2008 16:26:20 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 10, 2008 at 01:30:12PM +0200, Andrea Merello wrote:
-> Rtl8180: fix wrong parameter in RF code funcion invokation for philip=
-s radio
->=20
-> The sa2400 RF code needs to invoke sa2400_write_phy_antenna every tim=
-e the
-> channel is being switch.
->=20
-> This should be done passing the channel number to that function.
-> Incorrectly we were passing the same value that is written on the
-> channel RF register.
-> This may cause problems when operating on ch 14.
->=20
-> This patch fixes it.
->=20
-> Thanks to Alessandro Di Marco who found this issue!
->=20
->=20
-> signed-off-by: Andrea Merello <andreamrl@tiscali.it>
-> ---
->=20
-> --- a/drivers/net/wireless/rtl8180_sa2400.c     2008-02-02
-> 14:48:52.000000000 +0100
-> +++ b/drivers/net/wireless/rtl8180_sa2400.c     2008-02-02
-> 14:49:44.000000000 +0100
-> @@ -85,7 +85,7 @@ static void sa2400_rf_set_channel(struct
->=20
->         write_sa2400(dev, 7, txpw);
->=20
-> -       sa2400_write_phy_antenna(dev, chan);
-> +       sa2400_write_phy_antenna(dev, conf->channel);
->=20
->         write_sa2400(dev, 0, chan);
->         write_sa2400(dev, 1, 0xbb50);
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-  CC [M]  drivers/net/wireless/rtl8180_sa2400.o
-drivers/net/wireless/rtl8180_sa2400.c: In function =E2=80=98sa2400_rf_s=
-et_channel=E2=80=99:
-drivers/net/wireless/rtl8180_sa2400.c:89: warning: passing argument 2 o=
-f =E2=80=98sa2400_write_phy_antenna=E2=80=99 makes integer from pointer=
- without a cast
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Also, the patch is whitespace-damaged and it should be "Signed-off-by"
-(note the capital letter) if you don't mind. :-)
+ net/mac80211/tkip.c |   17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-Thanks,
-
-John
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -puN net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-2-key-mixing net/mac80211/tkip.c
+--- a/net/mac80211/tkip.c~mac80211-tkipc-use-struct-tkip_ctx-in-phase-2-key-mixing
++++ a/net/mac80211/tkip.c
+@@ -95,10 +95,12 @@ static void tkip_mixing_phase1(struct ie
+ 	ctx->initialized = 1;
+ }
+ 
+-static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
+-			       u8 *rc4key)
++static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
++			       u16 tsc_IV16, u8 *rc4key)
+ {
+ 	u16 ppk[6];
++	const u16 *p1k = ctx->p1k;
++	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
+ 	int i;
+ 
+ 	ppk[0] = p1k[0];
+@@ -152,9 +154,7 @@ static void ieee80211_tkip_gen_rc4key(st
+ 	if (key->u.tkip.tx.iv16 == 0 || !key->u.tkip.tx.initialized)
+ 		tkip_mixing_phase1(key, ta, &key->u.tkip.tx, key->u.tkip.tx.iv32);
+ 
+-	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+-			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.tx.iv16, rc4key);
++	tkip_mixing_phase2(key, &key->u.tkip.tx, key->u.tkip.tx.iv16, rc4key);
+ }
+ 
+ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+@@ -197,8 +197,7 @@ void ieee80211_get_tkip_key(struct ieee8
+ 		return;
+ 	}
+ 
+-	tkip_mixing_phase2(key->u.tkip.tx.p1k,
+-		&key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],	iv16, outkey);
++	tkip_mixing_phase2(key, &key->u.tkip.tx, iv16, outkey);
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+ 
+@@ -315,9 +314,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 		}
+ 	}
+ 
+-	tkip_mixing_phase2(key->u.tkip.rx[queue].p1k,
+-			   &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   iv16, rc4key);
++	tkip_mixing_phase2(key, &key->u.tkip.rx[queue], iv16, rc4key);
+ #ifdef CONFIG_TKIP_DEBUG
+ 	{
+ 		int i;
+_
