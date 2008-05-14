@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45244
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752523AbYEAJUp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 05:20:45 -0400
-Date: Thu, 01 May 2008 02:20:41 -0700 (PDT)
-Message-Id: <20080501.022041.213526595.davem@davemloft.net> (sfid-20080501_112032_862010_BD55471A)
-To: johannes@sipsolutions.net
-Cc: mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209632886.4008.8.camel@johannes.berg>
-References: <1209607368.7173.20.camel@johannes.berg>
-	<200805011058.40197.mb@bu3sch.de>
-	<1209632886.4008.8.camel@johannes.berg>
+Received: from c60.cesmail.net ([216.154.195.49]:59027 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbYENEwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 00:52:30 -0400
+Subject: Re: newbie rtl8187 question
+From: Pavel Roskin <proski@gnu.org>
+To: Paul Thomas <pthomas8589@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <c785bba30805132141l62bef2d7n4d78a95510ed6a3d@mail.gmail.com>
+References: <c785bba30805132014y56aafa7bi8788503f67a7c809@mail.gmail.com>
+	 <1210736718.2721.4.camel@rd>
+	 <c785bba30805132050y51cc3031uae718bc74ade96@mail.gmail.com>
+	 <1210737929.2721.19.camel@rd>
+	 <c785bba30805132141l62bef2d7n4d78a95510ed6a3d@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 14 May 2008 00:52:28 -0400
+Message-Id: <1210740748.2721.62.camel@rd> (sfid-20080514_065234_112313_4A060EAD)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 01 May 2008 11:08:06 +0200
-
-> > Seems the skb->destructor messes it up.
+On Tue, 2008-05-13 at 21:41 -0700, Paul Thomas wrote:
+> Thanks,
 > 
-> Actually, it seems to be outside of mac80211, I put in a WARN_ON() and
-> got this:
+> That worked! I unplugged my ethernet cable, and I'm sending this via
+> the wireless adapter.
 
-You're just seeing who freed it last here.
+Nice to hear that!!!
 
-It could have had it's ->truesize put into an illegal state
-elsewhere.
+> If I can get some other patches on this same tree I can test the
+> driver on an arm9 processor (Atmel AT91RM9200). I'll let you know.
+> 
+> Any idea when those patches will find there way to the main line kernel?
+
+Since the code is working, it's likely to be in linux-wireless within
+days, which means in will be scheduled for Linux 2.6.27.  2.6.26 is in
+the RC phase now, but I've seen a similar patch for Broadcom going into
+2.6.25 quite late in the game, so we can hope that 2.6.26 may have the
+rtl8187b fix too.
+
+-- 
+Regards,
+Pavel Roskin
