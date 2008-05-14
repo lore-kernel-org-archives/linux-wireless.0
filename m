@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:55213 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbYEWQNq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 12:13:46 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so433779fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2008 09:13:41 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/4] rt2x00: Don't count retries as failure
-Date: Fri, 23 May 2008 18:13:49 +0200
-References: <200805231811.38557.IvDoorn@gmail.com> <200805231812.00201.IvDoorn@gmail.com>
-In-Reply-To: <200805231812.00201.IvDoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2585 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433AbYENUUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 16:20:43 -0400
+Date: Wed, 14 May 2008 16:07:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrea Merello <andreamrl@tiscali.it>
+Cc: linux-wireless@vger.kernel.org,
+	Alessandro Di Marco <dmr@c0nc3pt.com>
+Subject: Re: [PATCH] Rtl8180 sa2400 ch14
+Message-ID: <20080514200729.GA15712@tuxdriver.com> (sfid-20080514_222104_601830_4F4DAB57)
+References: <c68f135e0805100430s668492b0l56107f1fa4fc4ff7@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200805231813.49909.IvDoorn@gmail.com> (sfid-20080523_181349_072176_DCCD905F)
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <c68f135e0805100430s668492b0l56107f1fa4fc4ff7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Link quality estimation became quite low for all rt2x00 drivers
-because the number of retries it took to send the frame were
-counted as failure.
-This does not correspond to the legacy driver link quality calculation,
-by not counting it we will send somewhat more optimistic values to
-mac80211.
+On Sat, May 10, 2008 at 01:30:12PM +0200, Andrea Merello wrote:
+> Rtl8180: fix wrong parameter in RF code funcion invokation for philip=
+s radio
+>=20
+> The sa2400 RF code needs to invoke sa2400_write_phy_antenna every tim=
+e the
+> channel is being switch.
+>=20
+> This should be done passing the channel number to that function.
+> Incorrectly we were passing the same value that is written on the
+> channel RF register.
+> This may cause problems when operating on ch 14.
+>=20
+> This patch fixes it.
+>=20
+> Thanks to Alessandro Di Marco who found this issue!
+>=20
+>=20
+> signed-off-by: Andrea Merello <andreamrl@tiscali.it>
+> ---
+>=20
+> --- a/drivers/net/wireless/rtl8180_sa2400.c     2008-02-02
+> 14:48:52.000000000 +0100
+> +++ b/drivers/net/wireless/rtl8180_sa2400.c     2008-02-02
+> 14:49:44.000000000 +0100
+> @@ -85,7 +85,7 @@ static void sa2400_rf_set_channel(struct
+>=20
+>         write_sa2400(dev, 7, txpw);
+>=20
+> -       sa2400_write_phy_antenna(dev, chan);
+> +       sa2400_write_phy_antenna(dev, conf->channel);
+>=20
+>         write_sa2400(dev, 0, chan);
+>         write_sa2400(dev, 1, 0xbb50);
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+  CC [M]  drivers/net/wireless/rtl8180_sa2400.o
+drivers/net/wireless/rtl8180_sa2400.c: In function =E2=80=98sa2400_rf_s=
+et_channel=E2=80=99:
+drivers/net/wireless/rtl8180_sa2400.c:89: warning: passing argument 2 o=
+f =E2=80=98sa2400_write_phy_antenna=E2=80=99 makes integer from pointer=
+ without a cast
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 6553a3d..5645140 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -507,7 +507,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	rt2x00dev->link.qual.tx_success +=
- 	    test_bit(TXDONE_SUCCESS, &txdesc->flags);
- 	rt2x00dev->link.qual.tx_failed +=
--	    txdesc->retry + !!test_bit(TXDONE_FAILURE, &txdesc->flags);
-+	    test_bit(TXDONE_FAILURE, &txdesc->flags);
- 
- 	/*
- 	 * Initialize TX status
--- 
-1.5.5.1
+Also, the patch is whitespace-damaged and it should be "Signed-off-by"
+(note the capital letter) if you don't mind. :-)
 
+Thanks,
+
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
