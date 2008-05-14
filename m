@@ -1,106 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:43092 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755017AbYENBNj (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55335 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755931AbYENX1G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 21:13:39 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so3574274rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 18:13:37 -0700 (PDT)
-Subject: Re: [PATCHv2] b43: use the bitrev helpers rather than rolling a
-	private one
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200805140303.23590.mb@bu3sch.de>
-References: <1210708518.6191.0.camel@brick>
-	 <200805140124.07982.mb@bu3sch.de> <1210726437.6191.17.camel@brick>
-	 <200805140303.23590.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 13 May 2008 18:13:35 -0700
-Message-Id: <1210727615.6191.20.camel@brick> (sfid-20080514_031344_387993_DB7BE517)
-Mime-Version: 1.0
+	Wed, 14 May 2008 19:27:06 -0400
+Message-Id: <200805142326.m4ENQIWp027091@imap1.linux-foundation.org> (sfid-20080515_012710_228676_70B9FE14)
+Subject: [patch 05/12] mac80211: add const, remove unused function, make one function static
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 14 May 2008 16:26:18 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 4-bit reversal flip_4bit is replaced with the bitrev helper
-bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
-where a register is read from for checking there.  The other caller
-explicitly passes an array index which is guaranteed to be within range
-and so a B43_WARN is not added there.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/net/wireless/b43/phy.c |   27 ++++++---------------------
- 1 files changed, 6 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
-index de024dc..feea79f 100644
---- a/drivers/net/wireless/b43/phy.c
-+++ b/drivers/net/wireless/b43/phy.c
-@@ -28,6 +28,7 @@
- #include <linux/delay.h>
- #include <linux/io.h>
+ net/mac80211/michael.c |    7 +++----
+ net/mac80211/michael.h |    4 ++--
+ net/mac80211/tkip.c    |   12 ++----------
+ net/mac80211/tkip.h    |    4 ----
+ 4 files changed, 7 insertions(+), 20 deletions(-)
+
+diff -puN net/mac80211/michael.c~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/michael.c
+--- a/net/mac80211/michael.c~mac80211-add-const-remove-unused-function-make-one-function-static
++++ a/net/mac80211/michael.c
+@@ -6,7 +6,6 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  */
+-
  #include <linux/types.h>
-+#include <linux/bitrev.h>
+ #include <linux/bitops.h>
+ #include <asm/unaligned.h>
+@@ -28,7 +27,7 @@ static void michael_block(struct michael
+ }
  
- #include "b43.h"
- #include "phy.h"
-@@ -83,25 +84,9 @@ const u8 b43_radio_channel_codes_bg[] = {
- 	72, 84,
+ static void michael_mic_hdr(struct michael_mic_ctx *mctx,
+-			    u8 *key, u8 *da, u8 *sa, u8 priority)
++			const u8 *key, const u8 *da, const u8 *sa, u8 priority)
+ {
+ 	mctx->l = get_unaligned_le32(key);
+ 	mctx->r = get_unaligned_le32(key + 4);
+@@ -44,8 +43,8 @@ static void michael_mic_hdr(struct micha
+ 	michael_block(mctx, priority);
+ }
+ 
+-void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+-		 u8 *data, size_t data_len, u8 *mic)
++void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
++		 const u8 *data, size_t data_len, u8 *mic)
+ {
+ 	u32 val;
+ 	size_t block, blocks, left;
+diff -puN net/mac80211/michael.h~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/michael.h
+--- a/net/mac80211/michael.h~mac80211-add-const-remove-unused-function-make-one-function-static
++++ a/net/mac80211/michael.h
+@@ -18,7 +18,7 @@ struct michael_mic_ctx {
+ 	u32 l, r;
  };
  
-+#define bitrev4(tmp) (bitrev8(tmp) >> 4)
- static void b43_phy_initg(struct b43_wldev *dev);
+-void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+-		 u8 *data, size_t data_len, u8 *mic);
++void michael_mic(const u8 *key, const u8 *da, const u8 *sa, u8 priority,
++		 const u8 *data, size_t data_len, u8 *mic);
  
--/* Reverse the bits of a 4bit value.
-- * Example:  1101 is flipped 1011
-- */
--static u16 flip_4bit(u16 value)
+ #endif /* MICHAEL_H */
+diff -puN net/mac80211/tkip.c~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/tkip.c
+--- a/net/mac80211/tkip.c~mac80211-add-const-remove-unused-function-make-one-function-static
++++ a/net/mac80211/tkip.c
+@@ -6,7 +6,6 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  */
+-
+ #include <linux/kernel.h>
+ #include <linux/bitops.h>
+ #include <linux/types.h>
+@@ -132,7 +131,7 @@ static void tkip_mixing_phase2(const u16
+ /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
+  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
+  * the packet payload). */
+-u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2)
+ {
+ 	*pos++ = iv0;
+@@ -143,14 +142,7 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, stru
+ 	return pos + 4;
+ }
+ 
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key)
 -{
--	u16 flipped = 0x0000;
--
--	B43_WARN_ON(value & ~0x000F);
--
--	flipped |= (value & 0x0001) << 3;
--	flipped |= (value & 0x0002) << 1;
--	flipped |= (value & 0x0004) >> 1;
--	flipped |= (value & 0x0008) >> 3;
--
--	return flipped;
+-	tkip_mixing_phase1(ta, &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv32, phase1key);
 -}
 -
- static void generate_rfatt_list(struct b43_wldev *dev,
- 				struct b43_rfatt_list *list)
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
++static void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key)
  {
-@@ -3069,13 +3054,13 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
- 		}
- 		radio_stacksave(0x0078);
- 		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
--		flipped = flip_4bit(tmp);
-+		B43_WARN_ON(tmp > 15);
-+		flipped = bitrev4(tmp);
- 		if (flipped < 10 && flipped >= 8)
- 			flipped = 7;
- 		else if (flipped >= 10)
- 			flipped -= 3;
--		flipped = flip_4bit(flipped);
--		flipped = (flipped << 1) | 0x0020;
-+		flipped = (bitrev4(flipped) << 1) | 0x0020;
- 		b43_radio_write16(dev, 0x0078, flipped);
+ 	/* Calculate per-packet key */
+diff -puN net/mac80211/tkip.h~mac80211-add-const-remove-unused-function-make-one-function-static net/mac80211/tkip.h
+--- a/net/mac80211/tkip.h~mac80211-add-const-remove-unused-function-make-one-function-static
++++ a/net/mac80211/tkip.h
+@@ -15,10 +15,6 @@
  
- 		b43_calc_nrssi_threshold(dev);
-@@ -3708,7 +3693,7 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
- 	tmp1 >>= 9;
- 
- 	for (i = 0; i < 16; i++) {
--		radio78 = ((flip_4bit(i) << 1) | 0x20);
-+		radio78 = (bitrev4(i) << 1) | 0x0020;
- 		b43_radio_write16(dev, 0x78, radio78);
- 		udelay(10);
- 		for (j = 0; j < 16; j++) {
--- 
-1.5.5.1.482.g0f174
-
-
-
+ u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			  u8 iv0, u8 iv1, u8 iv2);
+-void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key);
+-void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+-			       u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+_
