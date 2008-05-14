@@ -1,104 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45632 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36198 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751322AbYE1Oux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 10:50:53 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 07:50:53 -0700
-Date: Wed, 28 May 2008 20:20:48 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
-	<ron.rindjunsky@intel.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
-Message-ID: <20080528145048.GB5244@senthil-lnx.users.atheros.com> (sfid-20080528_165059_590512_A4E4FF85)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1757371AbYENOq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 10:46:59 -0400
+Subject: Re: [PATCH] libertas: remove lbs_get_data_rate()
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200805141627.18368.hs4233@mail.mn-solutions.de>
+References: <200805141627.18368.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 14 May 2008 10:42:29 -0400
+Message-Id: <1210776149.22992.7.camel@localhost.localdomain> (sfid-20080514_164704_179934_90009564)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This addresses an alignment issue with compare_ether_addr().
-The addresses passed to compare_ether_addr should be two bytes aligned.
-It may function properly in x86 platform. However may not work properly
-on IA-64 or ARM processor.
+On Wed, 2008-05-14 at 16:27 +0200, Holger Schurig wrote:
+> lbs_get_data_rate() get's called, but no-one uses it's result.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-This also fixes a typo in mlme.c where the sk_buff struct name is incorect.
-Though sizeof() works for any incorrect structure pointer name as its just
-a pointer length that we want, lets just fix it.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    4 ++--
- net/mac80211/rx.c   |    6 ++++--
- net/mac80211/util.c |    4 ++--
- 3 files changed, 8 insertions(+), 6 deletions(-)
+We currently get the iwconfig current rate from the last received packet
+when the rate is 'auto'; I guess if we care about the TX data rate at
+some future time we can use a combination of DATA_RATE (< 5.1 firmware)
+and TX_RATEQUERY (>= 5.1 firmware) to get it.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c7819fd..4be7736 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1316,7 +1316,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
--		kmalloc(buf_size * sizeof(struct sk_buf *), GFP_ATOMIC);
-+		kmalloc(buf_size * sizeof(struct sk_buff *), GFP_ATOMIC);
- 	if (!tid_agg_rx->reorder_buf) {
- 		if (net_ratelimit())
- 			printk(KERN_ERR "can not allocate reordering buffer "
-@@ -1325,7 +1325,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
- 		goto end;
- 	}
- 	memset(tid_agg_rx->reorder_buf, 0,
--		buf_size * sizeof(struct sk_buf *));
-+		buf_size * sizeof(struct sk_buff *));
- 
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9400a97..4b83ed1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1116,7 +1116,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	u16 fc, hdrlen, ethertype;
- 	u8 *payload;
- 	u8 dst[ETH_ALEN];
--	u8 src[ETH_ALEN];
-+	/* Should be aligned on 2 bytes for compare_ether_addr() */
-+	u16 src_aligned[ETH_ALEN >> 1];
-+	u8 *src = (u8 *)src_aligned;
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	DECLARE_MAC_BUF(mac);
-@@ -1259,7 +1261,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
-  */
- static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx)
- {
--	static const u8 pae_group_addr[ETH_ALEN]
-+	static const u8 pae_group_addr[ETH_ALEN] __attribute__ ((aligned(2)))
- 		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
- 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5a77e2c..416214c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -34,11 +34,11 @@ void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
- 
- /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
- /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
--const unsigned char rfc1042_header[] =
-+const unsigned char rfc1042_header[] __attribute__ ((aligned(2))) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
- 
- /* Bridge-Tunnel header (for EtherTypes ETH_P_AARP and ETH_P_IPX) */
--const unsigned char bridge_tunnel_header[] =
-+const unsigned char bridge_tunnel_header[] __attribute__ ((aligned(2))) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
- 
- 
--- 
-1.5.2.2
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-05-14 14:58:06.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-05-14 14:58:15.000000000 +0200
+> @@ -697,38 +697,6 @@ static int lbs_cmd_802_11_rate_adapt_rat
+>  }
+>  
+>  /**
+> - *  @brief Get the current data rate
+> - *
+> - *  @param priv    	A pointer to struct lbs_private structure
+> - *
+> - *  @return 	   	The data rate on success, error on failure
+> - */
+> -int lbs_get_data_rate(struct lbs_private *priv)
+> -{
+> -	struct cmd_ds_802_11_data_rate cmd;
+> -	int ret = -1;
+> -
+> -	lbs_deb_enter(LBS_DEB_CMD);
+> -
+> -	memset(&cmd, 0, sizeof(cmd));
+> -	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+> -	cmd.action = cpu_to_le16(CMD_ACT_GET_TX_RATE);
+> -
+> -	ret = lbs_cmd_with_response(priv, CMD_802_11_DATA_RATE, &cmd);
+> -	if (ret)
+> -		goto out;
+> -
+> -	lbs_deb_hex(LBS_DEB_CMD, "DATA_RATE_RESP", (u8 *) &cmd, sizeof (cmd));
+> -
+> -	ret = (int) lbs_fw_index_to_data_rate(cmd.rates[0]);
+> -	lbs_deb_cmd("DATA_RATE: current rate 0x%02x\n", ret);
+> -
+> -out:
+> -	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+> -	return ret;
+> -}
+> -
+> -/**
+>   *  @brief Set the data rate
+>   *
+>   *  @param priv    	A pointer to struct lbs_private structure
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.h	2008-05-14 14:59:07.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.h	2008-05-14 14:59:11.000000000 +0200
+> @@ -34,7 +34,6 @@ int lbs_update_hw_spec(struct lbs_privat
+>  int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+>  		    struct cmd_ds_mesh_access *cmd);
+>  
+> -int lbs_get_data_rate(struct lbs_private *priv);
+>  int lbs_set_data_rate(struct lbs_private *priv, u8 rate);
+>  
+>  int lbs_get_channel(struct lbs_private *priv);
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-05-14 14:58:28.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-05-14 15:04:14.000000000 +0200
+> @@ -928,20 +928,10 @@ static int lbs_setup_firmware(struct lbs
+>  	 */
+>  	memset(priv->current_addr, 0xff, ETH_ALEN);
+>  	ret = lbs_update_hw_spec(priv);
+> -	if (ret) {
+> -		ret = -1;
+> +	if (ret)
+>  		goto done;
+> -	}
+>  
+>  	lbs_set_mac_control(priv);
+> -
+> -	ret = lbs_get_data_rate(priv);
+> -	if (ret < 0) {
+> -		ret = -1;
+> -		goto done;
+> -	}
+> -
+> -	ret = 0;
+>  done:
+>  	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+>  	return ret;
 
