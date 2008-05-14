@@ -1,117 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759362AbYEBW7v (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59141 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756069AbYENX1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 18:59:51 -0400
-Subject: [PATCH] mac80211: require four hardware queues for QoS/HT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 03 May 2008 00:59:37 +0200
-Message-Id: <1209769177.3608.27.camel@johannes.berg> (sfid-20080503_005928_397518_F9CE3ED1)
-Mime-Version: 1.0
+	Wed, 14 May 2008 19:27:21 -0400
+Message-Id: <200805142326.m4ENQMFS027111@imap1.linux-foundation.org> (sfid-20080515_012724_314975_1AE679BB)
+Subject: [patch 11/12] wireless: use get/put_unaligned_* helpers
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 14 May 2008 16:26:22 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes mac80211 only announce QoS/HT support when
-the underlying hardware has four (or more) queues.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ron Rindjunksi <ron.rindjunksi@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- net/mac80211/iface.c |    3 ++-
- net/mac80211/mlme.c  |   21 ++++++++++++++-------
- net/mac80211/tx.c    |    4 ++--
- 3 files changed, 18 insertions(+), 10 deletions(-)
 
---- everything.orig/net/mac80211/iface.c	2008-05-03 00:29:07.000000000 +0200
-+++ everything/net/mac80211/iface.c	2008-05-03 00:31:01.000000000 +0200
-@@ -157,9 +157,10 @@ void ieee80211_if_set_type(struct net_de
- 		ifsta->auth_algs = IEEE80211_AUTH_ALG_OPEN |
- 			IEEE80211_AUTH_ALG_SHARED_KEY;
- 		ifsta->flags |= IEEE80211_STA_CREATE_IBSS |
--			IEEE80211_STA_WMM_ENABLED |
- 			IEEE80211_STA_AUTO_BSSID_SEL |
- 			IEEE80211_STA_AUTO_CHANNEL_SEL;
-+		if (sdata->local->hw.queues >= 4)
-+			ifsta->flags |= IEEE80211_STA_WMM_ENABLED;
- 
- 		msdata = IEEE80211_DEV_TO_SUB_IF(sdata->local->mdev);
- 		sdata->bss = &msdata->u.ap;
---- everything.orig/net/mac80211/mlme.c	2008-05-03 00:29:07.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-05-03 00:31:01.000000000 +0200
-@@ -272,6 +272,12 @@ static void ieee80211_sta_wmm_params(str
- 	int count;
- 	u8 *pos;
- 
-+	if (!(ifsta->flags & IEEE80211_STA_WMM_ENABLED))
-+		return;
-+
-+	if (!wmm_param)
-+		return;
-+
- 	if (wmm_param_len < 8 || wmm_param[5] /* version */ != 1)
- 		return;
- 	count = wmm_param[6] & 0x0f;
-@@ -762,8 +768,10 @@ static void ieee80211_send_assoc(struct 
- 		*pos++ = 1; /* WME ver */
- 		*pos++ = 0;
- 	}
-+
- 	/* wmm support is a must to HT */
--	if (wmm && sband->ht_info.ht_supported) {
-+	if (wmm && (ifsta->flags & IEEE80211_STA_WMM_ENABLED) &&
-+	    sband->ht_info.ht_supported) {
- 		__le16 tmp = cpu_to_le16(sband->ht_info.cap);
- 		pos = skb_put(skb, sizeof(struct ieee80211_ht_cap)+2);
- 		*pos++ = WLAN_EID_HT_CAPABILITY;
-@@ -2020,7 +2028,8 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	else
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
--	if (elems.ht_cap_elem && elems.ht_info_elem && elems.wmm_param) {
-+	if (elems.ht_cap_elem && elems.ht_info_elem && elems.wmm_param &&
-+	    (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
- 		struct ieee80211_ht_bss_info bss_info;
- 		ieee80211_ht_cap_ie_to_ht_info(
- 				(struct ieee80211_ht_cap *)
-@@ -2033,7 +2042,7 @@ static void ieee80211_rx_mgmt_assoc_resp
- 
- 	rate_control_rate_init(sta, local);
- 
--	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
-+	if (elems.wmm_param) {
- 		sta->flags |= WLAN_STA_WME;
- 		rcu_read_unlock();
- 		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
-@@ -2816,10 +2825,8 @@ static void ieee80211_rx_mgmt_beacon(str
- 
- 	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
- 
--	if (elems.wmm_param && (ifsta->flags & IEEE80211_STA_WMM_ENABLED)) {
--		ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
--					 elems.wmm_param_len);
--	}
-+	ieee80211_sta_wmm_params(dev, ifsta, elems.wmm_param,
-+				 elems.wmm_param_len);
- 
- 	/* Do not send changes to driver if we are scanning. This removes
- 	 * requirement that driver's bss_info_changed function needs to be
---- everything.orig/net/mac80211/tx.c	2008-05-02 22:50:29.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-05-03 00:31:01.000000000 +0200
-@@ -1490,8 +1490,8 @@ int ieee80211_subif_start_xmit(struct sk
- 		rcu_read_unlock();
- 	}
- 
--	/* receiver is QoS enabled, use a QoS type frame */
--	if (sta_flags & WLAN_STA_WME) {
-+	/* receiver and we are QoS enabled, use a QoS type frame */
-+	if (sta_flags & WLAN_STA_WME && local->hw.queues >= 4) {
- 		fc |= IEEE80211_STYPE_QOS_DATA;
- 		hdrlen += 2;
- 	}
+ net/mac80211/mesh_hwmp.c |    2 +-
+ net/wireless/radiotap.c  |   16 +++++++---------
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-
+diff -puN net/mac80211/mesh_hwmp.c~wireless-use-get-put_unaligned_-helpers net/mac80211/mesh_hwmp.c
+--- a/net/mac80211/mesh_hwmp.c~wireless-use-get-put_unaligned_-helpers
++++ a/net/mac80211/mesh_hwmp.c
+@@ -26,7 +26,7 @@ static inline u32 u32_field_get(u8 *preq
+ {
+ 	if (ae)
+ 		offset += 6;
+-	return le32_to_cpu(get_unaligned((__le32 *) (preq_elem + offset)));
++	return get_unaligned_le32(preq_elem + offset);
+ }
+ 
+ /* HWMP IE processing macros */
+diff -puN net/wireless/radiotap.c~wireless-use-get-put_unaligned_-helpers net/wireless/radiotap.c
+--- a/net/wireless/radiotap.c~wireless-use-get-put_unaligned_-helpers
++++ a/net/wireless/radiotap.c
+@@ -59,23 +59,21 @@ int ieee80211_radiotap_iterator_init(
+ 		return -EINVAL;
+ 
+ 	/* sanity check for allowed length and radiotap length field */
+-	if (max_length < le16_to_cpu(get_unaligned(&radiotap_header->it_len)))
++	if (max_length < get_unaligned_le16(&radiotap_header->it_len))
+ 		return -EINVAL;
+ 
+ 	iterator->rtheader = radiotap_header;
+-	iterator->max_length = le16_to_cpu(get_unaligned(
+-						&radiotap_header->it_len));
++	iterator->max_length = get_unaligned_le16(&radiotap_header->it_len);
+ 	iterator->arg_index = 0;
+-	iterator->bitmap_shifter = le32_to_cpu(get_unaligned(
+-						&radiotap_header->it_present));
++	iterator->bitmap_shifter = get_unaligned_le32(&radiotap_header->it_present);
+ 	iterator->arg = (u8 *)radiotap_header + sizeof(*radiotap_header);
+ 	iterator->this_arg = NULL;
+ 
+ 	/* find payload start allowing for extended bitmap(s) */
+ 
+ 	if (unlikely(iterator->bitmap_shifter & (1<<IEEE80211_RADIOTAP_EXT))) {
+-		while (le32_to_cpu(get_unaligned((__le32 *)iterator->arg)) &
+-				   (1<<IEEE80211_RADIOTAP_EXT)) {
++		while (get_unaligned_le32(iterator->arg) &
++		       (1 << IEEE80211_RADIOTAP_EXT)) {
+ 			iterator->arg += sizeof(u32);
+ 
+ 			/*
+@@ -241,8 +239,8 @@ int ieee80211_radiotap_iterator_next(
+ 			if (iterator->bitmap_shifter & 1) {
+ 				/* b31 was set, there is more */
+ 				/* move to next u32 bitmap */
+-				iterator->bitmap_shifter = le32_to_cpu(
+-					get_unaligned(iterator->next_bitmap));
++				iterator->bitmap_shifter =
++				    get_unaligned_le32(iterator->next_bitmap);
+ 				iterator->next_bitmap++;
+ 			} else
+ 				/* no more bitmaps: end */
+_
