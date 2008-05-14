@@ -1,31 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:64252 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbYE0HmP (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59963 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755662AbYENX0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 03:42:15 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so2807043rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2008 00:42:15 -0700 (PDT)
-Message-ID: <c85cb4470805270042s2cd7f103xdbfffaf318baff89@mail.gmail.com> (sfid-20080527_094219_307792_D153364F)
-Date: Tue, 27 May 2008 10:42:15 +0300
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH 1/1] mac80211: fix deadlock in sta->lock
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240805262223u4f884d16g5883dd6c7ba9c670@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
-	 <1211811554.4843.4.camel@johannes.berg>
-	 <1ba2fa240805262223u4f884d16g5883dd6c7ba9c670@mail.gmail.com>
+	Wed, 14 May 2008 19:26:36 -0400
+Message-Id: <200805142326.m4ENQG1N027082@imap1.linux-foundation.org> (sfid-20080515_012641_958308_358347BD)
+Subject: [patch 02/12] mac80211: michael.c use kernel-provided infrastructure
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 14 May 2008 16:26:16 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> This patch is wrong, it breaks error path.locking.Will resubmit
-> Tomas
->
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-agree, the error path should be fixed, thanks.
+Replace private implementation of bit rotation and unaligned access helpers
+with kernel-provided implementation.
+
+Fold xswap helper in its one usage in the michael_block macro.
+
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ net/mac80211/michael.c |   60 +++++++++------------------------------
+ 1 file changed, 14 insertions(+), 46 deletions(-)
+
+diff -puN net/mac80211/michael.c~mac80211-michaelc-use-kernel-provided-infrastructure net/mac80211/michael.c
+--- a/net/mac80211/michael.c~mac80211-michaelc-use-kernel-provided-infrastructure
++++ a/net/mac80211/michael.c
+@@ -8,71 +8,39 @@
+  */
+ 
+ #include <linux/types.h>
++#include <linux/bitops.h>
++#include <asm/unaligned.h>
+ 
+ #include "michael.h"
+ 
+-static inline u32 rotr(u32 val, int bits)
+-{
+-	return (val >> bits) | (val << (32 - bits));
+-}
+-
+-
+-static inline u32 rotl(u32 val, int bits)
+-{
+-	return (val << bits) | (val >> (32 - bits));
+-}
+-
+-
+-static inline u32 xswap(u32 val)
+-{
+-	return ((val & 0xff00ff00) >> 8) | ((val & 0x00ff00ff) << 8);
+-}
+-
+-
+ #define michael_block(l, r) \
+ do { \
+-	r ^= rotl(l, 17); \
++	r ^= rol32(l, 17); \
+ 	l += r; \
+-	r ^= xswap(l); \
++	r ^= ((l & 0xff00ff00) >> 8) | ((l & 0x00ff00ff) << 8); \
+ 	l += r; \
+-	r ^= rotl(l, 3); \
++	r ^= rol32(l, 3); \
+ 	l += r; \
+-	r ^= rotr(l, 2); \
++	r ^= ror32(l, 2); \
+ 	l += r; \
+ } while (0)
+ 
+-
+-static inline u32 michael_get32(u8 *data)
+-{
+-	return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+-}
+-
+-
+-static inline void michael_put32(u32 val, u8 *data)
+-{
+-	data[0] = val & 0xff;
+-	data[1] = (val >> 8) & 0xff;
+-	data[2] = (val >> 16) & 0xff;
+-	data[3] = (val >> 24) & 0xff;
+-}
+-
+-
+ void michael_mic(u8 *key, u8 *da, u8 *sa, u8 priority,
+ 		 u8 *data, size_t data_len, u8 *mic)
+ {
+ 	u32 l, r, val;
+ 	size_t block, blocks, left;
+ 
+-	l = michael_get32(key);
+-	r = michael_get32(key + 4);
++	l = get_unaligned_le32(key);
++	r = get_unaligned_le32(key + 4);
+ 
+ 	/* A pseudo header (DA, SA, Priority, 0, 0, 0) is used in Michael MIC
+ 	 * calculation, but it is _not_ transmitted */
+-	l ^= michael_get32(da);
++	l ^= get_unaligned_le32(da);
+ 	michael_block(l, r);
+-	l ^= da[4] | (da[5] << 8) | (sa[0] << 16) | (sa[1] << 24);
++	l ^= get_unaligned_le16(&da[4]) | (get_unaligned_le16(sa) << 16);
+ 	michael_block(l, r);
+-	l ^= michael_get32(&sa[2]);
++	l ^= get_unaligned_le32(&sa[2]);
+ 	michael_block(l, r);
+ 	l ^= priority;
+ 	michael_block(l, r);
+@@ -82,7 +50,7 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
+ 	left = data_len % 4;
+ 
+ 	for (block = 0; block < blocks; block++) {
+-		l ^= michael_get32(&data[block * 4]);
++		l ^= get_unaligned_le32(&data[block * 4]);
+ 		michael_block(l, r);
+ 	}
+ 
+@@ -99,6 +67,6 @@ void michael_mic(u8 *key, u8 *da, u8 *sa
+ 	/* last block is zero, so l ^ 0 = l */
+ 	michael_block(l, r);
+ 
+-	michael_put32(l, mic);
+-	michael_put32(r, mic + 4);
++	put_unaligned_le32(l, mic);
++	put_unaligned_le32(r, mic + 4);
+ }
+_
