@@ -1,174 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:54483 "EHLO ms5.sony.co.jp"
+Received: from mx1.redhat.com ([66.187.233.31]:32917 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752060AbYE3H1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 03:27:40 -0400
-Received: from mta5.sony.co.jp (mta5.Sony.CO.JP [137.153.71.6])
- by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7RUD0003133
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
-Received: from mta5.sony.co.jp (localhost [127.0.0.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7RUYh024801
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7RTfo024798
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
-Date: Fri, 30 May 2008 16:27:24 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] PS3: gelic: Allocate the bounce buffer dynamically
-Cc: geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
-References: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
-Message-Id: <20080530162153.4736.40F06B3A@sm.sony.co.jp> (sfid-20080530_092744_314703_E15C0470)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+	id S1753918AbYENOre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 May 2008 10:47:34 -0400
+Subject: Re: [PATCH, take 2] libertas: reduce command retry time
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200805141630.28357.hs4233@mail.mn-solutions.de>
+References: <200805141630.28357.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 14 May 2008 10:43:00 -0400
+Message-Id: <1210776180.22992.9.camel@localhost.localdomain> (sfid-20080514_164737_116893_28D78A18)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allocate the bouce buffer for the wireless command dynamically.
+On Wed, 2008-05-14 at 16:30 +0200, Holger Schurig wrote:
+> [PATCH, take 2] libertas: reduce command retry time
+> 
+> In the normal case, an unsuccessful command would be retried for 10*5 seconds,
+> or 10*10 seconds in the worst case. This patch reduces this to 3*3 seconds,
+> or 3*10 seconds in the worst case.
+> 
+> I also reduced the time it takes to start a new command downloaded.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
----
- drivers/net/ps3_gelic_wireless.c |   40 ++++++++++++++++++++++++++++++++-------
- 1 file changed, 33 insertions(+), 7 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -1524,15 +1524,20 @@ static struct iw_statistics *gelic_wl_ge
- 	struct gelic_eurus_cmd *cmd;
- 	struct iw_statistics *is;
- 	struct gelic_eurus_rssi_info *rssi;
-+	void *buf;
- 
- 	pr_debug("%s: <-\n", __func__);
- 
-+	buf = (void *)__get_free_page(GFP_KERNEL);
-+	if (!buf)
-+		return NULL;
-+
- 	is = &wl->iwstat;
- 	memset(is, 0, sizeof(*is));
- 	cmd = gelic_eurus_sync_cmd(wl, GELIC_EURUS_CMD_GET_RSSI_CFG,
--				   wl->buf, sizeof(*rssi));
-+				   buf, sizeof(*rssi));
- 	if (cmd && !cmd->status && !cmd->cmd_status) {
--		rssi = wl->buf;
-+		rssi = buf;
- 		is->qual.level = be16_to_cpu(rssi->rssi);
- 		is->qual.updated = IW_QUAL_LEVEL_UPDATED |
- 			IW_QUAL_QUAL_INVALID | IW_QUAL_NOISE_INVALID;
-@@ -1541,6 +1546,7 @@ static struct iw_statistics *gelic_wl_ge
- 		is->qual.updated = IW_QUAL_ALL_INVALID;
- 
- 	kfree(cmd);
-+	free_page((unsigned long)buf);
- 	pr_debug("%s: ->\n", __func__);
- 	return is;
- }
-@@ -1607,11 +1613,18 @@ static void gelic_wl_scan_complete_event
- 	union iwreq_data data;
- 	unsigned long this_time = jiffies;
- 	unsigned int data_len, i, found, r;
-+	void *buf;
- 	DECLARE_MAC_BUF(mac);
- 
- 	pr_debug("%s:start\n", __func__);
- 	mutex_lock(&wl->scan_lock);
- 
-+	buf = (void *)__get_free_page(GFP_KERNEL);
-+	if (!buf) {
-+		pr_info("%s: scan buffer alloc failed\n", __func__);
-+		goto out;
-+	}
-+
- 	if (wl->scan_stat != GELIC_WL_SCAN_STAT_SCANNING) {
- 		/*
- 		 * stop() may be called while scanning, ignore result
-@@ -1622,7 +1635,7 @@ static void gelic_wl_scan_complete_event
- 	}
- 
- 	cmd = gelic_eurus_sync_cmd(wl, GELIC_EURUS_CMD_GET_SCAN,
--				   wl->buf, PAGE_SIZE);
-+				   buf, PAGE_SIZE);
- 	if (!cmd || cmd->status || cmd->cmd_status) {
- 		wl->scan_stat = GELIC_WL_SCAN_STAT_INIT;
- 		pr_info("%s:cmd failed\n", __func__);
-@@ -1649,7 +1662,7 @@ static void gelic_wl_scan_complete_event
- 	}
- 
- 	/* put them in the newtork_list */
--	for (i = 0, scan_info_size = 0, scan_info = wl->buf;
-+	for (i = 0, scan_info_size = 0, scan_info = buf;
- 	     scan_info_size < data_len;
- 	     i++, scan_info_size += be16_to_cpu(scan_info->size),
- 	     scan_info = (void *)scan_info + be16_to_cpu(scan_info->size)) {
-@@ -1726,6 +1739,7 @@ static void gelic_wl_scan_complete_event
- 	wireless_send_event(port_to_netdev(wl_port(wl)), SIOCGIWSCAN, &data,
- 			    NULL);
- out:
-+	free_page((unsigned long)buf);
- 	complete(&wl->scan_done);
- 	mutex_unlock(&wl->scan_lock);
- 	pr_debug("%s:end\n", __func__);
-@@ -1848,7 +1862,10 @@ static int gelic_wl_do_wep_setup(struct 
- 
- 	pr_debug("%s: <-\n", __func__);
- 	/* we can assume no one should uses the buffer */
--	wep = wl->buf;
-+	wep = (struct gelic_eurus_wep_cfg *)__get_free_page(GFP_KERNEL);
-+	if (!wep)
-+		return -ENOMEM;
-+
- 	memset(wep, 0, sizeof(*wep));
- 
- 	if (wl->group_cipher_method == GELIC_WL_CIPHER_WEP) {
-@@ -1898,6 +1915,7 @@ static int gelic_wl_do_wep_setup(struct 
- 
- 	kfree(cmd);
- out:
-+	free_page((unsigned long)wep);
- 	pr_debug("%s: ->\n", __func__);
- 	return ret;
- }
-@@ -1941,7 +1959,10 @@ static int gelic_wl_do_wpa_setup(struct 
- 
- 	pr_debug("%s: <-\n", __func__);
- 	/* we can assume no one should uses the buffer */
--	wpa = wl->buf;
-+	wpa = (struct gelic_eurus_wpa_cfg *)__get_free_page(GFP_KERNEL);
-+	if (!wpa)
-+		return -ENOMEM;
-+
- 	memset(wpa, 0, sizeof(*wpa));
- 
- 	if (!test_bit(GELIC_WL_STAT_WPA_PSK_SET, &wl->stat))
-@@ -2000,6 +2021,7 @@ static int gelic_wl_do_wpa_setup(struct 
- 	else if (cmd->status || cmd->cmd_status)
- 		ret = -ENXIO;
- 	kfree(cmd);
-+	free_page((unsigned long)wpa);
- 	pr_debug("%s: --> %d\n", __func__, ret);
- 	return ret;
- }
-@@ -2018,7 +2040,10 @@ static int gelic_wl_associate_bss(struct
- 	pr_debug("%s: <-\n", __func__);
- 
- 	/* do common config */
--	common = wl->buf;
-+	common = (struct gelic_eurus_common_cfg *)__get_free_page(GFP_KERNEL);
-+	if (!common)
-+		return -ENOMEM;
-+
- 	memset(common, 0, sizeof(*common));
- 	common->bss_type = cpu_to_be16(GELIC_EURUS_BSS_INFRA);
- 	common->op_mode = cpu_to_be16(GELIC_EURUS_OPMODE_11BG);
-@@ -2104,6 +2129,7 @@ static int gelic_wl_associate_bss(struct
- 		pr_info("%s: connected\n", __func__);
- 	}
- out:
-+	free_page((unsigned long)common);
- 	pr_debug("%s: ->\n", __func__);
- 	return ret;
- }
+as long as woodhouse is fine with it, lets get it in
+
+> ---
+> With this patch, I don't have a command retry kernel log anymore in my
+> devices, even after running for hours and calling "iwconfig" every
+> 1.5 seconds while constantly sending out VNC updates. I bumped up the
+> times from my last mail.
+> 
+> It reduces loooooong delays if a command get's retried and you issue
+> "pccardctl eject" at the same time. This command unfortunately doesn't
+> set priv->surpriseremoved, which would speed up things tremendously.
+> 
+> Index: wireless-testing/drivers/net/wireless/libertas/cmd.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/cmd.c	2008-05-06 14:06:40.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/cmd.c	2008-05-13 14:17:52.000000000 +0200
+> @@ -1144,7 +1144,7 @@ static void lbs_submit_command(struct lb
+>  	struct cmd_header *cmd;
+>  	uint16_t cmdsize;
+>  	uint16_t command;
+> -	int timeo = 5 * HZ;
+> +	int timeo = 3 * HZ;
+>  	int ret;
+>  
+>  	lbs_deb_enter(LBS_DEB_HOST);
+> @@ -1162,7 +1162,7 @@ static void lbs_submit_command(struct lb
+>  	/* These commands take longer */
+>  	if (command == CMD_802_11_SCAN || command == CMD_802_11_ASSOCIATE ||
+>  	    command == CMD_802_11_AUTHENTICATE)
+> -		timeo = 10 * HZ;
+> +		timeo = 5 * HZ;
+>  
+>  	lbs_deb_cmd("DNLD_CMD: command 0x%04x, seq %d, size %d\n",
+>  		     command, le16_to_cpu(cmd->seqnum), cmdsize);
+> @@ -1174,7 +1174,7 @@ static void lbs_submit_command(struct lb
+>  		lbs_pr_info("DNLD_CMD: hw_host_to_card failed: %d\n", ret);
+>  		/* Let the timer kick in and retry, and potentially reset
+>  		   the whole thing if the condition persists */
+> -		timeo = HZ;
+> +		timeo = HZ/4;
+>  	}
+>  
+>  	/* Setup the timer after transmit command */
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-05-13 14:17:44.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-05-13 14:19:07.000000000 +0200
+> @@ -749,16 +749,19 @@ static int lbs_thread(void *data)
+>  		if (priv->cmd_timed_out && priv->cur_cmd) {
+>  			struct cmd_ctrl_node *cmdnode = priv->cur_cmd;
+>  
+> -			if (++priv->nr_retries > 10) {
+> -				lbs_pr_info("Excessive timeouts submitting command %x\n",
+> -					    le16_to_cpu(cmdnode->cmdbuf->command));
+> +			if (++priv->nr_retries > 3) {
+> +				lbs_pr_info("excessive timeouts submitting "
+> +					"command 0x%04x\n",
+> +					le16_to_cpu(cmdnode->cmdbuf->command));
+>  				lbs_complete_command(priv, cmdnode, -ETIMEDOUT);
+>  				priv->nr_retries = 0;
+>  			} else {
+>  				priv->cur_cmd = NULL;
+>  				priv->dnld_sent = DNLD_RES_RECEIVED;
+> -				lbs_pr_info("requeueing command %x due to timeout (#%d)\n",
+> -					    le16_to_cpu(cmdnode->cmdbuf->command), priv->nr_retries);
+> +				lbs_pr_info("requeueing command 0x%04x due "
+> +					"to timeout (#%d)\n",
+> +					le16_to_cpu(cmdnode->cmdbuf->command),
+> +					priv->nr_retries);
+>  
+>  				/* Stick it back at the _top_ of the pending queue
+>  				   for immediate resubmission */
+> @@ -959,12 +962,11 @@ static void command_timer_fn(unsigned lo
+>  	lbs_deb_enter(LBS_DEB_CMD);
+>  	spin_lock_irqsave(&priv->driver_lock, flags);
+>  
+> -	if (!priv->cur_cmd) {
+> -		lbs_pr_info("Command timer expired; no pending command\n");
+> +	if (!priv->cur_cmd)
+>  		goto out;
+> -	}
+>  
+> -	lbs_pr_info("Command %x timed out\n", le16_to_cpu(priv->cur_cmd->cmdbuf->command));
+> +	lbs_pr_info("command 0x%04x timed out\n",
+> +		le16_to_cpu(priv->cur_cmd->cmdbuf->command));
+>  
+>  	priv->cmd_timed_out = 1;
+>  	wake_up_interruptible(&priv->waitq);
 
