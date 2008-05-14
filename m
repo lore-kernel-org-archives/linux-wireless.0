@@ -1,125 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from backup.qzxyz.com ([212.85.24.239]:37892 "EHLO
-	scott.intra.qzxyz.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753655AbYEXTrA (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:48814 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757408AbYENA7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2008 15:47:00 -0400
-Date: Sat, 24 May 2008 20:36:09 +0100
-From: Scott Ashcroft <scott.ashcroft@talk21.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, jussi.kivilinna@mbnet.fi
-Subject: [PATCH] rndis_wlan: Make connections to TKIP PSK networks work
-Message-ID: <20080524193608.GB29429@backup.qzxyz.com> (sfid-20080524_214708_406145_13F83470)
+	Tue, 13 May 2008 20:59:13 -0400
+Received: by py-out-1112.google.com with SMTP id u52so3171670pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 17:59:12 -0700 (PDT)
+Message-ID: <482A3961.2010906@gmail.com> (sfid-20080514_025916_313567_6A4339C6)
+Date: Tue, 13 May 2008 17:59:13 -0700
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Dan Williams <dcbw@redhat.com>
+CC: Markus Becker <mab@comnets.uni-bremen.de>,
+	hs4233@mail.mn-solutions.de, David@Woodhou.se,
+	linux-wireless@vger.kernel.org
+Subject: First patch to mrv8k driver?
+Content-Type: multipart/mixed;
+ boundary="------------090308060705030309060805"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows the rndis_wlan driver to connect to TKIP PSK networks.
-It uses the ASSOCIATION_INFORMATION RNDIS call to pull back the IEs and sends them back to userspace using wireless events.
-Tested on a few wireless networks I have access to.
-Based on the similar code in ndiswrapper.
+This is a multi-part message in MIME format.
+--------------090308060705030309060805
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Cheers,
-Scott
+Hey All,
 
-Signed-off-by: scott.ashcroft@talk21.com
+My first patch for the mrv8k driver.  My machine locks up when I try to 
+load a firmware, so I'm not sure if this patch helps anybody or not.
+
+John Daiker
+
+
+
+--------------090308060705030309060805
+Content-Type: text/x-diff;
+ name="formatting.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="formatting.diff"
+
+Some formatting fixes, as well as a fwe mrv_reg_read32 returnvalue changes
+
+Signed-off-by: John Daiker <daikerjohn@gmail.com>
 ---
+ drivers/net/wireless/mrv8k/mrv8k.c |   23 +++++++++++++++--------
+ 1 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d0b1fb1..8dd9704 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -116,6 +116,7 @@ MODULE_PARM_DESC(workaround_interval,
- #define OID_802_11_ENCRYPTION_STATUS		ccpu2(0x0d01011b)
- #define OID_802_11_ADD_KEY			ccpu2(0x0d01011d)
- #define OID_802_11_REMOVE_KEY			ccpu2(0x0d01011e)
-+#define OID_802_11_ASSOCIATION_INFORMATION	ccpu2(0x0d01011f)
- #define OID_802_11_PMKID			ccpu2(0x0d010123)
- #define OID_802_11_NETWORK_TYPES_SUPPORTED	ccpu2(0x0d010203)
- #define OID_802_11_NETWORK_TYPE_IN_USE		ccpu2(0x0d010204)
-@@ -271,6 +272,26 @@ struct ndis_config_param {
- 	__le32 value_length;
- } __attribute__((packed));
+diff --git a/drivers/net/wireless/mrv8k/mrv8k.c b/drivers/net/wireless/mrv8k/mrv8k.c
+index a86ea9f..88497a1 100644
+--- a/drivers/net/wireless/mrv8k/mrv8k.c
++++ b/drivers/net/wireless/mrv8k/mrv8k.c
+@@ -241,8 +241,9 @@ static int mrv_upload_fw(struct mrv_priv *priv)
  
-+struct ndis_80211_assoc_info {
-+	__le32 length;
-+	__le16 req_ies;
-+	struct req_ie {
-+		__le16 capa;
-+		__le16 listen_interval;
-+		u8 cur_ap_address[6];
-+	} req_ie;
-+	__le32 req_ie_length;
-+	__le32 offset_req_ies;
-+	__le16 resp_ies;
-+	struct resp_ie {
-+		__le16 capa;
-+		__le16 status_code;
-+		__le16 assoc_id;
-+	} resp_ie;
-+	__le32 resp_ie_length;
-+	__le32 offset_resp_ies;
-+} __attribute__((packed));
-+
- /* these have to match what is in wpa_supplicant */
- enum wpa_alg { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP };
- enum wpa_cipher { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
-@@ -674,6 +695,16 @@ static int get_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
- 	return ret;
- }
+ 	_mrv_send_cmd(priv, MRV_HWMEM_CMD_BOOT);
  
-+static int get_association_info(struct usbnet *usbdev,
-+			struct ndis_80211_assoc_info *info, int len)
-+{
-+	int ret;
-+
-+	ret = rndis_query_oid(usbdev, OID_802_11_ASSOCIATION_INFORMATION,
-+				info, &len);
-+
-+	return ret;
-+}
+-	/* the boot code is stupid enought that it does not report any status when it
+-	 * loads correctly and become alive. Wait 1 second..*/
++	/* The boot code is stupid enough that it does not report any status
++	 * when it loads correctly and become alive. Wait 1 second...
++	 */
+ 	msleep(1000);
  
- static int is_associated(struct usbnet *usbdev)
- {
-@@ -2182,11 +2213,38 @@ static void rndis_wext_worker(struct work_struct *work)
- 	struct usbnet *usbdev = priv->usbdev;
- 	union iwreq_data evt;
- 	unsigned char bssid[ETH_ALEN];
--	int ret;
-+	struct ndis_80211_assoc_info *info;
-+	int assoc_size = sizeof(*info) + IW_CUSTOM_MAX + 32;
-+	int ret, offset;
- 
- 	if (test_and_clear_bit(WORK_CONNECTION_EVENT, &priv->work_pending)) {
--		ret = get_bssid(usbdev, bssid);
- 
-+		info = kzalloc(assoc_size, GFP_KERNEL);
-+		if (!info)
-+			goto get_bssid;
-+
-+		ret = get_association_info(usbdev, info, assoc_size);
-+		if (!ret) {
-+			evt.data.length = le32_to_cpu(info->req_ie_length);
-+			if (evt.data.length > 0) {
-+				offset = le32_to_cpu(info->offset_req_ies);
-+				wireless_send_event(usbdev->net,
-+					IWEVASSOCREQIE, &evt,
-+					(char *)info + offset);
-+			}
-+
-+			evt.data.length = le32_to_cpu(info->resp_ie_length);
-+			if (evt.data.length > 0) {
-+				offset = le32_to_cpu(info->offset_resp_ies);
-+				wireless_send_event(usbdev->net,
-+					IWEVASSOCRESPIE, &evt,
-+					(char *)info + offset);
-+			}
-+		}
-+		kfree(info);
-+
-+get_bssid:
-+		ret = get_bssid(usbdev, bssid);
- 		if (!ret) {
- 			evt.data.flags = 0;
- 			evt.data.length = 0;
+ 	err = request_firmware(&img, FW_FIRMWARE_FILENAME, &priv->pdev->dev);
+@@ -260,12 +261,15 @@ static int mrv_upload_fw(struct mrv_priv *priv)
+ 		memcpy(cmd_data, img->data + i, 256);
+ 		mrv_send_cmd(priv);
+ 		for (j = 0; j < 500; j++) {
+-			if (mrv_reg_read32(priv, MRV_REG_STATUS) == 5)
+-			  break;
++			if (mrv_reg_read32(priv, MRV_REG_STATUS) == 0x5)
++				break;
+ 			mdelay(1);
+ 		}
++		/* We waited for 500 msecs and the card never went to the
++		 * magical 'Loading firmware' state
++		 */
+ 		if (j == 500) {
+-			printk(KERN_ERR"Boot FW has failed to transfer real FW\n");
++			printk(KERN_ERR"Boot Firmware has failed to transfer a real Firmware\n");
+ 			return -2;
+ 		}
+ 	}
+@@ -278,12 +282,15 @@ static int mrv_upload_fw(struct mrv_priv *priv)
+ 		memcpy(cmd_data, img->data + i, img->size - i);
+ 		mrv_send_cmd(priv);
+ 		for (j = 0; j < 500; j++) {
+-			if (mrv_reg_read32(priv, MRV_REG_STATUS) == 5)
+-			  break;
++			if (mrv_reg_read32(priv, MRV_REG_STATUS) == 0x5)
++				break;
+ 			mdelay(1);
+ 		}
++		/* We waited for 500 msecs and the card never transfered the
++		 * last portion of the firmware... return an error
++		 */
+ 		if (j == 500) {
+-			printk(KERN_ERR"Boot FW has failed to transfer last real FW chunk\n");
++			printk(KERN_ERR"Boot Firmware has failed to transfer the last real Firmware chunk\n");
+ 			return -2;
+ 		}
+ 	}
+
+
+--------------090308060705030309060805--
