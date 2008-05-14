@@ -1,43 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.174]:51987 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006AbYE1Rx7 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45731 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751684AbYENXbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 13:53:59 -0400
-Message-ID: <483D9C34.2020908@scherping.de> (sfid-20080528_195402_514712_500CF103)
-Date: Wed, 28 May 2008 19:53:56 +0200
-From: Richard Scherping <richard@scherping.de>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k: 10 MHz channels?
-References: <483B181F.3010802@scherping.de> <40f31dec0805280336r40b102ffx11cbd0c0d465c9f8@mail.gmail.com>
-In-Reply-To: <40f31dec0805280336r40b102ffx11cbd0c0d465c9f8@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 14 May 2008 19:31:00 -0400
+Message-Id: <200805142330.m4ENUb2F027287@imap1.linux-foundation.org> (sfid-20080515_013104_494980_58D858C5)
+Subject: [patch for 2.6.26? 1/1] hostap: procfs fix for hostap_fw.c
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	mchouque@free.fr, jkmaline@cc.hut.fi
+From: akpm@linux-foundation.org
+Date: Wed, 14 May 2008 16:30:37 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis schrieb:
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
 
-> No work has been done for such features yet, other more important
-> things are missing right now. If you want to rev. engineer
-> half/quarter rate channels, i think you should start from nic_wakeup
-> and reset functions (also check out rx/tx descriptors for the rate
-> code). Mmiotrace is your friend ;-)
+I've been toying with hostap_pci and found a bug that is triggered when you
+unload/reload the module.
 
-Thanks very much for your reply, Nick!
+If you don't have PRISM2_NO_PROCFS_DEBUG defined (which is the default, as per
+hostap_config.h), the driver creates a "registers" file in /proc used to dump
+PRISM registers (function prism2_init_local_data):
 
-In fact I found the piece of code needed to get 10 MHz channels working with the Ubiquity cards today.
-I do not have the full code at hand ATM, but it was not more than adding
+#ifndef PRISM2_NO_PROCFS_DEBUG
+        create_proc_read_entry("registers", 0, local->proc,
+                               prism2_registers_proc_read, local);
+#endif /* PRISM2_NO_PROCFS_DEBUG */
 
-clock |= 0x100
+Note that create_proc_read_entry is being called with local->proc which isn't
+defined at the time: "registers" ends up being created as /proc/registers.
 
-to hw.c:ath5k_hw_nic_wakeup.
+When hostap_pci is done initializing the hardware, it calls hostap_hw_ready
+which in turns creates all the files in /proc through hostap_init_proc
+(hostap_proc.c):
 
-madwifi-trace helped to find that single, but important bit ;-)
+        local->proc = NULL;
 
-ath5k performance still is somewhat limited in ad-hoc mode, but I will try to work on that, too. Are there any ideas yet, that are not already implemented? I refer to the effect that a simple ping between two ath5k ad-hoc stations has only about 80 % success rate...
+        if (hostap_proc == NULL) {
+                printk(KERN_WARNING "%s: hostap proc directory not created\n",
+                       local->dev->name);
+                return;
+        }
 
-Thanks for your great work! With the full frequency range and free choice of channelwidths ath5k is about to exceed even specially modified MadWifi versions in functionality.
+        local->proc = proc_mkdir(local->ddev->name, hostap_proc);
 
-Richard
+So far so good, well sort of...  When you unload the module,
+prism2_free_local_data does this:
+
+#ifndef PRISM2_NO_PROCFS_DEBUG
+        if (local->proc != NULL)
+                remove_proc_entry("registers", local->proc);
+#endif /* PRISM2_NO_PROCFS_DEBUG */
+        hostap_remove_proc(local);
+
+Problem is local->proc has now been overwritten by hostap_init_proc meaning
+"registers" isn't removed.  When you reload the module you get an error
+telling you "registers" already exists (and you then get duplicate "registers"
+files in /proc).
+
+So in a nutshell "registers" should be created after calling hostap_init_proc
+(this way it'll be created where it belongs - /proc/net/hostap/%s) making it
+removable at module unload.
+
+Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
+Cc: Jouni Malinen <jkmaline@cc.hut.fi>
+Cc: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/net/wireless/hostap/hostap_hw.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff -puN drivers/net/wireless/hostap/hostap_hw.c~hostap-procfs-fix-for-hostap_fwc drivers/net/wireless/hostap/hostap_hw.c
+--- a/drivers/net/wireless/hostap/hostap_hw.c~hostap-procfs-fix-for-hostap_fwc
++++ a/drivers/net/wireless/hostap/hostap_hw.c
+@@ -3276,11 +3276,6 @@ while (0)
+ 	}
+ 	printk(KERN_INFO "%s: Registered netdevice %s\n", dev_info, dev->name);
+ 
+-#ifndef PRISM2_NO_PROCFS_DEBUG
+-	create_proc_read_entry("registers", 0, local->proc,
+-			       prism2_registers_proc_read, local);
+-#endif /* PRISM2_NO_PROCFS_DEBUG */
+-
+ 	hostap_init_data(local);
+ 	return dev;
+ 
+@@ -3307,6 +3302,10 @@ static int hostap_hw_ready(struct net_de
+ 			netif_carrier_off(local->ddev);
+ 		}
+ 		hostap_init_proc(local);
++#ifndef PRISM2_NO_PROCFS_DEBUG
++		create_proc_read_entry("registers", 0, local->proc,
++				prism2_registers_proc_read, local);
++#endif /* PRISM2_NO_PROCFS_DEBUG */
+ 		hostap_init_ap_proc(local);
+ 		return 0;
+ 	}
+_
