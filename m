@@ -1,74 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbYECLw1 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51535 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167AbYENK1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 07:52:27 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080502.163334.148944203.davem@davemloft.net>
-References: <1209639500.7067.0.camel@johannes.berg>
-	 <20080501110341.GD7490@gondor.apana.org.au>
-	 <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HAMbGV0fR9LyZuZZG4vU"
-Date: Sat, 03 May 2008 13:52:13 +0200
-Message-Id: <1209815533.3987.21.camel@johannes.berg> (sfid-20080503_135201_391781_DD13E25A)
-Mime-Version: 1.0
+	Wed, 14 May 2008 06:27:00 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCHv2] b43: use the bitrev helpers rather than rolling a private one
+Date: Wed, 14 May 2008 12:26:37 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1210708518.6191.0.camel@brick> <1210727615.6191.20.camel@brick> <200805141221.00979.mb@bu3sch.de>
+In-Reply-To: <200805141221.00979.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200805141226.37481.mb@bu3sch.de> (sfid-20080514_122703_442693_D0A17AE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 14 May 2008 12:21:00 Michael Buesch wrote:
+> On Wednesday 14 May 2008 03:13:35 Harvey Harrison wrote:
+> > The 4-bit reversal flip_4bit is replaced with the bitrev helper
+> > bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
+> > where a register is read from for checking there.  The other caller
+> > explicitly passes an array index which is guaranteed to be within range
+> > and so a B43_WARN is not added there.
+> > 
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> Reviewed-off-by: Michael Buesch <mb@bu3sch.de>
 
---=-HAMbGV0fR9LyZuZZG4vU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Reviewed-off bah :D
+That's when want to you change a Signed-off-by to a Reviewed-by. ;)
+
+> 
+> > ---
+> >  drivers/net/wireless/b43/phy.c |   27 ++++++---------------------
+> >  1 files changed, 6 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/b43/phy.c b/drivers/net/wireless/b43/phy.c
+> > index de024dc..feea79f 100644
+> > --- a/drivers/net/wireless/b43/phy.c
+> > +++ b/drivers/net/wireless/b43/phy.c
+> > @@ -28,6 +28,7 @@
+> >  #include <linux/delay.h>
+> >  #include <linux/io.h>
+> >  #include <linux/types.h>
+> > +#include <linux/bitrev.h>
+> >  
+> >  #include "b43.h"
+> >  #include "phy.h"
+> > @@ -83,25 +84,9 @@ const u8 b43_radio_channel_codes_bg[] = {
+> >  	72, 84,
+> >  };
+> >  
+> > +#define bitrev4(tmp) (bitrev8(tmp) >> 4)
+> >  static void b43_phy_initg(struct b43_wldev *dev);
+> >  
+> > -/* Reverse the bits of a 4bit value.
+> > - * Example:  1101 is flipped 1011
+> > - */
+> > -static u16 flip_4bit(u16 value)
+> > -{
+> > -	u16 flipped = 0x0000;
+> > -
+> > -	B43_WARN_ON(value & ~0x000F);
+> > -
+> > -	flipped |= (value & 0x0001) << 3;
+> > -	flipped |= (value & 0x0002) << 1;
+> > -	flipped |= (value & 0x0004) >> 1;
+> > -	flipped |= (value & 0x0008) >> 3;
+> > -
+> > -	return flipped;
+> > -}
+> > -
+> >  static void generate_rfatt_list(struct b43_wldev *dev,
+> >  				struct b43_rfatt_list *list)
+> >  {
+> > @@ -3069,13 +3054,13 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
+> >  		}
+> >  		radio_stacksave(0x0078);
+> >  		tmp = (b43_radio_read16(dev, 0x0078) & 0x001E);
+> > -		flipped = flip_4bit(tmp);
+> > +		B43_WARN_ON(tmp > 15);
+> > +		flipped = bitrev4(tmp);
+> >  		if (flipped < 10 && flipped >= 8)
+> >  			flipped = 7;
+> >  		else if (flipped >= 10)
+> >  			flipped -= 3;
+> > -		flipped = flip_4bit(flipped);
+> > -		flipped = (flipped << 1) | 0x0020;
+> > +		flipped = (bitrev4(flipped) << 1) | 0x0020;
+> >  		b43_radio_write16(dev, 0x0078, flipped);
+> >  
+> >  		b43_calc_nrssi_threshold(dev);
+> > @@ -3708,7 +3693,7 @@ u16 b43_radio_init2050(struct b43_wldev *dev)
+> >  	tmp1 >>= 9;
+> >  
+> >  	for (i = 0; i < 16; i++) {
+> > -		radio78 = ((flip_4bit(i) << 1) | 0x20);
+> > +		radio78 = (bitrev4(i) << 1) | 0x0020;
+> >  		b43_radio_write16(dev, 0x78, radio78);
+> >  		udelay(10);
+> >  		for (j = 0; j < 16; j++) {
+> 
+> 
+> 
 
 
-> We can't update skb->truesize during arbitray skb->data reallocations,
-> because it could corrupt the socket accounting.
->=20
-> On the other hand, if we provide ways for users to subvert the socket
-> buffer limits, we might as well not try to limit anything.
 
-Why don't we update the socket allocation when doing pskb_expand_head()?
-Sure, it could become negative, but is that so bad?
-
-> Take a look at some ethernet drivers that implement TSO in a way that
-> requires munging the IP headers for whatever reason.  If they need to
-> COW the packet data in order to modify it, they always do this with
-> pskb_expand_head(skb, 0, 0, GFP_*) exactly so that they don't modify
-> the SKB data size, and exactly so that the skb->truesize value stays
-> accurate.
-
-We need more space though. Should we then just increase the built-in
-headroom?
-
-johannes
-
---=-HAMbGV0fR9LyZuZZG4vU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBxR7KVg1VMiehFYAQIG6A/+LN7tnSrj2GWgprqCBlUEo7SJLnGQ7BVE
-BiRas6WVxYIUKjquPF5c3qWLaCDMPkRwV1j4tt3dfCXLckGDNMrb/TNESKL+TEqo
-psLnzV8gWcjIlfnt4FCb6d0G/N/P0w+R94tQC5Q9c55QTVU7BL9rwXsUmh3NKZx+
-N9PmtQrdLne8lzEKTUzRblH28rQ/yffn0blrnZhw7vc0wcYzo1IvdV/LCphSbQwu
-VCJhcVmZEQZAi6ezN+yI8Ap/RSzsdL1MVzquVjf1CkU1oeTT7z8vPX19qcqrSJp5
-DNn1L3bg5/fTF3bkeMKPKY7hccszC0iuflBA2jHGPGlMpJTxa92DMn10prZMEpM6
-DDZ4W+BpjUJtLO9PD921wWk02hrgrQIT/2XFEpLe8oPsE7RLiU+FkQgazgho2Pjb
-AlD2ixApQW45H2kM74iYq/4WJU4LdQ73fai04h9CWz6Q5T4O0cVZMCPoO4UXWlr/
-Eu6YJ9/500GuM1IrxcqBwZF96sbxRq5zAmaqsHfhHtU3R8JRiielYHgGk4KZhZ+4
-VdCeJnh+9S+WXCoTiNLrv/gAGqJFjqJHvNe4OJDA2nhR89WGmRgLZJIDVwHCjW8P
-D7hQwV74L0+OPvkOITfZLZpYZU7PTTP9LhzRebG5bC29xw1QLpJiroeOv1mJnhCb
-cKTH3ss5qRo=
-=wAUQ
------END PGP SIGNATURE-----
-
---=-HAMbGV0fR9LyZuZZG4vU--
-
+-- 
+Greetings Michael.
