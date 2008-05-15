@@ -1,83 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbYEUPJR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 11:09:17 -0400
-Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in
-	ieee80211_compatible_rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <hschaa@suse.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Bruno Randolf <bruno@thinktube.com>
-In-Reply-To: <1ba2fa240805210750x5112a8c3lea2f493f59a50b79@mail.gmail.com> (sfid-20080521_165053_580040_04763B33)
-References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
-	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
-	 <1ba2fa240805210347w375b571djc922f814fa9f521f@mail.gmail.com>
-	 <20080521135451.GA3545@tuxdriver.com>
-	 <1ba2fa240805210750x5112a8c3lea2f493f59a50b79@mail.gmail.com>
-	 (sfid-20080521_165053_580040_04763B33)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n+ADgkQF6q48M+Zov3wa"
-Date: Wed, 21 May 2008 17:08:09 +0200
-Message-Id: <1211382489.13667.11.camel@johannes.berg> (sfid-20080521_170920_712934_E942A2F7)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:14451 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752255AbYEOF4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:37 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 23/26] iwlwifi: remove 4965 remainings in iwl-eeprom.c file
+Date: Thu, 15 May 2008 13:54:15 +0800
+Message-Id: <1210830858-3410-24-git-send-email-yi.zhu@intel.com> (sfid-20080515_081615_444486_B2D84E91)
+In-Reply-To: <1210830858-3410-23-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-7-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-8-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-9-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-10-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-11-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-12-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-13-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-14-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-15-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-16-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-17-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-18-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-19-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-20-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-21-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-22-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-23-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-n+ADgkQF6q48M+Zov3wa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The patch cleans up 4965 remaings from iwl-eeprom.c file.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-> static void ieee80211_rx_bss_put(struct net_device *dev,
->                                  struct ieee80211_sta_bss *bss)
-> {
->         struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
->=20
->         local_bh_disable();
->         if (!atomic_dec_and_lock(&bss->users, &local->sta_bss_lock)) {
->                 local_bh_enable();
->                 return;
->         }
->=20
-> ---- don't we miss  local_bh_enable(); here or spin_unlock_bh takes
-> care of this ---
->=20
->=20
->         __ieee80211_rx_bss_hash_del(dev, bss);
->         list_del(&bss->list);
->         spin_unlock_bh(&local->sta_bss_lock);
-
-spin_unlock_bh takes care of it. The local_bh_disable() +
-atomic_dec_and_lock() is like spin_lock_bh() + atomic_dec() just with
-different atomicity guarantees.
-
-johannes
-
---=-n+ADgkQF6q48M+Zov3wa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDQ62KVg1VMiehFYAQIzKQ//SH7DhUCLkIqpMv2ugAQkiX+h1OxgKswd
-ig27gNxqO01mZyT07bW2cfWi9vbXrsBEFmoyEXnH2Yu3rA3IU17MFVlqUyl0wRun
-7itW9eMN9pq097rvPN0A78nk8q2t3VpdZ2zEOf9L2/2sb7ZIQDBu8zWhEPKJRftp
-MVQQ2PiI0SsW1e9DD0uLEDVQoOKolW9RRtM1P2LHN+t609Jt/YTuVBCr9eF0CwhB
-h3EBCMP50J+fDAkJrbTt+hBcVOvelA6PzjDpzDlGsnWbm/LOMu6+TdfCjFcadArS
-HYt2XwVEey2mTJmZWvdkMGKzlgOF7trKywl7ufwKqwWGCw6SnhX2FycFUVdx0gsA
-mLGxpbWzpJWaCKJR7/T+h9a8mx2e9A5zBeYCyiavIGZ39u/BeBhZPsHJHK1RVskl
-feqEGh98vbMeTG2ZyCG3de7iRvpJhdGgmUUquGtIw5WeU/IGrugcXgMa747tpBmb
-OMB97AdxDxWwUao9tBSn/gZEHxB+VjZro7Ye+okfdfxJldMsUwuQgQgHN99PPUrA
-azfC2gs80ezPTGWnQa+ADT+32Q1OkOirmeC1OzVKWdXZEVFBh1Q7Ub2JQQDoRbWm
-XMKNqg2jJCPfAp64fO52FnQXGsRVfGgBndWXXsDR6ieE+1BG31wGE5uS+aH4ckXE
-4FsKrK867Pg=
-=xviv
------END PGP SIGNATURE-----
-
---=-n+ADgkQF6q48M+Zov3wa--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index fa30660..300ef8e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -365,11 +365,11 @@ static void iwl_init_band_reference(const struct iwl_priv *priv,
+ 			    ? # x " " : "")
+ 
+ /**
+- * iwl4965_set_fat_chan_info - Copy fat channel info into driver's priv.
++ * iwl_set_fat_chan_info - Copy fat channel info into driver's priv.
+  *
+  * Does not set up a command, or touch hardware.
+  */
+-static int iwl4965_set_fat_chan_info(struct iwl_priv *priv,
++static int iwl_set_fat_chan_info(struct iwl_priv *priv,
+ 			      enum ieee80211_band band, u16 channel,
+ 			      const struct iwl_eeprom_channel *eeprom_ch,
+ 			      u8 fat_extension_channel)
+@@ -542,16 +542,16 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 				fat_extension_chan = HT_IE_EXT_CHANNEL_ABOVE;
+ 
+ 			/* Set up driver's info for lower half */
+-			iwl4965_set_fat_chan_info(priv, ieeeband,
+-						  eeprom_ch_index[ch],
+-						  &(eeprom_ch_info[ch]),
+-						  fat_extension_chan);
++			iwl_set_fat_chan_info(priv, ieeeband,
++						eeprom_ch_index[ch],
++						&(eeprom_ch_info[ch]),
++						fat_extension_chan);
+ 
+ 			/* Set up driver's info for upper half */
+-			iwl4965_set_fat_chan_info(priv, ieeeband,
+-						  (eeprom_ch_index[ch] + 4),
+-						  &(eeprom_ch_info[ch]),
+-						  HT_IE_EXT_CHANNEL_BELOW);
++			iwl_set_fat_chan_info(priv, ieeeband,
++						(eeprom_ch_index[ch] + 4),
++						&(eeprom_ch_info[ch]),
++						HT_IE_EXT_CHANNEL_BELOW);
+ 		}
+ 	}
+ 
+@@ -560,7 +560,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ EXPORT_SYMBOL(iwl_init_channel_map);
+ 
+ /*
+- * iwl_free_channel_map - undo allocations in iwl4965_init_channel_map
++ * iwl_free_channel_map - undo allocations in iwl_init_channel_map
+  */
+ void iwl_free_channel_map(struct iwl_priv *priv)
+ {
+-- 
+1.5.3.6
 
