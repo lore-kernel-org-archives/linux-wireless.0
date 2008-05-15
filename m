@@ -1,66 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:2033 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758116AbYEWO1e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 May 2008 10:27:34 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so395611fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2008 07:27:32 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: BUG: scheduling while atomic (2.6.26-rc3...)
-Date: Fri, 23 May 2008 16:28:39 +0200
-Cc: Andrew Price <andy@andrewprice.me.uk>,
-	linux-wireless@vger.kernel.org
-References: <g158ou$ts7$1@ger.gmane.org> <1211533873.18247.0.camel@johannes.berg>
-In-Reply-To: <1211533873.18247.0.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805231628.39152.IvDoorn@gmail.com> (sfid-20080523_162753_912468_F9C7F2F5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mba.ocn.ne.jp ([122.1.235.107]:54417 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750830AbYEOPh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 11:37:28 -0400
+Date: Fri, 16 May 2008 00:12:15 +0900 (JST)
+Message-Id: <20080516.001215.39152691.anemo@mba.ocn.ne.jp> (sfid-20080515_173732_220655_C9E56A59)
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] zd1211rw: Use DMA-aware buffer for usb transfer
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 May 2008, Johannes Berg wrote:
-> On Fri, 2008-05-23 at 03:05 +0100, Andrew Price wrote:
-> > Hi,
-> > 
-> > I'm seeing this bug when I boot but unfortunately the messages don't
-> > seem to get logged and the system locks so I took a photo of as much as
-> > could fit on my laptop's screen:
-> > http://sucs.org/~welshbyte/wirelesstraces.jpg (sorry about the bad quality).
-> > 
-> > Anyway, I've bisected it down to commit
-> > 2f561feb386d6adefbad63c59a1fcd298ac6a79c "mac80211: Add RTNL version of
-> > ieee80211_iterate_active_interfaces"
-> > 
-> > lspci says I'm using a:
-> > 
-> > 02:00.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
-> 
-> Looks like rt2x00 actually needs both versions of the function.
+The zd1211rw driver uses unaligned stack buffer for USB control
+message.  But it might cause stack corruption on non-coherent
+platform, such as MIPS.  Use DMA-aware buffers for USB transfer.
 
-Johannes: Thanks for the tip, I seriously overlooked that the rtnl version
-grabs a mutex in interrupt context. :)
-
-Andew: Could you try below patch to see if that works?
-
+Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 5645140..669d942 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -481,9 +481,9 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
- 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
- 
--	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
--					    rt2x00lib_beacondone_iter,
--					    rt2x00dev);
-+	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
-+						   rt2x00lib_beacondone_iter,
-+						   rt2x00dev);
- 
- 	queue_work(rt2x00dev->hw->workqueue, &rt2x00dev->intf_work);
- }
+ drivers/net/wireless/zd1211rw/zd_usb.c |   20 ++++++++++++++------
+ 1 files changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 12e24f0..fbacfe4 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -172,7 +172,7 @@ static int upload_code(struct usb_device *udev,
+ 		r = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			USB_REQ_FIRMWARE_CONFIRM,
+ 			USB_DIR_IN | USB_TYPE_VENDOR,
+-			0, 0, &ret, sizeof(ret), 5000 /* ms */);
++			0, 0, p, sizeof(ret), 5000 /* ms */);
+ 		if (r != sizeof(ret)) {
+ 			dev_err(&udev->dev,
+ 				"control request firmeware confirmation failed."
+@@ -181,6 +181,7 @@ static int upload_code(struct usb_device *udev,
+ 				r = -ENODEV;
+ 			goto error;
+ 		}
++		ret = p[0];
+ 		if (ret & 0x80) {
+ 			dev_err(&udev->dev,
+ 				"Internal error while downloading."
+@@ -312,22 +313,29 @@ int zd_usb_read_fw(struct zd_usb *usb, zd_addr_t addr, u8 *data, u16 len)
+ {
+ 	int r;
+ 	struct usb_device *udev = zd_usb_to_usbdev(usb);
++	u8 *buf = kmalloc(len, GFP_KERNEL);
+ 
++	if (!buf)
++		return -ENOMEM;
+ 	r = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 		USB_REQ_FIRMWARE_READ_DATA, USB_DIR_IN | 0x40, addr, 0,
+-		data, len, 5000);
++		buf, len, 5000);
+ 	if (r < 0) {
+ 		dev_err(&udev->dev,
+ 			"read over firmware interface failed: %d\n", r);
+-		return r;
++		goto exit;
+ 	} else if (r != len) {
+ 		dev_err(&udev->dev,
+ 			"incomplete read over firmware interface: %d/%d\n",
+ 			r, len);
+-		return -EIO;
++		r = -EIO;
++		goto exit;
+ 	}
+-
+-	return 0;
++	r = 0;
++	memcpy(data, buf, len);
++exit:
++	kfree(buf);
++	return r;
+ }
+ 
+ #define urb_dev(urb) (&(urb)->dev->dev)
