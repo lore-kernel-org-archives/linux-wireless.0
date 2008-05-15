@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2929 "EHLO ra.tuxdriver.com"
+Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755795AbYEMMwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 08:52:51 -0400
-Date: Tue, 13 May 2008 08:42:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: bruno randolf <bruno@thinktube.com>
-Cc: mcgrof@gmail.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	flamingice@sourmilk.net, jbenc@suse.cz
-Subject: Re: [PATCH 1/2] mac80211: use hardware flags for signal/noise units
-Message-ID: <20080513124201.GB3279@tuxdriver.com> (sfid-20080513_145254_019318_28F8BCF9)
-References: <20080508171540.20631.31056.stgit@localhost> <200805131126.58258.bruno@thinktube.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805131126.58258.bruno@thinktube.com>
+	id S1751766AbYEOF4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 06/26] iwlwifi: rename iwl4965_tx_info to iwl_tx_info
+Date: Thu, 15 May 2008 13:53:58 +0800
+Message-Id: <1210830858-3410-7-git-send-email-yi.zhu@intel.com> (sfid-20080515_075625_975123_72359773)
+In-Reply-To: <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 13, 2008 at 11:26:58AM +0200, bruno randolf wrote:
-> hello!
-> 
-> is there any interrest in getting this merged? any problems?
-> am i wasting my time?
-> 
-> bruno
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Bruno,
+This patch renames iwl4965_tx_info to iwl_tx_info.
 
-I'm sorry, I've mostly been waiting for some other comments.  But you
-are right, this has been sitting around for a while now.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-If anyone has any objections to Bruno's signal/noise patches then
-speak-up now.  Otherwise, I'll merge them "soon".
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index cf99224..ae18a80 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -118,7 +118,7 @@ struct iwl_queue {
+ #define MAX_NUM_OF_TBS          (20)
+ 
+ /* One for each TFD */
+-struct iwl4965_tx_info {
++struct iwl_tx_info {
+ 	struct ieee80211_tx_status status;
+ 	struct sk_buff *skb[MAX_NUM_OF_TBS];
+ };
+@@ -141,7 +141,7 @@ struct iwl_tx_queue {
+ 	struct iwl_tfd_frame *bd;
+ 	struct iwl_cmd *cmd;
+ 	dma_addr_t dma_addr_cmd;
+-	struct iwl4965_tx_info *txb;
++	struct iwl_tx_info *txb;
+ 	int need_update;
+ 	int sched_retry;
+ 	int active;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 2e7e616..6e70405 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1868,7 +1868,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 	idx = get_cmd_index(q, q->write_ptr, 0);
+ 
+ 	/* Set up driver data for this TFD */
+-	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl4965_tx_info));
++	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
+ 	txq->txb[q->write_ptr].skb[0] = skb;
+ 	memcpy(&(txq->txb[q->write_ptr].status.control),
+ 	       ctl, sizeof(struct ieee80211_tx_control));
+@@ -2306,7 +2306,7 @@ static int iwl4965_get_measurement(struct iwl_priv *priv,
+ #endif
+ 
+ static void iwl4965_txstatus_to_ieee(struct iwl_priv *priv,
+-				 struct iwl4965_tx_info *tx_sta)
++				     struct iwl_tx_info *tx_sta)
+ {
+ 
+ 	tx_sta->status.ack_signal = 0;
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.6
+
