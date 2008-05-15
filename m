@@ -1,119 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30281 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:14460 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759278AbYEWCLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:21 -0400
+	id S1752011AbYEOF4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:18 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Guy Cohen <guy.cohen@intel.com>,
 	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: don't switch to SGI if not supported by AP
-Date: Fri, 23 May 2008 10:08:54 +0800
-Message-Id: <1211508569-3163-17-git-send-email-yi.zhu@intel.com> (sfid-20080523_041132_416524_4DDA6AC8)
-In-Reply-To: <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH 05/26] iwlwifi: rename iwl4965_queue to iwl_queue
+Date: Thu, 15 May 2008 13:53:57 +0800
+Message-Id: <1210830858-3410-6-git-send-email-yi.zhu@intel.com> (sfid-20080515_075623_447509_9D40E76A)
+In-Reply-To: <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch fixes SGI support. RS didn't look at the capabilities of the AP
-before switching to SGI, this should lead to a stall in the traffic with an
-AP that doesn't support SGI.
+This patch renames iwl4965_queue to iwl_queue.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Guy Cohen  <guy.cohen@intel.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |   18 ++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 3 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   16 ++------------
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   28 +++++++++++++-------------
+ 4 files changed, 22 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index 071c7b6..2adc228 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -1439,6 +1439,15 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
- 			}
- 			break;
- 		case IWL_SISO_SWITCH_GI:
-+			if (!tbl->is_fat &&
-+				!(priv->current_ht_config.sgf &
-+						HT_SHORT_GI_20MHZ))
-+				break;
-+			if (tbl->is_fat &&
-+				!(priv->current_ht_config.sgf &
-+						HT_SHORT_GI_40MHZ))
-+				break;
-+
- 			IWL_DEBUG_RATE("LQ: SISO toggle SGI/NGI\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 17847f9..2bb0075 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3231,7 +3231,7 @@ static int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
+ int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
+ 					 u8 tid, int txq_id)
+ {
+-	struct iwl4965_queue *q = &priv->txq[txq_id].q;
++	struct iwl_queue *q = &priv->txq[txq_id].q;
+ 	u8 *addr = priv->stations[sta_id].sta.sta.addr;
+ 	struct iwl_tid_data *tid_data = &priv->stations[sta_id].tid[tid];
  
- 			memcpy(search_tbl, tbl, sz);
-@@ -1521,6 +1530,15 @@ static int rs_move_mimo_to_other(struct iwl_priv *priv,
- 			break;
+@@ -3263,16 +3263,6 @@ int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
+ }
  
- 		case IWL_MIMO_SWITCH_GI:
-+			if (!tbl->is_fat &&
-+				!(priv->current_ht_config.sgf &
-+						HT_SHORT_GI_20MHZ))
-+				break;
-+			if (tbl->is_fat &&
-+				!(priv->current_ht_config.sgf &
-+						HT_SHORT_GI_40MHZ))
-+				break;
-+
- 			IWL_DEBUG_RATE("LQ: MIMO toggle SGI/NGI\n");
+ /**
+- * iwl4965_queue_dec_wrap - Decrement queue index, wrap back to end if needed
+- * @index -- current index
+- * @n_bd -- total number of entries in queue (s/b power of 2)
+- */
+-static inline int iwl4965_queue_dec_wrap(int index, int n_bd)
+-{
+-	return (index == 0) ? n_bd - 1 : index - 1;
+-}
+-
+-/**
+  * iwl4965_rx_reply_compressed_ba - Handler for REPLY_COMPRESSED_BA
+  *
+  * Handles block-acknowledge notification from device, which reports success
+@@ -3304,7 +3294,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	agg = &priv->stations[ba_resp->sta_id].tid[ba_resp->tid].agg;
  
- 			/* Set up new search table for MIMO */
+ 	/* Find index just before block-ack window */
+-	index = iwl4965_queue_dec_wrap(ba_resp_scd_ssn & 0xff, txq->q.n_bd);
++	index = iwl_queue_dec_wrap(ba_resp_scd_ssn & 0xff, txq->q.n_bd);
+ 
+ 	/* TODO: Need to get this copy more safely - now good for debug */
+ 
+@@ -3337,7 +3327,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 		int freed = iwl4965_tx_queue_reclaim(priv, scd_flow, index);
+ 		priv->stations[ba_resp->sta_id].
+ 			tid[ba_resp->tid].tfds_in_queue -= freed;
+-		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
++		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
+ 			priv->mac80211_registered &&
+ 			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+ 			ieee80211_wake_queue(priv->hw, ampdu_q);
 diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4106efd..7a54682 100644
+index 5dccc5a..cf99224 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
 +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -610,8 +610,8 @@ struct iwl_hw_params {
- #endif
- };
+@@ -102,7 +102,7 @@ struct iwl_rx_mem_buffer {
+  *
+  * Contains common data for Rx and Tx queues
+  */
+-struct iwl4965_queue {
++struct iwl_queue {
+ 	int n_bd;              /* number of BDs in this queue */
+ 	int write_ptr;       /* 1-st empty entry (index) host_w*/
+ 	int read_ptr;         /* last used entry (index) host_r*/
+@@ -137,7 +137,7 @@ struct iwl4965_tx_info {
+  * descriptors) and required locking structures.
+  */
+ struct iwl_tx_queue {
+-	struct iwl4965_queue q;
++	struct iwl_queue q;
+ 	struct iwl_tfd_frame *bd;
+ 	struct iwl_cmd *cmd;
+ 	dma_addr_t dma_addr_cmd;
+@@ -721,7 +721,7 @@ extern u8 iwl_find_station(struct iwl_priv *priv, const u8 *bssid);
  
--#define HT_SHORT_GI_20MHZ_ONLY	(1 << 0)
--#define HT_SHORT_GI_40MHZ_ONLY	(1 << 1)
-+#define HT_SHORT_GI_20MHZ	(1 << 0)
-+#define HT_SHORT_GI_40MHZ	(1 << 1)
+ extern int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channel);
+ extern int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index);
+-extern int iwl4965_queue_space(const struct iwl4965_queue *q);
++extern int iwl_queue_space(const struct iwl_queue *q);
+ struct iwl_priv;
  
+ extern void iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index a1e03cc..870d257 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -105,7 +105,7 @@ EXPORT_SYMBOL(iwl_hw_txq_free_tfd);
+  */
+ static void iwl_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ {
+-	struct iwl4965_queue *q = &txq->q;
++	struct iwl_queue *q = &txq->q;
+ 	struct pci_dev *dev = priv->pci_dev;
+ 	int len;
  
- #define IWL_RX_HDR(x) ((struct iwl4965_rx_frame_hdr *)(\
+@@ -158,7 +158,7 @@ EXPORT_SYMBOL(iwl_hw_txq_ctx_free);
+ /**
+  * iwl_queue_init - Initialize queue's high/low-water and read/write indexes
+  */
+-static int iwl_queue_init(struct iwl_priv *priv, struct iwl4965_queue *q,
++static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
+ 			  int count, int slots_num, u32 id)
+ {
+ 	q->n_bd = count;
 diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index dd2fd40..a532a9e 100644
+index c713b27..2e7e616 100644
 --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
 +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -700,9 +700,9 @@ static void iwl4965_ht_conf(struct iwl_priv *priv,
- 	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+@@ -173,7 +173,7 @@ static const char *iwl4965_escape_essid(const char *essid, u8 essid_len)
+  * See more detailed info in iwl-4965-hw.h.
+  ***************************************************/
  
- 	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
--		iwl_conf->sgf |= 0x1;
-+		iwl_conf->sgf |= HT_SHORT_GI_20MHZ;
- 	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
--		iwl_conf->sgf |= 0x2;
-+		iwl_conf->sgf |= HT_SHORT_GI_40MHZ;
+-int iwl4965_queue_space(const struct iwl4965_queue *q)
++int iwl_queue_space(const struct iwl_queue *q)
+ {
+ 	int s = q->read_ptr - q->write_ptr;
  
- 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
- 	iwl_conf->max_amsdu_size =
+@@ -190,14 +190,14 @@ int iwl4965_queue_space(const struct iwl4965_queue *q)
+ }
+ 
+ 
+-static inline int x2_queue_used(const struct iwl4965_queue *q, int i)
++static inline int iwl_queue_used(const struct iwl_queue *q, int i)
+ {
+ 	return q->write_ptr > q->read_ptr ?
+ 		(i >= q->read_ptr && i < q->write_ptr) :
+ 		!(i < q->read_ptr && i >= q->write_ptr);
+ }
+ 
+-static inline u8 get_cmd_index(struct iwl4965_queue *q, u32 index, int is_huge)
++static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
+ {
+ 	/* This is for scan command, the big buffer at end of command array */
+ 	if (is_huge)
+@@ -348,7 +348,7 @@ u8 iwl4965_add_station_flags(struct iwl_priv *priv, const u8 *addr,
+ int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ {
+ 	struct iwl_tx_queue *txq = &priv->txq[IWL_CMD_QUEUE_NUM];
+-	struct iwl4965_queue *q = &txq->q;
++	struct iwl_queue *q = &txq->q;
+ 	struct iwl_tfd_frame *tfd;
+ 	u32 *control_flags;
+ 	struct iwl_cmd *out_cmd;
+@@ -369,7 +369,7 @@ int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
+-	if (iwl4965_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
++	if (iwl_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
+ 		IWL_ERROR("No space for Tx\n");
+ 		return -ENOSPC;
+ 	}
+@@ -1768,7 +1768,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 	u32 *control_flags;
+ 	int txq_id = ctl->queue;
+ 	struct iwl_tx_queue *txq = NULL;
+-	struct iwl4965_queue *q = NULL;
++	struct iwl_queue *q = NULL;
+ 	dma_addr_t phys_addr;
+ 	dma_addr_t txcmd_phys;
+ 	dma_addr_t scratch_phys;
+@@ -1981,7 +1981,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 	if (rc)
+ 		return rc;
+ 
+-	if ((iwl4965_queue_space(q) < q->high_mark)
++	if ((iwl_queue_space(q) < q->high_mark)
+ 	    && priv->mac80211_registered) {
+ 		if (wait_write_ptr) {
+ 			spin_lock_irqsave(&priv->lock, flags);
+@@ -2332,10 +2332,10 @@ static void iwl4965_txstatus_to_ieee(struct iwl_priv *priv,
+ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ {
+ 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+-	struct iwl4965_queue *q = &txq->q;
++	struct iwl_queue *q = &txq->q;
+ 	int nfreed = 0;
+ 
+-	if ((index >= q->n_bd) || (x2_queue_used(q, index) == 0)) {
++	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
+ 		IWL_ERROR("Read index for DMA queue txq id (%d), index %d, "
+ 			  "is out of range [0-%d] %d %d.\n", txq_id,
+ 			  index, q->n_bd, q->write_ptr, q->read_ptr);
+@@ -2541,7 +2541,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 	__le16 *qc;
+ #endif
+ 
+-	if ((index >= txq->q.n_bd) || (x2_queue_used(&txq->q, index) == 0)) {
++	if ((index >= txq->q.n_bd) || (iwl_queue_used(&txq->q, index) == 0)) {
+ 		IWL_ERROR("Read index for DMA queue txq_id (%d) index %d "
+ 			  "is out of range [0-%d] %d %d\n", txq_id,
+ 			  index, txq->q.n_bd, txq->q.write_ptr,
+@@ -2587,7 +2587,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 			freed = iwl4965_tx_queue_reclaim(priv, txq_id, index);
+ 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+ 
+-			if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
++			if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
+ 			    txq_id >= 0 && priv->mac80211_registered &&
+ 			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
+ 				/* calculate mac80211 ampdu sw queue to wake */
+@@ -2621,7 +2621,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		int freed = iwl4965_tx_queue_reclaim(priv, txq_id, index);
+ 		if (tid != MAX_TID_COUNT)
+ 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+-		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
++		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
+ 			(txq_id >= 0) && priv->mac80211_registered)
+ 			ieee80211_wake_queue(priv->hw, txq_id);
+ 		if (tid != MAX_TID_COUNT)
+@@ -5783,7 +5783,7 @@ static int iwl4965_mac_get_tx_stats(struct ieee80211_hw *hw,
+ 	struct iwl_priv *priv = hw->priv;
+ 	int i, avail;
+ 	struct iwl_tx_queue *txq;
+-	struct iwl4965_queue *q;
++	struct iwl_queue *q;
+ 	unsigned long flags;
+ 
+ 	IWL_DEBUG_MAC80211("enter\n");
+@@ -5798,7 +5798,7 @@ static int iwl4965_mac_get_tx_stats(struct ieee80211_hw *hw,
+ 	for (i = 0; i < AC_NUM; i++) {
+ 		txq = &priv->txq[i];
+ 		q = &txq->q;
+-		avail = iwl4965_queue_space(q);
++		avail = iwl_queue_space(q);
+ 
+ 		stats[i].len = q->n_window - avail;
+ 		stats[i].limit = q->n_window - q->high_mark;
 -- 
 1.5.3.6
 
