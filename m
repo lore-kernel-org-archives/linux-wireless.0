@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48794 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbYE2Hua (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.225]:10990 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbYEOQpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 03:50:30 -0400
-Subject: Re: question about ...: wrong count at exit"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <200805290937.22146.hs4233@mail.mn-solutions.de> (sfid-20080529_093731_142217_77BB66EC)
-References: <200805290937.22146.hs4233@mail.mn-solutions.de>
-	 (sfid-20080529_093731_142217_77BB66EC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gIjhF+lbk0KINtxEC/x0"
-Date: Thu, 29 May 2008 09:49:21 +0200
-Message-Id: <1212047361.16917.6.camel@johannes.berg> (sfid-20080529_095048_399395_8C82FB24)
-Mime-Version: 1.0
+	Thu, 15 May 2008 12:45:33 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so595566rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 09:45:32 -0700 (PDT)
+Message-ID: <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com> (sfid-20080515_184537_460826_9C556202)
+Date: Thu, 15 May 2008 12:45:32 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Zack Weinberg" <zackw@panix.com>
+Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
+	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
+	 <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
+	 <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 15, 2008 at 10:41 AM, Zack Weinberg <zackw@panix.com> wrote:
+>> Interesting...  can you confirm that madwifi also will not start from a cold
+>> boot?
+>
+> Yes, madwifi will not start from a cold boot.
 
---=-gIjhF+lbk0KINtxEC/x0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ugh, well that is not good.  Does ndiswrapper work?  Unless anyone
+else has ideas, I would suggest capturing a trace using mmiotrace and
+ndiswrapper to see what is going on.  Someone on ath5k-devel list
+might have a better idea.
 
-On Thu, 2008-05-29 at 09:37 +0200, Holger Schurig wrote:
-> After pulling the newest sparse, I got some new sparse warnings
-> which puzzle me. Here's one of them:
->=20
-> drivers/net/wireless/libertas/main.c:477:9: warning: context imbalance in=
- 'lbs_eth_stop': wrong count at exit
-> drivers/net/wireless/libertas/main.c:477:9:    context 'lock': wanted 0, =
-got 1
->=20
-> However, the function looks quite innocent, and I cannot see
-> any imbalance there. Did I oversee something or is that a
-> problem of sparse?
+>> Perhaps the best thing to do is add printks to ath5k_hw_nic_wakeup and see
+>> where it hangs?
+>
+> It's not hanging. The very first call to ath5k_hw_set_power(ah,
+> AR5K_PM_AWAKE, true, 0); from ath5k_hw_nic_wakeup fails with -EIO, and
+> the driver gives up.
 
->         spin_lock_irq(&priv->driver_lock);
->         priv->infra_open =3D 0;
->         netif_stop_queue(dev);
->         spin_unlock_irq(&priv->driver_lock);
+By 'hanging' I mean the register writes cease to do anything useful
+and the card basically stops responding until you power off.  Madwifi
+will even give "Card didn't behave as expected" in this case.  -EIO
+means it couldn't wake up the chip after 1s, so if the first call to
+ath5k_hw_set_power that doesn't work, we'll need a trace to see what
+differences there are in a working setup.
 
-I think it's a sparse problem caused by my patch, I sent further patches
-to fix it but they were never applied (and had a slight remaining
-problem too). If you look at the pre-processed function it should become
-obvious.
-
-johannes
-
---=-gIjhF+lbk0KINtxEC/x0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASD5gAKVg1VMiehFYAQJmEg//aQt4p3ErVaM91WwYOP5pRK1EVnFJQgPi
-p+LNPH0fIZ6+3GHgbnh4sbeKjaHkTiD8eM00Yvd4yvrJoHIwwa6QkMl5QbAzK/xv
-k/fWysYF1iyr1Cv9tmYGkG2OMaRzwsTbpQl1ZlA7grFXvrqmWsXMBVfdETdwzp0c
-B3+XU/psKdCGPUDIKydZrc8VXibFbGgbEeYcyeKzUFkhbnVlPUdAfWv9SSNHH2fn
-u/Y2qdKS0K4zS/RbOB11ZfrdF3VVeKyEAu+mjHKdi5+Robm3zS7TWUFJHwWDJ5BV
-k+aLyOnoEL/CG8eRSQNXwuHP0nSSfOjCCYJOAjiBmNgX8uhZU2jcgaNq9mCdshgy
-/O1DvZFAg0z/0NG3BOmMfacsMslgYLu3Mp3jbiT8c99Mrsd6QnQ/6grR4cegnyEP
-HZmDTUMu5yKYjdmjQs/b9K4JMYq9Oxk0UxwKFGLWKvV9GmWdDhlyonG/7OdLvaFr
-DK+exxrs1VXbpO9Cf0pDBhaeq9IIDb/Ab8okd2FZ/jlmmMV6CyJ79OIpDtbfTMZ9
-Agbrgsh32otbNNISkD5Oy+GE1J0f2svqmkZKUx9WDMJA8zGEXpfS+nVw7+frWec9
-GPx3fksjoMgXcg7SEObJIfBRzWgm4nvb5EFT53iOFwi5z6Xnokvg1qewBwxm9tMR
-jblt7CWzPSc=
-=g9DB
------END PGP SIGNATURE-----
-
---=-gIjhF+lbk0KINtxEC/x0--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
