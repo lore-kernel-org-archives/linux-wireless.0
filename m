@@ -1,76 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38862 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46739 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934341AbYEBWf6 (ORCPT
+	with ESMTP id S1753139AbYEOLMK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 18:35:58 -0400
-Subject: [PATCH]
+	Thu, 15 May 2008 07:12:10 -0400
+Subject: Re: [PATCH 5/5] mac80211: move TX info into skb->cb
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 03 May 2008 00:35:49 +0200
-Message-Id: <1209767749.3608.23.camel@johannes.berg> (sfid-20080503_003536_334347_3B50118C)
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <20080515105948.820956000@sipsolutions.net> (sfid-20080515_130617_846236_C0B1654B)
+References: <20080515105524.359863000@sipsolutions.net>
+	 <20080515105948.820956000@sipsolutions.net>
+	 (sfid-20080515_130617_846236_C0B1654B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K2LaMpAE1m43JvCi39sV"
+Date: Thu, 15 May 2008 13:11:07 +0200
+Message-Id: <1210849867.8709.0.camel@johannes.berg> (sfid-20080515_131214_527012_0D6E560D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 31ccc476b77234f6afb3 (mac80211: QoS related cleanups) I
-accidentally changed a variable from int to u16 causing a warning
-that a comparison for < 0 was always false. John thought this was
-a missing deletion of code and removed the warning by deleting the
-never executed branch of code in commit 13e5f0888caddf7a020dcd918
-(wireless: fix warning introduced by "mac80211: QoS related cleanups")
-but the problem really was my mistake of using a u16 variable for
-the queue variable when that variable can also contain an error
-code. This patch restores the original code and variable type.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/wme.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+--=-K2LaMpAE1m43JvCi39sV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/wme.c	2008-05-03 00:29:07.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-05-03 00:32:01.000000000 +0200
-@@ -155,8 +155,7 @@ static int wme_qdiscop_enqueue(struct sk
- 	unsigned short fc = le16_to_cpu(hdr->frame_control);
- 	struct Qdisc *qdisc;
- 	struct sta_info *sta;
--	int err;
--	u16 queue;
-+	int err, queue;
- 	u8 tid;
- 
- 	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
-@@ -216,15 +215,20 @@ static int wme_qdiscop_enqueue(struct sk
- 		rcu_read_unlock();
- 	}
- 
--	tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
--	pkt_data->queue = (unsigned int) queue;
--	qdisc = q->queues[queue];
--	err = qdisc->enqueue(skb, qdisc);
--	if (err == NET_XMIT_SUCCESS) {
--		qd->q.qlen++;
--		qd->bstats.bytes += skb->len;
--		qd->bstats.packets++;
--		return NET_XMIT_SUCCESS;
-+	if (unlikely(queue < 0)) {
-+			kfree_skb(skb);
-+			err = NET_XMIT_DROP;
-+	} else {
-+		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
-+		pkt_data->queue = (unsigned int) queue;
-+		qdisc = q->queues[queue];
-+		err = qdisc->enqueue(skb, qdisc);
-+		if (err == NET_XMIT_SUCCESS) {
-+			qd->q.qlen++;
-+			qd->bstats.bytes += skb->len;
-+			qd->bstats.packets++;
-+			return NET_XMIT_SUCCESS;
-+		}
- 	}
- 	qd->qstats.drops++;
- 	return err;
+On Thu, 2008-05-15 at 12:55 +0200, Johannes Berg wrote:
+> plain text document attachment (019-mac80211-tx-info-skb-cb.patch)
+> This patch converts mac80211 and all drivers to have transmit
+> information and status in skb->cb rather than allocating extra
+> memory for it and copying all the data around. To make it fit,
+> a union is used where only data that is necessary for all steps
+> is kept outside of the union.
+>=20
+> A number of fixes were done by Ivo, as well as the rt2x00 part
+> of this patch.
 
+I mangled it a bit though so you may want to check it, mac80211 now sets
+REQ_TX_STATUS so you can use that for status reporting, but you can't
+use it for queue kicking at least not in the future when mac80211 might
+not set it on all frames.
+
+johannes
+
+--=-K2LaMpAE1m43JvCi39sV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCwaSqVg1VMiehFYAQIfug//RLcD7cH34g3EyPV5LT47xXtOBPTiTj46
+gHCWuZh8pHHwDOks1t5T4tNLCgizpCIBRdGbRy/rCrGf4Q6wO7yjRlHZG5R3WOPi
+Tffr7ob/UgO1ORHx2x9ytx/ldro/7NLblIi6ZL0dI+QqQVLBLaB2PF3vVPczBQGp
+NlPxtGfxit5+svP/phU3rzaj+uRSlLbm/9YYqY6zX31oWi5rDjr7saQlkLqjBSaX
+GNFGCdiF09Y1EDx1sB8oJwvjafmjaoG/2s/FTJe2dSeQ4RtUQgk3d1E6YNQVG/2N
+wfPnBMHQq8UnnRdv/EIiRKB/3fftCMOHxDrZEkeAP9UOPDrj1e/AFOUdtUdY9b2Q
+ecxF6dTAiJ6Ba/d7ppQ1rR2zSww0n6pQ4SVwDaMO0WEvch/ky3fJpWEV7eRxZm/7
+gYwsfyoBAxEJ/6I0ekct3iQ7IjYNqlQ/5BfkF8H1NUWt+nXve3rFVE54M6nhI66I
+94ZqW05O4hJL0BzA14bbhVFjr6cjuXyR2+Jg0ZjuBqYihm3G5r/3Uvkz4LKDgLBP
+db5oR9J6Jb5V66l+0+vBu8raXHBhFXN1RqBNssrDPEaWg+n4M+17maYOMpUAVfsD
+eNvARt64LQy13dTMHI+fgPRX3YYFopmkcIuW0ndcRsH7kD/7ssdvcEWQVBjY5LKL
+UPh23RerEYc=
+=q9+u
+-----END PGP SIGNATURE-----
+
+--=-K2LaMpAE1m43JvCi39sV--
 
