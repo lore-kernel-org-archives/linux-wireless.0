@@ -1,141 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:54167 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbYESXJP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53608 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228AbYEOQTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 19:09:15 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH RFC] b43: Upload both beacon templates on initial load
-Date: Tue, 20 May 2008 01:08:13 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805200108.13922.mb@bu3sch.de> (sfid-20080520_010934_339161_2B5C80BD)
+	Thu, 15 May 2008 12:19:33 -0400
+Subject: Re: 4311 v2 Bail - 2.6.26-rc2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel <dan@f-box.org>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <482C530C.8060101@f-box.org>
+References: <48294F0B.4040908@f-box.org>
+	 <1210721604.4279.40.camel@johannes.berg>
+	 <1210721764.4279.41.camel@johannes.berg>	<200805140146.06910.mb@bu3sch.de>
+	 <1210722537.4279.43.camel@johannes.berg>
+	 (sfid-20080514_014950_992691_D85478C3) <1210722731.4279.45.camel@johannes.berg>
+	 <482C530C.8060101@f-box.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OsP7sWvldvOXFuKHBCBk"
+Date: Thu, 15 May 2008 18:18:23 +0200
+Message-Id: <1210868303.3900.11.camel@johannes.berg> (sfid-20080515_181939_400683_F0CE9961)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-05-20 00:16:27.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-05-20 00:54:16.000000000 +0200
-@@ -753,12 +753,13 @@ struct b43_wl {
- 	/* The beacon we are currently using (AP or IBSS mode).
- 	 * This beacon stuff is protected by the irq_lock. */
- 	struct sk_buff *current_beacon;
- 	struct ieee80211_tx_control beacon_txctl;
- 	bool beacon0_uploaded;
- 	bool beacon1_uploaded;
-+	bool beacon_templates_virgin; /* Never wrote the templates? */
- 	struct work_struct beacon_update_trigger;
- 
- 	/* The current QOS parameters for the 4 queues.
- 	 * This is protected by the irq_lock. */
- 	struct b43_qos_params qos_params[4];
- 	/* Workqueue for updating QOS parameters in hardware. */
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-05-20 00:18:53.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-05-20 01:05:04.000000000 +0200
-@@ -1541,12 +1541,36 @@ static void b43_write_probe_resp_templat
- 	b43_write_template_common(dev, probe_resp_data,
- 				  size, ram_offset, shm_size_offset,
- 				  rate->hw_value);
- 	kfree(probe_resp_data);
- }
- 
-+static void b43_upload_beacon0(struct b43_wldev *dev)
-+{
-+	struct b43_wl *wl = dev->wl;
-+
-+	if (wl->beacon0_uploaded)
-+		return;
-+	b43_write_beacon_template(dev, 0x68, 0x18);
-+	/* FIXME: Probe resp upload doesn't really belong here,
-+	 *        but we don't use that feature anyway. */
-+	b43_write_probe_resp_template(dev, 0x268, 0x4A,
-+				      &__b43_ratetable[3]);
-+	wl->beacon0_uploaded = 1;
-+}
-+
-+static void b43_upload_beacon1(struct b43_wldev *dev)
-+{
-+	struct b43_wl *wl = dev->wl;
-+
-+	if (wl->beacon1_uploaded)
-+		return;
-+	b43_write_beacon_template(dev, 0x468, 0x1A);
-+	wl->beacon1_uploaded = 1;
-+}
-+
- static void handle_irq_beacon(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl = dev->wl;
- 	u32 cmd, beacon0_valid, beacon1_valid;
- 
- 	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-@@ -1565,30 +1589,33 @@ static void handle_irq_beacon(struct b43
- 	if (beacon0_valid && beacon1_valid) {
- 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_BEACON);
- 		dev->irq_savedstate |= B43_IRQ_BEACON;
- 		return;
- 	}
- 
--	if (!beacon0_valid) {
--		if (!wl->beacon0_uploaded) {
--			b43_write_beacon_template(dev, 0x68, 0x18);
--			b43_write_probe_resp_template(dev, 0x268, 0x4A,
--						      &__b43_ratetable[3]);
--			wl->beacon0_uploaded = 1;
--		}
-+	if (unlikely(wl->beacon_templates_virgin)) {
-+		/* We never uploaded a beacon before.
-+		 * Upload both templates now, but only mark one valid. */
-+		wl->beacon_templates_virgin = 0;
-+		b43_upload_beacon0(dev);
-+		b43_upload_beacon1(dev);
- 		cmd = b43_read32(dev, B43_MMIO_MACCMD);
- 		cmd |= B43_MACCMD_BEACON0_VALID;
- 		b43_write32(dev, B43_MMIO_MACCMD, cmd);
--	} else if (!beacon1_valid) {
--		if (!wl->beacon1_uploaded) {
--			b43_write_beacon_template(dev, 0x468, 0x1A);
--			wl->beacon1_uploaded = 1;
-+	} else {
-+		if (!beacon0_valid) {
-+			b43_upload_beacon0(dev);
-+			cmd = b43_read32(dev, B43_MMIO_MACCMD);
-+			cmd |= B43_MACCMD_BEACON0_VALID;
-+			b43_write32(dev, B43_MMIO_MACCMD, cmd);
-+		} else if (!beacon1_valid) {
-+			b43_upload_beacon1(dev);
-+			cmd = b43_read32(dev, B43_MMIO_MACCMD);
-+			cmd |= B43_MACCMD_BEACON1_VALID;
-+			b43_write32(dev, B43_MMIO_MACCMD, cmd);
- 		}
--		cmd = b43_read32(dev, B43_MMIO_MACCMD);
--		cmd |= B43_MACCMD_BEACON1_VALID;
--		b43_write32(dev, B43_MMIO_MACCMD, cmd);
- 	}
- }
- 
- static void b43_beacon_update_trigger_work(struct work_struct *work)
- {
- 	struct b43_wl *wl = container_of(work, struct b43_wl,
-@@ -4164,12 +4191,15 @@ static int b43_op_start(struct ieee80211
- 	 * and mac80211 reconfiguring it. */
- 	memset(wl->bssid, 0, ETH_ALEN);
- 	memset(wl->mac_addr, 0, ETH_ALEN);
- 	wl->filter_flags = 0;
- 	wl->radiotap_enabled = 0;
- 	b43_qos_clear(wl);
-+	wl->beacon0_uploaded = 0;
-+	wl->beacon1_uploaded = 0;
-+	wl->beacon_templates_virgin = 1;
- 
- 	/* First register RFkill.
- 	 * LEDs that are registered later depend on it. */
- 	b43_rfkill_init(dev);
- 
- 	mutex_lock(&wl->mutex);
+
+--=-OsP7sWvldvOXFuKHBCBk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> > We really need a raw monitor frame capture.
+>=20
+> Not sure how I go about that one?
+>=20
+> I have an external RTL8187 device I can stick into monitor mode? But=20
+> then it wouldn't be associated/encryption keys...
+>=20
+> Tips anyone?
+
+In this case, adding a monitor interface to your local b43 machine (with
+iw: http://wireless.kernel.org/en/users/Documentation/iw) might be
+preferable.
+
+johannes
+
+--=-OsP7sWvldvOXFuKHBCBk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCxiTaVg1VMiehFYAQK2ww/9G5ELaY4biyFwGQiLKLQ1mPh4SFe728ww
+6kiUfH13eqAjKy7AB+gAV9pR7C1mJEVgSAXJqtedveU+oZFR8ibfwWHsJ1O0tt6f
+P1OvRhpbDJval8B/NV3Xak8HfxTCkAgKjIw6/tEBgrxGt4BRp3LM5S5k3RTEKepi
+W4vVmzSeFrODt6NuHnkBitGZS/mO1kz6UkTsfuBrBzx+/7lVOuPh9iM3hvmm6McW
+Eyl4DZqpUMAOXsndBbqx/U5t4PAUaF2SmwewUFy2uKY4ZXN8gl0aSO5t5d6RBnI1
+/CRaL3BobOiqXF4wiej9Kn2pty5t6PzbP+JB4uMduW4LnAwHfngOmjhNivysRfuD
+sd6AmH11OZKodXECoDypm3d38AwStKCC7so9vmvn6b3/tVJOKMsNmESoBhrIknbc
+vg7duxs7vk7x25GmnMzvJLBiqa0fCyeuayYmwAual0PLZVw2RaMBYe7D6xrq/khE
+pWqHtuuwSwi44HOCNFFEeQ+xi9QV/T2naFWXrXNyPphQQPhb5GborQNYSGfuRcCd
+hPKiSRANw/jqJRipJemvcTj1tOH3JJejFBrTp5GtRWch8MOh0uAv8I1Wq3NLSFvh
+EltuC7a/QtaUQKnAoa1ya4n8kn2ZgovG2HSA1i+TAdBcZlCQa47Wq+HNO4hWoqa+
+CVOOcDPWT9Q=
+=MWKN
+-----END PGP SIGNATURE-----
+
+--=-OsP7sWvldvOXFuKHBCBk--
+
