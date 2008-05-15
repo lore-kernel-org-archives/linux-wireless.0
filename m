@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:33698 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbYEFMOP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 08:14:15 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1138068fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 05:14:13 -0700 (PDT)
-Message-ID: <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com> (sfid-20080506_141327_005663_65AA487B)
-Date: Tue, 6 May 2008 15:14:13 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Volker Braun" <vbraun@physics.upenn.edu>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751478AbYEOF4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:16 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 02/26] iwlwifi: remove iwl4965_nic_start function
+Date: Thu, 15 May 2008 13:53:54 +0800
+Message-Id: <1210830858-3410-3-git-send-email-yi.zhu@intel.com> (sfid-20080515_075622_237063_CA071B0A)
+In-Reply-To: <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 6, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
->
-> On Tue, May 6, 2008 at 9:32 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->  >
->  > On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
->  >  > On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->  >  >  > >  I just tried compat-wireless-2008-05-05, which does contain
->  >  >  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
->  >  >  >  >
->  >  >  >
->  >  >  >  Thanks for trying this.
->  >  >  >  Can you try to load the module with swcrypto=1 and try again ?
->  >  >  >  This disables the HW encryption acceleration. Trying this will allow
->  >  >  >  to make 100% sure that the bug is in iwlwifi. The bug is likely to be
->  >  >  >  there, but I think it is worth to make this 100% sure.
->  >  >
->  >  >  Well it happens for me with iwl3945 which uses swcrypto by default see:
->  >  >
->  >  >  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
->  >  >
->  >
->  >  Actually, I made quite a lot of changes in security in iwl4965 that
->  >  are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
->  >  The security code is not the same between 3945 and 4965
->
->  OK, are you planning to port this changes/fixes to 3945 ?
->
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Well... Low priority...
-In any case, if it didn't work with SW encryption, this would indicate
-that the bug is not in iwlwifi
+This patch moves the contant of iwl4965_nic_start to the only place it is
+being used.
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 ++--------
+ 1 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index d0f948d..1a2d376 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3958,13 +3958,6 @@ static void iwl4965_dealloc_ucode_pci(struct iwl_priv *priv)
+ 	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_boot);
+ }
+ 
+-static void iwl4965_nic_start(struct iwl_priv *priv)
+-{
+-	/* Remove all resets to allow NIC to operate */
+-	iwl_write32(priv, CSR_RESET, 0);
+-}
+-
+-
+ /**
+  * iwl4965_read_ucode - Read uCode images from disk file.
+  *
+@@ -4454,7 +4447,8 @@ static int __iwl4965_up(struct iwl_priv *priv)
+ 		}
+ 
+ 		/* start card; "initialize" will load runtime ucode */
+-		iwl4965_nic_start(priv);
++		/* Remove all resets to allow NIC to operate */
++		iwl_write32(priv, CSR_RESET, 0);
+ 
+ 		IWL_DEBUG_INFO(DRV_NAME " is coming up\n");
+ 
 -- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+1.5.3.6
+
