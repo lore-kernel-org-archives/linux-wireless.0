@@ -1,124 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:3844 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754603AbYEECY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:29 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: [PATCH 21/25] iwlwifi : Set monitor mode for 3945
-Date: Mon,  5 May 2008 10:22:48 +0800
-Message-Id: <1209954172-3092-22-git-send-email-yi.zhu@intel.com> (sfid-20080505_044416_877343_C6CB42FA)
-In-Reply-To: <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55884 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803AbYEOLXV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 07:23:21 -0400
+Subject: Re: [PATCH 5/5] mac80211: move TX info into skb->cb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <200805151332.35758.IvDoorn@gmail.com> (sfid-20080515_132012_242142_393CACB2)
+References: <20080515105524.359863000@sipsolutions.net>
+	 <20080515105948.820956000@sipsolutions.net>
+	 <1210849867.8709.0.camel@johannes.berg>
+	 <200805151332.35758.IvDoorn@gmail.com>
+	 (sfid-20080515_132012_242142_393CACB2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qETPJop0hMcTdeeKo7in"
+Date: Thu, 15 May 2008 13:22:24 +0200
+Message-Id: <1210850544.8709.3.camel@johannes.berg> (sfid-20080515_132325_363668_CCD87F94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-The patch leverages mac80211 configure_filter to enable iwl3945
-monitor mode.
+--=-qETPJop0hMcTdeeKo7in
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   36 ++++++++++++++++++++++++++-
- 2 files changed, 36 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index fb96c62..9fdc140 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -886,6 +886,7 @@ struct iwl3945_priv {
- 	struct work_struct report_work;
- 	struct work_struct request_scan;
- 	struct work_struct beacon_update;
-+	struct work_struct set_monitor;
- 
- 	struct tasklet_struct irq_tasklet;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 7040cde..f021eba 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6144,6 +6144,24 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
- 	mutex_unlock(&priv->mutex);
- }
- 
-+static void iwl3945_bg_set_monitor(struct work_struct *work)
-+{
-+	struct iwl3945_priv *priv = container_of(work,
-+				struct iwl3945_priv, set_monitor);
-+
-+	IWL_DEBUG(IWL_DL_STATE, "setting monitor mode\n");
-+
-+	mutex_lock(&priv->mutex);
-+
-+	if (!iwl3945_is_ready(priv))
-+		IWL_DEBUG(IWL_DL_STATE, "leave - not ready\n");
-+	else
-+		if (iwl3945_set_mode(priv, IEEE80211_IF_TYPE_MNTR) != 0)
-+			IWL_ERROR("iwl3945_set_mode() failed\n");
-+
-+	mutex_unlock(&priv->mutex);
-+}
-+
- #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
- 
- static void iwl3945_bg_scan_check(struct work_struct *data)
-@@ -6996,7 +7014,22 @@ static void iwl3945_configure_filter(struct ieee80211_hw *hw,
- 	 * XXX: dummy
- 	 * see also iwl3945_connection_init_rx_config
- 	 */
--	*total_flags = 0;
-+	struct iwl3945_priv *priv = hw->priv;
-+	int new_flags = 0;
-+	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
-+		if (*total_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
-+			IWL_DEBUG_MAC80211("Enter: type %d (0x%x, 0x%x)\n",
-+					   IEEE80211_IF_TYPE_MNTR,
-+					   changed_flags, *total_flags);
-+			/* queue work 'cuz mac80211 is holding a lock which
-+			 * prevents us from issuing (synchronous) f/w cmds */
-+			queue_work(priv->workqueue, &priv->set_monitor);
-+			new_flags &= FIF_PROMISC_IN_BSS |
-+				     FIF_OTHER_BSS |
-+				     FIF_ALLMULTI;
-+		}
-+	}
-+	*total_flags = new_flags;
- }
- 
- static void iwl3945_mac_remove_interface(struct ieee80211_hw *hw,
-@@ -7872,6 +7905,7 @@ static void iwl3945_setup_deferred_work(struct iwl3945_priv *priv)
- 	INIT_WORK(&priv->abort_scan, iwl3945_bg_abort_scan);
- 	INIT_WORK(&priv->rf_kill, iwl3945_bg_rf_kill);
- 	INIT_WORK(&priv->beacon_update, iwl3945_bg_beacon_update);
-+	INIT_WORK(&priv->set_monitor, iwl3945_bg_set_monitor);
- 	INIT_DELAYED_WORK(&priv->post_associate, iwl3945_bg_post_associate);
- 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl3945_bg_init_alive_start);
- 	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
--- 
-1.5.3.6
+> > > A number of fixes were done by Ivo, as well as the rt2x00 part
+> > > of this patch.
+> >=20
+> > I mangled it a bit though so you may want to check it, mac80211 now set=
+s
+> > REQ_TX_STATUS so you can use that for status reporting, but you can't
+> > use it for queue kicking at least not in the future when mac80211 might
+> > not set it on all frames.
+>=20
+> Well queue kicking from driver to mac80211 is in rt2x00 based on txdone
+> events on a particular queue. (When frame was succesfully transmitted
+> and is no longer full, then the queue will be awakened by rt2x00).
+
+Yeah, but the patch you had sent me was removing the "driver generated"
+flag, and I kept that around now for this purpose.
+
+I have thought about this a bit, you may want to wait wrt. fragments
+because I'm going to rewrite fragmentation, and then we could change the
+mac80211/driver API to hand the driver an skb with all the fragments at
+once instead of handing it each fragment one by one, thoughts?
+
+johannes
+
+--=-qETPJop0hMcTdeeKo7in
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCwc76Vg1VMiehFYAQJDChAAsciqjw8DnpU7d8N/HXp/gtInRhoDx9jk
+dEsfiOo63XJl6QzzgWWclUVBrkpkVCFujPJZCP3qxhwD6U1nqc5+vv2Np9RlJpD6
+dbb6vzPCteM30ic/dUujyJR5y/4/w1Psby8sVSAiADN7cP0NCMDHAUn/7F5EhytB
+rh0aM99BpTeJPu1DDHnXmjAD4o4LLRF0p7Zk4fvYlyKTJbjQikTeU3wWnO+4gMtz
+pyQGYdDfdJzfT3V96HAZzPpSSWoSmrMbV/gIp7Zets60g3zEijDcr15aI0sYN7RY
+A8Nay8l16TKY7HybahzS8adIgVFGpwhk6NZKtWVx2q1oSIytUMNAEXYXS7VVu5/0
+j0iLAjXs9WgYemIzjF+dPqcrSJDjuH7YDesj9YcfRJqGF6kq+rExZchutkj5O6SO
+5OgD2tuRb1cMBpH/+Q1/4q80RjzslI5N04kTR2AnpVJ6UBi8MF+S95+F72wfy/Wb
+QRzVxVqxvqfOomKluca4FjQbwRaWWMQOdJHFxrNxRJX4Cbd80zMqUED5BAMMObt3
+2XjZJ6+21xtdg1TeSlIeOK8klCthvC+/EXgxHHuCDtDZyR5BM0hRGNqpFN4/AAZ6
+Saphshf9CmXpPA+yH7+WMvLJI1WpCa5cKB0pWM3bZslHwYHyvxIWflhh9UMIEb66
+czWAyTCqT4E=
+=TJAm
+-----END PGP SIGNATURE-----
+
+--=-qETPJop0hMcTdeeKo7in--
 
