@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:26978 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbYENElJ (ORCPT
+Received: from smtp-out003.kontent.com ([81.88.40.217]:48562 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbYEOTq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 00:41:09 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so1041458ugf.16
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 21:41:05 -0700 (PDT)
-Message-ID: <c785bba30805132141l62bef2d7n4d78a95510ed6a3d@mail.gmail.com> (sfid-20080514_064113_095634_621E4431)
-Date: Tue, 13 May 2008 21:41:04 -0700
-From: "Paul Thomas" <pthomas8589@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: newbie rtl8187 question
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1210737929.2721.19.camel@rd>
+	Thu, 15 May 2008 15:46:56 -0400
+From: Oliver Neukum <oliver@neukum.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [patch] resource leak in error case in rtl8187
+Date: Thu, 15 May 2008 21:46:54 +0200
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andreamrl@tiscali.it>
+References: <200805151617.37968.oliver@neukum.org> <20080515185724.GA17690@tuxdriver.com>
+In-Reply-To: <20080515185724.GA17690@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c785bba30805132014y56aafa7bi8788503f67a7c809@mail.gmail.com>
-	 <1210736718.2721.4.camel@rd>
-	 <c785bba30805132050y51cc3031uae718bc74ade96@mail.gmail.com>
-	 <1210737929.2721.19.camel@rd>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805152146.55673.oliver@neukum.org> (sfid-20080515_214702_391557_5F6BFCF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks,
+Am Donnerstag 15 Mai 2008 20:57:24 schrieb John W. Linville:
 
-That worked! I unplugged my ethernet cable, and I'm sending this via
-the wireless adapter.
+> Don't we need the same type of fix applied to rtl8187_iowrite_async
+> as well?  Would you like to resubmit (or submit a second patch)
+> with that fix included?
 
-If I can get some other patches on this same tree I can test the
-driver on an arm9 processor (Atmel AT91RM9200). I'll let you know.
+Indeed. A new redone patch is on the way. Please disregard the earlier patch.
 
-Any idea when those patches will find there way to the main line kernel?
+	Regards
+		Oliver
 
-thanks,
-Paul
-
-On Tue, May 13, 2008 at 9:05 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Tue, 2008-05-13 at 20:50 -0700, Paul Thomas wrote:
->  [private e-mail not quoted]
->
->  You can apply patches with patch or with StGIT.  If you haven't used
->  StGIT before, run "stg init" in the top source directory of the kernel.
->
->  stg import -n rtl8187b -u 'https://bugzilla.redhat.com/attachment.cgi?id=304231'
->  stg import -n rtl8187b-fix -u 'https://bugzilla.redhat.com/attachment.cgi?id=305203'
->
->  There will be some warnings about whitespace from StGIT, but the driver
->  compiles fine, and even sparse doesn't report any warnings.  I'm away
->  from the adapter, but I assume it would work.
->
->  P.S. Please don't take the discussion private.  Others may be interested
->  in it.
->
->  --
->  Regards,
->  Pavel Roskin
->
