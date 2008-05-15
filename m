@@ -1,32 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:36388 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752263AbYEGE4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 00:56:20 -0400
-Message-ID: <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org> (sfid-20080507_065529_786148_A3F6C94C)
-In-Reply-To: <fvp2kq$d26$2@ger.gmane.org>
-References: <fvp2dg$d26$1@ger.gmane.org> <fvp2kq$d26$2@ger.gmane.org>
-Date: Wed, 7 May 2008 06:23:35 +0200 (CEST)
-Subject: Re: is there support for my Card
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Markus Feldmann" <feldmann_markus@gmx.de>
+Received: from nf-out-0910.google.com ([64.233.182.191]:43662 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbYEOQxF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 12:53:05 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so207261nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 09:53:03 -0700 (PDT)
+Message-ID: <eb97335b0805150953m5d5fd39bm896b7a108a1909c@mail.gmail.com> (sfid-20080515_185318_110595_CCB57149)
+Date: Thu, 15 May 2008 12:53:03 -0400
+From: "Zack Weinberg" <zackw@panix.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
 Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
+	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
+	 <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
+	 <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com>
+	 <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Thu, May 15, 2008 at 12:45 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Thu, May 15, 2008 at 10:41 AM, Zack Weinberg <zackw@panix.com> wrote:
+>>> Interesting...  can you confirm that madwifi also will not start from a cold
+>>> boot?
+>>
+>> Yes, madwifi will not start from a cold boot.
+>
+> Ugh, well that is not good.  Does ndiswrapper work?
 
-Markus Feldmann wrote:
->> i only want to know if there is support in the next stable Kernel
->> 2.6.26 for my Card ?
-> AR5BXB61
+I haven't tried it, but wireless does work under Windows (Vista,
+vendor installation).
 
-That's an AR5007-based card, for which Nick posted a patch recently [1]. I
-don't know whether this patch will make it into 2.6.26. But even if it
-does, support for AR5007 is still incomplete, as Nick states: "Add RF2425
-initvals (still no rx/tx)". So ath5k might recognize and initialize your
-card, but most probably won't work with it.
+> Unless anyone
+> else has ideas, I would suggest capturing a trace using mmiotrace and
+> ndiswrapper to see what is going on.  Someone on ath5k-devel list
+> might have a better idea.
 
-Bye, Mike
+I don't know how to do that, can you point me at instructions?
+
+>> It's not hanging. The very first call to ath5k_hw_set_power(ah,
+>> AR5K_PM_AWAKE, true, 0); from ath5k_hw_nic_wakeup fails with -EIO, and
+>> the driver gives up.
+>
+> By 'hanging' I mean the register writes cease to do anything useful
+> and the card basically stops responding until you power off.  Madwifi
+> will even give "Card didn't behave as expected" in this case
+
+Oh, okay.  That is indeed the error message I'm getting from madwifi.
+
+zw
