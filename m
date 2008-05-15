@@ -1,84 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:59533 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754097AbYELMKz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 08:10:55 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2282376wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 05:10:55 -0700 (PDT)
-Message-ID: <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com> (sfid-20080512_141102_422394_5DFF21F4)
-Date: Mon, 12 May 2008 14:10:55 +0200
-From: drago01 <drago01@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Emmanuel Grumbach" <egrumbach@gmail.com>,
-	"Volker Braun" <vbraun@physics.upenn.edu>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <f6ca9fed0805060022s1f22e09ay5ac20b5ecd08ab9a@mail.gmail.com>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
-	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
-	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:14451 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752116AbYEOF4a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:30 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 17/26] iwlwifi: clean up and bug fix for security
+Date: Thu, 15 May 2008 13:54:09 +0800
+Message-Id: <1210830858-3410-18-git-send-email-yi.zhu@intel.com> (sfid-20080515_081615_562555_E91C0E42)
+In-Reply-To: <1210830858-3410-17-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-7-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-8-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-9-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-10-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-11-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-12-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-13-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-14-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-15-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-16-git-send-email-yi.zhu@intel.com>
+ <1210830858-3410-17-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 2:07 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->
-> On Mon, May 12, 2008 at 2:47 PM, drago01 <drago01@gmail.com> wrote:
->  > On Tue, May 6, 2008 at 2:14 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->  >>
->  >> On Tue, May 6, 2008 at 3:10 PM, drago01 <drago01@gmail.com> wrote:
->  >>  >
->  >>  > On Tue, May 6, 2008 at 9:32 AM, Emmanuel Grumbach
->  <egrumbach@gmail.com> wrote:
->  >>  >  >
->  >>  >  > On Tue, May 6, 2008 at 10:22 AM, drago01 <drago01@gmail.com> wrote:
->  >>  >  >  > On Tue, May 6, 2008 at 8:46 AM, Emmanuel Grumbach
->  <egrumbach@gmail.com> wrote:
->  >>  >  >  >  > >  I just tried compat-wireless-2008-05-05, which does contain
->  >>  >  >  >  >  >  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
->  >>  >  >  >  >  >
->  >>  >  >  >  >
->  >>  >  >  >  >  Thanks for trying this.
->  >>  >  >  >  >  Can you try to load the module with swcrypto=1 and try again ?
->  >>  >  >  >  >  This disables the HW encryption acceleration. Trying
->  this will allow
->  >>  >  >  >  >  to make 100% sure that the bug is in iwlwifi. The bug
->  is likely to be
->  >>  >  >  >  >  there, but I think it is worth to make this 100% sure.
->  >>  >  >  >
->  >>  >  >  >  Well it happens for me with iwl3945 which uses swcrypto
->  by default see:
->  >>  >  >  >
->  >>  >  >  >  http://marc.info/?l=linux-wireless&m=120699235803881&w=2
->  >>  >  >  >
->  >>  >  >
->  >>  >  >  Actually, I made quite a lot of changes in security in iwl4965 that
->  >>  >  >  are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
->  >>  >  >  The security code is not the same between 3945 and 4965
->  >>  >
->  >>  >  OK, are you planning to port this changes/fixes to 3945 ?
->  >>  >
->  >>
->  >>  Well... Low priority...
->  >
->  > This changes fix an important bug that otherwise make the driver
->  > useless in some configurations.
->  > So I think it should be backported to 3945 (even when development is
->  > focused on newer hardware)
->
->  But 3945 uses SW encryption this fix is for HW crypto.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I was talking about this:
-"Actually, I made quite a lot of changes in security in iwl4965 that
-are not in iwl3945 so I think it is worth trying with iwl4965 in SW.
-The security code is not the same between 3945 and 4965"
-which seemed to work for Volker using swcrypto
+This patch cleans up code in security.
+
+1) uses the new pointer to ieee80211_key_conf passed with the tx_control.
+2) resolves bug reported by Mirco Tischler (sends ADD_STA in ASYNC mode)
+3) resolves bug reported by Volker Braun regarding dynamic WEP
+4) drops a WEP packet which has been garbaged by firmware. This can
+happen upon rekeying.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   25 +++++++---------
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    3 ++
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |   41 ++++++++-------------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +-
+ 6 files changed, 29 insertions(+), 46 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 8f0852d..52c7eae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2389,6 +2389,7 @@ static int iwl4965_set_decrypted_flag(struct iwl_priv *priv,
+ 		    RX_RES_STATUS_BAD_KEY_TTAK)
+ 			break;
+ 
++	case RX_RES_STATUS_SEC_TYPE_WEP:
+ 		if ((decrypt_res & RX_RES_STATUS_DECRYPT_TYPE_MSK) ==
+ 		    RX_RES_STATUS_BAD_ICV_MIC) {
+ 			/* bad ICV, the packet is destroyed since the
+@@ -2396,7 +2397,6 @@ static int iwl4965_set_decrypted_flag(struct iwl_priv *priv,
+ 			IWL_DEBUG_RX("Packet destroyed\n");
+ 			return -1;
+ 		}
+-	case RX_RES_STATUS_SEC_TYPE_WEP:
+ 	case RX_RES_STATUS_SEC_TYPE_CCMP:
+ 		if ((decrypt_res & RX_RES_STATUS_DECRYPT_TYPE_MSK) ==
+ 		    RX_RES_STATUS_DECRYPT_OK) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 7a54682..305491f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -442,7 +442,6 @@ struct iwl_hw_key {
+ 	enum ieee80211_key_alg alg;
+ 	int keylen;
+ 	u8 keyidx;
+-	struct ieee80211_key_conf *conf;
+ 	u8 key[32];
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index c8e468f..99ee1e1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -324,7 +324,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 	unsigned long flags;
+ 
+ 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
+-	keyconf->hw_key_idx = keyconf->keyidx;
++	keyconf->hw_key_idx = HW_KEY_DEFAULT;
+ 	priv->stations[IWL_AP_ID].keyinfo.alg = ALG_WEP;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+@@ -354,7 +354,6 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 	int ret;
+ 
+ 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
+-	keyconf->hw_key_idx = keyconf->keyidx;
+ 
+ 	key_flags |= (STA_KEY_FLG_WEP | STA_KEY_FLG_MAP_KEY_MSK);
+ 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+@@ -411,7 +410,6 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 		key_flags |= STA_KEY_MULTICAST_MSK;
+ 
+ 	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-	keyconf->hw_key_idx = keyconf->keyidx;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
+@@ -449,12 +447,10 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 
+ 	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-	keyconf->hw_key_idx = keyconf->keyidx;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 
+ 	priv->stations[sta_id].keyinfo.alg = keyconf->alg;
+-	priv->stations[sta_id].keyinfo.conf = keyconf;
+ 	priv->stations[sta_id].keyinfo.keylen = 16;
+ 
+ 	if ((priv->stations[sta_id].sta.key.key_flags & STA_KEY_FLG_ENCRYPT_MSK)
+@@ -483,7 +479,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	u16 key_flags;
+ 	u8 keyidx;
+ 
+-	priv->key_mapping_key = 0;
++	priv->key_mapping_key--;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 	key_flags = le16_to_cpu(priv->stations[sta_id].sta.key.key_flags);
+@@ -514,31 +510,32 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
+ 	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
+-	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, 0);
++	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iwl_remove_dynamic_key);
+ 
+ int iwl_set_dynamic_key(struct iwl_priv *priv,
+-				struct ieee80211_key_conf *key, u8 sta_id)
++				struct ieee80211_key_conf *keyconf, u8 sta_id)
+ {
+ 	int ret;
+ 
+-	priv->key_mapping_key = 1;
++	priv->key_mapping_key++;
++	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
+ 
+-	switch (key->alg) {
++	switch (keyconf->alg) {
+ 	case ALG_CCMP:
+-		ret = iwl_set_ccmp_dynamic_key_info(priv, key, sta_id);
++		ret = iwl_set_ccmp_dynamic_key_info(priv, keyconf, sta_id);
+ 		break;
+ 	case ALG_TKIP:
+-		ret = iwl_set_tkip_dynamic_key_info(priv, key, sta_id);
++		ret = iwl_set_tkip_dynamic_key_info(priv, keyconf, sta_id);
+ 		break;
+ 	case ALG_WEP:
+-		ret = iwl_set_wep_dynamic_key_info(priv, key, sta_id);
++		ret = iwl_set_wep_dynamic_key_info(priv, keyconf, sta_id);
+ 		break;
+ 	default:
+-		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, key->alg);
++		IWL_ERROR("Unknown alg: %s alg = %d\n", __func__, keyconf->alg);
+ 		ret = -EINVAL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index ee25643..b643546 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -29,6 +29,9 @@
+ #ifndef __iwl_sta_h__
+ #define __iwl_sta_h__
+ 
++#define HW_KEY_DYNAMIC 0
++#define HW_KEY_DEFAULT 1
++
+ int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
+ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty);
+ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index a37ced5..f32cdda 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -639,16 +639,12 @@ static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
+ 				      struct sk_buff *skb_frag,
+ 				      int sta_id)
+ {
+-	struct iwl_hw_key *keyinfo = &priv->stations[sta_id].keyinfo;
+-	struct iwl_wep_key *wepkey;
+-	int keyidx = 0;
++	struct ieee80211_key_conf *keyconf = ctl->hw_key;
+ 
+-	BUG_ON(ctl->hw_key->hw_key_idx > 3);
+-
+-	switch (keyinfo->alg) {
++	switch (keyconf->alg) {
+ 	case ALG_CCMP:
+ 		tx_cmd->sec_ctl = TX_CMD_SEC_CCM;
+-		memcpy(tx_cmd->key, keyinfo->key, keyinfo->keylen);
++		memcpy(tx_cmd->key, keyconf->key, keyconf->keylen);
+ 		if (ctl->flags & IEEE80211_TXCTL_AMPDU)
+ 			tx_cmd->tx_flags |= TX_CMD_FLG_AGG_CCMP_MSK;
+ 		IWL_DEBUG_TX("tx_cmd with aes hwcrypto\n");
+@@ -656,39 +652,26 @@ static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
+ 
+ 	case ALG_TKIP:
+ 		tx_cmd->sec_ctl = TX_CMD_SEC_TKIP;
+-		ieee80211_get_tkip_key(keyinfo->conf, skb_frag,
++		ieee80211_get_tkip_key(keyconf, skb_frag,
+ 			IEEE80211_TKIP_P2_KEY, tx_cmd->key);
+ 		IWL_DEBUG_TX("tx_cmd with tkip hwcrypto\n");
+ 		break;
+ 
+ 	case ALG_WEP:
+-		wepkey = &priv->wep_keys[ctl->hw_key->hw_key_idx];
+-		tx_cmd->sec_ctl = 0;
+-		if (priv->default_wep_key) {
+-			/* the WEP key was sent as static */
+-			keyidx = ctl->hw_key->hw_key_idx;
+-			memcpy(&tx_cmd->key[3], wepkey->key,
+-							wepkey->key_size);
+-			if (wepkey->key_size == WEP_KEY_LEN_128)
+-				tx_cmd->sec_ctl |= TX_CMD_SEC_KEY128;
+-		} else {
+-			/* the WEP key was sent as dynamic */
+-			keyidx = keyinfo->keyidx;
+-			memcpy(&tx_cmd->key[3], keyinfo->key,
+-							keyinfo->keylen);
+-			if (keyinfo->keylen == WEP_KEY_LEN_128)
+-				tx_cmd->sec_ctl |= TX_CMD_SEC_KEY128;
+-		}
+-
+ 		tx_cmd->sec_ctl |= (TX_CMD_SEC_WEP |
+-			(keyidx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT);
++			(keyconf->keyidx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT);
++
++		if (keyconf->keylen == WEP_KEY_LEN_128)
++			tx_cmd->sec_ctl |= TX_CMD_SEC_KEY128;
++
++		memcpy(&tx_cmd->key[3], keyconf->key, keyconf->keylen);
+ 
+ 		IWL_DEBUG_TX("Configuring packet for WEP encryption "
+-			     "with key %d\n", keyidx);
++			     "with key %d\n", keyconf->keyidx);
+ 		break;
+ 
+ 	default:
+-		printk(KERN_ERR "Unknown encode alg %d\n", keyinfo->alg);
++		printk(KERN_ERR "Unknown encode alg %d\n", keyconf->alg);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index a532a9e..40616db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4951,7 +4951,8 @@ static int iwl4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		if (cmd == SET_KEY)
+ 			is_default_wep_key = !priv->key_mapping_key;
+ 		else
+-			is_default_wep_key = priv->default_wep_key;
++			is_default_wep_key =
++					(key->hw_key_idx == HW_KEY_DEFAULT);
+ 	}
+ 
+ 	switch (cmd) {
+-- 
+1.5.3.6
+
