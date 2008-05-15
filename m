@@ -1,110 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35950 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297AbYEOLuH (ORCPT
+Received: from smtp-out003.kontent.com ([81.88.40.217]:50376 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbYEOTtQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 07:50:07 -0400
-Subject: Re: [PATCH 5/5] mac80211: move TX info into skb->cb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-In-Reply-To: <200805151358.36340.IvDoorn@gmail.com> (sfid-20080515_134607_757865_EB404B1A)
-References: <20080515105524.359863000@sipsolutions.net>
-	 <200805151332.35758.IvDoorn@gmail.com>
-	 <1210850544.8709.3.camel@johannes.berg>
-	 <200805151358.36340.IvDoorn@gmail.com>
-	 (sfid-20080515_134607_757865_EB404B1A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4wFyl0IO1urcuziXx+yo"
-Date: Thu, 15 May 2008 13:49:14 +0200
-Message-Id: <1210852154.8709.10.camel@johannes.berg> (sfid-20080515_135013_794014_71253778)
-Mime-Version: 1.0
+	Thu, 15 May 2008 15:49:16 -0400
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, Michael Wu <flamingice@sourmilk.net>,
+	Andrea Merello <andreamrl@tiscali.it>
+Subject: [patch] resource leak in error case in rtl8187 #2
+From: Oliver Neukum <oliver@neukum.org>
+Date: Thu, 15 May 2008 21:49:16 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805152149.16876.oliver@neukum.org> (sfid-20080515_214920_898797_5CC6C53C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-4wFyl0IO1urcuziXx+yo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+this fixes resource leaks in error cases due to urb submission failures.
 
+	Regards
+		Oliver
 
-> > Yeah, but the patch you had sent me was removing the "driver generated"
-> > flag, and I kept that around now for this purpose.
->=20
-> I think we refer to different things when we talk about "queue kicking" ;=
-)
-> Anyway, I'm fine with how it looks like now. It means I can remove a few
-> patches from rt2x00.git :)
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
 
-Maybe :) I was talking about this hunk:
+---
 
-@@ -179,8 +176,10 @@ void rt2x00queue_write_tx_descriptor(str
-=20
-        /*
-         * We are done writing the frame to the queue entry,
--        * if this entry is a RTS of CTS-to-self frame we are done,
--        * otherwise we need to kick the queue.
-+        * also kick the queue in case the correct flags are set,
-+        * note that this will automatically filter beacons and
-+        * RTS/CTS frames since those frames don't have this flag
-+        * set.
-         */
-        if (rt2x00dev->ops->lib->kick_tx_queue &&
-            !(skbdesc->flags & FRAME_DESC_DRIVER_GENERATED))
-
-which looked vastly different in your original version and tested
-IEEE80211_TX_CTL_READY_FOR_TX I think.
-
-But if you're ok with that, that's great :)
-
-> > I have thought about this a bit, you may want to wait wrt. fragments
-> > because I'm going to rewrite fragmentation, and then we could change th=
-e
-> > mac80211/driver API to hand the driver an skb with all the fragments at
-> > once instead of handing it each fragment one by one, thoughts?
->=20
-> Well that would mostly be beneficial for rt61pci who is able to attach
-> multiple fragments into a single queue entry. But for the others that wou=
-ldn't
-> matter that much since each fragment occupies a single queue entry, so fo=
-r
-> those drivers having mac80211 calling tx() multiple times, or having rt2x=
-00
-> call write_tx_frame() multiple times isn't a big difference other then rt=
-2x00
-> being able to better control frame flow by kicking the TX queue only when
-> all fragments are in the queue.
-
-Well I expect that this would have to be controlled by a hardware flag
-anyway. Also, it might get you into trouble with the number of free
-queue entries because mac80211 would definitely expect you to take all
-fragments then, you couldn't just take the first 2 and leave 2 to
-mac80211, for example.
-
-johannes
-
---=-4wFyl0IO1urcuziXx+yo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCwjOKVg1VMiehFYAQJ2cRAAxKnPXN7lKP1UEFXy8x8oivddqCQxXYxJ
-Hl+acoXkajlwJIC4XsfOXzeZ7AusG3nfm11XSRZw9jvPVOArjVIfpwz5VsY24F91
-qIKFwmI6rqeUlIsNeV59FPi8DAzH9xpEUHRAFrHIf13g0zZBLP/4c/63rBDic9Hm
-7m/Su+nFnLL4Tnl0FrhqVBQN6r0rmgCqNLewuRIvB16xEpZpPj6vsFQ2lJac0lmS
-nmA0FpCW/Gaq9Q+xnyT6oXxVn4zRL3ADscRJjSHdeeO8aHBAy+9deqYK8cSsEZ84
-w8kc0miGbXU7g4xv/XvN0ZA4W7zwIs4nmnxRAvxJGFUca5BKZqZthx9f57g7Xxos
-65tnScg6bQC6LZOJwtWy2moItQwnnH8hkARjqqeyfIPWrO79kTqk2YaqSAbi7p0Z
-YBGwKYbFxYxJ/RU84TQSsWpm3egDH3e0qToHe4QB0jAH6uh8yRuUdeDMgRsiLKhl
-N3Xk2gz3FwzUhvOBcFc7rw7CuUBWOHFEj/uQEXrWqmltOP/E1hCvfpt9aA0nAEoN
-FcuGCHkQ8PIR+Kj1Q36Nm5zkq1iEN5VUy5kh4uV/aU6Xxj80hGXiohgOmyHkNXSx
-N09z/l1BBRN9QvQ+WVkJNzEab14Sb+RqWmyghVt6rm82b/hBXvIxcKuu2pBSGoa3
-LqzLnBYYh6w=
-=/BuW
------END PGP SIGNATURE-----
-
---=-4wFyl0IO1urcuziXx+yo--
-
+--- linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c.alt	2008-05-15 15:53:58.000000000 +0200
++++ linux-2.6.26-rc1/drivers/net/wireless/rtl8187_dev.c	2008-05-15 21:42:02.000000000 +0200
+@@ -92,6 +92,7 @@ static void rtl8187_iowrite_async(struct
+ 		u8 data[4];
+ 		struct usb_ctrlrequest dr;
+ 	} *buf;
++	int rc;
+ 
+ 	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
+ 	if (!buf)
+@@ -116,7 +117,11 @@ static void rtl8187_iowrite_async(struct
+ 	usb_fill_control_urb(urb, priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			     (unsigned char *)dr, buf, len,
+ 			     rtl8187_iowrite_async_cb, buf);
+-	usb_submit_urb(urb, GFP_ATOMIC);
++	rc = usb_submit_urb(urb, GFP_ATOMIC);
++	if (rc < 0) {
++		kfree(buf);
++		usb_free_urb(urb);
++	}
+ }
+ 
+ static inline void rtl818x_iowrite32_async(struct rtl8187_priv *priv,
+@@ -169,6 +174,7 @@ static int rtl8187_tx(struct ieee80211_h
+ 	struct urb *urb;
+ 	__le16 rts_dur = 0;
+ 	u32 flags;
++	int rc;
+ 
+ 	urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!urb) {
+@@ -208,7 +214,11 @@ static int rtl8187_tx(struct ieee80211_h
+ 	info->dev = dev;
+ 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
+ 			  hdr, skb->len, rtl8187_tx_cb, skb);
+-	usb_submit_urb(urb, GFP_ATOMIC);
++	rc = usb_submit_urb(urb, GFP_ATOMIC);
++	if (rc < 0) {
++		usb_free_urb(urb);
++		kfree_skb(skb);
++	}
+ 
+ 	return 0;
+ }
