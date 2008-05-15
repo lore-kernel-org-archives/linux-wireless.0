@@ -1,208 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.179]:18691 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937072AbYEVKXe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297AbYEOLuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 06:23:34 -0400
-Received: by el-out-1112.google.com with SMTP id s27so1039535ele.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 03:23:33 -0700 (PDT)
-Message-ID: <69e28c910805220323p549c4ccajf498168e825391c7@mail.gmail.com> (sfid-20080522_122351_241830_9B3B9399)
-Date: Thu, 22 May 2008 12:23:32 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFA] iwl4965: support mesh networking
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>, "Tomas Winkler" <tomasw@gmail.com>
-In-Reply-To: <1211447482.3698.50.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211447482.3698.50.camel@johannes.berg>
+	Thu, 15 May 2008 07:50:07 -0400
+Subject: Re: [PATCH 5/5] mac80211: move TX info into skb->cb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <200805151358.36340.IvDoorn@gmail.com> (sfid-20080515_134607_757865_EB404B1A)
+References: <20080515105524.359863000@sipsolutions.net>
+	 <200805151332.35758.IvDoorn@gmail.com>
+	 <1210850544.8709.3.camel@johannes.berg>
+	 <200805151358.36340.IvDoorn@gmail.com>
+	 (sfid-20080515_134607_757865_EB404B1A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4wFyl0IO1urcuziXx+yo"
+Date: Thu, 15 May 2008 13:49:14 +0200
+Message-Id: <1210852154.8709.10.camel@johannes.berg> (sfid-20080515_135013_794014_71253778)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 11:11 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This tries to make iwl4965 support mesh, but it doesn't actually work.
->
-> Here's my s-o-b so anyone else can try to make it work, I haven't
-> figured out yet what the bug is...
->
-> It seems that the iwlwifi card doesn't beacon, so the mesh state machine
-> gets stuck.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    9 ++++++---
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    3 ++-
->  drivers/net/wireless/iwlwifi/iwl-sta.c      |   10 +++++++---
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |   17 ++++++++++++-----
->  4 files changed, 27 insertions(+), 12 deletions(-)
->
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c 2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c      2008-05-22 10:44:59.000000000 +0200
-> @@ -584,7 +584,8 @@ unsigned int iwl4965_fill_beacon_frame(s
->
->        if (!iwl_is_associated(priv) || !priv->ibss_beacon ||
->            ((priv->iw_mode != IEEE80211_IF_TYPE_IBSS) &&
-> -            (priv->iw_mode != IEEE80211_IF_TYPE_AP)))
-> +            (priv->iw_mode != IEEE80211_IF_TYPE_AP) &&
-> +            (priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT)))
->                return 0;
->
->        if (priv->ibss_beacon->len > left)
-> @@ -1158,6 +1159,7 @@ static void iwl4965_connection_init_rx_c
->                break;
->
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->                priv->staging_rxon.dev_type = RXON_DEV_TYPE_IBSS;
->                priv->staging_rxon.flags = RXON_FLG_SHORT_PREAMBLE_MSK;
->                priv->staging_rxon.filter_flags = RXON_FILTER_BCON_AWARE_MSK |
-> @@ -1193,7 +1195,8 @@ static void iwl4965_connection_init_rx_c
->         * in some case A channels are all non IBSS
->         * in this case force B/G channel
->         */
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !(is_channel_ibss(ch_info)))
->                ch_info = &priv->channel_info[0];
->
-> @@ -1218,7 +1221,8 @@ static void iwl4965_connection_init_rx_c
->
->  static int iwl4965_set_mode(struct iwl_priv *priv, int mode)
->  {
-> -       if (mode == IEEE80211_IF_TYPE_IBSS) {
-> +       if (mode == IEEE80211_IF_TYPE_IBSS ||
-> +           mode == IEEE80211_IF_TYPE_MESH_POINT) {
->                const struct iwl_channel_info *ch_info;
->
->                ch_info = iwl_get_channel_info(priv,
-> @@ -3947,6 +3951,7 @@ static void iwl4965_post_associate(struc
->                break;
->
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->
->                /* clear out the station table */
->                iwlcore_clear_stations_table(priv);
-> @@ -3970,7 +3975,8 @@ static void iwl4965_post_associate(struc
->        iwl_chain_noise_reset(priv);
->        priv->start_calib = 1;
->
-> -       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
-> +       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +           priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT)
->                priv->assoc_station_added = 1;
->
->        iwl4965_activate_qos(priv, 0);
-> @@ -4960,7 +4966,8 @@ static int iwl4965_mac_beacon_update(str
->                return -EIO;
->        }
->
-> -       if (priv->iw_mode != IEEE80211_IF_TYPE_IBSS) {
-> +       if (priv->iw_mode != IEEE80211_IF_TYPE_IBSS &&
-> +           priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT) {
->                IWL_DEBUG_MAC80211("leave - not IBSS\n");
->                mutex_unlock(&priv->mutex);
->                return -EIO;
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-sta.c      2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-sta.c   2008-05-22 10:44:59.000000000 +0200
-> @@ -46,7 +46,8 @@ u8 iwl_find_station(struct iwl_priv *pri
->        DECLARE_MAC_BUF(mac);
->
->        if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) ||
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_AP))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_AP) ||
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                start = IWL_STA_ID;
->
->        if (is_broadcast_ether_addr(addr))
-> @@ -229,7 +230,8 @@ u8 iwl_add_station_flags(struct iwl_priv
->
->        /* BCAST station and IBSS stations do not work in HT mode */
->        if (index != priv->hw_params.bcast_sta_id &&
-> -           priv->iw_mode != IEEE80211_IF_TYPE_IBSS)
-> +           priv->iw_mode != IEEE80211_IF_TYPE_IBSS &&
-> +           priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT)
->                iwl_set_ht_add_station(priv, index, ht_info);
->
->        spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
-> @@ -575,7 +577,8 @@ int iwl_send_lq_cmd(struct iwl_priv *pri
->        };
->
->        if ((lq->sta_id == 0xFF) &&
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                return -EINVAL;
->
->        if (lq->sta_id == 0xFF)
-> @@ -712,6 +715,7 @@ int iwl_get_sta_id(struct iwl_priv *priv
->        /* If this frame is going out to an IBSS network, find the station,
->         * or create a new station table entry */
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->                sta_id = iwl_find_station(priv, hdr->addr1);
->                if (sta_id != IWL_INVALID_STATION)
->                        return sta_id;
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c  2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-4965-rs.c       2008-05-22 10:44:59.000000000 +0200
-> @@ -835,7 +835,8 @@ static void rs_tx_status(void *priv_rate
->        if (!priv->lq_mngr.lq_ready)
->                goto out;
->
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !lq_sta->ibss_sta_added)
->                goto out;
->
-> @@ -2088,7 +2089,8 @@ static void rs_initialize_lq(struct iwl_
->        i = sta->last_txrate_idx;
->
->        if ((lq_sta->lq.sta_id == 0xff) &&
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                goto out;
->
->        valid_tx_ant = priv->hw_params.valid_tx_ant;
-> @@ -2158,7 +2160,8 @@ static void rs_get_rate(void *priv_rate,
->        lq_sta = (struct iwl4965_lq_sta *)sta->rate_ctrl_priv;
->        i = sta->last_txrate_idx;
->
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !lq_sta->ibss_sta_added) {
->                u8 sta_id = iwl_find_station(priv, hdr->addr1);
->                DECLARE_MAC_BUF(mac);
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-core.c     2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-core.c  2008-05-22 10:44:59.000000000 +0200
-> @@ -245,7 +245,8 @@ void iwl_reset_qos(struct iwl_priv *priv
->        spin_lock_irqsave(&priv->lock, flags);
->        priv->qos_data.qos_active = 0;
->
-> -       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS) {
-> +       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +           priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) {
->                if (priv->qos_data.qos_enable)
->                        priv->qos_data.qos_active = 1;
->                if (!(priv->active_rate & 0xfff0)) {
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-You also need to modify iwl4965-base.c's iwl4965_get_sta_id function
-to generate proper station IDs for the packets being transmitted.
-Possibly you might have better luck with this once my injection patch
-lands. (Not sure if priv->vif is true in mesh mode, and without my
-patch, everything is dropped if !priv->vif.)
+--=-4wFyl0IO1urcuziXx+yo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+> > Yeah, but the patch you had sent me was removing the "driver generated"
+> > flag, and I kept that around now for this purpose.
+>=20
+> I think we refer to different things when we talk about "queue kicking" ;=
+)
+> Anyway, I'm fine with how it looks like now. It means I can remove a few
+> patches from rt2x00.git :)
+
+Maybe :) I was talking about this hunk:
+
+@@ -179,8 +176,10 @@ void rt2x00queue_write_tx_descriptor(str
+=20
+        /*
+         * We are done writing the frame to the queue entry,
+-        * if this entry is a RTS of CTS-to-self frame we are done,
+-        * otherwise we need to kick the queue.
++        * also kick the queue in case the correct flags are set,
++        * note that this will automatically filter beacons and
++        * RTS/CTS frames since those frames don't have this flag
++        * set.
+         */
+        if (rt2x00dev->ops->lib->kick_tx_queue &&
+            !(skbdesc->flags & FRAME_DESC_DRIVER_GENERATED))
+
+which looked vastly different in your original version and tested
+IEEE80211_TX_CTL_READY_FOR_TX I think.
+
+But if you're ok with that, that's great :)
+
+> > I have thought about this a bit, you may want to wait wrt. fragments
+> > because I'm going to rewrite fragmentation, and then we could change th=
+e
+> > mac80211/driver API to hand the driver an skb with all the fragments at
+> > once instead of handing it each fragment one by one, thoughts?
+>=20
+> Well that would mostly be beneficial for rt61pci who is able to attach
+> multiple fragments into a single queue entry. But for the others that wou=
+ldn't
+> matter that much since each fragment occupies a single queue entry, so fo=
+r
+> those drivers having mac80211 calling tx() multiple times, or having rt2x=
+00
+> call write_tx_frame() multiple times isn't a big difference other then rt=
+2x00
+> being able to better control frame flow by kicking the TX queue only when
+> all fragments are in the queue.
+
+Well I expect that this would have to be controlled by a hardware flag
+anyway. Also, it might get you into trouble with the number of free
+queue entries because mac80211 would definitely expect you to take all
+fragments then, you couldn't just take the first 2 and leave 2 to
+mac80211, for example.
+
+johannes
+
+--=-4wFyl0IO1urcuziXx+yo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASCwjOKVg1VMiehFYAQJ2cRAAxKnPXN7lKP1UEFXy8x8oivddqCQxXYxJ
+Hl+acoXkajlwJIC4XsfOXzeZ7AusG3nfm11XSRZw9jvPVOArjVIfpwz5VsY24F91
+qIKFwmI6rqeUlIsNeV59FPi8DAzH9xpEUHRAFrHIf13g0zZBLP/4c/63rBDic9Hm
+7m/Su+nFnLL4Tnl0FrhqVBQN6r0rmgCqNLewuRIvB16xEpZpPj6vsFQ2lJac0lmS
+nmA0FpCW/Gaq9Q+xnyT6oXxVn4zRL3ADscRJjSHdeeO8aHBAy+9deqYK8cSsEZ84
+w8kc0miGbXU7g4xv/XvN0ZA4W7zwIs4nmnxRAvxJGFUca5BKZqZthx9f57g7Xxos
+65tnScg6bQC6LZOJwtWy2moItQwnnH8hkARjqqeyfIPWrO79kTqk2YaqSAbi7p0Z
+YBGwKYbFxYxJ/RU84TQSsWpm3egDH3e0qToHe4QB0jAH6uh8yRuUdeDMgRsiLKhl
+N3Xk2gz3FwzUhvOBcFc7rw7CuUBWOHFEj/uQEXrWqmltOP/E1hCvfpt9aA0nAEoN
+FcuGCHkQ8PIR+Kj1Q36Nm5zkq1iEN5VUy5kh4uV/aU6Xxj80hGXiohgOmyHkNXSx
+N09z/l1BBRN9QvQ+WVkJNzEab14Sb+RqWmyghVt6rm82b/hBXvIxcKuu2pBSGoa3
+LqzLnBYYh6w=
+=/BuW
+-----END PGP SIGNATURE-----
+
+--=-4wFyl0IO1urcuziXx+yo--
+
