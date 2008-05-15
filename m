@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34777
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753455AbYECXHF (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:23026 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763944AbYEOTxD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 19:07:05 -0400
-Date: Sat, 03 May 2008 16:07:05 -0700 (PDT)
-Message-Id: <20080503.160705.78111001.davem@davemloft.net> (sfid-20080504_010636_272504_A9214809)
-To: johannes@sipsolutions.net
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209855383.3649.3.camel@johannes.berg>
-References: <20080503125940.GA26199@gondor.apana.org.au>
-	<1209830582.3673.8.camel@johannes.berg>
-	<1209855383.3649.3.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+	Thu, 15 May 2008 15:53:03 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so1461080ugf.16
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 12:53:02 -0700 (PDT)
+Message-ID: <eb97335b0805151253jeea20b9g91911b825ed8db77@mail.gmail.com> (sfid-20080515_215331_895421_20F72015)
+Date: Thu, 15 May 2008 15:53:01 -0400
+From: "Zack Weinberg" <zackw@panix.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0805151244o2438c3bfrbbe065ab58a7198@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	 <40f31dec0805151244o2438c3bfrbbe065ab58a7198@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCkRhdGU6IFN1
-biwgMDQgTWF5IDIwMDggMDA6NTY6MjMgKzAyMDANCg0KPiBUaGlzIHdhcyBhIHN0dXBpZCBtaXN0
-YWtlLCBpZiB5b3UgZG8gaXQgY29ycmVjdGx5IGl0IGFjdHVhbGx5IHdvcmtzIGFuZA0KPiBzbyBm
-YXIgaGFzIG9ubHkgdHJpZ2dlcmVkIGEgc2luZ2xlIHdhcm5pbmcgb24gbXkgc3lzdGVtOg0KPiAN
-Cj4gWyAgMjE3LjUwNzA0OF0gU0tCIEJVRzogSW52YWxpZCB0cnVlc2l6ZSAoNDI5NDk2NDEyMCkg
-c2l6ZT00MzIsIHNpemVvZihza19idWZmKT0xNzYNCj4g77u/DQo+IHRoYXQgd2FzIHdpdGggbXkg
-cGF0Y2ggdGhvdWdoIHRvIHVwZGF0ZSBza2ItPnRydWVzaXplIGR1cmluZyAhc2tiLT5zaw0KPiBw
-c2tiX2V4cGFuZF9oZWFkKCkgY2FsbHMuDQoNClRoYW5rcyBhIGxvdCBmb3IgdHJhY2tpbmcgdGhp
-cyBkb3duIEpvaGFubmVzLg0K
+On Thu, May 15, 2008 at 3:44 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> Are you sure that ath5k from compat-wireless is being used and not the
+> one that comes with 2.6.25 ?
+
+Yes.
+
+> Have you tried blacklisting ath5k, power-cycle and only use
+> madwifi/ndiswrapper ?
+
+Only madwifi, not ndiswrapper.
+
+> If your card doesn't work even after disabling ath5k and power-cycle
+> (reboot won't work, you'll have to actually turn your system off and
+> on)
+
+Did that.
+
+> then you might have some hw problem.
+
+Doubt it.  It works fine in Windows, after all.
+
+zw
