@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44261
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754143AbYEEWha (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:45531 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862AbYEOPnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 18:37:30 -0400
-Date: Mon, 05 May 2008 15:37:30 -0700 (PDT)
-Message-Id: <20080505.153730.186617868.davem@davemloft.net> (sfid-20080506_003650_784495_136E7FEE)
-To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210021066.4181.41.camel@johannes.berg>
-References: <1210018214.4181.27.camel@johannes.berg>
-	<20080505.134420.194001886.davem@davemloft.net>
-	<1210021066.4181.41.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 15 May 2008 11:43:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH] zd1211rw: Use DMA-aware buffer for usb transfer
+Date: Thu, 15 May 2008 17:42:35 +0200
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20080516.001215.39152691.anemo@mba.ocn.ne.jp>
+In-Reply-To: <20080516.001215.39152691.anemo@mba.ocn.ne.jp>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805151742.35366.mb@bu3sch.de> (sfid-20080515_174313_486920_EEA91802)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 05 May 2008 22:57:46 +0200
+On Thursday 15 May 2008 17:12:15 Atsushi Nemoto wrote:
+> @@ -312,22 +313,29 @@ int zd_usb_read_fw(struct zd_usb *usb, zd_addr_t addr, u8 *data, u16 len)
+>  {
+>  	int r;
+>  	struct usb_device *udev = zd_usb_to_usbdev(usb);
+> +	u8 *buf = kmalloc(len, GFP_KERNEL);
+>  
+> +	if (!buf)
+> +		return -ENOMEM;
 
-> But I cannot modify the ethernet header that'll live on in the skb data
-> so that's not useful.
+Not that my opinion counts here, but I don't like the coding style of
+doing work in the variable definition block.
+Pointer assignments in there are OK (like the zd_usb_to_usbdev, which just
+fetches a pointer), but a kmalloc() call is IMO very confusing.
 
-Actually, you can, if skb_header_cloned() returns false.
+But the decision whether this is OK or not is not up to me.
 
-When skb_header_cloned() returns false you can change the
-headers however you like.
+>  	r = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>  		USB_REQ_FIRMWARE_READ_DATA, USB_DIR_IN | 0x40, addr, 0,
+> -		data, len, 5000);
+> +		buf, len, 5000);
+>  	if (r < 0) {
+>  		dev_err(&udev->dev,
+>  			"read over firmware interface failed: %d\n", r);
+> -		return r;
+> +		goto exit;
+>  	} else if (r != len) {
+>  		dev_err(&udev->dev,
+>  			"incomplete read over firmware interface: %d/%d\n",
+>  			r, len);
+> -		return -EIO;
+> +		r = -EIO;
+> +		goto exit;
+>  	}
+> -
+> -	return 0;
+> +	r = 0;
+> +	memcpy(data, buf, len);
+> +exit:
+> +	kfree(buf);
+> +	return r;
+>  }
 
-I'm not sure if it helps the bridging case or not, but in
-any event, the following patch should work and reduce the
-number of cases where pskb_expand_head() is necessary on
-TX.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f35eaea..86f0e36 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	 * be cloned. This could happen, e.g., with Linux bridge code passing
- 	 * us broadcast frames. */
- 
--	if (head_need > 0 || skb_cloned(skb)) {
-+	if (head_need > 0 || skb_header_cloned(skb)) {
- #if 0
- 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
- 		       "of headroom\n", dev->name, head_need);
- #endif
- 
--		if (skb_cloned(skb))
-+		if (skb_header_cloned(skb))
- 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
- 		else
- 			I802_DEBUG_INC(local->tx_expand_skb_head);
+-- 
+Greetings Michael.
