@@ -1,94 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:45981 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756162AbYE0Ou6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 10:50:58 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	reinette.chatre@intel.com
+Received: from rv-out-0506.google.com ([209.85.198.230]:62545 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264AbYEOUoI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 16:44:08 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so700986rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 13:44:07 -0700 (PDT)
+Message-ID: <b6c5339f0805151344m2832d8e0s2d2b62338e2f8d5b@mail.gmail.com> (sfid-20080515_224414_151581_8FF4E42E)
+Date: Thu, 15 May 2008 16:44:07 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Zack Weinberg" <zackw@panix.com>
+Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
 Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/3] mac80211: fix ieee80211_get_buffered_bc
-Date: Tue, 27 May 2008 17:50:51 +0300
-Message-Id: <1211899852-22712-3-git-send-email-tomas.winkler@intel.com> (sfid-20080527_165103_945235_768D634C)
-In-Reply-To: <1211899852-22712-2-git-send-email-tomas.winkler@intel.com>
-References: <1211899852-22712-1-git-send-email-tomas.winkler@intel.com>
- <1211899852-22712-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	"Nick Kossifidis" <mickflemm@gmail.com>
+In-Reply-To: <eb97335b0805150953m5d5fd39bm896b7a108a1909c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
+	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
+	 <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
+	 <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com>
+	 <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com>
+	 <eb97335b0805150953m5d5fd39bm896b7a108a1909c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix bss not initialized in ieee80211_get_buffered_bc
-and unbalanced locking
+On Thu, May 15, 2008 at 12:53 PM, Zack Weinberg <zackw@panix.com> wrote:
+>> Unless anyone
+>> else has ideas, I would suggest capturing a trace using mmiotrace and
+>> ndiswrapper to see what is going on.  Someone on ath5k-devel list
+>> might have a better idea.
+>
+> I don't know how to do that, can you point me at instructions?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/tx.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+There are some instructions over here, but they are a little out of date:
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1a3b50b..04df78e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1954,7 +1954,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 			  struct ieee80211_tx_control *control)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct sk_buff *skb;
-+	struct sk_buff *skb = NULL;
- 	struct sta_info *sta;
- 	ieee80211_tx_handler *handler;
- 	struct ieee80211_tx_data tx;
-@@ -1966,7 +1966,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 
- 	sdata = vif_to_sdata(vif);
- 	bdev = sdata->dev;
--
-+	bss = &sdata->u.ap;
- 
- 	if (!bss)
- 		return NULL;
-@@ -1974,19 +1974,16 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	rcu_read_lock();
- 	beacon = rcu_dereference(bss->beacon);
- 
--	if (sdata->vif.type != IEEE80211_IF_TYPE_AP || !beacon ||
--	    !beacon->head) {
--		rcu_read_unlock();
--		return NULL;
--	}
-+	if (sdata->vif.type != IEEE80211_IF_TYPE_AP || !beacon || !beacon->head)
-+		goto out;
- 
- 	if (bss->dtim_count != 0)
--		return NULL; /* send buffered bc/mc only after DTIM beacon */
-+		goto out; /* send buffered bc/mc only after DTIM beacon */
- 	memset(control, 0, sizeof(*control));
- 	while (1) {
- 		skb = skb_dequeue(&bss->ps_bc_buf);
- 		if (!skb)
--			return NULL;
-+			goto out;
- 		local->total_ps_buffered--;
- 
- 		if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
-@@ -2023,6 +2020,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 		skb = NULL;
- 	}
- 
-+out:
- 	rcu_read_unlock();
- 
- 	return skb;
+    http://madwifi.org/wiki/DevDocs/MadwifiTrace
+
+I think believe the info from the nouveau link below is more recent.
+It's changed a lot even since the last time I ran it a month or two
+ago, so you may have to do a little research.  "Built-in mmiotrace"
+seems to be where it's going lately.
+
+    http://nouveau.freedesktop.org/wiki/MmioTrace
+
+First step would be to get your card working under ndiswrapper, I guess.
+
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Bob Copeland %% www.bobcopeland.com
