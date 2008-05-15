@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbYEDCJ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 22:09:57 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1209865354.6210.23.camel@johannes.berg> (sfid-20080504_034221_325997_0547A6E8)
-References: <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-	 <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-	 <1209865354.6210.23.camel@johannes.berg>
-	 (sfid-20080504_034221_325997_0547A6E8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zfg8D9pxGIM6OLTwM5ek"
-Date: Sun, 04 May 2008 04:09:46 +0200
-Message-Id: <1209866986.6210.41.camel@johannes.berg> (sfid-20080504_040925_899042_A5969955)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750959AbYEOF4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 May 2008 01:56:15 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 01/26] iwlwifi: changing irrelevant comment
+Date: Thu, 15 May 2008 13:53:53 +0800
+Message-Id: <1210830858-3410-2-git-send-email-yi.zhu@intel.com> (sfid-20080515_075621_039352_4B66B27F)
+In-Reply-To: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
---=-zfg8D9pxGIM6OLTwM5ek
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch changes an old eeprom comment in probe flow.
 
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Ideally, we'd have enough headroom in the skb to start with, since right
-> now we're apparently reallocating a lot, especially encrypted frames.
-> Not that I understand why we don't get a truesize bug (without the
-> monitors) when we do that.
-
-Hmm. I wonder if the reason might be that the skb itself is long enough,
-but has so much tailroom that it doesn't have enough headroom, but when
-we reallocate it to have more headroom we actually later don't use the
-extra tailroom. That would explain why I don't get truesize bugs
-although I do get a warning (from the modified pskb_expand_head()) that
-I mustn't reallocate the buffer.
-
-johannes
-
---=-zfg8D9pxGIM6OLTwM5ek
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB0a6aVg1VMiehFYAQKbNBAAth0Q/uwPYlqHMVHmGo7+ouTYVzDgwACH
-Sv+xWVeBjOeeWrJB5aThhWhMKSJQORrsFogUQF1yYriXNPZAWBDW2VOjA/QhKEIP
-imJ5kZC9PvRyai85L8n83AUGM5xIsZwr5AxMCy3/xlxanjFV5Ct8DiD91WELEcpi
-35XEWQxFzB57tDONC5dEJvnLudWE/DeDAnxtwOPxfouxu1rt5ho8lpg0QujH5fWB
-iruGf1/YIUw4RYfjSapK06wfxdP2nYGVia+B6Vex/CHbTrlcHNfJ/k0WYPzuMN/C
-QVoJyoKEJvB2Pu3vXTStvOvVXaSvk7kRxeunNqwVdS6yG6Gaxaws0lOc/yWga8lR
-jOHY+qLTKEyvH5M1JQL4pqH0nZzEIA6qCBBp9toUqgdC7UAXDM/v7ea8lj2diNi2
-sgF9W5WyF5Dn1/Qfl7kQrPA6ASDD2anuZOnrurYvs9BVUovg+T0PGi6GClKPOh4v
-zloBVhuHx0/OC9FRYEM2oWof09pTqCgZ7yzktE7zkU5wmpAAQm9Wp4bUaI51g/8X
-f52cm8jyqE0wJT6XWWsfI1Gl28xBP5JOgn9PvJvVBaSk6uxp0aIjOgI6judKf+q7
-Az5VCgf4nT20URjjqrGKAxhf+U6wWnFM6lSdZ9xD/IApPVuNyd7OepabqdocURqY
-c/y1JbgSZT8=
-=xRH5
------END PGP SIGNATURE-----
-
---=-zfg8D9pxGIM6OLTwM5ek--
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 55ca752..d0f948d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6605,7 +6605,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	if (err)
+ 		goto out_iounmap;
+ 
+-	/* MAC Address location in EEPROM same for 3945/4965 */
++	/* extract MAC Address */
+ 	iwl_eeprom_get_mac(priv, priv->mac_addr);
+ 	IWL_DEBUG_INFO("MAC address: %s\n", print_mac(mac, priv->mac_addr));
+ 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
+-- 
+1.5.3.6
 
