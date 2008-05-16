@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:64360 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbYEUTSq (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:37256 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbYEPPv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 15:18:46 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1742436ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 12:18:34 -0700 (PDT)
-Message-ID: <445f43ac0805211218v58d33458v41d0d11f98ed4f14@mail.gmail.com> (sfid-20080521_211851_323345_0620DF68)
-Date: Wed, 21 May 2008 12:18:34 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	carrano@laptop.org, dilinger@queued.net
-In-Reply-To: <1211396780.21380.368.camel@pmac.infradead.org>
+	Fri, 16 May 2008 11:51:56 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so192071wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 08:51:53 -0700 (PDT)
+Message-ID: <69e28c910805160851v7be6ccd0qc5f8538748941e80@mail.gmail.com> (sfid-20080516_175159_560646_B40A5FF8)
+Date: Fri, 16 May 2008 17:51:53 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH stable] libertas: Extend CMD_MESH_CONFIG to get and set persistent mesh default params.
+Cc: "David Woodhouse" <dwmw2@infradead.org>,
+	"Brian Cavagnolo" <brian@cozybit.com>, devel@laptop.org,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Andres Salomon" <dilinger@queued.net>,
+	"Javier Cardona" <javier@cozybit.com>,
+	"Ricardo Carrano" <carrano@ricardocarrano.com>
+In-Reply-To: <1210949448.6381.13.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <4832422a.20018e0a.6b37.3217@mx.google.com>
-	 <1211292718.21380.238.camel@pmac.infradead.org>
-	 <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com>
-	 <1211396780.21380.368.camel@pmac.infradead.org>
+References: <482c8eb8.0b97600a.08e2.ffff8ee3@mx.google.com>
+	 <1210946949.3008.16.camel@pmac.infradead.org>
+	 <1210949448.6381.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David,
-
-On Wed, May 21, 2008 at 12:06 PM, David Woodhouse <dwmw2@infradead.org> wrote:
-> On Wed, 2008-05-21 at 11:59 -0700, Javier Cardona wrote:
->>
->> If the boottime is set smaller than the host boot time, the device
->> will transition into standalone mode before it is detected by the
->> host.  The only recovery when that happens is to either reset the
->> device via an external reset line or to re-insert it.
+On Fri, May 16, 2008 at 4:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2008-05-16 at 15:09 +0100, David Woodhouse wrote:
+>> On Thu, 2008-05-15 at 11:01 -0700, Brian Cavagnolo wrote:
+>> > This patch is based on a patch from Shailendra Govardhan.  It introduces
+>> > several new iwprivs: {get,set}_bootflag {get,set}_boottime {get,set}_def_chan
+>> > {get,set}_def_protid {get,set}_def_metid {get,set}_def_meshcap
+>> > {get,set}_def_meshid.  These commands are only supported on Marvell hardware
+>> > that implements persistent defaults, such as the OLPC Active Antenna.
+>> > Accordingly, this patch may not be suitable for upstream merging.
 >
-> Nah, the driver will send it a CMD_802_11_RESET when it finds it not
-> responding properly to bootcmds, and it should be fine.
+>> But this is the _one_ thing which might actually be OK to do with a
+>> private ioctl, since it's very hardware-specific. Unlike like all the
+>> mesh-mangling stuff where we really ought to be compatible with o11s.
+>>
+>> So maybe, just maybe, we _can_ do this with iwpriv and push that
+>> upstream.
+>
+> Maybe we do, after all, need an iwpriv equivalent in cfg80211/nl80211 so
+> that we can kill wext at some point.
+>
+> Or maybe this should be in sysfs or so?
+>
+> johannes
+>
 
-You need a live endpoint to send a CMD_802_11_RESET, which you won't
-have if the device did not respond to USB enumeration because it was
-in standalone mode.
-
-Javier
+Or maybe in configfs? That's a better place for configuration options.
+(BTW rt2x00 uses debugfs as an iwpriv replacement, so that's another
+possibility.)
 
 -- 
-Javier Cardona
-cozybit Inc.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
