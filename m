@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39402
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1759675AbYEMIjt (ORCPT
+Received: from slow2-v.mail.gandi.net ([217.70.178.89]:49377 "EHLO
+	slow2-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbYEPIzi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:39:49 -0400
-Date: Tue, 13 May 2008 01:39:44 -0700 (PDT)
-Message-Id: <20080513.013944.26458379.davem@davemloft.net> (sfid-20080513_103959_541117_99326D58)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFT/C 2/7] mac80211: clean up skb reallocation code
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210667941.3646.37.camel@johannes.berg>
-References: <20080510221906.261962000@sipsolutions.net>
-	<20080512.020904.187999229.davem@davemloft.net>
-	<1210667941.3646.37.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 16 May 2008 04:55:38 -0400
+Received: from relay4-v.mail.gandi.net (relay4-v.mail.gandi.net [217.70.178.78])
+	by slow2-v.mail.gandi.net (Postfix) with ESMTP id 91E6721E786
+	for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 10:40:44 +0200 (CEST)
+Message-ID: <20080516104021.18775zzb3wj3y10k@mobydick.mine.nu> (sfid-20080516_105542_224500_A843EF2F)
+Date: Fri, 16 May 2008 10:40:21 +0200
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pavel Roskin <proski@gnu.org>, j@w1.fi,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostap: procfs fix for hostap_fw.c
+References: <20080506152354.GA3680@mobydick> <1210592626.3372.6.camel@dv>
+	<20080513004345.GB26418@tuxdriver.com>
+In-Reply-To: <20080513004345.GB26418@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 13 May 2008 10:39:01 +0200
+On Tue, 13 May 2008, "John W. Linville" <linville@tuxdriver.com> wrote:
+> On Mon, May 12, 2008 at 07:43:46AM -0400, Pavel Roskin wrote:
+>> On Tue, 2008-05-06 at 17:23 +0200, Mathieu Chouquet-Stringer wrote:
+>> > Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
+>>
+>> Acked-off-by: Pavel Roskin <proski@gnu.org>
+>>
+>> If a more concise description needs to be written, I can do it.
+>
+> If you don't mind, I would appreciate a more concise description.
+> I appreciate the full description of the bug, but I think it is a
+> bit much for the changelog as-is.
 
-> Oops, thanks! Seeing that you've applied your patch to change it I'll
-> have to respin this anyway and will fix it then.
+What about something like this:
+"registers" was wrongly created under /proc which was generating warning
+during module removal and warning of duplicates objects in /proc after
+module reloading.   The file now lies in /proc/net/hostap, where it was
+meant to be.
 
-Thanks Johannes.
+-- 
+Mathieu Chouquet-Stringer                           mchouque@free.fr
+             The sun itself sees not till heaven clears.
+               -- William Shakespeare --
