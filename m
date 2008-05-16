@@ -1,46 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:57422 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756867AbYEDMpz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 08:45:55 -0400
-Date: Sun, 4 May 2008 20:45:42 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-Message-ID: <20080504124542.GA1455@gondor.apana.org.au> (sfid-20080504_144543_715831_4364C1DB)
-References: <1209866916.6210.39.camel@johannes.berg> <20080504021213.GA30660@gondor.apana.org.au> <1209867740.6210.46.camel@johannes.berg> <20080504031652.GA30993@gondor.apana.org.au> <1209890847.6210.51.camel@johannes.berg> <1209892489.6210.56.camel@johannes.berg> <20080504094444.GA541@gondor.apana.org.au> <1209894754.6210.58.camel@johannes.berg> <1209900355.6210.64.camel@johannes.berg> <1209904088.4065.11.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1209904088.4065.11.camel@johannes.berg>
+Received: from mr1.bfh.ch ([147.87.250.50]:36452 "EHLO mr1.bfh.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754973AbYEPNse (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 09:48:34 -0400
+From: Michael Bernhard <michael.bernhard@bfh.ch>
+To: mcgrof@winlab.rutgers.edu
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] compat-2.6: Make it working with wireless-testing 2005-05-15
+Date: Fri, 16 May 2008 15:48:42 +0200
+Message-Id: <1210945725582-git-send-email-michael.bernhard@bfh.ch> (sfid-20080516_154839_315459_B5115365)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 04, 2008 at 02:28:08PM +0200, Johannes Berg wrote:
->
-> Now I see the problem. I increased the LL_MAX_HEADER constant, but all
-> code uses dev->hard_header_len to allocate the headroom (via
-> LL_RESERVED_SPACE), e.g. packet.c:
 
-Right hard_header_len is being overloaded with two meanings.
-On the one hand it's used to indicate the length of the header
-managed by the hardware header cache, on the other hand we use
-it to indicate the head room for those devices that don't have
-a cache.
+I'working under Ubuntu 7.10 with kernel version 2.6.22. I tried to get the
+compat-wireless package running and had some problems this patch series
+addresses. However, I don't know if this arises problems for kernel higher
+than 2.6.22.
 
-Since your device wants both, it fails miserably.
+PATCH 1/3: Corrects the three failed hunks in compat/compat.diff.
+PATCH 2/3: Adds some missing functions and macros.
+PATCH 3/3: Enables iwlwifi build
 
-There are three ways out of this.  You could have your own cache
-(I haven't looked at your headers so I don't know whether that
-makes sense), have no cache at all, or add a new field that gets
-added to hard_header_len for the purposes of calculating head
-room.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+There remaines one problem. In kernel version 2.6.22 the BIT() macro is
+defined in include/linux/input.h. For iwlwifi which uses this header in
+iwl-rfkill.h this gives a redefinition of BIT() which is defined in
+include/linux/bitops.h now.
