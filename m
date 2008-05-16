@@ -1,63 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34498 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbYEDS6P (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:58729 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbYEPVEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 14:58:15 -0400
-Subject: Re: S/G operation, skb checksums, data copying
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1209925725.3655.15.camel@johannes.berg> (sfid-20080504_202821_526459_C1C8EB56)
-References: <1209925725.3655.15.camel@johannes.berg>
-	 (sfid-20080504_202821_526459_C1C8EB56)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UKKlIBWuvwW8SBs5Equa"
-Date: Sun, 04 May 2008 20:58:03 +0200
-Message-Id: <1209927483.3655.23.camel@johannes.berg> (sfid-20080504_205740_737572_F3637A18)
+	Fri, 16 May 2008 17:04:10 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1037343pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 14:04:09 -0700 (PDT)
+Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1210969866.6381.46.camel@johannes.berg>
+References: <1210966154.5915.50.camel@brick>
+	 <1210966704.5915.51.camel@brick>
+	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 16 May 2008 14:04:07 -0700
+Message-Id: <1210971848.5915.58.camel@brick> (sfid-20080516_230414_876666_3F946B8B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-05-16 at 22:31 +0200, Johannes Berg wrote:
+> > +static inline int ieee80211_fctl_tods(struct ieee80211_hdr *hdr)
+>=20
+> > +static inline int ieee80211_fctl_fromds(struct ieee80211_hdr *hdr)
+>=20
+> These seem fine though I don't see why you implement them with a > 0
+> rather than !=3D 0 comparison?
 
---=-UKKlIBWuvwW8SBs5Equa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No reason, I'll move to all !=3D 0
 
+>=20
+> > +static inline int ieee80211_fctl_has_a4(struct ieee80211_hdr *hdr)
+>=20
+> That seems fine too.
+>=20
+> > +static inline int ieee80211_ftype(struct ieee80211_hdr *hdr, u16 f=
+type)
+>=20
+> That, I think, is misnamed, it should be ieee80211_is_ftype()
 
-> However, mac80211 needs to change the skb header before the skb is
-> handed to the hardware. Often enough, the skb it will get is cloned, so
-> it has to copy the header. Hence, it would benefit from having the
-> actual skb data not be in the header, but that is unavoidable currently
-> since we have no checksum features.
+Well, I didn't expect this to be used directly that much, hence the
+following three helpers...ftype_mgmt/ctl/data
 
-I just realised that this wouldn't happen since the extra data is
-actually in a struct page *, so never mind.
+>=20
+> > +static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u16 s=
+type)
+> > +{
+> > +	return (hdr->frame_control & cpu_to_le16(stype)) !=3D 0;
+> > +}
+>=20
+> And that even seems implemented wrongly? stype is a 4-bit field, this
+> doesn't make much sense to me.
 
-johannes
+It was meant to be used to replace code like:
 
---=-UKKlIBWuvwW8SBs5Equa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+=EF=BB=BFfc & IEEE80211_STYPE_QOS_DATA
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+=EF=BB=BFieee80211_stype(hdr, IEEE80211_STYPE_QOS_DATA)
 
-iQIVAwUASB4HOqVg1VMiehFYAQKGoQ//SDoLYkJv6vAIOVoythT9++2WMuCwrYjd
-SIT3NBjq89oWbbSFyG/0LlgzTYH1U365aoX2zSOY+GL4KrT3njI4LSYTSZWaPvyg
-J2hrX5IuI1iwmX5OAPyoMNy78LE2TOy2N4XAFkkraIXik1bKEj4eoVkXsI8tgtaX
-uQvistl487tKt2bMbeWpWLQHItflaUJs81ANaEo/NAC/qHurxbJZ8xzDhSsWYQgc
-tuKfvzrQNqkGYJAHnGSata1OfubaYPdnr9jHUbtyvzVvWPtAxPdOEXPIrvDOx0Hi
-UkJZswW3xe50Po/UALimkOY8lyG6rGB7ILIhEYcOa8hh8xMEt62eP9vxMjgiaJkt
-MxP/VV3GK1XNWH9VamwRfcVAnwpAfeeKpoCCPSus5bQglTnibyD3KekTx/XuV+zQ
-VXxfURv5lzQET/5t/uNjm0glc4CiJ1OFdGihD8OuN8Lt1k3YTW1YN2Xh5gb55HhA
-ATxl2/7Du6xCYECdOduZYW3ssx2EdtonuBD29pNd7T6TY3nxayf3sA/lX+gusSc6
-tYf1jeTxDHhNEMxSB4Vt4KIxdDJPv/nLwqZViOSzaQjgZ9w0vZcmLpt6llvKbwKw
-OQs3VhsPgTGVktoz1DkinP9Tn7tVy7NorpSmEi1+aqKzJzm+rvj14O8MREZV87yr
-uxbx1ayinp8=
-=G7QG
------END PGP SIGNATURE-----
+As most users of the stype bits test against a specific constant,
+otherwise you could add a bunch of helpers, one for each stype
+constant (similar to the ftype helpers I added.  There were only
+3 in the ftype case, so I just added them all and dropped the second
+parameter, in the stype case, there are more options, so I just
+left one two-parameter helper.
 
---=-UKKlIBWuvwW8SBs5Equa--
+>=20
+> > +static inline int ieee80211_ftype_mgmt(struct ieee80211_hdr *hdr)
+>=20
+> > +static inline int ieee80211_ftype_ctl(struct ieee80211_hdr *hdr)
+>=20
+> > +static inline int ieee80211_ftype_data(struct ieee80211_hdr *hdr)
+>=20
+> similarly, ieee80211_is_data() (remove the ftype, everybody hacking
+> wireless should know that data/mgmt/ctl are frame types)
 
+OK, I'll drop ftype from these three, but leave it in the two-param
+version as it is really just a helper for these three.
+
+What do you think if I just left the stype version as-is, subject
+to the usage I showed above, which is the common case.
+
+Harvey
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
