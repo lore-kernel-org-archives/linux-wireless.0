@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:38036 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887AbYEHMzX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44767
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750951AbYEPTkp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 08:55:23 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so593271mue.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 05:55:22 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: 015-mac80211-tx-info-skb-cb.patch
-Date: Thu, 8 May 2008 15:03:40 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200805081503.41025.IvDoorn@gmail.com> (sfid-20080508_145423_329164_3024D07A)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 16 May 2008 15:40:45 -0400
+Date: Fri, 16 May 2008 12:40:39 -0700 (PDT)
+Message-Id: <20080516.124039.253626477.davem@davemloft.net> (sfid-20080516_214048_947286_C3CB8811)
+To: rusty@rustcorp.com.au
+Cc: herbert@gondor.apana.org.au, mb@bu3sch.de,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, ron.rindjunsky@intel.com, tomasw@gmail.com,
+	ivdoorn@gmail.com, peter.p.waskiewicz.jr@intel.com
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200805162032.48469.rusty@rustcorp.com.au>
+References: <200805161201.48835.rusty@rustcorp.com.au>
+	<20080515.215823.28841530.davem@davemloft.net>
+	<200805162032.48469.rusty@rustcorp.com.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Rusty Russell <rusty@rustcorp.com.au>
+Date: Fri, 16 May 2008 20:32:48 +1000
 
-The following patch is intended to be ontop or integrated into your patch:
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/015-mac80211-tx-info-skb-cb.patch
-This fixes a compilation error when mac80211 debug output is disabled.
+> On Friday 16 May 2008 14:58:23 David Miller wrote:
+> > In fact, I want to move things more and more towards the driver
+> > queueing TX packets internally instead of the networking mid-layer.
+> >
+> > That will ahve benefits for things like TX multiqueue, we won't
+> > need any locking at all, nor have any knowledge about multiple
+> > queues at all, if the driver takes care of providing the buffer
+> > between what the kernel gives it and what the device can handle
+> > at the moment.
+> 
+> That would be great: then I could shove the packet back on the queue myself 
+> and not have to ask you about it.  It's adding a *second* queue inside the 
+> driver which feels terribly ugly...
 
-Ivo
----
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3b3592f..50edc9d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -223,10 +223,9 @@ static ieee80211_tx_result
- ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--	struct sk_buff *skb = tx->skb;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
--	struct ieee80211_tx_info *info = (void *)skb->cb;
-+	struct ieee80211_tx_info *info = (void *)tx->skb->cb;
- 	u32 sta_flags;
- 
- 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
+My description describes how I want the mid-layer queue to disappear
+entirely.  Queueing would be done by the driver only.
+
+Only the driver knows all of these details about how much space there
+is, what packet chopping has to take place and what effects that has
+on queue space, multiqueue configurations, how one wants to hash to
+multiple queues, how to lock this stuff the most efficiently.
+
+The kernel should just get out of the way and let the driver take care
+of everything.
+
+Sure, we can have some standard helpers to deal with the most common
+cases.  But anything non-trivial right now is painful because the
+mid-layer model tries to be too helpful when it should just get out
+of the way.
