@@ -1,67 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:25915 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758919AbYENRYK (ORCPT
+Received: from relay3-v.mail.gandi.net ([217.70.178.77]:45815 "EHLO
+	relay3-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589AbYEPN0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 13:24:10 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2842632fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2008 10:24:08 -0700 (PDT)
-Message-ID: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com> (sfid-20080514_192448_331054_2B8CA2FD)
-Date: Wed, 14 May 2008 13:24:07 -0400
-From: "Zack Weinberg" <zackw@panix.com>
-To: linux-wireless@vger.kernel.org
-Subject: Getting ath5k driver working with Thinkpad T61 [168c:1014]
+	Fri, 16 May 2008 09:26:11 -0400
+Date: Fri, 16 May 2008 15:26:07 +0200
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
+To: Pavel Roskin <proski@gnu.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>, j@w1.fi,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] hostap: procfs fix for hostap_fw.c
+Message-ID: <20080516132607.GA591@mobydick> (sfid-20080516_152640_541456_E7ADF27A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a shiny new Thinkpad T61 and I'd like to get its wireless
-chipset working with the ath5k driver.  I have tried
-compat-wireless-2008-05-07 on top of kernel 2.6.25.1 -- I get this in
-dmesg:
+On Fri, May 16, 2008 at 09:22:25AM -0400, Pavel Roskin wrote:
+> Sorry, I should have set you a copy of the patch with my description.
+> The patch is in linux-wireless already.
+> Thanks again for fixing that bug.
 
-# modprobe ath5k
-[15497.699573] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
-low) -> IRQ 17
-[15497.699607] PCI: Setting latency timer of device 0000:03:00.0 to 64
-[15497.699665] ath5k_pci 0000:03:00.0: registered as 'phy0'
-[15498.709122] ath5k phy0: failed to wakeup the MAC Chip
-[15498.709195] ACPI: PCI interrupt for device 0000:03:00.0 disabled
-[15498.709205] ath5k_pci: probe of 0000:03:00.0 failed with error -5
-
-# lspci -vnn -s 0000:03:00.0
-03:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR5212
-802.11abg NIC [168c:1014] (rev 01)
-	Subsystem: IBM Device [1014:058a]
-	Flags: fast devsel, IRQ 17
-	Memory at df3f0000 (64-bit, non-prefetchable) [size=64K]
-	Capabilities: [40] Power Management version 2
-	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
-	Capabilities: [60] Express Legacy Endpoint, MSI 00
-	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-	Capabilities: [100] Advanced Error Reporting <?>
-	Capabilities: [140] Virtual Channel <?>
-	Kernel modules: ath5k
-
-ath_info does not work:
-# ath_info df3f0000
-Unable to read EEPROM Magic value!
-
-The old madwifi drivers don't work with this chip either:
-# modprobe ath_pci
-[  392.367300] ath_hal: 0.9.18.0 (AR5210, AR5211, AR5212, RF5111,
-RF5112, RF2413, RF5413)
-[  392.379623] wlan: 0.9.4
-[  392.381431] ath_pci: 0.9.4
-[  392.381466] PCI: Enabling device 0000:03:00.0 (0000 -> 0002)
-[  392.381472] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
-low) -> IRQ 17
-[  392.381488] PCI: Setting latency timer of device 0000:03:00.0 to 64
-[  392.385856] wifi%d: unable to attach hardware: 'Hardware didn't
-respond as expected' (HAL status 3)
-[  392.385870] ACPI: PCI interrupt for device 0000:03:00.0 disabled
-
-What can I do to help make this chip work in the near future?
-
-zw
+No problem at all, thanks for taking the time to write this up!!!
+-- 
+Mathieu Chouquet-Stringer                           mchouque@free.fr
+            The sun itself sees not till heaven clears.
+	             -- William Shakespeare --
