@@ -1,74 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37119 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754528AbYEPUXW (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:24209 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012AbYEPV5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 16:23:22 -0400
-Subject: Re: mrv8k vs. mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080516172535.GA9880@tuxdriver.com>
-References: <1210694421.24737.19.camel@localhost.localdomain>
-	 <20080516172535.GA9880@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PokCoWQekKT8+zJ4nNSs"
-Date: Fri, 16 May 2008 22:22:52 +0200
-Message-Id: <1210969372.6381.40.camel@johannes.berg> (sfid-20080516_222326_441171_EC686822)
+	Fri, 16 May 2008 17:57:22 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1063929pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 14:57:21 -0700 (PDT)
+Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1210972335.6381.52.camel@johannes.berg>
+References: <1210966154.5915.50.camel@brick>
+	 <1210966704.5915.51.camel@brick>
+	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
+	 <1210971848.5915.58.camel@brick>
+	 (sfid-20080516_230412_000613_CA74646C)  <1210972335.6381.52.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 16 May 2008 14:57:20 -0700
+Message-Id: <1210975040.5915.63.camel@brick> (sfid-20080516_235726_146295_23AADF41)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-PokCoWQekKT8+zJ4nNSs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2008-05-16 at 13:25 -0400, John W. Linville wrote:
-> On Tue, May 13, 2008 at 12:00:21PM -0400, Dan Williams wrote:
-> > Hi,
+On Fri, 2008-05-16 at 23:12 +0200, Johannes Berg wrote:
+> > > > +static inline int ieee80211_fctl_has_a4(struct ieee80211_hdr *=
+hdr)
+> > >=20
+> > > That seems fine too.
+> > >=20
+> > > > +static inline int ieee80211_ftype(struct ieee80211_hdr *hdr, u=
+16 ftype)
+> > >=20
+> > > That, I think, is misnamed, it should be ieee80211_is_ftype()
 > >=20
-> > mrv8k has commands that should be sent before a scan is started, and
-> > after a scan has finished.  There aren't really pre/post scan hooks in
-> > mac80211, though there certainly could be without too much trouble.  Th=
-e
-> > other possibility is to inspect the filter flags when
-> > ops->configure_filter gets called, since FIF_BCN_PRBRESP_PROMISC gets
-> > flipped before and after the scan.  But that seems ugly and unstable.
-> >=20
-> > Any objections to adding ops->pre_scan and ops->post_scan hooks?  Or
-> > should I just use the configure_filter hack...  or is there a better
-> > way?
+> > Well, I didn't expect this to be used directly that much, hence the
+> > following three helpers...ftype_mgmt/ctl/data
 >=20
-> The pre/post hooks make sense to me...Johannes?
+> Right. Still, I think it should be named with _is_ in there.
 
-I don't know, sort of makes sense, but on the other hand the userspace
-MLME just does it all manually anyway! What exactly do you have to do to
-the hardware for scanning?
+Yes, I agree with you, that's what I meant to write.
 
-johannes
+>=20
+> > > > +static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u=
+16 stype)
+> > > > +{
+> > > > +	return (hdr->frame_control & cpu_to_le16(stype)) !=3D 0;
+> > > > +}
+> > >=20
+> > > And that even seems implemented wrongly? stype is a 4-bit field, =
+this
+> > > doesn't make much sense to me.
+> >=20
+> > It was meant to be used to replace code like:
+> >=20
+> > =EF=BB=BFfc & IEEE80211_STYPE_QOS_DATA
+> >=20
+> > =EF=BB=BFieee80211_stype(hdr, IEEE80211_STYPE_QOS_DATA)
+> >=20
+> > As most users of the stype bits test against a specific constant,
+> > otherwise you could add a bunch of helpers, one for each stype
+> > constant (similar to the ftype helpers I added.  There were only
+> > 3 in the ftype case, so I just added them all and dropped the secon=
+d
+> > parameter, in the stype case, there are more options, so I just
+> > left one two-parameter helper.
+>=20
+> Well, yes, but that's semantically unclear because of the way these b=
+its
+> are used vs. how they are called. The subtype (stype) is a four-bit
+> field in the frame control field which isn't actually defined to have
+> "flags" or bits like that in it. Look at the table in IEEE 802.11-200=
+7,
+> it's at the beginning of clause 7 somewhere.
+>=20
+> Hence, hiding this simple AND behind a function that claims to check =
+the
+> subtype is confusing.
 
---=-PokCoWQekKT8+zJ4nNSs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ahhh, I see what you are getting at now, how about ieee80211_stype_mask=
+?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+That makes the & a little clearer and has better semantic meaning.
 
-iQIVAwUASC3tGqVg1VMiehFYAQKSEw//aW7esQs0dIaGYmSijrPlJv8Isi8jhXFC
-iRnedhv/EG1+LYrMVezfS0q4O/mrchw1OtBcL2rmCsOxRnNUw6m3vsJNiHi1w97e
-qpyao8gHrm/y928TgI0Ujp6d0nuqKdKlCfHIFmxtfKF9cPTwvO+y/zzNdmatwg+Q
-2PQbt1Hx4fKvY5wRJf8ZP9hXyHSSWg721ZzOQ7xSCwkaPnqsyxRUATZTTPqyUivd
-efY5Oe2n08knBsRSbug/ADQOItohg1f+8qDEOfufy3YW+FCrep2Qb0NSIG7beKp0
-pvCizgmpKO7lBvPhMNT70AKeI74yN6ALpN1FwniGLL+f5KjJ4bMfHyxpi5isZWGy
-1d3Ga3pPcXsJCedSVlF4Zs7/bXArgMh15eWPkbxq27ox88ZEwBujKS2QEmx+8uYC
-/zdpE82UHOcgec61QBP2gI/GvVIGPuGt1XJrmdavbF68FCXR0vEE3evVFlGGeEyn
-Y4RTVSXBMqXKhf/xzUJMtNRqumdoQ40kJdfLK6h2IiCmfrwz7FJw9xWMzGkYXw9i
-fxbZIiT45ZeCcUuvfXcAoPaooIvKHRCc3puT3LTDhJ21VUZdvGZYzi7PZTxUmjVp
-izxW+ogNHCt5Vj1h8WOJ1nCqH9JOEEpYXtmjHfARP3IYyr2B89A2EyC+oq5g0tIg
-Rc2YeMb4l50=
-=AiT7
------END PGP SIGNATURE-----
+The other option is still to call it stype_mask, but change it to
+return a __le16....so tests against !=3D 0 still work and really
+is just a wrapper around the byteswap of the constant and the &.
 
---=-PokCoWQekKT8+zJ4nNSs--
+What do you think of that?
 
+Harvey
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
