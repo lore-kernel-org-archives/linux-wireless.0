@@ -1,94 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52688 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbYE2IhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 08/43] iwlwifi: remove notif_missed_beacons variable
-Date: Thu, 29 May 2008 16:34:53 +0800
-Message-Id: <1212050128-17132-9-git-send-email-yi.zhu@intel.com> (sfid-20080529_103725_666016_7D5D9E43)
-In-Reply-To: <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+Received: from el-out-1112.google.com ([209.85.162.182]:17769 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380AbYEPQQP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 12:16:15 -0400
+Received: by el-out-1112.google.com with SMTP id s27so273985ele.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 09:16:14 -0700 (PDT)
+Message-ID: <69e28c910805160916o68ba2512k3aaab29d592c54ff@mail.gmail.com> (sfid-20080516_181646_957987_A6F31548)
+Date: Fri, 16 May 2008 18:16:13 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Martin Dubuc" <martind1111@gmail.com>
+Subject: Re: [ipw3945-devel] Monitor mode on boot
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <7a0107ba0805160906r4bfcd09ch6e550b929e3bd21d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com>
+	 <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com>
+	 <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com>
+	 <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+	 <20080516150824.GB6510@tuxdriver.com>
+	 <7a0107ba0805160906r4bfcd09ch6e550b929e3bd21d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Fri, May 16, 2008 at 6:06 PM, Martin Dubuc <martind1111@gmail.com> wrote:
+> John,
+>
+> I do not believe the script later in the thread will suffice. As far as I
+> can understand, the script will create one interface in monitor mode for
+> each wmasterX (which is good), but the system will also bring up one managed
+> mode interfaces in parallel for each wmasterX. In my use case, I only want
+> an interface of device type X to come up in monitor mode and I don't want a
+> managed mode interface created in parallel.
+>
+> I need to create multiple monitor interfaces on the same box because my
+> application dedicates interfaces for the capture of traffic on specific
+> channels.
+>
+> Martin
 
-This patch removes notif_missed_beacons from priv since it was never
-used. Missed beacons notification will have only meaning if roaming
-will be implemented in mac80211.
+Why is the existence of managed interfaces a problem? Unlike madwifi,
+mac80211 really supports multiple interfaces on one device.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 --
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
- 4 files changed, 0 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 835c5b4..a9b3eda 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -835,8 +835,6 @@ struct iwl3945_priv {
- 
- 	u8 mac80211_registered;
- 
--	u32 notif_missed_beacons;
--
- 	/* Rx'd packet timing information */
- 	u32 last_beacon_time;
- 	u64 last_tsf;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1ee8121..342c6a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1125,8 +1125,6 @@ struct iwl_priv {
- 
- 	u8 mac80211_registered;
- 
--	u32 notif_missed_beacons;
--
- 	/* Rx'd packet timing information */
- 	u32 last_beacon_time;
- 	u64 last_tsf;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index e0f52e2..244bfe5 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5847,9 +5847,6 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
- 	/* Configure the adapter for unassociated operation */
- 	iwl3945_commit_rxon(priv);
- 
--	/* At this point, the NIC is initialized and operational */
--	priv->notif_missed_beacons = 0;
--
- 	iwl3945_reg_txpower_periodic(priv);
- 
- 	iwl3945_led_register(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index d7f9321..6785200 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3314,8 +3314,6 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 	iwl4965_commit_rxon(priv);
- 
- 	/* At this point, the NIC is initialized and operational */
--	priv->notif_missed_beacons = 0;
--
- 	iwl4965_rf_kill_ct_config(priv);
- 
- 	iwl_leds_register(priv);
 -- 
-1.5.3.6
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
