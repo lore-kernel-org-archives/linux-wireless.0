@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45862 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753966AbYEECYF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:05 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 02/25] iwlwifi-5000: rename iwl5000_init_nic to iwl5000_init_config
-Date: Mon,  5 May 2008 10:22:29 +0800
-Message-Id: <1209954172-3092-3-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_224423_E36AC4F7)
-In-Reply-To: <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37165 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754555AbYEPUYr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 16:24:47 -0400
+Subject: Re: [ipw3945-devel] Monitor mode on boot
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Martin Dubuc <martind1111@gmail.com>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080516172738.GB9880@tuxdriver.com> (sfid-20080516_195059_372322_570219A1)
+References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com>
+	 <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com>
+	 <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com>
+	 <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+	 <20080516150824.GB6510@tuxdriver.com>
+	 <7a0107ba0805160906r4bfcd09ch6e550b929e3bd21d@mail.gmail.com>
+	 <69e28c910805160916o68ba2512k3aaab29d592c54ff@mail.gmail.com>
+	 <7a0107ba0805160926ib7cc07er57c00054dec238e@mail.gmail.com>
+	 <69e28c910805160940x3de182cdrb1d49588ccb392d2@mail.gmail.com>
+	 <7a0107ba0805160948j3ca21a85v1b5fce8ddca23ac9@mail.gmail.com>
+	 <20080516172738.GB9880@tuxdriver.com>
+	 (sfid-20080516_195059_372322_570219A1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bX04kU6T8SO7mbcMx39c"
+Date: Fri, 16 May 2008 22:24:31 +0200
+Message-Id: <1210969471.6381.42.camel@johannes.berg> (sfid-20080516_222450_612056_BBDE126F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+--=-bX04kU6T8SO7mbcMx39c
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 0d8ef63..83ed69d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -86,7 +86,7 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
- 	return ret;
- }
- 
--static void iwl5000_nic_init(struct iwl_priv *priv)
-+static void iwl5000_nic_config(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 	u16 radio_cfg;
-@@ -439,7 +439,7 @@ static struct iwl_lib_ops iwl5000_lib = {
- 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
- 	.apm_ops = {
- 		.init =	iwl5000_apm_init,
--		.config = iwl5000_nic_init,
-+		.config = iwl5000_nic_config,
- 		.set_pwr_src = iwl4965_set_pwr_src,
- 	},
- 	.eeprom_ops = {
--- 
-1.5.3.6
+On Fri, 2008-05-16 at 13:27 -0400, John W. Linville wrote:
+> On Fri, May 16, 2008 at 12:48:26PM -0400, Martin Dubuc wrote:
+> > This would solve the boot up issue, but probably not the case where
+> > interfaces are added after the system is booted up (USB or PCI cards th=
+at
+> > can be hot plugged).
+>=20
+> udev?
+
+Yeah, I was just about to suggest the same. Learn how to use userspace
+tools, we're not going to do it in the kernel no matter how much you
+cry :)
+
+johannes
+
+--=-bX04kU6T8SO7mbcMx39c
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASC3tfqVg1VMiehFYAQLJuA//YtKTBzrAe3PvIsaRwwsKu37MatXpOJHz
+IzXtmfmkmpFGOKAoKmqwlAXWszj19YLxD+InypItTPsUqHqD9VrKoitmhimeu7RT
+7whqUYq4CBxo+RshVLTa5GZEgtPpMnjvxzG92dDmZRxLQQSvfjy9zbuP5KCZZB7X
+mzlVvp6+6R2Z3WA6hPxXoAy40MJL/+S88v3FJy2jK+n3bpmrYMew32ewjS6bqCzA
+femzZ65p16VGugp6cbulqutKOngpJU+BoDquEZvBFrr3G6VRSO85cpFE4v0iW9Wp
+2txNFY1q8Ql7O8BCaRwf2ET8BiQkCTNN5KxUWzgizg3Y9MHdmHrGn5sZLyerNeA9
+3FU4DnK1kP70GzPe79LyOy7jydqzukdyLU2OSOxpMAF9n0rFObGYmmfmpNCQBEP5
+JeQBIfNFf7HQYI6KVkYChjW+jEZDGrO0/WT+31IWRVEof0JPeLNfGQsM84YaFzAH
+qXxIPy87zGr+jCsYNPfboJphe5q9hKA7FYIbi035zUDYfXkkLAH2sqFuc1GJqQNx
+zFgLcOst5AhQqC9n4eVzEHBPUTYJkV+wirX4jXovQIFxQ7Cqo9ZlKqL6XRqsWOmz
+VXy2+XSlqijKLkZJeCIlcbWFA4sNps72BO3u32SLwFd0iq5/zXFdVqD0q/dLwUCw
+GF04tDOcXxc=
+=/wJl
+-----END PGP SIGNATURE-----
+
+--=-bX04kU6T8SO7mbcMx39c--
 
