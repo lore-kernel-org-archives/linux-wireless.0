@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59244 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43458 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763693AbYEHPFm (ORCPT
+	with ESMTP id S1754376AbYEPUlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 11:05:42 -0400
-Subject: Re: 015-mac80211-tx-info-skb-cb.patch
+	Fri, 16 May 2008 16:41:07 -0400
+Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200805081710.03869.IvDoorn@gmail.com> (sfid-20080508_170026_206395_174B3092)
-References: <200805081503.41025.IvDoorn@gmail.com>
-	 <200805081657.27976.IvDoorn@gmail.com>
-	 <1210258216.3547.56.camel@johannes.berg>
-	 <200805081710.03869.IvDoorn@gmail.com>
-	 (sfid-20080508_170026_206395_174B3092)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5JBIGSi8t6y/s3pPQVz+"
-Date: Thu, 08 May 2008 17:05:30 +0200
-Message-Id: <1210259130.3547.59.camel@johannes.berg> (sfid-20080508_170502_222337_7BAC745B)
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1210969866.6381.46.camel@johannes.berg> (sfid-20080516_223131_709907_6A706BD2)
+References: <1210966154.5915.50.camel@brick>
+	 <1210966704.5915.51.camel@brick>
+	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
+	 (sfid-20080516_223131_709907_6A706BD2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4HArI4h+vDgUPaLH/JRh"
+Date: Fri, 16 May 2008 22:40:51 +0200
+Message-Id: <1210970451.6381.48.camel@johannes.berg> (sfid-20080516_224112_011083_2253EA2E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-5JBIGSi8t6y/s3pPQVz+
-Content-Type: text/plain
+--=-4HArI4h+vDgUPaLH/JRh
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-> > Right :) I'm pretty much done with the skb->cb conversion too except fo=
-r
-> > ath5k (nick) and rt2x00 (you)
+> > +static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u16 stype=
+)
+> > +{
+> > +	return (hdr->frame_control & cpu_to_le16(stype)) !=3D 0;
+> > +}
 >=20
-> I'm going to rebase rt2x00.git this weekend to update from wireless-testi=
-ng,
-> since the skb->cb patches now depends on HW crypto which is not ready
-> for upstream yet, I am going to reverse the patch order so the skb->cb pa=
-tches
-> and some other updates can go upstream more easily.
+> And that even seems implemented wrongly? stype is a 4-bit field, this
+> doesn't make much sense to me.
 
-Cool, thanks. If you have a single patch that can pretty much go into
-wireless-testing you can send it to me and I'll roll it into my patch.
-If it depends on another rt2x00 merge then just let me know, I can wait
-with this. I'd like to do it soonish though, it removes ~200 lines of
-code (touching roughly 1000) and a lot of kmemdup/memcpy/kmalloc calls.
+Now, before you get any ideas, this code
 
-I'm just rebasing things a bit myself as well so I can give people a
-patch to test.
+=EF=BB=BF
+-       a4_included =3D (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)=
+) =3D=3D
+-               (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
+-       if ((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA &&
+-           fc & IEEE80211_STYPE_QOS_DATA) {
+
+is still correct. You really want to read the frame type bit assignments
+in 802.11-2007 :)
 
 johannes
 
---=-5JBIGSi8t6y/s3pPQVz+
+--=-4HArI4h+vDgUPaLH/JRh
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASCMWuaVg1VMiehFYAQIiwhAAnngx8FckAj2Xrgsfv/4P0ZSUviDd5xFG
-wnHX8FfV9KyAeU7JLJLBDN2liud9iRBYkw1c3v42E/jVwlc7FHB78GjdEDWKYbIw
-ymeS8B2uzZA3sgeYRq1kAIJVDrGga7qKE+tK8QJDj3fuB37S+ewg3v6s4okbfyKk
-2FLTwEYGYvkRJddlbisVKjZWzT5eYQlSSlUF1oNw/xo/0Jk0NOGo6Y16CKJ59uf5
-JiQwEaGJbdblG/nclm9y9PZhj+ykbIH2dVeJhJ5axfCha3h3suzL5TiEcWt8m+R9
-e63tGbq3WfemQPGFbuYjePrySHLR4Df6wULnZyk2m17zPkQzHS2louer8/VP8eMv
-9B+QcaVgNWLaMTRBIkKdt/2DIiRnN/WmNChp27Y1N5KYogjA9EdbQGcy+/uEm6ye
-CjjRTMAs8y1LugVsHptBFMJxOg9JxnDwVHKXtCiCBf/V2IBVFm0zfK3J8S1L6O+l
-dQZhJgJRWRGoqHMxmIA8LVNR24PiKwvTiHxBJLfR53mrs2jO1nsUP43x93OKLUPs
-OynqinlW1Gb6ClJEYAyNKOTyvFWzzKcXctGI/bAwMxcmSPt8724JbNjI39qGa8eT
-e49nOs4ikNPiOAWuGpRkirC7cjV7llx4HAF2Hg2WbcyKoGAyKd8dkiBtlQHuI3Gq
-l31BFTjfRYU=
-=KvRe
+iQIVAwUASC3xUaVg1VMiehFYAQIH9BAAnGjyiZSpurtw+yBxa1Jpqm05FPqp1xRR
+62WMEcRAxxvI4LfgHtzFC06INFXd6zRu7GFD3dfV6dwWZ+BJShNYsAWQY5qQrdgz
+y1nYIGOO6yyQqP9kE6Zdcg9Bg5/EHeox+8iT8AJ8BI5Vvr3mLvA5nf6vEuMk64EF
++J5Cc3fDj3v6Lf+2u2F//Gw8i52O6fOsIqfCSsw/KUrAE4J8ce5YRhnPkxXZ6kkH
+4OlFVR4tgPFOex1JEMDFK6/dBq2Zfw7h83cMVql9v8YDq0O0EsvkuB41RF458Ab3
+dYAY1FRuLoO7NAZVBkXVY5L6NG95CEzH9UdmqiNqvB8EWAlcz1QO5CZqGX7nqOgx
+WbQOTswM3av9d7zrocZIp8HUTzpXkjNWPEXDGYhqwpFRauHDf8uzUPgzAUj2Am2I
+cILAJGB080a4iIQmehJZEgceebXDadL4HBpsS6bjsdikvS8Eltx2rNuokNU0sReH
+P0GIv3BnVwdrMOuUmg6Ic0cjmhxxlVOZMSN6JGaEEctIrV1I5sxPgoBBvp0mO359
+GQuxO6GraHhQL+H+BJ2h79mExNwAf0mDxK9ZLxmkiZmeNhzZDmRWtlGS2PT9fVs/
+NWznfmj9vlvBdvRizh++cejEv0MRKClzix3MjBanbjHomk9nMzMQAE4fpriezPCa
++nDynGgSJ34=
+=rU6t
 -----END PGP SIGNATURE-----
 
---=-5JBIGSi8t6y/s3pPQVz+--
+--=-4HArI4h+vDgUPaLH/JRh--
 
