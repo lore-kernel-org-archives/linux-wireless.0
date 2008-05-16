@@ -1,84 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:13660 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.174]:48096 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755875AbYEVF7m (ORCPT
+	with ESMTP id S1751673AbYEPO26 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 01:59:42 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2473125wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 22:59:41 -0700 (PDT)
-Message-ID: <43e72e890805212259u7515a12as69eeea253b197a64@mail.gmail.com> (sfid-20080522_075946_521184_ED0C6993)
-Date: Wed, 21 May 2008 22:59:41 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"Jean Tourrilhes" <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1211210578.6252.52.camel@johannes.berg>
+	Fri, 16 May 2008 10:28:58 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so161662wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 07:28:57 -0700 (PDT)
+Message-ID: <69e28c910805160728x5c7305f1h6512af1506e4f08b@mail.gmail.com> (sfid-20080516_162902_040217_26AD96F0)
+Date: Fri, 16 May 2008 16:28:57 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Martin Dubuc" <martind1111@gmail.com>
+Subject: Re: [ipw3945-devel] Monitor mode on boot
+Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 <1211032475.6252.2.camel@johannes.berg>
-	 <1211117795.686.15.camel@localhost.localdomain>
-	 <1211199368.6252.19.camel@johannes.berg>
-	 <1211210578.6252.52.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com>
+	 <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com>
+	 <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com>
+	 <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2008 at 8:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> [removing linux-kernel and netdev from CC, I suppose they won't care too
-> much about these details]
->
-> On Mon, 2008-05-19 at 14:18 +0200, Johannes Berg wrote:
->> > Instead of testing for wireless/, best thing would probably be to call
->> > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
->> > wireless.  Some drivers may have to load firmware to figure out
->> > supported rates and encryption capabilities, but to be honest, NM does
->> > this to detect wireless devices and I haven't run into any issues in 4
->> > years using it.  If there are issues with drivers, then we need to fix
->> > the driver too.
+On Fri, May 16, 2008 at 4:03 PM, Stefanik G=E1bor <netrolller.3d@gmail.=
+com> wrote:
+> On Fri, May 16, 2008 at 3:27 PM, Martin Dubuc <martind1111@gmail.com>=
+ wrote:
 >>
->> I was about to propose calling SIOCGIWNAME since that is what
->> wireless-tools do and that linux/wireless.h indicates.
+>> You are right pointing out that it is possible to perform monitor mo=
+de
+>> configuration using startup scripts. However, to fit nicely in exist=
+ing
+>> frameworks, such as the ones available from Fedora, it would be nice=
+ that
+>> the driver be enhanced. Madwifi allows users to put a configuration =
+like
+>> this one in the modprobe.conf.:
+>>
+>> options ath_pci autocreate=3Dmonitor
+>>
+>> The nice thing about such a configuration is that it decouples the d=
+evice
+>> type configuration from the interface management function. One does =
+not need
+>> to worry which interface (wlan0, wlan1, wlan2, etc.) a device will c=
+ome up
+>> on, the system configures any device of a given type using a common =
+set of
+>> configuration. For systems that have only one Wi-Fi device, your met=
+hod is
+>> as good as this one, but for systems that have more than one Wi-Fi d=
+evice,
+>> some of them coming off and on while the system is running, possibly=
+ using
+>> different interface names, the modprobe.conf solution is better.
+>>
+>> Martin
 >
-> Here's a patch, comments?
 >
-> johannes
+> This might better be done in the stack, rather than the driver. This =
+way,
+> all drivers would get this functionality. CCing the linux-wireless ma=
+iling
+> list.
+> Also, since an userspace solution might be preferred by Linville and =
+the
+> other wireless maintainers, it might be wise to add an "aggregate dev=
+ice" or
+> a "supermaster" which can be targeted by iw so that all devices gover=
+ned by
+> that driver get a new interface.
+> Alternatively, a script can be made that creates a monitor interface =
+on monX
+> or rtapX for all wmasterX devices. This is equivalent to madwifi's so=
+lution,
+> except that it's userspace, which is preferred now.
 >
-> ---
->  hald/linux/device.c |   16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
->
-> --- hal.orig/hald/linux/device.c        2008-05-19 06:46:23.000000000 +0200
-> +++ hal/hald/linux/device.c     2008-05-19 06:55:25.000000000 +0200
-> @@ -45,6 +45,10 @@
->   #include <linux/input.h>
->  #endif
->
-> +/* for wireless extensions */
-> +#include <linux/if.h>
-> +#include <linux/wireless.h>
-> +
->  #include <dbus/dbus.h>
->  #include <dbus/dbus-glib.h>
->
-> @@ -532,10 +536,14 @@ net_add (const gchar *sysfs_path, const
->                const char *addr;
->                const char *parent_subsys;
->                char bridge_path[HAL_PATH_MAX];
-> -               char wireless_path[HAL_PATH_MAX];
->                char phy80211_path[HAL_PATH_MAX];
->                struct stat s;
->                dbus_uint64_t mac_address = 0;
-> +               int ioctl_fd;
-> +               struct iwreq iwr;
-> +
-> +               ioctl_fd = socket (PF_INET, SOCK_DGRAM, 0);
-> +               strncpy (iwr.ifr_ifrn.ifrn_name, IFNAMSIZ, ifname);
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
 
-IFNAMSIZ should be the last argument.
+BTW, here is a script that automatically creates a "monX" interface
+for every "wmasterX" master device it encounters:
 
-  Luis
+#!/bin/sh
+for a in $(iwconfig 2>&1 | grep wmaster | sed -e 's/wmaster//' | cut -b=
+ 1); do
+iw dev wmaster$a interface add mon$a type monitor
+ifconfig mon$a up
+done
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
