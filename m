@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753530AbYEJWWE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 18:22:04 -0400
-Received: from [91.5.117.77] (helo=[10.0.0.127])
-	by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1JuxS7-0000zD-CH
-	for linux-wireless@vger.kernel.org; Sun, 11 May 2008 00:22:03 +0200
-Message-Id: <20080510221905.646038000@sipsolutions.net> (sfid-20080511_002228_245832_9AA59424)
-References: <20080510221845.340428000@sipsolutions.net>
-Date: Sun, 11 May 2008 00:18:46 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT/C 1/7] mac80211: use skb_header_cloned()
-Mime-Version: 1.0
+Received: from sacred.ru ([62.205.161.221]:58331 "EHLO sacred.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753481AbYEPLK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 07:10:26 -0400
+Message-ID: <482D6A80.6030804@openvz.org> (sfid-20080516_131031_293994_541829E4)
+Date: Fri, 16 May 2008 15:05:36 +0400
+From: Pavel Emelyanov <xemul@openvz.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/7][MAC8021]: Fix one more call to synchronize_rcu in
+ atomic context.
+References: <4821CE54.9000401@openvz.org>
+In-Reply-To: <4821CE54.9000401@openvz.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 doesn't need to care here about cloned status but rather
-about whether the skb header data area is modifiable.
+Hi, John. 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Sorry for bothering you, I guess that you're very busy now, 
+but what are you plans about this set?
 
---- everything.orig/net/mac80211/tx.c	2008-05-10 23:00:06.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-05-10 23:00:37.000000000 +0200
-@@ -1563,13 +1563,13 @@ int ieee80211_subif_start_xmit(struct sk
- 	 * be cloned. This could happen, e.g., with Linux bridge code passing
- 	 * us broadcast frames. */
- 
--	if (head_need > 0 || skb_cloned(skb)) {
-+	if (head_need > 0 || skb_header_cloned(skb)) {
- #if 0
- 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
- 		       "of headroom\n", dev->name, head_need);
- #endif
- 
--		if (skb_cloned(skb))
-+		if (skb_header_cloned(skb))
- 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
- 		else
- 			I802_DEBUG_INC(local->tx_expand_skb_head);
+After I saw my first set included in some wireless git update,
+I thought this one would be in some of the next ones (since
+this set fixes some bugs in mesh tables), and started waiting.
 
--- 
+Here's a new wireless git update and this set is still not in.
+Shall I resubmit one?
+
+Thanks,
+Pavel
+
+> (This set applies OK without the previous one of 4 patches,
+>  but with some fuzz in the 7th one)
+> 
+> 
+> The mesh_path_node_free() does so under hashwlock.
+> 
+> But, this one is called
+> 1. from mesh_path_add() after an old hash is hidden and
+>    synchronize_rcu() is calld
+> 2. mesh_pathtbl_unregister(), when the module is being
+>    unloaded and no devices exist to mess with this hash.
+> 
+> So, it seems to me, that simply removing the call is OK.
+> 
+> Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
+> 
+> ---
+>  net/mac80211/mesh_pathtbl.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+> index 7097ef9..0b6c4bf 100644
+> --- a/net/mac80211/mesh_pathtbl.c
+> +++ b/net/mac80211/mesh_pathtbl.c
+> @@ -458,7 +458,6 @@ static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
+>  	struct mpath_node *node = hlist_entry(p, struct mpath_node, list);
+>  	mpath = node->mpath;
+>  	hlist_del_rcu(p);
+> -	synchronize_rcu();
+>  	if (free_leafs)
+>  		kfree(mpath);
+>  	kfree(node);
 
