@@ -1,84 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbYESPkP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 11:40:15 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211210686.12187.6.camel@localhost.localdomain>
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
-	 <1211117795.686.15.camel@localhost.localdomain>
-	 <1211199368.6252.19.camel@johannes.berg>
-	 <1211210686.12187.6.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VVMPMxkZnK+h4toNjr8S"
-Date: Mon, 19 May 2008 17:39:07 +0200
-Message-Id: <1211211547.6252.54.camel@johannes.berg> (sfid-20080519_174027_508017_5889A380)
-Mime-Version: 1.0
+Received: from mr1.bfh.ch ([147.87.250.50]:59384 "EHLO mr1.bfh.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756251AbYEPOKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 10:10:15 -0400
+From: Michael Bernhard <michael.bernhard@bfh.ch>
+To: mcgrof@winlab.rutgers.edu
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3 v2] compat-2.6: Add some missing functions and macros
+Date: Fri, 16 May 2008 16:10:28 +0200
+Message-Id: <12109470283444-git-send-email-michael.bernhard@bfh.ch> (sfid-20080516_161022_903305_95F117E7)
+In-Reply-To: <12109457272730-git-send-email-michael.bernhard@bfh.ch>
+References: <12109457272730-git-send-email-michael.bernhard@bfh.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Michael Bernhard <michael.bernhard@bfh.ch>
+---
+I'm sorry. The folowing two lines slipped through:
 
---=-VVMPMxkZnK+h4toNjr8S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> +/* Undef BIT() which is defined in include/linux/bitops.h */
+> +#undef BIT
 
-On Mon, 2008-05-19 at 11:24 -0400, Dan Williams wrote:
-> On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
-> > > Instead of testing for wireless/, best thing would probably be to cal=
-l
-> > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-> > > wireless.  Some drivers may have to load firmware to figure out
-> > > supported rates and encryption capabilities, but to be honest, NM doe=
-s
-> > > this to detect wireless devices and I haven't run into any issues in =
-4
-> > > years using it.  If there are issues with drivers, then we need to fi=
-x
-> > > the driver too.
-> >=20
-> > I was about to propose calling SIOCGIWNAME since that is what
-> > wireless-tools do and that linux/wireless.h indicates.
->=20
-> Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
-> that NAME return _something_ at least.  NAME should never ever be used
-> for anything more, but since wireless-tools appears to do this that's
-> fine.
+Here is a new patch.
 
-Yes, I realise it is completely useless, but wext seems to require that
-it be implemented. RANGE would work as well but typically has much more
-complexity in the kernel.
+ compat/compat.h         |   28 ++++++++++++++++++++++++++++
+ scripts/admin-update.sh |   10 ++++++++++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
 
-johannes
-
---=-VVMPMxkZnK+h4toNjr8S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDGfGqVg1VMiehFYAQKFrQ//VJSZe8MOCXjybVqM8xZNrPJJjx+kaT/m
-rytyEgVBFsj5ef9VeMruP3cPN/79jzJbWxeeG12TPbCNorsoRKvNk60eVrZw6/3a
-AAySbees2kodn7C1OfGgrbe2arQ1mrNsC0Y41CCtL+fkcV0D8tcmx8CBLtxerxqG
-yIGFygdxPVFTE8FAO540QInHNGK+6LS7BEPAgs5st7EbmymCDvfvrvJZXZWpgeAW
-Svx6ue0gv/GN48R8v/wxyhwY7jK7EDXYV4HCjIz7gstnB8DLq4RuzHYz1uaAInXs
-1l4iaqSP2HK891rIiDdMxr33NvWTdmRXjADYCiA8UR2a+iERPBC86XL+5avrh6e5
-eSDhi+Q/7v+R+gAYR4uZm6PszLpvIPmPav6XqIn4J+qTzxYrVA0Nr76s51XEqzNY
-MMGAyI0F04aCmJQ3xoSQjqVOFUpEnN1gOk53gVNm6Tx7zsww2IQUZWtBPot7lJqh
-Gx6tF/vuizl9R2NZ/ELnq5y/m2OfjlXAIyPbkROK3+j1ADjJCZsMbZ2/dahNFpOY
-HrddAkztuH3el82LnL8nqC49Fps9yc574RsdtJ7JaFRxppM8VLSEEzxyk7h5GI8d
-BkhXH2/HDi5yQbFkhs77Zhr+OdldV5zQOxpcEu+MNtfemyIkO94X7XVNCL9mVxtx
-2q9x99ypsgs=
-=lRSF
------END PGP SIGNATURE-----
-
---=-VVMPMxkZnK+h4toNjr8S--
+diff --git a/compat/compat.h b/compat/compat.h
+index 4ae26ac..0d940ab 100644
+--- a/compat/compat.h
++++ b/compat/compat.h
+@@ -30,6 +30,9 @@
+ #include <linux/init.h>
+ #include <linux/uaccess.h>
+ 
++#include <linux/unaligned/access_ok.h>
++#include <linux/unaligned/generic.h>
++
+ #include <net/arp.h>
+ #include <net/neighbour.h>
+ 
+@@ -403,6 +406,31 @@ static inline void led_classdev_unregister_suspended(struct led_classdev *lcd)
+ 	led_classdev_unregister(lcd);
+ }
+ 
++/* From include/linux/device.h */
++static inline const char *dev_name(struct device *dev)
++{
++	/* will be changed into kobject_name(&dev->kobj) in the near future */
++	return dev->bus_id;
++}
++
++/* From include/linux/kernel.h */
++/**
++ * clamp_val - return a value clamped to a given range using val's type
++ * @val: current value
++ * @min: minimum allowable value
++ * @max: maximum allowable value
++ *
++ * This macro does no typechecking and uses temporary variables of whatever
++ * type the input argument 'val' is.  This is useful when val is an unsigned
++ * type and min and max are literals that will otherwise be assigned a signed
++ * integer type.
++ */
++#define clamp_val(val, min, max) ({		\
++	typeof(val) __val = (val);		\
++	typeof(val) __min = (min);		\
++	typeof(val) __max = (max);		\
++	__val = __val < __min ? __min: __val;	\
++	__val > __max ? __max: __val; })
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
+ #endif /* LINUX_26_COMPAT_H */
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 555c1e8..55ef211 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -23,6 +23,9 @@ INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h bitops.h eeprom_93cx6.h pm_qos_params.h"
+ # For rndis_wext
+ INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
+ 
++# Unaligned access
++INCLUDE_LINUX_UNALIGNED="access_ok.h generic.h"
++
+ # Stuff that should die or be merged, only ipw uses it
+ INCLUDE_NET_OLD="ieee80211.h ieee80211_crypt.h"
+ # The good new yummy stuff
+@@ -73,6 +76,7 @@ DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
+ DRIVER_FILES="$DRIVER_FILES at76_usb.h at76_usb.c"
+ 
+ mkdir -p include/linux/ include/net/ include/linux/usb \
++	include/linux/unaligned \
+ 	net/mac80211/ net/wireless/ net/ieee80211/ \
+ 	drivers/ssb/ \
+ 	drivers/net/usb/ \
+@@ -100,6 +104,12 @@ for i in $INCLUDE_LINUX_USB; do
+ 	cp $GIT_TREE/$DIR/$i $DIR/
+ done
+ 
++DIR="include/linux/unaligned"
++for i in $INCLUDE_LINUX_UNALIGNED; do
++	echo "Copying $GIT_TREE/$DIR/$i"
++	cp $GIT_TREE/$DIR/$i $DIR/
++done
++
+ # net/wireless and net/mac80211
+ for i in $NET_DIRS; do
+ 	echo "Copying $GIT_TREE/net/$i/*.[ch]"
+-- 
+1.5.2.5
 
