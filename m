@@ -1,68 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755571AbYESMSk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 08:18:40 -0400
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-In-Reply-To: <1211117795.686.15.camel@localhost.localdomain>
-References: <1211026337.3827.25.camel@johannes.berg>
-	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
-	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
-	 <1211117795.686.15.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2UPt4qKi1GJIRJ0lv493"
-Date: Mon, 19 May 2008 14:16:08 +0200
-Message-Id: <1211199368.6252.19.camel@johannes.berg> (sfid-20080519_141848_645611_5E8D7427)
-Mime-Version: 1.0
+Received: from mr1.bfh.ch ([147.87.250.50]:36456 "EHLO mr1.bfh.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755575AbYEPNsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 May 2008 09:48:35 -0400
+From: Michael Bernhard <michael.bernhard@bfh.ch>
+To: mcgrof@winlab.rutgers.edu
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] compat-2.6: Add some missing functions and macros
+Date: Fri, 16 May 2008 15:48:44 +0200
+Message-Id: <12109457272730-git-send-email-michael.bernhard@bfh.ch> (sfid-20080516_154840_418674_0485727E)
+In-Reply-To: <1210945725582-git-send-email-michael.bernhard@bfh.ch>
+References: <1210945725582-git-send-email-michael.bernhard@bfh.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Michael Bernhard <michael.bernhard@bfh.ch>
+---
+ compat/compat.h         |   31 +++++++++++++++++++++++++++++++
+ scripts/admin-update.sh |   10 ++++++++++
+ 2 files changed, 41 insertions(+), 0 deletions(-)
 
---=-2UPt4qKi1GJIRJ0lv493
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> Instead of testing for wireless/, best thing would probably be to call
-> SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
-> wireless.  Some drivers may have to load firmware to figure out
-> supported rates and encryption capabilities, but to be honest, NM does
-> this to detect wireless devices and I haven't run into any issues in 4
-> years using it.  If there are issues with drivers, then we need to fix
-> the driver too.
-
-I was about to propose calling SIOCGIWNAME since that is what
-wireless-tools do and that linux/wireless.h indicates.
-
-johannes
-
---=-2UPt4qKi1GJIRJ0lv493
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDFvh6Vg1VMiehFYAQJKwxAAxJfeWZ6v5iO3NVKN7OZjWGU/2UeLhwUI
-r603e7JOqfCIfBVBvmtHeOOmdSfon4KPAHg/MJPv7dVZEtuWN6iRGfeAHfYWHeee
-MUj/jQl1uvj9Pya2MGsBB9MM5te85bvha2bCNEOsTPfcggIkDInzvQ89P1+8CdUy
-o/1dk3b56Os4L4jWVyLpttm0QSZ5tKgXfqnKoDSf7KFMfBTktWu9icQaLddwkwSr
-lGE+HJyx6a6SMycPO5H2oH3rtCv7hv5CLig7vL1mMruPLdelHd7jgUwAi2qSRJG3
-MP8DwS5V8JkzEaSqvPGEqCcU9JcMr71nvWdG0+JhTdQIFzg3mjD7BOI0yD4oUdYQ
-otCkmulKr0tEpKiOC13FidNd/J8MHfW+v5TWOJk1n7TVWDJPobCVy9i0EE3NLWlb
-ItyZ8beEhq02ZK58F3S+GDIG0q7zxuwDvQGbSpExv35UA325hU8EyhZbSZ57rpro
-IkiGYz28OFhvSgbjh4KyMj1MRskrh/s+UEq2OzamwhrLU8Qi2OHY/7HbLNxhthLo
-hnmod+3SAuYIwn7y3nq2YO9nMJ84HkSM9I3LRf4mM8y8r56LwN9IbmHFgttLGvY7
-LznGs0HPgIMReV2cDBXxqgGayNb47oPmkTNxYZFUGArk2/EDbHS9dJfepzrry+rA
-XnZILSbWi1w=
-=2st1
------END PGP SIGNATURE-----
-
---=-2UPt4qKi1GJIRJ0lv493--
+diff --git a/compat/compat.h b/compat/compat.h
+index 4ae26ac..78e19da 100644
+--- a/compat/compat.h
++++ b/compat/compat.h
+@@ -30,6 +30,9 @@
+ #include <linux/init.h>
+ #include <linux/uaccess.h>
+ 
++#include <linux/unaligned/access_ok.h>
++#include <linux/unaligned/generic.h>
++
+ #include <net/arp.h>
+ #include <net/neighbour.h>
+ 
+@@ -403,6 +406,34 @@ static inline void led_classdev_unregister_suspended(struct led_classdev *lcd)
+ 	led_classdev_unregister(lcd);
+ }
+ 
++/* From include/linux/device.h */
++static inline const char *dev_name(struct device *dev)
++{
++	/* will be changed into kobject_name(&dev->kobj) in the near future */
++	return dev->bus_id;
++}
++
++/* From include/linux/kernel.h */
++/**
++ * clamp_val - return a value clamped to a given range using val's type
++ * @val: current value
++ * @min: minimum allowable value
++ * @max: maximum allowable value
++ *
++ * This macro does no typechecking and uses temporary variables of whatever
++ * type the input argument 'val' is.  This is useful when val is an unsigned
++ * type and min and max are literals that will otherwise be assigned a signed
++ * integer type.
++ */
++#define clamp_val(val, min, max) ({		\
++	typeof(val) __val = (val);		\
++	typeof(val) __min = (min);		\
++	typeof(val) __max = (max);		\
++	__val = __val < __min ? __min: __val;	\
++	__val > __max ? __max: __val; })
++
++/* Undef BIT() which is defined in include/linux/bitops.h */
++#undef BIT
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
+ #endif /* LINUX_26_COMPAT_H */
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 555c1e8..55ef211 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -23,6 +23,9 @@ INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h bitops.h eeprom_93cx6.h pm_qos_params.h"
+ # For rndis_wext
+ INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
+ 
++# Unaligned access
++INCLUDE_LINUX_UNALIGNED="access_ok.h generic.h"
++
+ # Stuff that should die or be merged, only ipw uses it
+ INCLUDE_NET_OLD="ieee80211.h ieee80211_crypt.h"
+ # The good new yummy stuff
+@@ -73,6 +76,7 @@ DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
+ DRIVER_FILES="$DRIVER_FILES at76_usb.h at76_usb.c"
+ 
+ mkdir -p include/linux/ include/net/ include/linux/usb \
++	include/linux/unaligned \
+ 	net/mac80211/ net/wireless/ net/ieee80211/ \
+ 	drivers/ssb/ \
+ 	drivers/net/usb/ \
+@@ -100,6 +104,12 @@ for i in $INCLUDE_LINUX_USB; do
+ 	cp $GIT_TREE/$DIR/$i $DIR/
+ done
+ 
++DIR="include/linux/unaligned"
++for i in $INCLUDE_LINUX_UNALIGNED; do
++	echo "Copying $GIT_TREE/$DIR/$i"
++	cp $GIT_TREE/$DIR/$i $DIR/
++done
++
+ # net/wireless and net/mac80211
+ for i in $NET_DIRS; do
+ 	echo "Copying $GIT_TREE/net/$i/*.[ch]"
+-- 
+1.5.2.5
 
