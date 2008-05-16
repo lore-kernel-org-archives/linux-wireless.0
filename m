@@ -1,81 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:35314 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913AbYETMyZ (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:39542 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755231AbYEPMPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 08:54:25 -0400
-Received: by py-out-1112.google.com with SMTP id u52so2404947pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 05:54:25 -0700 (PDT)
-Message-ID: <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com> (sfid-20080520_145429_436059_08A7992C)
-Date: Tue, 20 May 2008 15:54:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Helmut Schaa" <hschaa@suse.de>
-Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+	Fri, 16 May 2008 08:15:44 -0400
+Date: Fri, 16 May 2008 20:15:28 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, ron.rindjunsky@intel.com, tomasw@gmail.com,
+	ivdoorn@gmail.com, peter.p.waskiewicz.jr@intel.com
+Subject: Re: [PATCH] mac80211: rewrite fragmentation code
+Message-ID: <20080516121528.GA9768@gondor.apana.org.au> (sfid-20080516_141730_705452_243A3389)
+References: <20080508032208.GA401@gondor.apana.org.au> <200805161201.48835.rusty@rustcorp.com.au> <20080515.215823.28841530.davem@davemloft.net> <200805162032.48469.rusty@rustcorp.com.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200805162032.48469.rusty@rustcorp.com.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2008 at 10:56 AM, Helmut Schaa <hschaa@suse.de> wrote:
-> Fix a possible NULL pointer dereference in ieee80211_compatible_rates
-> introduced in the patch "mac80211: fix association with some APs". If no bss
-> is available just use all supported rates in the association request.
->
-> Signed-off-by: Helmut Schaa <hschaa@suse.de>
-> ---
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 76ad4ed..3f7f92a 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -721,7 +721,17 @@ static void ieee80211_send_assoc(struct net_device
-> *dev,
->                        capab |= WLAN_CAPABILITY_PRIVACY;
->                if (bss->wmm_ie)
->                        wmm = 1;
-> +
-> +               /* get all rates supported by the device and the AP as
-> +                * some APs don't like getting a superset of their rates
-> +                * in the association request (e.g. D-Link DAP 1353 in
-> +                * b-only mode) */
-> +               rates_len = ieee80211_compatible_rates(bss, sband, &rates);
-> +
->                ieee80211_rx_bss_put(dev, bss);
-> +       } else {
-> +               rates = ~0;
-> +               rates_len = sband->n_bitrates;
->        }
->
->        mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
-> @@ -752,10 +762,7 @@ static void ieee80211_send_assoc(struct net_device
-> *dev,
->        *pos++ = ifsta->ssid_len;
->        memcpy(pos, ifsta->ssid, ifsta->ssid_len);
->
-> -       /* all supported rates should be added here but some APs
-> -        * (e.g. D-Link DAP 1353 in b-only mode) don't like that
-> -        * Therefore only add rates the AP supports */
-> -       rates_len = ieee80211_compatible_rates(bss, sband, &rates);
-> +       /* add all rates which were marked to be used above */
->        supp_rates_len = rates_len;
->        if (supp_rates_len > 8)
->                supp_rates_len = 8;
->
->
+On Fri, May 16, 2008 at 08:32:48PM +1000, Rusty Russell wrote:
+> 
+> But it's *simple*, and seems like a common thing to want.  Why not change 
+> everything to use TX_BUSY and rip out the guestimate/buffering hacks?
 
-I found one  ieee80211_rx_bss_{get,put} imbalance   in
-ieee80211_sta_join_ibss function
-That may cause this problem yet it doesn't look like this is the case.
-ieee80211_sta_join_ibss
-calls ieee80211_rx_bss_put on 'bss' that it receives as an argument
-Keep searching.
+I think this sounds quite reasonable.
 
-I suggest to insert at least some WARN_ON(1) for the else case.
-
-Tomas
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
