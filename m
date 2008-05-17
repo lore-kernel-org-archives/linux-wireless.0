@@ -1,38 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51437 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbYEQNpL (ORCPT
+Received: from mx2.suse.de ([195.135.220.15]:36937 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753003AbYEQSUW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 09:45:11 -0400
-Cc: netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Message-Id: <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> (sfid-20080517_154534_862563_74302D8C)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1211026337.3827.25.camel@johannes.berg>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-Date: Sat, 17 May 2008 15:45:04 +0200
-References: <1211026337.3827.25.camel@johannes.berg>
+	Sat, 17 May 2008 14:20:22 -0400
+Message-ID: <20080517202020.1da5y31wckkwc0sk@imap.suse.de> (sfid-20080517_202028_759904_A53E1EEB)
+Date: Sat, 17 May 2008 20:20:20 +0200
+From: Helmut Schaa <hschaa@suse.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: fix NULL pointer dereference in
+	ieee80211_compatible_rates
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Fix a possible NULL pointer dereference in ieee80211_compatible_rates
+introduced in the patch "mac80211: fix association with some APs".
 
-> The /sys/class/net/*/wireless/ direcory is, as far as I know, not
-> used by anyone. Additionally, the same data is available via wext
-> ioctls. Hence the sysfs files are pretty much useless. This patch
-> makes them optional and schedules them for removal.
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+---
 
-it is used by HAL to classify WiFi network cards as net.80211 instead  
-of net.80203 and so we do have an actual user. However HAL only tests  
-for the existence of the directory wireless/.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 76ad4ed..2642551 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -664,15 +664,22 @@ static int ieee80211_compatible_rates(struct
+ieee80211_sta_bss *bss,
+   	int i, j, count;
+   	*rates = 0;
+   	count = 0;
+-	for (i = 0; i < bss->supp_rates_len; i++) {
+-		int rate = (bss->supp_rates[i] & 0x7F) * 5;
 
-Please fix HAL first before submitting such a patch.
+-		for (j = 0; j < sband->n_bitrates; j++)
+-			if (sband->bitrates[j].bitrate == rate) {
+-				*rates |= BIT(j);
+-				count++;
+-				break;
+-			}
++	if (bss) {
++		for (i = 0; i < bss->supp_rates_len; i++) {
++			int rate = (bss->supp_rates[i] & 0x7F) * 5;
++
++			for (j = 0; j < sband->n_bitrates; j++)
++				if (sband->bitrates[j].bitrate == rate) {
++					*rates |= BIT(j);
++					count++;
++					break;
++				}
++		}
++	} else {
++		for (i = 0; i < sband->n_bitrates; i++)
++			*rates |= BIT(i);
++		count = sband->n_bitrates;
+   	}
 
-Regards
-
-Marcel
+   	return count;
 
