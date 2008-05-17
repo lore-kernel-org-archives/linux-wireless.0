@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24096 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754413AbYEECYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:13 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 08/25] iwlwifi-5000: add build_addsta_hcmd handler for 5000 HW
-Date: Mon,  5 May 2008 10:22:35 +0800
-Message-Id: <1209954172-3092-9-git-send-email-yi.zhu@intel.com> (sfid-20080505_042355_567985_A6841F1C)
-In-Reply-To: <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:40662 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbYEQOge (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 May 2008 10:36:34 -0400
+Cc: netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Message-Id: <31B1A5D6-8E8B-4148-860F-326FEEE5A3EE@holtmann.org> (sfid-20080517_163727_939962_16B2F279)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1211032475.6252.2.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+Date: Sat, 17 May 2008 16:36:31 +0200
+References: <1211026337.3827.25.camel@johannes.berg> <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> (sfid-20080517_154639_384202_6D3479C2) <1211032475.6252.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hi Johannes,
 
-This patch adds iwl5000_build_addsta_hcmd handler.
+>>> The /sys/class/net/*/wireless/ direcory is, as far as I know, not
+>>> used by anyone. Additionally, the same data is available via wext
+>>> ioctls. Hence the sysfs files are pretty much useless. This patch
+>>> makes them optional and schedules them for removal.
+>>
+>> it is used by HAL to classify WiFi network cards as net.80211 instead
+>> of net.80203 and so we do have an actual user. However HAL only tests
+>> for the existence of the directory wireless/.
+>
+> Oh, ok, I didn't know that, thanks.
+>
+>> Please fix HAL first before submitting such a patch.
+>
+> Sure, I'll take a look at that.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+saw your patch. Looks good to me. However what do we do with the non- 
+mac80211 drivers that are using WEXT directly. These should be  
+detected as net.80211, too.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 83ed69d..f9c2274 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -422,10 +422,19 @@ static void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 	}
- }
- 
-+static u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
-+{
-+	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
-+	memcpy(data, cmd, size);
-+	return size;
-+}
-+
-+
- static struct iwl_hcmd_ops iwl5000_hcmd = {
- };
- 
- static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
-+	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
- #ifdef CONFIG_IWL5000_RUN_TIME_CALIB
- 	.gain_computation = iwl5000_gain_computation,
- 	.chain_noise_reset = iwl5000_chain_noise_reset,
--- 
-1.5.3.6
+Regards
+
+Marcel
 
