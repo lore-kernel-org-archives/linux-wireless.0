@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58763 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbYE3TRV (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:47245 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752833AbYEQXeI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 15:17:21 -0400
-Subject: Re: [PATCH] iwl4965: remove useless network and duplicate checking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1ba2fa240805220341g69f3acb0qf03594f541232337@mail.gmail.com> (sfid-20080522_124104_336537_5B472C77)
-References: <1211446997.3698.47.camel@johannes.berg>
-	 <1ba2fa240805220341g69f3acb0qf03594f541232337@mail.gmail.com>
-	 (sfid-20080522_124104_336537_5B472C77)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yiJthK7cwOrNzZLOJOep"
-Date: Fri, 30 May 2008 21:17:15 +0200
-Message-Id: <1212175035.7238.8.camel@johannes.berg> (sfid-20080530_211724_936892_56DBA1D1)
-Mime-Version: 1.0
+	Sat, 17 May 2008 19:34:08 -0400
+Message-ID: <482F6B63.9080706@lwfinger.net> (sfid-20080518_013413_256809_97B9C0A0)
+Date: Sat, 17 May 2008 18:33:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Add hooks for firmware debugging
+References: <200805172244.35966.mb@bu3sch.de>	<69e28c910805171421l69ca2f3ame3b61a94fdc5921a@mail.gmail.com>	<200805172324.13818.mb@bu3sch.de> <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
+In-Reply-To: <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stefanik G=E1bor wrote:
+>=20
+> Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
+> "Broadcom AirForce One Microcode" for licensing/trademark reasons? Th=
+e
+> official name of these cards is AirForce One.
+>=20
 
---=-yiJthK7cwOrNzZLOJOep
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Some of these cards may be called AirForce One; however, I have 7 diffe=
+rent=20
+cards of varying form factor, and none of them have that name!
 
-
-> > The iwlwifi drivers go to great lengths to avoid passing packets to
-> > mac80211 they think shouldn't go there, while mac80211 can (of course!)
-> > handle them very well.
-> >
-> > Especially in the case of duplicate packets this is interesting
-> > because it's such a performance hog (especially for IBSS networks)
-> > while mac80211 does that work on the side without much effort.
-> >
-> > This patch removes all that and leaves only what is absolutely
-> > necessary for the hardware.
+Larry
 
 
-> Looks good to me. let me just repost it rebased over our latest code.
-
-ping? This one no longer applies.
-
-johannes
-
---=-yiJthK7cwOrNzZLOJOep
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEBSuqVg1VMiehFYAQL77g/8C6mTb3nM+pww1ouloU4QopMhtHzBz7/0
-nVi9Ojlwh+GVjZFSb0F7n8Hc9uWch9+AiKDHuvYL4WeQ1rjOYxorOMHyZ64+eBH8
-U7OaMBWvvkjdZUts/LEU5VbKiBDgtUIGCDEdLlLXOQrQ/sApdwW6u54AW4yYV0dj
-TVv4N7oe6J/KJMDv71/6lNw266Fz667imRiDpreGhs0wZgGI6B49rdOaByVBqUtl
-/RqfB50NjnlfEyBNjeRgwqFGMj98N8QN0iw68muLyyzRQIgou+5yuAUtHdgthq9O
-UI0SqwtY5Mxsxeqfvxu4A05xm2+SibUMUcUQ4rE1lJOK5rHCvmk2p2XukfkWBSmK
-R5bErwaHf4gfOAl/6jTXE8sZazCfe1GXqu+WH8MyURq+C0ib81yPBZw0jaymui8D
-Xd52/O2DiFlGOQnBcL71lQ29lSeY0mJIGrnDspntPF3TEpJFT05ajcGb34eIEkzj
-wCanFFSynPWYk56mxRT950fM/PnOtuozSfFbPHLudoEokczwkg2VoAYhHH0wvkiF
-G8KRTuLjtRH4fa5Aze9OaxcA46J0GlEPZNaQWZxF03ER2IOlsL9K1q2crnST1X00
-SrvX6ajOHOIQSRb8XawOWzikm4n2zwo6KMyJcZME+W32lUAPSlbQIwMmJVynTX7S
-0GTGqgs83cw=
-=Q9Hk
------END PGP SIGNATURE-----
-
---=-yiJthK7cwOrNzZLOJOep--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
