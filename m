@@ -1,98 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54690 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48689 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756AbYEGJN1 (ORCPT
+	with ESMTP id S1753117AbYEQMMh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 05:13:27 -0400
-Subject: [PATCH v3] mac80211: fix wme code
+	Sat, 17 May 2008 08:12:37 -0400
+Subject: [RFC] make wext wireless bits optional and deprecate them
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1209768249.3608.25.camel@johannes.berg> (sfid-20080503_004354_206661_FC39EF9A)
-References: <1209767749.3608.23.camel@johannes.berg>
-	 (sfid-20080503_003536_334347_3B50118C)  <1209768249.3608.25.camel@johannes.berg>
-	 (sfid-20080503_004354_206661_FC39EF9A)
+To: netdev <netdev@vger.kernel.org>
+Cc: Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain
-Date: Wed, 07 May 2008 11:12:44 +0200
-Message-Id: <1210151564.9305.42.camel@johannes.berg> (sfid-20080507_111234_934152_F42D0413)
+Date: Sat, 17 May 2008 14:12:17 +0200
+Message-Id: <1211026337.3827.25.camel@johannes.berg> (sfid-20080517_141325_034902_8C317B32)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 31ccc476b77234f6afb3 (mac80211: QoS related cleanups) I
-accidentally changed a variable from int to u16 causing a warning
-that a comparison for < 0 was always false. John thought this was
-a missing deletion of code and removed the warning by deleting the
-never executed branch of code in commit 13e5f0888caddf7a020dcd918
-(wireless: fix warning introduced by "mac80211: QoS related cleanups")
-but the problem really was my mistake of using a u16 variable for
-the queue variable when that variable can also contain an error
-code. This patch restores the original code and variable type.
-
-Additionally, this patch fixes a (currently) harmless mistake from
-the same patch in the declaration of two arrays in the internal
-header file.
+The /sys/class/net/*/wireless/ direcory is, as far as I know, not
+used by anyone. Additionally, the same data is available via wext
+ioctls. Hence the sysfs files are pretty much useless. This patch
+makes them optional and schedules them for removal.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jean Tourrilhes <jt@hpl.hp.com>
 ---
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/wme.c         |   26 +++++++++++++++-----------
- 2 files changed, 17 insertions(+), 13 deletions(-)
+ Documentation/feature-removal-schedule.txt |    8 ++++++++
+ net/core/net-sysfs.c                       |    4 ++--
+ net/wireless/Kconfig                       |   11 +++++++++++
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
---- everything.orig/net/mac80211/wme.c	2008-05-03 00:29:07.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-05-07 11:09:12.000000000 +0200
-@@ -155,8 +155,7 @@ static int wme_qdiscop_enqueue(struct sk
- 	unsigned short fc = le16_to_cpu(hdr->frame_control);
- 	struct Qdisc *qdisc;
- 	struct sta_info *sta;
--	int err;
--	u16 queue;
-+	int err, queue;
- 	u8 tid;
+--- everything.orig/net/core/net-sysfs.c	2008-05-17 13:22:21.000000000 +0200
++++ everything/net/core/net-sysfs.c	2008-05-17 13:23:43.000000000 +0200
+@@ -318,7 +318,7 @@ static struct attribute_group netstat_gr
+ 	.attrs  = netstat_attrs,
+ };
  
- 	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
-@@ -216,15 +215,20 @@ static int wme_qdiscop_enqueue(struct sk
- 		rcu_read_unlock();
- 	}
+-#ifdef CONFIG_WIRELESS_EXT
++#ifdef CONFIG_WIRELESS_EXT_SYSFS
+ /* helper function that does all the locking etc for wireless stats */
+ static ssize_t wireless_show(struct device *d, char *buf,
+ 			     ssize_t (*format)(const struct iw_statistics *,
+@@ -460,7 +460,7 @@ int netdev_register_kobject(struct net_d
+ 	if (net->get_stats)
+ 		*groups++ = &netstat_group;
  
--	tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
--	pkt_data->queue = (unsigned int) queue;
--	qdisc = q->queues[queue];
--	err = qdisc->enqueue(skb, qdisc);
--	if (err == NET_XMIT_SUCCESS) {
--		qd->q.qlen++;
--		qd->bstats.bytes += skb->len;
--		qd->bstats.packets++;
--		return NET_XMIT_SUCCESS;
-+	if (unlikely(queue < 0)) {
-+			kfree_skb(skb);
-+			err = NET_XMIT_DROP;
-+	} else {
-+		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
-+		pkt_data->queue = (unsigned int) queue;
-+		qdisc = q->queues[queue];
-+		err = qdisc->enqueue(skb, qdisc);
-+		if (err == NET_XMIT_SUCCESS) {
-+			qd->q.qlen++;
-+			qd->bstats.bytes += skb->len;
-+			qd->bstats.packets++;
-+			return NET_XMIT_SUCCESS;
-+		}
- 	}
- 	qd->qstats.drops++;
- 	return err;
---- everything.orig/net/mac80211/ieee80211_i.h	2008-05-07 11:09:41.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-05-07 11:10:08.000000000 +0200
-@@ -611,8 +611,8 @@ struct ieee80211_local {
- 	struct sta_info *sta_hash[STA_HASH_SIZE];
- 	struct timer_list sta_cleanup;
+-#ifdef CONFIG_WIRELESS_EXT
++#ifdef CONFIG_WIRELESS_EXT_SYSFS
+ 	if (net->wireless_handlers && net->wireless_handlers->get_wireless_stats)
+ 		*groups++ = &wireless_group;
+ #endif
+--- everything.orig/net/wireless/Kconfig	2008-05-17 13:22:21.000000000 +0200
++++ everything/net/wireless/Kconfig	2008-05-17 14:09:01.000000000 +0200
+@@ -29,3 +29,14 @@ config WIRELESS_EXT
  
--	unsigned long state[IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
--	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
-+	unsigned long state[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
-+	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_QUEUES + IEEE80211_MAX_AMPDU_QUEUES];
- 	struct tasklet_struct tx_pending_tasklet;
- 
- 	/* number of interfaces with corresponding IFF_ flags */
+ 	  Say N (if you can) unless you know you need wireless
+ 	  extensions for external modules.
++
++config WIRELESS_EXT_SYSFS
++	bool "Wireless extensions sysfs files"
++	default y
++	depends on WIRELESS_EXT && SYSFS
++	help
++	  This option enables the deprecated wireless statistics
++	  files in /sys/class/net/*/wireless/. The same information
++	  is available via the ioctls as well.
++
++	  Say Y if you have programs using it (we don't know of any).
+--- everything.orig/Documentation/feature-removal-schedule.txt	2008-05-17 13:22:20.000000000 +0200
++++ everything/Documentation/feature-removal-schedule.txt	2008-05-17 14:08:37.000000000 +0200
+@@ -304,3 +304,11 @@ When:	2.6.26
+ Why:	Implementation became generic; users should now include
+ 	linux/semaphore.h instead.
+ Who:	Matthew Wilcox <willy@linux.intel.com>
++
++---------------------------
++
++What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
++	(in net/core/net-sysfs.c)
++When:	June 2009
++Why:	Not used by anyone, over 1K .text/.data size reduction.
++Who:	Johannes Berg <johannes@sipsolutions.net>
 
 
