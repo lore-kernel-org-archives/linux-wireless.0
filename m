@@ -1,103 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42800 "EHLO mga14.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:42163 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758726AbYEWCLd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:33 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: remove 4965 remainings in iwl-eeprom.c file
-Date: Fri, 23 May 2008 10:09:01 +0800
-Message-Id: <1211508569-3163-24-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_705157_8A095064)
-In-Reply-To: <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+	id S1750947AbYEQPoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 May 2008 11:44:22 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JxOa4-0006L2-Ne
+	for linux-wireless@vger.kernel.org; Sat, 17 May 2008 15:44:20 +0000
+Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:44:20 +0000
+Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:44:20 +0000
+To: linux-wireless@vger.kernel.org
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: rt61pci breaks after hibernate
+Date: Sat, 17 May 2008 15:44:04 +0000 (UTC)
+Message-ID: <g0mug4$f61$1@ger.gmane.org> (sfid-20080517_174429_393319_2866052B)
+References: <g0mqn8$56h$1@ger.gmane.org> <200805171651.56973.rjw@sisk.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Cc: linux-kernel@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Sat, 17 May 2008 16:51:56 +0200, Rafael J. Wysocki wrote:
 
-The patch cleans up 4965 remaings from iwl-eeprom.c file.
+> Is this a regression or did it work before?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+Um... It is a regression and it worked before? It worked in 2.6.25 but 
+was broken in linux-next-20081513 . 
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index fa30660..300ef8e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -365,11 +365,11 @@ static void iwl_init_band_reference(const struct iwl_priv *priv,
- 			    ? # x " " : "")
- 
- /**
-- * iwl4965_set_fat_chan_info - Copy fat channel info into driver's priv.
-+ * iwl_set_fat_chan_info - Copy fat channel info into driver's priv.
-  *
-  * Does not set up a command, or touch hardware.
-  */
--static int iwl4965_set_fat_chan_info(struct iwl_priv *priv,
-+static int iwl_set_fat_chan_info(struct iwl_priv *priv,
- 			      enum ieee80211_band band, u16 channel,
- 			      const struct iwl_eeprom_channel *eeprom_ch,
- 			      u8 fat_extension_channel)
-@@ -542,16 +542,16 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 				fat_extension_chan = HT_IE_EXT_CHANNEL_ABOVE;
- 
- 			/* Set up driver's info for lower half */
--			iwl4965_set_fat_chan_info(priv, ieeeband,
--						  eeprom_ch_index[ch],
--						  &(eeprom_ch_info[ch]),
--						  fat_extension_chan);
-+			iwl_set_fat_chan_info(priv, ieeeband,
-+						eeprom_ch_index[ch],
-+						&(eeprom_ch_info[ch]),
-+						fat_extension_chan);
- 
- 			/* Set up driver's info for upper half */
--			iwl4965_set_fat_chan_info(priv, ieeeband,
--						  (eeprom_ch_index[ch] + 4),
--						  &(eeprom_ch_info[ch]),
--						  HT_IE_EXT_CHANNEL_BELOW);
-+			iwl_set_fat_chan_info(priv, ieeeband,
-+						(eeprom_ch_index[ch] + 4),
-+						&(eeprom_ch_info[ch]),
-+						HT_IE_EXT_CHANNEL_BELOW);
- 		}
- 	}
- 
-@@ -560,7 +560,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- EXPORT_SYMBOL(iwl_init_channel_map);
- 
- /*
-- * iwl_free_channel_map - undo allocations in iwl4965_init_channel_map
-+ * iwl_free_channel_map - undo allocations in iwl_init_channel_map
-  */
- void iwl_free_channel_map(struct iwl_priv *priv)
- {
 -- 
-1.5.3.6
+Sitsofe | http://sucs.org/~sits/
 
