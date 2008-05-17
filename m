@@ -1,88 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54830 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752298AbYEQJMe (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:46734 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbYEQWnB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 05:12:34 -0400
-Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1210981687.5915.67.camel@brick> (sfid-20080517_014812_097664_2D7947A4)
-References: <1210966154.5915.50.camel@brick>
-	 <1210966704.5915.51.camel@brick>
-	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
-	 <1210971848.5915.58.camel@brick>
-	 (sfid-20080516_230412_000613_CA74646C)  <1210972335.6381.52.camel@johannes.berg>
-	 <1210975040.5915.63.camel@brick>
-	 (sfid-20080516_235723_605932_ED6BE89E)  <1210975426.6381.70.camel@johannes.berg>
-	 <1210981687.5915.67.camel@brick> (sfid-20080517_014812_097664_2D7947A4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-chC4uH1Kflr/1MHPoGuH"
-Date: Sat, 17 May 2008 11:12:20 +0200
-Message-Id: <1211015540.3827.8.camel@johannes.berg> (sfid-20080517_111251_617961_EB7BD2B0)
-Mime-Version: 1.0
+	Sat, 17 May 2008 18:43:01 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so743172wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:43:00 -0700 (PDT)
+Message-ID: <69e28c910805171543u27a542b0nf2ab86e5702660e@mail.gmail.com> (sfid-20080518_004310_063315_124C8DF5)
+Date: Sun, 18 May 2008 00:43:00 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH] b43: Add hooks for firmware debugging
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200805180035.04341.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200805172244.35966.mb@bu3sch.de> <200805172324.13818.mb@bu3sch.de>
+	 <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
+	 <200805180035.04341.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, May 18, 2008 at 12:35 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Sunday 18 May 2008 00:27:49 Stefanik G=E1bor wrote:
+>> On Sat, May 17, 2008 at 11:24 PM, Michael Buesch <mb@bu3sch.de> wrot=
+e:
+>> Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
+>> "Broadcom AirForce One Microcode" for licensing/trademark reasons? T=
+he
+>> official name of these cards is AirForce One.
+>
+> That's the first time I hear that, so it's most likely not _that_ off=
+icial. ;)
+>
+> And quite honestly, I don't care at all playing bullshit-bingo with b=
+uzzwords.
+> The device has the product number 43XX, so we identify it that way.
+>
+> --
+> Greetings Michael.
+>
 
---=-chC4uH1Kflr/1MHPoGuH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Another question: is this legal in the US? AFAIK this might conflict
+with FCC regulations. (Not sure about EU.)
 
-
-> > > Ahhh, I see what you are getting at now, how about ieee80211_stype_ma=
-sk?
-> > >=20
-> > > That makes the & a little clearer and has better semantic meaning.
-> > >=20
-> > > The other option is still to call it stype_mask, but change it to
-> > > return a __le16....so tests against !=3D 0 still work and really
-> > > is just a wrapper around the byteswap of the constant and the &.
-> >=20
-> > Hmm. I'm not sure, how is all this really used? It seems you want
-> >=20
-> > ieee80211_has_qos_stype(hdr)
-> > and
-> >=20
-> > ieee80211_has_stype(hdr, stype)
-> >=20
-> > instead, no?
->=20
-> Just the latter I think.  But I'll do a few patches to see how it looks
-> first.  If there end up being a few common ones (like qos) a few
-> short-hand versions might be appropriate, I'll see how it goes.
-
-Yeah but I was thinking of ieee80211_stype_is() or whatever you want to
-call it (I think I actually like it that way around better than
-is_stype/ftype) to check the exact match of the four bits, i.e.=20
-	fc & stypemask =3D=3D argument
-
-and the QoS one check that the bit is set.
-
-johannes
-
---=-chC4uH1Kflr/1MHPoGuH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC6hcqVg1VMiehFYAQJVwRAAxPqX9L+12k/pQAovdjuNBYkl1rUiCWoI
-8vzQyfnKP7qNir4ek/C8Hs0jllOklGngYl04sBQZadLR2KbgMJGqo6I9u7ODapFA
-EQ+jfXTK8znQoKQGZX5SUw93N4EvT5QcPqGYmdu5suwBSivETB2HCaGZcRDrpWHC
-+jyBOI0PO/OGgIhzH276yk1TA49i8PdutVs/szGR3FikR+JwIAhHGX6hPYMvpIZl
-eT3u1I0MDsGDQWl11MoBD2W9O/MRhual6YxK5vxCp5j/QZuiezcOv9IRE21G56fA
-EA/dnmffA4FZXN0mAS120hlKc8GG4hrdQhEiOo4ZDrMnVqonuVBWD2u4hJuD4WIm
-l98t6n6YoI9qMzkXihL61YESO3Q4AqCu0f7WZqLhYlTZAylGxU4Sj1nLHEkERjGi
-whb/jYXim7386lbGNq45qR9BMCauNvWJv3TviwavuJplY7xMGBHJWwLfhwaJNanq
-gwtfrkCTvREPT4Su5Wu0OnAFNIWBaeuy5vRb0ph5U1+PUkaHB0S+Dgd3kgDz4xpp
-5+Mw5SR4rzQw6syqDVuhBMevx30uZj9D1U8eD8glko6ERh981fgOQu1Gftf5U/um
-cH32RjTfAkFk0xMWjx5AXTrLx1baFt6uiOKtH0ovOHAw9OEVpwVJkd3tebR8hiWN
-3Kr98XbGfKg=
-=z47W
------END PGP SIGNATURE-----
-
---=-chC4uH1Kflr/1MHPoGuH--
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
