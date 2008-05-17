@@ -1,87 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbYEMMex (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:58000 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbYEQW1t convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 08:34:53 -0400
-Subject: Re: 11n + wpa_supplicant
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <20080513122718.GA6309@jm.kir.nu>
-References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
-	 <20080513122718.GA6309@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hb5JUxJ8SM1uQW8PekFZ"
-Date: Tue, 13 May 2008 14:34:40 +0200
-Message-Id: <1210682080.3646.73.camel@johannes.berg> (sfid-20080513_143456_579757_53AF3CE0)
-Mime-Version: 1.0
+	Sat, 17 May 2008 18:27:49 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1030947waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:27:49 -0700 (PDT)
+Message-ID: <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com> (sfid-20080518_002815_581682_BD3D9EAC)
+Date: Sun, 18 May 2008 00:27:49 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH] b43: Add hooks for firmware debugging
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200805172324.13818.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200805172244.35966.mb@bu3sch.de>
+	 <69e28c910805171421l69ca2f3ame3b61a94fdc5921a@mail.gmail.com>
+	 <200805172324.13818.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 17, 2008 at 11:24 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Saturday 17 May 2008 23:21:22 Stefanik G=E1bor wrote:
+>> Hmm... what's this? Are we planning something along the lines of
+>> prism54's FreeMAC?
+>
+> http://bu3sch.de/gitweb?p=3Db43-ucode.git;a=3Dsummary
+>
+> Doesn't work, yet. So you don't need to try. ;)
+>
+> --
+> Greetings Michael.
+>
 
---=-hb5JUxJ8SM1uQW8PekFZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
+"Broadcom AirForce One Microcode" for licensing/trademark reasons? The
+official name of these cards is AirForce One.
 
-
-> In most cases, the pairwise cipher is selected during association, not
-> during 4-way handshake. Consequently, the driver/firmware should refuse
-> to send an (Re)Association Request that requests TKIP as the pairwise
-> cipher when using .11n.
-
-So to do this we should look at the associate IE(s) we get from
-userspace for association, right?
-
-> The exact mechanism depends on whether ap_scan=3D1 or ap_scan=3D2 is bein=
-g
-> used, i.e., whether wpa_supplicant is responsible for selecting a BSS
-> from scan results or not.
->=20
-> In ap_scan=3D1, I would say that it would be useful for wpa_supplicant to
-> know whether the BSS (and the local wlan driver/hardware for that
-> matter!) supports .11n. If the scan results indicate this in some
-> reliable way (e.g., all IEs are delivered to wpa_supplicant), the AP's
-> support for 11n can be figured out. The local side support would need to
-> be added, e.g., to driver capabilities reporting.
->=20
-> In ap_scaqn=3D2, wpa_supplicant requests the driver to select a BSS based
-> on configuration (SSID, security policy, including a specific cipher
-> suite), i.e., the driver would be told about TKIP use before
-> association and the driver would be responsible for not trying to use
-> 11n in that case. The corner case of AP/Authenticator requesting another
-> pairwise cipher would still be possible here, but not really something
-> that I would consider a real problem that needs to be solved.
-
-I'd think we can also just include the HT IE in the scan result. Or, why
-not just include all of them, parsers must be able to tell them apart
-anyway and NM could display an HT icon for example then.
-
-johannes
-
---=-hb5JUxJ8SM1uQW8PekFZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCmK3qVg1VMiehFYAQKSOA/7BDBAlgmfi1cFLaZytFnp3TfXYPb4rTUR
-+5jc+sZfj4vcmgYbkfMYKCS8ruNo5NDxTOh5zBFeXuNVTv+O2rIzQdIMxsx/TMAf
-dCrk8VNCFdx8QtR8MYxuVSMZ25iX+YHrPWPzG6wFVV/WaSpUcufi2lcZYKkrGTAJ
-BwwaQndDewJDNvYSJO1hwgo1A1DXruVaFy7+sy/IoLCllZvaRTG7NX2XjlR6sHdL
-JMw//6qyLorYU3r/EwhD9VuRjqoX5lrx7rv6H9X2QMKL6Q1qBXTfkS6lCT9Ald8J
-H3DcsPbIRv47vfsnfokWYP7CUI/yhrqHRtFhdJLTa5s0cV0fMoWak5IElOTb/FNC
-Dwu6p2StI92cihXalDDsQAdJnnea5UYPM60rqdcJ7B3BsXHOyLshIrCDl9ifSqnJ
-sgfTBaPDJPEOJuj3lH5h32pLxS3R519inhL6VzoIPfa4CGpAe/GNE1sjXx0CKlQ+
-eVIKIKiyBHVBlPHL0CJch5CWXtaqhTu8beZtMtL8U1GKhdV9iBVH8eTFPNvoC0u7
-f/lSdupcIZ49WFDOn3s8JDvKEPhZmWKgtY04L2cQFI3c6h3GGqsIWVE61dsTYcKZ
-v3Yd0yjyi4nWzo9JGwo52MBPhqZMypN1B7KKi/l235ggjhzRNGh8FJXpzePWNCzT
-j2DScSTyxnk=
-=OPo3
------END PGP SIGNATURE-----
-
---=-hb5JUxJ8SM1uQW8PekFZ--
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
