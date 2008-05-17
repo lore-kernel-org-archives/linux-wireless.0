@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58425 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754965AbYEPUmx (ORCPT
+Received: from ns2.suse.de ([195.135.220.15]:40286 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752288AbYEQSfd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 16:42:53 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
-Date: Fri, 16 May 2008 22:42:27 +0200
+	Sat, 17 May 2008 14:35:33 -0400
+Message-ID: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de> (sfid-20080517_203542_365617_BB2B3F5B)
+Date: Sat, 17 May 2008 20:35:31 +0200
+From: Helmut Schaa <hschaa@suse.de>
+To: John Linville <linville@tuxdriver.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <1210966154.5915.50.camel@brick> <1210966704.5915.51.camel@brick>
-In-Reply-To: <1210966704.5915.51.camel@brick>
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv2] mac80211: fix NULL pointer dereference in
+	ieee80211_compatible_rates
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805162242.28181.mb@bu3sch.de> (sfid-20080516_224257_738570_778C11BE)
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 16 May 2008 21:38:23 Harvey Harrison wrote:
-> diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-> index 45709ad..f899a06 100644
-> --- a/net/mac80211/wpa.c
-> +++ b/net/mac80211/wpa.c
-> @@ -24,23 +24,21 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
->  {
->  	struct ieee80211_hdr *hdr;
->  	size_t hdrlen;
-> -	u16 fc;
->  	int a4_included;
->  	u8 *pos;
->  
->  	hdr = (struct ieee80211_hdr *) skb->data;
-> -	fc = le16_to_cpu(hdr->frame_control);
->  
->  	hdrlen = 24;
-> -	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
-> -	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
-> +	if (ieee80211_fctl_has_a4(hdr)) {
->  		hdrlen += ETH_ALEN;
-> +		a4_included = 1;
->  		*sa = hdr->addr4;
->  		*da = hdr->addr3;
-> -	} else if (fc & IEEE80211_FCTL_FROMDS) {
-> +	} else if (ieee80211_fctl_fromds(hdr)) {
->  		*sa = hdr->addr3;
->  		*da = hdr->addr1;
-> -	} else if (fc & IEEE80211_FCTL_TODS) {
-> +	} else if (ieee80211_fctl_tods(hdr)) {
->  		*sa = hdr->addr2;
->  		*da = hdr->addr3;
->  	} else {
-> @@ -48,16 +46,14 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
->  		*da = hdr->addr1;
->  	}
->  
-> -	if (fc & 0x80)
-> +	if (ieee80211_stype(hdr, IEEE80211_STYPE_QOS_DATA))
->  		hdrlen += 2;
->  
->  	*data = skb->data + hdrlen;
->  	*data_len = skb->len - hdrlen;
->  
-> -	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
-^^^^^^^^^^^^^^^^^^^
-> -		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
-> -	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
-> -	    fc & IEEE80211_STYPE_QOS_DATA) {
-> +	if (ieee80211_ftype_data(hdr) &&
-> +	    ieee80211_stype(hdr, IEEE80211_STYPE_QOS_DATA)) {
->  		pos = (u8 *) &hdr->addr4;
->  		if (a4_included)
+Fix a possible NULL pointer dereference in ieee80211_compatible_rates
+introduced in the patch "mac80211: fix association with some APs".
 
-Are we going to use a4_included uninitialized now?
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+---
 
->  			pos += 6;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 76ad4ed..2642551 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -664,15 +664,22 @@ static int ieee80211_compatible_rates(struct  
+ieee80211_sta_bss *bss,
+  	int i, j, count;
+  	*rates = 0;
+  	count = 0;
+-	for (i = 0; i < bss->supp_rates_len; i++) {
+-		int rate = (bss->supp_rates[i] & 0x7F) * 5;
 
+-		for (j = 0; j < sband->n_bitrates; j++)
+-			if (sband->bitrates[j].bitrate == rate) {
+-				*rates |= BIT(j);
+-				count++;
+-				break;
+-			}
++	if (bss) {
++		for (i = 0; i < bss->supp_rates_len; i++) {
++			int rate = (bss->supp_rates[i] & 0x7F) * 5;
++
++			for (j = 0; j < sband->n_bitrates; j++)
++				if (sband->bitrates[j].bitrate == rate) {
++					*rates |= BIT(j);
++					count++;
++					break;
++				}
++		}
++	} else {
++		for (i = 0; i < sband->n_bitrates; i++)
++			*rates |= BIT(i);
++		count = sband->n_bitrates;
+  	}
 
+  	return count;
 
--- 
-Greetings Michael.
