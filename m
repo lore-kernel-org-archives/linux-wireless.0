@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47378 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523AbYEAI7F (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40470 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbYEQQ5U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 04:59:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 truesize bugs
-Date: Thu, 1 May 2008 10:58:39 +0200
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1209607368.7173.20.camel@johannes.berg>
-In-Reply-To: <1209607368.7173.20.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805011058.40197.mb@bu3sch.de> (sfid-20080501_105856_166245_19C68544)
+	Sat, 17 May 2008 12:57:20 -0400
+Subject: Re: NULL pointer in mac80211:ieee80211_associate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <hschaa@suse.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080517185038.6w1m4n5n6s88ckgw@imap.suse.de>
+References: <482DFC63.7050908@lwfinger.net>
+	 <1210974434.6381.60.camel@johannes.berg> <482E1344.7080808@lwfinger.net>
+	 (sfid-20080517_010547_496161_3AD36B80) <1210979397.3827.4.camel@johannes.berg>
+	 <20080517185038.6w1m4n5n6s88ckgw@imap.suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xW6v0B11vxc1MVsbf8rI"
+Date: Sat, 17 May 2008 18:56:56 +0200
+Message-Id: <1211043416.6252.14.camel@johannes.berg> (sfid-20080517_185725_511277_5CD1B573)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 May 2008 04:02:48 Johannes Berg wrote:
-> Hi,
-> 
-> Whenever you run a monitor interface in mac80211, you can see lots of
-> truesize bugs:
-> 
-> SKB BUG: Invalid truesize (464) len=307, sizeof(sk_buff)=176
-> 
-> It appears to be caused by mac80211's re-injection of the transmitted
-> frame. For those not familiar, here's what happens:
-> 
-> When a frame comes in on say wlan0's hard_start_xmit(), it is prepared
-> for transmission by the code there (802.11 headers added etc.) and then
-> scheduled to the master interface. Once it arrives on the master
-> (wmaster0) interface's hard_start_xmit(), it is modified again and
-> finally handed to the driver.
-> 
-> When the driver has transmitted the frame (successfully or not) it
-> reports the status of the transmission to mac80211 including the skb the
-> driver was given. At that point, things go different depending on
-> circumstances.
-> 
-> If no monitor interfaces are present, mac80211 simply orphans the skb
-> and destroys it. If there are monitor interfaces, it pushes some data
-> into the skb (the radiotap transmit status) and hands clones of the skb
-> to netif_rx() for each monitor interface, or the skb itself for the last
-> interface in the list.
 
-Hm, unrelated to this...
-But I am wondering what happens if the driver adds a device header to the skb.
-Is that header then also passed up netif_rx()?
-This doesn't happen for b43, as we use the DMA fragmentation to transmit the header,
-but it might happen for zd1211rw and others.
+--=-xW6v0B11vxc1MVsbf8rI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> All this is in net/mac80211/main.c:ieee80211_tx_status.
-> 
-> Now, the thing is that the skb truesize bug ONLY occurs when the last
-> part here is done when a radiotap monitor interface is present, if you
-> add
-> 
-> 	dev_kfree_skb(skb);
-> 	return;
-> 
-> in that function somewhere before the skb_orphan() call it never
-> happens. Hence, I'm confused. Since I only have a single monitor
-> interface when this happens, it can't be due to af_packet either,
-> afaict.
-> 
-> Can anyone help me diagnose this?
+On Sat, 2008-05-17 at 18:50 +0200, Helmut Schaa wrote:
+> Am Sa 17 Mai 2008 01:09:57 CEST schrieb Johannes Berg =20
+> <johannes@sipsolutions.net>:
+>=20
+> >> > Can you try to find out what code this corresponds to?
+> >>
+> >>  From objdump with line numbers, it occurs at "for (i =3D 0; i <
+> >> bss->supp_rates_len; i++) {" in ieee80211_compatible_rates, which I th=
+ink is
+> >> entered from ieee80211_send_assoc. It seems that bss is NULL. For test=
+ing, I
+> >> have placed a WARN_ON(!bss) statement just before the for loop.
+> >
+> > That looks plausible. Helmut, any ideas how to avoid this? Skip the
+> > compatible rates test completely and use all rates in this situation?
+>=20
+> Yes, that's most likely the best solution for it. If we do not have a =20
+> bss at this point we cannot adjust the rates anyway. Should I prepare =20
+> a patch?
 
-Seems the skb->destructor messes it up.
+Please do, thanks.
 
--- 
-Greetings Michael.
+johannes
+
+--=-xW6v0B11vxc1MVsbf8rI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASC8OVqVg1VMiehFYAQJW+hAAnXC8rjw2FvJY0L93zNxUOnZe6kBQl3Xd
+AKIPQR8/p7TVsVxO1+/ty/d8bwwfcmm6D5dgHhn7p3K2XV8VCKfYRO3cnAv1IKnG
++AirDjKDatx7eHFcFiEDk5+9kidq/Pr/CejLTo+OzIn6X3X188T1Ok7T+/IotdHB
+kJw0PQOOngBgdzulzoSD79mghk/ZR8urBVu84ngs8GBZjtWjc0nd297lxliuHGqw
+mf3e3P7FP5TS2R8EWyuecs4EtbWnA9kRlfdrcuGM/KpkG4oVrIMsGJv6ZfaXUw62
+9UVcKuZNYkPI4/7a2E3uJIPM4ulp27dU9G35lEURXIJ69b+NhmaP8yUFrT2G+f9x
+ekAu5d1PHYMBceQREaWHZ1EDNe0g3UbGjtqko/9jfbuquev+7r8VTys7riXrkFF0
+DDu/wzl6gIua5C+2m5anDO8e6L4gb54IVKIjXvuCcrKUMpQc+007LiRLbxMliC4q
+7uNiOZ4lsVd/WnAd+eR+kL52aXqYaqNIfLdOPclOD4rf/lxNes4vto1AIJfYq/io
+j1Q1MFxothsfjrBQQq5i8guv3OoBiIgbEGloHEPneLI7Wrjy9lISVtllVFwDALOu
+pHr0m3h47bznju+kES3TVRuFDOn+Ni5+t5rRVs384aW4h8Dxc1PrxWPsu95rlG7A
+F5GTWFdZUOY=
+=rlmU
+-----END PGP SIGNATURE-----
+
+--=-xW6v0B11vxc1MVsbf8rI--
+
