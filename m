@@ -1,194 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59391 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935015AbYEBUsj (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.236]:25390 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107AbYERL3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 16:48:39 -0400
-Message-Id: <200805022047.m42Kln9q014233@imap1.linux-foundation.org> (sfid-20080502_224817_015455_B4FE18EA)
-Subject: [patch 9/9] b43legacy: replace limit_value macro with clamp_val
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com, mb@bu3sch.de
-From: akpm@linux-foundation.org
-Date: Fri, 02 May 2008 13:47:49 -0700
+	Sun, 18 May 2008 07:29:23 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so1186641wxd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 18 May 2008 04:29:21 -0700 (PDT)
+Message-ID: <4830130D.6020401@gmail.com> (sfid-20080518_132928_126859_637CD146)
+Date: Sun, 18 May 2008 07:29:17 -0400
+From: Zappacky <zappacky.lists@gmail.com>
+MIME-Version: 1.0
+To: =?windows-1252?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Add hooks for firmware debugging
+References: <200805172244.35966.mb@bu3sch.de> <200805172324.13818.mb@bu3sch.de>	<69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>	<200805180035.04341.mb@bu3sch.de> <69e28c910805171543u27a542b0nf2ab86e5702660e@mail.gmail.com>
+In-Reply-To: <69e28c910805171543u27a542b0nf2ab86e5702660e@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Stefanik G=E1bor wrote:
+>=20
+> Another question: is this legal in the US? AFAIK this might conflict
+> with FCC regulations. (Not sure about EU.)
+>=20
 
-kernel-provided clamp_val is identical, delete the private limit_value helper.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Although I don't claim to be a lawyer, I found this information from=20
+http://www.softwarefreedom.org/resources/2007/fcc-sdr-whitepaper.html,=20
+which is a translation of the FCC's rules regarding software defined=20
+radios (including 802.11 chips).
 
- drivers/net/wireless/b43legacy/b43legacy.h |   17 -----------------
- drivers/net/wireless/b43legacy/main.c      |    8 ++++----
- drivers/net/wireless/b43legacy/phy.c       |   14 +++++++-------
- drivers/net/wireless/b43legacy/radio.c     |   12 ++++++------
- 4 files changed, 17 insertions(+), 34 deletions(-)
+Snippet 1:
 
-diff -puN drivers/net/wireless/b43legacy/b43legacy.h~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/b43legacy.h
---- a/drivers/net/wireless/b43legacy/b43legacy.h~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -823,23 +823,6 @@ void b43legacydbg(struct b43legacy_wl *w
- # define b43legacydbg(wl, fmt...) do { /* nothing */ } while (0)
- #endif /* DEBUG */
- 
--
--/** Limit a value between two limits */
--#ifdef limit_value
--# undef limit_value
--#endif
--#define limit_value(value, min, max)  \
--	({						\
--		typeof(value) __value = (value);	\
--		typeof(value) __min = (min);		\
--		typeof(value) __max = (max);		\
--		if (__value < __min)			\
--			__value = __min;		\
--		else if (__value > __max)		\
--			__value = __max;		\
--		__value;				\
--	})
--
- /* Macros for printing a value in Q5.2 format */
- #define Q52_FMT		"%u.%u"
- #define Q52_ARG(q52)	((q52) / 4), (((q52) & 3) * 100 / 4)
-diff -puN drivers/net/wireless/b43legacy/main.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/main.c
---- a/drivers/net/wireless/b43legacy/main.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/main.c
-@@ -846,10 +846,10 @@ static void handle_irq_noise(struct b43l
- 	/* Get the noise samples. */
- 	B43legacy_WARN_ON(dev->noisecalc.nr_samples >= 8);
- 	i = dev->noisecalc.nr_samples;
--	noise[0] = limit_value(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[1] = limit_value(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[2] = limit_value(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
--	noise[3] = limit_value(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[0] = clamp_val(noise[0], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[1] = clamp_val(noise[1], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[2] = clamp_val(noise[2], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
-+	noise[3] = clamp_val(noise[3], 0, ARRAY_SIZE(phy->nrssi_lt) - 1);
- 	dev->noisecalc.samples[i][0] = phy->nrssi_lt[noise[0]];
- 	dev->noisecalc.samples[i][1] = phy->nrssi_lt[noise[1]];
- 	dev->noisecalc.samples[i][2] = phy->nrssi_lt[noise[2]];
-diff -puN drivers/net/wireless/b43legacy/phy.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/phy.c
---- a/drivers/net/wireless/b43legacy/phy.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/phy.c
-@@ -1088,7 +1088,7 @@ static void b43legacy_phy_initg(struct b
- 		 * the value 0x7FFFFFFF here. I think that is some weird
- 		 * compiler optimization in the original driver.
- 		 * Essentially, what we do here is resetting all NRSSI LT
--		 * entries to -32 (see the limit_value() in nrssi_hw_update())
-+		 * entries to -32 (see the clamp_val() in nrssi_hw_update())
- 		 */
- 		b43legacy_nrssi_hw_update(dev, 0xFFFF);
- 		b43legacy_calc_nrssi_threshold(dev);
-@@ -1756,7 +1756,7 @@ static s8 b43legacy_phy_estimate_power_o
- 	switch (phy->type) {
- 	case B43legacy_PHYTYPE_B:
- 	case B43legacy_PHYTYPE_G:
--		tmp = limit_value(tmp, 0x00, 0x3F);
-+		tmp = clamp_val(tmp, 0x00, 0x3F);
- 		dbm = phy->tssi2dbm[tmp];
- 		break;
- 	default:
-@@ -1859,7 +1859,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 
- 	/* find the desired power in Q5.2 - power_level is in dBm
- 	 * and limit it - max_pwr is already in Q5.2 */
--	desired_pwr = limit_value(phy->power_level << 2, 0, max_pwr);
-+	desired_pwr = clamp_val(phy->power_level << 2, 0, max_pwr);
- 	if (b43legacy_debug(dev, B43legacy_DBG_XMITPOWER))
- 		b43legacydbg(dev->wl, "Current TX power output: " Q52_FMT
- 		       " dBm, Desired TX power output: " Q52_FMT
-@@ -1905,7 +1905,7 @@ void b43legacy_phy_xmitpower(struct b43l
- 			radio_attenuation++;
- 		}
- 	}
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
- 
- 	txpower = phy->txctl1;
- 	if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
-@@ -1933,8 +1933,8 @@ void b43legacy_phy_xmitpower(struct b43l
- 	}
- 	/* Save the control values */
- 	phy->txctl1 = txpower;
--	baseband_attenuation = limit_value(baseband_attenuation, 0, 11);
--	radio_attenuation = limit_value(radio_attenuation, 0, 9);
-+	baseband_attenuation = clamp_val(baseband_attenuation, 0, 11);
-+	radio_attenuation = clamp_val(radio_attenuation, 0, 9);
- 	phy->rfatt = radio_attenuation;
- 	phy->bbatt = baseband_attenuation;
- 
-@@ -1979,7 +1979,7 @@ s8 b43legacy_tssi2dbm_entry(s8 entry [],
- 		f = q;
- 		i++;
- 	} while (delta >= 2);
--	entry[index] = limit_value(b43legacy_tssi2dbm_ad(m1 * f, 8192),
-+	entry[index] = clamp_val(b43legacy_tssi2dbm_ad(m1 * f, 8192),
- 				   -127, 128);
- 	return 0;
- }
-diff -puN drivers/net/wireless/b43legacy/radio.c~b43legacy-replace-limit_value-macro-with-clamp_val drivers/net/wireless/b43legacy/radio.c
---- a/drivers/net/wireless/b43legacy/radio.c~b43legacy-replace-limit_value-macro-with-clamp_val
-+++ a/drivers/net/wireless/b43legacy/radio.c
-@@ -357,7 +357,7 @@ void b43legacy_nrssi_hw_update(struct b4
- 	for (i = 0; i < 64; i++) {
- 		tmp = b43legacy_nrssi_hw_read(dev, i);
- 		tmp -= val;
--		tmp = limit_value(tmp, -32, 31);
-+		tmp = clamp_val(tmp, -32, 31);
- 		b43legacy_nrssi_hw_write(dev, i, tmp);
- 	}
- }
-@@ -375,7 +375,7 @@ void b43legacy_nrssi_mem_update(struct b
- 		tmp = (i - delta) * phy->nrssislope;
- 		tmp /= 0x10000;
- 		tmp += 0x3A;
--		tmp = limit_value(tmp, 0, 0x3F);
-+		tmp = clamp_val(tmp, 0, 0x3F);
- 		phy->nrssi_lt[i] = tmp;
- 	}
- }
-@@ -839,7 +839,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 		} else
- 			threshold = phy->nrssi[1] - 5;
- 
--		threshold = limit_value(threshold, 0, 0x3E);
-+		threshold = clamp_val(threshold, 0, 0x3E);
- 		b43legacy_phy_read(dev, 0x0020); /* dummy read */
- 		b43legacy_phy_write(dev, 0x0020, (((u16)threshold) << 8)
- 				    | 0x001C);
-@@ -892,7 +892,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 			else
- 				a += 32;
- 			a = a >> 6;
--			a = limit_value(a, -31, 31);
-+			a = clamp_val(a, -31, 31);
- 
- 			b = b * (phy->nrssi[1] - phy->nrssi[0]);
- 			b += (phy->nrssi[0] << 6);
-@@ -901,7 +901,7 @@ void b43legacy_calc_nrssi_threshold(stru
- 			else
- 				b += 32;
- 			b = b >> 6;
--			b = limit_value(b, -31, 31);
-+			b = clamp_val(b, -31, 31);
- 
- 			tmp_u16 = b43legacy_phy_read(dev, 0x048A) & 0xF000;
- 			tmp_u16 |= ((u32)b & 0x0000003F);
-@@ -1905,7 +1905,7 @@ void b43legacy_radio_set_txpower_a(struc
- 	u16 dac;
- 	u16 ilt;
- 
--	txpower = limit_value(txpower, 0, 63);
-+	txpower = clamp_val(txpower, 0, 63);
- 
- 	pamp = b43legacy_get_txgain_freq_power_amp(txpower);
- 	pamp <<= 5;
-_
+The rules require any manufacturer certifying a device under the new=20
+process to take steps to prevent =93unauthorized=94 changes to the soft=
+ware=20
+on the device that might alter its radio frequency and power parameters=
+=20
+in a way that takes it out of compliance with the regulations known as=20
+=46CC Part 15 regulations.2 The specific technology implemented to=20
+accomplish this task is left to the manufacturers seeking certification=
+,=20
+although the FCC suggests several possible mechanisms that can serve as=
+=20
+such =93security measures.=943
+
+Snippet 2:
+
+Since software is a representation of a mathematical algorithm, it is=20
+not a =93device=94, =93home electronic equipment=94 or a =93home electr=
+onic ...=20
+system.=9417 Further, there is no precedent for applying the device=20
+certification rules to software except as installed as a component of a=
+=20
+specific hardware device. Indeed, the FCC has explicitly limited the=20
+certification requirements to =93hardware-based device[s].=9418 Both of=
+=20
+these facts make it clear that the FCC rules do not apply to software b=
+y=20
+itself, but only to hardware-based devices.
+
+
+What I get out of this, and out of poking in the legal babble, is that=20
+as long as our firmware doesn't cause the hardware itself to violate FC=
+C=20
+specs, we're in the clear. According to Snippet 1, it shouldn't even be=
+=20
+possible to violate the specifications, but we all know how good=20
+manufacturers are at stuff like that ;P.
+
+-Andrew/Zappacky
+
+(IANAL, Proceed at your own risk, etc)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
