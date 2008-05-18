@@ -1,64 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59730 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbYEIK1P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2008 06:27:15 -0400
-Subject: Re: [PATCH/RFC v2] mac80211: fix association with some APs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Tomas Winkler <tomasw@gmail.com>, Helmut Schaa <hschaa@suse.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <87ej8bykp9.fsf@nokia.com>
-References: <200805081030.57966.hschaa@suse.de>
-	 <200805081334.07599.hschaa@suse.de>
-	 <1210246602.3547.45.camel@johannes.berg>
-	 <1ba2fa240805081445p4fb5e47cvf2743a868c7887ae@mail.gmail.com>
-	 <87ej8bykp9.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OJbKS7uFL0Wd0liTJWHn"
-Date: Fri, 09 May 2008 12:26:59 +0200
-Message-Id: <1210328819.3547.90.camel@johannes.berg> (sfid-20080509_122608_812445_959BCED9)
-Mime-Version: 1.0
+Received: from mail.tinet.org ([195.77.216.130]:53439 "EHLO mail.tinet.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752637AbYERRyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 May 2008 13:54:04 -0400
+Received: from webmail.tinet.org ([195.77.216.133])
+          (envelope-sender <xdrudis@tinet.cat>)
+          by mail.tinet.org (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 18 May 2008 17:47:20 -0000
+Message-ID: <52420.80.224.39.3.1211132840.squirrel@webmail.tinet.org> (sfid-20080518_195410_029953_B6A0490E)
+Date: Sun, 18 May 2008 19:47:20 +0200 (CEST)
+Subject: Problems building iwl for 2.6.25 (dev_name and CONFIG_IWLWIFI not
+     defined)
+From: "Xavi Drudis Ferran" <xdrudis@tinet.cat>
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, and thanks for your work.
 
---=-OJbKS7uFL0Wd0liTJWHn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm trying to compile compat-wireless-2008-05-18
+on a Debian sid, with a custom kernel 2.6.25 (it's the
+debian source tree with just custom config, not
+custom code). I wanted to try the latest iwl3945 driver.
+
+It fails in b43, like this
+
+  LD [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/ath5k/ath5k.o
+  LD      /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/built-in.o
+  CC [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.o
+/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.c: In function 'handle_irq_noise':
+/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.c:1185: error: implicit declaration of function 'clamp_val'
+make[4]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.o] Error 1
+make[3]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43] Error 2
+make[2]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless] Error 2
+make[1]: *** [_module_/home/crovirab/compat-wireless-2008-05-18] Error 2
+make[1]: Leaving directory `/home/crovirab/linux/linux-source-2.6.25'
+make: *** [modules] Error 2
+
+But since I don't need b43, I disable it in config.mk
+CONFIG_B43=n
+
+make clean
+make
+
+Then it complains of
+  CC [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.o
+/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.c: In function 'handle_irq_noise':
+/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.c:849: error: implicit declaration of function 'clamp_val'
+m
+
+so I change in config.mk
+CONFIG_B43LEGACY=n
+
+make clean and make again
+
+And then I get stuck
+
+ CC [M]  /home/crovirab/compat-wireless-2008-05-18/net/mac80211/rc80211_pid_algo.o
+  LD [M]  /home/crovirab/compat-wireless-2008-05-18/net/mac80211/mac80211.o
+  LD      /home/crovirab/compat-wireless-2008-05-18/net/wireless/built-in.o
+  CC [M]  /home/crovirab/compat-wireless-2008-05-18/net/wireless/core.o
+/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c: In function 'cfg80211_dev_rename':
+/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:170: error: implicit declaration of function 'dev_name'
+/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:170: warning: passing argument 2 of 'strcmp' makes pointer from integer without a cast
+/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:176: warning: passing argument 2 of 'strcmp' makes pointer from integer without a cast
+make[3]: *** [/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.o] Error 1
+make[2]: *** [/home/crovirab/compat-wireless-2008-05-18/net/wireless] Error 2
+make[1]: *** [_module_/home/crovirab/compat-wireless-2008-05-18] Error 2
+make[1]: Leaving directory `/home/crovirab/linux/linux-source-2.6.25'
+make: *** [modules] Error 2
 
 
-> Most probably this isn't the only AP which has a similar bug, so it's
-> better to add a workaround anyway. Let's just hope that it doesn't
-> create any regressions.
+I don't know a bit about compat-wireless, but it sounds as
+I do need  /net/wireless/core.c , so I don't think I can't get
+around this one.
 
-Speaking of which, what about the Nokia AP bug that cx3110x works
-around? :)
+Looking at the code, I see dev_name() defined in compat.h
+like this
 
-johannes
 
---=-OJbKS7uFL0Wd0liTJWHn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+/* This is from include/linux/device.h, which was added as of 2.6.25 */
+static inline const char *dev_name(struct device *dev)
+{
+	/* will be changed into kobject_name(&dev->kobj) in the near future */
+	return dev->bus_id;
+}
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIVAwUASCQm8qVg1VMiehFYAQIf3g/9EqoLEzmZbjtONkyIkX0hOkbJ+aKc8I5t
-KyCcq1sxFv89D+k3FbYjI68sUJephD4TLHpq12FAJVBRkPTO+Kd1Tmm2MC+pYadu
-SiLtvFgoNPSnS+wJGQh5RKKALz6M/WeddQh/mfMuVJQ72QM/Wr6iOD9+GcadfSbS
-wHXp1TBftHhDzVWDDbCOZwPn1AEsVghI1nUriz7H379PBCVyC+7jQ0D730Pazd6x
-rCZCKewXAjeBTJ8ChI9Q42hOvTHdWdqsDjDds89vG1r/zVz3VYBouQin0coFhdD8
-/1VtFvMfTQy6bvqNyJty9BQSJw6QccVpELGSoDCt++HFj1jo2dRRI2iUVxiPGRtq
-W6XaiqvgpVtz9GrGZAMlwgVsXOPuyWXolv+B/zJvNXELCYdFSouSNWC6iietPuQz
-ylosLfDKqfeCKYOzhycOw38OWE5U2CFPiChZklmNun4RwsEbC8oXXjYtyqcE2GJA
-PbE8So8s1ovn9j9vWVmmjAs19YIxVxx50u8EU6J+kIT3i3sDZ11J+iOFBnYkJLZG
-Yg5N9yr8a4/NxMpQco2eNqCW03LQyN2cNOzKtb0SY66L+x7m0cQqTD3Y4LfbqBf1
-0MgW5YY7YNDABTwLunCJH4gmO+7mAsL1839z0CqNgTbYEqqSxx+eMeASxW9vLy4L
-510P09E+jxY=
-=0qsq
------END PGP SIGNATURE-----
+This is in an #ifdef that makes it ignored for me, since I'm running
+2.6.25.
 
---=-OJbKS7uFL0Wd0liTJWHn--
+But in my kernel source tree I don't see that function in
+include/linux/device.h
+
+So I try to copy that definition of dev_name in another section
+of compat.h and (one included for kernels < 2.6.26)
+
+Then it compiles.
+
+But it doesn't build iwl3945 (I realised when I saw complaints
+of symbols on loading it, because it wasn't in update and it
+was loading the debian kernel iwl3945, not the compat-wireless
+one).
+
+I see CONFIG_IWLWIFI is not defined in config.mk nor in my
+kernel .config (CONFIG_IWL3945=m , but CONFIG_IWLWIFI does not
+exist). So I add
+CONFIG_IWLWIFI=y
+to config.mk
+
+Oh, I also set CONFIG_RT2XX=n because it gave some warnings
+and I don't need it.
+
+
+With all that I managed to compile and install the modules, and
+I see them in /lib/modules/.../updates/...
+
+And I got rid of some error messages I used to have (about bad
+firmware and RX queue).
+
+It does not associate with WPA (the configuration worked with
+ipw3945 )
+Without encryption it says it associates but it doesn't get IP
+from DHCP nor can I ping if I set static iface config and routes
+
+
+I see two messages which might be related to it when doing
+/etc/init.d/networking restart
+
+wmaster0: unknown hardware address type 801
+wmaster0: unknown hardware address type 801
+
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument.
+
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0
+
+
+Btw, iwlist scanning works fine.
+
+I'm out of time now for looking at it further. And it's not
+my laptop, so I'm not sure I'll be able to insist later.
+
+I'm just sending this for the build issues, at first I thought I must
+be doing something odd to my .config or my debian kernel tree, and I
+still may, but I unpacked it again and couldn't find any CONFIG_IWLWIFI in
+.config or dev_name in include/linux/device.h . So I thought I'd write
+just in case it can be improved so that it works more straightforward
+in cases like mine. I don't dare sending a patch beacause I don't
+think the changes I made are good solutions in general. I'll attach
+my kernel config because maybe that's the problem.
+
+Btw, the web page tells to send issues to this list, but it doesn't
+point to archives or some other way to avoid duplicate reports,
+I'm sorry if this is one.
+
+Thanks, and keep up the good work.
+
 
