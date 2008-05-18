@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51879 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:40154 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753802AbYEHOsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 10:48:09 -0400
-Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335
-	[Libertas]"
+	id S1752589AbYERNkl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 May 2008 09:40:41 -0400
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
 From: Dan Williams <dcbw@redhat.com>
-To: Markus Becker <mab@comnets.uni-bremen.de>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, John Daiker <daikerjohn@gmail.com>,
-	David Woodhouse <David@woodhou.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	julian.calaby@gmail.com, andreamrl@tiscali.it
-In-Reply-To: <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
-References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
-	 <1209057680.9212.1065.camel@pmac.infradead.org>
-	 <4821F389.6070905@gmail.com>
-	 <200805080912.49903.hs4233@mail.mn-solutions.de>
-	 <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1211032475.6252.2.camel@johannes.berg>
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
 Content-Type: text/plain
-Date: Thu, 08 May 2008 10:43:42 -0400
-Message-Id: <1210257822.24803.0.camel@localhost.localdomain> (sfid-20080508_164709_122856_8F5ABDE9)
+Date: Sun, 18 May 2008 09:36:35 -0400
+Message-Id: <1211117795.686.15.camel@localhost.localdomain> (sfid-20080518_154119_284851_552B3A25)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-05-08 at 10:28 +0200, Markus Becker wrote:
-> Hi Dan,
+On Sat, 2008-05-17 at 15:54 +0200, Johannes Berg wrote:
+> On Sat, 2008-05-17 at 15:45 +0200, Marcel Holtmann wrote:
+> > Hi Johannes,
+> > 
+> > > The /sys/class/net/*/wireless/ direcory is, as far as I know, not
+> > > used by anyone. Additionally, the same data is available via wext
+> > > ioctls. Hence the sysfs files are pretty much useless. This patch
+> > > makes them optional and schedules them for removal.
+> > 
+> > it is used by HAL to classify WiFi network cards as net.80211 instead  
+> > of net.80203 and so we do have an actual user. However HAL only tests  
+> > for the existence of the directory wireless/.
 > 
-> are you creating a git tree for mrv8k at infradead? Or shall I ask David 
-> to create an account for me, so that I can set it up.
-
-Yeah, I'll get David to make a git tree.  You should still ask for an
-account and send him your SSH key so that you can push to the tree as
-well.
-
-Dan
-
-> BR,
-> Markus
+> Oh, ok, I didn't know that, thanks.
 > 
-> On Thu, 8 May 2008, Holger Schurig wrote:
+> > Please fix HAL first before submitting such a patch.
 > 
-> >> Do we have a git repo for this yet?  I just bought a NetGear
-> >> WG311v3 PCI Card (Marvell 88w8335), and desperately want this
-> >> card to work.
-> >
-> > You may create this repo by yourself at
-> > git/bomabil.infradead.org. David will "just" host this for you.
-> > You need an account on his server, for which you'll need to send
-> > your SSH public key to him.
-> >
-> > Docs on using git on git.infradead.org is at
-> > http://www.linux-mtd.infradead.org/doc/git.html
-> >
-> >
-> > I've an GIT tree there too, for libertas-tools.
-> >
+> Sure, I'll take a look at that.
+
+Instead of testing for wireless/, best thing would probably be to call
+SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+wireless.  Some drivers may have to load firmware to figure out
+supported rates and encryption capabilities, but to be honest, NM does
+this to detect wireless devices and I haven't run into any issues in 4
+years using it.  If there are issues with drivers, then we need to fix
+the driver too.
+
+dan
 
