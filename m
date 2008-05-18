@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound-mail-18.bluehost.com ([69.89.20.233]:55936 "HELO
-	outbound-mail-18.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755893AbYEARaG (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:55124 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752042AbYERPOv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 13:30:06 -0400
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Date: Thu, 1 May 2008 10:22:55 -0700
-Cc: Christoph Hellwig <hch@infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de> <200805010930.04799.jbarnes@virtuousgeek.org> <200805011916.07340.mb@bu3sch.de>
-In-Reply-To: <200805011916.07340.mb@bu3sch.de>
+	Sun, 18 May 2008 11:14:51 -0400
+Message-ID: <483047DD.2050205@lwfinger.net> (sfid-20080518_171455_514561_0D0F5E49)
+Date: Sun, 18 May 2008 10:14:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011022.55390.jbarnes@virtuousgeek.org> (sfid-20080501_192952_534559_1098C53D)
+To: Dan Williams <dcbw@redhat.com>
+CC: Tomas Winkler <tomasw@gmail.com>, Helmut Schaa <hschaa@suse.de>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2] mac80211: fix NULL pointer dereference in	ieee80211_compatible_rates
+References: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de>	 <1ba2fa240805180337h35bc3244od619e78c0d95d895@mail.gmail.com> <1211117578.686.12.camel@localhost.localdomain>
+In-Reply-To: <1211117578.686.12.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, May 01, 2008 10:16 am Michael Buesch wrote:
-> Ok, will redo the patches with that added and the name changed.
->
-> > Most drivers just do the fallback themselves, right?
->
-> Right.
->
-> > So it makes sense to
-> > just update the current code to fallback, and update drivers wanting
-> > specific mask values to check afterwards.  I hate to inflict that kind of
-> > driver wide update on Michael though... :)
->
-> Well, that's a lot of work and I'm not sure it's worth it.
-> I could live with having dma_set_mask as an API that fails on bad masks
-> and dma_request_mask as an API above that which retries. I think that's
-> just fine. Drivers can be migrated over time to the new API (or not. That
-> can be the driver maintainer's choice).
+Dan Williams wrote:
+> On Sun, 2008-05-18 at 13:37 +0300, Tomas Winkler wrote:
+>> Again, mac should rather solve the problem that we do not connect to
+>> AP's that are not in the BSS list
+>> Personally I would NACK this as it's just hiding  the real problem
+> 
+> Ugh; is that what's happening?  If the AP isn't in the BSS list of the
+> card, then the card shouldn't be connecting to it.  It should have been
+> probe-scanned already and thus exist in the BSS list, right?
+> 
+> Dan
+> 
+>> The other issue is that we call ieee80211_rx_bss_put(dev, bss); before
+>> this call in ieee80211_send_assoc.
 
-Can you also update the docs with the new call, indicating that it should 
-probably used in all but special cases?
+This AP certainly should have been in the BSS list. As I stated in the 
+original post, the system had been connected to that AP for about 18 hours 
+before the NULL bss NULL event occurred.
 
-Thanks,
-Jesse
+Clearly the sequence of events is improbable and it may be some time before 
+it happens again. What diagnostic information would be useful to capture 
+if/when it occurs? Is there any other location that I should monitor?
+
+Larry
