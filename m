@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:55764 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbYEPHbe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 03:31:34 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so306380nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 00:31:31 -0700 (PDT)
-Message-ID: <482D384C.30807@gmail.com> (sfid-20080516_093139_083975_56251B49)
-Date: Fri, 16 May 2008 09:31:24 +0200
-From: Ronald <ronald645@gmail.com>
-Reply-To: ronald645@gmail.com
+Received: from mx1.suse.de ([195.135.220.2]:55013 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755983AbYESLhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 07:37:18 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCHv2] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Date: Mon, 19 May 2008 13:37:08 +0200
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de> <1ba2fa240805180337h35bc3244od619e78c0d95d895@mail.gmail.com>
+In-Reply-To: <1ba2fa240805180337h35bc3244od619e78c0d95d895@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Association broken with wpa_supplicant
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805191337.09535.hschaa@suse.de> (sfid-20080519_133723_798923_CAED0CED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not using the latest wireless (2.6.25) but I also have trouble using 
-wpa_supplicant (same error as you). After *a lot* of trying, I figured 
-this out, to associate I do this:
+Am Sonntag, 18. Mai 2008 12:37:23 schrieb Tomas Winkler:
+> Again, mac should rather solve the problem that we do not connect to
+> AP's that are not in the BSS list
 
-/sbin/wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf.2 -B
-/bin/sleep 5
-/usr/bin/killall wpa_supplicant
-/sbin/wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf -B
-/bin/sleep 5
-/sbin/ifconfig wlan0 192.168.2.252 netmask 255.255.255.248
-/sbin/route add default gw 192.168.2.254
+I just tried that approach (see patch below) and could not find a regression 
+at a first glance. Nevertheless I'm not sure in which situations a bss is
+removed from the list and if this approach would cause a regression?
 
-The contents of wpa_supplicant.conf.2 is:
-
-ctrl_interface=/var/run/wpa_supplicant
-
-ap_scan=2
-fast_reauth=0
-
-network={
-	bssid=00:1B:2F:A9:48:E8
-	ssid="Chimera"
-	psk="<<scrubbed>>"
-	key_mgmt=WPA-PSK
-	proto=WPA2
-	pairwise=CCMP
-}
+Regards,
+Helmut
 
 
-The contents of wpa_supplicant.conf is:
-
-ctrl_interface=/var/run/wpa_supplicant
-
-ap_scan=1
-fast_reauth=0
-
-network={
-	bssid=00:1B:2F:A9:48:E8
-	ssid="Chimera"
-	psk="<<scrubbed>>"
-	key_mgmt=WPA-PSK
-	proto=WPA2
-	pairwise=CCMP
-}
-
-Trying to associate directly with only wpa_supplicant.conf won't work, 
-*only* after I used wpa_supplicant.conf.2. Furthermore, I never made a 
-bugreport as I thought that it would be an error in wpa_supplicant...
-
-I hope this helps you in any way =)
-
-						Ronald
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 76ad4ed..8595bfd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -678,7 +678,7 @@ static int ieee80211_compatible_rates(struct 
+ieee80211_sta_bss *bss,
+ 	return count;
+ }
+ 
+-static void ieee80211_send_assoc(struct net_device *dev,
++static int ieee80211_send_assoc(struct net_device *dev,
+ 				 struct ieee80211_if_sta *ifsta)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+@@ -716,6 +716,10 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 	bss = ieee80211_rx_bss_get(dev, ifsta->bssid,
+ 				   local->hw.conf.channel->center_freq,
+ 				   ifsta->ssid, ifsta->ssid_len);
++
++	if (!bss)
++		return 1;
++
+ 	if (bss) {
+ 		if (bss->capability & WLAN_CAPABILITY_PRIVACY)
+ 			capab |= WLAN_CAPABILITY_PRIVACY;
+@@ -829,6 +833,8 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		memcpy(ifsta->assocreq_ies, ies, ifsta->assocreq_ies_len);
+ 
+ 	ieee80211_sta_tx(dev, skb, 0);
++
++	return 0;
+ }
+ 
+ 
+@@ -945,7 +951,11 @@ static void ieee80211_associate(struct net_device *dev,
+ 		return;
+ 	}
+ 
+-	ieee80211_send_assoc(dev, ifsta);
++	if (ieee80211_send_assoc(dev, ifsta)) {
++		printk(KERN_DEBUG "%s: send association request failed", dev->name);
++		ifsta->state = IEEE80211_DISABLED;
++		return;
++	}
+ 
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_ASSOC_TIMEOUT);
+ }
