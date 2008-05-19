@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:54673 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365AbYEJMKh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 08:10:37 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1148254fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:37 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/5] mac80211: Initialize sta pointer
-Date: Sat, 10 May 2008 13:50:43 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200805101349.19481.IvDoorn@gmail.com>
-In-Reply-To: <200805101349.19481.IvDoorn@gmail.com>
+Received: from mx1.suse.de ([195.135.220.2]:49581 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750830AbYESO7r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 10:59:47 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCHv4] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Date: Mon, 19 May 2008 16:59:43 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Message-Id: <200805101350.43435.IvDoorn@gmail.com> (sfid-20080510_141046_554298_178ECB59)
 Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200805191659.43961.hschaa@suse.de> (sfid-20080519_165950_989332_9374533B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-patch: mac80211: rewrite fragmentation code
-introduced the following compile warning:
+Fix a possible NULL pointer dereference in ieee80211_compatible_rates 
+introduced in the patch "mac80211: fix association with some APs". If no bss
+is available just use all supported rates in the association request.
 
-net/mac80211/tx.c: In function 'ieee80211_master_start_xmit':
-net/mac80211/tx.c:1244: warning: 'sta' may be used uninitialized in this function
-
-sta is allowed to be NULL throughout the rest of the function,
-so we best initialize it to NULL.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
 ---
- net/mac80211/tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2ac891f..2aaf866 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1241,7 +1241,7 @@ static bool validate_control(struct ieee80211_local *local,
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key *key;
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
--	struct sta_info *sta;
-+	struct sta_info *sta = NULL;
- 	u8 *da;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 76ad4ed..7aff784 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -722,6 +722,15 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		if (bss->wmm_ie)
+ 			wmm = 1;
+ 		ieee80211_rx_bss_put(dev, bss);
++
++		/* get all rates supported by the device and the AP as
++		 * some APs don't like getting a superset of their rates
++		 * in the association request (e.g. D-Link DAP 1353 in
++		 * b-only mode) */
++		rates_len = ieee80211_compatible_rates(bss, sband, &rates);
++	} else {
++		rates = ~0;
++		rates_len = sband->n_bitrates;
+ 	}
  
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--- 
-1.5.5.1
-
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+@@ -752,10 +761,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 	*pos++ = ifsta->ssid_len;
+ 	memcpy(pos, ifsta->ssid, ifsta->ssid_len);
+ 
+-	/* all supported rates should be added here but some APs
+-	 * (e.g. D-Link DAP 1353 in b-only mode) don't like that
+-	 * Therefore only add rates the AP supports */
+-	rates_len = ieee80211_compatible_rates(bss, sband, &rates);
++	/* add all rates which were marked to be used above */
+ 	supp_rates_len = rates_len;
+ 	if (supp_rates_len > 8)
+ 		supp_rates_len = 8;
