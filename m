@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2263 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752799AbYE1U6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 16:58:12 -0400
-Date: Wed, 28 May 2008 16:22:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 2.6.26 1/3] iwlwifi: fix in-column rate scaling
-Message-ID: <20080528202201.GC25770@tuxdriver.com> (sfid-20080528_225817_625784_12E67600)
-References: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59291 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391AbYESPkP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 11:40:15 -0400
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1211210686.12187.6.camel@localhost.localdomain>
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
+	 <1211117795.686.15.camel@localhost.localdomain>
+	 <1211199368.6252.19.camel@johannes.berg>
+	 <1211210686.12187.6.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VVMPMxkZnK+h4toNjr8S"
+Date: Mon, 19 May 2008 17:39:07 +0200
+Message-Id: <1211211547.6252.54.camel@johannes.berg> (sfid-20080519_174027_508017_5889A380)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2008 at 11:29:33AM +0800, Zhu Yi wrote:
-> From: Guy Cohen <guy.cohen@intel.com>
-> 
-> This patch fixes cases that the code raised or didn't decrease
-> the rate although the success ratio was not good.
-> 
-> Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   45 ++++++++++++++-------------
->  1 files changed, 23 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-> index 2adc228..fa41ed1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-> @@ -1339,7 +1339,7 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
->  				lq_sta->search_better_tbl = 1;
->  				goto out;
->  			}
-> -
-> +			break;
->  		case IWL_LEGACY_SWITCH_SISO:
->  			IWL_DEBUG_RATE("LQ: Legacy switch to SISO\n");
->  
-> @@ -1425,9 +1425,9 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
->  				lq_sta->search_better_tbl = 1;
->  				goto out;
->  			}
-> -
-> +			break;
->  		case IWL_SISO_SWITCH_MIMO2:
-> -			IWL_DEBUG_RATE("LQ: SISO switch to MIMO\n");
-> +			IWL_DEBUG_RATE("LQ: SISO switch to MIMO2\n");
->  			memcpy(search_tbl, tbl, sz);
->  			search_tbl->is_SGI = 0;
->  			search_tbl->ant_type = ANT_AB; /*FIXME:RS*/
 
-These hunks don't apply to wireless-2.6.
+--=-VVMPMxkZnK+h4toNjr8S
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-John W. Linville
-linville@tuxdriver.com
+On Mon, 2008-05-19 at 11:24 -0400, Dan Williams wrote:
+> On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
+> > > Instead of testing for wireless/, best thing would probably be to cal=
+l
+> > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+> > > wireless.  Some drivers may have to load firmware to figure out
+> > > supported rates and encryption capabilities, but to be honest, NM doe=
+s
+> > > this to detect wireless devices and I haven't run into any issues in =
+4
+> > > years using it.  If there are issues with drivers, then we need to fi=
+x
+> > > the driver too.
+> >=20
+> > I was about to propose calling SIOCGIWNAME since that is what
+> > wireless-tools do and that linux/wireless.h indicates.
+>=20
+> Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
+> that NAME return _something_ at least.  NAME should never ever be used
+> for anything more, but since wireless-tools appears to do this that's
+> fine.
+
+Yes, I realise it is completely useless, but wext seems to require that
+it be implemented. RANGE would work as well but typically has much more
+complexity in the kernel.
+
+johannes
+
+--=-VVMPMxkZnK+h4toNjr8S
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDGfGqVg1VMiehFYAQKFrQ//VJSZe8MOCXjybVqM8xZNrPJJjx+kaT/m
+rytyEgVBFsj5ef9VeMruP3cPN/79jzJbWxeeG12TPbCNorsoRKvNk60eVrZw6/3a
+AAySbees2kodn7C1OfGgrbe2arQ1mrNsC0Y41CCtL+fkcV0D8tcmx8CBLtxerxqG
+yIGFygdxPVFTE8FAO540QInHNGK+6LS7BEPAgs5st7EbmymCDvfvrvJZXZWpgeAW
+Svx6ue0gv/GN48R8v/wxyhwY7jK7EDXYV4HCjIz7gstnB8DLq4RuzHYz1uaAInXs
+1l4iaqSP2HK891rIiDdMxr33NvWTdmRXjADYCiA8UR2a+iERPBC86XL+5avrh6e5
+eSDhi+Q/7v+R+gAYR4uZm6PszLpvIPmPav6XqIn4J+qTzxYrVA0Nr76s51XEqzNY
+MMGAyI0F04aCmJQ3xoSQjqVOFUpEnN1gOk53gVNm6Tx7zsww2IQUZWtBPot7lJqh
+Gx6tF/vuizl9R2NZ/ELnq5y/m2OfjlXAIyPbkROK3+j1ADjJCZsMbZ2/dahNFpOY
+HrddAkztuH3el82LnL8nqC49Fps9yc574RsdtJ7JaFRxppM8VLSEEzxyk7h5GI8d
+BkhXH2/HDi5yQbFkhs77Zhr+OdldV5zQOxpcEu+MNtfemyIkO94X7XVNCL9mVxtx
+2q9x99ypsgs=
+=lRSF
+-----END PGP SIGNATURE-----
+
+--=-VVMPMxkZnK+h4toNjr8S--
+
