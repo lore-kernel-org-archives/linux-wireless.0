@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:46734 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbYEQWnB convert rfc822-to-8bit (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:15932 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754381AbYESQoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 18:43:01 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so743172wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:43:00 -0700 (PDT)
-Message-ID: <69e28c910805171543u27a542b0nf2ab86e5702660e@mail.gmail.com> (sfid-20080518_004310_063315_124C8DF5)
-Date: Sun, 18 May 2008 00:43:00 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: Add hooks for firmware debugging
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200805180035.04341.mb@bu3sch.de>
+	Mon, 19 May 2008 12:44:10 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1906376waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2008 09:44:09 -0700 (PDT)
+Message-ID: <1ba2fa240805190944i8c7fc9btecebf98df3b2b265@mail.gmail.com> (sfid-20080519_184418_429561_E2F1978B)
+Date: Mon, 19 May 2008 19:44:09 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCHv2] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Cc: "Helmut Schaa" <hschaa@suse.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1211200868.6252.37.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <200805172244.35966.mb@bu3sch.de> <200805172324.13818.mb@bu3sch.de>
-	 <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
-	 <200805180035.04341.mb@bu3sch.de>
+References: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de>
+	 <1ba2fa240805180337h35bc3244od619e78c0d95d895@mail.gmail.com>
+	 <1211200868.6252.37.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 18, 2008 at 12:35 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Sunday 18 May 2008 00:27:49 Stefanik G=E1bor wrote:
->> On Sat, May 17, 2008 at 11:24 PM, Michael Buesch <mb@bu3sch.de> wrot=
-e:
->> Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
->> "Broadcom AirForce One Microcode" for licensing/trademark reasons? T=
-he
->> official name of these cards is AirForce One.
+On Mon, May 19, 2008 at 3:41 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> That's the first time I hear that, so it's most likely not _that_ off=
-icial. ;)
+>> Again, mac should rather solve the problem that we do not connect to
+>> AP's that are not in the BSS list
 >
-> And quite honestly, I don't care at all playing bullshit-bingo with b=
-uzzwords.
-> The device has the product number 43XX, so we identify it that way.
+> You're talking about this a lot without showing any willingness to work
+> on it. Personally, I don't care so I'm not going to work on making this
+> a valid assertion, obviously it is not.
+
+You are absolutely right I can imagine how it sounds, just I wish I
+had more time. So for now I'm just talking. If nobody will fix it till
+I clean my table I will fix it.
+
+>> The other issue is that we call ieee80211_rx_bss_put(dev, bss); before
+>> this call in ieee80211_send_assoc.
 >
-> --
-> Greetings Michael.
+> Indeed, we (i.e. not just me!) should have caught this at the time the
+> original patch was merged.
+:)
+
+> Helmut, can you please make a patch that addresses both issues by
+> instead moving the compatible rates check into the "if (bss)" part in
+> ieee80211_send_assoc() right after ieee80211_rx_bss_get()? And you can
+> make "u64 rates = ~0;" the default to address the !bss case.
 >
 
-Another question: is this legal in the US? AFAIK this might conflict
-with FCC regulations. (Not sure about EU.)
+Still not sure in what flow the bss can be removed from the list.
+send_assoc() is called after mac has  received successful
+authentication response. I would like to see a trace of this. Is this
+easily reproducible ?
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Tomas
+
+
+> johannes
+>
