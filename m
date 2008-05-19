@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:35195 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758969AbYEGLl1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 07:41:27 -0400
-Date: Wed, 7 May 2008 19:41:23 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
+Received: from mx1.redhat.com ([66.187.233.31]:57042 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751805AbYESP5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 11:57:54 -0400
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-Message-ID: <20080507114123.GA26073@gondor.apana.org.au> (sfid-20080507_134046_018331_474DED34)
-References: <20080430124055.091382000@sipsolutions.net> <20080430130050.105344000@sipsolutions.net> <20080507071026.GA24407@gondor.apana.org.au> <1210150217.9305.39.camel@johannes.berg> <20080507090040.GA25186@gondor.apana.org.au> <1210159339.5642.13.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1210159339.5642.13.camel@johannes.berg>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1211211547.6252.54.camel@johannes.berg>
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
+	 <1211117795.686.15.camel@localhost.localdomain>
+	 <1211199368.6252.19.camel@johannes.berg>
+	 <1211210686.12187.6.camel@localhost.localdomain>
+	 <1211211547.6252.54.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 19 May 2008 11:53:58 -0400
+Message-Id: <1211212438.12187.13.camel@localhost.localdomain> (sfid-20080519_175815_770712_9188F80D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 07, 2008 at 01:22:19PM +0200, Johannes Berg wrote:
->
-> +	if (unlikely(netif_queue_stopped(local->mdev) ||
-> +		     __ieee80211_queue_stopped(local, control->queue)))
-> +		return NETDEV_TX_BUSY;
+On Mon, 2008-05-19 at 17:39 +0200, Johannes Berg wrote:
+> On Mon, 2008-05-19 at 11:24 -0400, Dan Williams wrote:
+> > On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
+> > > > Instead of testing for wireless/, best thing would probably be to call
+> > > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+> > > > wireless.  Some drivers may have to load firmware to figure out
+> > > > supported rates and encryption capabilities, but to be honest, NM does
+> > > > this to detect wireless devices and I haven't run into any issues in 4
+> > > > years using it.  If there are issues with drivers, then we need to fix
+> > > > the driver too.
+> > > 
+> > > I was about to propose calling SIOCGIWNAME since that is what
+> > > wireless-tools do and that linux/wireless.h indicates.
+> > 
+> > Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
+> > that NAME return _something_ at least.  NAME should never ever be used
+> > for anything more, but since wireless-tools appears to do this that's
+> > fine.
+> 
+> Yes, I realise it is completely useless, but wext seems to require that
+> it be implemented. RANGE would work as well but typically has much more
+> complexity in the kernel.
 
-Returning busy should be avoided because not everything expects it.
-For example, this can cause tcpdump to see the same packet twice.
+Yup; NAME's better for this even though it's useless.
 
-Besides, I'm not sure if this will even work if you're fiddling
-with skb->next.  Perhaps you can stash it in a pointer local to
-your device.
+Dan
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
