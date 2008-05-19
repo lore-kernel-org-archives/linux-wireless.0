@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:32391 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbYEMKFZ (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:39828 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760979AbYESXsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 06:05:25 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so4037867waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 03:05:23 -0700 (PDT)
-Message-ID: <1ba2fa240805130305q207067b0n572b95340a3745d6@mail.gmail.com> (sfid-20080513_120530_987854_D8506A68)
-Date: Tue, 13 May 2008 13:05:22 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"David Miller" <davem@davemloft.net>
-Subject: Re: New GIT net tree naming...
-Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
-	akpm@linux-foundation.org, netdev@vger.kernel.org
-In-Reply-To: <20080512184715.GA18910@tuxdriver.com>
+	Mon, 19 May 2008 19:48:33 -0400
+Message-ID: <483211DA.5080205@lwfinger.net> (sfid-20080520_014838_774697_476E215E)
+Date: Mon, 19 May 2008 18:48:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080419.173510.257216556.davem@davemloft.net>
-	 <20080508014358.GE3412@tuxdriver.com>
-	 <200805080906.29603.hs4233@mail.mn-solutions.de>
-	 <20080508144046.GA3515@tuxdriver.com>
-	 <1ba2fa240805121039u1fc4273eh706c8868748b500c@mail.gmail.com>
-	 <20080512184715.GA18910@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org,
+	jckn@gmx.net, Johannes Berg <johannes@sipsolutions.net>,
+	Helmut Schaa <hschaa@suse.de>
+Subject: Re: [Bugme-new] [Bug 10755] New: iwl3945 regression - NULL deref
+ in ieee80211_associate
+References: <bug-10755-10286@http.bugzilla.kernel.org/> <20080519162655.f79208cd.akpm@linux-foundation.org>
+In-Reply-To: <20080519162655.f79208cd.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 12, 2008 at 9:47 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, May 12, 2008 at 08:39:22PM +0300, Tomas Winkler wrote:
->
->  > How would you want me to handle bug fixes to go both directions
->  > wireless-testing and upstream?
->  > Because of huge code movement we are now doing in iwlwifi they are
->  > currently just not the same.
->  > Shell I send two versions or you want to back port them not sure how
->  > do you want to track this...somewhere in merging loop it will create a
->  > conflict.  Maybe this is maintainer trivia anyhow
->  > I would like to make sure there are not glitches.
->
->  It is a good question -- thanks for asking!
->
->  If you think that two versions of the fix are appropriate, then please
->  do send them.  If it is simply because the code moved I'll probably
->  be able to figure it out, but if the code has actually changed it
->  may be worthwhile.
->
->  We are now trying to avoid rebasing "-next" patches as much as possible.
->  So the version for the current release will be merged to Linus and I or
->  Dave will have to figure-out how to resolve the merge conflicts when
->  current is pulled to -next.  Providing a "-next' version of the patch
->  can help to make sure that those merge conflicts are handled correctly.
->
->  John
+Andrew Morton wrote:
+> On Mon, 19 May 2008 15:56:01 -0700 (PDT)
+> bugme-daemon@bugzilla.kernel.org wrote:
+> 
+>> http://bugzilla.kernel.org/show_bug.cgi?id=10755
+>>
+>>            Summary: iwl3945 regression - NULL deref in ieee80211_associate
+>>            Product: Drivers
+>>            Version: 2.5
+>>      KernelVersion: 2.6.26-rc3
+>>           Platform: All
+>>         OS/Version: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: network-wireless
+>>         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
+>>         ReportedBy: jckn@gmx.net
+>>
+>>
+>> Latest working kernel version: 2.6.26-rc2
+>> Earliest failing kernel version: 2.6.26-rc3
+>> Distribution: Debian
+>> Hardware Environment: Lenovo Thinkpad R61 (8943-DLG)
+>> Software Environment:
+>> Problem Description: iwl3945 trying to associate to an AP leads to a kernel
+>> oops. The current (2008/05/19) linuxwireless.org compat-wireless driver is
+>> affected, too.
+>>
+> 
+> A post-2.6.25 regression.
+> 
+> EIP is at ieee80211_associate+0x253/0x640 [mac80211]
+> 
+> and it might not be iwl3945-specific.
 
-I'm not able to clone neither wireless-2.6.git nor net-2.6.git through http
-I'm behind a firewall so git protocol is not an option
+This bug looks like the one I found and reported in 
+http://marc.info/?l=linux-wireless&m=121097330013277&w=2. I found it for b43 
+- it is clearly not iwl3945 specific.
 
+The patch is in version 4 and probably not the final one, but it fixes the 
+oops. You will find the patch at 
+http://marc.info/?l=linux-wireless&m=121120929012836&w=2.
 
-git-clone  ttp://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
-Initialized empty Git repository in ....
-Cannot get remote repository information.
-Perhaps git-update-server-info needs to be run there?
+We know that bss is NULL when mac80211 tries to associate; however, I had 
+only one of these that happened after my interface had been connected to my 
+AP for ~18 hours, then got disassociated, followed by the oops. It sounds as 
+if jckn@gmx.net might be getting this systematically and there is hope to 
+find the root cause so as to prevent the problem rather than covering over 
+the symptoms as is done with the patch. In any case, there is a fix in the works.
 
-git-clone  http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.gi
-Getting pack list for
-http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-Getting index for pack 1c206683ae18d8f0b4833dcee50c8e1c76832df9
-Getting pack list for
-http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git/
-error: Unable to find 090b293b87792a815cf51aeccb590ec37c90cfa3 under
-http://www.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-Cannot obtain needed blob 090b293b87792a815cf51aeccb590ec37c90cfa3
-while processing commit 6e40a915de82e00d18f75941e531b40c4e0d94c4.
-Waiting for http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git//objects/9a/eb872460a5dcab8b4baf13125d0177f865f393
-got 334974abd063c20dc64dd32724425be36b90cebc
-got 9aeb872460a5dcab8b4baf13125d0177f865f393
-Waiting for http://www.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git//objects/ab/ef366d1ab8fe2ac484039976600938f6c76db3
-Received DONE message for unknown request!
+I have added Johannes and Helmut to the CC list.
 
-
-Thanks
-Tomas
+Larry
