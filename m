@@ -1,76 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51617 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54814 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbYE3TDo (ORCPT
+	with ESMTP id S1750946AbYESPYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 15:03:44 -0400
-Subject: Re: [PATCH] p54: fix skb->cb tx info conversion
+	Mon, 19 May 2008 11:24:16 -0400
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chr <chunkeey@web.de>
-In-Reply-To: <20080530161511.GA24013@tuxdriver.com>
-References: <1211813099.4843.12.camel@johannes.berg>
-	 <20080530161511.GA24013@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CO0c51517G9mbrW2deOO"
-Date: Fri, 30 May 2008 21:03:39 +0200
-Message-Id: <1212174219.7238.3.camel@johannes.berg> (sfid-20080530_210348_563484_6905F87B)
+To: Dan Williams <dcbw@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1211199368.6252.19.camel@johannes.berg>
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 (sfid-20080517_154639_384202_6D3479C2)  <1211032475.6252.2.camel@johannes.berg>
+	 <1211117795.686.15.camel@localhost.localdomain>
+	 <1211199368.6252.19.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 19 May 2008 17:22:58 +0200
+Message-Id: <1211210578.6252.52.camel@johannes.berg> (sfid-20080519_172422_766103_65593623)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[removing linux-kernel and netdev from CC, I suppose they won't care too
+much about these details]
 
---=-CO0c51517G9mbrW2deOO
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2008-05-19 at 14:18 +0200, Johannes Berg wrote:
+> > Instead of testing for wireless/, best thing would probably be to call
+> > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+> > wireless.  Some drivers may have to load firmware to figure out
+> > supported rates and encryption capabilities, but to be honest, NM does
+> > this to detect wireless devices and I haven't run into any issues in 4
+> > years using it.  If there are issues with drivers, then we need to fix
+> > the driver too.
+> 
+> I was about to propose calling SIOCGIWNAME since that is what
+> wireless-tools do and that linux/wireless.h indicates.
 
-
-> > +				ni =3D IEEE80211_SKB_CB(entry->next);
-> > +				freed =3D ((void *)ni->driver_data)->start_addr
-> > +						- last_addr;
-> > +			} else
-> >  				freed =3D priv->rx_end - last_addr;
-> > =20
-> >  			last_addr =3D range->end_addr;
->=20
->   CC [M]  drivers/net/wireless/p54/p54common.o
-> drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_rx_frame_s=
-ent=E2=80=99:
-> drivers/net/wireless/p54/p54common.c:406: warning: dereferencing =E2=80=
-=98void *=E2=80=99 pointer
-> drivers/net/wireless/p54/p54common.c:406: error: request for member =E2=
-=80=98start_addr=E2=80=99 in something not a structure or union
->=20
-> Looks like you are missing a (struct memrecord *) for the freed
-> assignment...?
-
-Umm, yes, this can't work. I wonder what I did, I sure have compiled
-this kernel. Must have backed out the patch accidentally. Sorry, will
-follow up with a fixed one.
+Here's a patch, comments?
 
 johannes
 
---=-CO0c51517G9mbrW2deOO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
+ hald/linux/device.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--- hal.orig/hald/linux/device.c	2008-05-19 06:46:23.000000000 +0200
++++ hal/hald/linux/device.c	2008-05-19 06:55:25.000000000 +0200
+@@ -45,6 +45,10 @@
+   #include <linux/input.h>
+ #endif
+ 
++/* for wireless extensions */
++#include <linux/if.h>
++#include <linux/wireless.h>
++
+ #include <dbus/dbus.h>
+ #include <dbus/dbus-glib.h>
+ 
+@@ -532,10 +536,14 @@ net_add (const gchar *sysfs_path, const 
+ 		const char *addr;
+ 		const char *parent_subsys;
+ 		char bridge_path[HAL_PATH_MAX];
+-		char wireless_path[HAL_PATH_MAX];
+ 		char phy80211_path[HAL_PATH_MAX];
+ 		struct stat s;
+ 		dbus_uint64_t mac_address = 0;
++		int ioctl_fd;
++		struct iwreq iwr;
++
++		ioctl_fd = socket (PF_INET, SOCK_DGRAM, 0);
++		strncpy (iwr.ifr_ifrn.ifrn_name, IFNAMSIZ, ifname);
+ 
+ 		addr = hal_device_property_get_string (d, "net.address");
+ 		if (addr != NULL) {
+@@ -554,8 +562,6 @@ net_add (const gchar *sysfs_path, const 
+ 		}
+ 
+ 		snprintf (bridge_path, HAL_PATH_MAX, "%s/bridge", sysfs_path);
+-		/* wireless extensions */
+-		snprintf (wireless_path, HAL_PATH_MAX, "%s/wireless", sysfs_path);
+ 		/* cfg80211 */
+ 		snprintf (phy80211_path, HAL_PATH_MAX, "%s/phy80211", sysfs_path);
+ 		parent_subsys = hal_device_property_get_string (parent_dev, "info.subsystem");
+@@ -565,7 +571,7 @@ net_add (const gchar *sysfs_path, const 
+ 			hal_device_property_set_string (d, "info.category", "net.bluetooth");
+ 			hal_device_add_capability (d, "net.bluetooth");
+ 			hal_device_property_set_uint64 (d, "net.bluetooth.mac_address", mac_address);
+-		} else if ((stat (wireless_path, &s) == 0 && (s.st_mode & S_IFDIR)) ||
++		} else if ((ioctl (ioctl_fd, SIOCGIWNAME, &iwr) == 0) ||
+ 			(stat (phy80211_path, &s) == 0 && (s.st_mode & S_IFDIR))) {
+ 			hal_device_property_set_string (d, "info.product", "WLAN Interface");
+ 			hal_device_property_set_string (d, "info.category", "net.80211");
+@@ -582,6 +588,8 @@ net_add (const gchar *sysfs_path, const 
+ 			hal_device_add_capability (d, "net.80203");
+ 			hal_device_property_set_uint64 (d, "net.80203.mac_address", mac_address);
+ 		}
++
++		close (ioctl_fd);
+ 	} else if (media_type == ARPHRD_IRDA) {
+ 		hal_device_property_set_string (d, "info.product", "Networking Interface");
+ 		hal_device_property_set_string (d, "info.category", "net.irda");
 
-iQIVAwUASEBPiqVg1VMiehFYAQKWng/+MhvsfTlONLHMmpdZor9+Ehv7xTlInwlT
-PO8v4lAV2A0PlWUseS4bvfH9yjvysQrwrzyuie02H7+erEAK6mk6/2lxFD3lToxG
-rNsULRPUgOla/yHN6cjmc4RaMjL9FweiE05M4olfbUig7dybcT3iCNKm0B/KNzdz
-/WzTVDDIWhU+FmpYgxrVhyBIEW72uw986wyIjRO1DaikrWT1LRXYn7vu8gJ9sch8
-zjJeYqtbb6F7+oHhBkv4C3vO+mygVE4EJoakbKxqULy5TxllfF/HL4c5fcUg0dby
-Bmmo/xcJ67SINxa2sPgC12rBmUfibi8lAjiTY0JWgDgrDwKV55r8GDHYjkR9lAgV
-6JHRsa0TrXlysMBUs6uU1IRM9RTPSkVyxOOE/bjz8iiRAG493IvG67qtY15GO8wI
-0sDG5ha6z+w1je5FxFiHvZ/u4luZo927Cgk9fMMnh2JuDBtRcLhir1UuR1v5jEcS
-5+rsO2yiIjxfe/DAQ8wpDYtA4s7ED4XAdkToB+b8+2cMB6+ibwuMzPlsdWzKtzJo
-mapNQM4qO1yqxUgNtyDnDLODZgyMbexFvztqM7Bx/WwoAMZDy7UGr2txiMKEvlP5
-YBxRV5NHiujQN+/DytDB9KsOvQcZ+wXV7rW9VHWc38x6Uz5N27i+JIEbPfz5/Hbo
-PUc89VbAGyo=
-=BFDj
------END PGP SIGNATURE-----
-
---=-CO0c51517G9mbrW2deOO--
 
