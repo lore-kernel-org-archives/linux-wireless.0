@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:14890 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754512AbYE1Iqn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36146 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765732AbYESWTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 04:46:43 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH, take 3] libertas: fix compact flash interrupt handling
-Date: Wed, 28 May 2008 10:46:35 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <200805261250.23580.hs4233@mail.mn-solutions.de> <1211919275.555.25.camel@localhost.localdomain>
-In-Reply-To: <1211919275.555.25.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805281046.35897.hs4233@mail.mn-solutions.de> (sfid-20080528_104657_875646_9A6C6010)
+	Mon, 19 May 2008 18:19:49 -0400
+Subject: Re: [2.6 patch] strip: remove dead URL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20080519221006.GZ17716@cs181133002.pp.htv.fi> (sfid-20080520_001225_773681_C22DD3EF)
+References: <20080519221006.GZ17716@cs181133002.pp.htv.fi>
+	 (sfid-20080520_001225_773681_C22DD3EF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W7QFjyyuU3FLJgRZRoEP"
+Date: Tue, 20 May 2008 00:16:05 +0200
+Message-Id: <1211235365.6252.68.camel@johannes.berg> (sfid-20080520_002007_448946_210CF26C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> But again; if the patch works better for you, I'll ack it
-> because it doesn't work any worse for me.  Logs with
-> libertas_debug=0x443af available if you want to see them.
 
-Yes, I'd like this. You can send me this as a .bz2 file.
+--=-W7QFjyyuU3FLJgRZRoEP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-For me, the problem with the old approach was in the "tx done" 
-part. With take1+take2 of my patch, an error showed up when, 
-while I was executing if_cs_send_data(), an interrupt could 
-happen and my code did touch other chip registers, while it just 
-should continue to send the data. Take 3 fixed this for me.
+On Tue, 2008-05-20 at 01:10 +0300, Adrian Bunk wrote:
+> http://mosquitonet.Stanford.EDU/strip.html no longer exists.
 
+Out of curiosity, does anybody even have this hardware? Does it even
+exist still? I mean, cell-phone sized 100kbit/sec wireless hardware? Who
+would use that? :)
 
-> I really don't know what to do to trace it further.  Is there a
-> way to reset the CF card and kick the firmware in the head that
-> I can try from the TX handler, like a USB port reset or
-> something?  I also might be able to set this machine up for
-> remote access so you can play with it if you like.
+johannes
 
-On CF, there's always one way to kick the firmware into the 
-head: "pcmciactrl eject; pcmciactrl insert". You can be quite 
-pretty sure that after this every state in the card, the 
-firmware, the driver and the networking subsystem has been 
-cleared :-)
+--=-W7QFjyyuU3FLJgRZRoEP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-However, maybe there are better ways, less sledge-hammer-like 
-ones. I'll dig more into this.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIVAwUASDH8JKVg1VMiehFYAQI75Q/+L38sxzEmlD0BibMuxm78vU8lmmH07IH2
+ZBlNINF6vx+FQuv2kzVqMnTabx4O4+wLphxByfNeYsxrQ0s3r2bVhbk/imc+17Au
+s+tMpOy7ff/X7cxcks79M731G2AOyXT+zeFS3m2Ei2B0Rw+ynH6+012kexvOj0B9
+aTySYzJgQkC8svQMYq2pRSGedsldd/uP5yk5nZ4v9zDA19Ec1XfX8gE/mdHkE8bJ
+Ao9Kos5d5c0xlN6GcETCozfVwDqibMW2N+rakQnNxbfBc1IgLj/nWDpHuY/yCNHD
+FuCowh/z2J9A6F6FIKY/ydP1fA/yIM7uNDx6fEqFHGev2j/BhRERBcYG2gx56C9r
+OoXGaxI6I3b5DiiIXomxaj+7oXg6Cab+n+0tFOEZg4PX650jJPFF14FlXIXMoN+i
+8NPtCh0CvFhBe8bIyWx/zBPXZaOo30P8/bmS57LJaTceD6tZyplymWdt8Jc62pLu
+P0JYPMEX8zzbZ9rLNdGliIdlcr4VSIbjJXlwYhGcavc11DxJl+tWwShMqBBiWqmH
+6JGz+D91jGvixBTZT9+bI9WX1rhwpfBLHBK4bp+8v6rOdVk+0cjKwncbTw7XeadE
+lmiRP5uBIqPpGcRXpy45uLR9k/vtYM6qY+wLbBfQ7W9mNzuO+2u2J2KqqaJMWeTk
+TMc5/5o/l98=
+=gnE2
+-----END PGP SIGNATURE-----
 
-One reason for my digging is this error that I had:
+--=-W7QFjyyuU3FLJgRZRoEP--
 
-libertas_cs: card not ready for commands
-libertas: DNLD_CMD: hw_host_to_card failed: -1
-libertas: command 0x001f timed out
-libertas: requeueing command 0x001f due to timeout (#1)
-libertas_cs: card not ready for commands
-libertas: DNLD_CMD: hw_host_to_card failed: -1
-libertas: command 0x001f timed out
-libertas: requeueing command 0x001f due to timeout (#2)
-libertas_cs: card not ready for commands
-libertas: DNLD_CMD: hw_host_to_card failed: -1
-libertas: command 0x001f timed out
-libertas: requeueing command 0x001f due to timeout (#3)
-libertas_cs: card not ready for commands
-libertas: DNLD_CMD: hw_host_to_card failed: -1
-libertas: command 0x001f timed out
-libertas: Excessive timeouts submitting command 0x001f
-libertas_cs: no cmd response in card
-libertas: PREP_CMD: command 0x0006 failed: -2
-libertas: SCAN_CMD failed
-
-
-However, I'm not yet sure if I can say (in this case) "the 
-firmware is hosed" and I'm also not sure if it's wise to just 
-send a CMD_802_11_RSSI command down as the driver currently 
-does.
