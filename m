@@ -1,47 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:3742 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754480AbYETCQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 22:16:04 -0400
-Subject: Re: iwlwifi injection bug
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:54167 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643AbYESXJP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 19:09:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andy Green <andy@warmcat.com>
-In-Reply-To: <1210945631.6381.11.camel@johannes.berg>
-References: <1210945631.6381.11.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 20 May 2008 10:15:28 +0800
-Message-Id: <1211249729.2532.59.camel@debian.sh.intel.com> (sfid-20080520_041609_855823_957E07AE)
-Mime-Version: 1.0
+Subject: [PATCH RFC] b43: Upload both beacon templates on initial load
+Date: Tue, 20 May 2008 01:08:13 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200805200108.13922.mb@bu3sch.de> (sfid-20080520_010934_339161_2B5C80BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-05-16 at 15:47 +0200, Johannes Berg wrote:
-> I don't know why you want to disallow sending frames when in monitor
-> mode (especially since reportedly it works), but this is not a good
-> way
-> to go about it:
-> 
-> static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff
-> *skb)
-> {
->         struct iwl_priv *priv = hw->priv;
-> 
->         IWL_DEBUG_MAC80211("enter\n");
-> 
->         if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
->                 IWL_DEBUG_MAC80211("leave - monitor\n");
->                 return -1;
->         }
-> 
-> You see, this will cause mac80211 to resubmit the frame and most
-> likely will totally mess up queue handling and various other things.
-
-The monitor mode the driver is using currently is purely a "sniffer". We
-will look into other promiscuous mode supported by the firmware to see
-if we can enable that.
-
-Thanks,
--yi
-
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-05-20 00:16:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-05-20 00:54:16.000000000 +0200
+@@ -753,12 +753,13 @@ struct b43_wl {
+ 	/* The beacon we are currently using (AP or IBSS mode).
+ 	 * This beacon stuff is protected by the irq_lock. */
+ 	struct sk_buff *current_beacon;
+ 	struct ieee80211_tx_control beacon_txctl;
+ 	bool beacon0_uploaded;
+ 	bool beacon1_uploaded;
++	bool beacon_templates_virgin; /* Never wrote the templates? */
+ 	struct work_struct beacon_update_trigger;
+ 
+ 	/* The current QOS parameters for the 4 queues.
+ 	 * This is protected by the irq_lock. */
+ 	struct b43_qos_params qos_params[4];
+ 	/* Workqueue for updating QOS parameters in hardware. */
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-05-20 00:18:53.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-05-20 01:05:04.000000000 +0200
+@@ -1541,12 +1541,36 @@ static void b43_write_probe_resp_templat
+ 	b43_write_template_common(dev, probe_resp_data,
+ 				  size, ram_offset, shm_size_offset,
+ 				  rate->hw_value);
+ 	kfree(probe_resp_data);
+ }
+ 
++static void b43_upload_beacon0(struct b43_wldev *dev)
++{
++	struct b43_wl *wl = dev->wl;
++
++	if (wl->beacon0_uploaded)
++		return;
++	b43_write_beacon_template(dev, 0x68, 0x18);
++	/* FIXME: Probe resp upload doesn't really belong here,
++	 *        but we don't use that feature anyway. */
++	b43_write_probe_resp_template(dev, 0x268, 0x4A,
++				      &__b43_ratetable[3]);
++	wl->beacon0_uploaded = 1;
++}
++
++static void b43_upload_beacon1(struct b43_wldev *dev)
++{
++	struct b43_wl *wl = dev->wl;
++
++	if (wl->beacon1_uploaded)
++		return;
++	b43_write_beacon_template(dev, 0x468, 0x1A);
++	wl->beacon1_uploaded = 1;
++}
++
+ static void handle_irq_beacon(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl = dev->wl;
+ 	u32 cmd, beacon0_valid, beacon1_valid;
+ 
+ 	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
+@@ -1565,30 +1589,33 @@ static void handle_irq_beacon(struct b43
+ 	if (beacon0_valid && beacon1_valid) {
+ 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_BEACON);
+ 		dev->irq_savedstate |= B43_IRQ_BEACON;
+ 		return;
+ 	}
+ 
+-	if (!beacon0_valid) {
+-		if (!wl->beacon0_uploaded) {
+-			b43_write_beacon_template(dev, 0x68, 0x18);
+-			b43_write_probe_resp_template(dev, 0x268, 0x4A,
+-						      &__b43_ratetable[3]);
+-			wl->beacon0_uploaded = 1;
+-		}
++	if (unlikely(wl->beacon_templates_virgin)) {
++		/* We never uploaded a beacon before.
++		 * Upload both templates now, but only mark one valid. */
++		wl->beacon_templates_virgin = 0;
++		b43_upload_beacon0(dev);
++		b43_upload_beacon1(dev);
+ 		cmd = b43_read32(dev, B43_MMIO_MACCMD);
+ 		cmd |= B43_MACCMD_BEACON0_VALID;
+ 		b43_write32(dev, B43_MMIO_MACCMD, cmd);
+-	} else if (!beacon1_valid) {
+-		if (!wl->beacon1_uploaded) {
+-			b43_write_beacon_template(dev, 0x468, 0x1A);
+-			wl->beacon1_uploaded = 1;
++	} else {
++		if (!beacon0_valid) {
++			b43_upload_beacon0(dev);
++			cmd = b43_read32(dev, B43_MMIO_MACCMD);
++			cmd |= B43_MACCMD_BEACON0_VALID;
++			b43_write32(dev, B43_MMIO_MACCMD, cmd);
++		} else if (!beacon1_valid) {
++			b43_upload_beacon1(dev);
++			cmd = b43_read32(dev, B43_MMIO_MACCMD);
++			cmd |= B43_MACCMD_BEACON1_VALID;
++			b43_write32(dev, B43_MMIO_MACCMD, cmd);
+ 		}
+-		cmd = b43_read32(dev, B43_MMIO_MACCMD);
+-		cmd |= B43_MACCMD_BEACON1_VALID;
+-		b43_write32(dev, B43_MMIO_MACCMD, cmd);
+ 	}
+ }
+ 
+ static void b43_beacon_update_trigger_work(struct work_struct *work)
+ {
+ 	struct b43_wl *wl = container_of(work, struct b43_wl,
+@@ -4164,12 +4191,15 @@ static int b43_op_start(struct ieee80211
+ 	 * and mac80211 reconfiguring it. */
+ 	memset(wl->bssid, 0, ETH_ALEN);
+ 	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	wl->filter_flags = 0;
+ 	wl->radiotap_enabled = 0;
+ 	b43_qos_clear(wl);
++	wl->beacon0_uploaded = 0;
++	wl->beacon1_uploaded = 0;
++	wl->beacon_templates_virgin = 1;
+ 
+ 	/* First register RFkill.
+ 	 * LEDs that are registered later depend on it. */
+ 	b43_rfkill_init(dev);
+ 
+ 	mutex_lock(&wl->mutex);
