@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51797 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042AbYEAOpK (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:19706 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751897AbYESRCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 10:45:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH 3/3] b43: Use the new weak DMA-mask API
-Date: Thu, 1 May 2008 16:43:08 +0200
-Cc: Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de>
-In-Reply-To: <200805011638.15910.mb@bu3sch.de>
+	Mon, 19 May 2008 13:02:51 -0400
+Received: by rn-out-0910.google.com with SMTP id e11so477660rng.17
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2008 10:02:50 -0700 (PDT)
+Message-ID: <1ba2fa240805191002mc77db60q6736104923179cef@mail.gmail.com> (sfid-20080519_190314_357814_302F9D67)
+Date: Mon, 19 May 2008 20:02:49 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Helmut Schaa" <hschaa@suse.de>
+Subject: Re: [PATCHv4] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200805191659.43961.hschaa@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011643.08605.mb@bu3sch.de> (sfid-20080501_164459_626023_DFE41E4F)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200805191659.43961.hschaa@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a user for the new weak DMA mask API.
-This removes the b43 DMA mask probe loop.
+On Mon, May 19, 2008 at 5:59 PM, Helmut Schaa <hschaa@suse.de> wrote:
+> Fix a possible NULL pointer dereference in ieee80211_compatible_rates
+> introduced in the patch "mac80211: fix association with some APs". If no bss
+> is available just use all supported rates in the association request.
+>
+> Signed-off-by: Helmut Schaa <hschaa@suse.de>
+> ---
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 76ad4ed..7aff784 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -722,6 +722,15 @@ static void ieee80211_send_assoc(struct net_device *dev,
+>                if (bss->wmm_ie)
+>                        wmm = 1;
+>                ieee80211_rx_bss_put(dev, bss);
+> +
+> +               /* get all rates supported by the device and the AP as
+> +                * some APs don't like getting a superset of their rates
+> +                * in the association request (e.g. D-Link DAP 1353 in
+> +                * b-only mode) */
+> +               rates_len = ieee80211_compatible_rates(bss, sband, &rates);
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-
-Index: linux-2.6/drivers/net/wireless/b43/dma.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/dma.c	2008-05-01 13:19:51.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/b43/dma.c	2008-05-01 14:45:52.000000000 +0200
-@@ -980,37 +980,27 @@ void b43_dma_free(struct b43_wldev *dev)
- 	destroy_ring(dma, tx_ring_mcast);
- }
- 
-+static inline unsigned int mask_to_bit(u64 dma_mask)
-+{
-+	return fls64(dma_mask);
-+}
-+
- static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
- {
- 	u64 orig_mask = mask;
--	bool fallback = 0;
- 	int err;
- 
--	/* Try to set the DMA mask. If it fails, try falling back to a
--	 * lower mask, as we can always also support a lower one. */
--	while (1) {
--		err = ssb_dma_set_mask(dev->dev, mask);
--		if (!err)
--			break;
--		if (mask == DMA_64BIT_MASK) {
--			mask = DMA_32BIT_MASK;
--			fallback = 1;
--			continue;
--		}
--		if (mask == DMA_32BIT_MASK) {
--			mask = DMA_30BIT_MASK;
--			fallback = 1;
--			continue;
--		}
-+	err = ssb_dma_set_mask_weak(dev->dev, &mask);
-+	if (err) {
- 		b43err(dev->wl, "The machine/kernel does not support "
- 		       "the required %u-bit DMA mask\n",
--		       (unsigned int)dma_mask_to_engine_type(orig_mask));
-+		       mask_to_bit(orig_mask));
- 		return -EOPNOTSUPP;
- 	}
--	if (fallback) {
-+	if (mask != orig_mask) {
- 		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
--			(unsigned int)dma_mask_to_engine_type(orig_mask),
--			(unsigned int)dma_mask_to_engine_type(mask));
-+			mask_to_bit(orig_mask),
-+			mask_to_bit(mask));
- 	}
- 
- 	return 0;
+Shuldn' t this call ieee80211_rx_bss_put(dev, bss);  after calling
+ieee80211_compatible_rates()
 
 
--- 
-Greetings Michael.
+> +       } else {
+> +               rates = ~0;
+> +               rates_len = sband->n_bitrates;
+>        }
+>
+>        mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+> @@ -752,10 +761,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
+>        *pos++ = ifsta->ssid_len;
+>        memcpy(pos, ifsta->ssid, ifsta->ssid_len);
+>
+> -       /* all supported rates should be added here but some APs
+> -        * (e.g. D-Link DAP 1353 in b-only mode) don't like that
+> -        * Therefore only add rates the AP supports */
+> -       rates_len = ieee80211_compatible_rates(bss, sband, &rates);
+> +       /* add all rates which were marked to be used above */
+>        supp_rates_len = rates_len;
+>        if (supp_rates_len > 8)
+>                supp_rates_len = 8;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
