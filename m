@@ -1,98 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43732 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756AbYEAKpx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 06:45:53 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080501.033221.193705040.davem@davemloft.net>
-References: <1209635299.4008.21.camel@johannes.berg>
-	 <20080501.025635.216053297.davem@davemloft.net>
-	 <1209636494.4008.24.camel@johannes.berg>
-	 <20080501.033221.193705040.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gmfiKpb7HG1wU42IwC2F"
-Date: Thu, 01 May 2008 12:45:13 +0200
-Message-Id: <1209638713.4008.32.camel@johannes.berg> (sfid-20080501_124541_234907_E0328AFC)
+Received: from mx1.redhat.com ([66.187.233.31]:45018 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754689AbYESXeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 19:34:03 -0400
+Subject: Re: [2.6 patch] strip: remove dead URL
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Adrian Bunk <bunk@kernel.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080519223646.GA19835@tuxdriver.com>
+References: <20080519221006.GZ17716@cs181133002.pp.htv.fi>
+	 <20080519223646.GA19835@tuxdriver.com>
+Content-Type: text/plain; charset=utf8
+Date: Mon, 19 May 2008 19:27:51 -0400
+Message-Id: <1211239671.10827.20.camel@localhost.localdomain> (sfid-20080520_013408_156558_60846C34)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-gmfiKpb7HG1wU42IwC2F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-05-01 at 03:32 -0700, David Miller wrote:
-
-> Right you are.
+On Mon, 2008-05-19 at 18:36 -0400, John W. Linville wrote:
+> On Tue, May 20, 2008 at 01:10:06AM +0300, Adrian Bunk wrote:
+> > http://mosquitonet.Stanford.EDU/strip.html no longer exists.
+> >=20
+> > Since the MAINTAINERS entry is now completely empty it's also remov=
+ed.
+> >=20
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
 >=20
-> So, I wonder what's causing the problem...  Could you "remember" the
-> length and truesize at the skb_orphan() point in mac80211, right
-> after the skb_push(), then in the truesize warning, print those
-> "remembered" values as well as the current ones.
+> Any reason why we should not just remove the driver?
 
-I was just playing with af_packet and added some debugging there that
-prints out the len of all packets it gets (for a certain ifidx)
+Subject to the 2-kernel-release removal notice requirement or outright?
+It looks like it was more of a research project than anything that
+shipped too, and likely didn't get used by more than a handful of
+people.
 
-That's confusing me even more now. I get
+According to wikipedia [1] there were ~8,000 users of Ricochet in Denve=
+r
+and San Diego as of early 2006, how many of them might actually be usin=
+g
+the STRIP driver we don't know.  Denver apparently just got shut down i=
+n
+late March [2].
 
-[ 7650.792004] packet_recv eda9e8c0 (len=3D137)
-[ 7650.792015] snaplen(eda9e8c0)=3D137
-[ 7650.792027] free eda9e8c0, len =3D 137
-[ 7650.792031] new skb: eda9e540
-[ 7650.792039] packet_recv eda9e8c0 (len=3D137)
-[ 7650.792044] snaplen(eda9e8c0)=3D137
-[ 7650.792048] new skb: eda9e8c0
-[ 7650.819464] packet_recv d1f4e9a0 (len=3D124)
-[ 7650.819478] snaplen(d1f4e9a0)=3D124
-[ 7650.819489] free d1f4e9a0, len =3D 124
-[ 7650.819493] new skb: d1f4e8c0
-[ 7650.819502] packet_recv d1f4e9a0 (len=3D124)
-[ 7650.819507] snaplen(d1f4e9a0)=3D124
-[ 7650.819511] new skb: d1f4e9a0
-[ 7651.215631] packet_recv e9ecc2a0 (len=3D376)
-[ 7651.215645] snaplen(e9ecc2a0)=3D376
-[ 7651.215657] free e9ecc2a0, len =3D 376
-[ 7651.215662] new skb: ede04b60
-[ 7651.215671] packet_recv e9ecc2a0 (len=3D376)
-[ 7651.215675] snaplen(e9ecc2a0)=3D376
-[ 7651.215680] new skb: e9ecc2a0
+Also, apparently if you bought your modem after 2000 [3] [4], it doesn'=
+t
+support the peer-to-peer stuff that STRIP uses.  Thus, it seems (?)
+you're limited to using the 28.8kbps modems with the STRIP driver.
+Modems registered after 2000 may work in peer-to-peer with STRIP in
+close proximity though.
 
-[ 7651.760751] SKB BUG: Invalid truesize (528) len=3D357, sizeof(sk_buff)=
-=3D176
+So we can probably count the # of users on one amputated hand.  Not sur=
+e
+if that qualifies for removal or what.  Deprecation at least?
 
+Dan
 
-528-176 is 352 which doesn't occur in that list... Maybe I should print
-it in mac80211.
+[1] =EF=BB=BFhttp://en.wikipedia.org/wiki/Ricochet_%28internet_service%=
+29
+[2] http://margysmusingsindenvercolorado.blogspot.com/2008/03/no-more-w=
+ireless-service.html
+[3] http://www.enlightenment-engine.com/eeng/Ricochet/Experiences%20wit=
+h%20Metricom.htm
+[4] http://illtel.denver.co.us/~abelits/metricom/
 
 
-johannes
-
---=-gmfiKpb7HG1wU42IwC2F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBmfOKVg1VMiehFYAQKQpg//Z9t1bgHdH1mIqnDO8X+fBbCoZX4WMIhz
-jsKFvc1EYuNeI9Rsg06/aY5iMmwTra+6rBiBhdTPE0gEyOa04cipXrvZnLm/jLD6
-/cTXS1hw+tgtxYt2hzu1LBSBY7ksUQdWLZ9xJZ7VLbLjHrbDIyRcHchM5C2Qbv+S
-3PdeEAukm+1xiRwtZUu2s+44dYMpIqii01E/vhmVACBJ3ZoePOxmuGdyat4D0YCv
-Vxn6KaQeXgnvN5GkAwUnBOpCZint73bnlKBWr66yXJIxKRDTq4oaB3dReuTT8KsZ
-pePV4XKDfgyNu8i5NibLZfg+ihaYHsMBBQRus18HybLrgn54tyBh6ck5hJdlS0BO
-vG66PmzYXRDsQzamajKilaBBt1s3Yqn3zp87cgqYFu6Obx6M9G7tgkZn8957Wuz/
-3TCRGmeG62KdwSCg21nr+nBlkXia3ZDJypI/EcwEMykDsQMH1vysWzSanpnXppJI
-YYkDbF1Et/ncWpza0mpchJF06ZLaE5JVvdTPPqCXWF+JRv0yggQy0RUCHB+NEAL8
-Oc6z97s5NdQmOacTWQ3cUxAFoPQKPBR3MxbPODUN9OE4USLSzlZScx+75YUiHth2
-UiFhyneNa6E4hOXRegDCfjzLHHQXE518nqWlRaC1bZNSGI4tMW3MhZSaz3lhKakp
-pZeMBEFMMyc=
-=Apgk
------END PGP SIGNATURE-----
-
---=-gmfiKpb7HG1wU42IwC2F--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
