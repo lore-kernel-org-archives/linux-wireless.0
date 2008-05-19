@@ -1,108 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620AbYETKL4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 06:11:56 -0400
-Subject: [PATCH] b43: enable mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 20 May 2008 12:10:49 +0200
-Message-Id: <1211278249.6252.78.camel@johannes.berg> (sfid-20080520_121205_205712_1F57F13D)
-Mime-Version: 1.0
+Received: from madara.hpl.hp.com ([192.6.19.124]:57657 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753694AbYESRPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 13:15:51 -0400
+Date: Mon, 19 May 2008 10:03:47 -0700
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+Message-ID: <20080519170347.GB21500@bougret.hpl.hp.com> (sfid-20080519_191605_021178_34815BBE)
+Reply-To: jt@hpl.hp.com
+References: <1211026337.3827.25.camel@johannes.berg> <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> <1211032475.6252.2.camel@johannes.berg> <1211117795.686.15.camel@localhost.localdomain> <1211199368.6252.19.camel@johannes.berg> <1211210686.12187.6.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1211210686.12187.6.camel@localhost.localdomain>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables b43 to do mesh networking, tested against my zd1211rw
-dongle.
+On Mon, May 19, 2008 at 11:24:46AM -0400, Dan Williams wrote:
+> On Mon, 2008-05-19 at 14:16 +0200, Johannes Berg wrote:
+> > > Instead of testing for wireless/, best thing would probably be to call
+> > > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+> > > wireless.  Some drivers may have to load firmware to figure out
+> > > supported rates and encryption capabilities, but to be honest, NM does
+> > > this to detect wireless devices and I haven't run into any issues in 4
+> > > years using it.  If there are issues with drivers, then we need to fix
+> > > the driver too.
+> > 
+> > I was about to propose calling SIOCGIWNAME since that is what
+> > wireless-tools do and that linux/wireless.h indicates.
+> 
+> Hmm; NAME is pretty useless.  That's fine to do, I guess WEXT requires
+> that NAME return _something_ at least.  NAME should never ever be used
+> for anything more, but since wireless-tools appears to do this that's
+> fine.
+> 
+> Dan
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Requires Michael's patch that fixes the beacon template upload to upload
-to both templates with the first upload.
+	It's not useless, it's supposed to tell you about the protocol
+capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg".
 
- drivers/net/wireless/b43/main.c |   33 ++++++++++++++++++++++-----------
- 1 file changed, 22 insertions(+), 11 deletions(-)
+	Have fun...
 
---- everything.orig/drivers/net/wireless/b43/main.c	2008-05-20 12:07:59.000000000 +0200
-+++ everything/drivers/net/wireless/b43/main.c	2008-05-20 12:09:12.000000000 +0200
-@@ -1430,11 +1430,17 @@ static void b43_write_beacon_template(st
- 		i += ie_len + 2;
- 	}
- 	if (!tim_found) {
--		b43warn(dev->wl, "Did not find a valid TIM IE in "
--			"the beacon template packet. AP or IBSS operation "
--			"may be broken.\n");
--	} else
--		b43dbg(dev->wl, "Updated beacon template\n");
-+		/*
-+		 * If ucode wants to modify TIM do it behind the beacon, this
-+		 * will happen, for example, when doing mesh networking.
-+		 */
-+		b43_shm_write16(dev, B43_SHM_SHARED,
-+				B43_SHM_SH_TIMBPOS,
-+				len + sizeof(struct b43_plcp_hdr6));
-+		b43_shm_write16(dev, B43_SHM_SHARED,
-+				B43_SHM_SH_DTIMPER, 0);
-+	}
-+	b43dbg(dev->wl, "Updated beacon template at 0x%x\n", ram_offset);
- }
- 
- static void b43_write_probe_resp_plcp(struct b43_wldev *dev,
-@@ -1549,7 +1555,8 @@ static void handle_irq_beacon(struct b43
- 	struct b43_wl *wl = dev->wl;
- 	u32 cmd, beacon0_valid, beacon1_valid;
- 
--	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-+	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP) &&
-+	    !b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
- 		return;
- 
- 	/* This is the bottom half of the asynchronous beacon update. */
-@@ -2374,7 +2381,8 @@ static void b43_adjust_opmode(struct b43
- 	ctl &= ~B43_MACCTL_BEACPROMISC;
- 	ctl |= B43_MACCTL_INFRA;
- 
--	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-+	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
-+	    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
- 		ctl |= B43_MACCTL_AP;
- 	else if (b43_is_mode(wl, IEEE80211_IF_TYPE_IBSS))
- 		ctl &= ~B43_MACCTL_INFRA;
-@@ -3241,8 +3249,9 @@ static int b43_op_config(struct ieee8021
- 	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_rx);
- 	b43_set_rx_antenna(dev, antenna);
- 
--	/* Update templates for AP mode. */
--	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
-+	/* Update templates for AP/mesh mode. */
-+	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
-+	    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
- 		b43_set_beacon_int(dev, conf->beacon_int);
- 
- 	if (!!conf->radio_enabled != phy->radio_on) {
-@@ -3423,8 +3432,9 @@ static int b43_op_config_interface(struc
- 	else
- 		memset(wl->bssid, 0, ETH_ALEN);
- 	if (b43_status(dev) >= B43_STAT_INITIALIZED) {
--		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
--			B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
-+		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
-+		    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT)) {
-+			B43_WARN_ON(conf->type != wl->if_type);
- 			b43_set_ssid(dev, conf->ssid, conf->ssid_len);
- 			if (conf->beacon)
- 				b43_update_templates(wl, conf->beacon);
-@@ -3964,6 +3974,7 @@ static int b43_op_add_interface(struct i
- 	/* TODO: allow WDS/AP devices to coexist */
- 
- 	if (conf->type != IEEE80211_IF_TYPE_AP &&
-+	    conf->type != IEEE80211_IF_TYPE_MESH_POINT &&
- 	    conf->type != IEEE80211_IF_TYPE_STA &&
- 	    conf->type != IEEE80211_IF_TYPE_WDS &&
- 	    conf->type != IEEE80211_IF_TYPE_IBSS)
-
+	Jean
 
