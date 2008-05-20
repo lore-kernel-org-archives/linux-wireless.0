@@ -1,89 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51334 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:40030 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756424AbYEALjV (ORCPT
+	with ESMTP id S1753620AbYETKL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 07:39:21 -0400
-Subject: Re: mac80211 truesize bugs
+	Tue, 20 May 2008 06:11:56 -0400
+Subject: [PATCH] b43: enable mesh
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
-References: <20080501.024320.212547875.davem@davemloft.net>
-	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
-	 <20080501.034950.261408566.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wDIw3NS3dGv42rxbB5ci"
-Date: Thu, 01 May 2008 13:38:33 +0200
-Message-Id: <1209641914.3904.0.camel@johannes.berg> (sfid-20080501_133908_152591_239C8338)
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 20 May 2008 12:10:49 +0200
+Message-Id: <1211278249.6252.78.camel@johannes.berg> (sfid-20080520_121205_205712_1F57F13D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch enables b43 to do mesh networking, tested against my zd1211rw
+dongle.
 
---=-wDIw3NS3dGv42rxbB5ci
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Requires Michael's patch that fixes the beacon template upload to upload
+to both templates with the first upload.
 
+ drivers/net/wireless/b43/main.c |   33 ++++++++++++++++++++++-----------
+ 1 file changed, 22 insertions(+), 11 deletions(-)
 
-> That makes more sense, good catch Herbert.
->=20
-> I guess it's the pskb_expand_head() calls done by net/mac80211/tx.c
-> I suspect we'll need to orphan early in order to accomodate these
-> adjustments, otherwise socket memory buffer allocations will
-> be corrupted.
->=20
-> Once that is cured, I think we can detect this better, by adding a
-> carefully constructed assertion to pskb_expand_head().  Basically, the
-> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
-> still attached to the SKB, print a warning message.
->=20
-> Something like:
->=20
-> diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-> index 4fe605f..9bfca08 100644
-> --- a/net/core/skbuff.c
-> +++ b/net/core/skbuff.c
-> @@ -699,6 +699,12 @@ int pskb_expand_head(struct sk_buff *skb, int nhead,=
- int ntail,
->  	if (skb_shared(skb))
->  		BUG();
-> =20
-> +	if (unlikely((nhead || ntail) && skb->sk)) {
-> +		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
-> +		       "with socket attached\n",
-> +		       nhead, ntail);
-> +	}
-> +
->  	size =3D SKB_DATA_ALIGN(size);
+--- everything.orig/drivers/net/wireless/b43/main.c	2008-05-20 12:07:59.000000000 +0200
++++ everything/drivers/net/wireless/b43/main.c	2008-05-20 12:09:12.000000000 +0200
+@@ -1430,11 +1430,17 @@ static void b43_write_beacon_template(st
+ 		i += ie_len + 2;
+ 	}
+ 	if (!tim_found) {
+-		b43warn(dev->wl, "Did not find a valid TIM IE in "
+-			"the beacon template packet. AP or IBSS operation "
+-			"may be broken.\n");
+-	} else
+-		b43dbg(dev->wl, "Updated beacon template\n");
++		/*
++		 * If ucode wants to modify TIM do it behind the beacon, this
++		 * will happen, for example, when doing mesh networking.
++		 */
++		b43_shm_write16(dev, B43_SHM_SHARED,
++				B43_SHM_SH_TIMBPOS,
++				len + sizeof(struct b43_plcp_hdr6));
++		b43_shm_write16(dev, B43_SHM_SHARED,
++				B43_SHM_SH_DTIMPER, 0);
++	}
++	b43dbg(dev->wl, "Updated beacon template at 0x%x\n", ram_offset);
+ }
+ 
+ static void b43_write_probe_resp_plcp(struct b43_wldev *dev,
+@@ -1549,7 +1555,8 @@ static void handle_irq_beacon(struct b43
+ 	struct b43_wl *wl = dev->wl;
+ 	u32 cmd, beacon0_valid, beacon1_valid;
+ 
+-	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
++	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP) &&
++	    !b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
+ 		return;
+ 
+ 	/* This is the bottom half of the asynchronous beacon update. */
+@@ -2374,7 +2381,8 @@ static void b43_adjust_opmode(struct b43
+ 	ctl &= ~B43_MACCTL_BEACPROMISC;
+ 	ctl |= B43_MACCTL_INFRA;
+ 
+-	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
++	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
++	    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
+ 		ctl |= B43_MACCTL_AP;
+ 	else if (b43_is_mode(wl, IEEE80211_IF_TYPE_IBSS))
+ 		ctl &= ~B43_MACCTL_INFRA;
+@@ -3241,8 +3249,9 @@ static int b43_op_config(struct ieee8021
+ 	antenna = b43_antenna_from_ieee80211(dev, conf->antenna_sel_rx);
+ 	b43_set_rx_antenna(dev, antenna);
+ 
+-	/* Update templates for AP mode. */
+-	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
++	/* Update templates for AP/mesh mode. */
++	if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
++	    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT))
+ 		b43_set_beacon_int(dev, conf->beacon_int);
+ 
+ 	if (!!conf->radio_enabled != phy->radio_on) {
+@@ -3423,8 +3432,9 @@ static int b43_op_config_interface(struc
+ 	else
+ 		memset(wl->bssid, 0, ETH_ALEN);
+ 	if (b43_status(dev) >= B43_STAT_INITIALIZED) {
+-		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
+-			B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
++		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP) ||
++		    b43_is_mode(wl, IEEE80211_IF_TYPE_MESH_POINT)) {
++			B43_WARN_ON(conf->type != wl->if_type);
+ 			b43_set_ssid(dev, conf->ssid, conf->ssid_len);
+ 			if (conf->beacon)
+ 				b43_update_templates(wl, conf->beacon);
+@@ -3964,6 +3974,7 @@ static int b43_op_add_interface(struct i
+ 	/* TODO: allow WDS/AP devices to coexist */
+ 
+ 	if (conf->type != IEEE80211_IF_TYPE_AP &&
++	    conf->type != IEEE80211_IF_TYPE_MESH_POINT &&
+ 	    conf->type != IEEE80211_IF_TYPE_STA &&
+ 	    conf->type != IEEE80211_IF_TYPE_WDS &&
+ 	    conf->type != IEEE80211_IF_TYPE_IBSS)
 
-Ok I think I'm starting to understand this a little better. However,
-shouldn't this function update skb->truesize so if the skb is later
-attached to a different socket again it has the right size?
-
-johannes
-
---=-wDIw3NS3dGv42rxbB5ci
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBmruKVg1VMiehFYAQIzlw//WgVpTDMA4vCcbfucAH2Wi8H3jQnSZJUR
-8M3PCwdyigHkKofzLV7kg8N5fG6gkSdzNyYFj8PbFlWI6Ab8i3SUcaffBTUzcSAG
-TOemBWdKETeXoeEICQzGIj8rye3oG6nowwKCxohjsrHmcrXv1ETux8bqo1nZWACz
-KzXDGQqWUNFw/Z6gPPDWN5TZAdehDkQOtx38pC7OwuQlGEkQH3JkJjyWRUwWNur5
-Rukx/KpgsUiIcncRJGxDFHwWu9awg9e3qw5IaTDu6jxA4idcaWXm5FAeXsPMtw2U
-re/Zkdm6pxlRialE/ztMrFkces5ZVqdMMYre8/fAVB6gftmwc9XHNUnsppGiLpkl
-VLyWoZmiL8cLC8YzS3o6FdaI/jUPTzM0YpvZVCsa/zCYur0KDIkqHRo8xsBWuOFg
-kTN+iIbc59KlXojW/Nc6HrCPJkagSkIY3/CvrsOZ/ibpgyO0ED5KDVV04+8klmAd
-WQrFuj587o7apddyosqb4pRPsS31U3rCYkJr29xX+p5kZ2+uhXWqil3hm0Y+j+Ov
-ZZUHgPCy/7aVbI5Owbl6PkShk69WlD1qIFL+lj1+jG4v2pRGHrSrkrQa48GG2Bif
-Vw8ps3RSbyzhQdKSlj6DrGNYwkczjsESorlK+4X5fGGwtshut6qV3jOxOA7K9ADP
-/27SnmcTmAA=
-=0gg5
------END PGP SIGNATURE-----
-
---=-wDIw3NS3dGv42rxbB5ci--
 
