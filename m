@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2763 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751352AbYE1P6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 11:58:18 -0400
-Date: Wed, 28 May 2008 11:16:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: johannes@sipsolutions.net, ron.rindjunsky@intel.com,
-	linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
-Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
-Message-ID: <20080528151651.GA13461@tuxdriver.com> (sfid-20080528_175821_349548_128405FB)
-References: <20080528145048.GB5244@senthil-lnx.users.atheros.com>
+Received: from an-out-0708.google.com ([209.85.132.241]:22786 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628AbYETIqW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 04:46:22 -0400
+Received: by an-out-0708.google.com with SMTP id d40so533434and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 01:46:22 -0700 (PDT)
+Message-ID: <43e72e890805200146t24e1978axce7c5851453301c@mail.gmail.com> (sfid-20080520_104627_109172_6CE1C77F)
+Date: Tue, 20 May 2008 01:46:21 -0700
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Michael Bernhard" <michael.bernhard@bfh.ch>
+Subject: Re: [PATCH 2/3 v2] compat-2.6: Add some missing functions and macros
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <12109470283444-git-send-email-michael.bernhard@bfh.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080528145048.GB5244@senthil-lnx.users.atheros.com>
+Content-Type: text/plain; charset=UTF-8
+References: <12109457272730-git-send-email-michael.bernhard@bfh.ch>
+	 <12109470283444-git-send-email-michael.bernhard@bfh.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 28, 2008 at 08:20:48PM +0530, Senthil Balasubramanian wrote:
-> This addresses an alignment issue with compare_ether_addr().
-> The addresses passed to compare_ether_addr should be two bytes aligned.
-> It may function properly in x86 platform. However may not work properly
-> on IA-64 or ARM processor.
+On Fri, May 16, 2008 at 7:10 AM, Michael Bernhard
+<michael.bernhard@bfh.ch> wrote:
 
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1116,7 +1116,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->  	u16 fc, hdrlen, ethertype;
->  	u8 *payload;
->  	u8 dst[ETH_ALEN];
-> -	u8 src[ETH_ALEN];
-> +	/* Should be aligned on 2 bytes for compare_ether_addr() */
-> +	u16 src_aligned[ETH_ALEN >> 1];
-> +	u8 *src = (u8 *)src_aligned;
->  	struct sk_buff *skb = rx->skb;
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	DECLARE_MAC_BUF(mac);
+> diff --git a/compat/compat.h b/compat/compat.h
+> index 4ae26ac..0d940ab 100644
+> --- a/compat/compat.h
+> +++ b/compat/compat.h
+> @@ -30,6 +30,9 @@
+>  #include <linux/init.h>
+>  #include <linux/uaccess.h>
+>
+> +#include <linux/unaligned/access_ok.h>
+> +#include <linux/unaligned/generic.h>
+> +
+>  #include <net/arp.h>
+>  #include <net/neighbour.h>
 
-Any reason you couldn't just do this?
+This only solves the compatibility for x86 arch. I have handled the
+porting of this by actually looking at all architectures and see how
+they managed to support the new unaligned API. You can find these
+changes here
 
-@@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	u16 fc, hdrlen, ethertype;
- 	u8 *payload;
- 	u8 dst[ETH_ALEN];
--	u8 src[ETH_ALEN];
-+	u8 src[ETH_ALEN] __attribute__ ((aligned(2)));
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	DECLARE_MAC_BUF(mac);
+http://tinyurl.com/5unrhz
 
-It seems to compile w/o errors on i686, and it seems more clear to me.
-Will that not work?
+Thanks for the patches though. I have pushed the required changes in.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
