@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4973 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754957AbYEHUbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 16:31:25 -0400
-Date: Thu, 8 May 2008 16:04:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org,
-	Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: Re: [patch 11/16] b43: Fix some TX/RX locking issues
-Message-ID: <20080508200434.GC9176@tuxdriver.com> (sfid-20080508_223024_404566_A46B9007)
-References: <20080508173436.454278564@mini.kroah.org> <20080508174221.GL855@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080508174221.GL855@suse.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:51281 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753435AbYETNDo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 09:03:44 -0400
+Subject: Re: [PATCH 1/2] Extend MESH_CONFIG command to access non-volatile
+	configuration.
+From: David Woodhouse <dwmw2@infradead.org>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	carrano@laptop.org, dilinger@queued.net
+In-Reply-To: <48324220.1997600a.4f22.35be@mx.google.com>
+References: <48324220.1997600a.4f22.35be@mx.google.com>
+Content-Type: text/plain
+Date: Tue, 20 May 2008 14:03:41 +0100
+Message-Id: <1211288621.21380.211.camel@pmac.infradead.org> (sfid-20080520_150349_081137_3B04F888)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 08, 2008 at 10:42:21AM -0700, Greg KH wrote:
-> 2.6.25-stable review patch.  If anyone has any objections, please let us
-> know.
+On Sat, 2008-05-17 at 00:55 -0700, Javier Cardona wrote:
+> This patch is based on a patch from Shailendra Govardhan and Brian Cavagnolo.
+> It extends the MESH_CONFIG command to configure non-volatile parameters on
+> libertas devices that support them (e.g. OLPC Active Antenna).
 > 
-> ------------------
-> From: Michael Buesch <mb@bu3sch.de>
+> This patch only implements the driver/firmware interface.
 > 
-> commit 21a75d7788f4e29b6c6d28e08f9f0310c4de828d upstream.
-> 
-> This fixes some TX/RX related locking issues.
-> With this patch applied, some of the PHY transmission errors are fixed.
+> See http://dev.laptop.org/ticket/6823 for minimal testing results and known
+> issues.
 
-ACK
+Thanks. That looks much better, modulo a few cosmetic things which I'll
+fix up, and this (which I'll also fix):
+
++               cmd.length = sizeof(struct mrvl_meshie_val);
+
+Sparse would have told you about that, if you built with
+'C=2 CF=-D__CHECK_ENDIAN__':
+
+drivers/net/wireless/libertas/cmd.c:1052:14: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/cmd.c:1052:14:    expected restricted unsigned short [addressable] [assigned] [usertype] length
+drivers/net/wireless/libertas/cmd.c:1052:14:    got unsigned int 
+
+I'd recommend always testing on a big-endian box, too. Sparse is good,
+but no substitute for the real thing.
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+dwmw2
+
