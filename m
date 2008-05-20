@@ -1,75 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Bass.Opus1.COM ([192.245.12.9]:4653 "EHLO bass.opus1.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084AbYE3PYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 11:24:35 -0400
-Received: from egdell.wetwork.net ([204.17.34.178])
- by Opus1.COM (PMDF V6.2-X27 #9830)
- with ESMTPSA id <01MVE4ZP9BZM955VRF@Opus1.COM> for
- linux-wireless@vger.kernel.org; Fri, 30 May 2008 08:02:52 -0700 (MST)
-Date: Fri, 30 May 2008 08:02:51 -0700
-From: Ehud Gavron <gavron@wetwork.net>
-Subject: Re: suspend vs. b43
-In-reply-to: <1212158238.4117.4.camel@johannes.berg>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:55111 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756027AbYETPTV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 11:19:21 -0400
+Subject: Re: iwlwifi injection bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Message-id: <4840171B.5080604@wetwork.net> (sfid-20080530_172438_586913_6E44C381)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1212150713.4117.2.camel@johannes.berg>
- <200805301606.25556.mb@bu3sch.de> <1212158238.4117.4.camel@johannes.berg>
+	Andy Green <andy@warmcat.com>
+In-Reply-To: <69e28c910805200758j72281d34kfaa244e9bbdd8451@mail.gmail.com> (sfid-20080520_165905_398872_E5346CEF)
+References: <1210945631.6381.11.camel@johannes.berg>
+	 <1211249729.2532.59.camel@debian.sh.intel.com>
+	 <69e28c910805200432lbd3790vb925dacaea3aca83@mail.gmail.com>
+	 <1211287111.6252.84.camel@johannes.berg>
+	 <69e28c910805200614q2232b21ame8ff03fe4156fb3b@mail.gmail.com>
+	 <1ba2fa240805200641j4ccc1de4r5572e1321394a526@mail.gmail.com>
+	 <69e28c910805200716i3fd16c33x274983ab8e7591e6@mail.gmail.com>
+	 <1211293631.6252.98.camel@johannes.berg>
+	 <69e28c910805200758j72281d34kfaa244e9bbdd8451@mail.gmail.com>
+	 (sfid-20080520_165905_398872_E5346CEF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pn/EUkZJYUWNL2IajVOy"
+Date: Tue, 20 May 2008 17:18:30 +0200
+Message-Id: <1211296710.6252.99.camel@johannes.berg> (sfid-20080520_171925_686713_1B8902F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-pn/EUkZJYUWNL2IajVOy
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Johannes Berg wrote:
-> On Fri, 2008-05-30 at 16:06 +0200, Michael Buesch wrote:
->   
->> On Friday 30 May 2008 14:31:53 Johannes Berg wrote:
->>     
->>> Since a while ago I've had trouble resuming when b43 was connected to an
->>> AP while suspended.
->>>
->>> I did a test today where this was the only difference, but I failed to
->>> see whether ssb or b43 were causing the problem.
->>>
->>> Does anyone have a machine with b43 in it that can suspend and supports
->>> the RTC-trace feature so we can narrow it down? Even reproducing might
->>> help to make sure it's not just something weird with my powerbook.
->>>       
->> Resume is pretty broken since some time for me.
->> It sometimes works fine and sometimes just hangs with a black screen.
->> I have no idea what's going on.
->>     
->
-> Odd. Resume itself works just fine here, except when b43 is up. But then
-> again, you might not notice that this is the problem because by default,
-> nothing gets printed on the resume console and then it will indeed hang
-> with a black screen.
->
-> johannes
->   
->   
-With NM disabled 2.6.25-wl  4311 after a suspend/resume I can:
-1. Successfully scan for APs (ifconfig wlan0 up... iwlist wlan0 scan)
-2. Associate with an AP  (iwconfig ...essid...key...)
-3. Get a DHCP address (dhclient... offer... bound to address such and such)
-but
-4. NO FURTHER IP COMMUNICATIONS WORKS
+On Tue, 2008-05-20 at 10:58 -0400, Stefanik G=C3=A1bor wrote:
+> On Tue, May 20, 2008 at 10:27 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> -     /* drop all data frame if we are not associated */
+> >> -     if ((!iwl3945_is_associated(priv) ||
+> >> +     /* drop all data frame if we are not associated and not monitori=
+ng */
+> >> +     if (((!iwl3945_is_associated(priv) && priv->iw_mode !=3D
+> >> IEEE80211_IF_TYPE_MNTR) ||
+> >>            ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->ass=
+oc_id)) &&
+> >>           ((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA)) {
+> >> -             IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+> >> +             IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated outsid=
+e monitor mode\n");
+> >>               goto drop_unlock;
+> >>       }
+> >
+> > This makes injection not work when you're not exclusively in monitor
+> > mode. Yes, it may break the spec to be sending frames to an arbitrary
+> > station, but it's useful for all kinds of things including testing to
+> > have a monitor and a regular interface working at the same time.
+> >
+> > johannes
+> >
+>=20
+> What do you think is a better way to check if we have a monitor
+> interface? && priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA? Or should this
+> be removed altogether?
 
-Let me know what other diags to run or if I should upgrade to the latest 
-wl tree if you think that will change the symptoms.
-Things have been busy but there is a weekend coming up here shortly.
+I tend to think it should be removed, in regular operation mac80211
+would never create such a data frame, and when injecting you actually
+want it.
 
-Ehud
+johannes
 
-> ------------------------------------------------------------------------
->
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->   
+--=-pn/EUkZJYUWNL2IajVOy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDLrxaVg1VMiehFYAQKFWw/9EaX0tn1O8o4RAO2Mde/3ML7lXRRdZUCH
+OkbJkUYh+iUXd9svsC0LV8oJ9jXiDb4KfvGqkZ3rA1R2+cXaSyLRbqPMH4moUNdt
+fNRqKn4+ZdhPLnhu3tEVN6w6hd0yNE++/3uiMVvGhIbIIJ5/1MscGDSIBf5z0QIG
+ba5YXOcFdqXYzdQ0FQbbi3+3PpfZ+Wxnfeja/5qjNGJEQs5ADc8bkDc4jU89oEJm
+rxDEyepJS1Yz+vtsw4huxu2q0bC+uPsAD61PmgXHrcxwcsYZITrDIseRQJCS6kGo
+Dg6O1ShpATpO649PJj4Xjs4ZQLTlRbGAnzaXRa+Btoi83+wDbU27fICkiycrvW6h
+cIQGKH2j3On7nwHnuLRT/dj/Q2nYSXomivKo3btAfqTqAQN4f7ilk9YreMBQAxa6
+9iFtYeht5rXyl+EG152qi1yTLQ+yHandTij9/LSTJbeGenWGmbDNGRvMxB1s2IUf
+oYaiPPnVSA6E8kl0rrsTXsuaqd0DtV1teB3Eg1WOpxb/YW9m6S6Sro5Gt+a8TVYT
+FMZyT+GTC0q1qrp/PUu28A7CqR4jgJNiez/Ux2odaDYlzjFzbZe1qFkvF4jIs0KW
+WnGEz4YVkKZN+ncavLToxMpUVQLb1Nkpo7tjqPVQx9XmI+rbeDqiD1ayfRLYjdb2
+3vezoUJD4x0=
+=kq5J
+-----END PGP SIGNATURE-----
+
+--=-pn/EUkZJYUWNL2IajVOy--
+
