@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46460
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751045AbYEEAav (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:35314 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913AbYETMyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 20:30:51 -0400
-Date: Sun, 04 May 2008 17:30:51 -0700 (PDT)
-Message-Id: <20080504.173051.133197507.davem@davemloft.net> (sfid-20080505_023036_543159_8E09684F)
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	Tue, 20 May 2008 08:54:25 -0400
+Received: by py-out-1112.google.com with SMTP id u52so2404947pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 05:54:25 -0700 (PDT)
+Message-ID: <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com> (sfid-20080520_145429_436059_08A7992C)
+Date: Tue, 20 May 2008 15:54:24 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Helmut Schaa" <hschaa@suse.de>
+Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209936745.7304.16.camel@johannes.berg>
-References: <1209936253.7304.10.camel@johannes.berg>
-	<1209936745.7304.16.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+In-Reply-To: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sun, 04 May 2008 23:32:25 +0200
-
-> --- everything.orig/net/mac80211/iface.c	2008-05-04 23:24:17.000000000 +0200
-> +++ everything/net/mac80211/iface.c	2008-05-04 23:31:46.000000000 +0200
-> @@ -53,6 +53,15 @@ int ieee80211_if_add(struct net_device *
->  	if (!ndev)
->  		return -ENOMEM;
->  
-> +	ndev->needed_headroom = local->tx_headroom +
-> +				4*6 /* four MAC addresses */
-> +				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
-> +				+ 6 /* mesh */
-> +				+ 8 /* rfc1042/bridge tunnel */
-> +				- ETH_HLEN /* ethernet hard_header_len */
-> +				+ IEEE80211_ENCRYPT_HEADROOM;
-> +	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+On Tue, May 20, 2008 at 10:56 AM, Helmut Schaa <hschaa@suse.de> wrote:
+> Fix a possible NULL pointer dereference in ieee80211_compatible_rates
+> introduced in the patch "mac80211: fix association with some APs". If no bss
+> is available just use all supported rates in the association request.
+>
+> Signed-off-by: Helmut Schaa <hschaa@suse.de>
+> ---
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 76ad4ed..3f7f92a 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -721,7 +721,17 @@ static void ieee80211_send_assoc(struct net_device
+> *dev,
+>                        capab |= WLAN_CAPABILITY_PRIVACY;
+>                if (bss->wmm_ie)
+>                        wmm = 1;
 > +
->  	ret = dev_alloc_name(ndev, ndev->name);
->  	if (ret < 0)
->  		goto fail;
+> +               /* get all rates supported by the device and the AP as
+> +                * some APs don't like getting a superset of their rates
+> +                * in the association request (e.g. D-Link DAP 1353 in
+> +                * b-only mode) */
+> +               rates_len = ieee80211_compatible_rates(bss, sband, &rates);
+> +
+>                ieee80211_rx_bss_put(dev, bss);
+> +       } else {
+> +               rates = ~0;
+> +               rates_len = sband->n_bitrates;
+>        }
+>
+>        mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+> @@ -752,10 +762,7 @@ static void ieee80211_send_assoc(struct net_device
+> *dev,
+>        *pos++ = ifsta->ssid_len;
+>        memcpy(pos, ifsta->ssid, ifsta->ssid_len);
+>
+> -       /* all supported rates should be added here but some APs
+> -        * (e.g. D-Link DAP 1353 in b-only mode) don't like that
+> -        * Therefore only add rates the AP supports */
+> -       rates_len = ieee80211_compatible_rates(bss, sband, &rates);
+> +       /* add all rates which were marked to be used above */
+>        supp_rates_len = rates_len;
+>        if (supp_rates_len > 8)
+>                supp_rates_len = 8;
+>
+>
 
-Where is the patch that adds these new members to struct netdevice,
-and where is the code that uses these new values?
+I found one  ieee80211_rx_bss_{get,put} imbalance   in
+ieee80211_sta_join_ibss function
+That may cause this problem yet it doesn't look like this is the case.
+ieee80211_sta_join_ibss
+calls ieee80211_rx_bss_put on 'bss' that it receives as an argument
+Keep searching.
 
-I even searched the netdev archives and couldn't find it.
+I suggest to insert at least some WARN_ON(1) for the else case.
 
-Anyways I see your basic idea and this may be the best way to handle
-the problem.  The invariants would be:
-
-1) LL_MAX_HEADER has to include all of these bits.
-
-2) LL_RESERVED_SPACE*() has to take the new needed_headroom
-   into account.
-
-Your patch which I can't find, which adds netdev->needed_*, probably
-does all of that.  But I'm just making sure :-)
-
-Note that what would be really nice is if we could assert, in
-dev_queue_xmit, that the SKB has all of the necessary headroom, and
-give a WARN_ON_ONCE() backtrace if not.
-
-If we can ensure that, things like mac80211 and others will not need
-to skb_realloc_headroom() or anything like that unless they need to
-modify packet contents after skb->data and the packet is shared
-(ie. the pskb_expand_headroom(skb, 0, 0, GFP_*) case the TSO drivers
-use).
+Tomas
