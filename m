@@ -1,111 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15924 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754578AbYEECYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 22:24:25 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 17/25] iwlwifi: compile iwl-sta into iwlcore
-Date: Mon,  5 May 2008 10:22:44 +0800
-Message-Id: <1209954172-3092-18-git-send-email-yi.zhu@intel.com> (sfid-20080505_044416_565514_B9984194)
-In-Reply-To: <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
- <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:36630 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764849AbYETOMD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 10:12:03 -0400
+Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile
+	configuration.
+From: David Woodhouse <dwmw2@infradead.org>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	carrano@laptop.org, dilinger@queued.net
+In-Reply-To: <4832422a.20018e0a.6b37.3217@mx.google.com>
+References: <4832422a.20018e0a.6b37.3217@mx.google.com>
+Content-Type: text/plain
+Date: Tue, 20 May 2008 15:11:58 +0100
+Message-Id: <1211292718.21380.238.camel@pmac.infradead.org> (sfid-20080520_161226_497075_088F5D51)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Sat, 2008-05-17 at 21:01 -0700, Javier Cardona wrote:
+> @@ -1218,6 +1219,7 @@ int lbs_start_card(struct lbs_private *priv)
+>         if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
+>                 lbs_pr_err("cannot register lbs_rtap attribute\n");
+>  
+> +       lbs_persist_config_init(dev);
+>         lbs_update_channel(priv);
+>  
+>         /* 5.0.16p0 is known to NOT support any mesh */
+> @@ -1278,6 +1280,7 @@ int lbs_stop_card(struct lbs_private *priv)
+>  
+>         lbs_debugfs_remove_one(priv);
+>         device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
+> +       lbs_persist_config_remove(dev);
+>         if (priv->mesh_tlv)
+>                 device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
+>  
 
-This patch moves iwl-sta into iwl-core.
+As Holger points out, we should call those only if (priv->mesh_tlv).
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+> +	return snprintf(buf, 12, "0x%X\n",
+> +		le32_to_cpu(cpu_to_le32(defs.bootflag)));
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index ab372fc..04da0d2 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -1,6 +1,6 @@
- obj-$(CONFIG_IWLCORE)	+= iwlcore.o
- iwlcore-objs 		= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
--iwlcore-objs 		+= iwl-rx.o iwl-tx.o
-+iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
- iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
- iwlcore-$(CONFIG_IWLWIFI_LEDS) += iwl-led.o
- iwlcore-$(CONFIG_IWLWIFI_RFKILL) += iwl-rfkill.o
-@@ -11,7 +11,7 @@ iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
- iwl3945-$(CONFIG_IWL3945_LEDS) += iwl-3945-led.o
- 
- obj-$(CONFIG_IWL4965)	+= iwl4965.o
--iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-4965-rs.o iwl-sta.o
-+iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-4965-rs.o
- 
- ifeq ($(CONFIG_IWL5000),y)
- 	iwl4965-objs += iwl-5000.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 34f5424..f226704 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -170,6 +170,7 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 	else
- 		return 0;
- }
-+EXPORT_SYMBOL(iwl_send_static_wepkey_cmd);
- 
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *keyconf)
-@@ -190,6 +191,7 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(iwl_remove_default_wep_key);
- 
- int iwl_set_default_wep_key(struct iwl_priv *priv,
- 			    struct ieee80211_key_conf *keyconf)
-@@ -217,6 +219,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(iwl_set_default_wep_key);
- 
- static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 				struct ieee80211_key_conf *keyconf,
-@@ -391,6 +394,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 	return ret;
- }
-+EXPORT_SYMBOL(iwl_remove_dynamic_key);
- 
- int iwl_set_dynamic_key(struct iwl_priv *priv,
- 				struct ieee80211_key_conf *key, u8 sta_id)
-@@ -416,6 +420,7 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(iwl_set_dynamic_key);
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
- static void iwl_dump_lq_cmd(struct iwl_priv *priv,
+Que? Sparse loves that one :)
+
+> +	*((uint32_t *)&cmd.data[0]) = cpu_to_le32(!!datum);
+
+Sparse doesn't much like that either. It should be (__le32 *)
+
+> +static ssize_t boottime_get(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct cmd_ds_mesh_config cmd;
+> +	struct mrvl_mesh_defaults *defs;
+> +	int ret;
+> +
+> +	memset(&cmd, 0, sizeof(struct cmd_ds_mesh_config));
+> +	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_GET,
+> +			CMD_TYPE_MESH_GET_DEFAULTS);
+> +
+> +	if (ret)
+> +		return -EOPNOTSUPP;
+
+Why not using mesh_get_default_parameters()? 
+
+> +	/* A too small boot time will result in the device booting into
+> +	 * standalone (no-host) mode before the host can take control of it,
+> +	 * so the change will be hard to revert.  This may be a desired
+> +	 * feature (e.g to configure a very fast boot time for devices that
+> +	 * will not be attached to a host), but dangerous.  So I'm enforcing a
+> +	 * lower limit of 20 seconds:  remove and recompile the driver if this
+> +	 * does not work for you.
+> +	 */
+> +	datum = (datum < 20) ? 20 : datum;
+
+Hm. The driver should be able to cope with a device which is already
+booted -- it sends it a reset command and then initialises it. I don't
+think we have to be so paranoid, do we? If there's a lower limit on the
+boottime, it would be the time it takes for an already-active driver to
+react when the device resets. Which is much less than 20 seconds.
+
 -- 
-1.5.3.6
+dwmw2
 
