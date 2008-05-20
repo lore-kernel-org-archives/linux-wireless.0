@@ -1,72 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39518 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755508AbYEPKkM (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.191]:28065 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755308AbYETStq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 06:40:12 -0400
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Miller <davem@davemloft.net>, herbert@gondor.apana.org.au,
-	mb@bu3sch.de, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ron.rindjunsky@intel.com, tomasw@gmail.com,
-	ivdoorn@gmail.com, peter.p.waskiewicz.jr@intel.com
-In-Reply-To: <200805162032.48469.rusty@rustcorp.com.au> (sfid-20080516_123407_138874_003A5D7F)
-References: <20080508032208.GA401@gondor.apana.org.au>
-	 <200805161201.48835.rusty@rustcorp.com.au>
-	 <20080515.215823.28841530.davem@davemloft.net>
-	 <200805162032.48469.rusty@rustcorp.com.au>
-	 (sfid-20080516_123407_138874_003A5D7F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VZds1be4maOlaCNsOgfd"
-Date: Fri, 16 May 2008 12:38:58 +0200
-Message-Id: <1210934338.4000.24.camel@johannes.berg> (sfid-20080516_124101_902959_226C9024)
+	Tue, 20 May 2008 14:49:46 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so1434827mue.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 11:49:40 -0700 (PDT)
+Date: Tue, 20 May 2008 21:49:30 +0300
+From: m.s.tsirkin@gmail.com
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
+	flamingice@sourmilk.net
+Subject: regression iwl3945/mac80211: association times out since 2.6.26-rc1
+Message-ID: <20080520184859.GA8168@robinhood.home> (sfid-20080520_204950_306962_5B7CBD05)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi!
+In all  of 2.6.26-rc1, rc2 and rc3, my iwl3945 wifi card can't associate with my access point.
+It does associate in 2.6.25.
 
---=-VZds1be4maOlaCNsOgfd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+under 2.6.-26-rc[1,2,3] wpa_supplicant reports:
+
+	Trying to associate with 00:16:e3:ef:5d:f0 (SSID='' freq=0 MHz)
+	Authentication with 00:00:00:00:00:00 timed out.
+
+where under 2.6.25 I was associating with 
+	Trying to associate with 00:16:e3:ef:5d:f0 (SSID='SIEMENS-EF5DF0' freq=2437 MHz)
+	Associated with 00:16:e3:ef:5d:f0
+	WPA: Key negotiation completed with 00:16:e3:ef:5d:f0 [PTK=CCMP GTK=CCMP]
+
+I tried bisecting, and I got as far as
+git-bisect good 4b119e21d0c66c22e8ca03df05d9de623d0eb50f
+git-bisect bad 96d510566e4908f77f03ff1436c78ae7162a17d0
+
+but a point between these 2 commits gets me iwl driver that hangs kernel
+when it's loaded, so I gave up on bisecting at this point.
+Still this leaves us with 91 candidates that might be introducing the regression
+(get their list with git log
+ 4b119e21d0c66c22e8ca03df05d9de623d0eb50f..96d510566e4908f77f03ff1436c78ae7162a17d0)
+
+Additional info:
+
+I get this in dmesg
+
+[   99.153033] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+[   99.204031] PM: Adding info for No Bus:iwl-phy1:radio
+[   99.204031] Registered led device: iwl-phy1:radio
+[   99.204031] PM: Adding info for No Bus:iwl-phy1:assoc
+[   99.204031] Registered led device: iwl-phy1:assoc
+[   99.204031] PM: Adding info for No Bus:iwl-phy1:RX
+[   99.204031] Registered led device: iwl-phy1:RX
+[   99.204031] PM: Adding info for No Bus:iwl-phy1:TX
+[   99.204031] Registered led device: iwl-phy1:TX
+[   99.220405] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+and even though the led now lights up, there's no association.
+
+portions of .config: 2.6.26-rc3:
+
+CONFIG_IWLWIFI=m
+CONFIG_IWLCORE=m
+# CONFIG_IWLWIFI_LEDS is not set
+CONFIG_IWLWIFI_RFKILL=y
+# CONFIG_IWL4965 is not set
+CONFIG_IWL3945=m
+CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
+CONFIG_IWL3945_LEDS=y
+CONFIG_IWL3945_DEBUG=y
+
+2.6.25:
+# CONFIG_IWL4965 is not set
+CONFIG_IWL3945=m
+CONFIG_IWL3945_QOS=y
+CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
+CONFIG_IWL3945_DEBUG=y
 
 
-> I put a patch in to do exactly that at Herbert's prompting, for 2.6.26, b=
-ut=20
-> it's buggy in (at least) two ways.  I have a fix for this, which adds a n=
-ew=20
-> tasklet to xmit the packet.  There's still some subtle race, however, sin=
-ce=20
-> I'm still seeing a stuck packet.  I'll have to revert to TX_BUSY for 2.6.=
-26=20
-> if I can't find it (unlikely).
+What kind of additional information would be useful for debugging this regression?
 
-Incidentally, mac80211 has a tasklet for this as well, and I'm pretty
-sure it's also buggy in the corner cases (rather than inefficient or
-something)
+Thanks!
 
-johannes
-
---=-VZds1be4maOlaCNsOgfd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC1kQaVg1VMiehFYAQKEvg/+IsfkpctQ26S9HoVt4QDI2aeZAHLcQird
-PcUmSemFb2uiu4LWey+7ia7D841XYLyrAfV/JmRP+HP68TF2x5SbeXV2AxaNMb96
-oitVUqh+SMctAbJ28gF/eekeJ4/7WQ2Iv3I7ywWv+1ZfxREellRjZpe2ix3AVoCc
-Ak9bkASOkY7PER7S+gE3+MQlbUQLuCJvQTdc3hAHsGHAv33xKHHnLf4xykKOqq3h
-MkFErN4t+XIlV9PCeJEiXcOFFXbfHidDImGA5RUiqBdMAMCD6EVe3ISZoJeRIGSW
-wMFEsWBceSpy+ykHkEJn9uo9oDWDTL2CGVMWav1Y20NJSCQyaRh+GNV1kjQTLueF
-+6RRIknEvfN3MabU2Uv7pfIMeo1pLPBIDDDeVKfVuC/l6EH+1ywODHrx9ziePyJZ
-ljuut5roCMjQAPBU+ZwOe9sEfi78ahFeiHTnKcG1KpFUZ/vUUD3JWvCGbiYgZmI6
-qjcN42x2wn9L+xAJuZEvei0HgS9/P/owkq/ybVlPy+IofScV36sXeut8EyN+oLxG
-U9hdN4aYltsDq9Kt65D7i6cDmW4R2rb5aTuaf4HWMicfC74OcclvD3DhIPv/xl60
-bMdhpZTqj79nh4iArI4GE1YrinBVL05O9UTe5OuxZlztFmjk/gj4zKJze+sRYP+o
-b1i39aOtDm4=
-=JmTb
------END PGP SIGNATURE-----
-
---=-VZds1be4maOlaCNsOgfd--
-
+-- 
+MST
