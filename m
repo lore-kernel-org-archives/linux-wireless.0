@@ -1,114 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:36587 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757301AbYEHSp1 (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.182]:42373 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756149AbYETOlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 14:45:27 -0400
-Subject: Re: dynamic wep with mulitple keys
-From: Volker Braun <vbraun@physics.upenn.edu>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 08 May 2008 14:31:12 -0400
-Message-Id: <1210271472.30724.43.camel@carrot.hep.upenn.edu> (sfid-20080508_204426_370682_1C6ECD2F)
-Mime-Version: 1.0
+	Tue, 20 May 2008 10:41:46 -0400
+Received: by el-out-1112.google.com with SMTP id s27so609437ele.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 07:41:45 -0700 (PDT)
+Message-ID: <1ba2fa240805200741yf19929dk26d930f703b23f91@mail.gmail.com> (sfid-20080520_164149_724649_AB3C07BB)
+Date: Tue, 20 May 2008 17:41:43 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Helmut Schaa" <hschaa@suse.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Andrew Morton" <akpm@linux-foundation.org>
+In-Reply-To: <4832D661.60902@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
+	 <1211288251.6252.86.camel@johannes.berg>
+	 <1ba2fa240805200611o7c221c86na2c627242a2ce67@mail.gmail.com>
+	 <1211289769.6252.90.camel@johannes.berg>
+	 <1ba2fa240805200633y6730a1e3ufbc0adfedd3f8243@mail.gmail.com>
+	 <1211290714.6252.93.camel@johannes.berg> <4832D661.60902@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is more data on my problem with dynamic wep.
+On Tue, May 20, 2008 at 4:47 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Johannes Berg wrote:
+>>>>
+>>>> Thing is, I'm not totally convinced it is wrong to the code while it may
+>>>> or may not be wrong...
+>>>
+>>> Doesn't should be bss pinned int he bss list if you are associating to
+>>> it. If it's not there you don't have access to it's info It looks very
+>>> wrong to me.
+>>
+>> Well, yes, it is a bit odd.
+>>
+>>>> I think this patch should go in first as it
+>>>> actually fixes the oops, and then we can discuss the merits of adding a
+>>>> warning there separately. Maybe after we look a bit at the code and try
+>>>> to figure out whether it can still happen after that patch from
+>>>> Abhijeet.
+>>>
+>>> I'm not sure if this patch is complete without this warning. What is
+>>> in the else statement is a hack and it should be obvious.
+>>
+>> Considering that the message won't help us at all, why bother? We know
+>> it's triggering, we know this might be a problem, and we know we can
+>> only solve it by auditing the code. So why add a message that will get
+>> us countless emails/complaints from people we cannot do anything about
+>> anyway without doing the audit?
+>
+> This argument could go on endlessly; however, it is clear that we need to
+> settle on a patch and get it upstream ASAP! Now that mainline is broken, the
+> urgency is _MUCH_ greater.
+>
 
-compat-wireless-2008-05-07 + iwl4965 + swcrypto=1: Associates and
-obtains dhcp lease, works fine.
-
-So it really is about the HW accelleration. I tried your patch (without
-swcrypto=1). First, output of wpa_supplicant:
-
-EAPOL: Received EAPOL-Key frame
-EAPOL: KEY_RX entering state KEY_RECEIVE
-EAPOL: processKey
-EAPOL: RX IEEE 802.1X ver=1 type=3 len=57 EAPOL-Key: type=1 key_length=13 key_index=0x1
-EAPOL: Successfully fetched key (len=64)
-EAPOL: EAPOL-Key key signature verified
-EAPOL: Decrypted(RC4) key - hexdump(len=13): [REMOVED]
-EAPOL: Setting dynamic WEP key: broadcast keyidx 1 len 13
-wpa_driver_wext_set_key: alg=1 key_idx=1 set_tx=0 seq_len=0 key_len=13
-RX EAPOL from 00:13:c4:8a:be:30
-RX EAPOL - hexdump(len=48): 01 03 00 2c 01 00 0d 00 00 48 23 40 de a7 a8 0e 57 ec cc b4 2e c4 58 30 18 51 11 55 a0 9d 5f 83 77 f4 ef ca 46 09 02 4b d4 1a 01 84 47 03 41 80
-EAPOL: Received EAPOL-Key frame
-EAPOL: KEY_RX entering state KEY_RECEIVE
-EAPOL: processKey
-EAPOL: RX IEEE 802.1X ver=1 type=3 len=44 EAPOL-Key: type=1 key_length=13 key_index=0x83
-EAPOL: Successfully fetched key (len=64)
-EAPOL: EAPOL-Key key signature verified
-EAPOL: using part of EAP keying material data encryption key - hexdump(len=13): [REMOVED]
-EAPOL: Setting dynamic WEP key: unicast keyidx 3 len 13
-wpa_driver_wext_set_key: alg=1 key_idx=3 set_tx=128 seq_len=0 key_len=13
-EAPOL: all required EAPOL-Key frames received
-WPA: EAPOL processing complete
-Cancelling scan request
-Cancelling authentication timeout
-State: ASSOCIATED -> COMPLETED
-CTRL-EVENT-CONNECTED - Connection to 00:13:c4:8a:be:30 completed (auth) [id=0 id_str=]
-
-Your patch yields: 
-
-May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
-May  8 14:03:54 localhost kernel: iwl4965: enable hwcrypto key sta=0 alg=0,keyid=3 static_key=0
-
-Should static_key not be the other way round (key_idx 3 is unicast)? In
-any case, after a while the broadcast key gets updated: wpa_supplicant
-says
-
-EAPOL: Received EAPOL-Key frame
-EAPOL: KEY_RX entering state KEY_RECEIVE
-EAPOL: processKey
-EAPOL: RX IEEE 802.1X ver=1 type=3 len=57 EAPOL-Key: type=1 key_length=13 key_index=0x2
-EAPOL: Successfully fetched key (len=64)
-EAPOL: EAPOL-Key key signature verified
-EAPOL: Decrypted(RC4) key - hexdump(len=13): [REMOVED]
-EAPOL: Setting dynamic WEP key: broadcast keyidx 2 len 13
-wpa_driver_wext_set_key: alg=1 key_idx=2 set_tx=0 seq_len=0 key_len=13
-EAPOL: all required EAPOL-Key frames received
-WPA: EAPOL processing complete
-
-and the syslog contains
-
-May  8 14:05:10 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=2 static_key=0
-
-5 minutes later the next cycle:
-
-EAPOL: Received EAPOL-Key frame
-EAPOL: KEY_RX entering state KEY_RECEIVE
-EAPOL: processKey
-EAPOL: RX IEEE 802.1X ver=1 type=3 len=57 EAPOL-Key: type=1 key_length=13 key_index=0x1
-EAPOL: Successfully fetched key (len=64)
-EAPOL: EAPOL-Key key signature verified
-EAPOL: Decrypted(RC4) key - hexdump(len=13): [REMOVED]
-EAPOL: Setting dynamic WEP key: broadcast keyidx 1 len 13
-wpa_driver_wext_set_key: alg=1 key_idx=1 set_tx=0 seq_len=0 key_len=13
-EAPOL: all required EAPOL-Key frames received
-WPA: EAPOL processing complete
-Cancelling scan request
-
-May  8 14:10:30 localhost kernel: iwl4965: disable hwcrypto key sta=31 alg=0,keyid=1 static_key=1
-May  8 14:10:30 localhost kernel: iwl4965: enable hwcrypto key sta=31 alg=0,keyid=1 static_key=0
-
-and so on... I never acquire a dhcp lease, dhclient always times out.
-
-
-As an aside, I just got an atheros-based pcmcia card for testing
-purposes and maybe sniff if necessary (though haven't done that yet). 
-Result so far:
-1) compat-wireless-2008-05-07 + ath5k: Fails to associate with AP.
-2) madwifi: associates and obtains dhcp lease, works perfectly.
-
-
-Volker
-
+We've just arguing about warning message so I won't consider it blocking.
+Tomas
