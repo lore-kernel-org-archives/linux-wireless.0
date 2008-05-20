@@ -1,163 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tinet.org ([195.77.216.130]:53439 "EHLO mail.tinet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752637AbYERRyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 May 2008 13:54:04 -0400
-Received: from webmail.tinet.org ([195.77.216.133])
-          (envelope-sender <xdrudis@tinet.cat>)
-          by mail.tinet.org (qmail-ldap-1.03) with SMTP
-          for <linux-wireless@vger.kernel.org>; 18 May 2008 17:47:20 -0000
-Message-ID: <52420.80.224.39.3.1211132840.squirrel@webmail.tinet.org> (sfid-20080518_195410_029953_B6A0490E)
-Date: Sun, 18 May 2008 19:47:20 +0200 (CEST)
-Subject: Problems building iwl for 2.6.25 (dev_name and CONFIG_IWLWIFI not
-     defined)
-From: "Xavi Drudis Ferran" <xdrudis@tinet.cat>
-To: linux-wireless@vger.kernel.org
+Received: from gv-out-0910.google.com ([216.239.58.190]:27918 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933066AbYETPjc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 11:39:32 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so539728gvc.37
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 08:39:29 -0700 (PDT)
+Message-ID: <69e28c910805200839k7426833auf96faef99dc49d9b@mail.gmail.com> (sfid-20080520_174113_068070_0B6A21F2)
+Date: Tue, 20 May 2008 11:39:28 -0400
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi injection bug
+Cc: "Tomas Winkler" <tomasw@gmail.com>, "Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>
+In-Reply-To: <1211296710.6252.99.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210945631.6381.11.camel@johannes.berg>
+	 <1211249729.2532.59.camel@debian.sh.intel.com>
+	 <69e28c910805200432lbd3790vb925dacaea3aca83@mail.gmail.com>
+	 <1211287111.6252.84.camel@johannes.berg>
+	 <69e28c910805200614q2232b21ame8ff03fe4156fb3b@mail.gmail.com>
+	 <1ba2fa240805200641j4ccc1de4r5572e1321394a526@mail.gmail.com>
+	 <69e28c910805200716i3fd16c33x274983ab8e7591e6@mail.gmail.com>
+	 <1211293631.6252.98.camel@johannes.berg>
+	 <69e28c910805200758j72281d34kfaa244e9bbdd8451@mail.gmail.com>
+	 <1211296710.6252.99.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, and thanks for your work.
+On Tue, May 20, 2008 at 11:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I tend to think it should be removed, in regular operation mac80211
+> would never create such a data frame, and when injecting you actually
+> want it.
+>
+> johannes
+>
 
-I'm trying to compile compat-wireless-2008-05-18
-on a Debian sid, with a custom kernel 2.6.25 (it's the
-debian source tree with just custom config, not
-custom code). I wanted to try the latest iwl3945 driver.
+OK! I have also determined that my IWL_INVALID_STATION change is
+unnecessary, as injected packets do have a valid station ID (they are
+marked as broadcast by iwl*9*5_get_sta_id). The IWL_INVALID_STATION
+change was a hack I put in earlier, before finding the real problems
+in iwl*9*5_get_sta_id and iwl*9*5_mac_tx.
 
-It fails in b43, like this
+----
 
-  LD [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/ath5k/ath5k.o
-  LD      /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/built-in.o
-  CC [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.o
-/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.c: In function 'handle_irq_noise':
-/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.c:1185: error: implicit declaration of function 'clamp_val'
-make[4]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43/main.o] Error 1
-make[3]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43] Error 2
-make[2]: *** [/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/crovirab/compat-wireless-2008-05-18] Error 2
-make[1]: Leaving directory `/home/crovirab/linux/linux-source-2.6.25'
-make: *** [modules] Error 2
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-05-20
+11:31:15.513173847 -0400
+@@ -2542,16 +2542,19 @@ static int iwl3945_get_sta_id(struct iwl
+ 			return sta_id;
 
-But since I don't need b43, I disable it in config.mk
-CONFIG_B43=n
+ 		IWL_DEBUG_DROP("Station %s not in station map. "
+ 			       "Defaulting to broadcast...\n",
+ 			       print_mac(mac, hdr->addr1));
+ 		iwl3945_print_hex_dump(IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ 		return priv->hw_setting.bcast_sta_id;
+ 	}
++	/* If we are in monitor mode, use BCAST */
++	case IEEE80211_IF_TYPE_MNTR:
++		return priv->hw_setting.bcast_sta_id;
+ 	default:
+ 		IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ 		return priv->hw_setting.bcast_sta_id;
+ 	}
+ }
 
-make clean
-make
+ /*
+  * start REPLY_TX command process
+@@ -2579,21 +2582,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ 	int rc;
 
-Then it complains of
-  CC [M]  /home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.o
-/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.c: In function 'handle_irq_noise':
-/home/crovirab/compat-wireless-2008-05-18/drivers/net/wireless/b43legacy/main.c:849: error: implicit declaration of function 'clamp_val'
-m
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (iwl3945_is_rfkill(priv)) {
+ 		IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ 		goto drop_unlock;
+ 	}
 
-so I change in config.mk
-CONFIG_B43LEGACY=n
+-	if (!priv->vif) {
+-		IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-		goto drop_unlock;
+-	}
+-
+ 	if ((ctl->tx_rate->hw_value & 0xFF) == IWL_INVALID_RATE) {
+ 		IWL_ERROR("ERROR: No TX rate available.\n");
+ 		goto drop_unlock;
+ 	}
 
-make clean and make again
+ 	unicast = !is_multicast_ether_addr(hdr->addr1);
+ 	id = 0;
 
-And then I get stuck
+@@ -2603,24 +2601,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ 	if (ieee80211_is_auth(fc))
+ 		IWL_DEBUG_TX("Sending AUTH frame\n");
+ 	else if (ieee80211_is_assoc_request(fc))
+ 		IWL_DEBUG_TX("Sending ASSOC frame\n");
+ 	else if (ieee80211_is_reassoc_request(fc))
+ 		IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
 
- CC [M]  /home/crovirab/compat-wireless-2008-05-18/net/mac80211/rc80211_pid_algo.o
-  LD [M]  /home/crovirab/compat-wireless-2008-05-18/net/mac80211/mac80211.o
-  LD      /home/crovirab/compat-wireless-2008-05-18/net/wireless/built-in.o
-  CC [M]  /home/crovirab/compat-wireless-2008-05-18/net/wireless/core.o
-/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c: In function 'cfg80211_dev_rename':
-/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:170: error: implicit declaration of function 'dev_name'
-/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:170: warning: passing argument 2 of 'strcmp' makes pointer from integer without a cast
-/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.c:176: warning: passing argument 2 of 'strcmp' makes pointer from integer without a cast
-make[3]: *** [/home/crovirab/compat-wireless-2008-05-18/net/wireless/core.o] Error 1
-make[2]: *** [/home/crovirab/compat-wireless-2008-05-18/net/wireless] Error 2
-make[1]: *** [_module_/home/crovirab/compat-wireless-2008-05-18] Error 2
-make[1]: Leaving directory `/home/crovirab/linux/linux-source-2.6.25'
-make: *** [modules] Error 2
+-	/* drop all data frame if we are not associated */
+-	if ((!iwl3945_is_associated(priv) ||
+-	     ((priv->iw_mode == IEEE80211_IF_TYPE_STA) && !priv->assoc_id)) &&
+-	    ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
+-		IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+-		goto drop_unlock;
+-	}
+-
+ 	spin_unlock_irqrestore(&priv->lock, flags);
 
+ 	hdr_len = ieee80211_get_hdrlen(fc);
 
-I don't know a bit about compat-wireless, but it sounds as
-I do need  /net/wireless/core.c , so I don't think I can't get
-around this one.
+ 	/* Find (or create) index into station table for destination station */
+ 	sta_id = iwl3945_get_sta_id(priv, hdr);
+ 	if (sta_id == IWL_INVALID_STATION) {
+ 		DECLARE_MAC_BUF(mac);
+@@ -6692,21 +6682,16 @@ static void iwl3945_mac_stop(struct ieee
 
-Looking at the code, I see dev_name() defined in compat.h
-like this
+ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		      struct ieee80211_tx_control *ctl)
+ {
+ 	struct iwl3945_priv *priv = hw->priv;
 
+ 	IWL_DEBUG_MAC80211("enter\n");
 
-/* This is from include/linux/device.h, which was added as of 2.6.25 */
-static inline const char *dev_name(struct device *dev)
-{
-	/* will be changed into kobject_name(&dev->kobj) in the near future */
-	return dev->bus_id;
-}
+-	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+-		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
+-	}
+-
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ 		     ctl->tx_rate->bitrate);
 
+ 	if (iwl3945_tx_skb(priv, skb, ctl))
+ 		dev_kfree_skb_any(skb);
 
-This is in an #ifdef that makes it ignored for me, since I'm running
-2.6.25.
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-base.c	2008-05-20
+11:31:54.278205087 -0400
+@@ -1746,16 +1746,19 @@ static int iwl4965_get_sta_id(struct iwl
+ 			return sta_id;
 
-But in my kernel source tree I don't see that function in
-include/linux/device.h
+ 		IWL_DEBUG_DROP("Station %s not in station map. "
+ 			       "Defaulting to broadcast...\n",
+ 			       print_mac(mac, hdr->addr1));
+ 		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ 		return priv->hw_params.bcast_sta_id;
 
-So I try to copy that definition of dev_name in another section
-of compat.h and (one included for kernels < 2.6.26)
++	/* If we are in monitor mode, use BCAST */
++	case IEEE80211_IF_TYPE_MNTR:
++		return priv->hw_params.bcast_sta_id;
+ 	default:
+ 		IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ 		return priv->hw_params.bcast_sta_id;
+ 	}
+ }
 
-Then it compiles.
+ /*
+  * start REPLY_TX command process
+@@ -1784,21 +1787,16 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 	int rc;
 
-But it doesn't build iwl3945 (I realised when I saw complaints
-of symbols on loading it, because it wasn't in update and it
-was loading the debian kernel iwl3945, not the compat-wireless
-one).
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (iwl_is_rfkill(priv)) {
+ 		IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ 		goto drop_unlock;
+ 	}
 
-I see CONFIG_IWLWIFI is not defined in config.mk nor in my
-kernel .config (CONFIG_IWL3945=m , but CONFIG_IWLWIFI does not
-exist). So I add
-CONFIG_IWLWIFI=y
-to config.mk
+-	if (!priv->vif) {
+-		IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-		goto drop_unlock;
+-	}
+-
+ 	if ((ctl->tx_rate->hw_value & 0xFF) == IWL_INVALID_RATE) {
+ 		IWL_ERROR("ERROR: No TX rate available.\n");
+ 		goto drop_unlock;
+ 	}
 
-Oh, I also set CONFIG_RT2XX=n because it gave some warnings
-and I don't need it.
+ 	unicast = !is_multicast_ether_addr(hdr->addr1);
+ 	id = 0;
 
+@@ -1808,25 +1806,16 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 	if (ieee80211_is_auth(fc))
+ 		IWL_DEBUG_TX("Sending AUTH frame\n");
+ 	else if (ieee80211_is_assoc_request(fc))
+ 		IWL_DEBUG_TX("Sending ASSOC frame\n");
+ 	else if (ieee80211_is_reassoc_request(fc))
+ 		IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
 
-With all that I managed to compile and install the modules, and
-I see them in /lib/modules/.../updates/...
+-	/* drop all data frame if we are not associated */
+-	if (((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) &&
+-	   (!iwl_is_associated(priv) ||
+-	    ((priv->iw_mode == IEEE80211_IF_TYPE_STA) && !priv->assoc_id) ||
+-	    !priv->assoc_station_added)) {
+-		IWL_DEBUG_DROP("Dropping - !iwl_is_associated\n");
+-		goto drop_unlock;
+-	}
+-
+ 	spin_unlock_irqrestore(&priv->lock, flags);
 
-And I got rid of some error messages I used to have (about bad
-firmware and RX queue).
+ 	hdr_len = ieee80211_get_hdrlen(fc);
 
-It does not associate with WPA (the configuration worked with
-ipw3945 )
-Without encryption it says it associates but it doesn't get IP
-from DHCP nor can I ping if I set static iface config and routes
+ 	/* Find (or create) index into station table for destination station */
+ 	sta_id = iwl4965_get_sta_id(priv, hdr);
+ 	if (sta_id == IWL_INVALID_STATION) {
+ 		DECLARE_MAC_BUF(mac);
+@@ -5110,21 +5099,16 @@ static void iwl4965_mac_stop(struct ieee
 
+ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		      struct ieee80211_tx_control *ctl)
+ {
+ 	struct iwl_priv *priv = hw->priv;
 
-I see two messages which might be related to it when doing
-/etc/init.d/networking restart
+ 	IWL_DEBUG_MAC80211("enter\n");
 
-wmaster0: unknown hardware address type 801
-wmaster0: unknown hardware address type 801
+-	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+-		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
+-	}
+-
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ 		     ctl->tx_rate->bitrate);
 
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlan0 ; Invalid argument.
+ 	if (iwl4965_tx_skb(priv, skb, ctl))
+ 		dev_kfree_skb_any(skb);
 
-ioctl[SIOCSIWAUTH]: Operation not supported
-WEXT auth param 4 value 0x0
-
-
-Btw, iwlist scanning works fine.
-
-I'm out of time now for looking at it further. And it's not
-my laptop, so I'm not sure I'll be able to insist later.
-
-I'm just sending this for the build issues, at first I thought I must
-be doing something odd to my .config or my debian kernel tree, and I
-still may, but I unpacked it again and couldn't find any CONFIG_IWLWIFI in
-.config or dev_name in include/linux/device.h . So I thought I'd write
-just in case it can be improved so that it works more straightforward
-in cases like mine. I don't dare sending a patch beacause I don't
-think the changes I made are good solutions in general. I'll attach
-my kernel config because maybe that's the problem.
-
-Btw, the web page tells to send issues to this list, but it doesn't
-point to archives or some other way to avoid duplicate reports,
-I'm sorry if this is one.
-
-Thanks, and keep up the good work.
-
-
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
