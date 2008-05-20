@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45018 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754689AbYESXeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 19:34:03 -0400
-Subject: Re: [2.6 patch] strip: remove dead URL
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080519223646.GA19835@tuxdriver.com>
-References: <20080519221006.GZ17716@cs181133002.pp.htv.fi>
-	 <20080519223646.GA19835@tuxdriver.com>
-Content-Type: text/plain; charset=utf8
-Date: Mon, 19 May 2008 19:27:51 -0400
-Message-Id: <1211239671.10827.20.camel@localhost.localdomain> (sfid-20080520_013408_156558_60846C34)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.225]:39542 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644AbYETBXw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 21:23:52 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1750091rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2008 18:23:50 -0700 (PDT)
+Message-ID: <183c1cc10805191823w5855227akce4aa1bb9f1b6198@mail.gmail.com> (sfid-20080520_032356_231539_F152C448)
+Date: Mon, 19 May 2008 21:23:50 -0400
+From: "John Goulah" <jgoulah@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi Makefile issue in compat-wireless-2008-05-18
+In-Reply-To: <1211245264.2532.24.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <183c1cc10805181143v526fcc86l4bec27b12805748f@mail.gmail.com>
+	 <1211168475.31033.9.camel@debian.sh.intel.com>
+	 <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com>
+	 <1211245264.2532.24.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-05-19 at 18:36 -0400, John W. Linville wrote:
-> On Tue, May 20, 2008 at 01:10:06AM +0300, Adrian Bunk wrote:
-> > http://mosquitonet.Stanford.EDU/strip.html no longer exists.
-> >=20
-> > Since the MAINTAINERS entry is now completely empty it's also remov=
-ed.
-> >=20
-> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
->=20
-> Any reason why we should not just remove the driver?
-
-Subject to the 2-kernel-release removal notice requirement or outright?
-It looks like it was more of a research project than anything that
-shipped too, and likely didn't get used by more than a handful of
-people.
-
-According to wikipedia [1] there were ~8,000 users of Ricochet in Denve=
-r
-and San Diego as of early 2006, how many of them might actually be usin=
-g
-the STRIP driver we don't know.  Denver apparently just got shut down i=
-n
-late March [2].
-
-Also, apparently if you bought your modem after 2000 [3] [4], it doesn'=
-t
-support the peer-to-peer stuff that STRIP uses.  Thus, it seems (?)
-you're limited to using the 28.8kbps modems with the STRIP driver.
-Modems registered after 2000 may work in peer-to-peer with STRIP in
-close proximity though.
-
-So we can probably count the # of users on one amputated hand.  Not sur=
-e
-if that qualifies for removal or what.  Deprecation at least?
-
-Dan
-
-[1] =EF=BB=BFhttp://en.wikipedia.org/wiki/Ricochet_%28internet_service%=
-29
-[2] http://margysmusingsindenvercolorado.blogspot.com/2008/03/no-more-w=
-ireless-service.html
-[3] http://www.enlightenment-engine.com/eeng/Ricochet/Experiences%20wit=
-h%20Metricom.htm
-[4] http://illtel.denver.co.us/~abelits/metricom/
+On Mon, May 19, 2008 at 9:01 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Mon, 2008-05-19 at 09:10 -0400, John Goulah wrote:
+>>
+>> Thats odd, my kernel is fairly new -- 2.6.24.4
+>>
+>> I custom compiled it, and I dont see anything related to IWL  in my
+>> .config file strangely enough.  I guess its possible my .config got
+>> out of sync somehow, or is this what you would consider "old" ?
+>
+> Yup, .24 is old. The patch will make its way to .26 (not released yet).
+>
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Ok,  I assume you mean the patch for the kernel config that allows
+this all to work?
+
+Would that mean you're not supporting compiling on any kernel older
+than 2.6.26 with this change?
+
+Thanks so much,
+John
