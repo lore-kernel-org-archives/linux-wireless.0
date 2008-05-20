@@ -1,132 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:13276 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbYEFGqc (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.229]:42102 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758371AbYETXDT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 02:46:32 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1032701fkq.5
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 23:46:29 -0700 (PDT)
-Message-ID: <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com> (sfid-20080506_084548_394968_E5215407)
-Date: Tue, 6 May 2008 09:46:28 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: "Volker Braun" <vbraun@physics.upenn.edu>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+	Tue, 20 May 2008 19:03:19 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so1274429wra.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 16:03:18 -0700 (PDT)
+Message-ID: <69e28c910805201603i3db5481axb758b842ffc30c8d@mail.gmail.com> (sfid-20080521_010400_536417_2DBCF081)
+Date: Tue, 20 May 2008 19:03:17 -0400
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_5997_31546840.1210056388919"
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
+	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
+	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
+	 <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com>
+	 <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
+	 <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_5997_31546840.1210056388919
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
->  I just tried compat-wireless-2008-05-05, which does contain
->  03dcb07e74a62eec2badb9f6a091790c484f4a6c. No difference:
+On Tue, May 20, 2008 at 6:56 PM, Stefanik G=E1bor <netrolller.3d@gmail.=
+com> wrote:
+> On Tue, May 20, 2008 at 6:45 PM, Tomas Winkler <tomasw@gmail.com> wro=
+te:
+>> Need to add if (sta_is !=3D bcast)  otherwise this will drop all you=
+r
+>> injected packets.
 >
+> Did you mean if (sta_id !=3D priv->hw_setting.bcast_sta_id)? Because
+> there is no "sta_is" variable.
 
-Thanks for trying this.
-Can you try to load the module with swcrypto=1 and try again ?
-This disables the HW encryption acceleration. Trying this will allow
-to make 100% sure that the bug is in iwlwifi. The bug is likely to be
-there, but I think it is worth to make this 100% sure.
+Patch with this fixed (also as attachment, in case Gmail damages the
+inline patch:
 
-Do you have a sniffer ? a capture might help.
+Signed-off by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
-Please, try with HW acceleration (without swcrypto=1) and with the
-attached patch. This will give us some more info.
-
-0001-iwlwifi-DEBUG-print-data-about-keys-installation.patch
----------------------------------
->From 66b6ea7e885e2f6d76c3f6af822100185d9c56f6 Mon Sep 17 00:00:00 2001
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Tue, 6 May 2008 09:37:14 +0300
-Subject: [PATCH 1/1] iwlwifi-DEBUG: print data about keys installation
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index f93503e..04d195b 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -5702,7 +5702,9 @@ static int iwl4965_mac_set_key(struct
-ieee80211_hw *hw, enum set_key_cmd cmd,
- 		else
- 			ret = iwl_set_dynamic_key(priv, key, sta_id);
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlw=
+ifi/iwl3945-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl394=
+5-base.c	2008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-bas=
+e.c	2008-05-20
+11:31:15.513173847 -0400
+@@ -2542,16 +2542,19 @@ static int iwl3945_get_sta_id(struct iwl
+ 			return sta_id;
 
--		IWL_DEBUG_MAC80211("enable hwcrypto key\n");
-+		IWL_ERROR("enable hwcrypto key sta=%d alg=%d,
-+			keyid=%d static_key=%d\n",
-+			sta_id, key->alg, key->keyidx, is_default_wep_key);
- 		break;
- 	case DISABLE_KEY:
- 		if (is_default_wep_key)
-@@ -5710,7 +5712,9 @@ static int iwl4965_mac_set_key(struct
-ieee80211_hw *hw, enum set_key_cmd cmd,
- 		else
- 			ret = iwl_remove_dynamic_key(priv, key, sta_id);
-
--		IWL_DEBUG_MAC80211("disable hwcrypto key\n");
-+		IWL_ERROR("disable hwcrypto key sta=%d alg=%d,
-+			keyid=%d static_key=%d\n",
-+			sta_id, key->alg, key->keyidx, is_default_wep_key);
- 		break;
+ 		IWL_DEBUG_DROP("Station %s not in station map. "
+ 			       "Defaulting to broadcast...\n",
+ 			       print_mac(mac, hdr->addr1));
+ 		iwl3945_print_hex_dump(IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ 		return priv->hw_setting.bcast_sta_id;
+ 	}
++	/* If we are in monitor mode, use BCAST */
++	case IEEE80211_IF_TYPE_MNTR:
++		return priv->hw_setting.bcast_sta_id;
  	default:
- 		ret = -EINVAL;
--- 
-1.5.4.1
+ 		IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ 		return priv->hw_setting.bcast_sta_id;
+ 	}
+ }
 
+ /*
+  * start REPLY_TX command process
+@@ -2579,21 +2582,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ 	int rc;
 
-Thanks
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (iwl3945_is_rfkill(priv)) {
+ 		IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ 		goto drop_unlock;
+ 	}
 
--- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+-	if (!priv->vif) {
+-		IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-		goto drop_unlock;
+-	}
+-
+ 	if ((ctl->tx_rate->hw_value & 0xFF) =3D=3D IWL_INVALID_RATE) {
+ 		IWL_ERROR("ERROR: No TX rate available.\n");
+ 		goto drop_unlock;
+ 	}
 
-------=_Part_5997_31546840.1210056388919
-Content-Type: text/x-patch;
- name=0001-iwlwifi-DEBUG-print-data-about-keys-installation.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ffw497wu0
-Content-Disposition: attachment;
- filename=0001-iwlwifi-DEBUG-print-data-about-keys-installation.patch
+ 	unicast =3D !is_multicast_ether_addr(hdr->addr1);
+ 	id =3D 0;
 
-RnJvbSA2NmI2ZWE3ZTg4NWUyZjZkNzZjM2Y2YWY4MjIxMDAxODVkOWM1NmY2IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
-aW50ZWwuY29tPgpEYXRlOiBUdWUsIDYgTWF5IDIwMDggMDk6Mzc6MTQgKzAzMDAKU3ViamVjdDog
-W1BBVENIIDEvMV0gaXdsd2lmaS1ERUJVRzogcHJpbnQgZGF0YSBhYm91dCBrZXlzIGluc3RhbGxh
-dGlvbgoKU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNo
-QGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDQ5NjUtYmFz
-ZS5jIHwgICAgOCArKysrKystLQogMSBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDIg
-ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
-d2w0OTY1LWJhc2UuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsNDk2NS1iYXNl
-LmMKaW5kZXggZjkzNTAzZS4uMDRkMTk1YiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2w0OTY1LWJhc2UuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL2l3bDQ5NjUtYmFzZS5jCkBAIC01NzAyLDcgKzU3MDIsOSBAQCBzdGF0aWMgaW50IGl3bDQ5
-NjVfbWFjX3NldF9rZXkoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIGVudW0gc2V0X2tleV9jbWQg
-Y21kLAogCQllbHNlCiAJCQlyZXQgPSBpd2xfc2V0X2R5bmFtaWNfa2V5KHByaXYsIGtleSwgc3Rh
-X2lkKTsKIAotCQlJV0xfREVCVUdfTUFDODAyMTEoImVuYWJsZSBod2NyeXB0byBrZXlcbiIpOwor
-CQlJV0xfRVJST1IoImVuYWJsZSBod2NyeXB0byBrZXkgc3RhPSVkIGFsZz0lZCwKKwkJCWtleWlk
-PSVkIHN0YXRpY19rZXk9JWRcbiIsCisJCQlzdGFfaWQsIGtleS0+YWxnLCBrZXktPmtleWlkeCwg
-aXNfZGVmYXVsdF93ZXBfa2V5KTsKIAkJYnJlYWs7CiAJY2FzZSBESVNBQkxFX0tFWToKIAkJaWYg
-KGlzX2RlZmF1bHRfd2VwX2tleSkKQEAgLTU3MTAsNyArNTcxMiw5IEBAIHN0YXRpYyBpbnQgaXds
-NDk2NV9tYWNfc2V0X2tleShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgZW51bSBzZXRfa2V5X2Nt
-ZCBjbWQsCiAJCWVsc2UKIAkJCXJldCA9IGl3bF9yZW1vdmVfZHluYW1pY19rZXkocHJpdiwga2V5
-LCBzdGFfaWQpOwogCi0JCUlXTF9ERUJVR19NQUM4MDIxMSgiZGlzYWJsZSBod2NyeXB0byBrZXlc
-biIpOworCQlJV0xfRVJST1IoImRpc2FibGUgaHdjcnlwdG8ga2V5IHN0YT0lZCBhbGc9JWQsCisJ
-CQlrZXlpZD0lZCBzdGF0aWNfa2V5PSVkXG4iLAorCQkJc3RhX2lkLCBrZXktPmFsZywga2V5LT5r
-ZXlpZHgsIGlzX2RlZmF1bHRfd2VwX2tleSk7CiAJCWJyZWFrOwogCWRlZmF1bHQ6CiAJCXJldCA9
-IC1FSU5WQUw7Ci0tIAoxLjUuNC4xCgo=
-------=_Part_5997_31546840.1210056388919--
+@@ -2603,24 +2601,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ 	if (ieee80211_is_auth(fc))
+ 		IWL_DEBUG_TX("Sending AUTH frame\n");
+ 	else if (ieee80211_is_assoc_request(fc))
+ 		IWL_DEBUG_TX("Sending ASSOC frame\n");
+ 	else if (ieee80211_is_reassoc_request(fc))
+ 		IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
+
+-	/* drop all data frame if we are not associated */
+-	if ((!iwl3945_is_associated(priv) ||
+-	     ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id=
+)) &&
+-	    ((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA)) {
+-		IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+-		goto drop_unlock;
+-	}
+-
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+
+ 	hdr_len =3D ieee80211_get_hdrlen(fc);
+
+ 	/* Find (or create) index into station table for destination station =
+*/
+ 	sta_id =3D iwl3945_get_sta_id(priv, hdr);
+ 	if (sta_id =3D=3D IWL_INVALID_STATION) {
+ 		DECLARE_MAC_BUF(mac);
+@@ -6692,21 +6682,16 @@ static void iwl3945_mac_stop(struct ieee
+
+ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb=
+,
+ 		      struct ieee80211_tx_control *ctl)
+ {
+ 	struct iwl3945_priv *priv =3D hw->priv;
+
+ 	IWL_DEBUG_MAC80211("enter\n");
+
+-	if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+-		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
+-	}
+-
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ 		     ctl->tx_rate->bitrate);
+
+ 	if (iwl3945_tx_skb(priv, skb, ctl))
+ 		dev_kfree_skb_any(skb);
+
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlw=
+ifi/iwl4965-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl496=
+5-base.c	2008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-bas=
+e.c	2008-05-20
+18:59:39.400975754 -0400
+@@ -1746,16 +1746,19 @@ static int iwl4965_get_sta_id(struct iwl
+ 			return sta_id;
+
+ 		IWL_DEBUG_DROP("Station %s not in station map. "
+ 			       "Defaulting to broadcast...\n",
+ 			       print_mac(mac, hdr->addr1));
+ 		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ 		return priv->hw_params.bcast_sta_id;
+
++	/* If we are in monitor mode, use BCAST */
++	case IEEE80211_IF_TYPE_MNTR:
++		return priv->hw_params.bcast_sta_id;
+ 	default:
+ 		IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ 		return priv->hw_params.bcast_sta_id;
+ 	}
+ }
+
+ /*
+  * start REPLY_TX command process
+@@ -1784,21 +1787,16 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 	int rc;
+
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (iwl_is_rfkill(priv)) {
+ 		IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ 		goto drop_unlock;
+ 	}
+
+-	if (!priv->vif) {
+-		IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-		goto drop_unlock;
+-	}
+-
+ 	if ((ctl->tx_rate->hw_value & 0xFF) =3D=3D IWL_INVALID_RATE) {
+ 		IWL_ERROR("ERROR: No TX rate available.\n");
+ 		goto drop_unlock;
+ 	}
+
+ 	unicast =3D !is_multicast_ether_addr(hdr->addr1);
+ 	id =3D 0;
+
+@@ -1808,22 +1806,20 @@ static int iwl4965_tx_skb(struct iwl_pri
+ 	if (ieee80211_is_auth(fc))
+ 		IWL_DEBUG_TX("Sending AUTH frame\n");
+ 	else if (ieee80211_is_assoc_request(fc))
+ 		IWL_DEBUG_TX("Sending ASSOC frame\n");
+ 	else if (ieee80211_is_reassoc_request(fc))
+ 		IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
+
+-	/* drop all data frame if we are not associated */
++	/* drop all non-broadcast data frames if !priv->assoc_station_added *=
+/
+ 	if (((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA) &&
+-	   (!iwl_is_associated(priv) ||
+-	    ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id)=
+ ||
+-	    !priv->assoc_station_added)) {
+-		IWL_DEBUG_DROP("Dropping - !iwl_is_associated\n");
++	   !priv->assoc_station_added && sta_id !=3D priv->hw_setting.bcast_s=
+ta_id) {
++		IWL_DEBUG_DROP("Dropping - !priv->assoc_station_added\n");
+ 		goto drop_unlock;
+ 	}
+
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+
+ 	hdr_len =3D ieee80211_get_hdrlen(fc);
+
+ 	/* Find (or create) index into station table for destination station =
+*/
+@@ -5110,21 +5106,16 @@ static void iwl4965_mac_stop(struct ieee
+
+ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb=
+,
+ 		      struct ieee80211_tx_control *ctl)
+ {
+ 	struct iwl_priv *priv =3D hw->priv;
+
+ 	IWL_DEBUG_MAC80211("enter\n");
+
+-	if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+-		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
+-	}
+-
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ 		     ctl->tx_rate->bitrate);
+
+ 	if (iwl4965_tx_skb(priv, skb, ctl))
+ 		dev_kfree_skb_any(skb);
+
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
