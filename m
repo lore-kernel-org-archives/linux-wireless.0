@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:53416 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764222AbYEHPCj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263AbYETACb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 11:02:39 -0400
-Subject: Re: Update: [RFC][PATCH] mrv8k: Driver for "Marvell 88w8335
-	[Libertas]"
-From: David Woodhouse <David@Woodhou.se>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Markus Becker <mab@comnets.uni-bremen.de>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, John Daiker <daikerjohn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	julian.calaby@gmail.com, andreamrl@tiscali.it
-In-Reply-To: <1210257822.24803.0.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0803191037220.21835@bugs.comnets.uni-bremen.de>
-	 <1209057680.9212.1065.camel@pmac.infradead.org>
-	 <4821F389.6070905@gmail.com>
-	 <200805080912.49903.hs4233@mail.mn-solutions.de>
-	 <Pine.LNX.4.64.0805081022470.24384@bugs.comnets.uni-bremen.de>
-	 <1210257822.24803.0.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 08 May 2008 16:02:33 +0100
-Message-Id: <1210258953.25560.1112.camel@pmac.infradead.org> (sfid-20080508_170139_349522_A8A4E17F)
+	Mon, 19 May 2008 20:02:31 -0400
+Subject: Re: [2.6 patch] strip: remove dead URL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20080519232237.GF17716@cs181133002.pp.htv.fi>
+References: <20080519221006.GZ17716@cs181133002.pp.htv.fi>
+	 <1211235365.6252.68.camel@johannes.berg>
+	 <20080519232237.GF17716@cs181133002.pp.htv.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eHTQTeS0QK3ghinnbdZb"
+Date: Tue, 20 May 2008 02:01:29 +0200
+Message-Id: <1211241689.6252.72.camel@johannes.berg> (sfid-20080520_020235_488438_EAF01694)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-05-08 at 10:43 -0400, Dan Williams wrote:
-> Yeah, I'll get David to make a git tree.  You should still ask for an
-> account and send him your SSH key so that you can push to the tree as
-> well.
 
-I've created git://git.infradead.org/mrv8k.git and the mrv8k group,
-which has schurig,mab,dwmw2,dcbw in it.
+--=-eHTQTeS0QK3ghinnbdZb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm a little confused by the request, because I thought wireless
-development was stuck in the 1990s and didn't use git -- I thought it
-was done by patches. But I'll let you work that one out for
-yourselves. :)
+On Tue, 2008-05-20 at 02:22 +0300, Adrian Bunk wrote:
+> On Tue, May 20, 2008 at 12:16:05AM +0200, Johannes Berg wrote:
+> > On Tue, 2008-05-20 at 01:10 +0300, Adrian Bunk wrote:
+> > > http://mosquitonet.Stanford.EDU/strip.html no longer exists.
+> >=20
+> > Out of curiosity, does anybody even have this hardware? Does it even
+> > exist still? I mean, cell-phone sized 100kbit/sec wireless hardware? Wh=
+o
+> > would use that? :)
+>=20
+> And don't forget that this "about the size and weight of a cellular=20
+> telephone" was written back in 1996...
 
--- 
-dwmw2
+Heh yes, I knew it was ancient but didn't bother to check the file as to
+how ancient :)
 
-"In particular, people who rebase other peoples trees should just be shot"
- -- Linus Torvalds
+> I was very near at suggesting removal of this driver, but at least
+> five years ago someone tried to use it (without success). [1]
+>=20
+> But if the general opinion is it should be removed I'd be glad to send
+> a patch.
+
+If five years ago it wasn't possible to use, what sorry state must it be
+in now? But then again, I can't say I care much either way.
+
+johannes
+
+--=-eHTQTeS0QK3ghinnbdZb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDIU2KVg1VMiehFYAQIrYQ//aquB3iYqvQHFZVY1MRQn2BmMMxLZGW2+
+UN74l52GwBuzS2EkZ/2tQDqK3z4EWatdGd1oaFnwxo/23xNtHKIzESCO+pR5G+sT
+x9s7vHq+GWl4U300S1JbtEFby5bWMKrvl6VddRXDMv+UQyXMKzrM+ZYtWcmR1UDO
+/vkXNx/uPmJNNvTTh277nl9qZ9NLVWPe+B1uJ5ylStThhW+0exSLDmnFThepMryM
+YDXxqrp71YcmCFCi9oknV5/z+ozywosd/gzFegFP4uxFdDfxxOD9UPFglSMs5iNR
+dT63oUgK5qt4u3KZvjVzkAkIfmErEoaUtBxg9z8hF6XJENt/t/Vn3qf3mAuzzQ+O
+3jSQ1io6ypID5OFkH7bPXiLhYZvZyo7utavtApX3JNGG3fQiVM6+wlHQuuT3BjaM
+pt1e2RmIYhxtb5he70vAeHe9iYr0p+FFIj+nZDId6lckp1hw6+ZFn1P0381HduwW
+Gl0Kl3sdYThw4xObhhnttOiGSqSYO31Fh5Oa6cjBGhtiqN2+4SdTFWArjRQ1yyPK
+H5tSJQ2g1+wbX1itXfA1BJWFj9ZABjvtjTne7EttRyAzj9QcBHLA9aOuT7RpgsAb
+XZe0rMjrrB0Gjb9X8ZI97q5td3+r1yi33enpmssy6UBbk12lp6tK7WfpfnzxnxLE
+JJrGfo39+o4=
+=+UZc
+-----END PGP SIGNATURE-----
+
+--=-eHTQTeS0QK3ghinnbdZb--
 
