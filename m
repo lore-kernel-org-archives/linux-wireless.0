@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:31500 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbYEFKq7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 06:46:59 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1284582waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 03:46:58 -0700 (PDT)
-Message-ID: <1ba2fa240805060346r617a53d1qb421f3d71ec14a1d@mail.gmail.com> (sfid-20080506_124654_643661_7E501734)
-Date: Tue, 6 May 2008 13:46:58 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1210070251.13316.4.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
-	 <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com>
-	 <1210066688.8012.75.camel@johannes.berg>
-	 <1ba2fa240805060334y2add302aua2e4461451a3f95b@mail.gmail.com>
-	 <1210070251.13316.4.camel@johannes.berg>
+Received: from mga11.intel.com ([192.55.52.93]:31432 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755365AbYETDt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 23:49:28 -0400
+Subject: Re: iwlwifi Makefile issue in compat-wireless-2008-05-18
+From: Zhu Yi <yi.zhu@intel.com>
+To: John Goulah <jgoulah@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <183c1cc10805191823w5855227akce4aa1bb9f1b6198@mail.gmail.com>
+References: <183c1cc10805181143v526fcc86l4bec27b12805748f@mail.gmail.com>
+	 <1211168475.31033.9.camel@debian.sh.intel.com>
+	 <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com>
+	 <1211245264.2532.24.camel@debian.sh.intel.com>
+	 <183c1cc10805191823w5855227akce4aa1bb9f1b6198@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 20 May 2008 11:48:55 +0800
+Message-Id: <1211255335.7814.5.camel@debian.sh.intel.com> (sfid-20080520_054932_157841_1EEEF65D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 6, 2008 at 1:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  > >  > >  Is this going to make it to 2.6.26?
->  > >  > >  Without this it will be hard to run 5000 under 2.6.26 as is.
->  > >  >
->  > >  > I meant 'QoS related cleanups'
->  > >
->  > >  Oh. No, I don't think so, unless you can somehow sell it to Linus as a
->  > >  bugfix ;)
->  > >
->  > I will think of a bug :)
->
->  And John and Davem too of course ;)
->
->
->  > >  Disable the 5000 in that kernel and make people use compat?
->  >
->  > Huh, why disabling?
->
->  Well if it's not going to work then wouldn't disabling it be better so
->  people realise it won't work?
+On Mon, 2008-05-19 at 21:23 -0400, John Goulah wrote:
+> Ok,  I assume you mean the patch for the kernel config that allows
+> this all to work?
 
-5000 won't be in vanilla 2.6.26 so there is nothing to disable. Hoped
-just that I won't need
-compat so back porting will be reduced to driver and not to mac80211
-i.e. kernel.
+I mean the recent patch introduces CONFIG_IWLWIFI.
 
->
->  Anyway, for all I care that patch can go into .26 but it's fairly large
->  and probably depends on the other two too. Also, it's broken as-is, I
->  sent a fix recently.
+> Would that mean you're not supporting compiling on any kernel older
+> than 2.6.26 with this change?
 
-Got it.
+I'd suggest we patch compat-wireless like this (given the fact it
+doesn't make use of Kconfig).
 
->  johannes
->
+Thanks,
+-yi
+
+--- config.mk	2008-05-20 11:46:55.000000000 +0800
++++ /tmp/config.mk	2008-05-20 11:46:49.000000000 +0800
+@@ -30,6 +30,7 @@ ifneq ($(CONFIG_PCI),)
+ 
+ CONFIG_ATH5K=m
+ CONFIG_ATH5K_DEBUG=n
++CONFIG_IWLWIFI=m
+ CONFIG_IWLCORE=m
+ CONFIG_IWL3945=m
+ CONFIG_IWL4965=m
+
+
