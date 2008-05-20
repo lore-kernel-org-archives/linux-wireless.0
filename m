@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:51110 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754335AbYENAx6 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:32812 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761976AbYETW4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 20:53:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2984030wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 17:53:58 -0700 (PDT)
-Subject: Re: [PATCH] b43: use the bitrev helpers rather than rolling a
-	private one
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200805140124.07982.mb@bu3sch.de>
-References: <1210708518.6191.0.camel@brick>
-	 <200805140124.07982.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 13 May 2008 17:53:56 -0700
-Message-Id: <1210726437.6191.17.camel@brick> (sfid-20080514_025402_084471_DAB95671)
-Mime-Version: 1.0
+	Tue, 20 May 2008 18:56:22 -0400
+Received: by py-out-1112.google.com with SMTP id u52so2650960pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 15:56:22 -0700 (PDT)
+Message-ID: <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com> (sfid-20080521_005657_448024_8DF054AD)
+Date: Tue, 20 May 2008 18:56:21 -0400
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
+	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
+	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
+	 <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com>
+	 <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-05-14 at 01:24 +0200, Michael Buesch wrote:
-> On Tuesday 13 May 2008 21:55:18 Harvey Harrison wrote:
-> > The 4-bit reversal flip_4bit is replaced with the bitrev helper
-> > bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
-> > where a register is read from for checking there.  The other caller
-> > explicitly passes an array index which is guaranteed to be within range
-> > and so a B43_WARN is not added there.
-> > 
-> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> ACK
-> 
-> But I'd prefer if we had something like the following
-> and use that:
-> 
-> #define bitrev4(x)	(bitrev8(x) >> 4)
-> 
-> This way the confusing (confusing to me :) ) shifts in the code would go away.
-> I have a hard time realizing that
-> bitrev8(x) >> 3
-> does actually mean
-> bitrev4(x) << 1
-> Maybe I'm just stupid, though. :)
-> 
+On Tue, May 20, 2008 at 6:45 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> Need to add if (sta_is != bcast)  otherwise this will drop all your
+> injected packets.
 
-You're not, this was only valid because x < 16....if bit 4 could be set
-this doesn't work anymore as bitrev8(x) >> 4 would truncate bit 4
-before shifting left.  So there was some subtlety here that makes >> 3
-ok.
+Did you mean if (sta_id != priv->hw_setting.bcast_sta_id)? Because
+there is no "sta_is" variable.
 
-Do you want an incremental patch adding a bitrev4 to phy.c or are you
-going to add it?
-
-Harvey
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
