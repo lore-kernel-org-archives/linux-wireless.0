@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:38105 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756459AbYEMX1o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 19:27:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: 4311 v2 Bail - 2.6.26-rc2
-Date: Wed, 14 May 2008 01:27:22 +0200
-Cc: Daniel <dan@f-box.org>, linux-wireless@vger.kernel.org
-References: <48294F0B.4040908@f-box.org> <200805131119.09964.mb@bu3sch.de> <482A08A5.3000204@f-box.org>
-In-Reply-To: <482A08A5.3000204@f-box.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805140127.22302.mb@bu3sch.de> (sfid-20080514_012747_829356_A0E41B5F)
+Received: from mga02.intel.com ([134.134.136.20]:53807 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759818AbYETBBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 May 2008 21:01:37 -0400
+Subject: Re: iwlwifi Makefile issue in compat-wireless-2008-05-18
+From: Zhu Yi <yi.zhu@intel.com>
+To: John Goulah <jgoulah@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com>
+References: <183c1cc10805181143v526fcc86l4bec27b12805748f@mail.gmail.com>
+	 <1211168475.31033.9.camel@debian.sh.intel.com>
+	 <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 20 May 2008 09:01:03 +0800
+Message-Id: <1211245264.2532.24.camel@debian.sh.intel.com> (sfid-20080520_030145_401374_4DB38522)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 May 2008 23:31:17 Daniel wrote:
-> Hello,
+On Mon, 2008-05-19 at 09:10 -0400, John Goulah wrote:
 > 
-> Michael Buesch wrote:
-> > Could you _please_ be so kind an explain your actual problem??
-> > My magic crystalball is broken today.
+> Thats odd, my kernel is fairly new -- 2.6.24.4
 > 
-> Sorry, it's the problem where after X minutes the device seems to loose 
-> the ability to communicate. It seems to be on a high number of 
-> connections/sec scenario.
-> 
-> It seems to occur at the 2nd or 3rd issue of the "wrong buffer size" 
-> message.
+> I custom compiled it, and I dont see anything related to IWL  in my
+> .config file strangely enough.  I guess its possible my .config got
+> out of sync somehow, or is this what you would consider "old" ?
 
-Where does this "wrong buffer size" message come from, and what does it mean?
+Yup, .24 is old. The patch will make its way to .26 (not released yet).
 
-> b43-phy1 debug: Using hardware based encryption for keyidx: 1, mac: 
-> ff:ff:ff:ff:ff:ff
-> wlan0: wrong buffer size<7>wlan0: wrong buffer size<7>wlan0: wrong 
-> buffer size<7>wlan0: wrong buffer size
-> b43-phy1 debug: Disabling hardware based encryption for keyidx: 1, mac: 
-> ff:ff:ff:ff:ff:ff
+Thanks,
+-yi
 
--- 
-Greetings Michael.
