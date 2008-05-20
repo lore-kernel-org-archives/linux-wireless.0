@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060AbYE3Oqq (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.237]:35293 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755493AbYETNeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 10:46:46 -0400
-Subject: Re: suspend vs. b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-In-Reply-To: <200805301642.05248.mb@bu3sch.de>
-References: <1212150713.4117.2.camel@johannes.berg>
-	 <200805301606.25556.mb@bu3sch.de> <1212158238.4117.4.camel@johannes.berg>
-	 <200805301642.05248.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MhwLNvQ99bD3n6uq42Xa"
-Date: Fri, 30 May 2008 16:46:22 +0200
-Message-Id: <1212158782.4117.8.camel@johannes.berg> (sfid-20080530_164649_920505_87CD1E90)
-Mime-Version: 1.0
+	Tue, 20 May 2008 09:34:00 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so1043632wra.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 06:33:59 -0700 (PDT)
+Message-ID: <1ba2fa240805200633y6730a1e3ufbc0adfedd3f8243@mail.gmail.com> (sfid-20080520_153413_214747_3158B189)
+Date: Tue, 20 May 2008 16:33:58 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
+Cc: "Helmut Schaa" <hschaa@suse.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1211289769.6252.90.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
+	 <1211288251.6252.86.camel@johannes.berg>
+	 <1ba2fa240805200611o7c221c86na2c627242a2ce67@mail.gmail.com>
+	 <1211289769.6252.90.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 20, 2008 at 4:22 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> >> I suggest to insert at least some WARN_ON(1) for the else case.
+>> >
+>> > Disagree, not until somebody audits the code. We already know it can
+>> > happen and a WARN() won't help us track it down because it provides no
+>> > additional information (stack trace is useless)
+>>
+>> What about printk(KERN_WARN ), The else statement actually means that
+>> something wrong happened.
+>
+> Thing is, I'm not totally convinced it is wrong to the code while it may
+> or may not be wrong...
 
---=-MhwLNvQ99bD3n6uq42Xa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Doesn't should be bss pinned int he bss list if you are associating to
+it. If it's not there you don't have access to it's info It looks very
+wrong to me.
 
-On Fri, 2008-05-30 at 16:42 +0200, Michael Buesch wrote:
-> On Friday 30 May 2008 16:37:18 Johannes Berg wrote:
-> > Odd. Resume itself works just fine here, except when b43 is up. But the=
-n
-> > again, you might not notice that this is the problem because by default=
-,
-> > nothing gets printed on the resume console and then it will indeed hang
-> > with a black screen.
->=20
-> How can I change the printing?
+I think this patch should go in first as it
+> actually fixes the oops, and then we can discuss the merits of adding a
+> warning there separately. Maybe after we look a bit at the code and try
+> to figure out whether it can still happen after that patch from
+> Abhijeet.
 
-Hmm. It seems I might have been wrong here. Rafael, do we still have
-console suspend stuff?
+I'm not sure if this patch is complete without this warning. What is
+in the else statement is a hack and it should be obvious.
 
-johannes
-
---=-MhwLNvQ99bD3n6uq42Xa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEATPKVg1VMiehFYAQLe3A//dlahm1Gvy9C2s6wpYA/iyGim2U90vqmw
-HsP2W1qOyI9H2bSJHz0KhT26ccqGWII7n07j/UU3III0XAMQS3msd1IfUsBCyvEl
-I5gFL36G/YA3N0tusrNevoqLzRiPzaaltdPUF/u9DIXgBevOLgeUq+vk3lCTiTkE
-Ye5f3CPoTkTgbxVV26A+RwEVXBRy2nK34REqK7LoVfrV0Ru69+RATofXh59Vzmae
-8hOIi7WJMM0hgTXDFxU3p5r2fAlct99GwBMVDLZfhVS+yyhzeIdAIwpWedgdleeV
-Yz+k5hKCQ8p9R3gZayEpwNpmdOuzqJb2w2VgRD8sARGNC4OFdozb2a0Iv9vBnblz
-KYuVBbeQyw9bs5NsxfS8ZWIeeNUlBecckF6H4T7PZGrWwpjzhwfYQXhVXuZDCp3w
-EHQU0MzX0bIkxwwXbh+kzlgAMT7uYUT/DaNSF6hqg9ndM54qwWs/WVLjhflRbdat
-jQHUqb8AQjRcfOcSOhRHMGh1QaZmbPZBEMKqJ7ion2Ore4Uww3ifuUys4MXx/RXJ
-xgl2/z6XjhquY97jz2uiRCmWFcC9u2PWGIEnHCLuHGUEH5Pd3q9HL0L5Id1S9leO
-vpC5lj/Yu0/d+yz7CS1em2PwSmBFMEvwF4S2rFy6JNJhbP1wyp+oC0MuitMwPn1K
-C+id6isz66k=
-=OEKx
------END PGP SIGNATURE-----
-
---=-MhwLNvQ99bD3n6uq42Xa--
-
+Tomas
