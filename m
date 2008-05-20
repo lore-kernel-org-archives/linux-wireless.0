@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754553AbYEMJRj (ORCPT
+Received: from ns2.suse.de ([195.135.220.15]:39636 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753120AbYETH4k convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 05:17:39 -0400
-Subject: Re: 11n + wpa_supplicant
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <8704f27d0805130148t57a1dad5nf5ff535ae4ddf968@mail.gmail.com> (sfid-20080513_104857_603495_7A3A4A22)
-References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
-	 <1210667328.3646.24.camel@johannes.berg>
-	 <8704f27d0805130141s403167b8q49eecb645d0461c1@mail.gmail.com>
-	 <1210668421.3646.43.camel@johannes.berg>
-	 <8704f27d0805130148t57a1dad5nf5ff535ae4ddf968@mail.gmail.com>
-	 (sfid-20080513_104857_603495_7A3A4A22)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LdxFQ9I8JgOig9EoTsSE"
-Date: Tue, 13 May 2008 11:17:28 +0200
-Message-Id: <1210670248.3646.54.camel@johannes.berg> (sfid-20080513_111746_705121_993A0A4B)
-Mime-Version: 1.0
+	Tue, 20 May 2008 03:56:40 -0400
+Message-ID: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de> (sfid-20080520_095642_396639_0354A65D)
+Date: Tue, 20 May 2008 09:56:37 +0200
+From: Helmut Schaa <hschaa@suse.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv5] mac80211: fix NULL pointer dereference in
+	ieee80211_compatible_rates
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix a possible NULL pointer dereference in ieee80211_compatible_rates
+introduced in the patch "mac80211: fix association with some APs". If no bss
+is available just use all supported rates in the association request.
 
---=-LdxFQ9I8JgOig9EoTsSE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Helmut Schaa <hschaa@suse.de>
+---
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 76ad4ed..3f7f92a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -721,7 +721,17 @@ static void ieee80211_send_assoc(struct net_device *dev,
+  			capab |= WLAN_CAPABILITY_PRIVACY;
+  		if (bss->wmm_ie)
+  			wmm = 1;
++
++		/* get all rates supported by the device and the AP as
++		 * some APs don't like getting a superset of their rates
++		 * in the association request (e.g. D-Link DAP 1353 in
++		 * b-only mode) */
++		rates_len = ieee80211_compatible_rates(bss, sband, &rates);
++
+  		ieee80211_rx_bss_put(dev, bss);
++	} else {
++		rates = ~0;
++		rates_len = sband->n_bitrates;
+  	}
 
-> >  Ah, so you mean if the user chose TKIP then we should associate as a
-> >  legacy STA?
-> >
->=20
-> I think so... If the AP is N-only we would be in trouble...
+  	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+@@ -752,10 +762,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
+  	*pos++ = ifsta->ssid_len;
+  	memcpy(pos, ifsta->ssid, ifsta->ssid_len);
 
-Hm. I don't really see much reason to do this. Technically, you could
-configure it this way, but in practice most people will just enable all
-algorithms they can support (i.e. all).
-
-I don't really care, but I wouldn't want to complicate wext further for
-this.
-
-johannes
-
---=-LdxFQ9I8JgOig9EoTsSE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASClcp6Vg1VMiehFYAQLhlxAAqzw7+Uq3+ETu1h12umroji1qgjSdD5hH
-O0SpKG9Du/kM7j4BEV3pr1hjn4Wyw8/G4i0Z8tslZuEaQ8BcQkdEHdq4gL3cQ0KX
-ZCgu0weDj4/DHojBGfIEXbf56p1xxtad3Tul/wH97SBRNQLbxqMKhF798JeQEzZ4
-d6D0H2H8i9ZH7tii5ir08CaJULrXual0bBEDl96dwZXLECigugCzZBUCO4HW3a3p
-fPJcOAWq4zcr4y9zRMXc6UwHo+DzXQT+8G1IUmTcHYOtRh0jCwX56NGmk3oIUhRk
-Ycr23hL2NMoZXWwb2n1+b+B5K7Sf3AbVjYD6Mu/VtRn+lrDy2tnBPuxBFNHr376t
-NvHvfhvA6yShfFKFdUt30+APrOlDzhv3CiyUeJBkJ4p98pB1CsEuU98CKeWL49nu
-JigqBeaOPbb6+SJ7Y7gaTQG37QL0ND79NfKQgPxR2dGPgcxGKPtZ6QdEOVSrnwKZ
-GM/dMyw0A9rSDLPoiiOVt0O8DtALtKF7GkH7f6dnRmI6EF9o41kcNsUMbeXA9YcS
-Pd7hp3SX9ngt38uVimphThNKnI5WUksIl8MV9j0xl3BOIjb4hlEUjNGlAAe9Em5o
-FgOB1edgjvPcWtafukSEGbF9feIH89GK8Y8Xqpo8BVFTdo1h7uPTbY87L47KZ1F8
-SdEAwTIHPkc=
-=hzQi
------END PGP SIGNATURE-----
-
---=-LdxFQ9I8JgOig9EoTsSE--
+-	/* all supported rates should be added here but some APs
+-	 * (e.g. D-Link DAP 1353 in b-only mode) don't like that
+-	 * Therefore only add rates the AP supports */
+-	rates_len = ieee80211_compatible_rates(bss, sband, &rates);
++	/* add all rates which were marked to be used above */
+  	supp_rates_len = rates_len;
+  	if (supp_rates_len > 8)
+  		supp_rates_len = 8;
 
