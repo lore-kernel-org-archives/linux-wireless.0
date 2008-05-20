@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:46502 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752586AbYEXJYo (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:55425 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932689AbYETO7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2008 05:24:44 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so1281659rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 02:24:43 -0700 (PDT)
-Message-ID: <41c7306f0805240224o21341f8gdf7b70e657c003c1@mail.gmail.com> (sfid-20080524_112447_780312_E20EA1FD)
-Date: Sat, 24 May 2008 11:24:43 +0200
-From: "Joris van der Kwast" <jvdkwast@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: error on make
+	Tue, 20 May 2008 10:59:04 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1394049ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 07:58:59 -0700 (PDT)
+Message-ID: <69e28c910805200758j72281d34kfaa244e9bbdd8451@mail.gmail.com> (sfid-20080520_165908_919750_554595EE)
+Date: Tue, 20 May 2008 10:58:58 -0400
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi injection bug
+Cc: "Tomas Winkler" <tomasw@gmail.com>, "Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>
+In-Reply-To: <1211293631.6252.98.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+References: <1210945631.6381.11.camel@johannes.berg>
+	 <1211249729.2532.59.camel@debian.sh.intel.com>
+	 <69e28c910805200432lbd3790vb925dacaea3aca83@mail.gmail.com>
+	 <1211287111.6252.84.camel@johannes.berg>
+	 <69e28c910805200614q2232b21ame8ff03fe4156fb3b@mail.gmail.com>
+	 <1ba2fa240805200641j4ccc1de4r5572e1321394a526@mail.gmail.com>
+	 <69e28c910805200716i3fd16c33x274983ab8e7591e6@mail.gmail.com>
+	 <1211293631.6252.98.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, May 20, 2008 at 10:27 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> -     /* drop all data frame if we are not associated */
+>> -     if ((!iwl3945_is_associated(priv) ||
+>> +     /* drop all data frame if we are not associated and not monitoring */
+>> +     if (((!iwl3945_is_associated(priv) && priv->iw_mode !=
+>> IEEE80211_IF_TYPE_MNTR) ||
+>>            ((priv->iw_mode == IEEE80211_IF_TYPE_STA) && !priv->assoc_id)) &&
+>>           ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
+>> -             IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+>> +             IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated outside monitor mode\n");
+>>               goto drop_unlock;
+>>       }
+>
+> This makes injection not work when you're not exclusively in monitor
+> mode. Yes, it may break the spec to be sending frames to an arbitrary
+> station, but it's useful for all kinds of things including testing to
+> have a monitor and a regular interface working at the same time.
+>
+> johannes
+>
 
-I was trying to build the daily snapshot compat-wireless-2008-05-24,
-on fedora 8, kernel 2.6.24.7-92.fc8_x86_64 and got the following
-error:
+What do you think is a better way to check if we have a monitor
+interface? && priv->iw_mode == IEEE80211_IF_TYPE_STA? Or should this
+be removed altogether?
 
-
-/home/joris/Data/Downloads
-/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:
-In function 'rt2x00leds_register':
-/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:186:
-error: 'struct led_classdev' has no member named 'blink_set'
-/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:189:
-error: 'struct led_classdev' has no member named 'blink_set'
-make[4]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.o]
-Error 1
-make[3]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00]
-Error 2
-make[2]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless]
-Error 2
-make[1]: *** [_module_/home/joris/Data/Downloads/compat-wireless-2008-05-24]
-Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.24.7-92.fc8-x86_64'
-make: *** [modules] Error 2
-
-
-So I hope this helps.
-
---
-Joris
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
