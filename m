@@ -1,76 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41123 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931AbYEAAfJ (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.180]:16554 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934631AbYETW0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2008 20:35:09 -0400
-Subject: Re: putting ieee80211_tx_control into skb->cb?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Chr <chunkeey@web.de>, Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Andrea Merello <andreamrl@tiscali.it>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <1209570457.18659.59.camel@johannes.berg> (sfid-20080430_174737_678263_D9A9E0B9)
-References: <1209570457.18659.59.camel@johannes.berg>
-	 (sfid-20080430_174737_678263_D9A9E0B9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rmq5X4ofECu7YO6CH0dw"
-Date: Thu, 01 May 2008 02:34:23 +0200
-Message-Id: <1209602063.7173.2.camel@johannes.berg> (sfid-20080501_023459_247577_A82C0B13)
-Mime-Version: 1.0
+	Tue, 20 May 2008 18:26:21 -0400
+Received: by el-out-1112.google.com with SMTP id s27so740344ele.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 15:26:20 -0700 (PDT)
+Message-ID: <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com> (sfid-20080521_002821_285112_706B9596)
+Date: Tue, 20 May 2008 18:26:19 -0400
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_3665_14050992.1211322379345"
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
+	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
+	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-rmq5X4ofECu7YO6CH0dw
-Content-Type: text/plain; charset=utf-8
+------=_Part_3665_14050992.1211322379345
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Wed, 2008-04-30 at 17:47 +0200, Johannes Berg wrote:
-> With my patch to shrink ieee80211_tx_control, I can now put that into
-> skb->cb.
->=20
-> Do we want to use that as the interface to drivers as well? Many drivers
-> could benefit from that a lot since we could save all the extra copies
-> done here.
+On Tue, May 20, 2008 at 6:18 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Wed, May 21, 2008 at 12:51 AM, Stefanik G=E1bor
+> <netrolller.3d@gmail.com> wrote:
+>> On Tue, May 20, 2008 at 5:41 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>>>
+>>> This is certainly no go for 4965. Station must be present in uCode
+>>> table. Maybe this work for monitor mode but there is a race in regular
+>>> cases, when sta_id !=3D broadcast id at least priv->assoc_station_added
+>>> =3D=3D 1 has to be true. Have you tested it with 4965 ?
+>>>
+>>> I suggest to proceed with 3945 part only of this patch.
+>>>
+>>> Tomas
+>>
+>> Which change does this comment apply to? The "IWL_DEBUG_DROP("Dropping
+>> - !priv->vif\n");" one? Or the "drop all data frame if we are not
+>> associated" one? Also, doesn't the "if (sta_id =3D=3D
+>> IWL_INVALID_STATION)" part protect against such cases? Also, what
+>> happens if we simply pass broadcast in such a case?
+>>
+> The station can be in driver data structure but it's not guaranties
+> it's also in the uCode. It will
+> return correct station id but the table in uCode will be empty.
+> Retuning to new channel clears the station table in the uCode so it
+> must to be reapplied also you must have applied rate command (LQ).
+> Simply currently there is a window big enough for a race. It can be
+> solved but there is more coding than this patch.
+>
+> Thanks
+> Tomas
+>> --
+>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>>
+>
 
-Yes, we do.
+Hmm... wouldn't this patch fix the issue? It limits the condition list
+of dropping data packets to just !priv->assoc_station_added. I don't
+know if iwl4965 injection still works with this patch though, but I
+suspect it does.
 
-Proof-of-concept code
-here: =EF=BB=BFhttp://johannes.sipsolutions.net/patches/kernel/all/2008-05-=
-01-00:32/041-mac80211-tx-info-skb-cb.patch
+---
 
-If you want to give it a try, beware! I changed a number of patches this
-is based on, the GSO-fragmentation one is among them, so you really want
-to pull all those from there rather than using the versions I posted.
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/=
+iwl3945-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl3945-ba=
+se.c=092008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl3945-base.c=
+=092008-05-20
+11:31:15.513173847 -0400
+@@ -2542,16 +2542,19 @@ static int iwl3945_get_sta_id(struct iwl
+ =09=09=09return sta_id;
 
-Will have to update all the other drivers now (done b43 so far)... But
-I'll let this simmer in my tree for a while and test with AP mode etc.,
-I think we should do one thing at a time ;)
+ =09=09IWL_DEBUG_DROP("Station %s not in station map. "
+ =09=09=09       "Defaulting to broadcast...\n",
+ =09=09=09       print_mac(mac, hdr->addr1));
+ =09=09iwl3945_print_hex_dump(IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ =09=09return priv->hw_setting.bcast_sta_id;
+ =09}
++=09/* If we are in monitor mode, use BCAST */
++=09case IEEE80211_IF_TYPE_MNTR:
++=09=09return priv->hw_setting.bcast_sta_id;
+ =09default:
+ =09=09IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ =09=09return priv->hw_setting.bcast_sta_id;
+ =09}
+ }
 
-johannes
+ /*
+  * start REPLY_TX command process
+@@ -2579,21 +2582,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ =09int rc;
 
---=-rmq5X4ofECu7YO6CH0dw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+ =09spin_lock_irqsave(&priv->lock, flags);
+ =09if (iwl3945_is_rfkill(priv)) {
+ =09=09IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ =09=09goto drop_unlock;
+ =09}
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+-=09if (!priv->vif) {
+-=09=09IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-=09=09goto drop_unlock;
+-=09}
+-
+ =09if ((ctl->tx_rate->hw_value & 0xFF) =3D=3D IWL_INVALID_RATE) {
+ =09=09IWL_ERROR("ERROR: No TX rate available.\n");
+ =09=09goto drop_unlock;
+ =09}
 
-iQIVAwUASBkQDqVg1VMiehFYAQIwiw/+JZ+j6dUz3vOAD6Zhk72w3HMEj/+raRCR
-qcWofvoKlVFwrqPT6cIShm5by49n+8tS5JJ/pgzPEh8VFX6eh0OqPwkDAa7rWXio
-ClYbXHcvI909zhc2QERQaFjUd9HUhkDiSxmnlZo64u4PKk8YeRBPgpDj5EKUanlM
-N7wM1XxDcejTC6BuGp+80VDMAT5p72yrg/DR+hfDu1Cd4+KH4GhDLpi52imsqetN
-QxxPYPLV8ZrrUyurvsrJfgtxPQH/geme64rMFpMcjOxzGcSGTBNW8ZzSq+r4lcVb
-KdaJj/ojKGY5qWkpGiaWGmHzo6bUaRlWCf8DcX8HEQGfiUIaeVYJIvAtMeid0E69
-n57x4qC3091wN4ZTuNLL5Adk7q66orCLHnsHrBRyrOF01OaHpDPbFDn6uR2D1zMV
-h5Fi1+FtymRreE8lcnoYwf5CuTN9mw6Sbw76NWNLNfAQAqxx2QiUzx1blTQRprUR
-ts+I77DIDYHYw4yviSsGLrghVGJq00DYsVO4AoYAfJGX0Z5XVF1Z8gPNlbU81ODK
-700HPCASw4Ade1BOJ3MQxXOi8WtBdY1+H0XppSVuo9sj+7tRA2/n+X/Uk+B7Bygd
-Mf0vYWKq6LZe3nY+gGYoQp/8CBIi/LfEcElqYsV2RhtmEzixoT9wZRJu+c8P1aXe
-lpB2MyuwSKs=
-=ukEr
------END PGP SIGNATURE-----
+ =09unicast =3D !is_multicast_ether_addr(hdr->addr1);
+ =09id =3D 0;
 
---=-rmq5X4ofECu7YO6CH0dw--
+@@ -2603,24 +2601,16 @@ static int iwl3945_tx_skb(struct iwl3945
+ =09if (ieee80211_is_auth(fc))
+ =09=09IWL_DEBUG_TX("Sending AUTH frame\n");
+ =09else if (ieee80211_is_assoc_request(fc))
+ =09=09IWL_DEBUG_TX("Sending ASSOC frame\n");
+ =09else if (ieee80211_is_reassoc_request(fc))
+ =09=09IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
 
+-=09/* drop all data frame if we are not associated */
+-=09if ((!iwl3945_is_associated(priv) ||
+-=09     ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id))=
+ &&
+-=09    ((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA)) {
+-=09=09IWL_DEBUG_DROP("Dropping - !iwl3945_is_associated\n");
+-=09=09goto drop_unlock;
+-=09}
+-
+ =09spin_unlock_irqrestore(&priv->lock, flags);
+
+ =09hdr_len =3D ieee80211_get_hdrlen(fc);
+
+ =09/* Find (or create) index into station table for destination station */
+ =09sta_id =3D iwl3945_get_sta_id(priv, hdr);
+ =09if (sta_id =3D=3D IWL_INVALID_STATION) {
+ =09=09DECLARE_MAC_BUF(mac);
+@@ -6692,21 +6682,16 @@ static void iwl3945_mac_stop(struct ieee
+
+ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ =09=09      struct ieee80211_tx_control *ctl)
+ {
+ =09struct iwl3945_priv *priv =3D hw->priv;
+
+ =09IWL_DEBUG_MAC80211("enter\n");
+
+-=09if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+-=09=09IWL_DEBUG_MAC80211("leave - monitor\n");
+-=09=09return -1;
+-=09}
+-
+ =09IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ =09=09     ctl->tx_rate->bitrate);
+
+ =09if (iwl3945_tx_skb(priv, skb, ctl))
+ =09=09dev_kfree_skb_any(skb);
+
+ =09IWL_DEBUG_MAC80211("leave\n");
+ =09return 0;
+diff -rp -U 8 compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/=
+iwl4965-base.c
+compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-base.c
+--- compat-wireless-2008-05-20.orig/drivers/net/wireless/iwlwifi/iwl4965-ba=
+se.c=092008-05-20
+05:05:29.000000000 -0400
++++ compat-wireless-2008-05-20/drivers/net/wireless/iwlwifi/iwl4965-base.c=
+=092008-05-20
+18:18:58.399897940 -0400
+@@ -1746,16 +1746,19 @@ static int iwl4965_get_sta_id(struct iwl
+ =09=09=09return sta_id;
+
+ =09=09IWL_DEBUG_DROP("Station %s not in station map. "
+ =09=09=09       "Defaulting to broadcast...\n",
+ =09=09=09       print_mac(mac, hdr->addr1));
+ =09=09iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ =09=09return priv->hw_params.bcast_sta_id;
+
++=09/* If we are in monitor mode, use BCAST */
++=09case IEEE80211_IF_TYPE_MNTR:
++=09=09return priv->hw_params.bcast_sta_id;
+ =09default:
+ =09=09IWL_WARNING("Unknown mode of operation: %d", priv->iw_mode);
+ =09=09return priv->hw_params.bcast_sta_id;
+ =09}
+ }
+
+ /*
+  * start REPLY_TX command process
+@@ -1784,21 +1787,16 @@ static int iwl4965_tx_skb(struct iwl_pri
+ =09int rc;
+
+ =09spin_lock_irqsave(&priv->lock, flags);
+ =09if (iwl_is_rfkill(priv)) {
+ =09=09IWL_DEBUG_DROP("Dropping - RF KILL\n");
+ =09=09goto drop_unlock;
+ =09}
+
+-=09if (!priv->vif) {
+-=09=09IWL_DEBUG_DROP("Dropping - !priv->vif\n");
+-=09=09goto drop_unlock;
+-=09}
+-
+ =09if ((ctl->tx_rate->hw_value & 0xFF) =3D=3D IWL_INVALID_RATE) {
+ =09=09IWL_ERROR("ERROR: No TX rate available.\n");
+ =09=09goto drop_unlock;
+ =09}
+
+ =09unicast =3D !is_multicast_ether_addr(hdr->addr1);
+ =09id =3D 0;
+
+@@ -1808,22 +1806,20 @@ static int iwl4965_tx_skb(struct iwl_pri
+ =09if (ieee80211_is_auth(fc))
+ =09=09IWL_DEBUG_TX("Sending AUTH frame\n");
+ =09else if (ieee80211_is_assoc_request(fc))
+ =09=09IWL_DEBUG_TX("Sending ASSOC frame\n");
+ =09else if (ieee80211_is_reassoc_request(fc))
+ =09=09IWL_DEBUG_TX("Sending REASSOC frame\n");
+ #endif
+
+-=09/* drop all data frame if we are not associated */
++=09/* drop all data frame if !priv->assoc_station_added */
+ =09if (((fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA) &&
+-=09   (!iwl_is_associated(priv) ||
+-=09    ((priv->iw_mode =3D=3D IEEE80211_IF_TYPE_STA) && !priv->assoc_id) |=
+|
+-=09    !priv->assoc_station_added)) {
+-=09=09IWL_DEBUG_DROP("Dropping - !iwl_is_associated\n");
++=09   !priv->assoc_station_added) {
++=09=09IWL_DEBUG_DROP("Dropping - !priv->assoc_station_added\n");
+ =09=09goto drop_unlock;
+ =09}
+
+ =09spin_unlock_irqrestore(&priv->lock, flags);
+
+ =09hdr_len =3D ieee80211_get_hdrlen(fc);
+
+ =09/* Find (or create) index into station table for destination station */
+@@ -5110,21 +5106,16 @@ static void iwl4965_mac_stop(struct ieee
+
+ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ =09=09      struct ieee80211_tx_control *ctl)
+ {
+ =09struct iwl_priv *priv =3D hw->priv;
+
+ =09IWL_DEBUG_MAC80211("enter\n");
+
+-=09if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+-=09=09IWL_DEBUG_MAC80211("leave - monitor\n");
+-=09=09return -1;
+-=09}
+-
+ =09IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+ =09=09     ctl->tx_rate->bitrate);
+
+ =09if (iwl4965_tx_skb(priv, skb, ctl))
+ =09=09dev_kfree_skb_any(skb);
+
+ =09IWL_DEBUG_MAC80211("leave\n");
+ =09return 0;
+
+------=_Part_3665_14050992.1211322379345
+Content-Type: text/x-diff; name=iwlinject3.diff
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fgh20quh0
+Content-Disposition: attachment; filename=iwlinject3.diff
+
+ZGlmZiAtcnAgLVUgOCBjb21wYXQtd2lyZWxlc3MtMjAwOC0wNS0yMC5vcmlnL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvaXdsMzk0NS1iYXNlLmMgY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUt
+MjAvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wzOTQ1LWJhc2UuYwotLS0gY29tcGF0
+LXdpcmVsZXNzLTIwMDgtMDUtMjAub3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
+bDM5NDUtYmFzZS5jCTIwMDgtMDUtMjAgMDU6MDU6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBjb21w
+YXQtd2lyZWxlc3MtMjAwOC0wNS0yMC9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDM5
+NDUtYmFzZS5jCTIwMDgtMDUtMjAgMTE6MzE6MTUuNTEzMTczODQ3IC0wNDAwCkBAIC0yNTQyLDE2
+ICsyNTQyLDE5IEBAIHN0YXRpYyBpbnQgaXdsMzk0NV9nZXRfc3RhX2lkKHN0cnVjdCBpd2wKIAkJ
+CXJldHVybiBzdGFfaWQ7CiAKIAkJSVdMX0RFQlVHX0RST1AoIlN0YXRpb24gJXMgbm90IGluIHN0
+YXRpb24gbWFwLiAiCiAJCQkgICAgICAgIkRlZmF1bHRpbmcgdG8gYnJvYWRjYXN0Li4uXG4iLAog
+CQkJICAgICAgIHByaW50X21hYyhtYWMsIGhkci0+YWRkcjEpKTsKIAkJaXdsMzk0NV9wcmludF9o
+ZXhfZHVtcChJV0xfRExfRFJPUCwgKHU4ICopIGhkciwgc2l6ZW9mKCpoZHIpKTsKIAkJcmV0dXJu
+IHByaXYtPmh3X3NldHRpbmcuYmNhc3Rfc3RhX2lkOwogCX0KKwkvKiBJZiB3ZSBhcmUgaW4gbW9u
+aXRvciBtb2RlLCB1c2UgQkNBU1QgKi8KKwljYXNlIElFRUU4MDIxMV9JRl9UWVBFX01OVFI6CisJ
+CXJldHVybiBwcml2LT5od19zZXR0aW5nLmJjYXN0X3N0YV9pZDsKIAlkZWZhdWx0OgogCQlJV0xf
+V0FSTklORygiVW5rbm93biBtb2RlIG9mIG9wZXJhdGlvbjogJWQiLCBwcml2LT5pd19tb2RlKTsK
+IAkJcmV0dXJuIHByaXYtPmh3X3NldHRpbmcuYmNhc3Rfc3RhX2lkOwogCX0KIH0KIAogLyoKICAq
+IHN0YXJ0IFJFUExZX1RYIGNvbW1hbmQgcHJvY2VzcwpAQCAtMjU3OSwyMSArMjU4MiwxNiBAQCBz
+dGF0aWMgaW50IGl3bDM5NDVfdHhfc2tiKHN0cnVjdCBpd2wzOTQ1CiAJaW50IHJjOwogCiAJc3Bp
+bl9sb2NrX2lycXNhdmUoJnByaXYtPmxvY2ssIGZsYWdzKTsKIAlpZiAoaXdsMzk0NV9pc19yZmtp
+bGwocHJpdikpIHsKIAkJSVdMX0RFQlVHX0RST1AoIkRyb3BwaW5nIC0gUkYgS0lMTFxuIik7CiAJ
+CWdvdG8gZHJvcF91bmxvY2s7CiAJfQogCi0JaWYgKCFwcml2LT52aWYpIHsKLQkJSVdMX0RFQlVH
+X0RST1AoIkRyb3BwaW5nIC0gIXByaXYtPnZpZlxuIik7Ci0JCWdvdG8gZHJvcF91bmxvY2s7Ci0J
+fQotCiAJaWYgKChjdGwtPnR4X3JhdGUtPmh3X3ZhbHVlICYgMHhGRikgPT0gSVdMX0lOVkFMSURf
+UkFURSkgewogCQlJV0xfRVJST1IoIkVSUk9SOiBObyBUWCByYXRlIGF2YWlsYWJsZS5cbiIpOwog
+CQlnb3RvIGRyb3BfdW5sb2NrOwogCX0KIAogCXVuaWNhc3QgPSAhaXNfbXVsdGljYXN0X2V0aGVy
+X2FkZHIoaGRyLT5hZGRyMSk7CiAJaWQgPSAwOwogCkBAIC0yNjAzLDI0ICsyNjAxLDE2IEBAIHN0
+YXRpYyBpbnQgaXdsMzk0NV90eF9za2Ioc3RydWN0IGl3bDM5NDUKIAlpZiAoaWVlZTgwMjExX2lz
+X2F1dGgoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNlbmRpbmcgQVVUSCBmcmFtZVxuIik7CiAJZWxz
+ZSBpZiAoaWVlZTgwMjExX2lzX2Fzc29jX3JlcXVlc3QoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNl
+bmRpbmcgQVNTT0MgZnJhbWVcbiIpOwogCWVsc2UgaWYgKGllZWU4MDIxMV9pc19yZWFzc29jX3Jl
+cXVlc3QoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNlbmRpbmcgUkVBU1NPQyBmcmFtZVxuIik7CiAj
+ZW5kaWYKIAotCS8qIGRyb3AgYWxsIGRhdGEgZnJhbWUgaWYgd2UgYXJlIG5vdCBhc3NvY2lhdGVk
+ICovCi0JaWYgKCghaXdsMzk0NV9pc19hc3NvY2lhdGVkKHByaXYpIHx8Ci0JICAgICAoKHByaXYt
+Pml3X21vZGUgPT0gSUVFRTgwMjExX0lGX1RZUEVfU1RBKSAmJiAhcHJpdi0+YXNzb2NfaWQpKSAm
+JgotCSAgICAoKGZjICYgSUVFRTgwMjExX0ZDVExfRlRZUEUpID09IElFRUU4MDIxMV9GVFlQRV9E
+QVRBKSkgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAhaXdsMzk0NV9pc19hc3NvY2lh
+dGVkXG4iKTsKLQkJZ290byBkcm9wX3VubG9jazsKLQl9Ci0KIAlzcGluX3VubG9ja19pcnFyZXN0
+b3JlKCZwcml2LT5sb2NrLCBmbGFncyk7CiAKIAloZHJfbGVuID0gaWVlZTgwMjExX2dldF9oZHJs
+ZW4oZmMpOwogCiAJLyogRmluZCAob3IgY3JlYXRlKSBpbmRleCBpbnRvIHN0YXRpb24gdGFibGUg
+Zm9yIGRlc3RpbmF0aW9uIHN0YXRpb24gKi8KIAlzdGFfaWQgPSBpd2wzOTQ1X2dldF9zdGFfaWQo
+cHJpdiwgaGRyKTsKIAlpZiAoc3RhX2lkID09IElXTF9JTlZBTElEX1NUQVRJT04pIHsKIAkJREVD
+TEFSRV9NQUNfQlVGKG1hYyk7CkBAIC02NjkyLDIxICs2NjgyLDE2IEBAIHN0YXRpYyB2b2lkIGl3
+bDM5NDVfbWFjX3N0b3Aoc3RydWN0IGllZWUKIAogc3RhdGljIGludCBpd2wzOTQ1X21hY190eChz
+dHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0IHNrX2J1ZmYgKnNrYiwKIAkJICAgICAgc3Ry
+dWN0IGllZWU4MDIxMV90eF9jb250cm9sICpjdGwpCiB7CiAJc3RydWN0IGl3bDM5NDVfcHJpdiAq
+cHJpdiA9IGh3LT5wcml2OwogCiAJSVdMX0RFQlVHX01BQzgwMjExKCJlbnRlclxuIik7CiAKLQlp
+ZiAocHJpdi0+aXdfbW9kZSA9PSBJRUVFODAyMTFfSUZfVFlQRV9NTlRSKSB7Ci0JCUlXTF9ERUJV
+R19NQUM4MDIxMSgibGVhdmUgLSBtb25pdG9yXG4iKTsKLQkJcmV0dXJuIC0xOwotCX0KLQogCUlX
+TF9ERUJVR19UWCgiZGV2LT54bWl0KCVkIGJ5dGVzKSBhdCByYXRlIDB4JTAyeFxuIiwgc2tiLT5s
+ZW4sCiAJCSAgICAgY3RsLT50eF9yYXRlLT5iaXRyYXRlKTsKIAogCWlmIChpd2wzOTQ1X3R4X3Nr
+Yihwcml2LCBza2IsIGN0bCkpCiAJCWRldl9rZnJlZV9za2JfYW55KHNrYik7CiAKIAlJV0xfREVC
+VUdfTUFDODAyMTEoImxlYXZlXG4iKTsKIAlyZXR1cm4gMDsKZGlmZiAtcnAgLVUgOCBjb21wYXQt
+d2lyZWxlc3MtMjAwOC0wNS0yMC5vcmlnL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
+NDk2NS1iYXNlLmMgY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUtMjAvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9pd2w0OTY1LWJhc2UuYwotLS0gY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUtMjAu
+b3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDQ5NjUtYmFzZS5jCTIwMDgtMDUt
+MjAgMDU6MDU6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBjb21wYXQtd2lyZWxlc3MtMjAwOC0wNS0y
+MC9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDQ5NjUtYmFzZS5jCTIwMDgtMDUtMjAg
+MTg6MTg6NTguMzk5ODk3OTQwIC0wNDAwCkBAIC0xNzQ2LDE2ICsxNzQ2LDE5IEBAIHN0YXRpYyBp
+bnQgaXdsNDk2NV9nZXRfc3RhX2lkKHN0cnVjdCBpd2wKIAkJCXJldHVybiBzdGFfaWQ7CiAKIAkJ
+SVdMX0RFQlVHX0RST1AoIlN0YXRpb24gJXMgbm90IGluIHN0YXRpb24gbWFwLiAiCiAJCQkgICAg
+ICAgIkRlZmF1bHRpbmcgdG8gYnJvYWRjYXN0Li4uXG4iLAogCQkJICAgICAgIHByaW50X21hYyht
+YWMsIGhkci0+YWRkcjEpKTsKIAkJaXdsX3ByaW50X2hleF9kdW1wKHByaXYsIElXTF9ETF9EUk9Q
+LCAodTggKikgaGRyLCBzaXplb2YoKmhkcikpOwogCQlyZXR1cm4gcHJpdi0+aHdfcGFyYW1zLmJj
+YXN0X3N0YV9pZDsKIAorCS8qIElmIHdlIGFyZSBpbiBtb25pdG9yIG1vZGUsIHVzZSBCQ0FTVCAq
+LworCWNhc2UgSUVFRTgwMjExX0lGX1RZUEVfTU5UUjoKKwkJcmV0dXJuIHByaXYtPmh3X3BhcmFt
+cy5iY2FzdF9zdGFfaWQ7CiAJZGVmYXVsdDoKIAkJSVdMX1dBUk5JTkcoIlVua25vd24gbW9kZSBv
+ZiBvcGVyYXRpb246ICVkIiwgcHJpdi0+aXdfbW9kZSk7CiAJCXJldHVybiBwcml2LT5od19wYXJh
+bXMuYmNhc3Rfc3RhX2lkOwogCX0KIH0KIAogLyoKICAqIHN0YXJ0IFJFUExZX1RYIGNvbW1hbmQg
+cHJvY2VzcwpAQCAtMTc4NCwyMSArMTc4NywxNiBAQCBzdGF0aWMgaW50IGl3bDQ5NjVfdHhfc2ti
+KHN0cnVjdCBpd2xfcHJpCiAJaW50IHJjOwogCiAJc3Bpbl9sb2NrX2lycXNhdmUoJnByaXYtPmxv
+Y2ssIGZsYWdzKTsKIAlpZiAoaXdsX2lzX3Jma2lsbChwcml2KSkgewogCQlJV0xfREVCVUdfRFJP
+UCgiRHJvcHBpbmcgLSBSRiBLSUxMXG4iKTsKIAkJZ290byBkcm9wX3VubG9jazsKIAl9CiAKLQlp
+ZiAoIXByaXYtPnZpZikgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAhcHJpdi0+dmlm
+XG4iKTsKLQkJZ290byBkcm9wX3VubG9jazsKLQl9Ci0KIAlpZiAoKGN0bC0+dHhfcmF0ZS0+aHdf
+dmFsdWUgJiAweEZGKSA9PSBJV0xfSU5WQUxJRF9SQVRFKSB7CiAJCUlXTF9FUlJPUigiRVJST1I6
+IE5vIFRYIHJhdGUgYXZhaWxhYmxlLlxuIik7CiAJCWdvdG8gZHJvcF91bmxvY2s7CiAJfQogCiAJ
+dW5pY2FzdCA9ICFpc19tdWx0aWNhc3RfZXRoZXJfYWRkcihoZHItPmFkZHIxKTsKIAlpZCA9IDA7
+CiAKQEAgLTE4MDgsMjIgKzE4MDYsMjAgQEAgc3RhdGljIGludCBpd2w0OTY1X3R4X3NrYihzdHJ1
+Y3QgaXdsX3ByaQogCWlmIChpZWVlODAyMTFfaXNfYXV0aChmYykpCiAJCUlXTF9ERUJVR19UWCgi
+U2VuZGluZyBBVVRIIGZyYW1lXG4iKTsKIAllbHNlIGlmIChpZWVlODAyMTFfaXNfYXNzb2NfcmVx
+dWVzdChmYykpCiAJCUlXTF9ERUJVR19UWCgiU2VuZGluZyBBU1NPQyBmcmFtZVxuIik7CiAJZWxz
+ZSBpZiAoaWVlZTgwMjExX2lzX3JlYXNzb2NfcmVxdWVzdChmYykpCiAJCUlXTF9ERUJVR19UWCgi
+U2VuZGluZyBSRUFTU09DIGZyYW1lXG4iKTsKICNlbmRpZgogCi0JLyogZHJvcCBhbGwgZGF0YSBm
+cmFtZSBpZiB3ZSBhcmUgbm90IGFzc29jaWF0ZWQgKi8KKwkvKiBkcm9wIGFsbCBkYXRhIGZyYW1l
+IGlmICFwcml2LT5hc3NvY19zdGF0aW9uX2FkZGVkICovCiAJaWYgKCgoZmMgJiBJRUVFODAyMTFf
+RkNUTF9GVFlQRSkgPT0gSUVFRTgwMjExX0ZUWVBFX0RBVEEpICYmCi0JICAgKCFpd2xfaXNfYXNz
+b2NpYXRlZChwcml2KSB8fAotCSAgICAoKHByaXYtPml3X21vZGUgPT0gSUVFRTgwMjExX0lGX1RZ
+UEVfU1RBKSAmJiAhcHJpdi0+YXNzb2NfaWQpIHx8Ci0JICAgICFwcml2LT5hc3NvY19zdGF0aW9u
+X2FkZGVkKSkgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAhaXdsX2lzX2Fzc29jaWF0
+ZWRcbiIpOworCSAgICFwcml2LT5hc3NvY19zdGF0aW9uX2FkZGVkKSB7CisJCUlXTF9ERUJVR19E
+Uk9QKCJEcm9wcGluZyAtICFwcml2LT5hc3NvY19zdGF0aW9uX2FkZGVkXG4iKTsKIAkJZ290byBk
+cm9wX3VubG9jazsKIAl9CiAKIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZwcml2LT5sb2NrLCBm
+bGFncyk7CiAKIAloZHJfbGVuID0gaWVlZTgwMjExX2dldF9oZHJsZW4oZmMpOwogCiAJLyogRmlu
+ZCAob3IgY3JlYXRlKSBpbmRleCBpbnRvIHN0YXRpb24gdGFibGUgZm9yIGRlc3RpbmF0aW9uIHN0
+YXRpb24gKi8KQEAgLTUxMTAsMjEgKzUxMDYsMTYgQEAgc3RhdGljIHZvaWQgaXdsNDk2NV9tYWNf
+c3RvcChzdHJ1Y3QgaWVlZQogCiBzdGF0aWMgaW50IGl3bDQ5NjVfbWFjX3R4KHN0cnVjdCBpZWVl
+ODAyMTFfaHcgKmh3LCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLAogCQkgICAgICBzdHJ1Y3QgaWVlZTgw
+MjExX3R4X2NvbnRyb2wgKmN0bCkKIHsKIAlzdHJ1Y3QgaXdsX3ByaXYgKnByaXYgPSBody0+cHJp
+djsKIAogCUlXTF9ERUJVR19NQUM4MDIxMSgiZW50ZXJcbiIpOwogCi0JaWYgKHByaXYtPml3X21v
+ZGUgPT0gSUVFRTgwMjExX0lGX1RZUEVfTU5UUikgewotCQlJV0xfREVCVUdfTUFDODAyMTEoImxl
+YXZlIC0gbW9uaXRvclxuIik7Ci0JCXJldHVybiAtMTsKLQl9Ci0KIAlJV0xfREVCVUdfVFgoImRl
+di0+eG1pdCglZCBieXRlcykgYXQgcmF0ZSAweCUwMnhcbiIsIHNrYi0+bGVuLAogCQkgICAgIGN0
+bC0+dHhfcmF0ZS0+Yml0cmF0ZSk7CiAKIAlpZiAoaXdsNDk2NV90eF9za2IocHJpdiwgc2tiLCBj
+dGwpKQogCQlkZXZfa2ZyZWVfc2tiX2FueShza2IpOwogCiAJSVdMX0RFQlVHX01BQzgwMjExKCJs
+ZWF2ZVxuIik7CiAJcmV0dXJuIDA7Cg==
+------=_Part_3665_14050992.1211322379345--
