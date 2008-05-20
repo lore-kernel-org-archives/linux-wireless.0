@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60374
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754270AbYEMDR5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44846 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757634AbYETJOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 23:17:57 -0400
-Date: Mon, 12 May 2008 20:17:51 -0700 (PDT)
-Message-Id: <20080512.201751.114868351.davem@davemloft.net> (sfid-20080513_051802_966076_FE141046)
-To: johannes@sipsolutions.net
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1209824720.1475.6.camel@johannes.berg>
-References: <20080502.163334.148944203.davem@davemloft.net>
-	<1209807477.3987.9.camel@johannes.berg>
-	<1209824720.1475.6.camel@johannes.berg>
+	Tue, 20 May 2008 05:14:52 -0400
+Subject: Re: iwlwifi injection bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Andy Green <andy@warmcat.com>
+In-Reply-To: <1211249729.2532.59.camel@debian.sh.intel.com>
+References: <1210945631.6381.11.camel@johannes.berg>
+	 <1211249729.2532.59.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yku3omZVQK80g7MGbB5H"
+Date: Tue, 20 May 2008 11:13:40 +0200
+Message-Id: <1211274820.6252.75.camel@johannes.berg> (sfid-20080520_111458_762799_399EFE6B)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 03 May 2008 16:25:20 +0200
 
-[ Ok, I'm going through all of this, we'll solve the problems one at
-  a time and get this all taken care of.  ]
+--=-Yku3omZVQK80g7MGbB5H
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The worst case is probably prism54 usb devices which by itself need 76
-> bytes headroom for the USB buffer, and then when we say run mesh on top
-> of it we'll need a total of 122 bytes. Needless to say, it cannot do s/g
-> operation.
- ...
-> Should we increase the LL_MAX_HEADER constant to 40 (no mesh networking)
-> or 46 for when 802.11 (with mesh networking) is configured into the
-> kernel? Most people probably don't run an IPIP tunnel over wireless yet
-> configure them in (especially distros) so that might be why we never saw
-> the problem before.
 
-Thanks for these numbers.
+> >         if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+> >                 IWL_DEBUG_MAC80211("leave - monitor\n");
+> >                 return -1;
+> >         }
+> >=20
+> > You see, this will cause mac80211 to resubmit the frame and most
+> > likely will totally mess up queue handling and various other things.
+>=20
+> The monitor mode the driver is using currently is purely a "sniffer". We
+> will look into other promiscuous mode supported by the firmware to see
+> if we can enable that.
 
-Based upon them I will adjust LL_MAX_HEADER as follows:
+Until then, however, you should return 0 and free the skb there to avoid
+messing up the whole networking layer's queuing.
 
-net: Set LL_MAX_HEADER properly for wireless.
+johannes
 
-Wireless networking, particularly with MESH enabled, has
-quite strong requirements for link-layer header space.
+--=-Yku3omZVQK80g7MGbB5H
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Based upon some numbers and descriptions from Johannes Berg
-we use 96 (same as AX25) for plain wireless, and with
-mesh enabled we use 128.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-In the process, simplify the cpp conditional logic here by
-ordering the cases by those needing the most space down
-to those needing the least case.
+iQIVAwUASDKWQ6Vg1VMiehFYAQIo3Q/+PnrVhyRteRm+sahHvTZDU2CNaVSCMTP6
+gpNWPRUT5RPBZ2ASYC16bjyjpezhjdk0BuTGM/WhlM/Rwuw3sgqz3ZSNNqwXlZw+
+QcHq1qvUFVH+Qtx/tbEF53SCXkUgqNoRWTcToM8CtcmETmttG51bMwZqEo4p92eU
+/ZYtCzqFpvRH8hG/Aty35So6x28ViFsiPYelWarY/G1pWpOV8Rv0w8m1v6BlZaBM
+eAIMUd6LmDNNhhTEDOjkBtvKEVjq4HkLsGVJULJS3qRhgeWUGAaxNY/ajX8SI5KI
+vH5+VHWjVwCffqdi6o8dOmXoKtGt38+5AyF/CIW9Y/hfJ7BzsX5nxdnwxQVhZ8D4
+Ks+C2Qg0B8SPZkMJzfgzygSoBaCwD1PV0rTrgMrKnsd/HTutrd5ut5sMilQQfvRt
+XuqiAYLOptyM9rhmXQC3suNgQnhQhWDNuyTvG0TBlwu31HZXZErZw8HPGHXXFQI+
+xRWSz9rGdPuDysK68+EreXTHYWWfELD/Jwj1VFijmpPnwFE/CesTFa64/VVWcYVw
+SvvWFCRF5F/LEQlvyJpNk27XoS55DN1uB05JEA7Wy1vro/5GUk62sc6vH9e65pmY
+f9MBg8Oat5Z3WhjklWwVpAK+lL7BLgq0GTbS8xOkibM8ZiGuDy9BBwqwWE4zSzci
+W664+g+HSoU=
+=UOVM
+-----END PGP SIGNATURE-----
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 7469017..a3fb57f 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -93,14 +93,16 @@ struct wireless_dev;
-  *	used.
-  */
-  
--#if !defined(CONFIG_AX25) && !defined(CONFIG_AX25_MODULE) && !defined(CONFIG_TR)
--#define LL_MAX_HEADER	32
-+#if defined(CONFIG_WLAN_80211) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
-+# if defined(CONFIG_MAC80211_MESH)
-+#  define LL_MAX_HEADER 128
-+# else
-+#  define LL_MAX_HEADER 96
-+# endif
-+#elif defined(CONFIG_TR)
-+# define LL_MAX_HEADER 48
- #else
--#if defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
--#define LL_MAX_HEADER	96
--#else
--#define LL_MAX_HEADER	48
--#endif
-+# define LL_MAX_HEADER 32
- #endif
- 
- #if !defined(CONFIG_NET_IPIP) && !defined(CONFIG_NET_IPIP_MODULE) && \
--- 
-1.5.5.1.57.g5909c
+--=-Yku3omZVQK80g7MGbB5H--
 
