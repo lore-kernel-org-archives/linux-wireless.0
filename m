@@ -1,96 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4495 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752940AbYEPPU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 11:20:57 -0400
-Date: Fri, 16 May 2008 11:08:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Martin Dubuc <martind1111@gmail.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Monitor mode on boot
-Message-ID: <20080516150824.GB6510@tuxdriver.com> (sfid-20080516_172100_831309_930F3D53)
-References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com> <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com> <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com> <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:38827 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760011AbYETKR4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 May 2008 06:17:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Upload both beacon templates on initial load
+Date: Tue, 20 May 2008 12:16:28 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200805201216.29134.mb@bu3sch.de> (sfid-20080520_142322_361614_7FDE8C87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 16, 2008 at 04:03:15PM +0200, Stefanik G=E1bor wrote:
-> On Fri, May 16, 2008 at 3:27 PM, Martin Dubuc <martind1111@gmail.com>=
- wrote:
->=20
-> > You are right pointing out that it is possible to perform monitor m=
-ode
-> > configuration using startup scripts. However, to fit nicely in exis=
-ting
-> > frameworks, such as the ones available from Fedora, it would be nic=
-e that
-> > the driver be enhanced. Madwifi allows users to put a configuration=
- like
-> > this one in the modprobe.conf.:
-> >
-> > options ath_pci autocreate=3Dmonitor
-> >
-> > The nice thing about such a configuration is that it decouples the =
-device
-> > type configuration from the interface management function. One does=
- not need
-> > to worry which interface (wlan0, wlan1, wlan2, etc.) a device will =
-come up
-> > on, the system configures any device of a given type using a common=
- set of
-> > configuration. For systems that have only one Wi-Fi device, your me=
-thod is
-> > as good as this one, but for systems that have more than one Wi-Fi =
-device,
-> > some of them coming off and on while the system is running, possibl=
-y using
-> > different interface names, the modprobe.conf solution is better.
-> >
-> > Martin
-> >
-> >
-> This might better be done in the stack, rather than the driver. This =
-way,
-> all drivers would get this functionality. CCing the linux-wireless ma=
-iling
-> list.
+This updates the beacon template code to upload both templates,
+if we never uploaded one before.
 
-In general I think we would like to avoid module options, especially
-in cases where the userland equivalent is easily accomplished.
-But if this is truly warranted it would make more sense to put it
-into mac80211 than into an individual driver.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Why would you want to automatically create several monitor interfaces
-on the same box?  Won't this usually be more-or-less redundant?
+---
 
-> Also, since an userspace solution might be preferred by Linville and =
-the
-> other wireless maintainers, it might be wise to add an "aggregate dev=
-ice" or
-> a "supermaster" which can be targeted by iw so that all devices gover=
-ned by
-> that driver get a new interface.
+John, we can apply that to 2.6.26, but I guess it's not too important
+there, as that doesn't support AP, IBSS or Mesh anyway.
 
-Gack!  The last thing I would want to see is more magical netdevs
-with mysterious purposes...
 
-> Alternatively, a script can be made that creates a monitor interface =
-on monX
-> or rtapX for all wmasterX devices. This is equivalent to madwifi's so=
-lution,
-> except that it's userspace, which is preferred now.
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-05-20 00:16:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-05-20 00:54:16.000000000 +0200
+@@ -753,12 +753,13 @@ struct b43_wl {
+ 	/* The beacon we are currently using (AP or IBSS mode).
+ 	 * This beacon stuff is protected by the irq_lock. */
+ 	struct sk_buff *current_beacon;
+ 	struct ieee80211_tx_control beacon_txctl;
+ 	bool beacon0_uploaded;
+ 	bool beacon1_uploaded;
++	bool beacon_templates_virgin; /* Never wrote the templates? */
+ 	struct work_struct beacon_update_trigger;
+ 
+ 	/* The current QOS parameters for the 4 queues.
+ 	 * This is protected by the irq_lock. */
+ 	struct b43_qos_params qos_params[4];
+ 	/* Workqueue for updating QOS parameters in hardware. */
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-05-20 00:18:53.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-05-20 01:05:04.000000000 +0200
+@@ -1541,12 +1541,36 @@ static void b43_write_probe_resp_templat
+ 	b43_write_template_common(dev, probe_resp_data,
+ 				  size, ram_offset, shm_size_offset,
+ 				  rate->hw_value);
+ 	kfree(probe_resp_data);
+ }
+ 
++static void b43_upload_beacon0(struct b43_wldev *dev)
++{
++	struct b43_wl *wl = dev->wl;
++
++	if (wl->beacon0_uploaded)
++		return;
++	b43_write_beacon_template(dev, 0x68, 0x18);
++	/* FIXME: Probe resp upload doesn't really belong here,
++	 *        but we don't use that feature anyway. */
++	b43_write_probe_resp_template(dev, 0x268, 0x4A,
++				      &__b43_ratetable[3]);
++	wl->beacon0_uploaded = 1;
++}
++
++static void b43_upload_beacon1(struct b43_wldev *dev)
++{
++	struct b43_wl *wl = dev->wl;
++
++	if (wl->beacon1_uploaded)
++		return;
++	b43_write_beacon_template(dev, 0x468, 0x1A);
++	wl->beacon1_uploaded = 1;
++}
++
+ static void handle_irq_beacon(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl = dev->wl;
+ 	u32 cmd, beacon0_valid, beacon1_valid;
+ 
+ 	if (!b43_is_mode(wl, IEEE80211_IF_TYPE_AP))
+@@ -1565,30 +1589,33 @@ static void handle_irq_beacon(struct b43
+ 	if (beacon0_valid && beacon1_valid) {
+ 		b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, B43_IRQ_BEACON);
+ 		dev->irq_savedstate |= B43_IRQ_BEACON;
+ 		return;
+ 	}
+ 
+-	if (!beacon0_valid) {
+-		if (!wl->beacon0_uploaded) {
+-			b43_write_beacon_template(dev, 0x68, 0x18);
+-			b43_write_probe_resp_template(dev, 0x268, 0x4A,
+-						      &__b43_ratetable[3]);
+-			wl->beacon0_uploaded = 1;
+-		}
++	if (unlikely(wl->beacon_templates_virgin)) {
++		/* We never uploaded a beacon before.
++		 * Upload both templates now, but only mark one valid. */
++		wl->beacon_templates_virgin = 0;
++		b43_upload_beacon0(dev);
++		b43_upload_beacon1(dev);
+ 		cmd = b43_read32(dev, B43_MMIO_MACCMD);
+ 		cmd |= B43_MACCMD_BEACON0_VALID;
+ 		b43_write32(dev, B43_MMIO_MACCMD, cmd);
+-	} else if (!beacon1_valid) {
+-		if (!wl->beacon1_uploaded) {
+-			b43_write_beacon_template(dev, 0x468, 0x1A);
+-			wl->beacon1_uploaded = 1;
++	} else {
++		if (!beacon0_valid) {
++			b43_upload_beacon0(dev);
++			cmd = b43_read32(dev, B43_MMIO_MACCMD);
++			cmd |= B43_MACCMD_BEACON0_VALID;
++			b43_write32(dev, B43_MMIO_MACCMD, cmd);
++		} else if (!beacon1_valid) {
++			b43_upload_beacon1(dev);
++			cmd = b43_read32(dev, B43_MMIO_MACCMD);
++			cmd |= B43_MACCMD_BEACON1_VALID;
++			b43_write32(dev, B43_MMIO_MACCMD, cmd);
+ 		}
+-		cmd = b43_read32(dev, B43_MMIO_MACCMD);
+-		cmd |= B43_MACCMD_BEACON1_VALID;
+-		b43_write32(dev, B43_MMIO_MACCMD, cmd);
+ 	}
+ }
+ 
+ static void b43_beacon_update_trigger_work(struct work_struct *work)
+ {
+ 	struct b43_wl *wl = container_of(work, struct b43_wl,
+@@ -4164,12 +4191,15 @@ static int b43_op_start(struct ieee80211
+ 	 * and mac80211 reconfiguring it. */
+ 	memset(wl->bssid, 0, ETH_ALEN);
+ 	memset(wl->mac_addr, 0, ETH_ALEN);
+ 	wl->filter_flags = 0;
+ 	wl->radiotap_enabled = 0;
+ 	b43_qos_clear(wl);
++	wl->beacon0_uploaded = 0;
++	wl->beacon1_uploaded = 0;
++	wl->beacon_templates_virgin = 1;
+ 
+ 	/* First register RFkill.
+ 	 * LEDs that are registered later depend on it. */
+ 	b43_rfkill_init(dev);
+ 
+ 	mutex_lock(&wl->mutex);
 
-The scripts later in the thread seem simple enough.  Do they suffice?
-
-John
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
