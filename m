@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:4189 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbYEHAVC (ORCPT
+Received: from bugs.comnets.uni-bremen.de ([134.102.186.10]:50744 "EHLO
+	bugs.comnets.uni-bremen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757336AbYEUPUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 20:21:02 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so771778waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 07 May 2008 17:21:02 -0700 (PDT)
-Message-ID: <1ba2fa240805071721i3d1e3258s1e8c024c4cae9239@mail.gmail.com> (sfid-20080508_022012_233566_938B8A3C)
-Date: Thu, 8 May 2008 03:21:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi and tx info in skb->cb
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210203054.3547.12.camel@johannes.berg>
+	Wed, 21 May 2008 11:20:30 -0400
+Date: Wed, 21 May 2008 17:20:29 +0200 (CEST)
+From: Markus Becker <mab@comnets.uni-bremen.de>
+To: Dan Williams <dcbw@redhat.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: mrv8k: now gets scan results
+In-Reply-To: <1211379614.25344.7.camel@localhost.localdomain>
+Message-ID: <Pine.LNX.4.64.0805211711450.3750@bugs.comnets.uni-bremen.de> (sfid-20080521_172035_680438_CB90EA16)
+References: <1211312013.10737.10.camel@localhost.localdomain>
+ <Pine.LNX.4.64.0805210900160.3750@bugs.comnets.uni-bremen.de>
+ <1211379614.25344.7.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1210197711.3547.1.camel@johannes.berg>
-	 <1ba2fa240805071629i6c7336f6y61a7c9690820ef5e@mail.gmail.com>
-	 <1210203054.3547.12.camel@johannes.berg>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 8, 2008 at 2:30 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->  > >  What is a TFD, and why can it have multiple SKBs with a single tx
->  > >  status? I'm referring to:
->  >
->  > TFD stands for TX File Descriptor
->
->  Huh, "file"?
-Sorry,. it's field.
->
->  Anyway,
->
->
->  > This is for scatter gather. Nothing to do with aggregation. If you get
->  > fragmented frame you can send it out without linearizing in CPU. in
->  > numer of TB - TX buffers (which is limitted bu MAX_NUM_OF_TBS)  But
->  > I'm just over ever explaining :)
->
->  We don't support that in mac80211 right now, why do you have that there?
 
-Currently we actively use 2 of them. First for TX command second for
-actual frame.  It would be even worth if we need to expand
-each packet also for TX command.
-Any how hope to make it work one day. There is significant performance
-gain in using this at least in the other operating system.
+On Wed, 21 May 2008, Dan Williams wrote:
 
+> On Wed, 2008-05-21 at 09:08 +0200, Markus Becker wrote:
+>> Hi Dan,
+>>
+>> I just tested it and my Option Fusion+ HSDPA card does not scan:
+>>
+>> May 21 08:52:17 shelbyville kernel: Command timeout
+>> May 21 08:52:17 shelbyville kernel: Could not set channel
+>> May 21 08:52:17 shelbyville kernel: ~Failed to set channel
+>> May 21 08:52:17 shelbyville kernel: wlan1: failed to set freq to 2417 MHz for scan
+>
+> Interesting; it does take the firmware upload though, right?  What
+> firmware version gets reported by the driver when it loads?  I'll have
+> to try again with my Netgear PCI card which was a lot more unhappy with
+> the driver than my 3Com CardBus one.
 
-Thanks
-Tomas
+The firmware loads fine for me, see below:
+May 21 08:50:40 shelbyville kernel: 0000:16:00.0 (mrv8k): successfully uploaded firmware
+May 21 08:50:40 shelbyville kernel: 0000:16:00.0 (mrv8k): MAC address 00:0c:e3:xx:xx:xx
+May 21 08:50:40 shelbyville kernel: 0000:16:00.0 (mrv8k): HW ver. 3, FW ver. 0x3020007, 2 antennas, regulatory domain EU
 
-Tomas
-
->  johannes
+>
+> I spent some time checking through marvell.git from Linville's repo on
+> kernel.org too, and it looks like we may be able to pull a lot of
+> constants and commands from that.  The RX and TX descriptors are
+> somewhat different, but I've generally found that Marvell's drivers and
+> firmware share a lot of API/ABI (would be stupid to break stuff all the
+> time anyway, even in closed source).  We may be able to use mrv8k for
+> the TopDog 802.11n PCI and USB parts as well since they are so similar
+> from a programming perspective.
+>
+> Dan
+>
+>> May 21 08:52:19 shelbyville kernel: Command timeout
+>> May 21 08:52:19 shelbyville kernel: Could not set channel
+>> May 21 08:52:19 shelbyville kernel: ~Failed to set channel
+>> May 21 08:52:19 shelbyville kernel: wlan1: failed to set freq to 2422 MHz for scan
+>> [...]
+>>
+>> I also got some lockups, however I have no infrastructure setup to debug
+>> those.
+>>
+>> Thanks for all your efforts,
+>> Markus
+>>
+>> On Tue, 20 May 2008, Dan Williams wrote:
+>>
+>>> Hi,
+>>>
+>>> I've gotten mrv8k to the point where I can get scan results with it on
+>>> my 3COM 3CRGPC10075 CardBus card.  Data RX still doesn't work for some
+>>> reason and WEP associations still fail with a mac80211 timeout.  Enough
+>>> for today though.  All changes pushed to mrv8k.git on infradead.
+>>>
+>>> Dan
+>>>
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
