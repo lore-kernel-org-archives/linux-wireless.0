@@ -1,123 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:57271 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754136AbYEHIbC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 04:31:02 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH/RFC] mac80211: fix association with some APs
-Date: Thu, 8 May 2008 10:30:57 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
+Received: from qb-out-0506.google.com ([72.14.204.236]:42870 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757627AbYEUPCX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2008 11:02:23 -0400
+Received: by qb-out-0506.google.com with SMTP id f11so5613130qba.15
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 08:02:22 -0700 (PDT)
+Message-ID: <69e28c910805210802u1c20ab0ek5a92c08a010d7085@mail.gmail.com> (sfid-20080521_170227_396283_5EBE5CEF)
+Date: Wed, 21 May 2008 17:02:20 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <1ba2fa240805201613x84c62cdke2ac3a4970beb60b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805081030.57966.hschaa@suse.de> (sfid-20080508_103014_164463_59BE0F2D)
+Content-Type: multipart/mixed;
+	boundary="----=_Part_6045_19537755.1211382141031"
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <1ba2fa240805201441u2182071en5d557bb8f5f28504@mail.gmail.com>
+	 <69e28c910805201451r3cab72bbwe9600008c9cc105d@mail.gmail.com>
+	 <1ba2fa240805201518h78f9825fw389d0afd42f0130b@mail.gmail.com>
+	 <69e28c910805201526v233cf05brfb3fac060a28c33b@mail.gmail.com>
+	 <1ba2fa240805201545q4084f0f3ge2c01d9537beec85@mail.gmail.com>
+	 <69e28c910805201556g1f28ec9fge9e23ef701db7d9a@mail.gmail.com>
+	 <1ba2fa240805201613x84c62cdke2ac3a4970beb60b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some APs refuse association if the supported rates contained in the association
-request do not match its own supported rates. This patch introduces a new
-function which builds the intersection between the AP's supported rates and the
-client's supported rates to work around such problems. The same approach is
-already used in ipw2200 for example.
+------=_Part_6045_19537755.1211382141031
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
+On Wed, May 21, 2008 at 1:13 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Wed, May 21, 2008 at 1:56 AM, Stefanik G=E1bor <netrolller.3d@gmail.co=
+m> wrote:
+>> On Tue, May 20, 2008 at 6:45 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>>> Need to add if (sta_is !=3D bcast)  otherwise this will drop all your
+>>> injected packets.
+>>
+>> Did you mean if (sta_id !=3D priv->hw_setting.bcast_sta_id)? Because
+>> there is no "sta_is" variable.
+>
+> j=F3 =E9jszak=E1t!
+>
 
----
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cb01995..8cc5805 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -650,6 +650,26 @@ static void ieee80211_authenticate(struct net_device *dev,
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
- }
- 
-+static int ieee80211_compatible_rates(struct ieee80211_sta_bss *bss,
-+				      struct ieee80211_supported_band *sband,
-+				      u64 *rates)
-+{
-+	int i, j, count;
-+	*rates = 0;
-+	count = 0;
-+	for (i = 0; i < bss->supp_rates_len; i++) {
-+		int rate = (bss->supp_rates[i] & 0x7F) * 5;
-+
-+		for (j = 0; j < sband->n_bitrates; j++)
-+			if (sband->bitrates[j].bitrate == rate) {
-+				*rates |= BIT(j);
-+				count++;
-+				break;
-+			}
-+	}
-+
-+	return count;
-+}
- 
- static void ieee80211_send_assoc(struct net_device *dev,
- 				 struct ieee80211_if_sta *ifsta)
-@@ -658,11 +678,12 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos, *ies;
--	int i, len;
-+	int i, len, count, rates_len, supp_rates_len;
- 	u16 capab;
- 	struct ieee80211_sta_bss *bss;
- 	int wmm = 0;
- 	struct ieee80211_supported_band *sband;
-+	u64 rates = 0;
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
- 			    sizeof(*mgmt) + 200 + ifsta->extra_ie_len +
-@@ -724,24 +745,37 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 	*pos++ = ifsta->ssid_len;
- 	memcpy(pos, ifsta->ssid, ifsta->ssid_len);
- 
-+	rates_len = ieee80211_compatible_rates(bss, sband, &rates);
-+	supp_rates_len = rates_len;
-+	if (supp_rates_len > 8)
-+		supp_rates_len = 8;
-+
- 	len = sband->n_bitrates;
--	if (len > 8)
--		len = 8;
--	pos = skb_put(skb, len + 2);
-+	pos = skb_put(skb, supp_rates_len + 2);
- 	*pos++ = WLAN_EID_SUPP_RATES;
--	*pos++ = len;
--	for (i = 0; i < len; i++) {
--		int rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
--	}
-+	*pos++ = supp_rates_len;
- 
--	if (sband->n_bitrates > len) {
--		pos = skb_put(skb, sband->n_bitrates - len + 2);
--		*pos++ = WLAN_EID_EXT_SUPP_RATES;
--		*pos++ = sband->n_bitrates - len;
--		for (i = len; i < sband->n_bitrates; i++) {
-+	count = 0;
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (BIT(i) & rates) {
- 			int rate = sband->bitrates[i].bitrate;
- 			*pos++ = (u8) (rate / 5);
-+			if (++count == 8)
-+				break;
-+		}
-+	}
-+
-+	if (count == 8)
-+	{
-+		pos = skb_put(skb, rates_len - count + 2);
-+		*pos++ = WLAN_EID_EXT_SUPP_RATES;
-+		*pos++ = rates_len - count;
-+
-+		for (i++; i < sband->n_bitrates; i++) {
-+			if (BIT(i) & rates) {
-+				int rate = sband->bitrates[i].bitrate;
-+				*pos++ = (u8) (rate / 5);
-+			}
- 		}
- 	}
- 
+I guess we should continue using English on this mailing list - we
+can't expect our readers to understand Hungarian. (Ez=E9rt nem is
+magyarul v=E1laszolok.)
+
+BTW I accidentally forgot to attach a usable version of the patch to
+my previous mail - this time, it's really attached.
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+------=_Part_6045_19537755.1211382141031
+Content-Type: text/x-diff; name=iwlinject3.diff
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fgi1gehu0
+Content-Disposition: attachment; filename=iwlinject3.diff
+
+ZGlmZiAtcnAgLVUgOCBjb21wYXQtd2lyZWxlc3MtMjAwOC0wNS0yMC5vcmlnL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvaXdsMzk0NS1iYXNlLmMgY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUt
+MjAvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wzOTQ1LWJhc2UuYwotLS0gY29tcGF0
+LXdpcmVsZXNzLTIwMDgtMDUtMjAub3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
+bDM5NDUtYmFzZS5jCTIwMDgtMDUtMjAgMDU6MDU6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBjb21w
+YXQtd2lyZWxlc3MtMjAwOC0wNS0yMC9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDM5
+NDUtYmFzZS5jCTIwMDgtMDUtMjAgMTE6MzE6MTUuNTEzMTczODQ3IC0wNDAwCkBAIC0yNTQyLDE2
+ICsyNTQyLDE5IEBAIHN0YXRpYyBpbnQgaXdsMzk0NV9nZXRfc3RhX2lkKHN0cnVjdCBpd2wKIAkJ
+CXJldHVybiBzdGFfaWQ7CiAKIAkJSVdMX0RFQlVHX0RST1AoIlN0YXRpb24gJXMgbm90IGluIHN0
+YXRpb24gbWFwLiAiCiAJCQkgICAgICAgIkRlZmF1bHRpbmcgdG8gYnJvYWRjYXN0Li4uXG4iLAog
+CQkJICAgICAgIHByaW50X21hYyhtYWMsIGhkci0+YWRkcjEpKTsKIAkJaXdsMzk0NV9wcmludF9o
+ZXhfZHVtcChJV0xfRExfRFJPUCwgKHU4ICopIGhkciwgc2l6ZW9mKCpoZHIpKTsKIAkJcmV0dXJu
+IHByaXYtPmh3X3NldHRpbmcuYmNhc3Rfc3RhX2lkOwogCX0KKwkvKiBJZiB3ZSBhcmUgaW4gbW9u
+aXRvciBtb2RlLCB1c2UgQkNBU1QgKi8KKwljYXNlIElFRUU4MDIxMV9JRl9UWVBFX01OVFI6CisJ
+CXJldHVybiBwcml2LT5od19zZXR0aW5nLmJjYXN0X3N0YV9pZDsKIAlkZWZhdWx0OgogCQlJV0xf
+V0FSTklORygiVW5rbm93biBtb2RlIG9mIG9wZXJhdGlvbjogJWQiLCBwcml2LT5pd19tb2RlKTsK
+IAkJcmV0dXJuIHByaXYtPmh3X3NldHRpbmcuYmNhc3Rfc3RhX2lkOwogCX0KIH0KIAogLyoKICAq
+IHN0YXJ0IFJFUExZX1RYIGNvbW1hbmQgcHJvY2VzcwpAQCAtMjU3OSwyMSArMjU4MiwxNiBAQCBz
+dGF0aWMgaW50IGl3bDM5NDVfdHhfc2tiKHN0cnVjdCBpd2wzOTQ1CiAJaW50IHJjOwogCiAJc3Bp
+bl9sb2NrX2lycXNhdmUoJnByaXYtPmxvY2ssIGZsYWdzKTsKIAlpZiAoaXdsMzk0NV9pc19yZmtp
+bGwocHJpdikpIHsKIAkJSVdMX0RFQlVHX0RST1AoIkRyb3BwaW5nIC0gUkYgS0lMTFxuIik7CiAJ
+CWdvdG8gZHJvcF91bmxvY2s7CiAJfQogCi0JaWYgKCFwcml2LT52aWYpIHsKLQkJSVdMX0RFQlVH
+X0RST1AoIkRyb3BwaW5nIC0gIXByaXYtPnZpZlxuIik7Ci0JCWdvdG8gZHJvcF91bmxvY2s7Ci0J
+fQotCiAJaWYgKChjdGwtPnR4X3JhdGUtPmh3X3ZhbHVlICYgMHhGRikgPT0gSVdMX0lOVkFMSURf
+UkFURSkgewogCQlJV0xfRVJST1IoIkVSUk9SOiBObyBUWCByYXRlIGF2YWlsYWJsZS5cbiIpOwog
+CQlnb3RvIGRyb3BfdW5sb2NrOwogCX0KIAogCXVuaWNhc3QgPSAhaXNfbXVsdGljYXN0X2V0aGVy
+X2FkZHIoaGRyLT5hZGRyMSk7CiAJaWQgPSAwOwogCkBAIC0yNjAzLDI0ICsyNjAxLDE2IEBAIHN0
+YXRpYyBpbnQgaXdsMzk0NV90eF9za2Ioc3RydWN0IGl3bDM5NDUKIAlpZiAoaWVlZTgwMjExX2lz
+X2F1dGgoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNlbmRpbmcgQVVUSCBmcmFtZVxuIik7CiAJZWxz
+ZSBpZiAoaWVlZTgwMjExX2lzX2Fzc29jX3JlcXVlc3QoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNl
+bmRpbmcgQVNTT0MgZnJhbWVcbiIpOwogCWVsc2UgaWYgKGllZWU4MDIxMV9pc19yZWFzc29jX3Jl
+cXVlc3QoZmMpKQogCQlJV0xfREVCVUdfVFgoIlNlbmRpbmcgUkVBU1NPQyBmcmFtZVxuIik7CiAj
+ZW5kaWYKIAotCS8qIGRyb3AgYWxsIGRhdGEgZnJhbWUgaWYgd2UgYXJlIG5vdCBhc3NvY2lhdGVk
+ICovCi0JaWYgKCghaXdsMzk0NV9pc19hc3NvY2lhdGVkKHByaXYpIHx8Ci0JICAgICAoKHByaXYt
+Pml3X21vZGUgPT0gSUVFRTgwMjExX0lGX1RZUEVfU1RBKSAmJiAhcHJpdi0+YXNzb2NfaWQpKSAm
+JgotCSAgICAoKGZjICYgSUVFRTgwMjExX0ZDVExfRlRZUEUpID09IElFRUU4MDIxMV9GVFlQRV9E
+QVRBKSkgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAhaXdsMzk0NV9pc19hc3NvY2lh
+dGVkXG4iKTsKLQkJZ290byBkcm9wX3VubG9jazsKLQl9Ci0KIAlzcGluX3VubG9ja19pcnFyZXN0
+b3JlKCZwcml2LT5sb2NrLCBmbGFncyk7CiAKIAloZHJfbGVuID0gaWVlZTgwMjExX2dldF9oZHJs
+ZW4oZmMpOwogCiAJLyogRmluZCAob3IgY3JlYXRlKSBpbmRleCBpbnRvIHN0YXRpb24gdGFibGUg
+Zm9yIGRlc3RpbmF0aW9uIHN0YXRpb24gKi8KIAlzdGFfaWQgPSBpd2wzOTQ1X2dldF9zdGFfaWQo
+cHJpdiwgaGRyKTsKIAlpZiAoc3RhX2lkID09IElXTF9JTlZBTElEX1NUQVRJT04pIHsKIAkJREVD
+TEFSRV9NQUNfQlVGKG1hYyk7CkBAIC02NjkyLDIxICs2NjgyLDE2IEBAIHN0YXRpYyB2b2lkIGl3
+bDM5NDVfbWFjX3N0b3Aoc3RydWN0IGllZWUKIAogc3RhdGljIGludCBpd2wzOTQ1X21hY190eChz
+dHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0IHNrX2J1ZmYgKnNrYiwKIAkJICAgICAgc3Ry
+dWN0IGllZWU4MDIxMV90eF9jb250cm9sICpjdGwpCiB7CiAJc3RydWN0IGl3bDM5NDVfcHJpdiAq
+cHJpdiA9IGh3LT5wcml2OwogCiAJSVdMX0RFQlVHX01BQzgwMjExKCJlbnRlclxuIik7CiAKLQlp
+ZiAocHJpdi0+aXdfbW9kZSA9PSBJRUVFODAyMTFfSUZfVFlQRV9NTlRSKSB7Ci0JCUlXTF9ERUJV
+R19NQUM4MDIxMSgibGVhdmUgLSBtb25pdG9yXG4iKTsKLQkJcmV0dXJuIC0xOwotCX0KLQogCUlX
+TF9ERUJVR19UWCgiZGV2LT54bWl0KCVkIGJ5dGVzKSBhdCByYXRlIDB4JTAyeFxuIiwgc2tiLT5s
+ZW4sCiAJCSAgICAgY3RsLT50eF9yYXRlLT5iaXRyYXRlKTsKIAogCWlmIChpd2wzOTQ1X3R4X3Nr
+Yihwcml2LCBza2IsIGN0bCkpCiAJCWRldl9rZnJlZV9za2JfYW55KHNrYik7CiAKIAlJV0xfREVC
+VUdfTUFDODAyMTEoImxlYXZlXG4iKTsKIAlyZXR1cm4gMDsKZGlmZiAtcnAgLVUgOCBjb21wYXQt
+d2lyZWxlc3MtMjAwOC0wNS0yMC5vcmlnL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
+NDk2NS1iYXNlLmMgY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUtMjAvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9pd2w0OTY1LWJhc2UuYwotLS0gY29tcGF0LXdpcmVsZXNzLTIwMDgtMDUtMjAu
+b3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDQ5NjUtYmFzZS5jCTIwMDgtMDUt
+MjAgMDU6MDU6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBjb21wYXQtd2lyZWxlc3MtMjAwOC0wNS0y
+MC9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bDQ5NjUtYmFzZS5jCTIwMDgtMDUtMjAg
+MTg6NTk6MzkuNDAwOTc1NzU0IC0wNDAwCkBAIC0xNzQ2LDE2ICsxNzQ2LDE5IEBAIHN0YXRpYyBp
+bnQgaXdsNDk2NV9nZXRfc3RhX2lkKHN0cnVjdCBpd2wKIAkJCXJldHVybiBzdGFfaWQ7CiAKIAkJ
+SVdMX0RFQlVHX0RST1AoIlN0YXRpb24gJXMgbm90IGluIHN0YXRpb24gbWFwLiAiCiAJCQkgICAg
+ICAgIkRlZmF1bHRpbmcgdG8gYnJvYWRjYXN0Li4uXG4iLAogCQkJICAgICAgIHByaW50X21hYyht
+YWMsIGhkci0+YWRkcjEpKTsKIAkJaXdsX3ByaW50X2hleF9kdW1wKHByaXYsIElXTF9ETF9EUk9Q
+LCAodTggKikgaGRyLCBzaXplb2YoKmhkcikpOwogCQlyZXR1cm4gcHJpdi0+aHdfcGFyYW1zLmJj
+YXN0X3N0YV9pZDsKIAorCS8qIElmIHdlIGFyZSBpbiBtb25pdG9yIG1vZGUsIHVzZSBCQ0FTVCAq
+LworCWNhc2UgSUVFRTgwMjExX0lGX1RZUEVfTU5UUjoKKwkJcmV0dXJuIHByaXYtPmh3X3BhcmFt
+cy5iY2FzdF9zdGFfaWQ7CiAJZGVmYXVsdDoKIAkJSVdMX1dBUk5JTkcoIlVua25vd24gbW9kZSBv
+ZiBvcGVyYXRpb246ICVkIiwgcHJpdi0+aXdfbW9kZSk7CiAJCXJldHVybiBwcml2LT5od19wYXJh
+bXMuYmNhc3Rfc3RhX2lkOwogCX0KIH0KIAogLyoKICAqIHN0YXJ0IFJFUExZX1RYIGNvbW1hbmQg
+cHJvY2VzcwpAQCAtMTc4NCwyMSArMTc4NywxNiBAQCBzdGF0aWMgaW50IGl3bDQ5NjVfdHhfc2ti
+KHN0cnVjdCBpd2xfcHJpCiAJaW50IHJjOwogCiAJc3Bpbl9sb2NrX2lycXNhdmUoJnByaXYtPmxv
+Y2ssIGZsYWdzKTsKIAlpZiAoaXdsX2lzX3Jma2lsbChwcml2KSkgewogCQlJV0xfREVCVUdfRFJP
+UCgiRHJvcHBpbmcgLSBSRiBLSUxMXG4iKTsKIAkJZ290byBkcm9wX3VubG9jazsKIAl9CiAKLQlp
+ZiAoIXByaXYtPnZpZikgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAhcHJpdi0+dmlm
+XG4iKTsKLQkJZ290byBkcm9wX3VubG9jazsKLQl9Ci0KIAlpZiAoKGN0bC0+dHhfcmF0ZS0+aHdf
+dmFsdWUgJiAweEZGKSA9PSBJV0xfSU5WQUxJRF9SQVRFKSB7CiAJCUlXTF9FUlJPUigiRVJST1I6
+IE5vIFRYIHJhdGUgYXZhaWxhYmxlLlxuIik7CiAJCWdvdG8gZHJvcF91bmxvY2s7CiAJfQogCiAJ
+dW5pY2FzdCA9ICFpc19tdWx0aWNhc3RfZXRoZXJfYWRkcihoZHItPmFkZHIxKTsKIAlpZCA9IDA7
+CiAKQEAgLTE4MDgsMjIgKzE4MDYsMjAgQEAgc3RhdGljIGludCBpd2w0OTY1X3R4X3NrYihzdHJ1
+Y3QgaXdsX3ByaQogCWlmIChpZWVlODAyMTFfaXNfYXV0aChmYykpCiAJCUlXTF9ERUJVR19UWCgi
+U2VuZGluZyBBVVRIIGZyYW1lXG4iKTsKIAllbHNlIGlmIChpZWVlODAyMTFfaXNfYXNzb2NfcmVx
+dWVzdChmYykpCiAJCUlXTF9ERUJVR19UWCgiU2VuZGluZyBBU1NPQyBmcmFtZVxuIik7CiAJZWxz
+ZSBpZiAoaWVlZTgwMjExX2lzX3JlYXNzb2NfcmVxdWVzdChmYykpCiAJCUlXTF9ERUJVR19UWCgi
+U2VuZGluZyBSRUFTU09DIGZyYW1lXG4iKTsKICNlbmRpZgogCi0JLyogZHJvcCBhbGwgZGF0YSBm
+cmFtZSBpZiB3ZSBhcmUgbm90IGFzc29jaWF0ZWQgKi8KKwkvKiBkcm9wIGFsbCBub24tYnJvYWRj
+YXN0IGRhdGEgZnJhbWVzIGlmICFwcml2LT5hc3NvY19zdGF0aW9uX2FkZGVkICovCiAJaWYgKCgo
+ZmMgJiBJRUVFODAyMTFfRkNUTF9GVFlQRSkgPT0gSUVFRTgwMjExX0ZUWVBFX0RBVEEpICYmCi0J
+ICAgKCFpd2xfaXNfYXNzb2NpYXRlZChwcml2KSB8fAotCSAgICAoKHByaXYtPml3X21vZGUgPT0g
+SUVFRTgwMjExX0lGX1RZUEVfU1RBKSAmJiAhcHJpdi0+YXNzb2NfaWQpIHx8Ci0JICAgICFwcml2
+LT5hc3NvY19zdGF0aW9uX2FkZGVkKSkgewotCQlJV0xfREVCVUdfRFJPUCgiRHJvcHBpbmcgLSAh
+aXdsX2lzX2Fzc29jaWF0ZWRcbiIpOworCSAgICFwcml2LT5hc3NvY19zdGF0aW9uX2FkZGVkICYm
+IHN0YV9pZCAhPSBwcml2LT5od19zZXR0aW5nLmJjYXN0X3N0YV9pZCkgeworCQlJV0xfREVCVUdf
+RFJPUCgiRHJvcHBpbmcgLSAhcHJpdi0+YXNzb2Nfc3RhdGlvbl9hZGRlZFxuIik7CiAJCWdvdG8g
+ZHJvcF91bmxvY2s7CiAJfQogCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHJpdi0+bG9jaywg
+ZmxhZ3MpOwogCiAJaGRyX2xlbiA9IGllZWU4MDIxMV9nZXRfaGRybGVuKGZjKTsKIAogCS8qIEZp
+bmQgKG9yIGNyZWF0ZSkgaW5kZXggaW50byBzdGF0aW9uIHRhYmxlIGZvciBkZXN0aW5hdGlvbiBz
+dGF0aW9uICovCkBAIC01MTEwLDIxICs1MTA2LDE2IEBAIHN0YXRpYyB2b2lkIGl3bDQ5NjVfbWFj
+X3N0b3Aoc3RydWN0IGllZWUKIAogc3RhdGljIGludCBpd2w0OTY1X21hY190eChzdHJ1Y3QgaWVl
+ZTgwMjExX2h3ICpodywgc3RydWN0IHNrX2J1ZmYgKnNrYiwKIAkJICAgICAgc3RydWN0IGllZWU4
+MDIxMV90eF9jb250cm9sICpjdGwpCiB7CiAJc3RydWN0IGl3bF9wcml2ICpwcml2ID0gaHctPnBy
+aXY7CiAKIAlJV0xfREVCVUdfTUFDODAyMTEoImVudGVyXG4iKTsKIAotCWlmIChwcml2LT5pd19t
+b2RlID09IElFRUU4MDIxMV9JRl9UWVBFX01OVFIpIHsKLQkJSVdMX0RFQlVHX01BQzgwMjExKCJs
+ZWF2ZSAtIG1vbml0b3JcbiIpOwotCQlyZXR1cm4gLTE7Ci0JfQotCiAJSVdMX0RFQlVHX1RYKCJk
+ZXYtPnhtaXQoJWQgYnl0ZXMpIGF0IHJhdGUgMHglMDJ4XG4iLCBza2ItPmxlbiwKIAkJICAgICBj
+dGwtPnR4X3JhdGUtPmJpdHJhdGUpOwogCiAJaWYgKGl3bDQ5NjVfdHhfc2tiKHByaXYsIHNrYiwg
+Y3RsKSkKIAkJZGV2X2tmcmVlX3NrYl9hbnkoc2tiKTsKIAogCUlXTF9ERUJVR19NQUM4MDIxMSgi
+bGVhdmVcbiIpOwogCXJldHVybiAwOwpPbmx5IGluIGNvbXBhdC13aXJlbGVzcy0yMDA4LTA1LTIw
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmk6IGl3bDQ5NjUtYmFzZS5jfgo=
+------=_Part_6045_19537755.1211382141031--
