@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.dnainternet.fi ([87.94.96.112]:61927 "EHLO
-	smtp2.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbYE0IPF (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59202 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757126AbYEUTG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 04:15:05 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/2] rndis_wlan: use ARRAY_SIZE instead of sizeof when adding
-	11g rates
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Scott Ashcroft <scott.ashcroft@talk21.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Tue, 27 May 2008 11:15:02 +0300
-Message-ID: <20080527081502.15936.68708.stgit@fate.lan> (sfid-20080527_101510_823954_B2263E54)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 21 May 2008 15:06:26 -0400
+Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile
+	configuration.
+From: David Woodhouse <dwmw2@infradead.org>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	carrano@laptop.org, dilinger@queued.net
+In-Reply-To: <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com>
+References: <4832422a.20018e0a.6b37.3217@mx.google.com>
+	 <1211292718.21380.238.camel@pmac.infradead.org>
+	 <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 21 May 2008 20:06:20 +0100
+Message-Id: <1211396780.21380.368.camel@pmac.infradead.org> (sfid-20080521_210630_613202_053CDEB4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Scott Ashcroft <scott.ashcroft@talk21.com>
+On Wed, 2008-05-21 at 11:59 -0700, Javier Cardona wrote:
+> 
+> If the boottime is set smaller than the host boot time, the device
+> will transition into standalone mode before it is detected by the
+> host.  The only recovery when that happens is to either reset the
+> device via an external reset line or to re-insert it. 
 
-While figuring out the TKIP problem I found a bug in the code which adds the 11g 
-rates. It's using sizeof instead of ARRAY_SIZE to terminate the for loop. This makes 
-it fall off the end of the rates array start into the frequency array instead. Running 
-"iwlist rate" should show the problem as there will always be 32 rates with the last 
-few being bogus.
+Nah, the driver will send it a CMD_802_11_RESET when it finds it not
+responding properly to bootcmds, and it should be fine.
 
-The following patch will fix it.
+>  That lower boundary was just intended to avoid support issues of
+> users seeing their devices disappear after a reboot.
 
-Signed-off-by: Scott Ashcroft <scott.ashcroft@talk21.com>
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+I remember that well :)
 
- drivers/net/wireless/rndis_wlan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d0b1fb1..ed310f8 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -1108,7 +1108,7 @@ static int rndis_iw_get_range(struct net_device *dev,
- 	/* fill in 802.11g rates */
- 	if (has_80211g_rates) {
- 		num = range->num_bitrates;
--		for (i = 0; i < sizeof(rates_80211g); i++) {
-+		for (i = 0; i < ARRAY_SIZE(rates_80211g); i++) {
- 			for (j = 0; j < num; j++) {
- 				if (range->bitrate[j] ==
- 					rates_80211g[i] * 1000000)
+-- 
+dwmw2
 
