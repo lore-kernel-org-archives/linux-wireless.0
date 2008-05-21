@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754992AbYEZOos (ORCPT
+Received: from mailguard.fgan.de ([128.7.3.5]:53547 "EHLO mailguard.fgan.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755694AbYEUJfK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 10:44:48 -0400
-Subject: [PATCH] ath5k: use IEEE80211_SKB_CB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 26 May 2008 16:43:39 +0200
-Message-Id: <1211813019.4843.9.camel@johannes.berg> (sfid-20080526_164451_160197_857B4CFD)
-Mime-Version: 1.0
+	Wed, 21 May 2008 05:35:10 -0400
+Received: from rufsun5.fkie.fgan.de ([128.7.2.5] helo=mailhost.fgan.de)
+	by mailguard.fgan.de with esmtp (Exim 4.63)
+	(envelope-from <Rogge@fgan.de>)
+	id 1JykHT-0008MU-4C
+	for linux-wireless@vger.kernel.org; Wed, 21 May 2008 11:06:43 +0200
+Received: from mailserv1.fkie.fgan.de ([128.7.96.101] helo=mailserv1.lorien.fkie.fgan.de)
+	by mailhost.fgan.de with esmtp (Exim 4.67 #7 (Solaris MB))
+	id 1JykHT-0004nt-00
+	for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 11:06:43 +0200
+From: Henning Rogge <rogge@fgan.de>
+To: linux-wireless@vger.kernel.org
+Subject: Get adhoc signal strength and bandwith from userspace
+Date: Wed, 21 May 2008 11:06:42 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200805211106.42682.rogge@fgan.de> (sfid-20080521_113517_234756_D7A0705F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k still uses the "(void*) skb->cb" direct cast, use IEEE80211_SKB_CB
-instead.
+Hello,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/ath5k/base.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I'm looking for an easy way to get average signal strength and bandwith=
+ for=20
+each communication partner in adhoc mode. I know this could be done wit=
+h=20
+radiotap headers, but this would require to parse all incoming frames, =
+which=20
+can consume lot's of cputime on embedded devices.
 
---- everything.orig/drivers/net/wireless/ath5k/base.c	2008-05-26 09:41:24.000000000 +0200
-+++ everything/drivers/net/wireless/ath5k/base.c	2008-05-26 09:41:52.000000000 +0200
-@@ -1296,7 +1296,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc
- 	struct ath5k_txq *txq = sc->txq;
- 	struct ath5k_desc *ds = bf->desc;
- 	struct sk_buff *skb = bf->skb;
--	struct ieee80211_tx_info *info = (void*) skb->cb;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
- 	int ret;
- 
-@@ -1945,7 +1945,7 @@ ath5k_tx_processq(struct ath5k_softc *sc
- 		}
- 
- 		skb = bf->skb;
--		info = (void*) skb->cb;
-+		info = IEEE80211_SKB_CB(skb);
- 		bf->skb = NULL;
- 
- 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
-@@ -2003,7 +2003,7 @@ static int
- ath5k_beacon_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- {
- 	struct sk_buff *skb = bf->skb;
--	struct	ieee80211_tx_info *info = (void*) skb->cb;
-+	struct	ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath5k_desc *ds;
- 	int ret, antenna = 0;
-@@ -2625,7 +2625,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_buf *bf;
--	struct ieee80211_tx_info *info = (void*) skb->cb;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	unsigned long flags;
- 	int hdrlen;
- 	int pad;
+Is there a userspace interface to get the bandwith and average signal s=
+trength=20
+of the communication partners in the 802.11 layer ?
 
+Henning Rogge
 
+*************************************************
+Diplom-Informatiker Henning Rogge
+=46orschungsgesellschaft f=FCr
+Angewandte Naturwissenschaften e. V. (FGAN)=20
+Neuenahrer Str. 20, 53343 Wachtberg, Germany
+Tel.: 0049 (0)228 9435-961
+=46ax: 0049 (0)228 9435-685
+E-Mail: rogge@fgan.de
+Web: www.fgan.de
+************************************************
+Sitz der Gesellschaft: Bonn
+Registergericht: Amtsgericht Bonn VR 2530
+Vorstand: Dr. rer. nat. Ralf Dornhaus (Vors.), Prof. Dr. Joachim Ender=20
+(Stellv.)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
