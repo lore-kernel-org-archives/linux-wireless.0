@@ -1,41 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.178]:42639 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128AbYEVPqN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 11:46:13 -0400
-Received: by el-out-1112.google.com with SMTP id s27so75162ele.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 08:46:12 -0700 (PDT)
-Message-ID: <f6ca9fed0805220846w3670fbe1i1cb28cc2d1b97288@mail.gmail.com> (sfid-20080522_174616_294968_0A534157)
-Date: Thu, 22 May 2008 17:46:11 +0200
-From: drago01 <drago01@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH WIP] rtl8187b support
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1211470467.10933.57.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211470467.10933.57.camel@dv>
+Received: from mga02.intel.com ([134.134.136.20]:21588 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935906AbYEUPRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2008 11:17:36 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: fix ieee80211_rx_bss_put/get imbalance
+Date: Wed, 21 May 2008 18:17:05 +0300
+Message-Id: <1211383025-1004-1-git-send-email-tomas.winkler@intel.com> (sfid-20080521_171742_743335_A51F775B)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 5:34 PM, Pavel Roskin <proski@gnu.org> wrote:
+This patch fixes iee80211_rx_bss_put/get imbalance
+introduced by 'mac80211: enable IBSS merging' patch.
 
-> +       rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
-> +       rtl8225_write(dev, 0x1, 0xEE0); msleep(1);
-> +       rtl8225_write(dev, 0x2, 0x44D); msleep(1);
-> +       rtl8225_write(dev, 0x3, 0x441); msleep(1);
-> +       rtl8225_write(dev, 0x4, 0x8C3); msleep(1);
-> +       rtl8225_write(dev, 0x5, 0xC72); msleep(1);
-> +       rtl8225_write(dev, 0x6, 0x0E6); msleep(1);
-> +       rtl8225_write(dev, 0x7, 0x82A); msleep(1);
-> +       rtl8225_write(dev, 0x8, 0x03F); msleep(1);
-> +       rtl8225_write(dev, 0x9, 0x335); msleep(1);
-> +       rtl8225_write(dev, 0xa, 0x9D4); msleep(1);
-> +       rtl8225_write(dev, 0xb, 0x7BB); msleep(1);
-> +       rtl8225_write(dev, 0xc, 0x850); msleep(1);
-> +       rtl8225_write(dev, 0xd, 0xCDF); msleep(1);
-> +       rtl8225_write(dev, 0xe, 0x02B); msleep(1);
-> +       rtl8225_write(dev, 0xf, 0x114); msleep(1);
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-wouldn't it make sense to let rtl8225_write always call msleep(1) ?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7cfd12e..0ef5993 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2479,8 +2479,6 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 	ifsta->state = IEEE80211_IBSS_JOINED;
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+ 
+-	ieee80211_rx_bss_put(dev, bss);
+-
+ 	return res;
+ }
+ 
+@@ -3523,6 +3521,7 @@ static int ieee80211_sta_create_ibss(struct net_device *dev,
+ 	struct ieee80211_supported_band *sband;
+ 	u8 bssid[ETH_ALEN], *pos;
+ 	int i;
++	int ret;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ #if 0
+@@ -3567,7 +3566,9 @@ static int ieee80211_sta_create_ibss(struct net_device *dev,
+ 		*pos++ = (u8) (rate / 5);
+ 	}
+ 
+-	return ieee80211_sta_join_ibss(dev, ifsta, bss);
++	ret = ieee80211_sta_join_ibss(dev, ifsta, bss);
++	ieee80211_rx_bss_put(dev, bss);
++	return ret;
+ }
+ 
+ 
+@@ -3615,10 +3616,13 @@ static int ieee80211_sta_find_ibss(struct net_device *dev,
+ 	    (bss = ieee80211_rx_bss_get(dev, bssid,
+ 					local->hw.conf.channel->center_freq,
+ 					ifsta->ssid, ifsta->ssid_len))) {
++		int ret;
+ 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %s"
+ 		       " based on configured SSID\n",
+ 		       dev->name, print_mac(mac, bssid));
+-		return ieee80211_sta_join_ibss(dev, ifsta, bss);
++		ret = ieee80211_sta_join_ibss(dev, ifsta, bss);
++		ieee80211_rx_bss_put(dev, bss);
++		return ret;
+ 	}
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 	printk(KERN_DEBUG "   did not try to join ibss\n");
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
