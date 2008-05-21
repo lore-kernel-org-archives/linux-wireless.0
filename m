@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:21156 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbYEETi6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33688 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbYEUVn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 15:38:58 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so873146waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 12:38:56 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Mon, 5 May 2008 12:29:42 -0700
-Subject: [PATCH] mac80211: fix access to null skb
-Message-ID: <481f6250.16be600a.0e4c.ffffb9ea@mx.google.com> (sfid-20080505_213815_083861_A35F2D17)
+	Wed, 21 May 2008 17:43:58 -0400
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <20080521210352.GA11827@tuxdriver.com>
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 <1211303731.6252.105.camel@johannes.berg>
+	 <20080521210352.GA11827@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GgAVnm/Q+ru1odfsGrha"
+Date: Wed, 21 May 2008 23:37:44 +0200
+Message-Id: <1211405864.3698.7.camel@johannes.berg> (sfid-20080521_234407_326000_20956CB6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this patch, if xmit_skb is null but net_ratelimit() returns 0 we would
-go to the else branch and access the null xmit_skb. Pointed out by Johannes
-Berg.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/rx.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e8b89c8..bc66d99 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1300,11 +1300,11 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 		if (is_multicast_ether_addr(skb->data)) {
- 			if (*mesh_ttl > 0) {
- 				xmit_skb = skb_copy(skb, GFP_ATOMIC);
--				if (!xmit_skb && net_ratelimit())
-+				if (xmit_skb)
-+					xmit_skb->pkt_type = PACKET_OTHERHOST;
-+				else if (net_ratelimit())
- 					printk(KERN_DEBUG "%s: failed to clone "
- 					       "multicast frame\n", dev->name);
--				else
--					xmit_skb->pkt_type = PACKET_OTHERHOST;
- 			} else
- 				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.sta,
- 							     dropped_frames_ttl);
--- 
-1.5.4.3
+--=-GgAVnm/Q+ru1odfsGrha
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> > I have filed a patch to fix HAL to use the canonical SIOCGIWNAME at
+> > https://bugs.freedesktop.org/show_bug.cgi?id=3D16037. Any further
+> > objections to this patch?
+>=20
+> I think this is going to fall under the "userland ABI" category.
+> We can make it a configurable option, but I don't think we are free
+> to remove it completely since there is at least existing versions of
+> HAL that use it.
+
+Well, yes, I gave it a year in the feature removal schedule since I
+thought nobody was actually using it. But if you look at how hal/sysfs
+are always dependent on new versions of each other *anyway*, I think we
+can get away with removing this in maybe two years time, and
+distributors can unset the option if they know their hal is new enough?
+
+johannes
+
+--=-GgAVnm/Q+ru1odfsGrha
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDSWJ6Vg1VMiehFYAQL2xA//dOA4+OvOlayV5I1wpYkP2bp5Oy6YlLHy
+a5VGdyqJXxa0dURRNLeX5XXojoUfIrAh1OaS5kh0lVdAVsABOKXIUChloYyzR0id
+zlrG2TJ/f4gw7Zm/mnMDxiWCT2QrP1mCLzHbBsmFHSH61IYJ+pErLsSLYEOViLqF
+jRVmw4ZY2ED5LaHHi6s6R6pDvE6Mk7NSCwQufcOvK7auS+OzyqxgdzR5JmtbAKK5
+02DbVHV3sxbdMzK81gXsY+l1fYAQVqiqdwMBuaxrrZ4cbeJLQDrt/XihZsr6g+kq
+GpTnitLxYbrLXyPAdkeSvzYnmk6MLk8i9gddMvaIuqhFI44lFSY4ysq5VtHnMCJa
+3nnsSjYlA8tzY6YrPFeDzT6HE6gS1S7u98eDPgmXP1i3vis8ixfK78j2coRz7UID
+/qeIgldOCxkY3q3lY2/DowXFjiDVkQD9r1HWsx9WzN1pD5zdozMyEZNmCP/ayMg4
++zXgxXGzEUwj1JmSmfvbNhpCndSEsyQVnxKIL59NA7gncMgK+QADpUn+wOE/v0+9
+U2FlA5BN1mUvoSGSCZObvm4uUDihH1Z2MM0tlDBotwSf9wRXXcZU+7D0S/o7mVYk
+dDg4ufldmY5clIbKJ23id02Mfx1IAGI5xVa1nFKXoG4OBVtgJ0mOj005KELs3cdB
+C+57s5Bv/ik=
+=ntSr
+-----END PGP SIGNATURE-----
+
+--=-GgAVnm/Q+ru1odfsGrha--
 
