@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.187]:46121 "EHLO
+Received: from rn-out-0910.google.com ([64.233.170.185]:56229 "EHLO
 	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109AbYE1SJf (ORCPT
+	with ESMTP id S1758954AbYEUPLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 14:09:35 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so1707685rnd.17
-        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 11:09:32 -0700 (PDT)
-Message-ID: <1ba2fa240805281109m217b3d66t1b023ea43cb82ee6@mail.gmail.com> (sfid-20080528_200938_869061_BA1B9ACC)
-Date: Wed, 28 May 2008 21:09:31 +0300
+	Wed, 21 May 2008 11:11:32 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so295927rnd.17
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 08:11:30 -0700 (PDT)
+Message-ID: <1ba2fa240805210811i41eefa21q8f412e44b4425064@mail.gmail.com> (sfid-20080521_171137_533386_147518F3)
+Date: Wed, 21 May 2008 18:11:29 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>
-Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ron.rindjunsky@intel.com" <ron.rindjunsky@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C483351723448@CHEXMB-01.global.atheros.com>
+	"Helmut Schaa" <hschaa@suse.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	"Bruno Randolf" <bruno@thinktube.com>
+In-Reply-To: <1211382489.13667.11.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20080528145048.GB5244@senthil-lnx.users.atheros.com>
-	 <20080528151651.GA13461@tuxdriver.com>
-	 <44EE5C37ADC36343B0625A05DD408C483351723447@CHEXMB-01.global.atheros.com>
-	 <1ba2fa240805281007x40ded8b1rd68f80c4ce5d79f@mail.gmail.com>
-	 <44EE5C37ADC36343B0625A05DD408C483351723448@CHEXMB-01.global.atheros.com>
+References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
+	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
+	 <1ba2fa240805210347w375b571djc922f814fa9f521f@mail.gmail.com>
+	 <20080521135451.GA3545@tuxdriver.com>
+	 <1ba2fa240805210750x5112a8c3lea2f493f59a50b79@mail.gmail.com>
+	 <1211382489.13667.11.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 28, 2008 at 8:33 PM, Senthilkumar Balasubramanian
-<Senthilkumar.Balasubramanian@atheros.com> wrote:
+On Wed, May 21, 2008 at 6:08 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> ________________________________________
-> From: Tomas Winkler [tomasw@gmail.com]
-> Sent: Wednesday, May 28, 2008 10:37 PM
-> To: Senthilkumar Balasubramanian
-> Cc: John W. Linville; johannes@sipsolutions.net; ron.rindjunsky@intel.com; linux-wireless@vger.kernel.org; Luis Rodriguez
-> Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
+>> static void ieee80211_rx_bss_put(struct net_device *dev,
+>>                                  struct ieee80211_sta_bss *bss)
+>> {
+>>         struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+>>
+>>         local_bh_disable();
+>>         if (!atomic_dec_and_lock(&bss->users, &local->sta_bss_lock)) {
+>>                 local_bh_enable();
+>>                 return;
+>>         }
+>>
+>> ---- don't we miss  local_bh_enable(); here or spin_unlock_bh takes
+>> care of this ---
+>>
+>>
+>>         __ieee80211_rx_bss_hash_del(dev, bss);
+>>         list_del(&bss->list);
+>>         spin_unlock_bh(&local->sta_bss_lock);
 >
-> On Wed, May 28, 2008 at 7:50 PM, Senthilkumar Balasubramanian
-> <Senthilkumar.Balasubramanian@atheros.com> wrote:
->> ________________________________________
->> From: John W. Linville [linville@tuxdriver.com]
->> Sent: Wednesday, May 28, 2008 8:46 PM
->> To: Senthilkumar Balasubramanian
->> Cc: johannes@sipsolutions.net; ron.rindjunsky@intel.com; linux-wireless@vger.kernel.org; Luis Rodriguez
->> Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
->>
->> On Wed, May 28, 2008 at 08:20:48PM +0530, Senthil Balasubramanian wrote:
->>> This addresses an alignment issue with compare_ether_addr().
->>> The addresses passed to compare_ether_addr should be two bytes aligned.
->>> It may function properly in x86 platform. However may not work properly
->>> on IA-64 or ARM processor.
->>
->>> --- a/net/mac80211/rx.c
->>> +++ b/net/mac80211/rx.c
->>> @@ -1116,7 +1116,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->>>       u16 fc, hdrlen, ethertype;
->>>       u8 *payload;
->>>       u8 dst[ETH_ALEN];
->>> -     u8 src[ETH_ALEN];
->>> +     /* Should be aligned on 2 bytes for compare_ether_addr() */
->>> +     u16 src_aligned[ETH_ALEN >> 1];
->>> +     u8 *src = (u8 *)src_aligned;
->>>       struct sk_buff *skb = rx->skb;
->>>       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->>>       DECLARE_MAC_BUF(mac);
->>
->> Any reason you couldn't just do this?
->>
->> I just thought of using the type u16 instead of attribute here. that's all. No specific reason.
->>
->> @@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->>        u16 fc, hdrlen, ethertype;
->>        u8 *payload;
->>        u8 dst[ETH_ALEN];
->> -       u8 src[ETH_ALEN];
->> +       u8 src[ETH_ALEN] __attribute__ ((aligned(2)));
->>        struct sk_buff *skb = rx->skb;
->>        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->>        DECLARE_MAC_BUF(mac);
->>
->> It seems to compile w/o errors on i686, and it seems more clear to me.
->> Will that not work?
->>
->> Yes. It should also work. I will re-create the patch and send it to you. I will also include Johannes suggestion of just using __aligned macro.
->>
-> Can we split the two issues in seperate patches. It's better for tracking.
+> spin_unlock_bh takes care of it. The local_bh_disable() +
+> atomic_dec_and_lock() is like spin_lock_bh() + atomic_dec() just with
+> different atomicity guarantees.
 >
-> They are not two different issues. All of them addresses the same alignment issue only.  Initially I thought of using u16 to get it aligned on 2 byte and then I started using the attribute stuff as in page_group_addr[] and others required initializations for the u8 array.
+> johannes
 >
-
-I mean reordering buffer allocation and alignment are not the same issues.
-
-Thanks
+OK, thanks for explanation
 Tomas
