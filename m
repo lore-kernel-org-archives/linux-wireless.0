@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47635 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752333AbYE3WtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 18:49:00 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: suspend vs. b43
-Date: Sat, 31 May 2008 00:49:41 +0200
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1212150713.4117.2.camel@johannes.berg> <200805302319.34173.rjw@sisk.pl> <1212187090.20421.2.camel@johannes.berg>
-In-Reply-To: <1212187090.20421.2.camel@johannes.berg>
+Received: from gv-out-0910.google.com ([216.239.58.188]:15965 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758208AbYEUT6M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2008 15:58:12 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so904063gvc.37
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 12:58:11 -0700 (PDT)
+Message-ID: <445f43ac0805211251v12f49c26j540bf3763bc4dd27@mail.gmail.com> (sfid-20080521_215816_450933_4A9640CD)
+Date: Wed, 21 May 2008 12:51:20 -0700
+From: "Javier Cardona" <javier@cozybit.com>
+To: "David Woodhouse" <dwmw2@infradead.org>
+Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	carrano@laptop.org, dilinger@queued.net
+In-Reply-To: <1211398105.21380.371.camel@pmac.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805310049.41782.rjw@sisk.pl> (sfid-20080531_004903_171787_A6633FF9)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4832422a.20018e0a.6b37.3217@mx.google.com>
+	 <1211292718.21380.238.camel@pmac.infradead.org>
+	 <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com>
+	 <1211396780.21380.368.camel@pmac.infradead.org>
+	 <445f43ac0805211218v58d33458v41d0d11f98ed4f14@mail.gmail.com>
+	 <1211398105.21380.371.camel@pmac.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, 31 of May 2008, Johannes Berg wrote:
-> 
-> > It hangs for me either at read_unlock_irqrestore() in b43_op_tx() or somewhere
-> > in ieee80211_tx() (at various places).
-> 
-> Huh. Why is it even getting into the tx path? And even then, why does it
-> hang at an unlock?
+David,
 
-Well, I saw that during hibernation, so it probably happened after creating the
-image, when devices were being resumed for image saving.
+On Wed, May 21, 2008 at 12:28 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+> On Wed, 2008-05-21 at 12:18 -0700, Javier Cardona wrote:
+>> You need a live endpoint to send a CMD_802_11_RESET, which you won't
+>> have if the device did not respond to USB enumeration because it was
+>> in standalone mode.
+>
+> Hm, did that behaviour change recently? I'm sure this recovery was
+> working before.
 
-Thanks,
-Rafael
+I don't think we've ever been able to communicate over USB with a
+dongle that is in standalone mode.
+
+Javier
+
+
+-- 
+Javier Cardona
+cozybit Inc.
