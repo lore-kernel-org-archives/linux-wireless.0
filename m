@@ -1,62 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414AbYE1KGv (ORCPT
+Received: from hu-out-0506.google.com ([72.14.214.229]:17103 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754316AbYEUFrw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 06:06:51 -0400
-Subject: Re: two different oopses with 2.6.26-rc4
-From: Johannes Berg <johannes@sipsolutions.net>
-To: alejandro.riveira@gmail.com
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1211968234.9895.7.camel@Varda> (sfid-20080528_115058_065425_05FEB1E1)
-References: <1211968234.9895.7.camel@Varda>
-	 (sfid-20080528_115058_065425_05FEB1E1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1U2QRpjKjWz+07RQnKMB"
-Date: Wed, 28 May 2008 12:05:35 +0200
-Message-Id: <1211969135.21624.2.camel@johannes.berg> (sfid-20080528_120657_143478_2EE84BE8)
+	Wed, 21 May 2008 01:47:52 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so4659846hue.21
+        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 22:47:50 -0700 (PDT)
+Date: Wed, 21 May 2008 08:47:45 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
+	flamingice@sourmilk.net
+Subject: Re: regression iwl3945/mac80211: association times out since
+	2.6.26-rc1
+Message-ID: <20080521054743.GA9910@robinhood.home> (sfid-20080521_074756_624287_2B6B331F)
+References: <20080520184859.GA8168@robinhood.home>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080520184859.GA8168@robinhood.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-1U2QRpjKjWz+07RQnKMB
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-
-> i cced wireless becouse of the first oops
-=EF=BB=BF
-Yeah. Please don't. Report one bug per email, to the appropriate forum.
-wireless really doesn't want to see any debugging of weird other
-problems.
-
-Anyhow, the wireless problem here is known and a fix is on its way, so
-everybody *please* drop wireless from CC if you want to reply.
-
-johannes
-
---=-1U2QRpjKjWz+07RQnKMB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASD0ubaVg1VMiehFYAQIVwA/+PlW0lAtUygV+HDbMwWmCOA8xKwGgvGU+
-dnLuX048CmGhNi0NNZwP8+u2qzbhsRZIOXpf9yz9mX24jCf7ay3fWMu5FhhSZpka
-+TkUZ1GVRoo5DIMJr+lANi80CtlMr31HZ96WK7UlMz/swkdF9IvIlXIgqlKj7xC8
-waPeuSmNOBJCAadkGs+VrR91PET3NADDcdfZJfFEVV/j96Au1X3IDDmSf45T51oW
-BWSHBS3Z3hx2hZNtTLo55h7Lw3kPB7n5m9pWGnp/0JrznriNgR4WtVoIUeN2QJu1
-bHm7slnrd+gX1Pbuqa8ShEMUWQGHE79BdlD3yvYtnjoTHDqJ9w+Myb7HaqidAOa1
-FsZOSw5xWiwWucbr9J4T3uuUmiX/un1Db3K4jfmi9/0ZYnPfFo0xLcF2wKTZ90Sf
-/G0fcXJI1m8pdIn7eiy9YoIPOBrEeaFjYa3lI7OjUUjrQIJNFhe8/sQOmhbvRuXc
-O/t2a35NC8LceZQ02Jc3QO76AYmsgeYb95nKspf6Z7w95rMSHnUhQbH2aMluGEzi
-sjG1NnzFcEAKtdzyxVb58rTlefkRzIEae5Y6e2ZFoyf0GokfhfjQbwFVjZ9//6du
-1odpnKn8URQRx00PENslVAhzJjANn5coyDLUkTpOUgSzrXrhET8CJOqbbVsGmpI1
-Jwj7VUepgVE=
-=9Oed
------END PGP SIGNATURE-----
-
---=-1U2QRpjKjWz+07RQnKMB--
-
+FYI, I created an item in bugzilla to track this
+http://bugzilla.kernel.org/show_bug.cgi?id=10765
