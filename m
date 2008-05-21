@@ -1,48 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:36706 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbYEaRzM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 13:55:12 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Date: Sat, 31 May 2008 19:54:46 +0200
-Cc: Stefanik =?iso-8859-1?q?G=E1bor?= <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <200805311841.46740.mb@bu3sch.de> <1212252636.2766.10.camel@rd>
-In-Reply-To: <1212252636.2766.10.camel@rd>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200805311954.46639.mb@bu3sch.de> (sfid-20080531_195601_487797_48C525BE)
+Received: from mx1.redhat.com ([66.187.233.31]:56840 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761745AbYEUOQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 May 2008 10:16:08 -0400
+Subject: Re: [PATCH] libertas: sysfs interface for accessing default mesh
+	channel
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, javier@cozybit.com
+In-Reply-To: <1211326991.2561.24.camel@shinybook.infradead.org>
+References: <1211326991.2561.24.camel@shinybook.infradead.org>
+Content-Type: text/plain
+Date: Wed, 21 May 2008 10:15:59 -0400
+Message-Id: <1211379359.25344.1.camel@localhost.localdomain> (sfid-20080521_161614_603131_0CB68E12)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
-> On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
-> > On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
-> > > "BUG: unable to handle kernel NULL pointer dereference at 0000000=
-4
-> > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
-> >=20
-> > So can you put a few printks into the function to see where it dere=
-ferences
-> > a NULL pointer? (or use gdb to lookup the offset).
->=20
-> u8 key_idx =3D info->control.hw_key->hw_key_idx;
->=20
-> info->control.hw_key is NULL.
+On Wed, 2008-05-21 at 00:43 +0100, David Woodhouse wrote:
+> From: Javier Cardona <javier@cozybit.com>
+> 
+> This will create the following entry:
+> /sys/class/net/mshX
+>             -- boot_options
+>             |   |-- ...
+>             |   `-- channel
+>             ...
+> 
+> ... which I overlooked on my previous patch.
+> 
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> Signed-off-by: David Woodhouse <dwmw2@infradead.org>
 
-Is a NULL pointer supposed to tell "do not encrypt", or is this a mac80=
-211 bug?
+Acked-by: Dan Williams <dcbw@redhat.com>
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+> Added to git://git.infradead.org/~dwmw2/libertas-2.6.git
+> (from which I dropped the OLPC reset patch which Andres is going to improve on)
+> 
+> diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
+> index baa6627..6cf5e39 100644
+> --- a/drivers/net/wireless/libertas/persistcfg.c
+> +++ b/drivers/net/wireless/libertas/persistcfg.c
+> @@ -130,6 +130,49 @@ static ssize_t boottime_set(struct device *dev,
+>  }
+>  
+>  /**
+> + * @brief Get function for sysfs attribute channel
+> + */
+> +static ssize_t channel_get(struct device *dev,
+> +			   struct device_attribute *attr, char *buf)
+> +{
+> +	struct mrvl_mesh_defaults defs;
+> +	int ret;
+> +
+> +	ret = mesh_get_default_parameters(dev, &defs);
+> +
+> +	if (ret)
+> +		return ret;
+> +
+> +	return snprintf(buf, 12, "0x%x\n", le16_to_cpu(defs.channel));
+> +}
+> +
+> +/**
+> + * @brief Set function for sysfs attribute channel
+> + */
+> +static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
+> +			   const char *buf, size_t count)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct cmd_ds_mesh_config cmd;
+> +	uint16_t datum;
+> +	int ret;
+> +
+> +	memset(&cmd, 0, sizeof(cmd));
+> +	ret = sscanf(buf, "%hx", &datum);
+> +	if (ret != 1 || datum < 1 || datum > 11)
+> +		return -EINVAL;
+> +
+> +	*((__le16 *)&cmd.data[0]) = cpu_to_le16(datum);
+> +	cmd.length = cpu_to_le16(sizeof(uint16_t));
+> +	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_SET,
+> +				   CMD_TYPE_MESH_SET_DEF_CHANNEL);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return strlen(buf);
+> +}
+> +
+> +/**
+>   * @brief Get function for sysfs attribute mesh_id
+>   */
+>  static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
+> @@ -365,6 +408,7 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
+>  
+>  static DEVICE_ATTR(bootflag, 0644, bootflag_get, bootflag_set);
+>  static DEVICE_ATTR(boottime, 0644, boottime_get, boottime_set);
+> +static DEVICE_ATTR(channel, 0644, channel_get, channel_set);
+>  static DEVICE_ATTR(mesh_id, 0644, mesh_id_get, mesh_id_set);
+>  static DEVICE_ATTR(protocol_id, 0644, protocol_id_get, protocol_id_set);
+>  static DEVICE_ATTR(metric_id, 0644, metric_id_get, metric_id_set);
+> @@ -373,6 +417,7 @@ static DEVICE_ATTR(capability, 0644, capability_get, capability_set);
+>  static struct attribute *boot_opts_attrs[] = {
+>  	&dev_attr_bootflag.attr,
+>  	&dev_attr_boottime.attr,
+> +	&dev_attr_channel.attr,
+>  	NULL
+>  };
+>  
+> 
+
