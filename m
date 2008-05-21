@@ -1,87 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44134 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbYEVTQh (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.187]:16183 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431AbYEUTGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 15:16:37 -0400
-Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: JMF <tolas_feup@hotmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Alejandro Grijalba =?ISO-8859-1?Q?Mart=EDnez?=
-	<sud@latinsud.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <loom.20080522T185920-107@post.gmane.org> (sfid-20080522_211000_297449_6D1BE157)
-References: <47FAB829.9010304@latinsud.com>
-	 <200804081025.39645.mb@bu3sch.de> <loom.20080522T171937-155@post.gmane.org>
-	 <69e28c910805221115g6290e5e9nef4444efca07aea@mail.gmail.com>
-	 <69e28c910805221121v1a34901co35ec41bff41bd1ec@mail.gmail.com>
-	 (sfid-20080522_202122_300727_51A7210B) <1211481278.3698.58.camel@johannes.berg>
-	 <loom.20080522T185920-107@post.gmane.org>
-	 (sfid-20080522_211000_297449_6D1BE157)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Lw2dHWnj7fOdYW0Nj4k2"
-Date: Thu, 22 May 2008 21:15:23 +0200
-Message-Id: <1211483723.3698.69.camel@johannes.berg> (sfid-20080522_211640_532186_4FA9CED9)
-Mime-Version: 1.0
+	Wed, 21 May 2008 15:06:14 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so879421gvc.37
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 12:06:08 -0700 (PDT)
+Message-ID: <445f43ac0805211159u317bf720vd88d29a504445ba6@mail.gmail.com> (sfid-20080521_210619_004993_6A6CAA13)
+Date: Wed, 21 May 2008 11:59:48 -0700
+From: "Javier Cardona" <javier@cozybit.com>
+To: "David Woodhouse" <dwmw2@infradead.org>
+Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	carrano@laptop.org, dilinger@queued.net
+In-Reply-To: <1211292718.21380.238.camel@pmac.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4832422a.20018e0a.6b37.3217@mx.google.com>
+	 <1211292718.21380.238.camel@pmac.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David,
 
---=-Lw2dHWnj7fOdYW0Nj4k2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tue, May 20, 2008 at 7:11 AM, David Woodhouse <dwmw2@infradead.org> wrote:
+> On Sat, 2008-05-17 at 21:01 -0700, Javier Cardona wrote:
+>> +     /* A too small boot time will result in the device booting into
+>> +      * standalone (no-host) mode before the host can take control of it,
+>> +      * so the change will be hard to revert.  This may be a desired
+>> +      * feature (e.g to configure a very fast boot time for devices that
+>> +      * will not be attached to a host), but dangerous.  So I'm enforcing a
+>> +      * lower limit of 20 seconds:  remove and recompile the driver if this
+>> +      * does not work for you.
+>> +      */
+>> +     datum = (datum < 20) ? 20 : datum;
+>
+> Hm. The driver should be able to cope with a device which is already
+> booted -- it sends it a reset command and then initialises it. I don't
+> think we have to be so paranoid, do we? If there's a lower limit on the
+> boottime, it would be the time it takes for an already-active driver to
+> react when the device resets. Which is much less than 20 seconds.
 
-[don't drop CCs, restored]
+If the boottime is set smaller than the host boot time, the device
+will transition into standalone mode before it is detected by the
+host.  The only recovery when that happens is to either reset the
+device via an external reset line or to re-insert it.  That lower
+boundary was just intended to avoid support issues of users seeing
+their devices disappear after a reboot.
 
-> Are you really sure the flag is IEEE80211_TX_INJECTED?
-> For the current (today, 22 May) wireless-testing, it seems it's been
->  renamed to IEEE80211_TX_CTL_INJECTED. Also, not tx->flags anymore, but
->  info->flags instead.
-> Can you confirm that?
+Javier
 
-Yeah both of those are correct, due to a recent patch of mine.
 
-> I was going to say something else, but I saw another post by Johannes... =
-Strange
-> that hostapd uses injection in monitor mode interfaces, I thought it woul=
-d be
-> only  AP mode interfaces.
-
-No, it uses monitor for a bunch of things, including getting access to
-management frames (before a station has associated.)
-
-> And it is also strange that iwlwifi developers wanted to disallow injecti=
-on in
-> monitor mode, with hostapd apparently needing it!
-
-No, not strange either, for one iwlwifi doesn't seem to support AP yet,
-and secondly the monitor interface would be secondary so iwlwifi
-wouldn't even notice it.
-
-johannes
-
---=-Lw2dHWnj7fOdYW0Nj4k2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDXGSaVg1VMiehFYAQIxaA//RGEzkmC5TCoQcitKWopEF10kA2a/x9N7
-3fhdNqtzA79YOJRlvn6r8k2xBmhKqsrlUOra/Y1INYIBeNZLfTiurUzhCgWYR+gO
-diR2xAKGtCQzr4AyL1dVUE08Y6TLcMVxrIzUZY0NU0p2bB17USvLqvaoWKx4ESmq
-e+1DdCTzW/InIsolcBNzfO6TBHe4C4XF4v0j3pqiPH6BlO4y/DEAdqzGYbz771KA
-P14o6EoOXX8fSyLREKiML+p8UpC+AAEggGJ+rLL0oV7hP1SlyaJPG6i7krhbozG3
-DwigwihXH4myoQDzQPpIURRWL9DvbyJGr6l+nUm97605Xn1v20KXZzBccFv9HKfL
-/dCcpSleFtkr3jLFQCVg3ChB47YE5UCVazIlHvrXT9u4hh1ysyvh5enCwcWxTGwm
-Po3fgF6KIXEmALe5fQsYOKFcD+kEsqpTlYvEVTq+wVyUmyV5fgabCuBCh50OT99y
-TmnFYcluV4vta5M9cB0cyzBvM6zz+xpjjyolKlcVsElzSoc8NgxXbwP4ZfqfIaeZ
-bug5yu5rj2uGxK/ULdAG6uPLdUBzrOAnN47Sgtutz0DXTwhFAXuh9wMR7yApKt+b
-Xfbj0muFAwFqPVMpy4THCuMMjKbcHQ+m1UUQWJR9O4t+e8LOtZza2rkGJz8/EUAR
-5+ssEtpyh+0=
-=HUNA
------END PGP SIGNATURE-----
-
---=-Lw2dHWnj7fOdYW0Nj4k2--
-
+-- 
+Javier Cardona
+cozybit Inc.
