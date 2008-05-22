@@ -1,128 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:44076 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbYEJRG6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40260 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761231AbYEVJSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 13:06:58 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2477619waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 10:06:57 -0700 (PDT)
-Message-ID: <1ba2fa240805101006t4b3362c8ja11e58db4634b0f9@mail.gmail.com> (sfid-20080510_190707_056984_59F9F303)
-Date: Sat, 10 May 2008 20:06:54 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Vincent C Jones" <v.jones@networkingunlimited.com>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
-	 <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
-	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
+	Thu, 22 May 2008 05:18:37 -0400
+Subject: Re: [PATCH V2] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andy Green <andy@warmcat.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1211447545.7814.97.camel@debian.sh.intel.com>
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <69e28c910805210819ye492edkc20b1ddccdf082ce@mail.gmail.com>
+	 <1211447545.7814.97.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qIAMF8EVEH6WgVs5WPt/"
+Date: Thu, 22 May 2008 11:17:37 +0200
+Message-Id: <1211447857.3698.52.camel@johannes.berg> (sfid-20080522_111840_626998_EFEFAD7A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 10, 2008 at 5:39 PM, Vincent C Jones
-<v.jones@networkingunlimited.com> wrote:
->
-> On Sat, 2008-05-10 at 03:12 +0300, Tomas Winkler wrote:
->> On Sat, May 10, 2008 at 2:41 AM, Vincent C Jones
->> <v.jones@networkingunlimited.com> wrote:
->> >
->> > On Sat, 2008-05-10 at 00:23 +0300, Tomas Winkler wrote:
->> >> On Fri, May 9, 2008 at 7:57 PM, Vincent C Jones
->> >> <v.jones@networkingunlimited.com> wrote:
->> >> > The channel/frequency reporting by iwlwifi is incompatible with
->> >> >  wpa_supplicant for 5GHz (802.11A) channels. Version numbers and iwlist
->> >> >  versus wpa_supplicant scan results are below. Association still works if
->> >> >  the correct channel is specified using iwconfig, but that is
->> >> >  incompatible with roaming.
->> >>
->> >> Fixed by the patch ' iwlwifi: Fix frequency in rx_status fill'
->> >>
->> >> Thanks
->> >> Tomas
->> >
->> > This patch did not apply cleanly to plain 2.6.26-rc1: off by -4 lines in
->> > iwl-3945.c and by 1078 lines in iwl-4965.c. More important, it did not
->> > fix the problem of wpa_supplicant thinking the 802.11A access points are
->> > on channel 0. Same results with 2.6.26-rc1-git7, with & without patch.
->> > Any idea when this patch (and the patches it appears to depend on) will
->> > make it into the 2.6.26 release?
->> >
->>
->> This patch is against wireless-testing.git, it's just too lines and
->> doesn't really have logical dependencies on other patches so I didn't
->> create a separate patch for 2.6.26...It looks maybe I should.
->> Can you  try to eproduce your problem on wireless-testing kernel with
->> this patch?
->> Also some logs will be useful
->>
->> Thanks
->> Tomas
->
-> Tomas,
->
-> No joy. Did I git the wrong tree?
->
-> (git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git)
->
-> Still had to apply your patch (offset 223 lines this time). Also applied
-> the media/built-in.o patch so my config would compile. Wpa_supplicant
-> (v0.6.3) still reports 0 for the channel of 11A stations:
 
-It seems  to be correct.  There are some patches that come before this
-one yet Yi has reordered the series a bit and pushed this one first
-because of it's urgency. The later patches will come later, but there
-is no dependency. So that my explain the offset.
+--=-qIAMF8EVEH6WgVs5WPt/
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
->> scan_res
-> bssid / frequency / signal level / flags / ssid
-> 00:1a:c1:8a:23:40       0       208     [WPA-PSK-TKIP
-> +CCMP][WPA2-PSK-TKIP+CCMP-preauth] NetworkingUnlimited
-> 00:1e:2a:6c:93:d9       2462    169     [WPA-PSK-TKIP
-> +CCMP][WPA2-PSK-TKIP+CCMP]NetworkingUnlimited-G
->>
->
-> I've appended output of iwlist scan and dmesg. Any other logs of
-> interest?
->
->
->          Cell 05 - Address: 00:1A:C1:8A:23:40
->                    ESSID:"NetworkingUnlimited"
->                    Mode:Master
->                    Frequency:5.24 GHz (Channel 48)
->                    Channel:48
+On Thu, 2008-05-22 at 17:12 +0800, Zhu Yi wrote:
+> On Wed, 2008-05-21 at 17:19 +0200, Stefanik G=C3=A1bor wrote:
+> > also works in monitor-while-associated mode.
+>=20
+> How does it work? AFAICS, mac80211 wext.c blocks setting essid and bssid
+> in monitor mode. Did you patch it?
 
-Looks like channel is reported correctly here
+You just create two virtual interfaces. Which, incidentally, iwlwifi
+seems to be quite buggy about: it will accept all types, even those it
+doesn't support (mesh, ap, wds?)
 
+johannes
 
->>>>> issue command "iwconfig wlan0 chan 48"
+--=-qIAMF8EVEH6WgVs5WPt/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Not sure how wpa supplicant parses the scanning output
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-The scan result is  build by ieee80211_sta_scan_result function
-defined in mlme.c file
+iQIVAwUASDU6MKVg1VMiehFYAQKDVRAAqS9MT//TmGekvSpXsB4DsSoJth6Sbsje
+GgWBLeae0JNcywixeuYQpLXTmQx8WrrKQSUew++0V9yCSNHoO+fihnNh2I8wEEGX
+Ea5qeK2ozxr9410O8lFox2APApvWGFOmV50DLReHjB9zqQQ1n7xSynqN5f0l+NbJ
+DL78MYzF6x8SkrFAemRBAKJ75pG2RpumUaYeIPWwaNHXE2zRkKW3LRvWpYM3xXZh
+UJ479v41jJGpiLCftrpweVWhK26wsyLVDGrmshUJWEE8aWes1cCqfQPSyY/Wp5wQ
+f0yfpQk+FVA97sgPJdalTk8iRvjWQr64i8EPdra/16iGL7JUx/O/zNgh8JXo9EmV
+2S5dibjduDNzw7l9kKW3292xYtwVez/5Mea8FaBN8uhSishUBdF9RLDO/C4VJHdo
+Ov/XpQK5EzrHJCPiJNeACy++URSFCg2pbwhgOcn5RfqELRFFyemoG5rPDTd4cAE8
+3CMI1AfZajUhX3txrj4y7K6zOPYewaZ0aPxxYFNbqWIovYkxeGCpDZp2YIO55KoW
+gW6xHDYcRDkK8ogY0g0ZW+S6Fb5wyY5MpgmORKWpkwOk9KWmLaqaw6pWu7OEJnC/
+9NF6QB5G8XLDeSqsOWyEEK2bl6HTkKO6WxGRkUW18YP4NIg1FoNQGSzALXtmbHzc
+1fWEcgy1gI0=
+=5iO/
+-----END PGP SIGNATURE-----
 
-The code dealing with frequency is below. I currently I don't have 11a
-AP so if you can put some debug output in wpa_supplicant and mac80211
-we can learn more. Otherwise I will have to look at this tomorrow
+--=-qIAMF8EVEH6WgVs5WPt/--
 
-memset(&iwe, 0, sizeof(iwe));
-        iwe.cmd = SIOCGIWFREQ;
-        iwe.u.freq.m = bss->freq;
-        iwe.u.freq.e = 6;
-        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
-                                          IW_EV_FREQ_LEN);
-
-        memset(&iwe, 0, sizeof(iwe));
-        iwe.cmd = SIOCGIWFREQ;
-        iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
-        iwe.u.freq.e = 0;
-        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
-                                          IW_EV_FREQ_LEN);
-
-
-Thanks
-Tomas
