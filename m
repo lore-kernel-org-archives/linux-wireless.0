@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:52901 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753467AbYEALDF (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.178]:45083 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902AbYEVTTf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 07:03:05 -0400
-Date: Thu, 1 May 2008 19:02:53 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-Message-ID: <20080501110253.GC7490@gondor.apana.org.au> (sfid-20080501_130253_478151_86734B02)
-References: <20080501.024320.212547875.davem@davemloft.net> <E1JrW9h-0001tI-00@gondolin.me.apana.org.au> <20080501.034950.261408566.davem@davemloft.net>
+	Thu, 22 May 2008 15:19:35 -0400
+Received: by el-out-1112.google.com with SMTP id s27so147559ele.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 12:19:34 -0700 (PDT)
+Message-ID: <1ba2fa240805221219i36f7889cs439802c60a54dcb2@mail.gmail.com> (sfid-20080522_211938_715330_42C3ED61)
+Date: Thu, 22 May 2008 22:19:33 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: JMF <tolas_feup@hotmail.com>
+Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20080522T185920-107@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <47FAB829.9010304@latinsud.com> <200804081025.39645.mb@bu3sch.de>
+	 <loom.20080522T171937-155@post.gmane.org>
+	 <69e28c910805221115g6290e5e9nef4444efca07aea@mail.gmail.com>
+	 <69e28c910805221121v1a34901co35ec41bff41bd1ec@mail.gmail.com>
+	 <1211481278.3698.58.camel@johannes.berg>
+	 <loom.20080522T185920-107@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 01, 2008 at 03:49:50AM -0700, David Miller wrote:
+On Thu, May 22, 2008 at 10:09 PM, JMF <tolas_feup@hotmail.com> wrote:
+> Johannes Berg <johannes@...> writes:
 >
-> Once that is cured, I think we can detect this better, by adding a
-> carefully constructed assertion to pskb_expand_head().  Basically, the
-> idea is, if "nhead" or "ntail" are non-zero, and there is a socket
-> still attached to the SKB, print a warning message.
-> 
-> Something like:
-> 
-> diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-> index 4fe605f..9bfca08 100644
-> --- a/net/core/skbuff.c
-> +++ b/net/core/skbuff.c
-> @@ -699,6 +699,12 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
->  	if (skb_shared(skb))
->  		BUG();
->  
-> +	if (unlikely((nhead || ntail) && skb->sk)) {
-> +		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
-> +		       "with socket attached\n",
-> +		       nhead, ntail);
-> +	}
+>>
+>> > >> This does not work, since we use injection for other types of
+>> > >>  frames. For example management frames from hostapd. We don't want
+>> > >>  (and can't) make hostapd keep track of sequence numbers.
+>> > >> You'll have to contact radiotap people and add a flag for this.
+>> > >>  This would also solve the hardware counter problem then.
+>>
+>> > The flag is IEEE80211_TX_INJECTED. Here is a new patch, for the
+>> > current wireless-testing:
+>
+>
+> Are you really sure the flag is IEEE80211_TX_INJECTED?
+> For the current (today, 22 May) wireless-testing, it seems it's been
+>  renamed to IEEE80211_TX_CTL_INJECTED. Also, not tx->flags anymore, but
+>  info->flags instead.
+> Can you confirm that?
+>
+>
+> I was going to say something else, but I saw another post by Johannes... Strange
+> that hostapd uses injection in monitor mode interfaces, I thought it would be
+> only  AP mode interfaces.
+> And it is also strange that iwlwifi developers wanted to disallow injection in
+> monitor mode, with hostapd apparently needing it!
 
-This could actually work :) I was worried about tunnelling doing
-a genuine expansion on such a packet but it turns that it does a
-skb_clone first.  So perhaps we should just require that if a
-packet is to be expanded while attached to a socket then it must
-be cloned first.
+On behalf of iwlwifi, this is legacy behavior that wasn't treated for
+a,b,c reasons.
+There used to be management interface that was used by hostapd and
+monitor interface was used for sniffing.  So with wanting or not
+wanting it is actually all around.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Tomas
+
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
