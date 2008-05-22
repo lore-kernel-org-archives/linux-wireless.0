@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:64606 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534AbYECJxM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49458 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755036AbYEVR5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 05:53:12 -0400
-Received: by ug-out-1314.google.com with SMTP id h3so262203ugf.16
-        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2008 02:53:09 -0700 (PDT)
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: Please pull 'upstream' branch of rt2x00
-Date: Sat, 3 May 2008 11:58:42 +0200
-Cc: Scott White <nwi_sub@hotmail.com>, linux-wireless@vger.kernel.org
-References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl> <200805022325.38311.IvDoorn@gmail.com> <1209795569.10221.1.camel@localhost>
-In-Reply-To: <1209795569.10221.1.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805031158.43072.IvDoorn@gmail.com> (sfid-20080503_115245_787841_253DE73E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 22 May 2008 13:57:15 -0400
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies -
+	2.6.26-rc1 kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Vincent C Jones <v.jones@networkingunlimited.com>,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+In-Reply-To: <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com> (sfid-20080522_185359_028598_D17C0097)
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
+	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
+	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
+	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
+	 <1210617467.3792.4.camel@X61.DFGI.com>
+	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+	 (sfid-20080522_185359_028598_D17C0097)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cVD9spdQyhhxo5M15/oM"
+Date: Thu, 22 May 2008 19:56:09 +0200
+Message-Id: <1211478969.3698.56.camel@johannes.berg> (sfid-20080522_195718_726818_E6B27568)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 03 May 2008, Mattias Nissler wrote:
-> On Fri, 2008-05-02 at 23:25 +0200, Ivo van Doorn wrote:
-> > On Friday 02 May 2008, Scott White wrote:
-> > > 
-> > > >Was this patch series in time for the 2.6.26 merge window?
-> > > >
-> > > >If not, please consider merging at least the following patches since
-> > > >they are real bugfixes:
-> > > >
-> > > >>       rt2x00: Don't enable short preamble for 1MBs
-> > > >>       rt2x00: Fix quality/activity led handling
-> > > >>       rt2x00: Clarify supported chipsets in Kconfig
-> > > >
-> > > >The others are code cleanups which are "nice to have", but could otherwise
-> > > >wait for 2.6.27.
-> > > 
-> > > The merge window is still open at this time.  I haven't seen a rc1 yet.  Anyway I saw that only the 3 bugfixes are currently in the queue.  As the owner of several (10 by the university and 2 personal) rt73 usb wireless cards, I would really like it if the latest version 2.1.5 made into 2.6.26.  As someone who has used 2.6.24 and finished compiling 2.6.25 two days ago I find that the driver in both kernels is not good.  Not good means I get a wireless signal and I get data transfers, but the speed fluctuates and have other issues.  However with each release, the problems I have are slowing decreasing.  I have been waiting patiently for 2.6.25-rc1 to have 2.1.5 since 2.1.5 was announced.  I really think all of 2.1.5 should get in 2.6.25-rc1.
-> > 
-> > Have you tried forcing the rate to 54Mbit instead of letting the rate selection algorithm doing its work?
-> > It seems to have helped with several other users.
-> 
-> For rt73? IIRC the rate selection algo does not work at all for that
-> device, because we cannot report failed frames. Or have you done
-> anything about that I might have missed, Ivo? If not, the rate is
-> probably fixed at 54Mbit anyway.
 
-Well I didn't do anything new, but this line will report rt2x00lib that the
-frame was succesfully send or failed to send:
-	txdesc.status = !urb->status ? TX_SUCCESS : TX_FAIL_RETRY;
-What is missing is the retry count, since that is something that
-the USB drivers cannot report. (Unless I grab the max retry count
-as configured by mac80211 as the number of retries on failure)
+--=-cVD9spdQyhhxo5M15/oM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+
+>         memset(&iwe, 0, sizeof(iwe));
+>         iwe.cmd =3D SIOCGIWFREQ;
+> -       iwe.u.freq.m =3D bss->freq;
+> -       iwe.u.freq.e =3D 6;
+> +       iwe.u.freq.m =3D ieee80211_frequency_to_channel(bss->freq);
+> +       iwe.u.freq.e =3D 0;
+>         current_ev =3D iwe_stream_add_event(current_ev, end_buf, &iwe,
+>                                           IW_EV_FREQ_LEN);
+>=20
+>         memset(&iwe, 0, sizeof(iwe));
+>         iwe.cmd =3D SIOCGIWFREQ;
+> -       iwe.u.freq.m =3D ieee80211_frequency_to_channel(bss->freq);
+> -       iwe.u.freq.e =3D 0;
+> +       iwe.u.freq.m =3D bss->freq;
+> +       iwe.u.freq.e =3D 6;
+>         current_ev =3D iwe_stream_add_event(current_ev, end_buf, &iwe,
+>                                           IW_EV_FREQ_LEN);
+
+That doesn't make any sense, can you explain?
+
+johannes
+
+--=-cVD9spdQyhhxo5M15/oM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDWzuKVg1VMiehFYAQKQqQ//b+UsWONLJZgNFVDRcefaVuGeyvg2ftk8
++fUWgw7HOvay4qG456tp/qVgwji3ESOKdQyCmnP5/ul0iAtrRoilBAYTMuLnyua2
+Y4Nw3cOXgLv9U/NVb0uKu4tjD28pSiTOfEeRpgF1vcGJlX26zDsTjL+zfPJZTTRT
++qxgw6nWaDFRthkbgoKl28EcdXfX56OHMevF765rP5HN0vpLXnZMi6O+MNv4EnPy
+RRSzs/Y8H4gXx9ALKwCZv3vrUGEl6i0VLZv4AOwewQEUEejswnYH2JtNJt11JPFn
+6cZAji+iFseICutP9Y6aLa0JA6/pl/r9tBmSiE5b4/RNz8L62+gcGriVQZ3S34UW
+6/r+zHtrFvcSmIziAU7rDoh/ROEYmIQbVMvI0TP5VcNlt2sA9hLowtHX4naL1S6H
+SD6AZ2q0HsmKRGd1mWvIbO1fljpj9j/bgdf8y2ZCgnOf7fanXtBJdZu1jEg7zO2b
+wPcOHIXcAGB3rwkPaRMpUGHWWMcaD6VTIeHhMHjv5TpAWQg3uqVw3NssmKvcI5f6
+d7h/supYEAxLxrw2RA6bDQ3LPnpxOlVUwWPm1gxSy3Np7b4an0phoh8x01IGcom5
+A489Ehch7qUS0ARC5JvXXkl9WfxmdYxIS+FFYjpfJQFicbL967iSlrOtFw3jWJnR
+Y5e+wHB0s0Y=
+=VSeU
+-----END PGP SIGNATURE-----
+
+--=-cVD9spdQyhhxo5M15/oM--
+
