@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43336 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756562AbYEMIjL (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.180]:26429 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755040AbYEVWuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:39:11 -0400
-Subject: Re: [RFT/C 2/7] mac80211: clean up skb reallocation code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080512.020904.187999229.davem@davemloft.net>
-References: <20080510221845.340428000@sipsolutions.net>
-	 <20080510221906.261962000@sipsolutions.net>
-	 <20080512.020904.187999229.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SB7/XFvzJcr7YsduE74v"
-Date: Tue, 13 May 2008 10:39:01 +0200
-Message-Id: <1210667941.3646.37.camel@johannes.berg> (sfid-20080513_103915_148345_A7BCE8F3)
-Mime-Version: 1.0
+	Thu, 22 May 2008 18:50:16 -0400
+Received: by el-out-1112.google.com with SMTP id s27so191705ele.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 15:50:15 -0700 (PDT)
+Message-ID: <1ba2fa240805221550p774708f9h7aab016a24202cff@mail.gmail.com> (sfid-20080523_005021_859567_F6130BB1)
+Date: Fri, 23 May 2008 01:50:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Vincent C Jones" <v.jones@networkingunlimited.com>
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Cc: linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <egrumbach@gmail.com>
+In-Reply-To: <1211495615.4595.14.camel@X61.NetworkingUnlimited.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
+	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
+	 <1210617467.3792.4.camel@X61.DFGI.com>
+	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+	 <1211495615.4595.14.camel@X61.NetworkingUnlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, May 23, 2008 at 1:33 AM, Vincent C Jones
+<v.jones@networkingunlimited.com> wrote:
+> On Thu, 2008-05-22 at 19:53 +0300, Tomas Winkler wrote:
+>> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
+>> <v.jones@networkingunlimited.com> wrote:
+>> >
+>> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
+>> >
+>> >> Meanwhile we've reproduced the wpa_supplicant issue...
+>> >>
+>> >
+>> > That is great news. Let me know when it is time to test again...
+>>
+>> Please try this one. I've just pasted that in so it's might be
+>> white-space-wise broken
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 7877d3b..5996e3d 100644
+>>   *  *  *
+>> Tomas
+>
+> Tomas,
+>
+> Applied patch to today's
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> and I can confirm that wpa_supplicant v0.6.3 again works on the A band.
+>
+> FWIW, however, I still have some issues:
+>
+> 1 - Roaming from 3com to NetGear takes about 5 minutes before iwlist
+> scan sees the A/N channel on the NetGear AP. Roaming from NetGear to
+> 3com, however, the 3com AP is seen on the first scan after losing
+> contact.
 
---=-SB7/XFvzJcr7YsduE74v
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What channel is NG?, what is the beacon period.
+We'll soon release a new uCode that should speed up a bit scanning on A band.
 
-On Mon, 2008-05-12 at 02:09 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Sun, 11 May 2008 00:18:47 +0200
->=20
-> In patch one, you changed the call site of this new
-> ieee80211_skb_resize() to properly use skb_header_cloned().  But
-> skb_cloned snuck back into the statistics code in this patch:
+> 2 - The NetGear is allegedly 11n, but shows up as standard A (or G) in
+> iwconfig et al. Highest data rate listed by iwlist is 54 on A, 48 on G.
 
-Oops, thanks! Seeing that you've applied your patch to change it I'll
-have to respin this anyway and will fix it then.
+wext doesn't report 11n rates and probably never will, it doesn't mean
+there is no 11n connection.
+Currently I don't have some non crypto interface looking into it.
 
-johannes
+> 3 - Booting Windows, the 4965 does see the NetGear as 802.11n, so I
+> can't blame it on the hardware...
+>
+No you cant :)
 
---=-SB7/XFvzJcr7YsduE74v
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> 4 - I won't guarantee it is not a configuration issue on my part...
+> attached is the ".config" file used to compile the kernel.
+>
+Looks good.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASClTpKVg1VMiehFYAQKGrg/+IIvMuvauQnzJA5HONjNtSClUOrs1zUIu
-N4XwinW4BnrysIKwwUet+9/KX8PCxZ9DWizI06sLjwM2zPpqfiaMk2UtpoxFv2Lm
-p2luEUc0UPLDQwkXx+lItPkPKUjmY9tR5Fq+0aU6RCAgvuXTxl603cbffGN4TE/G
-sH7vgbRlSFIj3k6VIBGPNo92lNslQY3m+KCFvQIcEp7+xf3zZyxELGjMqdRYSqvh
-2cBYUtGg128fn2tFDatxj1cpdOI3ms3rg9FJw5yGn6DTzTCZHa3NvQi6ctHtC9Ff
-DrgxPiBbXF0VipvdEXSe+Icm+8NGE/pkRkdLIm/TaJjptYyyOclyhcWNUUQXTzNN
-Ke8RIPOdBJNNLRMYBRKgqPSMysMttrez8xdto38eTYav3WZZOJJkEHUDv0EsE9DC
-bfyyvI8rhsWp1h1bFLXAnC6VGfD1Z0aSoXyXZEBX8o+NnfcSmW1h3CXmOSzfS1jN
-doYa2sRfgNI9jzJMj0cvvAiOx3BZqfdgBf5dnVklKnPvkoQxWqobTp1jrOaSpXy5
-kXpl9vKdMiiZZkBGV1kMJSz+bBW4e11+8XRKO/1eiemryUhstnNwuqgSVe7KlbMT
-pd0xc/vBVMj14Hlj8hC31WuCcelhAJj8m4eIbqOqiYkblafTg8taO5OKfxDDH7xc
-Zxn0iBQ4hNw=
-=7dsb
------END PGP SIGNATURE-----
-
---=-SB7/XFvzJcr7YsduE74v--
-
+Tomas
