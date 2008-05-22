@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44538 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbYEMXeR (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:34208 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754724AbYEVQxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 19:34:17 -0400
-Subject: Re: 4311 v2 Bail - 2.6.26-rc2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, Daniel <dan@f-box.org>,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <200805140127.22302.mb@bu3sch.de> (sfid-20080514_012747_829356_A0E41B5F)
-References: <48294F0B.4040908@f-box.org> <200805131119.09964.mb@bu3sch.de>
-	 <482A08A5.3000204@f-box.org>  <200805140127.22302.mb@bu3sch.de>
-	 (sfid-20080514_012747_829356_A0E41B5F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xlC/rfYPFNrHnSABVrwq"
-Date: Wed, 14 May 2008 01:33:23 +0200
-Message-Id: <1210721604.4279.40.camel@johannes.berg> (sfid-20080514_013420_793116_3CAFC237)
-Mime-Version: 1.0
+	Thu, 22 May 2008 12:53:55 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so155078rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 09:53:54 -0700 (PDT)
+Message-ID: <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com> (sfid-20080522_185359_028598_D17C0097)
+Date: Thu, 22 May 2008 19:53:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Vincent C Jones" <v.jones@networkingunlimited.com>
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Cc: linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <egrumbach@gmail.com>
+In-Reply-To: <1210617467.3792.4.camel@X61.DFGI.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
+	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
+	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
+	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
+	 <1210617467.3792.4.camel@X61.DFGI.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
+<v.jones@networkingunlimited.com> wrote:
+>
+> On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
+>
+>> Meanwhile we've reproduced the wpa_supplicant issue...
+>>
+>
+> That is great news. Let me know when it is time to test again...
 
---=-xlC/rfYPFNrHnSABVrwq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please try this one. I've just pasted that in so it's might be
+white-space-wise broken
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7877d3b..5996e3d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4080,17 +4080,18 @@ ieee80211_sta_scan_result(struct net_device *dev,
+                                                  IW_EV_UINT_LEN);
+        }
+
++
+        memset(&iwe, 0, sizeof(iwe));
+        iwe.cmd = SIOCGIWFREQ;
+-       iwe.u.freq.m = bss->freq;
+-       iwe.u.freq.e = 6;
++       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
++       iwe.u.freq.e = 0;
+        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+                                          IW_EV_FREQ_LEN);
+
+        memset(&iwe, 0, sizeof(iwe));
+        iwe.cmd = SIOCGIWFREQ;
+-       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+-       iwe.u.freq.e = 0;
++       iwe.u.freq.m = bss->freq;
++       iwe.u.freq.e = 6;
+        current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+                                          IW_EV_FREQ_LEN);
 
 
-> Where does this "wrong buffer size" message come from, and what does it m=
-ean?
->=20
-> > b43-phy1 debug: Using hardware based encryption for keyidx: 1, mac:=20
-> > ff:ff:ff:ff:ff:ff
-> > wlan0: wrong buffer size<7>wlan0: wrong buffer size<7>wlan0: wrong=20
-> > buffer size<7>wlan0: wrong buffer size
-
-It comes from mac80211 when the AP is sending invalid A-MSDU frames.
-
-johannes
-
---=-xlC/rfYPFNrHnSABVrwq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASColQ6Vg1VMiehFYAQJI7Q/8DBtHB9KImz4M+sca95FQ2yJyyoKeoAqS
-y4vSWSoAeEHRZ/Qo6QmzLy8CcLA27U3g0uoCZeGW6CXyGe1a2WD/FhBL1vKE8DyO
-NlXGVfLEYOlSMHbt19LejmXAL95B7DHt7XxU5g7LX2Gvljx9xQcXwCbR3VCX+Cis
-x/W67n/KH74qwc5/jC9TJM7eUo+MldSmipoX4hxzeRBt/G/170LoGhaTiFm2Q4rD
-mI3TKnFylOkzxHOUSq6pg4ML8oGO0Rdsk8dup3uWmPq6EV/5J0zevfKkGnkOEwJF
-/po4RNuTrlMfO7sOx0gnZrbVaKOekDJDXDYmWB3JBiqsekGDQ3ii/MEkuqaLLsRQ
-DbUdBUThwV1v46aOeUNw9LJB4DzCzZ7KhxkHMrgSgtwh6UAGSueGQ+8uckddmi5V
-xCxvC98gVvKL1ToDZu/qPJwH8Pt0tDDtg9S6E7feKQORsPnR1qfKIHbm1RPchToB
-h4l50siiGN6In9nRU4K4hBigjznGAdo4IXTueYSbpAVknoumohO5DzuQV3wsfwy0
-KwwjN6r2qzC6pzCtIV3MVv7VaRup8jhXs+mdrO8k6XQGOY/OVvSqceaat9dIfrni
-DqWGBt8rLE3H/G+5Zb5l9256D4mewOOznf7MDqwBfiHJX3Xv15ztuYW1UejnuKKs
-WKkVfvQ/Soo=
-=IRwn
------END PGP SIGNATURE-----
-
---=-xlC/rfYPFNrHnSABVrwq--
-
+Tomas
