@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59141 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756069AbYENX1V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 19:27:21 -0400
-Message-Id: <200805142326.m4ENQMFS027111@imap1.linux-foundation.org> (sfid-20080515_012724_314975_1AE679BB)
-Subject: [patch 11/12] wireless: use get/put_unaligned_* helpers
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Wed, 14 May 2008 16:26:22 -0700
+Received: from main.gmane.org ([80.91.229.2]:34021 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755003AbYEVRzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 13:55:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1JzF0J-0006Pv-1V
+	for linux-wireless@vger.kernel.org; Thu, 22 May 2008 17:55:03 +0000
+Received: from host34.fmed.uc.pt ([193.137.208.34])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:55:03 +0000
+Received: from tolas_feup by host34.fmed.uc.pt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:55:03 +0000
+To: linux-wireless@vger.kernel.org
+From: JMF <tolas_feup@hotmail.com>
+Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
+Date: Thu, 22 May 2008 17:48:02 +0000 (UTC)
+Message-ID: <loom.20080522T171937-155@post.gmane.org> (sfid-20080522_195508_338612_4E461A73)
+References: <47FAB829.9010304@latinsud.com> <200804081025.39645.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Michael Buesch <mb@...> writes:
+ (...)
+> > +	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
+> > +		return TXRX_CONTINUE;
+ (...)
+> This does not work, since we use injection for other types of
+>  frames. For example management frames from hostapd. We don't want
+>  (and can't) make hostapd keep track of sequence numbers.
+> You'll have to contact radiotap people and add a flag for this.
+>  This would also solve the hardware counter problem then.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+The last time I saw tx.c, this should now be something like
+     info->flags & IEEE80211_TX_CTL_INJECTED
+But as far as I can see the usage is the same.
+And, unless I'm wrong, IEEE80211_TX_CTL_INJECTED is only used
+ with Monitor mode interfaces.
+Does hostapd use monitor mode interfaces? Because if it doesn't,
+ and if I saw things correcly, info->flags won't be set to
+ IEEE80211_TX_CTL_INJECTED, right?
 
- net/mac80211/mesh_hwmp.c |    2 +-
- net/wireless/radiotap.c  |   16 +++++++---------
- 2 files changed, 8 insertions(+), 10 deletions(-)
+Any comments on this?
 
-diff -puN net/mac80211/mesh_hwmp.c~wireless-use-get-put_unaligned_-helpers net/mac80211/mesh_hwmp.c
---- a/net/mac80211/mesh_hwmp.c~wireless-use-get-put_unaligned_-helpers
-+++ a/net/mac80211/mesh_hwmp.c
-@@ -26,7 +26,7 @@ static inline u32 u32_field_get(u8 *preq
- {
- 	if (ae)
- 		offset += 6;
--	return le32_to_cpu(get_unaligned((__le32 *) (preq_elem + offset)));
-+	return get_unaligned_le32(preq_elem + offset);
- }
- 
- /* HWMP IE processing macros */
-diff -puN net/wireless/radiotap.c~wireless-use-get-put_unaligned_-helpers net/wireless/radiotap.c
---- a/net/wireless/radiotap.c~wireless-use-get-put_unaligned_-helpers
-+++ a/net/wireless/radiotap.c
-@@ -59,23 +59,21 @@ int ieee80211_radiotap_iterator_init(
- 		return -EINVAL;
- 
- 	/* sanity check for allowed length and radiotap length field */
--	if (max_length < le16_to_cpu(get_unaligned(&radiotap_header->it_len)))
-+	if (max_length < get_unaligned_le16(&radiotap_header->it_len))
- 		return -EINVAL;
- 
- 	iterator->rtheader = radiotap_header;
--	iterator->max_length = le16_to_cpu(get_unaligned(
--						&radiotap_header->it_len));
-+	iterator->max_length = get_unaligned_le16(&radiotap_header->it_len);
- 	iterator->arg_index = 0;
--	iterator->bitmap_shifter = le32_to_cpu(get_unaligned(
--						&radiotap_header->it_present));
-+	iterator->bitmap_shifter = get_unaligned_le32(&radiotap_header->it_present);
- 	iterator->arg = (u8 *)radiotap_header + sizeof(*radiotap_header);
- 	iterator->this_arg = NULL;
- 
- 	/* find payload start allowing for extended bitmap(s) */
- 
- 	if (unlikely(iterator->bitmap_shifter & (1<<IEEE80211_RADIOTAP_EXT))) {
--		while (le32_to_cpu(get_unaligned((__le32 *)iterator->arg)) &
--				   (1<<IEEE80211_RADIOTAP_EXT)) {
-+		while (get_unaligned_le32(iterator->arg) &
-+		       (1 << IEEE80211_RADIOTAP_EXT)) {
- 			iterator->arg += sizeof(u32);
- 
- 			/*
-@@ -241,8 +239,8 @@ int ieee80211_radiotap_iterator_next(
- 			if (iterator->bitmap_shifter & 1) {
- 				/* b31 was set, there is more */
- 				/* move to next u32 bitmap */
--				iterator->bitmap_shifter = le32_to_cpu(
--					get_unaligned(iterator->next_bitmap));
-+				iterator->bitmap_shifter =
-+				    get_unaligned_le32(iterator->next_bitmap);
- 				iterator->next_bitmap++;
- 			} else
- 				/* no more bitmaps: end */
-_
