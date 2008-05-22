@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound-mail-32.bluehost.com ([69.89.18.152]:35585 "HELO
-	outbound-mail-32.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753678AbYEAQhV (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:13660 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755875AbYEVF7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 12:37:21 -0400
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Date: Thu, 1 May 2008 09:30:04 -0700
-Cc: Christoph Hellwig <hch@infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de> <20080501155826.GA11188@infradead.org> <200805011807.26036.mb@bu3sch.de>
-In-Reply-To: <200805011807.26036.mb@bu3sch.de>
+	Thu, 22 May 2008 01:59:42 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2473125wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 22:59:41 -0700 (PDT)
+Message-ID: <43e72e890805212259u7515a12as69eeea253b197a64@mail.gmail.com> (sfid-20080522_075946_521184_ED0C6993)
+Date: Wed, 21 May 2008 22:59:41 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] make wext wireless bits optional and deprecate them
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	"Jean Tourrilhes" <jt@hpl.hp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1211210578.6252.52.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805010930.04799.jbarnes@virtuousgeek.org> (sfid-20080501_183706_176761_C0245EE6)
+Content-Type: text/plain; charset=UTF-8
+References: <1211026337.3827.25.camel@johannes.berg>
+	 <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org>
+	 <1211032475.6252.2.camel@johannes.berg>
+	 <1211117795.686.15.camel@localhost.localdomain>
+	 <1211199368.6252.19.camel@johannes.berg>
+	 <1211210578.6252.52.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, May 01, 2008 9:07 am Michael Buesch wrote:
-> On Thursday 01 May 2008 17:58:26 Christoph Hellwig wrote:
-> > On Thu, May 01, 2008 at 05:47:26PM +0200, Michael Buesch wrote:
-> > > We've discussed that and this behaviour is not acceptable, as the
-> > > driver must know about a possible fallback in case it can do 32bit DMA
-> > > more efficiently than 64bit DMA, for example.
-> >
-> > That's what we have dma_get_required_mask() for.  See
-> > Documentation/DMA-API.txt.
+On Mon, May 19, 2008 at 8:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> [removing linux-kernel and netdev from CC, I suppose they won't care too
+> much about these details]
 >
-> So well. I'm still unsure about the advantage of having some opencoded
-> probe loop in the driver, instead of implementing it in a common place
-> and doing all of it with a single API call.
-> We can still call dma_get_required_mask() and adjust the mask to that
-> in dma_set_mask_weak(). That can _additionally_ be done there.
+> On Mon, 2008-05-19 at 14:18 +0200, Johannes Berg wrote:
+>> > Instead of testing for wireless/, best thing would probably be to call
+>> > SIOCGIWRANGE on the device and if it returns EOPNOTSUP then it's not
+>> > wireless.  Some drivers may have to load firmware to figure out
+>> > supported rates and encryption capabilities, but to be honest, NM does
+>> > this to detect wireless devices and I haven't run into any issues in 4
+>> > years using it.  If there are issues with drivers, then we need to fix
+>> > the driver too.
+>>
+>> I was about to propose calling SIOCGIWNAME since that is what
+>> wireless-tools do and that linux/wireless.h indicates.
+>
+> Here's a patch, comments?
+>
+> johannes
+>
+> ---
+>  hald/linux/device.c |   16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+>
+> --- hal.orig/hald/linux/device.c        2008-05-19 06:46:23.000000000 +0200
+> +++ hal/hald/linux/device.c     2008-05-19 06:55:25.000000000 +0200
+> @@ -45,6 +45,10 @@
+>   #include <linux/input.h>
+>  #endif
+>
+> +/* for wireless extensions */
+> +#include <linux/if.h>
+> +#include <linux/wireless.h>
+> +
+>  #include <dbus/dbus.h>
+>  #include <dbus/dbus-glib.h>
+>
+> @@ -532,10 +536,14 @@ net_add (const gchar *sysfs_path, const
+>                const char *addr;
+>                const char *parent_subsys;
+>                char bridge_path[HAL_PATH_MAX];
+> -               char wireless_path[HAL_PATH_MAX];
+>                char phy80211_path[HAL_PATH_MAX];
+>                struct stat s;
+>                dbus_uint64_t mac_address = 0;
+> +               int ioctl_fd;
+> +               struct iwreq iwr;
+> +
+> +               ioctl_fd = socket (PF_INET, SOCK_DGRAM, 0);
+> +               strncpy (iwr.ifr_ifrn.ifrn_name, IFNAMSIZ, ifname);
 
-So I think we're agreed that we want some core function to fall back to 
-different mask values, but yeah, making it take dma_get_required_mask into 
-account would also be good.
+IFNAMSIZ should be the last argument.
 
-Most drivers just do the fallback themselves, right?  So it makes sense to 
-just update the current code to fallback, and update drivers wanting specific 
-mask values to check afterwards.  I hate to inflict that kind of driver wide 
-update on Michael though... :)
-
-Jesse
+  Luis
