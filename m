@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47100 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757539AbYENBDt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 21:03:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH] b43: use the bitrev helpers rather than rolling a private one
-Date: Wed, 14 May 2008 03:03:23 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1210708518.6191.0.camel@brick> <200805140124.07982.mb@bu3sch.de> <1210726437.6191.17.camel@brick>
-In-Reply-To: <1210726437.6191.17.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805140303.23590.mb@bu3sch.de> (sfid-20080514_030351_913467_1DF912F6)
+Received: from main.gmane.org ([80.91.229.2]:51621 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755349AbYEVRuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 13:50:09 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1JzEvS-0005zC-Vc
+	for linux-wireless@vger.kernel.org; Thu, 22 May 2008 17:50:03 +0000
+Received: from c-67-190-34-252.hsd1.co.comcast.net ([67.190.34.252])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:50:02 +0000
+Received: from dann.church by c-67-190-34-252.hsd1.co.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 17:50:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Dann Church <dann.church@cassatt.com>
+Subject: Re: iwl4965 - =?utf-8?b?d3BhX3N1cHBsaWNhbnQ=?= can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Date: Thu, 22 May 2008 17:42:31 +0000 (UTC)
+Message-ID: <loom.20080522T173929-232@post.gmane.org> (sfid-20080522_195015_507128_F17F01CD)
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>  <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>  <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>  <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>  <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>  <1210617467.3792.4.camel@X61.DFGI.com> <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 May 2008 02:53:56 Harvey Harrison wrote:
-> On Wed, 2008-05-14 at 01:24 +0200, Michael Buesch wrote:
-> > On Tuesday 13 May 2008 21:55:18 Harvey Harrison wrote:
-> > > The 4-bit reversal flip_4bit is replaced with the bitrev helper
-> > > bitrev8 and a 4-bit shift.  The B43_WARN is moved to the location
-> > > where a register is read from for checking there.  The other caller
-> > > explicitly passes an array index which is guaranteed to be within range
-> > > and so a B43_WARN is not added there.
-> > > 
-> > > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> > 
-> > ACK
-> > 
-> > But I'd prefer if we had something like the following
-> > and use that:
-> > 
-> > #define bitrev4(x)	(bitrev8(x) >> 4)
-> > 
-> > This way the confusing (confusing to me :) ) shifts in the code would go away.
-> > I have a hard time realizing that
-> > bitrev8(x) >> 3
-> > does actually mean
-> > bitrev4(x) << 1
-> > Maybe I'm just stupid, though. :)
-> > 
+Tomas Winkler <tomasw@...> writes:
+
 > 
-> You're not, this was only valid because x < 16....if bit 4 could be set
-> this doesn't work anymore as bitrev8(x) >> 4 would truncate bit 4
-> before shifting left.  So there was some subtlety here that makes >> 3
-> ok.
+> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
+> <v.jones@...> wrote:
+> >
+> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
+> >
+> >> Meanwhile we've reproduced the wpa_supplicant issue...
+> >>
+> >
+> > That is great news. Let me know when it is time to test again...
+> 
+> Please try this one. I've just pasted that in so it's might be
+> white-space-wise broken
 
-I don't understand. These are all 4 bit values.
-The old flip helper enforced this with a B43_WARN_ON().
+I have this same issue running fedora core 9 with a kernel version
+2.6.25.3-18.fc9.i686.PAE.  Any chance this patch would work on such a kernel
+(assuming I recompiled it from source)?
 
-The >>3 actually is
 
-((bitrev8(x) >> 4) << 1)
-which is the same as
-(bitrev4(x) << 1)
 
-The <<1 is there, because the hardware wants is this way in the register.
-The <<1 is not related to the actual flip operation.
 
-> Do you want an incremental patch adding a bitrev4 to phy.c or are you
-> going to add it?
-
-Can you just respin this one instead of doing an incremental one?
-
--- 
-Greetings Michael.
