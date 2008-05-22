@@ -1,42 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:33332 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755072AbYEBVU1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 17:20:27 -0400
-Received: by ug-out-1314.google.com with SMTP id h3so146765ugf.16
-        for <linux-wireless@vger.kernel.org>; Fri, 02 May 2008 14:20:23 -0700 (PDT)
-To: Scott White <nwi_sub@hotmail.com>
-Subject: Re: Please pull 'upstream' branch of rt2x00
-Date: Fri, 2 May 2008 23:25:38 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
-In-Reply-To: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805022325.38311.IvDoorn@gmail.com> (sfid-20080502_232004_497703_1C3E5BAD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:48470 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755264AbYEVTaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 15:30:19 -0400
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies -
+	2.6.26-rc1 kernel
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Vincent C Jones <v.jones@networkingunlimited.com>,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+In-Reply-To: <1211483568.3698.66.camel@johannes.berg>
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
+	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
+	 <1210617467.3792.4.camel@X61.DFGI.com>
+	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+	 <1211478969.3698.56.camel@johannes.berg>
+	 <1211481249.28022.15.camel@localhost.localdomain>
+	 <1ba2fa240805221151q2e53b069n6658c6cd7d6f4ba0@mail.gmail.com>
+	 (sfid-20080522_205154_739984_95576FF6)  <1211483568.3698.66.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 22 May 2008 15:30:12 -0400
+Message-Id: <1211484612.28022.31.camel@localhost.localdomain> (sfid-20080522_213040_180573_76D0E4E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 02 May 2008, Scott White wrote:
+On Thu, 2008-05-22 at 21:12 +0200, Johannes Berg wrote:
+> > > wpa_supplicant cannot handle A-band channel #s.  Thus, with the previous
+> > > code, the FREQ+frequency was sent first, and the FREQ+channel was sent
+> > > second.  Sending the FREQ+channel second made the supplicant overwrite
+> > > the value it already parsed from the FREQ+frequency for that BSSID.  But
+> > > since the supplicant can't handle A-band channel #s, you end up with 0.
+> > >
+> > > Reversing the order of these two makes it work, but it's a total hack.
+> > > That may be what's needed right now though until everyone fixes their
+> > > supplicant.  There's overlap on A-band channels 7 - 12 (5035MHz ->
+> > > 5060MHz) with B/G band channel #s.  Obviously WEXT falls over here
+> > > because the band isn't passed.
+> > >
+> > > But what's the best fix to the supplicant?  It could just parse A-band
+> > > channels and where the numbers overlap, assume B/G band.  Or, it could
+> > > be patched to prefer FREQ+frequency over FREQ+channel if it received
+> > > both.  That's probably the best solution.
 > 
-> >Was this patch series in time for the 2.6.26 merge window?
-> >
-> >If not, please consider merging at least the following patches since
-> >they are real bugfixes:
-> >
-> >>       rt2x00: Don't enable short preamble for 1MBs
-> >>       rt2x00: Fix quality/activity led handling
-> >>       rt2x00: Clarify supported chipsets in Kconfig
-> >
-> >The others are code cleanups which are "nice to have", but could otherwise
-> >wait for 2.6.27.
+> Fun. How about it we just make wpa supplicant ignore FREQ/channel
+> completely if it uses FREQ/frequency anyway?
+
+Can't because some drivers send channel and not frequency.  Yeah, we
+could fix all the drivers, but that doesn't help people running latest
+supplicant on older kernels.
+
+atmel.c
+zd1201.c
+wl3501_cs.c
+linux-wlan-ng (somewhat unclear but probably)
+
+Dan
+
+> > Actually we've also tried to removing FREQ+channel part and it has
+> > worked. So wpa_supplicant won't get into this dilemma.
 > 
-> The merge window is still open at this time.  I haven't seen a rc1 yet.  Anyway I saw that only the 3 bugfixes are currently in the queue.  As the owner of several (10 by the university and 2 personal) rt73 usb wireless cards, I would really like it if the latest version 2.1.5 made into 2.6.26.  As someone who has used 2.6.24 and finished compiling 2.6.25 two days ago I find that the driver in both kernels is not good.  Not good means I get a wireless signal and I get data transfers, but the speed fluctuates and have other issues.  However with each release, the problems I have are slowing decreasing.  I have been waiting patiently for 2.6.25-rc1 to have 2.1.5 since 2.1.5 was announced.  I really think all of 2.1.5 should get in 2.6.25-rc1.
+> Makes sense.
+> 
+> > Patch that broke it is below so  I guess the bug is in everything form
+> > 2.6.25 and up.
+> > '
+> > commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+> > Author: Johannes Berg <johannes@sipsolutions.net>
+> > Date:   Thu Jan 24 19:38:38 2008 +0100
+> > 
+> >     cfg80211 API for channels/bitrates, mac80211 and driver conversion
+> > '
+> 
+> Yeah, sorry about that. Once more, bitten by the assumption wext was
+> useful and people would implement it properly.
+> 
+> johannes
 
-Have you tried forcing the rate to 54Mbit instead of letting the rate selection algorithm doing its work?
-It seems to have helped with several other users.
-
-Ivo
