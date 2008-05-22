@@ -1,58 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:24207 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450AbYEUFxN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46130 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYEVTEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 01:53:13 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1573710ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 22:53:00 -0700 (PDT)
-Message-ID: <445f43ac0805202252v2fc8757ax5a43ddce8188ed61@mail.gmail.com> (sfid-20080521_075322_159194_0A23C88D)
-Date: Tue, 20 May 2008 22:52:59 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	carrano@laptop.org, dwmw2@infradead.org, dilinger@queued.net
-In-Reply-To: <200805201007.59746.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4832422a.20018e0a.6b37.3217@mx.google.com>
-	 <200805201007.59746.hs4233@mail.mn-solutions.de>
+	Thu, 22 May 2008 15:04:04 -0400
+Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: JMF <tolas_feup@hotmail.com>,
+	Alejandro Grijalba =?ISO-8859-1?Q?Mart=EDnez?=
+	<sud@latinsud.com>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <69e28c910805221152g199d83b9s225799d0e3e53bcd@mail.gmail.com> (sfid-20080522_205222_586288_4C9D9980)
+References: <47FAB829.9010304@latinsud.com>
+	 <200804081025.39645.mb@bu3sch.de> <loom.20080522T171937-155@post.gmane.org>
+	 <69e28c910805221115g6290e5e9nef4444efca07aea@mail.gmail.com>
+	 <69e28c910805221121v1a34901co35ec41bff41bd1ec@mail.gmail.com>
+	 <1211481278.3698.58.camel@johannes.berg>
+	 <69e28c910805221152g199d83b9s225799d0e3e53bcd@mail.gmail.com>
+	 (sfid-20080522_205222_586288_4C9D9980)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JtQ+mjLzzytLfOpZpEAl"
+Date: Thu, 22 May 2008 21:03:01 +0200
+Message-Id: <1211482981.3698.61.camel@johannes.berg> (sfid-20080522_210408_768663_81E15672)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger,
 
-Thanks for your comments.
+--=-JtQ+mjLzzytLfOpZpEAl
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 20, 2008 at 1:07 AM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
-> *) a runtime check (e.g. by comparing firmware version) if
->   the firmware supports mesh at all, and then doing this only
->   in that case. Probably as lbs_has_mesh() call, we're going
->   to need this in several places
->
-> *) a kernel-config option, because many people use CF/SDIO
->   cards in embedded environmnents and like to have things
->   small. No need for #ifdef/#endif, because the compiler can
->   savely optimize things out: "#define lbs_has_mesh() (0)"
->   if mesh is turned off via Kconfig.
+On Thu, 2008-05-22 at 20:52 +0200, Stefanik G=C3=A1bor wrote:
+> On Thu, May 22, 2008 at 8:34 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >> >> This does not work, since we use injection for other types of
+> >> >>  frames. For example management frames from hostapd. We don't want
+> >> >>  (and can't) make hostapd keep track of sequence numbers.
+> >> >> You'll have to contact radiotap people and add a flag for this.
+> >> >>  This would also solve the hardware counter problem then.
+> >
+> >> The flag is IEEE80211_TX_INJECTED. Here is a new patch, for the
+> >> current wireless-testing:
+> >
+> > Reorder the two blocks and you have your answer. NO.
+> >
+> > johannes
+> >
+>=20
+> Hmm, shouldn't this version fix the hostap and other non-monitor-mode cas=
+es?
 
-Is David's suggestion acceptable to you?
+No, because hostapd uses monitor interfaces. Give up, it doesn't work
+without an extra radiotap flag.
 
-On Sat, 2008-05-17 at 21:01 -0700, David Woodhouse wrote:
-> As Holger points out, we should call those only if (priv->mesh_tlv).
+johannes
 
-> Also, you create /sys/class/net/ethX/mesh_ie. This doesn't make
-> sense to me. /sys/class/net/mshX/boot_options seems to be more
-> logical. However, I don't know much about mesh ...
+--=-JtQ+mjLzzytLfOpZpEAl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-The entries in the mesh_ie directory groups the non-volatile
-parameters of the mesh Information Element that is included in all
-mesh beacons.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Javier
+iQIVAwUASDXDY6Vg1VMiehFYAQI19xAAqTZ+uoBLmowDN6Vb3PVddnHr67EyklpZ
+Bqutu9okidkr/fkmI+PKfeybqqkfbsJaNNnuiJPrB8hbafvGXJ3ZzHYALZx7mBY1
+mQydBxNMuwKSFBtltwIzZSHeQM9icxGAfbHyY7fJYI0RK4kxNb2n1knUzq9VbLsA
+ZBTi7foKT6FSR6q/HgiKeu2su2+P3IF4dqFm5w07uGdMRex42/OqMzLQcn0M0IHX
+GStXg6RzJBK9gcKfDZk0mQIck8B0SUA9DiInjZeaxH1uyx6VN0q5x7HU6Dz0Bv06
+nKGv2X+/N98SP3oQK1Ph0Q1hs68zavvu9nf4L8Oa85iPtRJTLyd+kecBA0zp57Bf
+D5nJnfjx5HrJ3HzrC83fb0bEv9mbQQPz1FLBv09cNsgCQVvRlbbfIplKkzO1/Sjw
+sIX2WsmsaZliYLZDE6BRZb0zITMkEBQNNQKOe9jm1YLLxsDXg0U9hW1QSedOkDS3
+OjnwhyLsdypgi0cNaI5FDm88HX7K92H4py/WrExIu06ccO5UZXpZgJqVOQ9818+7
+Buhx0fjc/ifEphKpEuuefisWzM42X9VqN+i+II36/+TvLGQ6bQMtFJGkD7ZHxQRn
+rfGfTSdtKuWbFxx3SHC1AZTPMYO8w9y4Kp15VPeQJXyrHKe7xbfTRPOpBy+TmVjJ
+ivDoUWhbsoM=
+=o0pn
+-----END PGP SIGNATURE-----
 
--- 
-Javier Cardona
-cozybit Inc.
+--=-JtQ+mjLzzytLfOpZpEAl--
+
