@@ -1,153 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta5.srv.hcvlny.cv.net ([167.206.4.200]:65140 "EHLO
-	mta5.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762532AbYEIQ5T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2008 12:57:19 -0400
-Received: from X61.NetworkingUnlimited.com
- (ool-43503a0c.dyn.optonline.net [67.80.58.12]) by mta5.srv.hcvlny.cv.net
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- with ESMTP id <0K0M004OV1RE0PJ1@mta5.srv.hcvlny.cv.net> for
- linux-wireless@vger.kernel.org; Fri, 09 May 2008 12:57:15 -0400 (EDT)
-Date: Fri, 09 May 2008 12:57:14 -0400
-From: Vincent C Jones <v.jones@networkingunlimited.com>
-Subject: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1	kernel
-To: linux-wireless@vger.kernel.org
-Message-id: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com> (sfid-20080509_185617_216527_EAA78744)
-MIME-version: 1.0
-Content-type: text/plain
+Received: from ra.tuxdriver.com ([70.61.120.52]:3745 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759827AbYEVM6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 08:58:09 -0400
+Date: Thu, 22 May 2008 08:40:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-05-22
+Message-ID: <20080522124017.GA3996@tuxdriver.com> (sfid-20080522_145816_224361_31A34233)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel/frequency reporting by iwlwifi is incompatible with
-wpa_supplicant for 5GHz (802.11A) channels. Version numbers and iwlist
-versus wpa_supplicant scan results are below. Association still works if
-the correct channel is specified using iwconfig, but that is
-incompatible with roaming.
+Dave,
 
+Another week, another 70+ patches -- actually this pace feels a
+bit slow!  This batch includes updates to rt2x00, libertas, iwlwifi,
+mac80211, and a smattering of other drivers.
+
+Let me know if there are problems!
+
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+
+---
+
+The following changes since commit 5b06c85c3b96fa8db632f1ee94f99a2bd0215f3a:
+  Allan Stephens (1):
+        tipc: Cosmetic cleanup of topology service code
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Atsushi Nemoto (1):
+      zd1211rw: Use DMA-aware buffer for usb transfer
+
+David Woodhouse (3):
+      libertas: Increase priority of 'unknown command' warnings
+      libertas: fix multicast filtering on eth and msh interfaces
+      libertas: Add reset_card() callback to hardware driver
+
+Emmanuel Grumbach (2):
+      iwlwifi: don't switch to SGI if not supported by AP
+      iwlwifi: clean up and bug fix for security
+
+Ester Kummer (1):
+      iwlwifi: trigger event log from debugfs
+
+Gertjan van Wingerde (2):
+      rt2x00: Fix queue related oops in case of deselected mac80211 multi-queue feature.
+      rt2x00: Only initialize the minimum needed fields of PCI TX descriptors.
+
+Gregory Greenman (1):
+      iwlwifi: get_hw_cmd_size
+
+Harvey Harrison (6):
+      mac80211: michael.c use kernel-provided infrastructure
+      mac80211: introduce struct michael_mic_ctx and static helpers
+      mac80211: add const, remove unused function, make one function static
+      mac80211: add a struct to hold tkip context
+      mac80211: tkip.c use struct tkip_ctx in phase 1 key mixing
+      mac80211: tkip.c use struct tkip_ctx in phase 2 key mixing
+
+Holger Schurig (1):
+      libertas: reduce command retry time
+
+Ivo van Doorn (9):
+      rt2x00: trim skb_frame_desc to 32 bytes
+      rt2x00: Fix TX status reporting
+      rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
+      rt2x00: Preserve descriptor information after memmove()
+      rt2x00: Split rt2x00lib_write_tx_desc()
+      rt2x00: Remove redundant flags/dev_flags initializations
+      rt2x00: Merge RX and TX entry private data
+      rt2x00: Remove extra +
+      rt2x00: Release rt2x00 2.1.6
+
+Javier Cardona (3):
+      libertas: Extend MESH_CONFIG command to access non-volatile configuration
+      libertas: sysfs interface for accessing non-volatile configuration
+      libertas: sysfs interface for accessing default mesh channel
+
+Johannes Berg (8):
+      mac80211: fix bugs in queue handling functions
+      mac80211: let drivers wake but not start queues
+      mac80211: use rate index in TX control
+      mac80211: reorder some transmit handlers
+      mac80211: move TX info into skb->cb
+      mac80211: dont allow fragmentation and requeuing on A-MPDU queues
+      mac80211: use multi-queue master netdevice
+      mac80211: remove channel use statistics
+
+Larry.Finger@lwfinger.net (1):
+      b43: Fix typo in firmware file name for 802.11 cores with rev 13
+
+Michael Buesch (4):
+      b43: Add hooks for firmware debugging
+      b43: Allow running without PCM firmware
+      b43: Add panic reason code that doesn't trigger restart
+      b43: Add firmware markers support
+
+Pavel Emelyanov (8):
+      mac80211: Brush up error paths in mesh_path_add.
+      mac80211: Fix one more call to synchronize_rcu in atomic context.
+      mac80211: Prepare mesh_table_grow to failing copy_node callback.
+      mac80211: Report allocation failure from mesh_path_node_copy.
+      mac80211: Fix sleeping allocation under lock in mesh_path_node_copy.
+      mac80211: Do not report false error from mesh_path_add.
+      mac80211: Merge error paths in mesh_table_grow().
+      mac80211: Consolidate hash kfree-ing in mesh.c.
+
+Ron Rindjunsky (9):
+      iwlwifi: changing irrelevant comment
+      iwlwifi: remove iwl4965_nic_start function
+      mac80211: separate Tx and Rx MCS when configuring HT
+      iwlwifi: filling Tx MCS set
+      iwlwifi: rename and move Tx queue activation/deactivation
+      iwlwifi: add rx_handlers stub for iwl5000
+      iwlwifi: add ucode loaders for iwl5000
+      iwlwifi: add ucode init flow handling for iwl5000
+      iwlwifi: iwl5000 WiFi/WiMax coexistence
+
+Tomas Winkler (13):
+      iwlwifi: rename iwl4965_queue to iwl_queue
+      iwlwifi: rename iwl4965_tx_info to iwl_tx_info
+      iwlwifi: remove 4965 from iwl4965_tx_queue_update_write_ptr
+      iwlwifi: remove 4965 prefix from iwl4965_frame
+      iwlwifi: remove 4965 from iwl4965_rate_info
+      iwlwifi: move iwl_bcast_addr to iwlcore
+      iwlwifi: move more station managment into iwl-sta.c
+      iwlwifi: remove 4956 form iwl4965_tx_cmd
+      iwlwifi: refactor ieee80211_get_qos_ctrl
+      iwlwifi: move TX code into iwl-tx.c
+      iwlwifi: remove 4965 remainings in iwl-eeprom.c file
+      iwlwifi: add debugfs to disable/enable run time calibration
+      iwlwifi: refactor pci prob flow
+
+ drivers/net/wireless/adm8211.c              |   35 +-
+ drivers/net/wireless/adm8211.h              |    1 -
+ drivers/net/wireless/ath5k/base.c           |   74 +-
+ drivers/net/wireless/ath5k/base.h           |    1 -
+ drivers/net/wireless/b43/b43.h              |   28 +-
+ drivers/net/wireless/b43/dma.c              |   46 +-
+ drivers/net/wireless/b43/dma.h              |    3 +-
+ drivers/net/wireless/b43/main.c             |  192 ++++-
+ drivers/net/wireless/b43/pio.c              |   36 +-
+ drivers/net/wireless/b43/pio.h              |    8 +-
+ drivers/net/wireless/b43/xmit.c             |   65 +-
+ drivers/net/wireless/b43/xmit.h             |    4 +-
+ drivers/net/wireless/b43legacy/dma.c        |   35 +-
+ drivers/net/wireless/b43legacy/dma.h        |    4 +-
+ drivers/net/wireless/b43legacy/main.c       |   13 +-
+ drivers/net/wireless/b43legacy/pio.c        |   19 +-
+ drivers/net/wireless/b43legacy/pio.h        |    4 +-
+ drivers/net/wireless/b43legacy/xmit.c       |   47 +-
+ drivers/net/wireless/b43legacy/xmit.h       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   25 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |  123 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.h  |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |  304 ++-------
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |  316 ++++++++-
+ drivers/net/wireless/iwlwifi/iwl-calib.c    |    9 +
+ drivers/net/wireless/iwlwifi/iwl-calib.h    |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   86 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  210 +++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   24 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   52 ++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   90 ++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h  |   19 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h     |   28 +
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |  294 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |  651 ++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   85 +--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c | 1067 +++------------------------
+ drivers/net/wireless/libertas/Makefile      |    8 +-
+ drivers/net/wireless/libertas/assoc.c       |    6 +-
+ drivers/net/wireless/libertas/cmd.c         |  105 ++--
+ drivers/net/wireless/libertas/cmd.h         |    3 +
+ drivers/net/wireless/libertas/cmdresp.c     |    5 +-
+ drivers/net/wireless/libertas/decl.h        |    4 +
+ drivers/net/wireless/libertas/defs.h        |   14 +-
+ drivers/net/wireless/libertas/dev.h         |    3 +
+ drivers/net/wireless/libertas/host.h        |   17 +
+ drivers/net/wireless/libertas/hostcmd.h     |    2 +-
+ drivers/net/wireless/libertas/main.c        |  205 ++++--
+ drivers/net/wireless/libertas/persistcfg.c  |  453 ++++++++++++
+ drivers/net/wireless/libertas/types.h       |   30 +
+ drivers/net/wireless/libertas/wext.c        |    5 +-
+ drivers/net/wireless/p54/p54common.c        |   93 +--
+ drivers/net/wireless/p54/p54common.h        |    1 -
+ drivers/net/wireless/p54/p54pci.c           |    2 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c     |  132 ++--
+ drivers/net/wireless/rt2x00/rt2400pci.h     |    5 +
+ drivers/net/wireless/rt2x00/rt2500pci.c     |  120 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.h     |    5 +
+ drivers/net/wireless/rt2x00/rt2500usb.c     |   85 ++--
+ drivers/net/wireless/rt2x00/rt2500usb.h     |    5 +
+ drivers/net/wireless/rt2x00/rt2x00.h        |   52 +-
+ drivers/net/wireless/rt2x00/rt2x00debug.c   |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |  226 +-----
+ drivers/net/wireless/rt2x00/rt2x00lib.h     |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |   76 ++-
+ drivers/net/wireless/rt2x00/rt2x00pci.c     |  103 +--
+ drivers/net/wireless/rt2x00/rt2x00pci.h     |   28 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c   |  167 ++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h   |   73 ++-
+ drivers/net/wireless/rt2x00/rt2x00reg.h     |   11 -
+ drivers/net/wireless/rt2x00/rt2x00usb.c     |  228 +++---
+ drivers/net/wireless/rt2x00/rt2x00usb.h     |   26 +-
+ drivers/net/wireless/rt2x00/rt61pci.c       |  133 ++--
+ drivers/net/wireless/rt2x00/rt61pci.h       |    5 +
+ drivers/net/wireless/rt2x00/rt73usb.c       |   59 +-
+ drivers/net/wireless/rt2x00/rt73usb.h       |    5 +
+ drivers/net/wireless/rtl8180_dev.c          |   62 +-
+ drivers/net/wireless/rtl8187.h              |    6 -
+ drivers/net/wireless/rtl8187_dev.c          |   45 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c      |  161 ++---
+ drivers/net/wireless/zd1211rw/zd_mac.h      |   16 -
+ drivers/net/wireless/zd1211rw/zd_usb.c      |   29 +-
+ include/linux/ieee80211.h                   |   18 +-
+ include/net/mac80211.h                      |  348 +++++-----
+ net/mac80211/Kconfig                        |   14 +-
+ net/mac80211/Makefile                       |    2 +-
+ net/mac80211/cfg.c                          |    4 +-
+ net/mac80211/debugfs_key.c                  |    8 +-
+ net/mac80211/debugfs_netdev.c               |    9 -
+ net/mac80211/debugfs_sta.c                  |    1 -
+ net/mac80211/ieee80211_i.h                  |   76 +--
+ net/mac80211/iface.c                        |    2 +-
+ net/mac80211/key.h                          |   17 +-
+ net/mac80211/main.c                         |  261 ++++----
+ net/mac80211/mesh.c                         |   38 +-
+ net/mac80211/mesh.h                         |    2 +-
+ net/mac80211/mesh_pathtbl.c                 |   53 +-
+ net/mac80211/michael.c                      |  106 +--
+ net/mac80211/michael.h                      |    8 +-
+ net/mac80211/mlme.c                         |   34 +-
+ net/mac80211/rate.c                         |   12 +-
+ net/mac80211/rate.h                         |   33 +-
+ net/mac80211/rc80211_pid.h                  |    4 +-
+ net/mac80211/rc80211_pid_algo.c             |   22 +-
+ net/mac80211/rc80211_pid_debugfs.c          |    8 +-
+ net/mac80211/rx.c                           |   72 +--
+ net/mac80211/sta_info.c                     |    8 +-
+ net/mac80211/sta_info.h                     |    6 +-
+ net/mac80211/tkip.c                         |   86 +--
+ net/mac80211/tkip.h                         |    4 -
+ net/mac80211/tx.c                           |  729 +++++++++----------
+ net/mac80211/util.c                         |   59 +-
+ net/mac80211/wep.c                          |    9 +-
+ net/mac80211/wme.c                          |   28 +-
+ net/mac80211/wme.h                          |    2 +-
+ net/mac80211/wpa.c                          |   81 +--
+ 122 files changed, 5042 insertions(+), 4024 deletions(-)
+ create mode 100644 drivers/net/wireless/libertas/persistcfg.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-05-22.patch.bz2
 -- 
-Dr. Vincent C. Jones, PE
-Networking Unlimited, Inc.
-Phone: +1 201 568-7810
-V.Jones@NetworkingUnlimited.com
-
-X61:~ # modinfo iwl4965
-filename:       /lib/modules/2.6.26-rc1-test/kernel/drivers/net/wireless/iwlwifi/iwl4965.ko
-license:        GPL
-author:         Copyright(c) 2003-2008 Intel Corporation
-version:        1.2.26ks
-description:    Intel(R) Wireless WiFi Link 4965AGN driver for Linux
-srcversion:     9D17B36AB629BB7D6073C31
-alias:          pci:v00008086d00004230sv*sd*bc*sc*i*
-alias:          pci:v00008086d00004229sv*sd*bc*sc*i*
-depends:        mac80211,iwlcore,cfg80211,firmware_class
-vermagic:       2.6.26-rc1-test SMP mod_unload
-parm:           antenna:select antenna (1=Main, 2=Aux, default 0 [both])
-(int)
-parm:           disable:manually disable the radio (default 0 [radio
-on]) (int)
-parm:           swcrypto:using crypto in software (default 0 [hardware])
-(int)
-parm:           debug:debug output mask (int)
-parm:           disable_hw_scan:disable hardware scanning (default 0)
-(int)
-parm:           queues_num:number of hw queues. (int)
-parm:           qos_enable:enable all QoS functionality (int)
-parm:           amsdu_size_8K:enable 8K amsdu size (int)
-X61:~ # wpa_supplicant -v
-wpa_supplicant v0.6.3
-Copyright (c) 2003-2008, Jouni Malinen <j@w1.fi> and contributors
-X61:~ # iwconfig -v
-iwconfig  Wireless-Tools version 29
-          Compatible with Wireless Extension v11 to v22.
-
-Kernel    Currently compiled with Wireless Extension v22.
-
-wlan0     Recommend Wireless Extension v21 or later,
-          Currently compiled with Wireless Extension v22.
-
-X61:~ # uname -a
-Linux X61 2.6.26-rc1-test #2 SMP Fri May 9 09:00:30 EDT 2008 x86_64
-x86_64 x86_64 GNU/Linux
-X61:~ #  iwlist wlan0 scan
-wlan0     Scan completed :
-          Cell 01 - Address: 00:14:BF:96:98:BF
-                    ESSID:"linksys"
-                    Mode:Master
-                    Frequency:2.437 GHz (Channel 6)
-                    Channel:6
-                    Quality=24/100  Signal level=-94 dBm  Noise
-level=-127 dBm
-                    Encryption key:off
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
-                              24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
-                              12 Mb/s; 48 Mb/s
-                    Extra:tsf=000000ae75798185
-          Cell 02 - Address: 00:1E:2A:6C:93:D9
-                    ESSID:"NetworkingUnlimited-G"
-                    Mode:Master
-                    Frequency:2.462 GHz (Channel 11)
-                    Channel:11
-                    Quality=38/100  Signal level=-86 dBm  Noise
-level=-127 dBm
-                    Encryption key:on
-                    IE: WPA Version 1
-                        Group Cipher : TKIP
-                        Pairwise Ciphers (2) : CCMP TKIP
-                        Authentication Suites (1) : PSK
-                    IE: IEEE 802.11i/WPA2 Version 1
-                        Group Cipher : TKIP
-                        Pairwise Ciphers (2) : CCMP TKIP
-                        Authentication Suites (1) : PSK
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
-                              24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
-                              12 Mb/s; 48 Mb/s
-                    Extra:tsf=0000019d354e1183
-          Cell 03 - Address: 00:1A:C1:8A:23:40
-                    ESSID:"NetworkingUnlimited"
-                    Mode:Master
-                    Frequency:5.24 GHz (Channel 48)
-                    Channel:48
-                    Quality=100/100  Signal level=-46 dBm  Noise
-level=-94 dBm
-                    Encryption key:on
-                    IE: WPA Version 1
-                        Group Cipher : TKIP
-                        Pairwise Ciphers (2) : TKIP CCMP
-                        Authentication Suites (1) : PSK
-                    IE: IEEE 802.11i/WPA2 Version 1
-                        Group Cipher : TKIP
-                        Pairwise Ciphers (2) : TKIP CCMP
-                        Authentication Suites (1) : PSK
-                       Preauthentication Supported
-                    Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
-                              36 Mb/s; 48 Mb/s; 54 Mb/s
-                    Extra:tsf=000000dc34bf7037
-
-X61:~ # wpa_cli -i wlan0
-wpa_cli v0.6.3
-Copyright (c) 2004-2008, Jouni Malinen <j@w1.fi> and contributors
-
-This program is free software. You can distribute it and/or modify it
-under the terms of the GNU General Public License version 2.
-
-Alternatively, this software may be distributed under the terms of the
-BSD license. See README and COPYING for more details.
-
-
-
-Interactive mode
-
-> scan
-OK
-<2>CTRL-EVENT-SCAN-RESULTS
-> scan_results
-bssid / frequency / signal level / flags / ssid
-00:1a:c1:8a:23:40       0       202     [WPA-PSK-TKIP
-+CCMP][WPA2-PSK-TKIP+CCMP-preauth] NetworkingUnlimited
-00:1e:2a:6c:93:d9       2462    168     [WPA-PSK-TKIP
-+CCMP][WPA2-PSK-TKIP+CCMP]NetworkingUnlimited-G
-00:14:bf:96:98:bf       2437    167             linksys
-> quit
-X61:~ #  
-
+John W. Linville
+linville@tuxdriver.com
