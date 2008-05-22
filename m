@@ -1,85 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45532 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751315AbYEPPaw (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:50694 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753225AbYEVPIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 11:30:52 -0400
-Subject: Re: iwlwifi injection bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <69e28c910805160812g1c88d796m6133cb36586cc8e8@mail.gmail.com> (sfid-20080516_171249_316046_CADCB33A)
-References: <1210945631.6381.11.camel@johannes.berg>
-	 <69e28c910805160812g1c88d796m6133cb36586cc8e8@mail.gmail.com>
-	 (sfid-20080516_171249_316046_CADCB33A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-afQcDAsazVth53PlgwbI"
-Date: Fri, 16 May 2008 17:30:36 +0200
-Message-Id: <1210951836.6381.38.camel@johannes.berg> (sfid-20080516_173059_783149_E4F0DD1D)
-Mime-Version: 1.0
+	Thu, 22 May 2008 11:08:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH] b43legacy: Fix controller restart crash
+Date: Thu, 22 May 2008 17:06:36 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200805221706.37185.mb@bu3sch.de> (sfid-20080522_170820_194823_70B46B36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes a kernel crash on rmmod, in the case where the controller
+was restarted before doing the rmmod.
 
---=-afQcDAsazVth53PlgwbI
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Fri, 2008-05-16 at 17:12 +0200, Stefanik G=C3=A1bor wrote:
-> On Fri, May 16, 2008 at 3:47 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > I don't know why you want to disallow sending frames when in monitor
-> > mode (especially since reportedly it works), but this is not a good way
-> > to go about it:
-> >
-> > static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-> > {
-> >        struct iwl_priv *priv =3D hw->priv;
-> >
-> >        IWL_DEBUG_MAC80211("enter\n");
-> >
-> >        if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> >                IWL_DEBUG_MAC80211("leave - monitor\n");
-> >                return -1;
-> >        }
-> >
-> > You see, this will cause mac80211 to resubmit the frame and most likely
-> > will totally mess up queue handling and various other things.
-> >
-> > johannes
-> >
->=20
-> Hmm... thanks for the hint! I was chasing a weird Radiotap bug that
-> shown up when I tried to use packetspammer or aireplay on a monitor
-> interface with the latest iwlwifi git. The symptoms ranged from just
-> not transmitting to hangs and kernel panics. It appears to mess up
-> more than just TX/RX queues.
+---
 
-Doesn't surprise me, but I'd be interested in the panics nonetheless.
+Stefano, this is untested. Please test by doing
+echo -n 1 >/debug/b43legacy/phy*/restart
+rmmod b43legacy
+It should not crash anymore at the rmmod (actually the restart should
+also hang in b43legacy, as it has a deadlock, which this patch also fixes).
 
-johannes
-
---=-afQcDAsazVth53PlgwbI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC2om6Vg1VMiehFYAQJ3hA/7Bkxa4FhM6qrbrEnnwfshGSmYrdjzIL31
-H7S0y9nZXLxbXpLoAkN75kU+dpIDdo8XvLccLjNIzd00a/0Un1BgsztpoauD3JcZ
-iDzv1UiaIrLnhdwrfEEKts7VdVCipq85MQb5GRbZFmDnxU/C58Epb8reIHeUaIBx
-208sUXgHHnGNaX8ROJLceEwN8354D/kvqNnJW5a8/ft9pCElRW2D9LBwv3RAvUpX
-ClA7sobQcxpzR4816SpgDCF+KQvlekaGm1BhIxgx9WbywzyMHKrfIghni02gjjvR
-OH0MNsWhhYHhkhXWBwtG0i5W9zAi5E4j9jTI8V/3CleR9Gr+5iWjvt7NP/RG/htJ
-/YkYSnB8kkLtHKrGZf2cpGAsLpZkSx5xOEbNZbCalV1tM/BEc+/B+lj35R74Pyir
-FEZqS8OtxLAYcjkuPtp7Rp8dcCCuVe+URMmI966DB47TRZwI8Pv5Uz8Cm2jxGgPq
-HPUwoz5ChyavL6APf3uWMi3SVIXqXrayPnH8OhvexL7r195XqZymPdxDSqWLB8l8
-XpPx2aL2LKndrFCDDpH8ZyMB4p6b1jmcRfqt4o2Fl11HTPxRSOqbK343UFObCtj3
-GL0d9DR8i52GKIenpfCRHQ1g8O9dfc6NeLcwfS9j3QrWmHwjC+NpF+oNGqvCogBb
-QjlOqI/bzbY=
-=LbdS
------END PGP SIGNATURE-----
-
---=-afQcDAsazVth53PlgwbI--
-
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c	2008-05-15 23:31:37.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c	2008-05-22 17:02:59.000000000 +0200
+@@ -3035,13 +3035,12 @@ static void b43legacy_set_pretbtt(struct
+ }
+ 
+ /* Shutdown a wireless core */
+ /* Locking: wl->mutex */
+ static void b43legacy_wireless_core_exit(struct b43legacy_wldev *dev)
+ {
+-	struct b43legacy_wl *wl = dev->wl;
+ 	struct b43legacy_phy *phy = &dev->phy;
+ 	u32 macctl;
+ 
+ 	B43legacy_WARN_ON(b43legacy_status(dev) > B43legacy_STAT_INITIALIZED);
+ 	if (b43legacy_status(dev) != B43legacy_STAT_INITIALIZED)
+ 		return;
+@@ -3050,18 +3049,12 @@ static void b43legacy_wireless_core_exit
+ 	/* Stop the microcode PSM. */
+ 	macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
+ 	macctl &= ~B43legacy_MACCTL_PSM_RUN;
+ 	macctl |= B43legacy_MACCTL_PSM_JMP0;
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ 
+-	mutex_unlock(&wl->mutex);
+-	/* Must unlock as it would otherwise deadlock. No races here.
+-	 * Cancel possibly pending workqueues. */
+-	cancel_work_sync(&dev->restart_work);
+-	mutex_lock(&wl->mutex);
+-
+ 	b43legacy_leds_exit(dev);
+ 	b43legacy_rng_exit(dev->wl);
+ 	b43legacy_pio_free(dev);
+ 	b43legacy_dma_free(dev);
+ 	b43legacy_chip_exit(dev);
+ 	b43legacy_radio_turn_off(dev, 1);
+@@ -3482,12 +3475,14 @@ static void b43legacy_chip_reset(struct 
+ 		if (err) {
+ 			b43legacy_wireless_core_exit(dev);
+ 			goto out;
+ 		}
+ 	}
+ out:
++	if (err)
++		wl->current_dev = NULL; /* Failed to init the dev. */
+ 	mutex_unlock(&wl->mutex);
+ 	if (err)
+ 		b43legacyerr(wl, "Controller restart FAILED\n");
+ 	else
+ 		b43legacyinfo(wl, "Controller restarted\n");
+ }
+@@ -3614,15 +3609,17 @@ err_powerdown:
+ 
+ static void b43legacy_one_core_detach(struct ssb_device *dev)
+ {
+ 	struct b43legacy_wldev *wldev;
+ 	struct b43legacy_wl *wl;
+ 
++	/* Do not cancel ieee80211-workqueue based work here.
++	 * See comment in b43legacy_remove(). */
++
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
+-	cancel_work_sync(&wldev->restart_work);
+ 	b43legacy_debugfs_remove_device(wldev);
+ 	b43legacy_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
+ 	wl->nr_devs--;
+ 	ssb_set_drvdata(dev, NULL);
+ 	kfree(wldev);
+@@ -3784,12 +3781,16 @@ err_wireless_exit:
+ 
+ static void b43legacy_remove(struct ssb_device *dev)
+ {
+ 	struct b43legacy_wl *wl = ssb_get_devtypedata(dev);
+ 	struct b43legacy_wldev *wldev = ssb_get_drvdata(dev);
+ 
++	/* We must cancel any work here before unregistering from ieee80211,
++	 * as the ieee80211 unreg will destroy the workqueue. */
++	cancel_work_sync(&wldev->restart_work);
++
+ 	B43legacy_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev)
+ 		ieee80211_unregister_hw(wl->hw);
+ 
+ 	b43legacy_one_core_detach(dev);
+ 
