@@ -1,75 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47980 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbYEDMwx (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.177]:15163 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761981AbYEVKT2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 08:52:53 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080504124542.GA1455@gondor.apana.org.au>
-References: <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-	 <1209890847.6210.51.camel@johannes.berg>
-	 <1209892489.6210.56.camel@johannes.berg>
-	 <20080504094444.GA541@gondor.apana.org.au>
-	 <1209894754.6210.58.camel@johannes.berg>
-	 <1209900355.6210.64.camel@johannes.berg>
-	 <1209904088.4065.11.camel@johannes.berg>
-	 <20080504124542.GA1455@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FCcq2GcFutyqc6Irka1Z"
-Date: Sun, 04 May 2008 14:52:41 +0200
-Message-Id: <1209905561.4065.23.camel@johannes.berg> (sfid-20080504_145219_696285_AD0AD5BE)
-Mime-Version: 1.0
+	Thu, 22 May 2008 06:19:28 -0400
+Received: by el-out-1112.google.com with SMTP id s27so1038751ele.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 03:19:27 -0700 (PDT)
+Message-ID: <69e28c910805220319y52f13b55h5692be4c3d1788a4@mail.gmail.com> (sfid-20080522_121933_342359_3BF4DB0C)
+Date: Thu, 22 May 2008 12:19:27 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH V2] iwlwifi: Fix packet injection in iwl3945 and iwl4965
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andy Green" <andy@warmcat.com>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1211447857.3698.52.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910805201001r78d13ec5v4c7cf933edd39c10@mail.gmail.com>
+	 <69e28c910805210819ye492edkc20b1ddccdf082ce@mail.gmail.com>
+	 <1211447545.7814.97.camel@debian.sh.intel.com>
+	 <1211447857.3698.52.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 22, 2008 at 11:17 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-05-22 at 17:12 +0800, Zhu Yi wrote:
+>> On Wed, 2008-05-21 at 17:19 +0200, Stefanik G=E1bor wrote:
+>> > also works in monitor-while-associated mode.
+>>
+>> How does it work? AFAICS, mac80211 wext.c blocks setting essid and b=
+ssid
+>> in monitor mode. Did you patch it?
+>
+> You just create two virtual interfaces. Which, incidentally, iwlwifi
+> seems to be quite buggy about: it will accept all types, even those i=
+t
+> doesn't support (mesh, ap, wds?)
+>
+> johannes
+>
 
---=-FCcq2GcFutyqc6Irka1Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Exactly. I should have wrote multi-VAP mode, since that's what it
+really is, except for that it doesn't panic, unlike madwifi's
+similarly named mode. Wext.c blocks setting ESSID and BSSID for
+monitor interfaces - but there is nothing that prevents a monitor and
+a station interface to coexist on the same wmaster - and even though
+setting ESSID and BSSID on the monitor interface (call it "rtap0") is
+blocked, they still work on the station interface (for example,
+"wlan0"). (This multi-interface mode is exposed by the iw tool, as
+well as aircrack-ng's airmon-ng script, which essentially acts as a
+front-end for iw.)
 
+G=E1bor
 
-> There are three ways out of this.  You could have your own cache
-> (I haven't looked at your headers so I don't know whether that
-> makes sense)
-
-This doesn't really make all that much sense since 802.11 has not only
-variable length headers but also needs a fixed BSSID in the header and
-is pretty much intermingled with 802.3.
-
-> have no cache at all,
-
-That wouldn't be good either I think since we can actually use the
-ethernet header quite well.
-
-johannes
-
---=-FCcq2GcFutyqc6Irka1Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB2xmKVg1VMiehFYAQL0uxAAlpktHaMKVQwaJB65jqqhZs1wj0F85ds/
-pQblzpKj+mt0nCAaRzUcPe2zv9rZQ1geWIEEk+CGC9ZAT5CGOtNZKwYr91Iq1tzp
-PPZbNIx3XPoymWOP8Y3N7pZ2US6R1oRJSxmAZPnPGgKclUop0M5c/Fe8mSOKKDO6
-oIyw3L42XR0cNqsKIEe8cPEP44VC0/56Jj2n8t8HSXIQ6px0vh0JWsfsAnzD3D9b
-FyzZKdkLqaZrvTV41/vbajRXCi5F83APUJ3CKQCCjPiYboWHOgWVSergUF5CfiLV
-UhJva64wWxpg1DH4udgFGos6ZlmG7TAROzM1uu88s84cGYw7WLlN3UH3kHPfYHt7
-IcO8TD5GvG17T1YLnspcSaMhW11jxYhdedp39u0n32DU9xqAybw18c/T/tUabOj+
-MzJPIlvKDrudi5x8UgGRpX6bRDdMEjmtGpHOBFtm0R8iixUr0AefUobtJcByNSa0
-v+8nTDeG06XZrmwbmBa0At92ZrTZtiKbyeo3JXWWcyZgWXiLxmBXzl1U2kTj/X1Y
-EIrBsdYIXK8VRHTieEx5L78JoiyT3NdSXJZZu6xDFOkqX2ZlVvGJGj709wvlmppo
-7tFTzjNu2jszzSZbw7mhi8ceAS1Qw2QchdOpfa5KXF3NC91yhFbF8dOYEJSpReMs
-OLPAC/dq7D4=
-=uL1S
------END PGP SIGNATURE-----
-
---=-FCcq2GcFutyqc6Irka1Z--
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
