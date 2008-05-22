@@ -1,101 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:51802 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755941AbYEAOpO (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.185]:48733 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756190AbYEVR6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 10:45:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH 1/3] Add dma_set_mask_weak() API
-Date: Thu, 1 May 2008 16:40:16 +0200
-Cc: Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
+	Thu, 22 May 2008 13:58:55 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so249876gvc.37
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 10:58:53 -0700 (PDT)
+Message-ID: <1ba2fa240805221058m23650d83pdb930f8d2cb6c3d9@mail.gmail.com> (sfid-20080522_195908_795382_D298D3A6)
+Date: Thu, 22 May 2008 20:58:52 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Cc: "Vincent C Jones" <v.jones@networkingunlimited.com>,
 	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de>
-In-Reply-To: <200805011638.15910.mb@bu3sch.de>
+	"Emmanuel Grumbach" <egrumbach@gmail.com>
+In-Reply-To: <1211478969.3698.56.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011640.17281.mb@bu3sch.de> (sfid-20080501_164500_974728_7582FD49)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
+	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
+	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
+	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
+	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
+	 <1210617467.3792.4.camel@X61.DFGI.com>
+	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
+	 <1211478969.3698.56.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a new DMA subsystem API call for "weak" setting
-of the DMA mask.
-Weak means that it will fallback to smaller masks in case the
-DMA subsystem rejects a big mask.
-Currently such rejection may happen if the driver requests a 64bit
-mask on a VIA machine, for example. dma_set_mask_weak() will fallback
-to 32bit, in that case, and tell the caller about it by modifying the
-passed mask.
+On Thu, May 22, 2008 at 8:56 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>>         memset(&iwe, 0, sizeof(iwe));
+>>         iwe.cmd = SIOCGIWFREQ;
+>> -       iwe.u.freq.m = bss->freq;
+>> -       iwe.u.freq.e = 6;
+>> +       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+>> +       iwe.u.freq.e = 0;
+>>         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+>>                                           IW_EV_FREQ_LEN);
+>>
+>>         memset(&iwe, 0, sizeof(iwe));
+>>         iwe.cmd = SIOCGIWFREQ;
+>> -       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+>> -       iwe.u.freq.e = 0;
+>> +       iwe.u.freq.m = bss->freq;
+>> +       iwe.u.freq.e = 6;
+>>         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+>>                                           IW_EV_FREQ_LEN);
+>
+> That doesn't make any sense, can you explain?
+>
+Your patch switched order of channel and freq in the scan
+It looks like wpa_supplicant cannot handle it
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-
-Index: wireless-testing/drivers/base/dma-mapping.c
-===================================================================
---- wireless-testing.orig/drivers/base/dma-mapping.c	2008-04-28 23:34:19.000000000 +0200
-+++ wireless-testing/drivers/base/dma-mapping.c	2008-04-28 23:46:25.000000000 +0200
-@@ -216,3 +216,38 @@ void dmam_release_declared_memory(struct
- EXPORT_SYMBOL(dmam_release_declared_memory);
- 
- #endif
-+
-+/**
-+ * dma_set_mask_weak - Set the DMA mask. Retry with smaller masks.
-+ * @dev: Device to set the mask on.
-+ * @mask: Pointer to the mask that you want to set. The function will
-+ * 	modify the mask and set it to the actually used mask, in case
-+ * 	it had to fall back to a smaller mask.
-+ *
-+ * Set the DMA mask and allow falling back to smaller masks in
-+ * case of an error.
-+ *
-+ * RETURNS:
-+ * 0 on success, -errno on failure.
-+ */
-+int dma_set_mask_weak(struct device *dev, u64 *mask)
-+{
-+	u64 m = *mask;
-+	int err;
-+
-+	if (m < DMA_MIN_FALLBACK_MASK)
-+		return -EINVAL;
-+	while (1) {
-+		err = dma_set_mask(dev, m);
-+		if (!err)
-+			break;
-+		/* Did not like this one. Try a smaller one. */
-+		m >>= 1;
-+		if (m < DMA_MIN_FALLBACK_MASK)
-+			return err;
-+	}
-+	*mask = m;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(dma_set_mask_weak);
-Index: wireless-testing/include/linux/dma-mapping.h
-===================================================================
---- wireless-testing.orig/include/linux/dma-mapping.h	2008-04-28 23:34:19.000000000 +0200
-+++ wireless-testing/include/linux/dma-mapping.h	2008-04-28 23:35:35.000000000 +0200
-@@ -60,6 +60,11 @@ static inline int is_device_dma_capable(
- 
- extern u64 dma_get_required_mask(struct device *dev);
- 
-+extern int dma_set_mask_weak(struct device *dev, u64 *mask);
-+/* Smallest mask fallback used by dma_set_mask_weak(). */
-+#define DMA_MIN_FALLBACK_MASK	DMA_BIT_MASK(24) /* 16 MB */
-+
-+
- static inline unsigned int dma_get_max_seg_size(struct device *dev)
- {
- 	return dev->dma_parms ? dev->dma_parms->max_segment_size : 65536;
-
-
--- 
-Greetings Michael.
+Tomas
