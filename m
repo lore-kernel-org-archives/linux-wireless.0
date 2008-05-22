@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:60753 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755252AbYE3VBf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 17:01:35 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so78372nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 14:01:33 -0700 (PDT)
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: "BUG: unable to handle kernel paging request" on shutdown or killing NetworkManager in latest wireless-testing (with rt73usb wireless adapter)
-Date: Fri, 30 May 2008 23:06:48 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-References: <69e28c910805301336m319f6134i11f999d56b740314@mail.gmail.com>
-In-Reply-To: <69e28c910805301336m319f6134i11f999d56b740314@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805302306.48653.IvDoorn@gmail.com> (sfid-20080530_230205_575215_3C0CE409)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:16121 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759616AbYEVWgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 18:36:43 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: dcbw@redhat.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: reorder channel and freq reporting in wext scan report
+Date: Fri, 23 May 2008 01:36:36 +0300
+Message-Id: <1211495796-2881-1-git-send-email-tomas.winkler@intel.com> (sfid-20080523_003646_622189_43C35403)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch switch order of channel and freq (SIOCGIWFREQ) reports
+in scan results in order to overcome wpa_supplicant inability
+to handle channel numbers in 5.2Ghz band.
+Wext reporting channel number is ambiguous as channels 7-12 (802.11j)
+exist on both bands.
 
-> I have just compiled a kernel from wireless-testing (32-bit x86), and
-> I get this during shutdown or if I kill NetworkManager (blacklisting
-> rt73usb fixes it):
-
-Could you try below patch to see if that works?
-
-Ivo
-
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 58d1633..63381cf 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -347,8 +347,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	}
+ net/mac80211/mlme.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7cfd12e..c7eca4d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4095,18 +4095,17 @@ ieee80211_sta_scan_result(struct net_device *dev,
  
- 	/*
--	 * Kill guardian urb.
-+	 * Kill guardian urb (if required by driver).
- 	 */
-+	if (!test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags))
-+		return;
-+
- 	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
- 		bcn_priv = rt2x00dev->bcn->entries[i].priv_data;
- 		if (bcn_priv->guardian_urb)
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+-	iwe.u.freq.m = bss->freq;
+-	iwe.u.freq.e = 6;
++	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
++	iwe.u.freq.e = 0;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+-	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+-	iwe.u.freq.e = 0;
++	iwe.u.freq.m = bss->freq;
++	iwe.u.freq.e = 6;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
+-
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = IWEVQUAL;
+ 	iwe.u.qual.qual = bss->signal;
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
