@@ -1,342 +1,487 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:28939 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760039AbYEWCMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:12:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from gateway-1237.mvista.com ([63.81.120.158]:39260 "EHLO
+	dwalker1.mvista.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757638AbYEVX3d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 19:29:33 -0400
+Message-Id: <20080522232103.120033152@mvista.com> (sfid-20080523_012938_609112_AA1730D1)
+Date: Thu, 22 May 2008 16:21:03 -0700
+From: Daniel Walker <dwalker@mvista.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH] iwlwifi: move tx response common handlers to iwlcore
-Date: Fri, 23 May 2008 10:09:27 +0800
-Message-Id: <1211508569-3163-50-git-send-email-yi.zhu@intel.com> (sfid-20080523_042832_141031_B6897B3E)
-In-Reply-To: <1211508569-3163-49-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-38-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-40-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-41-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-42-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-43-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-44-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-45-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-46-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-47-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-48-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-49-git-send-email-yi.zhu@intel.com>
+Cc: rusty@rustcorp.com.au, matthew@wil.cx, mingo@elte.hu,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	arjan@infradead.org
+Subject: [PATCH] net: wireless: airo semaphore to mutex
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-
-This pach moves common tx response handlers to the header files
-and iwl-tx.c.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Daniel Walker <dwalker@mvista.com>
+ 
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |    9 ++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   30 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   30 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   68 +++------------------------
- 5 files changed, 79 insertions(+), 61 deletions(-)
+ drivers/net/wireless/airo.c |  107 ++++++++++++++++++++++----------------------
+ 1 file changed, 54 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index bad0e94..2652e37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1365,6 +1365,15 @@ enum {
- 	TX_ABORT_REQUIRED_MSK = 0x80000000,	/* bits 31:31 */
- };
+Index: linux-2.6.25/drivers/net/wireless/airo.c
+===================================================================
+--- linux-2.6.25.orig/drivers/net/wireless/airo.c
++++ linux-2.6.25/drivers/net/wireless/airo.c
+@@ -36,6 +36,7 @@
+ #include <linux/bitops.h>
+ #include <linux/scatterlist.h>
+ #include <linux/crypto.h>
++#include <linux/mutex.h>
+ #include <asm/io.h>
+ #include <asm/system.h>
+ #include <asm/unaligned.h>
+@@ -1197,7 +1198,7 @@ struct airo_info {
+ 	tdsRssiEntry *rssi;
+ 	struct task_struct *list_bss_task;
+ 	struct task_struct *airo_thread_task;
+-	struct semaphore sem;
++	struct mutex lock;
+ 	wait_queue_head_t thr_wait;
+ 	unsigned long expires;
+ 	struct {
+@@ -1294,7 +1295,7 @@ static void micinit(struct airo_info *ai
  
-+static inline int iwl_is_tx_success(u32 status)
-+{
-+	status &= TX_STATUS_MSK;
-+	return (status == TX_STATUS_SUCCESS)
-+	    || (status == TX_STATUS_DIRECT_DONE);
-+}
-+
-+
-+
- /* *******************************
-  * TX aggregation status
-  ******************************* */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 4fe7a9b..7ccaf80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -209,6 +209,8 @@ void iwl_rx_allocate(struct iwl_priv *priv);
- void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
- 			       struct iwl_rx_mem_buffer *rxb);
+ 	clear_bit(JOB_MIC, &ai->jobs);
+ 	PC4500_readrid(ai, RID_MIC, &mic_rid, sizeof(mic_rid), 0);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
  
-+/* TX helpers */
-+
- /*****************************************************
- * TX
- ******************************************************/
-@@ -221,6 +223,7 @@ void iwl_hw_txq_ctx_free(struct iwl_priv *priv);
- int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv, void *tfd,
- 					dma_addr_t addr, u16 len);
- int iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
-+
- /*****************************************************
-  *   S e n d i n g     H o s t     C o m m a n d s   *
-  *****************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 924a1f4..16c0a91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1243,6 +1243,36 @@ static inline void iwl_txq_ctx_deactivate(struct iwl_priv *priv, int txq_id)
- 	clear_bit(txq_id, &priv->txq_ctx_active_msk);
- }
+ 	ai->micstats.enabled = (mic_rid.state & 0x00FF) ? 1 : 0;
  
-+#ifdef CONFIG_IWLWIF_DEBUG
-+const char *iwl_get_tx_fail_reason(u32 status);
-+#else
-+static inline const char *iwl_get_tx_fail_reason(u32 status) { return ""; }
-+#endif
-+
-+
-+#ifdef CONFIG_IWL4965_HT
-+static inline int iwl_get_ra_sta_id(struct iwl_priv *priv,
-+				    struct ieee80211_hdr *hdr)
-+{
-+	if (priv->iw_mode == IEEE80211_IF_TYPE_STA) {
-+		return IWL_AP_ID;
-+	} else {
-+		u8 *da = ieee80211_get_DA(hdr);
-+		return iwl_find_station(priv, da);
-+	}
-+}
-+
-+static inline struct ieee80211_hdr *iwl_tx_queue_get_hdr(struct iwl_priv *priv,
-+							 int txq_id, int idx)
-+{
-+	if (priv->txq[txq_id].txb[idx].skb[0])
-+		return (struct ieee80211_hdr *)priv->txq[txq_id].
-+				txb[idx].skb[0]->data;
-+	return NULL;
-+}
-+#endif
-+
-+
- static inline int iwl_is_associated(struct iwl_priv *priv)
- {
- 	return (priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) ? 1 : 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index f73d690..70920bf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1058,3 +1058,33 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	return ret ? ret : idx;
- }
+@@ -1740,11 +1741,11 @@ static int readBSSListRid(struct airo_in
+ 		if (ai->flags & FLAG_RADIO_MASK) return -ENETDOWN;
+ 		memset(&cmd, 0, sizeof(cmd));
+ 		cmd.cmd=CMD_LISTBSS;
+-		if (down_interruptible(&ai->sem))
++		if (mutex_lock_interruptible(&ai->lock))
+ 			return -ERESTARTSYS;
+ 		ai->list_bss_task = current;
+ 		issuecommand(ai, &cmd, &rsp);
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+ 		/* Let the command take effect */
+ 		schedule_timeout_uninterruptible(3 * HZ);
+ 		ai->list_bss_task = NULL;
+@@ -2094,7 +2095,7 @@ static void airo_end_xmit(struct net_dev
+ 	clear_bit(JOB_XMIT, &priv->jobs);
+ 	clear_bit(FLAG_PENDING_XMIT, &priv->flags);
+ 	status = transmit_802_3_packet (priv, fids[fid], skb->data);
+-	up(&priv->sem);
++	mutex_unlock(&priv->lock);
  
-+#ifdef CONFIG_IWLWIF_DEBUG
-+#define TX_STATUS_ENTRY(x) case TX_STATUS_FAIL_ ## x: return #x
-+
-+const char *iwl_get_tx_fail_reason(u32 status)
-+{
-+	switch (status & TX_STATUS_MSK) {
-+	case TX_STATUS_SUCCESS:
-+		return "SUCCESS";
-+		TX_STATUS_ENTRY(SHORT_LIMIT);
-+		TX_STATUS_ENTRY(LONG_LIMIT);
-+		TX_STATUS_ENTRY(FIFO_UNDERRUN);
-+		TX_STATUS_ENTRY(MGMNT_ABORT);
-+		TX_STATUS_ENTRY(NEXT_FRAG);
-+		TX_STATUS_ENTRY(LIFE_EXPIRE);
-+		TX_STATUS_ENTRY(DEST_PS);
-+		TX_STATUS_ENTRY(ABORTED);
-+		TX_STATUS_ENTRY(BT_RETRY);
-+		TX_STATUS_ENTRY(STA_INVALID);
-+		TX_STATUS_ENTRY(FRAG_DROPPED);
-+		TX_STATUS_ENTRY(TID_DISABLE);
-+		TX_STATUS_ENTRY(FRAME_FLUSHED);
-+		TX_STATUS_ENTRY(INSUFFICIENT_CF_POLL);
-+		TX_STATUS_ENTRY(TX_LOCKED);
-+		TX_STATUS_ENTRY(NO_BEACON_ON_RADAR);
-+	}
-+
-+	return "UNKNOWN";
-+}
-+EXPORT_SYMBOL(iwl_get_tx_fail_reason);
-+#endif /* CONFIG_IWLWIFI_DEBUG */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index e46bdb1..e749b9f 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -915,33 +915,7 @@ int iwl4965_is_network_packet(struct iwl_priv *priv, struct ieee80211_hdr *heade
- 	return 1;
- }
+ 	i = 0;
+ 	if ( status == SUCCESS ) {
+@@ -2138,7 +2139,7 @@ static int airo_start_xmit(struct sk_buf
+ 	fids[i] |= (len << 16);
+ 	priv->xmit.skb = skb;
+ 	priv->xmit.fid = i;
+-	if (down_trylock(&priv->sem) != 0) {
++	if (mutex_trylock(&priv->lock) == 0) {
+ 		set_bit(FLAG_PENDING_XMIT, &priv->flags);
+ 		netif_stop_queue(dev);
+ 		set_bit(JOB_XMIT, &priv->jobs);
+@@ -2159,7 +2160,7 @@ static void airo_end_xmit11(struct net_d
+ 	clear_bit(JOB_XMIT11, &priv->jobs);
+ 	clear_bit(FLAG_PENDING_XMIT11, &priv->flags);
+ 	status = transmit_802_11_packet (priv, fids[fid], skb->data);
+-	up(&priv->sem);
++	mutex_unlock(&priv->lock);
  
--#define TX_STATUS_ENTRY(x) case TX_STATUS_FAIL_ ## x: return #x
+ 	i = MAX_FIDS / 2;
+ 	if ( status == SUCCESS ) {
+@@ -2209,7 +2210,7 @@ static int airo_start_xmit11(struct sk_b
+ 	fids[i] |= (len << 16);
+ 	priv->xmit11.skb = skb;
+ 	priv->xmit11.fid = i;
+-	if (down_trylock(&priv->sem) != 0) {
++	if (mutex_trylock(&priv->lock) == 0) {
+ 		set_bit(FLAG_PENDING_XMIT11, &priv->flags);
+ 		netif_stop_queue(dev);
+ 		set_bit(JOB_XMIT11, &priv->jobs);
+@@ -2226,11 +2227,11 @@ static void airo_read_stats(struct airo_
  
--static const char *iwl4965_get_tx_fail_reason(u32 status)
--{
--	switch (status & TX_STATUS_MSK) {
--	case TX_STATUS_SUCCESS:
--		return "SUCCESS";
--		TX_STATUS_ENTRY(SHORT_LIMIT);
--		TX_STATUS_ENTRY(LONG_LIMIT);
--		TX_STATUS_ENTRY(FIFO_UNDERRUN);
--		TX_STATUS_ENTRY(MGMNT_ABORT);
--		TX_STATUS_ENTRY(NEXT_FRAG);
--		TX_STATUS_ENTRY(LIFE_EXPIRE);
--		TX_STATUS_ENTRY(DEST_PS);
--		TX_STATUS_ENTRY(ABORTED);
--		TX_STATUS_ENTRY(BT_RETRY);
--		TX_STATUS_ENTRY(STA_INVALID);
--		TX_STATUS_ENTRY(FRAG_DROPPED);
--		TX_STATUS_ENTRY(TID_DISABLE);
--		TX_STATUS_ENTRY(FRAME_FLUSHED);
--		TX_STATUS_ENTRY(INSUFFICIENT_CF_POLL);
--		TX_STATUS_ENTRY(TX_LOCKED);
--		TX_STATUS_ENTRY(NO_BEACON_ON_RADAR);
--	}
--
--	return "UNKNOWN";
--}
- 
- /**
-  * iwl4965_scan_cancel - Cancel any currently executing HW scan
-@@ -1616,40 +1590,12 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 	return nfreed;
- }
- 
--static int iwl4965_is_tx_success(u32 status)
--{
--	status &= TX_STATUS_MSK;
--	return (status == TX_STATUS_SUCCESS)
--	    || (status == TX_STATUS_DIRECT_DONE);
--}
--
- /******************************************************************************
-  *
-  * Generic RX handler implementations
-  *
-  ******************************************************************************/
- #ifdef CONFIG_IWL4965_HT
--
--static inline int iwl4965_get_ra_sta_id(struct iwl_priv *priv,
--				    struct ieee80211_hdr *hdr)
--{
--	if (priv->iw_mode == IEEE80211_IF_TYPE_STA)
--		return IWL_AP_ID;
--	else {
--		u8 *da = ieee80211_get_DA(hdr);
--		return iwl_find_station(priv, da);
--	}
--}
--
--static struct ieee80211_hdr *iwl4965_tx_queue_get_hdr(
--	struct iwl_priv *priv, int txq_id, int idx)
--{
--	if (priv->txq[txq_id].txb[idx].skb[0])
--		return (struct ieee80211_hdr *)priv->txq[txq_id].
--				txb[idx].skb[0]->data;
--	return NULL;
--}
--
- static inline u32 iwl4965_get_scd_ssn(struct iwl4965_tx_resp *tx_resp)
- {
- 	__le32 *scd_ssn = (__le32 *)((u32 *)&tx_resp->status +
-@@ -1697,7 +1643,7 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 		tx_status = &(priv->txq[txq_id].txb[idx].status);
- 		tx_status->retry_count = tx_resp->failure_frame;
- 		tx_status->control.flags &= ~IEEE80211_TXCTL_AMPDU;
--		tx_status->flags = iwl4965_is_tx_success(status)?
-+		tx_status->flags = iwl_is_tx_success(status)?
- 			IEEE80211_TX_STATUS_ACK : 0;
- 		iwl4965_hwrate_to_tx_control(priv,
- 					     le32_to_cpu(tx_resp->rate_n_flags),
-@@ -1730,7 +1676,7 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 			IWL_DEBUG_TX_REPLY("FrameCnt = %d, txq_id=%d idx=%d\n",
- 					   agg->frame_count, txq_id, idx);
- 
--			hdr = iwl4965_tx_queue_get_hdr(priv, txq_id, idx);
-+			hdr = iwl_tx_queue_get_hdr(priv, txq_id, idx);
- 
- 			sc = le16_to_cpu(hdr->seq_ctrl);
- 			if (idx != (SEQ_TO_SN(sc) & 0xff)) {
-@@ -1807,14 +1753,14 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 	}
- 
- #ifdef CONFIG_IWL4965_HT
--	hdr = iwl4965_tx_queue_get_hdr(priv, txq_id, index);
-+	hdr = iwl_tx_queue_get_hdr(priv, txq_id, index);
- 	fc = le16_to_cpu(hdr->frame_control);
- 	if (ieee80211_is_qos_data(fc)) {
- 		qc = ieee80211_get_qos_ctrl(hdr, ieee80211_get_hdrlen(fc));
- 		tid = qc[0] & 0xf;
- 	}
- 
--	sta_id = iwl4965_get_ra_sta_id(priv, hdr);
-+	sta_id = iwl_get_ra_sta_id(priv, hdr);
- 	if (txq->sched_retry && unlikely(sta_id == IWL_INVALID_STATION)) {
- 		IWL_ERROR("Station not known\n");
+ 	clear_bit(JOB_STATS, &ai->jobs);
+ 	if (ai->power.event) {
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
  		return;
-@@ -1833,7 +1779,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 				(struct iwl4965_tx_resp_agg *)tx_resp, index);
+ 	}
+ 	readStatsRid(ai, &stats_rid, RID_STATS, 0);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
  
- 		if ((tx_resp->frame_count == 1) &&
--		    !iwl4965_is_tx_success(status)) {
-+		    !iwl_is_tx_success(status)) {
- 			/* TODO: send BAR */
+ 	ai->stats.rx_packets = le32_to_cpu(vals[43]) + le32_to_cpu(vals[44]) +
+ 			       le32_to_cpu(vals[45]);
+@@ -2257,7 +2258,7 @@ static struct net_device_stats *airo_get
+ 
+ 	if (!test_bit(JOB_STATS, &local->jobs)) {
+ 		/* Get stats out of the card if available */
+-		if (down_trylock(&local->sem) != 0) {
++		if (mutex_trylock(&local->lock) == 0) {
+ 			set_bit(JOB_STATS, &local->jobs);
+ 			wake_up_interruptible(&local->thr_wait);
+ 		} else
+@@ -2276,7 +2277,7 @@ static void airo_set_promisc(struct airo
+ 	clear_bit(JOB_PROMISC, &ai->jobs);
+ 	cmd.parm0=(ai->flags&IFF_PROMISC) ? PROMISC : NOPROMISC;
+ 	issuecommand(ai, &cmd, &rsp);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ }
+ 
+ static void airo_set_multicast_list(struct net_device *dev) {
+@@ -2284,7 +2285,7 @@ static void airo_set_multicast_list(stru
+ 
+ 	if ((dev->flags ^ ai->flags) & IFF_PROMISC) {
+ 		change_bit(FLAG_PROMISC, &ai->flags);
+-		if (down_trylock(&ai->sem) != 0) {
++		if (mutex_trylock(&ai->lock) == 0) {
+ 			set_bit(JOB_PROMISC, &ai->jobs);
+ 			wake_up_interruptible(&ai->thr_wait);
+ 		} else
+@@ -2680,7 +2681,7 @@ static struct net_device *init_wifidev(s
+ static int reset_card( struct net_device *dev , int lock) {
+ 	struct airo_info *ai = dev->priv;
+ 
+-	if (lock && down_interruptible(&ai->sem))
++	if (lock && mutex_lock_interruptible(&ai->lock))
+ 		return -1;
+ 	waitbusy (ai);
+ 	OUT4500(ai,COMMAND,CMD_SOFTRESET);
+@@ -2688,7 +2689,7 @@ static int reset_card( struct net_device
+ 	waitbusy (ai);
+ 	msleep(200);
+ 	if (lock)
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+ 	return 0;
+ }
+ 
+@@ -2774,7 +2775,7 @@ static struct net_device *_init_airo_car
+ 		set_bit(FLAG_MPI, &ai->flags);
+ 	}
+ 	spin_lock_init(&ai->aux_lock);
+-	sema_init(&ai->sem, 1);
++	mutex_init(&ai->lock);
+ 	ai->config.len = 0;
+ 	ai->pci = pci;
+ 	init_waitqueue_head (&ai->thr_wait);
+@@ -2946,7 +2947,7 @@ static void airo_send_event(struct net_d
+ 
+ 	clear_bit(JOB_EVENT, &ai->jobs);
+ 	PC4500_readrid(ai, RID_STATUS, &status_rid, sizeof(status_rid), 0);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 	wrqu.data.length = 0;
+ 	wrqu.data.flags = 0;
+ 	memcpy(wrqu.ap_addr.sa_data, status_rid.bssid[0], ETH_ALEN);
+@@ -3001,7 +3002,7 @@ static void airo_process_scan_results (s
+ out:
+ 	ai->scan_timeout = 0;
+ 	clear_bit(JOB_SCAN_RESULTS, &ai->jobs);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 
+ 	/* Send an empty event to user space.
+ 	 * We don't send the received data on
+@@ -3029,7 +3030,7 @@ static int airo_thread(void *data) {
+ 			break;
+ 
+ 		if (ai->jobs) {
+-			locked = down_interruptible(&ai->sem);
++			locked = mutex_lock_interruptible(&ai->lock);
+ 		} else {
+ 			wait_queue_t wait;
+ 
+@@ -3078,12 +3079,12 @@ static int airo_thread(void *data) {
+ 			continue;
+ 
+ 		if (test_bit(JOB_DIE, &ai->jobs)) {
+-			up(&ai->sem);
++			mutex_unlock(&ai->lock);
+ 			break;
  		}
  
-@@ -1864,12 +1810,12 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		if (ai->power.event || test_bit(FLAG_FLASHING, &ai->flags)) {
+-			up(&ai->sem);
++			mutex_unlock(&ai->lock);
+ 			continue;
+ 		}
  
- 	tx_status->retry_count = tx_resp->failure_frame;
- 	tx_status->flags =
--	    iwl4965_is_tx_success(status) ? IEEE80211_TX_STATUS_ACK : 0;
-+	    iwl_is_tx_success(status) ? IEEE80211_TX_STATUS_ACK : 0;
- 	iwl4965_hwrate_to_tx_control(priv, le32_to_cpu(tx_resp->rate_n_flags),
- 				     &tx_status->control);
+@@ -3106,7 +3107,7 @@ static int airo_thread(void *data) {
+ 		else if (test_bit(JOB_SCAN_RESULTS, &ai->jobs))
+ 			airo_process_scan_results(ai);
+ 		else  /* Shouldn't get here, but we make sure to unlock */
+-			up(&ai->sem);
++			mutex_unlock(&ai->lock);
+ 	}
  
- 	IWL_DEBUG_TX("Tx queue %d Status %s (0x%08x) rate_n_flags 0x%x "
--		     "retries %d\n", txq_id, iwl4965_get_tx_fail_reason(status),
-+		     "retries %d\n", txq_id, iwl_get_tx_fail_reason(status),
- 		     status, le32_to_cpu(tx_resp->rate_n_flags),
- 		     tx_resp->failure_frame);
+ 	return 0;
+@@ -3211,7 +3212,7 @@ static irqreturn_t airo_interrupt(int ir
+ 				set_bit(FLAG_UPDATE_UNI, &apriv->flags);
+ 				set_bit(FLAG_UPDATE_MULTI, &apriv->flags);
  
+-				if (down_trylock(&apriv->sem) != 0) {
++				if (mutex_trylock(&apriv->lock) == 0) {
+ 					set_bit(JOB_EVENT, &apriv->jobs);
+ 					wake_up_interruptible(&apriv->thr_wait);
+ 				} else
+@@ -3487,7 +3488,7 @@ static int enable_MAC(struct airo_info *
+ 	 * "cheaper" - Jean II */
+ 	if (ai->flags & FLAG_RADIO_MASK) return SUCCESS;
+ 
+-	if (lock && down_interruptible(&ai->sem))
++	if (lock && mutex_lock_interruptible(&ai->lock))
+ 		return -ERESTARTSYS;
+ 
+ 	if (!test_bit(FLAG_ENABLED, &ai->flags)) {
+@@ -3500,7 +3501,7 @@ static int enable_MAC(struct airo_info *
+ 		rc = SUCCESS;
+ 
+ 	if (lock)
+-	    up(&ai->sem);
++	    mutex_unlock(&ai->lock);
+ 
+ 	if (rc)
+ 		airo_print_err(ai->dev->name, "Cannot enable MAC");
+@@ -3516,7 +3517,7 @@ static void disable_MAC( struct airo_inf
+         Cmd cmd;
+ 	Resp rsp;
+ 
+-	if (lock && down_interruptible(&ai->sem))
++	if (lock && mutex_lock_interruptible(&ai->lock))
+ 		return;
+ 
+ 	if (test_bit(FLAG_ENABLED, &ai->flags)) {
+@@ -3526,7 +3527,7 @@ static void disable_MAC( struct airo_inf
+ 		clear_bit(FLAG_ENABLED, &ai->flags);
+ 	}
+ 	if (lock)
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+ }
+ 
+ static void enable_interrupts( struct airo_info *ai ) {
+@@ -3721,11 +3722,11 @@ static u16 setup_card(struct airo_info *
+ 	/* The NOP is the first step in getting the card going */
+ 	cmd.cmd = NOP;
+ 	cmd.parm0 = cmd.parm1 = cmd.parm2 = 0;
+-	if (lock && down_interruptible(&ai->sem))
++	if (lock && mutex_lock_interruptible(&ai->lock))
+ 		return ERROR;
+ 	if ( issuecommand( ai, &cmd, &rsp ) != SUCCESS ) {
+ 		if (lock)
+-			up(&ai->sem);
++			mutex_unlock(&ai->lock);
+ 		return ERROR;
+ 	}
+ 	disable_MAC( ai, 0);
+@@ -3735,7 +3736,7 @@ static u16 setup_card(struct airo_info *
+ 		cmd.cmd = CMD_ENABLEAUX;
+ 		if (issuecommand(ai, &cmd, &rsp) != SUCCESS) {
+ 			if (lock)
+-				up(&ai->sem);
++				mutex_unlock(&ai->lock);
+ 			airo_print_err(ai->dev->name, "Error checking for AUX port");
+ 			return ERROR;
+ 		}
+@@ -3748,7 +3749,7 @@ static u16 setup_card(struct airo_info *
+ 		}
+ 	}
+ 	if (lock)
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+ 	if (ai->config.len == 0) {
+ 		tdsRssiRid rssi_rid;
+ 		CapabilityRid cap_rid;
+@@ -4047,7 +4048,7 @@ static int PC4500_readrid(struct airo_in
+         int rc = SUCCESS;
+ 
+ 	if (lock) {
+-		if (down_interruptible(&ai->sem))
++		if (mutex_lock_interruptible(&ai->lock))
+ 			return ERROR;
+ 	}
+ 	if (test_bit(FLAG_MPI,&ai->flags)) {
+@@ -4100,7 +4101,7 @@ static int PC4500_readrid(struct airo_in
+ 	}
+ done:
+ 	if (lock)
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+ 	return rc;
+ }
+ 
+@@ -4115,7 +4116,7 @@ static int PC4500_writerid(struct airo_i
+ 	*(__le16*)pBuf = cpu_to_le16((u16)len);
+ 
+ 	if (lock) {
+-		if (down_interruptible(&ai->sem))
++		if (mutex_lock_interruptible(&ai->lock))
+ 			return ERROR;
+ 	}
+ 	if (test_bit(FLAG_MPI,&ai->flags)) {
+@@ -4174,7 +4175,7 @@ static int PC4500_writerid(struct airo_i
+ 	}
+ done:
+ 	if (lock)
+-		up(&ai->sem);
++		mutex_unlock(&ai->lock);
+         return rc;
+ }
+ 
+@@ -4190,7 +4191,7 @@ static u16 transmit_allocate(struct airo
+ 
+ 	cmd.cmd = CMD_ALLOCATETX;
+ 	cmd.parm0 = lenPayload;
+-	if (down_interruptible(&ai->sem))
++	if (mutex_lock_interruptible(&ai->lock))
+ 		return ERROR;
+ 	if (issuecommand(ai, &cmd, &rsp) != SUCCESS) {
+ 		txFid = ERROR;
+@@ -4230,7 +4231,7 @@ static u16 transmit_allocate(struct airo
+ 		bap_write(ai, &txControl, sizeof(txControl), BAP1);
+ 
+ done:
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 
+ 	return txFid;
+ }
+@@ -5403,10 +5404,10 @@ static int proc_BSSList_open( struct ino
+ 			if (ai->flags & FLAG_RADIO_MASK) return -ENETDOWN;
+ 			memset(&cmd, 0, sizeof(cmd));
+ 			cmd.cmd=CMD_LISTBSS;
+-			if (down_interruptible(&ai->sem))
++			if (mutex_lock_interruptible(&ai->lock))
+ 				return -ERESTARTSYS;
+ 			issuecommand(ai, &cmd, &rsp);
+-			up(&ai->sem);
++			mutex_unlock(&ai->lock);
+ 			data->readlen = 0;
+ 			return 0;
+ 		}
+@@ -5482,7 +5483,7 @@ static void timer_func( struct net_devic
+ 	set_bit (FLAG_COMMIT, &apriv->flags);
+ 	writeConfigRid(apriv, 0);
+ 	enable_MAC(apriv, 0);
+-	up(&apriv->sem);
++	mutex_unlock(&apriv->lock);
+ 
+ /* Schedule check to see if the change worked */
+ 	clear_bit(JOB_AUTOWEP, &apriv->jobs);
+@@ -5539,7 +5540,7 @@ static int airo_pci_suspend(struct pci_d
+ 	readSsidRid(ai, ai->SSID);
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	/* the lock will be released at the end of the resume callback */
+-	if (down_interruptible(&ai->sem))
++	if (mutex_lock_interruptible(&ai->lock))
+ 		return -EAGAIN;
+ 	disable_MAC(ai, 0);
+ 	netif_device_detach(dev);
+@@ -5593,7 +5594,7 @@ static int airo_pci_resume(struct pci_de
+ 	netif_device_attach(dev);
+ 	netif_wake_queue(dev);
+ 	enable_interrupts(ai);
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 	return 0;
+ }
+ #endif
+@@ -5904,10 +5905,10 @@ static int airo_set_wap(struct net_devic
+ 	         !memcmp(off, awrq->sa_data, ETH_ALEN)) {
+ 		memset(&cmd, 0, sizeof(cmd));
+ 		cmd.cmd=CMD_LOSE_SYNC;
+-		if (down_interruptible(&local->sem))
++		if (mutex_lock_interruptible(&local->lock))
+ 			return -ERESTARTSYS;
+ 		issuecommand(local, &cmd, &rsp);
+-		up(&local->sem);
++		mutex_unlock(&local->lock);
+ 	} else {
+ 		memset(&APList_rid, 0, sizeof(APList_rid));
+ 		APList_rid.len = cpu_to_le16(sizeof(APList_rid));
+@@ -7135,7 +7136,7 @@ static int airo_set_scan(struct net_devi
+ 	 * Jean II */
+ 	if (ai->flags & FLAG_RADIO_MASK) return -ENETDOWN;
+ 
+-	if (down_interruptible(&ai->sem))
++	if (mutex_lock_interruptible(&ai->lock))
+ 		return -ERESTARTSYS;
+ 
+ 	/* If there's already a scan in progress, don't
+@@ -7151,7 +7152,7 @@ static int airo_set_scan(struct net_devi
+ 	wake = 1;
+ 
+ out:
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 	if (wake)
+ 		wake_up_interruptible(&ai->thr_wait);
+ 	return 0;
+@@ -7346,7 +7347,7 @@ static int airo_get_scan(struct net_devi
+ 	if (ai->scan_timeout > 0)
+ 		return -EAGAIN;
+ 
+-	if (down_interruptible(&ai->sem))
++	if (mutex_lock_interruptible(&ai->lock))
+ 		return -EAGAIN;
+ 
+ 	list_for_each_entry (net, &ai->network_list, list) {
+@@ -7368,7 +7369,7 @@ static int airo_get_scan(struct net_devi
+ 	dwrq->flags = 0;	/* todo */
+ 
+ out:
+-	up(&ai->sem);
++	mutex_unlock(&ai->lock);
+ 	return err;
+ }
+ 
+@@ -7403,14 +7404,14 @@ static int airo_config_commit(struct net
+ 		writeSsidRid(local, &SSID_rid, 1);
+ 		writeAPListRid(local, &APList_rid, 1);
+ 	}
+-	if (down_interruptible(&local->sem))
++	if (mutex_lock_interruptible(&local->lock))
+ 		return -ERESTARTSYS;
+ 	writeConfigRid(local, 0);
+ 	enable_MAC(local, 0);
+ 	if (test_bit (FLAG_RESET, &local->flags))
+ 		airo_set_promisc(local);
+ 	else
+-		up(&local->sem);
++		mutex_unlock(&local->lock);
+ 
+ 	return 0;
+ }
+@@ -7607,13 +7608,13 @@ static void airo_read_wireless_stats(str
+ 	/* Get stats out of the card */
+ 	clear_bit(JOB_WSTATS, &local->jobs);
+ 	if (local->power.event) {
+-		up(&local->sem);
++		mutex_unlock(&local->lock);
+ 		return;
+ 	}
+ 	readCapabilityRid(local, &cap_rid, 0);
+ 	readStatusRid(local, &status_rid, 0);
+ 	readStatsRid(local, &stats_rid, RID_STATS, 0);
+-	up(&local->sem);
++	mutex_unlock(&local->lock);
+ 
+ 	/* The status */
+ 	local->wstats.status = le16_to_cpu(status_rid.mode);
+@@ -7658,7 +7659,7 @@ static struct iw_statistics *airo_get_wi
+ 
+ 	if (!test_bit(JOB_WSTATS, &local->jobs)) {
+ 		/* Get stats out of the card if available */
+-		if (down_trylock(&local->sem) != 0) {
++		if (mutex_trylock(&local->lock) == 0) {
+ 			set_bit(JOB_WSTATS, &local->jobs);
+ 			wake_up_interruptible(&local->thr_wait);
+ 		} else
 -- 
-1.5.3.6
 
+-- 
