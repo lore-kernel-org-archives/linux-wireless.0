@@ -1,49 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43740 "EHLO ciao.gmane.org"
+Received: from mga14.intel.com ([143.182.124.37]:27647 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750934AbYEHOC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 10:02:58 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Ju6hy-00050b-BG
-	for linux-wireless@vger.kernel.org; Thu, 08 May 2008 14:02:54 +0000
-Received: from dslc-082-082-160-009.pools.arcor-ip.net ([82.82.160.9])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 14:02:54 +0000
-Received: from feldmann_markus by dslc-082-082-160-009.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 08 May 2008 14:02:54 +0000
-To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: Re: is there support for my Card
-Date: Thu, 08 May 2008 16:02:35 +0200
-Message-ID: <fvv15v$9jr$1@ger.gmane.org> (sfid-20080508_160157_974941_8C9143F3)
-References: <fvp2dg$d26$1@ger.gmane.org> <fvp2kq$d26$2@ger.gmane.org> <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <59055.84.58.170.93.1210134215.squirrel@webmail.madwifi.org>
+	id S1758992AbYEWCLL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:11 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: remove 4965 from iwl4965_tx_queue_update_write_ptr
+Date: Fri, 23 May 2008 10:08:46 +0800
+Message-Id: <1211508569-3163-9-git-send-email-yi.zhu@intel.com> (sfid-20080523_041121_146516_AA021FED)
+In-Reply-To: <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Renzmann schrieb:
-> Hi.
-> 
-> Markus Feldmann wrote:
->>> i only want to know if there is support in the next stable Kernel
->>> 2.6.26 for my Card ?
->> AR5BXB61
-> 
-> That's an AR5007-based card
-Are you sure. It looks like this Card,
-http://www.atheros.com/pt/AR5006EG.htm
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-and not like this one,
-http://www.atheros.com/pt/AR5007EG.htm
+This patch renames iwl4965_tx_queue_update_write_ptr to
+iwl_txq_update_write_ptr. This is a preparation for moving to iwl-tx.c.
 
-However on Boot my System shows a W-Lan Card of the Type AR5006EG.
-Is this a Bug ?
-Wherefrom do you know that the Card with Chipset 'AR5BXB61' is from the
-Type AR5007 ?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   38 +++++++++++++-------------
+ 1 files changed, 19 insertions(+), 19 deletions(-)
 
-Regards Markus
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 45b6b52..0ad9558 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -53,7 +53,7 @@
+ #include "iwl-sta.h"
+ #include "iwl-calib.h"
+ 
+-static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
++static int iwl_txq_update_write_ptr(struct iwl_priv *priv,
+ 				  struct iwl_tx_queue *txq);
+ 
+ /******************************************************************************
+@@ -417,7 +417,7 @@ int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 
+ 	/* Increment and update queue's write index */
+ 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
+-	ret = iwl4965_tx_queue_update_write_ptr(priv, txq);
++	ret = iwl_txq_update_write_ptr(priv, txq);
+ 
+ 	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+ 	return ret ? ret : idx;
+@@ -1978,7 +1978,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 
+ 	/* Tell device the write index *just past* this latest filled TFD */
+ 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
+-	rc = iwl4965_tx_queue_update_write_ptr(priv, txq);
++	rc = iwl_txq_update_write_ptr(priv, txq);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	if (rc)
+@@ -1989,7 +1989,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
+ 		if (wait_write_ptr) {
+ 			spin_lock_irqsave(&priv->lock, flags);
+ 			txq->need_update = 1;
+-			iwl4965_tx_queue_update_write_ptr(priv, txq);
++			iwl_txq_update_write_ptr(priv, txq);
+ 			spin_unlock_irqrestore(&priv->lock, flags);
+ 		}
+ 
+@@ -3272,17 +3272,17 @@ int iwl4965_calc_sig_qual(int rssi_dbm, int noise_dbm)
+ }
+ 
+ /**
+- * iwl4965_tx_queue_update_write_ptr - Send new write index to hardware
++ * iwl_txq_update_write_ptr - Send new write index to hardware
+  */
+-static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
++static int iwl_txq_update_write_ptr(struct iwl_priv *priv,
+ 				  struct iwl_tx_queue *txq)
+ {
+ 	u32 reg = 0;
+-	int rc = 0;
++	int ret = 0;
+ 	int txq_id = txq->q.id;
+ 
+ 	if (txq->need_update == 0)
+-		return rc;
++		return ret;
+ 
+ 	/* if we're trying to save power */
+ 	if (test_bit(STATUS_POWER_PMI, &priv->status)) {
+@@ -3295,13 +3295,13 @@ static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
+ 			IWL_DEBUG_INFO("Requesting wakeup, GP1 = 0x%x\n", reg);
+ 			iwl_set_bit(priv, CSR_GP_CNTRL,
+ 				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-			return rc;
++			return ret;
+ 		}
+ 
+ 		/* restore this queue's parameters in nic hardware. */
+-		rc = iwl_grab_nic_access(priv);
+-		if (rc)
+-			return rc;
++		ret = iwl_grab_nic_access(priv);
++		if (ret)
++			return ret;
+ 		iwl_write_direct32(priv, HBUS_TARG_WRPTR,
+ 				     txq->q.write_ptr | (txq_id << 8));
+ 		iwl_release_nic_access(priv);
+@@ -3314,7 +3314,7 @@ static int iwl4965_tx_queue_update_write_ptr(struct iwl_priv *priv,
+ 
+ 	txq->need_update = 0;
+ 
+-	return rc;
++	return ret;
+ }
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -3706,12 +3706,12 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 	if (inta & CSR_INT_BIT_WAKEUP) {
+ 		IWL_DEBUG_ISR("Wakeup interrupt\n");
+ 		iwl_rx_queue_update_write_ptr(priv, &priv->rxq);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[0]);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[1]);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[2]);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[3]);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[4]);
+-		iwl4965_tx_queue_update_write_ptr(priv, &priv->txq[5]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[0]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[1]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[2]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[3]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[4]);
++		iwl_txq_update_write_ptr(priv, &priv->txq[5]);
+ 
+ 		handled |= CSR_INT_BIT_WAKEUP;
+ 	}
+-- 
+1.5.3.6
 
