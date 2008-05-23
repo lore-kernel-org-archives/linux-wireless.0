@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:7283 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202AbYEMOGu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 10:06:50 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2283620fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 07:06:47 -0700 (PDT)
-Message-ID: <8704f27d0805130706l2e39431bnf48ca78d40dc70df@mail.gmail.com> (sfid-20080513_160654_270286_2012C1E8)
-Date: Tue, 13 May 2008 17:06:46 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: "Volker Braun" <vbraun@physics.upenn.edu>
-Subject: Re: dynamic wep with mulitple keys
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1210686828.32590.15.camel@carrot.hep.upenn.edu>
+Received: from c60.cesmail.net ([216.154.195.49]:13441 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757969AbYEWByt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 21:54:49 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 2/5] hostap: fix references to 8802.11
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>
+Date: Thu, 22 May 2008 21:54:48 -0400
+Message-ID: <20080523015448.16636.37283.stgit@dv.roinet.com> (sfid-20080523_035451_584067_4FD08E69)
+In-Reply-To: <20080523015442.16636.92254.stgit@dv.roinet.com>
+References: <20080523015442.16636.92254.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <1ba2fa240804231015r41e7d7f5ocf7d78af72fb4622@mail.gmail.com>
-	 <8704f27d0805050735s647ac4aaq469630bde6bc341e@mail.gmail.com>
-	 <1210003121.11809.10.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805052346u24954211l6f55513c78205586@mail.gmail.com>
-	 <1210271472.30724.43.camel@carrot.hep.upenn.edu>
-	 <8704f27d0805081149wa91072en32ce8912ba1a14ff@mail.gmail.com>
-	 <8704f27d0805120213w197327b0r2fa490df1e5399d1@mail.gmail.com>
-	 <1210686828.32590.15.camel@carrot.hep.upenn.edu>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The official patch will be sent by Yi Zhu in the next bunch of
-patches, please look for  iwlwifi: clean up and bug fix in security
+802.11 is meant in all cases.  The section numbers match the actual
+802.11 standard.
 
-thanks for reporting and help with debug
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-On Tue, May 13, 2008 at 4:53 PM, Volker Braun <vbraun@physics.upenn.edu> wrote:
-> I tried the patch and now my wireless works perfectly. Thank you! Let me
->  know when your "official" patch is ready then I'll test it as well.
->
->  Volker
->
->
->
->
->  On Mon, 2008-05-12 at 12:13 +0300, Emmanuel Grumbach wrote:
->  > here is the patch I promised last week, can you please try it ?
->
->
->
+ drivers/net/wireless/hostap/hostap_ap.c |    8 ++++----
+ drivers/net/wireless/hostap/hostap_ap.h |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-
-
--- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
+index ab981af..19ed075 100644
+--- a/drivers/net/wireless/hostap/hostap_ap.c
++++ b/drivers/net/wireless/hostap/hostap_ap.c
+@@ -9,11 +9,11 @@
+  *
+  * AP:  FIX:
+  * - if unicast Class 2 (assoc,reassoc,disassoc) frame received from
+- *   unauthenticated STA, send deauth. frame (8802.11: 5.5)
++ *   unauthenticated STA, send deauth. frame (802.11: 5.5)
+  * - if unicast Class 3 (data with to/from DS,deauth,pspoll) frame received
+- *   from authenticated, but unassoc STA, send disassoc frame (8802.11: 5.5)
++ *   from authenticated, but unassoc STA, send disassoc frame (802.11: 5.5)
+  * - if unicast Class 3 received from unauthenticated STA, send deauth. frame
+- *   (8802.11: 5.5)
++ *   (802.11: 5.5)
+  */
+ 
+ #include <linux/proc_fs.h>
+@@ -1956,7 +1956,7 @@ static void handle_pspoll(local_info_t *local,
+ 	/* FIX: todo:
+ 	 * - add timeout for buffering (clear aid in TIM vector if buffer timed
+ 	 *   out (expiry time must be longer than ListenInterval for
+-	 *   the corresponding STA; "8802-11: 11.2.1.9 AP aging function"
++	 *   the corresponding STA; "802.11: 11.2.1.9 AP aging function"
+ 	 * - what to do, if buffered, pspolled, and sent frame is not ACKed by
+ 	 *   sta; store buffer for later use and leave TIM aid bit set? use
+ 	 *   TX event to check whether frame was ACKed?
+diff --git a/drivers/net/wireless/hostap/hostap_ap.h b/drivers/net/wireless/hostap/hostap_ap.h
+index 2fa2452..0d2cbf4 100644
+--- a/drivers/net/wireless/hostap/hostap_ap.h
++++ b/drivers/net/wireless/hostap/hostap_ap.h
+@@ -103,7 +103,7 @@ struct sta_info {
+ #define MAX_STA_COUNT 1024
+ 
+ /* Maximum number of AIDs to use for STAs; must be 2007 or lower
+- * (8802.11 limitation) */
++ * (802.11 limitation) */
+ #define MAX_AID_TABLE_SIZE 128
+ 
+ #define STA_HASH_SIZE 256
