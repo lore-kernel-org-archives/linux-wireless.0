@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:19706 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbYESRCv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42961 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593AbYEWJML (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 13:02:51 -0400
-Received: by rn-out-0910.google.com with SMTP id e11so477660rng.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 May 2008 10:02:50 -0700 (PDT)
-Message-ID: <1ba2fa240805191002mc77db60q6736104923179cef@mail.gmail.com> (sfid-20080519_190314_357814_302F9D67)
-Date: Mon, 19 May 2008 20:02:49 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Helmut Schaa" <hschaa@suse.de>
-Subject: Re: [PATCHv4] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200805191659.43961.hschaa@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200805191659.43961.hschaa@suse.de>
+	Fri, 23 May 2008 05:12:11 -0400
+Subject: Re: BUG: scheduling while atomic (2.6.26-rc3...)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Price <andy@andrewprice.me.uk>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <g158ou$ts7$1@ger.gmane.org> (sfid-20080523_040537_383935_93B9797D)
+References: <g158ou$ts7$1@ger.gmane.org>
+	 (sfid-20080523_040537_383935_93B9797D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ra3CwS0K7L5pLp09bOWq"
+Date: Fri, 23 May 2008 11:11:13 +0200
+Message-Id: <1211533873.18247.0.camel@johannes.berg> (sfid-20080523_111216_124642_1A058359)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2008 at 5:59 PM, Helmut Schaa <hschaa@suse.de> wrote:
-> Fix a possible NULL pointer dereference in ieee80211_compatible_rates
-> introduced in the patch "mac80211: fix association with some APs". If no bss
-> is available just use all supported rates in the association request.
->
-> Signed-off-by: Helmut Schaa <hschaa@suse.de>
-> ---
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 76ad4ed..7aff784 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -722,6 +722,15 @@ static void ieee80211_send_assoc(struct net_device *dev,
->                if (bss->wmm_ie)
->                        wmm = 1;
->                ieee80211_rx_bss_put(dev, bss);
-> +
-> +               /* get all rates supported by the device and the AP as
-> +                * some APs don't like getting a superset of their rates
-> +                * in the association request (e.g. D-Link DAP 1353 in
-> +                * b-only mode) */
-> +               rates_len = ieee80211_compatible_rates(bss, sband, &rates);
 
-Shuldn' t this call ieee80211_rx_bss_put(dev, bss);  after calling
-ieee80211_compatible_rates()
+--=-Ra3CwS0K7L5pLp09bOWq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2008-05-23 at 03:05 +0100, Andrew Price wrote:
+> Hi,
+>=20
+> I'm seeing this bug when I boot but unfortunately the messages don't
+> seem to get logged and the system locks so I took a photo of as much as
+> could fit on my laptop's screen:
+> http://sucs.org/~welshbyte/wirelesstraces.jpg (sorry about the bad qualit=
+y).
+>=20
+> Anyway, I've bisected it down to commit
+> 2f561feb386d6adefbad63c59a1fcd298ac6a79c "mac80211: Add RTNL version of
+> ieee80211_iterate_active_interfaces"
+>=20
+> lspci says I'm using a:
+>=20
+> 02:00.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 0=
+1)
 
-> +       } else {
-> +               rates = ~0;
-> +               rates_len = sband->n_bitrates;
->        }
->
->        mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
-> @@ -752,10 +761,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
->        *pos++ = ifsta->ssid_len;
->        memcpy(pos, ifsta->ssid, ifsta->ssid_len);
->
-> -       /* all supported rates should be added here but some APs
-> -        * (e.g. D-Link DAP 1353 in b-only mode) don't like that
-> -        * Therefore only add rates the AP supports */
-> -       rates_len = ieee80211_compatible_rates(bss, sband, &rates);
-> +       /* add all rates which were marked to be used above */
->        supp_rates_len = rates_len;
->        if (supp_rates_len > 8)
->                supp_rates_len = 8;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Looks like rt2x00 actually needs both versions of the function.
+
+johannes
+
+--=-Ra3CwS0K7L5pLp09bOWq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASDaKMKVg1VMiehFYAQKGbQ/+KyGTavpRFNeD1SIm1lWvOj9rdxTNyVTm
+orRmdh/bGUGt1J0EJur9a2irqe8f7wMT5omBeqQ++oQo/KNrESZjVT5tOygyI38c
+Wkm9MjexSltnnDJ3kuo+H4kR3I3YGXSQFzT5ddlJEXjXgYv87k6NSywnIivdHatc
+WHByxt4nAZ4MpTAgINlVH4GxTWGsVFLnwR2vTcMCq8yiKuRz+4vQKJnOkeN9wRC6
+FcXPguI1DiI4IH41wnZwtn3Q17fogDbieNMXpSTcvPKhKqsSYawbgwN2IkU29LYw
+bCA5LepMhJQMtIlFgVQPTu+HCZC7+sLVKdND3k/ZiAcLTSdV2QgoINglAgruUTLz
+4a3FTnUElededzVwpTMzHsTRwiiJqKAzPgPCWNP4+cD+MSXnNKxyG/Mm+leinJXQ
+zBGvk8UDC9xZlTmCfg1bw1ogwMkjolvLvQ0vx87P9wGyn3JETOujy6l2rzJTjav4
+gWuEX2p7Ka+EEA0YJXDzMfqcTeSyUveGBL5kd2c2jHLewT196YZoqctv8ucnUeXU
+2C/SU6ON4oy+dn9dl6Px2aEKAh2mRon75XzEuPnKNiP3Y3FjB/lVzHguHaaZNsyl
+xdn+PCOiKMz71GPL6QBdO3eQbo9A4NuJJr4CZudJApJGWSshcPkDX0cDSPINty3N
+H/E/APR4Ik0=
+=I3YK
+-----END PGP SIGNATURE-----
+
+--=-Ra3CwS0K7L5pLp09bOWq--
+
