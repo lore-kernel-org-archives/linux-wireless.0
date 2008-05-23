@@ -1,234 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:60287 "EHLO ciao.gmane.org"
+Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759770AbYEFUul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 16:50:41 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JtU7S-0002mJ-6C
-	for linux-wireless@vger.kernel.org; Tue, 06 May 2008 20:50:38 +0000
-Received: from 78-62-85-225.static.zebra.lt ([78.62.85.225])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 20:50:38 +0000
-Received: from paulius.zaleckas by 78-62-85-225.static.zebra.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 20:50:38 +0000
-To: linux-wireless@vger.kernel.org
-From: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-Subject: [PATCH] atmel: use netstats in net_device structure
-Date: Tue, 06 May 2008 23:50:30 +0300
-Message-ID: <4820C496.1040204@teltonika.lt> (sfid-20080506_224952_848049_19D9E810)
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070806020003090804060808"
-Cc: netdev@vger.kernel.org
+	id S1759670AbYEWCLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: clean up alive_start routine
+Date: Fri, 23 May 2008 10:09:13 +0800
+Message-Id: <1211508569-3163-36-git-send-email-yi.zhu@intel.com> (sfid-20080523_042836_166888_93D874DF)
+In-Reply-To: <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070806020003090804060808
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Use net_device_stats from net_device structure instead of local.
-Kill atmel_get_stats function, because by default it is used
-identical internal_stats function from net/core/dev.c
-No need to memset stats to 0, because they are allocated by kzalloc.
+This patch cleans up alive_start routine. It removes 4965 from the common
+code and moves the run time calibration reset into a common code.
 
-P.S. Someone should cleanup init_atmel_card function from unneeded
-initializations to 0/NULL. Out of scope for this patch.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   12 ------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-calib.c    |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-calib.h    |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   19 ++++++++++---------
+ 5 files changed, 32 insertions(+), 26 deletions(-)
 
-Signed-off-by: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-
---------------070806020003090804060808
-Content-Type: text/x-patch;
- name="atmel_netstats.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="atmel_netstats.patch"
-
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index ef2da40..f978a9d 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -433,7 +433,6 @@ struct atmel_private {
- 	struct net_device *dev;
- 	struct device *sys_dev;
- 	struct iw_statistics wstats;
--	struct net_device_stats	stats;	// device stats
- 	spinlock_t irqlock, timerlock;	// spinlocks
- 	enum { BUS_TYPE_PCCARD, BUS_TYPE_PCI } bus_type;
- 	enum {
-@@ -694,9 +693,9 @@ static void tx_done_irq(struct atmel_private *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index c92742c..547287c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -925,15 +925,6 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
  
- 		if (type == TX_PACKET_TYPE_DATA) {
- 			if (status == TX_STATUS_SUCCESS)
--				priv->stats.tx_packets++;
-+				priv->dev->stats.tx_packets++;
- 			else
--				priv->stats.tx_errors++;
-+				priv->dev->stats.tx_errors++;
- 			netif_wake_queue(priv->dev);
- 		}
- 	}
-@@ -792,13 +791,13 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
+ 	spin_lock_irqsave(&priv->lock, flags);
  
- 	if (priv->card && priv->present_callback &&
- 	    !(*priv->present_callback)(priv->card)) {
--		priv->stats.tx_errors++;
-+		dev->stats.tx_errors++;
- 		dev_kfree_skb(skb);
- 		return 0;
- 	}
+-#ifdef CONFIG_IWL4965_RUN_TIME_CALIB
+-	memset(&(priv->sensitivity_data), 0,
+-	       sizeof(struct iwl_sensitivity_data));
+-	memset(&(priv->chain_noise_data), 0,
+-	       sizeof(struct iwl_chain_noise_data));
+-	for (i = 0; i < NUM_RX_CHAINS; i++)
+-		priv->chain_noise_data.delta_gain_code[i] =
+-				CHAIN_NOISE_DELTA_GAIN_INIT_VAL;
+-#endif /* CONFIG_IWL4965_RUN_TIME_CALIB*/
+ 	ret = iwl_grab_nic_access(priv);
+ 	if (ret) {
+ 		spin_unlock_irqrestore(&priv->lock, flags);
+@@ -1000,9 +991,6 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
+ 	iwl_release_nic_access(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
  
- 	if (priv->station_state != STATION_STATE_READY) {
--		priv->stats.tx_errors++;
-+		dev->stats.tx_errors++;
- 		dev_kfree_skb(skb);
- 		return 0;
- 	}
-@@ -815,7 +814,7 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
- 	   initial + 18 (+30-12) */
- 
- 	if (!(buff = find_tx_buff(priv, len + 18))) {
--		priv->stats.tx_dropped++;
-+		dev->stats.tx_dropped++;
- 		spin_unlock_irqrestore(&priv->irqlock, flags);
- 		spin_unlock_bh(&priv->timerlock);
- 		netif_stop_queue(dev);
-@@ -851,7 +850,7 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
- 	/* low bit of first byte of destination tells us if broadcast */
- 	tx_update_descriptor(priv, *(skb->data) & 0x01, len + 18, buff, TX_PACKET_TYPE_DATA);
- 	dev->trans_start = jiffies;
--	priv->stats.tx_bytes += len;
-+	dev->stats.tx_bytes += len;
- 
- 	spin_unlock_irqrestore(&priv->irqlock, flags);
- 	spin_unlock_bh(&priv->timerlock);
-@@ -895,7 +894,7 @@ static void fast_rx_path(struct atmel_private *priv,
- 	}
- 
- 	if (!(skb = dev_alloc_skb(msdu_size + 14))) {
--		priv->stats.rx_dropped++;
-+		priv->dev->stats.rx_dropped++;
- 		return;
- 	}
- 
-@@ -908,7 +907,7 @@ static void fast_rx_path(struct atmel_private *priv,
- 		crc = crc32_le(crc, skbp + 12, msdu_size);
- 		atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + 30 + msdu_size, 4);
- 		if ((crc ^ 0xffffffff) != netcrc) {
--			priv->stats.rx_crc_errors++;
-+			priv->dev->stats.rx_crc_errors++;
- 			dev_kfree_skb(skb);
- 			return;
- 		}
-@@ -924,8 +923,8 @@ static void fast_rx_path(struct atmel_private *priv,
- 	skb->protocol = eth_type_trans(skb, priv->dev);
- 	skb->ip_summed = CHECKSUM_NONE;
- 	netif_rx(skb);
--	priv->stats.rx_bytes += 12 + msdu_size;
--	priv->stats.rx_packets++;
-+	priv->dev->stats.rx_bytes += 12 + msdu_size;
-+	priv->dev->stats.rx_packets++;
+-	/* Ask for statistics now, the uCode will send statistics notification
+-	 * periodically after association */
+-	iwl_send_statistics_request(priv, CMD_ASYNC);
+ 	return ret;
  }
  
- /* Test to see if the packet in card memory at packet_loc has a valid CRC
-@@ -991,7 +990,7 @@ static void frag_rx_path(struct atmel_private *priv,
- 			crc = crc32_le(crc, &priv->rx_buf[12], msdu_size);
- 			atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + msdu_size, 4);
- 			if ((crc ^ 0xffffffff) != netcrc) {
--				priv->stats.rx_crc_errors++;
-+				priv->dev->stats.rx_crc_errors++;
- 				memset(priv->frag_source, 0xff, 6);
- 			}
- 		}
-@@ -1009,7 +1008,7 @@ static void frag_rx_path(struct atmel_private *priv,
- 				       msdu_size);
- 			atmel_copy_to_host(priv->dev, (void *)&netcrc, rx_packet_loc + msdu_size, 4);
- 			if ((crc ^ 0xffffffff) != netcrc) {
--				priv->stats.rx_crc_errors++;
-+				priv->dev->stats.rx_crc_errors++;
- 				memset(priv->frag_source, 0xff, 6);
- 				more_frags = 1; /* don't send broken assembly */
- 			}
-@@ -1021,7 +1020,7 @@ static void frag_rx_path(struct atmel_private *priv,
- 		if (!more_frags) { /* last one */
- 			memset(priv->frag_source, 0xff, 6);
- 			if (!(skb = dev_alloc_skb(priv->frag_len + 14))) {
--				priv->stats.rx_dropped++;
-+				priv->dev->stats.rx_dropped++;
- 			} else {
- 				skb_reserve(skb, 2);
- 				memcpy(skb_put(skb, priv->frag_len + 12),
-@@ -1031,8 +1030,8 @@ static void frag_rx_path(struct atmel_private *priv,
- 				skb->protocol = eth_type_trans(skb, priv->dev);
- 				skb->ip_summed = CHECKSUM_NONE;
- 				netif_rx(skb);
--				priv->stats.rx_bytes += priv->frag_len + 12;
--				priv->stats.rx_packets++;
-+				priv->dev->stats.rx_bytes += priv->frag_len + 12;
-+				priv->dev->stats.rx_packets++;
- 			}
- 		}
- 	} else
-@@ -1057,7 +1056,7 @@ static void rx_done_irq(struct atmel_private *priv)
- 			if (status == 0xc1) /* determined by experiment */
- 				priv->wstats.discard.nwid++;
- 			else
--				priv->stats.rx_errors++;
-+				priv->dev->stats.rx_errors++;
- 			goto next;
- 		}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index d6ffdee..0355ccd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -580,10 +580,6 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
  
-@@ -1065,7 +1064,7 @@ static void rx_done_irq(struct atmel_private *priv)
- 		rx_packet_loc = atmel_rmem16(priv, atmel_rx(priv, RX_DESC_MSDU_POS_OFFSET, priv->rx_desc_head));
+ 	iwl5000_send_wimax_coex(priv);
  
- 		if (msdu_size < 30) {
--			priv->stats.rx_errors++;
-+			priv->dev->stats.rx_errors++;
- 			goto next;
- 		}
- 
-@@ -1123,7 +1122,7 @@ static void rx_done_irq(struct atmel_private *priv)
- 				msdu_size -= 4;
- 				crc = crc32_le(crc, (unsigned char *)&priv->rx_buf, msdu_size);
- 				if ((crc ^ 0xffffffff) != (*((u32 *)&priv->rx_buf[msdu_size]))) {
--					priv->stats.rx_crc_errors++;
-+					priv->dev->stats.rx_crc_errors++;
- 					goto next;
- 				}
- 			}
-@@ -1250,12 +1249,6 @@ static irqreturn_t service_interrupt(int irq, void *dev_id)
- 	}
- }
- 
--static struct net_device_stats *atmel_get_stats(struct net_device *dev)
--{
--	struct atmel_private *priv = netdev_priv(dev);
--	return &priv->stats;
--}
+-	/* Ask for statistics now, the uCode will send notification
+-	 * periodically after association */
+-	iwl_send_statistics_request(priv, CMD_ASYNC);
 -
- static struct iw_statistics *atmel_get_wireless_stats(struct net_device *dev)
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
+index beb9716..a6c7f0d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
+@@ -786,3 +786,21 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
+ }
+ EXPORT_SYMBOL(iwl_chain_noise_calibration);
+ 
++
++void iwl_reset_run_time_calib(struct iwl_priv *priv)
++{
++	int i;
++	memset(&(priv->sensitivity_data), 0,
++	       sizeof(struct iwl_sensitivity_data));
++	memset(&(priv->chain_noise_data), 0,
++	       sizeof(struct iwl_chain_noise_data));
++	for (i = 0; i < NUM_RX_CHAINS; i++)
++		priv->chain_noise_data.delta_gain_code[i] =
++				CHAIN_NOISE_DELTA_GAIN_INIT_VAL;
++
++	/* Ask for statistics now, the uCode will send notification
++	 * periodically after association */
++	iwl_send_statistics_request(priv, CMD_ASYNC);
++}
++EXPORT_SYMBOL(iwl_reset_run_time_calib);
++
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.h b/drivers/net/wireless/iwlwifi/iwl-calib.h
+index e690668..b8e57c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.h
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.h
+@@ -78,7 +78,7 @@ void iwl_sensitivity_calibration(struct iwl_priv *priv,
+ 				struct iwl4965_notif_statistics *resp);
+ 
+ void iwl_init_sensitivity(struct iwl_priv *priv);
+-
++void iwl_reset_run_time_calib(struct iwl_priv *priv);
+ static inline void iwl_chain_noise_reset(struct iwl_priv *priv)
  {
- 	struct atmel_private *priv = netdev_priv(dev);
-@@ -1518,8 +1511,6 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
- 		priv->crc_ok_cnt = priv->crc_ko_cnt = 0;
- 	} else
- 		priv->probe_crc = 0;
--	memset(&priv->stats, 0, sizeof(priv->stats));
--	memset(&priv->wstats, 0, sizeof(priv->wstats));
- 	priv->last_qual = jiffies;
- 	priv->last_beacon_timestamp = 0;
- 	memset(priv->frag_source, 0xff, sizeof(priv->frag_source));
-@@ -1568,7 +1559,6 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
- 	dev->change_mtu = atmel_change_mtu;
- 	dev->set_mac_address = atmel_set_mac_address;
- 	dev->hard_start_xmit = start_tx;
--	dev->get_stats = atmel_get_stats;
- 	dev->wireless_handlers = (struct iw_handler_def *)&atmel_handler_def;
- 	dev->do_ioctl = atmel_ioctl;
- 	dev->irq = irq;
-
---------------070806020003090804060808--
+ 
+@@ -101,6 +101,9 @@ static inline void iwl_init_sensitivity(struct iwl_priv *priv)
+ static inline void iwl_chain_noise_reset(struct iwl_priv *priv)
+ {
+ }
++static inline void iwl_reset_run_time_calib(struct iwl_priv *priv)
++{
++}
+ #endif
+ 
+ #endif /* __iwl_calib_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 89dd890..0559cdc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3252,11 +3252,11 @@ static int iwl4965_read_ucode(struct iwl_priv *priv)
+ }
+ 
+ /**
+- * iwl4965_alive_start - called after REPLY_ALIVE notification received
++ * iwl_alive_start - called after REPLY_ALIVE notification received
+  *                   from protocol/runtime uCode (initialization uCode's
+- *                   Alive gets handled by iwl4965_init_alive_start()).
++ *                   Alive gets handled by iwl_init_alive_start()).
+  */
+-static void iwl4965_alive_start(struct iwl_priv *priv)
++static void iwl_alive_start(struct iwl_priv *priv)
+ {
+ 	int ret = 0;
+ 
+@@ -3280,7 +3280,6 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
+ 	}
+ 
+ 	iwlcore_clear_stations_table(priv);
+-
+ 	ret = priv->cfg->ops->lib->alive_notify(priv);
+ 	if (ret) {
+ 		IWL_WARNING("Could not complete ALIVE transition [ntf]: %d\n",
+@@ -3318,6 +3317,8 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
+ 	/* Configure Bluetooth device coexistence support */
+ 	iwl4965_send_bt_config(priv);
+ 
++	iwl_reset_run_time_calib(priv);
++
+ 	/* Configure the adapter for unassociated operation */
+ 	iwl4965_commit_rxon(priv);
+ 
+@@ -3562,7 +3563,7 @@ static int __iwl4965_up(struct iwl_priv *priv)
+  *
+  *****************************************************************************/
+ 
+-static void iwl4965_bg_init_alive_start(struct work_struct *data)
++static void iwl_bg_init_alive_start(struct work_struct *data)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, init_alive_start.work);
+@@ -3575,7 +3576,7 @@ static void iwl4965_bg_init_alive_start(struct work_struct *data)
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+-static void iwl4965_bg_alive_start(struct work_struct *data)
++static void iwl_bg_alive_start(struct work_struct *data)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, alive_start.work);
+@@ -3584,7 +3585,7 @@ static void iwl4965_bg_alive_start(struct work_struct *data)
+ 		return;
+ 
+ 	mutex_lock(&priv->mutex);
+-	iwl4965_alive_start(priv);
++	iwl_alive_start(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -5476,8 +5477,8 @@ static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
+ 	INIT_WORK(&priv->beacon_update, iwl4965_bg_beacon_update);
+ 	INIT_WORK(&priv->set_monitor, iwl4965_bg_set_monitor);
+ 	INIT_DELAYED_WORK(&priv->post_associate, iwl4965_bg_post_associate);
+-	INIT_DELAYED_WORK(&priv->init_alive_start, iwl4965_bg_init_alive_start);
+-	INIT_DELAYED_WORK(&priv->alive_start, iwl4965_bg_alive_start);
++	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
++	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
+ 	INIT_DELAYED_WORK(&priv->scan_check, iwl4965_bg_scan_check);
+ 
+ 	iwl4965_hw_setup_deferred_work(priv);
+-- 
+1.5.3.6
 
