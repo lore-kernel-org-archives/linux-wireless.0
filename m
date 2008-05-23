@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:48458 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763555AbYEGHKb (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:55213 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbYEWQNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 03:10:31 -0400
-Date: Wed, 7 May 2008 15:10:26 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Subject: Re: [RFC/RFT 3/4] mac80211: use GSO for fragmentation
-Message-ID: <20080507071026.GA24407@gondor.apana.org.au> (sfid-20080507_091000_215782_5F09E270)
-References: <20080430124055.091382000@sipsolutions.net> <20080430130050.105344000@sipsolutions.net>
+	Fri, 23 May 2008 12:13:47 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so433779fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2008 09:13:47 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/4] rt2x00: Use atomic interface iteration in irq context
+Date: Fri, 23 May 2008 18:14:02 +0200
+References: <200805231811.38557.IvDoorn@gmail.com> <200805231812.18092.IvDoorn@gmail.com> <200805231812.43582.IvDoorn@gmail.com>
+In-Reply-To: <200805231812.43582.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080430130050.105344000@sipsolutions.net>
+Message-Id: <200805231814.02871.IvDoorn@gmail.com> (sfid-20080523_181352_753852_3C95DC9D)
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 30, 2008 at 02:40:58PM +0200, Johannes Berg wrote:
-> This patch makes mac80211 use the GSO infrastructure for segmentation,
-> but not really all of it because we do not register a protocol handler
-> (nor can do that easily since a lot of functions need to be done before
-> segmentation and another bunch afterwards, and we need to keep rcu-
-> protected structures for both.)
+rt2x00lib_beacondone() is called from interrupt context,
+this means we cannot use the mac80211 interface iterator
+that uses the rtnl lock (since that uses a mutex which can sleep).
+Instead we should use the atomic mac80211 interface iterator.
 
-Your idea of using skb_segment to remove duplicate code is great.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-However, using skb->gso_skb for the push-back doesn't work.  For
-example, what is going to happen when I enable software GSO on a
-wireless device and then send a real GSO packet to it where each
-GSO fragment also required wireless fragmentation?
-
-I suggest that you just use skb_segment for the actual fragmentation
-but keep the original infrastructure for handling the fragments.
-
-Cheers,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 5645140..669d942 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -481,9 +481,9 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
+ 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+-	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
+-					    rt2x00lib_beacondone_iter,
+-					    rt2x00dev);
++	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
++						   rt2x00lib_beacondone_iter,
++						   rt2x00dev);
+ 
+ 	queue_work(rt2x00dev->hw->workqueue, &rt2x00dev->intf_work);
+ }
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+1.5.5.1
+
