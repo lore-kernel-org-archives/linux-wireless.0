@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:32934 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937AbYEBFTS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 01:19:18 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so86541waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 01 May 2008 22:19:17 -0700 (PDT)
-Subject: [PATCH 5/6] wireless: use get/put_unaligned_* helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 01 May 2008 22:19:33 -0700
-Message-Id: <1209705574.22362.41.camel@brick> (sfid-20080502_071912_620346_614B9E4E)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:42800 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759161AbYEWCLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:25 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: add rx_handlers stub for iwl5000
+Date: Fri, 23 May 2008 10:08:57 +0800
+Message-Id: <1211508569-3163-20-git-send-email-yi.zhu@intel.com> (sfid-20080523_041136_406173_8BFB2EB2)
+In-Reply-To: <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/mesh_hwmp.c |    2 +-
- net/wireless/radiotap.c  |   16 +++++++---------
- 2 files changed, 8 insertions(+), 10 deletions(-)
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 3df8092..2368973 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -26,7 +26,7 @@ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
- {
- 	if (ae)
- 		offset += 6;
--	return le32_to_cpu(get_unaligned((__le32 *) (preq_elem + offset)));
-+	return get_unaligned_le32(preq_elem + offset);
+This patch adds rx_handler_setup stub to iwl5000.
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index d155247..00ad360 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -464,6 +464,10 @@ static u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
+ 	return len;
  }
  
- /* HWMP IE processing macros */
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 28fbd0b..f591871 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -59,23 +59,21 @@ int ieee80211_radiotap_iterator_init(
- 		return -EINVAL;
++static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
++{
++}
++
+ static struct iwl_hcmd_ops iwl5000_hcmd = {
+ };
  
- 	/* sanity check for allowed length and radiotap length field */
--	if (max_length < le16_to_cpu(get_unaligned(&radiotap_header->it_len)))
-+	if (max_length < get_unaligned_le16(&radiotap_header->it_len))
- 		return -EINVAL;
- 
- 	iterator->rtheader = radiotap_header;
--	iterator->max_length = le16_to_cpu(get_unaligned(
--						&radiotap_header->it_len));
-+	iterator->max_length = get_unaligned_le16(&radiotap_header->it_len);
- 	iterator->arg_index = 0;
--	iterator->bitmap_shifter = le32_to_cpu(get_unaligned(
--						&radiotap_header->it_present));
-+	iterator->bitmap_shifter = get_unaligned_le32(&radiotap_header->it_present);
- 	iterator->arg = (u8 *)radiotap_header + sizeof(*radiotap_header);
- 	iterator->this_arg = NULL;
- 
- 	/* find payload start allowing for extended bitmap(s) */
- 
- 	if (unlikely(iterator->bitmap_shifter & (1<<IEEE80211_RADIOTAP_EXT))) {
--		while (le32_to_cpu(get_unaligned((__le32 *)iterator->arg)) &
--				   (1<<IEEE80211_RADIOTAP_EXT)) {
-+		while (get_unaligned_le32(iterator->arg) &
-+		       (1 << IEEE80211_RADIOTAP_EXT)) {
- 			iterator->arg += sizeof(u32);
- 
- 			/*
-@@ -241,8 +239,8 @@ int ieee80211_radiotap_iterator_next(
- 			if (iterator->bitmap_shifter & 1) {
- 				/* b31 was set, there is more */
- 				/* move to next u32 bitmap */
--				iterator->bitmap_shifter = le32_to_cpu(
--					get_unaligned(iterator->next_bitmap));
-+				iterator->bitmap_shifter =
-+				    get_unaligned_le32(iterator->next_bitmap);
- 				iterator->next_bitmap++;
- 			} else
- 				/* no more bitmaps: end */
+@@ -483,6 +487,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.shared_mem_rx_idx = iwl5000_shared_mem_rx_idx,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+ 	.disable_tx_fifo = iwl5000_disable_tx_fifo,
++	.rx_handler_setup = iwl5000_rx_handler_setup,
+ 	.apm_ops = {
+ 		.init =	iwl5000_apm_init,
+ 		.config = iwl5000_nic_config,
 -- 
-1.5.5.1.350.gbbbf
-
+1.5.3.6
 
