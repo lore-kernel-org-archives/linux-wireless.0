@@ -1,59 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:48733 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756190AbYEVR6z (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:21012 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755745AbYEWF7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 13:58:55 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so249876gvc.37
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 10:58:53 -0700 (PDT)
-Message-ID: <1ba2fa240805221058m23650d83pdb930f8d2cb6c3d9@mail.gmail.com> (sfid-20080522_195908_795382_D298D3A6)
-Date: Thu, 22 May 2008 20:58:52 +0300
+	Fri, 23 May 2008 01:59:32 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so460188waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 22:59:31 -0700 (PDT)
+Message-ID: <1ba2fa240805222259le148912ub540ebf4077dc145@mail.gmail.com> (sfid-20080523_075949_132349_A2DE70AD)
+Date: Fri, 23 May 2008 08:59:30 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Cc: "Vincent C Jones" <v.jones@networkingunlimited.com>,
+To: "Harvey Harrison" <harvey.harrison@gmail.com>
+Subject: Re: [PATCH] iwlwifi: impelemnt 5000 tx response path
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <egrumbach@gmail.com>
-In-Reply-To: <1211478969.3698.56.camel@johannes.berg>
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1211521497.6888.24.camel@brick>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
-	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
-	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
-	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
-	 <1210617467.3792.4.camel@X61.DFGI.com>
-	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
-	 <1211478969.3698.56.camel@johannes.berg>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-44-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-45-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-46-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-47-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-48-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-49-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-50-git-send-email-yi.zhu@intel.com>
+	 <1211508569-3163-51-git-send-email-yi.zhu@intel.com>
+	 <1211521497.6888.24.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 8:56 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->>         memset(&iwe, 0, sizeof(iwe));
->>         iwe.cmd = SIOCGIWFREQ;
->> -       iwe.u.freq.m = bss->freq;
->> -       iwe.u.freq.e = 6;
->> +       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
->> +       iwe.u.freq.e = 0;
->>         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
->>                                           IW_EV_FREQ_LEN);
+On Fri, May 23, 2008 at 8:44 AM, Harvey Harrison
+<harvey.harrison@gmail.com> wrote:
+> On Fri, 2008-05-23 at 10:09 +0800, Zhu Yi wrote:
+>> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 >>
->>         memset(&iwe, 0, sizeof(iwe));
->>         iwe.cmd = SIOCGIWFREQ;
->> -       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
->> -       iwe.u.freq.e = 0;
->> +       iwe.u.freq.m = bss->freq;
->> +       iwe.u.freq.e = 6;
->>         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
->>                                           IW_EV_FREQ_LEN);
+>> This patch implements 5000 HW tx response path
+>>
+>> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/iwl-5000.c |  235 +++++++++++++++++++++++++++++++
+>>  net/mac80211/mlme.c                     |   10 +-
+>>  2 files changed, 240 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> index 685a84e..5d6a28c 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+>> @@ -972,6 +972,240 @@ static void iwl5000_txq_set_sched(struct iwl_priv *priv, u32 mask)
+>>       iwl_write_prph(priv, IWL50_SCD_TXFACT, mask);
+>>  }
+>>
+>> +
+>> +static inline u32 iwl5000_get_scd_ssn(struct iwl5000_tx_resp *tx_resp)
+>> +{
+>> +     __le32 *scd_ssn = (__le32 *)((u32 *)&tx_resp->status +
+>> +                             tx_resp->frame_count);
+>> +     return le32_to_cpu(*scd_ssn) & MAX_SN;
 >
-> That doesn't make any sense, can you explain?
+> How about:
 >
-Your patch switched order of channel and freq in the scan
-It looks like wpa_supplicant cannot handle it
+>        return le32_to_cpup((__le32 *)&tx_resp->status + tx_resp->frame_count);
+>
+> Cheers,
+>
+> Harvey
+>
 
+Thanks
+Will apply on top of it
+    return le32_to_cpup((__le32 *)&tx_resp->status +
+tx_resp->frame_count) & MAX_SN;
+
+Thank
 Tomas
