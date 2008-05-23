@@ -1,67 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:13724 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbYEPXsJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 19:48:09 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so506492waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 16:48:09 -0700 (PDT)
-Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1210975426.6381.70.camel@johannes.berg>
-References: <1210966154.5915.50.camel@brick>
-	 <1210966704.5915.51.camel@brick>
-	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
-	 <1210971848.5915.58.camel@brick>
-	 (sfid-20080516_230412_000613_CA74646C)  <1210972335.6381.52.camel@johannes.berg>
-	 <1210975040.5915.63.camel@brick>
-	 (sfid-20080516_235723_605932_ED6BE89E)  <1210975426.6381.70.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 16 May 2008 16:48:07 -0700
-Message-Id: <1210981687.5915.67.camel@brick> (sfid-20080517_014818_368555_683F5D7E)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759650AbYEWCLk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:40 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: use uCode error and event tables pointer w.r.t loaded image
+Date: Fri, 23 May 2008 10:09:07 +0800
+Message-Id: <1211508569-3163-30-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_582951_901E54E8)
+In-Reply-To: <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-17 at 00:03 +0200, Johannes Berg wrote:
-> On Fri, 2008-05-16 at 14:57 -0700, Harvey Harrison wrote:
-> > On Fri, 2008-05-16 at 23:12 +0200, Johannes Berg wrote:
-> > > 
-> > > Right. Still, I think it should be named with _is_ in there.
-> > 
-> > Yes, I agree with you, that's what I meant to write.
-> 
-> Actually, maybe it should be "has" and not "is" since it's being passed
-> a frame that can *have* a given frame type, and is a frame of a given
-> type. Dunno.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-I think _is_ works best, I'll send out a few trial patches, but this
-seems to make sense in the places its used.
+This patch updates the usage of the pointers to error and log tables
+received in alive response w.r.t. the current uCode image.
 
-> 
-> > Ahhh, I see what you are getting at now, how about ieee80211_stype_mask?
-> > 
-> > That makes the & a little clearer and has better semantic meaning.
-> > 
-> > The other option is still to call it stype_mask, but change it to
-> > return a __le16....so tests against != 0 still work and really
-> > is just a wrapper around the byteswap of the constant and the &.
-> 
-> Hmm. I'm not sure, how is all this really used? It seems you want
-> 
-> ieee80211_has_qos_stype(hdr)
-> and
-> 
-> ieee80211_has_stype(hdr, stype)
-> 
-> instead, no?
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   29 +++++++++++++++++++----------
+ 1 files changed, 19 insertions(+), 10 deletions(-)
 
-Just the latter I think.  But I'll do a few patches to see how it looks
-first.  If there end up being a few common ones (like qos) a few
-short-hand versions might be appropriate, I'll see how it goes.
-
-Harvey
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 785396f..373e984 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1084,17 +1084,20 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 	u32 data2, line;
+ 	u32 desc, time, count, base, data1;
+ 	u32 blink1, blink2, ilink1, ilink2;
+-	int rc;
++	int ret;
+ 
+-	base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
++	if (priv->ucode_type == UCODE_INIT)
++		base = le32_to_cpu(priv->card_alive_init.error_event_table_ptr);
++	else
++		base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
+ 
+ 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
+ 		IWL_ERROR("Not valid error log pointer 0x%08X\n", base);
+ 		return;
+ 	}
+ 
+-	rc = iwl_grab_nic_access(priv);
+-	if (rc) {
++	ret = iwl_grab_nic_access(priv);
++	if (ret) {
+ 		IWL_WARNING("Can not read from adapter at this time.\n");
+ 		return;
+ 	}
+@@ -1146,8 +1149,10 @@ void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 
+ 	if (num_events == 0)
+ 		return;
+-
+-	base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
++	if (priv->ucode_type == UCODE_INIT)
++		base = le32_to_cpu(priv->card_alive_init.log_event_table_ptr);
++	else
++		base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
+ 
+ 	if (mode == 0)
+ 		event_size = 2 * sizeof(u32);
+@@ -1177,7 +1182,7 @@ EXPORT_SYMBOL(iwl_print_event_log);
+ 
+ void iwl_dump_nic_event_log(struct iwl_priv *priv)
+ {
+-	int rc;
++	int ret;
+ 	u32 base;       /* SRAM byte address of event log header */
+ 	u32 capacity;   /* event log capacity in # entries */
+ 	u32 mode;       /* 0 - no timestamp, 1 - timestamp recorded */
+@@ -1185,14 +1190,18 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv)
+ 	u32 next_entry; /* index of next entry to be written by uCode */
+ 	u32 size;       /* # entries that we'll print */
+ 
+-	base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
++	if (priv->ucode_type == UCODE_INIT)
++		base = le32_to_cpu(priv->card_alive_init.log_event_table_ptr);
++	else
++		base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
++
+ 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
+ 		IWL_ERROR("Invalid event log pointer 0x%08X\n", base);
+ 		return;
+ 	}
+ 
+-	rc = iwl_grab_nic_access(priv);
+-	if (rc) {
++	ret = iwl_grab_nic_access(priv);
++	if (ret) {
+ 		IWL_WARNING("Can not read from adapter at this time.\n");
+ 		return;
+ 	}
+-- 
+1.5.3.6
 
