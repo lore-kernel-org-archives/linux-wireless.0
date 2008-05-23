@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547AbYEALuT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 07:50:19 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080501.034950.261408566.davem@davemloft.net>
-References: <20080501.024320.212547875.davem@davemloft.net>
-	 <E1JrW9h-0001tI-00@gondolin.me.apana.org.au>
-	 <20080501.034950.261408566.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3UUXvEO9lQPH2yVYLr5P"
-Date: Thu, 01 May 2008 13:49:35 +0200
-Message-Id: <1209642575.3904.2.camel@johannes.berg> (sfid-20080501_135006_334694_30F62591)
+Received: from mx1.redhat.com ([66.187.233.31]:58043 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750838AbYEWLhB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 07:37:01 -0400
+Subject: Re: [PATCH 1/1] mac80211: reorder channel and freq reporting in
+	wext scan report
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1211495796-2881-1-git-send-email-tomas.winkler@intel.com>
+References: <1211495796-2881-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain
+Date: Fri, 23 May 2008 07:36:48 -0400
+Message-Id: <1211542608.30036.8.camel@localhost.localdomain> (sfid-20080523_133707_171611_11895A2A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-05-23 at 01:36 +0300, Tomas Winkler wrote:
+> This patch switch order of channel and freq (SIOCGIWFREQ) reports
+> in scan results in order to overcome wpa_supplicant inability
+> to handle channel numbers in 5.2Ghz band.
+> Wext reporting channel number is ambiguous as channels 7-12 (802.11j)
+> exist on both bands.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-3UUXvEO9lQPH2yVYLr5P
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-> =20
-> +	if (unlikely((nhead || ntail) && skb->sk)) {
-> +		printk(KERN_ERR "SKB BUG: Illegal pskb expand (%d:%d) "
-> +		       "with socket attached\n",
-> +		       nhead, ntail);
-> +	}
-> +
-
-Also this could be a WARN_ON since here we really want to know who
-called it.
-
-johannes
-
---=-3UUXvEO9lQPH2yVYLr5P
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASBmuTqVg1VMiehFYAQLnOA/+L4n8YMleIsm84+EnIGXXXRi39PUTln+r
-eQvsepwJTnnTX96FyZwUU62EazUssdHpkc1G19YKZ7CMhYdRKVd/3SraSx8gRgCm
-BT3u+AoC7dedNOZtUOXbWDOChWjr0v5+mO0SLatS+4awznLt7URSmIpPFeFMF99a
-mdb1ksUlG5o+fONfXnByztaR7CwI72+eGkpXjT6MOmQ2avNyzfQmh4caadh69usH
-vJDPxERTUAKjTx3Zxs0zaYeuTKJ4oF0F9cti0RiV+PpzwCW3TnyQFCpLkFqWJ6W4
-33Is/0YIURqdDOnvtOp2RVrFq+Ww9WdVss81G/hMOEmqS/fWR4gYY1uqvAFSlgVf
-7OcsiQ7WR/7iIQENaNSippLFnsSeprmrLBF2pz0mX4p2Cznwg14aQCCeuBweiOwd
-MUrujMq6tKx7GyZhEDDbWHH7fkxnTSBB7JZzjE3FDxl4FWimBcFDbIm12ZdwFdbW
-Zbz0AzFIdLU3Z86byKyzGPFJUt2KnBS/rSaL04ec9+dq7EfGp4jDP5GbXEIQvwaD
-s1UjDrkQ1FN6MZikKymV1FSH0nY6GCB7HdZ1mwserzbJt50VakflPM4NZ5j7++z/
-gjA6gAZB2IkaFbn0CnR9CntmaSFoz9pDhA7Ow9EqtzPc3vEfqRkkquioFo8sSPwp
-LF3WNNmxICQ=
-=N+yL
------END PGP SIGNATURE-----
-
---=-3UUXvEO9lQPH2yVYLr5P--
+> ---
+>  net/mac80211/mlme.c |    9 ++++-----
+>  1 files changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 7cfd12e..c7eca4d 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -4095,18 +4095,17 @@ ieee80211_sta_scan_result(struct net_device *dev,
+>  
+>  	memset(&iwe, 0, sizeof(iwe));
+>  	iwe.cmd = SIOCGIWFREQ;
+> -	iwe.u.freq.m = bss->freq;
+> -	iwe.u.freq.e = 6;
+> +	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+> +	iwe.u.freq.e = 0;
+>  	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+>  					  IW_EV_FREQ_LEN);
+>  
+>  	memset(&iwe, 0, sizeof(iwe));
+>  	iwe.cmd = SIOCGIWFREQ;
+> -	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+> -	iwe.u.freq.e = 0;
+> +	iwe.u.freq.m = bss->freq;
+> +	iwe.u.freq.e = 6;
+>  	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+>  					  IW_EV_FREQ_LEN);
+> -
+>  	memset(&iwe, 0, sizeof(iwe));
+>  	iwe.cmd = IWEVQUAL;
+>  	iwe.u.qual.qual = bss->signal;
 
