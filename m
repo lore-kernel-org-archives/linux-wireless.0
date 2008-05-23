@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758775AbYEMVic (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 17:38:32 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240805131412i3bd1756bhb11d31742b326b2f@mail.gmail.com> (sfid-20080513_231212_813726_F80F0C2D)
-References: <20080502.163334.148944203.davem@davemloft.net>
-	 <1209807477.3987.9.camel@johannes.berg>
-	 <1209824720.1475.6.camel@johannes.berg>
-	 <20080512.201751.114868351.davem@davemloft.net>
-	 <20080513203906.GB20269@tuxdriver.com>
-	 <1210712356.4279.22.camel@johannes.berg>
-	 <1ba2fa240805131412i3bd1756bhb11d31742b326b2f@mail.gmail.com>
-	 (sfid-20080513_231212_813726_F80F0C2D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xjvV9yiNaUz+qM3d/OfK"
-Date: Tue, 13 May 2008 23:37:23 +0200
-Message-Id: <1210714643.4279.27.camel@johannes.berg> (sfid-20080513_233836_377418_72A08EC6)
+Received: from mx1.redhat.com ([66.187.233.31]:60407 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751932AbYEWSLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 14:11:30 -0400
+Subject: Re: [PATCH] mac80211 : Fixes the status message for iwconfig
+From: Dan Williams <dcbw@redhat.com>
+To: abhijeet.kolekar@intel.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1211564640.15162.1.camel@abhi-desktop>
+References: <1211562926905-git-send-email-abhijeet.kolekar@intel.com>
+	 <1211564362.31559.45.camel@localhost.localdomain>
+	 <1211564640.15162.1.camel@abhi-desktop>
+Content-Type: text/plain
+Date: Fri, 23 May 2008 14:11:36 -0400
+Message-Id: <1211566296.12312.0.camel@localhost.localdomain> (sfid-20080523_201135_296763_C1B75702)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-05-23 at 10:44 -0700, Abhijeet Kolekar wrote:
+> On Fri, 2008-23-05 at 13:39 -0400, Dan Williams wrote:
+> > On Fri, 2008-05-23 at 10:15 -0700, Abhijeet Kolekar wrote:
+> > > iwconfig was showing incorrect status messages when disassociated.
+> > > Patch fixes this by always checking for association status in 
+> > > ioctl calls for getting ap address.
+> > > 
+> > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > 
+> > I may not remember correctly, but I think you need to also report the
+> > BSSID being associated with during assoc & auth stages with WEXT.  So
+> > the right check here is to return nothing if _disassocated_, but
+> > otherwise return the BSSID that's currently pending or associated with. 
+> > 
+> > Dan
+> One question though, Do we need to report similar things with essid or
+> WEXT will always return the essid regardless of the state.
 
---=-xjvV9yiNaUz+qM3d/OfK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I lied; ignore me.  Patch is good.
 
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-> >  Most fullmac devices also need some space, whether they do things that
-> >  way or not is a completely different thing, the ieee80211 stack for
-> >  example copies every packet into a new skb anyway.
->=20
-> It's really depends on when is the 802.3 to 802.11 header translation
-> made it doesn't matter whether it's fullmac or softmac. I would say
-> that WLAN is OK.
-
-True, some devices take 802.3 frames and do the translation and
-everything themselves. I dunno. I guess it would make sense to make it
-mac80211 anyway because ieee80211 doesn't care and the other drivers are
-probably handling this in some other way anyway (if maybe even by using
-different dma descriptors, or just not caring because transfer speeds
-are low enough)
-
-johannes
-
---=-xjvV9yiNaUz+qM3d/OfK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCoKEaVg1VMiehFYAQKY/w/9FhWlK2a9A0LBfnYkJ+6BIiEzjJYHxkLT
-++SgIkDbZJ8WZk4bEyH69uJQmXNuF5mTCxdg5EysLGPml69+rI7eSkEb9v66skg8
-bfyns6kEoW4GsTT3ftJmSKEkGBNW+Q0Vt6tXqk8rFE4ofvrkW0bWkId95CO1lHjf
-/7cGLta4FoansqNFFHnsyXXKsGmjfj7K4qtxzxq6aHocy05DRpZi7YMP67joXvtO
-zZu773KUXZvp1caZtHqFYH5/GfaQ0aC4dGHeuTzEEIFR05A+mfK1sTOXolTiWXmX
-d70U4I+/5C4/gr4ktFSq2kUpsH/R48T29jhlN4KBNOJQnmkTMcc3yZXmdPZXeO8g
-6NOvg+IEAIVijnuO+6THukhIBX3s4oxFfKZt0yh06vFxIEEFawWkTQUWnIie0/cs
-BW2WmhThCXC1kcFsofpQ1KA6hvFFhcbZB0FUza3+8hlvJXAO4dFE1T8mG0is+aBZ
-dwhNjBM7ZaZaleWQWzZrbGORryU63v9UHb/9A/lxGwLMqMj0/6HJdIJsiVbKWS19
-8QoSbH10H/KApgFNrMUervCitGZn00NpkBYgFZIo/H+YmT0EOXnDVdW1E4PxsoGZ
-omTRqK3vGYkaxkzKGXglUWXD7UxmoVnZ9il3Ow3/RqzHG+OPuu/Zasgg8SFh9X3Y
-CNqdEDvv4HA=
-=nsD0
------END PGP SIGNATURE-----
-
---=-xjvV9yiNaUz+qM3d/OfK--
+> > 
+> > > ---
+> > >  net/mac80211/wext.c |   11 ++++++++---
+> > >  1 files changed, 8 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+> > > index c2e2378..1a35562 100644
+> > > --- a/net/mac80211/wext.c
+> > > +++ b/net/mac80211/wext.c
+> > > @@ -501,9 +501,14 @@ static int ieee80211_ioctl_giwap(struct net_device *dev,
+> > >  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> > >  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+> > >  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+> > > -		ap_addr->sa_family = ARPHRD_ETHER;
+> > > -		memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> > > -		return 0;
+> > > +		if (sdata->u.sta.state == IEEE80211_ASSOCIATED) {
+> > > +			ap_addr->sa_family = ARPHRD_ETHER;
+> > > +			memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> > > +			return 0;
+> > > +		} else {
+> > > +			memset(&ap_addr->sa_data, 0, ETH_ALEN);
+> > > +			return 0;
+> > > +		}
+> > >  	} else if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
+> > >  		ap_addr->sa_family = ARPHRD_ETHER;
+> > >  		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
