@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:56567 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751045AbYEDM5G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 08:57:06 -0400
-Date: Sun, 4 May 2008 20:56:52 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-Message-ID: <20080504125652.GA1618@gondor.apana.org.au> (sfid-20080504_145634_021948_BA1F36DE)
-References: <1209867740.6210.46.camel@johannes.berg> <20080504031652.GA30993@gondor.apana.org.au> <1209890847.6210.51.camel@johannes.berg> <1209892489.6210.56.camel@johannes.berg> <20080504094444.GA541@gondor.apana.org.au> <1209894754.6210.58.camel@johannes.berg> <1209900355.6210.64.camel@johannes.berg> <1209904088.4065.11.camel@johannes.berg> <20080504124542.GA1455@gondor.apana.org.au> <1209905561.4065.23.camel@johannes.berg>
+Received: from c60.cesmail.net ([216.154.195.49]:28812 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757969AbYEWBzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 21:55:01 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 4/5] hostap: don't report useless WDS frames by default
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>
+Date: Thu, 22 May 2008 21:55:00 -0400
+Message-ID: <20080523015500.16636.99401.stgit@dv.roinet.com> (sfid-20080523_035505_127229_6519FAD6)
+In-Reply-To: <20080523015442.16636.92254.stgit@dv.roinet.com>
+References: <20080523015442.16636.92254.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1209905561.4065.23.camel@johannes.berg>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 04, 2008 at 02:52:41PM +0200, Johannes Berg wrote:
->
-> > have no cache at all,
-> 
-> That wouldn't be good either I think since we can actually use the
-> ethernet header quite well.
+DEBUG_EXTRA is reported to the kernel log by default, but DEBUG_EXTRA2
+is not.  Unrelated WDS frames pollute the log unnecessarily.
 
-Actually this is not as bad as it sounds.  Since you're constructing
-the hardware header anyway, it may turn out to be easier to tack on
-the Ethernet header while you're at it.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Please note that the hardware cache is not the same as the neighbour
-cache.  Just because you lose the hardware cache doesn't mean that
-you'd lose the neighbour (ARP) cache.
+ drivers/net/wireless/hostap/hostap_80211_rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-However, this would mean that you'd no longer have an Ethernet device
-which is both good and bad.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
+index 4fd7380..47884c3 100644
+--- a/drivers/net/wireless/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
+@@ -551,7 +551,7 @@ hostap_rx_frame_wds(local_info_t *local, struct ieee80211_hdr_4addr *hdr,
+ 	     hdr->addr1[2] != 0xff || hdr->addr1[3] != 0xff ||
+ 	     hdr->addr1[4] != 0xff || hdr->addr1[5] != 0xff)) {
+ 		/* RA (or BSSID) is not ours - drop */
+-		PDEBUG(DEBUG_EXTRA, "%s: received WDS frame with "
++		PDEBUG(DEBUG_EXTRA2, "%s: received WDS frame with "
+ 		       "not own or broadcast %s=%s\n",
+ 		       local->dev->name,
+ 		       fc & IEEE80211_FCTL_FROMDS ? "RA" : "BSSID",
