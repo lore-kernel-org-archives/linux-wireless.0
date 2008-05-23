@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:37417 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:27461 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759974AbYEWCL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:58 -0400
+	id S1759025AbYEWCLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:13 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: move iwl_rxq_stop into iwl-rx.c
-Date: Fri, 23 May 2008 10:09:20 +0800
-Message-Id: <1211508569-3163-43-git-send-email-yi.zhu@intel.com> (sfid-20080523_042835_927957_BF14600C)
-In-Reply-To: <1211508569-3163-42-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: remove 4965 from iwl4965_rate_info
+Date: Fri, 23 May 2008 10:08:48 +0800
+Message-Id: <1211508569-3163-11-git-send-email-yi.zhu@intel.com> (sfid-20080523_041124_952189_CA731648)
+In-Reply-To: <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
 References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
  <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
  <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
@@ -21,150 +21,268 @@ References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
  <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
  <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
  <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-38-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-40-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-41-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-42-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch moves iwl_rxq_stop into iwl-rx.c.
+This patch removes 4965 from iwl4965_rate_info structure and
+associated variables.
 
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   25 -------------------------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   26 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 4 files changed, 28 insertions(+), 27 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |   27 ++++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.h  |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   12 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 +++---
+ 5 files changed, 31 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 8e3660e..e2123ab 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -481,7 +481,7 @@ static u32 rate_n_flags_from_tbl(struct iwl4965_scale_tbl_info *tbl,
+ 	u32 rate_n_flags = 0;
+ 
+ 	if (is_legacy(tbl->lq_type)) {
+-		rate_n_flags = iwl4965_rates[index].plcp;
++		rate_n_flags = iwl_rates[index].plcp;
+ 		if (index >= IWL_FIRST_CCK_RATE && index <= IWL_LAST_CCK_RATE)
+ 			rate_n_flags |= RATE_MCS_CCK_MSK;
+ 
+@@ -493,11 +493,11 @@ static u32 rate_n_flags_from_tbl(struct iwl4965_scale_tbl_info *tbl,
+ 		rate_n_flags = RATE_MCS_HT_MSK;
+ 
+ 		if (is_siso(tbl->lq_type))
+-			rate_n_flags |=	iwl4965_rates[index].plcp_siso;
++			rate_n_flags |=	iwl_rates[index].plcp_siso;
+ 		else if (is_mimo2(tbl->lq_type))
+-			rate_n_flags |=	iwl4965_rates[index].plcp_mimo2;
++			rate_n_flags |=	iwl_rates[index].plcp_mimo2;
+ 		else
+-			rate_n_flags |=	iwl4965_rates[index].plcp_mimo3;
++			rate_n_flags |=	iwl_rates[index].plcp_mimo3;
+ 	} else {
+ 		IWL_ERROR("Invalid tbl->lq_type %d\n", tbl->lq_type);
+ 	}
+@@ -697,7 +697,7 @@ static u16 rs_get_adjacent_rate(struct iwl_priv *priv, u8 index, u16 rate_mask,
+ 
+ 	low = index;
+ 	while (low != IWL_RATE_INVALID) {
+-		low = iwl4965_rates[low].prev_rs;
++		low = iwl_rates[low].prev_rs;
+ 		if (low == IWL_RATE_INVALID)
+ 			break;
+ 		if (rate_mask & (1 << low))
+@@ -707,7 +707,7 @@ static u16 rs_get_adjacent_rate(struct iwl_priv *priv, u8 index, u16 rate_mask,
+ 
+ 	high = index;
+ 	while (high != IWL_RATE_INVALID) {
+-		high = iwl4965_rates[high].next_rs;
++		high = iwl_rates[high].next_rs;
+ 		if (high == IWL_RATE_INVALID)
+ 			break;
+ 		if (rate_mask & (1 << high))
+@@ -2088,7 +2088,7 @@ static void rs_initialize_lq(struct iwl_priv *priv,
+ 		i = 0;
+ 
+ 	/* FIXME:RS: This is also wrong in 4965 */
+-	rate = iwl4965_rates[i].plcp;
++	rate = iwl_rates[i].plcp;
+ 	rate |= RATE_MCS_ANT_B_MSK;
+ 	rate &= ~RATE_MCS_ANT_A_MSK;
+ 
+@@ -2691,7 +2691,7 @@ int iwl4965_fill_rs_info(struct ieee80211_hw *hw, char *buf, u8 sta_id)
+ 		int active = lq_sta->active_tbl;
+ 
+ 		cnt +=
+-		    sprintf(&buf[cnt], " %2dMbs: ", iwl4965_rates[i].ieee / 2);
++		    sprintf(&buf[cnt], " %2dMbs: ", iwl_rates[i].ieee / 2);
+ 
+ 		mask = (1ULL << (IWL_RATE_MAX_WINDOW - 1));
+ 		for (j = 0; j < IWL_RATE_MAX_WINDOW; j++, mask >>= 1)
+@@ -2702,7 +2702,7 @@ int iwl4965_fill_rs_info(struct ieee80211_hw *hw, char *buf, u8 sta_id)
+ 		samples += lq_sta->lq_info[active].win[i].counter;
+ 		good += lq_sta->lq_info[active].win[i].success_counter;
+ 		success += lq_sta->lq_info[active].win[i].success_counter *
+-			   iwl4965_rates[i].ieee;
++			   iwl_rates[i].ieee;
+ 
+ 		if (lq_sta->lq_info[active].win[i].stamp) {
+ 			int delta =
+@@ -2722,10 +2722,11 @@ int iwl4965_fill_rs_info(struct ieee80211_hw *hw, char *buf, u8 sta_id)
+ 		i = j;
+ 	}
+ 
+-	/* Display the average rate of all samples taken.
+-	 *
+-	 * NOTE:  We multiply # of samples by 2 since the IEEE measurement
+-	 * added from iwl4965_rates is actually 2X the rate */
++	/*
++	 * Display the average rate of all samples taken.
++	 * NOTE: We multiply # of samples by 2 since the IEEE measurement
++	 * added from iwl_rates is actually 2X the rate.
++	 */
+ 	if (samples)
+ 		cnt += sprintf(&buf[cnt],
+ 			 "\nAverage rate is %3d.%02dMbs over last %4dms\n"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
+index 7ea2041..1dd4124 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.h
+@@ -29,7 +29,7 @@
+ 
+ #include "iwl-dev.h"
+ 
+-struct iwl4965_rate_info {
++struct iwl_rate_info {
+ 	u8 plcp;	/* uCode API:  IWL_RATE_6M_PLCP, etc. */
+ 	u8 plcp_siso;	/* uCode API:  IWL_RATE_SISO_6M_PLCP, etc. */
+ 	u8 plcp_mimo2;	/* uCode API:  IWL_RATE_MIMO2_6M_PLCP, etc. */
+@@ -45,7 +45,7 @@ struct iwl4965_rate_info {
+ 
+ /*
+  * These serve as indexes into
+- * struct iwl4965_rate_info iwl4965_rates[IWL_RATE_COUNT];
++ * struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
+  */
+ enum {
+ 	IWL_RATE_1M_INDEX = 0,
+@@ -240,7 +240,7 @@ enum {
+ #define TID_MAX_TIME_DIFF ((TID_QUEUE_MAX_SIZE - 1) * TID_QUEUE_CELL_SPACING)
+ #define TIME_WRAP_AROUND(x, y) (((y) > (x)) ? (y) - (x) : (0-(x)) + (y))
+ 
+-extern const struct iwl4965_rate_info iwl4965_rates[IWL_RATE_COUNT];
++extern const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
+ 
+ enum iwl_table_type {
+ 	LQ_NONE,
+@@ -279,7 +279,7 @@ static inline u8 num_of_ant(u8 mask)
+ 
+ static inline u8 iwl4965_get_prev_ieee_rate(u8 rate_index)
+ {
+-	u8 rate = iwl4965_rates[rate_index].prev_ieee;
++	u8 rate = iwl_rates[rate_index].prev_ieee;
+ 
+ 	if (rate == IWL_RATE_INVALID)
+ 		rate = rate_index;
 diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 0c3664f..da08622 100644
+index 922b0a1..1ec53a3 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -388,31 +388,6 @@ void iwl4965_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
- 			&priv->bands[IEEE80211_BAND_2GHZ].bitrates[rate_index];
- }
+@@ -345,8 +345,8 @@ int iwl4965_hwrate_to_plcp_idx(u32 rate_n_flags)
  
--int iwl4965_hw_rxq_stop(struct iwl_priv *priv)
--{
--	int rc;
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->lock, flags);
--	rc = iwl_grab_nic_access(priv);
--	if (rc) {
--		spin_unlock_irqrestore(&priv->lock, flags);
--		return rc;
--	}
--
--	/* stop Rx DMA */
--	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
--	rc = iwl_poll_direct_bit(priv, FH_MEM_RSSR_RX_STATUS_REG,
--				     (1 << 24), 1000);
--	if (rc < 0)
--		IWL_ERROR("Can't stop Rx DMA.\n");
--
--	iwl_release_nic_access(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	return 0;
--}
--
- /*
-  * EEPROM handlers
+ 	/* 4965 legacy rate format, search for match in table */
+ 	} else {
+-		for (idx = 0; idx < ARRAY_SIZE(iwl4965_rates); idx++)
+-			if (iwl4965_rates[idx].plcp == (rate_n_flags & 0xFF))
++		for (idx = 0; idx < ARRAY_SIZE(iwl_rates); idx++)
++			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
+ 				return idx;
+ 	}
+ 
+@@ -1951,7 +1951,7 @@ void iwl4965_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 	u16 rate_flags = 0;
+ 	int rate_idx = min(ctrl->tx_rate->hw_value & 0xffff, IWL_RATE_COUNT - 1);
+ 
+-	rate_plcp = iwl4965_rates[rate_idx].plcp;
++	rate_plcp = iwl_rates[rate_idx].plcp;
+ 
+ 	rts_retry_limit = (is_hcca) ?
+ 	    RTS_HCCA_RETRY_LIMIT : RTS_DFAULT_RETRY_LIMIT;
+@@ -2436,7 +2436,7 @@ static void iwl4965_add_radiotap(struct iwl_priv *priv,
+ 	if (rate == -1)
+ 		iwl4965_rt->rt_rate = 0;
+ 	else
+-		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
++		iwl4965_rt->rt_rate = iwl_rates[rate].ieee;
+ 
+ 	/*
+ 	 * "antenna number"
+@@ -2848,7 +2848,7 @@ static void iwl4965_dbg_report_frame(struct iwl_priv *priv,
+ 		if (unlikely(rate_idx == -1))
+ 			bitrate = 0;
+ 		else
+-			bitrate = iwl4965_rates[rate_idx].ieee / 2;
++			bitrate = iwl_rates[rate_idx].ieee / 2;
+ 
+ 		/* print frame summary.
+ 		 * MAC addresses show just the last byte (for brevity),
+@@ -3473,7 +3473,7 @@ void iwl4965_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap)
+ 		rate_flags |= RATE_MCS_ANT_B_MSK; /*FIXME:RS*/
+ 
+ 		link_cmd.rs_table[i].rate_n_flags =
+-			iwl4965_hw_set_rate_n_flags(iwl4965_rates[r].plcp, rate_flags);
++			iwl4965_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
+ 		r = iwl4965_get_prev_ieee_rate(r);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index b800031..8e411de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -67,7 +67,7 @@ MODULE_LICENSE("GPL");
+  * maps to IWL_RATE_INVALID
+  *
   */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1fc4d9a..def1461 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -685,8 +685,8 @@ extern u8 iwl4965_sync_station(struct iwl_priv *priv, int sta_id,
-  ****************************************************************************/
- extern void iwl4965_hw_setup_deferred_work(struct iwl_priv *priv);
- extern void iwl4965_hw_cancel_deferred_work(struct iwl_priv *priv);
--extern int iwl4965_hw_rxq_stop(struct iwl_priv *priv);
- extern int iwl4965_hw_set_hw_params(struct iwl_priv *priv);
-+extern int iwl_rxq_stop(struct iwl_priv *priv);
- extern void iwl_txq_ctx_stop(struct iwl_priv *priv);
- extern int iwl4965_hw_get_temperature(struct iwl_priv *priv);
- extern unsigned int iwl4965_hw_get_beacon_cmd(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index a2eb90d..ed63e5c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -420,3 +420,29 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 	return 0;
- }
+-const struct iwl4965_rate_info iwl4965_rates[IWL_RATE_COUNT] = {
++const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
+ 	IWL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
+ 	IWL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
+ 	IWL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
+@@ -83,7 +83,7 @@ const struct iwl4965_rate_info iwl4965_rates[IWL_RATE_COUNT] = {
+ 	IWL_DECLARE_RATE_INFO(60, 60, 48, INV, 48, INV, 48, INV),/* 60mbps */
+ 	/* FIXME:RS:          ^^    should be INV (legacy) */
+ };
+-EXPORT_SYMBOL(iwl4965_rates);
++EXPORT_SYMBOL(iwl_rates);
  
-+int iwl_rxq_stop(struct iwl_priv *priv)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	ret = iwl_grab_nic_access(priv);
-+	if (unlikely(ret)) {
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+		return ret;
-+	}
-+
-+	/* stop Rx DMA */
-+	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
-+	ret = iwl_poll_direct_bit(priv, FH_MEM_RSSR_RX_STATUS_REG,
-+				     (1 << 24), 1000);
-+	if (ret < 0)
-+		IWL_ERROR("Can't stop Rx DMA.\n");
-+
-+	iwl_release_nic_access(priv);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(iwl_rxq_stop);
-+
+ /* This function both allocates and initializes hw and priv. */
+ struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
+@@ -383,7 +383,7 @@ static void iwlcore_init_hw_rates(struct iwl_priv *priv,
+ 	int i;
+ 
+ 	for (i = 0; i < IWL_RATE_COUNT; i++) {
+-		rates[i].bitrate = iwl4965_rates[i].ieee * 5;
++		rates[i].bitrate = iwl_rates[i].ieee * 5;
+ 		rates[i].hw_value = i; /* Rate scaling will work on indexes */
+ 		rates[i].hw_value_short = i;
+ 		rates[i].flags = 0;
+@@ -392,7 +392,7 @@ static void iwlcore_init_hw_rates(struct iwl_priv *priv,
+ 			 * If CCK != 1M then set short preamble rate flag.
+ 			 */
+ 			rates[i].flags |=
+-				(iwl4965_rates[i].plcp == IWL_RATE_1M_PLCP) ?
++				(iwl_rates[i].plcp == IWL_RATE_1M_PLCP) ?
+ 					0 : IEEE80211_RATE_SHORT_PREAMBLE;
+ 		}
+ 	}
 diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 14b55ec..b47d8be 100644
+index 1c45b6f..edde814 100644
 --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
 +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3413,7 +3413,7 @@ static void __iwl4965_down(struct iwl_priv *priv)
- 	spin_unlock_irqrestore(&priv->lock, flags);
+@@ -878,9 +878,9 @@ static u8 iwl4965_rate_get_lowest_plcp(struct iwl_priv *priv)
  
- 	iwl_txq_ctx_stop(priv);
--	iwl4965_hw_rxq_stop(priv);
-+	iwl_rxq_stop(priv);
+ 	/* Find lowest valid rate */
+ 	for (i = IWL_RATE_1M_INDEX; i != IWL_RATE_INVALID;
+-					i = iwl4965_rates[i].next_ieee) {
++					i = iwl_rates[i].next_ieee) {
+ 		if (rate_mask & (1 << i))
+-			return iwl4965_rates[i].plcp;
++			return iwl_rates[i].plcp;
+ 	}
  
- 	spin_lock_irqsave(&priv->lock, flags);
- 	if (!iwl_grab_nic_access(priv)) {
+ 	/* No valid rate was found. Assign the lowest one */
+@@ -939,7 +939,7 @@ static u16 iwl4965_supported_rate_to_ie(u8 *ie, u16 supported_rate,
+ 	for (bit = 1, i = 0; i < IWL_RATE_COUNT; i++, bit <<= 1) {
+ 		if (bit & supported_rate) {
+ 			ret_rates |= bit;
+-			rates[*cnt] = iwl4965_rates[i].ieee |
++			rates[*cnt] = iwl_rates[i].ieee |
+ 				((bit & basic_rate) ? 0x80 : 0x00);
+ 			(*cnt)++;
+ 			(*left)--;
 -- 
 1.5.3.6
 
