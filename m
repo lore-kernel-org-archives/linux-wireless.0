@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:39828 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760979AbYESXsd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 19:48:33 -0400
-Message-ID: <483211DA.5080205@lwfinger.net> (sfid-20080520_014838_774697_476E215E)
-Date: Mon, 19 May 2008 18:48:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: linux-wireless@vger.kernel.org, bugme-daemon@bugzilla.kernel.org,
-	jckn@gmx.net, Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <hschaa@suse.de>
-Subject: Re: [Bugme-new] [Bug 10755] New: iwl3945 regression - NULL deref
- in ieee80211_associate
-References: <bug-10755-10286@http.bugzilla.kernel.org/> <20080519162655.f79208cd.akpm@linux-foundation.org>
-In-Reply-To: <20080519162655.f79208cd.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:34354 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751779AbYEWRjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 13:39:17 -0400
+Subject: Re: [PATCH] mac80211 : Fixes the status message for iwconfig
+From: Dan Williams <dcbw@redhat.com>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1211562926905-git-send-email-abhijeet.kolekar@intel.com>
+References: <1211562926905-git-send-email-abhijeet.kolekar@intel.com>
+Content-Type: text/plain
+Date: Fri, 23 May 2008 13:39:22 -0400
+Message-Id: <1211564362.31559.45.camel@localhost.localdomain> (sfid-20080523_193921_824948_9566F42B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Morton wrote:
-> On Mon, 19 May 2008 15:56:01 -0700 (PDT)
-> bugme-daemon@bugzilla.kernel.org wrote:
+On Fri, 2008-05-23 at 10:15 -0700, Abhijeet Kolekar wrote:
+> iwconfig was showing incorrect status messages when disassociated.
+> Patch fixes this by always checking for association status in 
+> ioctl calls for getting ap address.
 > 
->> http://bugzilla.kernel.org/show_bug.cgi?id=10755
->>
->>            Summary: iwl3945 regression - NULL deref in ieee80211_associate
->>            Product: Drivers
->>            Version: 2.5
->>      KernelVersion: 2.6.26-rc3
->>           Platform: All
->>         OS/Version: Linux
->>               Tree: Mainline
->>             Status: NEW
->>           Severity: normal
->>           Priority: P1
->>          Component: network-wireless
->>         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
->>         ReportedBy: jckn@gmx.net
->>
->>
->> Latest working kernel version: 2.6.26-rc2
->> Earliest failing kernel version: 2.6.26-rc3
->> Distribution: Debian
->> Hardware Environment: Lenovo Thinkpad R61 (8943-DLG)
->> Software Environment:
->> Problem Description: iwl3945 trying to associate to an AP leads to a kernel
->> oops. The current (2008/05/19) linuxwireless.org compat-wireless driver is
->> affected, too.
->>
+> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+
+I may not remember correctly, but I think you need to also report the
+BSSID being associated with during assoc & auth stages with WEXT.  So
+the right check here is to return nothing if _disassocated_, but
+otherwise return the BSSID that's currently pending or associated with. 
+
+Dan
+
+> ---
+>  net/mac80211/wext.c |   11 ++++++++---
+>  1 files changed, 8 insertions(+), 3 deletions(-)
 > 
-> A post-2.6.25 regression.
-> 
-> EIP is at ieee80211_associate+0x253/0x640 [mac80211]
-> 
-> and it might not be iwl3945-specific.
+> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+> index c2e2378..1a35562 100644
+> --- a/net/mac80211/wext.c
+> +++ b/net/mac80211/wext.c
+> @@ -501,9 +501,14 @@ static int ieee80211_ioctl_giwap(struct net_device *dev,
+>  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+>  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+> -		ap_addr->sa_family = ARPHRD_ETHER;
+> -		memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> -		return 0;
+> +		if (sdata->u.sta.state == IEEE80211_ASSOCIATED) {
+> +			ap_addr->sa_family = ARPHRD_ETHER;
+> +			memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> +			return 0;
+> +		} else {
+> +			memset(&ap_addr->sa_data, 0, ETH_ALEN);
+> +			return 0;
+> +		}
+>  	} else if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
+>  		ap_addr->sa_family = ARPHRD_ETHER;
+>  		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
 
-This bug looks like the one I found and reported in 
-http://marc.info/?l=linux-wireless&m=121097330013277&w=2. I found it for b43 
-- it is clearly not iwl3945 specific.
-
-The patch is in version 4 and probably not the final one, but it fixes the 
-oops. You will find the patch at 
-http://marc.info/?l=linux-wireless&m=121120929012836&w=2.
-
-We know that bss is NULL when mac80211 tries to associate; however, I had 
-only one of these that happened after my interface had been connected to my 
-AP for ~18 hours, then got disassociated, followed by the oops. It sounds as 
-if jckn@gmx.net might be getting this systematically and there is hope to 
-find the root cause so as to prevent the problem rather than covering over 
-the symptoms as is done with the patch. In any case, there is a fix in the works.
-
-I have added Johannes and Helmut to the CC list.
-
-Larry
