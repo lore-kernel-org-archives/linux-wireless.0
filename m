@@ -1,58 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:13686 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753735AbYELQzG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 May 2008 12:55:06 -0400
-Received: by an-out-0708.google.com with SMTP id d40so487193and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 12 May 2008 09:55:05 -0700 (PDT)
-Message-ID: <43e72e890805120955n49697895j97b5e9f79de92af2@mail.gmail.com> (sfid-20080512_185512_189310_4CF5E788)
-Date: Mon, 12 May 2008 09:55:05 -0700
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Patrick McHardy" <kaber@trash.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, "Dan Williams" <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: prism54: revert "prism54: set carrier flags correctly"
-In-Reply-To: <43e72e890805120952q5abca0c3sfe49dedd97ed772e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <48287189.8080706@trash.net>
-	 <43e72e890805120952q5abca0c3sfe49dedd97ed772e@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:50159 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758645AbYEWCLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:12 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: remove 4965 prefix from iwl4965_frame
+Date: Fri, 23 May 2008 10:08:47 +0800
+Message-Id: <1211508569-3163-10-git-send-email-yi.zhu@intel.com> (sfid-20080523_041122_083135_B88ACFD3)
+In-Reply-To: <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh and if you're wondering how im sending this, its through GPRS on my
-trusty bb and through my trusty gmail :) so I do have at least "some"
-level of interweb access..
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Now if only I could hack on this too...
+This patch removes 4965 from iwl4965_frame struct and handling functions.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   20 ++++++++++----------
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
-
-On 5/12/08, Luis R. Rodriguez <mcgrof@winlab.rutgers.edu> wrote:
-> Patick, thanks for staying on top of this, however NACK. The fix I
-> sumbitted and you tested should be merged. I nagged about it too, John
-> just wanted a resubmit with a log message.
->
-> John please accept the patch I posted, sorry I'd resend and add a nice
-> commit log message but I've been away from interweb access for a few
-> days now and expect it to be this way for the next two days.
->
-> You can add something like "this fixes a regression introduced by $SHA1_SUM"
->
-> Thanks,
->
->   Luis
->
->
->
-> On 5/12/08, Patrick McHardy <kaber@trash.net> wrote:
-> >
->
-> --
-> Sent from Gmail for mobile | mobile.google.com
->
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 83876a0..922b0a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2016,7 +2016,7 @@ int iwl4965_hw_get_temperature(struct iwl_priv *priv)
+ }
+ 
+ unsigned int iwl4965_hw_get_beacon_cmd(struct iwl_priv *priv,
+-			  struct iwl4965_frame *frame, u8 rate)
++			  struct iwl_frame *frame, u8 rate)
+ {
+ 	struct iwl4965_tx_beacon_cmd *tx_beacon_cmd;
+ 	unsigned int frame_size;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 9a842fd..60a8f06 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -262,7 +262,7 @@ enum iwl_pwr_src {
+ #define IEEE80211_HLEN                  (IEEE80211_4ADDR_LEN)
+ #define IEEE80211_FRAME_LEN             (IEEE80211_DATA_LEN + IEEE80211_HLEN)
+ 
+-struct iwl4965_frame {
++struct iwl_frame {
+ 	union {
+ 		struct ieee80211_hdr frame;
+ 		struct iwl4965_tx_beacon_cmd beacon;
+@@ -696,7 +696,7 @@ extern int iwl4965_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv, void *tfd,
+ 					dma_addr_t addr, u16 len);
+ extern int iwl4965_hw_get_temperature(struct iwl_priv *priv);
+ extern unsigned int iwl4965_hw_get_beacon_cmd(struct iwl_priv *priv,
+-				 struct iwl4965_frame *frame, u8 rate);
++				 struct iwl_frame *frame, u8 rate);
+ extern void iwl4965_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 				     struct iwl_cmd *cmd,
+ 				     struct ieee80211_tx_control *ctrl,
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 0ad9558..1c45b6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -800,7 +800,7 @@ static int iwl4965_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_fla
+ 	return iwl_send_cmd(priv, &cmd);
+ }
+ 
+-static void iwl4965_clear_free_frames(struct iwl_priv *priv)
++static void iwl_clear_free_frames(struct iwl_priv *priv)
+ {
+ 	struct list_head *element;
+ 
+@@ -810,7 +810,7 @@ static void iwl4965_clear_free_frames(struct iwl_priv *priv)
+ 	while (!list_empty(&priv->free_frames)) {
+ 		element = priv->free_frames.next;
+ 		list_del(element);
+-		kfree(list_entry(element, struct iwl4965_frame, list));
++		kfree(list_entry(element, struct iwl_frame, list));
+ 		priv->frames_count--;
+ 	}
+ 
+@@ -821,9 +821,9 @@ static void iwl4965_clear_free_frames(struct iwl_priv *priv)
+ 	}
+ }
+ 
+-static struct iwl4965_frame *iwl4965_get_free_frame(struct iwl_priv *priv)
++static struct iwl_frame *iwl_get_free_frame(struct iwl_priv *priv)
+ {
+-	struct iwl4965_frame *frame;
++	struct iwl_frame *frame;
+ 	struct list_head *element;
+ 	if (list_empty(&priv->free_frames)) {
+ 		frame = kzalloc(sizeof(*frame), GFP_KERNEL);
+@@ -838,10 +838,10 @@ static struct iwl4965_frame *iwl4965_get_free_frame(struct iwl_priv *priv)
+ 
+ 	element = priv->free_frames.next;
+ 	list_del(element);
+-	return list_entry(element, struct iwl4965_frame, list);
++	return list_entry(element, struct iwl_frame, list);
+ }
+ 
+-static void iwl4965_free_frame(struct iwl_priv *priv, struct iwl4965_frame *frame)
++static void iwl_free_frame(struct iwl_priv *priv, struct iwl_frame *frame)
+ {
+ 	memset(frame, 0, sizeof(*frame));
+ 	list_add(&frame->list, &priv->free_frames);
+@@ -892,12 +892,12 @@ static u8 iwl4965_rate_get_lowest_plcp(struct iwl_priv *priv)
+ 
+ static int iwl4965_send_beacon_cmd(struct iwl_priv *priv)
+ {
+-	struct iwl4965_frame *frame;
++	struct iwl_frame *frame;
+ 	unsigned int frame_size;
+ 	int rc;
+ 	u8 rate;
+ 
+-	frame = iwl4965_get_free_frame(priv);
++	frame = iwl_get_free_frame(priv);
+ 
+ 	if (!frame) {
+ 		IWL_ERROR("Could not obtain free frame buffer for beacon "
+@@ -912,7 +912,7 @@ static int iwl4965_send_beacon_cmd(struct iwl_priv *priv)
+ 	rc = iwl_send_cmd_pdu(priv, REPLY_TX_BEACON, frame_size,
+ 			      &frame->u.cmd[0]);
+ 
+-	iwl4965_free_frame(priv, frame);
++	iwl_free_frame(priv, frame);
+ 
+ 	return rc;
+ }
+@@ -4355,7 +4355,7 @@ static void __iwl4965_down(struct iwl_priv *priv)
+ 	priv->ibss_beacon = NULL;
+ 
+ 	/* clear out any free frames */
+-	iwl4965_clear_free_frames(priv);
++	iwl_clear_free_frames(priv);
+ }
+ 
+ static void iwl4965_down(struct iwl_priv *priv)
 -- 
-Sent from Gmail for mobile | mobile.google.com
+1.5.3.6
+
