@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:49453 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235AbYEMIs5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:48:57 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2174688fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 13 May 2008 01:48:55 -0700 (PDT)
-Message-ID: <8704f27d0805130148t57a1dad5nf5ff535ae4ddf968@mail.gmail.com> (sfid-20080513_104900_552932_982CEC39)
-Date: Tue, 13 May 2008 11:48:53 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: 11n + wpa_supplicant
-Cc: "Jouni Malinen" <j@w1.fi>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Tomas Winkler" <tomasw@gmail.com>
-In-Reply-To: <1210668421.3646.43.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
-	 <1210667328.3646.24.camel@johannes.berg>
-	 <8704f27d0805130141s403167b8q49eecb645d0461c1@mail.gmail.com>
-	 <1210668421.3646.43.camel@johannes.berg>
+Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759690AbYEWCLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:42 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: increase max payload of iwl_cmd
+Date: Fri, 23 May 2008 10:09:08 +0800
+Message-Id: <1211508569-3163-31-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_330381_B6CA19C9)
+In-Reply-To: <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 13, 2008 at 11:47 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Tue, 2008-05-13 at 11:41 +0300, Emmanuel Grumbach wrote:
->  > >
->  > >  I would think that, indeed, it *is* its job since its job is
->  > >  key/algorithm selection and 11n limits the choices.
->  > >
->  >
->  > depends on priorities, maybe the security selection should limit the
->  > 11n... IMHO, security should be in higher priority since the user
->  > explicitly said he wants TKIP
->  >
->  > >  How about we simply put the 11n information element into the generic IE
->  > >  and have mac80211 use that?
->  > >
->  >
->  > in mac80211 we perfectly know what the AP supports (in
->  > ieee80211_send_assoc, I can read the IEs from the AP) , that's no the
->  > issue here, the issue is what security alg the user will chose in the
->  > 4way. This decision affects the associate even though it occurs after
->  > the association
->
->  Ah, so you mean if the user chose TKIP then we should associate as a
->  legacy STA?
->
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-I think so... If the AP is N-only we would be in trouble...
+This patch increases iwl_cmd payload maximum size from 360 to 640
+to fit some of iwl5000 commands as well.
 
->  johannes
->
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 820542b..b61c647 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -308,6 +308,8 @@ struct iwl_cmd_meta {
+ 
+ } __attribute__ ((packed));
+ 
++#define IWL_CMD_MAX_PAYLOAD 640
++
+ /**
+  * struct iwl_cmd
+  *
+@@ -333,7 +335,7 @@ struct iwl_cmd {
+ 		struct iwl4965_tx_beacon_cmd tx_beacon;
+ 		struct iwl4965_rxon_assoc_cmd rxon_assoc;
+ 		u8 *indirect;
+-		u8 payload[360];
++		u8 payload[IWL_CMD_MAX_PAYLOAD];
+ 	} __attribute__ ((packed)) cmd;
+ } __attribute__ ((packed));
+ 
 -- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+1.5.3.6
+
