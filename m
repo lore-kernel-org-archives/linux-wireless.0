@@ -1,76 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49642 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753671AbYEMKHV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 06:07:21 -0400
-Subject: Re: dynamic wep with mulitple keys
-From: Johannes Berg <johannes@sipsolutions.net>
-To: drago01 <drago01@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Volker Braun <vbraun@physics.upenn.edu>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0805130244x648325a3k2ae7b77fa610ca6d@mail.gmail.com> (sfid-20080513_114503_459511_D50D0D96)
-References: <1208969544.3312.5.camel@localhost.localdomain>
-	 <8704f27d0805060032g2312e7dcwc19f382c431e6cd3@mail.gmail.com>
-	 <f6ca9fed0805060510l36c72666v414dfd989625d18e@mail.gmail.com>
-	 <8704f27d0805060514i59db36f0t9801fab7543b8655@mail.gmail.com>
-	 <f6ca9fed0805120447wf6c1c38mea24ba587dc834d4@mail.gmail.com>
-	 <1ba2fa240805120507r2914d23dt6826a732730fea49@mail.gmail.com>
-	 <f6ca9fed0805120510yec6ba9fge41c46d2d01c236a@mail.gmail.com>
-	 <1ba2fa240805120522m26904f72l45941b1beb411e60@mail.gmail.com>
-	 <f6ca9fed0805120538k75a953acrc1cd251efe9bbe1b@mail.gmail.com>
-	 <1210670668.3646.56.camel@johannes.berg>
-	 <f6ca9fed0805130244x648325a3k2ae7b77fa610ca6d@mail.gmail.com>
-	 (sfid-20080513_114503_459511_D50D0D96)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FVvpqzGClEo7nVg3e/n7"
-Date: Tue, 13 May 2008 12:07:08 +0200
-Message-Id: <1210673228.3646.60.camel@johannes.berg> (sfid-20080513_120726_531351_575CFFA2)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:30281 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759278AbYEWCLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Guy Cohen <guy.cohen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: don't switch to SGI if not supported by AP
+Date: Fri, 23 May 2008 10:08:54 +0800
+Message-Id: <1211508569-3163-17-git-send-email-yi.zhu@intel.com> (sfid-20080523_041132_416524_4DDA6AC8)
+In-Reply-To: <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-FVvpqzGClEo7nVg3e/n7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes SGI support. RS didn't look at the capabilities of the AP
+before switching to SGI, this should lead to a stall in the traffic with an
+AP that doesn't support SGI.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Guy Cohen  <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
+ 3 files changed, 22 insertions(+), 4 deletions(-)
 
-> The problem is that when connecting to a dynamic wep network which
-> uses multiple keys iwl3945 fails to get a dhcp lease. (See
-> http://marc.info/?l=3Dlinux-wireless&m=3D120699235803881&w=3D2)
-> Volker had the same problem with iwl4965.  But when turning off
-> hwcrypto and therefore use the mac80211 code it works for him.
-> iwl3945 does not use hwcrypto by default (and when I enable it it does
-> not work either) but fails. Both should be using the same code
-> (mac80211) but one driver works and the other doesn't which is odd.
-
-I haven't got a clue. Are those identical networks?
-
-johannes
-
---=-FVvpqzGClEo7nVg3e/n7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCloSqVg1VMiehFYAQL6Bg//U92w0HTk8tZMzCjnHx7FQ8oURZyplj6/
-Wn2F3reB4cFw/y4qHTnaQm0k90uRv5zgvxFbmqRIvuiQJ9AH1XvwAqCZr+k3hEZb
-vUTl98r3tYMHEGCJ5JqiI2zQu5oZyvj0uAUnQxlV/ifGpL6E11abB9ocnYftrCCw
-4JW6XT87kgkIYx63Krit0d0s9HoYKLPymFD7Hk38puiLJKPpHXPVGqaL4DQdy52F
-S0bG32SygPvlKlEbXB8SVSbCbMn/k2LtqEDYFxpJFPCyudi601pUwfq2KzdjIBim
-sw7qIb+PQn1CFxW1iqgbxjGRvYPwInSZazWmcDGUDqKy6F6RV8Qsdmd9ackiIu+8
-ubhaGIni2DXl9lEQjM0+sAjca9Jb4/6VIJzBWZYJAo9uXvr0cEdy1yTbLk+t2OtU
-vxIqNZP0GuKCxw38SAJqwOUN/+kepIZ4rpvzHHIBfuvaO/fXW5KHB8W0fHSxY7Uu
-cGYvv3jGEUE5KIZoh+OfJ3Iye4Wye3FNOY+MtLCWO0haN8oVoDCcDvk6AG1nx4tO
-uo/GtzdkWjJnHA2jLOBLPwBLI+ti/b1XqdrcjLAJUqDSXPgYedUg3aP1G+DiSfLq
-ia5TUP3s/mLNh0xvpr8LIhMUQlnn0+WoIVFkWYk/UMRv9pa1PXoX+BHtaiMvU1I1
-Pb24FUFKYTE=
-=XGSC
------END PGP SIGNATURE-----
-
---=-FVvpqzGClEo7nVg3e/n7--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 071c7b6..2adc228 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1439,6 +1439,15 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
+ 			}
+ 			break;
+ 		case IWL_SISO_SWITCH_GI:
++			if (!tbl->is_fat &&
++				!(priv->current_ht_config.sgf &
++						HT_SHORT_GI_20MHZ))
++				break;
++			if (tbl->is_fat &&
++				!(priv->current_ht_config.sgf &
++						HT_SHORT_GI_40MHZ))
++				break;
++
+ 			IWL_DEBUG_RATE("LQ: SISO toggle SGI/NGI\n");
+ 
+ 			memcpy(search_tbl, tbl, sz);
+@@ -1521,6 +1530,15 @@ static int rs_move_mimo_to_other(struct iwl_priv *priv,
+ 			break;
+ 
+ 		case IWL_MIMO_SWITCH_GI:
++			if (!tbl->is_fat &&
++				!(priv->current_ht_config.sgf &
++						HT_SHORT_GI_20MHZ))
++				break;
++			if (tbl->is_fat &&
++				!(priv->current_ht_config.sgf &
++						HT_SHORT_GI_40MHZ))
++				break;
++
+ 			IWL_DEBUG_RATE("LQ: MIMO toggle SGI/NGI\n");
+ 
+ 			/* Set up new search table for MIMO */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4106efd..7a54682 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -610,8 +610,8 @@ struct iwl_hw_params {
+ #endif
+ };
+ 
+-#define HT_SHORT_GI_20MHZ_ONLY	(1 << 0)
+-#define HT_SHORT_GI_40MHZ_ONLY	(1 << 1)
++#define HT_SHORT_GI_20MHZ	(1 << 0)
++#define HT_SHORT_GI_40MHZ	(1 << 1)
+ 
+ 
+ #define IWL_RX_HDR(x) ((struct iwl4965_rx_frame_hdr *)(\
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index dd2fd40..a532a9e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -700,9 +700,9 @@ static void iwl4965_ht_conf(struct iwl_priv *priv,
+ 	priv->ps_mode = (u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+ 
+ 	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
+-		iwl_conf->sgf |= 0x1;
++		iwl_conf->sgf |= HT_SHORT_GI_20MHZ;
+ 	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
+-		iwl_conf->sgf |= 0x2;
++		iwl_conf->sgf |= HT_SHORT_GI_40MHZ;
+ 
+ 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
+ 	iwl_conf->max_amsdu_size =
+-- 
+1.5.3.6
 
