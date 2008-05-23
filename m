@@ -1,409 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:58552 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbYEVKlC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 06:41:02 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3457242waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 03:41:00 -0700 (PDT)
-Message-ID: <1ba2fa240805220341g69f3acb0qf03594f541232337@mail.gmail.com> (sfid-20080522_124114_481954_A43F7187)
-Date: Thu, 22 May 2008 13:41:00 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwl4965: remove useless network and duplicate checking
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <1211446997.3698.47.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211446997.3698.47.camel@johannes.berg>
+Received: from mga14.intel.com ([143.182.124.37]:37417 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759814AbYEWCLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:55 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: implement apm stop function
+Date: Fri, 23 May 2008 10:09:17 +0800
+Message-Id: <1211508569-3163-40-git-send-email-yi.zhu@intel.com> (sfid-20080523_042836_285113_4EEA3FF8)
+In-Reply-To: <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-38-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 12:03 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> The iwlwifi drivers go to great lengths to avoid passing packets to
-> mac80211 they think shouldn't go there, while mac80211 can (of course!)
-> handle them very well.
->
-> Especially in the case of duplicate packets this is interesting
-> because it's such a performance hog (especially for IBSS networks)
-> while mac80211 does that work on the side without much effort.
->
-> This patch removes all that and leaves only what is absolutely
-> necessary for the hardware.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Unless I made a mistake, obviously.
->
-> Of course, it would be good to use the 20 descriptors per skb
-> to be able to fill the performance gap again...
->
-> Somebody should port this to iwl3945 too.
->
->  drivers/net/wireless/iwlwifi/iwl-4965.c     |   81 +++++-------------
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    4
->  drivers/net/wireless/iwlwifi/iwl-dev.h      |   19 ----
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |  122 ----------------------------
->  4 files changed, 27 insertions(+), 199 deletions(-)
->
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965.c     2008-05-22 10:37:41.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-4965.c  2008-05-22 10:42:41.000000000 +0200
-> @@ -2456,10 +2456,10 @@ static u32 iwl4965_translate_rx_status(s
->        return decrypt_out;
->  }
->
-> -static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
-> -                                      int include_phy,
-> -                                      struct iwl_rx_mem_buffer *rxb,
-> -                                      struct ieee80211_rx_status *stats)
-> +static void iwl4965_pass_packet_to_mac80211(struct iwl_priv *priv,
-> +                                           int include_phy,
-> +                                           struct iwl_rx_mem_buffer *rxb,
-> +                                           struct ieee80211_rx_status *stats)
->  {
->        struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
->        struct iwl4965_rx_phy_res *rx_start = (include_phy) ?
-> @@ -2498,12 +2498,6 @@ static void iwl4965_handle_data_packet(s
->                rx_start->byte_count = amsdu->byte_count;
->                rx_end = (__le32 *) (((u8 *) hdr) + len);
->        }
-> -       /* In monitor mode allow 802.11 ACk frames (10 bytes) */
-> -       if (len > priv->hw_params.max_pkt_size ||
-> -           len < ((priv->iw_mode == IEEE80211_IF_TYPE_MNTR) ? 10 : 16)) {
-> -               IWL_WARNING("byte count out of range [16,4K] : %d\n", len);
-> -               return;
-> -       }
->
->        ampdu_status = le32_to_cpu(*rx_end);
->        skblen = ((u8 *) rx_end - (u8 *) & pkt->u.raw[0]) + sizeof(u32);
-> @@ -2762,6 +2756,21 @@ static inline void iwl4965_dbg_report_fr
->  }
->  #endif
->
-> +/* This is necessary only for a number of statistics, see the user. */
-> +static int iwl4965_is_network_packet(struct iwl_priv *priv,
-> +                                    struct ieee80211_hdr *header)
-> +{
-> +       switch (priv->iw_mode) {
-> +       case IEEE80211_IF_TYPE_IBSS: /* Header: Dest. | Source    | BSSID */
-> +               /* packets to our IBSS update information */
-> +               return !compare_ether_addr(header->addr3, priv->bssid);
-> +       case IEEE80211_IF_TYPE_STA: /* Header: Dest. | AP{BSSID} | Source */
-> +               /* packets to our BSS update information */
-> +               return !compare_ether_addr(header->addr2, priv->bssid);
-> +       default:
-> +               return 1;
-> +       }
-> +}
->
->
->  /* Called for REPLY_RX (legacy ABG frames), or
-> @@ -2873,8 +2882,9 @@ static void iwl4965_rx_reply_rx(struct i
->                              (unsigned long long)rx_status.mactime);
->
->
-> +       /* Take shortcut when only in monitor mode */
->        if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
-> -               iwl4965_handle_data_packet(priv, 1, include_phy,
-> +               iwl4965_pass_packet_to_mac80211(priv, include_phy,
->                                                 rxb, &rx_status);
->                return;
->        }
-> @@ -2889,54 +2899,15 @@ static void iwl4965_rx_reply_rx(struct i
->        fc = le16_to_cpu(header->frame_control);
->        switch (fc & IEEE80211_FCTL_FTYPE) {
->        case IEEE80211_FTYPE_MGMT:
-> +       case IEEE80211_FTYPE_DATA:
->                if (priv->iw_mode == IEEE80211_IF_TYPE_AP)
-> -                       iwl4965_update_ps_mode(priv, fc  & IEEE80211_FCTL_PM,
-> -                                               header->addr2);
-> -               iwl4965_handle_data_packet(priv, 0, include_phy, rxb, &rx_status);
-> -               break;
-> -
-> -       case IEEE80211_FTYPE_CTL:
-> -#ifdef CONFIG_IWL4965_HT
-> -               switch (fc & IEEE80211_FCTL_STYPE) {
-> -               case IEEE80211_STYPE_BACK_REQ:
-> -                       IWL_DEBUG_HT("IEEE80211_STYPE_BACK_REQ arrived\n");
-> -                       iwl4965_handle_data_packet(priv, 0, include_phy,
-> -                                               rxb, &rx_status);
-> -                       break;
-> -               default:
-> -                       break;
-> -               }
-> -#endif
-> -               break;
-> -
-> -       case IEEE80211_FTYPE_DATA: {
-> -               DECLARE_MAC_BUF(mac1);
-> -               DECLARE_MAC_BUF(mac2);
-> -               DECLARE_MAC_BUF(mac3);
-> -
-> -               if (priv->iw_mode == IEEE80211_IF_TYPE_AP)
-> -                       iwl4965_update_ps_mode(priv, fc  & IEEE80211_FCTL_PM,
-> +                       iwl4965_update_ps_mode(priv, fc & IEEE80211_FCTL_PM,
->                                                header->addr2);
-> -
-> -               if (unlikely(!network_packet))
-> -                       IWL_DEBUG_DROP("Dropping (non network): "
-> -                                      "%s, %s, %s\n",
-> -                                      print_mac(mac1, header->addr1),
-> -                                      print_mac(mac2, header->addr2),
-> -                                      print_mac(mac3, header->addr3));
-> -               else if (unlikely(iwl4965_is_duplicate_packet(priv, header)))
-> -                       IWL_DEBUG_DROP("Dropping (dup): %s, %s, %s\n",
-> -                                      print_mac(mac1, header->addr1),
-> -                                      print_mac(mac2, header->addr2),
-> -                                      print_mac(mac3, header->addr3));
-> -               else
-> -                       iwl4965_handle_data_packet(priv, 1, include_phy, rxb,
-> -                                                  &rx_status);
-> -               break;
-> -       }
-> +               /* fall through */
->        default:
-> +               iwl4965_pass_packet_to_mac80211(priv, include_phy, rxb,
-> +                                               &rx_status);
->                break;
-> -
->        }
->  }
->
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-dev.h      2008-05-22 10:37:41.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-dev.h   2008-05-22 10:37:42.000000000 +0200
-> @@ -532,8 +532,6 @@ struct iwl4965_ucode {
->        u8 data[0];             /* data in same order as "size" elements */
->  };
->
-> -#define IWL_IBSS_MAC_HASH_SIZE 32
-> -
->  struct iwl4965_ibss_seq {
->        u8 mac[ETH_ALEN];
->        u16 seq_num;
-> @@ -633,16 +631,7 @@ extern int iwl_send_add_sta(struct iwl_p
->                            struct iwl_addsta_cmd *sta, u8 flags);
->  u8 iwl_add_station_flags(struct iwl_priv *priv, const u8 *addr, int is_ap,
->                         u8 flags, struct ieee80211_ht_info *ht_info);
-> -extern int iwl4965_is_network_packet(struct iwl_priv *priv,
-> -                                struct ieee80211_hdr *header);
->  extern int iwl4965_power_init_handle(struct iwl_priv *priv);
-> -extern void iwl4965_handle_data_packet_monitor(struct iwl_priv *priv,
-> -                                          struct iwl_rx_mem_buffer *rxb,
-> -                                          void *data, short len,
-> -                                          struct ieee80211_rx_status *stats,
-> -                                          u16 phy_flags);
-> -extern int iwl4965_is_duplicate_packet(struct iwl_priv *priv,
-> -                                      struct ieee80211_hdr *header);
->  extern int iwl4965_calc_db_from_ratio(int sig_ratio);
->  extern int iwl4965_calc_sig_qual(int rssi_dbm, int noise_dbm);
->  extern unsigned int iwl4965_fill_beacon_frame(struct iwl_priv *priv,
-> @@ -1129,14 +1118,6 @@ struct iwl_priv {
->        u32 last_beacon_time;
->        u64 last_tsf;
->
-> -       /* Duplicate packet detection */
-> -       u16 last_seq_num;
-> -       u16 last_frag_num;
-> -       unsigned long last_packet_time;
-> -
-> -       /* Hash table for finding stations in IBSS network */
-> -       struct list_head ibss_mac_hash[IWL_IBSS_MAC_HASH_SIZE];
-> -
->        /* eeprom */
->        u8 *eeprom;
->        struct iwl_eeprom_calib_info *calib_info;
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c 2008-05-22 10:37:40.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c      2008-05-22 10:42:27.000000000 +0200
-> @@ -927,36 +927,6 @@ static void iwl4965_activate_qos(struct
->        }
->  }
->
-> -int iwl4965_is_network_packet(struct iwl_priv *priv, struct ieee80211_hdr *header)
-> -{
-> -       /* Filter incoming packets to determine if they are targeted toward
-> -        * this network, discarding packets coming from ourselves */
-> -       switch (priv->iw_mode) {
-> -       case IEEE80211_IF_TYPE_IBSS: /* Header: Dest. | Source    | BSSID */
-> -               /* packets from our adapter are dropped (echo) */
-> -               if (!compare_ether_addr(header->addr2, priv->mac_addr))
-> -                       return 0;
-> -               /* {broad,multi}cast packets to our IBSS go through */
-> -               if (is_multicast_ether_addr(header->addr1))
-> -                       return !compare_ether_addr(header->addr3, priv->bssid);
-> -               /* packets to our adapter go through */
-> -               return !compare_ether_addr(header->addr1, priv->mac_addr);
-> -       case IEEE80211_IF_TYPE_STA: /* Header: Dest. | AP{BSSID} | Source */
-> -               /* packets from our adapter are dropped (echo) */
-> -               if (!compare_ether_addr(header->addr3, priv->mac_addr))
-> -                       return 0;
-> -               /* {broad,multi}cast packets to our BSS go through */
-> -               if (is_multicast_ether_addr(header->addr1))
-> -                       return !compare_ether_addr(header->addr2, priv->bssid);
-> -               /* packets to our adapter go through */
-> -               return !compare_ether_addr(header->addr1, priv->mac_addr);
-> -       default:
-> -               break;
-> -       }
-> -
-> -       return 1;
-> -}
-> -
->  #define TX_STATUS_ENTRY(x) case TX_STATUS_FAIL_ ## x: return #x
->
->  static const char *iwl4965_get_tx_fail_reason(u32 status)
-> @@ -1037,20 +1007,6 @@ static int iwl4965_scan_cancel_timeout(s
->        return ret;
->  }
->
-> -static void iwl4965_sequence_reset(struct iwl_priv *priv)
-> -{
-> -       /* Reset ieee stats */
-> -
-> -       /* We don't reset the net_device_stats (ieee->stats) on
-> -        * re-association */
-> -
-> -       priv->last_seq_num = -1;
-> -       priv->last_frag_num = -1;
-> -       priv->last_packet_time = 0;
-> -
-> -       iwl4965_scan_cancel(priv);
-> -}
-> -
->  #define MAX_UCODE_BEACON_INTERVAL      4096
->  #define INTEL_CONN_LISTEN_INTERVAL     __constant_cpu_to_le16(0xA)
->
-> @@ -1404,72 +1360,6 @@ void iwl4965_radio_kill_sw(struct iwl_pr
->        return;
->  }
->
-> -#define IWL_PACKET_RETRY_TIME HZ
-> -
-> -int iwl4965_is_duplicate_packet(struct iwl_priv *priv, struct ieee80211_hdr *header)
-> -{
-> -       u16 sc = le16_to_cpu(header->seq_ctrl);
-> -       u16 seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
-> -       u16 frag = sc & IEEE80211_SCTL_FRAG;
-> -       u16 *last_seq, *last_frag;
-> -       unsigned long *last_time;
-> -
-> -       switch (priv->iw_mode) {
-> -       case IEEE80211_IF_TYPE_IBSS:{
-> -               struct list_head *p;
-> -               struct iwl4965_ibss_seq *entry = NULL;
-> -               u8 *mac = header->addr2;
-> -               int index = mac[5] & (IWL_IBSS_MAC_HASH_SIZE - 1);
-> -
-> -               __list_for_each(p, &priv->ibss_mac_hash[index]) {
-> -                       entry = list_entry(p, struct iwl4965_ibss_seq, list);
-> -                       if (!compare_ether_addr(entry->mac, mac))
-> -                               break;
-> -               }
-> -               if (p == &priv->ibss_mac_hash[index]) {
-> -                       entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-> -                       if (!entry) {
-> -                               IWL_ERROR("Cannot malloc new mac entry\n");
-> -                               return 0;
-> -                       }
-> -                       memcpy(entry->mac, mac, ETH_ALEN);
-> -                       entry->seq_num = seq;
-> -                       entry->frag_num = frag;
-> -                       entry->packet_time = jiffies;
-> -                       list_add(&entry->list, &priv->ibss_mac_hash[index]);
-> -                       return 0;
-> -               }
-> -               last_seq = &entry->seq_num;
-> -               last_frag = &entry->frag_num;
-> -               last_time = &entry->packet_time;
-> -               break;
-> -       }
-> -       case IEEE80211_IF_TYPE_STA:
-> -               last_seq = &priv->last_seq_num;
-> -               last_frag = &priv->last_frag_num;
-> -               last_time = &priv->last_packet_time;
-> -               break;
-> -       default:
-> -               return 0;
-> -       }
-> -       if ((*last_seq == seq) &&
-> -           time_after(*last_time + IWL_PACKET_RETRY_TIME, jiffies)) {
-> -               if (*last_frag == frag)
-> -                       goto drop;
-> -               if (*last_frag + 1 != frag)
-> -                       /* out-of-order fragment */
-> -                       goto drop;
-> -       } else
-> -               *last_seq = seq;
-> -
-> -       *last_frag = frag;
-> -       *last_time = jiffies;
-> -       return 0;
-> -
-> - drop:
-> -       return 1;
-> -}
-> -
->  #ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
->
->  #include "iwl-spectrum.h"
-> @@ -4074,7 +3964,7 @@ static void iwl4965_post_associate(struc
->                break;
->        }
->
-> -       iwl4965_sequence_reset(priv);
-> +       iwl4965_scan_cancel(priv);
->
->        /* Enable Rx differential gain and sensitivity calibrations */
->        iwl_chain_noise_reset(priv);
-> @@ -5835,8 +5725,6 @@ static int iwl4965_pci_probe(struct pci_
->  static void __devexit iwl4965_pci_remove(struct pci_dev *pdev)
->  {
->        struct iwl_priv *priv = pci_get_drvdata(pdev);
-> -       struct list_head *p, *q;
-> -       int i;
->        unsigned long flags;
->
->        if (!priv)
-> @@ -5862,14 +5750,6 @@ static void __devexit iwl4965_pci_remove
->
->        iwl_synchronize_irq(priv);
->
-> -       /* Free MAC hash list for ADHOC */
-> -       for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
-> -               list_for_each_safe(p, q, &priv->ibss_mac_hash[i]) {
-> -                       list_del(p);
-> -                       kfree(list_entry(p, struct iwl4965_ibss_seq, list));
-> -               }
-> -       }
-> -
->        iwlcore_low_level_notify(priv, IWLCORE_REMOVE_EVT);
->        iwl_dbgfs_unregister(priv);
->        sysfs_remove_group(&pdev->dev.kobj, &iwl4965_attribute_group);
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-core.c     2008-05-22 10:37:40.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-core.c  2008-05-22 10:42:27.000000000 +0200
-> @@ -801,7 +801,6 @@ EXPORT_SYMBOL(iwl_setup_mac);
->  int iwl_init_drv(struct iwl_priv *priv)
->  {
->        int ret;
-> -       int i;
->
->        priv->retry_rate = 1;
->        priv->ibss_beacon = NULL;
-> @@ -812,9 +811,6 @@ int iwl_init_drv(struct iwl_priv *priv)
->        spin_lock_init(&priv->hcmd_lock);
->        spin_lock_init(&priv->lq_mngr.lock);
->
-> -       for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++)
-> -               INIT_LIST_HEAD(&priv->ibss_mac_hash[i]);
-> -
->        INIT_LIST_HEAD(&priv->free_frames);
->
->        mutex_init(&priv->mutex);
->
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Looks good to me. let me just repost it rebased over our latest code.
+This patch adds apm stop function for 4965 and 5000.
 
-Thanks
-Tomas
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   19 ++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   20 ++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ 3 files changed, 39 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 639ad50..378fd83 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -646,6 +646,22 @@ void iwl4965_hw_txq_ctx_stop(struct iwl_priv *priv)
+ 	iwl_hw_txq_ctx_free(priv);
+ }
+ 
++static void iwl4965_apm_stop(struct iwl_priv *priv)
++{
++	unsigned long flags;
++
++	iwl4965_hw_nic_stop_master(priv);
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++
++	udelay(10);
++
++	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	spin_unlock_irqrestore(&priv->lock, flags);
++}
++
+ static int iwl4965_apm_reset(struct iwl_priv *priv)
+ {
+ 	int ret = 0;
+@@ -662,6 +678,7 @@ static int iwl4965_apm_reset(struct iwl_priv *priv)
+ 	/* FIXME: put here L1A -L0S w/a */
+ 
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++
+ 	ret = iwl_poll_bit(priv, CSR_RESET,
+ 			  CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+ 			  CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25);
+@@ -693,7 +710,6 @@ out:
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	return ret;
+-
+ }
+ 
+ #define REG_RECALIB_PERIOD (60)
+@@ -3629,6 +3645,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.apm_ops = {
+ 		.init = iwl4965_apm_init,
+ 		.reset = iwl4965_apm_reset,
++		.stop = iwl4965_apm_stop,
+ 		.config = iwl4965_nic_config,
+ 		.set_pwr_src = iwl4965_set_pwr_src,
+ 	},
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 10054bd..27cfe3c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -100,6 +100,25 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	return ret;
+ }
+ 
++/* FIXME: this is indentical to 4965 */
++static void iwl5000_apm_stop(struct iwl_priv *priv)
++{
++	unsigned long flags;
++
++	iwl4965_hw_nic_stop_master(priv);
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++
++	udelay(10);
++
++	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++
++	spin_unlock_irqrestore(&priv->lock, flags);
++}
++
++
+ static int iwl5000_apm_reset(struct iwl_priv *priv)
+ {
+ 	int ret = 0;
+@@ -859,6 +878,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.apm_ops = {
+ 		.init =	iwl5000_apm_init,
+ 		.reset = iwl5000_apm_reset,
++		.stop = iwl5000_apm_stop,
+ 		.config = iwl5000_nic_config,
+ 		.set_pwr_src = iwl4965_set_pwr_src,
+ 	},
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 70cc9d3..916e0a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -125,6 +125,7 @@ struct iwl_lib_ops {
+ 	struct {
+ 		int (*init)(struct iwl_priv *priv);
+ 		int (*reset)(struct iwl_priv *priv);
++		void (*stop)(struct iwl_priv *priv);
+ 		void (*config)(struct iwl_priv *priv);
+ 		int (*set_pwr_src)(struct iwl_priv *priv, enum iwl_pwr_src src);
+ 	} apm_ops;
+-- 
+1.5.3.6
+
