@@ -1,143 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:47450 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763751AbYESV4X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 17:56:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add panic reason code that doesn't trigger restart
-Date: Mon, 19 May 2008 23:51:37 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805192351.38219.mb@bu3sch.de> (sfid-20080519_235630_483142_352D8E7A)
+Received: from mga14.intel.com ([143.182.124.37]:21636 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759854AbYEWCLw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:52 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: setup correctly L1 L0S pi link values
+Date: Fri, 23 May 2008 10:09:15 +0800
+Message-Id: <1211508569-3163-38-git-send-email-yi.zhu@intel.com> (sfid-20080523_042833_900805_57BF5CA4)
+In-Reply-To: <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a firmware panic reason code that doesn't trigger a restart.
-This is useful for firmware debugging and avoiding endless
-restart loops. We can use FWPANIC_DIE to halt the firmware at a
-well defined point.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+This patch setups L1 L0S pci link values.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |    7 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |   18 ++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |   19 ++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-csr.h     |    6 +++++-
+ 4 files changed, 39 insertions(+), 11 deletions(-)
 
-John, this is for 2.6.27
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index ee55b28..fc11833 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -100,9 +100,14 @@
+ 
+ #include "iwl-commands.h"
+ 
+-#define PCI_LINK_CTRL      0x0F0
++/* PCI registers */
++#define PCI_LINK_CTRL      0x0F0	/* 1 byte */
+ #define PCI_POWER_SOURCE   0x0C8
+ #define PCI_REG_WUM8       0x0E8
++
++/* PCI register values */
++#define PCI_LINK_VAL_L0S_EN	0x01
++#define PCI_LINK_VAL_L1_EN	0x02
+ #define PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT         (0x80000000)
+ 
+ #define TFD_QUEUE_SIZE_MAX      (256)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 547287c..02d3dc0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -500,6 +500,10 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
+ 
++	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
++			  CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
++
+ 	/* set "initialization complete" bit to move adapter
+ 	 * D0U* --> D0A* state */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+@@ -518,11 +522,12 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
+ 		goto out;
+ 
+ 	/* enable DMA */
+-	iwl_write_prph(priv, APMG_CLK_CTRL_REG,
+-			APMG_CLK_VAL_DMA_CLK_RQT | APMG_CLK_VAL_BSM_CLK_RQT);
++	iwl_write_prph(priv, APMG_CLK_CTRL_REG, APMG_CLK_VAL_DMA_CLK_RQT |
++						APMG_CLK_VAL_BSM_CLK_RQT);
+ 
+ 	udelay(20);
+ 
++	/* disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+ 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
+@@ -550,8 +555,13 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
+ 
+ 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
+ 
+-	/* disable L1 entry -- workaround for pre-B1 */
+-	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
++	/* L1 is enabled by BIOS */
++	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
++		/* diable L0S disabled L1A enabled */
++		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
++	else
++		/* L0S enabled L1A disabled */
++		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 
+ 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0355ccd..b1c5045 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -63,6 +63,10 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 		    CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
+ 
++	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
++		    CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
++
+ 	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
+ 
+ 	/* set "initialization complete" bit to move adapter
+@@ -83,13 +87,13 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 		return ret;
+ 
+ 	/* enable DMA */
+-	iwl_write_prph(priv, APMG_CLK_EN_REG,
+-			APMG_CLK_VAL_DMA_CLK_RQT);
++	iwl_write_prph(priv, APMG_CLK_EN_REG, APMG_CLK_VAL_DMA_CLK_RQT);
+ 
+ 	udelay(20);
+ 
++	/* disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+-			APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
++			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
+ 	iwl_release_nic_access(priv);
+ 
+@@ -106,8 +110,13 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+ 
+ 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
+ 
+-	/* disable L1 entry -- workaround for pre-B1 */
+-	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
++	/* L1 is enabled by BIOS */
++	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
++		/* diable L0S disabled L1A enabled */
++		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
++	else
++		/* L0S enabled L1A disabled */
++		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 
+ 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 9d6e5d2..545ed69 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -87,13 +87,14 @@
+ /* EEPROM reads */
+ #define CSR_EEPROM_REG          (CSR_BASE+0x02c)
+ #define CSR_EEPROM_GP           (CSR_BASE+0x030)
++#define CSR_GIO_REG		(CSR_BASE+0x03C)
+ #define CSR_GP_UCODE		(CSR_BASE+0x044)
+ #define CSR_UCODE_DRV_GP1       (CSR_BASE+0x054)
+ #define CSR_UCODE_DRV_GP1_SET   (CSR_BASE+0x058)
+ #define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
+ #define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
+-#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+ #define CSR_LED_REG             (CSR_BASE+0x094)
++#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+ 
+ /* Analog phase-lock-loop configuration  */
+ #define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
+@@ -213,6 +214,9 @@
+ #define CSR_EEPROM_GP_BAD_SIGNATURE	(0x00000000)
+ #define CSR_EEPROM_GP_IF_OWNER_MSK	(0x00000180)
+ 
++/* CSR GIO */
++#define CSR_GIO_REG_VAL_L0S_ENABLED	(0x00000002)
++
+ /* UCODE DRV GP */
+ #define CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP             (0x00000001)
+ #define CSR_UCODE_SW_BIT_RFKILL                     (0x00000002)
+-- 
+1.5.3.6
 
-
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-05-17 23:09:09.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-05-18 23:57:16.000000000 +0200
-@@ -419,18 +419,27 @@ enum {
- 					 B43_IRQ_TXFIFO_FLUSH_OK | \
- 					 B43_IRQ_NOISESAMPLE_OK | \
- 					 B43_IRQ_UCODE_DEBUG | \
- 					 B43_IRQ_RFKILL | \
- 					 B43_IRQ_TX_OK)
- 
-+/* The firmware register to fetch the debug-IRQ reason from. */
-+#define B43_DEBUGIRQ_REASON_REG		63
- /* Debug-IRQ reasons. */
- #define B43_DEBUGIRQ_PANIC		0	/* The firmware panic'ed */
- #define B43_DEBUGIRQ_DUMP_SHM		1	/* Dump shared SHM */
- #define B43_DEBUGIRQ_DUMP_REGS		2	/* Dump the microcode registers */
- #define B43_DEBUGIRQ_ACK		0xFFFF	/* The host writes that to ACK the IRQ */
- 
-+/* The firmware register to fetch the panic reason from. */
-+#define B43_FWPANIC_REASON_REG		3
-+/* Firmware panic reason codes */
-+#define B43_FWPANIC_DIE			0 /* Firmware died. Don't auto-restart it. */
-+#define B43_FWPANIC_RESTART		1 /* Firmware died. Schedule a controller reset. */
-+
-+
- /* Device specific rate values.
-  * The actual values defined here are (rate_in_mbps * 2).
-  * Some code depends on this. Don't change it. */
- #define B43_CCK_RATE_1MB		0x02
- #define B43_CCK_RATE_2MB		0x04
- #define B43_CCK_RATE_5MB		0x0B
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-05-17 23:33:15.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-05-19 00:02:01.000000000 +0200
-@@ -1661,31 +1661,52 @@ static void b43_set_beacon_int(struct b4
- 		b43_write16(dev, 0x610, beacon_int);
- 	}
- 	b43_time_unlock(dev);
- 	b43dbg(dev->wl, "Set beacon interval to %u\n", beacon_int);
- }
- 
-+static void b43_handle_firmware_panic(struct b43_wldev *dev)
-+{
-+	u16 reason;
-+
-+	/* Read the register that contains the reason code for the panic. */
-+	reason = b43_shm_read16(dev, B43_SHM_SCRATCH, B43_FWPANIC_REASON_REG);
-+	b43err(dev->wl, "Whoopsy, firmware panic! Reason: %u\n", reason);
-+
-+	switch (reason) {
-+	default:
-+		b43dbg(dev->wl, "The panic reason is unknown.\n");
-+		/* fallthrough */
-+	case B43_FWPANIC_DIE:
-+		/* Do not restart the controller or firmware.
-+		 * The device is nonfunctional from now on.
-+		 * Restarting would result in this panic to trigger again,
-+		 * so we avoid that recursion. */
-+		break;
-+	case B43_FWPANIC_RESTART:
-+		b43_controller_restart(dev, "Microcode panic");
-+		break;
-+	}
-+}
-+
- static void handle_irq_ucode_debug(struct b43_wldev *dev)
- {
- 	unsigned int i, cnt;
- 	u16 reason;
- 	__le16 *buf;
- 
- 	/* The proprietary firmware doesn't have this IRQ. */
- 	if (!dev->fw.opensource)
- 		return;
- 
--	/* Microcode register 63 contains the debug-IRQ reason. */
--	reason = b43_shm_read16(dev, B43_SHM_SCRATCH, 63);
-+	/* Read the register that contains the reason code for this IRQ. */
-+	reason = b43_shm_read16(dev, B43_SHM_SCRATCH, B43_DEBUGIRQ_REASON_REG);
-+
- 	switch (reason) {
- 	case B43_DEBUGIRQ_PANIC:
--		/* The reason for the panic is in register 3. */
--		reason = b43_shm_read16(dev, B43_SHM_SCRATCH, 3);
--		b43err(dev->wl, "Whoopsy, the microcode panic'ed! Reason: %u\n",
--		       reason);
--		b43_controller_restart(dev, "Microcode panic");
-+		b43_handle_firmware_panic(dev);
- 		break;
- 	case B43_DEBUGIRQ_DUMP_SHM:
- 		if (!B43_DEBUG)
- 			break; /* Only with driver debugging enabled. */
- 		buf = kmalloc(4096, GFP_ATOMIC);
- 		if (!buf) {
-@@ -1720,13 +1741,15 @@ static void handle_irq_ucode_debug(struc
- 		break;
- 	default:
- 		b43dbg(dev->wl, "Debug-IRQ triggered for unknown reason: %u\n",
- 		       reason);
- 	}
- out:
--	b43_shm_write16(dev, B43_SHM_SCRATCH, 63, B43_DEBUGIRQ_ACK);
-+	/* Acknowledge the debug-IRQ, so the firmware can continue. */
-+	b43_shm_write16(dev, B43_SHM_SCRATCH,
-+			B43_DEBUGIRQ_REASON_REG, B43_DEBUGIRQ_ACK);
- }
- 
- /* Interrupt handler bottom-half */
- static void b43_interrupt_tasklet(struct b43_wldev *dev)
- {
- 	u32 reason;
