@@ -1,59 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:61974 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbYEaU3O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 16:29:14 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so313126wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 13:29:13 -0700 (PDT)
-Message-ID: <69e28c910805311329v8f29c42mbb97ab553cc6e96c@mail.gmail.com> (sfid-20080531_222917_244646_989CA888)
-Date: Sat, 31 May 2008 22:29:13 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Cc: "Michael Buesch" <mb@bu3sch.de>, "Pavel Roskin" <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1212265322.7672.2.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
-	 <200805311841.46740.mb@bu3sch.de> <1212252636.2766.10.camel@rd>
-	 <200805311954.46639.mb@bu3sch.de>
-	 <1212265322.7672.2.camel@johannes.berg>
+Received: from mga14.intel.com ([143.182.124.37]:42800 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759297AbYEWCLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:30 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: iwl5000 WiFi/WiMax coexistence
+Date: Fri, 23 May 2008 10:09:00 +0800
+Message-Id: <1211508569-3163-23-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_030687_A052D849)
+In-Reply-To: <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 31, 2008 at 10:22 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2008-05-31 at 19:54 +0200, Michael Buesch wrote:
->> On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
->> > On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
->> > > On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
->> > > > "BUG: unable to handle kernel NULL pointer dereference at 0000=
-0004
->> > > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
->> > >
->> > > So can you put a few printks into the function to see where it d=
-ereferences
->> > > a NULL pointer? (or use gdb to lookup the offset).
->> >
->> > u8 key_idx =3D info->control.hw_key->hw_key_idx;
->> >
->> > info->control.hw_key is NULL.
->>
->> Is a NULL pointer supposed to tell "do not encrypt", or is this a ma=
-c80211 bug?
->
-> It's probably a bug.
->
-> johannes
->
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Should we assume that it's the first key if it happens?
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch adds WiFi/WiMax coexistence to iwl5000.
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   12 ++++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   54 +++++++++++++++++++++++++++
+ 2 files changed, 66 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5e818ee..520c7ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -494,6 +494,16 @@ static void iwl5000_tx_queue_set_status(struct iwl_priv *priv,
+ 		       scd_retry ? "BA" : "AC", txq_id, tx_fifo_id);
+ }
+ 
++static int iwl5000_send_wimax_coex(struct iwl_priv *priv)
++{
++	struct iwl_wimax_coex_cmd coex_cmd;
++
++	memset(&coex_cmd, 0, sizeof(coex_cmd));
++
++	return iwl_send_cmd_pdu(priv, COEX_PRIORITY_TABLE_CMD,
++				sizeof(coex_cmd), &coex_cmd);
++}
++
+ static int iwl5000_alive_notify(struct iwl_priv *priv)
+ {
+ 	u32 a;
+@@ -568,6 +578,8 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
+ 	iwl_release_nic_access(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	iwl5000_send_wimax_coex(priv);
++
+ 	/* Ask for statistics now, the uCode will send notification
+ 	 * periodically after association */
+ 	iwl_send_statistics_request(priv, CMD_ASYNC);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index dd84326..5b9e9bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -93,6 +93,11 @@ enum {
+ 	REPLY_LEDS_CMD = 0x48,
+ 	REPLY_TX_LINK_QUALITY_CMD = 0x4e, /* 4965 only */
+ 
++	/* WiMAX coexistence */
++	COEX_PRIORITY_TABLE_CMD = 0x5a,	/*5000 only */
++	COEX_MEDIUM_NOTIFICATION = 0x5b,
++	COEX_EVENT_CMD = 0x5c,
++
+ 	/* 802.11h related */
+ 	RADAR_NOTIFICATION = 0x70,	/* not used */
+ 	REPLY_QUIET_CMD = 0x71,		/* not used */
+@@ -2797,6 +2802,55 @@ struct iwl4965_led_cmd {
+ 	u8 reserved;
+ } __attribute__ ((packed));
+ 
++/*
++ * Coexistence WIFI/WIMAX  Command
++ * COEX_PRIORITY_TABLE_CMD = 0x5a
++ *
++ */
++enum {
++	COEX_UNASSOC_IDLE		= 0,
++	COEX_UNASSOC_MANUAL_SCAN	= 1,
++	COEX_UNASSOC_AUTO_SCAN		= 2,
++	COEX_CALIBRATION		= 3,
++	COEX_PERIODIC_CALIBRATION	= 4,
++	COEX_CONNECTION_ESTAB		= 5,
++	COEX_ASSOCIATED_IDLE		= 6,
++	COEX_ASSOC_MANUAL_SCAN		= 7,
++	COEX_ASSOC_AUTO_SCAN		= 8,
++	COEX_ASSOC_ACTIVE_LEVEL		= 9,
++	COEX_RF_ON			= 10,
++	COEX_RF_OFF			= 11,
++	COEX_STAND_ALONE_DEBUG		= 12,
++	COEX_IPAN_ASSOC_LEVEL		= 13,
++	COEX_RSRVD1			= 14,
++	COEX_RSRVD2			= 15,
++	COEX_NUM_OF_EVENTS		= 16
++};
++
++struct iwl_wimax_coex_event_entry {
++	u8 request_prio;
++	u8 win_medium_prio;
++	u8 reserved;
++	u8 flags;
++} __attribute__ ((packed));
++
++/* COEX flag masks */
++
++/* Staion table is valid */
++#define COEX_FLAGS_STA_TABLE_VALID_MSK      (0x1)
++/* UnMask wakeup src at unassociated sleep */
++#define COEX_FLAGS_UNASSOC_WA_UNMASK_MSK    (0x4)
++/* UnMask wakeup src at associated sleep */
++#define COEX_FLAGS_ASSOC_WA_UNMASK_MSK      (0x8)
++/* Enable CoEx feature. */
++#define COEX_FLAGS_COEX_ENABLE_MSK          (0x80)
++
++struct iwl_wimax_coex_cmd {
++	u8 flags;
++	u8 reserved[3];
++	struct iwl_wimax_coex_event_entry sta_prio[COEX_NUM_OF_EVENTS];
++} __attribute__ ((packed));
++
+ /******************************************************************************
+  * (13)
+  * Union of all expected notifications/responses:
+-- 
+1.5.3.6
+
