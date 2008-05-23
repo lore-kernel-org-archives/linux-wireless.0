@@ -1,81 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764945AbYEFJSA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 05:18:00 -0400
-Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU
-	SW queue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com> (sfid-20080506_110823_078106_5D0EDF31)
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
-	 (sfid-20080506_110823_078106_5D0EDF31)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cZU7JU+Fnt2v/Jsf3k1K"
-Date: Tue, 06 May 2008 11:16:56 +0200
-Message-Id: <1210065416.8012.56.camel@johannes.berg> (sfid-20080506_111731_516887_C43643ED)
+Received: from mga02.intel.com ([134.134.136.20]:28447 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752182AbYEWRqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 13:46:08 -0400
+Subject: Re: [PATCH] mac80211 : Fixes the status message for iwconfig
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Reply-To: abhijeet.kolekar@intel.com
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1211564362.31559.45.camel@localhost.localdomain>
+References: <1211562926905-git-send-email-abhijeet.kolekar@intel.com>
+	 <1211564362.31559.45.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 23 May 2008 10:44:00 -0700
+Message-Id: <1211564640.15162.1.camel@abhi-desktop> (sfid-20080523_194613_523948_37BBC048)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-cZU7JU+Fnt2v/Jsf3k1K
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-05-06 at 12:09 +0300, Tomas Winkler wrote:
-> On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> >
-> >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introd=
-uced
-> >  in patch "mac80211: QoS related cleanups"), when trying to perform
-> >  ieee80211_wake_queue.
-> >
-> >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> >
->=20
-> Is this going to make it to 2.6.26?
-> Without this it will be hard to run 5000 under 2.6.26 as is.
-
-The referenced QoS cleanup patch isn't in 2.6.26 is it?
-
-johannes
-
---=-cZU7JU+Fnt2v/Jsf3k1K
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCAiB6Vg1VMiehFYAQJ5mBAAhBCUUAdZHqRBfS1of2iKqzED5tRYo8rb
-e4/CqxvRGw9evB4jX2xXa3SZVVOlztIel3X4BBB8tGh4D8BCSNcKGUYdFh12P646
-q/IsraWvLS4OfSP1f7WPp3glaz1MUnEzL6lM7TBckHzs5Tt8zR1kCWcpNGTsTRoE
-UKuBOsLu3t+J2zCPOWPivDNMLLV5wGNpdldlWQiimMgqWl0T67y5gMgQuIkAqjBo
-nYcMS8VG4C5TciqHgV5STB8729m5pAjcHzwLln2vEYYFj9DxfhsuIzwhxh9LKtmC
-sADZtiMMzjX1BpLh2Dl5Hoy72xf9FMirIShcZhCP6XgMxfaVcfIYQGtPDAUJaJ+F
-X/4rgNzMz5FSm+oZ+nGc7qWDyVpjpeoeTpXltFdRPBgWYNqCxjlPJKOR354+B1d4
-Cc2H58GAxf8nEpTN+vzA/+BYX3IhqaMxdvsNurOUK3GyxjNAYXw1vfXsA/SOCrye
-eFylVqxpyxacv6QCliY19YGWAR2X9l94GzQ3mQt3p+MDvotEX9D8o4HzwRu6Nsz/
-5R+qpkAooHVd638i305cK5pUQZyKs4z0cAsR7+hD63Zq5eNp4kU9Z7D70bSMLEap
-dtmhBITXRUzAU6rPo7e9BlUkxehbqQ1Hwnx2ekr1yhUoCYTJE3mwtXq3lxqmKMWe
-8O4aQulG3yU=
-=ojS7
------END PGP SIGNATURE-----
-
---=-cZU7JU+Fnt2v/Jsf3k1K--
-
+On Fri, 2008-23-05 at 13:39 -0400, Dan Williams wrote:
+> On Fri, 2008-05-23 at 10:15 -0700, Abhijeet Kolekar wrote:
+> > iwconfig was showing incorrect status messages when disassociated.
+> > Patch fixes this by always checking for association status in 
+> > ioctl calls for getting ap address.
+> > 
+> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> 
+> I may not remember correctly, but I think you need to also report the
+> BSSID being associated with during assoc & auth stages with WEXT.  So
+> the right check here is to return nothing if _disassocated_, but
+> otherwise return the BSSID that's currently pending or associated with. 
+> 
+> Dan
+One question though, Do we need to report similar things with essid or
+WEXT will always return the essid regardless of the state.
+> 
+> > ---
+> >  net/mac80211/wext.c |   11 ++++++++---
+> >  1 files changed, 8 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+> > index c2e2378..1a35562 100644
+> > --- a/net/mac80211/wext.c
+> > +++ b/net/mac80211/wext.c
+> > @@ -501,9 +501,14 @@ static int ieee80211_ioctl_giwap(struct net_device *dev,
+> >  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> >  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+> >  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+> > -		ap_addr->sa_family = ARPHRD_ETHER;
+> > -		memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> > -		return 0;
+> > +		if (sdata->u.sta.state == IEEE80211_ASSOCIATED) {
+> > +			ap_addr->sa_family = ARPHRD_ETHER;
+> > +			memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
+> > +			return 0;
+> > +		} else {
+> > +			memset(&ap_addr->sa_data, 0, ETH_ALEN);
+> > +			return 0;
+> > +		}
+> >  	} else if (sdata->vif.type == IEEE80211_IF_TYPE_WDS) {
+> >  		ap_addr->sa_family = ARPHRD_ETHER;
+> >  		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
+> 
