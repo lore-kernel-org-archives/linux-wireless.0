@@ -1,105 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:39146 "EHLO ms5.sony.co.jp"
+Received: from c60.cesmail.net ([216.154.195.49]:58924 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324AbYE3HxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 03:53:04 -0400
-Received: from mta5.sony.co.jp (mta5.Sony.CO.JP [137.153.71.6])
- by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7r0w1019234
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
-Received: from mta5.sony.co.jp (localhost [127.0.0.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7r09A027016
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7r0Rc027004
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
-Date: Fri, 30 May 2008 16:52:55 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] PS3: gelic: Deprecate the private ioctls in the gelic driver
-Cc: geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
-References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
-Message-Id: <20080530164650.4750.40F06B3A@sm.sony.co.jp> (sfid-20080530_095308_175845_2F08E58E)
+	id S1757193AbYEWByz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 21:54:55 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 3/5] hostap: remove private "monitor" ioctl
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>
+Date: Thu, 22 May 2008 21:54:54 -0400
+Message-ID: <20080523015454.16636.44068.stgit@dv.roinet.com> (sfid-20080523_035457_755875_532C60C7)
+In-Reply-To: <20080523015442.16636.92254.stgit@dv.roinet.com>
+References: <20080523015442.16636.92254.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the driver has the standard way to handle PSK, deprecate the old
-interface.
+This is an ioctl obsoleted by the monitor mode years ago.  Using it
+would trigger a deprecation warning.  As the wireless drivers
+standardize on the radiotap standard, the "monitor" ioctl cannot be
+preserved to work as obsolete software expects.
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/Kconfig              |   13 +++++++++++++
- drivers/net/ps3_gelic_wireless.c |    6 ++++++
- 2 files changed, 19 insertions(+)
 
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -2297,6 +2297,19 @@ config GELIC_WIRELESS
- 	  the driver automatically distinguishes the models, you can
- 	  safely enable this option even if you have a wireless-less model.
+ drivers/net/wireless/hostap/hostap_common.h |    2 +
+ drivers/net/wireless/hostap/hostap_ioctl.c  |   53 ---------------------------
+ 2 files changed, 1 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_common.h b/drivers/net/wireless/hostap/hostap_common.h
+index b470c74..2f92ecd 100644
+--- a/drivers/net/wireless/hostap/hostap_common.h
++++ b/drivers/net/wireless/hostap/hostap_common.h
+@@ -239,7 +239,7 @@ struct hfa384x_comms_quality {
+ #define PRISM2_IOCTL_GET_PRISM2_PARAM (SIOCIWFIRSTPRIV + 1)
+ #define PRISM2_IOCTL_WRITEMIF (SIOCIWFIRSTPRIV + 2)
+ #define PRISM2_IOCTL_READMIF (SIOCIWFIRSTPRIV + 3)
+-#define PRISM2_IOCTL_MONITOR (SIOCIWFIRSTPRIV + 4)
++/* #define PRISM2_IOCTL_MONITOR (SIOCIWFIRSTPRIV + 4) */
+ #define PRISM2_IOCTL_RESET (SIOCIWFIRSTPRIV + 6)
+ #define PRISM2_IOCTL_INQUIRE (SIOCIWFIRSTPRIV + 8)
+ #define PRISM2_IOCTL_WDS_ADD (SIOCIWFIRSTPRIV + 10)
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index 0ca0bfe..7dc8392 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -2124,8 +2124,6 @@ static int prism2_ioctl_giwscan(struct net_device *dev,
  
-+config GELIC_WIRELESS_OLD_PSK_INTERFACE
-+       bool "PS3 Wireless private PSK interface (OBSOLETE)"
-+       depends on GELIC_WIRELESS
-+       help
-+          This option retains the obsolete private interface to pass
-+          the PSK from user space programs to the driver.  The PSK
-+          stands for 'Pre Shared Key' and is used for WPA[2]-PSK
-+          (WPA-Personal) environment.
-+          If WPA[2]-PSK is used and you need to use old programs that
-+          support only this old interface, say Y.  Otherwise N.
-+
-+          If unsure, say N.
-+
- config GIANFAR
- 	tristate "Gianfar Ethernet"
- 	depends on FSL_SOC
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -1375,6 +1375,7 @@ static int gelic_wl_get_mode(struct net_
- 	return 0;
+ 
+ static const struct iw_priv_args prism2_priv[] = {
+-	{ PRISM2_IOCTL_MONITOR,
+-	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, 0, "monitor" },
+ 	{ PRISM2_IOCTL_READMIF,
+ 	  IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1,
+ 	  IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1, "readmif" },
+@@ -2907,52 +2905,6 @@ static int prism2_ioctl_priv_writemif(struct net_device *dev,
  }
  
-+#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
- /* SIOCIWFIRSTPRIV */
- static int hex2bin(u8 *str, u8 *bin, unsigned int len)
+ 
+-static int prism2_ioctl_priv_monitor(struct net_device *dev, int *i)
+-{
+-	struct hostap_interface *iface;
+-	local_info_t *local;
+-	int ret = 0;
+-	u32 mode;
+-
+-	iface = netdev_priv(dev);
+-	local = iface->local;
+-
+-	printk(KERN_DEBUG "%s: process %d (%s) used deprecated iwpriv monitor "
+-	       "- update software to use iwconfig mode monitor\n",
+-	       dev->name, task_pid_nr(current), current->comm);
+-
+-	/* Backward compatibility code - this can be removed at some point */
+-
+-	if (*i == 0) {
+-		/* Disable monitor mode - old mode was not saved, so go to
+-		 * Master mode */
+-		mode = IW_MODE_MASTER;
+-		ret = prism2_ioctl_siwmode(dev, NULL, &mode, NULL);
+-	} else if (*i == 1) {
+-		/* netlink socket mode is not supported anymore since it did
+-		 * not separate different devices from each other and was not
+-		 * best method for delivering large amount of packets to
+-		 * user space */
+-		ret = -EOPNOTSUPP;
+-	} else if (*i == 2 || *i == 3) {
+-		switch (*i) {
+-		case 2:
+-			local->monitor_type = PRISM2_MONITOR_80211;
+-			break;
+-		case 3:
+-			local->monitor_type = PRISM2_MONITOR_PRISM;
+-			break;
+-		}
+-		mode = IW_MODE_MONITOR;
+-		ret = prism2_ioctl_siwmode(dev, NULL, &mode, NULL);
+-		hostap_monitor_mode_enable(local);
+-	} else
+-		ret = -EINVAL;
+-
+-	return ret;
+-}
+-
+-
+ static int prism2_ioctl_priv_reset(struct net_device *dev, int *i)
  {
-@@ -1479,6 +1480,7 @@ static int gelic_wl_priv_get_psk(struct 
- 	pr_debug("%s:-> %d\n", __func__, data->data.length);
- 	return 0;
- }
-+#endif
+ 	struct hostap_interface *iface;
+@@ -4004,11 +3956,6 @@ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ 		else ret = prism2_ioctl_priv_inquire(dev, (int *) wrq->u.name);
+ 		break;
  
- /* SIOCGIWNICKN */
- static int gelic_wl_get_nick(struct net_device *net_dev,
-@@ -2329,6 +2331,7 @@ static const iw_handler gelic_wl_wext_ha
- 	IW_IOCTL(SIOCGIWNICKN)		= gelic_wl_get_nick,
- };
- 
-+#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
- static struct iw_priv_args gelic_wl_private_args[] =
- {
- 	{
-@@ -2350,15 +2353,18 @@ static const iw_handler gelic_wl_private
- 	gelic_wl_priv_set_psk,
- 	gelic_wl_priv_get_psk,
- };
-+#endif
- 
- static const struct iw_handler_def gelic_wl_wext_handler_def = {
- 	.num_standard		= ARRAY_SIZE(gelic_wl_wext_handler),
- 	.standard		= gelic_wl_wext_handler,
- 	.get_wireless_stats	= gelic_wl_get_wireless_stats,
-+#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
- 	.num_private		= ARRAY_SIZE(gelic_wl_private_handler),
- 	.num_private_args	= ARRAY_SIZE(gelic_wl_private_args),
- 	.private		= gelic_wl_private_handler,
- 	.private_args		= gelic_wl_private_args,
-+#endif
- };
- 
- static struct net_device *gelic_wl_alloc(struct gelic_card *card)
-
+-	case PRISM2_IOCTL_MONITOR:
+-		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
+-		else ret = prism2_ioctl_priv_monitor(dev, (int *) wrq->u.name);
+-		break;
+-
+ 	case PRISM2_IOCTL_RESET:
+ 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
+ 		else ret = prism2_ioctl_priv_reset(dev, (int *) wrq->u.name);
