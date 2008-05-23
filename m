@@ -1,87 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754170AbYEFJiu (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:8337 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbYEWOFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 05:38:50 -0400
-Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU
-	SW queue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Fri, 23 May 2008 10:05:23 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
 	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com> (sfid-20080506_111043_286335_9ED98D33)
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
-	 <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com>
-	 (sfid-20080506_111043_286335_9ED98D33)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0VauDyUhEheDM74yUYBn"
-Date: Tue, 06 May 2008 11:38:08 +0200
-Message-Id: <1210066688.8012.75.camel@johannes.berg> (sfid-20080506_113803_164790_8A4B5313)
-Mime-Version: 1.0
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH, take 2] libertas: fix compact flash interrupt handling
+Date: Fri, 23 May 2008 16:05:04 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200805231605.04168.hs4233@mail.mn-solutions.de> (sfid-20080523_160525_646666_BBD539FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[PATCH] libertas: fix compact flash interrupt handling
 
---=-0VauDyUhEheDM74yUYBn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The old code misbehaved because it polled card status and always
+called the "tx over" code-path.
 
-On Tue, 2008-05-06 at 12:11 +0300, Tomas Winkler wrote:
-> On Tue, May 6, 2008 at 12:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> > On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> >  > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> >  >
-> >  >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as int=
-roduced
-> >  >  in patch "mac80211: QoS related cleanups"), when trying to perform
-> >  >  ieee80211_wake_queue.
-> >  >
-> >  >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> >  >
-> >
-> >  Is this going to make it to 2.6.26?
-> >  Without this it will be hard to run 5000 under 2.6.26 as is.
->=20
-> I meant 'QoS related cleanups'
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Oh. No, I don't think so, unless you can somehow sell it to Linus as a
-bugfix ;)
-
-Disable the 5000 in that kernel and make people use compat?
-
-johannes
-
---=-0VauDyUhEheDM74yUYBn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCAm/6Vg1VMiehFYAQL2ug//bzhJO5Vf+6qlHT6me1qUy/Dt/D2/fSE6
-xj28q+ume25ZkTjaTENcF1RccXzX0IdndPra3emQ3icqjpbAdAqSOMBHEJi+Qtyz
-KIZl5EOxwgIpwYmRhWbfJlbyFW6SfcDNuCvRDzomI5kjalVx3PJBcepRVN9kdIMY
-WzDrltA1mzV6jjEyP9BkZq7k1ysyAqIi1wVM7xZj/860BvTkxczhVFLkDeZccdmr
-qmR1wsP4r6mdLBhBsAz7/Zei7id279Ofmy9mnFVeE85emb6/VV7RmTmsaDw4XLmp
-aluKzLmXB7xk20r/pXnfqh7f6/7xl6UsuFJf9FwcKNkMlYWwvLd7LZUIZnXzB2s6
-VV1R4Te7bHqH/01EnFqBzPU8+draJQa/Wfa+XJk/gfJz42iDxfb8B/vJTM04mrqC
-v9BONRUh08N708GjiIX4ULpLsuS+zsWoJc5YXcuKbCFwC5lAr5nH6yAPi9YCT1hz
-xFYV4099TpyYRlRyzHfvaRIj5/D5xk4KU1WeLo4Y3TLOhmJZO2UhONaOWQ9k+TGN
-j2WwydKG0vMqkFc3pc40YM8RNQxhSJ70XeDMoe1XNdupjEMb80Cu12+I3UhFxqeT
-2Y0hC0nLASOthHkmadr2VbMm/7x1yybPy30wdfyuAgrA68cN1F8SMr2RYsq55Zl/
-cjUhPD0LO14=
-=m1Cs
------END PGP SIGNATURE-----
-
---=-0VauDyUhEheDM74yUYBn--
-
+Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-05-23 14:24:52.000000000 +0200
++++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-05-23 14:34:49.000000000 +0200
+@@ -394,10 +394,8 @@ static irqreturn_t if_cs_interrupt(int i
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
++	/* Ask card interrupt cause register if there is something for us */
+ 	cause = if_cs_read16(card, IF_CS_C_INT_CAUSE);
+-	if_cs_write16(card, IF_CS_C_INT_CAUSE, cause & IF_CS_C_IC_MASK);
+-
+-	lbs_deb_cs("cause 0x%04x\n", cause);
+ 	if (cause == 0) {
+ 		/* Not for us */
+ 		return IRQ_NONE;
+@@ -409,9 +407,9 @@ static irqreturn_t if_cs_interrupt(int i
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	/* TODO: I'm not sure what the best ordering is */
+-
+-	cause = if_cs_read16(card, IF_CS_C_STATUS) & IF_CS_C_S_MASK;
++	/* Clear interrupt cause */
++	if_cs_write16(card, IF_CS_C_INT_CAUSE, cause & IF_CS_C_IC_MASK);
++	lbs_deb_cs("cause 0x%04x\n", cause);
+ 
+ 	if (cause & IF_CS_C_S_RX_UPLD_RDY) {
+ 		struct sk_buff *skb;
+@@ -422,7 +420,7 @@ static irqreturn_t if_cs_interrupt(int i
+ 	}
+ 
+ 	if (cause & IF_CS_H_IC_TX_OVER) {
+-		lbs_deb_cs("tx over\n");
++		lbs_deb_cs("tx done\n");
+ 		lbs_host_to_card_done(priv);
+ 	}
+ 
+@@ -430,7 +428,7 @@ static irqreturn_t if_cs_interrupt(int i
+ 		unsigned long flags;
+ 		u8 i;
+ 
+-		lbs_deb_cs("cmd upload ready\n");
++		lbs_deb_cs("cmd resp\n");
+ 		spin_lock_irqsave(&priv->driver_lock, flags);
+ 		i = (priv->resp_idx == 0) ? 1 : 0;
+ 		spin_unlock_irqrestore(&priv->driver_lock, flags);
+@@ -445,14 +443,17 @@ static irqreturn_t if_cs_interrupt(int i
+ 	}
+ 
+ 	if (cause & IF_CS_H_IC_HOST_EVENT) {
+-		u16 event = if_cs_read16(priv->card, IF_CS_C_STATUS)
++		u16 status;
++		lbs_deb_cs("host event\n");
++		status = if_cs_read16(priv->card, IF_CS_C_STATUS)
+ 			& IF_CS_C_S_STATUS_MASK;
++		lbs_deb_cs("card status 0x%04x\n", status);
+ 		if_cs_write16(priv->card, IF_CS_H_INT_CAUSE,
+ 			IF_CS_H_IC_HOST_EVENT);
+-		lbs_deb_cs("eventcause 0x%04x\n", event);
+-		lbs_queue_event(priv, event >> 8 & 0xff);
++		lbs_queue_event(priv, status >> 8 & 0xff);
+ 	}
+ 
++	lbs_deb_leave(LBS_DEB_CS);
+ 	return IRQ_HANDLED;
+ }
+ 
