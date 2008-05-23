@@ -1,55 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc1-s7.bay0.hotmail.com ([65.54.246.79]:46492 "EHLO
-	bay0-omc1-s7.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752929AbYECT3F convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 15:29:05 -0400
-Message-ID: <BAY113-W2833B83671CFA44686489584D50@phx.gbl> (sfid-20080503_212848_532835_DD93E23E)
-From: Scott White <nwi_sub@hotmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: Please pull 'upstream' branch of rt2x00
-Date: Sat, 3 May 2008 14:29:04 -0500
-In-Reply-To: <200805022325.38311.IvDoorn@gmail.com>
-References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
- <200805022325.38311.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759406AbYEWCLh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:37 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: move iwl_dump_nic_error_log to iwlcore module
+Date: Fri, 23 May 2008 10:09:05 +0800
+Message-Id: <1211508569-3163-28-git-send-email-yi.zhu@intel.com> (sfid-20080523_042834_839170_27AB91E6)
+In-Reply-To: <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ester Kummer <ester.kummer@intel.com>
 
-> To: nwi_sub@hotmail.com
-> Subject: Re: Please pull 'upstream' branch of rt2x00
-> Date: Fri, 2 May 2008 23:25:38 +0200
-> CC: linux-wireless@vger.kernel.org
-> From: ivdoorn@gmail.com
->
-> On Friday 02 May 2008, Scott White wrote:
->>
->>>Was this patch series in time for the 2.6.26 merge window?
->>>
->>>If not, please consider merging at least the following patches since
->>>they are real bugfixes:
->>>
->>>> rt2x00: Don't enable short preamble for 1MBs
->>>> rt2x00: Fix quality/activity led handling
->>>> rt2x00: Clarify supported chipsets in Kconfig
->>>
->>>The others are code cleanups which are "nice to have", but could otherwise
->>>wait for 2.6.27.
->>
->> The merge window is still open at this time. I haven't seen a rc1 yet. Anyway I saw that only the 3 bugfixes are currently in the queue. As the owner of several (10 by the university and 2 personal) rt73 usb wireless cards, I would really like it if the latest version 2.1.5 made into 2.6.26. As someone who has used 2.6.24 and finished compiling 2.6.25 two days ago I find that the driver in both kernels is not good. Not good means I get a wireless signal and I get data transfers, but the speed fluctuates and have other issues. However with each release, the problems I have are slowing decreasing. I have been waiting patiently for 2.6.25-rc1 to have 2.1.5 since 2.1.5 was announced. I really think all of 2.1.5 should get in 2.6.25-rc1.
->
-> Have you tried forcing the rate to 54Mbit instead of letting the rate selection algorithm doing its work?
-> It seems to have helped with several other users.
->
-> Ivo
+This patch moves the function iwl_dump_nic_error_log to iwlcore.
+Remove sysfs entry it cannot be really triggered.
 
-No I haven't tried that.  However I have 54Mbit (g) at home, but only 11Mbit (b only) at work.  I guess I would have to change the rate when I change locations.
+Signed-off-by: Ester Kummer <ester.kummer@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   72 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   87 +--------------------------
+ 3 files changed, 74 insertions(+), 86 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 7e25ca4..785396f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1056,6 +1056,78 @@ int iwl_verify_ucode(struct iwl_priv *priv)
+ EXPORT_SYMBOL(iwl_verify_ucode);
+ 
+ 
++static const char *desc_lookup(int i)
++{
++	switch (i) {
++	case 1:
++		return "FAIL";
++	case 2:
++		return "BAD_PARAM";
++	case 3:
++		return "BAD_CHECKSUM";
++	case 4:
++		return "NMI_INTERRUPT";
++	case 5:
++		return "SYSASSERT";
++	case 6:
++		return "FATAL_ERROR";
++	}
++
++	return "UNKNOWN";
++}
++
++#define ERROR_START_OFFSET  (1 * sizeof(u32))
++#define ERROR_ELEM_SIZE     (7 * sizeof(u32))
++
++void iwl_dump_nic_error_log(struct iwl_priv *priv)
++{
++	u32 data2, line;
++	u32 desc, time, count, base, data1;
++	u32 blink1, blink2, ilink1, ilink2;
++	int rc;
++
++	base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
++
++	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
++		IWL_ERROR("Not valid error log pointer 0x%08X\n", base);
++		return;
++	}
++
++	rc = iwl_grab_nic_access(priv);
++	if (rc) {
++		IWL_WARNING("Can not read from adapter at this time.\n");
++		return;
++	}
++
++	count = iwl_read_targ_mem(priv, base);
++
++	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
++		IWL_ERROR("Start IWL Error Log Dump:\n");
++		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
++	}
++
++	desc = iwl_read_targ_mem(priv, base + 1 * sizeof(u32));
++	blink1 = iwl_read_targ_mem(priv, base + 3 * sizeof(u32));
++	blink2 = iwl_read_targ_mem(priv, base + 4 * sizeof(u32));
++	ilink1 = iwl_read_targ_mem(priv, base + 5 * sizeof(u32));
++	ilink2 = iwl_read_targ_mem(priv, base + 6 * sizeof(u32));
++	data1 = iwl_read_targ_mem(priv, base + 7 * sizeof(u32));
++	data2 = iwl_read_targ_mem(priv, base + 8 * sizeof(u32));
++	line = iwl_read_targ_mem(priv, base + 9 * sizeof(u32));
++	time = iwl_read_targ_mem(priv, base + 11 * sizeof(u32));
++
++	IWL_ERROR("Desc        Time       "
++		"data1      data2      line\n");
++	IWL_ERROR("%-13s (#%d) %010u 0x%08X 0x%08X %u\n",
++		desc_lookup(desc), desc, time, data1, data2, line);
++	IWL_ERROR("blink1  blink2  ilink1  ilink2\n");
++	IWL_ERROR("0x%05X 0x%05X 0x%05X 0x%05X\n", blink1, blink2,
++		ilink1, ilink2);
++
++	iwl_release_nic_access(priv);
++}
++EXPORT_SYMBOL(iwl_dump_nic_error_log);
++
+ #define EVENT_START_OFFSET  (4 * sizeof(u32))
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a8d062f..e75bf34 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -238,6 +238,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
+ ******************************************************/
+ void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 			 u32 num_events, u32 mode);
++void iwl_dump_nic_error_log(struct iwl_priv *priv);
+ void iwl_dump_nic_event_log(struct iwl_priv *priv);
+ 
+ /*************** DRIVER STATUS FUNCTIONS   *****/
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 48c59cb..038eea0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2621,76 +2621,6 @@ static inline void iwl4965_disable_interrupts(struct iwl_priv *priv)
+ 	IWL_DEBUG_ISR("Disabled interrupts\n");
+ }
+ 
+-static const char *desc_lookup(int i)
+-{
+-	switch (i) {
+-	case 1:
+-		return "FAIL";
+-	case 2:
+-		return "BAD_PARAM";
+-	case 3:
+-		return "BAD_CHECKSUM";
+-	case 4:
+-		return "NMI_INTERRUPT";
+-	case 5:
+-		return "SYSASSERT";
+-	case 6:
+-		return "FATAL_ERROR";
+-	}
+-
+-	return "UNKNOWN";
+-}
+-
+-#define ERROR_START_OFFSET  (1 * sizeof(u32))
+-#define ERROR_ELEM_SIZE     (7 * sizeof(u32))
+-
+-static void iwl4965_dump_nic_error_log(struct iwl_priv *priv)
+-{
+-	u32 data2, line;
+-	u32 desc, time, count, base, data1;
+-	u32 blink1, blink2, ilink1, ilink2;
+-	int rc;
+-
+-	base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
+-
+-	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
+-		IWL_ERROR("Not valid error log pointer 0x%08X\n", base);
+-		return;
+-	}
+-
+-	rc = iwl_grab_nic_access(priv);
+-	if (rc) {
+-		IWL_WARNING("Can not read from adapter at this time.\n");
+-		return;
+-	}
+-
+-	count = iwl_read_targ_mem(priv, base);
+-
+-	if (ERROR_START_OFFSET <= count * ERROR_ELEM_SIZE) {
+-		IWL_ERROR("Start IWL Error Log Dump:\n");
+-		IWL_ERROR("Status: 0x%08lX, count: %d\n", priv->status, count);
+-	}
+-
+-	desc = iwl_read_targ_mem(priv, base + 1 * sizeof(u32));
+-	blink1 = iwl_read_targ_mem(priv, base + 3 * sizeof(u32));
+-	blink2 = iwl_read_targ_mem(priv, base + 4 * sizeof(u32));
+-	ilink1 = iwl_read_targ_mem(priv, base + 5 * sizeof(u32));
+-	ilink2 = iwl_read_targ_mem(priv, base + 6 * sizeof(u32));
+-	data1 = iwl_read_targ_mem(priv, base + 7 * sizeof(u32));
+-	data2 = iwl_read_targ_mem(priv, base + 8 * sizeof(u32));
+-	line = iwl_read_targ_mem(priv, base + 9 * sizeof(u32));
+-	time = iwl_read_targ_mem(priv, base + 11 * sizeof(u32));
+-
+-	IWL_ERROR("Desc               Time       "
+-		  "data1      data2      line\n");
+-	IWL_ERROR("%-13s (#%d) %010u 0x%08X 0x%08X %u\n",
+-		  desc_lookup(desc), desc, time, data1, data2, line);
+-	IWL_ERROR("blink1  blink2  ilink1  ilink2\n");
+-	IWL_ERROR("0x%05X 0x%05X 0x%05X 0x%05X\n", blink1, blink2,
+-		  ilink1, ilink2);
+-
+-	iwl_release_nic_access(priv);
+-}
+ 
+ /**
+  * iwl4965_irq_handle_error - called for HW or SW error interrupt from card
+@@ -2705,7 +2635,7 @@ static void iwl4965_irq_handle_error(struct iwl_priv *priv)
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (priv->debug_level & IWL_DL_FW_ERRORS) {
+-		iwl4965_dump_nic_error_log(priv);
++		iwl_dump_nic_error_log(priv);
+ 		iwl_dump_nic_event_log(priv);
+ 		iwl4965_print_rx_config_cmd(priv);
+ 	}
+@@ -5529,20 +5459,6 @@ static ssize_t show_status(struct device *d,
+ 
+ static DEVICE_ATTR(status, S_IRUGO, show_status, NULL);
+ 
+-static ssize_t dump_error_log(struct device *d,
+-			      struct device_attribute *attr,
+-			      const char *buf, size_t count)
+-{
+-	char *p = (char *)buf;
+-
+-	if (p[0] == '1')
+-		iwl4965_dump_nic_error_log((struct iwl_priv *)d->driver_data);
+-
+-	return strnlen(buf, count);
+-}
+-
+-static DEVICE_ATTR(dump_errors, S_IWUSR, NULL, dump_error_log);
+-
+ /*****************************************************************************
+  *
+  * driver setup and teardown
+@@ -5588,7 +5504,6 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
+ 
+ static struct attribute *iwl4965_sysfs_entries[] = {
+ 	&dev_attr_channels.attr,
+-	&dev_attr_dump_errors.attr,
+ 	&dev_attr_flags.attr,
+ 	&dev_attr_filter_flags.attr,
+ #ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
+-- 
+1.5.3.6
 
-_________________________________________________________________
-Make Windows Vista more reliable and secure with Windows Vista Service Pack 1.
-http://www.windowsvista.com/SP1?WT.mc_id=hotmailvistasp1banner
