@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5708 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751290AbYEEIHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 04:07:00 -0400
-Subject: Re: [PATCH 20/25] iwlwifi : Set monitor mode for 4965
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-In-Reply-To: <1209971503.3655.0.camel@johannes.berg>
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-2-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-3-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-4-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-5-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-6-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-7-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-8-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-9-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-10-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-11-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-12-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-13-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-14-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-15-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-16-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-17-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-18-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-19-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-20-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 (sfid-20080505_044417_821018_3824BECA)  <1209971503.3655.0.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 05 May 2008 16:05:39 +0800
-Message-Id: <1209974740.2827.124.camel@debian.sh.intel.com> (sfid-20080505_100623_025489_B35FBA76)
-Mime-Version: 1.0
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13521 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbYEWO6A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 10:58:00 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "Johan Adolfsson" <Johan.Adolfsson@axis.com>
+Subject: Re: [PATCH] libertas: before sleeping, check for a command result
+Date: Fri, 23 May 2008 16:57:42 +0200
+Cc: libertas-dev@lists.infradead.org,
+	"'Dan Williams'" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"'John W. Linville'" <linville@tuxdriver.com>
+References: <002701c8bce1$04097010$0137550a@se.axis.com>
+In-Reply-To: <002701c8bce1$04097010$0137550a@se.axis.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805231657.42433.hs4233@mail.mn-solutions.de> (sfid-20080523_165806_879529_A973BB96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-05-05 at 09:11 +0200, Johannes Berg wrote:
-> Those conditions will never be true. 
+> I have experience a couple of timeout and resends and after
+> sending another commands I get the response from the previous
+> one, and the patch seems to solve a couple of those for me -
+> still se some problem fetching packet from  firmware with ret
+> = -22 though. And it could be dependant on how much debug I
+> have turned on..
 
-Why? I see mac80211 never passes IEEE80211_IF_TYPE_MNTR to
-add_interface(). But this patch passes the flag in configure_filter().
-Please take a look.
+Keep in mind that maybe the firmware actually really takes ages 
+to complete a command. David Woodhouse reported this.
 
-> In the case of the latter, that is
-> a good thing, in the case of the former that isn't.
+In my case, because I had the proper debugging statements in my 
+interrupt handler, I knew for sure that I already received the 
+response. Can you verify that, for the comment timeouts you 
+noticed, if this did happen or not?
 
-Could you elaborate?
 
-Thanks,
--yi
+> But, shouldn't the above priv->event_fifo check move before
+> cur_cmd  as well?
 
+Maybe, my change to the thread was just a shot into the dark, I 
+don't claim that I fully understand it. Maybe Dan or David can 
+help you with this.
+
+> I have no clue what kind of events we are talking about here
+> and if those can be processed independent of if a cmd is
+> running or not, just trigged on the comment.
+
+The kfifo contains hostevents (e.g. link lost, deauthenticated) 
+and command responses. Hmm, not sure if the latter is still 
+true.
