@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:40038 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006AbYETHG0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 03:06:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so527316and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 00:06:23 -0700 (PDT)
-Message-ID: <43e72e890805200006m56cf551yf3b3ab557c20b8ff@mail.gmail.com> (sfid-20080520_090631_475438_1970456C)
-Date: Tue, 20 May 2008 00:06:23 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: iwlwifi Makefile issue in compat-wireless-2008-05-18
-Cc: "John Goulah" <jgoulah@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1211255335.7814.5.camel@debian.sh.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3099 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751187AbYEWO3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 10:29:36 -0400
+Date: Fri, 23 May 2008 09:54:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [PATCH 00/51] iwlwifi driver 05/23 updates
+Message-ID: <20080523135416.GA19379@tuxdriver.com> (sfid-20080523_162940_083152_19011E4C)
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com> <1211510742.7814.121.camel@debian.sh.intel.com> <20080523123204.GA12575@tuxdriver.com> <200805231526.27110.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <183c1cc10805181143v526fcc86l4bec27b12805748f@mail.gmail.com>
-	 <1211168475.31033.9.camel@debian.sh.intel.com>
-	 <183c1cc10805190610h176cb8fcx54e6755fb5f36cfb@mail.gmail.com>
-	 <1211245264.2532.24.camel@debian.sh.intel.com>
-	 <183c1cc10805191823w5855227akce4aa1bb9f1b6198@mail.gmail.com>
-	 <1211255335.7814.5.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200805231526.27110.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 19, 2008 at 8:48 PM, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Mon, 2008-05-19 at 21:23 -0400, John Goulah wrote:
->> Ok,  I assume you mean the patch for the kernel config that allows
->> this all to work?
->
-> I mean the recent patch introduces CONFIG_IWLWIFI.
->
->> Would that mean you're not supporting compiling on any kernel older
->> than 2.6.26 with this change?
->
-> I'd suggest we patch compat-wireless like this (given the fact it
-> doesn't make use of Kconfig).
->
-> Thanks,
-> -yi
->
-> --- config.mk   2008-05-20 11:46:55.000000000 +0800
-> +++ /tmp/config.mk      2008-05-20 11:46:49.000000000 +0800
-> @@ -30,6 +30,7 @@ ifneq ($(CONFIG_PCI),)
->
->  CONFIG_ATH5K=m
->  CONFIG_ATH5K_DEBUG=n
-> +CONFIG_IWLWIFI=m
->  CONFIG_IWLCORE=m
->  CONFIG_IWL3945=m
->  CONFIG_IWL4965=m
+On Fri, May 23, 2008 at 03:26:27PM +0200, Holger Schurig wrote:
+> > It should be fine as-is, especially since you sent each as a
+> > reply to the previous.
+> 
+> However, sending LOTS of patches via this way looks funny in 
+> several e-mail clients. Here's an example with KMail:
 
-Applied on compat-wireless.
+That is true.  OTOH, sending them as individual messages (or as replies
+to a single "0/N" message) can cause them to arrive out of order.
 
-thanks,
+In most cases patches sent as a group need to be applied in a certain
+order.  In many cases they will fail to apply, and in others they
+might apply out of order but not be "bisectable" out of order.
 
-  Luis
+IMHO it is a lot easier to deal with the "funny looking" mailbox
+window than to deal with the issues caused by misordered patches.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
