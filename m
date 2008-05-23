@@ -1,80 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbYEDQDk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 May 2008 12:03:40 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1209909990.3753.0.camel@johannes.berg> (sfid-20080504_160619_267031_C8D61782)
-References: <1209866916.6210.39.camel@johannes.berg>
-	 <20080504021213.GA30660@gondor.apana.org.au>
-	 <1209867740.6210.46.camel@johannes.berg>
-	 <20080504031652.GA30993@gondor.apana.org.au>
-	 <1209890847.6210.51.camel@johannes.berg>
-	 <1209892489.6210.56.camel@johannes.berg>
-	 <20080504094444.GA541@gondor.apana.org.au>
-	 <1209894754.6210.58.camel@johannes.berg>
-	 <1209900355.6210.64.camel@johannes.berg>
-	 <1209904088.4065.11.camel@johannes.berg>
-	 <20080504124542.GA1455@gondor.apana.org.au>
-	 <1209909990.3753.0.camel@johannes.berg>
-	 (sfid-20080504_160619_267031_C8D61782)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VDIlIrNuz2WeYKL9qk1e"
-Date: Sun, 04 May 2008 18:03:26 +0200
-Message-Id: <1209917006.3753.2.camel@johannes.berg> (sfid-20080504_180307_553231_1D0CF66C)
+Received: from mga11.intel.com ([192.55.52.93]:52695 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755590AbYEWCqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:46:14 -0400
+Subject: Re: [PATCH 00/51] iwlwifi driver 05/23 updates
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Fri, 23 May 2008 10:45:42 +0800
+Message-Id: <1211510742.7814.121.camel@debian.sh.intel.com> (sfid-20080523_044622_684803_4AC7D324)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-05-23 at 10:08 +0800, Zhu Yi wrote:
+> Here are some iwlwifi drivers update. Please apply.
 
---=-VDIlIrNuz2WeYKL9qk1e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I forgot to put a series number for each patch. If you think that
+matters, I'll resubmit.
 
-On Sun, 2008-05-04 at 16:06 +0200, Johannes Berg wrote:
-> > There are three ways out of this.  You could have your own cache
-> > (I haven't looked at your headers so I don't know whether that
-> > makes sense), have no cache at all, or add a new field that gets
-> > added to hard_header_len for the purposes of calculating head
-> > room.
->=20
-> I tried the last option, patch below, didn't quite work out yet, but I
-> got:
->=20
-> [  256.241496] KERNEL: assertion (!atomic_read(&sk->sk_wmem_alloc))
-> failed at net/packet/af_packet.c (225)
-
-Except for that, the patch works fine with mac80211 setting the new
-netdev fields. I still get lots of reallocations though because I get a
-lot of cloned packets, not sure why.
-
-johannes
-
---=-VDIlIrNuz2WeYKL9qk1e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB3eTKVg1VMiehFYAQJL1RAAnBugK+Fyyy5rdhWUCT4hBzS50xQGenD8
-bgILSKroo7HbOaoZ7jVsIK/A1hcLtD95t/+PU4Cv1Sz0O+5KA+jtroslffL/7oun
-1jP3pwb5NU4PRHMR8sG8LuC6fPH+HvhZjLMThYPZTMKFggEgyQIOOJGThl9qbBY0
-N/HfX20IqDJtdYOkgz4wg44tthMPzIdRUP1aByuNvHxqJB9pRKrJSodj2K7ke6qE
-EchsMICch3sxKPw8a9NY3oDom2Rn0k7vJKmGn/6zncfUJzRGOEvGCrc19xg28glb
-bnprpWhmbKMc3ATLaBhoswr2Qm9DeooQ0UkTRulshAhhW+EOy0PZXMqJljHDxSFk
-14oh3qdby40srnpJDq+w3gNv0FBcZCQSIJtv8+3Kvo3irRCgwl7a6CnU3ZIx3Nm0
-1uqRrz4RT5sRUP3IjAhtxcY+HUzeFpfxHzQH6ZM4pIP61AF0I8hLytLZZHrTQ4kG
-u+hv2pex8ldSUjwkXiT0JcVXwbTaDGlVgVh68bd0QR7ceauwM/haw3cZoATMHkdU
-lUsjHiqQo5u3ojb67twsL+R7mKGGUZdE2CzM4Qw5RAKOhPsGa//Td6JRsoIH5yQN
-NNtnUVIyYKIgswPRfUOFzhXjt7M0kfVXcswdYhEMjssdvyob/AowgaddSnH15cvt
-9yYjhQUYd4o=
-=VYyy
------END PGP SIGNATURE-----
-
---=-VDIlIrNuz2WeYKL9qk1e--
+Thanks,
+-yi
 
