@@ -1,82 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:57961 "EHLO hostap.isc.org"
+Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753333AbYEMM2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 08:28:03 -0400
-Date: Tue, 13 May 2008 15:27:18 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-Subject: Re: 11n + wpa_supplicant
-Message-ID: <20080513122718.GA6309@jm.kir.nu> (sfid-20080513_142808_443690_FD2B19E3)
-References: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8704f27d0805130118p6f597743sebed5a2cdb6d59cb@mail.gmail.com>
+	id S1759730AbYEWCLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 May 2008 22:11:47 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH] iwlwifi: remove notif_missed_beacons variable
+Date: Fri, 23 May 2008 10:09:12 +0800
+Message-Id: <1211508569-3163-35-git-send-email-yi.zhu@intel.com> (sfid-20080523_042835_438987_C833B0E7)
+In-Reply-To: <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
+References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
+ <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 13, 2008 at 11:18:29AM +0300, Emmanuel Grumbach wrote:
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> the spec of 11n makes the support on AES mandatory, but not TKIP.
-> Meaning that a NIC can support WPA2 and 11n separately, but not TKIP
-> in 11n. The RC4 encryption machine has a delay that makes difficult to
-> encrypt in TKIP (or WEP) in 11n rates. Intel's 11n are such NICs, 11n
-> + TKIP/WEP is not supported.
+This patch removes notif_missed_beacons from priv since it was never
+used. Missed beacons notification will have only meaning if roaming
+will be implemented in mac80211.
 
-This is not just a hardware support question; 11n explicitly disallows
-use of TKIP between HT STAs and this needs to be enforced somewhere.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 --
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 --
+ 4 files changed, 0 insertions(+), 9 deletions(-)
 
-> The problem here is that the association (which can be 11n or not)
-> occurs before the 4-way handshake. Let's say that I have an AP that
-> publishes only TKIP in its WPA IE and 11n IE, I can understand that
-> there is no way I should do 11n association. But what happens with an
-> AP that publishes TKIP + AES in its RSN IE and 11n IE ? I could
-> associate in 11n, but then wpa_supplicant might be configured to
-> associate in TKIP (although the AP support AES), and I would be in an
-> unsupported mode.
-
-In most cases, the pairwise cipher is selected during association, not
-during 4-way handshake. Consequently, the driver/firmware should refuse
-to send an (Re)Association Request that requests TKIP as the pairwise
-cipher when using .11n.
-
-In the corner case (which I don't think I have even implemented yet in
-wpa_supplicant..) the AP/Authenticator could request the STA to use
-another pairwise cipher if security policy for that specific STA does
-not allow the pairwise cipher suite that the STA tried to select in
-(re)association request. In this particular case (should it ever be
-implemented), it could be useful for wpa_supplicant to know that .11n is
-used. However, no sane security policy would require TKIP as the
-pairwise cipher in such a case, so I don't think this is really going to
-ever happen in real networks and any kind of failure to use the network
-is suitable end result for such an attempt..
-
-> One solution would be to make wpa_supplicant understand what 11n is,
-> but that's not it's job.
-> Another solution would be to make wpa_supplicant tell me that it
-> intends to use TKIP before asking me to associate.
-
-The exact mechanism depends on whether ap_scan=1 or ap_scan=2 is being
-used, i.e., whether wpa_supplicant is responsible for selecting a BSS
-from scan results or not.
-
-In ap_scan=1, I would say that it would be useful for wpa_supplicant to
-know whether the BSS (and the local wlan driver/hardware for that
-matter!) supports .11n. If the scan results indicate this in some
-reliable way (e.g., all IEs are delivered to wpa_supplicant), the AP's
-support for 11n can be figured out. The local side support would need to
-be added, e.g., to driver capabilities reporting.
-
-In ap_scaqn=2, wpa_supplicant requests the driver to select a BSS based
-on configuration (SSID, security policy, including a specific cipher
-suite), i.e., the driver would be told about TKIP use before
-association and the driver would be responsible for not trying to use
-11n in that case. The corner case of AP/Authenticator requesting another
-pairwise cipher would still be possible here, but not really something
-that I would consider a real problem that needs to be solved.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 9fdc140..d100c38 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -836,8 +836,6 @@ struct iwl3945_priv {
+ 
+ 	u8 mac80211_registered;
+ 
+-	u32 notif_missed_beacons;
+-
+ 	/* Rx'd packet timing information */
+ 	u32 last_beacon_time;
+ 	u64 last_tsf;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index b61c647..ea08cf9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1126,8 +1126,6 @@ struct iwl_priv {
+ 
+ 	u8 mac80211_registered;
+ 
+-	u32 notif_missed_beacons;
+-
+ 	/* Rx'd packet timing information */
+ 	u32 last_beacon_time;
+ 	u64 last_tsf;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index b8fb8d8..3104f6a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5849,9 +5849,6 @@ static void iwl3945_alive_start(struct iwl3945_priv *priv)
+ 	/* Configure the adapter for unassociated operation */
+ 	iwl3945_commit_rxon(priv);
+ 
+-	/* At this point, the NIC is initialized and operational */
+-	priv->notif_missed_beacons = 0;
+-
+ 	iwl3945_reg_txpower_periodic(priv);
+ 
+ 	iwl3945_led_register(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index bf975cb..89dd890 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3322,8 +3322,6 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
+ 	iwl4965_commit_rxon(priv);
+ 
+ 	/* At this point, the NIC is initialized and operational */
+-	priv->notif_missed_beacons = 0;
+-
+ 	iwl4965_rf_kill_ct_config(priv);
+ 
+ 	iwl_leds_register(priv);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.3.6
+
