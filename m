@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:16095 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbYEFKeP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760251AbYEXSIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 06:34:15 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so1613748rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 May 2008 03:34:15 -0700 (PDT)
-Message-ID: <1ba2fa240805060334y2add302aua2e4461451a3f95b@mail.gmail.com> (sfid-20080506_123333_275165_F1FA15F3)
-Date: Tue, 6 May 2008 13:34:14 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 25/25] iwlwifi: map A-MPDU HW queue to mac80211 A-MPDU SW queue
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1210066688.8012.75.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1209954172-3092-1-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-21-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-22-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-23-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-24-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-25-git-send-email-yi.zhu@intel.com>
-	 <1209954172-3092-26-git-send-email-yi.zhu@intel.com>
-	 <1ba2fa240805060209x3765abf6lf5ece51055b0d60@mail.gmail.com>
-	 <1ba2fa240805060211j3730f29w30313dcb3fd34c44@mail.gmail.com>
-	 <1210066688.8012.75.camel@johannes.berg>
+	Sat, 24 May 2008 14:08:17 -0400
+Subject: [PATCH] b43legacy: fix build errors when DMA or PIO are not
+	selected
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <rdunlap@xenotime.net>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-next@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080523102811.1dfc50df.rdunlap@xenotime.net> (sfid-20080523_192821_931342_75EA810D)
+References: <20080523102811.1dfc50df.rdunlap@xenotime.net>
+	 (sfid-20080523_192821_931342_75EA810D)
+Content-Type: text/plain
+Date: Sat, 24 May 2008 20:07:55 +0200
+Message-Id: <1211652475.18247.4.camel@johannes.berg> (sfid-20080524_200821_225063_D9B82F33)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 6, 2008 at 12:38 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Tue, 2008-05-06 at 12:11 +0300, Tomas Winkler wrote:
->  > On Tue, May 6, 2008 at 12:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->  > > On Mon, May 5, 2008 at 5:22 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->  > >  > From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->  > >  >
->  > >  >  This patch maps A-MPDU HW queue to mac80211 SW queue scheme (as introduced
->  > >  >  in patch "mac80211: QoS related cleanups"), when trying to perform
->  > >  >  ieee80211_wake_queue.
->  > >  >
->  > >  >  Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
->  > >  >
->  > >
->  > >  Is this going to make it to 2.6.26?
->  > >  Without this it will be hard to run 5000 under 2.6.26 as is.
->  >
->  > I meant 'QoS related cleanups'
->
->  Oh. No, I don't think so, unless you can somehow sell it to Linus as a
->  bugfix ;)
->
-I will think of a bug :)
+Currently, b43legacy is broken due to
 
->  Disable the 5000 in that kernel and make people use compat?
+commit fbad4598ca826b994d0fd4ce3deebc9cd1960b31
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Thu May 15 12:55:29 2008 +0200
 
-Huh, why disabling?
+    mac80211: move TX info into skb->cb
 
->
->  johannes
->
+when compiled with only PIO or only DMA because I forgot to update two
+stubs. This patch fixes it.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/b43legacy/dma.h |    3 +--
+ drivers/net/wireless/b43legacy/pio.h |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+--- everything.orig/drivers/net/wireless/b43legacy/dma.h	2008-05-24 20:01:48.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/dma.h	2008-05-24 20:01:55.000000000 +0200
+@@ -321,8 +321,7 @@ void b43legacy_dma_get_tx_stats(struct b
+ }
+ static inline
+ int b43legacy_dma_tx(struct b43legacy_wldev *dev,
+-		     struct sk_buff *skb,
+-		     struct ieee80211_tx_control *ctl)
++		     struct sk_buff *skb)
+ {
+ 	return 0;
+ }
+--- everything.orig/drivers/net/wireless/b43legacy/pio.h	2008-05-24 20:02:05.000000000 +0200
++++ everything/drivers/net/wireless/b43legacy/pio.h	2008-05-24 20:02:12.000000000 +0200
+@@ -130,8 +130,7 @@ void b43legacy_pio_free(struct b43legacy
+ }
+ static inline
+ int b43legacy_pio_tx(struct b43legacy_wldev *dev,
+-		   struct sk_buff *skb,
+-		   struct ieee80211_tx_control *ctl)
++		   struct sk_buff *skb)
+ {
+ 	return 0;
+ }
+
+
