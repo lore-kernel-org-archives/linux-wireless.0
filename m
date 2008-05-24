@@ -1,263 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39297 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756991AbYEBUsK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 16:48:10 -0400
-Message-Id: <200805022047.m42KljvE014214@imap1.linux-foundation.org> (sfid-20080502_224747_564930_B6DEB20A)
-Subject: [patch 3/9] mac80211: tkip.c use kernel-provided infrastructure
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	harvey.harrison@gmail.com
-From: akpm@linux-foundation.org
-Date: Fri, 02 May 2008 13:47:45 -0700
+Received: from main.gmane.org ([80.91.229.2]:38402 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754676AbYEXLEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 May 2008 07:04:05 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JzrXb-0008Dv-GC
+	for linux-wireless@vger.kernel.org; Sat, 24 May 2008 11:04:01 +0000
+Received: from c-67-190-34-252.hsd1.co.comcast.net ([67.190.34.252])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 11:03:59 +0000
+Received: from dann.church by c-67-190-34-252.hsd1.co.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 11:03:59 +0000
+To: linux-wireless@vger.kernel.org
+From: Dann Church <dann.church@cassatt.com>
+Subject: Re: iwl4965 - =?utf-8?b?d3BhX3N1cHBsaWNhbnQ=?= can't see 5Ghz frequencies - 2.6.26-rc1 kernel
+Date: Sat, 24 May 2008 11:03:46 +0000 (UTC)
+Message-ID: <loom.20080524T105644-837@post.gmane.org> (sfid-20080524_130410_482752_2A1861EB)
+References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>  <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>  <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>  <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>  <1210617467.3792.4.camel@X61.DFGI.com>  <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>  <loom.20080522T173929-232@post.gmane.org> <1ba2fa240805221054h7873d5c8k6fb44bf38ef2778@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Tomas Winkler <tomasw@...> writes:
 
-Use kernel-provided bit rotation and unaligned access infrastructure rather
-than opencoding it.
+> 
+> On Thu, May 22, 2008 at 8:42 PM, Dann Church <dann.church@...> wrote:
+> > Tomas Winkler <tomasw@...> writes:
+> >
+> >>
+> >> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
+> >> <v.jones@...> wrote:
+> >> >
+> >> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
+> >> >
+> >> >> Meanwhile we've reproduced the wpa_supplicant issue...
+> >> >>
+> >> >
+> >> > That is great news. Let me know when it is time to test again...
+> >>
+> >> Please try this one. I've just pasted that in so it's might be
+> >> white-space-wise broken
+> >
+> > I have this same issue running fedora core 9 with a kernel version
+> > 2.6.25.3-18.fc9.i686.PAE.  Any chance this patch would work on such a kernel
+> > (assuming I recompiled it from source)?
+> >
+> >
+> Yes it will please try it out
+> Thanks
+> Tomas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+I'm happy to report that I have made the equivalent changes to ieee80211_sta.c
+in the 2.6.25 kernel on my FC9 box and it works as expected.  I didn't do the
+wpa_supplicant fix mentioned later in this thread as it didn't seem necessary in
+my case.
 
-Some minor spacing adjustments as well.
+Here's the patch I generated (which isn't conceptually different from the
+previous one posted) in case anyone needs it for such a kernel:
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+diff -uNrp linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c
+kernel-2.6.25.new/linux-2.6.25.i686/net/mac80211/ieee80211_sta.c
+--- linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c	2008-05-23
+10:23:15.000000000 -0600
++++ linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c	2008-05-23
+10:28:44.000000000 -0600
+@@ -4035,15 +4035,15 @@ ieee80211_sta_scan_result(struct net_dev
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+-	iwe.u.freq.m = bss->freq;
+-	iwe.u.freq.e = 6;
++	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
++	iwe.u.freq.e = 0;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+-	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
+-	iwe.u.freq.e = 0;
++	iwe.u.freq.m = bss->freq;
++	iwe.u.freq.e = 6;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
+ 
 
- net/mac80211/tkip.c |  145 +++++++++++++-----------------------------
- 1 file changed, 46 insertions(+), 99 deletions(-)
+Thanks for tracking this issue down!
 
-diff -puN net/mac80211/tkip.c~mac80211-tkipc-use-kernel-provided-infrastructure net/mac80211/tkip.c
---- a/net/mac80211/tkip.c~mac80211-tkipc-use-kernel-provided-infrastructure
-+++ a/net/mac80211/tkip.c
-@@ -8,23 +8,22 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/bitops.h>
- #include <linux/types.h>
- #include <linux/netdevice.h>
-+#include <asm/unaligned.h>
- 
- #include <net/mac80211.h>
- #include "key.h"
- #include "tkip.h"
- #include "wep.h"
- 
--
--/* TKIP key mixing functions */
--
--
- #define PHASE1_LOOP_COUNT 8
- 
--
--/* 2-byte by 2-byte subset of the full AES S-box table; second part of this
-- * table is identical to first part but byte-swapped */
-+/*
-+ * 2-byte by 2-byte subset of the full AES S-box table; second part of this
-+ * table is identical to first part but byte-swapped
-+ */
- static const u16 tkip_sbox[256] =
- {
- 	0xC6A5, 0xF884, 0xEE99, 0xF68D, 0xFF0D, 0xD6BD, 0xDEB1, 0x9154,
-@@ -61,53 +60,13 @@ static const u16 tkip_sbox[256] =
- 	0x82C3, 0x29B0, 0x5A77, 0x1E11, 0x7BCB, 0xA8FC, 0x6DD6, 0x2C3A,
- };
- 
--
--static inline u16 Mk16(u8 x, u8 y)
--{
--	return ((u16) x << 8) | (u16) y;
--}
--
--
--static inline u8 Hi8(u16 v)
--{
--	return v >> 8;
--}
--
--
--static inline u8 Lo8(u16 v)
--{
--	return v & 0xff;
--}
--
--
--static inline u16 Hi16(u32 v)
--{
--	return v >> 16;
--}
--
--
--static inline u16 Lo16(u32 v)
--{
--	return v & 0xffff;
--}
--
--
--static inline u16 RotR1(u16 v)
--{
--	return (v >> 1) | ((v & 0x0001) << 15);
--}
--
--
--static inline u16 tkip_S(u16 val)
-+static u16 tkipS(u16 val)
- {
--	u16 a = tkip_sbox[Hi8(val)];
--
--	return tkip_sbox[Lo8(val)] ^ Hi8(a) ^ (Lo8(a) << 8);
-+	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
- }
- 
--
--
--/* P1K := Phase1(TA, TK, TSC)
-+/*
-+ * P1K := Phase1(TA, TK, TSC)
-  * TA = transmitter address (48 bits)
-  * TK = dot11DefaultKeyValue or dot11KeyMappingValue (128 bits)
-  * TSC = TKIP sequence counter (48 bits, only 32 msb bits used)
-@@ -118,23 +77,22 @@ static void tkip_mixing_phase1(const u8 
- {
- 	int i, j;
- 
--	p1k[0] = Lo16(tsc_IV32);
--	p1k[1] = Hi16(tsc_IV32);
--	p1k[2] = Mk16(ta[1], ta[0]);
--	p1k[3] = Mk16(ta[3], ta[2]);
--	p1k[4] = Mk16(ta[5], ta[4]);
-+	p1k[0] = tsc_IV32 & 0xFFFF;
-+	p1k[1] = tsc_IV32 >> 16;
-+	p1k[2] = get_unaligned_le16(ta + 0);
-+	p1k[3] = get_unaligned_le16(ta + 2);
-+	p1k[4] = get_unaligned_le16(ta + 4);
- 
- 	for (i = 0; i < PHASE1_LOOP_COUNT; i++) {
- 		j = 2 * (i & 1);
--		p1k[0] += tkip_S(p1k[4] ^ Mk16(tk[ 1 + j], tk[ 0 + j]));
--		p1k[1] += tkip_S(p1k[0] ^ Mk16(tk[ 5 + j], tk[ 4 + j]));
--		p1k[2] += tkip_S(p1k[1] ^ Mk16(tk[ 9 + j], tk[ 8 + j]));
--		p1k[3] += tkip_S(p1k[2] ^ Mk16(tk[13 + j], tk[12 + j]));
--		p1k[4] += tkip_S(p1k[3] ^ Mk16(tk[ 1 + j], tk[ 0 + j])) + i;
-+		p1k[0] += tkipS(p1k[4] ^ get_unaligned_le16(tk + 0 + j));
-+		p1k[1] += tkipS(p1k[0] ^ get_unaligned_le16(tk + 4 + j));
-+		p1k[2] += tkipS(p1k[1] ^ get_unaligned_le16(tk + 8 + j));
-+		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
-+		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
- 	}
- }
- 
--
- static void tkip_mixing_phase2(const u16 *p1k, const u8 *tk, u16 tsc_IV16,
- 			       u8 *rc4key)
- {
-@@ -148,31 +106,29 @@ static void tkip_mixing_phase2(const u16
- 	ppk[4] = p1k[4];
- 	ppk[5] = p1k[4] + tsc_IV16;
- 
--	ppk[0] += tkip_S(ppk[5] ^ Mk16(tk[ 1], tk[ 0]));
--	ppk[1] += tkip_S(ppk[0] ^ Mk16(tk[ 3], tk[ 2]));
--	ppk[2] += tkip_S(ppk[1] ^ Mk16(tk[ 5], tk[ 4]));
--	ppk[3] += tkip_S(ppk[2] ^ Mk16(tk[ 7], tk[ 6]));
--	ppk[4] += tkip_S(ppk[3] ^ Mk16(tk[ 9], tk[ 8]));
--	ppk[5] += tkip_S(ppk[4] ^ Mk16(tk[11], tk[10]));
--	ppk[0] +=  RotR1(ppk[5] ^ Mk16(tk[13], tk[12]));
--	ppk[1] +=  RotR1(ppk[0] ^ Mk16(tk[15], tk[14]));
--	ppk[2] +=  RotR1(ppk[1]);
--	ppk[3] +=  RotR1(ppk[2]);
--	ppk[4] +=  RotR1(ppk[3]);
--	ppk[5] +=  RotR1(ppk[4]);
--
--	rc4key[0] = Hi8(tsc_IV16);
--	rc4key[1] = (Hi8(tsc_IV16) | 0x20) & 0x7f;
--	rc4key[2] = Lo8(tsc_IV16);
--	rc4key[3] = Lo8((ppk[5] ^ Mk16(tk[1], tk[0])) >> 1);
--
--	for (i = 0; i < 6; i++) {
--		rc4key[4 + 2 * i] = Lo8(ppk[i]);
--		rc4key[5 + 2 * i] = Hi8(ppk[i]);
--	}
-+	ppk[0] += tkipS(ppk[5] ^ get_unaligned_le16(tk + 0));
-+	ppk[1] += tkipS(ppk[0] ^ get_unaligned_le16(tk + 2));
-+	ppk[2] += tkipS(ppk[1] ^ get_unaligned_le16(tk + 4));
-+	ppk[3] += tkipS(ppk[2] ^ get_unaligned_le16(tk + 6));
-+	ppk[4] += tkipS(ppk[3] ^ get_unaligned_le16(tk + 8));
-+	ppk[5] += tkipS(ppk[4] ^ get_unaligned_le16(tk + 10));
-+	ppk[0] += ror16(ppk[5] ^ get_unaligned_le16(tk + 12), 1);
-+	ppk[1] += ror16(ppk[0] ^ get_unaligned_le16(tk + 14), 1);
-+	ppk[2] += ror16(ppk[1], 1);
-+	ppk[3] += ror16(ppk[2], 1);
-+	ppk[4] += ror16(ppk[3], 1);
-+	ppk[5] += ror16(ppk[4], 1);
-+
-+	rc4key[0] = tsc_IV16 >> 8;
-+	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
-+	rc4key[2] = tsc_IV16 & 0xFF;
-+	rc4key[3] = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
-+
-+	rc4key += 4;
-+	for (i = 0; i < 6; i++)
-+		put_unaligned_le16(ppk[i], rc4key + 2 * i);
- }
- 
--
- /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
-  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
-  * the packet payload). */
-@@ -183,14 +139,10 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, stru
- 	*pos++ = iv1;
- 	*pos++ = iv2;
- 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
--	*pos++ = key->u.tkip.iv32 & 0xff;
--	*pos++ = (key->u.tkip.iv32 >> 8) & 0xff;
--	*pos++ = (key->u.tkip.iv32 >> 16) & 0xff;
--	*pos++ = (key->u.tkip.iv32 >> 24) & 0xff;
--	return pos;
-+	put_unaligned_le32(key->u.tkip.iv32, pos);
-+	return pos + 4;
- }
- 
--
- void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
- 				  u16 *phase1key)
- {
-@@ -228,10 +180,8 @@ void ieee80211_get_tkip_key(struct ieee8
- 	u16 iv16;
- 	u32 iv32;
- 
--	iv16 = data[hdr_len] << 8;
--	iv16 += data[hdr_len + 2];
--	iv32 = data[hdr_len + 4] | (data[hdr_len + 5] << 8) |
--	       (data[hdr_len + 6] << 16) | (data[hdr_len + 7] << 24);
-+	iv16 = data[hdr_len + 2] | (data[hdr_len] << 8);
-+	iv32 = get_unaligned_le32(data + hdr_len + 4);
- 
- #ifdef CONFIG_TKIP_DEBUG
- 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
-@@ -281,7 +231,6 @@ void ieee80211_tkip_encrypt_data(struct 
- 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
- }
- 
--
- /* Decrypt packet payload with TKIP using @key. @pos is a pointer to the
-  * beginning of the buffer containing IEEE 802.11 header payload, i.e.,
-  * including IV, Ext. IV, real data, Michael MIC, ICV. @payload_len is the
-@@ -302,7 +251,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 
- 	iv16 = (pos[0] << 8) | pos[2];
- 	keyid = pos[3];
--	iv32 = pos[4] | (pos[5] << 8) | (pos[6] << 16) | (pos[7] << 24);
-+	iv32 = get_unaligned_le32(pos + 4);
- 	pos += 8;
- #ifdef CONFIG_TKIP_DEBUG
- 	{
-@@ -409,5 +358,3 @@ int ieee80211_tkip_decrypt_data(struct c
- 
- 	return res;
- }
--
--
-_
+--Dann
+
+
+
+
+
+
