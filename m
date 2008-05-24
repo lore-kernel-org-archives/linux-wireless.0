@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45364 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609AbYESLH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 07:07:57 -0400
-Subject: Re: [PATCHv2] mac80211: fix NULL pointer dereference
-	in	ieee80211_compatible_rates
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Tomas Winkler <tomasw@gmail.com>, Helmut Schaa <hschaa@suse.de>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <483047DD.2050205@lwfinger.net>
-References: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de>
-	 <1ba2fa240805180337h35bc3244od619e78c0d95d895@mail.gmail.com>
-	 <1211117578.686.12.camel@localhost.localdomain>
-	 <483047DD.2050205@lwfinger.net>
-Content-Type: text/plain
-Date: Mon, 19 May 2008 07:07:54 -0400
-Message-Id: <1211195274.3203.11.camel@localhost.localdomain> (sfid-20080519_130822_236785_2A9F5A99)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.233]:46502 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbYEXJYo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 May 2008 05:24:44 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1281659rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 02:24:43 -0700 (PDT)
+Message-ID: <41c7306f0805240224o21341f8gdf7b70e657c003c1@mail.gmail.com> (sfid-20080524_112447_780312_E20EA1FD)
+Date: Sat, 24 May 2008 11:24:43 +0200
+From: "Joris van der Kwast" <jvdkwast@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: error on make
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-05-18 at 10:14 -0500, Larry Finger wrote:
-> Dan Williams wrote:
-> > On Sun, 2008-05-18 at 13:37 +0300, Tomas Winkler wrote:
-> >> Again, mac should rather solve the problem that we do not connect to
-> >> AP's that are not in the BSS list
-> >> Personally I would NACK this as it's just hiding  the real problem
-> > 
-> > Ugh; is that what's happening?  If the AP isn't in the BSS list of the
-> > card, then the card shouldn't be connecting to it.  It should have been
-> > probe-scanned already and thus exist in the BSS list, right?
-> > 
-> > Dan
-> > 
-> >> The other issue is that we call ieee80211_rx_bss_put(dev, bss); before
-> >> this call in ieee80211_send_assoc.
-> 
-> This AP certainly should have been in the BSS list. As I stated in the 
-> original post, the system had been connected to that AP for about 18 hours 
-> before the NULL bss NULL event occurred.
-> 
-> Clearly the sequence of events is improbable and it may be some time before 
-> it happens again. What diagnostic information would be useful to capture 
-> if/when it occurs? Is there any other location that I should monitor?
+Hi,
 
-I'd think a printk whenever a unique BSS item is removed from the BSS
-list; and the location of that removal in the code using __func__ and
-__LINE__ in the output.
+I was trying to build the daily snapshot compat-wireless-2008-05-24,
+on fedora 8, kernel 2.6.24.7-92.fc8_x86_64 and got the following
+error:
 
-Dan
 
+/home/joris/Data/Downloads
+/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:
+In function 'rt2x00leds_register':
+/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:186:
+error: 'struct led_classdev' has no member named 'blink_set'
+/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.c:189:
+error: 'struct led_classdev' has no member named 'blink_set'
+make[4]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00/rt2x00leds.o]
+Error 1
+make[3]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless/rt2x00]
+Error 2
+make[2]: *** [/home/joris/Data/Downloads/compat-wireless-2008-05-24/drivers/net/wireless]
+Error 2
+make[1]: *** [_module_/home/joris/Data/Downloads/compat-wireless-2008-05-24]
+Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.24.7-92.fc8-x86_64'
+make: *** [modules] Error 2
+
+
+So I hope this helps.
+
+--
+Joris
