@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:60463 "EHLO sacred.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757324AbYEFOy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 10:54:27 -0400
-Message-ID: <48207073.6010600@openvz.org> (sfid-20080506_165351_957877_EFA66241)
-Date: Tue, 06 May 2008 18:51:31 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
+Received: from yw-out-2324.google.com ([74.125.46.31]:1331 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753697AbYEXXYf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 May 2008 19:24:35 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so733982ywe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 16:24:29 -0700 (PDT)
+Message-ID: <1ba2fa240805241624t4999d108uef78b30408a5c545@mail.gmail.com> (sfid-20080525_012441_209416_E2E0276F)
+Date: Sun, 25 May 2008 02:24:28 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+Subject: Re: regression iwl3945/mac80211: association times out since 2.6.26-rc1
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
+	flamingice@sourmilk.net
+In-Reply-To: <20080524182852.GA9722@robinhood.home>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: [PATCH 3/4][MAC80211]: Fix potential scheduling while atomic in mesh_path_add.
 Content-Type: text/plain; charset=ISO-8859-1
+References: <20080520184859.GA8168@robinhood.home>
+	 <20080521054743.GA9910@robinhood.home>
+	 <20080524182852.GA9722@robinhood.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling synchronize_rcu() under write-lock-ed pathtbl_resize_lock may
-result in this warning (and other side effects).
+On Sat, May 24, 2008 at 9:29 PM, Michael S. Tsirkin
+<m.s.tsirkin@gmail.com> wrote:
+> On Wed, May 21, 2008 at 08:47:44AM +0300, Michael S. Tsirkin wrote:
+>> FYI, I created an item in bugzilla to track this
+>> http://bugzilla.kernel.org/show_bug.cgi?id=10765
+>
+> As requested, more configuration and log files have been attached
+> to this item.
 
-It looks safe just dropping this lock before calling synchronize_rcu.
-
-Signed-off-by: Pavel Emelyanov <xemul@openvz.org>
-
----
- net/mac80211/mesh_pathtbl.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 1d2d051..99c2d36 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -220,9 +220,10 @@ endadd:
- 			return -ENOMEM;
- 		}
- 		rcu_assign_pointer(mesh_paths, newtbl);
-+		write_unlock(&pathtbl_resize_lock);
-+
- 		synchronize_rcu();
- 		mesh_table_free(oldtbl, false);
--		write_unlock(&pathtbl_resize_lock);
- 	}
- endadd2:
- 	return err;
--- 
-1.5.3.4
-
+It looks like also this issue should be fixed by ' mac80211: reorder
+channel and freq reporting in wext scan report' patch.
+http://article.gmane.org/gmane.linux.kernel.wireless.general/15177
+Please try.
+Thanks
+Tomas
