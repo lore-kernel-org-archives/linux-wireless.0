@@ -1,161 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27647 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759061AbYEWCLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:16 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: remove 4956 form iwl4965_tx_cmd
-Date: Fri, 23 May 2008 10:08:51 +0800
-Message-Id: <1211508569-3163-14-git-send-email-yi.zhu@intel.com> (sfid-20080523_041127_533620_76FF8994)
-In-Reply-To: <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
+Received: from rv-out-0506.google.com ([209.85.198.226]:5197 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681AbYEXAS5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 May 2008 20:18:57 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1105511rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 May 2008 17:18:57 -0700 (PDT)
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Cc: dwmw2@infradead.org
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 23 May 2008 17:17:16 -0700
+Subject: [PATCH] Rate adaptation configuration via iwconfig.
+Message-ID: <48375ef0.1ed6720a.75fe.ffff9c31@mx.google.com> (sfid-20080524_021900_500728_E242C13F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Implemented rate adaptation support via 'iwconfig rate' API.  It is now
+possible to specify a bit-rate value and append 'auto'.  That will configure
+rate adaptation to use all bit-rates equal or lower than than selected value.
 
-This patch renames iwl4965_tx_cmd to iwl_tx_cmd and cleans
-collateral code.
+Made lbs_cmd_802_11_rate_adapt_rateset a direct command.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    3 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 -
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 5 files changed, 7 insertions(+), 11 deletions(-)
+ drivers/net/wireless/libertas/assoc.c   |    2 +-
+ drivers/net/wireless/libertas/cmd.c     |   63 ++++++++++++++++++++++++-------
+ drivers/net/wireless/libertas/cmd.h     |    2 +
+ drivers/net/wireless/libertas/cmdresp.c |   20 ----------
+ drivers/net/wireless/libertas/dev.h     |    5 +-
+ drivers/net/wireless/libertas/hostcmd.h |    2 +-
+ drivers/net/wireless/libertas/main.c    |    2 +-
+ drivers/net/wireless/libertas/rx.c      |    4 +-
+ drivers/net/wireless/libertas/wext.c    |   27 +++++++++----
+ 9 files changed, 76 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index aeaf5f7..02bbe04 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1053,7 +1053,6 @@ int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index 29026f6..46cdf11 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -1249,7 +1249,7 @@ static int get_common_rates(struct lbs_private *priv,
+ 	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+ 	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
  
- 	priv->hw_params.max_txq_num = priv->cfg->mod_params->num_of_queues;
- 	priv->hw_params.sw_crypto = priv->cfg->mod_params->sw_crypto;
--	priv->hw_params.tx_cmd_len = sizeof(struct iwl4965_tx_cmd);
- 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
- 	if (priv->cfg->mod_params->amsdu_size_8K)
-@@ -1943,7 +1942,7 @@ void iwl4965_hw_build_tx_cmd_rate(struct iwl_priv *priv,
- 			      struct ieee80211_hdr *hdr, int sta_id,
- 			      int is_hcca)
+-	if (!priv->auto_rate) {
++	if (!priv->enablehwauto) {
+ 		for (i = 0; i < tmp_size; i++) {
+ 			if (tmp[i] == priv->cur_rate)
+ 				goto done;
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 49b0177..6144885 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -676,26 +676,61 @@ static int lbs_cmd_802_11_monitor_mode(struct cmd_ds_command *cmd,
+ 	return 0;
+ }
+ 
+-static int lbs_cmd_802_11_rate_adapt_rateset(struct lbs_private *priv,
+-					      struct cmd_ds_command *cmd,
+-					      u16 cmd_action)
++static __le16 lbs_rate_to_fw_bitmap(int rate, int lower_rates_ok)
  {
--	struct iwl4965_tx_cmd *tx = &cmd->cmd.tx;
-+	struct iwl_tx_cmd *tx = &cmd->cmd.tx;
- 	u8 rts_retry_limit = 0;
- 	u8 data_retry_limit = 0;
- 	u16 fc = le16_to_cpu(hdr->frame_control);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 72d655c..d155247 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -298,7 +298,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+-	struct cmd_ds_802_11_rate_adapt_rateset
+-	*rateadapt = &cmd->params.rateset;
++/*		Bit  	Rate
++*		15:13 Reserved
++*		12    54 Mbps
++*		11    48 Mbps
++*		10    36 Mbps
++*		9     24 Mbps
++*		8     18 Mbps
++*		7     12 Mbps
++*		6     9 Mbps
++*		5     6 Mbps
++*		4     Reserved
++*		3     11 Mbps
++*		2     5.5 Mbps
++*		1     2 Mbps
++*		0     1 Mbps
++**/
++
++	uint16_t ratemask;
++	int i = lbs_data_rate_to_fw_index(rate);
++	if (lower_rates_ok)
++		ratemask = (0x1fef >> (12 - i));
++	else
++		ratemask = (1 << i);
++	return cpu_to_le16(ratemask);
++}
++
++int lbs_cmd_802_11_rate_adapt_rateset(struct lbs_private *priv,
++						uint16_t cmd_action)
++{
++	struct cmd_ds_802_11_rate_adapt_rateset cmd;
++	int ret;
  
- 	priv->hw_params.max_txq_num = priv->cfg->mod_params->num_of_queues;
- 	priv->hw_params.sw_crypto = priv->cfg->mod_params->sw_crypto;
--	priv->hw_params.tx_cmd_len = sizeof(struct iwl4965_tx_cmd);
- 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
- 	if (priv->cfg->mod_params->amsdu_size_8K)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 350af1b..dd84326 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1196,7 +1196,7 @@ struct iwl4965_dram_scratch {
- /*
-  * REPLY_TX = 0x1c (command)
-  */
--struct iwl4965_tx_cmd {
-+struct iwl_tx_cmd {
- 	/*
- 	 * MPDU byte count:
- 	 * MAC header (24/26/30/32 bytes) + 2 bytes pad if 26/30 header size,
-@@ -2135,7 +2135,7 @@ struct iwl4965_scan_cmd {
+ 	lbs_deb_enter(LBS_DEB_CMD);
+-	cmd->size =
+-	    cpu_to_le16(sizeof(struct cmd_ds_802_11_rate_adapt_rateset)
+-			     + S_DS_GEN);
+-	cmd->command = cpu_to_le16(CMD_802_11_RATE_ADAPT_RATESET);
  
- 	/* For active scans (set to all-0s for passive scans).
- 	 * Does not include payload.  Must specify Tx rate; no rate scaling. */
--	struct iwl4965_tx_cmd tx_cmd;
-+	struct iwl_tx_cmd tx_cmd;
+-	rateadapt->action = cpu_to_le16(cmd_action);
+-	rateadapt->enablehwauto = cpu_to_le16(priv->enablehwauto);
+-	rateadapt->bitmap = cpu_to_le16(priv->ratebitmap);
++	if (!priv->cur_rate && !priv->enablehwauto)
++		return -EINVAL;
  
- 	/* For directed active scans (set to all-0s otherwise) */
- 	struct iwl4965_ssid_ie direct_scan[PROBE_OPTION_MAX];
-@@ -2232,7 +2232,7 @@ struct iwl4965_beacon_notif {
-  * REPLY_TX_BEACON = 0x91 (command, has simple generic response)
-  */
- struct iwl4965_tx_beacon_cmd {
--	struct iwl4965_tx_cmd tx;
-+	struct iwl_tx_cmd tx;
- 	__le16 tim_idx;
- 	u8 tim_size;
- 	u8 reserved1;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 565d7dc..ddb950e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -329,7 +329,7 @@ struct iwl_cmd {
- 		struct iwl4965_rxon_time_cmd rxon_time;
- 		struct iwl4965_powertable_cmd powertable;
- 		struct iwl4965_qosparam_cmd qosparam;
--		struct iwl4965_tx_cmd tx;
-+		struct iwl_tx_cmd tx;
- 		struct iwl4965_tx_beacon_cmd tx_beacon;
- 		struct iwl4965_rxon_assoc_cmd rxon_assoc;
- 		u8 *indirect;
-@@ -573,7 +573,6 @@ struct iwl_sensitivity_ranges {
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++
++	cmd.action = cpu_to_le16(cmd_action);
++	cmd.enablehwauto = cpu_to_le16(priv->enablehwauto);
++	cmd.bitmap = lbs_rate_to_fw_bitmap(priv->cur_rate, priv->enablehwauto);
++	ret = lbs_cmd_with_response(priv, CMD_802_11_RATE_ADAPT_RATESET,
++								&cmd);
++	if (!ret && cmd_action == CMD_ACT_GET) {
++		priv->ratebitmap = le16_to_cpu(cmd.bitmap);
++		priv->enablehwauto = le16_to_cpu(cmd.enablehwauto);
++	}
++
++	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
++	return ret;
+ }
++EXPORT_SYMBOL_GPL(lbs_cmd_802_11_rate_adapt_rateset);
+ 
  /**
-  * struct iwl_hw_params
-  * @max_txq_num: Max # Tx queues supported
-- * @tx_cmd_len: Size of Tx command (but not including frame itself)
-  * @tx/rx_chains_num: Number of TX/RX chains
-  * @valid_tx/rx_ant: usable antennas
-  * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
-@@ -590,7 +589,6 @@ struct iwl_sensitivity_ranges {
-  */
- struct iwl_hw_params {
- 	u16 max_txq_num;
--	u16 tx_cmd_len;
- 	u8  tx_chains_num;
- 	u8  rx_chains_num;
- 	u8  valid_tx_ant;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 88032cc..6d5b58f 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1740,7 +1740,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
- 	 * of the MAC header (device reads on dword boundaries).
- 	 * We'll tell device about this padding later.
+  *  @brief Get the current data rate
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 619d88d..6513088 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -47,6 +47,8 @@ int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan);
+ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria);
+ int lbs_suspend(struct lbs_private *priv);
+ int lbs_resume(struct lbs_private *priv);
++int lbs_cmd_802_11_rate_adapt_rateset(struct lbs_private *priv,
++							uint16_t cmd_action);
+ 
+ int lbs_cmd_802_11_inactivity_timeout(struct lbs_private *priv,
+ 				      uint16_t cmd_action, uint16_t *timeout);
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 5abecb7..8929046 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -203,22 +203,6 @@ static int lbs_ret_802_11_rf_tx_power(struct lbs_private *priv,
+ 	return 0;
+ }
+ 
+-static int lbs_ret_802_11_rate_adapt_rateset(struct lbs_private *priv,
+-					      struct cmd_ds_command *resp)
+-{
+-	struct cmd_ds_802_11_rate_adapt_rateset *rates = &resp->params.rateset;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-
+-	if (rates->action == CMD_ACT_GET) {
+-		priv->enablehwauto = le16_to_cpu(rates->enablehwauto);
+-		priv->ratebitmap = le16_to_cpu(rates->bitmap);
+-	}
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int lbs_ret_802_11_rssi(struct lbs_private *priv,
+ 				struct cmd_ds_command *resp)
+ {
+@@ -322,10 +306,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
+ 	case CMD_RET(CMD_802_11_BEACON_STOP):
+ 		break;
+ 
+-	case CMD_RET(CMD_802_11_RATE_ADAPT_RATESET):
+-		ret = lbs_ret_802_11_rate_adapt_rateset(priv, resp);
+-		break;
+-
+ 	case CMD_RET(CMD_802_11_RSSI):
+ 		ret = lbs_ret_802_11_rssi(priv, resp);
+ 		break;
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 0d9edb9..e3fa0ad 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -234,8 +234,8 @@ struct lbs_private {
+ 	/** 802.11 statistics */
+ //	struct cmd_DS_802_11_GET_STAT wlan802_11Stat;
+ 
+-	u16 enablehwauto;
+-	u16 ratebitmap;
++	uint16_t enablehwauto;
++	uint16_t ratebitmap;
+ 
+ 	u32 fragthsd;
+ 	u32 rtsthsd;
+@@ -293,7 +293,6 @@ struct lbs_private {
+ 
+ 	/** data rate stuff */
+ 	u8 cur_rate;
+-	u8 auto_rate;
+ 
+ 	/** RF calibration data */
+ 
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index f29bc5b..feef9e6 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -499,6 +499,7 @@ struct cmd_ds_802_11_data_rate {
+ };
+ 
+ struct cmd_ds_802_11_rate_adapt_rateset {
++	struct cmd_header hdr;
+ 	__le16 action;
+ 	__le16 enablehwauto;
+ 	__le16 bitmap;
+@@ -702,7 +703,6 @@ struct cmd_ds_command {
+ 		struct cmd_ds_802_11_rf_tx_power txp;
+ 		struct cmd_ds_802_11_rf_antenna rant;
+ 		struct cmd_ds_802_11_monitor_mode monitor;
+-		struct cmd_ds_802_11_rate_adapt_rateset rateset;
+ 		struct cmd_ds_mac_multicast_adr madr;
+ 		struct cmd_ds_802_11_ad_hoc_join adj;
+ 		struct cmd_ds_802_11_rssi rssi;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index b4684bf..7ad40a2 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1021,7 +1021,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 	priv->curbssparams.channel = DEFAULT_AD_HOC_CHANNEL;
+ 	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
+ 	priv->radioon = RADIO_ON;
+-	priv->auto_rate = 1;
++	priv->enablehwauto = 1;
+ 	priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
+ 	priv->psmode = LBS802_11POWERMODECAM;
+ 	priv->psstate = PS_STATE_FULL_POWER;
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 05af731..5749f22 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -237,7 +237,7 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 	/* Take the data rate from the rxpd structure
+ 	 * only if the rate is auto
  	 */
--	len = priv->hw_params.tx_cmd_len +
-+	len = sizeof(struct iwl_tx_cmd) +
- 		sizeof(struct iwl_cmd_header) + hdr_len;
+-	if (priv->auto_rate)
++	if (priv->enablehwauto)
+ 		priv->cur_rate = lbs_fw_index_to_data_rate(p_rx_pd->rx_rate);
  
- 	len_org = len;
-@@ -1789,7 +1789,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
- 	iwl_update_tx_stats(priv, fc, len);
+ 	lbs_compute_rssi(priv, p_rx_pd);
+@@ -383,7 +383,7 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+ 	/* Take the data rate from the rxpd structure
+ 	 * only if the rate is auto
+ 	 */
+-	if (priv->auto_rate)
++	if (priv->enablehwauto)
+ 		priv->cur_rate = lbs_fw_index_to_data_rate(prxpd->rx_rate);
  
- 	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
--		offsetof(struct iwl4965_tx_cmd, scratch);
-+		offsetof(struct iwl_tx_cmd, scratch);
- 	out_cmd->cmd.tx.dram_lsb_ptr = cpu_to_le32(scratch_phys);
- 	out_cmd->cmd.tx.dram_msb_ptr = iwl_get_dma_hi_address(scratch_phys);
+ 	lbs_compute_rssi(priv, prxpd);
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index ab09542..330ec53 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1021,29 +1021,38 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
  
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 	lbs_deb_wext("vwrq->value %d\n", vwrq->value);
++	lbs_deb_wext("vwrq->fixed %d\n", vwrq->fixed);
++
++	if (vwrq->fixed && vwrq->value == -1)
++		goto out;
+ 
+ 	/* Auto rate? */
+-	if (vwrq->value == -1) {
+-		priv->auto_rate = 1;
++	priv->enablehwauto = !vwrq->fixed;
++
++	if (vwrq->value == -1)
+ 		priv->cur_rate = 0;
+-	} else {
++	else {
+ 		if (vwrq->value % 100000)
+ 			goto out;
+ 
++		new_rate = vwrq->value / 500000;
++		priv->cur_rate = new_rate;
++		/* the rest is only needed for lbs_set_data_rate() */
+ 		memset(rates, 0, sizeof(rates));
+ 		copy_active_data_rates(priv, rates);
+-		new_rate = vwrq->value / 500000;
+ 		if (!memchr(rates, new_rate, sizeof(rates))) {
+ 			lbs_pr_alert("fixed data rate 0x%X out of range\n",
+ 				new_rate);
+ 			goto out;
+ 		}
+-
+-		priv->cur_rate = new_rate;
+-		priv->auto_rate = 0;
+ 	}
+ 
+-	ret = lbs_set_data_rate(priv, new_rate);
++	/* Try the newer command first (Firmware Spec 5.1 and above) */
++	ret = lbs_cmd_802_11_rate_adapt_rateset(priv, CMD_ACT_SET);
++
++	/* Fallback to older version */
++	if (ret)
++		ret = lbs_set_data_rate(priv, new_rate);
+ 
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+@@ -1060,7 +1069,7 @@ static int lbs_get_rate(struct net_device *dev, struct iw_request_info *info,
+ 	if (priv->connect_status == LBS_CONNECTED) {
+ 		vwrq->value = priv->cur_rate * 500000;
+ 
+-		if (priv->auto_rate)
++		if (priv->enablehwauto)
+ 			vwrq->fixed = 0;
+ 		else
+ 			vwrq->fixed = 1;
 -- 
-1.5.3.6
+1.5.2.4
+
+
 
