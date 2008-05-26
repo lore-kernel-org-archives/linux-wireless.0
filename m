@@ -1,261 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:50159 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752944AbYEWCLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: rename iwl4965_queue to iwl_queue
-Date: Fri, 23 May 2008 10:08:43 +0800
-Message-Id: <1211508569-3163-6-git-send-email-yi.zhu@intel.com> (sfid-20080523_041118_760605_EAA3CBBD)
-In-Reply-To: <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
+Received: from mail9.dslextreme.com ([66.51.199.94]:50119 "HELO
+	mail9.dslextreme.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750714AbYEZEsh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 00:48:37 -0400
+Message-ID: <483A3F91.6020403@gawab.com> (sfid-20080526_064843_213626_BF386244)
+Date: Sun, 25 May 2008 21:41:53 -0700
+From: Justin Madru <jdm64@gawab.com>
+MIME-Version: 1.0
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Oops in mac80211 with 2.6.26-rc3 triggered playing a video
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hi,
 
-This patch renames iwl4965_queue to iwl_queue.
+I've been getting kernel crashes at random when a video file just starts 
+to play (using VLC).
+As soon as the first frame shows, the system locks up hard (sometimes 
+not even alt+sysrq+b works).
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   16 ++------------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    6 ++--
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   28 +++++++++++++-------------
- 4 files changed, 22 insertions(+), 32 deletions(-)
+Just recently, when it crashed it was able to print an oops to the 
+syslog. The weird thing is that it says that it's a bug in mac80211? But 
+I only have the crash the instant a video file starts to play. (I have 
+an Intel 3945 wireles, and Intel i945 graphic card)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 17847f9..2bb0075 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3231,7 +3231,7 @@ static int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
- int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
- 					 u8 tid, int txq_id)
- {
--	struct iwl4965_queue *q = &priv->txq[txq_id].q;
-+	struct iwl_queue *q = &priv->txq[txq_id].q;
- 	u8 *addr = priv->stations[sta_id].sta.sta.addr;
- 	struct iwl_tid_data *tid_data = &priv->stations[sta_id].tid[tid];
- 
-@@ -3263,16 +3263,6 @@ int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
- }
- 
- /**
-- * iwl4965_queue_dec_wrap - Decrement queue index, wrap back to end if needed
-- * @index -- current index
-- * @n_bd -- total number of entries in queue (s/b power of 2)
-- */
--static inline int iwl4965_queue_dec_wrap(int index, int n_bd)
--{
--	return (index == 0) ? n_bd - 1 : index - 1;
--}
--
--/**
-  * iwl4965_rx_reply_compressed_ba - Handler for REPLY_COMPRESSED_BA
-  *
-  * Handles block-acknowledge notification from device, which reports success
-@@ -3304,7 +3294,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	agg = &priv->stations[ba_resp->sta_id].tid[ba_resp->tid].agg;
- 
- 	/* Find index just before block-ack window */
--	index = iwl4965_queue_dec_wrap(ba_resp_scd_ssn & 0xff, txq->q.n_bd);
-+	index = iwl_queue_dec_wrap(ba_resp_scd_ssn & 0xff, txq->q.n_bd);
- 
- 	/* TODO: Need to get this copy more safely - now good for debug */
- 
-@@ -3337,7 +3327,7 @@ static void iwl4965_rx_reply_compressed_ba(struct iwl_priv *priv,
- 		int freed = iwl4965_tx_queue_reclaim(priv, scd_flow, index);
- 		priv->stations[ba_resp->sta_id].
- 			tid[ba_resp->tid].tfds_in_queue -= freed;
--		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
-+		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
- 			priv->mac80211_registered &&
- 			agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)
- 			ieee80211_wake_queue(priv->hw, ampdu_q);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 5dccc5a..cf99224 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -102,7 +102,7 @@ struct iwl_rx_mem_buffer {
-  *
-  * Contains common data for Rx and Tx queues
-  */
--struct iwl4965_queue {
-+struct iwl_queue {
- 	int n_bd;              /* number of BDs in this queue */
- 	int write_ptr;       /* 1-st empty entry (index) host_w*/
- 	int read_ptr;         /* last used entry (index) host_r*/
-@@ -137,7 +137,7 @@ struct iwl4965_tx_info {
-  * descriptors) and required locking structures.
-  */
- struct iwl_tx_queue {
--	struct iwl4965_queue q;
-+	struct iwl_queue q;
- 	struct iwl_tfd_frame *bd;
- 	struct iwl_cmd *cmd;
- 	dma_addr_t dma_addr_cmd;
-@@ -721,7 +721,7 @@ extern u8 iwl_find_station(struct iwl_priv *priv, const u8 *bssid);
- 
- extern int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channel);
- extern int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index);
--extern int iwl4965_queue_space(const struct iwl4965_queue *q);
-+extern int iwl_queue_space(const struct iwl_queue *q);
- struct iwl_priv;
- 
- extern void iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index a1e03cc..870d257 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -105,7 +105,7 @@ EXPORT_SYMBOL(iwl_hw_txq_free_tfd);
-  */
- static void iwl_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- {
--	struct iwl4965_queue *q = &txq->q;
-+	struct iwl_queue *q = &txq->q;
- 	struct pci_dev *dev = priv->pci_dev;
- 	int len;
- 
-@@ -158,7 +158,7 @@ EXPORT_SYMBOL(iwl_hw_txq_ctx_free);
- /**
-  * iwl_queue_init - Initialize queue's high/low-water and read/write indexes
-  */
--static int iwl_queue_init(struct iwl_priv *priv, struct iwl4965_queue *q,
-+static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- 			  int count, int slots_num, u32 id)
- {
- 	q->n_bd = count;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index c713b27..2e7e616 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -173,7 +173,7 @@ static const char *iwl4965_escape_essid(const char *essid, u8 essid_len)
-  * See more detailed info in iwl-4965-hw.h.
-  ***************************************************/
- 
--int iwl4965_queue_space(const struct iwl4965_queue *q)
-+int iwl_queue_space(const struct iwl_queue *q)
- {
- 	int s = q->read_ptr - q->write_ptr;
- 
-@@ -190,14 +190,14 @@ int iwl4965_queue_space(const struct iwl4965_queue *q)
- }
- 
- 
--static inline int x2_queue_used(const struct iwl4965_queue *q, int i)
-+static inline int iwl_queue_used(const struct iwl_queue *q, int i)
- {
- 	return q->write_ptr > q->read_ptr ?
- 		(i >= q->read_ptr && i < q->write_ptr) :
- 		!(i < q->read_ptr && i >= q->write_ptr);
- }
- 
--static inline u8 get_cmd_index(struct iwl4965_queue *q, u32 index, int is_huge)
-+static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
- {
- 	/* This is for scan command, the big buffer at end of command array */
- 	if (is_huge)
-@@ -348,7 +348,7 @@ u8 iwl4965_add_station_flags(struct iwl_priv *priv, const u8 *addr,
- int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[IWL_CMD_QUEUE_NUM];
--	struct iwl4965_queue *q = &txq->q;
-+	struct iwl_queue *q = &txq->q;
- 	struct iwl_tfd_frame *tfd;
- 	u32 *control_flags;
- 	struct iwl_cmd *out_cmd;
-@@ -369,7 +369,7 @@ int iwl4965_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		return -EIO;
- 	}
- 
--	if (iwl4965_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
-+	if (iwl_queue_space(q) < ((cmd->meta.flags & CMD_ASYNC) ? 2 : 1)) {
- 		IWL_ERROR("No space for Tx\n");
- 		return -ENOSPC;
- 	}
-@@ -1768,7 +1768,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
- 	u32 *control_flags;
- 	int txq_id = ctl->queue;
- 	struct iwl_tx_queue *txq = NULL;
--	struct iwl4965_queue *q = NULL;
-+	struct iwl_queue *q = NULL;
- 	dma_addr_t phys_addr;
- 	dma_addr_t txcmd_phys;
- 	dma_addr_t scratch_phys;
-@@ -1981,7 +1981,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
- 	if (rc)
- 		return rc;
- 
--	if ((iwl4965_queue_space(q) < q->high_mark)
-+	if ((iwl_queue_space(q) < q->high_mark)
- 	    && priv->mac80211_registered) {
- 		if (wait_write_ptr) {
- 			spin_lock_irqsave(&priv->lock, flags);
-@@ -2332,10 +2332,10 @@ static void iwl4965_txstatus_to_ieee(struct iwl_priv *priv,
- int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
--	struct iwl4965_queue *q = &txq->q;
-+	struct iwl_queue *q = &txq->q;
- 	int nfreed = 0;
- 
--	if ((index >= q->n_bd) || (x2_queue_used(q, index) == 0)) {
-+	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
- 		IWL_ERROR("Read index for DMA queue txq id (%d), index %d, "
- 			  "is out of range [0-%d] %d %d.\n", txq_id,
- 			  index, q->n_bd, q->write_ptr, q->read_ptr);
-@@ -2541,7 +2541,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 	__le16 *qc;
- #endif
- 
--	if ((index >= txq->q.n_bd) || (x2_queue_used(&txq->q, index) == 0)) {
-+	if ((index >= txq->q.n_bd) || (iwl_queue_used(&txq->q, index) == 0)) {
- 		IWL_ERROR("Read index for DMA queue txq_id (%d) index %d "
- 			  "is out of range [0-%d] %d %d\n", txq_id,
- 			  index, txq->q.n_bd, txq->q.write_ptr,
-@@ -2587,7 +2587,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 			freed = iwl4965_tx_queue_reclaim(priv, txq_id, index);
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 
--			if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
-+			if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
- 			    txq_id >= 0 && priv->mac80211_registered &&
- 			    agg->state != IWL_EMPTYING_HW_QUEUE_DELBA) {
- 				/* calculate mac80211 ampdu sw queue to wake */
-@@ -2621,7 +2621,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 		int freed = iwl4965_tx_queue_reclaim(priv, txq_id, index);
- 		if (tid != MAX_TID_COUNT)
- 			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
--		if (iwl4965_queue_space(&txq->q) > txq->q.low_mark &&
-+		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
- 			(txq_id >= 0) && priv->mac80211_registered)
- 			ieee80211_wake_queue(priv->hw, txq_id);
- 		if (tid != MAX_TID_COUNT)
-@@ -5783,7 +5783,7 @@ static int iwl4965_mac_get_tx_stats(struct ieee80211_hw *hw,
- 	struct iwl_priv *priv = hw->priv;
- 	int i, avail;
- 	struct iwl_tx_queue *txq;
--	struct iwl4965_queue *q;
-+	struct iwl_queue *q;
- 	unsigned long flags;
- 
- 	IWL_DEBUG_MAC80211("enter\n");
-@@ -5798,7 +5798,7 @@ static int iwl4965_mac_get_tx_stats(struct ieee80211_hw *hw,
- 	for (i = 0; i < AC_NUM; i++) {
- 		txq = &priv->txq[i];
- 		q = &txq->q;
--		avail = iwl4965_queue_space(q);
-+		avail = iwl_queue_space(q);
- 
- 		stats[i].len = q->n_window - avail;
- 		stats[i].limit = q->n_window - q->high_mark;
--- 
-1.5.3.6
+BUG: unable to handle kernel NULL pointer dereference at 00000090
+IP: [<f89e721f>] :mac80211:ieee80211_associate+0x24f/0x610
+*pde = 00000000
+Oops: 0000 [#1] PREEMPT SMP
+Modules linked in: i915 acpi_cpufreq cpufreq_powersave cpufreq_stats 
+cpufreq_userspace cpufreq_conservative container sbs sbshc ext3 jbd 
+mbcache arc4 ecb crypto_blkcipher rtc dcdbas cryptomgr crypto_algapi 
+psmouse evdev snd_hda_intel snd_pcm_oss snd_mixer_oss snd_pcm iwl3945 
+mac80211 snd_timer crc32 snd_page_alloc video backlight output ac button 
+battery intel_agp reiserfs sr_mod cdrom sg ata_piix ehci_hcd uhci_hcd 
+usbcore thermal processor fan
+
+Pid: 1899, comm: iwl3945 Not tainted (2.6.26-rc3-git #1)
+EIP: 0060:[<f89e721f>] EFLAGS: 00010246 CPU: 1
+EIP is at ieee80211_associate+0x24f/0x610 [mac80211]
+EAX: 00000000 EBX: 00000000 ECX: 00000000 EDX: f7b85e38
+ESI: f7b85e84 EDI: ecc7122e EBP: f7bbdd34 ESP: f7bbdcc0
+ DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process iwl3945 (pid: 1899, ti=f7bbd000 task=f718d390 task.ti=f7bbd000)
+Stack: f7b85e84 00000000 f7bbdd14 00000202 f7b85e38 f7b85800 f7f65f00 
+00000018
+       f7bbdcfa 00000000 00000421 00000003 00000006 00000052 f7bbdd0c 
+ecc7122c
+       f71593a4 00000000 f7bbde15 f7bbdd3c c0295679 303a3030 33623a66 
+3a31613a
+Call Trace:
+ [_format_mac_addr+0x79/0x90] ? _format_mac_addr+0x79/0x90
+ [sched_debug_show+0x9c6/0xcb0] ? sched_debug_show+0x9c6/0xcb0
+ [<f89e7610>] ? ieee80211_auth_completed+0x30/0x40 [mac80211]
+ [<f89e7a73>] ? ieee80211_rx_mgmt_auth+0x303/0x4b0 [mac80211]
+ [hrtimer_start+0xc2/0x150] ? hrtimer_start+0xc2/0x150
+ [hrtick_set+0x85/0x100] ? hrtick_set+0x85/0x100
+ [jbd:schedule+0x364/0x8c0] ? schedule+0x364/0x870
+ [<f89e7da7>] ? ieee80211_sta_rx_queued_mgmt+0x187/0xcb0 [mac80211]
+ [ext3:preempt_schedule+0x33/0x100] ? preempt_schedule+0x33/0x50
+ [mac80211:dev_queue_xmit+0xa6/0x1f20] ? dev_queue_xmit+0xa6/0x330
+ [mac80211:_spin_unlock_bh+0x18/0xb0] ? _spin_unlock_bh+0x18/0x20
+ [<f89e33b7>] ? ieee80211_rx_bss_get+0xa7/0xc0 [mac80211]
+ [mac80211:skb_dequeue+0x4d/0x360] ? skb_dequeue+0x4d/0x70
+ [<f89e960f>] ? ieee80211_sta_work+0x8f/0x760 [mac80211]
+ [hrtick_set+0xa7/0x100] ? hrtick_set+0xa7/0x100
+ [jbd:schedule+0x364/0x8c0] ? schedule+0x364/0x870
+ [run_workqueue+0x80/0x120] ? run_workqueue+0x80/0x120
+ [<f89e9580>] ? ieee80211_sta_work+0x0/0x760 [mac80211]
+ [worker_thread+0x88/0xe0] ? worker_thread+0x88/0xe0
+ [<c013ba80>] ? autoremove_wake_function+0x0/0x40
+ [worker_thread+0x0/0xe0] ? worker_thread+0x0/0xe0
+ [kthread+0x42/0x70] ? kthread+0x42/0x70
+ [kthread+0x0/0x70] ? kthread+0x0/0x70
+ [kernel_thread_helper+0x7/0x18] ? kernel_thread_helper+0x7/0x18
+ =======================
+Code: c6 00 00 8b 55 9c 8b 4d c8 8b 42 70 88 41 01 8b 42 70 8b 7d c8 89 
+c1 c1 e9 02 83 c7 02 f3 a5 89 c1 83 e1 03 74 02 f3 a4 8b 5d d0 <8b> 9b 
+90 00 00 00 85 db 89 5d d8 0f 84 6d 03 00 00 8b 7d cc 8b
+EIP: [<f89e721f>] ieee80211_associate+0x24f/0x610 [mac80211] SS:ESP 
+0068:f7bbdcc0
+---[ end trace 7afccad6600bfa21 ]---
+
+Justin Madru
 
