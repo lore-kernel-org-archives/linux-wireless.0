@@ -1,110 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:43571 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:30068 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759025AbYEWCLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:24 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
+	id S1756401AbYEZOJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 10:09:24 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: rename and move Tx queue activation/deactivation
-Date: Fri, 23 May 2008 10:08:56 +0800
-Message-Id: <1211508569-3163-19-git-send-email-yi.zhu@intel.com> (sfid-20080523_041135_760745_87CE40E3)
-In-Reply-To: <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/1] mac80211: fix deadlock in sta->lock
+Date: Mon, 26 May 2008 17:09:18 +0300
+Message-Id: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com> (sfid-20080526_160936_239975_94B16351)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch moves iwl4965_txq_ctx_activate and iwl4965_txq_ctx_deactivate
-to iwl-dev.h and removes 4965 prefix from their names.
+This patch fixes a deadlock of sta->lock use, occuring while changing
+tx aggregation states, as dev_queue_xmit end up in new function
+test_and_clear_sta_flags that uses that lock thus leading to deadlock
 
 Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c |   14 ++------------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |   10 ++++++++++
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ net/mac80211/main.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 52c7eae..f848a5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -911,16 +911,6 @@ static const u16 default_queue_to_tx_fifo[] = {
- 	IWL_TX_FIFO_HCCA_2
- };
- 
--static inline void iwl4965_txq_ctx_activate(struct iwl_priv *priv, int txq_id)
--{
--	set_bit(txq_id, &priv->txq_ctx_active_msk);
--}
--
--static inline void iwl4965_txq_ctx_deactivate(struct iwl_priv *priv, int txq_id)
--{
--	clear_bit(txq_id, &priv->txq_ctx_active_msk);
--}
--
- int iwl4965_alive_notify(struct iwl_priv *priv)
- {
- 	u32 a;
-@@ -998,7 +988,7 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
- 	/* Map each Tx/cmd queue to its corresponding fifo */
- 	for (i = 0; i < ARRAY_SIZE(default_queue_to_tx_fifo); i++) {
- 		int ac = default_queue_to_tx_fifo[i];
--		iwl4965_txq_ctx_activate(priv, i);
-+		iwl_txq_ctx_activate(priv, i);
- 		iwl4965_tx_queue_set_status(priv, &priv->txq[i], ac, 0);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b0fddb7..5a9030c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -662,6 +662,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ 		goto start_ba_err;
  	}
  
-@@ -3115,7 +3105,7 @@ static int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
- 	iwl4965_set_wr_ptrs(priv, txq_id, ssn_idx);
- 
- 	iwl_clear_bits_prph(priv, IWL49_SCD_INTERRUPT_MASK, (1 << txq_id));
--	iwl4965_txq_ctx_deactivate(priv, txq_id);
-+	iwl_txq_ctx_deactivate(priv, txq_id);
- 	iwl4965_tx_queue_set_status(priv, &priv->txq[txq_id], tx_fifo, 0);
- 
- 	iwl_release_nic_access(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 305491f..533479e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1210,6 +1210,16 @@ struct iwl_priv {
- 	struct timer_list statistics_periodic;
- }; /*iwl_priv */
- 
-+static inline void iwl_txq_ctx_activate(struct iwl_priv *priv, int txq_id)
-+{
-+	set_bit(txq_id, &priv->txq_ctx_active_msk);
-+}
++	spin_unlock_bh(&sta->lock);
 +
-+static inline void iwl_txq_ctx_deactivate(struct iwl_priv *priv, int txq_id)
-+{
-+	clear_bit(txq_id, &priv->txq_ctx_active_msk);
-+}
-+
- static inline int iwl_is_associated(struct iwl_priv *priv)
- {
- 	return (priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) ? 1 : 0;
+ 	/* Will put all the packets in the new SW queue */
+ 	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
+ 	spin_unlock_bh(&local->mdev->queue_lock);
+@@ -688,9 +690,9 @@ start_ba_err:
+ 	kfree(sta->ampdu_mlme.tid_tx[tid]);
+ 	sta->ampdu_mlme.tid_tx[tid] = NULL;
+ 	spin_unlock_bh(&local->mdev->queue_lock);
++	spin_unlock_bh(&sta->lock);
+ 	ret = -EBUSY;
+ start_ba_exit:
+-	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ 	return ret;
+ }
+@@ -829,10 +831,11 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ 	}
+ 	state = &sta->ampdu_mlme.tid_state_tx[tid];
+ 
+-	spin_lock_bh(&sta->lock);
++	/* no need to use sta->lock in this state check, as
++	 * ieee80211_stop_tx_ba_session will let only
++	 * one stop call to pass through per sta/tid */
+ 	if ((*state & HT_AGG_STATE_REQ_STOP_BA_MSK) == 0) {
+ 		printk(KERN_DEBUG "unexpected callback to A-MPDU stop\n");
+-		spin_unlock_bh(&sta->lock);
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+@@ -855,6 +858,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ 	 * ieee80211_wake_queue is not used here as this queue is not
+ 	 * necessarily stopped */
+ 	netif_schedule(local->mdev);
++	spin_lock_bh(&sta->lock);
+ 	*state = HT_AGG_STATE_IDLE;
+ 	sta->ampdu_mlme.addba_req_num[tid] = 0;
+ 	kfree(sta->ampdu_mlme.tid_tx[tid]);
 -- 
-1.5.3.6
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
