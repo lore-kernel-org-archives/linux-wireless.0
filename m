@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:39583 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757007AbYE0HK7 (ORCPT
+Received: from gateway-1237.mvista.com ([63.81.120.158]:12951 "EHLO
+	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753829AbYEZR70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 03:10:59 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so2793490rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2008 00:10:59 -0700 (PDT)
-Message-ID: <b25c3fa70805270010r10b7b29brd6c67ef9a0253e66@mail.gmail.com> (sfid-20080527_091114_094447_3F259758)
-Date: Tue, 27 May 2008 00:10:59 -0700
-From: "Joonwoo Park" <joonwpark81@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"Reinette Chatre" <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
-	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
+	Mon, 26 May 2008 13:59:26 -0400
+Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
+From: Daniel Walker <dwalker@mvista.com>
+To: Michal Schmidt <mschmidt@redhat.com>
+Cc: linville@tuxdriver.com, rusty@rustcorp.com.au, matthew@wil.cx,
+	mingo@elte.hu, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, arjan@infradead.org
+In-Reply-To: <20080526192914.31045d09@brian.englab.brq.redhat.com>
+References: <20080522232103.120033152@mvista.com>
+	 <20080526192914.31045d09@brian.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Mon, 26 May 2008 10:59:23 -0700
+Message-Id: <1211824763.18130.234.camel@localhost.localdomain> (sfid-20080526_200000_867079_12D31B18)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/5/26 Tomas Winkler <tomasw@gmail.com>:
-> On Tue, May 27, 2008 at 8:13 AM, Joonwoo Park <joonwpark81@gmail.com> wrote:
->> Fix overflow which is occured by long wep key configuring.
->> Also, this patch contains some cleanup for not to do memcpy with
->> zero size.
->>
->> $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
->>
->
-> WEP key is of fixed size 13 or  5 bytes, this setting should be
-> refused somewhere in the mac wext handler.
-> NACK.
-> Tomas
->
 
-It sounds reasonable. I'll dig this problem more.
+On Mon, 2008-05-26 at 19:29 +0200, Michal Schmidt wrote:
+> On Thu, 22 May 2008 16:21:03 -0700
+> Daniel Walker <dwalker@mvista.com> wrote:
+> 
+> > Signed-off-by: Daniel Walker <dwalker@mvista.com>
+> >  
+> > ---
+> >  drivers/net/wireless/airo.c |  107
+> > ++++++++++++++++++++++---------------------- 1 file changed, 54
+> > insertions(+), 53 deletions(-)
+> > 
+> > Index: linux-2.6.25/drivers/net/wireless/airo.c
+> > ===================================================================
+> > --- linux-2.6.25.orig/drivers/net/wireless/airo.c
+> > +++ linux-2.6.25/drivers/net/wireless/airo.c
+> 
+> > @@ -3211,7 +3212,7 @@ static irqreturn_t airo_interrupt(int ir
+> >  				set_bit(FLAG_UPDATE_UNI,
+> > &apriv->flags); set_bit(FLAG_UPDATE_MULTI, &apriv->flags);
+> >  
+> > -				if (down_trylock(&apriv->sem) != 0) {
+> > +				if (mutex_trylock(&apriv->lock) ==
+> > 0) { set_bit(JOB_EVENT, &apriv->jobs);
+> >  					wake_up_interruptible(&apriv->thr_wait);
+> >  				} else
+> 
+> 
+> Mutexes are not allowed in interrupt context, not even mutex_trylock.
 
-Thanks,
-Joonwoo
+I know .. I must have missed that it was in ISR .. Thanks for noticing
+it.
+
+Daniel
+
