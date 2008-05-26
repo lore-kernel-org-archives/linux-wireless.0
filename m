@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:39790 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230AbYEVSVU convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:58620 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbYEZFmc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 14:21:20 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so150015wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 11:21:20 -0700 (PDT)
-Message-ID: <69e28c910805221121v1a34901co35ec41bff41bd1ec@mail.gmail.com> (sfid-20080522_202125_063966_9BB38E42)
-Date: Thu, 22 May 2008 20:21:20 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: JMF <tolas_feup@hotmail.com>,
-	"=?ISO-8859-1?Q?Alejandro_Grijalba_Mart=EDnez?=" <sud@latinsud.com>,
-	"Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: do not alter injected seq numbers
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <69e28c910805221115g6290e5e9nef4444efca07aea@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <47FAB829.9010304@latinsud.com> <200804081025.39645.mb@bu3sch.de>
-	 <loom.20080522T171937-155@post.gmane.org>
-	 <69e28c910805221115g6290e5e9nef4444efca07aea@mail.gmail.com>
+	Mon, 26 May 2008 01:42:32 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1136172fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 25 May 2008 22:42:30 -0700 (PDT)
+Date: Mon, 26 May 2008 08:42:26 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
+	flamingice@sourmilk.net
+Subject: Re: regression iwl3945/mac80211: association times out since
+	2.6.26-rc1
+Message-ID: <20080526054040.GA7207@robinhood.home> (sfid-20080526_074235_995217_D1E652A8)
+References: <20080520184859.GA8168@robinhood.home>
+	<20080521054743.GA9910@robinhood.home>
+	<20080524182852.GA9722@robinhood.home>
+	<1ba2fa240805241624t4999d108uef78b30408a5c545@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240805241624t4999d108uef78b30408a5c545@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 7:48 PM, JMF <tolas_feup@hotmail.com> wrote:
-> Michael Buesch <mb@...> writes:
->  (...)
->> > +   if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
->> > +           return TXRX_CONTINUE;
->  (...)
->> This does not work, since we use injection for other types of
->>  frames. For example management frames from hostapd. We don't want
->>  (and can't) make hostapd keep track of sequence numbers.
->> You'll have to contact radiotap people and add a flag for this.
->>  This would also solve the hardware counter problem then.
->
-> The last time I saw tx.c, this should now be something like
->     info->flags & IEEE80211_TX_CTL_INJECTED
-> But as far as I can see the usage is the same.
-> And, unless I'm wrong, IEEE80211_TX_CTL_INJECTED is only used
->  with Monitor mode interfaces.
-> Does hostapd use monitor mode interfaces? Because if it doesn't,
->  and if I saw things correcly, info->flags won't be set to
->  IEEE80211_TX_CTL_INJECTED, right?
->
-> Any comments on this?
+On Sun, May 25, 2008 at 02:24:28AM +0300, Tomas Winkler wrote:
+> On Sat, May 24, 2008 at 9:29 PM, Michael S. Tsirkin
+> <m.s.tsirkin@gmail.com> wrote:
+> > On Wed, May 21, 2008 at 08:47:44AM +0300, Michael S. Tsirkin wrote:
+> >> FYI, I created an item in bugzilla to track this
+> >> http://bugzilla.kernel.org/show_bug.cgi?id=10765
+> >
+> > As requested, more configuration and log files have been attached
+> > to this item.
+> 
+> It looks like also this issue should be fixed by ' mac80211: reorder
+> channel and freq reporting in wext scan report' patch.
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/15177
+> Please try.
+> Thanks
+> Tomas
 
-The flag is IEEE80211_TX_INJECTED. Here is a new patch, for the
-current wireless-testing:
+I can confirm that the patch linked above has solved the regression for me.
+Is it queued for 2.6.26?
 
-Signed-off-by: Alejandro Grijalba Mart=EDnez <sud@latinsud.com>
-Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
-
----
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f35eaea..e5e8483 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -292,6 +292,9 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *t=
-x)
- {
-       struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *)tx->skb->d=
-ata;
-
-+       if (unlikely(tx->flags & IEEE80211_TX_INJECTED))
-+               return TX_CONTINUE;
-+
-       if (ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >=3D 2=
-4)
-               ieee80211_include_sequence(tx->sdata, hdr);
-
-
-
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+MST
