@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:47750 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762091AbYEHRnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 May 2008 13:43:32 -0400
-Date: Thu, 8 May 2008 10:42:14 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 08/16] b43: Fix dual-PHY devices
-Message-ID: <20080508174214.GI855@suse.de> (sfid-20080508_194235_526656_1370271B)
-References: <20080508173436.454278564@mini.kroah.org>
+Received: from el-out-1112.google.com ([209.85.162.178]:25195 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754502AbYEZOcX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 10:32:23 -0400
+Received: by el-out-1112.google.com with SMTP id s27so633350ele.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 07:32:20 -0700 (PDT)
+Message-ID: <1ba2fa240805260732g4c5942b2qec443dfc6d6339a7@mail.gmail.com> (sfid-20080526_163227_434183_A1578925)
+Date: Mon, 26 May 2008 17:32:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: fix deadlock in sta->lock
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1211811554.4843.4.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080508174122.GA855@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
+	 <1211811554.4843.4.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
-
-------------------
-From: Michael Buesch <mb@bu3sch.de>
-
-commit 2e35af143a1380173ba292e48e9b4913ef16b4ee upstream
-
-This fixes operation of dual-PHY (A/B/G) devices.
-Do not anounce the A-PHY to mac80211, as that's not supported, yet.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/net/wireless/b43/main.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3912,6 +3912,14 @@ static int b43_wireless_core_attach(stru
- 		err = -EOPNOTSUPP;
- 		goto err_powerdown;
- 	}
-+	if (1 /* disable A-PHY */) {
-+		/* FIXME: For now we disable the A-PHY on multi-PHY devices. */
-+		if (dev->phy.type != B43_PHYTYPE_N) {
-+			have_2ghz_phy = 1;
-+			have_5ghz_phy = 0;
-+		}
-+	}
-+
- 	dev->phy.gmode = have_2ghz_phy;
- 	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
- 	b43_wireless_core_reset(dev, tmp);
-
--- 
+On Mon, May 26, 2008 at 5:19 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-05-26 at 17:09 +0300, Tomas Winkler wrote:
+>> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+>>
+>> This patch fixes a deadlock of sta->lock use, occuring while changing
+>> tx aggregation states, as dev_queue_xmit end up in new function
+>> test_and_clear_sta_flags that uses that lock thus leading to deadlock
+>
+> Oh, good catch, thanks. Reminds me to debug the other deadlock I saw
+> (not mac80211 related though)
+>
+very encouraging :) . Can you send me details I also experience some
+lockups on rc2
+Thanks
+Tomas
