@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750959AbYEOF4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 01:56:15 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 01/26] iwlwifi: changing irrelevant comment
-Date: Thu, 15 May 2008 13:53:53 +0800
-Message-Id: <1210830858-3410-2-git-send-email-yi.zhu@intel.com> (sfid-20080515_075621_039352_4B66B27F)
-In-Reply-To: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
-References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
+Received: from gateway-1237.mvista.com ([63.81.120.158]:23291 "EHLO
+	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbYE0Eeo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 00:34:44 -0400
+Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
+From: Daniel Walker <dwalker@mvista.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Rusty Russell <rusty@rustcorp.com.au>,
+	Michal Schmidt <mschmidt@redhat.com>, linville@tuxdriver.com,
+	mingo@elte.hu, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, arjan@infradead.org
+In-Reply-To: <20080527021503.GH30894@parisc-linux.org>
+References: <20080522232103.120033152@mvista.com>
+	 <20080526192914.31045d09@brian.englab.brq.redhat.com>
+	 <200805271117.23051.rusty@rustcorp.com.au>
+	 <20080527021503.GH30894@parisc-linux.org>
+Content-Type: text/plain
+Date: Mon, 26 May 2008 21:34:41 -0700
+Message-Id: <1211862881.18130.243.camel@localhost.localdomain> (sfid-20080527_063535_760572_F0E1F766)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch changes an old eeprom comment in probe flow.
+On Mon, 2008-05-26 at 20:15 -0600, Matthew Wilcox wrote:
+> On Tue, May 27, 2008 at 11:17:22AM +1000, Rusty Russell wrote:
+> > On Tuesday 27 May 2008 03:29:14 Michal Schmidt wrote:
+> > > Mutexes are not allowed in interrupt context, not even mutex_trylock.
+> > 
+> > As an aside, does anyone know why?  I know the documentation says so, but it 
+> > wasn't immediately obvious to me.  I asked before to no response...
+> 
+> Because mutexes have an owner.  In interrupt context, there is no owner.
+> This owner is used to do priority boosts as well as debugging.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I don't think regular mutexes do boosting, the rtmutex does tho .. I
+think it's more a issue with lockdep complaining about the context, but
+that exists to just plain disallow this type of usage on principal .
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 55ca752..d0f948d 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -6605,7 +6605,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	if (err)
- 		goto out_iounmap;
- 
--	/* MAC Address location in EEPROM same for 3945/4965 */
-+	/* extract MAC Address */
- 	iwl_eeprom_get_mac(priv, priv->mac_addr);
- 	IWL_DEBUG_INFO("MAC address: %s\n", print_mac(mac, priv->mac_addr));
- 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
--- 
-1.5.3.6
+Daniel
 
