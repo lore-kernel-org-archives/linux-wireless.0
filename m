@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:54532 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910AbYEQVbD (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:43319 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014AbYE0LYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 17:31:03 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so748629rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 14:31:02 -0700 (PDT)
-Message-ID: <14b026160805171431y7e758ef2tf8c9c85408e20aa5@mail.gmail.com> (sfid-20080517_233128_284897_40220F8D)
-Date: Sat, 17 May 2008 23:31:02 +0200
-From: "=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=" <zajec5polish@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: Add hooks for firmware debugging
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200805172324.13818.mb@bu3sch.de>
+	Tue, 27 May 2008 07:24:20 -0400
+Date: Tue, 27 May 2008 05:24:03 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Daniel Walker <dwalker@mvista.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>,
+	Michal Schmidt <mschmidt@redhat.com>, linville@tuxdriver.com,
+	mingo@elte.hu, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, arjan@infradead.org
+Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
+Message-ID: <20080527112403.GI30894@parisc-linux.org> (sfid-20080527_132424_117790_B981F57A)
+References: <20080522232103.120033152@mvista.com> <20080526192914.31045d09@brian.englab.brq.redhat.com> <200805271117.23051.rusty@rustcorp.com.au> <20080527021503.GH30894@parisc-linux.org> <1211862881.18130.243.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200805172244.35966.mb@bu3sch.de>
-	 <69e28c910805171421l69ca2f3ame3b61a94fdc5921a@mail.gmail.com>
-	 <200805172324.13818.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1211862881.18130.243.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAwOC81LzE3LCBNaWNoYWVsIEJ1ZXNjaCA8bWJAYnUzc2NoLmRlPjoKPiBPbiBTYXR1cmRheSAx
-NyBNYXkgMjAwOCAyMzoyMToyMiBTdGVmYW5payBHw6Fib3Igd3JvdGU6Cj4gID4gSG1tLi4uIHdo
-YXQncyB0aGlzPyBBcmUgd2UgcGxhbm5pbmcgc29tZXRoaW5nIGFsb25nIHRoZSBsaW5lcyBvZgo+
-ICA+IHByaXNtNTQncyBGcmVlTUFDPwo+Cj4KPiBodHRwOi8vYnUzc2NoLmRlL2dpdHdlYj9wPWI0
-My11Y29kZS5naXQ7YT1zdW1tYXJ5Cj4KPiAgRG9lc24ndCB3b3JrLCB5ZXQuIFNvIHlvdSBkb24n
-dCBuZWVkIHRvIHRyeS4gOykKCk9oIG1hbiwgb3BlbiBzb3VyY2UgZnc/IFRoYXQncyBzbyBuaWNl
-IHRvIGhlYXIgdGhhdCEgSSBleHRyZW1seSBob3BlCnlvdSB3aWxsIGFibGUgdG8gbWFrZSB0aGlz
-IHdvcmtpbmchCgpPcGVuIGZ3IGNvdWxkIGJlIGluY2x1ZGVkIGluIGFueSBkaXN0cm8sIHJpZ2h0
-PwoKLS0gClJhZmHFgiBNacWCZWNraQo=
+On Mon, May 26, 2008 at 09:34:41PM -0700, Daniel Walker wrote:
+> 
+> On Mon, 2008-05-26 at 20:15 -0600, Matthew Wilcox wrote:
+> > On Tue, May 27, 2008 at 11:17:22AM +1000, Rusty Russell wrote:
+> > > On Tuesday 27 May 2008 03:29:14 Michal Schmidt wrote:
+> > > > Mutexes are not allowed in interrupt context, not even mutex_trylock.
+> > > 
+> > > As an aside, does anyone know why?  I know the documentation says so, but it 
+> > > wasn't immediately obvious to me.  I asked before to no response...
+> > 
+> > Because mutexes have an owner.  In interrupt context, there is no owner.
+> > This owner is used to do priority boosts as well as debugging.
+> 
+> I don't think regular mutexes do boosting, the rtmutex does tho .. I
+> think it's more a issue with lockdep complaining about the context, but
+> that exists to just plain disallow this type of usage on principal .
+
+You're right, I got confused, it's only rtmutexes that do priority
+inheritance.
+
+I suppose we could have a special 'interrupt context' owner for
+the purposes of LOCKDEP.  Ingo?
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
