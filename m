@@ -1,203 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:54090 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761910AbYEVLJb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 07:09:31 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3468525waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 22 May 2008 04:09:30 -0700 (PDT)
-Message-ID: <1ba2fa240805220409u470bd5b2o83ab02be05d05850@mail.gmail.com> (sfid-20080522_131027_978365_D68A5823)
-Date: Thu, 22 May 2008 14:09:30 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFA] iwl4965: support mesh networking
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <1211447482.3698.50.camel@johannes.berg>
+Received: from ms6.Sony.CO.JP ([211.125.136.204]:52394 "EHLO ms6.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757025AbYE0H1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 03:27:01 -0400
+Date: Tue, 27 May 2008 16:24:31 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Daniel Walker <dwalker@mvista.com>
+Subject: Re: [PATCH 1/3] ps3: gelic: scan_lock semaphore to mutex
+Cc: netdev@vger.kernel.org, jgarzik@pobox.com, netdev@vger.kernel.org,
+	matthew@wil.cx, rusty@rustcorp.com.au, mingo@elte.hu,
+	linux-kernel@vger.kernel.org, arjan@infradead.org,
+	geoffrey.levand@am.sony.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20080522195404.061391772@mvista.com>
+References: <20080522195404.061391772@mvista.com>
+Message-Id: <20080527161710.0149.40F06B3A@sm.sony.co.jp> (sfid-20080527_092742_716531_2D1C5CB3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211447482.3698.50.camel@johannes.berg>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 22, 2008 at 12:11 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This tries to make iwl4965 support mesh, but it doesn't actually work.
->
-> Here's my s-o-b so anyone else can try to make it work, I haven't
-> figured out yet what the bug is...
->
-> It seems that the iwlwifi card doesn't beacon, so the mesh state machine
-> gets stuck.
->
+Added CC: linux-wireless
 
-It does beaconing in general (we have working IBSS and AP)  the
-dev_type must be  RXON_DEV_TYPE_IBSS or AP depends I'm just not
-familiar with the MESH stuff.
+On Thu, 22 May 2008 00:00:01 -0700
+Daniel Walker <dwalker@mvista.com> wrote:
 
-Tomas
+> Signed-off-by: Daniel Walker <dwalker@mvista.com>
+> 
 
+patches #1 - #3:
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+
 > ---
->  drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |    9 ++++++---
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    3 ++-
->  drivers/net/wireless/iwlwifi/iwl-sta.c      |   10 +++++++---
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |   17 ++++++++++++-----
->  4 files changed, 27 insertions(+), 12 deletions(-)
->
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl4965-base.c 2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl4965-base.c      2008-05-22 10:44:59.000000000 +0200
-> @@ -584,7 +584,8 @@ unsigned int iwl4965_fill_beacon_frame(s
->
->        if (!iwl_is_associated(priv) || !priv->ibss_beacon ||
->            ((priv->iw_mode != IEEE80211_IF_TYPE_IBSS) &&
-> -            (priv->iw_mode != IEEE80211_IF_TYPE_AP)))
-> +            (priv->iw_mode != IEEE80211_IF_TYPE_AP) &&
-> +            (priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT)))
->                return 0;
->
->        if (priv->ibss_beacon->len > left)
-> @@ -1158,6 +1159,7 @@ static void iwl4965_connection_init_rx_c
->                break;
->
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->                priv->staging_rxon.dev_type = RXON_DEV_TYPE_IBSS;
->                priv->staging_rxon.flags = RXON_FLG_SHORT_PREAMBLE_MSK;
->                priv->staging_rxon.filter_flags = RXON_FILTER_BCON_AWARE_MSK |
-> @@ -1193,7 +1195,8 @@ static void iwl4965_connection_init_rx_c
->         * in some case A channels are all non IBSS
->         * in this case force B/G channel
->         */
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !(is_channel_ibss(ch_info)))
->                ch_info = &priv->channel_info[0];
->
-> @@ -1218,7 +1221,8 @@ static void iwl4965_connection_init_rx_c
->
->  static int iwl4965_set_mode(struct iwl_priv *priv, int mode)
->  {
-> -       if (mode == IEEE80211_IF_TYPE_IBSS) {
-> +       if (mode == IEEE80211_IF_TYPE_IBSS ||
-> +           mode == IEEE80211_IF_TYPE_MESH_POINT) {
->                const struct iwl_channel_info *ch_info;
->
->                ch_info = iwl_get_channel_info(priv,
-> @@ -3947,6 +3951,7 @@ static void iwl4965_post_associate(struc
->                break;
->
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->
->                /* clear out the station table */
->                iwlcore_clear_stations_table(priv);
-> @@ -3970,7 +3975,8 @@ static void iwl4965_post_associate(struc
->        iwl_chain_noise_reset(priv);
->        priv->start_calib = 1;
->
-> -       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
-> +       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +           priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT)
->                priv->assoc_station_added = 1;
->
->        iwl4965_activate_qos(priv, 0);
-> @@ -4960,7 +4966,8 @@ static int iwl4965_mac_beacon_update(str
->                return -EIO;
->        }
->
-> -       if (priv->iw_mode != IEEE80211_IF_TYPE_IBSS) {
-> +       if (priv->iw_mode != IEEE80211_IF_TYPE_IBSS &&
-> +           priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT) {
->                IWL_DEBUG_MAC80211("leave - not IBSS\n");
->                mutex_unlock(&priv->mutex);
->                return -EIO;
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-sta.c      2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-sta.c   2008-05-22 10:44:59.000000000 +0200
-> @@ -46,7 +46,8 @@ u8 iwl_find_station(struct iwl_priv *pri
->        DECLARE_MAC_BUF(mac);
->
->        if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) ||
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_AP))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_AP) ||
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                start = IWL_STA_ID;
->
->        if (is_broadcast_ether_addr(addr))
-> @@ -229,7 +230,8 @@ u8 iwl_add_station_flags(struct iwl_priv
->
->        /* BCAST station and IBSS stations do not work in HT mode */
->        if (index != priv->hw_params.bcast_sta_id &&
-> -           priv->iw_mode != IEEE80211_IF_TYPE_IBSS)
-> +           priv->iw_mode != IEEE80211_IF_TYPE_IBSS &&
-> +           priv->iw_mode != IEEE80211_IF_TYPE_MESH_POINT)
->                iwl_set_ht_add_station(priv, index, ht_info);
->
->        spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
-> @@ -575,7 +577,8 @@ int iwl_send_lq_cmd(struct iwl_priv *pri
->        };
->
->        if ((lq->sta_id == 0xFF) &&
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                return -EINVAL;
->
->        if (lq->sta_id == 0xFF)
-> @@ -712,6 +715,7 @@ int iwl_get_sta_id(struct iwl_priv *priv
->        /* If this frame is going out to an IBSS network, find the station,
->         * or create a new station table entry */
->        case IEEE80211_IF_TYPE_IBSS:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->                sta_id = iwl_find_station(priv, hdr->addr1);
->                if (sta_id != IWL_INVALID_STATION)
->                        return sta_id;
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-4965-rs.c  2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-4965-rs.c       2008-05-22 10:44:59.000000000 +0200
-> @@ -835,7 +835,8 @@ static void rs_tx_status(void *priv_rate
->        if (!priv->lq_mngr.lq_ready)
->                goto out;
->
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !lq_sta->ibss_sta_added)
->                goto out;
->
-> @@ -2088,7 +2089,8 @@ static void rs_initialize_lq(struct iwl_
->        i = sta->last_txrate_idx;
->
->        if ((lq_sta->lq.sta_id == 0xff) &&
-> -           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS))
-> +           (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT))
->                goto out;
->
->        valid_tx_ant = priv->hw_params.valid_tx_ant;
-> @@ -2158,7 +2160,8 @@ static void rs_get_rate(void *priv_rate,
->        lq_sta = (struct iwl4965_lq_sta *)sta->rate_ctrl_priv;
->        i = sta->last_txrate_idx;
->
-> -       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS) &&
-> +       if ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +            priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) &&
->            !lq_sta->ibss_sta_added) {
->                u8 sta_id = iwl_find_station(priv, hdr->addr1);
->                DECLARE_MAC_BUF(mac);
-> --- everything.orig/drivers/net/wireless/iwlwifi/iwl-core.c     2008-05-22 10:42:27.000000000 +0200
-> +++ everything/drivers/net/wireless/iwlwifi/iwl-core.c  2008-05-22 10:44:59.000000000 +0200
-> @@ -245,7 +245,8 @@ void iwl_reset_qos(struct iwl_priv *priv
->        spin_lock_irqsave(&priv->lock, flags);
->        priv->qos_data.qos_active = 0;
->
-> -       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS) {
-> +       if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS ||
-> +           priv->iw_mode == IEEE80211_IF_TYPE_MESH_POINT) {
->                if (priv->qos_data.qos_enable)
->                        priv->qos_data.qos_active = 1;
->                if (!(priv->active_rate & 0xfff0)) {
->
->
->
+>  drivers/net/ps3_gelic_wireless.c |   18 +++++++++---------
+>  drivers/net/ps3_gelic_wireless.h |    2 +-
+>  2 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> Index: linux-2.6.25/drivers/net/ps3_gelic_wireless.c
+> ===================================================================
+> --- linux-2.6.25.orig/drivers/net/ps3_gelic_wireless.c
+> +++ linux-2.6.25/drivers/net/ps3_gelic_wireless.c
+> @@ -695,7 +695,7 @@ static int gelic_wl_get_scan(struct net_
+>  	unsigned long this_time = jiffies;
+>  
+>  	pr_debug("%s: <-\n", __func__);
+> -	if (down_interruptible(&wl->scan_lock))
+> +	if (mutex_lock_interruptible(&wl->scan_lock))
+>  		return -EAGAIN;
+>  
+>  	switch (wl->scan_stat) {
+> @@ -733,7 +733,7 @@ static int gelic_wl_get_scan(struct net_
+>  	wrqu->data.length = ev - extra;
+>  	wrqu->data.flags = 0;
+>  out:
+> -	up(&wl->scan_lock);
+> +	mutex_unlock(&wl->scan_lock);
+>  	pr_debug("%s: -> %d %d\n", __func__, ret, wrqu->data.length);
+>  	return ret;
+>  }
+> @@ -1554,7 +1554,7 @@ static int gelic_wl_start_scan(struct ge
+>  	int ret = 0;
+>  
+>  	pr_debug("%s: <- always=%d\n", __func__, always_scan);
+> -	if (down_interruptible(&wl->scan_lock))
+> +	if (mutex_lock_interruptible(&wl->scan_lock))
+>  		return -ERESTARTSYS;
+>  
+>  	/*
+> @@ -1588,7 +1588,7 @@ static int gelic_wl_start_scan(struct ge
+>  	}
+>  	kfree(cmd);
+>  out:
+> -	up(&wl->scan_lock);
+> +	mutex_unlock(&wl->scan_lock);
+>  	pr_debug("%s: ->\n", __func__);
+>  	return ret;
+>  }
+> @@ -1610,7 +1610,7 @@ static void gelic_wl_scan_complete_event
+>  	DECLARE_MAC_BUF(mac);
+>  
+>  	pr_debug("%s:start\n", __func__);
+> -	down(&wl->scan_lock);
+> +	mutex_lock(&wl->scan_lock);
+>  
+>  	if (wl->scan_stat != GELIC_WL_SCAN_STAT_SCANNING) {
+>  		/*
+> @@ -1727,7 +1727,7 @@ static void gelic_wl_scan_complete_event
+>  			    NULL);
+>  out:
+>  	complete(&wl->scan_done);
+> -	up(&wl->scan_lock);
+> +	mutex_unlock(&wl->scan_lock);
+>  	pr_debug("%s:end\n", __func__);
+>  }
+>  
+> @@ -2282,7 +2282,7 @@ static void gelic_wl_assoc_worker(struct
+>  	wait_for_completion(&wl->scan_done);
+>  
+>  	pr_debug("%s: scan done\n", __func__);
+> -	down(&wl->scan_lock);
+> +	mutex_lock(&wl->scan_lock);
+>  	if (wl->scan_stat != GELIC_WL_SCAN_STAT_GOT_LIST) {
+>  		gelic_wl_send_iwap_event(wl, NULL);
+>  		pr_info("%s: no scan list. association failed\n", __func__);
+> @@ -2302,7 +2302,7 @@ static void gelic_wl_assoc_worker(struct
+>  	if (ret)
+>  		pr_info("%s: association failed %d\n", __func__, ret);
+>  scan_lock_out:
+> -	up(&wl->scan_lock);
+> +	mutex_unlock(&wl->scan_lock);
+>  out:
+>  	up(&wl->assoc_stat_lock);
+>  }
+> @@ -2431,7 +2431,7 @@ static struct net_device *gelic_wl_alloc
+>  
+>  	INIT_DELAYED_WORK(&wl->event_work, gelic_wl_event_worker);
+>  	INIT_DELAYED_WORK(&wl->assoc_work, gelic_wl_assoc_worker);
+> -	init_MUTEX(&wl->scan_lock);
+> +	mutex_init(&wl->scan_lock);
+>  	init_MUTEX(&wl->assoc_stat_lock);
+>  
+>  	init_completion(&wl->scan_done);
+> Index: linux-2.6.25/drivers/net/ps3_gelic_wireless.h
+> ===================================================================
+> --- linux-2.6.25.orig/drivers/net/ps3_gelic_wireless.h
+> +++ linux-2.6.25/drivers/net/ps3_gelic_wireless.h
+> @@ -241,7 +241,7 @@ enum gelic_wl_assoc_state {
+>  #define GELIC_WEP_KEYS 4
+>  struct gelic_wl_info {
+>  	/* bss list */
+> -	struct semaphore scan_lock;
+> +	struct mutex scan_lock;
+>  	struct list_head network_list;
+>  	struct list_head network_free_list;
+>  	struct gelic_wl_scan_info *networks;
+> 
+> -- 
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+Masakazu Mokuno
+
