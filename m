@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:43662 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbYEOQxF (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:21650 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755166AbYE0GlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 12:53:05 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so207261nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 09:53:03 -0700 (PDT)
-Message-ID: <eb97335b0805150953m5d5fd39bm896b7a108a1909c@mail.gmail.com> (sfid-20080515_185318_110595_CCB57149)
-Date: Thu, 15 May 2008 12:53:03 -0400
-From: "Zack Weinberg" <zackw@panix.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com>
+	Tue, 27 May 2008 02:41:13 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2529177waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 23:41:13 -0700 (PDT)
+Message-ID: <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com> (sfid-20080527_084124_263733_92B21A8B)
+Date: Tue, 27 May 2008 09:41:12 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Joonwoo Park" <joonwpark81@gmail.com>
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
-	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
-	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
-	 <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
-	 <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com>
-	 <b6c5339f0805150945j8c3847ctd66f88180902a029@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 15, 2008 at 12:45 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Thu, May 15, 2008 at 10:41 AM, Zack Weinberg <zackw@panix.com> wrote:
->>> Interesting...  can you confirm that madwifi also will not start from a cold
->>> boot?
->>
->> Yes, madwifi will not start from a cold boot.
+On Tue, May 27, 2008 at 8:13 AM, Joonwoo Park <joonwpark81@gmail.com> wrote:
+> Fix overflow which is occured by long wep key configuring.
+> Also, this patch contains some cleanup for not to do memcpy with
+> zero size.
 >
-> Ugh, well that is not good.  Does ndiswrapper work?
-
-I haven't tried it, but wireless does work under Windows (Vista,
-vendor installation).
-
-> Unless anyone
-> else has ideas, I would suggest capturing a trace using mmiotrace and
-> ndiswrapper to see what is going on.  Someone on ath5k-devel list
-> might have a better idea.
-
-I don't know how to do that, can you point me at instructions?
-
->> It's not hanging. The very first call to ath5k_hw_set_power(ah,
->> AR5K_PM_AWAKE, true, 0); from ath5k_hw_nic_wakeup fails with -EIO, and
->> the driver gives up.
+> $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
 >
-> By 'hanging' I mean the register writes cease to do anything useful
-> and the card basically stops responding until you power off.  Madwifi
-> will even give "Card didn't behave as expected" in this case
 
-Oh, okay.  That is indeed the error message I'm getting from madwifi.
-
-zw
+WEP key is of fixed size 13 or  5 bytes, this setting should be
+refused somewhere in the mac wext handler.
+NACK.
+Tomas
