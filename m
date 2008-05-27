@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47851 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755672AbYEVSWx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 14:22:53 -0400
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies -
-	2.6.26-rc1 kernel
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Vincent C Jones <v.jones@networkingunlimited.com>,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-In-Reply-To: <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com>
-	 <1210430367.3778.9.camel@X61.NetworkingUnlimited.com>
-	 <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>
-	 <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>
-	 <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>
-	 <1210617467.3792.4.camel@X61.DFGI.com>
-	 <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 22 May 2008 14:22:59 -0400
-Message-Id: <1211480579.28022.5.camel@localhost.localdomain> (sfid-20080522_202259_554507_FBCF2252)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.234]:39583 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757007AbYE0HK7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 03:10:59 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so2793490rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 May 2008 00:10:59 -0700 (PDT)
+Message-ID: <b25c3fa70805270010r10b7b29brd6c67ef9a0253e66@mail.gmail.com> (sfid-20080527_091114_094447_3F259758)
+Date: Tue, 27 May 2008 00:10:59 -0700
+From: "Joonwoo Park" <joonwpark81@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Cc: "Zhu Yi" <yi.zhu@intel.com>,
+	"Reinette Chatre" <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
+	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-05-22 at 19:53 +0300, Tomas Winkler wrote:
-> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
-> <v.jones@networkingunlimited.com> wrote:
-> >
-> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
-> >
-> >> Meanwhile we've reproduced the wpa_supplicant issue...
-> >>
-> >
-> > That is great news. Let me know when it is time to test again...
-> 
-> Please try this one. I've just pasted that in so it's might be
-> white-space-wise broken
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 7877d3b..5996e3d 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -4080,17 +4080,18 @@ ieee80211_sta_scan_result(struct net_device *dev,
->                                                   IW_EV_UINT_LEN);
->         }
-> 
-> +
->         memset(&iwe, 0, sizeof(iwe));
->         iwe.cmd = SIOCGIWFREQ;
-> -       iwe.u.freq.m = bss->freq;
-> -       iwe.u.freq.e = 6;
-> +       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
-> +       iwe.u.freq.e = 0;
->         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
->                                           IW_EV_FREQ_LEN);
-> 
->         memset(&iwe, 0, sizeof(iwe));
->         iwe.cmd = SIOCGIWFREQ;
-> -       iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
-> -       iwe.u.freq.e = 0;
-> +       iwe.u.freq.m = bss->freq;
-> +       iwe.u.freq.e = 6;
->         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
->                                           IW_EV_FREQ_LEN);
+2008/5/26 Tomas Winkler <tomasw@gmail.com>:
+> On Tue, May 27, 2008 at 8:13 AM, Joonwoo Park <joonwpark81@gmail.com> wrote:
+>> Fix overflow which is occured by long wep key configuring.
+>> Also, this patch contains some cleanup for not to do memcpy with
+>> zero size.
+>>
+>> $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
+>>
+>
+> WEP key is of fixed size 13 or  5 bytes, this setting should be
+> refused somewhere in the mac wext handler.
+> NACK.
+> Tomas
+>
 
-Wait a minute; what's mac80211 sending _two_ FREQ events for?  That's
-not right.
+It sounds reasonable. I'll dig this problem more.
 
-Dan
-
-
+Thanks,
+Joonwoo
