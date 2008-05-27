@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:16469 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbYETHva (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 03:51:30 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: fix multicast filtering on eth and msh interfaces.
-Date: Tue, 20 May 2008 09:51:14 +0200
-Cc: David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <1211208955.21380.163.camel@pmac.infradead.org>
-In-Reply-To: <1211208955.21380.163.camel@pmac.infradead.org>
+Received: from iabervon.org ([66.92.72.58]:33812 "EHLO iabervon.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752191AbYE0Bi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 21:38:59 -0400
+Date: Mon, 26 May 2008 21:38:58 -0400 (EDT)
+From: Daniel Barkalow <barkalow@iabervon.org>
+To: linux-wireless@vger.kernel.org
+cc: ipw3945-devel@lists.sourceforge.com
+Subject: rf_kill and txpower.disabled on iwl3945
+Message-ID: <alpine.LNX.1.00.0801301319200.13593@iabervon.org> (sfid-20080527_033905_049740_33AC00DB)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805200951.14516.hs4233@mail.mn-solutions.de> (sfid-20080520_095153_780235_BF15E9BD)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces trailing blanks, e.g. here:
+I've been having a problem where restarting the userspace handling for my 
+wifi would make it stop working entirely. I eventually tracked this down 
+to the conflation of txpower.disable and rf_kill; if I make siwtxpower not 
+change radio_enabled, it all works as expected.
 
+I think there are two issues:
 
-> +	     dev = (dev==priv->mesh_dev?NULL:priv->mesh_dev)) {
-> +		if ((dev_get_flags(dev) & (IFF_UP|IFF_MULTICAST)) !=
-> +		    (IFF_UP|IFF_MULTICAST))
-> +			continue;
+# iwconfig iface txpower off
+# echo 0 > /sys/class/net/iface/device/rf_kill
+# iwconfig iface <anything>
 
+Causes the radio to go back to being disabled, to the confusion of 
+userspace (or at least, me), since it's not expected that changing other
+settings will kill the radio again.
 
-The whole warning was: Warning: trailing whitespace in lines
-621,625,654 of drivers/net/wireless/libertas/main.c.
+Also, I think I was having a problem with:
 
+# iwconfig iface txpower off
+# iwconfig iface txpower auto
 
-I also had one patch reject against wireless-testing,
-v2.6.26-rc2-7503-gc24e096, which was easy to fix:
+because it tries using REPLY_TX_POWER_TABLE_CMD before it unkills the 
+radio, but the part that's supposed to respond to that command is shut off 
+when the radio is killed. And it seems to fail, therefore, and then not 
+actually unkill the radio.
 
-@@ -1169,6 +1202,7 @@ int lbs_remove_card(struct lbs_private *priv)
+Is "txpower off" (or !radio_enabled) supposed to disable the radio 
+completely (such that the driver can't turn on the chipset temporarily to 
+configure it or get its configuration), or is it just supposed to be a 
+power saving measure, and not affect the availability of other operations?
 
-        cancel_delayed_work(&priv->scan_work);
-        cancel_delayed_work(&priv->assoc_work);
-+       cancel_work_sync(&priv->mcast_work);
-        destroy_workqueue(priv->work_thread);
-
-        if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+	-Daniel
+*This .sig left intentionally blank*
