@@ -1,122 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52482 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932811AbYEGTRq (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:57558 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752906AbYE0G2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 15:17:46 -0400
-Subject: Re: b43 doing tx-status reports with NULL frames?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200805071500.32033.mb@bu3sch.de> (sfid-20080507_150018_586767_9F2BD6EE)
-References: <1210158511.5642.1.camel@johannes.berg>
-	 <200805071500.32033.mb@bu3sch.de> (sfid-20080507_150018_586767_9F2BD6EE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zTV3BIBjXpC8UDdQqhgR"
-Date: Wed, 07 May 2008 21:17:05 +0200
-Message-Id: <1210187825.5642.25.camel@johannes.berg> (sfid-20080507_211713_151613_EF77E765)
-Mime-Version: 1.0
+	Tue, 27 May 2008 02:28:50 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2522599waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 23:28:50 -0700 (PDT)
+Message-ID: <1ba2fa240805262328n2443c3bfr8e3fbf8ea88e1fd8@mail.gmail.com> (sfid-20080527_082855_279876_3762D547)
+Date: Tue, 27 May 2008 09:28:50 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: Barteq <barteqpl@gmail.com>
+Subject: Re: oops while trying to associate with TKIP-PSK network
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <op.ubsd290bi79708@thinkpad>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <op.ubsd290bi79708@thinkpad>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 27, 2008 at 3:24 AM, Barteq <barteqpl@gmail.com> wrote:
+> Hello developers!
+>
+> I've got ubuntu backported kernel with iwl4965 driver version 1.2.26ks.
+> Short after computer is being on it tries to associate with my home WPA-PSK
+> network. After some tries it OOPS and forces me to reboot computer.
+> Maybe it is fixed in the newest version, but I'm unable to build it due to
+> compile errors (under 2.6.25-1-generic).
+>
+> Trace below:
+>
+> May 27 01:51:48 thinkpad kernel: [  208.540680] wlan0: authenticate with AP
+> 00:13:10:4a:c6:88
+> May 27 01:51:48 thinkpad kernel: [  208.542393] wlan0: RX authentication
+> from 00:13:10:4a:c6:88 (alg=0 transaction=2 status=0)
+> May 27 01:51:48 thinkpad kernel: [  208.542393] wlan0: authenticated
+> May 27 01:51:48 thinkpad kernel: [  208.542393] wlan0: associate with AP
+> 00:13:10:4a:c6:88
+> May 27 01:51:48 thinkpad kernel: [  208.542393] BUG: unable to handle kernel
+> NULL pointer dereference at 00000090
+> May 27 01:51:48 thinkpad kernel: [  208.542393] IP: [<f8c2740c>]
+> :mac80211:ieee80211_associate+0x24c/0x640
+> May 27 01:51:48 thinkpad kernel: [  208.542393] *pde = 00000000
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Oops: 0000 [#1] SMP
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Modules linked in: af_packet
+> ipv6 binfmt_misc container sbs sbshc acpi_cpufreq cpufreq_powersav
+> e cpufreq_stats cpufreq_userspace cpufreq_ondemand cpufreq_conservative
+> freq_table iptable_filter ip_tables x_tables ext3 jbd mbcache hdaps inp
+> ut_polldev uinput loop joydev arc4 ecb snd_hda_intel snd_pcsp pcmcia iwl4965
+> snd_pcm_oss snd_mixer_oss snd_seq_oss psmouse iwlcore snd_pcm rfki
+> ll snd_seq_midi serio_raw iTCO_wdt iTCO_vendor_support yenta_socket
+> rsrc_nonstatic mac80211 ac video snd_rawmidi pcmcia_core battery cfg80211 b
+> ay output nvidia(P) snd_seq_midi_event snd_seq agpgart i2c_core snd_timer
+> snd_seq_device snd soundcore button snd_page_alloc e1000e shpchp pci_
+> hotplug thinkpad_acpi led_class nvram evdev reiserfs sha256_generic aes_i586
+> aes_generic cbc sr_mod cdrom piix ide_pci_generic ide_core sg sd_m
+> od ata_piix ata_generic ohci1394 ieee1394 pata_acpi ahci libata scsi_mod
+> dock ehci_hcd uhci_hcd usbcore dm_crypt crypto_blkcipher dm_mirror dm_log
+> dm_snapshot dm_mod ther
+> May 27 01:51:48 thinkpad kernel: al processor fan fbcon tileblit font
+> bitblit softcursor fuse
+> May 27 01:51:48 thinkpad kernel: [  208.542393]
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Pid: 4534, comm: iwl4965
+> Tainted: P          (2.6.25-1-generic #1)
+> May 27 01:51:48 thinkpad kernel: [  208.542393] EIP: 0060:[<f8c2740c>]
+> EFLAGS: 00010246 CPU: 0
+> May 27 01:51:48 thinkpad kernel: [  208.542393] EIP is at
+> ieee80211_associate+0x24c/0x640 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393] EAX: 00000000 EBX: f5c3c810
+> ECX: 00000000 EDX: f5c3c82c
+> May 27 01:51:48 thinkpad kernel: [  208.542393] ESI: f7e42e84 EDI: f5c3c82e
+> EBP: 00000421 ESP: f7923d4c
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  DS: 007b ES: 007b FS: 00d8
+> GS: 0000 SS: 0068
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Process iwl4965 (pid: 4534,
+> ti=f7922000 task=f7a51360 task.ti=f7922000)
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Stack: f7e42e84 00000000
+> f7923d88 f7e42e38 f7e42800 f5c01240 33323435 205d3339
+> May 27 01:51:48 thinkpad kernel: [  208.542393]        00000000 f7923ed7
+> f5c3c82c f7c294c4 00000000 00000000 f7e42d00 313a3030
+> May 27 01:51:48 thinkpad kernel: [  208.542393]        30313a33 3a61343a
+> 383a3663 f8c20038 f5e3c044 00000002 00000000 f7e42d00
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Call Trace:
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c20038>]
+> ieee80211_ioctl_siwauth+0x18/0x80 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c286c3>]
+> ieee80211_sta_rx_queued_mgmt+0xd13/0x10f0 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c3042d>]
+> __ieee80211_tx+0x7d/0x170 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]
+>  [dev_hard_start_xmit+0x21d/0x2b0] dev_hard_start_xmit+0x21d/0x2b0
+> May 27 01:51:48 thinkpad kernel: [  208.542393]
+>  [iwl4965:_spin_lock_bh+0x8/0x60] _spin_lock_bh+0x8/0x20
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c236ea>]
+> ieee80211_rx_bss_get+0xaa/0xc0 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c29810>]
+> ieee80211_sta_work+0x80/0x740 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [update_curr+0x41/0x70]
+> update_curr+0x41/0x70
+> May 27 01:51:48 thinkpad kernel: [  208.542393]
+>  [__dequeue_entity+0x50/0xc0] __dequeue_entity+0x50/0xc0
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [hrtick_set+0x69/0x130]
+> hrtick_set+0x69/0x130
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [jbd:schedule+0x26b/0x6c0]
+> schedule+0x26b/0x670
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<f8c29790>]
+> ieee80211_sta_work+0x0/0x740 [mac80211]
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [run_workqueue+0xb8/0x150]
+> run_workqueue+0xb8/0x150
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [worker_thread+0x0/0xe0]
+> worker_thread+0x0/0xe0
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [worker_thread+0x80/0xe0]
+> worker_thread+0x80/0xe0
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [<c013a760>]
+> autoremove_wake_function+0x0/0x40
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [worker_thread+0x0/0xe0]
+> worker_thread+0x0/0xe0
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [kthread+0x42/0x70]
+> kthread+0x42/0x70
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  [kthread+0x0/0x70]
+> kthread+0x0/0x70
+> May 27 01:51:48 thinkpad kernel: [  208.542393]
+>  [kernel_thread_helper+0x7/0x10] kernel_thread_helper+0x7/0x10
+> May 27 01:51:48 thinkpad kernel: [  208.542393]  =======================
+> May 27 01:51:48 thinkpad kernel: [  208.542393] Code: 00 8b 7c 24 0c 8b 54
+> 24 28 8b 47 70 88 42 01 8b 47 70 89 d7 83 c7 02 89 c1 c1 e9 02 f3 a5 89 c1
+> 83 e1 03 74 02 f3 a4 8b 4c 24 30 <8b> 89 90 00 00 00 85 c9 89 4c 24 38 0f 84
+> 92 03 00 00 8b 7c 24
+> May 27 01:51:48 thinkpad kernel: [  208.542393] EIP: [<f8c2740c>]
+> ieee80211_associate+0x24c/0x640 [mac80211] SS:ESP 0068:f7923d4c
+> May 27 01:51:48 thinkpad kernel: [  208.542403] ---[ end trace
+> f77f607b02413c6c ]---
+>
 
---=-zTV3BIBjXpC8UDdQqhgR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This one shell fix it up.
+http://marc.info/?l=linux-wireless&m=121120929012836&w=2
 
-
-> > That WARN_ON is:
-> >=20
-> >         if (WARN_ON(!skb))
-> >                 return;
-> >=20
-> > This was with dma overflow injection and a few patches, but nothing
-> > relevant inside b43.
->=20
-> hm, this is interesting.
->=20
-> Is it this one?
-> 1379                 if (meta->is_last_fragment) {
-> 1380                         B43_WARN_ON(!meta->skb);
-
-Uh, yes. I had added one in mac80211 (see above) because it crashed for
-me at that place once, but that one triggered as well:
-
-
-May  7 13:04:02 johannes kernel: [  847.811168] Badness at drivers/net/wire=
-less/b43/dma.c:1380
-May  7 13:04:02 johannes kernel: [  847.811174] NIP: f2530de4 LR: f2530dc8 =
-CTR: f252ff70
-May  7 13:04:02 johannes kernel: [  847.811182] REGS: d191bb20 TRAP: 0700  =
- Not tainted  (2.6.25-wl-06933-g0bacadf-dirty)
-May  7 13:04:02 johannes kernel: [  847.811188] MSR: 00021032 <ME,IR,DR>  C=
-R: 48242484  XER: 00000000
-May  7 13:04:02 johannes kernel: [  847.811205] TASK =3D d1918000[5078] 'wp=
-a_supplicant' THREAD: d191a000
-May  7 13:04:02 johannes kernel: [  847.811211] GPR00: 00000001 d191bbd0 d1=
-918000 edb89248 00000208 d191bbd8 00000000 000003cc=20
-May  7 13:04:02 johannes kernel: [  847.811230] GPR08: 00000001 00000000 00=
-010004 edb89200 48242488 10083d28 100e0000 100876e9=20
-May  7 13:04:02 johannes kernel: [  847.811249] GPR16: 100876d9 100876b1 22=
-042442 0000008a 00000002 1006071c ed88703c 00000000=20
-May  7 13:04:02 johannes kernel: [  847.811268] GPR24: d191bbd8 f2537d24 ee=
-513120 d191bc28 00000001 0000029e 00000041 ed887000=20
-May  7 13:04:02 johannes kernel: [  847.811288] NIP [f2530de4] b43_dma_hand=
-le_txstatus+0xd4/0x2e8 [b43]
-May  7 13:04:02 johannes kernel: [  847.811336] LR [f2530dc8] b43_dma_handl=
-e_txstatus+0xb8/0x2e8 [b43]
-
-
-> The "is_last_fragment" actually means "is last s/g fragment".
-> (not 802.11 fragment).
-
-Right, I know :)
-
-> So basically this assertion checks the presence of the skb buffer
-> for each s/g fragment. We use two s/g fragments for each TX packet.
-> One for the header and one for the skb. You already know that.
-> So, for the first s/g fragment we have meta->skb=3DNULL and for the
-> second meta->skb!=3DNULL.
-> I'm not sure why this assertion triggers. I can't see where in the TX pat=
-h
-> the allocation of the slots or the meta->skb assignment can go wrong.
-> Allocation basically always allocates the ring descriptors in pairs.
-> Either both or none (in case of a DMA error, but _not_ an overflow).
-> The ring suspend (or suspend injection) basically is independent from
-> the allocation.
->=20
-> Can you add the following assertion into b43_dma_tx() after the
-> b43_dma_tx_fragment call, please?
->=20
-> WARN_ON(free_slots(ring) & 1);
->=20
-> This shouldn't ever trigger, as we always allocate the slots in pairs.
-
-I don't even know if I can reproduce this, sorry. Also, if I can, with
-my patch to put things into skb->cb it'll all just crash...
-
-johannes
-
---=-zTV3BIBjXpC8UDdQqhgR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCIAL6Vg1VMiehFYAQKtWQ//fmlSz5sv3CytJRQYgo0zkK/j0+0lKjvM
-GQn5adye8Pp8bRXbFuPDjrK075XJcb7D1iI8SOCI70OZEpBVyQvpmsKhtksVyL36
-U6sw7uwejMxmy9/h5jBMQjbJ1GSjbPgail+FxhPyKzonB3+Q+zg18Mcy4nSelgTP
-0VgWDizsLQ3j0Wg1IAkH86P1QuUwbiKJHKEie+lfuYpAl4SxD+lFX+VxNnASUa7N
-7H3npms2OlsbRG3teskOK9kTTLhkrsYdyejQJOlA1UGQksNVZntAcYj1lutZ/GDc
-dtm5ZbB3xLjdIWdM4h7RigFvniMSTdUIluS7fHgkgFMXFvYisD31PYBHoAER4Cbk
-evEWY97B02+yuWyApRxFbavY+PKOskawC7YlgxhfjNiNaytdOyjJufNSrbY3hlOK
-bQ3OKl79Iuq5cqtLhIoUfXlXXpp6fu1wXgVoP/bLeUF45v8fF8HjvKW9tfWYl5jI
-mqeWLHP2oY62DVwHc8elS9KalxVkYhoqW2IHkqJu/hfQI015FjNTMAY9tLCmfNHj
-V1i4vM6/S45gBdDH0sbW7xEPSqrhlCWIHS4dfQkf2yba3B8p8PueNzgcmzvCdijg
-q1lgZuAT/QipTC152UmEo330eyKEiLIRC4/70w5rgaVlK/v0Wl9BgbVUfrOxI6T/
-QS+RRrQV9qw=
-=Tc/A
------END PGP SIGNATURE-----
-
---=-zTV3BIBjXpC8UDdQqhgR--
-
+Tomas
