@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57548 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:59788 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756019AbYE0UJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 16:09:01 -0400
-Subject: Re: [PATCH] libertas: before sleeping, check for a command result
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200805231604.13144.hs4233@mail.mn-solutions.de>
-References: <200805231604.13144.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 27 May 2008 16:08:52 -0400
-Message-Id: <1211918933.555.18.camel@localhost.localdomain> (sfid-20080527_220907_402651_882D1F1C)
-Mime-Version: 1.0
+	id S1753801AbYE0DbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 23:31:11 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2.6.26 2/3] iwlwifi: fix exit from stay_in_table state
+Date: Tue, 27 May 2008 11:29:34 +0800
+Message-Id: <1211858975-21424-2-git-send-email-yi.zhu@intel.com> (sfid-20080527_053116_278424_31328279)
+In-Reply-To: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
+References: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-05-23 at 16:04 +0200, Holger Schurig wrote:
-> If we don't check for a command response early, but rather sleep,
-> then we might sleep despite an already-received command response.
-> This will lead to a command-timeout.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+From: Guy Cohen <guy.cohen@intel.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+When exiting from stay in table state (e.g. timer expiration),
+all the statistics are reset and the RS flow should not continue
+but only after enough statistics are collected again.
 
-> Index: wireless-testing/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-05-23 14:25:16.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-05-23 14:25:51.000000000 +0200
-> @@ -722,14 +722,14 @@ static int lbs_thread(void *data)
->  			shouldsleep = 1;	/* Something is en route to the device already */
->  		else if (priv->tx_pending_len > 0)
->  			shouldsleep = 0;	/* We've a packet to send */
-> +		else if (priv->resp_len[priv->resp_idx])
-> +			shouldsleep = 0;	/* We have a command response */
->  		else if (priv->cur_cmd)
->  			shouldsleep = 1;	/* Can't send a command; one already running */
->  		else if (!list_empty(&priv->cmdpendingq))
->  			shouldsleep = 0;	/* We have a command to send */
->  		else if (__kfifo_len(priv->event_fifo))
->  			shouldsleep = 0;	/* We have an event to process */
-> -		else if (priv->resp_len[priv->resp_idx])
-> -			shouldsleep = 0;	/* We have a command response */
->  		else
->  			shouldsleep = 1;	/* No command */
->  
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index fa41ed1..838db19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1980,7 +1980,7 @@ lq_update:
+ 	 * 2)  Not just finishing up a search
+ 	 * 3)  Allowing a new search
+ 	 */
+-	if (!update_lq && !done_search && !lq_sta->stay_in_tbl) {
++	if (!update_lq && !done_search && !lq_sta->stay_in_tbl && window->counter) {
+ 		/* Save current throughput to compare with "search" throughput*/
+ 		lq_sta->last_tpt = current_tpt;
+ 
+-- 
+1.5.3.6
 
