@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36389 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755157AbYEAPoN (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:42473 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585AbYE0NNm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 11:44:13 -0400
-Date: Thu, 1 May 2008 11:43:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Message-ID: <20080501154358.GA3318@infradead.org> (sfid-20080501_174405_128360_ABB30D8A)
-References: <200805011638.15910.mb@bu3sch.de> <20080501153618.GA470@infradead.org> <200805011742.05302.mb@bu3sch.de>
+	Tue, 27 May 2008 09:13:42 -0400
+Date: Tue, 27 May 2008 07:13:25 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Daniel Walker <dwalker@mvista.com>
+Cc: linville@tuxdriver.com, rusty@rustcorp.com.au, mingo@elte.hu,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	arjan@infradead.org
+Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
+Message-ID: <20080527131325.GJ30894@parisc-linux.org> (sfid-20080527_151346_072924_0612C346)
+References: <20080522232103.120033152@mvista.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200805011742.05302.mb@bu3sch.de>
+In-Reply-To: <20080522232103.120033152@mvista.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 01, 2008 at 05:42:04PM +0200, Michael Buesch wrote:
-> Yeah. because it has to be done in every driver.
-> So we put the implementation into a central place, instead of
-> reimplementing the wheel over and over again. This way we avoid bugs,
-> like the "b43 broken on VIA boards" in the first place.
-> Currently every driver requesting a >32bit mask and not retrying with
-> a lower mask is broken on VIA hardware. I dunno how many of the current
-> drivers that are, but everybody can easily see that is not a b43-specific
-> problem that we should solve for b43 only.
+On Thu, May 22, 2008 at 04:21:03PM -0700, Daniel Walker wrote:
+> Signed-off-by: Daniel Walker <dwalker@mvista.com>
 
-Yeah.  Personally I'd rather let set_dma_mask fall back silently,
-I can't imagine a lot of cases where the driver cares that it only
-gets dma in the lower 32bit.  And if there is any such case it
-can still check the dma mask afterwards.
+Reviewing the driver, this really doesn't feel like a classical lock.
+It feels very much ad-hoc, with most references to ->sem being
+unbalanced.
 
+The driver has a thread (airo_thread) and it seems to be trying to
+synchronise against both the interrupt handler, and other threads
+(calling eg ->get_stats).
+
+I think it really wants to be using spin_lock_irqsave() instead of a
+mutex.  I'd want to study the driver in a lot more detail before making
+that kind of change though.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
