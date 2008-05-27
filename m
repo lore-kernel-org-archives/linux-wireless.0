@@ -1,94 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50664 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbYEDCIt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 22:08:49 -0400
-Subject: Re: mac80211 truesize bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, mb@bu3sch.de,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080504020203.GA30514@gondor.apana.org.au>
-References: <1209760731.3608.17.camel@johannes.berg>
-	 <20080502.163334.148944203.davem@davemloft.net>
-	 <1209815533.3987.21.camel@johannes.berg>
-	 <20080503.180300.10562559.davem@davemloft.net>
-	 <1209865354.6210.23.camel@johannes.berg>
-	 <20080504020203.GA30514@gondor.apana.org.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GuQHjY1piMMh7lxTGlRN"
-Date: Sun, 04 May 2008 04:08:36 +0200
-Message-Id: <1209866916.6210.39.camel@johannes.berg> (sfid-20080504_040838_706411_C26A6B31)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:59788 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087AbYE0DbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 May 2008 23:31:13 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2.6.26 3/3] iwlwifi: fix rate scale TLC column selection bug
+Date: Tue, 27 May 2008 11:29:35 +0800
+Message-Id: <1211858975-21424-3-git-send-email-yi.zhu@intel.com> (sfid-20080527_053116_434399_3EE9BCEB)
+In-Reply-To: <1211858975-21424-2-git-send-email-yi.zhu@intel.com>
+References: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
+ <1211858975-21424-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Guy Cohen <guy.cohen@intel.com>
 
---=-GuQHjY1piMMh7lxTGlRN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes a case that a wrong maximal rate is selected when
+searching for better configurations.
 
-On Sun, 2008-05-04 at 10:02 +0800, Herbert Xu wrote:
-> On Sun, May 04, 2008 at 03:42:34AM +0200, Johannes Berg wrote:
-> >
-> > I'm still not sure about the dependencies between LL_MAX_HEADER,
-> > dev->hard_header_len and similar. Why, for example, does ipip set it to
-> > LL_MAX_HEADER + sizeof(struct iphdr)? Because it doesn't know better
-> > since the packets it creates could be routed anywhere?
->=20
-> The difference between LL_MAX_HEADER and hard_header_len is that
-> the former is a system-wide hint of how big the header can be
-> and the latter is a device-specific value.
->=20
-> In other words, we use the former when we don't know where we
-> create a packet since we don't know where it'll end up.  As such
-> we allocate a generous amount of header space so that hopefully
-> nobody will have to expand the header later.  However, it would
-> be OK for someone to expand it but obviously it this happened
-> for the majority of your traffic then you've done something wrong
-> since expanding it wastes CPU resources by copying the data.
->=20
-> The value of hard_header_len on the other hand is used for two
-> purposes at least.  First of all it is a hint of how much free
-> header space there should be in a packet before it goes into a
-> device (but don't rely on it).  More importantly it's the length
-> of the hardware header in the packet.  The definition of the
-> hardware header varies with each type of device.
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Ok, thanks for the explanation. The latter probably means that I cannot
-use hard_header_len since mac80211 really needs devices to show up as
-ethernet devices. However, it wouldn't really help anyway if I cannot
-rely on it being available.
-
-So, what is mac80211 supposed to do? It needs up to 54 bytes of
-available headroom (for an encrypted mesh packet which currently can't
-really happen, but anyway) yet it cannot pskb_expand_head() either.
-Cloning each packet seems even more expensive, and just like skb_orphan
-subverts the purpose of the socket accounting.
-
-johannes
-
---=-GuQHjY1piMMh7lxTGlRN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB0ao6Vg1VMiehFYAQLB3hAAqi7ELI0q6fXWP+V4Q2UEoI0fs/lgILJJ
-vUj5H9GTPunylhPneT+1spPVThOPEx7lyJF+vW9KEr65rOQfkbuNhdSBDscR98pp
-HwhTbq5iag7LqgiDBDsI7RHd8bmkKOIgI3lRP6Yc5VeT8p8gZ84XA0yjwl6qudV/
-0aldF+H+4ztCbeBLoYQAcBWUqbUTQatlojrMIgiG8jD2ns91hSZo0Nyv2+2sQVYa
-EqCZeUpqHSiXCYOhX7Ff7lRl5fLdrZdlrSUv3n5VQcebW3E6cF9jdtJT5LO6K82i
-CSYP7GE3ybTAWgdUaf2hxCBgkaj4IuemQjaiw2kMhT4Zh/qIADhNr7VplDf8law0
-DLno8g3Gh17nC/xMUDX/PDLOA40C/oz1PkU45u7Y+rTe1Kfa4/Y6yGULeafjUz3A
-+QEH4GgXDYbRRqek05OWEu21sAU9MqTx24sC5QRWcLhfwnDwJdQjzWG+fcZHh88k
-O0lzIGjP1LZTrT7Q14Vua1gtmqQEG0wlBD74t5oKxC4HfwOHEyWJ6LaU5juDmkYo
-RO0ytPFp7iSFnQPoCv4pe+u3fKv9T0i1d94b9kkqKA8JQIpHZFwQpyb7JPO152rF
-mv55YRhroi/K7pzRYemOzkI7ssJSi3AqWygua3hsyfopd37YHKHweYeMHSNBTEdm
-Cg3nIdEnxdU=
-=rRJK
------END PGP SIGNATURE-----
-
---=-GuQHjY1piMMh7lxTGlRN--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 838db19..d0ae0cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1148,7 +1148,6 @@ static s32 rs_get_best_rate(struct iwl_priv *priv,
+ 
+ 			/* Higher rate not available, use the original */
+ 			} else {
+-				new_rate = rate;
+ 				break;
+ 			}
+ 		}
+-- 
+1.5.3.6
 
