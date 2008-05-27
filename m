@@ -1,76 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbYEPUYr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 16:24:47 -0400
-Subject: Re: [ipw3945-devel] Monitor mode on boot
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Martin Dubuc <martind1111@gmail.com>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20080516172738.GB9880@tuxdriver.com> (sfid-20080516_195059_372322_570219A1)
-References: <7a0107ba0805151404o778a09ddj522fffa3edbeec6@mail.gmail.com>
-	 <69e28c910805160316q7c1b869an7fd554979ea260b8@mail.gmail.com>
-	 <7a0107ba0805160627l55f53b04r69a32e1bba36ecb6@mail.gmail.com>
-	 <69e28c910805160703j4fef73e8x2c357f91d4b43ea5@mail.gmail.com>
-	 <20080516150824.GB6510@tuxdriver.com>
-	 <7a0107ba0805160906r4bfcd09ch6e550b929e3bd21d@mail.gmail.com>
-	 <69e28c910805160916o68ba2512k3aaab29d592c54ff@mail.gmail.com>
-	 <7a0107ba0805160926ib7cc07er57c00054dec238e@mail.gmail.com>
-	 <69e28c910805160940x3de182cdrb1d49588ccb392d2@mail.gmail.com>
-	 <7a0107ba0805160948j3ca21a85v1b5fce8ddca23ac9@mail.gmail.com>
-	 <20080516172738.GB9880@tuxdriver.com>
-	 (sfid-20080516_195059_372322_570219A1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bX04kU6T8SO7mbcMx39c"
-Date: Fri, 16 May 2008 22:24:31 +0200
-Message-Id: <1210969471.6381.42.camel@johannes.berg> (sfid-20080516_222450_612056_BBDE126F)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:45981 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756162AbYE0Ou6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 10:50:58 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/3] mac80211: fix ieee80211_get_buffered_bc
+Date: Tue, 27 May 2008 17:50:51 +0300
+Message-Id: <1211899852-22712-3-git-send-email-tomas.winkler@intel.com> (sfid-20080527_165103_945235_768D634C)
+In-Reply-To: <1211899852-22712-2-git-send-email-tomas.winkler@intel.com>
+References: <1211899852-22712-1-git-send-email-tomas.winkler@intel.com>
+ <1211899852-22712-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+fix bss not initialized in ieee80211_get_buffered_bc
+and unbalanced locking
 
---=-bX04kU6T8SO7mbcMx39c
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/tx.c |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-On Fri, 2008-05-16 at 13:27 -0400, John W. Linville wrote:
-> On Fri, May 16, 2008 at 12:48:26PM -0400, Martin Dubuc wrote:
-> > This would solve the boot up issue, but probably not the case where
-> > interfaces are added after the system is booted up (USB or PCI cards th=
-at
-> > can be hot plugged).
->=20
-> udev?
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1a3b50b..04df78e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1954,7 +1954,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 			  struct ieee80211_tx_control *control)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct sk_buff *skb;
++	struct sk_buff *skb = NULL;
+ 	struct sta_info *sta;
+ 	ieee80211_tx_handler *handler;
+ 	struct ieee80211_tx_data tx;
+@@ -1966,7 +1966,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 
+ 	sdata = vif_to_sdata(vif);
+ 	bdev = sdata->dev;
+-
++	bss = &sdata->u.ap;
+ 
+ 	if (!bss)
+ 		return NULL;
+@@ -1974,19 +1974,16 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	rcu_read_lock();
+ 	beacon = rcu_dereference(bss->beacon);
+ 
+-	if (sdata->vif.type != IEEE80211_IF_TYPE_AP || !beacon ||
+-	    !beacon->head) {
+-		rcu_read_unlock();
+-		return NULL;
+-	}
++	if (sdata->vif.type != IEEE80211_IF_TYPE_AP || !beacon || !beacon->head)
++		goto out;
+ 
+ 	if (bss->dtim_count != 0)
+-		return NULL; /* send buffered bc/mc only after DTIM beacon */
++		goto out; /* send buffered bc/mc only after DTIM beacon */
+ 	memset(control, 0, sizeof(*control));
+ 	while (1) {
+ 		skb = skb_dequeue(&bss->ps_bc_buf);
+ 		if (!skb)
+-			return NULL;
++			goto out;
+ 		local->total_ps_buffered--;
+ 
+ 		if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
+@@ -2023,6 +2020,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 		skb = NULL;
+ 	}
+ 
++out:
+ 	rcu_read_unlock();
+ 
+ 	return skb;
+-- 
+1.5.4.1
 
-Yeah, I was just about to suggest the same. Learn how to use userspace
-tools, we're not going to do it in the kernel no matter how much you
-cry :)
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-johannes
-
---=-bX04kU6T8SO7mbcMx39c
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASC3tfqVg1VMiehFYAQLJuA//YtKTBzrAe3PvIsaRwwsKu37MatXpOJHz
-IzXtmfmkmpFGOKAoKmqwlAXWszj19YLxD+InypItTPsUqHqD9VrKoitmhimeu7RT
-7whqUYq4CBxo+RshVLTa5GZEgtPpMnjvxzG92dDmZRxLQQSvfjy9zbuP5KCZZB7X
-mzlVvp6+6R2Z3WA6hPxXoAy40MJL/+S88v3FJy2jK+n3bpmrYMew32ewjS6bqCzA
-femzZ65p16VGugp6cbulqutKOngpJU+BoDquEZvBFrr3G6VRSO85cpFE4v0iW9Wp
-2txNFY1q8Ql7O8BCaRwf2ET8BiQkCTNN5KxUWzgizg3Y9MHdmHrGn5sZLyerNeA9
-3FU4DnK1kP70GzPe79LyOy7jydqzukdyLU2OSOxpMAF9n0rFObGYmmfmpNCQBEP5
-JeQBIfNFf7HQYI6KVkYChjW+jEZDGrO0/WT+31IWRVEof0JPeLNfGQsM84YaFzAH
-qXxIPy87zGr+jCsYNPfboJphe5q9hKA7FYIbi035zUDYfXkkLAH2sqFuc1GJqQNx
-zFgLcOst5AhQqC9n4eVzEHBPUTYJkV+wirX4jXovQIFxQ7Cqo9ZlKqL6XRqsWOmz
-VXy2+XSlqijKLkZJeCIlcbWFA4sNps72BO3u32SLwFd0iq5/zXFdVqD0q/dLwUCw
-GF04tDOcXxc=
-=/wJl
------END PGP SIGNATURE-----
-
---=-bX04kU6T8SO7mbcMx39c--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
