@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:34303 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754165AbYEOWao (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:47199 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756412AbYE0PeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 18:30:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Association broken with wpa_supplicant
-Date: Fri, 16 May 2008 00:30:10 +0200
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+	Tue, 27 May 2008 11:34:25 -0400
+Date: Tue, 27 May 2008 09:34:06 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Daniel Walker <dwalker@mvista.com>
+Cc: Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com,
+	rusty@rustcorp.com.au, mingo@elte.hu, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, arjan@infradead.org
+Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
+Message-ID: <20080527153406.GL30894@parisc-linux.org> (sfid-20080527_173429_365978_04203F77)
+References: <20080522232103.120033152@mvista.com> <20080527131325.GJ30894@parisc-linux.org> <1211896108.1746.3.camel@localhost.localdomain> <1211900915.18130.251.camel@localhost.localdomain>
 MIME-Version: 1.0
-Message-Id: <200805160030.11244.mb@bu3sch.de> (sfid-20080516_003051_817717_1A6121D9)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1211900915.18130.251.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, May 27, 2008 at 08:08:35AM -0700, Daniel Walker wrote:
+> 
+> On Tue, 2008-05-27 at 09:48 -0400, Dan Williams wrote:
+> > 
+> > Yeah, that might be the right way to go.  If you want to jump into the
+> > driver, feel quite free, but I don't think you need to go into too much
+> > detail with it.  Your overall behavior analysis is right on the mark
+> > already.
+> 
+> I think we could just remove the trylock from the interrupt case, and
+> always force the wake_up_interruptible(&priv->thr_wait) case. It looks
+> like the trylocking is just an optimization to save a wakeup ..
 
-Association is broken in latest wireless-testing when using
-wpa_supplicant. It tells me
-
-Trying to associate with REAL_BSSID...
-Authentication with 00:00:00:00:00:00 timed out.
-
-The commit responsible for the breakage is
-
-Author: Abhijeet Kolekar <abhijeet.kolekar@intel.com>  2008-05-09 18:35:41
-Committer: John W. Linville <linville@tuxdriver.com>  2008-05-15 22:11:19
-Parent: 6d7ef8714c227884346aebd9f4e5eea302db6d22 (hostap: fix "registers" registration in procfs)
-Child:  d67ec7fb2b8ce69709def2421ab893517b101591 (libertas: fix command timeout after firmware failure)
-Branches: master, remotes/origin/master
-Follows: master-2008-05-14
-Precedes: master-2008-05-15
-
-    mac80211 : Association with 11n hidden ssid ap.
-    
-    This patch fixes the association problem with 11n hidden ssid ap.
-    Patch fixes the problem of associating with hidden ssid when
-    all three parameters ap,essid and channel are given to iwconfig.
-    This patch removes the condition of checking three parameters
-    and always checks for bss in bss list while associating.
-    
-    Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
------------------------------ net/mac80211/mlme.c -----------------------------
-index 7877d3b..508f675 100644
-@@ -3434,13 +3434,6 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 	struct ieee80211_sta_bss *bss, *selected = NULL;
- 	int top_rssi = 0, freq;
- 
--	if (!(ifsta->flags & (IEEE80211_STA_AUTO_SSID_SEL |
--	    IEEE80211_STA_AUTO_BSSID_SEL | IEEE80211_STA_AUTO_CHANNEL_SEL))) {
--		ifsta->state = IEEE80211_AUTHENTICATE;
--		ieee80211_sta_reset_auth(dev, ifsta);
--		return 0;
--	}
--
- 	spin_lock_bh(&local->sta_bss_lock);
- 	freq = local->oper_channel->center_freq;
- 	list_for_each_entry(bss, &local->sta_bss_list, list) {
-
-
-
-Reverting this fixes the issue for me.
+'just'?  I think you'd see severe performance reductions if you had to
+do a wakeup for every interrupt.
 
 -- 
-Greetings Michael.
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
