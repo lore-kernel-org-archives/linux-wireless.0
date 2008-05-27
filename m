@@ -1,44 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33801 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757588AbYETR2u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 13:28:50 -0400
-Cc: netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Message-Id: <57793EAF-9BDF-43DE-8E59-4ADE7AFDC64D@holtmann.org> (sfid-20080520_192858_957850_04B139FE)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1211303731.6252.105.camel@johannes.berg>
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Subject: Re: [RFC] make wext wireless bits optional and deprecate them
-Date: Tue, 20 May 2008 19:28:41 +0200
-References: <1211026337.3827.25.camel@johannes.berg> <CD993362-B1DE-4E4D-8A5B-E9E2AD7DA04C@holtmann.org> (sfid-20080517_154639_384202_6D3479C2) <1211303731.6252.105.camel@johannes.berg>
+Received: from mga03.intel.com ([143.182.124.21]:45981 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755327AbYE0Ou6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 10:50:58 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	reinette.chatre@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] mac80211 locking issues
+Date: Tue, 27 May 2008 17:50:49 +0300
+Message-Id: <1211899852-22712-1-git-send-email-tomas.winkler@intel.com> (sfid-20080527_165102_247996_AE57D95E)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Fix few locking issue and one typo
 
->>> The /sys/class/net/*/wireless/ direcory is, as far as I know, not
->>> used by anyone. Additionally, the same data is available via wext
->>> ioctls. Hence the sysfs files are pretty much useless. This patch
->>> makes them optional and schedules them for removal.
->>
->> it is used by HAL to classify WiFi network cards as net.80211 instead
->> of net.80203 and so we do have an actual user. However HAL only tests
->> for the existence of the directory wireless/.
->>
->> Please fix HAL first before submitting such a patch.
->
-> I have filed a patch to fix HAL to use the canonical SIOCGIWNAME at
-> https://bugs.freedesktop.org/show_bug.cgi?id=16037. Any further
-> objections to this patch?
 
-patch looks good to me.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Regards
-
-Marcel
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
