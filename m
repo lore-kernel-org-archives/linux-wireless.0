@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.239]:51770 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbYEETit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 15:38:49 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so1339016wra.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 12:38:47 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Mon, 5 May 2008 12:02:35 -0700
-Subject: [PATCH] mac80211: fix incorrect mesh header length
-Message-ID: <481f6246.20038e0a.0ff3.fffff3d4@mx.google.com> (sfid-20080505_213806_846782_12B6148D)
+Received: from mx1.redhat.com ([66.187.233.31]:57548 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756019AbYE0UJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 May 2008 16:09:01 -0400
+Subject: Re: [PATCH] libertas: before sleeping, check for a command result
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200805231604.13144.hs4233@mail.mn-solutions.de>
+References: <200805231604.13144.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Tue, 27 May 2008 16:08:52 -0400
+Message-Id: <1211918933.555.18.camel@localhost.localdomain> (sfid-20080527_220907_402651_882D1F1C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should have been updated at the same time we were transitioning from 3 byte
-to 4 byte mesh sequence number. Pointed out by Johannes Berg.
+On Fri, 2008-05-23 at 16:04 +0200, Holger Schurig wrote:
+> If we don't check for a command response early, but rather sleep,
+> then we might sleep despite an already-received command response.
+> This will lead to a command-timeout.
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- net/mac80211/mesh.c |    2 +-
- net/mac80211/util.c |   10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index f76bc26..697ef67 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -397,7 +397,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
- 	put_unaligned(cpu_to_le32(sdata->u.sta.mesh_seqnum), &meshhdr->seqnum);
- 	sdata->u.sta.mesh_seqnum++;
- 
--	return 5;
-+	return 6;
- }
- 
- void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index cc9f715..24a465c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -153,15 +153,15 @@ int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- 	/* 7.1.3.5a.2 */
- 	switch (ae) {
- 	case 0:
--		return 5;
-+		return 6;
- 	case 1:
--		return 11;
-+		return 12;
- 	case 2:
--		return 17;
-+		return 18;
- 	case 3:
--		return 23;
-+		return 24;
- 	default:
--		return 5;
-+		return 6;
- 	}
- }
- 
--- 
-1.5.4.3
-
-
+> Index: wireless-testing/drivers/net/wireless/libertas/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/main.c	2008-05-23 14:25:16.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/main.c	2008-05-23 14:25:51.000000000 +0200
+> @@ -722,14 +722,14 @@ static int lbs_thread(void *data)
+>  			shouldsleep = 1;	/* Something is en route to the device already */
+>  		else if (priv->tx_pending_len > 0)
+>  			shouldsleep = 0;	/* We've a packet to send */
+> +		else if (priv->resp_len[priv->resp_idx])
+> +			shouldsleep = 0;	/* We have a command response */
+>  		else if (priv->cur_cmd)
+>  			shouldsleep = 1;	/* Can't send a command; one already running */
+>  		else if (!list_empty(&priv->cmdpendingq))
+>  			shouldsleep = 0;	/* We have a command to send */
+>  		else if (__kfifo_len(priv->event_fifo))
+>  			shouldsleep = 0;	/* We have an event to process */
+> -		else if (priv->resp_len[priv->resp_idx])
+> -			shouldsleep = 0;	/* We have a command response */
+>  		else
+>  			shouldsleep = 1;	/* No command */
+>  
 
