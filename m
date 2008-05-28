@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27391 "EHLO mga14.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4132 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757152AbYEMIu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 04:50:29 -0400
-Subject: Re: [RFC PATCH] mac80211 : Association with 11n hidden ssid ap.
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	id S1752935AbYE1M7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 08:59:08 -0400
+Date: Tue, 27 May 2008 20:41:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, JMF <tolas_feup@hotmail.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1210667747.3646.32.camel@johannes.berg>
-References: <12103509413156-git-send-email-abhijeet.kolekar@intel.com>
-	 <1210641995.2506.200.camel@debian.sh.intel.com>
-	 <1210667747.3646.32.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 13 May 2008 16:49:51 +0800
-Message-Id: <1210668591.2530.18.camel@debian.sh.intel.com> (sfid-20080513_105035_121867_01E14191)
-Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Message-ID: <20080528004100.GG7779@tuxdriver.com> (sfid-20080528_145924_539786_70F658E1)
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com> <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com> <loom.20080527T105701-941@post.gmane.org> <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com> <1211896423.1746.9.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1211896423.1746.9.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-05-13 at 10:35 +0200, Johannes Berg wrote:
-> Well, I'm not sure I'm the right person to look at this, I'm very
-> unfamiliar with the code in question. For all I care we can put it in
-> and revert/fixup when we get bug reports from it.
+On Tue, May 27, 2008 at 09:53:43AM -0400, Dan Williams wrote:
 
-Thanks. Let's do it if no one NACK.
+> I've gotten maybe 1 or 2 requests for > 104/128-bit WEP key support for
+> NM in 3 years.  Nice to have, but I'm not sure it's worth the extra code
+> and maintenance burden?  Would be good to have somebody tell us what
+> hardware (APs and cards) support this though.
 
--yi
+I'm inclined to think that it is _not_ worth the trouble for this
+particular feature.
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
