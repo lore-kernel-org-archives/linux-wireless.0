@@ -1,122 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:58924 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757193AbYEWByz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 21:54:55 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 3/5] hostap: remove private "monitor" ioctl
-To: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>
-Date: Thu, 22 May 2008 21:54:54 -0400
-Message-ID: <20080523015454.16636.44068.stgit@dv.roinet.com> (sfid-20080523_035457_755875_532C60C7)
-In-Reply-To: <20080523015442.16636.92254.stgit@dv.roinet.com>
-References: <20080523015442.16636.92254.stgit@dv.roinet.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51552 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752755AbYE1UKm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 16:10:42 -0400
+Date: Wed, 28 May 2008 13:10:39 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: =?ISO-8859-15?Q?Alejandro_Riveira_Fern=E1ndez?=
+	<ariveira@gmail.com>
+cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Linux 2.6.26-rc4
+In-Reply-To: <20080527124315.131b1343@Varda>
+Message-ID: <alpine.LFD.1.10.0805281307150.2958@woody.linux-foundation.org> (sfid-20080528_221047_669541_BE57D5DF)
+References: <alpine.LFD.1.10.0805261127030.2958@woody.linux-foundation.org> <20080527124315.131b1343@Varda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an ioctl obsoleted by the monitor mode years ago.  Using it
-would trigger a deprecation warning.  As the wireless drivers
-standardize on the radiotap standard, the "monitor" ioctl cannot be
-preserved to work as obsolete software expects.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
 
- drivers/net/wireless/hostap/hostap_common.h |    2 +
- drivers/net/wireless/hostap/hostap_ioctl.c  |   53 ---------------------------
- 2 files changed, 1 insertions(+), 54 deletions(-)
+On Tue, 27 May 2008, Alejandro Riveira Fern=C3=A1ndez wrote:
+> =20
+>   Compiled and booting into 2.6.26-rc4
+>=20
+>  1) With splash quiet on grub line it doesn't boot (or i didin't wait=
+ long
+>     enough)
+>  2) without quiet and splash I get into VT X filas becouse i use the =
+evil
+>     nvidia driver that's expected. But ubuntu failsafe mode (xserver =
+with vesa
+>     in low res) doesn't show up either *regression*
 
-diff --git a/drivers/net/wireless/hostap/hostap_common.h b/drivers/net/wireless/hostap/hostap_common.h
-index b470c74..2f92ecd 100644
---- a/drivers/net/wireless/hostap/hostap_common.h
-+++ b/drivers/net/wireless/hostap/hostap_common.h
-@@ -239,7 +239,7 @@ struct hfa384x_comms_quality {
- #define PRISM2_IOCTL_GET_PRISM2_PARAM (SIOCIWFIRSTPRIV + 1)
- #define PRISM2_IOCTL_WRITEMIF (SIOCIWFIRSTPRIV + 2)
- #define PRISM2_IOCTL_READMIF (SIOCIWFIRSTPRIV + 3)
--#define PRISM2_IOCTL_MONITOR (SIOCIWFIRSTPRIV + 4)
-+/* #define PRISM2_IOCTL_MONITOR (SIOCIWFIRSTPRIV + 4) */
- #define PRISM2_IOCTL_RESET (SIOCIWFIRSTPRIV + 6)
- #define PRISM2_IOCTL_INQUIRE (SIOCIWFIRSTPRIV + 8)
- #define PRISM2_IOCTL_WDS_ADD (SIOCIWFIRSTPRIV + 10)
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index 0ca0bfe..7dc8392 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -2124,8 +2124,6 @@ static int prism2_ioctl_giwscan(struct net_device *dev,
- 
- 
- static const struct iw_priv_args prism2_priv[] = {
--	{ PRISM2_IOCTL_MONITOR,
--	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, 0, "monitor" },
- 	{ PRISM2_IOCTL_READMIF,
- 	  IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1,
- 	  IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1, "readmif" },
-@@ -2907,52 +2905,6 @@ static int prism2_ioctl_priv_writemif(struct net_device *dev,
- }
- 
- 
--static int prism2_ioctl_priv_monitor(struct net_device *dev, int *i)
--{
--	struct hostap_interface *iface;
--	local_info_t *local;
--	int ret = 0;
--	u32 mode;
--
--	iface = netdev_priv(dev);
--	local = iface->local;
--
--	printk(KERN_DEBUG "%s: process %d (%s) used deprecated iwpriv monitor "
--	       "- update software to use iwconfig mode monitor\n",
--	       dev->name, task_pid_nr(current), current->comm);
--
--	/* Backward compatibility code - this can be removed at some point */
--
--	if (*i == 0) {
--		/* Disable monitor mode - old mode was not saved, so go to
--		 * Master mode */
--		mode = IW_MODE_MASTER;
--		ret = prism2_ioctl_siwmode(dev, NULL, &mode, NULL);
--	} else if (*i == 1) {
--		/* netlink socket mode is not supported anymore since it did
--		 * not separate different devices from each other and was not
--		 * best method for delivering large amount of packets to
--		 * user space */
--		ret = -EOPNOTSUPP;
--	} else if (*i == 2 || *i == 3) {
--		switch (*i) {
--		case 2:
--			local->monitor_type = PRISM2_MONITOR_80211;
--			break;
--		case 3:
--			local->monitor_type = PRISM2_MONITOR_PRISM;
--			break;
--		}
--		mode = IW_MODE_MONITOR;
--		ret = prism2_ioctl_siwmode(dev, NULL, &mode, NULL);
--		hostap_monitor_mode_enable(local);
--	} else
--		ret = -EINVAL;
--
--	return ret;
--}
--
--
- static int prism2_ioctl_priv_reset(struct net_device *dev, int *i)
- {
- 	struct hostap_interface *iface;
-@@ -4004,11 +3956,6 @@ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
- 		else ret = prism2_ioctl_priv_inquire(dev, (int *) wrq->u.name);
- 		break;
- 
--	case PRISM2_IOCTL_MONITOR:
--		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
--		else ret = prism2_ioctl_priv_monitor(dev, (int *) wrq->u.name);
--		break;
--
- 	case PRISM2_IOCTL_RESET:
- 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
- 		else ret = prism2_ioctl_priv_reset(dev, (int *) wrq->u.name);
+Can you give more details about where it stops?=20
+
+>  3) i get an oops with network manager
+
+=2E. again, please give the full oops, without that we just know that "=
+an=20
+oops happened".
+
+>  4) if i try to run some sudo command it gets stuck (Crtl +C doesnt' =
+help)
+>     "ip route" gets stuck too. User programs i tried wrok fine (only =
+ls and
+>     htop). Network realted problem?
+
+I assume it's related to the oops above - the oops probably happened wh=
+ile=20
+holding some mutex or other lock, which is why network-related stuff th=
+en=20
+blocks on that lock (which will never be released, since the oops kille=
+d=20
+the process that held it).
+
+I suspect the oops is also why the bootup breaks, so it's likely all th=
+e=20
+same issue. Please save the dmesg into a file, reboot into a working=20
+setup, and send that. Along with hw information (it's likely related to=
+=20
+your network device driver, since I've not seen an uproar of these kind=
+s=20
+of problems from everybody else..).
+
+>  5) printk times on dmesg go crazy
+
+More details, please, again.
+
+			Linus
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
