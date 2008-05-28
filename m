@@ -1,143 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56157
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1761100AbYEEXD3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 19:03:29 -0400
-Date: Mon, 05 May 2008 16:03:28 -0700 (PDT)
-Message-Id: <20080505.160328.203996832.davem@davemloft.net> (sfid-20080506_010246_918137_AD07BA0A)
-To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210000923.8245.26.camel@johannes.berg>
-References: <1209972139.3655.9.camel@johannes.berg>
-	<1ba2fa240805050727r2060b0b4x3a9b3240647b66b1@mail.gmail.com>
-	<1210000923.8245.26.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:10805 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751012AbYE1OiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 10:38:17 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 07:38:17 -0700
+Date: Wed, 28 May 2008 20:08:12 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <lrodriguez@atheros.com>, <ron.rindjunsky@intel.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Fix for NULL pointer dereference in
+	sta_info_get()
+Message-ID: <20080528143812.GA5244@senthil-lnx.users.atheros.com> (sfid-20080528_163820_713411_3D0A1C18)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 05 May 2008 17:22:03 +0200
+This addresses a NULL pointer dereference in sta_info_get().
+TID and sta_info are extracted in ADDBA Timer expiry function
+through the timer handler's argument.
 
-> 
-> > I've did some measurement of the TX path  on an embedded system (2.6.23 kernel)
-> > When bridging packets from an ethernet device to wireless  there is
-> > loss of 12% in the CPU utilization and equivalent throughput reduction
-> > in data packets that are checked and expanded in
-> > ieee80211_subif_start_xmit function.
-> 
-> Yeah, I figured.
+The problem is extracging the TID (which was stored in
+timer_to_tid[] array of type "u8") through "int *" typecast which
+may also yield unwanted bytes for the MSB of TID that results
+in incorrect sta_info and ieee80211_local pointers.
 
-I think we can handle this without clones or copies.
+ieee80211_local pointer is NULL as illustrated below, it crashes in
+sta_info_get(). The problem started when extracting ieee80211_local
+pointer out of sta_info iteself and eventually crashed in
+stat_info_get().
 
-First, the skb_header_cloned() patch I posted in another reply will
-get rid of copying due to clones.  I've included it below for
-completeness.
+The proper way to fix is to change the data type of TID to u8
+instead of u16. However changing all the occurences requires
+some prototype changes as well. We should fix this in upcoming
+patches.
 
-The next problem is to make sure there is enough space available.  And
-all that's needed is some help from the bridging layer and some hooks
-into netdev_alloc_skb().
+BUG: unable to handle kernel NULL pointer dereference at 000000e8
+IP: [<c038c0c5>] _read_lock_bh+0x15/0x30
+*pde = 00000000
+Oops: 0002 [#1] PREEMPT SMP
+Modules -- lengthy line --
 
-On bridge transmit, it knows the input and output devices, and the
-requirements of LL header space on the transmit side.
+Pid: 0, comm: swapper Tainted: P         (2.6.25-rc3-wl #3)
+EIP: 0060:[<c038c0c5>] EFLAGS: 00010202 CPU: 1
+EIP is at _read_lock_bh+0x15/0x30
+EAX: 000000e8 EBX: 000000e8 ECX: 00000103 EDX: f7e74f14
+ESI: 00000103 EDI: f789c000 EBP: 000000e8 ESP: f7891e5c
+DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process swapper (pid: 0, ti=f7890000 task=f7888b00 task.ti=f7890000)
+Stack: 00000000 f8e917f9 f7e74f14 f789c000 f7e74f14 00000103 f789c000 00000000
+f8e98583 f8ead92e 000000e8 f7e74f00 00000000 00000100 f7e74f14 f7e75924
+00000103 f789c000 f7891ed0 c01334a8 f8e98520 f7e755b8 00000000 00000ceb
+Call Trace:
+[<f8e917f9>] sta_info_get+0x19/0x60 [mac80211]
+[<f8e98583>] sta_addba_resp_timer_expired+0x63/0x120 [mac80211]
+[<c01334a8>] run_timer_softirq+0x128/0x1f0
+[<f8e98520>] sta_addba_resp_timer_expired+0x0/0x120 [mac80211]
+[<f8e98520>] sta_addba_resp_timer_expired+0x0/0x120 [mac80211]
+[<c012f5ba>] __do_softirq+0x8a/0x110
+[<c012f695>] do_softirq+0x55/0x60
+[<c012f89d>] irq_exit+0x6d/0x90
+[<c0116705>] smp_apic_timer_interrupt+0x55/0x80
+[<c0147d95>] tick_notify+0x275/0x3b0
+[<c012f882>] irq_exit+0x52/0x90
+[<c0105c24>] apic_timer_interrupt+0x28/0x30
+[<c038c2b7>] _spin_unlock_irqrestore+0x7/0x30
+[<c027fcf4>] acpi_get_register+0x2a/0x30
+[<f8b1ae95>] acpi_idle_enter_bm+0x59/0x376 [processor]
+[<c0143713>] pm_qos_requirement+0x23/0x30
+[<c02dc35d>] cpuidle_idle_call+0x7d/0xc0
+[<c02dc2e0>] cpuidle_idle_call+0x0/0xc0
+[<c0103f15>] cpu_idle+0x65/0x110
+=======================
+Code: 00 01 74 05 e8 81 fb ff ff 5b c3 8d 74 26 00 8d bc 27 00 00
+00 00 53 89 c3 e8 e8 33 da ff 89 e0 25 00 e0 ff ff 83 40 14 01 89
+d8 <f0> 83 28 01 79 05 e8 70 fb ff ff 5b c3 8d b4 26 00 00 00 00 8d
+EIP: [<c038c0c5>] _read_lock_bh+0x15/0x30 SS:ESP 0068:f7891e5c
+Kernel panic - not syncing: Fatal exception in interrupt
 
-If the transmit requirements are not met for the received packet, we
-can tag the difference into the input netdev.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Using that information we can allocate extra space in
-netdev_alloc_skb(), and do an skb_reserve().
-
-The only requirement is that the ethernet driver serving input packets
-uses netdev_alloc_skb().  The most important drivers already do, and
-those which do not are trivially converted.
-
-The following along with Johannes's needed_header et al. patch should
-take care of the overhead.
-
-If this proves to be a working solution, we can do something similar
-for IPv4 and IPv6 forwarding.  At that point, we should make this
-"adjust input device extra space" a helper function that all of
-these spots can call.
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 7c1d446..6c06fba 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -600,6 +600,7 @@ struct net_device
-  * Cache line mostly used on receive path (including eth_type_trans())
-  */
- 	unsigned long		last_rx;	/* Time of last Rx	*/
-+	unsigned int		rx_alloc_extra;
- 	/* Interface address info used in eth_type_trans() */
- 	unsigned char		dev_addr[MAX_ADDR_LEN];	/* hw address, (before bcast 
- 							because most packets are unicast) */
-diff --git a/net/bridge/br_forward.c b/net/bridge/br_forward.c
-index bdd7c35..d2b2272 100644
---- a/net/bridge/br_forward.c
-+++ b/net/bridge/br_forward.c
-@@ -42,6 +42,22 @@ int br_dev_queue_push_xmit(struct sk_buff *skb)
- 		if (nf_bridge_maybe_copy_header(skb))
- 			kfree_skb(skb);
- 		else {
-+			unsigned int headroom = skb_headroom(skb);
-+			unsigned int hh_len = LL_RESERVED_SPACE(skb->dev);
-+
-+			if (headroom < hh_len) {
-+				struct net_device *in_dev;
-+				unsigned int extra;
-+
-+				in_dev = __dev_get_by_index(dev_net(skb->dev),
-+							    skb->iif);
-+				BUG_ON(!in_dev);
-+
-+				extra = hh_len - headroom;
-+				if (extra >= in_dex->rx_alloc_extra)
-+					in_dev->rx_alloc_extra = extra;
-+			}
-+
- 			skb_push(skb, ETH_HLEN);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c7819fd..0eb739d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1604,7 +1604,7 @@ void sta_addba_resp_timer_expired(unsigned long data)
+ 	 * only one argument, and both sta_info and TID are needed, so init
+ 	 * flow in sta_info_create gives the TID as data, while the timer_to_id
+ 	 * array gives the sta through container_of */
+-	u16 tid = *(int *)data;
++	u16 tid = *(u8 *)data;
+ 	struct sta_info *temp_sta = container_of((void *)data,
+ 		struct sta_info, timer_to_tid[tid]);
  
- 			dev_queue_xmit(skb);
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 5c459f2..74a2515 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
- 		unsigned int length, gfp_t gfp_mask)
+@@ -1652,7 +1652,7 @@ timer_expired_exit:
+ static void sta_rx_agg_session_timer_expired(unsigned long data)
  {
- 	int node = dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
-+	unsigned int extra = dev->rx_alloc_extra + NET_SKB_PAD;
- 	struct sk_buff *skb;
- 
--	skb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
-+	skb = __alloc_skb(length + extra, gfp_mask, 0, node);
- 	if (likely(skb)) {
--		skb_reserve(skb, NET_SKB_PAD);
-+		skb_reserve(skb, extra);
- 		skb->dev = dev;
- 	}
- 	return skb;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f35eaea..86f0e36 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	 * be cloned. This could happen, e.g., with Linux bridge code passing
- 	 * us broadcast frames. */
- 
--	if (head_need > 0 || skb_cloned(skb)) {
-+	if (head_need > 0 || skb_header_cloned(skb)) {
- #if 0
- 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
- 		       "of headroom\n", dev->name, head_need);
- #endif
- 
--		if (skb_cloned(skb))
-+		if (skb_header_cloned(skb))
- 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
- 		else
- 			I802_DEBUG_INC(local->tx_expand_skb_head);
+ 	/* not an elegant detour, but there is no choice as the timer passes
+-	 * only one argument, and verious sta_info are needed here, so init
++	 * only one argument, and various sta_info are needed here, so init
+ 	 * flow in sta_info_create gives the TID as data, while the timer_to_id
+ 	 * array gives the sta through container_of */
+ 	u8 *ptid = (u8 *)data;
+-- 
+1.5.2.2
+
