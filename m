@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:17673 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750761AbYE3EwA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbYE1NQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 00:52:00 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Oliver Neukum <oliver@neukum.org>
-Subject: Re: race between rtl8187_stop and rtl8187_rx_cb?
-Date: Fri, 30 May 2008 00:15:33 -0400
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, Andrea Merello <andreamrl@tiscali.it>
-References: <200805162201.07634.oliver@neukum.org>
-In-Reply-To: <200805162201.07634.oliver@neukum.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1251958.KiOhrZHdQk";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200805300015.41406.flamingice@sourmilk.net> (sfid-20080530_065242_199214_27062718)
+	Wed, 28 May 2008 09:16:23 -0400
+Subject: Re: [PATCH 1/1] mac80211: sends HT IE to user level through wext
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1ba2fa240805272317t359e79d2xb1913779939ac7c9@mail.gmail.com> (sfid-20080528_081713_805729_F618BFC6)
+References: <1211907611-27979-1-git-send-email-tomas.winkler@intel.com>
+	 <1211907892.3930.19.camel@johannes.berg> <20080527172032.GN4932@jm.kir.nu>
+	 <1211909055.3930.23.camel@johannes.berg>
+	 <1ba2fa240805272317t359e79d2xb1913779939ac7c9@mail.gmail.com>
+	 (sfid-20080528_081713_805729_F618BFC6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QzctC0KeNIbfRjxyegJ0"
+Date: Wed, 28 May 2008 15:14:52 +0200
+Message-Id: <1211980492.21624.11.camel@johannes.berg> (sfid-20080528_151626_969596_AA2D7B7B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1251958.KiOhrZHdQk
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-QzctC0KeNIbfRjxyegJ0
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Friday 16 May 2008 16:01:06 Oliver Neukum wrote:
-> rtl8187_stop() works by emptying a queue and unlinking urbs. But
-> an urb finishing will be taken from the queue in rtl8187_rx_cb until
-> it is resubmitted. Am I overlooking something or is there a window?
->
-It appears that if you're unlucky, a rx urb can end up getting requeued aft=
-er=20
-the dequeue loop in rtl8187_stop on a SMP system. Good catch. Doesn't look=
-=20
-like it'll cause much trouble other than leaving urbs/skbs unfreed when the=
-=20
-interface is down, but it's worth fixing. This requires information about=20
-whether or not the interface is started or stopped. Preferred way would be =
-to=20
-set priv->mode =3D IEEE80211_IF_TYPE_INVALID in rtl8187_stop and priv->mode=
- =3D=20
-IEEE80211_IF_TYPE_MNTR in rtl8187_start, so we can check for priv->mode =3D=
-=3D=20
-IEEE80211_IF_TYPE_INVALID before requeueing the urb in rtl8187_rx_cb.=20
 
-Thanks,
-=2DMichael Wu
+> >> I would prefer to get all IEs in one blob (assuming WEXT does not have
+> >> length limits on this data that could be up to about 2250 bytes long).
 
---nextPart1251958.KiOhrZHdQk
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> Would this work with current and older version of  wpa_supplicant?.
+> I'm concern with backward compatibility,
+
+Yes, even iwlist handles that fine. In fact, wpa_supplicant simply
+concatenates all of them internally, and iwlist just prints each IE it
+finds in each GENIE item.
+
+johannes
+
+--=-QzctC0KeNIbfRjxyegJ0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBIP39tT3Oqt9AH4aERAkvgAKCcMp0rnyxpiNJxMWEUwUYuOtB6+wCffQqE
-r9w88xaK7Ak2E0oKIJ/0UNM=
-=gfl+
+iQIVAwUASD1ay6Vg1VMiehFYAQKc8Q//RW9c6OLgpagE9gJSoyC4wLdazNdyL6V5
+03jSGM6ojPRq2nWp7AIbEnTYa7jPT/gk4OQoj6p5Upr9MPmgvBJmf6ajuxSF7Kf3
+yJuTr3+gfhAvMchysDsd4JcRqs7O/OyvspKkaEXfBn+3EiJaeXj1UGrHDjCd3vui
+JhK70pkaAC+NlZmeaV0gFIzFiZsJHNNlLZ4KaO6MFoMdoS6QrPLoOmi60G1oM29h
+3wk8wYsKOHBmxDYPQ1C+/WTrenOeejdyzAV6uWkBtfqF4rDohqHQvfmONuqmpVeM
+3Q2HUc0yS4CsHUBNvHwgWbXMsdcsam9rbUwry0e05hXHXBRoCWM+MMKcsICA+EgQ
+m/eDJXNxOuWKLdVd4Cfw9FojnEUlEn9Jh0J4RL0S44Nc0sLRUx5WZe0veK7dd5Vd
+z//ptqFmpBDJO22naIEm1Q0/Rts2Vx/BGEitXDzanO13zPHjTwGKS6PTAkqBgDLK
+fiovVyZTL5xQ4YBbbNdzjii6VznVaONhedklEcSOpl3CeDufN+SDFHjibsSM0dP8
+XgVBox7D9HGQVfKL5QstjKLWwNtoljbMvZ8Upw6IBr3HELGXXI/ke5F78nAyiXQl
+ln4yHUCtXLLrVKMt5anc3wTOtXfiRdazzyG+d6J7i5cduyRgk0kd+iQbUK8vjVbn
+u7M25y2+wtU=
+=L+2A
 -----END PGP SIGNATURE-----
 
---nextPart1251958.KiOhrZHdQk--
+--=-QzctC0KeNIbfRjxyegJ0--
+
