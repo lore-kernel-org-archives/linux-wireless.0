@@ -1,87 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:50705 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752597AbYECXKE (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:14890 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512AbYE1Iqn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 19:10:04 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so885274nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 03 May 2008 16:10:03 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: multiqueue
-Date: Sun, 4 May 2008 01:15:24 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200805040035.05512.IvDoorn@gmail.com> <1209854340.3673.23.camel@johannes.berg>
-In-Reply-To: <1209854340.3673.23.camel@johannes.berg>
+	Wed, 28 May 2008 04:46:43 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH, take 3] libertas: fix compact flash interrupt handling
+Date: Wed, 28 May 2008 10:46:35 +0200
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200805261250.23580.hs4233@mail.mn-solutions.de> <1211919275.555.25.camel@localhost.localdomain>
+In-Reply-To: <1211919275.555.25.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805040115.24553.IvDoorn@gmail.com> (sfid-20080504_010935_374302_7FF9CB5D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200805281046.35897.hs4233@mail.mn-solutions.de> (sfid-20080528_104657_875646_9A6C6010)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 04 May 2008, Johannes Berg wrote:
-> Hi Ivo,
-> 
-> > Below is a warning I get with your latest QOS patch series,
-> > rt61pci registers 4 queues, but apparently the WARN_ON()
-> > in ieee80211_wake_queue is being triggered.
-> > 
-> > void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
-> > {
-> > 	struct ieee80211_local *local = hw_to_local(hw);
-> > 
-> > 	if (netif_is_multiqueue(local->mdev)) {
-> > 		netif_wake_subqueue(local->mdev, queue);
-> > 	} else {
-> > 		WARN_ON(queue != 0);
-> > 		netif_wake_queue(local->mdev);
-> > 	}
-> > }
-> > 
-> > CONFIG_MAC80211_QOS is enabled in the kernel configuration,
-> > and debugfs shows that rt2x00 is serving frames over multiple
-> > TX queues, so the multiqueue is working...
-> 
-> Strange. Can you verify that the master device has the
-> NETIF_F_MULTI_QUEUE flag set? Since that config symbol got enabled you
-> must have multiqueue code compiled in. Or maybe I put the setting of the
-> MULTI_QUEUE flag into a wrong patch by accident? Check
-> net/mac80211/main.c please
+> But again; if the patch works better for you, I'll ack it
+> because it doesn't work any worse for me.  Logs with
+> libertas_debug=0x443af available if you want to see them.
 
-My config options are:
-CONFIG_NET_SCHED=y
-CONFIG_NETDEVICES_MULTIQUEUE=y
-CONFIG_CFG80211=m
-CONFIG_NL80211=y
-CONFIG_WIRELESS_EXT=y
-CONFIG_MAC80211=m
-CONFIG_MAC80211_QOS=y
+Yes, I'd like this. You can send me this as a .bz2 file.
 
-snip from net/mac80211/main.c:
+For me, the problem with the old approach was in the "tx done" 
+part. With take1+take2 of my patch, an error showed up when, 
+while I was executing if_cs_send_data(), an interrupt could 
+happen and my code did touch other chip registers, while it just 
+should continue to send the data. Take 3 fixed this for me.
 
-#ifdef CONFIG_MAC80211_QOS
-	if (hw->queues > IEEE80211_MAX_QUEUES)
-		hw->queues = IEEE80211_MAX_QUEUES;
-	if (hw->ampdu_queues > IEEE80211_MAX_AMPDU_QUEUES)
-		hw->ampdu_queues = IEEE80211_MAX_AMPDU_QUEUES;
-	if (hw->queues < 4)
-		hw->ampdu_queues = 0;
-#else
-	hw->queues = 1;
-	hw->ampdu_queues = 0;
-#endif
 
-	/* for now, mdev needs sub_if_data :/ */
-	mdev = alloc_netdev_mq(sizeof(struct ieee80211_sub_if_data),
-			       "wmaster%d", ether_setup,
-			       hw->queues + hw->ampdu_queues);
-	if (!mdev)
-		goto fail_mdev_alloc;
-	if (hw->queues > 1)
-		mdev->flags |= NETIF_F_MULTI_QUEUE;
+> I really don't know what to do to trace it further.  Is there a
+> way to reset the CF card and kick the firmware in the head that
+> I can try from the TX handler, like a USB port reset or
+> something?  I also might be able to set this machine up for
+> remote access so you can play with it if you like.
 
-So theoretically this flag should be set.
-However /sys/class/net/wmaster1/features contains the value 0x0
+On CF, there's always one way to kick the firmware into the 
+head: "pcmciactrl eject; pcmciactrl insert". You can be quite 
+pretty sure that after this every state in the card, the 
+firmware, the driver and the networking subsystem has been 
+cleared :-)
 
-Ivo
+However, maybe there are better ways, less sledge-hammer-like 
+ones. I'll dig more into this.
+
+
+One reason for my digging is this error that I had:
+
+libertas_cs: card not ready for commands
+libertas: DNLD_CMD: hw_host_to_card failed: -1
+libertas: command 0x001f timed out
+libertas: requeueing command 0x001f due to timeout (#1)
+libertas_cs: card not ready for commands
+libertas: DNLD_CMD: hw_host_to_card failed: -1
+libertas: command 0x001f timed out
+libertas: requeueing command 0x001f due to timeout (#2)
+libertas_cs: card not ready for commands
+libertas: DNLD_CMD: hw_host_to_card failed: -1
+libertas: command 0x001f timed out
+libertas: requeueing command 0x001f due to timeout (#3)
+libertas_cs: card not ready for commands
+libertas: DNLD_CMD: hw_host_to_card failed: -1
+libertas: command 0x001f timed out
+libertas: Excessive timeouts submitting command 0x001f
+libertas_cs: no cmd response in card
+libertas: PREP_CMD: command 0x0006 failed: -2
+libertas: SCAN_CMD failed
+
+
+However, I'm not yet sure if I can say (in this case) "the 
+firmware is hosed" and I'm also not sure if it's wise to just 
+send a CMD_802_11_RSSI command down as the driver currently 
+does.
