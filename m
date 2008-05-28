@@ -1,198 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:54379 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbYEAKIm (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:30648 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbYE1KgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 06:08:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43: Fix some TX/RX locking issues
-Date: Thu, 1 May 2008 12:08:10 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200804251929.09301.mb@bu3sch.de>
-In-Reply-To: <200804251929.09301.mb@bu3sch.de>
+	Wed, 28 May 2008 06:36:19 -0400
+Received: by an-out-0708.google.com with SMTP id d40so620767and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 03:36:18 -0700 (PDT)
+Message-ID: <40f31dec0805280336r40b102ffx11cbd0c0d465c9f8@mail.gmail.com> (sfid-20080528_123624_722780_46CC4293)
+Date: Wed, 28 May 2008 13:36:18 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Richard Scherping" <richard@scherping.de>
+Subject: Re: ath5k: 10 MHz channels?
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <483B181F.3010802@scherping.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011208.10533.mb@bu3sch.de> (sfid-20080501_120829_839749_9B4FB92B)
+Content-Type: text/plain; charset=UTF-8
+References: <483B181F.3010802@scherping.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, did you drop this patch? I can't see it in git and your latest push,
-while a patch submitted later is in there.
+2008/5/26 Richard Scherping <richard@scherping.de>:
+> Hello list!
+>
+> I have been testing ath5k with some different Atheros devices (Cardbus bg, MiniPCI HighPower abg, MiniPCI HighPower a - exact models available if needed) and found that it works quite well now. Test systems were running Debian 4.0 with Kernel 2.6.22 from backports and compat-wireless 2008-05-17.
+>
+> While using arbitrary channels worked quite well (got ad-hoc working at 6.1 GHz - in development lab, so no legal problems with that) I do miss the possibility to switch to 10 MHz wide channel operation as it is possible with MadWifi and needed for some 11j modes.
+>
+> Are there any hints how this might be possible to enable? I can provide analysis of the systems running with MadWifi and 10 MHz channels if needed - just direct me to the right tools ;-)
+>
+> Thanks in advance for any help!
+>
+> Richard
 
-On Friday 25 April 2008, Michael Buesch wrote:
-> This fixes some TX/RX related locking issues.
-> With this patch applied, some of the PHY transmission errors are fixed.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> ---
-> 
-> John, this is for 2.6.26.
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/b43.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-04-24 19:42:55.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-04-25 19:28:42.000000000 +0200
-> @@ -688,12 +688,16 @@ struct b43_wl {
->  	struct b43_wldev *current_dev;
->  	/* Pointer to the ieee80211 hardware data structure */
->  	struct ieee80211_hw *hw;
->  
->  	struct mutex mutex;
->  	spinlock_t irq_lock;
-> +	/* R/W lock for data transmission.
-> +	 * Transmissions on 2+ queues can run concurrently, but somebody else
-> +	 * might sync with TX by write_lock_irqsave()'ing. */
-> +	rwlock_t tx_lock;
->  	/* Lock for LEDs access. */
->  	spinlock_t leds_lock;
->  	/* Lock for SHM access. */
->  	spinlock_t shm_lock;
->  
->  	/* We can only have one operating interface (802.11 core)
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-04-24 19:42:55.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-04-25 18:47:08.000000000 +0200
-> @@ -726,12 +726,13 @@ static void b43_synchronize_irq(struct b
->  
->  /* DummyTransmission function, as documented on
->   * http://bcm-specs.sipsolutions.net/DummyTransmission
->   */
->  void b43_dummy_transmission(struct b43_wldev *dev)
->  {
-> +	struct b43_wl *wl = dev->wl;
->  	struct b43_phy *phy = &dev->phy;
->  	unsigned int i, max_loop;
->  	u16 value;
->  	u32 buffer[5] = {
->  		0x00000000,
->  		0x00D40000,
-> @@ -752,12 +753,15 @@ void b43_dummy_transmission(struct b43_w
->  		break;
->  	default:
->  		B43_WARN_ON(1);
->  		return;
->  	}
->  
-> +	spin_lock_irq(&wl->irq_lock);
-> +	write_lock(&wl->tx_lock);
-> +
->  	for (i = 0; i < 5; i++)
->  		b43_ram_write(dev, i * 4, buffer[i]);
->  
->  	/* Commit writes */
->  	b43_read32(dev, B43_MMIO_MACCTL);
->  
-> @@ -792,12 +796,15 @@ void b43_dummy_transmission(struct b43_w
->  		if (!(value & 0x0100))
->  			break;
->  		udelay(10);
->  	}
->  	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
->  		b43_radio_write16(dev, 0x0051, 0x0037);
-> +
-> +	write_unlock(&wl->tx_lock);
-> +	spin_unlock_irq(&wl->irq_lock);
->  }
->  
->  static void key_write(struct b43_wldev *dev,
->  		      u8 index, u8 algorithm, const u8 * key)
->  {
->  	unsigned int i;
-> @@ -2821,30 +2828,37 @@ static int b43_rng_init(struct b43_wl *w
->  static int b43_op_tx(struct ieee80211_hw *hw,
->  		     struct sk_buff *skb,
->  		     struct ieee80211_tx_control *ctl)
->  {
->  	struct b43_wl *wl = hw_to_b43_wl(hw);
->  	struct b43_wldev *dev = wl->current_dev;
-> -	int err = -ENODEV;
-> +	unsigned long flags;
-> +	int err;
->  
->  	if (unlikely(skb->len < 2 + 2 + 6)) {
->  		/* Too short, this can't be a valid frame. */
-> -		return -EINVAL;
-> +		dev_kfree_skb_any(skb);
-> +		return NETDEV_TX_OK;
->  	}
->  	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
-> -
->  	if (unlikely(!dev))
-> -		goto out;
-> -	if (unlikely(b43_status(dev) < B43_STAT_STARTED))
-> -		goto out;
-> -	/* TX is done without a global lock. */
-> -	if (b43_using_pio_transfers(dev))
-> -		err = b43_pio_tx(dev, skb, ctl);
-> -	else
-> -		err = b43_dma_tx(dev, skb, ctl);
-> -out:
-> +		return NETDEV_TX_BUSY;
-> +
-> +	/* Transmissions on seperate queues can run concurrently. */
-> +	read_lock_irqsave(&wl->tx_lock, flags);
-> +
-> +	err = -ENODEV;
-> +	if (likely(b43_status(dev) >= B43_STAT_STARTED)) {
-> +		if (b43_using_pio_transfers(dev))
-> +			err = b43_pio_tx(dev, skb, ctl);
-> +		else
-> +			err = b43_dma_tx(dev, skb, ctl);
-> +	}
-> +
-> +	read_unlock_irqrestore(&wl->tx_lock, flags);
-> +
->  	if (unlikely(err))
->  		return NETDEV_TX_BUSY;
->  	return NETDEV_TX_OK;
->  }
->  
->  /* Locking: wl->irq_lock */
-> @@ -3457,23 +3471,23 @@ static void b43_wireless_core_stop(struc
->  	spin_lock_irqsave(&wl->irq_lock, flags);
->  	dev->irq_savedstate = b43_interrupt_disable(dev, B43_IRQ_ALL);
->  	b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);	/* flush */
->  	spin_unlock_irqrestore(&wl->irq_lock, flags);
->  	b43_synchronize_irq(dev);
->  
-> +	write_lock_irqsave(&wl->tx_lock, flags);
->  	b43_set_status(dev, B43_STAT_INITIALIZED);
-> +	write_unlock_irqrestore(&wl->tx_lock, flags);
->  
->  	b43_pio_stop(dev);
->  	mutex_unlock(&wl->mutex);
->  	/* Must unlock as it would otherwise deadlock. No races here.
->  	 * Cancel the possibly running self-rearming periodic work. */
->  	cancel_delayed_work_sync(&dev->periodic_work);
->  	mutex_lock(&wl->mutex);
->  
-> -	ieee80211_stop_queues(wl->hw);	//FIXME this could cause a deadlock, as mac80211 seems buggy.
-> -
->  	b43_mac_suspend(dev);
->  	free_irq(dev->dev->irq, dev);
->  	b43dbg(wl, "Wireless interface stopped\n");
->  }
->  
->  /* Locking: wl->mutex */
-> @@ -4471,12 +4485,13 @@ static int b43_wireless_init(struct ssb_
->  
->  	/* Get and initialize struct b43_wl */
->  	wl = hw_to_b43_wl(hw);
->  	memset(wl, 0, sizeof(*wl));
->  	wl->hw = hw;
->  	spin_lock_init(&wl->irq_lock);
-> +	rwlock_init(&wl->tx_lock);
->  	spin_lock_init(&wl->leds_lock);
->  	spin_lock_init(&wl->shm_lock);
->  	mutex_init(&wl->mutex);
->  	INIT_LIST_HEAD(&wl->devlist);
->  	INIT_WORK(&wl->qos_update_work, b43_qos_update_work);
->  	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
-> 
+No work has been done for such features yet, other more important
+things are missing right now. If you want to rev. engineer
+half/quarter rate channels, i think you should start from nic_wakeup
+and reset functions (also check out rx/tx descriptors for the rate
+code). Mmiotrace is your friend ;-)
 
 
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
