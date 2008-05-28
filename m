@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52678 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828AbYE2IhO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 05/43] iwlwifi: create drivers debugfs dir under wiphy->debugfsdir
-Date: Thu, 29 May 2008 16:34:50 +0800
-Message-Id: <1212050128-17132-6-git-send-email-yi.zhu@intel.com> (sfid-20080529_103719_428932_329F168F)
-In-Reply-To: <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:49387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbYE1Qnm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 12:43:42 -0400
+Subject: Re: [PATCH] mac80211: fix alignment issue with compare_ether_addr()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ron.rindjunsky@intel.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@Atheros.com
+In-Reply-To: <20080528151651.GA13461@tuxdriver.com> (sfid-20080528_175821_349548_128405FB)
+References: <20080528145048.GB5244@senthil-lnx.users.atheros.com>
+	 <20080528151651.GA13461@tuxdriver.com>
+	 (sfid-20080528_175821_349548_128405FB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ROFUe35lH+9TCAq3UNex"
+Date: Wed, 28 May 2008 18:42:35 +0200
+Message-Id: <1211992955.21624.41.camel@johannes.berg> (sfid-20080528_184345_563633_E0CEDCB7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch creates driver's debugfs tree under wiphy->debugfsdir.
-This patch fixes collision in debugfs if two or more NICs are plugged.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+--=-ROFUe35lH+9TCAq3UNex
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index c64e602..29e16ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -367,6 +367,7 @@ DEBUGFS_READ_FILE_OPS(tx_statistics);
- int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- {
- 	struct iwl_debugfs *dbgfs;
-+	struct dentry *phyd = priv->hw->wiphy->debugfsdir;
- 
- 	dbgfs = kzalloc(sizeof(struct iwl_debugfs), GFP_KERNEL);
- 	if (!dbgfs) {
-@@ -375,7 +376,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 
- 	priv->dbgfs = dbgfs;
- 	dbgfs->name = name;
--	dbgfs->dir_drv = debugfs_create_dir(name, NULL);
-+	dbgfs->dir_drv = debugfs_create_dir(name, phyd);
- 	if (!dbgfs->dir_drv || IS_ERR(dbgfs->dir_drv)){
- 		goto err;
- 	}
--- 
-1.5.3.6
+
+> -	u8 src[ETH_ALEN];
+> +	u8 src[ETH_ALEN] __attribute__ ((aligned(2)));
+
+> It seems to compile w/o errors on i686, and it seems more clear to me.
+> Will that not work?
+
+I think it should be __aligned(2) anyway :)
+
+Other than that, yeah, we definitely want this patch. And the previous
+one too, thanks.
+
+johannes
+
+--=-ROFUe35lH+9TCAq3UNex
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD2LeqVg1VMiehFYAQKSKBAAhGWNswhDCtlaRaNxP2736J29+N6PSpRR
+zTRM+cgOL4o3A5M2tbvWX6pLIqbibCZ+n+XFOXadL+aC3Y2VJ1szg0XG39eooqtA
+wocRcqJrI8B8YWSxoCbJzo5M8A97xJ88fCSrbicKJ6/zE+FX398HpykgR201KF7G
+scf5jFR1nDceJY+g+AyjzVsaIyH9C1YuZ0K6JGsPnJWOW//LQoFzg2IhZGP/670B
+zMub1rw0+s+I8uyuNR2zL/K3oICXopezx4VYnu+ApaLMmhrQGwVmwWpvNhF4svN2
+V+fWu65sVSWVm0c7vbwW25RDLo5VANeUhdCHdmMV1Xo6TKAqQlQfUW7vEBBWn6+/
+T65zC+KWo69skJDDsG3Jt2LYsNXOrm+1vLRMEr1sBRRB4qR+nb0TYYEH95j+T1zU
+NNNmWYk87C7939MJ2cbKcTAZzYr4B8kYMfqjIizNsexH/mpLJ6IRe+z4TgFB//VV
+hGYse4NCbQhGnwnPA2CZn6Xztu0LhYtj1u71ONd5YjsVztl4VsIsTCy2oGIFpk6N
+WejhGmYUjiwRbYSG4nDhZrONcLp9qBcU5eQMisg0hQ6s4Uv2fdY0kDA9QA3uj5iw
+jTYz30zhMBqe8tZu7le1aGFKVEok6AFzNvXn5id9OTrkLuxAD8T8WgII+cix3nGu
+hnSh1OuCYig=
+=HBY/
+-----END PGP SIGNATURE-----
+
+--=-ROFUe35lH+9TCAq3UNex--
 
