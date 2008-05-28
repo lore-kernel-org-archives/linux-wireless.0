@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:37876 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758675AbYEEVMw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbYE1WMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 17:12:52 -0400
-Date: Mon, 5 May 2008 23:13:41 +0200
-From: Pavel Machek <pavel@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: kernel list <linux-kernel@vger.kernel.org>, kaszak@gmail.com,
-	lcostantino@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: w35und: some more code removal
-Message-ID: <20080505211341.GA17657@elf.ucw.cz> (sfid-20080505_231214_067084_174C826B)
-References: <20080505200927.GA7273@elf.ucw.cz> <1210018631.4181.29.camel@johannes.berg> <20080505202057.GB7273@elf.ucw.cz> <1210018983.4181.33.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1210018983.4181.33.camel@johannes.berg>
+	Wed, 28 May 2008 18:12:20 -0400
+Subject: Re: pull request: wireless-2.6 2008-05-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080528213831.GA3133@tuxdriver.com> (sfid-20080528_235847_981601_A47BB9BE)
+References: <20080528213831.GA3133@tuxdriver.com>
+	 (sfid-20080528_235847_981601_A47BB9BE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y51Y1hJYL9KnL8+UZg8j"
+Date: Thu, 29 May 2008 00:11:10 +0200
+Message-Id: <1212012670.21624.48.camel@johannes.berg> (sfid-20080529_001224_761224_32850AC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
 
-> > > > Remove some more unneccessary code
-> > > > 
-> > > > ---
-> > > > commit 5b251c6315097d5f9ab5d30c43813fe74c1db4e4
-> > > > tree 5ca21582f55886d5f0249f7ca139687450024581
-> > > > parent e44ccdabb97fa4a6cdc1a95adcad7bcc469d0c16
-> > > > author Pavel <pavel@amd.ucw.cz> Mon, 05 May 2008 22:08:51 +0200
-> > > > committer Pavel <pavel@amd.ucw.cz> Mon, 05 May 2008 22:08:51 +0200
-> > > 
-> > > Let me guess, you're using git-am too? :P
-> > 
-> > No, this is actually all hand-generated ;-).
-> 
-> Seriously though, we (as inhabitants of linux-wireless) have no context
-> for these patches, so I hope you're not expecting us to actually look at
-> them.
+--=-y51Y1hJYL9KnL8+UZg8j
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I mainly want them archived at public place, and maybe let others know
-that I'm working on this.
+On Wed, 2008-05-28 at 17:38 -0400, John W. Linville wrote:
+> David,
+>=20
+> Another round of fixes for 2.6.26 follows...
+>=20
+> Please let me know if there are problems!
 
-Context is at http://code.google.com/p/winbondport/ . I hope to get
-something that can be merged one day; any help with cleaning the code
-is very welcome.
+What about
 
-I believe code is now in shape where it can be incrementally cleaned
-up for a merge, then features can be added back... (Currently it is
-locked to single channel at single speed).
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+[PATCH] b43legacy: fix build errors when DMA or PIO are not selected
+
+johannes
+
+--=-y51Y1hJYL9KnL8+UZg8j
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD3YfaVg1VMiehFYAQKKfg//Wcy5F+w7RH6pGFGXoolb2IoxtQrWEYho
+C7lWIObQ3PKVDChgxMA/TtZnk9VWBTUi09+VrCkuP+2WJiJOcOZb79ZiL4zXbCbn
+Odi1AlPr3sVsA2awGeDFfVg/vqV68o6kfZbeZBuuEG62mWwkWRbFUMx6VyOXhA15
+jf3hQDkYMeC3YezXyPqFNKaHWLV0lp8pOsy9VYtZ7NwA6C758AYR9489TPd6qvGI
+1uJzz7sOqpRYwupEmYT4U9rerzDFT+PZJUJkOV4qVGz+vc69/72WvydaTMum71m2
+dHeplYWBIcdyFUp1vBNoo2LW4tBONOFJXwYiKn7nUmgwh+Og1PqTAe5z+K1F9t6j
+vBDS4+Vne1hb4hSz0tBoe1P/4UGmP9Lo+0F3qazvoyTzc1t5dMAvS2TWqcXn6cm6
+bESvSSkDJVts/HYCerC1sKx4HppbFoPjB2bEI5bYQs/aP2wuYwLDQP+fD+GbU1xK
+wiR8+2CjH/ktdBKRQFUsSkYYVL/WekF3QHG+Cq/bDQYrC8y43oyIN7LM46HyQndw
+iiX3tx+40nkxgiast+2OgBXJLXHVb1sJMrAcefhU+J1ht+CocjoI5eljlGQNsHR+
+YWtWX9oxkZFvpbW1CefC+8eS1pnJypnrtPzJVJaAe0UCE59EDidfHwxr8KIK6wnM
+++PUYf5iLDE=
+=OkFP
+-----END PGP SIGNATURE-----
+
+--=-y51Y1hJYL9KnL8+UZg8j--
+
