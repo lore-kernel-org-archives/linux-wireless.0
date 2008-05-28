@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:34411 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbYENVxC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 May 2008 17:53:02 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so90030wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 14 May 2008 14:53:02 -0700 (PDT)
-Subject: Re: [PATCH 5/5] b43: move the register write into
-	radio2050_rfover_val
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1210795241.29705.26.camel@johannes.berg>
-References: <1210791396.6191.40.camel@brick>
-	 <200805142122.21635.mb@bu3sch.de>  <1210793758.6191.43.camel@brick>
-	 (sfid-20080514_213609_061251_8D4DC32D)  <1210795241.29705.26.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 14 May 2008 14:53:01 -0700
-Message-Id: <1210801981.6191.44.camel@brick> (sfid-20080514_235308_291623_1EB33A77)
+Received: from main.gmane.org ([80.91.229.2]:39608 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751746AbYE1KO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 06:14:58 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1K1IgG-0004Xf-P4
+	for linux-wireless@vger.kernel.org; Wed, 28 May 2008 10:14:52 +0000
+Received: from 62.28.35.120 ([62.28.35.120])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 10:14:52 +0000
+Received: from tolas_feup by 62.28.35.120 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 10:14:52 +0000
+To: linux-wireless@vger.kernel.org
+From: JMF <tolas_feup@hotmail.com>
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Date: Wed, 28 May 2008 10:14:42 +0000 (UTC)
+Message-ID: <loom.20080528T100534-804@post.gmane.org> (sfid-20080528_121505_696186_5DE459FD)
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>  <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>  <loom.20080527T105701-941@post.gmane.org>  <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com> <1211896423.1746.9.camel@localhost.localdomain>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-05-14 at 22:00 +0200, Johannes Berg wrote:
-> On Wed, 2008-05-14 at 12:35 -0700, Harvey Harrison wrote:
-> > On Wed, 2008-05-14 at 21:22 +0200, Michael Buesch wrote:
-> > > On Wednesday 14 May 2008 20:56:36 Harvey Harrison wrote:
-> > > > It is always called with the same dev, register value as the
-> > > > b43_phy_write that wraps around it, make it return void
-> > > > and move the register write into radio2050_rfover_val.
-> > > 
-> > > NACK to the whole 5 patches.
-> > > See the list archives for an explanation.
-> > 
-> > Any particular reference for nacking 5/5?
-> > 
-> > While I respectfully disagree with you Re: 1-4 I can't make you take it.
-> 
-> You could prove that those are correct:
-> 
-> make the function you're going to use an inline, compile &
-> objdump/md5sum, apply the patch conversion, compile & objdump/md5sum &
-> compare, make function out of line again
-
-At this point I'll let sleeping dogs lie, it's not worth fighting over.
-
-Harvey
+I see... That's the idea I had, WEP greater than 128-bit as an extra, an attempt
+to add more "security" by some manufacturers. If the wireless drivers and
+current hardware were made with the standards in mind, then maybe adding support
+for more than 128-bit WEP may require more work than it deserves :)
+I have a Dlink router and I don't remember ever seeing 256bit WEP or something
+like that. When I bought it I didn't know a thing about wireless, but when I
+read about WEP and TKIP back then, the choice was clear. Maybe not supporting
+these WEP "modes" will keep more people from using it, preferring better
+protection instead...
 
