@@ -1,60 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37257 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358AbYEETnb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 15:43:31 -0400
-Subject: Re: [PATCH] mac80211: fix access to null skb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <481f6250.16be600a.0e4c.ffffb9ea@mx.google.com> (sfid-20080505_213813_777086_CBCA1C12)
-References: <481f6250.16be600a.0e4c.ffffb9ea@mx.google.com>
-	 (sfid-20080505_213813_777086_CBCA1C12)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pgMZvpu8oOUconyb/1Ze"
-Date: Mon, 05 May 2008 21:42:36 +0200
-Message-Id: <1210016556.4181.20.camel@johannes.berg> (sfid-20080505_214248_470590_E9A29A42)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:36688 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785AbYE1Rpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 13:45:38 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 May 2008 10:45:38 -0700
+Date: Wed, 28 May 2008 23:15:32 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <ron.rindjunsky@intel.com>, <linux-wireless@vger.kernel.org>,
+	<Luis.Rodriguez@Atheros.com>, <tomasw@gmail.com>
+Subject: [PATCH]v1 mac80211: fix alignment issue with compare_ether_addr()
+Message-ID: <20080528174532.GA5575@senthil-lnx.users.atheros.com> (sfid-20080528_194542_984620_52429297)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This addresses an alignment issue with compare_ether_addr().
+The addresses passed to compare_ether_addr should be two bytes aligned.
+It may function properly in x86 platform. However may not work properly
+on IA-64 or ARM processor.
 
---=-pgMZvpu8oOUconyb/1Ze
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This also fixes a typo in mlme.c where the sk_buff struct name is incorect.
+Though sizeof() works for any incorrect structure pointer name as its just
+a pointer length that we want, lets just fix it.
 
-On Mon, 2008-05-05 at 12:29 -0700, Luis Carlos Cobo wrote:
-> Without this patch, if xmit_skb is null but net_ratelimit() returns 0 we =
-would
-> go to the else branch and access the null xmit_skb. Pointed out by Johann=
-es
-> Berg.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |    4 ++--
+ net/mac80211/rx.c   |    4 ++--
+ net/mac80211/util.c |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-Thanks Luis, for both patches.
-
-johannes
-
---=-pgMZvpu8oOUconyb/1Ze
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB9jK6Vg1VMiehFYAQKGrQ//b7Mm91MbOYdY+z0aEoCPUIr/JM8N0jp7
-40+X2N6jrL2V9Ygg/k7sLQ5OHNY/85uKVWeP/TPmxTyHLse1ZI6PD76ZnUd9Frln
-Q0eJxBKuWJ1G9/FWLC02GP4rayfQVQMRoUKHmXuHcia76YzzL8VEen39By4QGrXm
-7+kBglg4MWWNXxMIwcLqCe2I4ySV04aSEOCR2PrruOVqXz9hidgxeCcVwDzqoYtv
-We94BTOS1U4CXZ7veBapk3Ll60jycpRREvE8sKBO15NDZ5KzaFBHymLuB8ckX8eF
-DtrqxsXAtEcbpwcXgejN9Kp+bsJt5+0n7qr1SinMAJwnnn2zrDKFUutmZDtn7FoD
-bOq2+nQuB8ImMIpRwG8XfH/AAUek7HZfxRx/kfi6xCln4e4vlJKdGZgNFntM6uGg
-xxRXfzmSlfCblvLTZAEULt8vBS/x77C/jSbLSBAog7hxHJVZrpv7HztRe5C2KSgk
-7vfHBd6NI47TkEKm9ZqhwfTNx529pDKKGuoEangixmL/WXVPSoF7yV1jmVFvAxA5
-KDHtCc91gWbfkAYp9rPhZlWyIAAYK3W+bvy0AvMIyPZmIBcZ0cEhAyS386p3oOSS
-g33LAmvOf0MZWWXAGVvUIl2++bEpQP5Ds4LgfSKwMTvvYJSGLiPZ0AaQV8+m4Bwa
-rhf2k4z52Tc=
-=Uln9
------END PGP SIGNATURE-----
-
---=-pgMZvpu8oOUconyb/1Ze--
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c7819fd..4be7736 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1316,7 +1316,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
+ 
+ 	/* prepare reordering buffer */
+ 	tid_agg_rx->reorder_buf =
+-		kmalloc(buf_size * sizeof(struct sk_buf *), GFP_ATOMIC);
++		kmalloc(buf_size * sizeof(struct sk_buff *), GFP_ATOMIC);
+ 	if (!tid_agg_rx->reorder_buf) {
+ 		if (net_ratelimit())
+ 			printk(KERN_ERR "can not allocate reordering buffer "
+@@ -1325,7 +1325,7 @@ static void ieee80211_sta_process_addba_request(struct net_device *dev,
+ 		goto end;
+ 	}
+ 	memset(tid_agg_rx->reorder_buf, 0,
+-		buf_size * sizeof(struct sk_buf *));
++		buf_size * sizeof(struct sk_buff *));
+ 
+ 	if (local->ops->ampdu_action)
+ 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9400a97..a3643fd 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1116,7 +1116,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ 	u16 fc, hdrlen, ethertype;
+ 	u8 *payload;
+ 	u8 dst[ETH_ALEN];
+-	u8 src[ETH_ALEN];
++	u8 src[ETH_ALEN] __aligned(2);
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	DECLARE_MAC_BUF(mac);
+@@ -1259,7 +1259,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+  */
+ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx)
+ {
+-	static const u8 pae_group_addr[ETH_ALEN]
++	static const u8 pae_group_addr[ETH_ALEN] __aligned(2)
+ 		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
+ 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5a77e2c..6513bc2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -34,11 +34,11 @@ void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
+ 
+ /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
+ /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
+-const unsigned char rfc1042_header[] =
++const unsigned char rfc1042_header[] __aligned(2) =
+ 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
+ 
+ /* Bridge-Tunnel header (for EtherTypes ETH_P_AARP and ETH_P_IPX) */
+-const unsigned char bridge_tunnel_header[] =
++const unsigned char bridge_tunnel_header[] __aligned(2) =
+ 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
+ 
+ 
+-- 
+1.5.2.2
 
