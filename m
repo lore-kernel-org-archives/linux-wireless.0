@@ -1,48 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow2-v.mail.gandi.net ([217.70.178.89]:49377 "EHLO
-	slow2-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbYEPIzi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 04:55:38 -0400
-Received: from relay4-v.mail.gandi.net (relay4-v.mail.gandi.net [217.70.178.78])
-	by slow2-v.mail.gandi.net (Postfix) with ESMTP id 91E6721E786
-	for <linux-wireless@vger.kernel.org>; Fri, 16 May 2008 10:40:44 +0200 (CEST)
-Message-ID: <20080516104021.18775zzb3wj3y10k@mobydick.mine.nu> (sfid-20080516_105542_224500_A843EF2F)
-Date: Fri, 16 May 2008 10:40:21 +0200
-From: Mathieu Chouquet-Stringer <mchouque@free.fr>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Roskin <proski@gnu.org>, j@w1.fi,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostap: procfs fix for hostap_fw.c
-References: <20080506152354.GA3680@mobydick> <1210592626.3372.6.camel@dv>
-	<20080513004345.GB26418@tuxdriver.com>
-In-Reply-To: <20080513004345.GB26418@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:52689 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211AbYE2IhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:24 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 14/43] iwlwifi: refactor stop master function
+Date: Thu, 29 May 2008 16:34:59 +0800
+Message-Id: <1212050128-17132-15-git-send-email-yi.zhu@intel.com> (sfid-20080529_110546_819556_22EE33E6)
+In-Reply-To: <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 13 May 2008, "John W. Linville" <linville@tuxdriver.com> wrote:
-> On Mon, May 12, 2008 at 07:43:46AM -0400, Pavel Roskin wrote:
->> On Tue, 2008-05-06 at 17:23 +0200, Mathieu Chouquet-Stringer wrote:
->> > Signed-off-by: Mathieu Chouquet-Stringer <mchouque@free.fr>
->>
->> Acked-off-by: Pavel Roskin <proski@gnu.org>
->>
->> If a more concise description needs to be written, I can do it.
->
-> If you don't mind, I would appreciate a more concise description.
-> I appreciate the full description of the bug, but I think it is a
-> bit much for the changelog as-is.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-What about something like this:
-"registers" was wrongly created under /proc which was generating warning
-during module removal and warning of duplicates objects in /proc after
-module reloading.   The file now lies in /proc/net/hostap, where it was
-meant to be.
+This patch refactors stop master function for 4965 and 5000.
+Currently it duplicates the function.
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   60 +++++++++++++------------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   29 ++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ 3 files changed, 52 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 080fc54..c586490 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -579,39 +579,6 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+-int iwl4965_hw_nic_stop_master(struct iwl_priv *priv)
+-{
+-	int rc = 0;
+-	u32 reg_val;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	/* set stop master bit */
+-	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
+-
+-	reg_val = iwl_read32(priv, CSR_GP_CNTRL);
+-
+-	if (CSR_GP_CNTRL_REG_FLAG_MAC_POWER_SAVE ==
+-	    (reg_val & CSR_GP_CNTRL_REG_MSK_POWER_SAVE_TYPE))
+-		IWL_DEBUG_INFO("Card in power save, master is already "
+-			       "stopped\n");
+-	else {
+-		rc = iwl_poll_bit(priv, CSR_RESET,
+-				  CSR_RESET_REG_FLAG_MASTER_DISABLED,
+-				  CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
+-		if (rc < 0) {
+-			spin_unlock_irqrestore(&priv->lock, flags);
+-			return rc;
+-		}
+-	}
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-	IWL_DEBUG_INFO("stop master\n");
+-
+-	return rc;
+-}
+-
+ /**
+  * iwl4965_hw_txq_ctx_stop - Stop all Tx DMA channels, free Tx queue memory
+  */
+@@ -642,11 +609,34 @@ void iwl4965_hw_txq_ctx_stop(struct iwl_priv *priv)
+ 	iwl_hw_txq_ctx_free(priv);
+ }
+ 
++static int iwl4965_apm_stop_master(struct iwl_priv *priv)
++{
++	int ret = 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	/* set stop master bit */
++	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
++
++	ret = iwl_poll_bit(priv, CSR_RESET,
++				  CSR_RESET_REG_FLAG_MASTER_DISABLED,
++				  CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
++	if (ret < 0)
++		goto out;
++
++out:
++	spin_unlock_irqrestore(&priv->lock, flags);
++	IWL_DEBUG_INFO("stop master\n");
++
++	return ret;
++}
++
+ static void iwl4965_apm_stop(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+ 
+-	iwl4965_hw_nic_stop_master(priv);
++	iwl4965_apm_stop_master(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+@@ -663,7 +653,7 @@ static int iwl4965_apm_reset(struct iwl_priv *priv)
+ 	int ret = 0;
+ 	unsigned long flags;
+ 
+-	iwl4965_hw_nic_stop_master(priv);
++	iwl4965_apm_stop_master(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 27cfe3c..d607452 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -56,6 +56,31 @@ static const u16 iwl5000_default_queue_to_tx_fifo[] = {
+ 	IWL_TX_FIFO_HCCA_2
+ };
+ 
++/* FIXME: same implementation as 4965 */
++static int iwl5000_apm_stop_master(struct iwl_priv *priv)
++{
++	int ret = 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	/* set stop master bit */
++	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
++
++	ret = iwl_poll_bit(priv, CSR_RESET,
++				  CSR_RESET_REG_FLAG_MASTER_DISABLED,
++				  CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
++	if (ret < 0)
++		goto out;
++
++out:
++	spin_unlock_irqrestore(&priv->lock, flags);
++	IWL_DEBUG_INFO("stop master\n");
++
++	return ret;
++}
++
++
+ static int iwl5000_apm_init(struct iwl_priv *priv)
+ {
+ 	int ret = 0;
+@@ -105,7 +130,7 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+ 
+-	iwl4965_hw_nic_stop_master(priv);
++	iwl5000_apm_stop_master(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+@@ -124,7 +149,7 @@ static int iwl5000_apm_reset(struct iwl_priv *priv)
+ 	int ret = 0;
+ 	unsigned long flags;
+ 
+-	iwl4965_hw_nic_stop_master(priv);
++	iwl5000_apm_stop_master(priv);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index d193da3..44bd827 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -686,7 +686,6 @@ extern void iwl4965_hw_setup_deferred_work(struct iwl_priv *priv);
+ extern void iwl4965_hw_cancel_deferred_work(struct iwl_priv *priv);
+ extern int iwl4965_hw_rxq_stop(struct iwl_priv *priv);
+ extern int iwl4965_hw_set_hw_params(struct iwl_priv *priv);
+-extern int iwl4965_hw_nic_stop_master(struct iwl_priv *priv);
+ extern void iwl4965_hw_txq_ctx_stop(struct iwl_priv *priv);
+ extern int iwl4965_hw_get_temperature(struct iwl_priv *priv);
+ extern unsigned int iwl4965_hw_get_beacon_cmd(struct iwl_priv *priv,
 -- 
-Mathieu Chouquet-Stringer                           mchouque@free.fr
-             The sun itself sees not till heaven clears.
-               -- William Shakespeare --
+1.5.3.6
+
