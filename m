@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:46064 "EHLO sacred.ru"
+Received: from venema.h4ckr.net ([217.24.1.135]:39645 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755943AbYEFRuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 May 2008 13:50:12 -0400
-Message-ID: <4820997E.1070305@openvz.org> (sfid-20080506_194931_562186_522634C5)
-Date: Tue, 06 May 2008 21:46:38 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
+	id S1750709AbYE2E5Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 00:57:25 -0400
+Message-ID: <58972.84.58.168.85.1212037044.squirrel@webmail.madwifi.org> (sfid-20080529_065729_605136_DA827388)
+In-Reply-To: <20080528002814.GF7779@tuxdriver.com>
+References: <4838A467.1000700@optonline.net>
+    <20080528002814.GF7779@tuxdriver.com>
+Date: Thu, 29 May 2008 06:57:24 +0200 (CEST)
+Subject: Re: ath5k can't connect on 5424
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Jerry Quinn" <jlquinn@optonline.net>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	mickflemm@gmail.com
 MIME-Version: 1.0
-To: Ingo Oeser <netdev@axxeo.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock.
-References: <48206F4C.5050105@openvz.org> <200805061840.37713.netdev@axxeo.de>
-In-Reply-To: <200805061840.37713.netdev@axxeo.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ingo Oeser wrote:
-> Hi Pavel,
-> 
-> regarding:
-> 
-> [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock
-> [PATCH 2/4][MAC80211]: Fix not checked kmalloc() result
-> 
-> Pavel Emelyanov schrieb:
->> The mesh_path_add() read-locks the pathtbl_resize_lock and calls
->> kmalloc with GFP_KERNEL mask.
->>
->> Fix it and move the endadd2 label lower. It should be _before_ the
->> if() beyond, but it makes no sense for it being there, so I move it
->> right after this if().
-> 
-> What about doing both allocations in succession to local variables,
-> share the failure path if an error occours an kfree them unconditionally 
-> like this?
+Hi.
 
-I do not quite like doing so. Since this relies on fact that kfree bears
-NULL pointers. But if we ever switch from kmalloc to kmem_cache_alloc,
-this will result in an oops.
+John W. Linville wrote:
+> You might wish to post the results of running the ath_info tool
+> available from the madwifi project (sorry, I don't have the URL handy).
 
-And as far as sharing the error paths are concerned, I make such thing
-in the 4th patch in a more classical manner.
+svn co http://svn.madwifi.org/ath_info/trunk ath_info
 
-> new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
-> new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
-> if (!new_node || !new_mpath) {
-> 	kfree(new_mpath);
-> 	kfree(new_node);
-> 	atomic_dec(&sdata->u.sta.mpaths);
-> 	err = -ENOMEM;
-> 	goto endadd2;
-> }
-> ...
-> read_lock(...);
-> ...
-> 
-> Rationale: Allocations are always likely to fail/succeed in close succession.
-> 
-> 
-> Best Regards
-> 
-> Ingo Oeser
-> 
+Usage information is available in the manpage and on
+http://madwifi.org/wiki/UserDocs/AthInfo
 
+hth
+
+Bye, Mike
