@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55729
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751893AbYEGF74 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:16246 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889AbYE2TSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 01:59:56 -0400
-Date: Tue, 06 May 2008 22:59:50 -0700 (PDT)
-Message-Id: <20080506.225950.181623233.davem@davemloft.net> (sfid-20080507_075904_934793_722700D1)
-To: xemul@openvz.org
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read
- lock.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4821442D.8010801@openvz.org>
-References: <4820997E.1070305@openvz.org>
-	<20080506.134047.86330538.davem@davemloft.net>
-	<4821442D.8010801@openvz.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 29 May 2008 15:18:40 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so4239492rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 12:18:39 -0700 (PDT)
+Message-ID: <b6c5339f0805291218y2f54452bu900a51c99c70fe11@mail.gmail.com> (sfid-20080529_211911_193229_9366A379)
+Date: Thu, 29 May 2008 15:18:39 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: ath5k can't connect on 5424
+Cc: "Jerry Quinn (ibm)" <jlquinn@optonline.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	mickflemm@gmail.com
+In-Reply-To: <1212087179.3808.2.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4838A467.1000700@optonline.net>
+	 <20080528002814.GF7779@tuxdriver.com> <483EC752.1040609@optonline.net>
+	 <1212087179.3808.2.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavel Emelyanov <xemul@openvz.org>
-Date: Wed, 07 May 2008 09:54:53 +0400
+On Thu, May 29, 2008 at 2:52 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2008-05-29 at 11:10 -0400, Jerry Quinn (ibm) wrote:
+>
+>> MAC Version:  2424  (0xa0)
+>> MAC Revision: 5424  (0xa3)
+>> Warning: Invalid EEPROM Magic number!
+>
+> If I understand correctly, it means that your device uses a new EEPROM
+> layout that hasn't been reverse engineered yet.
 
-> David Miller wrote:
-> > The whole reason we made kfree allow NULL points is so that
-> > checks for it would be ommitted at kfree calls sides, whether
-> > they be direct or indirect.
-> 
-> Hm... I really thought that this check in kfree is just for sanity 
-> against some 3rd part code. But why kmem_cache_free() is not such then?
+Hmm, I get the "Invalid EEPROM" from ath_info as well, but it works
+here (same MAC/PHY revisions, different device id and different
+regulatory domain).  I guess I'm lucky...
 
-That's not what the check was added for.
-
-If you look in the history, there are lots of changes that
-are of the form "don't check for NULL, kfree() does that"
-and it decreases kernel text size.  That was why the check
-was added to kfree(), so we could do that.
-
-There have been some discussions about kmem_cache_free() NULL
-checks, but that tends to keep getting stalled in the mud
-for whatever reason.
-
-Whether you should resubmit your patch is up to the wireless
-folks :-)
+-- 
+Bob Copeland %% www.bobcopeland.com
