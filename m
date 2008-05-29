@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59698
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751285AbYEMWJb (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.238]:53958 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbYE2IHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 May 2008 18:09:31 -0400
-Date: Tue, 13 May 2008 15:09:26 -0700 (PDT)
-Message-Id: <20080513.150926.114765212.davem@davemloft.net> (sfid-20080514_000937_286997_34D91E50)
-To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com,
-	herbert@gondor.apana.org.au, mb@bu3sch.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 truesize bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210714643.4279.27.camel@johannes.berg>
-References: <1210712356.4279.22.camel@johannes.berg>
-	<1ba2fa240805131412i3bd1756bhb11d31742b326b2f@mail.gmail.com>
-	<1210714643.4279.27.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 29 May 2008 04:07:20 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so3973333rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 01:07:20 -0700 (PDT)
+Message-ID: <1ba2fa240805290107r2c3b68cbh4bf18e86c9f96335@mail.gmail.com> (sfid-20080529_100724_546703_13450EFE)
+Date: Thu, 29 May 2008 11:07:19 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: question about ...: wrong count at exit"
+Cc: "Holger Schurig" <hs4233@mail.mn-solutions.de>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1212047361.16917.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200805290937.22146.hs4233@mail.mn-solutions.de>
+	 <1212047361.16917.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 13 May 2008 23:37:23 +0200
+On Thu, May 29, 2008 at 10:49 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-05-29 at 09:37 +0200, Holger Schurig wrote:
+>> After pulling the newest sparse, I got some new sparse warnings
+>> which puzzle me. Here's one of them:
+>>
+>> drivers/net/wireless/libertas/main.c:477:9: warning: context imbalance in 'lbs_eth_stop': wrong count at exit
+>> drivers/net/wireless/libertas/main.c:477:9:    context 'lock': wanted 0, got 1
+>>
+>> However, the function looks quite innocent, and I cannot see
+>> any imbalance there. Did I oversee something or is that a
+>> problem of sparse?
+>
+>>         spin_lock_irq(&priv->driver_lock);
+>>         priv->infra_open = 0;
+>>         netif_stop_queue(dev);
+>>         spin_unlock_irq(&priv->driver_lock);
+>
+> I think it's a sparse problem caused by my patch, I sent further patches
+> to fix it but they were never applied (and had a slight remaining
+> problem too). If you look at the pre-processed function it should become
+> obvious.
+>
 
-> 
-> > >  Most fullmac devices also need some space, whether they do things that
-> > >  way or not is a completely different thing, the ieee80211 stack for
-> > >  example copies every packet into a new skb anyway.
-> > 
-> > It's really depends on when is the 802.3 to 802.11 header translation
-> > made it doesn't matter whether it's fullmac or softmac. I would say
-> > that WLAN is OK.
-> 
-> True, some devices take 802.3 frames and do the translation and
-> everything themselves. I dunno. I guess it would make sense to make it
-> mac80211 anyway because ieee80211 doesn't care and the other drivers are
-> probably handling this in some other way anyway (if maybe even by using
-> different dma descriptors, or just not caring because transfer speeds
-> are low enough)
+I got plenty of this in the mac80211 reported with newest sparse, but
+they looks false caused by 'goto statements'
 
-We should fix ieee80211 (it's something I planned to look into today
-in fact), and the drivers that copy or do things incorrectly.
-
-It doesn't make sense to make this decision based upon which 80211
-stack or which drivers are enabled.  All of them in essence want this
-extra space, so let's give it to them.
+Tomas
