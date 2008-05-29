@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:43256 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbYE1OtV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 10:49:21 -0400
-Date: Wed, 28 May 2008 17:48:28 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/5] hostap: remove private "monitor" ioctl
-Message-ID: <20080528144828.GA6744@jm.kir.nu> (sfid-20080528_164924_873773_ECA35561)
-References: <20080523015442.16636.92254.stgit@dv.roinet.com> <20080523015454.16636.44068.stgit@dv.roinet.com> <20080526094406.GI4932@jm.kir.nu> <1211981429.31989.29.camel@dv>
+Received: from nf-out-0910.google.com ([64.233.182.191]:58760 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757118AbYE2NvW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 09:51:22 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1533457nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 06:51:19 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: ffs() compile-time
+Date: Thu, 29 May 2008 15:55:53 +0200
+Cc: rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1211981429.31989.29.camel@dv>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200805291555.53673.IvDoorn@gmail.com> (sfid-20080529_155220_680692_BF6BE021)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 28, 2008 at 09:30:29AM -0400, Pavel Roskin wrote:
+Hi,
 
-> The old ioctl was supporting bare 802.11, prism and AVS headers.  I want
-> to replace all three of them with radiotap.  I had to leave bare 802.11
-> support for the AP interface (wlan0ap) for hostapd compatibility, but
-> the main interface should only support radiotap.
-> 
-> Suppose we want to support the old ioctl.  All three types of headers
-> that could be requested are going away now.  Can we expect the software
-> that doesn't know of "iwconfig mode monitor" to know radiotap headers?
-> I don't think so.
+In rt2x00 I define all registers through the FIELD32(__mask) defines,
+which look like this:
 
-Where is this "are going away now" statement coming from? I see no
-technical reason for this apart from simplifying the implementation.
+struct rt2x00_field32 {
+	u32 bit_offset;
+	u32 bit_mask;
+};
 
-> > this may break existing user space programs, I do not think this should
-> > go in. Obviously, same goes for removal of the actual use of this
-> > parameter and support for different header formats in patch 5/5. Adding
-> > support for radiotap format is of course reasonable, but I would be more
-> > careful with removing existing functionality which may still be in use.
-> 
-> OK, if that's what you prefer, I can do it.
+#define FIELD32(__mask)
+({
+	BUILD_BUG_ON(!(__mask) ||
+		     !is_valid_mask(__mask) ||	
+		     (__mask) != (u32)(__mask));
+	(struct rt2x00_field32) {
+		__ffs(__mask), (__mask)
+	};
+})
 
-I'm not strongly against replacing the old formats with radiotap, but I
-just do not follow the logic given as reasons for doing this as a simple
-replacement instead of doing it in steps (add radiotap now; remove
-deprecated formats later).
+As you see everywhere where a define which contains FIELD32() will
+make a call to __ffs(). However this is suboptimal since the __mask which
+is passed to __ffs() is a constant during compile time.
+So it would be very nice when I can make use of a compile-time version of __ffs()
+to make GCC find the first bit during compile-time this would increase performance
+and help reduce the module size of each rt2x00 driver.
 
-I do not know how common user space programs that do not support
-radiotap, but would support one (or more) of the old formats (and
-similarly for the private ioctl vs. generic mode ioctl). If these kinds
-of cases are very rare, I could see better justification for simple
-replacement. If such programs are still in active use in systems that
-could be expected to upgrade to the new kernel version, there is much
-more justification to keep the old formats available and just make it
-clearer that they are deprecated and will be removed at a certain point
-in the future.
+However I am a bit lost at what a proper solution would be, GCC provides
+__builtin_ffs() but would that perform the compile-time calculation or not.
+Another solution would be creating a macro like:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+#define _COMPILE_FFS4(x)\
+({			\
+	(x) & 0x1 ? 1 :	\
+	(x) & 0x2 ? 2 :	\
+	(x) & 0x4 ? 3 :	\
+	(x) & 0x8 ? 4 :	\
+	0;		\
+})
+
+And have _COMPILE_FFS8, _COMPILE_FFS16 and _COMPILE_FFS32 use above macro.
+But I am kind of hesitant about that macro as well, because it just doesn't feel right. :S
+
+Any advice is welcome. :)
+Thanks,
+
+Ivo
