@@ -1,28 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50679
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752902AbYESXcZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 19:32:25 -0400
-Date: Mon, 19 May 2008 16:32:21 -0700 (PDT)
-Message-Id: <20080519.163221.236551963.davem@davemloft.net> (sfid-20080520_013235_964541_86872AD3)
+Received: from mga02.intel.com ([134.134.136.20]:52678 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881AbYE2IhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:13 -0400
+From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-05-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080516213137.GA16638@tuxdriver.com>
-References: <20080515195341.GB25905@tuxdriver.com>
-	<20080516213137.GA16638@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 04/43] iwlwifi: increase max payload of iwl_cmd
+Date: Thu, 29 May 2008 16:34:49 +0800
+Message-Id: <1212050128-17132-5-git-send-email-yi.zhu@intel.com> (sfid-20080529_103718_520011_36B5B88F)
+In-Reply-To: <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 16 May 2008 17:31:37 -0400
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-> Another quick round of fixes intended for 2.6.26 (including the
-> corrected version of the "11n hidden ssid" patch)...
+This patch increases iwl_cmd payload maximum size from 360 to 640
+to fit some of iwl5000 commands as well.
 
-Pulled, thanks a lot John.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f7fd8ea..1ee8121 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -307,6 +307,8 @@ struct iwl_cmd_meta {
+ 
+ } __attribute__ ((packed));
+ 
++#define IWL_CMD_MAX_PAYLOAD 640
++
+ /**
+  * struct iwl_cmd
+  *
+@@ -332,7 +334,7 @@ struct iwl_cmd {
+ 		struct iwl4965_tx_beacon_cmd tx_beacon;
+ 		struct iwl4965_rxon_assoc_cmd rxon_assoc;
+ 		u8 *indirect;
+-		u8 payload[360];
++		u8 payload[IWL_CMD_MAX_PAYLOAD];
+ 	} __attribute__ ((packed)) cmd;
+ } __attribute__ ((packed));
+ 
+-- 
+1.5.3.6
+
