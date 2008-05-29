@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55596 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752780AbYEaUfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 16:35:13 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1K2Xn4-0005vB-6Y
-	for linux-wireless@vger.kernel.org; Sat, 31 May 2008 20:35:02 +0000
-Received: from 84-255-194-155.static.t-2.net ([84.255.194.155])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 20:35:02 +0000
-Received: from ielectric by 84-255-194-155.static.t-2.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 20:35:02 +0000
-To: linux-wireless@vger.kernel.org
-From: iElectric <ielectric@gmail.com>
-Subject: Moving to kernel .25-r4
-Date: Sat, 31 May 2008 20:33:35 +0000 (UTC)
-Message-ID: <loom.20080531T203112-538@post.gmane.org> (sfid-20080531_223518_354365_9AA28B36)
+Received: from wf-out-1314.google.com ([209.85.200.170]:30599 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366AbYE2Vfu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 17:35:50 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3102617wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 14:35:48 -0700 (PDT)
+Subject: Re: [PATCH 15/37] wireless: use get/put_endian helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1212096681.10109.0.camel@johannes.berg>
+References: <1212092308.28403.117.camel@brick>
+	 (sfid-20080529_221900_617991_210BEC75)  <1212096681.10109.0.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 29 May 2008 14:35:45 -0700
+Message-Id: <1212096945.28403.141.camel@brick> (sfid-20080529_233553_755487_1CF631B5)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently I moved to kernel .25-r4. I want to use newest firmware version with
-b43 for my 4311 rev 1 wireless card. I cut the firmware to /lib/firmware/b43/,
-do rmmod b43, modprobe b43 and it still uses old firmware:
+On Thu, 2008-05-29 at 23:31 +0200, Johannes Berg wrote:
+> > -	ADM8211_CSR_WRITE(BSSID0, le32_to_cpu(*(__le32 *)bssid));
+> > +	ADM8211_CSR_WRITE(BSSID0, get_le32((__le32 *)bssid));
+> 
+> Maybe I'm stupid, but isn't this the same as le32_to_cpup? Or does
+> get_le32 handle unaligned values?
+> 
+> johannes
 
-b43-phy0: Broadcom 4311 WLAN found
-b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
-b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-b43-phy0 debug: Chip initialized
-b43-phy0 debug: 32-bit DMA initialized
-b43-phy0 debug: Wireless interface started
-b43-phy0 debug: Adding Interface type 2
+You're not stupid, but there is a new put_le32 as well that takes
+aligned values similar to the put_unaligned_le32, so get_le32 was
+added to have an analog to get_unaligned_le32 as well.
 
-Ideas? 
-
-Also I can also confirm freezing after hibernation on HP lappy.
+Harvey
 
