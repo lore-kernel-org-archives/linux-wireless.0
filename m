@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52678 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbYE2IhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:15 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 06/43] iwlwifi: mark 4965 ucode types
-Date: Thu, 29 May 2008 16:34:51 +0800
-Message-Id: <1212050128-17132-7-git-send-email-yi.zhu@intel.com> (sfid-20080529_103721_276939_A95C2271)
-In-Reply-To: <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:54800 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbYE2KjN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 06:39:13 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3525558waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 03:39:12 -0700 (PDT)
+Message-ID: <1ba2fa240805290339y77256fb7r296118775d3e85a8@mail.gmail.com> (sfid-20080529_123917_454583_6E102823)
+Date: Thu, 29 May 2008 13:39:12 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 38/43] mac80211: allow disable FAT in specific configurations
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1212055950.16917.53.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+	 <1212053870.16917.39.camel@johannes.berg>
+	 <1ba2fa240805290258of0559a0t183128d3f9889eae@mail.gmail.com>
+	 <1212055950.16917.53.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Thu, May 29, 2008 at 1:12 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> > It seems to me that (12, -1) would be pretty much the same as (8, +1) as
+>> > far as regulatory is concerned.
+>>
+>> Yes, just beacons will flows on 12 and not on 8 so from protocol point
+>> this is important
+>
+> Yes, but how is it important to the regulatory regulations?
 
-This patch marks 4965 ucode types.
+I didn't say it does.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+>
+>> (But this is not what is written in the comment we comparing (8,-1) to
+>> (8,+1) - Both are FAT channels - Beacons flow on 8 channel)
+>>
+>> I'm just thinking about how we should
+>> > express this in the regulatory database where we're not really concerned
+>> > with channels but rather allowed bands.
+>> >
+>> Not sure what do you mean, You always need to keep in mind channel, band tuple.
+>
+> Well our database just says: "ok, you're allowed to use 2400-2483.5 MHz,
+> at a maximum bandwidth of 40 MHz, if it fits"
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index ca9ca92..063ba2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -162,9 +162,10 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	/* Tell bootstrap uCode where to find the "Initialize" uCode
- 	 *   in host DRAM ... host DRAM physical address bits 35:4 for 4965.
--	 * NOTE:  iwl4965_initialize_alive_start() will replace these values,
-+	 * NOTE:  iwl_init_alive_start() will replace these values,
- 	 *        after the "initialize" uCode has run, to point to
--	 *        runtime/protocol instructions and backup data cache. */
-+	 *        runtime/protocol instructions and backup data cache.
-+	 */
- 	pinst = priv->ucode_init.p_addr >> 4;
- 	pdata = priv->ucode_init_data.p_addr >> 4;
- 	inst_len = priv->ucode_init.len;
-@@ -220,6 +221,8 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
- 
- 	iwl_release_nic_access(priv);
- 
-+	priv->ucode_type = UCODE_INIT;
-+
- 	return 0;
- }
- 
-@@ -266,6 +269,8 @@ static int iwl4965_set_ucode_ptrs(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO("Runtime uCode pointers are set.\n");
- 
-+	priv->ucode_type = UCODE_RT;
-+
- 	return ret;
- }
- 
--- 
-1.5.3.6
+OK. Now I understand your question. The word 'band' is a bit
+overloaded. Regulatory specs uses
+'channel starting frequency' as for 2.4 or 5, 'channel spacing' as for
+10 (Narrow) 20 (Wide) 40 (FAT) and
+channel set as list of channels for particular reg domain class such as 36, 48.
 
+I'm not aware of the cases that if (Ch1, +1) is on the same band  as
+(Ch2, -1) it won't be allowed in some regulatory domain, so your DB
+would be OK. Just the protocol doesn't talk in frequencies but in
+channels.
+
+When matching against such database you would need to check not only
+if you can associate against
+ X-Y Mhz (40Mhz) but also if you can fall to  X (20Mhz) or Y(20MHz)
+depending if X or Y is the  primary channel.
+
+
+Thanks
+Tomas
