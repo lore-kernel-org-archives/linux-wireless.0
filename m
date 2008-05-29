@@ -1,104 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:38402 "EHLO ciao.gmane.org"
+Received: from mga02.intel.com ([134.134.136.20]:52689 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754676AbYEXLEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 May 2008 07:04:05 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JzrXb-0008Dv-GC
-	for linux-wireless@vger.kernel.org; Sat, 24 May 2008 11:04:01 +0000
-Received: from c-67-190-34-252.hsd1.co.comcast.net ([67.190.34.252])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 11:03:59 +0000
-Received: from dann.church by c-67-190-34-252.hsd1.co.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 24 May 2008 11:03:59 +0000
-To: linux-wireless@vger.kernel.org
-From: Dann Church <dann.church@cassatt.com>
-Subject: Re: iwl4965 - =?utf-8?b?d3BhX3N1cHBsaWNhbnQ=?= can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Date: Sat, 24 May 2008 11:03:46 +0000 (UTC)
-Message-ID: <loom.20080524T105644-837@post.gmane.org> (sfid-20080524_130410_482752_2A1861EB)
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>  <1210434402.3787.7.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101156q4dc52c2bt47d2f6e51b611eea@mail.gmail.com>  <1210456110.3787.26.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805101506p78c3eeb6q6e980ac4200fd56f@mail.gmail.com>  <1210474179.3787.31.camel@X61.NetworkingUnlimited.com>  <1ba2fa240805120950mf983e97qac4cdfa2c84b6662@mail.gmail.com>  <1210617467.3792.4.camel@X61.DFGI.com>  <1ba2fa240805220953u746d3429q50faa1885104cadb@mail.gmail.com>  <loom.20080522T173929-232@post.gmane.org> <1ba2fa240805221054h7873d5c8k6fb44bf38ef2778@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751881AbYE2IhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 11/43] iwlwifi: setup correctly L1 L0S pi link values
+Date: Thu, 29 May 2008 16:34:56 +0800
+Message-Id: <1212050128-17132-12-git-send-email-yi.zhu@intel.com> (sfid-20080529_103726_898941_418C434A)
+In-Reply-To: <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@...> writes:
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> 
-> On Thu, May 22, 2008 at 8:42 PM, Dann Church <dann.church@...> wrote:
-> > Tomas Winkler <tomasw@...> writes:
-> >
-> >>
-> >> On Mon, May 12, 2008 at 9:37 PM, Vincent C Jones
-> >> <v.jones@...> wrote:
-> >> >
-> >> > On Mon, 2008-05-12 at 19:50 +0300, Tomas Winkler wrote:
-> >> >
-> >> >> Meanwhile we've reproduced the wpa_supplicant issue...
-> >> >>
-> >> >
-> >> > That is great news. Let me know when it is time to test again...
-> >>
-> >> Please try this one. I've just pasted that in so it's might be
-> >> white-space-wise broken
-> >
-> > I have this same issue running fedora core 9 with a kernel version
-> > 2.6.25.3-18.fc9.i686.PAE.  Any chance this patch would work on such a kernel
-> > (assuming I recompiled it from source)?
-> >
-> >
-> Yes it will please try it out
-> Thanks
-> Tomas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-I'm happy to report that I have made the equivalent changes to ieee80211_sta.c
-in the 2.6.25 kernel on my FC9 box and it works as expected.  I didn't do the
-wpa_supplicant fix mentioned later in this thread as it didn't seem necessary in
-my case.
+This patch setups L1 L0S pci link values.
 
-Here's the patch I generated (which isn't conceptually different from the
-previous one posted) in case anyone needs it for such a kernel:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h |    7 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |   18 ++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |   19 ++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-csr.h     |    6 +++++-
+ 4 files changed, 39 insertions(+), 11 deletions(-)
 
-diff -uNrp linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c
-kernel-2.6.25.new/linux-2.6.25.i686/net/mac80211/ieee80211_sta.c
---- linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c	2008-05-23
-10:23:15.000000000 -0600
-+++ linux-2.6.25.noarch/net/mac80211/ieee80211_sta.c	2008-05-23
-10:28:44.000000000 -0600
-@@ -4035,15 +4035,15 @@ ieee80211_sta_scan_result(struct net_dev
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index ee55b28..fc11833 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -100,9 +100,14 @@
  
- 	memset(&iwe, 0, sizeof(iwe));
- 	iwe.cmd = SIOCGIWFREQ;
--	iwe.u.freq.m = bss->freq;
--	iwe.u.freq.e = 6;
-+	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
-+	iwe.u.freq.e = 0;
- 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
- 					  IW_EV_FREQ_LEN);
+ #include "iwl-commands.h"
  
- 	memset(&iwe, 0, sizeof(iwe));
- 	iwe.cmd = SIOCGIWFREQ;
--	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->freq);
--	iwe.u.freq.e = 0;
-+	iwe.u.freq.m = bss->freq;
-+	iwe.u.freq.e = 6;
- 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
- 					  IW_EV_FREQ_LEN);
+-#define PCI_LINK_CTRL      0x0F0
++/* PCI registers */
++#define PCI_LINK_CTRL      0x0F0	/* 1 byte */
+ #define PCI_POWER_SOURCE   0x0C8
+ #define PCI_REG_WUM8       0x0E8
++
++/* PCI register values */
++#define PCI_LINK_VAL_L0S_EN	0x01
++#define PCI_LINK_VAL_L1_EN	0x02
+ #define PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT         (0x80000000)
  
-
-Thanks for tracking this issue down!
-
---Dann
-
-
-
-
-
+ #define TFD_QUEUE_SIZE_MAX      (256)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index d548bda..bf0bd4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -496,6 +496,10 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
+ 
++	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
++			  CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
++
+ 	/* set "initialization complete" bit to move adapter
+ 	 * D0U* --> D0A* state */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+@@ -514,11 +518,12 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
+ 		goto out;
+ 
+ 	/* enable DMA */
+-	iwl_write_prph(priv, APMG_CLK_CTRL_REG,
+-			APMG_CLK_VAL_DMA_CLK_RQT | APMG_CLK_VAL_BSM_CLK_RQT);
++	iwl_write_prph(priv, APMG_CLK_CTRL_REG, APMG_CLK_VAL_DMA_CLK_RQT |
++						APMG_CLK_VAL_BSM_CLK_RQT);
+ 
+ 	udelay(20);
+ 
++	/* disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+ 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
+@@ -546,8 +551,13 @@ static void iwl4965_nic_config(struct iwl_priv *priv)
+ 
+ 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
+ 
+-	/* disable L1 entry -- workaround for pre-B1 */
+-	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
++	/* L1 is enabled by BIOS */
++	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
++		/* diable L0S disabled L1A enabled */
++		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
++	else
++		/* L0S enabled L1A disabled */
++		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 
+ 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0355ccd..b1c5045 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -63,6 +63,10 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 		    CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
+ 
++	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
++		    CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
++
+ 	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
+ 
+ 	/* set "initialization complete" bit to move adapter
+@@ -83,13 +87,13 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 		return ret;
+ 
+ 	/* enable DMA */
+-	iwl_write_prph(priv, APMG_CLK_EN_REG,
+-			APMG_CLK_VAL_DMA_CLK_RQT);
++	iwl_write_prph(priv, APMG_CLK_EN_REG, APMG_CLK_VAL_DMA_CLK_RQT);
+ 
+ 	udelay(20);
+ 
++	/* disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+-			APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
++			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
+ 	iwl_release_nic_access(priv);
+ 
+@@ -106,8 +110,13 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+ 
+ 	pci_read_config_byte(priv->pci_dev, PCI_LINK_CTRL, &val_link);
+ 
+-	/* disable L1 entry -- workaround for pre-B1 */
+-	pci_write_config_byte(priv->pci_dev, PCI_LINK_CTRL, val_link & ~0x02);
++	/* L1 is enabled by BIOS */
++	if ((val_link & PCI_LINK_VAL_L1_EN) == PCI_LINK_VAL_L1_EN)
++		/* diable L0S disabled L1A enabled */
++		iwl_set_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
++	else
++		/* L0S enabled L1A disabled */
++		iwl_clear_bit(priv, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 
+ 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 9d6e5d2..545ed69 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -87,13 +87,14 @@
+ /* EEPROM reads */
+ #define CSR_EEPROM_REG          (CSR_BASE+0x02c)
+ #define CSR_EEPROM_GP           (CSR_BASE+0x030)
++#define CSR_GIO_REG		(CSR_BASE+0x03C)
+ #define CSR_GP_UCODE		(CSR_BASE+0x044)
+ #define CSR_UCODE_DRV_GP1       (CSR_BASE+0x054)
+ #define CSR_UCODE_DRV_GP1_SET   (CSR_BASE+0x058)
+ #define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
+ #define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
+-#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+ #define CSR_LED_REG             (CSR_BASE+0x094)
++#define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
+ 
+ /* Analog phase-lock-loop configuration  */
+ #define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
+@@ -213,6 +214,9 @@
+ #define CSR_EEPROM_GP_BAD_SIGNATURE	(0x00000000)
+ #define CSR_EEPROM_GP_IF_OWNER_MSK	(0x00000180)
+ 
++/* CSR GIO */
++#define CSR_GIO_REG_VAL_L0S_ENABLED	(0x00000002)
++
+ /* UCODE DRV GP */
+ #define CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP             (0x00000001)
+ #define CSR_UCODE_SW_BIT_RFKILL                     (0x00000002)
+-- 
+1.5.3.6
 
