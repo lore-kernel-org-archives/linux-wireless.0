@@ -1,236 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51620 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:36760 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759670AbYEWCLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:11:49 -0400
+	id S1751942AbYE2IiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:38:01 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] iwlwifi: clean up alive_start routine
-Date: Fri, 23 May 2008 10:09:13 +0800
-Message-Id: <1211508569-3163-36-git-send-email-yi.zhu@intel.com> (sfid-20080523_042836_166888_93D874DF)
-In-Reply-To: <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH 42/43] iwlwifi: send calibration results as HUGE commands
+Date: Thu, 29 May 2008 16:35:27 +0800
+Message-Id: <1212050128-17132-43-git-send-email-yi.zhu@intel.com> (sfid-20080529_103815_949581_73332D96)
+In-Reply-To: <1212050128-17132-42-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-40-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-41-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-42-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch cleans up alive_start routine. It removes 4965 from the common
-code and moves the run time calibration reset into a common code.
+This patch saves memory by reducing the size of the entry in the txq. It
+was 640 because of the calibration commands. Calibration commands are now
+sent as HUGE commands (using the extra 1024 bytes at the end of the command
+txq), hence, there is no need for 640 in every entry any more.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   12 ------------
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    4 ----
- drivers/net/wireless/iwlwifi/iwl-calib.c    |   18 ++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-calib.h    |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   19 ++++++++++---------
- 5 files changed, 32 insertions(+), 26 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   45 ++++++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
+ 2 files changed, 28 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index c92742c..547287c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -925,15 +925,6 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--#ifdef CONFIG_IWL4965_RUN_TIME_CALIB
--	memset(&(priv->sensitivity_data), 0,
--	       sizeof(struct iwl_sensitivity_data));
--	memset(&(priv->chain_noise_data), 0,
--	       sizeof(struct iwl_chain_noise_data));
--	for (i = 0; i < NUM_RX_CHAINS; i++)
--		priv->chain_noise_data.delta_gain_code[i] =
--				CHAIN_NOISE_DELTA_GAIN_INIT_VAL;
--#endif /* CONFIG_IWL4965_RUN_TIME_CALIB*/
- 	ret = iwl_grab_nic_access(priv);
- 	if (ret) {
- 		spin_unlock_irqrestore(&priv->lock, flags);
-@@ -1000,9 +991,6 @@ int iwl4965_alive_notify(struct iwl_priv *priv)
- 	iwl_release_nic_access(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	/* Ask for statistics now, the uCode will send statistics notification
--	 * periodically after association */
--	iwl_send_statistics_request(priv, CMD_ASYNC);
- 	return ret;
- }
- 
 diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index d6ffdee..0355ccd 100644
+index 9ef4468..7e525ad 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -580,10 +580,6 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 
- 	iwl5000_send_wimax_coex(priv);
- 
--	/* Ask for statistics now, the uCode will send notification
--	 * periodically after association */
--	iwl_send_statistics_request(priv, CMD_ASYNC);
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index beb9716..a6c7f0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -786,3 +786,21 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
- }
- EXPORT_SYMBOL(iwl_chain_noise_calibration);
- 
-+
-+void iwl_reset_run_time_calib(struct iwl_priv *priv)
-+{
-+	int i;
-+	memset(&(priv->sensitivity_data), 0,
-+	       sizeof(struct iwl_sensitivity_data));
-+	memset(&(priv->chain_noise_data), 0,
-+	       sizeof(struct iwl_chain_noise_data));
-+	for (i = 0; i < NUM_RX_CHAINS; i++)
-+		priv->chain_noise_data.delta_gain_code[i] =
-+				CHAIN_NOISE_DELTA_GAIN_INIT_VAL;
-+
-+	/* Ask for statistics now, the uCode will send notification
-+	 * periodically after association */
-+	iwl_send_statistics_request(priv, CMD_ASYNC);
-+}
-+EXPORT_SYMBOL(iwl_reset_run_time_calib);
-+
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.h b/drivers/net/wireless/iwlwifi/iwl-calib.h
-index e690668..b8e57c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.h
-@@ -78,7 +78,7 @@ void iwl_sensitivity_calibration(struct iwl_priv *priv,
- 				struct iwl4965_notif_statistics *resp);
- 
- void iwl_init_sensitivity(struct iwl_priv *priv);
--
-+void iwl_reset_run_time_calib(struct iwl_priv *priv);
- static inline void iwl_chain_noise_reset(struct iwl_priv *priv)
- {
- 
-@@ -101,6 +101,9 @@ static inline void iwl_init_sensitivity(struct iwl_priv *priv)
- static inline void iwl_chain_noise_reset(struct iwl_priv *priv)
- {
- }
-+static inline void iwl_reset_run_time_calib(struct iwl_priv *priv)
-+{
-+}
- #endif
- 
- #endif /* __iwl_calib_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 89dd890..0559cdc 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3252,11 +3252,11 @@ static int iwl4965_read_ucode(struct iwl_priv *priv)
- }
- 
- /**
-- * iwl4965_alive_start - called after REPLY_ALIVE notification received
-+ * iwl_alive_start - called after REPLY_ALIVE notification received
-  *                   from protocol/runtime uCode (initialization uCode's
-- *                   Alive gets handled by iwl4965_init_alive_start()).
-+ *                   Alive gets handled by iwl_init_alive_start()).
-  */
--static void iwl4965_alive_start(struct iwl_priv *priv)
-+static void iwl_alive_start(struct iwl_priv *priv)
+@@ -428,28 +428,37 @@ static int iwl5000_send_calib_results(struct iwl_priv *priv)
  {
  	int ret = 0;
  
-@@ -3280,7 +3280,6 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 	}
+-	if (priv->calib_results.lo_res)
+-		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
+-					priv->calib_results.lo_res_len,
+-					priv->calib_results.lo_res);
+-	if (ret)
+-		goto err;
++	struct iwl_host_cmd hcmd = {
++		.id = REPLY_PHY_CALIBRATION_CMD,
++		.meta.flags = CMD_SIZE_HUGE,
++	};
  
- 	iwlcore_clear_stations_table(priv);
--
- 	ret = priv->cfg->ops->lib->alive_notify(priv);
- 	if (ret) {
- 		IWL_WARNING("Could not complete ALIVE transition [ntf]: %d\n",
-@@ -3318,6 +3317,8 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 	/* Configure Bluetooth device coexistence support */
- 	iwl4965_send_bt_config(priv);
++	if (priv->calib_results.lo_res) {
++		hcmd.len = priv->calib_results.lo_res_len;
++		hcmd.data = priv->calib_results.lo_res;
++		ret = iwl_send_cmd_sync(priv, &hcmd);
  
-+	iwl_reset_run_time_calib(priv);
+-	if (priv->calib_results.tx_iq_res)
+-		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
+-				priv->calib_results.tx_iq_res_len,
+-				priv->calib_results.tx_iq_res);
++		if (ret)
++			goto err;
++	}
+ 
+-	if (ret)
+-		goto err;
++	if (priv->calib_results.tx_iq_res) {
++		hcmd.len = priv->calib_results.tx_iq_res_len;
++		hcmd.data = priv->calib_results.tx_iq_res;
++		ret = iwl_send_cmd_sync(priv, &hcmd);
+ 
+-	if (priv->calib_results.tx_iq_perd_res)
+-		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
+-				      priv->calib_results.tx_iq_perd_res_len,
+-				      priv->calib_results.tx_iq_perd_res);
+-	if (ret)
+-		goto err;
++		if (ret)
++			goto err;
++	}
 +
- 	/* Configure the adapter for unassociated operation */
- 	iwl4965_commit_rxon(priv);
++	if (priv->calib_results.tx_iq_perd_res) {
++		hcmd.len = priv->calib_results.tx_iq_perd_res_len;
++		hcmd.data = priv->calib_results.tx_iq_perd_res;
++		ret = iwl_send_cmd_sync(priv, &hcmd);
++
++		if (ret)
++			goto err;
++	}
  
-@@ -3562,7 +3563,7 @@ static int __iwl4965_up(struct iwl_priv *priv)
-  *
-  *****************************************************************************/
+ 	return 0;
+ err:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a2b9817..802f1a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -307,7 +307,7 @@ struct iwl_cmd_meta {
  
--static void iwl4965_bg_init_alive_start(struct work_struct *data)
-+static void iwl_bg_init_alive_start(struct work_struct *data)
- {
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, init_alive_start.work);
-@@ -3575,7 +3576,7 @@ static void iwl4965_bg_init_alive_start(struct work_struct *data)
- 	mutex_unlock(&priv->mutex);
- }
+ } __attribute__ ((packed));
  
--static void iwl4965_bg_alive_start(struct work_struct *data)
-+static void iwl_bg_alive_start(struct work_struct *data)
- {
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, alive_start.work);
-@@ -3584,7 +3585,7 @@ static void iwl4965_bg_alive_start(struct work_struct *data)
- 		return;
+-#define IWL_CMD_MAX_PAYLOAD 640
++#define IWL_CMD_MAX_PAYLOAD 320
  
- 	mutex_lock(&priv->mutex);
--	iwl4965_alive_start(priv);
-+	iwl_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -5476,8 +5477,8 @@ static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
- 	INIT_WORK(&priv->beacon_update, iwl4965_bg_beacon_update);
- 	INIT_WORK(&priv->set_monitor, iwl4965_bg_set_monitor);
- 	INIT_DELAYED_WORK(&priv->post_associate, iwl4965_bg_post_associate);
--	INIT_DELAYED_WORK(&priv->init_alive_start, iwl4965_bg_init_alive_start);
--	INIT_DELAYED_WORK(&priv->alive_start, iwl4965_bg_alive_start);
-+	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
-+	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
- 	INIT_DELAYED_WORK(&priv->scan_check, iwl4965_bg_scan_check);
- 
- 	iwl4965_hw_setup_deferred_work(priv);
+ /**
+  * struct iwl_cmd
 -- 
 1.5.3.6
 
