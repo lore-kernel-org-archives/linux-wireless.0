@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13829 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754124AbYEUHH1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34007 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbYE2Ii0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 03:07:27 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Javier Cardona" <javier@cozybit.com>
-Subject: Re: [PATCH 2/2] Sysfs interface for accessing non-volatile configuration.
-Date: Wed, 21 May 2008 09:07:21 +0200
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	carrano@laptop.org, dwmw2@infradead.org, dilinger@queued.net
-References: <4832422a.20018e0a.6b37.3217@mx.google.com> <200805201007.59746.hs4233@mail.mn-solutions.de> <445f43ac0805202252v2fc8757ax5a43ddce8188ed61@mail.gmail.com>
-In-Reply-To: <445f43ac0805202252v2fc8757ax5a43ddce8188ed61@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805210907.21250.hs4233@mail.mn-solutions.de> (sfid-20080521_090744_878719_271D7D33)
+	Thu, 29 May 2008 04:38:26 -0400
+Subject: Re: question about ...: wrong count at exit"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1212049987.16917.23.camel@johannes.berg> (sfid-20080529_103424_231719_C5708594)
+References: <200805290937.22146.hs4233@mail.mn-solutions.de>
+	 <1212047361.16917.6.camel@johannes.berg>
+	 <1ba2fa240805290107r2c3b68cbh4bf18e86c9f96335@mail.gmail.com>
+	 (sfid-20080529_100723_276189_896310A7)  <1212049987.16917.23.camel@johannes.berg>
+	 (sfid-20080529_103424_231719_C5708594)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7BdPjTJceDMVuXg54T/6"
+Date: Thu, 29 May 2008 10:37:21 +0200
+Message-Id: <1212050241.16917.28.camel@johannes.berg> (sfid-20080529_103828_948408_3C9FA0FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Is David's suggestion acceptable to you?
 
-Yes, it is. For the long time, I'd like to have a kernel option. 
-I'll probably make this by myself, then I can show numbers (e.g. 
-if the saving is considerable). For now, go with checking 
-mesh_XXX.
+--=-7BdPjTJceDMVuXg54T/6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The entries in the mesh_ie directory groups the non-volatile
-> parameters of the mesh Information Element that is included in
-> all mesh beacons.
 
-Ahh, ok. And since ethX can't produce mesh beacons, then mesh_ie 
-entry belongs then to mshX's sysfs-entry, right?
+> one that I'll send a patch for in a minute,
+
+actually, that one is caused by another local patch
+
+johannes
+
+--=-7BdPjTJceDMVuXg54T/6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD5rQKVg1VMiehFYAQIT8Q//YfdPGi9G7O1ILpgPk/AuOkeUDAcUqj/z
+gstAfOgWcA0vUzZO69/T22r7VeZfR02CooiRFh+7s+wFFeYBboMNGpyFAz06y3R7
+6kLx7olwYemuS/ddsCCsGVnvwQD8MCsiTBf9a84Tg2KDY8uctVSYoJP1XZFmAOUe
+5igrZuqO0lI1k/c/0DwBlBot8BLNS/h4utX7Ox4HfsHY/UMqRc026fhhxrG1zomS
+DqDYMYEG9lBMPspRRIVKAjEqiILonfHYFulDEBy77NrQVvwj2xkESrU4RKfyT27E
+WdGyxTSK+4JvjazAysiAqPyFJtyzhDpP4uO6rdoAl+GRKYcTVyeJRl06fx00dcMU
+QPxOC63+R5fPSU6tYwY29tugJo6KWSaDrcwlUulRFhuRnOl63pwbXLIwfikrOrun
+aJivdMrXfz8hp/WV9P4hm/EwQmlbpGt3w7NuVjQO8UJ1KKicy2ddRvuYwTTU5sGw
+CvWZ/dzloyRLSHM9xG1le4beb0SGOf3G/51N36t4gnLxlcvs8WpIrnwHlo+aykWD
+WXu8FOJ6JPQZ+Jeqg//pVWQSA62NjrhNEr+DHJAvAzdpYfWKy3e17bHYoi2nHvuQ
+lObRWq3cA+ybKU21GjJEvacp0jT3XU8lE7Awolpf/0YuAMcVCld+k5FzVI5XfkdK
+s5c8blaeXZM=
+=u83Q
+-----END PGP SIGNATURE-----
+
+--=-7BdPjTJceDMVuXg54T/6--
+
