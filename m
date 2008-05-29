@@ -1,50 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43319 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014AbYE0LYU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 07:24:20 -0400
-Date: Tue, 27 May 2008 05:24:03 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: Daniel Walker <dwalker@mvista.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>,
-	Michal Schmidt <mschmidt@redhat.com>, linville@tuxdriver.com,
-	mingo@elte.hu, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, arjan@infradead.org
-Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
-Message-ID: <20080527112403.GI30894@parisc-linux.org> (sfid-20080527_132424_117790_B981F57A)
-References: <20080522232103.120033152@mvista.com> <20080526192914.31045d09@brian.englab.brq.redhat.com> <200805271117.23051.rusty@rustcorp.com.au> <20080527021503.GH30894@parisc-linux.org> <1211862881.18130.243.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1211862881.18130.243.camel@localhost.localdomain>
+Received: from mga02.intel.com ([134.134.136.20]:55135 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752762AbYE2Ihr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:47 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 30/43] iwlwifi: move iwl_sta_modify_enable_tid_tx to iwl-sta.c
+Date: Thu, 29 May 2008 16:35:15 +0800
+Message-Id: <1212050128-17132-31-git-send-email-yi.zhu@intel.com> (sfid-20080529_110546_418390_4B5AB541)
+In-Reply-To: <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 09:34:41PM -0700, Daniel Walker wrote:
-> 
-> On Mon, 2008-05-26 at 20:15 -0600, Matthew Wilcox wrote:
-> > On Tue, May 27, 2008 at 11:17:22AM +1000, Rusty Russell wrote:
-> > > On Tuesday 27 May 2008 03:29:14 Michal Schmidt wrote:
-> > > > Mutexes are not allowed in interrupt context, not even mutex_trylock.
-> > > 
-> > > As an aside, does anyone know why?  I know the documentation says so, but it 
-> > > wasn't immediately obvious to me.  I asked before to no response...
-> > 
-> > Because mutexes have an owner.  In interrupt context, there is no owner.
-> > This owner is used to do priority boosts as well as debugging.
-> 
-> I don't think regular mutexes do boosting, the rtmutex does tho .. I
-> think it's more a issue with lockdep complaining about the context, but
-> that exists to just plain disallow this type of usage on principal .
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-You're right, I got confused, it's only rtmutexes that do priority
-inheritance.
+This patch moves iwl_sta_modify_enable_tid_tx into iwl-sta.c.
 
-I suppose we could have a special 'interrupt context' owner for
-the purposes of LOCKDEP.  Ingo?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   21 ++-------------------
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   20 ++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.h  |    1 +
+ 3 files changed, 23 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1d95e8c..b719d19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -44,6 +44,7 @@
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+ #include "iwl-calib.h"
++#include "iwl-sta.h"
+ 
+ /* module parameters */
+ static struct iwl_mod_params iwl4965_mod_params = {
+@@ -2900,24 +2901,6 @@ static void iwl4965_rx_reply_rx_phy(struct iwl_priv *priv,
+ #ifdef CONFIG_IWL4965_HT
+ 
+ /**
+- * iwl4965_sta_modify_enable_tid_tx - Enable Tx for this TID in station table
+- */
+-static void iwl4965_sta_modify_enable_tid_tx(struct iwl_priv *priv,
+-					 int sta_id, int tid)
+-{
+-	unsigned long flags;
+-
+-	/* Remove "disable" flag, to enable Tx for this TID */
+-	spin_lock_irqsave(&priv->sta_lock, flags);
+-	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_TID_DISABLE_TX;
+-	priv->stations[sta_id].sta.tid_disable_tx &= cpu_to_le16(~(1 << tid));
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-	spin_unlock_irqrestore(&priv->sta_lock, flags);
+-
+-	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+-}
+-
+-/**
+  * iwl4965_tx_status_reply_compressed_ba - Update tx status from block-ack
+  *
+  * Go through block-ack's bitmap of ACK'd frames, update driver's record of
+@@ -3193,7 +3176,7 @@ static int iwl4965_tx_queue_agg_enable(struct iwl_priv *priv, int txq_id,
+ 	ra_tid = BUILD_RAxTID(sta_id, tid);
+ 
+ 	/* Modify device's station table to Tx this TID */
+-	iwl4965_sta_modify_enable_tid_tx(priv, sta_id, tid);
++	iwl_sta_modify_enable_tid_tx(priv, sta_id, tid);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	rc = iwl_grab_nic_access(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index ed07566..983f107 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -921,3 +921,23 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+ }
+ EXPORT_SYMBOL(iwl_get_sta_id);
+ 
++
++/**
++ * iwl_sta_modify_enable_tid_tx - Enable Tx for this TID in station table
++ */
++void iwl_sta_modify_enable_tid_tx(struct iwl_priv *priv, int sta_id, int tid)
++{
++	unsigned long flags;
++
++	/* Remove "disable" flag, to enable Tx for this TID */
++	spin_lock_irqsave(&priv->sta_lock, flags);
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_TID_DISABLE_TX;
++	priv->stations[sta_id].sta.tid_disable_tx &= cpu_to_le16(~(1 << tid));
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
++}
++EXPORT_SYMBOL(iwl_sta_modify_enable_tid_tx);
++
++
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 500e1df..3d55716 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -45,4 +45,5 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ int iwl_rxon_add_station(struct iwl_priv *priv, const u8 *addr, int is_ap);
+ u8 iwl_remove_station(struct iwl_priv *priv, const u8 *addr, int is_ap);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
++void iwl_sta_modify_enable_tid_tx(struct iwl_priv *priv, int sta_id, int tid);
+ #endif /* __iwl_sta_h__ */
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.3.6
+
