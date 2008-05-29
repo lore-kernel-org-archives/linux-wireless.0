@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:29491 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbYEOLqI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 07:46:08 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so261163fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 04:46:07 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 5/5] mac80211: move TX info into skb->cb
-Date: Thu, 15 May 2008 13:58:35 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-References: <20080515105524.359863000@sipsolutions.net> <200805151332.35758.IvDoorn@gmail.com> <1210850544.8709.3.camel@johannes.berg>
-In-Reply-To: <1210850544.8709.3.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200805151358.36340.IvDoorn@gmail.com> (sfid-20080515_134614_166877_597AD71F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:26007 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751109AbYE2CCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 May 2008 22:02:31 -0400
+Subject: Re: [PATCH 2.6.26 1/3] iwlwifi: fix in-column rate scaling
+From: Zhu Yi <yi.zhu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <20080528202201.GC25770@tuxdriver.com>
+References: <1211858975-21424-1-git-send-email-yi.zhu@intel.com>
+	 <20080528202201.GC25770@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 29 May 2008 10:02:00 +0800
+Message-Id: <1212026521.7814.276.camel@debian.sh.intel.com> (sfid-20080529_040236_505977_18BD82D5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 May 2008, Johannes Berg wrote:
-> 
-> > > > A number of fixes were done by Ivo, as well as the rt2x00 part
-> > > > of this patch.
-> > > 
-> > > I mangled it a bit though so you may want to check it, mac80211 now sets
-> > > REQ_TX_STATUS so you can use that for status reporting, but you can't
-> > > use it for queue kicking at least not in the future when mac80211 might
-> > > not set it on all frames.
+On Wed, 2008-05-28 at 16:22 -0400, John W. Linville wrote:
+> On Tue, May 27, 2008 at 11:29:33AM +0800, Zhu Yi wrote:
+> > From: Guy Cohen <guy.cohen@intel.com>
 > > 
-> > Well queue kicking from driver to mac80211 is in rt2x00 based on txdone
-> > events on a particular queue. (When frame was succesfully transmitted
-> > and is no longer full, then the queue will be awakened by rt2x00).
+> > This patch fixes cases that the code raised or didn't decrease
+> > the rate although the success ratio was not good.
+> > 
+> > Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   45 ++++++++++++++-------------
+> >  1 files changed, 23 insertions(+), 22 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+> > index 2adc228..fa41ed1 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+> > @@ -1339,7 +1339,7 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
+> >  				lq_sta->search_better_tbl = 1;
+> >  				goto out;
+> >  			}
+> > -
+> > +			break;
+> >  		case IWL_LEGACY_SWITCH_SISO:
+> >  			IWL_DEBUG_RATE("LQ: Legacy switch to SISO\n");
+> >  
+> > @@ -1425,9 +1425,9 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
+> >  				lq_sta->search_better_tbl = 1;
+> >  				goto out;
+> >  			}
+> > -
+> > +			break;
+> >  		case IWL_SISO_SWITCH_MIMO2:
+> > -			IWL_DEBUG_RATE("LQ: SISO switch to MIMO\n");
+> > +			IWL_DEBUG_RATE("LQ: SISO switch to MIMO2\n");
+> >  			memcpy(search_tbl, tbl, sz);
+> >  			search_tbl->is_SGI = 0;
+> >  			search_tbl->ant_type = ANT_AB; /*FIXME:RS*/
 > 
-> Yeah, but the patch you had sent me was removing the "driver generated"
-> flag, and I kept that around now for this purpose.
+> These hunks don't apply to wireless-2.6.
 
-I think we refer to different things when we talk about "queue kicking" ;)
-Anyway, I'm fine with how it looks like now. It means I can remove a few
-patches from rt2x00.git :)
+Oops, please ignore these hunks.
 
-> I have thought about this a bit, you may want to wait wrt. fragments
-> because I'm going to rewrite fragmentation, and then we could change the
-> mac80211/driver API to hand the driver an skb with all the fragments at
-> once instead of handing it each fragment one by one, thoughts?
+Thanks,
+-yi
 
-Well that would mostly be beneficial for rt61pci who is able to attach
-multiple fragments into a single queue entry. But for the others that wouldn't
-matter that much since each fragment occupies a single queue entry, so for
-those drivers having mac80211 calling tx() multiple times, or having rt2x00
-call write_tx_frame() multiple times isn't a big difference other then rt2x00
-being able to better control frame flow by kicking the TX queue only when
-all fragments are in the queue.
-
-Ivo
