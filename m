@@ -1,100 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38704 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313AbYEPVMa (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:13464 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751243AbYE2U57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 17:12:30 -0400
-Subject: Re: [RFC-PATCH] mac80211: add helpers for frame control tests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1210971848.5915.58.camel@brick> (sfid-20080516_230412_000613_CA74646C)
-References: <1210966154.5915.50.camel@brick>
-	 <1210966704.5915.51.camel@brick>
-	 (sfid-20080516_213833_934385_1E372539)  <1210969866.6381.46.camel@johannes.berg>
-	 <1210971848.5915.58.camel@brick> (sfid-20080516_230412_000613_CA74646C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HzJNnqBrGEh+WXjydsVK"
-Date: Fri, 16 May 2008 23:12:15 +0200
-Message-Id: <1210972335.6381.52.camel@johannes.berg> (sfid-20080516_231234_710145_F6075027)
-Mime-Version: 1.0
+	Thu, 29 May 2008 16:57:59 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: wimax@linuxwimax.org, linux-wireless@vger.kernel.org
+Subject: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050 v1.2
+Date: Thu, 29 May 2008 13:57:47 -0700
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200805291357.47910.inaky@linux.intel.com> (sfid-20080529_225803_515524_FD09554F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HzJNnqBrGEh+WXjydsVK
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi All
 
 
-> > > +static inline int ieee80211_fctl_has_a4(struct ieee80211_hdr *hdr)
-> >=20
-> > That seems fine too.
-> >=20
-> > > +static inline int ieee80211_ftype(struct ieee80211_hdr *hdr, u16 fty=
-pe)
-> >=20
-> > That, I think, is misnamed, it should be ieee80211_is_ftype()
->=20
-> Well, I didn't expect this to be used directly that much, hence the
-> following three helpers...ftype_mgmt/ctl/data
+Intel would like to announce the 1.2 release of the Linux WiMAX common
+stack and drivers for its WiMAX devices (eg: Intel(r) WiMAX/WiFi </WiFi>
+Link 5050, with estimated availability around third quarter of 2008).
 
-Right. Still, I think it should be named with _is_ in there.
+You can find the code and additional information at http://linuxwimax.org.
 
-> > > +static inline int ieee80211_stype(struct ieee80211_hdr *hdr, u16 sty=
-pe)
-> > > +{
-> > > +	return (hdr->frame_control & cpu_to_le16(stype)) !=3D 0;
-> > > +}
-> >=20
-> > And that even seems implemented wrongly? stype is a 4-bit field, this
-> > doesn't make much sense to me.
->=20
-> It was meant to be used to replace code like:
->=20
-> =EF=BB=BFfc & IEEE80211_STYPE_QOS_DATA
->=20
-> =EF=BB=BFieee80211_stype(hdr, IEEE80211_STYPE_QOS_DATA)
->=20
-> As most users of the stype bits test against a specific constant,
-> otherwise you could add a bunch of helpers, one for each stype
-> constant (similar to the ftype helpers I added.  There were only
-> 3 in the ftype case, so I just added them all and dropped the second
-> parameter, in the stype case, there are more options, so I just
-> left one two-parameter helper.
+The changes from release 1.1 to 1.2 are:
 
-Well, yes, but that's semantically unclear because of the way these bits
-are used vs. how they are called. The subtype (stype) is a four-bit
-field in the frame control field which isn't actually defined to have
-"flags" or bits like that in it. Look at the table in IEEE 802.11-2007,
-it's at the beginning of clause 7 somewhere.
+* WiMAX network service:*
 
-Hence, hiding this simple AND behind a function that claims to check the
-subtype is confusing.
+   1. Support for semi-manual and auto scan modes.
+   2. Support for preferred and wide scan types.
+   3. Support for FW based SSL implementation. This does not quite work
+      yet (fix expected soon). There exists the ability to switch
+      (dynamic) between a host based OpenSSL implementation and a FW
+      based SSL.
+   4. Statistics and device details
+   5. Daemon mode operation for wimax network service
+   6. Miscellaneous stability related fixes. 
 
-johannes
+* WiMAX kernel stack and drivers:
 
---=-HzJNnqBrGEh+WXjydsVK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+General
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+   1. Debug levels can be changed in runtime.
+   2. General cleanup and removal of dead code 
 
-iQIVAwUASC34rqVg1VMiehFYAQJgUhAAxXq2q14ona+rtl8PYDLSK+lEH9taQavN
-nCI1tVCYhOXMG4/aVV6183bR30UOrknBVTZIGjw6OTo1Ts0x/iAlxVnnGYxN+9+h
-99XG0w0dAeRpf2S1YYIJ2xF9kdaB8Rt+RqX0rnJGemnk4aYc4EIT3yRlb7Qkkkv3
-QN988wEMTbgYysEefj6IGzxSZYX1+sdFFCcle9wIVjbVAXtkaWtGIobOmh4eXG0C
-E/U63tqO1MSgwIQ0+EUaKIL7c1QTqTn1uSp6KucLcc0ezZ0hhcK3IGs9/Yqr0390
-AwPIXuUnmz/FmYmpRjapnJ9d3rkkj/uzqh/0go96Rb5503P8JEk8sBttZX3xwil2
-XJ2cCNVXjfx3XxDyjlqsoXgS8aERXlj8C/52XFCjcVpkqDSr8LycYQnEkz7nop1/
-rdYpcc8KK2RI0MjJvy1z8HJMldg00tYBPZ96+1nMPI3keM+JqAFEHC5ox0FIxWsr
-TOOsW4KHntYmA4XEQ56HF3k5Y5f3kLICPhkbaxB5zhZk2PlueGR3zqRFMdV31O5i
-wLyyw4fRpscizKrcyd5coVxGRFbTHVNeoLqLMbj/USUGvqhyqDEisLDcex9uIrFl
-nQVB8sS9G106PDPu9dn0nue6ynIz1dsmJr2dx8VBS9bceU4WxGaJXaWjwpUNtF2I
-9HXrI5AEe0E=
-=pfMn
------END PGP SIGNATURE-----
+WiMAX kernel stack
 
---=-HzJNnqBrGEh+WXjydsVK--
+   1. Add RF-Kill subsystem integration and wimax_rfkill() API call.
+   2. Documentation update 
 
+Intel 2400m WiMAX driver
+
+   1. Remove old IOCTL legacy control interface and other unused code.
+   2. Add new firmware upload mechanism, deprecate the old one.
+   3. Integrate into WiMAX stack's rfkill framework
+   4. Split the driver into device / transport specific parts. The
+      device becomes the i200m.ko module (the driver core) and the USB
+      specific driver becomes i2400m-usb.ko, that uses the core as a
+      "library".
+   5. Export RX and TX statistics on sysfs
+   6. RX path uses skb_clone() to minimize memory pressure; buffer size
+      is now dynamically grown on-demand instead of always allocating 64k.
+   7. New TX engine based on a FIFO (to lower memory pressure). 
+
+
+
+-- 
+Inaky
