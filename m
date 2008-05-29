@@ -1,51 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4129 "EHLO ra.tuxdriver.com"
+Received: from mga02.intel.com ([134.134.136.20]:36760 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753997AbYE1M66 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 May 2008 08:58:58 -0400
-Date: Tue, 27 May 2008 20:28:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jerry Quinn <jlquinn@optonline.net>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	mickflemm@gmail.com
-Subject: Re: ath5k can't connect on 5424
-Message-ID: <20080528002814.GF7779@tuxdriver.com> (sfid-20080528_145923_344089_C2DA1FCE)
-References: <4838A467.1000700@optonline.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4838A467.1000700@optonline.net>
+	id S1752519AbYE2Ihu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:50 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 33/43] iwlwifi: Rx handlers common use for 4965 and 5000
+Date: Thu, 29 May 2008 16:35:18 +0800
+Message-Id: <1212050128-17132-34-git-send-email-yi.zhu@intel.com> (sfid-20080529_103802_443424_4762E536)
+In-Reply-To: <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 24, 2008 at 07:27:35PM -0400, Jerry Quinn wrote:
-> Hi.  I just installed compat-wireless 2008-05-24.
->
-> The good news is that ath5k now loads into the kernel and can talk to the 
-> chip.  However, beyond that, the device doesn't do anything.  During 
-> modprobe ath5k, I get
->
->
-> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-> PCI: Setting latency timer of device 0000:03:00.0 to 64
-> ath5k_pci 0000:03:00.0: registered as 'phy1'
-> phy1: Selected rate control algorithm 'pid'
-> ath5k phy1: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
-> udev: renamed network interface wlan0 to ath0
->
-> The pci id for the chip is 168c:1014 (rev 01).  This is an IBM Thinkpad 
-> T60p, running Debian testing with kernel 2.6.25-2-686, the latest dist 
-> kernel available.
->
-> When I try to bring up the interface I just get a link is not ready message 
-> in the kernel log with no other info.  Also, iwlist ath0 scan gives me no 
-> results either (I did ifconfig ath0 up beforehand).
->
-> Let me know if there's any further diagnosis I can provide to help out.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-You might wish to post the results of running the ath_info tool
-available from the madwifi project (sorry, I don't have the URL handy).
+This patch moves Rx handlers from iwl 4965 only use to common use along
+with iwl 5000, thus enables Rx path to iwl 5000.
 
-John
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   19 ++-----------------
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 ++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   18 ++++++++++++++++--
+ 3 files changed, 20 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 556e59e..aee7014 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2689,7 +2689,7 @@ static inline void iwl4965_dbg_report_frame(struct iwl_priv *priv,
+ 
+ /* Called for REPLY_RX (legacy ABG frames), or
+  * REPLY_RX_MPDU_CMD (HT high-throughput N frames). */
+-static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
++void iwl4965_rx_reply_rx(struct iwl_priv *priv,
+ 				struct iwl_rx_mem_buffer *rxb)
+ {
+ 	struct ieee80211_hdr *header;
+@@ -2863,17 +2863,6 @@ static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
+ 	}
+ }
+ 
+-/* Cache phy data (Rx signal strength, etc) for HT frame (REPLY_RX_PHY_CMD).
+- * This will be used later in iwl4965_rx_reply_rx() for REPLY_RX_MPDU_CMD. */
+-static void iwl4965_rx_reply_rx_phy(struct iwl_priv *priv,
+-				    struct iwl_rx_mem_buffer *rxb)
+-{
+-	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+-	priv->last_phy_res[0] = 1;
+-	memcpy(&priv->last_phy_res[1], &(pkt->u.raw[0]),
+-	       sizeof(struct iwl4965_rx_phy_res));
+-}
+-
+ #ifdef CONFIG_IWL4965_HT
+ 
+ /**
+@@ -3522,11 +3511,7 @@ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
+ {
+ 	/* Legacy Rx frames */
+ 	priv->rx_handlers[REPLY_RX] = iwl4965_rx_reply_rx;
+-
+-	/* High-throughput (HT) Rx frames */
+-	priv->rx_handlers[REPLY_RX_PHY_CMD] = iwl4965_rx_reply_rx_phy;
+-	priv->rx_handlers[REPLY_RX_MPDU_CMD] = iwl4965_rx_reply_rx;
+-
++	/* Tx response */
+ 	priv->rx_handlers[REPLY_TX] = iwl4965_rx_reply_tx;
+ 
+ #ifdef CONFIG_IWL4965_HT
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 8c258d6..a2b9817 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -702,6 +702,8 @@ extern void iwl4965_hw_rx_statistics(struct iwl_priv *priv,
+ 				 struct iwl_rx_mem_buffer *rxb);
+ extern void iwl4965_disable_events(struct iwl_priv *priv);
+ extern int iwl4965_get_temperature(const struct iwl_priv *priv);
++extern void iwl4965_rx_reply_rx(struct iwl_priv *priv,
++				struct iwl_rx_mem_buffer *rxb);
+ 
+ /**
+  * iwl_find_station - Find station id for a given BSSID
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 4322cd6..49e72d4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1872,6 +1872,17 @@ static void iwl4965_rx_card_state_notif(struct iwl_priv *priv,
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ }
+ 
++/* Cache phy data (Rx signal strength, etc) for HT frame (REPLY_RX_PHY_CMD).
++ * This will be used later in iwl4965_rx_reply_rx() for REPLY_RX_MPDU_CMD. */
++static void iwl4965_rx_reply_rx_phy(struct iwl_priv *priv,
++				    struct iwl_rx_mem_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
++	priv->last_phy_res[0] = 1;
++	memcpy(&priv->last_phy_res[1], &(pkt->u.raw[0]),
++	       sizeof(struct iwl4965_rx_phy_res));
++}
++
+ /**
+  * iwl4965_setup_rx_handlers - Initialize Rx handler callbacks
+  *
+@@ -1900,18 +1911,21 @@ static void iwl4965_setup_rx_handlers(struct iwl_priv *priv)
+ 	 */
+ 	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl4965_hw_rx_statistics;
+ 	priv->rx_handlers[STATISTICS_NOTIFICATION] = iwl4965_hw_rx_statistics;
+-
++	/* scan handlers */
+ 	priv->rx_handlers[REPLY_SCAN_CMD] = iwl4965_rx_reply_scan;
+ 	priv->rx_handlers[SCAN_START_NOTIFICATION] = iwl4965_rx_scan_start_notif;
+ 	priv->rx_handlers[SCAN_RESULTS_NOTIFICATION] =
+ 	    iwl4965_rx_scan_results_notif;
+ 	priv->rx_handlers[SCAN_COMPLETE_NOTIFICATION] =
+ 	    iwl4965_rx_scan_complete_notif;
++	/* status change handler */
+ 	priv->rx_handlers[CARD_STATE_NOTIFICATION] = iwl4965_rx_card_state_notif;
+ 
+ 	priv->rx_handlers[MISSED_BEACONS_NOTIFICATION] =
+ 	    iwl_rx_missed_beacon_notif;
+-
++	/* Rx handlers */
++	priv->rx_handlers[REPLY_RX_PHY_CMD] = iwl4965_rx_reply_rx_phy;
++	priv->rx_handlers[REPLY_RX_MPDU_CMD] = iwl4965_rx_reply_rx;
+ 	/* Set up hardware specific Rx handlers */
+ 	priv->cfg->ops->lib->rx_handler_setup(priv);
+ }
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.6
+
