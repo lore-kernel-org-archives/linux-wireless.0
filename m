@@ -1,41 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sacred.ru ([62.205.161.221]:43136 "EHLO sacred.ru"
+Received: from mga02.intel.com ([134.134.136.20]:36760 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761317AbYEGF62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 01:58:28 -0400
-Message-ID: <4821442D.8010801@openvz.org> (sfid-20080507_075811_214089_CEC92F2D)
-Date: Wed, 07 May 2008 09:54:53 +0400
-From: Pavel Emelyanov <xemul@openvz.org>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>, johannes@sipsolutions.net
-CC: netdev@axxeo.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/4][MAC80211]: Fix GFP_KERNEL allocation under read lock.
-References: <48206F4C.5050105@openvz.org>	<200805061840.37713.netdev@axxeo.de>	<4820997E.1070305@openvz.org> <20080506.134047.86330538.davem@davemloft.net>
-In-Reply-To: <20080506.134047.86330538.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751070AbYE2Ihv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:51 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 34/43] iwlwifi: move iwl_get_hw_mode to iwl-core.h
+Date: Thu, 29 May 2008 16:35:19 +0800
+Message-Id: <1212050128-17132-35-git-send-email-yi.zhu@intel.com> (sfid-20080529_103805_259321_081F0E01)
+In-Reply-To: <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Pavel Emelyanov <xemul@openvz.org>
-> Date: Tue, 06 May 2008 21:46:38 +0400
-> 
->> I do not quite like doing so. Since this relies on fact that kfree bears
->> NULL pointers. But if we ever switch from kmalloc to kmem_cache_alloc,
->> this will result in an oops.
-> 
-> The whole reason we made kfree allow NULL points is so that
-> checks for it would be ommitted at kfree calls sides, whether
-> they be direct or indirect.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Hm... I really thought that this check in kfree is just for sanity 
-against some 3rd part code. But why kmem_cache_free() is not such then?
+This patch moves iwl_get_hw_mode to iwl-core.h.
 
-> Adding the check for some theoretical-or-not future change is
-> rediculious.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Well, this makes sense. Shall I resubmit the set?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 004c684..6b5af7a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -342,4 +342,10 @@ static inline int iwl_send_rxon_assoc(struct iwl_priv *priv)
+ 	return priv->cfg->ops->hcmd->rxon_assoc(priv);
+ }
+ 
++static inline const struct ieee80211_supported_band *iwl_get_hw_mode(
++			struct iwl_priv *priv, enum ieee80211_band band)
++{
++	return priv->hw->wiphy->bands[band];
++}
++
+ #endif /* __iwl_core_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 49e72d4..676d043 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -87,12 +87,6 @@ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
+ 
+-static const struct ieee80211_supported_band *iwl_get_hw_mode(
+-		struct iwl_priv *priv, enum ieee80211_band band)
+-{
+-	return priv->hw->wiphy->bands[band];
+-}
+-
+ static int iwl4965_is_empty_essid(const char *essid, int essid_len)
+ {
+ 	/* Single white space is for Linksys APs */
+-- 
+1.5.3.6
 
-Thanks,
-Pavel
