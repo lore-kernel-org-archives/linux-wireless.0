@@ -1,76 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbYEEXhN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 19:37:13 -0400
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080505.160328.203996832.davem@davemloft.net>
-References: <1209972139.3655.9.camel@johannes.berg>
-	 <1ba2fa240805050727r2060b0b4x3a9b3240647b66b1@mail.gmail.com>
-	 <1210000923.8245.26.camel@johannes.berg>
-	 <20080505.160328.203996832.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZMvnsLKNlz2K9NuY/S0s"
-Date: Tue, 06 May 2008 01:36:31 +0200
-Message-Id: <1210030591.8012.41.camel@johannes.berg> (sfid-20080506_013634_014040_FA6D0185)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:31371 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135AbYE2Iho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:44 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 28/43] iwlwifi: implement txq invalidate byte count table
+Date: Thu, 29 May 2008 16:35:13 +0800
+Message-Id: <1212050128-17132-29-git-send-email-yi.zhu@intel.com> (sfid-20080529_110547_813683_EBB07868)
+In-Reply-To: <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-ZMvnsLKNlz2K9NuY/S0s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is required to overcome a bug in 5000 HW byte count table.
 
-On Mon, 2008-05-05 at 16:03 -0700, David Miller wrote:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   21 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |    5 ++++-
+ 3 files changed, 28 insertions(+), 2 deletions(-)
 
-> @@ -255,11 +255,12 @@ struct sk_buff *__netdev_alloc_skb(struct net_devic=
-e *dev,
->  		unsigned int length, gfp_t gfp_mask)
->  {
->  	int node =3D dev->dev.parent ? dev_to_node(dev->dev.parent) : -1;
-> +	unsigned int extra =3D dev->rx_alloc_extra + NET_SKB_PAD;
->  	struct sk_buff *skb;
-> =20
-> -	skb =3D __alloc_skb(length + NET_SKB_PAD, gfp_mask, 0, node);
-> +	skb =3D __alloc_skb(length + extra, gfp_mask, 0, node);
->  	if (likely(skb)) {
-> -		skb_reserve(skb, NET_SKB_PAD);
-> +		skb_reserve(skb, extra);
-
-Come to think of it, if you want to bridge two wireless AP-mode devices
-with different headroom .... Nah.
-
-four-byte multiple isn't quite right though, but I'm not sure what would
-be, probably multiple of NET_SKB_PAD?
-
-johannes
-
---=-ZMvnsLKNlz2K9NuY/S0s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASB+Z/qVg1VMiehFYAQIksA//XiWdAjaJpqfBMmJBaAst9rEU7Gwssah9
-Oi/dtqYO7VKD5bHdQQQSDeglq4H7moUfdm9210pZz5h8psykHVrEBVhQmA9F/fHn
-FTm9FecBTu/JKY6xrg1B0+0gajSxcgEEUTuh3He6gKq69QHqduTkitSX/TSB73Up
-cYRon7lg3IAf62R83v+WAAp7o3PFUPM9hf914cbGdpi+WjGbu+iuPZtLmEMIzJIX
-HiVyb9oHcEBwAcLTrDRo2PVcjv5rzJMCBw2SBaLQhYSo5L1DRDibySB8ibuliFgz
-JasRjKNMqjtlbLXfdx0qMSyP+LKPjx5Lyl84mn0yDokMNLw/YXup61Zi6ajGje+O
-ae379f8FSLEY/00PJlTa+CKNRr6lJEefZhkpXH3Czo33AfdrPrAl72mMGrwOqjHz
-sGZDAeog+bFUMVLK9qZIFxNPbWrgAdb2vKlqUwwe5kqYFZnSNGaw8MID1jO1siNK
-X3hjDM1ReMZc+OwfFKyjD6t+0Ftkct77sz0muIERpajPfoG2tZGeu7C6SmzeeO+w
-q2ik0+Msv2iyq0CRXy5hBBkNEc/Iuj1qJPfrOfCorbeL0EpX5AwZAsBmAsOcf2hW
-lx2g3bX+KAT+oBv54Aik84ZN/2LThkkPnedSt6Ld2QA7Q2Q4dYT0mKWTeyZ6JhE5
-CKvEmsyMzuw=
-=MDQl
------END PGP SIGNATURE-----
-
---=-ZMvnsLKNlz2K9NuY/S0s--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index dc9f3b6..6a10526 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -955,6 +955,26 @@ static void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+ 	}
+ }
+ 
++static void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
++					   struct iwl_tx_queue *txq)
++{
++	int txq_id = txq->q.id;
++	struct iwl5000_shared *shared_data = priv->shared_virt;
++	u8 sta = 0;
++
++	if (txq_id != IWL_CMD_QUEUE_NUM)
++		sta = txq->cmd[txq->q.read_ptr].cmd.tx.sta_id;
++
++	shared_data->queues_byte_cnt_tbls[txq_id].tfd_offset[txq->q.read_ptr].
++					val = cpu_to_le16(1 | (sta << 12));
++
++	if (txq->q.write_ptr < IWL50_MAX_WIN_SIZE) {
++		shared_data->queues_byte_cnt_tbls[txq_id].
++			tfd_offset[IWL50_QUEUE_SIZE + txq->q.read_ptr].
++				val = cpu_to_le16(1 | (sta << 12));
++	}
++}
++
+ static u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+ {
+ 	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
+@@ -1248,6 +1268,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.free_shared_mem = iwl5000_free_shared_mem,
+ 	.shared_mem_rx_idx = iwl5000_shared_mem_rx_idx,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
++	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwl5000_txq_set_sched,
+ 	.rx_handler_setup = iwl5000_rx_handler_setup,
+ 	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8264b4e..1941a91 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -107,10 +107,12 @@ struct iwl_lib_ops {
+ 	void (*txq_update_byte_cnt_tbl)(struct iwl_priv *priv,
+ 					struct iwl_tx_queue *txq,
+ 					u16 byte_cnt);
++	void (*txq_inval_byte_cnt_tbl)(struct iwl_priv *priv,
++				       struct iwl_tx_queue *txq);
++	void (*txq_set_sched)(struct iwl_priv *priv, u32 mask);
+ 	/* setup Rx handler */
+ 	void (*rx_handler_setup)(struct iwl_priv *priv);
+ 	/* nic Tx fifo handling */
+-	void (*txq_set_sched)(struct iwl_priv *priv, u32 mask);
+ 	/* alive notification after init uCode load */
+ 	void (*init_alive_start)(struct iwl_priv *priv);
+ 	/* alive notification */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index b2b2ed2..224bcec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1080,8 +1080,11 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 		tx_info = &txq->txb[txq->q.read_ptr];
+ 		ieee80211_tx_status_irqsafe(priv->hw, tx_info->skb[0]);
+ 		tx_info->skb[0] = NULL;
+-		iwl_hw_txq_free_tfd(priv, txq);
+ 
++		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
++			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
++
++		iwl_hw_txq_free_tfd(priv, txq);
+ 		nfreed++;
+ 	}
+ 	return nfreed;
+-- 
+1.5.3.6
 
