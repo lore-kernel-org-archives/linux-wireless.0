@@ -1,70 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799AbYEJVUf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 17:20:35 -0400
-Subject: Re: [PATCH 4/5] rt2x00: Convert rt2x00 to read control info from
-	skb->cb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200805101351.11467.IvDoorn@gmail.com> (sfid-20080510_141040_628124_2BF61C9B)
-References: <200805101349.19481.IvDoorn@gmail.com>
-	 <200805101351.11467.IvDoorn@gmail.com>
-	 (sfid-20080510_141040_628124_2BF61C9B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EMsKJdLpKFBDMP4OjyM5"
-Date: Sat, 10 May 2008 23:20:12 +0200
-Message-Id: <1210454412.12837.16.camel@johannes.berg> (sfid-20080510_232041_658710_085E1C19)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:36760 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752754AbYE2Ih5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:57 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 39/43] iwlwifi: disable FAT channel when not permitted
+Date: Thu, 29 May 2008 16:35:24 +0800
+Message-Id: <1212050128-17132-40-git-send-email-yi.zhu@intel.com> (sfid-20080529_103811_623485_52832D35)
+In-Reply-To: <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-EMsKJdLpKFBDMP4OjyM5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch disables FAT channel when it is not permitted according to
+the EEPROM.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-> +	/*
-> +	 * Don't automatically kick the beacon queue.
-> +	 */
-> +	tx_info->flags &=3D ~IEEE80211_TX_CTL_READY_FOR_TX;
-> =20
->  	/*
->  	 * Fill in skb descriptor
->  	 */
->  	skbdesc =3D get_skb_frame_desc(skb);
->  	memset(skbdesc, 0, sizeof(*skbdesc));
-> -	skbdesc->flags |=3D FRAME_DESC_DRIVER_GENERATED;
-
-Could you live w/o that change? I'm pondering removing that flag again
-since it doesn't have any meaning any more with the fragmentation/busy
-reschedule rewrite I'll do.
-
-johannes
-
---=-EMsKJdLpKFBDMP4OjyM5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASCYRi6Vg1VMiehFYAQLYlw//Sft3nl7yvN/eODL+FrZbIpuwN9J6abT4
-lmyjcjYO93Tw68+9U9dXp9wYgiFBIHJ6uDDQYZh6Ae4Y2qPk3VEcx/oEsWAPCMbF
-2Hb83ZJJeks4gmJFAebieKSLOYw4kN3C1khRCyTPH/PVXTC1iy+flk8xK7TN7txS
-ZmFu7izZv1NxEBTo0lAwD47FaMo2X1ggLquejxcqupp5Azw3c9qeDVqIMjHFBXnt
-LaNNq4THKdhQtCMOTd+NqEHvjjuriW8AcJ9C1mgjlHXkdAq8Us2A8KDfLdXRkVwj
-fJ654B9RykBnJXz1laFf0T5Aga587dO25+hBCT1fKPqlzvcA2AB0hZMWN9VYEuCi
-jiHu6DNJZqHmD2SwOp6DtRv4wTOcI/uRrDiFJwDhHLbdmNzAjT+26I17Eg7X64Fg
-cGKMdsPvAzGDfnWXnHbbHFzt6/fAm5fqp9Rf8uI07Lkgl/YNpUqWXRHOwYQADjVm
-1wlxxlhFedT3tTeRGqjhsNVNHQShwdMpj6AABhCTBpD+j7nFtZGSFMKBiQKTiNHg
-gIVxqQiopKnllj8tEvX6fkpc0fF6KQMOIzmHi5d3aNkOoYTmpzbfRc+3VVOJWe8b
-K0QQBOUuCCSWB+ErMbnikeBhoRhVFEO3NLM9p+n0uj2OAMZkHwoS+kuTgpJyiTmz
-RDj86mYTzXc=
-=38Ky
------END PGP SIGNATURE-----
-
---=-EMsKJdLpKFBDMP4OjyM5--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 010085a..c9bbfbb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -486,6 +486,25 @@ static int iwlcore_init_geos(struct iwl_priv *priv)
+ 			if (ch->flags & EEPROM_CHANNEL_RADAR)
+ 				geo_ch->flags |= IEEE80211_CHAN_RADAR;
+ 
++			switch (ch->fat_extension_channel) {
++			case HT_IE_EXT_CHANNEL_ABOVE:
++				/* only above is allowed, disable below */
++				geo_ch->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
++				break;
++			case HT_IE_EXT_CHANNEL_BELOW:
++				/* only below is allowed, disable above */
++				geo_ch->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
++				break;
++			case HT_IE_EXT_CHANNEL_NONE:
++				/* fat not allowed: disable both*/
++				geo_ch->flags |= (IEEE80211_CHAN_NO_FAT_ABOVE |
++						  IEEE80211_CHAN_NO_FAT_BELOW);
++				break;
++			case HT_IE_EXT_CHANNEL_MAX:
++				/* both above and below are permitted */
++				break;
++			}
++
+ 			if (ch->max_power_avg > priv->max_channel_txpower_limit)
+ 				priv->max_channel_txpower_limit =
+ 				    ch->max_power_avg;
+-- 
+1.5.3.6
 
