@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:37848 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756962AbYEUKrE (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:15040 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825AbYE2J6X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 06:47:04 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2884820waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 21 May 2008 03:47:04 -0700 (PDT)
-Message-ID: <1ba2fa240805210347w375b571djc922f814fa9f521f@mail.gmail.com> (sfid-20080521_124747_596272_ABECD5FA)
-Date: Wed, 21 May 2008 13:47:04 +0300
+	Thu, 29 May 2008 05:58:23 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2217325ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 02:58:22 -0700 (PDT)
+Message-ID: <1ba2fa240805290258of0559a0t183128d3f9889eae@mail.gmail.com> (sfid-20080529_115826_573977_29D8E9C0)
+Date: Thu, 29 May 2008 12:58:21 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Helmut Schaa" <hschaa@suse.de>
-Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in ieee80211_compatible_rates
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 38/43] mac80211: allow disable FAT in specific configurations
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org,
-	"Bruno Randolf" <bruno@thinktube.com>
-In-Reply-To: <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1212053870.16917.39.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de>
-	 <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+	 <1212053870.16917.39.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 20, 2008 at 3:54 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Tue, May 20, 2008 at 10:56 AM, Helmut Schaa <hschaa@suse.de> wrote:
->> Fix a possible NULL pointer dereference in ieee80211_compatible_rates
->> introduced in the patch "mac80211: fix association with some APs". If no bss
->> is available just use all supported rates in the association request.
+On Thu, May 29, 2008 at 12:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-05-29 at 16:35 +0800, Zhu Yi wrote:
+>> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 >>
->> Signed-off-by: Helmut Schaa <hschaa@suse.de>
->> ---
+>> This patch allows to disable FAT channel in specific configurations.
 >>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 76ad4ed..3f7f92a 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -721,7 +721,17 @@ static void ieee80211_send_assoc(struct net_device
->> *dev,
->>                        capab |= WLAN_CAPABILITY_PRIVACY;
->>                if (bss->wmm_ie)
->>                        wmm = 1;
->> +
->> +               /* get all rates supported by the device and the AP as
->> +                * some APs don't like getting a superset of their rates
->> +                * in the association request (e.g. D-Link DAP 1353 in
->> +                * b-only mode) */
->> +               rates_len = ieee80211_compatible_rates(bss, sband, &rates);
->> +
->>                ieee80211_rx_bss_put(dev, bss);
->> +       } else {
->> +               rates = ~0;
->> +               rates_len = sband->n_bitrates;
->>        }
->>
->>        mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
->> @@ -752,10 +762,7 @@ static void ieee80211_send_assoc(struct net_device
->> *dev,
->>        *pos++ = ifsta->ssid_len;
->>        memcpy(pos, ifsta->ssid, ifsta->ssid_len);
->>
->> -       /* all supported rates should be added here but some APs
->> -        * (e.g. D-Link DAP 1353 in b-only mode) don't like that
->> -        * Therefore only add rates the AP supports */
->> -       rates_len = ieee80211_compatible_rates(bss, sband, &rates);
->> +       /* add all rates which were marked to be used above */
->>        supp_rates_len = rates_len;
->>        if (supp_rates_len > 8)
->>                supp_rates_len = 8;
->>
->>
+>> For example the configuration (8, +1), (primary channel 8, extension
+>> channel 12) isn't permitted in U.S., but (8, -1), (primary channel 8,
+>> extension channel 4) is. When FAT channel configuration is not
+>> permitted, FAT channel should be reported as not supported in the
+>> capabilities of the HT IE in association request. And sssociation is
+>> performed on 20Mhz channel.
 >
-> I found one  ieee80211_rx_bss_{get,put} imbalance   in
-> ieee80211_sta_join_ibss function
-> That may cause this problem yet it doesn't look like this is the case.
-> ieee80211_sta_join_ibss
-> calls ieee80211_rx_bss_put on 'bss' that it receives as an argument
+> Can you explain more in detail the underlying regulatory rules?
+>
+> It seems to me that (12, -1) would be pretty much the same as (8, +1) as
+> far as regulatory is concerned.
 
-The patch below introduced  _get/_put imbalance. ieee80211_rx_bss_info
-_put bss back at the end. Other callers of the ieee80211_sta_join_ibss
-function don't use put.
-I will post a patch that takes out the _put out of
-ieee80211_rx_bss_info, I think it's more readable.
+Yes, just beacons will flows on 12 and not on 8 so from protocol point
+this is important
 
-commit 9d9bf77d16ba527f6f63846ca18cf20ae6e8d697
-Author: Bruno Randolf <bruno@thinktube.com>
-Date:   Mon Feb 18 11:21:36 2008 +0900
+(But this is not what is written in the comment we comparing (8,-1) to
+(8,+1) - Both are FAT channels - Beacons flow on 8 channel)
 
-    mac80211: enable IBSS merging
+I'm just thinking about how we should
+> express this in the regulatory database where we're not really concerned
+> with channels but rather allowed bands.
+>
+Not sure what do you mean, You always need to keep in mind channel, band tuple.
 
 Tomas
