@@ -1,263 +1,300 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:58268 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbYE2PKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 11:10:38 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m4TFAbSC030643
-	for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 11:10:37 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m4TFABqD138544
-	for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 11:10:11 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m4TFAB7N012234
-	for <linux-wireless@vger.kernel.org>; Thu, 29 May 2008 11:10:11 -0400
-Message-ID: <483EC752.1040609@optonline.net> (sfid-20080529_171043_669383_A3CE1C1A)
-Date: Thu, 29 May 2008 11:10:10 -0400
-From: "Jerry Quinn (ibm)" <jlquinn@optonline.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	mickflemm@gmail.com
-Subject: Re: ath5k can't connect on 5424
-References: <4838A467.1000700@optonline.net> <20080528002814.GF7779@tuxdriver.com>
-In-Reply-To: <20080528002814.GF7779@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:34060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbYE2IkA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:40:00 -0400
+Subject: [PATCH v2] mac80211: clean up skb reallocation code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 29 May 2008 10:38:53 +0200
+Message-Id: <1212050333.16917.31.camel@johannes.berg> (sfid-20080529_104005_752871_2D264773)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sat, May 24, 2008 at 07:27:35PM -0400, Jerry Quinn wrote:
->   
->> Hi.  I just installed compat-wireless 2008-05-24.
->>
->> The good news is that ath5k now loads into the kernel and can talk to the 
->> chip.  However, beyond that, the device doesn't do anything.  During 
->> modprobe ath5k, I get
->>
->>
->> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
->> PCI: Setting latency timer of device 0000:03:00.0 to 64
->> ath5k_pci 0000:03:00.0: registered as 'phy1'
->> phy1: Selected rate control algorithm 'pid'
->> ath5k phy1: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
->> udev: renamed network interface wlan0 to ath0
->>
->> The pci id for the chip is 168c:1014 (rev 01).  This is an IBM Thinkpad 
->> T60p, running Debian testing with kernel 2.6.25-2-686, the latest dist 
->> kernel available.
->>
->> When I try to bring up the interface I just get a link is not ready message 
->> in the kernel log with no other info.  Also, iwlist ath0 scan gives me no 
->> results either (I did ifconfig ath0 up beforehand).
->>
->> Let me know if there's any further diagnosis I can provide to help out.
->>     
->
-> You might wish to post the results of running the ath_info tool
-> available from the madwifi project (sorry, I don't have the URL handy).
->
-> John
->   
+This cleans up the skb reallocation code to avoid problems with
+skb->truesize, not resize an skb twice for a single output path
+because we didn't expand it enough during the first copy and also
+removes the code to further expand it during crypto operations
+which will no longer be necessary.
 
-Mike, thanks for pointing me to the updated ath_info.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Also fixes two harmless sparse warnings.
 
-Here's the dump from my chip:
+ net/mac80211/tx.c  |   97 +++++++++++++++++++++++++++++++++++++----------------
+ net/mac80211/wep.c |   10 +----
+ net/mac80211/wpa.c |   54 ++++++++++++-----------------
+ 3 files changed, 93 insertions(+), 68 deletions(-)
 
-naga:~/ath_info# ./ath_info -v 0xedf00000
-#DBG main: sleep_ctl reg 00000000   reset_ctl reg 00000000
- -==Device Information==-
-MAC Version:  2424  (0xa0)
-MAC Revision: 5424  (0xa3)
-Warning: Invalid EEPROM Magic number!
-Device type:  3
-5GHz PHY Revision: SChip (0xa2)
-2GHz PHY Revision: SChip (0xa2)
+--- everything.orig/net/mac80211/tx.c	2008-05-22 10:00:35.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-05-22 10:00:48.000000000 +0200
+@@ -1215,6 +1215,45 @@ retry:
+ 
+ /* device xmit handlers */
+ 
++static int ieee80211_skb_resize(struct ieee80211_local *local,
++				struct sk_buff *skb,
++				int head_need, bool may_encrypt)
++{
++	int tail_need = 0;
++
++	/*
++	 * This could be optimised, devices that do full hardware
++	 * crypto (including TKIP MMIC) need no tailroom... But we
++	 * have no drivers for such devices currently.
++	 */
++	if (may_encrypt) {
++		tail_need = IEEE80211_ENCRYPT_TAILROOM;
++		tail_need -= skb_tailroom(skb);
++		tail_need = max_t(int, tail_need, 0);
++	}
++
++	if (head_need || tail_need) {
++		/* Sorry. Can't account for this any more */
++		skb_orphan(skb);
++	}
++
++	if (skb_header_cloned(skb))
++		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
++	else
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++	if (pskb_expand_head(skb, head_need, tail_need, GFP_ATOMIC)) {
++		printk(KERN_DEBUG "%s: failed to reallocate TX buffer\n",
++		       wiphy_name(local->hw.wiphy));
++		return -ENOMEM;
++	}
++
++	/* update truesize too */
++	skb->truesize += head_need + tail_need;
++
++	return 0;
++}
++
+ int ieee80211_master_start_xmit(struct sk_buff *skb,
+ 				struct net_device *dev)
+ {
+@@ -1222,6 +1261,7 @@ int ieee80211_master_start_xmit(struct s
+ 	struct net_device *odev = NULL;
+ 	struct ieee80211_sub_if_data *osdata;
+ 	int headroom;
++	bool may_encrypt;
+ 	int ret;
+ 
+ 	if (info->control.ifindex)
+@@ -1241,13 +1281,18 @@ int ieee80211_master_start_xmit(struct s
+ 
+ 	osdata = IEEE80211_DEV_TO_SUB_IF(odev);
+ 
+-	headroom = osdata->local->tx_headroom + IEEE80211_ENCRYPT_HEADROOM;
+-	if (skb_headroom(skb) < headroom) {
+-		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
+-			dev_kfree_skb(skb);
+-			dev_put(odev);
+-			return 0;
+-		}
++	may_encrypt = !(info->flags & IEEE80211_TX_CTL_DO_NOT_ENCRYPT);
++
++	headroom = osdata->local->tx_headroom;
++	if (may_encrypt)
++		headroom += IEEE80211_ENCRYPT_HEADROOM;
++	headroom -= skb_headroom(skb);
++	headroom = max_t(int, 0, headroom);
++
++	if (ieee80211_skb_resize(osdata->local, skb, headroom, may_encrypt)) {
++		dev_kfree_skb(skb);
++		dev_put(odev);
++		return 0;
+ 	}
+ 
+ 	info->control.vif = &osdata->vif;
+@@ -1509,32 +1554,26 @@ int ieee80211_subif_start_xmit(struct sk
+ 	 * build in headroom in __dev_alloc_skb() (linux/skbuff.h) and
+ 	 * alloc_skb() (net/core/skbuff.c)
+ 	 */
+-	head_need = hdrlen + encaps_len + meshhdrlen + local->tx_headroom;
+-	head_need -= skb_headroom(skb);
++	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
+ 
+-	/* We are going to modify skb data, so make a copy of it if happens to
+-	 * be cloned. This could happen, e.g., with Linux bridge code passing
+-	 * us broadcast frames. */
++	/*
++	 * So we need to modify the skb header and hence need a copy of
++	 * that. The head_need variable above doesn't, so far, include
++	 * the needed header space that we don't need right away. If we
++	 * can, then we don't reallocate right now but only after the
++	 * frame arrives at the master device (if it does...)
++	 *
++	 * If we cannot, however, then we will reallocate to include all
++	 * the ever needed space. Also, if we need to reallocate it anyway,
++	 * make it big enough for everything we may ever need.
++	 */
+ 
+ 	if (head_need > 0 || skb_header_cloned(skb)) {
+-#if 0
+-		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+-		       "of headroom\n", dev->name, head_need);
+-#endif
+-
+-		if (skb_header_cloned(skb))
+-			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+-		else
+-			I802_DEBUG_INC(local->tx_expand_skb_head);
+-		/* Since we have to reallocate the buffer, make sure that there
+-		 * is enough room for possible WEP IV/ICV and TKIP (8 bytes
+-		 * before payload and 12 after). */
+-		if (pskb_expand_head(skb, (head_need > 0 ? head_need + 8 : 8),
+-				     12, GFP_ATOMIC)) {
+-			printk(KERN_DEBUG "%s: failed to reallocate TX buffer"
+-			       "\n", dev->name);
++		head_need += IEEE80211_ENCRYPT_HEADROOM;
++		head_need += local->tx_headroom;
++		head_need = max_t(int, 0, head_need);
++		if (ieee80211_skb_resize(local, skb, head_need, true))
+ 			goto fail;
+-		}
+ 	}
+ 
+ 	if (encaps_data) {
+--- everything.orig/net/mac80211/wep.c	2008-05-22 10:00:35.000000000 +0200
++++ everything/net/mac80211/wep.c	2008-05-22 10:00:48.000000000 +0200
+@@ -93,13 +93,9 @@ static u8 *ieee80211_wep_add_iv(struct i
+ 	fc |= IEEE80211_FCTL_PROTECTED;
+ 	hdr->frame_control = cpu_to_le16(fc);
+ 
+-	if ((skb_headroom(skb) < WEP_IV_LEN ||
+-	     skb_tailroom(skb) < WEP_ICV_LEN)) {
+-		I802_DEBUG_INC(local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, WEP_IV_LEN, WEP_ICV_LEN,
+-					      GFP_ATOMIC)))
+-			return NULL;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < WEP_ICV_LEN ||
++		    skb_headroom(skb) < WEP_IV_LEN))
++		return NULL;
+ 
+ 	hdrlen = ieee80211_get_hdrlen(fc);
+ 	newhdr = skb_push(skb, WEP_IV_LEN);
+--- everything.orig/net/mac80211/wpa.c	2008-05-22 10:00:35.000000000 +0200
++++ everything/net/mac80211/wpa.c	2008-05-29 10:37:38.000000000 +0200
+@@ -79,6 +79,7 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 	struct sk_buff *skb = tx->skb;
+ 	int authenticator;
+ 	int wpa_test = 0;
++	int tail;
+ 
+ 	fc = tx->fc;
+ 
+@@ -98,16 +99,13 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 		return TX_CONTINUE;
+ 	}
+ 
+-	if (skb_tailroom(skb) < MICHAEL_MIC_LEN) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, TKIP_IV_LEN,
+-					      MICHAEL_MIC_LEN + TKIP_ICV_LEN,
+-					      GFP_ATOMIC))) {
+-			printk(KERN_DEBUG "%s: failed to allocate more memory "
+-			       "for Michael MIC\n", tx->dev->name);
+-			return TX_DROP;
+-		}
+-	}
++	tail = MICHAEL_MIC_LEN;
++	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++		tail += TKIP_ICV_LEN;
++
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < TKIP_IV_LEN))
++		return TX_DROP;
+ 
+ #if 0
+ 	authenticator = fc & IEEE80211_FCTL_FROMDS; /* FIX */
+@@ -188,7 +186,7 @@ static int tkip_encrypt_skb(struct ieee8
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	int hdrlen, len, tailneed;
++	int hdrlen, len, tail;
+ 	u16 fc;
+ 	u8 *pos;
+ 
+@@ -199,7 +197,7 @@ static int tkip_encrypt_skb(struct ieee8
+ 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+ 		/* hwaccel - with no need for preallocated room for IV/ICV */
+ 		info->control.hw_key = &tx->key->conf;
+-		return TX_CONTINUE;
++		return 0;
+ 	}
+ 
+ 	fc = le16_to_cpu(hdr->frame_control);
+@@ -207,17 +205,13 @@ static int tkip_encrypt_skb(struct ieee8
+ 	len = skb->len - hdrlen;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+-		tailneed = 0;
++		tail = 0;
+ 	else
+-		tailneed = TKIP_ICV_LEN;
++		tail = TKIP_ICV_LEN;
+ 
+-	if ((skb_headroom(skb) < TKIP_IV_LEN ||
+-	     skb_tailroom(skb) < tailneed)) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, TKIP_IV_LEN, tailneed,
+-					      GFP_ATOMIC)))
+-			return -1;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < TKIP_IV_LEN))
++		return -1;
+ 
+ 	pos = skb_push(skb, TKIP_IV_LEN);
+ 	memmove(pos, pos + TKIP_IV_LEN, hdrlen);
+@@ -432,7 +426,7 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	int hdrlen, len, tailneed;
++	int hdrlen, len, tail;
+ 	u16 fc;
+ 	u8 *pos, *pn, *b_0, *aad, *scratch;
+ 	int i;
+@@ -445,7 +439,7 @@ static int ccmp_encrypt_skb(struct ieee8
+ 		/* hwaccel - with no need for preallocated room for CCMP "
+ 		 * header or MIC fields */
+ 		info->control.hw_key = &tx->key->conf;
+-		return TX_CONTINUE;
++		return 0;
+ 	}
+ 
+ 	scratch = key->u.ccmp.tx_crypto_buf;
+@@ -457,17 +451,13 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	len = skb->len - hdrlen;
+ 
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+-		tailneed = 0;
++		tail = 0;
+ 	else
+-		tailneed = CCMP_MIC_LEN;
++		tail = CCMP_MIC_LEN;
+ 
+-	if ((skb_headroom(skb) < CCMP_HDR_LEN ||
+-	     skb_tailroom(skb) < tailneed)) {
+-		I802_DEBUG_INC(tx->local->tx_expand_skb_head);
+-		if (unlikely(pskb_expand_head(skb, CCMP_HDR_LEN, tailneed,
+-					      GFP_ATOMIC)))
+-			return -1;
+-	}
++	if (WARN_ON(skb_tailroom(skb) < tail ||
++		    skb_headroom(skb) < CCMP_HDR_LEN))
++		return -1;
+ 
+ 	pos = skb_push(skb, CCMP_HDR_LEN);
+ 	memmove(pos, pos + CCMP_HDR_LEN, hdrlen);
 
-/============== EEPROM Information =============\
-| EEPROM Version:   5.3 | EEPROM Size:   4 kbit |
-| EEMAP:              2 | Reg. Domain:     0x62 |
-|================= Capabilities ================|
-| 802.11a Support:  yes | Turbo-A disabled: yes |
-| 802.11b Support:  yes | Turbo-G disabled: yes |
-| 802.11g Support:  yes | 2GHz XR disabled: no  |
-| RFKill  Support:  yes | 5GHz XR disabled: no  |
-| 32kHz   Crystal:  no  |                       |
-\===============================================/
-
-/=========================================================\
-|          Calibration data common for all modes          |
-|=========================================================|
-|          CCK/OFDM gain delta:             1             |
-|          CCK/OFDM power delta:            5             |
-|          Scaled CCK delta:                5             |
-|          2GHz Antenna gain:               0             |
-|          5GHz Antenna gain:               0             |
-|          Turbo 2W maximum dBm:           38             |
-|          Target power start:          0x1bd             |
-|          EAR Start:                   0x21f             |
-\=========================================================/
-
-/=========================================================\
-|          Calibration data for 802.11a operation         |
-|=========================================================|
-| I power:              0x08 | Q power:              0x1f |
-| Use fixed bias:       0x00 | Max turbo power:      0x26 |
-| Max XR power:         0x18 | Switch Settling Time: 0x2d |
-| Tx/Rx attenuation:    0x2e | TX end to XLNA On:    0x02 |
-| TX end to XPA Off:    0x00 | TX end to XPA On:     0x0e |
-| 62db Threshold:       0x0f | XLNA gain:            0x0d |
-| XPD:                  0x01 | XPD gain:             0x0a |
-| I gain:               0x00 | Tx/Rx margin:         0x13 |
-| False detect backoff: 0x00 | Noise Floor Threshold: -54 |
-| ADC desired size:      -32 | PGA desired size:      -80 |
-|=========================================================|
-| Antenna control   0:  0x00 | Antenna control   1:  0x01 |
-| Antenna control   2:  0x26 | Antenna control   3:  0x26 |
-| Antenna control   4:  0x06 | Antenna control   5:  0x06 |
-| Antenna control   6:  0x02 | Antenna control   7:  0x25 |
-| Antenna control   8:  0x25 | Antenna control   9:  0x05 |
-| Antenna control  10:  0x05 | Antenna control  11:  0x00 |
-|=========================================================|
-| Octave Band 0:           5 | db 0:                    5 |
-| Octave Band 1:           5 | db 1:                    5 |
-| Octave Band 2:           5 | db 2:                    5 |
-| Octave Band 3:           5 | db 3:                    5 |
-\=========================================================/
-/============== Per rate power calibration ===========\
-| Freq | 6-24Mbit/s | 36Mbit/s |  48Mbit/s | 54Mbit/s |
-|======|============|==========|===========|==========|
-| 4920 |    12.00   |  12.00   |   12.00   |   8.00   |
-|======|============|==========|===========|==========|
-| 5080 |    12.00   |  12.00   |   12.00   |   8.00   |
-|======|============|==========|===========|==========|
-| 5170 |    16.00   |  16.00   |   14.00   |  13.00   |
-|======|============|==========|===========|==========|
-| 5240 |    16.00   |  16.00   |   14.00   |  13.00   |
-|======|============|==========|===========|==========|
-| 5260 |    17.00   |  16.00   |   14.00   |  13.00   |
-|======|============|==========|===========|==========|
-| 5700 |    17.00   |  16.00   |   14.00   |  13.00   |
-|======|============|==========|===========|==========|
-| 5745 |    16.00   |  15.00   |   14.00   |  11.00   |
-|======|============|==========|===========|==========|
-| 5825 |    16.00   |  15.00   |   14.00   |  11.00   |
-|======|============|==========|===========|==========|
-| 5360 |    18.00   |  18.00   |   18.00   |  18.00   |
-|======|============|==========|===========|==========|
-| 5720 |    18.00   |  18.00   |   18.00   |  18.00   |
-\=====================================================/
-/=================== Per channel power calibration ====================\
-| Freq | pwr_0 | pwr_1 | pwr_2 | pwr_3 |pwrx3_0|pwrx3_1|pwrx3_2|max_pwr|
-|      | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5045 | 11.01 | 18.01 | 20.00 | 31.03 |  0.01 |  3.02 | 11.01 | 31.03 |
-|      |  [25] |  [44] |  [48] |  [63] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5185 |  5.00 | 18.02 | 21.02 | 25.00 | 42.02 | 46.01 | 51.01 | 25.00 |
-|      |   [0] |  [24] |  [27] |  [30] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5220 |  8.00 | 32.00 | 17.00 | 18.02 |  1.00 | 10.02 | 26.01 | 18.02 |
-|      | [153] | [178] | [198] | [208] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5435 | 21.01 |  6.03 | 32.00 | 32.00 | 34.01 | 42.02 |  1.02 | 32.00 |
-|      |  [50] |  [54] |  [72] | [103] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5535 | 22.00 | 55.01 | 17.03 |  4.01 | 18.01 | 24.02 |  2.01 |  4.01 |
-|      | [171] | [171] | [173] | [177] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5100 |  1.01 | 12.02 | 10.00 | 54.01 | 24.00 | 36.00 | 18.02 | 54.01 |
-|      |  [98] | [119] | [145] | [150] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 4825 | 54.01 | 42.02 |  1.01 | 11.02 | 25.01 |  6.03 | 32.00 | 11.02 |
-|      | [144] | [167] | [175] | [197] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 4890 | 18.02 | 28.02 | 34.01 | 10.02 | 13.03 | 55.01 | 21.02 | 10.02 |
-|      |  [22] |  [28] |  [44] |  [54] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 5045 | 24.00 | 32.00 | 18.02 | 28.02 |  1.02 | 11.02 |  5.03 | 28.02 |
-|      | [161] | [186] | [205] | [215] |  [20] |  [35] |  [63] |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 4925 | 17.03 |  5.03 | 16.00 | 36.00 | 26.01 | 42.02 |  1.02 | 36.00 |
-|      |  [46] |  [60] |  [78] | [107] |  [20] |  [35] |  [63] |       |
-\======================================================================/
-
-/=========================================================\
-|          Calibration data for 802.11b operation         |
-|=========================================================|
-| I power:              0x00 | Q power:              0x00 |
-| Use fixed bias:       0x00 | Max turbo power:      0x00 |
-| Max XR power:         0x00 | Switch Settling Time: 0x28 |
-| Tx/Rx attenuation:    0x1c | TX end to XLNA On:    0x02 |
-| TX end to XPA Off:    0x00 | TX end to XPA On:     0x07 |
-| 62db Threshold:       0x1c | XLNA gain:            0x0d |
-| XPD:                  0x01 | XPD gain:             0x0a |
-| I gain:               0x00 | Tx/Rx margin:         0x14 |
-| False detect backoff: 0x00 | Noise Floor Threshold:  -1 |
-| ADC desired size:      -62 | PGA desired size:      -104 |
-|=========================================================|
-| Antenna control   0:  0x00 | Antenna control   1:  0x0d |
-| Antenna control   2:  0x2a | Antenna control   3:  0x2a |
-| Antenna control   4:  0x22 | Antenna control   5:  0x22 |
-| Antenna control   6:  0x0e | Antenna control   7:  0x29 |
-| Antenna control   8:  0x29 | Antenna control   9:  0x21 |
-| Antenna control  10:  0x21 | Antenna control  11:  0x00 |
-|=========================================================|
-| Octave Band 0:           5 | db 0:                    5 |
-| Octave Band 1:           5 | db 1:                    5 |
-| Octave Band 2:           0 | db 2:                    0 |
-| Octave Band 3:           0 | db 3:                    0 |
-\=========================================================/
-/=================== Per channel power calibration ====================\
-| Freq | pwr_0 | pwr_1 | pwr_2 | pwr_3 |pwrx3_0|pwrx3_1|pwrx3_2|max_pwr|
-|      | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 2412 |  6.00 | 22.01 | 21.02 |  6.03 | 18.01 | 31.02 | 30.01 |  6.03 |
-|      | [170] | [170] | [174] | [178] |  [20] |  [35] |  [63] |       |
-\======================================================================/
-
-/=========================================================\
-|          Calibration data for 802.11g operation         |
-|=========================================================|
-| I power:              0x00 | Q power:              0x10 |
-| Use fixed bias:       0x01 | Max turbo power:      0x26 |
-| Max XR power:         0x24 | Switch Settling Time: 0x28 |
-| Tx/Rx attenuation:    0x1c | TX end to XLNA On:    0x02 |
-| TX end to XPA Off:    0x00 | TX end to XPA On:     0x0e |
-| 62db Threshold:       0x1c | XLNA gain:            0x0d |
-| XPD:                  0x01 | XPD gain:             0x0a |
-| I gain:               0x00 | Tx/Rx margin:         0x14 |
-| False detect backoff: 0x00 | Noise Floor Threshold:  -1 |
-| ADC desired size:      -40 | PGA desired size:      -105 |
-|=========================================================|
-| Antenna control   0:  0x00 | Antenna control   1:  0x0d |
-| Antenna control   2:  0x2a | Antenna control   3:  0x2a |
-| Antenna control   4:  0x22 | Antenna control   5:  0x22 |
-| Antenna control   6:  0x0e | Antenna control   7:  0x29 |
-| Antenna control   8:  0x29 | Antenna control   9:  0x21 |
-| Antenna control  10:  0x21 | Antenna control  11:  0x05 |
-|=========================================================|
-| Octave Band 0:           5 | db 0:                    5 |
-| Octave Band 1:           5 | db 1:                    5 |
-| Octave Band 2:           0 | db 2:                    0 |
-| Octave Band 3:           0 | db 3:                    0 |
-\=========================================================/
-/=================== Per channel power calibration ====================\
-| Freq | pwr_0 | pwr_1 | pwr_2 | pwr_3 |pwrx3_0|pwrx3_1|pwrx3_2|max_pwr|
-|      | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac | pcdac |       |
-|======|=======|=======|=======|=======|=======|=======|=======|=======|
-| 2412 |  1.02 | 11.02 | 61.03 | 23.00 | 32.00 | 36.00 | 17.02 | 23.00 |
-|      |  [98] | [121] | [123] | [129] |  [20] |  [35] |  [63] |       |
-\======================================================================/
-
-GPIO registers: CR 0x00018003, DO 0x00000001, DI 0x0000000b
-STA_ID0: 00:16:cf:23:6f:9e
-STA_ID1: 0x1b809e6f, AP: 0, IBSS: 0, KeyCache Disable: 0
-TIMER0: 0x00000030, TBTT:    48, TU: 0x00070030
-TIMER1: 0x0007ffff, DMAb: 65535, TU: 0x0006ffff (-49)
-TIMER2: 0x01ffffff, SWBA: 65535, TU: 0x003fffff (+3735503)
-TIMER3: 0x00000031, ATIM:    49, TU: 0x00070031 (+1)
-TSF: 0x000000001a8bf0f6, TSFTU: 41724, TU: 0x0006a2fc
-BEACON: 0x00000000
-LAST_TSTP: 0x007fe01f
 
