@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47199 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756412AbYE0PeZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45618 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939AbYE2Voe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 May 2008 11:34:25 -0400
-Date: Tue, 27 May 2008 09:34:06 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: Daniel Walker <dwalker@mvista.com>
-Cc: Dan Williams <dcbw@redhat.com>, linville@tuxdriver.com,
-	rusty@rustcorp.com.au, mingo@elte.hu, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, arjan@infradead.org
-Subject: Re: [PATCH] net: wireless: airo semaphore to mutex
-Message-ID: <20080527153406.GL30894@parisc-linux.org> (sfid-20080527_173429_365978_04203F77)
-References: <20080522232103.120033152@mvista.com> <20080527131325.GJ30894@parisc-linux.org> <1211896108.1746.3.camel@localhost.localdomain> <1211900915.18130.251.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1211900915.18130.251.camel@localhost.localdomain>
+	Thu, 29 May 2008 17:44:34 -0400
+Subject: Re: [PATCH 15/37] wireless: use get/put_endian helpers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1212096945.28403.141.camel@brick> (sfid-20080529_233551_020981_7B2BB967)
+References: <1212092308.28403.117.camel@brick>
+	 (sfid-20080529_221900_617991_210BEC75)  <1212096681.10109.0.camel@johannes.berg>
+	 <1212096945.28403.141.camel@brick> (sfid-20080529_233551_020981_7B2BB967)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LpfWgCpNxnWXeObMqQZN"
+Date: Thu, 29 May 2008 23:43:31 +0200
+Message-Id: <1212097411.10109.3.camel@johannes.berg> (sfid-20080529_234438_717996_78572848)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2008 at 08:08:35AM -0700, Daniel Walker wrote:
-> 
-> On Tue, 2008-05-27 at 09:48 -0400, Dan Williams wrote:
-> > 
-> > Yeah, that might be the right way to go.  If you want to jump into the
-> > driver, feel quite free, but I don't think you need to go into too much
-> > detail with it.  Your overall behavior analysis is right on the mark
-> > already.
-> 
-> I think we could just remove the trylock from the interrupt case, and
-> always force the wake_up_interruptible(&priv->thr_wait) case. It looks
-> like the trylocking is just an optimization to save a wakeup ..
 
-'just'?  I think you'd see severe performance reductions if you had to
-do a wakeup for every interrupt.
+--=-LpfWgCpNxnWXeObMqQZN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+On Thu, 2008-05-29 at 14:35 -0700, Harvey Harrison wrote:
+> On Thu, 2008-05-29 at 23:31 +0200, Johannes Berg wrote:
+> > > -	ADM8211_CSR_WRITE(BSSID0, le32_to_cpu(*(__le32 *)bssid));
+> > > +	ADM8211_CSR_WRITE(BSSID0, get_le32((__le32 *)bssid));
+> >=20
+> > Maybe I'm stupid, but isn't this the same as le32_to_cpup? Or does
+> > get_le32 handle unaligned values?
+
+> You're not stupid, but there is a new put_le32 as well that takes
+> aligned values similar to the put_unaligned_le32, so get_le32 was
+> added to have an analog to get_unaligned_le32 as well.
+
+So this is just to make the API "complete"? Are we removing le32_to_cpup
+and the associated API then?
+
+johannes
+
+--=-LpfWgCpNxnWXeObMqQZN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD8jgqVg1VMiehFYAQLhDRAAkEaiwtxYPGM7jDowDVrE+ihwLxeHMe8H
+ez3jzTrEbssDshZ3bU3SiTKhVWgKEndC7fv3rXeC+sYAvT1hN6DV0+MUEDzpYMN1
+2sMrJ5QtIvBKnF9e3hdKoasEeNFJYWjpwH56EcC05s20lWz5mfDdSP6eQZmnei5e
+q8ByxAyenR+PJFNxMNZBsVRK86KbVFQGrzfb6xLLe0G8ZuG8lEdRtEM/9MQ02GBw
+CtYaVgKJqaCHwQsZd1Wpy3ur+XOVe5yuKl7Drk7/55Z5WXC9oxgrJigPE8YgS05b
+sHC+1ToIkCyxYL1SBR62ZaUaMDQLNm5rphhGOza7uy4dvftmmkS6lOFO85tR0pNy
+mSOZHku+iGgV1PpNMhghvs5bwzIrjf+WbEpJPaQSBuBEUDWU31bPNY7Cg4naGLjg
+ZY17xSvG21l49sfkfNkyJ4C89AgPPXyroNoWNNgFc5so3GVpL9xhJm5keDv8oEdB
+NXoS/emFYWLjuMSVli6CYchBSdXaJsRQG10kr9sRP2qJ2boAwU4DlcZy2Oba+Lu1
+XzesS+zNstBKZoDtud6qn336boZNpl1ZRAr26G3iSMMOIRmHSjS8keUKymOaHZsA
+Qa9HPMNGnjYpWnNrlceAfYIY/8+/r2RDEh2VSkqp3Yicm+4UAuzyQvrNKBtu7Bzb
+AfuLRtVBExo=
+=sQVV
+-----END PGP SIGNATURE-----
+
+--=-LpfWgCpNxnWXeObMqQZN--
+
