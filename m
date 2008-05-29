@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:40407 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345AbYEJBMC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2008 21:12:02 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1372626wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2008 18:12:00 -0700 (PDT)
-Date: Sat, 10 May 2008 09:11:58 +0800
-From: Huang Weiyi <weiyi.huang@gmail.com>
-To: yi.zhu@intel.com, reinette.chatre@intel.com
-Subject: iwl-sta.c: removed duplicated include
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Message-Id: <20080510091004.2451.WEIYI.HUANG@gmail.com> (sfid-20080510_031207_377549_3D6B6E2F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from mga02.intel.com ([134.134.136.20]:35053 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752760AbYE2Iht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 04:37:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 32/43] iwlwifi: add frame count limit to link quality command
+Date: Thu, 29 May 2008 16:35:17 +0800
+Message-Id: <1212050128-17132-33-git-send-email-yi.zhu@intel.com> (sfid-20080529_110548_130394_E2A87678)
+In-Reply-To: <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
+ <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed duplicated include "iwl-sta.h" in 
-drivers/net/wireless/iwlwifi/iwl-sta.c
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+This patch adds frame count limit to link quality host command.
 
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c    2008-05-10 08:50:32.000000000 +0800
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c    2008-05-10 08:50:46.000000000 +0800
-@@ -36,7 +36,6 @@
- #include "iwl-io.h"
- #include "iwl-helpers.h"
- #include "iwl-4965.h"
--#include "iwl-sta.h"
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
- int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
- {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 347fbeb..d8f2b4d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -2443,6 +2443,7 @@ static void rs_fill_link_cmd(const struct iwl_priv *priv,
+ 		repeat_rate--;
+ 	}
+ 
++	lq_cmd->agg_params.agg_frame_cnt_limit = 64;
+ 	lq_cmd->agg_params.agg_dis_start_th = 3;
+ 	lq_cmd->agg_params.agg_time_limit = cpu_to_le16(4000);
+ }
+-- 
+1.5.3.6
 
