@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2530 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420AbYEPPvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 11:51:02 -0400
-Date: Fri, 16 May 2008 11:16:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Emelyanov <xemul@openvz.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/7][MAC8021]: Fix one more call to synchronize_rcu in
-	atomic context.
-Message-ID: <20080516151620.GC6510@tuxdriver.com> (sfid-20080516_175108_292806_35C25882)
-References: <4821CE54.9000401@openvz.org> <482D6A80.6030804@openvz.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <482D6A80.6030804@openvz.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbYE2Hf2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 03:35:28 -0400
+Subject: Re: pull request: wireless-2.6 2008-05-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080529003527.GC22536@tuxdriver.com>
+References: <20080528213831.GA3133@tuxdriver.com>
+	 <1212012670.21624.48.camel@johannes.berg>
+	 <20080529003527.GC22536@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-i6oqQJ0OexmjRAbRaIyB"
+Date: Thu, 29 May 2008 09:33:58 +0200
+Message-Id: <1212046438.16917.0.camel@johannes.berg> (sfid-20080529_093531_461177_7C884AB0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 16, 2008 at 03:05:36PM +0400, Pavel Emelyanov wrote:
 
-> Sorry for bothering you, I guess that you're very busy now, 
-> but what are you plans about this set?
-> 
-> After I saw my first set included in some wireless git update,
-> I thought this one would be in some of the next ones (since
-> this set fixes some bugs in mesh tables), and started waiting.
-> 
-> Here's a new wireless git update and this set is still not in.
-> Shall I resubmit one?
+--=-i6oqQJ0OexmjRAbRaIyB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pavel,
+On Wed, 2008-05-28 at 20:35 -0400, John W. Linville wrote:
+> On Thu, May 29, 2008 at 12:11:10AM +0200, Johannes Berg wrote:
+> > On Wed, 2008-05-28 at 17:38 -0400, John W. Linville wrote:
+> > > David,
+> > >=20
+> > > Another round of fixes for 2.6.26 follows...
+> > >=20
+> > > Please let me know if there are problems!
+> >=20
+> > What about
+> >=20
+> > [PATCH] b43legacy: fix build errors when DMA or PIO are not selected
+>=20
+> That claims to correct a problem created by "mac80211: move TX info
+> into skb->cb", which is not in the 2.6.26 stream.  I will apply it
+> to wireless-next-2.6.
 
-I still have your patchset.  I'm still working on clearing my
-backlog, as well as waiting for some fixes to make the round-trip
-net-2.6->linux-2.6->net-next-2.6.  The combination of that and the
-fact that your patch hit locking and "the usual suspects" had not
-yet commented on it made me decide to wait until the next round.
+Sorry, yes, my mistake.
 
-If you are desperate to see them sooner, I could probably put them
-in the -testing tree early?  Let me know if you would like that.
+johannes
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--=-i6oqQJ0OexmjRAbRaIyB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD5cZaVg1VMiehFYAQIGXQ/+NCdC7oaAquqd19vCct1J3a0A7eFnfP8W
+xvxU38/970D8l75DABrHixaupJOKz1WpnM6UCobzSZhy0y/OAUe6MbEFBt3efKvB
+fn6l1Yti4NoD6xNtgFcqB+wPlP0nXVaXw83++C2FKDQ6VjbBdecnCDRBesex1jBX
+wPjeWpT57eDonUHG5I+Zoeues92ffAP4zIjK9/mAKGPVUMVsQ84+XGK6/xllMYXj
++HoTR1H/V6y1xjILEUaIYZ9Mm/PznFgOPtAXoFPIR5mIGEgsYrvy58RYy6tfuh/Z
+ewLTv+G6i+D0+KEGtQToQrDBb2I3UXo9OKR4uEJqW6Eg96tvQ5Z2PT9i+r6BitUx
+cfNPr8k+XssP8STSbGkANyT+wQOeNmizXIhvwVP+xKD+ljHQsunJHEtJLKoTO4vy
+e7s5UI4kTtO6H5Yadn5UhifgVmbo8KmXWPtA2nn6wyO31jmUM3gEfJxSY4Kd7A8Y
+eU2uh5iHqRuzfkQ8pPUnCc52+NIDv4NKefvJuO5wqa/YM1VKKJebmyTSXe+GNXvN
+CwT4TGij1C0J5Qqxm9VlKR71548OYUVvIhdhdFTZUSYgQaVbFM1V8bsiJLvQ1iHp
+T3FxgVjdBZvdXAGJSHMFOsqsVouhoBg+OcSKeLiUFbPf9/OhbHn0Hq9DIWAbBiLE
+x0HB0K74gk0=
+=KKsA
+-----END PGP SIGNATURE-----
+
+--=-i6oqQJ0OexmjRAbRaIyB--
+
