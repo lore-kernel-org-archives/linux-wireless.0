@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:41083 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755936AbYEZOsc (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:50165 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752045AbYE3RWt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 10:48:32 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2151062waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 26 May 2008 07:48:31 -0700 (PDT)
-Message-ID: <1ba2fa240805260748w6766e5efkb236bc7e0f776bc4@mail.gmail.com> (sfid-20080526_164835_917403_977C70EF)
-Date: Mon, 26 May 2008 17:48:30 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: fix deadlock in sta->lock
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1211812853.4843.7.camel@johannes.berg>
+	Fri, 30 May 2008 13:22:49 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050 v1.2
+Date: Fri, 30 May 2008 10:22:21 -0700
+Cc: linux-wireless@vger.kernel.org, wimax@linuxwimax.org
+References: <200805291357.47910.inaky@linux.intel.com> <200805300856.14645.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200805300856.14645.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
-	 <1211811554.4843.4.camel@johannes.berg>
-	 <1ba2fa240805260732g4c5942b2qec443dfc6d6339a7@mail.gmail.com>
-	 <1211812853.4843.7.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805301022.22441.inaky@linux.intel.com> (sfid-20080530_192252_693560_F9334DF7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 26, 2008 at 5:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-05-26 at 17:32 +0300, Tomas Winkler wrote:
->> On Mon, May 26, 2008 at 5:19 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Mon, 2008-05-26 at 17:09 +0300, Tomas Winkler wrote:
->> >> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->> >>
->> >> This patch fixes a deadlock of sta->lock use, occuring while changing
->> >> tx aggregation states, as dev_queue_xmit end up in new function
->> >> test_and_clear_sta_flags that uses that lock thus leading to deadlock
->> >
->> > Oh, good catch, thanks. Reminds me to debug the other deadlock I saw
->> > (not mac80211 related though)
->> >
->> very encouraging :) . Can you send me details I also experience some
->> lockups on rc2
->
-> Well when I resume my machine it locks up right after printing "eth0:
-> resuming" or something like that, *iff* eth0 was down when suspending. I
-> fixed a bug like that (NAPI related) a while ago, but w/o sungem changes
-> it has re-appeared, or so it seems.
->
-Thanks, doesn't look like what I see.
-Tomas
+On Thursday 29 May 2008, Holger Schurig wrote:
+> > You can find the code and additional information at
+> > http://linuxwimax.org.
+> 
+> Nice. However, http://intelwimax.org would have been better. Or 
+> are you willing to host info about other (possible) linux wimax 
+> vendors?
+
+That is the idea. This is supposed to be a community site.
+
+-- 
+Inaky
