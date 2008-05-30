@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36862 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38313 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbYE3Mc6 (ORCPT
+	with ESMTP id S1752477AbYE3Ou2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 08:32:58 -0400
-Subject: suspend vs. b43
+	Fri, 30 May 2008 10:50:28 -0400
+Subject: Re: suspend vs. b43
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y+mP7NIEwXijBAHAFsAS"
-Date: Fri, 30 May 2008 14:31:53 +0200
-Message-Id: <1212150713.4117.2.camel@johannes.berg> (sfid-20080530_143301_686440_AFFF0BAC)
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200805301649.14445.hs4233@mail.mn-solutions.de>
+References: <1212150713.4117.2.camel@johannes.berg>
+	 <200805301606.25556.mb@bu3sch.de> <1212158238.4117.4.camel@johannes.berg>
+	 <200805301649.14445.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xJuv+xM5rTS/fqqwf4eG"
+Date: Fri, 30 May 2008 16:50:03 +0200
+Message-Id: <1212159003.4117.10.camel@johannes.berg> (sfid-20080530_165030_358309_31FB6AA8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-y+mP7NIEwXijBAHAFsAS
+--=-xJuv+xM5rTS/fqqwf4eG
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Fri, 2008-05-30 at 16:49 +0200, Holger Schurig wrote:
+> > Odd. Resume itself works just fine here, except when b43 is
+> > up. But then again, you might not notice that this is the
+> > problem because by default, nothing gets printed on the resume
+> > console and then it will indeed hang with a black screen.
+>=20
+> pepper it with printk's and add netconsole ...
 
-Since a while ago I've had trouble resuming when b43 was connected to an
-AP while suspended.
-
-I did a test today where this was the only difference, but I failed to
-see whether ssb or b43 were causing the problem.
-
-Does anyone have a machine with b43 in it that can suspend and supports
-the RTC-trace feature so we can narrow it down? Even reproducing might
-help to make sure it's not just something weird with my powerbook.
+Well, yeah, netconsole _might_ work as sungem gets resumed before b43,
+but I tried doing that on the regular console and didn't see anything
+useful.
 
 johannes
 
---=-y+mP7NIEwXijBAHAFsAS
+--=-xJuv+xM5rTS/fqqwf4eG
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASD/zuKVg1VMiehFYAQLcZhAAj+XbnRiTrixV5QXEbXdwmLo5nrsnlwNB
-+JdzlDhn4SrU9Gh87H+pwJYso6GrNG3OAOKdfmx57WC9al9esDbhelqW+N6fV35j
-ROW86eRNISoyDhY/DlyC2ScqrSAmJ29WGX5/KCOuvL6XUzYqoVqsUpnYYTKiXrK3
-NYGqrFTKTtBF/Z24+cACDvYedhYoFDR0z4ND5Ssfh02kxL15JeZWdu0tuMydWwgb
-J0iFLk05zeptT/EvWatFT/gTMiDM9sTf02Jwv1hmbJRxNLEa16Co3Cm3aj03SSp+
-TxLTuFxUBPlJhfkgu7G/E70isrgDYYwDsKxe9Gj9v5zZfUFvlGYSixugHbDVwEPt
-g9/20Ru5eMM/XQP+6OjoV3EwGT3tX1Oc+GZnqtYytXD0aiMWv5L5WVp7I8D7CMhI
-hsNBjanWFbDjX5awjwMzs/PEhxpeRmmpFfs9kG9GisuE70SSR72N0FGmDrIPHARn
-vXTvTzIkfvRLKBh8ZAQ7pGpZL4aOqRjCIvXN7mpw41WR8snjdLODfIxjUZfQKy1H
-IxqyVQEGOVa79VcimLR1Xw/B0OJd5rxMdRmyGqCNnBmOCOsuXpm1RVhrmy3LvGub
-7S+r+4OlJrD1Yc6JtC/MZ7hcncP9lBtjAOHMVORz1NH+kS2d0YNBdCEdZj/tgRmI
-zgVNkw/A4EQ=
-=NqEL
+iQIVAwUASEAUGaVg1VMiehFYAQKL2A/+ISdvs73qXlX7w/qRYzcKFYdhwFNFvwXx
+RyGtygpBHe0VbDahHygEfhABIw50BvTDEl27yHs+iqaysNK3XZ2Y9aWMynsuf82H
+IhLn/qyk6fkmrzv2A4yLAa20kx772+PGb47Xmzh7wuxah4MWPT8fMEeSWbJLnw6I
+uS2G7b48GacLqfkAziN96noZ7cBJfcPuGO9PNHAvOE9Wnu9sr+4M51wA2JEmAk6Z
+yK9OqXYFukblf+V5eKpttCccr4duQcVA5p7b5ZSAfvooOntVTXQvGpy0MXQHCent
+6HIEARLTR6AJzwL+Xoq9bDp1jign7MXaHqV5ZHUzY1w3luJJu69vW71fI7Rnsnvv
+LFXmRv15C1bIrm+5COyejTwA5xy52abrbwyVOXTJkOiYGfg+HwYzSm5rmgj1QAIy
+5+FlLYWLVTe18/v7IduWdrtFtxwWd5GOMoavhruVZ0Gzzh7w55Jmv/VHph5X5ZVz
+jcATQhWDnlKfDOndE3On4DLCijmKVNGKExW136dPgR9jStVSGurlZ7poAQudeKf6
+sJDgTWBQl4/dBsbdjU0u8ORF0OvFl/Z496h0562qmIS5gA16URqC16a1qWKJVRwP
+tarnehvJmJENvtcL0PeAR8r+pFS20tV3vCagETR1TCqvvydYKtM80AxZp7hATgyM
+VmzigF72stE=
+=cox/
 -----END PGP SIGNATURE-----
 
---=-y+mP7NIEwXijBAHAFsAS--
+--=-xJuv+xM5rTS/fqqwf4eG--
 
