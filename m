@@ -1,100 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:36760 "EHLO mga02.intel.com"
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:54483 "EHLO ms5.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752754AbYE2Ih5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 May 2008 04:37:57 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 39/43] iwlwifi: disable FAT channel when not permitted
-Date: Thu, 29 May 2008 16:35:24 +0800
-Message-Id: <1212050128-17132-40-git-send-email-yi.zhu@intel.com> (sfid-20080529_103811_623485_52832D35)
-In-Reply-To: <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
-References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-2-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-3-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-4-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-5-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-6-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-7-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-8-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-9-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-10-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-11-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-12-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-13-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-14-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-15-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-16-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-17-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-18-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-19-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-20-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-21-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-22-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-23-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-24-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-25-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-26-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-27-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-28-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-29-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-30-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-31-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-32-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
- <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+	id S1752060AbYE3H1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 03:27:40 -0400
+Received: from mta5.sony.co.jp (mta5.Sony.CO.JP [137.153.71.6])
+ by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7RUD0003133
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
+Received: from mta5.sony.co.jp (localhost [127.0.0.1])
+ by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7RUYh024801
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+ by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7RTfo024798
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:30 +0900 (JST)
+Date: Fri, 30 May 2008 16:27:24 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] PS3: gelic: Allocate the bounce buffer dynamically
+Cc: geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
+References: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
+Message-Id: <20080530162153.4736.40F06B3A@sm.sony.co.jp> (sfid-20080530_092744_314703_E15C0470)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Allocate the bouce buffer for the wireless command dynamically.
 
-This patch disables FAT channel when it is not permitted according to
-the EEPROM.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/net/ps3_gelic_wireless.c |   40 ++++++++++++++++++++++++++++++++-------
+ 1 file changed, 33 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 010085a..c9bbfbb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -486,6 +486,25 @@ static int iwlcore_init_geos(struct iwl_priv *priv)
- 			if (ch->flags & EEPROM_CHANNEL_RADAR)
- 				geo_ch->flags |= IEEE80211_CHAN_RADAR;
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -1524,15 +1524,20 @@ static struct iw_statistics *gelic_wl_ge
+ 	struct gelic_eurus_cmd *cmd;
+ 	struct iw_statistics *is;
+ 	struct gelic_eurus_rssi_info *rssi;
++	void *buf;
  
-+			switch (ch->fat_extension_channel) {
-+			case HT_IE_EXT_CHANNEL_ABOVE:
-+				/* only above is allowed, disable below */
-+				geo_ch->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
-+				break;
-+			case HT_IE_EXT_CHANNEL_BELOW:
-+				/* only below is allowed, disable above */
-+				geo_ch->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
-+				break;
-+			case HT_IE_EXT_CHANNEL_NONE:
-+				/* fat not allowed: disable both*/
-+				geo_ch->flags |= (IEEE80211_CHAN_NO_FAT_ABOVE |
-+						  IEEE80211_CHAN_NO_FAT_BELOW);
-+				break;
-+			case HT_IE_EXT_CHANNEL_MAX:
-+				/* both above and below are permitted */
-+				break;
-+			}
+ 	pr_debug("%s: <-\n", __func__);
+ 
++	buf = (void *)__get_free_page(GFP_KERNEL);
++	if (!buf)
++		return NULL;
 +
- 			if (ch->max_power_avg > priv->max_channel_txpower_limit)
- 				priv->max_channel_txpower_limit =
- 				    ch->max_power_avg;
--- 
-1.5.3.6
+ 	is = &wl->iwstat;
+ 	memset(is, 0, sizeof(*is));
+ 	cmd = gelic_eurus_sync_cmd(wl, GELIC_EURUS_CMD_GET_RSSI_CFG,
+-				   wl->buf, sizeof(*rssi));
++				   buf, sizeof(*rssi));
+ 	if (cmd && !cmd->status && !cmd->cmd_status) {
+-		rssi = wl->buf;
++		rssi = buf;
+ 		is->qual.level = be16_to_cpu(rssi->rssi);
+ 		is->qual.updated = IW_QUAL_LEVEL_UPDATED |
+ 			IW_QUAL_QUAL_INVALID | IW_QUAL_NOISE_INVALID;
+@@ -1541,6 +1546,7 @@ static struct iw_statistics *gelic_wl_ge
+ 		is->qual.updated = IW_QUAL_ALL_INVALID;
+ 
+ 	kfree(cmd);
++	free_page((unsigned long)buf);
+ 	pr_debug("%s: ->\n", __func__);
+ 	return is;
+ }
+@@ -1607,11 +1613,18 @@ static void gelic_wl_scan_complete_event
+ 	union iwreq_data data;
+ 	unsigned long this_time = jiffies;
+ 	unsigned int data_len, i, found, r;
++	void *buf;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	pr_debug("%s:start\n", __func__);
+ 	mutex_lock(&wl->scan_lock);
+ 
++	buf = (void *)__get_free_page(GFP_KERNEL);
++	if (!buf) {
++		pr_info("%s: scan buffer alloc failed\n", __func__);
++		goto out;
++	}
++
+ 	if (wl->scan_stat != GELIC_WL_SCAN_STAT_SCANNING) {
+ 		/*
+ 		 * stop() may be called while scanning, ignore result
+@@ -1622,7 +1635,7 @@ static void gelic_wl_scan_complete_event
+ 	}
+ 
+ 	cmd = gelic_eurus_sync_cmd(wl, GELIC_EURUS_CMD_GET_SCAN,
+-				   wl->buf, PAGE_SIZE);
++				   buf, PAGE_SIZE);
+ 	if (!cmd || cmd->status || cmd->cmd_status) {
+ 		wl->scan_stat = GELIC_WL_SCAN_STAT_INIT;
+ 		pr_info("%s:cmd failed\n", __func__);
+@@ -1649,7 +1662,7 @@ static void gelic_wl_scan_complete_event
+ 	}
+ 
+ 	/* put them in the newtork_list */
+-	for (i = 0, scan_info_size = 0, scan_info = wl->buf;
++	for (i = 0, scan_info_size = 0, scan_info = buf;
+ 	     scan_info_size < data_len;
+ 	     i++, scan_info_size += be16_to_cpu(scan_info->size),
+ 	     scan_info = (void *)scan_info + be16_to_cpu(scan_info->size)) {
+@@ -1726,6 +1739,7 @@ static void gelic_wl_scan_complete_event
+ 	wireless_send_event(port_to_netdev(wl_port(wl)), SIOCGIWSCAN, &data,
+ 			    NULL);
+ out:
++	free_page((unsigned long)buf);
+ 	complete(&wl->scan_done);
+ 	mutex_unlock(&wl->scan_lock);
+ 	pr_debug("%s:end\n", __func__);
+@@ -1848,7 +1862,10 @@ static int gelic_wl_do_wep_setup(struct 
+ 
+ 	pr_debug("%s: <-\n", __func__);
+ 	/* we can assume no one should uses the buffer */
+-	wep = wl->buf;
++	wep = (struct gelic_eurus_wep_cfg *)__get_free_page(GFP_KERNEL);
++	if (!wep)
++		return -ENOMEM;
++
+ 	memset(wep, 0, sizeof(*wep));
+ 
+ 	if (wl->group_cipher_method == GELIC_WL_CIPHER_WEP) {
+@@ -1898,6 +1915,7 @@ static int gelic_wl_do_wep_setup(struct 
+ 
+ 	kfree(cmd);
+ out:
++	free_page((unsigned long)wep);
+ 	pr_debug("%s: ->\n", __func__);
+ 	return ret;
+ }
+@@ -1941,7 +1959,10 @@ static int gelic_wl_do_wpa_setup(struct 
+ 
+ 	pr_debug("%s: <-\n", __func__);
+ 	/* we can assume no one should uses the buffer */
+-	wpa = wl->buf;
++	wpa = (struct gelic_eurus_wpa_cfg *)__get_free_page(GFP_KERNEL);
++	if (!wpa)
++		return -ENOMEM;
++
+ 	memset(wpa, 0, sizeof(*wpa));
+ 
+ 	if (!test_bit(GELIC_WL_STAT_WPA_PSK_SET, &wl->stat))
+@@ -2000,6 +2021,7 @@ static int gelic_wl_do_wpa_setup(struct 
+ 	else if (cmd->status || cmd->cmd_status)
+ 		ret = -ENXIO;
+ 	kfree(cmd);
++	free_page((unsigned long)wpa);
+ 	pr_debug("%s: --> %d\n", __func__, ret);
+ 	return ret;
+ }
+@@ -2018,7 +2040,10 @@ static int gelic_wl_associate_bss(struct
+ 	pr_debug("%s: <-\n", __func__);
+ 
+ 	/* do common config */
+-	common = wl->buf;
++	common = (struct gelic_eurus_common_cfg *)__get_free_page(GFP_KERNEL);
++	if (!common)
++		return -ENOMEM;
++
+ 	memset(common, 0, sizeof(*common));
+ 	common->bss_type = cpu_to_be16(GELIC_EURUS_BSS_INFRA);
+ 	common->op_mode = cpu_to_be16(GELIC_EURUS_OPMODE_11BG);
+@@ -2104,6 +2129,7 @@ static int gelic_wl_associate_bss(struct
+ 		pr_info("%s: connected\n", __func__);
+ 	}
+ out:
++	free_page((unsigned long)common);
+ 	pr_debug("%s: ->\n", __func__);
+ 	return ret;
+ }
 
