@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751766AbYEOF4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 01:56:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 06/26] iwlwifi: rename iwl4965_tx_info to iwl_tx_info
-Date: Thu, 15 May 2008 13:53:58 +0800
-Message-Id: <1210830858-3410-7-git-send-email-yi.zhu@intel.com> (sfid-20080515_075625_975123_72359773)
-In-Reply-To: <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
-References: <1210830858-3410-1-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-2-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-3-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-4-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-5-git-send-email-yi.zhu@intel.com>
- <1210830858-3410-6-git-send-email-yi.zhu@intel.com>
+Received: from rn-out-0910.google.com ([64.233.170.186]:14183 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYE3LrO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 07:47:14 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so2045902rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 04:47:13 -0700 (PDT)
+Message-ID: <1ba2fa240805300447t1eb22a80v7a0623efe0b07b17@mail.gmail.com> (sfid-20080530_134733_037568_55485861)
+Date: Fri, 30 May 2008 14:47:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 40/43] iwlwifi: fix a memory leak in scan
+Cc: linux-wireless@vger.kernel.org, "Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <1212050128-17132-41-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1212050128-17132-1-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-33-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-34-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-35-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-36-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-37-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-38-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-39-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-40-git-send-email-yi.zhu@intel.com>
+	 <1212050128-17132-41-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Thu, May 29, 2008 at 11:35 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> This patch fixes a memory leak that the scan buffer isn't released
+> on exit.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-core.c     |    1 +
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+>  2 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+> index c9bbfbb..61716ba 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -911,6 +911,7 @@ void iwl_uninit_drv(struct iwl_priv *priv)
+>        iwl_free_calib_results(priv);
+>        iwlcore_free_geos(priv);
+>        iwl_free_channel_map(priv);
+> +       kfree(priv->scan);
+>  }
+>  EXPORT_SYMBOL(iwl_uninit_drv);
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 244bfe5..72279e0 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -8257,7 +8257,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+>
+>        iwl3945_free_channel_map(priv);
+>        iwl3945_free_geos(priv);
+> -
+> +       kfree(priv->scan);
+>        if (priv->ibss_beacon)
+>                dev_kfree_skb(priv->ibss_beacon);
+>
+> --
+> 1.5.3.6
+>
 
-This patch renames iwl4965_tx_info to iwl_tx_info.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index cf99224..ae18a80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -118,7 +118,7 @@ struct iwl_queue {
- #define MAX_NUM_OF_TBS          (20)
- 
- /* One for each TFD */
--struct iwl4965_tx_info {
-+struct iwl_tx_info {
- 	struct ieee80211_tx_status status;
- 	struct sk_buff *skb[MAX_NUM_OF_TBS];
- };
-@@ -141,7 +141,7 @@ struct iwl_tx_queue {
- 	struct iwl_tfd_frame *bd;
- 	struct iwl_cmd *cmd;
- 	dma_addr_t dma_addr_cmd;
--	struct iwl4965_tx_info *txb;
-+	struct iwl_tx_info *txb;
- 	int need_update;
- 	int sched_retry;
- 	int active;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 2e7e616..6e70405 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1868,7 +1868,7 @@ static int iwl4965_tx_skb(struct iwl_priv *priv,
- 	idx = get_cmd_index(q, q->write_ptr, 0);
- 
- 	/* Set up driver data for this TFD */
--	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl4965_tx_info));
-+	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
- 	txq->txb[q->write_ptr].skb[0] = skb;
- 	memcpy(&(txq->txb[q->write_ptr].status.control),
- 	       ctl, sizeof(struct ieee80211_tx_control));
-@@ -2306,7 +2306,7 @@ static int iwl4965_get_measurement(struct iwl_priv *priv,
- #endif
- 
- static void iwl4965_txstatus_to_ieee(struct iwl_priv *priv,
--				 struct iwl4965_tx_info *tx_sta)
-+				     struct iwl_tx_info *tx_sta)
- {
- 
- 	tx_sta->status.ack_signal = 0;
--- 
-1.5.3.6
-
+This one is also for 2.6.26
