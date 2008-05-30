@@ -1,119 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462AbYEZOUg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 May 2008 10:20:36 -0400
-Subject: Re: [PATCH 1/1] mac80211: fix deadlock in sta->lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
-References: <1211810958-23095-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K+jNlYInN+ktedOz8VN1"
-Date: Mon, 26 May 2008 16:19:14 +0200
-Message-Id: <1211811554.4843.4.camel@johannes.berg> (sfid-20080526_162040_334903_7C0A37FE)
-Mime-Version: 1.0
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:39146 "EHLO ms5.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbYE3HxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 03:53:04 -0400
+Received: from mta5.sony.co.jp (mta5.Sony.CO.JP [137.153.71.6])
+ by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7r0w1019234
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
+Received: from mta5.sony.co.jp (localhost [127.0.0.1])
+ by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7r09A027016
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+ by mta5.sony.co.jp (R8/Sony) with ESMTP id m4U7r0Rc027004
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:53:00 +0900 (JST)
+Date: Fri, 30 May 2008 16:52:55 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] PS3: gelic: Deprecate the private ioctls in the gelic driver
+Cc: geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+Message-Id: <20080530164650.4750.40F06B3A@sm.sony.co.jp> (sfid-20080530_095308_175845_2F08E58E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As the driver has the standard way to handle PSK, deprecate the old
+interface.
 
---=-K+jNlYInN+ktedOz8VN1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+---
+ drivers/net/Kconfig              |   13 +++++++++++++
+ drivers/net/ps3_gelic_wireless.c |    6 ++++++
+ 2 files changed, 19 insertions(+)
 
-On Mon, 2008-05-26 at 17:09 +0300, Tomas Winkler wrote:
-> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
->=20
-> This patch fixes a deadlock of sta->lock use, occuring while changing
-> tx aggregation states, as dev_queue_xmit end up in new function
-> test_and_clear_sta_flags that uses that lock thus leading to deadlock
-
-Oh, good catch, thanks. Reminds me to debug the other deadlock I saw
-(not mac80211 related though)
-
-> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/main.c |   10 +++++++---
->  1 files changed, 7 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index b0fddb7..5a9030c 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -662,6 +662,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw=
- *hw, u8 *ra, u16 tid)
->  		goto start_ba_err;
->  	}
-> =20
-> +	spin_unlock_bh(&sta->lock);
-> +
->  	/* Will put all the packets in the new SW queue */
->  	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
->  	spin_unlock_bh(&local->mdev->queue_lock);
-> @@ -688,9 +690,9 @@ start_ba_err:
->  	kfree(sta->ampdu_mlme.tid_tx[tid]);
->  	sta->ampdu_mlme.tid_tx[tid] =3D NULL;
->  	spin_unlock_bh(&local->mdev->queue_lock);
-> +	spin_unlock_bh(&sta->lock);
->  	ret =3D -EBUSY;
->  start_ba_exit:
-> -	spin_unlock_bh(&sta->lock);
->  	rcu_read_unlock();
->  	return ret;
->  }
-> @@ -829,10 +831,11 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *h=
-w, u8 *ra, u8 tid)
->  	}
->  	state =3D &sta->ampdu_mlme.tid_state_tx[tid];
-> =20
-> -	spin_lock_bh(&sta->lock);
-> +	/* no need to use sta->lock in this state check, as
-> +	 * ieee80211_stop_tx_ba_session will let only
-> +	 * one stop call to pass through per sta/tid */
->  	if ((*state & HT_AGG_STATE_REQ_STOP_BA_MSK) =3D=3D 0) {
->  		printk(KERN_DEBUG "unexpected callback to A-MPDU stop\n");
-> -		spin_unlock_bh(&sta->lock);
->  		rcu_read_unlock();
->  		return;
->  	}
-> @@ -855,6 +858,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw,=
- u8 *ra, u8 tid)
->  	 * ieee80211_wake_queue is not used here as this queue is not
->  	 * necessarily stopped */
->  	netif_schedule(local->mdev);
-> +	spin_lock_bh(&sta->lock);
->  	*state =3D HT_AGG_STATE_IDLE;
->  	sta->ampdu_mlme.addba_req_num[tid] =3D 0;
->  	kfree(sta->ampdu_mlme.tid_tx[tid]);
-
---=-K+jNlYInN+ktedOz8VN1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASDrG4aVg1VMiehFYAQJbSw/9FS3ibzpYwh/r0DZNm8OeE+es03+Z1kj3
-5KCBXCiaKKI5IUgyFsoX99GIKzvBaFTL7wRtuq4nNf7B3TSb+z0KLfLmhO4OOj2N
-meZUVNqXxUYyYbNJXqToVtueHmVib7KYoJ0RZD34XQd3F1iMoCSOinDElRFe+uo0
-zTiK92dtt6zjsnFsxIA7GmQMn1KR9xjnG94YJo354XD/pL2LcmvuDyWBPASQsfbM
-Gae1UNNZyHA+95qUyszbN3mU6sXZp6CVcZ5oeXfTHEnJSXcqxSg5qGQyEkcaXS1P
-BkepL94BSMJ0E9aJftcfUYR95gZzLxhUohs/a+5U4Cllhsj8qXhB+dgGKPB2Mrn0
-uDJvHyEMKFrBHa0nQTdTxftAX+rzoPPkLH7/P67YuUP/OVffRV51ZrWSdZSw9KyZ
-3+UYP82p1hVQQ4cGGh4m56EAlMgI418aOydYgYGOP0jzrskwIiI0Z/UXZmGeUj78
-2ibQpEJaRJMVn5X4AIpFgg1q0V0Bt/2CbFYWthM194/OcFK9gXgRmB8kauh8LI94
-szrcvcZ7zfsGd8BveaNabgBN96gufXZlMnqTmdIfv6qFOJGgrRs7rx1sNucXPMUV
-6uh8dKivqJ+5LaX8jeyNLKM4G7uEZDgTCdyschrstRf+nNRYX+xh2cS82QdE8mEz
-bSCooCV5MPk=
-=3mDB
------END PGP SIGNATURE-----
-
---=-K+jNlYInN+ktedOz8VN1--
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -2297,6 +2297,19 @@ config GELIC_WIRELESS
+ 	  the driver automatically distinguishes the models, you can
+ 	  safely enable this option even if you have a wireless-less model.
+ 
++config GELIC_WIRELESS_OLD_PSK_INTERFACE
++       bool "PS3 Wireless private PSK interface (OBSOLETE)"
++       depends on GELIC_WIRELESS
++       help
++          This option retains the obsolete private interface to pass
++          the PSK from user space programs to the driver.  The PSK
++          stands for 'Pre Shared Key' and is used for WPA[2]-PSK
++          (WPA-Personal) environment.
++          If WPA[2]-PSK is used and you need to use old programs that
++          support only this old interface, say Y.  Otherwise N.
++
++          If unsure, say N.
++
+ config GIANFAR
+ 	tristate "Gianfar Ethernet"
+ 	depends on FSL_SOC
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -1375,6 +1375,7 @@ static int gelic_wl_get_mode(struct net_
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+ /* SIOCIWFIRSTPRIV */
+ static int hex2bin(u8 *str, u8 *bin, unsigned int len)
+ {
+@@ -1479,6 +1480,7 @@ static int gelic_wl_priv_get_psk(struct 
+ 	pr_debug("%s:-> %d\n", __func__, data->data.length);
+ 	return 0;
+ }
++#endif
+ 
+ /* SIOCGIWNICKN */
+ static int gelic_wl_get_nick(struct net_device *net_dev,
+@@ -2329,6 +2331,7 @@ static const iw_handler gelic_wl_wext_ha
+ 	IW_IOCTL(SIOCGIWNICKN)		= gelic_wl_get_nick,
+ };
+ 
++#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+ static struct iw_priv_args gelic_wl_private_args[] =
+ {
+ 	{
+@@ -2350,15 +2353,18 @@ static const iw_handler gelic_wl_private
+ 	gelic_wl_priv_set_psk,
+ 	gelic_wl_priv_get_psk,
+ };
++#endif
+ 
+ static const struct iw_handler_def gelic_wl_wext_handler_def = {
+ 	.num_standard		= ARRAY_SIZE(gelic_wl_wext_handler),
+ 	.standard		= gelic_wl_wext_handler,
+ 	.get_wireless_stats	= gelic_wl_get_wireless_stats,
++#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+ 	.num_private		= ARRAY_SIZE(gelic_wl_private_handler),
+ 	.num_private_args	= ARRAY_SIZE(gelic_wl_private_args),
+ 	.private		= gelic_wl_private_handler,
+ 	.private_args		= gelic_wl_private_args,
++#endif
+ };
+ 
+ static struct net_device *gelic_wl_alloc(struct gelic_card *card)
 
