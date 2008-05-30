@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60678
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750695AbYEPE6c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 May 2008 00:58:32 -0400
-Date: Thu, 15 May 2008 21:58:23 -0700 (PDT)
-Message-Id: <20080515.215823.28841530.davem@davemloft.net> (sfid-20080516_065859_735853_4D100A07)
-To: rusty@rustcorp.com.au
-Cc: herbert@gondor.apana.org.au, mb@bu3sch.de,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ron.rindjunsky@intel.com, tomasw@gmail.com,
-	ivdoorn@gmail.com, peter.p.waskiewicz.jr@intel.com
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200805161201.48835.rusty@rustcorp.com.au>
-References: <20080508032208.GA401@gondor.apana.org.au>
-	<20080507.202606.242037993.davem@davemloft.net>
-	<200805161201.48835.rusty@rustcorp.com.au>
+Received: from mx1.redhat.com ([66.187.233.31]:53931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752270AbYE3Rwh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 13:52:37 -0400
+Subject: Re: [PATCH 1/3] WEXT: Add support for passing PMK and capability
+	flags to WEXT
+From: Dan Williams <dcbw@redhat.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530164258.4744.40F06B3A@sm.sony.co.jp>
+References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+	 <20080530164258.4744.40F06B3A@sm.sony.co.jp>
+Content-Type: text/plain
+Date: Fri, 30 May 2008 13:52:15 -0400
+Message-Id: <1212169935.8178.29.camel@localhost.localdomain> (sfid-20080530_195239_336016_D5B2B245)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rusty Russell <rusty@rustcorp.com.au>
-Date: Fri, 16 May 2008 12:01:48 +1000
+On Fri, 2008-05-30 at 16:52 +0900, Masakazu Mokuno wrote:
+> This defines the flags for setting the PMK to the driver and the
+> capability flag for this so that the user space program can figure out
+> whether the target driver wants to do 4-way hand shake by itself and
+> pass the PMK which is needed before 4-way handshake to the driver.
+> 
+> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
-> Dave, please allow me to ask a heretical question.  Returning
-> TX_BUSY has some appeal for virtio_net: is it fundamentally a flawed
-> idea, or simply a matter of coding?
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Allowing TX_BUSY adds a special case to the caller which we'd
-like to remove at some point.
+> ---
+>  include/linux/wireless.h |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> --- a/include/linux/wireless.h
+> +++ b/include/linux/wireless.h
+> @@ -611,6 +611,7 @@
+>  #define IW_ENCODE_ALG_WEP	1
+>  #define IW_ENCODE_ALG_TKIP	2
+>  #define IW_ENCODE_ALG_CCMP	3
+> +#define IW_ENCODE_ALG_PMK	4
+>  /* struct iw_encode_ext ->ext_flags */
+>  #define IW_ENCODE_EXT_TX_SEQ_VALID	0x00000001
+>  #define IW_ENCODE_EXT_RX_SEQ_VALID	0x00000002
+> @@ -630,6 +631,7 @@
+>  #define IW_ENC_CAPA_WPA2	0x00000002
+>  #define IW_ENC_CAPA_CIPHER_TKIP	0x00000004
+>  #define IW_ENC_CAPA_CIPHER_CCMP	0x00000008
+> +#define IW_ENC_CAPA_4WAY_HANDSHAKE	0x00000010
+>  
+>  /* Event capability macros - in (struct iw_range *)->event_capa
+>   * Because we have more than 32 possible events, we use an array of
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> Currently we have no virtio interface to ask how many descriptors are left; 
-> it's not clear that it's a fair question to ask, since for Xen it's depends 
-> on the actual buffers we're trying to put in the descirptors.
-
-Two things:
-
-1) You can always make sure that you have enough space for a
-   TSO frame, with arbitrary page boundaries and thus buffer
-   chopping.
-
-   It can even be estimated, and if violated by some corner case
-   you can punt and drop.
-
-2) You can queue inside of the driver one packet when you hit
-   the limits unexpectedly, netif_stop_queue(), and return
-   success.  Spit this packet out right before waking the
-   queue again.
-
-Really, there are no hard reasons to ever return TX_BUSY,
-it's always a bug.
-
-In fact, I want to move things more and more towards the driver
-queueing TX packets internally instead of the networking mid-layer.
-
-That will ahve benefits for things like TX multiqueue, we won't
-need any locking at all, nor have any knowledge about multiple
-queues at all, if the driver takes care of providing the buffer
-between what the kernel gives it and what the device can handle
-at the moment.
