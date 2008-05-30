@@ -1,66 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:40286 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([66.187.233.31]:53468 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288AbYEQSfd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 14:35:33 -0400
-Message-ID: <20080517203531.vus3gj5ce8ksskkc@imap.suse.de> (sfid-20080517_203542_365617_BB2B3F5B)
-Date: Sat, 17 May 2008 20:35:31 +0200
-From: Helmut Schaa <hschaa@suse.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv2] mac80211: fix NULL pointer dereference in
-	ieee80211_compatible_rates
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+	id S1752664AbYE3RwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 13:52:12 -0400
+Subject: Re: [PATCH 3/3] PS3: gelic: Add support for ESSID scan
+From: Dan Williams <dcbw@redhat.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530162420.473C.40F06B3A@sm.sony.co.jp>
+References: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
+	 <20080530162420.473C.40F06B3A@sm.sony.co.jp>
+Content-Type: text/plain
+Date: Fri, 30 May 2008 13:51:44 -0400
+Message-Id: <1212169904.8178.27.camel@localhost.localdomain> (sfid-20080530_195216_638968_7E576B1E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a possible NULL pointer dereference in ieee80211_compatible_rates
-introduced in the patch "mac80211: fix association with some APs".
+On Fri, 2008-05-30 at 16:27 +0900, Masakazu Mokuno wrote:
+> This adds the support for ESSID scanning
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
----
+You'll want to:
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 76ad4ed..2642551 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -664,15 +664,22 @@ static int ieee80211_compatible_rates(struct  
-ieee80211_sta_bss *bss,
-  	int i, j, count;
-  	*rates = 0;
-  	count = 0;
--	for (i = 0; i < bss->supp_rates_len; i++) {
--		int rate = (bss->supp_rates[i] & 0x7F) * 5;
+	range->scan_capa = IW_SCAN_CAPA_ESSID;
 
--		for (j = 0; j < sband->n_bitrates; j++)
--			if (sband->bitrates[j].bitrate == rate) {
--				*rates |= BIT(j);
--				count++;
--				break;
--			}
-+	if (bss) {
-+		for (i = 0; i < bss->supp_rates_len; i++) {
-+			int rate = (bss->supp_rates[i] & 0x7F) * 5;
-+
-+			for (j = 0; j < sband->n_bitrates; j++)
-+				if (sband->bitrates[j].bitrate == rate) {
-+					*rates |= BIT(j);
-+					count++;
-+					break;
-+				}
-+		}
-+	} else {
-+		for (i = 0; i < sband->n_bitrates; i++)
-+			*rates |= BIT(i);
-+		count = sband->n_bitrates;
-  	}
+in your SIOCGIWRANGE handler too.
 
-  	return count;
+Dan
+
+> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+> ---
+>  drivers/net/ps3_gelic_wireless.c |   62 ++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 55 insertions(+), 7 deletions(-)
+> 
+> --- a/drivers/net/ps3_gelic_wireless.c
+> +++ b/drivers/net/ps3_gelic_wireless.c
+> @@ -45,7 +45,8 @@
+>  #include "ps3_gelic_wireless.h"
+>  
+> 
+> -static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan);
+> +static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan,
+> +			       u8 *essid, size_t essid_len);
+>  static int gelic_wl_try_associate(struct net_device *netdev);
+>  
+>  /*
+> @@ -105,6 +106,7 @@ static const struct eurus_cmd_arg_info c
+>  	[GELIC_EURUS_CMD_GET_WEP_CFG]    = { .post_arg = 1},
+>  	[GELIC_EURUS_CMD_GET_WPA_CFG]    = { .post_arg = 1},
+>  	[GELIC_EURUS_CMD_GET_RSSI_CFG]   = { .post_arg = 1},
+> +	[GELIC_EURUS_CMD_START_SCAN]     = { .pre_arg = 1},
+>  	[GELIC_EURUS_CMD_GET_SCAN]       = { .post_arg = 1},
+>  };
+>  
+> @@ -163,7 +165,9 @@ static void gelic_eurus_sync_cmd_worker(
+>  	card = port_to_card(wl_port(wl));
+>  
+>  	if (cmd_info[cmd->cmd].pre_arg) {
+> -		arg1 = ps3_mm_phys_to_lpar(__pa(cmd->buffer));
+> +		arg1 = (cmd->buffer) ?
+> +			ps3_mm_phys_to_lpar(__pa(cmd->buffer)) :
+> +			0;
+>  		arg2 = cmd->buf_size;
+>  	} else {
+>  		arg1 = 0;
+> @@ -370,8 +374,18 @@ static int gelic_wl_set_scan(struct net_
+>  			   union iwreq_data *wrqu, char *extra)
+>  {
+>  	struct gelic_wl_info *wl = port_wl(netdev_priv(netdev));
+> -
+> -	return gelic_wl_start_scan(wl, 1);
+> +	struct iw_scan_req *req;
+> +	u8 *essid = NULL;
+> +	size_t essid_len = 0;
+> +
+> +	if (wrqu->data.length == sizeof(struct iw_scan_req) &&
+> +	    wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+> +		req = (struct iw_scan_req*)extra;
+> +		essid = req->essid;
+> +		essid_len = req->essid_len;
+> +		pr_debug("%s: ESSID scan =%s\n", __func__, essid);
+> +	}
+> +	return gelic_wl_start_scan(wl, 1, essid, essid_len);
+>  }
+>  
+>  #define OUI_LEN 3
+> @@ -1554,10 +1568,13 @@ static struct iw_statistics *gelic_wl_ge
+>  /*
+>   *  scanning helpers
+>   */
+> -static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan)
+> +static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan,
+> +			       u8 *essid, size_t essid_len)
+>  {
+>  	struct gelic_eurus_cmd *cmd;
+>  	int ret = 0;
+> +	void *buf = NULL;
+> +	size_t len;
+>  
+>  	pr_debug("%s: <- always=%d\n", __func__, always_scan);
+>  	if (mutex_lock_interruptible(&wl->scan_lock))
+> @@ -1580,12 +1597,27 @@ static int gelic_wl_start_scan(struct ge
+>  		complete(&wl->scan_done);
+>  		goto out;
+>  	}
+> +
+> +	/* ESSID scan ? */
+> +	if (essid_len && essid) {
+> +		buf = (void *)__get_free_page(GFP_KERNEL);
+> +		if (!buf) {
+> +			ret = -ENOMEM;
+> +			goto out;
+> +		}
+> +		len = IW_ESSID_MAX_SIZE; /* hypervisor always requires 32 */
+> +		memset(buf, 0, len);
+> +		memcpy(buf, essid, essid_len);
+> +		pr_debug("%s: essid scan='%s'\n", __func__, (char *)buf);
+> +	} else
+> +		len = 0;
+> +
+>  	/*
+>  	 * issue start scan request
+>  	 */
+>  	wl->scan_stat = GELIC_WL_SCAN_STAT_SCANNING;
+>  	cmd = gelic_eurus_sync_cmd(wl, GELIC_EURUS_CMD_START_SCAN,
+> -				   NULL, 0);
+> +				   buf, len);
+>  	if (!cmd || cmd->status || cmd->cmd_status) {
+>  		wl->scan_stat = GELIC_WL_SCAN_STAT_INIT;
+>  		complete(&wl->scan_done);
+> @@ -1594,6 +1626,7 @@ static int gelic_wl_start_scan(struct ge
+>  	}
+>  	kfree(cmd);
+>  out:
+> +	free_page((unsigned long)buf);
+>  	mutex_unlock(&wl->scan_lock);
+>  	pr_debug("%s: ->\n", __func__);
+>  	return ret;
+> @@ -2281,6 +2314,9 @@ static void gelic_wl_assoc_worker(struct
+>  
+>  	struct gelic_wl_scan_info *best_bss;
+>  	int ret;
+> +	unsigned long irqflag;
+> +	u8 *essid;
+> +	size_t essid_len;
+>  
+>  	wl = container_of(work, struct gelic_wl_info, assoc_work.work);
+>  
+> @@ -2289,7 +2325,19 @@ static void gelic_wl_assoc_worker(struct
+>  	if (wl->assoc_stat != GELIC_WL_ASSOC_STAT_DISCONN)
+>  		goto out;
+>  
+> -	ret = gelic_wl_start_scan(wl, 0);
+> +	spin_lock_irqsave(&wl->lock, irqflag);
+> +	if (test_bit(GELIC_WL_STAT_ESSID_SET, &wl->stat)) {
+> +		pr_debug("%s: assoc ESSID configured %s\n", __func__,
+> +			 wl->essid);
+> +		essid = wl->essid;
+> +		essid_len = wl->essid_len;
+> +	} else {
+> +		essid = NULL;
+> +		essid_len = 0;
+> +	}
+> +	spin_unlock_irqrestore(&wl->lock, irqflag);
+> +
+> +	ret = gelic_wl_start_scan(wl, 0, essid, essid_len);
+>  	if (ret == -ERESTARTSYS) {
+>  		pr_debug("%s: scan start failed association\n", __func__);
+>  		schedule_delayed_work(&wl->assoc_work, HZ/10); /*FIXME*/
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
