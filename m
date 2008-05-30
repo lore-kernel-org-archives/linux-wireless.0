@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47154 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311AbYESPcH (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:17673 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750761AbYE3EwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 May 2008 11:32:07 -0400
-Subject: [PATCH] libertas: Fix ethtool statistics
-From: David Woodhouse <dwmw2@infradead.org>
-To: linville@tuxdriver.com
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Sebastian Siewior <liber+tas@ml.breakpoint.cc>
-Content-Type: text/plain
-Date: Mon, 19 May 2008 16:32:02 +0100
-Message-Id: <1211211122.21380.167.camel@pmac.infradead.org> (sfid-20080519_173211_895707_E91E7BC4)
-Mime-Version: 1.0
+	Fri, 30 May 2008 00:52:00 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Oliver Neukum <oliver@neukum.org>
+Subject: Re: race between rtl8187_stop and rtl8187_rx_cb?
+Date: Fri, 30 May 2008 00:15:33 -0400
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, Andrea Merello <andreamrl@tiscali.it>
+References: <200805162201.07634.oliver@neukum.org>
+In-Reply-To: <200805162201.07634.oliver@neukum.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1251958.KiOhrZHdQk";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200805300015.41406.flamingice@sourmilk.net> (sfid-20080530_065242_199214_27062718)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix various problems:
- - We converted MESH_ACCESS to a direct command but missed this caller.
- - We were trying to access mesh stats even on meshless firmware.
- - We should really zero the buffer if something goes wrong.
+--nextPart1251958.KiOhrZHdQk
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
+On Friday 16 May 2008 16:01:06 Oliver Neukum wrote:
+> rtl8187_stop() works by emptying a queue and unlinking urbs. But
+> an urb finishing will be taken from the queue in rtl8187_rx_cb until
+> it is resubmitted. Am I overlooking something or is there a window?
+>
+It appears that if you're unlucky, a rx urb can end up getting requeued aft=
+er=20
+the dequeue loop in rtl8187_stop on a SMP system. Good catch. Doesn't look=
+=20
+like it'll cause much trouble other than leaving urbs/skbs unfreed when the=
+=20
+interface is down, but it's worth fixing. This requires information about=20
+whether or not the interface is started or stopped. Preferred way would be =
+to=20
+set priv->mode =3D IEEE80211_IF_TYPE_INVALID in rtl8187_stop and priv->mode=
+ =3D=20
+IEEE80211_IF_TYPE_MNTR in rtl8187_start, so we can check for priv->mode =3D=
+=3D=20
+IEEE80211_IF_TYPE_INVALID before requeueing the urb in rtl8187_rx_cb.=20
 
-diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-index dcfdb40..688d60d 100644
---- a/drivers/net/wireless/libertas/ethtool.c
-+++ b/drivers/net/wireless/libertas/ethtool.c
-@@ -73,8 +73,8 @@ out:
-         return ret;
- }
- 
--static void lbs_ethtool_get_stats(struct net_device * dev,
--				struct ethtool_stats * stats, u64 * data)
-+static void lbs_ethtool_get_stats(struct net_device *dev,
-+				  struct ethtool_stats *stats, uint64_t *data)
- {
- 	struct lbs_private *priv = dev->priv;
- 	struct cmd_ds_mesh_access mesh_access;
-@@ -83,12 +83,12 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
- 
- 	/* Get Mesh Statistics */
--	ret = lbs_prepare_and_send_command(priv,
--			CMD_MESH_ACCESS, CMD_ACT_MESH_GET_STATS,
--			CMD_OPTION_WAITFORRSP, 0, &mesh_access);
-+	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
- 
--	if (ret)
-+	if (ret) {
-+		memset(data, 0, MESH_STATS_NUM*(sizeof(uint64_t)));
- 		return;
-+	}
- 
- 	priv->mstats.fwd_drop_rbt = le32_to_cpu(mesh_access.data[0]);
- 	priv->mstats.fwd_drop_ttl = le32_to_cpu(mesh_access.data[1]);
-@@ -111,19 +111,18 @@ static void lbs_ethtool_get_stats(struct net_device * dev,
- 	lbs_deb_enter(LBS_DEB_ETHTOOL);
- }
- 
--static int lbs_ethtool_get_sset_count(struct net_device * dev, int sset)
-+static int lbs_ethtool_get_sset_count(struct net_device *dev, int sset)
- {
--	switch (sset) {
--	case ETH_SS_STATS:
-+	struct lbs_private *priv = dev->priv;
-+
-+	if (sset == ETH_SS_STATS && dev == priv->mesh_dev)
- 		return MESH_STATS_NUM;
--	default:
--		return -EOPNOTSUPP;
--	}
-+
-+	return -EOPNOTSUPP;
- }
- 
- static void lbs_ethtool_get_strings(struct net_device *dev,
--					  u32 stringset,
--					  u8 * s)
-+				    uint32_t stringset, uint8_t *s)
- {
- 	int i;
- 
+Thanks,
+=2DMichael Wu
 
--- 
-dwmw2
+--nextPart1251958.KiOhrZHdQk
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBIP39tT3Oqt9AH4aERAkvgAKCcMp0rnyxpiNJxMWEUwUYuOtB6+wCffQqE
+r9w88xaK7Ak2E0oKIJ/0UNM=
+=gfl+
+-----END PGP SIGNATURE-----
+
+--nextPart1251958.KiOhrZHdQk--
