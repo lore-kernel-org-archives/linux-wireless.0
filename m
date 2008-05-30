@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57698 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757376AbYEAPmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 May 2008 11:42:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] Add API for weak DMA masks
-Date: Thu, 1 May 2008 17:42:04 +0200
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Linville <linville@tuxdriver.com>,
-	Andi Kleen <andi@firstfloor.org>,
-	David Miller <davem@davemloft.net>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Ingo Molnar <mingo@elte.hu>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <200805011638.15910.mb@bu3sch.de> <20080501153618.GA470@infradead.org>
-In-Reply-To: <20080501153618.GA470@infradead.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:45722 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752015AbYE3PWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 11:22:36 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: suspend vs. b43
+Date: Fri, 30 May 2008 17:23:23 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1212150713.4117.2.camel@johannes.berg> <200805301606.25556.mb@bu3sch.de> <1212158238.4117.4.camel@johannes.berg>
+In-Reply-To: <1212158238.4117.4.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200805011742.05302.mb@bu3sch.de> (sfid-20080501_174239_381109_C2F3F592)
+  charset="iso-8859-15"
+Message-Id: <200805301723.24192.rjw@sisk.pl> (sfid-20080530_172238_227210_3058CA3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 May 2008 17:36:18 Christoph Hellwig wrote:
-> On Thu, May 01, 2008 at 04:38:15PM +0200, Michael Buesch wrote:
-> > This patchset adds API and one user for a "weak" dma_set_mask().
-> > Weak means that it will fallback to smaller masks in case the
-> > DMA subsystem rejects a big mask.
-> > Currently such rejection may happen if the driver requests a 64bit
-> > mask on a VIA machine, for example. dma_set_mask_weak() will fallback
-> > to 32bit, in that case, and tell the caller about it by modifying the
-> > passed mask.
+On Friday, 30 of May 2008, Johannes Berg wrote:
+> On Fri, 2008-05-30 at 16:06 +0200, Michael Buesch wrote:
+> > On Friday 30 May 2008 14:31:53 Johannes Berg wrote:
+> > > Since a while ago I've had trouble resuming when b43 was connected to an
+> > > AP while suspended.
+> > > 
+> > > I did a test today where this was the only difference, but I failed to
+> > > see whether ssb or b43 were causing the problem.
+> > > 
+> > > Does anyone have a machine with b43 in it that can suspend and supports
+> > > the RTC-trace feature so we can narrow it down? Even reproducing might
+> > > help to make sure it's not just something weird with my powerbook.
+> > 
+> > Resume is pretty broken since some time for me.
+> > It sometimes works fine and sometimes just hangs with a black screen.
+> > I have no idea what's going on.
 > 
-> Why do we need it?  Is the call to set the 32bit mask when it fails
-> a too big burden for the driver author?
+> Odd. Resume itself works just fine here, except when b43 is up.
 
-Yeah. because it has to be done in every driver.
-So we put the implementation into a central place, instead of
-reimplementing the wheel over and over again. This way we avoid bugs,
-like the "b43 broken on VIA boards" in the first place.
-Currently every driver requesting a >32bit mask and not retrying with
-a lower mask is broken on VIA hardware. I dunno how many of the current
-drivers that are, but everybody can easily see that is not a b43-specific
-problem that we should solve for b43 only.
+I can confirm that.  It looks like a deadlock with mac80211 or something
+similar to my untrained eye.
 
--- 
-Greetings Michael.
+> But then again, you might not notice that this is the problem because by
+> default, nothing gets printed on the resume console and then it will indeed
+> hang with a black screen.
+
+Please use "no_console_suspend", as I said in the other message.
+
+Thanks,
+Rafael
