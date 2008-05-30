@@ -1,89 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:28065 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755308AbYETStq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 May 2008 14:49:46 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1434827mue.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 May 2008 11:49:40 -0700 (PDT)
-Date: Tue, 20 May 2008 21:49:30 +0300
-From: m.s.tsirkin@gmail.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, johannes@sipsolutions.net,
-	flamingice@sourmilk.net
-Subject: regression iwl3945/mac80211: association times out since 2.6.26-rc1
-Message-ID: <20080520184859.GA8168@robinhood.home> (sfid-20080520_204950_306962_5B7CBD05)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:38827 "EHLO ms5.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751491AbYE3Hwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 03:52:30 -0400
+Received: from mta6.sony.co.jp (mta6.Sony.CO.JP [137.153.71.9])
+ by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7qSks018331
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:52:28 +0900 (JST)
+Received: from mta6.sony.co.jp (localhost [127.0.0.1])
+ by mta6.sony.co.jp (R8/Sony) with ESMTP id m4U7qSvk014772
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:52:28 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+ by mta6.sony.co.jp (R8/Sony) with ESMTP id m4U7qSa2014722
+ for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:52:28 +0900 (JST)
+Date: Fri, 30 May 2008 16:52:23 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] WEXT: Add support for passing PMK and capability flags to WEXT
+Cc: geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+Message-Id: <20080530164258.4744.40F06B3A@sm.sony.co.jp> (sfid-20080530_095234_103838_A0A0F1D7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-In all  of 2.6.26-rc1, rc2 and rc3, my iwl3945 wifi card can't associate with my access point.
-It does associate in 2.6.25.
+This defines the flags for setting the PMK to the driver and the
+capability flag for this so that the user space program can figure out
+whether the target driver wants to do 4-way hand shake by itself and
+pass the PMK which is needed before 4-way handshake to the driver.
 
-under 2.6.-26-rc[1,2,3] wpa_supplicant reports:
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+---
+ include/linux/wireless.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-	Trying to associate with 00:16:e3:ef:5d:f0 (SSID='' freq=0 MHz)
-	Authentication with 00:00:00:00:00:00 timed out.
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -611,6 +611,7 @@
+ #define IW_ENCODE_ALG_WEP	1
+ #define IW_ENCODE_ALG_TKIP	2
+ #define IW_ENCODE_ALG_CCMP	3
++#define IW_ENCODE_ALG_PMK	4
+ /* struct iw_encode_ext ->ext_flags */
+ #define IW_ENCODE_EXT_TX_SEQ_VALID	0x00000001
+ #define IW_ENCODE_EXT_RX_SEQ_VALID	0x00000002
+@@ -630,6 +631,7 @@
+ #define IW_ENC_CAPA_WPA2	0x00000002
+ #define IW_ENC_CAPA_CIPHER_TKIP	0x00000004
+ #define IW_ENC_CAPA_CIPHER_CCMP	0x00000008
++#define IW_ENC_CAPA_4WAY_HANDSHAKE	0x00000010
+ 
+ /* Event capability macros - in (struct iw_range *)->event_capa
+  * Because we have more than 32 possible events, we use an array of
 
-where under 2.6.25 I was associating with 
-	Trying to associate with 00:16:e3:ef:5d:f0 (SSID='SIEMENS-EF5DF0' freq=2437 MHz)
-	Associated with 00:16:e3:ef:5d:f0
-	WPA: Key negotiation completed with 00:16:e3:ef:5d:f0 [PTK=CCMP GTK=CCMP]
-
-I tried bisecting, and I got as far as
-git-bisect good 4b119e21d0c66c22e8ca03df05d9de623d0eb50f
-git-bisect bad 96d510566e4908f77f03ff1436c78ae7162a17d0
-
-but a point between these 2 commits gets me iwl driver that hangs kernel
-when it's loaded, so I gave up on bisecting at this point.
-Still this leaves us with 91 candidates that might be introducing the regression
-(get their list with git log
- 4b119e21d0c66c22e8ca03df05d9de623d0eb50f..96d510566e4908f77f03ff1436c78ae7162a17d0)
-
-Additional info:
-
-I get this in dmesg
-
-[   99.153033] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-[   99.204031] PM: Adding info for No Bus:iwl-phy1:radio
-[   99.204031] Registered led device: iwl-phy1:radio
-[   99.204031] PM: Adding info for No Bus:iwl-phy1:assoc
-[   99.204031] Registered led device: iwl-phy1:assoc
-[   99.204031] PM: Adding info for No Bus:iwl-phy1:RX
-[   99.204031] Registered led device: iwl-phy1:RX
-[   99.204031] PM: Adding info for No Bus:iwl-phy1:TX
-[   99.204031] Registered led device: iwl-phy1:TX
-[   99.220405] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-
-and even though the led now lights up, there's no association.
-
-portions of .config: 2.6.26-rc3:
-
-CONFIG_IWLWIFI=m
-CONFIG_IWLCORE=m
-# CONFIG_IWLWIFI_LEDS is not set
-CONFIG_IWLWIFI_RFKILL=y
-# CONFIG_IWL4965 is not set
-CONFIG_IWL3945=m
-CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
-CONFIG_IWL3945_LEDS=y
-CONFIG_IWL3945_DEBUG=y
-
-2.6.25:
-# CONFIG_IWL4965 is not set
-CONFIG_IWL3945=m
-CONFIG_IWL3945_QOS=y
-CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
-CONFIG_IWL3945_DEBUG=y
-
-
-What kind of additional information would be useful for debugging this regression?
-
-Thanks!
-
--- 
-MST
