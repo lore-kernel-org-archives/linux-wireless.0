@@ -1,62 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:55689 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712AbYEaUte convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 16:49:34 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
-Date: Sat, 31 May 2008 22:48:55 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	linux-kernel@vger.kernel.org
-References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <1212265322.7672.2.camel@johannes.berg> <69e28c910805311329v8f29c42mbb97ab553cc6e96c@mail.gmail.com>
-In-Reply-To: <69e28c910805311329v8f29c42mbb97ab553cc6e96c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200805312248.55551.mb@bu3sch.de> (sfid-20080531_224945_405216_693DF42C)
+Received: from mx1.redhat.com ([66.187.233.31]:39021 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752750AbYE3Rye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 13:54:34 -0400
+Subject: Re: [PATCH 3/3] PS3: gelic: Deprecate the private ioctls in the
+	gelic driver
+From: Dan Williams <dcbw@redhat.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <20080530164650.4750.40F06B3A@sm.sony.co.jp>
+References: <20080530163019.4741.40F06B3A@sm.sony.co.jp>
+	 <20080530164650.4750.40F06B3A@sm.sony.co.jp>
+Content-Type: text/plain
+Date: Fri, 30 May 2008 13:54:08 -0400
+Message-Id: <1212170048.8178.33.camel@localhost.localdomain> (sfid-20080530_195438_001305_9448C07B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 May 2008 22:29:13 Stefanik G=E1bor wrote:
-> On Sat, May 31, 2008 at 10:22 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2008-05-31 at 19:54 +0200, Michael Buesch wrote:
-> >> On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
-> >> > On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
-> >> > > On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
-> >> > > > "BUG: unable to handle kernel NULL pointer dereference at 00=
-000004
-> >> > > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
-> >> > >
-> >> > > So can you put a few printks into the function to see where it=
- dereferences
-> >> > > a NULL pointer? (or use gdb to lookup the offset).
-> >> >
-> >> > u8 key_idx =3D info->control.hw_key->hw_key_idx;
-> >> >
-> >> > info->control.hw_key is NULL.
-> >>
-> >> Is a NULL pointer supposed to tell "do not encrypt", or is this a =
-mac80211 bug?
-> >
-> > It's probably a bug.
-> >
-> > johannes
-> >
->=20
-> Should we assume that it's the first key if it happens?
+On Fri, 2008-05-30 at 16:52 +0900, Masakazu Mokuno wrote:
+> As the driver has the standard way to handle PSK, deprecate the old
+> interface.
+> 
+> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
-No. It looks like it should not happen at all.
+Yay, fewer private ioctls == better.
 
+Acked-by: Dan Williams <dcbw@redhat.com>
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+>  drivers/net/Kconfig              |   13 +++++++++++++
+>  drivers/net/ps3_gelic_wireless.c |    6 ++++++
+>  2 files changed, 19 insertions(+)
+> 
+> --- a/drivers/net/Kconfig
+> +++ b/drivers/net/Kconfig
+> @@ -2297,6 +2297,19 @@ config GELIC_WIRELESS
+>  	  the driver automatically distinguishes the models, you can
+>  	  safely enable this option even if you have a wireless-less model.
+>  
+> +config GELIC_WIRELESS_OLD_PSK_INTERFACE
+> +       bool "PS3 Wireless private PSK interface (OBSOLETE)"
+> +       depends on GELIC_WIRELESS
+> +       help
+> +          This option retains the obsolete private interface to pass
+> +          the PSK from user space programs to the driver.  The PSK
+> +          stands for 'Pre Shared Key' and is used for WPA[2]-PSK
+> +          (WPA-Personal) environment.
+> +          If WPA[2]-PSK is used and you need to use old programs that
+> +          support only this old interface, say Y.  Otherwise N.
+> +
+> +          If unsure, say N.
+> +
+>  config GIANFAR
+>  	tristate "Gianfar Ethernet"
+>  	depends on FSL_SOC
+> --- a/drivers/net/ps3_gelic_wireless.c
+> +++ b/drivers/net/ps3_gelic_wireless.c
+> @@ -1375,6 +1375,7 @@ static int gelic_wl_get_mode(struct net_
+>  	return 0;
+>  }
+>  
+> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+>  /* SIOCIWFIRSTPRIV */
+>  static int hex2bin(u8 *str, u8 *bin, unsigned int len)
+>  {
+> @@ -1479,6 +1480,7 @@ static int gelic_wl_priv_get_psk(struct 
+>  	pr_debug("%s:-> %d\n", __func__, data->data.length);
+>  	return 0;
+>  }
+> +#endif
+>  
+>  /* SIOCGIWNICKN */
+>  static int gelic_wl_get_nick(struct net_device *net_dev,
+> @@ -2329,6 +2331,7 @@ static const iw_handler gelic_wl_wext_ha
+>  	IW_IOCTL(SIOCGIWNICKN)		= gelic_wl_get_nick,
+>  };
+>  
+> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+>  static struct iw_priv_args gelic_wl_private_args[] =
+>  {
+>  	{
+> @@ -2350,15 +2353,18 @@ static const iw_handler gelic_wl_private
+>  	gelic_wl_priv_set_psk,
+>  	gelic_wl_priv_get_psk,
+>  };
+> +#endif
+>  
+>  static const struct iw_handler_def gelic_wl_wext_handler_def = {
+>  	.num_standard		= ARRAY_SIZE(gelic_wl_wext_handler),
+>  	.standard		= gelic_wl_wext_handler,
+>  	.get_wireless_stats	= gelic_wl_get_wireless_stats,
+> +#ifdef CONFIG_GELIC_WIRELESS_OLD_PSK_INTERFACE
+>  	.num_private		= ARRAY_SIZE(gelic_wl_private_handler),
+>  	.num_private_args	= ARRAY_SIZE(gelic_wl_private_args),
+>  	.private		= gelic_wl_private_handler,
+>  	.private_args		= gelic_wl_private_args,
+> +#endif
+>  };
+>  
+>  static struct net_device *gelic_wl_alloc(struct gelic_card *card)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
