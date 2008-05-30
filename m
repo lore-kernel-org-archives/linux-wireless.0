@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:48743 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757271AbYEJAM3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51617 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbYE3TDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 May 2008 20:12:29 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2056601waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 09 May 2008 17:12:29 -0700 (PDT)
-Message-ID: <1ba2fa240805091712gccaec9cibdab621e8d1c9ba7@mail.gmail.com> (sfid-20080510_021233_543239_7828ACA2)
-Date: Sat, 10 May 2008 03:12:29 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Vincent C Jones" <v.jones@networkingunlimited.com>
-Subject: Re: iwl4965 - wpa_supplicant can't see 5Ghz frequencies - 2.6.26-rc1 kernel
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1210352234.3763.23.camel@X61.NetworkingUnlimited.com>
-	 <1ba2fa240805091423y680b6706ta124eaaed73c81c0@mail.gmail.com>
-	 <1210376474.3856.7.camel@X61.NetworkingUnlimited.com>
+	Fri, 30 May 2008 15:03:44 -0400
+Subject: Re: [PATCH] p54: fix skb->cb tx info conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>
+In-Reply-To: <20080530161511.GA24013@tuxdriver.com>
+References: <1211813099.4843.12.camel@johannes.berg>
+	 <20080530161511.GA24013@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CO0c51517G9mbrW2deOO"
+Date: Fri, 30 May 2008 21:03:39 +0200
+Message-Id: <1212174219.7238.3.camel@johannes.berg> (sfid-20080530_210348_563484_6905F87B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 10, 2008 at 2:41 AM, Vincent C Jones
-<v.jones@networkingunlimited.com> wrote:
->
-> On Sat, 2008-05-10 at 00:23 +0300, Tomas Winkler wrote:
->> On Fri, May 9, 2008 at 7:57 PM, Vincent C Jones
->> <v.jones@networkingunlimited.com> wrote:
->> > The channel/frequency reporting by iwlwifi is incompatible with
->> >  wpa_supplicant for 5GHz (802.11A) channels. Version numbers and iwlist
->> >  versus wpa_supplicant scan results are below. Association still works if
->> >  the correct channel is specified using iwconfig, but that is
->> >  incompatible with roaming.
->>
->> Fixed by the patch ' iwlwifi: Fix frequency in rx_status fill'
->>
->> Thanks
->> Tomas
->
-> This patch did not apply cleanly to plain 2.6.26-rc1: off by -4 lines in
-> iwl-3945.c and by 1078 lines in iwl-4965.c. More important, it did not
-> fix the problem of wpa_supplicant thinking the 802.11A access points are
-> on channel 0. Same results with 2.6.26-rc1-git7, with & without patch.
-> Any idea when this patch (and the patches it appears to depend on) will
-> make it into the 2.6.26 release?
->
 
-This patch is against wireless-testing.git, it's just too lines and
-doesn't really have logical dependencies on other patches so I didn't
-create a separate patch for 2.6.26...It looks maybe I should.
-Can you  try to eproduce your problem on wireless-testing kernel with
-this patch?
-Also some logs will be useful
-
-Thanks
-Tomas
+--=-CO0c51517G9mbrW2deOO
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
+> > +				ni =3D IEEE80211_SKB_CB(entry->next);
+> > +				freed =3D ((void *)ni->driver_data)->start_addr
+> > +						- last_addr;
+> > +			} else
+> >  				freed =3D priv->rx_end - last_addr;
+> > =20
+> >  			last_addr =3D range->end_addr;
+>=20
+>   CC [M]  drivers/net/wireless/p54/p54common.o
+> drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_rx_frame_s=
+ent=E2=80=99:
+> drivers/net/wireless/p54/p54common.c:406: warning: dereferencing =E2=80=
+=98void *=E2=80=99 pointer
+> drivers/net/wireless/p54/p54common.c:406: error: request for member =E2=
+=80=98start_addr=E2=80=99 in something not a structure or union
+>=20
+> Looks like you are missing a (struct memrecord *) for the freed
+> assignment...?
 
-> Vince
->
+Umm, yes, this can't work. I wonder what I did, I sure have compiled
+this kernel. Must have backed out the patch accidentally. Sorry, will
+follow up with a fixed one.
+
+johannes
+
+--=-CO0c51517G9mbrW2deOO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASEBPiqVg1VMiehFYAQKWng/+MhvsfTlONLHMmpdZor9+Ehv7xTlInwlT
+PO8v4lAV2A0PlWUseS4bvfH9yjvysQrwrzyuie02H7+erEAK6mk6/2lxFD3lToxG
+rNsULRPUgOla/yHN6cjmc4RaMjL9FweiE05M4olfbUig7dybcT3iCNKm0B/KNzdz
+/WzTVDDIWhU+FmpYgxrVhyBIEW72uw986wyIjRO1DaikrWT1LRXYn7vu8gJ9sch8
+zjJeYqtbb6F7+oHhBkv4C3vO+mygVE4EJoakbKxqULy5TxllfF/HL4c5fcUg0dby
+Bmmo/xcJ67SINxa2sPgC12rBmUfibi8lAjiTY0JWgDgrDwKV55r8GDHYjkR9lAgV
+6JHRsa0TrXlysMBUs6uU1IRM9RTPSkVyxOOE/bjz8iiRAG493IvG67qtY15GO8wI
+0sDG5ha6z+w1je5FxFiHvZ/u4luZo927Cgk9fMMnh2JuDBtRcLhir1UuR1v5jEcS
+5+rsO2yiIjxfe/DAQ8wpDYtA4s7ED4XAdkToB+b8+2cMB6+ibwuMzPlsdWzKtzJo
+mapNQM4qO1yqxUgNtyDnDLODZgyMbexFvztqM7Bx/WwoAMZDy7UGr2txiMKEvlP5
+YBxRV5NHiujQN+/DytDB9KsOvQcZ+wXV7rW9VHWc38x6Uz5N27i+JIEbPfz5/Hbo
+PUc89VbAGyo=
+=BFDj
+-----END PGP SIGNATURE-----
+
+--=-CO0c51517G9mbrW2deOO--
+
