@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57893
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756909AbYEHD0N (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbYE3Mc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 May 2008 23:26:13 -0400
-Date: Wed, 07 May 2008 20:26:06 -0700 (PDT)
-Message-Id: <20080507.202606.242037993.davem@davemloft.net> (sfid-20080508_052517_251398_44E7CFED)
-To: herbert@gondor.apana.org.au
-Cc: mb@bu3sch.de, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ron.rindjunsky@intel.com, tomasw@gmail.com, ivdoorn@gmail.com,
-	peter.p.waskiewicz.jr@intel.com
-Subject: Re: [PATCH] mac80211: rewrite fragmentation code
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080508032208.GA401@gondor.apana.org.au>
-References: <20080507130548.GA26977@gondor.apana.org.au>
-	<200805071548.06693.mb@bu3sch.de>
-	<20080508032208.GA401@gondor.apana.org.au>
+	Fri, 30 May 2008 08:32:58 -0400
+Subject: suspend vs. b43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y+mP7NIEwXijBAHAFsAS"
+Date: Fri, 30 May 2008 14:31:53 +0200
+Message-Id: <1212150713.4117.2.camel@johannes.berg> (sfid-20080530_143301_686440_AFFF0BAC)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Thu, 8 May 2008 11:22:08 +0800
 
-> On Wed, May 07, 2008 at 03:48:06PM +0200, Michael Buesch wrote:
-> >
-> > So there's no way to actually fail in a TX handler? Drivers
-> > are doomed to drop the packet, if they cannot handle it due to
-> > ring overflow?
-> 
-> You're supposed to stop the queue before the ring overflows.
+--=-y+mP7NIEwXijBAHAFsAS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Right, and this is why drivers choose a TX wakeup threshold such
-that they can accept an arbitrarily sized TSO frame.
+Hi,
 
-For example, from drivers/net/tg3.c's ->hard_start_xmit():
+Since a while ago I've had trouble resuming when b43 was connected to an
+AP while suspended.
 
-	if (unlikely(tg3_tx_avail(tp) <= (MAX_SKB_FRAGS + 1))) {
-		netif_stop_queue(dev);
-		if (tg3_tx_avail(tp) > TG3_TX_WAKEUP_THRESH(tp))
-			netif_wake_queue(tp->dev);
-	}
+I did a test today where this was the only difference, but I failed to
+see whether ssb or b43 were causing the problem.
 
-The driver is responsible for stopping the queue _before_ it
-enters a state where there is not enough space in the queue
-to accept a packet.
+Does anyone have a machine with b43 in it that can suspend and supports
+the RTC-trace feature so we can narrow it down? Even reproducing might
+help to make sure it's not just something weird with my powerbook.
 
-This is why most drivers make the following kind of BUG check
-at the start of their ->hard_start_xmit()
+johannes
 
-	if (unlikely(tg3_tx_avail(tp) <= (skb_shinfo(skb)->nr_frags + 1))) {
-		if (!netif_queue_stopped(dev)) {
-			netif_stop_queue(dev);
+--=-y+mP7NIEwXijBAHAFsAS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-			/* This is a hard error, log it. */
-			printk(KERN_ERR PFX "%s: BUG! Tx Ring full when "
-			       "queue awake!\n", dev->name);
-		}
-		return NETDEV_TX_BUSY;
-	}
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASD/zuKVg1VMiehFYAQLcZhAAj+XbnRiTrixV5QXEbXdwmLo5nrsnlwNB
++JdzlDhn4SrU9Gh87H+pwJYso6GrNG3OAOKdfmx57WC9al9esDbhelqW+N6fV35j
+ROW86eRNISoyDhY/DlyC2ScqrSAmJ29WGX5/KCOuvL6XUzYqoVqsUpnYYTKiXrK3
+NYGqrFTKTtBF/Z24+cACDvYedhYoFDR0z4ND5Ssfh02kxL15JeZWdu0tuMydWwgb
+J0iFLk05zeptT/EvWatFT/gTMiDM9sTf02Jwv1hmbJRxNLEa16Co3Cm3aj03SSp+
+TxLTuFxUBPlJhfkgu7G/E70isrgDYYwDsKxe9Gj9v5zZfUFvlGYSixugHbDVwEPt
+g9/20Ru5eMM/XQP+6OjoV3EwGT3tX1Oc+GZnqtYytXD0aiMWv5L5WVp7I8D7CMhI
+hsNBjanWFbDjX5awjwMzs/PEhxpeRmmpFfs9kG9GisuE70SSR72N0FGmDrIPHARn
+vXTvTzIkfvRLKBh8ZAQ7pGpZL4aOqRjCIvXN7mpw41WR8snjdLODfIxjUZfQKy1H
+IxqyVQEGOVa79VcimLR1Xw/B0OJd5rxMdRmyGqCNnBmOCOsuXpm1RVhrmy3LvGub
+7S+r+4OlJrD1Yc6JtC/MZ7hcncP9lBtjAOHMVORz1NH+kS2d0YNBdCEdZj/tgRmI
+zgVNkw/A4EQ=
+=NqEL
+-----END PGP SIGNATURE-----
+
+--=-y+mP7NIEwXijBAHAFsAS--
+
