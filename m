@@ -1,172 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39637 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758357AbYEBKXN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40335 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbYE3THR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 May 2008 06:23:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Fix some TX/RX locking issues
-Date: Fri, 2 May 2008 12:19:57 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200805021219.58153.mb@bu3sch.de> (sfid-20080502_122253_734276_DCD6BF06)
+	Fri, 30 May 2008 15:07:17 -0400
+Subject: [PATCH v2] p54: fix skb->cb tx info conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Chr <chunkeey@web.de>
+In-Reply-To: <20080530161511.GA24013@tuxdriver.com>
+References: <1211813099.4843.12.camel@johannes.berg>
+	 <20080530161511.GA24013@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 30 May 2008 21:07:15 +0200
+Message-Id: <1212174435.7238.6.camel@johannes.berg> (sfid-20080530_210721_954676_3E5290AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some TX/RX related locking issues.
-With this patch applied, some of the PHY transmission errors are fixed.
+When I moved the TX info into skb->cb apparently I forgot to change a
+few places to put the p54-internal data into info->driver_data rather
+than skb->cb. This should fix it.
 
-This patch is in wireless-testing.git, commit
-c83d30b31aebdf652f78f4f6898959e44fd67ca3
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/p54/p54common.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--- everything.orig/drivers/net/wireless/p54/p54common.c	2008-05-26 16:42:52.000000000 +0200
++++ everything/drivers/net/wireless/p54/p54common.c	2008-05-30 21:05:56.000000000 +0200
+@@ -392,16 +392,21 @@ static void p54_rx_frame_sent(struct iee
+ 	u32 last_addr = priv->rx_start;
+ 
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+-		range = (struct memrecord *)&entry->cb;
++		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
++		range = (void *)info->driver_data;
+ 		if (range->start_addr == addr) {
+-			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+ 			struct p54_control_hdr *entry_hdr;
+ 			struct p54_tx_control_allocdata *entry_data;
+ 			int pad = 0;
+ 
+-			if (entry->next != (struct sk_buff *)&priv->tx_queue)
+-				freed = ((struct memrecord *)&entry->next->cb)->start_addr - last_addr;
+-			else
++			if (entry->next != (struct sk_buff *)&priv->tx_queue) {
++				struct ieee80211_tx_info *ni;
++				struct memrecord *mr;
++
++				ni = IEEE80211_SKB_CB(entry->next);
++				mr = (struct memrecord *)ni->driver_data;
++				freed = mr->start_addr - last_addr;
++			} else
+ 				freed = priv->rx_end - last_addr;
+ 
+ 			last_addr = range->end_addr;
 
 
-Index: linux-2.6.25/drivers/net/wireless/b43/b43.h
-===================================================================
---- linux-2.6.25.orig/drivers/net/wireless/b43/b43.h	2008-05-01 12:29:34.000000000 +0200
-+++ linux-2.6.25/drivers/net/wireless/b43/b43.h	2008-05-01 12:29:51.000000000 +0200
-@@ -625,12 +625,16 @@ struct b43_wl {
- 	struct b43_wldev *current_dev;
- 	/* Pointer to the ieee80211 hardware data structure */
- 	struct ieee80211_hw *hw;
- 
- 	struct mutex mutex;
- 	spinlock_t irq_lock;
-+	/* R/W lock for data transmission.
-+	 * Transmissions on 2+ queues can run concurrently, but somebody else
-+	 * might sync with TX by write_lock_irqsave()'ing. */
-+	rwlock_t tx_lock;
- 	/* Lock for LEDs access. */
- 	spinlock_t leds_lock;
- 	/* Lock for SHM access. */
- 	spinlock_t shm_lock;
- 
- 	/* We can only have one operating interface (802.11 core)
-Index: linux-2.6.25/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.25.orig/drivers/net/wireless/b43/main.c	2008-05-01 12:29:47.000000000 +0200
-+++ linux-2.6.25/drivers/net/wireless/b43/main.c	2008-05-01 12:29:51.000000000 +0200
-@@ -619,12 +619,13 @@ static void b43_synchronize_irq(struct b
- 
- /* DummyTransmission function, as documented on
-  * http://bcm-specs.sipsolutions.net/DummyTransmission
-  */
- void b43_dummy_transmission(struct b43_wldev *dev)
- {
-+	struct b43_wl *wl = dev->wl;
- 	struct b43_phy *phy = &dev->phy;
- 	unsigned int i, max_loop;
- 	u16 value;
- 	u32 buffer[5] = {
- 		0x00000000,
- 		0x00D40000,
-@@ -645,12 +646,15 @@ void b43_dummy_transmission(struct b43_w
- 		break;
- 	default:
- 		B43_WARN_ON(1);
- 		return;
- 	}
- 
-+	spin_lock_irq(&wl->irq_lock);
-+	write_lock(&wl->tx_lock);
-+
- 	for (i = 0; i < 5; i++)
- 		b43_ram_write(dev, i * 4, buffer[i]);
- 
- 	/* Commit writes */
- 	b43_read32(dev, B43_MMIO_MACCTL);
- 
-@@ -685,12 +689,15 @@ void b43_dummy_transmission(struct b43_w
- 		if (!(value & 0x0100))
- 			break;
- 		udelay(10);
- 	}
- 	if (phy->radio_ver == 0x2050 && phy->radio_rev <= 0x5)
- 		b43_radio_write16(dev, 0x0051, 0x0037);
-+
-+	write_unlock(&wl->tx_lock);
-+	spin_unlock_irq(&wl->irq_lock);
- }
- 
- static void key_write(struct b43_wldev *dev,
- 		      u8 index, u8 algorithm, const u8 * key)
- {
- 	unsigned int i;
-@@ -2589,21 +2596,27 @@ static int b43_rng_init(struct b43_wl *w
- static int b43_op_tx(struct ieee80211_hw *hw,
- 		     struct sk_buff *skb,
- 		     struct ieee80211_tx_control *ctl)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
- 	struct b43_wldev *dev = wl->current_dev;
--	int err = -ENODEV;
-+	unsigned long flags;
-+	int err;
- 
- 	if (unlikely(!dev))
--		goto out;
--	if (unlikely(b43_status(dev) < B43_STAT_STARTED))
--		goto out;
--	/* DMA-TX is done without a global lock. */
--	err = b43_dma_tx(dev, skb, ctl);
--out:
-+		return NETDEV_TX_BUSY;
-+
-+	/* Transmissions on seperate queues can run concurrently. */
-+	read_lock_irqsave(&wl->tx_lock, flags);
-+
-+	err = -ENODEV;
-+	if (likely(b43_status(dev) >= B43_STAT_STARTED))
-+		err = b43_dma_tx(dev, skb, ctl);
-+
-+	read_unlock_irqrestore(&wl->tx_lock, flags);
-+
- 	if (unlikely(err))
- 		return NETDEV_TX_BUSY;
- 	return NETDEV_TX_OK;
- }
- 
- static int b43_op_conf_tx(struct ieee80211_hw *hw,
-@@ -3106,22 +3119,22 @@ static void b43_wireless_core_stop(struc
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 	dev->irq_savedstate = b43_interrupt_disable(dev, B43_IRQ_ALL);
- 	b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);	/* flush */
- 	spin_unlock_irqrestore(&wl->irq_lock, flags);
- 	b43_synchronize_irq(dev);
- 
-+	write_lock_irqsave(&wl->tx_lock, flags);
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
-+	write_unlock_irqrestore(&wl->tx_lock, flags);
- 
- 	mutex_unlock(&wl->mutex);
- 	/* Must unlock as it would otherwise deadlock. No races here.
- 	 * Cancel the possibly running self-rearming periodic work. */
- 	cancel_delayed_work_sync(&dev->periodic_work);
- 	mutex_lock(&wl->mutex);
- 
--	ieee80211_stop_queues(wl->hw);	//FIXME this could cause a deadlock, as mac80211 seems buggy.
--
- 	b43_mac_suspend(dev);
- 	free_irq(dev->dev->irq, dev);
- 	b43dbg(wl, "Wireless interface stopped\n");
- }
- 
- /* Locking: wl->mutex */
-@@ -4081,12 +4094,13 @@ static int b43_wireless_init(struct ssb_
- 
- 	/* Get and initialize struct b43_wl */
- 	wl = hw_to_b43_wl(hw);
- 	memset(wl, 0, sizeof(*wl));
- 	wl->hw = hw;
- 	spin_lock_init(&wl->irq_lock);
-+	rwlock_init(&wl->tx_lock);
- 	spin_lock_init(&wl->leds_lock);
- 	spin_lock_init(&wl->shm_lock);
- 	mutex_init(&wl->mutex);
- 	INIT_LIST_HEAD(&wl->devlist);
- 
- 	ssb_set_devtypedata(dev, wl);
