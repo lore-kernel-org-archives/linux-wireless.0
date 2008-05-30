@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:54589 "EHLO ms5.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893AbYE3H1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 May 2008 03:27:50 -0400
-Received: from mta6.sony.co.jp (mta6.Sony.CO.JP [137.153.71.9])
- by ms5.sony.co.jp (R8/Sony) with ESMTP id m4U7RmZv003516
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:48 +0900 (JST)
-Received: from mta6.sony.co.jp (localhost [127.0.0.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m4U7RmIr012351
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:48 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m4U7Rlbb012344
- for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 16:27:48 +0900 (JST)
-Date: Fri, 30 May 2008 16:27:42 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] PS3: gelic: Kill the static bounce buffer
-Cc: geoffrey.levand@am.sony.com,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-In-Reply-To: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
-References: <20080530132951.4720.40F06B3A@sm.sony.co.jp>
-Message-Id: <20080530162321.4739.40F06B3A@sm.sony.co.jp> (sfid-20080530_092810_386244_78F1D518)
+Received: from nf-out-0910.google.com ([64.233.182.191]:60753 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755252AbYE3VBf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 May 2008 17:01:35 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so78372nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 30 May 2008 14:01:33 -0700 (PDT)
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: "BUG: unable to handle kernel paging request" on shutdown or killing NetworkManager in latest wireless-testing (with rt73usb wireless adapter)
+Date: Fri, 30 May 2008 23:06:48 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+References: <69e28c910805301336m319f6134i11f999d56b740314@mail.gmail.com>
+In-Reply-To: <69e28c910805301336m319f6134i11f999d56b740314@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200805302306.48653.IvDoorn@gmail.com> (sfid-20080530_230205_575215_3C0CE409)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the bounce buffer is allocaetd dynamically, kill the static bounce buffer.
+Hi,
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+> I have just compiled a kernel from wireless-testing (32-bit x86), and
+> I get this during shutdown or if I kill NetworkManager (blacklisting
+> rt73usb fixes it):
+
+Could you try below patch to see if that works?
+
+Ivo
+
 ---
- drivers/net/ps3_gelic_wireless.c |    9 ---------
- drivers/net/ps3_gelic_wireless.h |    3 ---
- 2 files changed, 12 deletions(-)
-
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -2472,16 +2472,9 @@ static struct net_device *gelic_wl_alloc
- 	BUILD_BUG_ON(PAGE_SIZE <
- 		     sizeof(struct gelic_eurus_scan_info) *
- 		     GELIC_EURUS_MAX_SCAN);
--	wl->buf = (void *)get_zeroed_page(GFP_KERNEL);
--	if (!wl->buf) {
--		pr_info("%s:buffer allocation failed\n", __func__);
--		goto fail_getpage;
--	}
- 	pr_debug("%s:end\n", __func__);
- 	return netdev;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 58d1633..63381cf 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -347,8 +347,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 	}
  
--fail_getpage:
--	destroy_workqueue(wl->event_queue);
- fail_event_workqueue:
- 	destroy_workqueue(wl->eurus_cmd_queue);
- fail_cmd_workqueue:
-@@ -2500,8 +2493,6 @@ static void gelic_wl_free(struct gelic_w
- 
- 	pr_debug("%s: <-\n", __func__);
- 
--	free_page((unsigned long)wl->buf);
--
- 	pr_debug("%s: destroy queues\n", __func__);
- 	destroy_workqueue(wl->eurus_cmd_queue);
- 	destroy_workqueue(wl->event_queue);
---- a/drivers/net/ps3_gelic_wireless.h
-+++ b/drivers/net/ps3_gelic_wireless.h
-@@ -288,9 +288,6 @@ struct gelic_wl_info {
- 	u8 active_bssid[ETH_ALEN]; /* associated bssid */
- 	unsigned int essid_len;
- 
--	/* buffer for hypervisor IO */
--	void *buf;
--
- 	struct iw_public_data wireless_data;
- 	struct iw_statistics iwstat;
- };
-
+ 	/*
+-	 * Kill guardian urb.
++	 * Kill guardian urb (if required by driver).
+ 	 */
++	if (!test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags))
++		return;
++
+ 	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
+ 		bcn_priv = rt2x00dev->bcn->entries[i].priv_data;
+ 		if (bcn_priv->guardian_urb)
