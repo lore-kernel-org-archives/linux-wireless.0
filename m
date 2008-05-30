@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:28559 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752520AbYEOOlJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 May 2008 10:41:09 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so332650fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 15 May 2008 07:41:07 -0700 (PDT)
-Message-ID: <eb97335b0805150741g252ba49ckbf1b493a46acf762@mail.gmail.com> (sfid-20080515_164114_872147_BF69A300)
-Date: Thu, 15 May 2008 10:41:07 -0400
-From: "Zack Weinberg" <zackw@panix.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
-	 <b6c5339f0805141138o5575095du1f12c62624c80630@mail.gmail.com>
-	 <eb97335b0805141145v3436e0e3ld7bd2721cbf0d15f@mail.gmail.com>
-	 <b6c5339f0805141209p4a8b1b2do1cb2ec1c11de07e8@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:40589 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752490AbYE3A4e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 May 2008 20:56:34 -0400
+Subject: Re: [PATCH] ipw2200: expire and use oldest BSS on adhoc create
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1212086308.25805.25.camel@localhost.localdomain>
+References: <1212086308.25805.25.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 30 May 2008 08:56:05 +0800
+Message-Id: <1212108965.7814.316.camel@debian.sh.intel.com> (sfid-20080530_025640_242060_4C2AEF92)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 14, 2008 at 3:09 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Wed, May 14, 2008 at 2:45 PM, Zack Weinberg <zackw@panix.com> wrote:
->> exactly the same thing happens immediately after cold boot with
->> nothing else having touched the chip.
->
-> Interesting...  can you confirm that madwifi also will not start from a cold
-> boot?
+On Thu, 2008-05-29 at 14:38 -0400, Dan Williams wrote:
+> If there are no networks on the free list, expire the oldest one when
+> creating a new adhoc network.  Because ipw2200 and the ieee80211 stack
+> don't actually cull old networks and place them back on the free list
+> unless they are needed for new probe responses, over time the free list
+> would become empty and creating an adhoc network would fail due to the !
+> list_empty(...) check.
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Yes, madwifi will not start from a cold boot.
+ACK. Looks like you are doing stress testing to create/delete ad-hoc
+networks (> 128) ;-)
 
-> Perhaps the best thing to do is add printks to ath5k_hw_nic_wakeup and see
-> where it hangs?
+Thanks,
+-yi
 
-It's not hanging. The very first call to ath5k_hw_set_power(ah,
-AR5K_PM_AWAKE, true, 0); from ath5k_hw_nic_wakeup fails with -EIO, and
-the driver gives up.
+> diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+> index d74c061..db2bf46 100644
+> --- a/drivers/net/wireless/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2200.c
+> @@ -7558,8 +7558,31 @@ static int ipw_associate(void *data)
+>  	    priv->ieee->iw_mode == IW_MODE_ADHOC &&
+>  	    priv->config & CFG_ADHOC_CREATE &&
+>  	    priv->config & CFG_STATIC_ESSID &&
+> -	    priv->config & CFG_STATIC_CHANNEL &&
+> -	    !list_empty(&priv->ieee->network_free_list)) {
+> +	    priv->config & CFG_STATIC_CHANNEL) {
+> +		/* Use oldest network if the free list is empty */
+> +		if (list_empty(&priv->ieee->network_free_list)) {
+> +			struct ieee80211_network *oldest = NULL;
+> +			struct ieee80211_network *target;
+> +			DECLARE_MAC_BUF(mac);
+> +
+> +			list_for_each_entry(target, &priv->ieee->network_list, list) {
+> +				if ((oldest == NULL) ||
+> +				    (target->last_scanned < oldest->last_scanned))
+> +					oldest = target;
+> +			}
+> +
+> +			/* If there are no more slots, expire the oldest */
+> +			list_del(&oldest->list);
+> +			target = oldest;
+> +			IPW_DEBUG_ASSOC("Expired '%s' (%s) from "
+> +					"network list.\n",
+> +					escape_essid(target->ssid,
+> +						     target->ssid_len),
+> +					print_mac(mac, target->bssid));
+> +			list_add_tail(&target->list,
+> +				      &priv->ieee->network_free_list);
+> +		}
+> +
+>  		element = priv->ieee->network_free_list.next;
+>  		network = list_entry(element, struct ieee80211_network, list);
+>  		ipw_adhoc_create(priv, network);
 
-zw
