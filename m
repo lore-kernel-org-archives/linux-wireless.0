@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29391 "EHLO mga02.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:55596 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752137AbYEQJFt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 05:05:49 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 2/2] mac80211: use multi-queue master netdevice
-Date: Sat, 17 May 2008 02:05:47 -0700
-Message-ID: <D5C1322C3E673F459512FB59E0DDC329051ABCE0@orsmsx414.amr.corp.intel.com> (sfid-20080517_110559_229679_6672EBF0)
-In-Reply-To: <20080516230007.837741000@sipsolutions.net>
-References: <20080516225712.794319000@sipsolutions.net> <20080516230007.837741000@sipsolutions.net>
-From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"Ron Rindjunksi" <ron.rindjunski@intel.com>
+	id S1752780AbYEaUfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 16:35:13 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1K2Xn4-0005vB-6Y
+	for linux-wireless@vger.kernel.org; Sat, 31 May 2008 20:35:02 +0000
+Received: from 84-255-194-155.static.t-2.net ([84.255.194.155])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 20:35:02 +0000
+Received: from ielectric by 84-255-194-155.static.t-2.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 20:35:02 +0000
+To: linux-wireless@vger.kernel.org
+From: iElectric <ielectric@gmail.com>
+Subject: Moving to kernel .25-r4
+Date: Sat, 31 May 2008 20:33:35 +0000 (UTC)
+Message-ID: <loom.20080531T203112-538@post.gmane.org> (sfid-20080531_223518_354365_9AA28B36)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This patch updates mac80211 and drivers to be multi-queue aware and
-> use that instead of the internal queue mapping. Also does a number
-> of cleanups in various pieces of the code that fall out and reduces
-> internal mac80211 state size.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> This is just ground-work. We'll be able to play with Qos much 
-> more now.
-> 
->  drivers/net/wireless/ath5k/base.c           |    2 
->  drivers/net/wireless/b43/dma.c              |    7 +-
->  drivers/net/wireless/b43/pio.c              |    8 +-
->  drivers/net/wireless/b43legacy/dma.c        |    3 
->  drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 -
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 -
->  drivers/net/wireless/p54/p54common.c        |    8 +-
->  drivers/net/wireless/rt2x00/rt2x00mac.c     |   10 +-
->  drivers/net/wireless/rt2x00/rt2x00queue.h   |   13 ---
->  drivers/net/wireless/rtl8180_dev.c          |    4 -
->  include/net/mac80211.h                      |   20 +++++
->  net/mac80211/Kconfig                        |   14 +++-
->  net/mac80211/Makefile                       |    2 
->  net/mac80211/ieee80211_i.h                  |   16 ++--
->  net/mac80211/iface.c                        |    2 
->  net/mac80211/main.c                         |   29 ++++++--
->  net/mac80211/sta_info.c                     |    2 
->  net/mac80211/tx.c                           |   97 
-> ++++++++++++----------------
->  net/mac80211/util.c                         |   29 ++++----
->  net/mac80211/wme.c                          |   14 +---
->  net/mac80211/wme.h                          |    2 
->  21 files changed, 158 insertions(+), 132 deletions(-)
+Recently I moved to kernel .25-r4. I want to use newest firmware version with
+b43 for my 4311 rev 1 wireless card. I cut the firmware to /lib/firmware/b43/,
+do rmmod b43, modprobe b43 and it still uses old firmware:
 
-This patch looks fine to me.  Thanks for porting the wireless tree to
-use these bits Johannes.
+b43-phy0: Broadcom 4311 WLAN found
+b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
+b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+b43-phy0 debug: Chip initialized
+b43-phy0 debug: 32-bit DMA initialized
+b43-phy0 debug: Wireless interface started
+b43-phy0 debug: Adding Interface type 2
 
--PJ Waskiewicz
+Ideas? 
+
+Also I can also confirm freezing after hibernation on HP lappy.
+
