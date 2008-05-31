@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4214 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753836AbYEUO3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 May 2008 10:29:08 -0400
-Date: Wed, 21 May 2008 09:54:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Helmut Schaa <hschaa@suse.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Bruno Randolf <bruno@thinktube.com>
-Subject: Re: [PATCHv5] mac80211: fix NULL pointer dereference in
-	ieee80211_compatible_rates
-Message-ID: <20080521135451.GA3545@tuxdriver.com> (sfid-20080521_162918_324533_C2278D4E)
-References: <20080520095637.2cq5p5ohhc8440o4@imap.suse.de> <1ba2fa240805200554w9354d14v9abc70f676540b9b@mail.gmail.com> <1ba2fa240805210347w375b571djc922f814fa9f521f@mail.gmail.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:36706 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbYEaRzM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 13:55:12 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
+Date: Sat, 31 May 2008 19:54:46 +0200
+Cc: Stefanik =?iso-8859-1?q?G=E1bor?= <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <200805311841.46740.mb@bu3sch.de> <1212252636.2766.10.camel@rd>
+In-Reply-To: <1212252636.2766.10.camel@rd>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240805210347w375b571djc922f814fa9f521f@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200805311954.46639.mb@bu3sch.de> (sfid-20080531_195601_487797_48C525BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 21, 2008 at 01:47:04PM +0300, Tomas Winkler wrote:
-> On Tue, May 20, 2008 at 3:54 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
+> On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
+> > On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
+> > > "BUG: unable to handle kernel NULL pointer dereference at 0000000=
+4
+> > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
+> >=20
+> > So can you put a few printks into the function to see where it dere=
+ferences
+> > a NULL pointer? (or use gdb to lookup the offset).
+>=20
+> u8 key_idx =3D info->control.hw_key->hw_key_idx;
+>=20
+> info->control.hw_key is NULL.
 
-> > I found one  ieee80211_rx_bss_{get,put} imbalance   in
-> > ieee80211_sta_join_ibss function
-> > That may cause this problem yet it doesn't look like this is the case.
-> > ieee80211_sta_join_ibss
-> > calls ieee80211_rx_bss_put on 'bss' that it receives as an argument
-> 
-> The patch below introduced  _get/_put imbalance. ieee80211_rx_bss_info
-> _put bss back at the end. Other callers of the ieee80211_sta_join_ibss
-> function don't use put.
-> I will post a patch that takes out the _put out of
-> ieee80211_rx_bss_info, I think it's more readable.
+Is a NULL pointer supposed to tell "do not encrypt", or is this a mac80=
+211 bug?
 
-Since you are doing _get and _add in ieee80211_rx_bss_info, it makes
-sense to me to do _put at the end of it.  Perhaps we should remove
-the _put from the end of ieee80211_sta_join_ibss and change it's
-callers instead?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
