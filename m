@@ -1,30 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:55975 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbYEJMKb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 May 2008 08:10:31 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1148406fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 10 May 2008 05:10:27 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 0/5] mac80211 & rt2x00 updates
-Date: Sat, 10 May 2008 13:49:19 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200805101349.19481.IvDoorn@gmail.com> (sfid-20080510_141042_679010_438EE576)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:65136 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752972AbYEaQsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 12:48:45 -0400
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet
+	transmit
+From: Pavel Roskin <proski@gnu.org>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Sat, 31 May 2008 12:48:42 -0400
+Message-Id: <1212252522.2766.8.camel@rd> (sfid-20080531_184850_195017_58EB54BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hello!
 
-I have just released rt2x00 2.1.6.
-Your mac80211 patches with rt2x00 code changes requires
-the patches from that release cycle.
+You beat me at reporting it.  I was about to report the same thing.
+Basically, my laptop with bcm4311 started crashing when using WEP in th=
+e
+last weeks.  Its runs the current wireless-testing.
 
-This patch series contains rt2x00 updates and fixes for various
-of your mac80211 patches.
+On Sat, 2008-05-31 at 16:23 +0200, Stefanik G=E1bor wrote:
+>  #4 [c04619c8] b43_generate_txhdr at f8dd3a99
 
-Ivo
+Yes, that's where it happens.  This patch prevents the panic, but it's
+almost certainly not the right fix.
+
+diff --git a/drivers/net/wireless/b43/xmit.c
+b/drivers/net/wireless/b43/xmit.c
+index f9e1cff..5ec8d86 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -234,11 +234,14 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+=20
+ 	plcp_fragment_len =3D fragment_len + FCS_LEN;
+ 	if (use_encryption) {
+-		u8 key_idx =3D info->control.hw_key->hw_key_idx;
++		u8 key_idx;
+ 		struct b43_key *key;
+ 		int wlhdr_len;
+ 		size_t iv_len;
+=20
++		if (!info->control.hw_key)
++			return -ENOKEY;
++		key_idx =3D info->control.hw_key->hw_key_idx;
+ 		B43_WARN_ON(key_idx >=3D dev->max_nr_keys);
+ 		key =3D &(dev->key[key_idx]);
+=20
+Another workaround is to use nohwcrypt=3D1 in the module options.
+
+It's strange that other drivers (b43legacy, ath5k) use
+info->control.hw_key->hw_key_idx under the same conditions (see how
+use_encryption is calculated), but don't have any problems on the same
+network (but I need to recheck).
+
+I'm using 40-bit WEP with wpa_supplicant (because it's configured to
+recognize many networks, some of which are with WPA).  I don't know if
+it's relevant.  It's Fedora 9 for x86_64, but NetworkManager is
+disabled.
+
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
