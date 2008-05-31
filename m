@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53040
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753813AbYEEUCZ (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:55689 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753712AbYEaUte convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 16:02:25 -0400
-Date: Mon, 05 May 2008 13:02:25 -0700 (PDT)
-Message-Id: <20080505.130225.159803012.davem@davemloft.net> (sfid-20080505_220143_761303_DEE1E3DE)
-To: johannes@sipsolutions.net
-Cc: tomasw@gmail.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: assign needed_headroom/tailroom for netdevs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1210017456.4181.23.camel@johannes.berg>
-References: <1210014316.4181.14.camel@johannes.berg>
-	<20080505.125013.129139559.davem@davemloft.net>
-	<1210017456.4181.23.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 31 May 2008 16:49:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
+Date: Sat, 31 May 2008 22:48:55 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Pavel Roskin" <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-kernel@vger.kernel.org
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com> <1212265322.7672.2.camel@johannes.berg> <69e28c910805311329v8f29c42mbb97ab553cc6e96c@mail.gmail.com>
+In-Reply-To: <69e28c910805311329v8f29c42mbb97ab553cc6e96c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200805312248.55551.mb@bu3sch.de> (sfid-20080531_224945_405216_693DF42C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 05 May 2008 21:57:36 +0200
+On Saturday 31 May 2008 22:29:13 Stefanik G=E1bor wrote:
+> On Sat, May 31, 2008 at 10:22 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sat, 2008-05-31 at 19:54 +0200, Michael Buesch wrote:
+> >> On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
+> >> > On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
+> >> > > On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
+> >> > > > "BUG: unable to handle kernel NULL pointer dereference at 00=
+000004
+> >> > > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
+> >> > >
+> >> > > So can you put a few printks into the function to see where it=
+ dereferences
+> >> > > a NULL pointer? (or use gdb to lookup the offset).
+> >> >
+> >> > u8 key_idx =3D info->control.hw_key->hw_key_idx;
+> >> >
+> >> > info->control.hw_key is NULL.
+> >>
+> >> Is a NULL pointer supposed to tell "do not encrypt", or is this a =
+mac80211 bug?
+> >
+> > It's probably a bug.
+> >
+> > johannes
+> >
+>=20
+> Should we assume that it's the first key if it happens?
 
-> Not necessarily because we seem to be getting a lot of cloned frames
-> that we need to copy all the time. If we would remove the ethernet
-> header and stick that skb into the fraglist of a new skb we'd win.
+No. It looks like it should not happen at all.
 
-And the copy is necessary because you need more tailroom or something?
 
-I don't understand why simply having all the space you need is not
-better and faster :-)
-
-Even if you have a clone, you can muck with the data in the IP and TCP
-header areas, so long as skb_header_cloned() is false.
-
-So I can only conclude that your problematic case is that of
-encryption, right?  That's the only situation where I can imagine you
-need to modify with packet data outside of the protocol headers.
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
