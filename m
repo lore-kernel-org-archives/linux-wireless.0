@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:39231 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760011AbYEQWfa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 18:35:30 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Add hooks for firmware debugging
-Date: Sun, 18 May 2008 00:35:04 +0200
-Cc: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <200805172244.35966.mb@bu3sch.de> <200805172324.13818.mb@bu3sch.de> <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
-In-Reply-To: <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200805180035.04341.mb@bu3sch.de> (sfid-20080518_003610_436033_D294F816)
+Received: from c60.cesmail.net ([216.154.195.49]:53450 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752896AbYEaQui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 12:50:38 -0400
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet
+	transmit
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200805311841.46740.mb@bu3sch.de>
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+	 <200805311711.16266.mb@bu3sch.de>
+	 <69e28c910805310934w7d2bc2ddkec27926a8c8033c4@mail.gmail.com>
+	 <200805311841.46740.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Sat, 31 May 2008 12:50:36 -0400
+Message-Id: <1212252636.2766.10.camel@rd> (sfid-20080531_185041_807977_CFBCD63C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 18 May 2008 00:27:49 Stefanik G=E1bor wrote:
-> On Sat, May 17, 2008 at 11:24 PM, Michael Buesch <mb@bu3sch.de> wrote=
-:
-> > On Saturday 17 May 2008 23:21:22 Stefanik G=E1bor wrote:
-> >> Hmm... what's this? Are we planning something along the lines of
-> >> prism54's FreeMAC?
-> >
-> > http://bu3sch.de/gitweb?p=3Db43-ucode.git;a=3Dsummary
-> >
-> > Doesn't work, yet. So you don't need to try. ;)
-> >
-> > --
-> > Greetings Michael.
-> >
+On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
+> On Saturday 31 May 2008 18:34:29 Stefanik G=E1bor wrote:
+> > "BUG: unable to handle kernel NULL pointer dereference at 00000004
+> > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
 >=20
-> Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
-> "Broadcom AirForce One Microcode" for licensing/trademark reasons? Th=
-e
-> official name of these cards is AirForce One.
+> So can you put a few printks into the function to see where it derefe=
+rences
+> a NULL pointer? (or use gdb to lookup the offset).
 
-That's the first time I hear that, so it's most likely not _that_ offic=
-ial. ;)
+u8 key_idx =3D info->control.hw_key->hw_key_idx;
 
-And quite honestly, I don't care at all playing bullshit-bingo with buz=
-zwords.
-The device has the product number 43XX, so we identify it that way.
+info->control.hw_key is NULL.
 
 --=20
-Greetings Michael.
+Regards,
+Pavel Roskin
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
