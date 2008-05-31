@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:58000 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbYEQW1t convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbYEaUWL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 May 2008 18:27:49 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1030947waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 17 May 2008 15:27:49 -0700 (PDT)
-Message-ID: <69e28c910805171527y4521a9e7n34d1842281234769@mail.gmail.com> (sfid-20080518_002815_581682_BD3D9EAC)
-Date: Sun, 18 May 2008 00:27:49 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] b43: Add hooks for firmware debugging
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200805172324.13818.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200805172244.35966.mb@bu3sch.de>
-	 <69e28c910805171421l69ca2f3ame3b61a94fdc5921a@mail.gmail.com>
-	 <200805172324.13818.mb@bu3sch.de>
+	Sat, 31 May 2008 16:22:11 -0400
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet
+	transmit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Pavel Roskin <proski@gnu.org>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200805311954.46639.mb@bu3sch.de>
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+	 <200805311841.46740.mb@bu3sch.de> <1212252636.2766.10.camel@rd>
+	 <200805311954.46639.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fPR82+C+HKQChBKZuqVe"
+Date: Sat, 31 May 2008 22:22:02 +0200
+Message-Id: <1212265322.7672.2.camel@johannes.berg> (sfid-20080531_222217_784848_1B5A62A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 17, 2008 at 11:24 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Saturday 17 May 2008 23:21:22 Stefanik G=E1bor wrote:
->> Hmm... what's this? Are we planning something along the lines of
->> prism54's FreeMAC?
->
-> http://bu3sch.de/gitweb?p=3Db43-ucode.git;a=3Dsummary
->
-> Doesn't work, yet. So you don't need to try. ;)
->
-> --
-> Greetings Michael.
->
 
-Hmm, are we calling this "Broadcom BCM43xx Microcode" instead of
-"Broadcom AirForce One Microcode" for licensing/trademark reasons? The
-official name of these cards is AirForce One.
+--=-fPR82+C+HKQChBKZuqVe
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, 2008-05-31 at 19:54 +0200, Michael Buesch wrote:
+> On Saturday 31 May 2008 18:50:36 Pavel Roskin wrote:
+> > On Sat, 2008-05-31 at 18:41 +0200, Michael Buesch wrote:
+> > > On Saturday 31 May 2008 18:34:29 Stefanik G=C3=A1bor wrote:
+> > > > "BUG: unable to handle kernel NULL pointer dereference at 00000004
+> > > > IP: [<f8dd3a99>] :b43:b43_generate_txhdr+0x6a9/0x790
+> > >=20
+> > > So can you put a few printks into the function to see where it derefe=
+rences
+> > > a NULL pointer? (or use gdb to lookup the offset).
+> >=20
+> > u8 key_idx =3D info->control.hw_key->hw_key_idx;
+> >=20
+> > info->control.hw_key is NULL.
+>=20
+> Is a NULL pointer supposed to tell "do not encrypt", or is this a mac8021=
+1 bug?
+
+It's probably a bug.
+
+johannes
+
+--=-fPR82+C+HKQChBKZuqVe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASEGzaaVg1VMiehFYAQJklxAAtvK2Tewxn1aSc/vyL5lPUmg1uRKqV5lh
+RgI5eq1ZMDKGlYEleJa2SJnxFayVFfSjN+shiw/J3O905p7XJN1KzhAd1aT6+boB
+i0Mu+yx25ti5UVoqs1PxAmMI99FCp41CrdK/YXe/Oavb1F80SceT29RlfGztI7Ph
+IFA2CdSRxn2WkOtzLsy8ei4eHjraayjQgnDiIW9RQXRWcA7qW//EFAg3paCEq6DC
+g5I3NpBeEhndplf7jbJY2RE++qnKWAcMfDRBeENsl/NjdIBj6jxMLSV/o/hJst60
+dsBHT8kmEk78iQv333M50tDJGd+NRwtlXGxv0Vt52eAv51I4S0TQ4whs8PneqqnA
+oCoj8tLZmbH9+9nYkFxi/9aHjEc5eS9MzLf1I42pLs5Mcwa+WY5lorQBC5fIe3rG
+bBVMK0l5k+61qGve4yZTl8khd3W/ONhHVSrPUy4FXFlYe48sSMlzDsZOhvCqq3/E
+FYrnVZyq1cEPkMTqT96f37VuWO9aY6n0bCWRUHr0RCt1rBvJZxz0E/cQBAC8e/A4
+nhoVjYSTjK0hy/1q2wJrQYN22LmrY+Q5XdDFY9VAqBxk3uUTWhWqhxUywgxlL3YF
+txVc8X8pSYWCzsGntvuuEzrJWoBhMd+7FDsetJXfD3vEzndvkT3HDNkZChC4lM5C
+OV6iBOAxowo=
+=Yszy
+-----END PGP SIGNATURE-----
+
+--=-fPR82+C+HKQChBKZuqVe--
+
