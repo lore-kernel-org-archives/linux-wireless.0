@@ -1,432 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:21564 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759854AbYEWCMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 May 2008 22:12:05 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH] iwlwifi-5000: implement initial calibration for 5000
-Date: Fri, 23 May 2008 10:09:24 +0800
-Message-Id: <1211508569-3163-47-git-send-email-yi.zhu@intel.com> (sfid-20080523_042835_310227_CE08CAC3)
-In-Reply-To: <1211508569-3163-46-git-send-email-yi.zhu@intel.com>
-References: <1211508569-3163-1-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-2-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-3-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-4-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-5-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-6-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-7-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-8-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-9-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-10-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-11-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-12-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-13-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-14-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-15-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-16-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-17-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-18-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-19-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-20-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-21-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-22-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-23-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-24-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-25-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-26-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-27-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-28-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-29-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-30-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-31-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-32-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-33-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-34-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-35-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-36-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-37-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-38-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-39-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-40-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-41-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-42-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-43-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-44-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-45-git-send-email-yi.zhu@intel.com>
- <1211508569-3163-46-git-send-email-yi.zhu@intel.com>
+Received: from vs166246.vserver.de ([62.75.166.246]:48688 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbYEaPLv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 11:11:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
+Date: Sat, 31 May 2008 17:11:15 +0200
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+In-Reply-To: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200805311711.16266.mb@bu3sch.de> (sfid-20080531_171155_451124_A34D1970)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Saturday 31 May 2008 16:23:58 Stefanik G=E1bor wrote:
+> In the latest wireless-testing kernel, I get a panic when I try to
+> connect to a network or inject a packet in monitor mode using b43
+> (stack obtained using kdump and crash):
+>=20
+> crash> bt -l
+> PID: 0      TASK: c0431340  CPU: 0   COMMAND: "swapper"
+>  #0 [c04617bc] crash_kexec at c015ce2a
+>     /usr/src/wl-hack/wireless-testing/kernel/kexec.c: 1077
+>  #1 [c046180c] die at c01054ba
+>     /usr/src/wl-hack/wireless-testing/arch/x86/kernel/traps_32.c: 476
+>  #2 [c0461828] do_page_fault at c034ef1f
+>     /usr/src/wl-hack/wireless-testing/arch/x86/mm/fault.c: 858
+>  #3 [c0461994] error_code (via page_fault) at c034d2e8
+>     /usr/src/wl-hack/wireless-testing/arch/i386/kernel/entry.S
+>     EAX: 00000000  EBX: 00000000  ECX: f6103000  EDX: f75ed4a0  EBP: =
+c0461a58
+>     DS:  007b      ESI: 00000002  ES:  007b      EDI: 00000074
+>     CS:  0060      EIP: f8dd3a99  ERR: ffffffff  EFLAGS: 00010046
+>  #4 [c04619c8] b43_generate_txhdr at f8dd3a99
+>  #5 [c0461a5c] b43_dma_tx at f8dd83d7
+>  #6 [c0461ae4] b43_op_tx at f8dc4d32
+>  #7 [c0461afc] __ieee80211_tx at f89c3ed4
+>  #8 [c0461b14] ieee80211_master_start_xmit at f89c4b6d
+>  #9 [c0461b74] dev_hard_start_xmit at c02d4cb5
+>     /usr/src/wl-hack/wireless-testing/net/core/dev.c: 1558
+> #10 [c0461ba0] __qdisc_run at c02e678d
+>     /usr/src/wl-hack/wireless-testing/net/sched/sch_generic.c: 155
+> #11 [c0461bd8] dev_queue_xmit at c02d5172
+>     include/net/pkt_sched.h: 89
+> #12 [c0461c04] ieee80211_subif_start_xmit at f89c45db
+> #13 [c0461cc0] dev_hard_start_xmit at c02d4cb5
+>     /usr/src/wl-hack/wireless-testing/net/core/dev.c: 1558
+> #14 [c0461cec] __qdisc_run at c02e678d
+>     /usr/src/wl-hack/wireless-testing/net/sched/sch_generic.c: 155
+> #15 [c0461d24] dev_queue_xmit at c02d5172
+>     include/net/pkt_sched.h: 89
+> #16 [c0461d50] neigh_resolve_output at c02dac3e
+>     /usr/src/wl-hack/wireless-testing/net/core/neighbour.c: 1215
+> #17 [c0461d90] ip6_output_finish at f8d55c9e
+> #18 [c0461db0] ip6_output2 at f8d57e63
+> #19 [c0461dd4] ip6_output at f8d58418
+> #20 [c0461e50] mld_sendpack at f8d70d8d
+> #21 [c0461ebc] mld_ifc_timer_expire at f8d71a94
+> #22 [c0461ef0] run_timer_softirq at c0138547
+>     /usr/src/wl-hack/wireless-testing/kernel/timer.c: 798
+> #23 [c0461f34] __do_softirq at c0134230
+>     /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 234
+> #24 [c0461f50] do_softirq at c0134318
+>     /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 271
+> #25 [c0461f5c] irq_exit at c01344b0
+>     /usr/src/wl-hack/wireless-testing/kernel/softirq.c: 310
+> #26 [c0461f64] smp_apic_timer_interrupt at c0113583
+>     /usr/src/wl-hack/wireless-testing/arch/x86/kernel/apic_32.c: 619
+> #27 [c0461f7c] apic_timer_interrupt at c0104963
+>     include/linux/kdev_t.h: 52
+> #28 [c0461fbc] cpu_idle at c0102d69
+>     /usr/src/wl-hack/wireless-testing/arch/x86/kernel/process_32.c: 1=
+88
+>=20
+> No out-of-tree patches applied on b43. (I used to have a patch
+> applied, but I removed it to test reproducibility of this crash.)
+>=20
+> Any ideas why this happens?
 
-This patch adds initial calibration framework for 5000 HW faimily.
+Please provide more information. For example as for what "crash" means.
+Is this a NULL pointer dereference or whatever?
+Please put a few printks into b43_generate_txhdr()
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |  127 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-commands.h |   50 +++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   16 ++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   12 +++
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    4 +
- 7 files changed, 211 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index a94cd36..eb6141e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -395,6 +395,8 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 
- #endif /* CONFIG_IWL5000_RUN_TIME_CALIB */
- 
-+
-+
- static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- 					   size_t offset)
- {
-@@ -404,6 +406,118 @@ static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- }
- 
- /*
-+ *  Calibration
-+ */
-+static int iwl5000_send_Xtal_calib(struct iwl_priv *priv)
-+{
-+	u16 *xtal_calib = (u16 *)iwl_eeprom_query_addr(priv, EEPROM_5000_XTAL);
-+
-+	struct iwl5000_calibration cal_cmd = {
-+		.op_code = IWL5000_PHY_CALIBRATE_CRYSTAL_FRQ_CMD,
-+		.data = {
-+			(u8)xtal_calib[0],
-+			(u8)xtal_calib[1],
-+		}
-+	};
-+
-+	return iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
-+				sizeof(cal_cmd), &cal_cmd);
-+}
-+
-+static int iwl5000_send_calib_results(struct iwl_priv *priv)
-+{
-+	int ret = 0;
-+
-+	if (priv->calib_results.lo_res)
-+		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
-+					priv->calib_results.lo_res_len,
-+					priv->calib_results.lo_res);
-+	if (ret)
-+		goto err;
-+
-+
-+	if (priv->calib_results.tx_iq_res)
-+		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
-+				priv->calib_results.tx_iq_res_len,
-+				priv->calib_results.tx_iq_res);
-+
-+	if (ret)
-+		goto err;
-+
-+	if (priv->calib_results.tx_iq_perd_res)
-+		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
-+				      priv->calib_results.tx_iq_perd_res_len,
-+				      priv->calib_results.tx_iq_perd_res);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+err:
-+	IWL_ERROR("Error %d\n", ret);
-+	return ret;
-+}
-+
-+static int iwl5000_send_calib_cfg(struct iwl_priv *priv)
-+{
-+	struct iwl5000_calib_cfg_cmd calib_cfg_cmd;
-+	struct iwl_host_cmd cmd = {
-+		.id = CALIBRATION_CFG_CMD,
-+		.len = sizeof(struct iwl5000_calib_cfg_cmd),
-+		.data = &calib_cfg_cmd,
-+	};
-+
-+	memset(&calib_cfg_cmd, 0, sizeof(calib_cfg_cmd));
-+	calib_cfg_cmd.ucd_calib_cfg.once.is_enable = IWL_CALIB_INIT_CFG_ALL;
-+	calib_cfg_cmd.ucd_calib_cfg.once.start = IWL_CALIB_INIT_CFG_ALL;
-+	calib_cfg_cmd.ucd_calib_cfg.once.send_res = IWL_CALIB_INIT_CFG_ALL;
-+	calib_cfg_cmd.ucd_calib_cfg.flags = IWL_CALIB_INIT_CFG_ALL;
-+
-+	return iwl_send_cmd(priv, &cmd);
-+}
-+
-+static void iwl5000_rx_calib_result(struct iwl_priv *priv,
-+			     struct iwl_rx_mem_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
-+	struct iwl5000_calib_hdr *hdr = (struct iwl5000_calib_hdr *)pkt->u.raw;
-+	int len = le32_to_cpu(pkt->len) & FH_RSCSR_FRAME_SIZE_MSK;
-+
-+	iwl_free_calib_results(priv);
-+
-+	/* reduce the size of the length field itself */
-+	len -= 4;
-+
-+	switch (hdr->op_code) {
-+	case IWL5000_PHY_CALIBRATE_LO_CMD:
-+		priv->calib_results.lo_res = kzalloc(len, GFP_ATOMIC);
-+		priv->calib_results.lo_res_len = len;
-+		memcpy(priv->calib_results.lo_res, pkt->u.raw, len);
-+		break;
-+	case IWL5000_PHY_CALIBRATE_TX_IQ_CMD:
-+		priv->calib_results.tx_iq_res = kzalloc(len, GFP_ATOMIC);
-+		priv->calib_results.tx_iq_res_len = len;
-+		memcpy(priv->calib_results.tx_iq_res, pkt->u.raw, len);
-+		break;
-+	case IWL5000_PHY_CALIBRATE_TX_IQ_PERD_CMD:
-+		priv->calib_results.tx_iq_perd_res = kzalloc(len, GFP_ATOMIC);
-+		priv->calib_results.tx_iq_perd_res_len = len;
-+		memcpy(priv->calib_results.tx_iq_perd_res, pkt->u.raw, len);
-+		break;
-+	default:
-+		IWL_ERROR("Unknown calibration notification %d\n",
-+			  hdr->op_code);
-+		return;
-+	}
-+}
-+
-+static void iwl5000_rx_calib_complete(struct iwl_priv *priv,
-+			       struct iwl_rx_mem_buffer *rxb)
-+{
-+	IWL_DEBUG_INFO("Init. calibration is completed, restarting fw.\n");
-+	queue_work(priv->workqueue, &priv->restart);
-+}
-+
-+/*
-  * ucode
-  */
- static int iwl5000_load_section(struct iwl_priv *priv,
-@@ -565,6 +679,7 @@ static void iwl5000_init_alive_start(struct iwl_priv *priv)
- 		goto restart;
- 	}
- 
-+	iwl5000_send_calib_cfg(priv);
- 	return;
- 
- restart:
-@@ -684,8 +799,14 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 	iwl_release_nic_access(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-+
- 	iwl5000_send_wimax_coex(priv);
- 
-+	iwl5000_send_Xtal_calib(priv);
-+
-+	if (priv->ucode_type == UCODE_RT)
-+		iwl5000_send_calib_results(priv);
-+
- 	return 0;
- }
- 
-@@ -856,8 +977,14 @@ static u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
- 
- static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
- {
-+	/* init calibration handlers */
-+	priv->rx_handlers[CALIBRATION_RES_NOTIFICATION] =
-+					iwl5000_rx_calib_result;
-+	priv->rx_handlers[CALIBRATION_COMPLETE_NOTIFICATION] =
-+					iwl5000_rx_calib_complete;
- }
- 
-+
- static int iwl5000_hw_valid_rtc_data_addr(u32 addr)
- {
- 	return (addr >= RTC_DATA_LOWER_BOUND) &&
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index a637abe..6f62beb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2778,10 +2778,59 @@ enum {
- 	IWL5000_PHY_CALIBRATE_AGC_TABLE_CMD	= 14,
- 	IWL5000_PHY_CALIBRATE_CRYSTAL_FRQ_CMD	= 15,
- 	IWL5000_PHY_CALIBRATE_BASE_BAND_CMD	= 16,
-+	IWL5000_PHY_CALIBRATE_TX_IQ_PERD_CMD	= 17,
- 	IWL5000_PHY_CALIBRATE_CHAIN_NOISE_RESET_CMD = 18,
- 	IWL5000_PHY_CALIBRATE_CHAIN_NOISE_GAIN_CMD = 19,
- };
- 
-+enum {
-+	CALIBRATION_CFG_CMD = 0x65,
-+	CALIBRATION_RES_NOTIFICATION = 0x66,
-+	CALIBRATION_COMPLETE_NOTIFICATION = 0x67
-+};
-+
-+struct iwl_cal_crystal_freq_cmd {
-+	u8 cap_pin1;
-+	u8 cap_pin2;
-+} __attribute__ ((packed));
-+
-+struct iwl5000_calibration {
-+	u8 op_code;
-+	u8 first_group;
-+	u8 num_groups;
-+	u8 all_data_valid;
-+	struct iwl_cal_crystal_freq_cmd data;
-+} __attribute__ ((packed));
-+
-+#define IWL_CALIB_INIT_CFG_ALL	__constant_cpu_to_le32(0xffffffff)
-+
-+struct iwl_calib_cfg_elmnt_s {
-+	__le32 is_enable;
-+	__le32 start;
-+	__le32 send_res;
-+	__le32 apply_res;
-+	__le32 reserved;
-+} __attribute__ ((packed));
-+
-+struct iwl_calib_cfg_status_s {
-+	struct iwl_calib_cfg_elmnt_s once;
-+	struct iwl_calib_cfg_elmnt_s perd;
-+	__le32 flags;
-+} __attribute__ ((packed));
-+
-+struct iwl5000_calib_cfg_cmd {
-+	struct iwl_calib_cfg_status_s ucd_calib_cfg;
-+	struct iwl_calib_cfg_status_s drv_calib_cfg;
-+	__le32 reserved1;
-+} __attribute__ ((packed));
-+
-+struct iwl5000_calib_hdr {
-+	u8 op_code;
-+	u8 first_group;
-+	u8 groups_num;
-+	u8 data_valid;
-+} __attribute__ ((packed));
-+
- struct iwl5000_calibration_chain_noise_reset_cmd {
- 	u8 op_code;	/* IWL5000_PHY_CALIBRATE_CHAIN_NOISE_RESET_CMD */
- 	u8 flags;	/* not used */
-@@ -2894,6 +2943,7 @@ struct iwl_rx_packet {
- 		struct iwl4965_notif_statistics stats;
- 		struct iwl4965_compressed_ba_resp compressed_ba;
- 		struct iwl4965_missed_beacon_notif missed_beacon;
-+		struct iwl5000_calibration calib;
- 		__le32 status;
- 		u8 raw[0];
- 	} u;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 373e984..010085a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -871,9 +871,25 @@ err:
- }
- EXPORT_SYMBOL(iwl_init_drv);
- 
-+void iwl_free_calib_results(struct iwl_priv *priv)
-+{
-+	kfree(priv->calib_results.lo_res);
-+	priv->calib_results.lo_res = NULL;
-+	priv->calib_results.lo_res_len = 0;
-+
-+	kfree(priv->calib_results.tx_iq_res);
-+	priv->calib_results.tx_iq_res = NULL;
-+	priv->calib_results.tx_iq_res_len = 0;
-+
-+	kfree(priv->calib_results.tx_iq_perd_res);
-+	priv->calib_results.tx_iq_perd_res = NULL;
-+	priv->calib_results.tx_iq_perd_res_len = 0;
-+}
-+EXPORT_SYMBOL(iwl_free_calib_results);
- 
- void iwl_uninit_drv(struct iwl_priv *priv)
- {
-+	iwl_free_calib_results(priv);
- 	iwlcore_free_geos(priv);
- 	iwl_free_channel_map(priv);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index eeea4e8..4fe7a9b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -172,6 +172,7 @@ struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
- void iwl_hw_detect(struct iwl_priv *priv);
- 
- void iwlcore_clear_stations_table(struct iwl_priv *priv);
-+void iwl_free_calib_results(struct iwl_priv *priv);
- void iwl_reset_qos(struct iwl_priv *priv);
- void iwl_set_rxon_chain(struct iwl_priv *priv);
- int iwl_set_rxon_channel(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index d7bca7c..924a1f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -877,6 +877,15 @@ struct statistics_general_data {
- 	u32 beacon_energy_c;
- };
- 
-+struct iwl_calib_results {
-+	void *tx_iq_res;
-+	void *tx_iq_perd_res;
-+	void *lo_res;
-+	u32 tx_iq_res_len;
-+	u32 tx_iq_perd_res_len;
-+	u32 lo_res_len;
-+};
-+
- enum ucode_type {
- 	UCODE_NONE = 0,
- 	UCODE_INIT,
-@@ -984,6 +993,9 @@ struct iwl_priv {
- 	s32 temperature;	/* degrees Kelvin */
- 	s32 last_temperature;
- 
-+	/* init calibration results */
-+	struct iwl_calib_results calib_results;
-+
- 	/* Scan related variables */
- 	unsigned long last_scan_jiffies;
- 	unsigned long next_scan_jiffies;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index dc1f027..d3a2a5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -146,6 +146,7 @@ struct iwl_eeprom_channel {
- 
- /*5000 calibrations */
- #define EEPROM_5000_CALIB_ALL	(INDIRECT_ADDRESS | INDIRECT_CALIBRATION)
-+#define EEPROM_5000_XTAL	((2*0x128) | EEPROM_5000_CALIB_ALL)
- 
- /* 5000 links */
- #define EEPROM_5000_LINK_HOST             (2*0x64)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index dab4a0e..6c53736 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -56,6 +56,7 @@ const char *get_cmd_string(u8 cmd)
- 		IWL_CMD(REPLY_RATE_SCALE);
- 		IWL_CMD(REPLY_LEDS_CMD);
- 		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
-+		IWL_CMD(COEX_PRIORITY_TABLE_CMD);
- 		IWL_CMD(RADAR_NOTIFICATION);
- 		IWL_CMD(REPLY_QUIET_CMD);
- 		IWL_CMD(REPLY_CHANNEL_SWITCH);
-@@ -89,6 +90,9 @@ const char *get_cmd_string(u8 cmd)
- 		IWL_CMD(REPLY_RX_MPDU_CMD);
- 		IWL_CMD(REPLY_RX);
- 		IWL_CMD(REPLY_COMPRESSED_BA);
-+		IWL_CMD(CALIBRATION_CFG_CMD);
-+		IWL_CMD(CALIBRATION_RES_NOTIFICATION);
-+		IWL_CMD(CALIBRATION_COMPLETE_NOTIFICATION);
- 	default:
- 		return "UNKNOWN";
- 
--- 
-1.5.3.6
-
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
