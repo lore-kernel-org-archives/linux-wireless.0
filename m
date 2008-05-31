@@ -1,93 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60347 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753673AbYFMIfz (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:37360 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332AbYEaWab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 04:35:55 -0400
-Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>
-In-Reply-To: <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com> (sfid-20080613_102859_691762_2A965AC9)
-References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
-	 <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
-	 <1213343813.3860.0.camel@johannes.berg>
-	 <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com>
-	 (sfid-20080613_102859_691762_2A965AC9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EW4Lvq65NCa3wCXYOoKK"
-Date: Fri, 13 Jun 2008 10:35:13 +0200
-Message-Id: <1213346113.3860.3.camel@johannes.berg> (sfid-20080613_103601_013789_814C45C7)
-Mime-Version: 1.0
+	Sat, 31 May 2008 18:30:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Evil: Run b43 firmware inside of the kernel
+Date: Sun, 1 Jun 2008 00:30:03 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200806010030.03473.mb@bu3sch.de> (sfid-20080601_003036_424218_6700DC31)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-EW4Lvq65NCa3wCXYOoKK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I hacked up some patches that add a virtual machine to the
+b43 driver to run the firmware inside of the kernel.
+http://bu3sch.de/patches/misc/b43-vm/
 
+This doesn't sound very useful, but it might help when debugging
+firmware code, as firmware code is extremely hard to debug when
+run on the device.
+Actually, I found out with this VM that the RXE (at least) seems to be
+highly timing sensitive. That means it completely breaks when some
+magic timings dont fit. So I have the same issue with the VM (using
+the proprietary FW) as I do have with my opensource FW (on the device).
+I can receive one packet and then it locks up in the RXE busy loop.
+I'm not sure why that happens, yet.
 
-> >>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++=
-++++++++-
-> >>  1 files changed, 56 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net=
-/wireless/iwlwifi/iwl4965-base.c
-> >> index 81a1c22..c179b21 100644
-> >> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> >> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> >> @@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRU=
-SR, show_power_level,
-> >>  static ssize_t show_channels(struct device *d,
-> >>                            struct device_attribute *attr, char *buf)
-> >>  {
-> >> -     /* all this shit doesn't belong into sysfs anyway */
-> >> -     return 0;
-> >
-> > Hehe. Do you really have to? You can query this information with
-> > nl80211. I don't know why you need all that sysfs stuff anyway.
->=20
-> I'm not sure why Yi has cut off the log message but original was
->=20
-> 'This patch returns channel list to sysfs. This is requirement
-> for validation purposes'
->=20
-> Our automation is build around sysfs and wext and I'm not going to
-> rewrite it now.
+However, I thought I should send these patches to the public.
+I thought maybe somebody was interested in flaming me for putting a code
+interpreter and a disassembler into the kernel. So here you go.
 
-If you managed to get along without this for so long, why is it needed
-in upstream now?
+http://bu3sch.de/patches/misc/b43-vm/
+Get the two patches and apply them in the correct order to the driver.
+Then run the python script to generate the dummy firmware that's run on
+the device while the real fw runs in the VM.
+Assemble that dummy firmware using b43-asm and put it into
+/lib/firmware/b43-vm/ucode5.fw
+Compile with debugging enabled (important!).
+Then fire up b43 with the module parameter vm_enable=1
+If the VM successfully loaded it should print the following line in dmesg:
+"b43-phyX: Running firmware inside of a virtual machine!"
+And of course it would break after the first received packet and loop
+forever in a tight loop. :) You can see that by getting a VM coredump
+by reading /debug/b43/phyX/vm_dump
 
-Remember, sysfs is API. You don't get to change it gratuitously, so
-neither should you add to it gratuitously. And we already _have_ API for
-this particular thing which is not dependent on a particular
-hardware/driver to boot!
+Have fun and don't try this at home, kids.
 
-johannes
-
---=-EW4Lvq65NCa3wCXYOoKK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUjE9AAoJEKVg1VMiehFYx54P/1FX7DenCZBcntSR3uf7da9s
-d1gAxQktWtPwyIg9HuAJC4G5cT0maCQ5wLV30HcKHOBDlhcNUSQpdgSIA3QRGwVe
-X+XlwCG7Yv2H2rAxXkiY5ZwfoE6f1yhrvo3dh3n5Rdo3AMvpkZb1LfBMZHIDCuva
-wMyHhn0OIQ8I5Pg68RiRqmOSuXkOOvE2S4PcaI0Tt6idBsBAXU5B6Z5ib08HWLj5
-aPWubvTdp4yDJSAQcIwfRqp7SS2GeCweX3HSjYuYNampgVea/WTffd3l1qTSuRp2
-41lw+7eY2yrBRBJmNMCeGyKpvoj2qZ3bddlcAkF5+7Ee/Iz9DxpV9nG1JEl9GCrL
-5y837WeolCO+SwtO0HmTh4AAbBN64VvNccoKi5MDzw2wMKtabY8iUa6K5C6YRssl
-q9NPBbZKymmQZHsyzIKxjr4/jbCC/awsknUtqBfCubeRt8phgJ6eCLuVI1QBYMHO
-N11ceQy7PZnhEfOrHMVPTx3GymGoxa0WNBoQW2lkJNVEu+oZ/vXBS9Y9j4tP8+HQ
-RM6dE7xccMwq3M47G/xt32bqy7xvWCpgBTwEP7GHrCftIMA8MIcud7aa29hna2e5
-SZU+2tHVEZnAN4e9gfBMxFC6k5QRnIDXCTmi5PMin3Xfps2w6fFN4HmQODgyC7uI
-llYuIEn1Qfs/35WPAlC2
-=DCzy
------END PGP SIGNATURE-----
-
---=-EW4Lvq65NCa3wCXYOoKK--
-
+-- 
+Greetings Michael.
