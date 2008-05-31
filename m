@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56102 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757495AbYECPio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 May 2008 11:38:44 -0400
-Subject: Re: Please pull 'upstream' branch of rt2x00
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Scott White <nwi_sub@hotmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1209828478.3673.2.camel@johannes.berg>
-References: <BAY113-W31BC1B2DB0F0597B99310784DA0@phx.gbl>
-	 <200805031158.43072.IvDoorn@gmail.com> <1209809936.10921.9.camel@localhost>
-	 <200805031702.20416.IvDoorn@gmail.com>
-	 (sfid-20080503_165631_067313_B10C7019)  <1209828478.3673.2.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 03 May 2008 15:38:41 +0000
-Message-Id: <1209829121.27386.1.camel@localhost> (sfid-20080503_173816_512141_186C40F8)
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.183]:33043 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756901AbYEaTCi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 15:02:38 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so182063waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 12:02:38 -0700 (PDT)
+Message-ID: <1ba2fa240805311202t3a88800m131d433cbe9ce9e2@mail.gmail.com> (sfid-20080531_210257_704531_7C8A9745)
+Date: Sat, 31 May 2008 22:02:38 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwl4965: remove useless network and duplicate checking
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <20080530202212.GA21212@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211446997.3698.47.camel@johannes.berg>
+	 <1ba2fa240805220341g69f3acb0qf03594f541232337@mail.gmail.com>
+	 <1212175035.7238.8.camel@johannes.berg>
+	 <20080530202212.GA21212@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-03 at 17:27 +0200, Johannes Berg wrote:
-> > Hmm, perhaps we need some way the driver can inform the rate selection
-> > module about statistics. I mean the hardware does measure the number
-> > of failed TX frames, and the number of retries, but it doesn't set them
-> > in the descriptor but in the hardware.
-> 
-> Yes we should have this.
+On Fri, May 30, 2008 at 11:22 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, May 30, 2008 at 09:17:15PM +0200, Johannes Berg wrote:
+>>
+>> > > The iwlwifi drivers go to great lengths to avoid passing packets to
+>> > > mac80211 they think shouldn't go there, while mac80211 can (of course!)
+>> > > handle them very well.
+>> > >
+>> > > Especially in the case of duplicate packets this is interesting
+>> > > because it's such a performance hog (especially for IBSS networks)
+>> > > while mac80211 does that work on the side without much effort.
+>> > >
+>> > > This patch removes all that and leaves only what is absolutely
+>> > > necessary for the hardware.
+>>
+>>
+>> > Looks good to me. let me just repost it rebased over our latest code.
+>>
+>> ping? This one no longer applies.
+>
+> Was going to ask about that one myself...
 
-New rate control algorithm probably. Or even better: Split what is
-currently the rate control algorithm into an link quality estimation
-part (failed frames percentage and such) and the actual rate control
-that interprets that value and acts accordingly.
+I know that's I wanted to delay it. I preferred to rebase one patch
+then many other. I will release it in next round, still have some code
+movement. It also get proper testing.
+Tomas
 
-Mattias
-
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
