@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:58607 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785AbYEETkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 May 2008 15:40:05 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Jt6Xa-0007Or-Ty
-	for linux-wireless@vger.kernel.org; Mon, 05 May 2008 19:40:02 +0000
-Received: from 78-62-85-225.static.zebra.lt ([78.62.85.225])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 19:40:02 +0000
-Received: from paulius.zaleckas by 78-62-85-225.static.zebra.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 05 May 2008 19:40:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-Subject: Re: [PATCH] 8139too: use netstats in net_device structure
-Date: Mon, 05 May 2008 22:37:24 +0300
-Message-ID: <481F61F4.8000809@teltonika.lt> (sfid-20080505_213922_682577_6FB56230)
-References: <fvnmeu$jt5$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Cc: netdev@vger.kernel.org
-In-Reply-To: <fvnmeu$jt5$1@ger.gmane.org>
-Cc: linux-wireless@vger.kernel.org
+Received: from wf-out-1314.google.com ([209.85.200.175]:24033 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325AbYEaQyZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 May 2008 12:54:25 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so273894wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 31 May 2008 09:54:24 -0700 (PDT)
+Message-ID: <69e28c910805310954s6c478001h837415a6a63d26f0@mail.gmail.com> (sfid-20080531_185428_817992_62811A2E)
+Date: Sat, 31 May 2008 18:54:24 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet transmit
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1212252522.2766.8.camel@rd>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+	 <1212252522.2766.8.camel@rd>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paulius Zaleckas wrote:
-> Use net_device_stats from net_device structure instead of local.
-> Changed airo_read_stats function parameter to net_device.
-> 
-> Signed-off-by: Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-> 
+On Sat, May 31, 2008 at 6:48 PM, Pavel Roskin <proski@gnu.org> wrote:
+> It's strange that other drivers (b43legacy, ath5k) use
+> info->control.hw_key->hw_key_idx under the same conditions (see how
+> use_encryption is calculated), but don't have any problems on the same
+> network (but I need to recheck).
 
-Sorry. Posted with wrong subject(copy & paste error)...
-I will repost it.
+Hmm... does ath5k use hardware crypto? B43 does (but not with
+nohwcrypt - and that appears to be a valid workaround), b43legacy
+doesn't AFAIK.
 
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
