@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbYFKMHL (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:7883 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756528AbYFAX17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 08:07:11 -0400
-Message-ID: <90792e191e13c5c2955689833ca3118a.squirrel@secure.sipsolutions.net>
-In-Reply-To: <20080611065719.GB7377@jm.kir.nu>
-References: <20080610105058.GA6961@jm.kir.nu>
-    <1213096575.3668.6.camel@johannes.berg>
-    <20080610123007.GB1571@tuxdriver.com>
-    <1213103469.3668.13.camel@johannes.berg>
-    <20080610152418.GD13267@tuxdriver.com>
-    <20080610183722.GA7377@jm.kir.nu>
-    <1213124444.3668.48.camel@johannes.berg>
-    <20080611065719.GB7377@jm.kir.nu>
-Date: Wed, 11 Jun 2008 14:07:01 +0200 (CEST)
-Subject: Re: [PATCH RFC] mac80211_hwsim
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Jouni Malinen" <j@w1.fi>
+	Sun, 1 Jun 2008 19:27:59 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so628289wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2008 16:27:59 -0700 (PDT)
+Message-Id: <20080601231543.372911291@gmail.com> (sfid-20080602_012818_462285_D822534A)
+References: <20080601231329.223608711@gmail.com>
+Date: Mon, 02 Jun 2008 08:13:40 +0900
+From: akinobu.mita@gmail.com
+To: linux-kernel@vger.kernel.org
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [patch -v2 11/23] airo: use simple_read_from_buffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> That sounds better. net/wireless.h was bit confusing on this part since
-> it has the "filled by the core" notice only for
-> IEEE80211_RATE_MANDATORY_* flags, not for IEEE80211_RATE_ERP_G. Looks
-> like this should be added to the ERP flag, too.
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/airo.c |   15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-good point.
+Index: 2.6-git/drivers/net/wireless/airo.c
+===================================================================
+--- 2.6-git.orig/drivers/net/wireless/airo.c
++++ 2.6-git/drivers/net/wireless/airo.c
+@@ -4560,22 +4560,13 @@ static ssize_t proc_read( struct file *f
+ 			  size_t len,
+ 			  loff_t *offset )
+ {
+-	loff_t pos = *offset;
+-	struct proc_data *priv = (struct proc_data*)file->private_data;
++	struct proc_data *priv = file->private_data;
+ 
+ 	if (!priv->rbuffer)
+ 		return -EINVAL;
+ 
+-	if (pos < 0)
+-		return -EINVAL;
+-	if (pos >= priv->readlen)
+-		return 0;
+-	if (len > priv->readlen - pos)
+-		len = priv->readlen - pos;
+-	if (copy_to_user(buffer, priv->rbuffer + pos, len))
+-		return -EFAULT;
+-	*offset = pos + len;
+-	return len;
++	return simple_read_from_buffer(buffer, len, offset, priv->rbuffer,
++					priv->readlen);
+ }
+ 
+ /*
 
-> OK, I'll remove it. With the current bands this seems to be fine, but
-> how would that work with 10 MHz and 5 MHz channels? I haven't verified,
-> but I would assume they could use same center frequency with 20 MHz
-> channels..
-
-Yeah... that isn't really supported yet.
-
-> Hmm.. Aren't the channel and rate structures being modified by
-> mac80211/wireless code? Sharing the same global data area for all radios
-> might not be desired if there will be different "hw" capabilities as far
-> as supported channels/rates/bands are concerned. In addition, the static
-> data structures were marked 'const' which would at least be somewhat
-> confusing if the data ends up changing.
-
-They're only modified all the same, so it's fine to share unless you have
-different capabilities. Yeah, you should removed the const then.
-
-johannes
-
+-- 
