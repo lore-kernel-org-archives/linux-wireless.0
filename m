@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:32949 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523AbYFBPmJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 11:42:09 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 2/4] rndis_wlan: update carrier flag when link state changes
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Date: Mon, 02 Jun 2008 18:35:29 +0300
-Message-ID: <20080602153529.22793.91132.stgit@nanoha.lan> (sfid-20080602_174215_993401_5AF0C2F2)
-In-Reply-To: <20080602153521.22793.4271.stgit@nanoha.lan>
-References: <20080602153521.22793.4271.stgit@nanoha.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from c60.cesmail.net ([216.154.195.49]:12407 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbYFAFjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jun 2008 01:39:48 -0400
+Subject: Re: Moving to kernel .25-r4
+From: Pavel Roskin <proski@gnu.org>
+To: iElectric <ielectric@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20080531T203112-538@post.gmane.org>
+References: <loom.20080531T203112-538@post.gmane.org>
+Content-Type: text/plain
+Date: Sun, 01 Jun 2008 01:39:45 -0400
+Message-Id: <1212298785.6853.5.camel@rd> (sfid-20080601_073953_366872_08DEF435)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver wasn't updating netif_carrier on link state changes but assumed
-link layer was always up.
+On Sat, 2008-05-31 at 20:33 +0000, iElectric wrote:
+> Recently I moved to kernel .25-r4. I want to use newest firmware version with
+> b43 for my 4311 rev 1 wireless card. I cut the firmware to /lib/firmware/b43/,
+> do rmmod b43, modprobe b43 and it still uses old firmware:
+> 
+> b43-phy0: Broadcom 4311 WLAN found
+> b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
+> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+> b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
+> b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+That's the new firmware.
 
- drivers/net/wireless/rndis_wlan.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+> Ideas? 
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index aaeeec8..c281c0b 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2215,6 +2215,8 @@ static void rndis_wext_worker(struct work_struct *work)
- 	int ret, offset;
- 
- 	if (test_and_clear_bit(WORK_LINK_UP, &priv->work_pending)) {
-+		netif_carrier_on(usbdev->net);
-+
- 		info = kzalloc(assoc_size, GFP_KERNEL);
- 		if (!info)
- 			goto get_bssid;
-@@ -2253,6 +2255,8 @@ get_bssid:
- 	}
- 
- 	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending)) {
-+		netif_carrier_off(usbdev->net);
-+
- 		evt.data.flags = 0;
- 		evt.data.length = 0;
- 		memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
-@@ -2574,6 +2578,7 @@ static int rndis_wext_bind(struct usbnet *dev, struct usb_interface *intf)
- 	/* turn radio on */
- 	priv->radio_on = 1;
- 	disassociate(dev, 1);
-+	netif_carrier_off(dev->net);
- 
- 	/* because rndis_command() sleeps we need to use workqueue */
- 	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
+A good bug report describes:
 
+1) What you do (you missed some details, such as the firmware name)
+2) What you get (that was mostly OK)
+3) What you expect to get (that was missing completely)
+
+-- 
+Regards,
+Pavel Roskin
