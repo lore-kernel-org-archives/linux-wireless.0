@@ -1,93 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47079
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752801AbYFCUgw (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:1454 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755011AbYFAV7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:52 -0400
-Date: Tue, 03 Jun 2008 12:20:08 -0700 (PDT)
-Message-Id: <20080603.122008.02818528.davem@davemloft.net> (sfid-20080603_223734_555834_3F15C7D8)
+	Sun, 1 Jun 2008 17:59:39 -0400
+Received: from deadeye.i.decadent.org.uk ([192.168.4.177])
+	by shadbolt.decadent.org.uk with esmtp (Exim 4.63)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1K2utm-0003xr-Nl
+	for linux-wireless@vger.kernel.org; Sun, 01 Jun 2008 22:15:39 +0100
+Received: from womble by deadeye.i.decadent.org.uk with local (Exim 4.69)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1K2ut2-0001yb-9E
+	for linux-wireless@vger.kernel.org; Sun, 01 Jun 2008 22:14:44 +0100
+From: Ben Hutchings <ben@decadent.org.uk>
 To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 6/12]: wext: Parameterize the standard/private handlers.
-From: David Miller <davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NHB6gLZtW3p7s2qoU2+w"
+Date: Sun, 01 Jun 2008 22:14:44 +0100
+Message-Id: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk> (sfid-20080601_235957_766328_0713F24F)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: IW_SCAN_CAPA_ESSID vs hidden ESSID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-The WEXT standard and private handlers to use are now
-arguments to wireless_process_ioctl().
+--=-NHB6gLZtW3p7s2qoU2+w
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+Since upgrading from Linux 2.6.24 to .25, I have found that
+NetworkManager cannot associate my Intel wireless card, handled by the
+ipw2200 driver, with my AP, which has a hidden SSID.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e96559e..929d241 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1015,11 +1015,17 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- }
- 
- /* ---------------------------------------------------------------- */
-+typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
-+			       unsigned int, iw_handler);
-+
- /*
-  * Main IOCTl dispatcher.
-  * Check the type of IOCTL and call the appropriate wrapper...
-  */
--static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd)
-+static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
-+				  unsigned int cmd,
-+				  wext_ioctl_func standard,
-+				  wext_ioctl_func private)
- {
- 	struct net_device *dev;
- 	iw_handler	handler;
-@@ -1035,12 +1041,12 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return ioctl_standard_call(dev, ifr, cmd,
--					   &iw_handler_get_iwstats);
-+		return standard(dev, ifr, cmd,
-+				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return ioctl_standard_call(dev, ifr, cmd,
--					   &iw_handler_get_private);
-+		return standard(dev, ifr, cmd,
-+				&iw_handler_get_private);
- 
- 	/* Basic check */
- 	if (!netif_device_present(dev))
-@@ -1051,9 +1057,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return ioctl_standard_call(dev, ifr, cmd, handler);
-+			return standard(dev, ifr, cmd, handler);
- 		else
--			return ioctl_private_call(dev, ifr, cmd, handler);
-+			return private(dev, ifr, cmd, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
-@@ -1084,7 +1090,9 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd);
-+	ret = wireless_process_ioctl(net, ifr, cmd,
-+				     ioctl_standard_call,
-+				     ioctl_private_call);
- 	rtnl_unlock();
- 	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
- 		return -EFAULT;
--- 
-1.5.5.1.308.g1fbb5
+NetworkManager thinks that wpa_supplicant should be able to scan for
+specific hidden SSIDs if the underlying driver advertises
+IW_SCAN_CAPA_ESSID, which ipw2200 does since 2.6.25:
 
+	/* Use "AP_SCAN 2" if:
+	 * - The wireless network is non-broadcast and the driver doesn't support
+	 *     scanning specific SSIDs
+	 * - The wireless network is Ad-Hoc
+	 * - The wireless driver does not support WPA (stupid drivers...)
+	 */
+	is_adhoc =3D (nm_ap_get_mode(ap) =3D=3D IW_MODE_ADHOC);
+	if (is_adhoc || !supports_wpa)
+		ap_scan =3D "AP_SCAN 2";
+	else if (!nm_ap_get_broadcast (ap))
+		ap_scan =3D self->priv->has_scan_capa_ssid ? "AP_SCAN 1" : "AP_SCAN 2";
+
+However, this doesn't work because the scan results just have an empty
+string or "<hidden>" (not consistently, which is weird).
+
+So one of these components is doing the wrong thing.  Is it that:
+
+1. ipw2200 or ieee80211 should copy the selected ESSID into scan results
+2. wpa_supplicant should not check the ESSID of scan results if it has
+already selected an ESSId
+3. NetworkManager should not expect IW_SCAN_CAPA_ESSID to mean that this
+will work
+
+?
+
+Ben.
+
+--=20
+Ben Hutchings
+We get into the habit of living before acquiring the habit of thinking.
+                                                              - Albert Camu=
+s
+
+--=-NHB6gLZtW3p7s2qoU2+w
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBIQxFE79ZNCRIGYgcRAmGuAKCLUiu3SoEJ7CbNHHeKUaAHy3zInwCfWijt
+opYvIOXV+Xb+y0FAydMZ79I=
+=bFUo
+-----END PGP SIGNATURE-----
+
+--=-NHB6gLZtW3p7s2qoU2+w--
