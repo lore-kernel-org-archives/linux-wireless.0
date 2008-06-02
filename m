@@ -1,68 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904AbYFYTeE (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:20637 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662AbYFBRtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 15:34:04 -0400
-Subject: Re: [PATCH] rt2x00: Fix lock dependency errror
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200806252127.00971.IvDoorn@gmail.com> (sfid-20080625_212601_184149_3694A8DA)
-References: <200806252127.00971.IvDoorn@gmail.com>
-	 (sfid-20080625_212601_184149_3694A8DA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WdE4ZwMeYXbEMor46czP"
-Date: Wed, 25 Jun 2008 21:33:20 +0200
-Message-Id: <1214422400.21847.54.camel@johannes.berg> (sfid-20080625_213410_986375_BE44EC73)
-Mime-Version: 1.0
+	Mon, 2 Jun 2008 13:49:06 -0400
+Received: by py-out-1112.google.com with SMTP id p76so497660pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 10:49:05 -0700 (PDT)
+Message-ID: <1deddf2e0806021049tff1b11fscd012f7794ec48b0@mail.gmail.com> (sfid-20080602_194910_679958_C7AC2BE4)
+Date: Mon, 2 Jun 2008 10:49:04 -0700
+From: "Ryan Loebs" <obsidianx@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Broadcom 4311 and Master Mode
+In-Reply-To: <1212428650.3599.6.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1deddf2e0806021023j156ff226n98838622ad77ea9d@mail.gmail.com>
+	 <1212428650.3599.6.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Alright, I had it set to hw_mode=b changed it to hw_mode=g and now it
+got through... somewhat...
 
---=-WdE4ZwMeYXbEMor46czP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Now  I get this:
+
+Upon startup:
+=========================================
+Configuration file: hostapd.conf
+Failed to update rate sets in kernel module
+Could not set passive scanning: Unknown error 4294967295
+Mode: IEEE 802.11g  Channel: 5  Frequency: 2432 MHz
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+Using interface wlan0 with hwaddr 00:1a:73:a4:44:c8 and ssid 'test'
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+unknown mgmt cb frame subtype 4
+=========================================
 
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/=
-rt2x00/rt2x00.h
-> index 611d983..73dacbb 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -821,6 +822,7 @@ struct rt2x00_dev {
->  	/*
->  	 * Scheduled work.
->  	 */
-> +	struct workqueue_struct *workqueue;
-
-Do you really need a whole workqueue (kernel thread) per device? I would
-think that using schedule_work / cancel_work_sync for this task and keep
-using the mac80211 wq would be sufficient?
-
-johannes
-
---=-WdE4ZwMeYXbEMor46czP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYp19AAoJEKVg1VMiehFYZdEQAKyP06IderN/i9vv+OtJ3QX2
-r1ks0W1eM0pJyyDyJbmvjgIfqpqQ//yVZZfgsvkR4C433A9VaMlxzC51hVvhMEe+
-qtvF5Vdzr0MLQd8iP16hNLlvRMOHZa9i+EbCvFMp/94Cp09lZXr9uTyxOdcdXAz7
-hgkl72/JCoFNGNztmw+fS5YBwCWb3F/LuNEI0XqdBEuhvjYs+Z3l48s57YnPfMrK
-UIjFRwwTsdumvpMUVNb0sDybRcMip3uld+2R3f+nJjKubD65Fe6sCzEPt2ntdy3J
-sUgo4G7KWgVASF3lXciM3dkPl5gU/UGUlQZO1OX5ZBRZ+Rcu1QXDileAwjRBNFiN
-IUrgWd50t8ldlNG7AEjmqGmE8XqdY7dVpAP83xtWf2kJvszkHj7WrP53qp/8R2nV
-XXmXEWvjMl8GgeLA66Qhkzo+LWfeppyXdUAk6xQiC17T7x9SyLcqkCTPk00DnbRe
-T2zFeceGfnaSVOZwx8aGiJTCILIXctrZ1YdCJ3gRbzcQtxnDtyO7wMfWQwns/bof
-usO6U+svGs0Ky471i7Iu/xoDlqFhcgbT5el4DDPmKftRU5Iz++aE5bTObOuPeRYJ
-iCAs4TAjsxNrneh89NJc/7t3zRv8Y/IkDDAoSoLpqIdbIUPSRcAYSggwrsrSIaRo
-KIRUubV4gv6XQ5Z1NxTO
-=HF5K
------END PGP SIGNATURE-----
-
---=-WdE4ZwMeYXbEMor46czP--
-
+Nintendo DS attempts to connect and test:
+=========================================
+wlan0: STA 00:09:bf:63:d9:79 IEEE 802.11: authenticated
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+wlan0: STA 00:09:bf:63:d9:79 IEEE 802.11: associated (aid 1,
+accounting session 484431D2-00000000)
+Failed to set CTS protect in kernel driver
+Failed to set Short Slot Time option in kernel driver
+Could not set preamble for kernel driver
+^CSignal 2 received - terminating
+=========================================
