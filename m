@@ -1,80 +1,393 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34719 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbYFLRGd (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:21524 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbYFBHZO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 13:06:33 -0400
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Rik van Riel <riel@redhat.com>,
-	Zdenek Kabelac <zdenek.kabelac@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com> (sfid-20080612_183546_862400_74C1FB2A)
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
-	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
-	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
-	 (sfid-20080612_183546_862400_74C1FB2A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-US5klRkV1nBE0x3GLjJR"
-Date: Thu, 12 Jun 2008 19:05:35 +0200
-Message-Id: <1213290335.3730.4.camel@johannes.berg> (sfid-20080612_190637_234993_69133BC3)
-Mime-Version: 1.0
+	Mon, 2 Jun 2008 03:25:14 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: [PATCH, RESEND] libertas: unify various CF-related defines
+Date: Mon, 2 Jun 2008 09:25:05 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200805261250.50363.hs4233@mail.mn-solutions.de> <20080530154113.GB9490@tuxdriver.com>
+In-Reply-To: <20080530154113.GB9490@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806020925.05938.hs4233@mail.mn-solutions.de> (sfid-20080602_092519_813310_690D7B5F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
---=-US5klRkV1nBE0x3GLjJR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+---
 
+John, this patch applies successfully for me on top of
+wireless-testing v2.6.26-rc4-8765-g24e3ad4.
 
-> > Probably. it would be safe to use vmalloc for allocating txb anyway.
-> > I'll give it a try.
->=20
-> So vmalloc  didn't break anything on the 32bit machine I'm just about
-> to install 64 one so it will take hour or two.. I will issue some
-> official patch after that.
-
-Well, I disagree, and I'll push my patch as soon as somebody confirms
-that it doesn't break anything.
-
-> > There was already discussion on LKML about memory allocation problems
-> > on X86_64, which might explain this regression. This didn't happen
-> > before.
->=20
-> This is  the thread title if you are interested.
-> 'x86/kernel/pci_dma.c: gfp |=3D __GFP_NORETRY'
-
-Like I said, it doesn't matter, there's no need to _waste_
-18*256*sizeof(void *) bytes memory.
-
-johannes
-
---=-US5klRkV1nBE0x3GLjJR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUVdbAAoJEKVg1VMiehFYIc4P/2Ebf+XPaW6s4/BYvH7HpIbq
-/JocDvLUzk+q8+NJ468tJ5KNUxcJ2K18A7YiVUHY8vUg+PhIFACCm9cmaUwnOcws
-4kh98S8CVVA4yDAyeW20ZVZe9tEznf1XL3HiAmbh0zaL5/shmBTGmO7c9MH8TAJS
-MZ7phLWNkXUN0I7pB3Gmv3vpPWb1cT4F/CcaZ6w+uvvcc50CMerPgGE1hrVipSej
-8A9a0G7lPpU/vY1TGQhsAlRtQeflpT+Ao4lbw06iq9cUaSSCodtt+FEv16Oags/9
-c1MJKyZP4/O66lfSkzN9mcv11+yXZPXy7+pqOgSXvfCJ7MGkPQab9CGANLUR0t6z
-O3Sb7UbohJXHBgWj7q/qx8eGgB46esn6FeJLRpKxpxCSQM+HHHsJO4DpwnQFqnrT
-NCMw+D2u1k8LF45Ujlom7hXTnn06nMmc4PedZaZipYqwTynqHfJvxZRxEOI42fuj
-XF1s6dQEvwacX2ICUT2GBS9KUZmfDtpcn0U6FNjo4RhRtKTOuUbTpjfzZ6ipVnIQ
-dOap5GmTeWNq6igpXmi6JaLPv4k1dKUwfbTsnk0cCsHgb2DzLj+POXk9XQG1/zhU
-7Y0oO0vydbzXclTOIPDFcN6gMg1K9TBNVFP1lxD9OTp9jDBsj+Pue3wuYn+a0UEB
-TsJej93PUIbo/uSgaMpk
-=4EsQ
------END PGP SIGNATURE-----
-
---=-US5klRkV1nBE0x3GLjJR--
+Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-05-26 10:38:24.000000000 +0200
++++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-05-26 10:42:09.000000000 +0200
+@@ -159,56 +159,40 @@ static int if_cs_poll_while_fw_download(
+ 
+ 
+ 
+-/* Host control registers and their bit definitions */
+-
+-#define IF_CS_H_STATUS			0x00000000
+-#define IF_CS_H_STATUS_TX_OVER		0x0001
+-#define IF_CS_H_STATUS_RX_OVER		0x0002
+-#define IF_CS_H_STATUS_DNLD_OVER	0x0004
+-
+-#define IF_CS_H_INT_CAUSE		0x00000002
+-#define IF_CS_H_IC_TX_OVER		0x0001
+-#define IF_CS_H_IC_RX_OVER		0x0002
+-#define IF_CS_H_IC_DNLD_OVER		0x0004
+-#define IF_CS_H_IC_POWER_DOWN		0x0008
+-#define IF_CS_H_IC_HOST_EVENT		0x0010
+-#define IF_CS_H_IC_MASK			0x001f
+-
+-#define IF_CS_H_INT_MASK		0x00000004
+-#define	IF_CS_H_IM_MASK			0x001f
+-
+-#define IF_CS_H_WRITE_LEN		0x00000014
+-
+-#define IF_CS_H_WRITE			0x00000016
++/* First the bitmasks for the host/card interrupt/status registers: */
++#define IF_CS_BIT_TX			0x0001
++#define IF_CS_BIT_RX			0x0002
++#define IF_CS_BIT_COMMAND		0x0004
++#define IF_CS_BIT_RESP			0x0008
++#define IF_CS_BIT_EVENT			0x0010
++#define	IF_CS_BIT_MASK			0x001f
+ 
+-#define IF_CS_H_CMD_LEN			0x00000018
++/* And now the individual registers and assorted masks */
++#define IF_CS_HOST_STATUS		0x00000000
+ 
+-#define IF_CS_H_CMD			0x0000001A
++#define IF_CS_HOST_INT_CAUSE		0x00000002
+ 
+-#define IF_CS_C_READ_LEN		0x00000024
++#define IF_CS_HOST_INT_MASK		0x00000004
+ 
+-#define IF_CS_H_READ			0x00000010
++#define IF_CS_HOST_WRITE		0x00000016
++#define IF_CS_HOST_WRITE_LEN		0x00000014
+ 
+-/* Card control registers and their bit definitions */
++#define IF_CS_HOST_CMD			0x0000001A
++#define IF_CS_HOST_CMD_LEN		0x00000018
+ 
+-#define IF_CS_C_STATUS			0x00000020
+-#define IF_CS_C_S_TX_DNLD_RDY		0x0001
+-#define IF_CS_C_S_RX_UPLD_RDY		0x0002
+-#define IF_CS_C_S_CMD_DNLD_RDY		0x0004
+-#define IF_CS_C_S_CMD_UPLD_RDY		0x0008
+-#define IF_CS_C_S_CARDEVENT		0x0010
+-#define IF_CS_C_S_MASK			0x001f
+-#define IF_CS_C_S_STATUS_MASK		0x7f00
++#define IF_CS_READ			0x00000010
++#define IF_CS_READ_LEN			0x00000024
+ 
+-#define IF_CS_C_INT_CAUSE		0x00000022
+-#define	IF_CS_C_IC_MASK			0x001f
++#define IF_CS_CARD_CMD			0x00000012
++#define IF_CS_CARD_CMD_LEN		0x00000030
+ 
+-#define IF_CS_C_SQ_READ_LOW		0x00000028
+-#define IF_CS_C_SQ_HELPER_OK		0x10
++#define IF_CS_CARD_STATUS		0x00000020
++#define IF_CS_CARD_STATUS_MASK		0x7f00
+ 
+-#define IF_CS_C_CMD_LEN			0x00000030
++#define IF_CS_CARD_INT_CAUSE		0x00000022
+ 
+-#define IF_CS_C_CMD			0x00000012
++#define IF_CS_CARD_SQ_READ_LOW		0x00000028
++#define IF_CS_CARD_SQ_HELPER_OK		0x10
+ 
+ #define IF_CS_SCRATCH			0x0000003F
+ 
+@@ -221,13 +205,13 @@ static int if_cs_poll_while_fw_download(
+ static inline void if_cs_enable_ints(struct if_cs_card *card)
+ {
+ 	lbs_deb_enter(LBS_DEB_CS);
+-	if_cs_write16(card, IF_CS_H_INT_MASK, 0);
++	if_cs_write16(card, IF_CS_HOST_INT_MASK, 0);
+ }
+ 
+ static inline void if_cs_disable_ints(struct if_cs_card *card)
+ {
+ 	lbs_deb_enter(LBS_DEB_CS);
+-	if_cs_write16(card, IF_CS_H_INT_MASK, IF_CS_H_IM_MASK);
++	if_cs_write16(card, IF_CS_HOST_INT_MASK, IF_CS_BIT_MASK);
+ }
+ 
+ /*
+@@ -244,8 +228,8 @@ static int if_cs_send_cmd(struct lbs_pri
+ 
+ 	/* Is hardware ready? */
+ 	while (1) {
+-		u16 val = if_cs_read16(card, IF_CS_C_STATUS);
+-		if (val & IF_CS_C_S_CMD_DNLD_RDY)
++		u16 val = if_cs_read16(card, IF_CS_CARD_STATUS);
++		if (val & IF_CS_BIT_COMMAND)
+ 			break;
+ 		if (++loops > 100) {
+ 			lbs_pr_err("card not ready for commands\n");
+@@ -254,20 +238,20 @@ static int if_cs_send_cmd(struct lbs_pri
+ 		mdelay(1);
+ 	}
+ 
+-	if_cs_write16(card, IF_CS_H_CMD_LEN, nb);
++	if_cs_write16(card, IF_CS_HOST_CMD_LEN, nb);
+ 
+-	if_cs_write16_rep(card, IF_CS_H_CMD, buf, nb / 2);
++	if_cs_write16_rep(card, IF_CS_HOST_CMD, buf, nb / 2);
+ 	/* Are we supposed to transfer an odd amount of bytes? */
+ 	if (nb & 1)
+-		if_cs_write8(card, IF_CS_H_CMD, buf[nb-1]);
++		if_cs_write8(card, IF_CS_HOST_CMD, buf[nb-1]);
+ 
+ 	/* "Assert the download over interrupt command in the Host
+ 	 * status register" */
+-	if_cs_write16(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
++	if_cs_write16(card, IF_CS_HOST_STATUS, IF_CS_BIT_COMMAND);
+ 
+ 	/* "Assert the download over interrupt command in the Card
+ 	 * interrupt case register" */
+-	if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++	if_cs_write16(card, IF_CS_HOST_INT_CAUSE, IF_CS_BIT_COMMAND);
+ 	ret = 0;
+ 
+ done:
+@@ -287,18 +271,18 @@ static void if_cs_send_data(struct lbs_p
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 	if_cs_disable_ints(card);
+ 
+-	status = if_cs_read16(card, IF_CS_C_STATUS);
+-	BUG_ON((status & IF_CS_C_S_TX_DNLD_RDY) == 0);
++	status = if_cs_read16(card, IF_CS_CARD_STATUS);
++	BUG_ON((status & IF_CS_BIT_TX) == 0);
+ 
+-	if_cs_write16(card, IF_CS_H_WRITE_LEN, nb);
++	if_cs_write16(card, IF_CS_HOST_WRITE_LEN, nb);
+ 
+ 	/* write even number of bytes, then odd byte if necessary */
+-	if_cs_write16_rep(card, IF_CS_H_WRITE, buf, nb / 2);
++	if_cs_write16_rep(card, IF_CS_HOST_WRITE, buf, nb / 2);
+ 	if (nb & 1)
+-		if_cs_write8(card, IF_CS_H_WRITE, buf[nb-1]);
++		if_cs_write8(card, IF_CS_HOST_WRITE, buf[nb-1]);
+ 
+-	if_cs_write16(card, IF_CS_H_STATUS, IF_CS_H_STATUS_TX_OVER);
+-	if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_STATUS_TX_OVER);
++	if_cs_write16(card, IF_CS_HOST_STATUS, IF_CS_BIT_TX);
++	if_cs_write16(card, IF_CS_HOST_INT_CAUSE, IF_CS_BIT_TX);
+ 	if_cs_enable_ints(card);
+ 
+ 	lbs_deb_leave(LBS_DEB_CS);
+@@ -311,27 +295,28 @@ static int if_cs_receive_cmdres(struct l
+ {
+ 	unsigned long flags;
+ 	int ret = -1;
+-	u16 val;
++	u16 status;
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+ 	/* is hardware ready? */
+-	val = if_cs_read16(priv->card, IF_CS_C_STATUS);
+-	if ((val & IF_CS_C_S_CMD_UPLD_RDY) == 0) {
+-		lbs_pr_err("card not ready for CMD\n");
++	status = if_cs_read16(priv->card, IF_CS_CARD_STATUS);
++	if ((status & IF_CS_BIT_RESP) == 0) {
++		lbs_pr_err("no cmd response in card\n");
++		*len = 0;
+ 		goto out;
+ 	}
+ 
+-	*len = if_cs_read16(priv->card, IF_CS_C_CMD_LEN);
++	*len = if_cs_read16(priv->card, IF_CS_CARD_CMD_LEN);
+ 	if ((*len == 0) || (*len > LBS_CMD_BUFFER_SIZE)) {
+ 		lbs_pr_err("card cmd buffer has invalid # of bytes (%d)\n", *len);
+ 		goto out;
+ 	}
+ 
+ 	/* read even number of bytes, then odd byte if necessary */
+-	if_cs_read16_rep(priv->card, IF_CS_C_CMD, data, *len/sizeof(u16));
++	if_cs_read16_rep(priv->card, IF_CS_CARD_CMD, data, *len/sizeof(u16));
+ 	if (*len & 1)
+-		data[*len-1] = if_cs_read8(priv->card, IF_CS_C_CMD);
++		data[*len-1] = if_cs_read8(priv->card, IF_CS_CARD_CMD);
+ 
+ 	/* This is a workaround for a firmware that reports too much
+ 	 * bytes */
+@@ -356,7 +341,7 @@ static struct sk_buff *if_cs_receive_dat
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+-	len = if_cs_read16(priv->card, IF_CS_C_READ_LEN);
++	len = if_cs_read16(priv->card, IF_CS_READ_LEN);
+ 	if (len == 0 || len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
+ 		lbs_pr_err("card data buffer has invalid # of bytes (%d)\n", len);
+ 		priv->stats.rx_dropped++;
+@@ -371,13 +356,13 @@ static struct sk_buff *if_cs_receive_dat
+ 	data = skb->data;
+ 
+ 	/* read even number of bytes, then odd byte if necessary */
+-	if_cs_read16_rep(priv->card, IF_CS_H_READ, data, len/sizeof(u16));
++	if_cs_read16_rep(priv->card, IF_CS_READ, data, len/sizeof(u16));
+ 	if (len & 1)
+-		data[len-1] = if_cs_read8(priv->card, IF_CS_H_READ);
++		data[len-1] = if_cs_read8(priv->card, IF_CS_READ);
+ 
+ dat_err:
+-	if_cs_write16(priv->card, IF_CS_H_STATUS, IF_CS_H_STATUS_RX_OVER);
+-	if_cs_write16(priv->card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_RX_OVER);
++	if_cs_write16(priv->card, IF_CS_HOST_STATUS, IF_CS_BIT_RX);
++	if_cs_write16(priv->card, IF_CS_HOST_INT_CAUSE, IF_CS_BIT_RX);
+ 
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %p", skb);
+@@ -393,7 +378,7 @@ static irqreturn_t if_cs_interrupt(int i
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+ 	/* Ask card interrupt cause register if there is something for us */
+-	cause = if_cs_read16(card, IF_CS_C_INT_CAUSE);
++	cause = if_cs_read16(card, IF_CS_CARD_INT_CAUSE);
+ 	if (cause == 0) {
+ 		/* Not for us */
+ 		return IRQ_NONE;
+@@ -406,10 +391,10 @@ static irqreturn_t if_cs_interrupt(int i
+ 	}
+ 
+ 	/* Clear interrupt cause */
+-	if_cs_write16(card, IF_CS_C_INT_CAUSE, cause & IF_CS_C_IC_MASK);
++	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, cause & IF_CS_BIT_MASK);
+ 	lbs_deb_cs("cause 0x%04x\n", cause);
+ 
+-	if (cause & IF_CS_C_S_RX_UPLD_RDY) {
++	if (cause & IF_CS_BIT_RX) {
+ 		struct sk_buff *skb;
+ 		lbs_deb_cs("rx packet\n");
+ 		skb = if_cs_receive_data(priv);
+@@ -417,12 +402,12 @@ static irqreturn_t if_cs_interrupt(int i
+ 			lbs_process_rxed_packet(priv, skb);
+ 	}
+ 
+-	if (cause & IF_CS_H_IC_TX_OVER) {
++	if (cause & IF_CS_BIT_TX) {
+ 		lbs_deb_cs("tx done\n");
+ 		lbs_host_to_card_done(priv);
+ 	}
+ 
+-	if (cause & IF_CS_C_S_CMD_UPLD_RDY) {
++	if (cause & IF_CS_BIT_RESP) {
+ 		unsigned long flags;
+ 		u8 i;
+ 
+@@ -440,11 +425,11 @@ static irqreturn_t if_cs_interrupt(int i
+ 		spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 	}
+ 
+-	if (cause & IF_CS_H_IC_HOST_EVENT) {
+-		u16 event = if_cs_read16(priv->card, IF_CS_C_STATUS)
+-			& IF_CS_C_S_STATUS_MASK;
+-		if_cs_write16(priv->card, IF_CS_H_INT_CAUSE,
+-			IF_CS_H_IC_HOST_EVENT);
++	if (cause & IF_CS_BIT_EVENT) {
++		u16 event = if_cs_read16(priv->card, IF_CS_CARD_STATUS)
++			& IF_CS_CARD_STATUS_MASK;
++		if_cs_write16(priv->card, IF_CS_HOST_INT_CAUSE,
++			IF_CS_BIT_EVENT);
+ 		lbs_deb_cs("host event 0x%04x\n", event);
+ 		lbs_queue_event(priv, event >> 8 & 0xff);
+ 	}
+@@ -511,26 +496,26 @@ static int if_cs_prog_helper(struct if_c
+ 
+ 		/* "write the number of bytes to be sent to the I/O Command
+ 		 * write length register" */
+-		if_cs_write16(card, IF_CS_H_CMD_LEN, count);
++		if_cs_write16(card, IF_CS_HOST_CMD_LEN, count);
+ 
+ 		/* "write this to I/O Command port register as 16 bit writes */
+ 		if (count)
+-			if_cs_write16_rep(card, IF_CS_H_CMD,
++			if_cs_write16_rep(card, IF_CS_HOST_CMD,
+ 				&fw->data[sent],
+ 				count >> 1);
+ 
+ 		/* "Assert the download over interrupt command in the Host
+ 		 * status register" */
+-		if_cs_write8(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
++		if_cs_write8(card, IF_CS_HOST_STATUS, IF_CS_BIT_COMMAND);
+ 
+ 		/* "Assert the download over interrupt command in the Card
+ 		 * interrupt case register" */
+-		if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++		if_cs_write16(card, IF_CS_HOST_INT_CAUSE, IF_CS_BIT_COMMAND);
+ 
+ 		/* "The host polls the Card Status register ... for 50 ms before
+ 		   declaring a failure */
+-		ret = if_cs_poll_while_fw_download(card, IF_CS_C_STATUS,
+-			IF_CS_C_S_CMD_DNLD_RDY);
++		ret = if_cs_poll_while_fw_download(card, IF_CS_CARD_STATUS,
++			IF_CS_BIT_COMMAND);
+ 		if (ret < 0) {
+ 			lbs_pr_err("can't download helper at 0x%x, ret %d\n",
+ 				sent, ret);
+@@ -572,14 +557,15 @@ static int if_cs_prog_real(struct if_cs_
+ 	}
+ 	lbs_deb_cs("fw size %td\n", fw->size);
+ 
+-	ret = if_cs_poll_while_fw_download(card, IF_CS_C_SQ_READ_LOW, IF_CS_C_SQ_HELPER_OK);
++	ret = if_cs_poll_while_fw_download(card, IF_CS_CARD_SQ_READ_LOW,
++		IF_CS_CARD_SQ_HELPER_OK);
+ 	if (ret < 0) {
+ 		lbs_pr_err("helper firmware doesn't answer\n");
+ 		goto err_release;
+ 	}
+ 
+ 	for (sent = 0; sent < fw->size; sent += len) {
+-		len = if_cs_read16(card, IF_CS_C_SQ_READ_LOW);
++		len = if_cs_read16(card, IF_CS_CARD_SQ_READ_LOW);
+ 		if (len & 1) {
+ 			retry++;
+ 			lbs_pr_info("odd, need to retry this firmware block\n");
+@@ -597,16 +583,16 @@ static int if_cs_prog_real(struct if_cs_
+ 		}
+ 
+ 
+-		if_cs_write16(card, IF_CS_H_CMD_LEN, len);
++		if_cs_write16(card, IF_CS_HOST_CMD_LEN, len);
+ 
+-		if_cs_write16_rep(card, IF_CS_H_CMD,
++		if_cs_write16_rep(card, IF_CS_HOST_CMD,
+ 			&fw->data[sent],
+ 			(len+1) >> 1);
+-		if_cs_write8(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
+-		if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++		if_cs_write8(card, IF_CS_HOST_STATUS, IF_CS_BIT_COMMAND);
++		if_cs_write16(card, IF_CS_HOST_INT_CAUSE, IF_CS_BIT_COMMAND);
+ 
+-		ret = if_cs_poll_while_fw_download(card, IF_CS_C_STATUS,
+-			IF_CS_C_S_CMD_DNLD_RDY);
++		ret = if_cs_poll_while_fw_download(card, IF_CS_CARD_STATUS,
++			IF_CS_BIT_COMMAND);
+ 		if (ret < 0) {
+ 			lbs_pr_err("can't download firmware at 0x%x\n", sent);
+ 			goto err_release;
+@@ -834,7 +820,7 @@ static int if_cs_probe(struct pcmcia_dev
+ 
+ 	/* Clear any interrupt cause that happend while sending
+ 	 * firmware/initializing card */
+-	if_cs_write16(card, IF_CS_C_INT_CAUSE, IF_CS_C_IC_MASK);
++	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+ 	if_cs_enable_ints(card);
+ 
+ 	/* And finally bring the card up */
 
