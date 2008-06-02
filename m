@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:40402 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443AbYFLSxh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:53:37 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2147587rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 11:53:37 -0700 (PDT)
-Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
-	bridging.
-From: Luis Carlos Cobo <luisca@cozybit.com>
+Received: from c60.cesmail.net ([216.154.195.49]:29742 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751038AbYFBEdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 00:33:06 -0400
+Subject: Re: Wireless-testing's b43 panics in b43_generate_txhdr on packet
+	transmit
+From: Pavel Roskin <proski@gnu.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
-	j@w1.fi, bridge@linux-foundation.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-In-Reply-To: <1213296250.3730.33.camel@johannes.berg>
-References: <1213232760.6645.24.camel@localhost>
-	 (sfid-20080612_030607_332834_1EFDE126)  <1213255570.3871.8.camel@johannes.berg>
-	 <1213294793.6615.16.camel@localhost>
-	 (sfid-20080612_202000_504292_98E93460)  <1213294852.3730.31.camel@johannes.berg>
-	 <1213295643.6615.20.camel@localhost>
-	 (sfid-20080612_203408_119945_EA437275)  <1213296250.3730.33.camel@johannes.berg>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	Michael Buesch <mb@bu3sch.de>, linux-kernel@vger.kernel.org
+In-Reply-To: <20080602000841.qjrd66s3esgscko0-cebfxv@fcnzpbc.arg@webmail.spamcop.net>
+References: <69e28c910805310723j2b721030x2609cc9e866abafa@mail.gmail.com>
+	 <200805311841.46740.mb@bu3sch.de> <1212252636.2766.10.camel@rd>
+	 <200805311954.46639.mb@bu3sch.de> <1212265322.7672.2.camel@johannes.berg>
+	 <20080602000841.qjrd66s3esgscko0-cebfxv@fcnzpbc.arg@webmail.spamcop.net>
 Content-Type: text/plain
-Date: Thu, 12 Jun 2008 11:53:35 -0700
-Message-Id: <1213296815.6615.24.camel@localhost> (sfid-20080612_205341_245044_06EEF8B4)
+Date: Mon, 02 Jun 2008 00:33:04 -0400
+Message-Id: <1212381184.2894.3.camel@rd> (sfid-20080602_063312_994863_8BFD1189)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-12 at 20:44 +0200, Johannes Berg wrote:
-> But in response to what mac80211 command are you sending the promisc
-> mode to the hw?
+On Mon, 2008-06-02 at 00:08 -0400, Pavel Roskin wrote:
 
-In the function associated to .configure_filter (struct ieee80211_ops)
-in the driver, when (*new_flags & (FIF_PROMISC_IN_BSS))
+> wep_encrypt_skb() in wep.c would not return TX_CONTINUE.  But most  
+> importantly, there is a suspicious change in wep_encrypt_skb() - the  
+> key is set in the other branch of the condition.
+> 
+> I'll try to restore the original logic in wep.c.  I'll post a patch if  
+> it works.
+
+That was it!  Here's the patch (I'll submit it to John tomorrow if nobody objects).
+
+
+mac80211: fix hardware WEP support
+
+Setting hardware WEP key was accidentally moved to a wrong place in
+57ccbb1cbe3f8e10a500ff8b9fb26dc1a542fe99.  Move it back.  This fixes
+kernel panic in b43 if WEP is used.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+
+ net/mac80211/wep.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index c9fd129..e7b6344 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -335,10 +335,10 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	info->control.icv_len = WEP_ICV_LEN;
+ 
+ 	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+-		info->control.hw_key = &tx->key->conf;
+ 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
+ 			return -1;
+ 	} else {
++		info->control.hw_key = &tx->key->conf;
+ 		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+ 			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
+ 				return -1;
+
 
 -- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+Regards,
+Pavel Roskin
