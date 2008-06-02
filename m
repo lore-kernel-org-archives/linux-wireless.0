@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32658 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759310AbYF3J1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 26/33] iwlwifi: fix 4965 uCode load
-Date: Mon, 30 Jun 2008 17:23:26 +0800
-Message-Id: <1214817813-17639-27-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_870927_5083A070)
-In-Reply-To: <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
+Received: from fk-out-0910.google.com ([209.85.128.190]:61581 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752032AbYFBPBb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 11:01:31 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so918296fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 08:01:29 -0700 (PDT)
+Message-ID: <8704f27d0806020801g1785d067j9c28832a7e5c39e3@mail.gmail.com> (sfid-20080602_170135_023020_DD375EAE)
+Date: Mon, 2 Jun 2008 18:01:29 +0300
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: Barteq <barteqpl@gmail.com>
+Subject: Re: iwlwifi: Bug - can't connect to WPA PSK access point any more
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <op.ub3jirfui79708@thinkpad>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <op.ub3jirfui79708@thinkpad>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+> Some facts:
+> kernel: Linux thinkpad 2.6.26-rc4-zen0 #1 SMP PREEMPT Wed May 28 03:00:38
+> CEST 2008 i686 GNU/Linux
+> iwl module: 1.2.26ks from 01.06.2008 compat-wireless pack
+> ucode: iwlwifi-4965-ucode-4.44.1.20
+>
 
-This patch fixes uCode load in 4965 HW
+can you please check that you have this one ?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    5 +----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 2 files changed, 3 insertions(+), 6 deletions(-)
+1b7a0e7709ba92423894c612c4dca88bec315a75
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=1b7a0e7709ba92423894c612c4dca88bec315a75
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 099983f..1be6ca4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -807,11 +807,8 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 
- 	iwl5000_send_Xtal_calib(priv);
- 
--	if (priv->ucode_type == UCODE_RT) {
-+	if (priv->ucode_type == UCODE_RT)
- 		iwl5000_send_calib_results(priv);
--		set_bit(STATUS_READY, &priv->status);
--		priv->is_open = 1;
--	}
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index a4aebe1..5eb2a3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2627,9 +2627,9 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 			ret = -ETIMEDOUT;
- 			goto out_release_irq;
- 		}
--
--		priv->is_open = 1;
- 	}
-+
-+	priv->is_open = 1;
- 	IWL_DEBUG_MAC80211("leave\n");
- 	return 0;
- 
+> Maybe I'm donig something wrong, maybe it's not a bug, but.. it is extremly
+> irritating.. I'cant use wifi at home, but it works in every other location!
+
+Well, in the meantime, you can load the module with swcrypto=1, this
+will make things work
+
+> Even today was using wpa-psk network.. based on some newer wrt54gl linksys
+> AP - without any serious issues.
+
+This might be because your AP does group key rekeying. I just checked
+with a 1250 Cisco AP, group key rekeying works (I configured the AP to
+do rekeying every 15 seconds...) This might also be because the AP
+implements the rekeying in a funny way (in terms of key indeces), that
+iwlwifi doesn't know how to deal with (just thinking aloud).
+
+Please send your wpa_supp conf file over.
+Please try to disable the group key rekeying just to see what happens....
+
 -- 
-1.5.3.6
-
+Emmanuel Grumbach
+egrumbach@gmail.com
