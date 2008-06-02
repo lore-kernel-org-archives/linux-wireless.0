@@ -1,67 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36339 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35218 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753502AbYFJNMB (ORCPT
+	with ESMTP id S1760291AbYFBMjc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 09:12:01 -0400
-Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+	Mon, 2 Jun 2008 08:39:32 -0400
+Subject: Re: [PATCH] mac80211: fix panic when using hardware WEP
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080610123007.GB1571@tuxdriver.com>
-References: <20080610105058.GA6961@jm.kir.nu>
-	 <1213096575.3668.6.camel@johannes.berg>
-	 <20080610123007.GB1571@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AIY6pNykq+ra3LScBNkO"
-Date: Tue, 10 Jun 2008 15:11:09 +0200
-Message-Id: <1213103469.3668.13.camel@johannes.berg> (sfid-20080610_151208_700604_5E6F70EA)
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <20080602115437.12734.42209.stgit@dv.roinet.com>
+References: <20080602115437.12734.42209.stgit@dv.roinet.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RCuPpsl24HG5sCr3HTTf"
+Date: Mon, 02 Jun 2008 14:19:43 +0200
+Message-Id: <1212409183.4148.14.camel@johannes.berg> (sfid-20080602_144009_444678_FF45226B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-AIY6pNykq+ra3LScBNkO
+--=-RCuPpsl24HG5sCr3HTTf
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2008-06-02 at 07:54 -0400, Pavel Roskin wrote:
+> 57ccbb1cbe3f8e10a500ff8b9fb26dc1a542fe99 misplaced code for setting
+> hardware WEP keys.  Move it back.  This fixes kernel panic in b43 if WEP
+> is used and hardware encryption is enabled.
 
-> > One thing that I'd like to add is a having a "global" monitor interface
-> > that is registered by the hwsim module and not mac80211 and shows all
-> > frames, regardless of channel etc.
+Oh wow, yes, sorry about that, and thanks for tracking it down!
+
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
 >=20
-> That sounds like a great idea.  A mechanism for injecting frames from
-> an external source might be useful as well...?
+>  net/mac80211/wep.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+> index c9fd129..e7b6344 100644
+> --- a/net/mac80211/wep.c
+> +++ b/net/mac80211/wep.c
+> @@ -335,10 +335,10 @@ static int wep_encrypt_skb(struct ieee80211_tx_data=
+ *tx, struct sk_buff *skb)
+>  	info->control.icv_len =3D WEP_ICV_LEN;
+> =20
+>  	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+> -		info->control.hw_key =3D &tx->key->conf;
+>  		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
+>  			return -1;
+>  	} else {
+> +		info->control.hw_key =3D &tx->key->conf;
+>  		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+>  			if (!ieee80211_wep_add_iv(tx->local, skb, tx->key))
+>  				return -1;
+>=20
 
-Using the same interface maybe? We can work on it.
-
-> Jouni this looks great.  Let's get this into the kernel.
-
-I wonder where to stick it. net/mac80211/virtual-hw.c? Or
-drivers/net/wireless/mac80211-virt.c? Heh. Not that it matters :)
-
-johannes
-
---=-AIY6pNykq+ra3LScBNkO
+--=-RCuPpsl24HG5sCr3HTTf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJITn1pAAoJEKVg1VMiehFYeJMP/ReDe7EkFujovNNFOMVwq2Pg
-nqWwEp5m5cguxvBpiN1yQ+fpSBsdJLWB7tRUffjAX1d/bug8SsIzkbnfTUdgU4dB
-Ns1nwDZBVEvZSZJE3iJm3uyRG1vhwjbD4NecUJAnIO4qgoRALqb1+1lBamaOgFoG
-Dh6Jflnbnh3/TsbTpUllIu/QG4pCphrd60//PKV32l/S05kxYI9NYtMmO9xE4eJ4
-Uzn88Dfo1ZJSA1uiaSgcRAgxHAT2Bsi2nyzwfRrSvKkwHJFt/Qwnmr6//8zNw190
-Ol96hqKT5OF3JG6no+c0qIsbWpNj2aFl/1YAhdNpAaJg54J+n9FcAqCLBpyY5U2P
-nAr0RRhRqwhCRZ63hmVRXlthJDq4gBRlhdwJ/QsNGV61FNqTRkjvKMqQ+bXmwHlG
-tao+80D4B40Ups9fykKoHa3+9ocG6xKikCxOrQB7blusmWdrrTIrd0O/TDbo7cjl
-+kwgqRUi7Hsg5044Fe0ODWMPVRf/KRil4DQ3kCA/0IYGpc9rqHK1rD2J94faDwAo
-Rx1tbVanjLustMWoLVntv5QycqVW+YlNL7oe2gigP7Y/PFqaYjmnf1ZuPVOfNVL8
-dUUKjmqBr90wNPWK8wC4Rx356yIDy3cAUJBK1ylYiVbJ2b4+zoRt8//eM3HOcYN+
-GYKx7m6p2GHjjZtoHwMq
-=IwJt
+iQIVAwUASEPlX6Vg1VMiehFYAQIPnhAAvif+QOnA1Mypdv5EsJ13E8RhOIL4bFXJ
+c78ZlTPSi+GJpPIVwaqhijgYdH+znV0Amb9BvHjPH2GIc4+kvtZxURY/z4m2nwtz
+UgTcZ93KLXvrga5L48czEBTsvfhTXNPLtPtx7kNg+1L6JT3+/1op45TzzNKfMT0d
+Ryc8Ama5g4s8WuHzFqLDu1bghSmn9dtnApNHQ9bdNS68cXZsnu7ZmWL/f6bPpHXy
+R3w0S3WFLz3+Xb5X0HLYE/gbgfBesk7UZXZJrpROBkNeNd5HDgJCXmFlr5fLXodH
+mI+spt/6CfFXuqRhqANWdEfUBxe9ELvL3fuV8YvzJ3RzuUZx2c3dyfRYQ91OoPy1
+deyKnSIrTmRP9Mb0BgD+PxJ9YovGbB9PyhYLvqdshkeRsOAtIYP4FRHTKC0ko5Lg
+qs7Z4x5E1NiQyLewP5hHN9cfKsxw16H0kIPd3wF1sSMtXRtVqYgDIUEZRlMc9Uig
+kcM+kGDMJBRrtQrIiad+C1yh9OcqBrFlDggogGL1RE4auaPbSaliSMWt0cyMwgCC
+KLm9U37s7gCNhu7R29HIk7ZoVJPhJ6h95tCPdp4KGVcxiB7CU+ocdauCIZwPaI8m
+uJdotABlmue9PpMF9WII2K8JsEFBPcA9SrONaTBcCJm1yQ+2SzUwGONTrgTnBxuF
+Ho+71gRV1xM=
+=FBlw
 -----END PGP SIGNATURE-----
 
---=-AIY6pNykq+ra3LScBNkO--
+--=-RCuPpsl24HG5sCr3HTTf--
 
