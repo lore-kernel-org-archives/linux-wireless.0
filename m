@@ -1,67 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14906 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754545AbYFLTin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 15:38:43 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: fix beacon interval value
-Date: Thu, 12 Jun 2008 22:38:37 +0300
-Message-Id: <1213299517-24042-1-git-send-email-tomas.winkler@intel.com> (sfid-20080612_213847_355572_07FFAC4B)
-Content-Type: text/plain; charset="us-ascii"
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:54498 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991AbYFBPnV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 11:43:21 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/4] rndis_wlan: do link-down state change in worker thread
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Mon, 02 Jun 2008 18:35:21 +0300
+Message-ID: <20080602153521.22793.4271.stgit@nanoha.lan> (sfid-20080602_174323_556934_33E21167)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes setting beacon interval
+rndis_wext_link_change() is called from within rndis_command() so it
+isn't very good place to do any work. Move to worker thread.
 
-1. in register_hw it honors value requested by the driver
-2. It uses default 100 instead of 1000 or 10000. Scanning for beacon
-interval ~1sec and above is not sane
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- net/mac80211/main.c |    3 ++-
- net/mac80211/mlme.c |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b182f01..5c5396e 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1707,7 +1707,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	debugfs_hw_add(local);
- 
--	local->hw.conf.beacon_int = 1000;
-+	if (local->hw.conf.beacon_int < 10)
-+		local->hw.conf.beacon_int = 100;
- 
- 	local->wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
- 						  IEEE80211_HW_SIGNAL_DB |
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7f05820..46f2037 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3583,7 +3583,7 @@ static int ieee80211_sta_create_ibss(struct net_device *dev,
- 	sband = local->hw.wiphy->bands[bss->band];
- 
- 	if (local->hw.conf.beacon_int == 0)
--		local->hw.conf.beacon_int = 10000;
-+		local->hw.conf.beacon_int = 100;
- 	bss->beacon_int = local->hw.conf.beacon_int;
- 	bss->last_update = jiffies;
- 	bss->capability = WLAN_CAPABILITY_IBSS;
--- 
-1.5.4.1
+ drivers/net/wireless/rndis_wlan.c |   28 ++++++++++++++--------------
+ 1 files changed, 14 insertions(+), 14 deletions(-)
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 3954897..aaeeec8 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -310,8 +310,9 @@ enum wpa_key_mgmt { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
+ #define CAP_MODE_MASK		7
+ #define CAP_SUPPORT_TXPOWER	8
+ 
+-#define WORK_CONNECTION_EVENT	(1<<0)
+-#define WORK_SET_MULTICAST_LIST	(1<<1)
++#define WORK_LINK_UP		(1<<0)
++#define WORK_LINK_DOWN		(1<<1)
++#define WORK_SET_MULTICAST_LIST	(1<<2)
+ 
+ /* RNDIS device private data */
+ struct rndis_wext_private {
+@@ -2213,7 +2214,7 @@ static void rndis_wext_worker(struct work_struct *work)
+ 	int assoc_size = sizeof(*info) + IW_CUSTOM_MAX + 32;
+ 	int ret, offset;
+ 
+-	if (test_and_clear_bit(WORK_CONNECTION_EVENT, &priv->work_pending)) {
++	if (test_and_clear_bit(WORK_LINK_UP, &priv->work_pending)) {
+ 		info = kzalloc(assoc_size, GFP_KERNEL);
+ 		if (!info)
+ 			goto get_bssid;
+@@ -2251,6 +2252,13 @@ get_bssid:
+ 		}
+ 	}
+ 
++	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending)) {
++		evt.data.flags = 0;
++		evt.data.length = 0;
++		memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
++		wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
++	}
++
+ 	if (test_and_clear_bit(WORK_SET_MULTICAST_LIST, &priv->work_pending))
+ 		set_multicast_list(usbdev);
+ }
+@@ -2267,18 +2275,10 @@ static void rndis_wext_set_multicast_list(struct net_device *dev)
+ static void rndis_wext_link_change(struct usbnet *dev, int state)
+ {
+ 	struct rndis_wext_private *priv = get_rndis_wext_priv(dev);
+-	union iwreq_data evt;
+ 
+-	if (state) {
+-		/* queue work to avoid recursive calls into rndis_command */
+-		set_bit(WORK_CONNECTION_EVENT, &priv->work_pending);
+-		queue_work(priv->workqueue, &priv->work);
+-	} else {
+-		evt.data.flags = 0;
+-		evt.data.length = 0;
+-		memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
+-		wireless_send_event(dev->net, SIOCGIWAP, &evt, NULL);
+-	}
++	/* queue work to avoid recursive calls into rndis_command */
++	set_bit(state ? WORK_LINK_UP : WORK_LINK_DOWN, &priv->work_pending);
++	queue_work(priv->workqueue, &priv->work);
+ }
+ 
+ 
 
