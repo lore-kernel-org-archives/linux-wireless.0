@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4845 "EHLO ra.tuxdriver.com"
+Received: from main.gmane.org ([80.91.229.2]:53638 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754130AbYFJM7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 08:59:10 -0400
-Date: Tue, 10 Jun 2008 08:30:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
-Message-ID: <20080610123007.GB1571@tuxdriver.com> (sfid-20080610_145914_933327_454CB0D7)
-References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg>
-MIME-Version: 1.0
+	id S1753182AbYFBR5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 13:57:33 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1K3EHi-0007CM-Ui
+	for linux-wireless@vger.kernel.org; Mon, 02 Jun 2008 17:57:30 +0000
+Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 17:57:30 +0000
+Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 17:57:30 +0000
+To: linux-wireless@vger.kernel.org
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: [PATCH] mac80211: fix rate control initialisation
+Date: Mon, 02 Jun 2008 18:50:20 +0100
+Message-ID: <g21c9v$vdl$1@ger.gmane.org> (sfid-20080602_195737_496928_9DF3D142)
+References: <g1uicv$se6$1@ger.gmane.org> <1212392284.4148.7.camel@johannes.berg>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213096575.3668.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 01:16:15PM +0200, Johannes Berg wrote:
-> On Tue, 2008-06-10 at 13:50 +0300, Jouni Malinen wrote:
-> > hostapd and wpa_supplicant include a test driver interface that allows
-> > them to be tested on a single host without any wireless hardware for
-> > development purposes. I have found this very valuable both for
-> > developing new functionality and for testing existing code.
-> > 
-> > In order to provide similar mechanism for mac80211 developers and to
-> > extend the scope of suitable test cases for hostapd/wpa_supplicant, I've
-> > written a Linux kernel module that provides a similar test interface at
-> > a lower layer. mac80211_hwsim simulates WLAN hardware and the air
-> > interface between the radios by acting as a low-level radio driver for
-> > mac80211. Neither mac80211 nor user space programs need any changes to
-> > work with the simulated radios.
+Johannes Berg wrote:
+
+> In commit 2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39 ("mac80211: use rate
+> index in TX control") I forgot to initialise a few new variables to -1
+> which means that the rate control algorithm is never triggered and 0 is
+> used as the only rate index, effectively fixing the transmit bitrate at
+> the lowest supported.
 > 
-> Way cool!
- 
-Yes, awesome!
+> This patch adds the missing initialisation.
 
-> > The initial version of mac80211_hwsim is available from the
-> > mac80211_hwsim subdirectory of my hostap Git tree:
-> > git://w1.fi/srv/git/hostap.git
-> > http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim
-> > 
-> > If there is interest in moving mac80211_hwsim module into the Linux
-> > kernel tree, I'm open to doing that, too.
-> 
-> I think that would make sense, yes, especially since one look at the
-> code already tells me that it needs to follow large API changes to work
-> with the current mac80211.
+This is far better (the rate sets itself to 24Mb/s or 36 Mb/s rather than
+being fixed on 54 Mb/s). However when using iwl3945 the rate could not be
+forced using iwconfig wlan0 rate 54M fixed and it took a little . The rate
+it chooses also seems to bounce about a bit - simply telling networkmanager
+to reconnect results in a different speed (although it's hard to tell how
+good the connection is while this is happening).
 
-ACK
-
-> One thing that I'd like to add is a having a "global" monitor interface
-> that is registered by the hwsim module and not mac80211 and shows all
-> frames, regardless of channel etc.
-
-That sounds like a great idea.  A mechanism for injecting frames from
-an external source might be useful as well...?
-
-Jouni this looks great.  Let's get this into the kernel.
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Sitsofe | http://sucs.org/~sits/
+
