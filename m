@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4394 "EHLO ra.tuxdriver.com"
+Received: from ms5.Sony.CO.JP ([211.125.136.201]:47923 "EHLO ms5.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751147AbYF0RRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 13:17:25 -0400
-Date: Fri, 27 Jun 2008 13:07:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: drago01 <drago01@gmail.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-06-27
-Message-ID: <20080627170751.GB20277@tuxdriver.com> (sfid-20080627_191729_349852_940F2F81)
-References: <20080627153541.GA16597@tuxdriver.com> <f6ca9fed0806270854u674a9d5aled463865e07829c8@mail.gmail.com>
+	id S1753659AbYFBDnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jun 2008 23:43:18 -0400
+Date: Mon, 02 Jun 2008 12:42:47 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 3/3] PS3: gelic: Add support for ESSID scan
+Cc: geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	linux-wireless@vger.kernel.org, geoffrey.levand@am.sony.com,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+In-Reply-To: <1212169904.8178.27.camel@localhost.localdomain>
+References: <20080530162420.473C.40F06B3A@sm.sony.co.jp> <1212169904.8178.27.camel@localhost.localdomain>
+Message-Id: <20080602123704.475F.40F06B3A@sm.sony.co.jp> (sfid-20080602_054325_377817_25AAE115)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0806270854u674a9d5aled463865e07829c8@mail.gmail.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 05:54:06PM +0200, drago01 wrote:
-> On Fri, Jun 27, 2008 at 5:35 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> 
-> > Randy Dunlap (1):
-> >      iwlwifi: fix build for CONFIG_INPUT=n
-> 
-> this one was NACKED by Ivo (well not exactly this but the 3945
-> version, and Yi posted an updated patch)
 
-I have no record of that.  Could someone send me a correct patch on
-top of this one?
+On Fri, 30 May 2008 13:51:44 -0400
+Dan Williams <dcbw@redhat.com> wrote:
 
-John
+> On Fri, 2008-05-30 at 16:27 +0900, Masakazu Mokuno wrote:
+> > This adds the support for ESSID scanning
+> 
+> You'll want to:
+> 
+> 	range->scan_capa = IW_SCAN_CAPA_ESSID;
+> 
+> in your SIOCGIWRANGE handler too.
+
+I didn't notice that this flag already was merged in.
+I'll respin.
+
+Thanks for pointing out.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Masakazu Mokuno
+
