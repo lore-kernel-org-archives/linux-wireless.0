@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:50385 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbYFJUDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 16:03:15 -0400
-Subject: Re: http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/
-From: Pavel Roskin <proski@gnu.org>
-To: Grant Williamson <traxtopel@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <484ECE93.1090501@gmail.com>
-References: <484ECE93.1090501@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:60089 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755004AbYFBMdI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 08:33:08 -0400
+Subject: [PATCH] mac80211: fix rate control initialisation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <g1uicv$se6$1@ger.gmane.org>
+References: <g1uicv$se6$1@ger.gmane.org>
 Content-Type: text/plain
-Date: Tue, 10 Jun 2008 16:03:12 -0400
-Message-Id: <1213128193.26837.15.camel@dv> (sfid-20080610_220321_050594_BD844A1B)
+Date: Mon, 02 Jun 2008 09:38:04 +0200
+Message-Id: <1212392284.4148.7.camel@johannes.berg> (sfid-20080602_143313_035781_919AAFC2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-10 at 14:57 -0400, Grant Williamson wrote:
-> Hi,
-> 
-> I am trying to narrow down a wireless issue I am having with leap on 
-> Fedora 9. Seems that in April the issue was fixed in the 
-> compat-wireless-2.6 tarball.
-> 
-> On http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/ most of 
-> the archives for April are missing. Is there any
-> other mirror where I can find or checkout the archives between 20080407 
-> & 20080420?
-> 
-> I need to track it down so the issue can get fixed on el5.
+In commit 2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39 ("mac80211: use rate
+index in TX control") I forgot to initialise a few new variables to -1 which
+means that the rate control algorithm is never triggered and 0 is used as
+the only rate index, effectively fixing the transmit bitrate at the lowest
+supported.
 
-The snapshots are not suitable for bisecting bugs.  Even a single day
-can bring dozens of updates.
+This patch adds the missing initialisation.
 
-This right tool for bisection is git.  Please check out the wireless
-tree:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Bisected-by: Sitsofe Wheeler <sitsofe@yahoo.com>
+---
+ net/mac80211/tx.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+--- everything.orig/net/mac80211/tx.c	2008-06-02 09:25:05.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-06-02 09:31:34.000000000 +0200
+@@ -947,6 +947,8 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	tx->local = local;
+ 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	tx->channel = local->hw.conf.channel;
++	tx->rate_idx = -1;
++	tx->last_frag_rate_idx = -1;
+ 	/*
+ 	 * Set this flag (used below to indicate "automatic fragmentation"),
+ 	 * it will be cleared/left by radiotap as desired.
 
-Then compile the kernel.  See if the problem exists.  You need to use
-reverse logic, since you are looking for a patch that fixed something,
-not a patch that broke it.
 
-Thus, if the problem is fixed, mark the revision as "bad" with
-"git-bisect bad".  Then find a revision that is likely to have the
-problem.  Use "git-tag -l" or an interactive tool, such as qgit or tig.
-Check it out with "git-checkout".  Test the kernel.  Mark is with
-"git-bisect bad" or "git-bisect good" using the same reversed logic.
-
-Once you find one "good" and one "bad" revision, git-bisect will be
-telling you what to test next, and a few tests later, you'll have the
-exact change you are looking for.
-
-You can also check logs for the problem or describe it here in case
-somebody knows which patch fixed it.
-
--- 
-Regards,
-Pavel Roskin
