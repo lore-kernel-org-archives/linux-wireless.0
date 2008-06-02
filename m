@@ -1,159 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46277 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852AbYFSMT6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 08:19:58 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1K9J7M-0004hW-Iv
-	for linux-wireless@vger.kernel.org; Thu, 19 Jun 2008 14:19:56 +0200
-Subject: [RFC 1/2] consolidate TX handler code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:52226 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751542AbYFBRqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 13:46:39 -0400
+Subject: Re: IW_SCAN_CAPA_ESSID vs hidden ESSID
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk>
+References: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk>
 Content-Type: text/plain
-Date: Thu, 19 Jun 2008 14:19:16 +0200
-Message-Id: <1213877956.8967.1.camel@johannes.berg> (sfid-20080619_142002_910996_E0F09190)
+Date: Mon, 02 Jun 2008 13:45:29 -0400
+Message-Id: <1212428729.10093.13.camel@localhost.localdomain> (sfid-20080602_194642_949366_8B449DDE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Untested so far, this isn't the interesting part.
+On Sun, 2008-06-01 at 22:14 +0100, Ben Hutchings wrote:
+> Since upgrading from Linux 2.6.24 to .25, I have found that
+> NetworkManager cannot associate my Intel wireless card, handled by the
+> ipw2200 driver, with my AP, which has a hidden SSID.
+> 
+> NetworkManager thinks that wpa_supplicant should be able to scan for
+> specific hidden SSIDs if the underlying driver advertises
+> IW_SCAN_CAPA_ESSID, which ipw2200 does since 2.6.25:
+> 
+> 	/* Use "AP_SCAN 2" if:
+> 	 * - The wireless network is non-broadcast and the driver doesn't support
+> 	 *     scanning specific SSIDs
+> 	 * - The wireless network is Ad-Hoc
+> 	 * - The wireless driver does not support WPA (stupid drivers...)
+> 	 */
+> 	is_adhoc = (nm_ap_get_mode(ap) == IW_MODE_ADHOC);
+> 	if (is_adhoc || !supports_wpa)
+> 		ap_scan = "AP_SCAN 2";
+> 	else if (!nm_ap_get_broadcast (ap))
+> 		ap_scan = self->priv->has_scan_capa_ssid ? "AP_SCAN 1" : "AP_SCAN 2";
+> 
+> However, this doesn't work because the scan results just have an empty
+> string or "<hidden>" (not consistently, which is weird).
+> 
+> So one of these components is doing the wrong thing.  Is it that:
+> 
+> 1. ipw2200 or ieee80211 should copy the selected ESSID into scan results
+> 2. wpa_supplicant should not check the ESSID of scan results if it has
+> already selected an ESSId
+> 3. NetworkManager should not expect IW_SCAN_CAPA_ESSID to mean that this
+> will work
 
----
- net/mac80211/tx.c |   86 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 44 insertions(+), 42 deletions(-)
+You might also want:
 
---- everything.orig/net/mac80211/tx.c	2008-06-19 13:47:40.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-06-19 14:00:33.000000000 +0200
-@@ -1105,13 +1105,50 @@ static int __ieee80211_tx(struct ieee802
- 	return IEEE80211_TX_OK;
- }
- 
-+/*
-+ * Invoke TX handlers, return 0 on success and non-zero if the
-+ * frame was dropped or queued.
-+ */
-+static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_local *local = tx->local;
-+	struct sk_buff *skb = tx->skb;
-+	ieee80211_tx_handler *handler;
-+	ieee80211_tx_result res = TX_DROP;
-+	int i;
-+
-+	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
-+		res = (*handler)(tx);
-+		if (res != TX_CONTINUE)
-+			break;
-+	}
-+
-+	if (WARN_ON(tx->skb != skb))
-+		res = TX_DROP;
-+
-+	if (unlikely(res == TX_DROP)) {
-+		I802_DEBUG_INC(local->tx_handlers_drop);
-+		if (skb)
-+			dev_kfree_skb(skb);
-+		for (i = 0; i < tx->num_extra_frag; i++)
-+			if (tx->extra_frag[i])
-+				dev_kfree_skb(tx->extra_frag[i]);
-+		kfree(tx->extra_frag);
-+		return -1;
-+	} else if (unlikely(res == TX_QUEUED)) {
-+		I802_DEBUG_INC(local->tx_handlers_queued);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
- static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
--	ieee80211_tx_handler *handler;
- 	struct ieee80211_tx_data tx;
--	ieee80211_tx_result res = TX_DROP, res_prepare;
-+	ieee80211_tx_result res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int ret, i, retries = 0;
- 	u16 queue;
-@@ -1140,26 +1177,8 @@ static int ieee80211_tx(struct net_devic
- 	tx.channel = local->hw.conf.channel;
- 	info->band = tx.channel->band;
- 
--	for (handler = ieee80211_tx_handlers; *handler != NULL;
--	     handler++) {
--		res = (*handler)(&tx);
--		if (res != TX_CONTINUE)
--			break;
--	}
--
--	if (WARN_ON(tx.skb != skb))
--		goto drop;
--
--	if (unlikely(res == TX_DROP)) {
--		I802_DEBUG_INC(local->tx_handlers_drop);
--		goto drop;
--	}
--
--	if (unlikely(res == TX_QUEUED)) {
--		I802_DEBUG_INC(local->tx_handlers_queued);
--		rcu_read_unlock();
--		return 0;
--	}
-+	if (invoke_tx_handlers(&tx))
-+		goto out;
- 
- retry:
- 	ret = __ieee80211_tx(local, skb, &tx);
-@@ -1209,6 +1228,7 @@ retry:
- 		store->last_frag_rate_ctrl_probe =
- 			!!(tx.flags & IEEE80211_TX_PROBE_LAST_FRAG);
- 	}
-+ out:
- 	rcu_read_unlock();
- 	return 0;
- 
-@@ -1959,9 +1979,7 @@ ieee80211_get_buffered_bc(struct ieee802
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct sk_buff *skb = NULL;
- 	struct sta_info *sta;
--	ieee80211_tx_handler *handler;
- 	struct ieee80211_tx_data tx;
--	ieee80211_tx_result res = TX_DROP;
- 	struct net_device *bdev;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_ap *bss = NULL;
-@@ -2012,25 +2030,9 @@ ieee80211_get_buffered_bc(struct ieee802
- 	tx.channel = local->hw.conf.channel;
- 	info->band = tx.channel->band;
- 
--	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
--		res = (*handler)(&tx);
--		if (res == TX_DROP || res == TX_QUEUED)
--			break;
--	}
--
--	if (WARN_ON(tx.skb != skb))
--		res = TX_DROP;
--
--	if (res == TX_DROP) {
--		I802_DEBUG_INC(local->tx_handlers_drop);
--		dev_kfree_skb(skb);
--		skb = NULL;
--	} else if (res == TX_QUEUED) {
--		I802_DEBUG_INC(local->tx_handlers_queued);
-+	if (invoke_tx_handlers(&tx))
- 		skb = NULL;
--	}
--
--out:
-+ out:
- 	rcu_read_unlock();
- 
- 	return skb;
+http://lists.shmoo.com/pipermail/hostap/2008-June/017873.html
+
+that patch.  It fixes an issue that caused wpa_supplicant to never
+probe-scan the AP in with a hidden SSID test configuration with ipw2200.
+
+Dan
 
 
