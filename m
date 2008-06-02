@@ -1,154 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58272 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636AbYFSX1I (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:32768 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbYFBPn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 19:27:08 -0400
-Message-Id: <20080619232433.748395000@sipsolutions.net> (sfid-20080620_012712_239099_17BBF70C)
-References: <20080619232229.202159000@sipsolutions.net>
-Date: Fri, 20 Jun 2008 01:22:30 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: add single function calling tx handlers
-Mime-Version: 1.0
+	Mon, 2 Jun 2008 11:43:29 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 4/4] rndis_wlan: cleanup: rename and remove local pointers
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Mon, 02 Jun 2008 18:35:44 +0300
+Message-ID: <20080602153544.22793.56932.stgit@nanoha.lan> (sfid-20080602_174341_631003_0F1D7CA9)
+In-Reply-To: <20080602153521.22793.4271.stgit@nanoha.lan>
+References: <20080602153521.22793.4271.stgit@nanoha.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This modifies mac80211 to only have a single function calling the
-TX handlers rather than them being invoked in multiple places.
+Mixed use of 'dev' and 'usbdev' for usbnet pointer can be confusing. So changing all 'usbnet *dev' to 'usbnet *usbdev'.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Also remove 'net_device *net' pointer from 'rndis_wext_bind' as 'usbdev->net' were already used where needed.
+
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- net/mac80211/tx.c |   82 ++++++++++++++++++++++++++----------------------------
- 1 file changed, 40 insertions(+), 42 deletions(-)
 
---- everything.orig/net/mac80211/tx.c	2008-06-20 01:05:01.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-06-20 01:05:02.000000000 +0200
-@@ -1106,13 +1106,46 @@ static int __ieee80211_tx(struct ieee802
- 	return IEEE80211_TX_OK;
+ drivers/net/wireless/rndis_wlan.c |   74 +++++++++++++++++++------------------
+ 1 files changed, 37 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index ad46a0b..8505d8b 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2279,9 +2279,9 @@ static void rndis_wext_set_multicast_list(struct net_device *dev)
+ 	queue_work(priv->workqueue, &priv->work);
  }
  
-+/*
-+ * Invoke TX handlers, return 0 on success and non-zero if the
-+ * frame was dropped or queued.
-+ */
-+static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_local *local = tx->local;
-+	struct sk_buff *skb = tx->skb;
-+	ieee80211_tx_handler *handler;
-+	ieee80211_tx_result res = TX_DROP;
-+	int i;
-+
-+	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
-+		res = (*handler)(tx);
-+		if (res != TX_CONTINUE)
-+			break;
-+	}
-+
-+	if (unlikely(res == TX_DROP)) {
-+		I802_DEBUG_INC(local->tx_handlers_drop);
-+		dev_kfree_skb(skb);
-+		for (i = 0; i < tx->num_extra_frag; i++)
-+			if (tx->extra_frag[i])
-+				dev_kfree_skb(tx->extra_frag[i]);
-+		kfree(tx->extra_frag);
-+		return -1;
-+	} else if (unlikely(res == TX_QUEUED)) {
-+		I802_DEBUG_INC(local->tx_handlers_queued);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
- static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
+-static void rndis_wext_link_change(struct usbnet *dev, int state)
++static void rndis_wext_link_change(struct usbnet *usbdev, int state)
  {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
--	ieee80211_tx_handler *handler;
- 	struct ieee80211_tx_data tx;
--	ieee80211_tx_result res = TX_DROP, res_prepare;
-+	ieee80211_tx_result res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int ret, i, retries = 0;
- 	u16 queue;
-@@ -1141,26 +1174,8 @@ static int ieee80211_tx(struct net_devic
- 	tx.channel = local->hw.conf.channel;
- 	info->band = tx.channel->band;
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(dev);
++	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
  
--	for (handler = ieee80211_tx_handlers; *handler != NULL;
--	     handler++) {
--		res = (*handler)(&tx);
--		if (res != TX_CONTINUE)
--			break;
--	}
--
--	if (WARN_ON(tx.skb != skb))
--		goto drop;
--
--	if (unlikely(res == TX_DROP)) {
--		I802_DEBUG_INC(local->tx_handlers_drop);
--		goto drop;
--	}
--
--	if (unlikely(res == TX_QUEUED)) {
--		I802_DEBUG_INC(local->tx_handlers_queued);
--		rcu_read_unlock();
--		return 0;
--	}
-+	if (invoke_tx_handlers(&tx))
-+		goto out;
+ 	/* queue work to avoid recursive calls into rndis_command */
+ 	set_bit(state ? WORK_LINK_UP : WORK_LINK_DOWN, &priv->work_pending);
+@@ -2289,7 +2289,7 @@ static void rndis_wext_link_change(struct usbnet *dev, int state)
+ }
  
- retry:
- 	ret = __ieee80211_tx(local, skb, &tx);
-@@ -1210,6 +1225,7 @@ retry:
- 		store->last_frag_rate_ctrl_probe =
- 			!!(tx.flags & IEEE80211_TX_PROBE_LAST_FRAG);
- 	}
-+ out:
- 	rcu_read_unlock();
+ 
+-static int rndis_wext_get_caps(struct usbnet *dev)
++static int rndis_wext_get_caps(struct usbnet *usbdev)
+ {
+ 	struct {
+ 		__le32	num_items;
+@@ -2297,18 +2297,18 @@ static int rndis_wext_get_caps(struct usbnet *dev)
+ 	} networks_supported;
+ 	int len, retval, i, n;
+ 	__le32 tx_power;
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(dev);
++	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+ 
+ 	/* determine if supports setting txpower */
+ 	len = sizeof(tx_power);
+-	retval = rndis_query_oid(dev, OID_802_11_TX_POWER_LEVEL, &tx_power,
+-								&len);
++	retval = rndis_query_oid(usbdev, OID_802_11_TX_POWER_LEVEL, &tx_power,
++									&len);
+ 	if (retval == 0 && le32_to_cpu(tx_power) != 0xFF)
+ 		priv->caps |= CAP_SUPPORT_TXPOWER;
+ 
+ 	/* determine supported modes */
+ 	len = sizeof(networks_supported);
+-	retval = rndis_query_oid(dev, OID_802_11_NETWORK_TYPES_SUPPORTED,
++	retval = rndis_query_oid(usbdev, OID_802_11_NETWORK_TYPES_SUPPORTED,
+ 						&networks_supported, &len);
+ 	if (retval >= 0) {
+ 		n = le32_to_cpu(networks_supported.num_items);
+@@ -2447,9 +2447,9 @@ end:
+ }
+ 
+ 
+-static int bcm4320_early_init(struct usbnet *dev)
++static int bcm4320_early_init(struct usbnet *usbdev)
+ {
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(dev);
++	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+ 	char buf[8];
+ 
+ 	/* Early initialization settings, setting these won't have effect
+@@ -2497,27 +2497,26 @@ static int bcm4320_early_init(struct usbnet *dev)
+ 	else
+ 		priv->param_workaround_interval = modparam_workaround_interval;
+ 
+-	rndis_set_config_parameter_str(dev, "Country", priv->param_country);
+-	rndis_set_config_parameter_str(dev, "FrameBursting",
++	rndis_set_config_parameter_str(usbdev, "Country", priv->param_country);
++	rndis_set_config_parameter_str(usbdev, "FrameBursting",
+ 					priv->param_frameburst ? "1" : "0");
+-	rndis_set_config_parameter_str(dev, "Afterburner",
++	rndis_set_config_parameter_str(usbdev, "Afterburner",
+ 					priv->param_afterburner ? "1" : "0");
+ 	sprintf(buf, "%d", priv->param_power_save);
+-	rndis_set_config_parameter_str(dev, "PowerSaveMode", buf);
++	rndis_set_config_parameter_str(usbdev, "PowerSaveMode", buf);
+ 	sprintf(buf, "%d", priv->param_power_output);
+-	rndis_set_config_parameter_str(dev, "PwrOut", buf);
++	rndis_set_config_parameter_str(usbdev, "PwrOut", buf);
+ 	sprintf(buf, "%d", priv->param_roamtrigger);
+-	rndis_set_config_parameter_str(dev, "RoamTrigger", buf);
++	rndis_set_config_parameter_str(usbdev, "RoamTrigger", buf);
+ 	sprintf(buf, "%d", priv->param_roamdelta);
+-	rndis_set_config_parameter_str(dev, "RoamDelta", buf);
++	rndis_set_config_parameter_str(usbdev, "RoamDelta", buf);
+ 
  	return 0;
+ }
  
-@@ -1960,9 +1976,7 @@ ieee80211_get_buffered_bc(struct ieee802
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct sk_buff *skb = NULL;
- 	struct sta_info *sta;
--	ieee80211_tx_handler *handler;
- 	struct ieee80211_tx_data tx;
--	ieee80211_tx_result res = TX_DROP;
- 	struct net_device *bdev;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_ap *bss = NULL;
-@@ -2013,25 +2027,9 @@ ieee80211_get_buffered_bc(struct ieee802
- 	tx.channel = local->hw.conf.channel;
- 	info->band = tx.channel->band;
  
--	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
--		res = (*handler)(&tx);
--		if (res == TX_DROP || res == TX_QUEUED)
--			break;
--	}
--
--	if (WARN_ON(tx.skb != skb))
--		res = TX_DROP;
--
--	if (res == TX_DROP) {
--		I802_DEBUG_INC(local->tx_handlers_drop);
--		dev_kfree_skb(skb);
--		skb = NULL;
--	} else if (res == TX_QUEUED) {
--		I802_DEBUG_INC(local->tx_handlers_queued);
-+	if (invoke_tx_handlers(&tx))
- 		skb = NULL;
--	}
--
--out:
-+ out:
- 	rcu_read_unlock();
+-static int rndis_wext_bind(struct usbnet *dev, struct usb_interface *intf)
++static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ {
+-	struct net_device *net = dev->net;
+ 	struct rndis_wext_private *priv;
+ 	int retval, len;
+ 	__le32 tmp;
+@@ -2530,18 +2529,18 @@ static int rndis_wext_bind(struct usbnet *dev, struct usb_interface *intf)
+ 	/* These have to be initialized before calling generic_rndis_bind().
+ 	 * Otherwise we'll be in big trouble in rndis_wext_early_init().
+ 	 */
+-	dev->driver_priv = priv;
++	usbdev->driver_priv = priv;
+ 	memset(priv, 0, sizeof(*priv));
+ 	memset(priv->name, 0, sizeof(priv->name));
+ 	strcpy(priv->name, "IEEE802.11");
+-	net->wireless_handlers = &rndis_iw_handlers;
+-	priv->usbdev = dev;
++	usbdev->net->wireless_handlers = &rndis_iw_handlers;
++	priv->usbdev = usbdev;
  
- 	return skb;
-
--- 
+ 	mutex_init(&priv->command_lock);
+ 	spin_lock_init(&priv->stats_lock);
+ 
+ 	/* try bind rndis_host */
+-	retval = generic_rndis_bind(dev, intf, FLAG_RNDIS_PHYM_WIRELESS);
++	retval = generic_rndis_bind(usbdev, intf, FLAG_RNDIS_PHYM_WIRELESS);
+ 	if (retval < 0)
+ 		goto fail;
+ 
+@@ -2552,20 +2551,21 @@ static int rndis_wext_bind(struct usbnet *dev, struct usb_interface *intf)
+ 	 * rndis_host wants to avoid all OID as much as possible
+ 	 * so do promisc/multicast handling in rndis_wext.
+ 	 */
+-	dev->net->set_multicast_list = rndis_wext_set_multicast_list;
++	usbdev->net->set_multicast_list = rndis_wext_set_multicast_list;
+ 	tmp = RNDIS_PACKET_TYPE_DIRECTED | RNDIS_PACKET_TYPE_BROADCAST;
+-	retval = rndis_set_oid(dev, OID_GEN_CURRENT_PACKET_FILTER, &tmp,
++	retval = rndis_set_oid(usbdev, OID_GEN_CURRENT_PACKET_FILTER, &tmp,
+ 								sizeof(tmp));
+ 
+ 	len = sizeof(tmp);
+-	retval = rndis_query_oid(dev, OID_802_3_MAXIMUM_LIST_SIZE, &tmp, &len);
++	retval = rndis_query_oid(usbdev, OID_802_3_MAXIMUM_LIST_SIZE, &tmp,
++								&len);
+ 	priv->multicast_size = le32_to_cpu(tmp);
+ 	if (retval < 0 || priv->multicast_size < 0)
+ 		priv->multicast_size = 0;
+ 	if (priv->multicast_size > 0)
+-		dev->net->flags |= IFF_MULTICAST;
++		usbdev->net->flags |= IFF_MULTICAST;
+ 	else
+-		dev->net->flags &= ~IFF_MULTICAST;
++		usbdev->net->flags &= ~IFF_MULTICAST;
+ 
+ 	priv->iwstats.qual.qual = 0;
+ 	priv->iwstats.qual.level = 0;
+@@ -2575,13 +2575,13 @@ static int rndis_wext_bind(struct usbnet *dev, struct usb_interface *intf)
+ 					| IW_QUAL_QUAL_INVALID
+ 					| IW_QUAL_LEVEL_INVALID;
+ 
+-	rndis_wext_get_caps(dev);
+-	set_default_iw_params(dev);
++	rndis_wext_get_caps(usbdev);
++	set_default_iw_params(usbdev);
+ 
+ 	/* turn radio on */
+ 	priv->radio_on = 1;
+-	disassociate(dev, 1);
+-	netif_carrier_off(dev->net);
++	disassociate(usbdev, 1);
++	netif_carrier_off(usbdev->net);
+ 
+ 	/* because rndis_command() sleeps we need to use workqueue */
+ 	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
+@@ -2598,12 +2598,12 @@ fail:
+ }
+ 
+ 
+-static void rndis_wext_unbind(struct usbnet *dev, struct usb_interface *intf)
++static void rndis_wext_unbind(struct usbnet *usbdev, struct usb_interface *intf)
+ {
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(dev);
++	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+ 
+ 	/* turn radio off */
+-	disassociate(dev, 0);
++	disassociate(usbdev, 0);
+ 
+ 	cancel_delayed_work_sync(&priv->stats_work);
+ 	cancel_work_sync(&priv->work);
+@@ -2614,13 +2614,13 @@ static void rndis_wext_unbind(struct usbnet *dev, struct usb_interface *intf)
+ 		kfree(priv->wpa_ie);
+ 	kfree(priv);
+ 
+-	rndis_unbind(dev, intf);
++	rndis_unbind(usbdev, intf);
+ }
+ 
+ 
+-static int rndis_wext_reset(struct usbnet *dev)
++static int rndis_wext_reset(struct usbnet *usbdev)
+ {
+-	return deauthenticate(dev);
++	return deauthenticate(usbdev);
+ }
+ 
+ 
 
