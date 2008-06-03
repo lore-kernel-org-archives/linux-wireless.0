@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753565AbYFIT2g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 15:28:36 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:36 -0700 (PDT)
-Subject: [PATCHv2 8/8] mac80211: rx.c use new helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 09 Jun 2008 12:28:23 -0700
-Message-Id: <1213039703.5974.73.camel@brick> (sfid-20080609_212840_181890_45EBA6D2)
+Received: from mx1.redhat.com ([66.187.233.31]:35387 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752336AbYFCOOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 10:14:46 -0400
+Subject: Re: [PATCH, RESEND] libertas: unify various CF-related defines
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080603005719.GA23853@tuxdriver.com>
+References: <200805261250.50363.hs4233@mail.mn-solutions.de>
+	 <20080530154113.GB9490@tuxdriver.com>
+	 <200806020925.05938.hs4233@mail.mn-solutions.de>
+	 <20080603005719.GA23853@tuxdriver.com>
+Content-Type: text/plain; charset=utf8
+Date: Tue, 03 Jun 2008 10:14:16 -0400
+Message-Id: <1212502456.3108.3.camel@localhost.localdomain> (sfid-20080603_161451_146215_F44F5E5E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/rx.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
+On Mon, 2008-06-02 at 20:57 -0400, John W. Linville wrote:
+> On Mon, Jun 02, 2008 at 09:25:05AM +0200, Holger Schurig wrote:
+> > Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> >=20
+> > ---
+> >=20
+> > John, this patch applies successfully for me on top of
+> > wireless-testing v2.6.26-rc4-8765-g24e3ad4.
+>=20
+> Yes, but then I get this:
+>=20
+>   CC [M]  drivers/net/wireless/libertas/if_usb.o
+> drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_r=
+eset_olpc_card=E2=80=99:
+> drivers/net/wireless/libertas/if_usb.c:158: warning: no return statem=
+ent in function returning non-void
+> drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_p=
+robe=E2=80=99:
+> drivers/net/wireless/libertas/if_usb.c:248: warning: assignment from =
+incompatible pointer type
+>=20
+> Are we out of sync?
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a3643fd..e80336f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -67,12 +67,9 @@ static inline int should_drop_frame(struct ieee80211_rx_status *status,
- 		return 1;
- 	if (unlikely(skb->len < 16 + present_fcs_len + radiotap_len))
- 		return 1;
--	if (((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
--			cpu_to_le16(IEEE80211_FTYPE_CTL)) &&
--	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
--			cpu_to_le16(IEEE80211_STYPE_PSPOLL)) &&
--	    ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_STYPE)) !=
--			cpu_to_le16(IEEE80211_STYPE_BACK_REQ)))
-+	if (ieee80211_is_ctl(hdr->frame_control) &&
-+	    !ieee80211_is_pspoll(hdr->frame_control) &&
-+	    !ieee80211_is_back_req(hdr->frame_control))
- 		return 1;
- 	return 0;
- }
-@@ -2118,7 +2115,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct sta_info *sta;
- 	struct tid_ampdu_rx *tid_agg_rx;
--	u16 fc, sc;
-+	u16 sc;
- 	u16 mpdu_seq_num;
- 	u8 ret = 0, *qc;
- 	int tid;
-@@ -2127,14 +2124,12 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 	if (!sta)
- 		return ret;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--
- 	/* filter the QoS data rx stream according to
- 	 * STA/TID and check if this STA/TID is on aggregation */
--	if (!WLAN_FC_IS_QOS_DATA(fc))
-+	if (!ieee80211_is_data_qos(hdr->frame_control))
- 		goto end_reorder;
- 
--	qc = skb->data + ieee80211_get_hdrlen(fc) - QOS_CONTROL_LEN;
-+	qc = ieee80211_get_qos_ctl(hdr);
- 	tid = qc[0] & QOS_CONTROL_TID_MASK;
- 
- 	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL)
-@@ -2143,7 +2138,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
- 
- 	/* null data frames are excluded */
--	if (unlikely(fc & IEEE80211_STYPE_NULLFUNC))
-+	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
- 		goto end_reorder;
- 
- 	/* new un-ordered ampdu frame - process it */
--- 
-1.5.6.rc2.261.ga8fbe
+Holger's patch shouldn't touch if_usb.c at all; these errors would be
+the OLPC reset card patch that Woodhouse posted a week or two back most
+likely.
 
+dan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
