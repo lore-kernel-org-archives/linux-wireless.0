@@ -1,84 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46623 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbYFRVSP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47094
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753067AbYFCUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 17:18:15 -0400
-Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806181411j15544134ga55607c394ff5db7@mail.gmail.com> (sfid-20080618_231111_448703_F8563F8D)
-References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
-	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
-	 <1213803431.1312.24.camel@johannes.berg>
-	 <1ba2fa240806180917i320fac4bxcfd7416349850bff@mail.gmail.com>
-	 <1213809824.1312.34.camel@johannes.berg>
-	 <1ba2fa240806181411j15544134ga55607c394ff5db7@mail.gmail.com>
-	 (sfid-20080618_231111_448703_F8563F8D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-baJMchI7YcLNqBNdpIIW"
-Date: Wed, 18 Jun 2008 23:17:32 +0200
-Message-Id: <1213823853.1312.37.camel@johannes.berg> (sfid-20080618_231819_228676_BD7B34FD)
+	Tue, 3 Jun 2008 16:36:54 -0400
+Date: Tue, 03 Jun 2008 13:28:20 -0700 (PDT)
+Message-Id: <20080603.132820.04181365.davem@davemloft.net> (sfid-20080603_223736_308352_3E139949)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/12]: wext: Extract private call iw_point handling into
+ seperate functions.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-baJMchI7YcLNqBNdpIIW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |  141 +++++++++++++++++++++++++++------------------------
+ 1 files changed, 74 insertions(+), 67 deletions(-)
 
-
-> Yes, this is handled by firmware, What is important is to make switch
-> on beacon edge.
-> Still our implementation uses also timer in mac rather then some mac
-> to driver over complicated synchronization.
-> Other thing is that the firmware enforce the switching, traffic on the
-> old channel is not allowed after the switch.
-
-Yeah, ok. As for enforcing the traffic, true as well. However, I'd like
-mac80211 to help out with this for those drivers that don't do it all in
-firmware (all others, I'd assume); it's not overly important that you
-switch instantly after receiving the switch beacon, if you take a bit
-longer to do that you'll just potentially miss a few packets. No big
-deal.
-
-> > Also, does your firmware implement full radar detection? Broadcom and
-> > Atheros hardware seem to only pass information about pulse edges up to
-> > the driver (in different ways, obviously) and pulse/radar detection
-> > needs to be done in software, I'd like that to be somehow shareable.
-> >
-> iwl drivers were designed for laptop marked mostly unlike like other
-> vendors that plays in AP market so the radar awareness is in slave
-> mode. I think the hw actually support radar detection but I'm not sure
-> it was ever employed in a product.
-
-Oh, right, ok.
-
-johannes
-
---=-baJMchI7YcLNqBNdpIIW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWXtpAAoJEKVg1VMiehFY1c0QAJBc4ylhsfuRVfZfAbafMwvk
-4A1WRut1/SgTLCbFJZS8FOVOVWgDGN488caqTj+grcCuTFbpa8TjVnJZBzepTNaV
-H9wY3UDuGZsiDIeIiwASRTFA3pTfpYuSc3/zwhC3jaOcp+ynHdxC9hGcDMfPL+lb
-xkivtOg5tsx35hrYCJXbEjWYekYxxiMZ0le9ZiOy77phy+XcQfmPSvw2s3r3uvZt
-Ol+GKRgknm+OOkeFMuCwmm/hgEPtKj0LmRDuB9f1fI5DhD4hICmZqNlM8uGVLfY2
-lk+eptXWlJl2O+wXf0zxIwy5aoN+NcQsg3Vko/oV7WmUirT3Rd3N+e2rlBAZaLqo
-Lda+jZWWFpVuE5P2gaK7vznJm2qSNK2qIpi1r0C00vetufWVbZD5P1IOAL8Zjb5J
-JD+yj9LGV59tHZq2YmZusbcC6PP/GRmngBMkfMSQwnkxvm3ny1wuisUjCHD36w0n
-5+UWzBzWhnZRvi+aNH1OV/T6abOjS2n6EJyiaUcWKRCUQMnnhvYSXVJhSs3k72DY
-iFest2Ecig/E7bVxKIdYf+fOdAy3gQlLRAkmN9AwucXWg+vcT3HY3nJGafyrjiFT
-yBj8H1Mi1S3oYgFCaSQp1KS2BSd9m79K+Pcj8K6VL/ZqQXFHLxz0ZlZqyunZ+fgy
-evUx0x2WJH93WaAyD+1q
-=gHxW
------END PGP SIGNATURE-----
-
---=-baJMchI7YcLNqBNdpIIW--
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index d17c0f4..a1cd19a 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -890,25 +890,22 @@ static int ioctl_standard_call(struct net_device *	dev,
+  * a iw_handler but process it in your ioctl handler (i.e. use the
+  * old driver API).
+  */
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+-			      unsigned int cmd, iw_handler handler)
++static int get_priv_descr_and_size(struct net_device *dev, unsigned int cmd,
++				   const struct iw_priv_args **descrp)
+ {
+-	struct iwreq *			iwr = (struct iwreq *) ifr;
+-	const struct iw_priv_args *	descr = NULL;
+-	struct iw_request_info		info;
+-	int				extra_size = 0;
+-	int				i;
+-	int				ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	int i, extra_size;
+ 
+-	/* Get the description of the IOCTL */
+-	for (i = 0; i < dev->wireless_handlers->num_private_args; i++)
++	descr = NULL;
++	for (i = 0; i < dev->wireless_handlers->num_private_args; i++) {
+ 		if (cmd == dev->wireless_handlers->private_args[i].cmd) {
+-			descr = &(dev->wireless_handlers->private_args[i]);
++			descr = &dev->wireless_handlers->private_args[i];
+ 			break;
+ 		}
++	}
+ 
+-	/* Compute the size of the set/get arguments */
+-	if (descr != NULL) {
++	extra_size = 0;
++	if (descr) {
+ 		if (IW_IS_SET(cmd)) {
+ 			int	offset = 0;	/* For sub-ioctls */
+ 			/* Check for sub-ioctl handler */
+@@ -933,72 +930,82 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 				extra_size = 0;
+ 		}
+ 	}
++	*descrp = descr;
++	return extra_size;
++}
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
++static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
++				  const struct iw_priv_args *descr,
++				  iw_handler handler, struct net_device *dev,
++				  struct iw_request_info *info, int extra_size)
++{
++	char *extra;
++	int err;
+ 
+-	/* Check if we have a pointer to user space data or not. */
+-	if (extra_size == 0) {
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
+-	} else {
+-		char *	extra;
+-		int	err;
++	/* Check what user space is giving us */
++	if (IW_IS_SET(cmd)) {
++		if (!iwp->pointer && iwp->length != 0)
++			return -EFAULT;
+ 
+-		/* Check what user space is giving us */
+-		if (IW_IS_SET(cmd)) {
+-			/* Check NULL pointer */
+-			if ((iwr->u.data.pointer == NULL) &&
+-			   (iwr->u.data.length != 0))
+-				return -EFAULT;
++		if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK))
++			return -E2BIG;
++	} else if (!iwp->pointer)
++		return -EFAULT;
+ 
+-			/* Does it fits within bounds ? */
+-			if (iwr->u.data.length > (descr->set_args &
+-						 IW_PRIV_SIZE_MASK))
+-				return -E2BIG;
+-		} else if (iwr->u.data.pointer == NULL)
+-			return -EFAULT;
++	extra = kmalloc(extra_size, GFP_KERNEL);
++	if (!extra)
++		return -ENOMEM;
+ 
+-		/* Always allocate for max space. Easier, and won't last
+-		 * long... */
+-		extra = kmalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* If it is a SET, get all the extra data in here */
+-		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-			err = copy_from_user(extra, iwr->u.data.pointer,
+-					     extra_size);
+-			if (err) {
+-				kfree(extra);
+-				return -EFAULT;
+-			}
++	/* If it is a SET, get all the extra data in here */
++	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++		if (copy_from_user(extra, iwp->pointer, extra_size)) {
++			err = -EFAULT;
++			goto out;
+ 		}
++	}
+ 
+-		/* Call the handler */
+-		ret = handler(dev, &info, &(iwr->u), extra);
++	/* Call the handler */
++	err = handler(dev, info, (union iwreq_data *) iwp, extra);
+ 
+-		/* If we have something to return to the user */
+-		if (!ret && IW_IS_GET(cmd)) {
++	/* If we have something to return to the user */
++	if (!err && IW_IS_GET(cmd)) {
++		/* Adjust for the actual length if it's variable,
++		 * avoid leaking kernel bits outside.
++		 */
++		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
++			extra_size = adjust_priv_size(descr->get_args, iwp);
+ 
+-			/* Adjust for the actual length if it's variable,
+-			 * avoid leaking kernel bits outside. */
+-			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+-				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u.data));
+-			}
++		if (copy_to_user(iwp->pointer, extra, extra_size))
++			err =  -EFAULT;
++	}
+ 
+-			err = copy_to_user(iwr->u.data.pointer, extra,
+-					   extra_size);
+-			if (err)
+-				ret =  -EFAULT;
+-		}
++out:
++	kfree(extra);
++	return err;
++}
+ 
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
+-	}
++static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++			      unsigned int cmd, iw_handler handler)
++{
++	struct iwreq *iwr = (struct iwreq *) ifr;
++	int extra_size = 0, ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	struct iw_request_info info;
+ 
++	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
++
++	/* Prepare the call */
++	info.cmd = cmd;
++	info.flags = 0;
++
++	/* Check if we have a pointer to user space data or not. */
++	if (extra_size == 0) {
++		/* No extra arguments. Trivial to handle */
++		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++	} else {
++		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
++					     handler, dev, &info, extra_size);
++	}
+ 
+ 	/* Call commit handler if needed and defined */
+ 	if (ret == -EIWCOMMIT)
+-- 
+1.5.5.1.308.g1fbb5
 
