@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48960 "EHLO vs166246.vserver.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4380 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752333AbYFZRmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 13:42:51 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-Date: Thu, 26 Jun 2008 18:46:17 +0200
-Cc: Stefanik =?iso-8859-15?q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3> <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
-In-Reply-To: <1214498071.30722.22.camel@dv>
+	id S1752078AbYFCP3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 11:29:21 -0400
+Date: Tue, 3 Jun 2008 10:59:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH, RESEND] libertas: unify various CF-related defines
+Message-ID: <20080603145926.GA22160@tuxdriver.com> (sfid-20080603_172924_752080_293CCAF3)
+References: <200805261250.50363.hs4233@mail.mn-solutions.de> <20080530154113.GB9490@tuxdriver.com> <200806020925.05938.hs4233@mail.mn-solutions.de> <20080603005719.GA23853@tuxdriver.com> <1212502456.3108.3.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806261846.17962.mb@bu3sch.de> (sfid-20080626_194320_882035_E72DB651)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1212502456.3108.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 26 June 2008 18:34:31 Pavel Roskin wrote:
-> On Thu, 2008-06-26 at 18:21 +0200, Michael Buesch wrote:
-> > +	  ===> BIG FAT WARNING <===
-> > +	  This is not IEEE 802.11 compliant, yet!
-> > +	  You might disturb operation of other accesspoints and
-> > +	  stations in your neighbourhood. Do only enable this, if
-> > +	  you want to help out fixing this to make this warning disappear.
-> > +	  If you enable this, expect that your neighbour will ring your
-> > +	  door and yell at you for disturbing his network.
-> 
-> Gladly there will be no black helicopters :-)
+On Tue, Jun 03, 2008 at 10:14:16AM -0400, Dan Williams wrote:
+> On Mon, 2008-06-02 at 20:57 -0400, John W. Linville wrote:
+> > On Mon, Jun 02, 2008 at 09:25:05AM +0200, Holger Schurig wrote:
+> > > Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> > >=20
+> > > ---
+> > >=20
+> > > John, this patch applies successfully for me on top of
+> > > wireless-testing v2.6.26-rc4-8765-g24e3ad4.
+> >=20
+> > Yes, but then I get this:
+> >=20
+> >   CC [M]  drivers/net/wireless/libertas/if_usb.o
+> > drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb=
+_reset_olpc_card=E2=80=99:
+> > drivers/net/wireless/libertas/if_usb.c:158: warning: no return stat=
+ement in function returning non-void
+> > drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb=
+_probe=E2=80=99:
+> > drivers/net/wireless/libertas/if_usb.c:248: warning: assignment fro=
+m incompatible pointer type
+> >=20
+> > Are we out of sync?
+>=20
+> Holger's patch shouldn't touch if_usb.c at all; these errors would be
+> the OLPC reset card patch that Woodhouse posted a week or two back mo=
+st
+> likely.
 
-Oh right. I forgot these :)
+Indeed...I just sent a one-liner to fix the warning.  I'll fold it
+into the original before the actual merge to davem.
 
-> But is it really so bad?
-
-Well no. But I think we should try hard to make users not use this, yet.
-Something that is not IEEE 802.11 compliant is not what everybody should use.
-There's enough noise in the air that disturbs wireless. I don't want
-to have yet another neighbour installing yet another broken thing. ;)
-
-> What's the current TODO list for the AP mode?
-
-I think there are some issues with the rates.
-Maybe more. I don't really know.
-I was going to look into this, but I was pushed back a little bit
-by some hardware and software defects. I probably need to get new
-hardware first.
-
--- 
-Greetings Michael.
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
