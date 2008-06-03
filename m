@@ -1,26 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:35607 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892AbYFBR4e (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:2192 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008AbYFCS0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 13:56:34 -0400
-Received: by py-out-1112.google.com with SMTP id p76so500020pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 10:56:34 -0700 (PDT)
-Message-ID: <1deddf2e0806021056y5c5485b1pcba55bcb47b43b1c@mail.gmail.com> (sfid-20080602_195648_952032_E5930BE6)
-Date: Mon, 2 Jun 2008 10:56:33 -0700
-From: "Ryan Loebs" <obsidianx@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Broadcom 4311 and Master Mode
-In-Reply-To: <1212429042.20021.6.camel@johannes.berg>
+	Tue, 3 Jun 2008 14:26:11 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644294nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:09 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/11] rt2x00: Don't kill guardian_urb when it wasn't created
+Date: Tue, 3 Jun 2008 20:29:50 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806032024.52931.IvDoorn@gmail.com> <200806032026.40506.IvDoorn@gmail.com> <200806032027.06094.IvDoorn@gmail.com>
+In-Reply-To: <200806032027.06094.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1deddf2e0806021023j156ff226n98838622ad77ea9d@mail.gmail.com>
-	 <1212428650.3599.6.camel@dv>
-	 <1deddf2e0806021049tff1b11fscd012f7794ec48b0@mail.gmail.com>
-	 <1212429042.20021.6.camel@johannes.berg>
+Message-Id: <200806032029.51057.IvDoorn@gmail.com> (sfid-20080603_202615_927155_56F9186A)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh... oh wow :P Heh, I should have just looked down at the DS... It
-said it couldn't acquire an IP... I didn't realize it was just a DHCP
-thing :)  Sweet!  Thanks for the help :)
+This fixes a "BUG: unable to handle kernel paging request"
+bug in rt73usb which was caused by killing the guardian_urb
+while it had never been allocated for rt73usb.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 52d12fd..36a087a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -394,8 +394,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	/*
+-	 * Kill guardian urb.
++	 * Kill guardian urb (if required by driver).
+ 	 */
++	if (!test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags))
++		return;
++
+ 	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
+ 		bcn_priv = rt2x00dev->bcn->entries[i].priv_data;
+ 		if (bcn_priv->guardian_urb)
+-- 
+1.5.5.3
+
