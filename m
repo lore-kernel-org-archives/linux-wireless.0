@@ -1,151 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:64642 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979AbYFLBGE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47076
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752774AbYFCUgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:06:04 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2703281waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 18:06:03 -0700 (PDT)
-Subject: [RFC] Do not activate promiscuous mode on wlan interfaces for
-	bridging.
-From: Luis Carlos Cobo <luisca@cozybit.com>
+	Tue, 3 Jun 2008 16:36:53 -0400
+Date: Tue, 03 Jun 2008 13:28:34 -0700 (PDT)
+Message-Id: <20080603.132834.181129742.davem@davemloft.net> (sfid-20080603_223728_917155_429C0391)
 To: linux-wireless@vger.kernel.org
-Cc: shemminger@linux-foundation.org, j@w1.fi,
-	johannes@sipsolutions.net, bridge@linux-foundation.org
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 18:06:00 -0700
-Message-Id: <1213232760.6645.24.camel@localhost> (sfid-20080612_030609_577959_AA2302DF)
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/12]: wext: Pass iwreq pointer down into standard/private
+ handlers.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Sorry if you received this mail multiple times, my email client had problems with the Cc's)
 
-I have come across a 802.11 device that stops acknowledging frames addressed to
-it when in promiscuous mode. The device can act as an AP with hostapd. However,
-when the interface is attached to a bridge the lack of acknowledgments makes the
-device non-functional as an AP.
+They have no need to see the object as an ifreq.
 
-It seems that it is not really necessary to activate promiscuous mode when
-attaching a wlan interface to a bridge, and it causes unnecessary processing
-overhead to any wlan device.
-
-Case 1: Ethernet to ethernet
-----------------------------
-
-A <----> BRIDGE <----> B
-
-The bridge needs to set promiscuous mode on both interfaces.
-
-Case 2: Ethernet to 802.11 through AP
--------------------------------------
-
-A <----> BRIDGE/AP -))  ((- B
-
-The ethernet interface needs to be in promiscuous mode so that frames from A to
-B are received by the bridge and then forwarded.
-
-However, the wlan interface does _not_ need to be a promiscuous mode. A 802.11
-frame from B to A will have:
-
-ToDS
-RA = BSSID = MAC_AP
-TA = SA = MAC_B
-DA = MAC_A
-
-Frames are naturally addressed to the AP, so the wlan interface does not need to
-be in promiscuous mode. Activating promiscuous mode would actually force the
-device to deal with many frames it does not really have to deal with.
-
-Case 3: Ethernet to 802.11 through IBSS / Managed STAs
-------------------------------------------------------
-
-A <----> BRIDGE/IBSS_STA_B -))  ((- IBSS_STA_C
-
-or
-
-A <----> BRIDGE/STA -))  ((- AP
-
-In this case the frames on the wireless segment will not be naturally addressed
-to the bridge, so activating promiscuous mode on the wireless interface would be
-necessary for the bridge to work. However there are three problems here:
-
-First as Jouni Malinen states [1], this would not comply with 802.11 standard,
-which does not allow to use as SA a MAC address other than our own. If we do it
-anyway, we will have to look for 802.11 ACKs to the MAC address we bridge to
-control frame retransmissions. I do not think any device does this.
-
-Second, such a bridge would be responsible for sending 802.11 ACKs for any
-802.11 frame addressed to a MAC in the ethernet segment it bridges to. As acking
-is usually implemented at MAC level I do not think any device supports this.
-
-Third, on the managed STA case, the STA would have to fake an association with
-the AP for A (and every other node in the ethernet segment it bridges to).  While
-doable, it adds unnecessary ugly complexity.
-
-Even with these problems the bridging might "work", but every frame on the wlan
-segment from/to the bridged ethernet will have to be retransmitted the maximum
-number of times since acks would not work properly.
-
-Given this three cases, the best would be to consider case 3 to be not
-supported (it is indeed not supported, AFAIK), and apply the patch below.
-
-Please let me know what you think of this patch and whether it could interfere
-with any functionality.
-
-Nomenclature
-RA = receiver address
-TA = transmitter address
-SA = source address
-BSSID = basic service set identifier
-<----> = Ethernet link
--)) ((- = 802.11 link
-
-[1]: http://marc.info/?l=linux-wireless&m=117881727809631&w=2
-
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/bridge/br_if.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+ net/wireless/wext.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
-index c2397f5..155bd90 100644
---- a/net/bridge/br_if.c
-+++ b/net/bridge/br_if.c
-@@ -135,7 +135,8 @@ static void del_nbp(struct net_bridge_port *p)
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 929d241..b72cdd2 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -832,11 +832,10 @@ out:
+  * user space and kernel space.
+  */
+ static int ioctl_standard_call(struct net_device *	dev,
+-			       struct ifreq *		ifr,
++			       struct iwreq *		iwr,
+ 			       unsigned int		cmd,
+ 			       iw_handler		handler)
+ {
+-	struct iwreq *				iwr = (struct iwreq *) ifr;
+ 	const struct iw_ioctl_description *	descr;
+ 	struct iw_request_info			info;
+ 	int					ret = -EINVAL;
+@@ -984,10 +983,9 @@ out:
+ 	return err;
+ }
  
- 	sysfs_remove_link(br->ifobj, dev->name);
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+ 			      unsigned int cmd, iw_handler handler)
+ {
+-	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	int extra_size = 0, ret = -EINVAL;
+ 	const struct iw_priv_args *descr;
+ 	struct iw_request_info info;
+@@ -1015,7 +1013,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
  
--	dev_set_promiscuity(dev, -1);
-+	if (!dev->ieee80211_ptr)
-+		dev_set_promiscuity(dev, -1);
+ /* ---------------------------------------------------------------- */
+-typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+ 			       unsigned int, iw_handler);
  
- 	spin_lock_bh(&br->lock);
- 	br_stp_disable_port(p);
-@@ -389,7 +390,15 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
- 		goto err2;
+ /*
+@@ -1027,6 +1025,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
++	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	struct net_device *dev;
+ 	iw_handler	handler;
  
- 	rcu_assign_pointer(dev->br_port, p);
--	dev_set_promiscuity(dev, 1);
-+	/*
-+	 * 802.11 interfaces working as Access Points do not need to be set to
-+	 * promiscuous mode for bridging, as every frame is addressed to them.
-+	 *
-+	 * Bridging of 802.11 interfaces which are not in AP mode is not
-+	 * supported.
-+	 */
-+	if (!dev->ieee80211_ptr)
-+		dev_set_promiscuity(dev, 1);
+@@ -1041,11 +1040,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_iwstats);
  
- 	list_add_rcu(&p->list, &br->port_list);
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_private);
  
+ 	/* Basic check */
+@@ -1057,9 +1056,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return standard(dev, ifr, cmd, handler);
++			return standard(dev, iwr, cmd, handler);
+ 		else
+-			return private(dev, ifr, cmd, handler);
++			return private(dev, iwr, cmd, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
 -- 
-1.5.4.3
-
-
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
+1.5.5.1.308.g1fbb5
 
