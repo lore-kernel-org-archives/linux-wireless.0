@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58938 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753308AbYFVPi6 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40831 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758793AbYFCWAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:58 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 09/12] rfkill: add type string helper
-Date: Sun, 22 Jun 2008 12:38:45 -0300
-Message-Id: <1214149128-5913-10-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173910_444752_5C1C6467)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 3 Jun 2008 18:00:40 -0400
+Message-ID: <4845BF11.7070604@lwfinger.net> (sfid-20080604_000105_331100_A3EDF526)
+Date: Tue, 03 Jun 2008 17:00:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/12]: wext: Emit event stream entries correctly when
+ compat.
+References: <20080603.132856.202640855.davem@davemloft.net>
+In-Reply-To: <20080603.132856.202640855.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will need access to the rfkill switch type in string format for more
-than just sysfs.  Therefore, move it to a generic helper.
+David Miller wrote:
+> Three major portions to this change:
+> 
+> 1) Add IW_EV_COMPAT_LCP_LEN, IW_EV_COMPAT_POINT_OFF,
+>    and IW_EV_COMPAT_POINT_LEN helper defines.
+> 
+> 2) Delete iw_stream_check_add_*(), they are unused.
+> 
+> 3) Add iw_request_info argument to iwe_stream_add_*(), and use it to
+>    size the event and pointer lengths correctly depending upon whether
+>    IW_REQUEST_FLAG_COMPAT is set or not.
+> 
+> 4) The mechanical transformations to the drivers and wireless stack
+>    bits to get the iw_request_info passed down into the routines
+>    modified in #3.
+> 
+> With a lot of help and bug fixes from Masakazu Mokuno.
+> 
+> Signed-off-by: David S. Miller <davem@davemloft.net>
+> ---
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   33 +++++++++++++++------------------
- 1 files changed, 15 insertions(+), 18 deletions(-)
+David,
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index a561e35..3c77734 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -224,34 +224,31 @@ static ssize_t rfkill_name_show(struct device *dev,
- 	return sprintf(buf, "%s\n", rfkill->name);
- }
- 
--static ssize_t rfkill_type_show(struct device *dev,
--				struct device_attribute *attr,
--				char *buf)
-+static const char *rfkill_get_type_str(enum rfkill_type type)
- {
--	struct rfkill *rfkill = to_rfkill(dev);
--	const char *type;
--
--	switch (rfkill->type) {
-+	switch (type) {
- 	case RFKILL_TYPE_WLAN:
--		type = "wlan";
--		break;
-+		return "wlan";
- 	case RFKILL_TYPE_BLUETOOTH:
--		type = "bluetooth";
--		break;
-+		return "bluetooth";
- 	case RFKILL_TYPE_UWB:
--		type = "ultrawideband";
--		break;
-+		return "ultrawideband";
- 	case RFKILL_TYPE_WIMAX:
--		type = "wimax";
--		break;
-+		return "wimax";
- 	case RFKILL_TYPE_WWAN:
--		type = "wwan";
--		break;
-+		return "wwan";
- 	default:
- 		BUG();
- 	}
-+}
-+
-+static ssize_t rfkill_type_show(struct device *dev,
-+				struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
- 
--	return sprintf(buf, "%s\n", type);
-+	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
- }
- 
- static ssize_t rfkill_state_show(struct device *dev,
--- 
-1.5.5.4
+What tree should be used for this patch? On wireless-testing that 
+git-describe lists as v2.6.26-rc4-8782-gd9a8bd7, hunk 5 for mlme.c fails.
+
+Larry
 
