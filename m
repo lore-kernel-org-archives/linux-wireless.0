@@ -1,128 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:56974 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758277AbYFHLNq (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47075
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752712AbYFCUgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 07:13:46 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1182075mue.1
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 04:13:44 -0700 (PDT)
-Date: Sun, 8 Jun 2008 13:13:06 +0200
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH v2] iwlwifi: fix oops in iwl3945_led_brightness_set
-Message-ID: <20080608111302.GB5856@joi> (sfid-20080608_131351_023543_C5E0F7ED)
-References: <20080608084855.GA8167@joi> <1ba2fa240806080318g45a8042csb4eec293a3d1ee5b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240806080318g45a8042csb4eec293a3d1ee5b@mail.gmail.com>
+	Tue, 3 Jun 2008 16:36:52 -0400
+Date: Tue, 03 Jun 2008 12:20:11 -0700 (PDT)
+Message-Id: <20080603.122011.202411331.davem@davemloft.net> (sfid-20080603_223725_112225_40846DD3)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/12]: wext: Pass iwreq pointer down into standard/private
+ handlers.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 08, 2008 at 01:18:36PM +0300, Tomas Winkler wrote:
-> On Sun, Jun 8, 2008 at 11:48 AM, Marcin Slusarz
-> <marcin.slusarz@gmail.com> wrote:
-> > fix race between:
-> > ieee80211_open->ieee80211_led_radio->led_trigger_event->led_set_brightness->iwl3945_led_brightness_set
-> > (which assumes that "led->priv" is not NULL)
-> > and
-> > iwl3945_pci_probe->iwl3945_setup_deferred_work->(...)->iwl3945_bg_alive_start->iwl3945_alive_start->iwl3945_led_register->iwl3945_led_register_led
-> > which sets priv field in struct iwl3945_led
-> > after
-> > led->led_dev.brightness_set = iwl3945_led_brightness_set;
-> > (...)
-> > led_classdev_register(device, &led->led_dev);
-> >
-> > http://kerneloops.org/guilty.php?guilty=iwl3945_led_brightness_set&version=2.6.25-release&start=1671168&end=1703935&class=oops
-> >
-> > Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> > Cc: Zhu Yi <yi.zhu@intel.com>
-> > Cc: Reinette Chatre <reinette.chatre@intel.com>
-> > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > Cc: John W. Linville <linville@tuxdriver.com>
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: ipw3945-devel@lists.sourceforge.net
-> > ---
-> >
-> > Compile tested only. Please review and test on real hardware.
-> >
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-3945-led.c |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> > index d200d08..9f08568 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> > @@ -185,6 +185,8 @@ static void iwl3945_led_brightness_set(struct led_classdev *led_cdev,
-> >                                               struct iwl3945_led, led_dev);
-> >        struct iwl3945_priv *priv = led->priv;
-> >
-> > +       if (!led->registered)
-> > +               return;
-> >        if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-> >                return;
-> >
-> > --
-> > 1.5.4.5
-> >
-> NACK
-> Just need to revert the order in registration command as done in
-> iwl_leds_register_led.
 
-Thanks for a review!
-Updated patch below.
+They have no need to see the object as an ifreq.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-fix race between:
-ieee80211_open->ieee80211_led_radio->led_trigger_event->led_set_brightness->iwl3945_led_brightness_set
-(which assumes that "led->priv" is not NULL)
-and
-iwl3945_pci_probe->iwl3945_setup_deferred_work->(...)->iwl3945_bg_alive_start->iwl3945_alive_start->iwl3945_led_register->iwl3945_led_register_led
-which sets priv field in struct iwl3945_led
-after
-led->led_dev.brightness_set = iwl3945_led_brightness_set;
-(...)
-led_classdev_register(device, &led->led_dev);
+ net/wireless/wext.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
 
-http://kerneloops.org/guilty.php?guilty=iwl3945_led_brightness_set&version=2.6.25-release&start=1671168&end=1703935&class=oops
-
-Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: ipw3945-devel@lists.sourceforge.net
----
- drivers/net/wireless/iwlwifi/iwl-3945-led.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-index d200d08..8b1528e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-@@ -229,14 +229,15 @@ static int iwl3945_led_register_led(struct iwl3945_priv *priv,
- 	led->led_dev.brightness_set = iwl3945_led_brightness_set;
- 	led->led_dev.default_trigger = trigger;
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 929d241..b72cdd2 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -832,11 +832,10 @@ out:
+  * user space and kernel space.
+  */
+ static int ioctl_standard_call(struct net_device *	dev,
+-			       struct ifreq *		ifr,
++			       struct iwreq *		iwr,
+ 			       unsigned int		cmd,
+ 			       iw_handler		handler)
+ {
+-	struct iwreq *				iwr = (struct iwreq *) ifr;
+ 	const struct iw_ioctl_description *	descr;
+ 	struct iw_request_info			info;
+ 	int					ret = -EINVAL;
+@@ -984,10 +983,9 @@ out:
+ 	return err;
+ }
  
-+	led->priv = priv;
-+	led->type = type;
-+
- 	ret = led_classdev_register(device, &led->led_dev);
- 	if (ret) {
- 		IWL_ERROR("Error: failed to register led handler.\n");
- 		return ret;
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+ 			      unsigned int cmd, iw_handler handler)
+ {
+-	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	int extra_size = 0, ret = -EINVAL;
+ 	const struct iw_priv_args *descr;
+ 	struct iw_request_info info;
+@@ -1015,7 +1013,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
+ 
+ /* ---------------------------------------------------------------- */
+-typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+ 			       unsigned int, iw_handler);
+ 
+ /*
+@@ -1027,6 +1025,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
++	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+ 
+@@ -1041,11 +1040,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+@@ -1057,9 +1056,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return standard(dev, ifr, cmd, handler);
++			return standard(dev, iwr, cmd, handler);
+ 		else
+-			return private(dev, ifr, cmd, handler);
++			return private(dev, iwr, cmd, handler);
  	}
- 
--	led->priv = priv;
--	led->type = type;
- 	led->registered = 1;
- 
- 	if (set_led && led->led_on)
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
 -- 
-1.5.4.5
+1.5.5.1.308.g1fbb5
 
