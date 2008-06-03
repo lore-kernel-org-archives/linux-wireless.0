@@ -1,177 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33441 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762162AbYFWUXS (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48405
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753695AbYFCWDO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:18 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 08/13] rfkill: add notifier chains support
-Date: Mon, 23 Jun 2008 17:23:03 -0300
-Message-Id: <1214252588-30723-9-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222327_760088_9F44CF6D)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 3 Jun 2008 18:03:14 -0400
+Date: Tue, 03 Jun 2008 15:03:13 -0700 (PDT)
+Message-Id: <20080603.150313.27318034.davem@davemloft.net> (sfid-20080604_000346_664269_28CC24CB)
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/12]: wext: Emit event stream entries correctly when
+ compat.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4845BF11.7070604@lwfinger.net>
+References: <20080603.132856.202640855.davem@davemloft.net>
+	<4845BF11.7070604@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a notifier chain for use by the rfkill class.  This notifier chain
-signals the following events (more to be added when needed):
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 03 Jun 2008 17:00:49 -0500
 
-  1. rfkill: rfkill device state has changed
+> What tree should be used for this patch? On wireless-testing that 
+> git-describe lists as v2.6.26-rc4-8782-gd9a8bd7, hunk 5 for mlme.c fails.
 
-A pointer to the rfkill struct will be passed as a parameter.
-
-The notifier message types have been added to include/linux/rfkill.h
-instead of to include/linux/notifier.h in order to avoid the madness of
-modifying a header used globally (and that triggers an almost full tree
-rebuild every time it is touched) with information that is of interest only
-to code that includes the rfkill.h header.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- include/linux/rfkill.h |    7 +++++
- net/rfkill/rfkill.c    |   70 +++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 74 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index c0cab7d..98667be 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -117,4 +117,11 @@ static inline char *rfkill_get_led_name(struct rfkill *rfkill)
- #endif
- }
- 
-+/* rfkill notification chain */
-+#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
-+						   switch has changed */
-+
-+int register_rfkill_notifier(struct notifier_block *nb);
-+int unregister_rfkill_notifier(struct notifier_block *nb);
-+
- #endif /* RFKILL_H */
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index fb56690..a561e35 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -46,6 +46,49 @@ MODULE_PARM_DESC(default_state,
- 
- static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
- 
-+static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
-+
-+
-+/**
-+ * register_rfkill_notifier - Add notifier to rfkill notifier chain
-+ * @nb: pointer to the new entry to add to the chain
-+ *
-+ * See blocking_notifier_chain_register() for return value and further
-+ * observations.
-+ *
-+ * Adds a notifier to the rfkill notifier chain.  The chain will be
-+ * called with a pointer to the relevant rfkill structure as a parameter,
-+ * refer to include/linux/rfkill.h for the possible events.
-+ *
-+ * Notifiers added to this chain are to always return NOTIFY_DONE.  This
-+ * chain is a blocking notifier chain: notifiers can sleep.
-+ *
-+ * Calls to this chain may have been done through a workqueue.  One must
-+ * assume unordered asynchronous behaviour, there is no way to know if
-+ * actions related to the event that generated the notification have been
-+ * carried out already.
-+ */
-+int register_rfkill_notifier(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(register_rfkill_notifier);
-+
-+/**
-+ * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
-+ * @nb: pointer to the entry to remove from the chain
-+ *
-+ * See blocking_notifier_chain_unregister() for return value and further
-+ * observations.
-+ *
-+ * Removes a notifier from the rfkill notifier chain.
-+ */
-+int unregister_rfkill_notifier(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
-+
- 
- static void rfkill_led_trigger(struct rfkill *rfkill,
- 			       enum rfkill_state state)
-@@ -62,14 +105,25 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
- #endif /* CONFIG_RFKILL_LEDS */
- }
- 
-+static void notify_rfkill_state_change(struct rfkill *rfkill)
-+{
-+	blocking_notifier_call_chain(&rfkill_notifier_list,
-+			RFKILL_STATE_CHANGED,
-+			rfkill);
-+}
-+
- static void update_rfkill_state(struct rfkill *rfkill)
- {
--	enum rfkill_state newstate;
-+	enum rfkill_state newstate, oldstate;
- 
- 	if (rfkill->get_state) {
- 		mutex_lock(&rfkill->mutex);
--		if (!rfkill->get_state(rfkill->data, &newstate))
-+		if (!rfkill->get_state(rfkill->data, &newstate)) {
-+			oldstate = rfkill->state;
- 			rfkill->state = newstate;
-+			if (oldstate != newstate)
-+				notify_rfkill_state_change(rfkill);
-+		}
- 		mutex_unlock(&rfkill->mutex);
- 	}
- }
-@@ -93,8 +147,10 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 			rfkill->state = state;
- 	}
- 
--	if (force || rfkill->state != oldstate)
-+	if (force || rfkill->state != oldstate) {
- 		rfkill_led_trigger(rfkill, rfkill->state);
-+		notify_rfkill_state_change(rfkill);
-+	}
- 
- 	return retval;
- }
-@@ -139,12 +195,20 @@ EXPORT_SYMBOL(rfkill_switch_all);
-  */
- int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
- {
-+	enum rfkill_state oldstate;
-+
- 	if (state != RFKILL_STATE_OFF &&
- 	    state != RFKILL_STATE_ON)
- 		return -EINVAL;
- 
- 	mutex_lock(&rfkill->mutex);
-+
-+	oldstate = rfkill->state;
- 	rfkill->state = state;
-+
-+	if (state != oldstate)
-+		notify_rfkill_state_change(rfkill);
-+
- 	mutex_unlock(&rfkill->mutex);
- 
- 	return 0;
--- 
-1.5.5.4
-
+I said in the 0/12 posting that the patches are based upon
+net-next-2.6
