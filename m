@@ -1,57 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:49057 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754001AbYFRWaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 18:30:08 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1K95lj-0001Dm-8u
-	for linux-wireless@vger.kernel.org; Thu, 19 Jun 2008 00:04:43 +0200
-Message-ID: <4859866A.1090300@gmail.com> (sfid-20080619_003017_588260_C6FB3DD2)
-Date: Wed, 18 Jun 2008 23:04:26 +0100
-MIME-Version: 1.0
-To: Bernhard Reiter
-	<public-bernhard-fZ64t2NdLluOJsaolrKA/Q@hugh.gmane.org>
-CC: =?ISO-8859-1?Q?Stefanik_G=E1bor?=
-	<public-netrolller.3d-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-References: <200806181715.20516.bernhard@intevation.de> <69e28c910806180831j3625db4h6b93836146349fb@mail.gmail.com>
-In-Reply-To: <69e28c910806180831j3625db4h6b93836146349fb@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-From: Dave <kilroyd@googlemail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47064
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752566AbYFCUgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 16:36:52 -0400
+Date: Tue, 03 Jun 2008 12:20:03 -0700 (PDT)
+Message-Id: <20080603.122003.93040710.davem@davemloft.net> (sfid-20080603_223845_610295_C22F5BC2)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/12]: wext: Extract private call iw_point handling into
+ seperate functions.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |  141 +++++++++++++++++++++++++++------------------------
+ 1 files changed, 74 insertions(+), 67 deletions(-)
 
-Stefanik G=E1bor wrote:
-> On Wed, Jun 18, 2008 at 5:15 PM, Bernhard Reiter <bernhard@intevation=
-=2Ede> wrote:
->> Sitting here a  pc card wireless land adapter.
->> id 0x0156, 0x0003, which probably makes it an Agere card.
->> cardctl info says:
->> "Wireless PC Card Model 0110"
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index d17c0f4..a1cd19a 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -890,25 +890,22 @@ static int ioctl_standard_call(struct net_device *	dev,
+  * a iw_handler but process it in your ioctl handler (i.e. use the
+  * old driver API).
+  */
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+-			      unsigned int cmd, iw_handler handler)
++static int get_priv_descr_and_size(struct net_device *dev, unsigned int cmd,
++				   const struct iw_priv_args **descrp)
+ {
+-	struct iwreq *			iwr = (struct iwreq *) ifr;
+-	const struct iw_priv_args *	descr = NULL;
+-	struct iw_request_info		info;
+-	int				extra_size = 0;
+-	int				i;
+-	int				ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	int i, extra_size;
+ 
+-	/* Get the description of the IOCTL */
+-	for (i = 0; i < dev->wireless_handlers->num_private_args; i++)
++	descr = NULL;
++	for (i = 0; i < dev->wireless_handlers->num_private_args; i++) {
+ 		if (cmd == dev->wireless_handlers->private_args[i].cmd) {
+-			descr = &(dev->wireless_handlers->private_args[i]);
++			descr = &dev->wireless_handlers->private_args[i];
+ 			break;
+ 		}
++	}
+ 
+-	/* Compute the size of the set/get arguments */
+-	if (descr != NULL) {
++	extra_size = 0;
++	if (descr) {
+ 		if (IW_IS_SET(cmd)) {
+ 			int	offset = 0;	/* For sub-ioctls */
+ 			/* Check for sub-ioctl handler */
+@@ -933,72 +930,82 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 				extra_size = 0;
+ 		}
+ 	}
++	*descrp = descr;
++	return extra_size;
++}
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
++static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
++				  const struct iw_priv_args *descr,
++				  iw_handler handler, struct net_device *dev,
++				  struct iw_request_info *info, int extra_size)
++{
++	char *extra;
++	int err;
+ 
+-	/* Check if we have a pointer to user space data or not. */
+-	if (extra_size == 0) {
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
+-	} else {
+-		char *	extra;
+-		int	err;
++	/* Check what user space is giving us */
++	if (IW_IS_SET(cmd)) {
++		if (!iwp->pointer && iwp->length != 0)
++			return -EFAULT;
+ 
+-		/* Check what user space is giving us */
+-		if (IW_IS_SET(cmd)) {
+-			/* Check NULL pointer */
+-			if ((iwr->u.data.pointer == NULL) &&
+-			   (iwr->u.data.length != 0))
+-				return -EFAULT;
++		if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK))
++			return -E2BIG;
++	} else if (!iwp->pointer)
++		return -EFAULT;
+ 
+-			/* Does it fits within bounds ? */
+-			if (iwr->u.data.length > (descr->set_args &
+-						 IW_PRIV_SIZE_MASK))
+-				return -E2BIG;
+-		} else if (iwr->u.data.pointer == NULL)
+-			return -EFAULT;
++	extra = kmalloc(extra_size, GFP_KERNEL);
++	if (!extra)
++		return -ENOMEM;
+ 
+-		/* Always allocate for max space. Easier, and won't last
+-		 * long... */
+-		extra = kmalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* If it is a SET, get all the extra data in here */
+-		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-			err = copy_from_user(extra, iwr->u.data.pointer,
+-					     extra_size);
+-			if (err) {
+-				kfree(extra);
+-				return -EFAULT;
+-			}
++	/* If it is a SET, get all the extra data in here */
++	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++		if (copy_from_user(extra, iwp->pointer, extra_size)) {
++			err = -EFAULT;
++			goto out;
+ 		}
++	}
+ 
+-		/* Call the handler */
+-		ret = handler(dev, &info, &(iwr->u), extra);
++	/* Call the handler */
++	err = handler(dev, info, (union iwreq_data *) iwp, extra);
+ 
+-		/* If we have something to return to the user */
+-		if (!ret && IW_IS_GET(cmd)) {
++	/* If we have something to return to the user */
++	if (!err && IW_IS_GET(cmd)) {
++		/* Adjust for the actual length if it's variable,
++		 * avoid leaking kernel bits outside.
++		 */
++		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
++			extra_size = adjust_priv_size(descr->get_args, iwp);
+ 
+-			/* Adjust for the actual length if it's variable,
+-			 * avoid leaking kernel bits outside. */
+-			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+-				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u.data));
+-			}
++		if (copy_to_user(iwp->pointer, extra, extra_size))
++			err =  -EFAULT;
++	}
+ 
+-			err = copy_to_user(iwr->u.data.pointer, extra,
+-					   extra_size);
+-			if (err)
+-				ret =  -EFAULT;
+-		}
++out:
++	kfree(extra);
++	return err;
++}
+ 
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
+-	}
++static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++			      unsigned int cmd, iw_handler handler)
++{
++	struct iwreq *iwr = (struct iwreq *) ifr;
++	int extra_size = 0, ret = -EINVAL;
++	const struct iw_priv_args *descr;
++	struct iw_request_info info;
+ 
++	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
++
++	/* Prepare the call */
++	info.cmd = cmd;
++	info.flags = 0;
++
++	/* Check if we have a pointer to user space data or not. */
++	if (extra_size == 0) {
++		/* No extra arguments. Trivial to handle */
++		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++	} else {
++		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
++					     handler, dev, &info, extra_size);
++	}
+ 
+ 	/* Call commit handler if needed and defined */
+ 	if (ret == -EIWCOMMIT)
+-- 
+1.5.5.1.308.g1fbb5
 
-> This appears to be a Wavelan 2 / Orinoco card. Maybe try adding your
-> device IDs to the Orinoco driver.
-
-According to <http://dotpups.de/dotpups/Wifi/drivers-for-Puppy-1/lucent=
--agere_README>, this is a Hermes II based card, which is not supported =
-by the orinoco driver.
-
-There is a more recent version of the Agere driver available, which has=
- been patched for 2.6 kernels. See <http://ubuntuforums.org/showthread.=
-php?t=3D304217>
-=20
-
-Regards,
-
-Dave.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
