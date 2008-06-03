@@ -1,91 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:42828 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752710AbYFVPi5 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47080
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753028AbYFCUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:57 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>
-Subject: [GIT PATCH] rfkill rework for 2.6.27 (v2)
-Date: Sun, 22 Jun 2008 12:38:36 -0300
-Message-Id: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173904_587907_708CA413)
+	Tue, 3 Jun 2008 16:36:54 -0400
+Date: Tue, 03 Jun 2008 13:28:52 -0700 (PDT)
+Message-Id: <20080603.132852.25499038.davem@davemloft.net> (sfid-20080603_223932_182375_15F86343)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 11/12]: wext: Create IW_REQUEST_FLAG_COMPAT and set it as
+ needed.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hello John,
+Now low-level WEXT ioctl handlers can do compat handling
+when necessary.
 
-Here is the revised patchset to bring rfkill up to shape enough that it
-becomes useable for platform drivers like thinkpad-acpi.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/net/iw_handler.h |    2 +-
+ net/wireless/wext.c      |   73 +++++++++++++++++++++-------------------------
+ 2 files changed, 34 insertions(+), 41 deletions(-)
 
-There are some very minor changes:
- * Added a check for illegal states on rfkill_force_state() since
-   it is an exported function and someone might call it with wrong
-   parameters;
- * Fix use of %u instead of %d on uevent generation for RFKILL_STATE
-   to match the type for enum rfkill_state;
- * Minor documentation wording changes;
-
-All the patches in this patchset have been ACKed by Ivo, the rfkill
-maintainer.  They're based on wireless-testing master branch, but they
-apply cleanly on top of 2.6.26-rc7 as well.
-
-No real problem was found on any of the patches in the thread they
-generated last time I posted, AFAIK all doubts regarding these patches
-have been explained to the satisfaction of everyone involved, and they
-dealt far more with the rfkill subsystem itself than with anything any
-of the patches was doing.
-
-True, there are still shortcomings in the rfkill subsystem even after
-this patchset, but that's not a problem with the patches but rather
-missing features and changes that should be done on further patches.
-Some of these patches are ready (e.g. extra documentation) and others (a
-new hardlocked rfkill state for rfkill-state) are being tested, and will
-be send to linux-wireless soon.
-
-Please merge this patchset on wireless-testing to get it on its way to
-linux-next, so that it can go to 2.6.27 when the merge window opens.
-This patchset is extremely important for my thinkpad-acpi work, and for
-other drivers like hp-wmi.
-
-Note that these patches are backwards-compatible in API and ABI.  No
-in-tree drivers are broken by it, but it doesn't magically fixes their
-rfkill support either.  It just makes it possible to write drivers using
-rfkill that actually work properly.
-
-These patches went through a lot of discursion already, available at
-http://thread.gmane.org/gmane.linux.kernel/664500 and a more recent
-thread at http://thread.gmane.org/gmane.linux.kernel/682233 and
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/15677.
-
-
-This series is available as a git branch at:
-git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git for-upstream/rfkill
-
-Shortlog:
-
-Henrique de Moraes Holschuh (12):
-      rfkill: clarify meaning of rfkill states
-      rfkill: fix minor typo in kernel doc
-      rfkill: handle SW_RFKILL_ALL events
-      rfkill: add parameter to disable radios by default
-      rfkill: add read-write rfkill switch support
-      rfkill: add the WWAN radio type
-      rfkill: rework suspend and resume handlers
-      rfkill: add notifier chains support
-      rfkill: add type string helper
-      rfkill: add uevent notifications
-      rfkill: do not allow userspace to override ALL RADIOS OFF
-      rfkill: document rw rfkill switches and clarify input subsystem interactions
-
-Thank you.
-
+diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
+index 369d50e..c99a8ee 100644
+--- a/include/net/iw_handler.h
++++ b/include/net/iw_handler.h
+@@ -256,7 +256,7 @@
+ #define EIWCOMMIT	EINPROGRESS
+ 
+ /* Flags available in struct iw_request_info */
+-#define IW_REQUEST_FLAG_NONE	0x0000	/* No flag so far */
++#define IW_REQUEST_FLAG_COMPAT	0x0001	/* Compat ioctl call */
+ 
+ /* Type of headers we know about (basically union iwreq_data) */
+ #define IW_HEADER_TYPE_NULL	0	/* Not available */
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 071cee4..96a2ed9 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -834,10 +834,10 @@ out:
+ static int ioctl_standard_call(struct net_device *	dev,
+ 			       struct iwreq *		iwr,
+ 			       unsigned int		cmd,
++			       struct iw_request_info	*info,
+ 			       iw_handler		handler)
+ {
+ 	const struct iw_ioctl_description *	descr;
+-	struct iw_request_info			info;
+ 	int					ret = -EINVAL;
+ 
+ 	/* Get the description of the IOCTL */
+@@ -845,15 +845,11 @@ static int ioctl_standard_call(struct net_device *	dev,
+ 		return -EOPNOTSUPP;
+ 	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+ 	/* Check if we have a pointer to user space data or not */
+ 	if (descr->header_type != IW_HEADER_TYPE_POINT) {
+ 
+ 		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), NULL);
++		ret = handler(dev, info, &(iwr->u), NULL);
+ 
+ 		/* Generate an event to notify listeners of the change */
+ 		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
+@@ -861,7 +857,7 @@ static int ioctl_standard_call(struct net_device *	dev,
+ 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
+ 	} else {
+ 		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
+-					      handler, dev, &info);
++					      handler, dev, info);
+ 	}
+ 
+ 	/* Call commit handler if needed and defined */
+@@ -984,25 +980,21 @@ out:
+ }
+ 
+ static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+-			      unsigned int cmd, iw_handler handler)
++			      unsigned int cmd, struct iw_request_info *info,
++			      iw_handler handler)
+ {
+ 	int extra_size = 0, ret = -EINVAL;
+ 	const struct iw_priv_args *descr;
+-	struct iw_request_info info;
+ 
+ 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+ 	/* Check if we have a pointer to user space data or not. */
+ 	if (extra_size == 0) {
+ 		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
+ 	} else {
+ 		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
+-					     handler, dev, &info, extra_size);
++					     handler, dev, info, extra_size);
+ 	}
+ 
+ 	/* Call commit handler if needed and defined */
+@@ -1014,7 +1006,8 @@ static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+ 
+ /* ---------------------------------------------------------------- */
+ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+-			       unsigned int, iw_handler);
++			       unsigned int, struct iw_request_info *,
++			       iw_handler);
+ 
+ /*
+  * Main IOCTl dispatcher.
+@@ -1022,6 +1015,7 @@ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+  */
+ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 				  unsigned int cmd,
++				  struct iw_request_info *info,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
+@@ -1040,11 +1034,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return standard(dev, iwr, cmd,
++		return standard(dev, iwr, cmd, info,
+ 				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return standard(dev, iwr, cmd,
++		return standard(dev, iwr, cmd, info,
+ 				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+@@ -1056,9 +1050,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return standard(dev, iwr, cmd, handler);
++			return standard(dev, iwr, cmd, info, handler);
+ 		else
+-			return private(dev, iwr, cmd, handler);
++			return private(dev, iwr, cmd, info, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
+@@ -1080,7 +1074,7 @@ static int wext_permission_check(unsigned int cmd)
+ 
+ /* entry point from dev ioctl */
+ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
+-			       unsigned int cmd,
++			       unsigned int cmd, struct iw_request_info *info,
+ 			       wext_ioctl_func standard,
+ 			       wext_ioctl_func private)
+ {
+@@ -1091,7 +1085,7 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
++	ret = wireless_process_ioctl(net, ifr, cmd, info, standard, private);
+ 	rtnl_unlock();
+ 
+ 	return ret;
+@@ -1100,10 +1094,12 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
+ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 		      void __user *arg)
+ {
+-	int ret = wext_ioctl_dispatch(net, ifr, cmd,
+-				      ioctl_standard_call,
+-				      ioctl_private_call);
++	struct iw_request_info info = { .cmd = cmd, .flags = 0 };
++	int ret;
+ 
++	ret = wext_ioctl_dispatch(net, ifr, cmd, &info,
++				  ioctl_standard_call,
++				  ioctl_private_call);
+ 	if (ret >= 0 &&
+ 	    IW_IS_GET(cmd) &&
+ 	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
+@@ -1116,28 +1112,25 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ static int compat_standard_call(struct net_device *	dev,
+ 				struct iwreq *		iwr,
+ 				unsigned int		cmd,
++				struct iw_request_info	*info,
+ 				iw_handler		handler)
+ {
+ 	const struct iw_ioctl_description *descr;
+ 	struct compat_iw_point *iwp_compat;
+-	struct iw_request_info info;
+ 	struct iw_point iwp;
+ 	int err;
+ 
+ 	descr = standard_ioctl + (cmd - SIOCIWFIRST);
+ 
+ 	if (descr->header_type != IW_HEADER_TYPE_POINT)
+-		return ioctl_standard_call(dev, iwr, cmd, handler);
++		return ioctl_standard_call(dev, iwr, cmd, info, handler);
+ 
+ 	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
+ 	iwp.pointer = compat_ptr(iwp_compat->pointer);
+ 	iwp.length = iwp_compat->length;
+ 	iwp.flags = iwp_compat->flags;
+ 
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+-	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
++	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, info);
+ 
+ 	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
+ 	iwp_compat->length = iwp.length;
+@@ -1147,22 +1140,18 @@ static int compat_standard_call(struct net_device *	dev,
+ }
+ 
+ static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
+-			       unsigned int cmd, iw_handler handler)
++			       unsigned int cmd, struct iw_request_info *info,
++			       iw_handler handler)
+ {
+ 	const struct iw_priv_args *descr;
+-	struct iw_request_info info;
+ 	int ret, extra_size;
+ 
+ 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
+ 
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+ 	/* Check if we have a pointer to user space data or not. */
+ 	if (extra_size == 0) {
+ 		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
++		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
+ 	} else {
+ 		struct compat_iw_point *iwp_compat;
+ 		struct iw_point iwp;
+@@ -1173,7 +1162,7 @@ static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
+ 		iwp.flags = iwp_compat->flags;
+ 
+ 		ret = ioctl_private_iw_point(&iwp, cmd, descr,
+-					     handler, dev, &info, extra_size);
++					     handler, dev, info, extra_size);
+ 
+ 		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
+ 		iwp_compat->length = iwp.length;
+@@ -1191,6 +1180,7 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+ 			     unsigned long arg)
+ {
+ 	void __user *argp = (void __user *)arg;
++	struct iw_request_info info;
+ 	struct iwreq iwr;
+ 	char *colon;
+ 	int ret;
+@@ -1203,7 +1193,10 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+ 	if (colon)
+ 		*colon = 0;
+ 
+-	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
++	info.cmd = cmd;
++	info.flags = IW_REQUEST_FLAG_COMPAT;
++
++	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd, &info,
+ 				  compat_standard_call,
+ 				  compat_private_call);
+ 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.5.1.308.g1fbb5
+
