@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44687 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752683AbYFLCQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 22:16:52 -0400
-Subject: Re: [PATCH 26/29] mac80211 : fix for iwconfig in ad-hoc mode
-From: Dan Williams <dcbw@redhat.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-In-Reply-To: <1213235239-2954-27-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-20-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-21-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-22-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-24-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-26-git-send-email-yi.zhu@intel.com>
-	 <1213235239-2954-27-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 22:14:08 -0400
-Message-Id: <1213236848.30376.7.camel@localhost.localdomain> (sfid-20080612_041656_014549_0494B5F6)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.174]:25489 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbYFCUC2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 16:02:28 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1414465wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 13:02:27 -0700 (PDT)
+Message-ID: <69e28c910806031302s91fdcd8wcd2827baa64b04b@mail.gmail.com> (sfid-20080603_220231_709653_A6C76F2E)
+Date: Tue, 3 Jun 2008 22:02:27 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH 05/11] rt2x00: Don't kill guardian_urb when it wasn't created
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <200806032029.51057.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200806032024.52931.IvDoorn@gmail.com>
+	 <200806032026.40506.IvDoorn@gmail.com>
+	 <200806032027.06094.IvDoorn@gmail.com>
+	 <200806032029.51057.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-12 at 09:47 +0800, Zhu Yi wrote:
-> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> 
-> The patch checks interface status, if it is in IBSS_JOINED mode
-> show cell id it is associated with.
-> 
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Tue, Jun 3, 2008 at 8:29 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote=
+:
+> This fixes a "BUG: unable to handle kernel paging request"
+> bug in rt73usb which was caused by killing the guardian_urb
+> while it had never been allocated for rt73usb.
+>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00usb.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wi=
+reless/rt2x00/rt2x00usb.c
+> index 52d12fd..36a087a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> @@ -394,8 +394,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *=
+rt2x00dev)
+>        }
+>
+>        /*
+> -        * Kill guardian urb.
+> +        * Kill guardian urb (if required by driver).
+>         */
+> +       if (!test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags)=
+)
+> +               return;
+> +
+>        for (i =3D 0; i < rt2x00dev->bcn->limit; i++) {
+>                bcn_priv =3D rt2x00dev->bcn->entries[i].priv_data;
+>                if (bcn_priv->guardian_urb)
+> --
+> 1.5.5.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Good catch.  This is actually a regression since 2.6.25.3 where the code
-didn't care about the state but was just:
 
-        if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
-            sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
-                ap_addr->sa_family = ARPHRD_ETHER;
-                memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
-                return 0;
 
-John, this is a good candidate for 2.6.26 as it's technically a
-regression, even though impact is probably low.
-
-Dan
-
->  net/mac80211/wext.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 4806d96..5af3862 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -508,7 +508,8 @@ static int ieee80211_ioctl_giwap(struct net_device *dev,
->  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
->  	    sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
-> -		if (sdata->u.sta.state == IEEE80211_ASSOCIATED) {
-> +		if (sdata->u.sta.state == IEEE80211_ASSOCIATED ||
-> +		    sdata->u.sta.state == IEEE80211_IBSS_JOINED) {
->  			ap_addr->sa_family = ARPHRD_ETHER;
->  			memcpy(&ap_addr->sa_data, sdata->u.sta.bssid, ETH_ALEN);
->  			return 0;
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
