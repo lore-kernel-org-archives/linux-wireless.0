@@ -1,43 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([203.16.214.146]:2011 "EHLO
-	ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753211AbYF0GCN (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:2074 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbYFCS0D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 02:02:13 -0400
-Received: from [192.168.1.33] ([192.168.1.33])
-	(authenticated user iwo@call-direct.com.au)
-	by mail.call-direct.com.au (Kerio MailServer 6.4.1 patch 1)
-	for linux-wireless@vger.kernel.org;
-	Fri, 27 Jun 2008 15:57:03 +1000
-Message-ID: <48648130.40402@call-direct.com.au> (sfid-20080627_080216_985183_62D87AE6)
-Date: Fri, 27 Jun 2008 15:57:04 +1000
-From: Iwo Mergler <iwo@call-direct.com.au>
+	Tue, 3 Jun 2008 14:26:03 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644244nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:03 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 01/11] rt2x00: Calculate register offset during compile time
+Date: Tue, 3 Jun 2008 20:29:35 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806032024.52931.IvDoorn@gmail.com>
+In-Reply-To: <200806032024.52931.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: mac80211: Question about beacons
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200806032029.35662.IvDoorn@gmail.com> (sfid-20080603_202607_301474_FEA62053)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+By using __ffs() the register offsets were always calculated
+at run-time which all FIELD32/FIELD16 definitions were builtin
+constants. This means we can heavily optimize the register handling
+by allowing GCC to do all the work during compilation.
 
-I'm trying to debug the AP mode of the rt73usb driver. It works OK,
-as far as I can tell, but there are no beacons in the air. Not even garbled
-packets. The AP is happy to respond to SSID broadcast requests though.
+Add some compile_ffs() macros to perform the calculation at
+compile time. After this each rt2x00 module size is reduced
+by ~2500 bytes. And the stack size of several functions is reduced
+as well which further limits the number of rt2x00 results in
+'make checkstack'.
 
-Now, when starting hostapd, the driver gets three rt73usb_beacon_update()
-calls (struct ieee80211_ops ->beacon_update()). The SKBs passed in are
-identical IEEE802.11 beacon packets, with the sequence numbers 0, 1 and 2.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00reg.h |   55 +++++++++++++++++++++++--------
+ 1 files changed, 41 insertions(+), 14 deletions(-)
 
-I believe the hardware is supposed to be auto-beaconing.
-
-Here is the question: why three calls? I would have expected a single 
-call for
-such a device.
-
-Kind regards,
-
-Iwo
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index 3f255df..03e846f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -130,40 +130,67 @@ struct rt2x00_field32 {
+ 
+ /*
+  * Power of two check, this will check
+- * if the mask that has been given contains
+- * and contiguous set of bits.
++ * if the mask that has been given contains and contiguous set of bits.
++ * Note that we cannot use the is_power_of_2() function since this
++ * check must be done at compile-time.
+  */
+ #define is_power_of_two(x)	( !((x) & ((x)-1)) )
+ #define low_bit_mask(x)		( ((x)-1) & ~(x) )
+ #define is_valid_mask(x)	is_power_of_two(1 + (x) + low_bit_mask(x))
+ 
++/*
++ * Macro's to find first set bit in a variable.
++ * These macro's behaves the same as the __ffs() function with
++ * the most important difference that this is done during
++ * compile-time rather then run-time.
++ */
++#define compile_ffs2(__x) \
++	((__x) & 0x1) ? 0 : 1
++
++#define compile_ffs4(__x) \
++	((__x) & 0x3) ? compile_ffs2(__x) : compile_ffs2(__x >> 2) + 2
++
++#define compile_ffs8(__x) \
++	((__x) & 0xf) ? compile_ffs4(__x) : compile_ffs4(__x >> 4) + 4
++
++#define compile_ffs16(__x) \
++	((__x) & 0xff) ? compile_ffs8(__x) : compile_ffs8(__x >> 8) + 8
++
++#define compile_ffs32(__x) \
++	((__x) & 0xffff) ? compile_ffs16(__x) : compile_ffs16(__x >> 16) + 16
++
++/*
++ * This macro will check the requirements for the FIELD{8,16,32} macros
++ * The mask should be a constant non-zero contiguous set of bits which
++ * does not exceed the given typelimit.
++ */
++#define FIELD_CHECK(__mask, __type)			\
++	BUILD_BUG_ON(!__builtin_constant_p(__mask) ||	\
++		     !(__mask) ||			\
++		     !is_valid_mask(__mask) ||		\
++		     (__mask) != (__type)(__mask))	\
++
+ #define FIELD8(__mask)				\
+ ({						\
+-	BUILD_BUG_ON(!(__mask) ||		\
+-		     !is_valid_mask(__mask) ||	\
+-		     (__mask) != (u8)(__mask));	\
++	FIELD_CHECK(__mask, u8);		\
+ 	(struct rt2x00_field8) {		\
+-		__ffs(__mask), (__mask)		\
++		compile_ffs8(__mask), (__mask)	\
+ 	};					\
+ })
+ 
+ #define FIELD16(__mask)				\
+ ({						\
+-	BUILD_BUG_ON(!(__mask) ||		\
+-		     !is_valid_mask(__mask) ||	\
+-		     (__mask) != (u16)(__mask));\
++	FIELD_CHECK(__mask, u16);		\
+ 	(struct rt2x00_field16) {		\
+-		__ffs(__mask), (__mask)		\
++		compile_ffs16(__mask), (__mask)	\
+ 	};					\
+ })
+ 
+ #define FIELD32(__mask)				\
+ ({						\
+-	BUILD_BUG_ON(!(__mask) ||		\
+-		     !is_valid_mask(__mask) ||	\
+-		     (__mask) != (u32)(__mask));\
++	FIELD_CHECK(__mask, u32);		\
+ 	(struct rt2x00_field32) {		\
+-		__ffs(__mask), (__mask)		\
++		compile_ffs32(__mask), (__mask)	\
+ 	};					\
+ })
+ 
+-- 
+1.5.5.3
 
