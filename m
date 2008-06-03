@@ -1,127 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39175 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760706AbYFHLyT (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47086
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752999AbYFCUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 07:54:19 -0400
-Subject: Re: PROBLEM: p54usb doesn't work with my Philips CPWUA054
-	usb	adapter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo Couckuyt <iv0co@yahoo.co.uk>
-Cc: linux-wireless@vger.kernel.org, Chr <chunkeey@web.de>
-In-Reply-To: <4849A6D4.2090904@yahoo.co.uk>
-References: <47AF79DA.10204@yahoo.co.uk>
-	 (sfid-20080220_180121_070641_4FFC2208) <1203532811.17534.79.camel@johannes.berg>
-	 <4849A6D4.2090904@yahoo.co.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1Bkqo+ASfJ3ISFv+FIk0"
-Date: Sun, 08 Jun 2008 13:54:14 +0200
-Message-Id: <1212926054.698.36.camel@johannes.berg> (sfid-20080608_135422_997802_B3DB100D)
+	Tue, 3 Jun 2008 16:36:54 -0400
+Date: Tue, 03 Jun 2008 12:20:24 -0700 (PDT)
+Message-Id: <20080603.122024.134382203.davem@davemloft.net> (sfid-20080603_224044_717100_255E0636)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/12]: wext: Remove compat handling from fs/compat_ioctl.c
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-1Bkqo+ASfJ3ISFv+FIk0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No longer used.
 
-On Fri, 2008-06-06 at 23:06 +0200, Ivo Couckuyt wrote:
-> Sorry for the late reply, i just thought i install kernel 2.6.25 r4 and=20
-> try again.
->=20
-> It is somewhat better and worse, when modprobing p54usb i got a small=20
-> hang/hickup accompanied with the following error in dmesg
-> ehci_hcd 0000:00:02.2: HC died; cleaning up
->=20
-> afterwards the kernel fails (refuses ?) to detect the device again. so I=20
-> no longer get a kernel oops but even modprobbing doesnt work anymore.
-> see attachment for full dmesg. any ideas, testing i an do now ?
->=20
-> kind regards,
-> Ivo Couckuyt
->=20
-> Johannes Berg wrote:
-> >> I followed the guidelines for a bug report.
-> >> If there is anything else needed, I'll be happy to do all the testing=20
-> >> needed.
-> >>
-> >> [1.] One line summary of the problem:
-> >> p54usb driver crashes on trying to associate with an ap with the=20
-> >> CPWUA054 usb adapter
-> >>
-> >> [2.] Full description of the problem/report:
-> >> What works:
-> >> modprobe p54usb
-> >> dmesg (displays my adapter correctly)
-> >> ifconfig up wlan0
-> >> dmesg (using the right firmware 2.5.6.0)
-> >>
-> >> but trying to associate to my accesspoint (using wpa_supplicant) cause=
-s=20
-> >> a hard-lock up (keyboard leds blinking).
-> >> Before locking up it spams loads of 'RX: unknown frame received phy1'=20
-> >> messages on kmsg/dmesg.
-> >>    =20
-> >
-> > Please switch to a VT (e.g. VT 1, usually by pressing ctrl-alt-f1) and
-> > associate by hand (e.g. iwconfig wlan0 essid "your ssid") and take a
-> > picture of the oops that comes out.
-> >
-> > johannes
-> >  =20
-> plain text document attachment (2.6.25_irq)
-> usb 1-1: new high speed USB device using ehci_hcd and address 4
-> usb 1-1: configuration #1 chosen from 1 choice
-> p54: LM86 firmware
-> p54: FW rev 2.5.6.0 - Softmac protocol 3.0
-> ehci_hcd 0000:00:02.2: HC died; cleaning up
-> irq 11: nobody cared (try booting with the "irqpoll" option)
-> Pid: 0, comm: swapper Not tainted 2.6.25-gentoo-r4-BARTON #1
->  [<c0149ee7>] __report_bad_irq+0x27/0x90
->  [<c014a218>] note_interrupt+0x2c8/0x300
->  [<c01493e1>] ? handle_IRQ_event+0x31/0x70
->  [<c014aced>] handle_level_irq+0xdd/0x110
->  [<c0105e26>] do_IRQ+0x46/0x80
->  [<c010415f>] common_interrupt+0x23/0x28
->  [<c01493c7>] ? handle_IRQ_event+0x17/0x70
->  [<c014ac8a>] handle_level_irq+0x7a/0x110
->  [<c0105e26>] do_IRQ+0x46/0x80
->  [<c010415f>] common_interrupt+0x23/0x28
->  [<c0120e92>] ? __do_softirq+0x42/0xb0
->  [<c0120f35>] do_softirq+0x35/0x40
->  [<c01210f4>] irq_exit+0x44/0x50
->  [<c0105e2b>] do_IRQ+0x4b/0x80
->  [<c010415f>] common_interrupt+0x23/0x28
->  [<c0102b9d>] ? default_idle+0x4d/0x80
->  [<c0102b50>] ? default_idle+0x0/0x80
->  [<c0102af3>] cpu_idle+0x33/0x90
->  [<c03caadc>] rest_init+0x5c/0x60
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ fs/compat_ioctl.c |  107 +----------------------------------------------------
+ 1 files changed, 1 insertions(+), 106 deletions(-)
 
-Sorry, no idea. Christian?
-
-johannes
-
---=-1Bkqo+ASfJ3ISFv+FIk0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIS8hiAAoJEKVg1VMiehFYYWIQALRVDtr6pJ3HQ9TUv88J9Cgj
-Fo2uBTLg1z6BcfjONKZomIMr4Pz382YrJ7Rp6MIkvlXfbdosqjRCHld5AcLXTnUJ
-Fx1RqPeZSkhDArKRsJ0I2yBQ8qAld5EmFnqFs6pFRbgPlKzBllzj0cLqsK4HlHlz
-dVU4qCTLy9Hek2H2e2UCcPikJuAj0qpFZVe4Bbyj7eghO0Jw2Q1kel0t4jOh9Pox
-k5cH/W276kpdSxRovzAFdDk3ebigQrpDPvuxS7ssI6UZ//XY2k08DsHFoA+2nwZ6
-mJkoG9qaubLs4J3WNqcW7kuGwp5GVLQ9AaelmZavFYm4bi97+m9ZYo4RBza4ap2p
-0pYdaDLAsv+lEakmTH4/S0ehnM+pQIxq/iRUguTwkYmHu/JWFZAAVrsD2LGWr71E
-rvlIrIV7f4pIDq8xsRYKrn0hQjAlh1XYb4gL0PWb4p0RaHVbPtctbgviOpyyGaTx
-dDJHiIbPVXyU6KKx9fA4+P/iqL6BMYSv9xqSc/sNLAm7+BQwcHGtK0PCc0oT7rp8
-05ykQN337eCUuU8bEp1jWk3d5t7P0Lw3233yBgZQaX1VROLZq+1OUdFaD+I3k9a9
-EBWGqi59pqYB9sOb+OMMJUNtoaDMV0fXXoqu9g2crsQM5XeRSC4fQlmJCpZGhqXW
-gZm55bpha220dgMgoPM/
-=LKET
------END PGP SIGNATURE-----
-
---=-1Bkqo+ASfJ3ISFv+FIk0--
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index 8ab850b..05ec7ee 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -58,7 +58,6 @@
+ #include <linux/syscalls.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c-dev.h>
+-#include <linux/wireless.h>
+ #include <linux/atalk.h>
+ #include <linux/loop.h>
+ 
+@@ -1757,58 +1756,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
+ 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
+ }
+ 
+-static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
+-{
+-	struct iwreq __user *iwr;
+-	struct iwreq __user *iwr_u;
+-	struct iw_point __user *iwp;
+-	struct compat_iw_point __user *iwp_u;
+-	compat_caddr_t pointer_u;
+-	void __user *pointer;
+-	__u16 length, flags;
+-	int ret;
+-
+-	iwr_u = compat_ptr(arg);
+-	iwp_u = (struct compat_iw_point __user *) &iwr_u->u.data;
+-	iwr = compat_alloc_user_space(sizeof(*iwr));
+-	if (iwr == NULL)
+-		return -ENOMEM;
+-
+-	iwp = &iwr->u.data;
+-
+-	if (!access_ok(VERIFY_WRITE, iwr, sizeof(*iwr)))
+-		return -EFAULT;
+-
+-	if (__copy_in_user(&iwr->ifr_ifrn.ifrn_name[0],
+-			   &iwr_u->ifr_ifrn.ifrn_name[0],
+-			   sizeof(iwr->ifr_ifrn.ifrn_name)))
+-		return -EFAULT;
+-
+-	if (__get_user(pointer_u, &iwp_u->pointer) ||
+-	    __get_user(length, &iwp_u->length) ||
+-	    __get_user(flags, &iwp_u->flags))
+-		return -EFAULT;
+-
+-	if (__put_user(compat_ptr(pointer_u), &iwp->pointer) ||
+-	    __put_user(length, &iwp->length) ||
+-	    __put_user(flags, &iwp->flags))
+-		return -EFAULT;
+-
+-	ret = sys_ioctl(fd, cmd, (unsigned long) iwr);
+-
+-	if (__get_user(pointer, &iwp->pointer) ||
+-	    __get_user(length, &iwp->length) ||
+-	    __get_user(flags, &iwp->flags))
+-		return -EFAULT;
+-
+-	if (__put_user(ptr_to_compat(pointer), &iwp_u->pointer) ||
+-	    __put_user(length, &iwp_u->length) ||
+-	    __put_user(flags, &iwp_u->flags))
+-		return -EFAULT;
+-
+-	return ret;
+-}
+-
+ /* Since old style bridge ioctl's endup using SIOCDEVPRIVATE
+  * for some operations; this forces use of the newer bridge-utils that
+  * use compatiable ioctls
+@@ -2489,36 +2436,6 @@ COMPATIBLE_IOCTL(I2C_TENBIT)
+ COMPATIBLE_IOCTL(I2C_PEC)
+ COMPATIBLE_IOCTL(I2C_RETRIES)
+ COMPATIBLE_IOCTL(I2C_TIMEOUT)
+-/* wireless */
+-COMPATIBLE_IOCTL(SIOCSIWCOMMIT)
+-COMPATIBLE_IOCTL(SIOCGIWNAME)
+-COMPATIBLE_IOCTL(SIOCSIWNWID)
+-COMPATIBLE_IOCTL(SIOCGIWNWID)
+-COMPATIBLE_IOCTL(SIOCSIWFREQ)
+-COMPATIBLE_IOCTL(SIOCGIWFREQ)
+-COMPATIBLE_IOCTL(SIOCSIWMODE)
+-COMPATIBLE_IOCTL(SIOCGIWMODE)
+-COMPATIBLE_IOCTL(SIOCSIWSENS)
+-COMPATIBLE_IOCTL(SIOCGIWSENS)
+-COMPATIBLE_IOCTL(SIOCSIWRANGE)
+-COMPATIBLE_IOCTL(SIOCSIWPRIV)
+-COMPATIBLE_IOCTL(SIOCSIWSTATS)
+-COMPATIBLE_IOCTL(SIOCSIWAP)
+-COMPATIBLE_IOCTL(SIOCGIWAP)
+-COMPATIBLE_IOCTL(SIOCSIWRATE)
+-COMPATIBLE_IOCTL(SIOCGIWRATE)
+-COMPATIBLE_IOCTL(SIOCSIWRTS)
+-COMPATIBLE_IOCTL(SIOCGIWRTS)
+-COMPATIBLE_IOCTL(SIOCSIWFRAG)
+-COMPATIBLE_IOCTL(SIOCGIWFRAG)
+-COMPATIBLE_IOCTL(SIOCSIWTXPOW)
+-COMPATIBLE_IOCTL(SIOCGIWTXPOW)
+-COMPATIBLE_IOCTL(SIOCSIWRETRY)
+-COMPATIBLE_IOCTL(SIOCGIWRETRY)
+-COMPATIBLE_IOCTL(SIOCSIWPOWER)
+-COMPATIBLE_IOCTL(SIOCGIWPOWER)
+-COMPATIBLE_IOCTL(SIOCSIWAUTH)
+-COMPATIBLE_IOCTL(SIOCGIWAUTH)
+ /* hiddev */
+ COMPATIBLE_IOCTL(HIDIOCGVERSION)
+ COMPATIBLE_IOCTL(HIDIOCAPPLICATION)
+@@ -2749,29 +2666,7 @@ COMPATIBLE_IOCTL(USBDEVFS_IOCTL32)
+ HANDLE_IOCTL(I2C_FUNCS, w_long)
+ HANDLE_IOCTL(I2C_RDWR, do_i2c_rdwr_ioctl)
+ HANDLE_IOCTL(I2C_SMBUS, do_i2c_smbus_ioctl)
+-/* wireless */
+-HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSTATS, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWMLME, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWSCAN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWGENIE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWGENIE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWENCODEEXT, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWENCODEEXT, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWPMKSA, do_wireless_ioctl)
++/* bridge */
+ HANDLE_IOCTL(SIOCSIFBR, old_bridge_ioctl)
+ HANDLE_IOCTL(SIOCGIFBR, old_bridge_ioctl)
+ /* Not implemented in the native kernel */
+-- 
+1.5.5.1.308.g1fbb5
 
