@@ -1,88 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099AbYF3Ryk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 13:54:40 -0400
-Subject: Re: IBSS lockdep failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <bruno@thinktube.com>
-In-Reply-To: <1ba2fa240806300940v35c5f2efq6a7036de096006bc@mail.gmail.com> (sfid-20080630_184029_253158_D448274F)
-References: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com>
-	 <1214841181.5507.54.camel@johannes.berg>
-	 <1ba2fa240806300914n7d28f874i4ee43cb999903135@mail.gmail.com>
-	 <1214842913.5507.58.camel@johannes.berg>
-	 <1ba2fa240806300940v35c5f2efq6a7036de096006bc@mail.gmail.com>
-	 (sfid-20080630_184029_253158_D448274F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v/rFl64ckPB2yuPMkS6P"
-Date: Mon, 30 Jun 2008 19:53:56 +0200
-Message-Id: <1214848436.5507.61.camel@johannes.berg> (sfid-20080630_195443_746736_EA855AE2)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2251 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753446AbYFCT3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 15:29:24 -0400
+Date: Tue, 3 Jun 2008 15:09:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-2.6 2008-06-03
+Message-ID: <20080603190943.GB28966@tuxdriver.com> (sfid-20080603_212928_893815_4C288C43)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-v/rFl64ckPB2yuPMkS6P
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+A smattering of fixes for 2.6.26...nothing major...
 
+John
 
-> wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID
-> XX:XX:XX:XX:XX:XD
-> phy0: Adding new IBSS station XX:XX:XX:XX:XX:X1 (dev=3Dwlan0)
-> phy0: Allocated STA XX:XX:XX:XX:XX:X1
-> phy0: Inserted STA XX:XX:XX:XX:XX:X1
-> wlan0: RX ProbeReq SA=3DXX:XX:XX:XX:XX:X1 DA=3Dff:ff:ff:ff:ff:ff
-> BSSID=3Dff:ff:ff:ff:ff:ff (tx_last_beacon=3D1)
-> wlan0: Sending ProbeResp to XX:XX:XX:XX:XX:X1
-> RX beacon SA=3DXX:XX:XX:XX:XX:XC BSSID=3DXX:XX:XX:XX:XX:XD TSF=3D0x14dc0b=
-d5c
-> BCN=3D0x14dc0be19 diff=3D-189 @1071562
+---
 
-That value is suspiciously low, you might want to double-check you're
-setting the correct RX timestamp in the driver, mac80211 expects the
-timestamp to be at the first symbol of the frame.
+Individual patches are available here:
 
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
 
-> phy0: Destroyed STA XX:XX:XX:XX:XX:XB
-> phy0: Destroyed STA XX:XX:XX:XX:XX:XC
+---
 
-Ok so at least it's not trying to remove the same STA twice :)
+The following changes since commit 78b8c91d226f2bc1fae8cbdab7de8b8367ad758b:
+  Adam Langley (1):
+        TCP: Fix corrupt packets when options space overflows with MD5SIG enabled
 
-> BUG: unable to handle kernel NULL pointer dereference at 00000004
-> IP: [<c043d4eb>] zap_class+0x22/0x64
-> *pde =3D 00000000
-> Oops: 0002 [#1] SMP
-> Modules linked in: mac80211 cfg80211 netconsole i915 drm autofs4 hidp
-> rfcomm l2cap sunrpc cpufreq_ondemand acpi_cpufreq dm_multipath sbs
+are available in the git repository at:
 
-Any chance of getting a stack trace? zap_class seems weird.
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
-johannes
+Andrew Morton (1):
+      airo warning fix
 
---=-v/rFl64ckPB2yuPMkS6P
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Dan Williams (1):
+      ipw2200: expire and use oldest BSS on adhoc create
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Felix Homann (1):
+      USB ID for Philips CPWUA054/00 Wireless USB Adapter 11g
 
-iQIcBAABAgAGBQJIaR2xAAoJEKVg1VMiehFYrW4QAK8+WUNbbu+nFeGEXfjPYZsM
-3t7XgPuD8r31MIDxSfudLyCotnAduYmIPMMBgbU07jUca6jfprpt/d823ByEnm3i
-xu+aYfUXW0ECc/wHkFxt+E6lO+81i7o9efyOcIB05DN+O9eRE2PFGgfCqTe5SNu/
-1eKx8Jm/NeauEc7j0qtUdtNlebmtKFrpAg/85VCq6zBoSBoAxujm6aP7CLPcSWjn
-HWC++GFaUphOCdpTXFK935laVQIViyNr41fUQlOK+UuKAFw9QqFemHAxfc7KSkTy
-oLdAjRd04QHkow+Aq9+yBEwzmHXRxrpphUwNUal8TgLfEcVgkEMGiD3lzQpVMn1d
-j/EtXUHsggy5CPIP+TD2mYzISdpU0zasrnGiXW8M0vKOvKvmq1HL1jqJRcbkwSF6
-lDlB+pqOzMYjBt6OZC10vsd1dgiRLJOeCelsZNXhl1dRo194khbCbQtH7pLhUQvD
-HmUHs6dr/Uo5Vfve5IvD+MF0NGvxbMBkcQaiOLyA5Ci3ubOa2b+VvfoqqT9+cP0r
-/lHNXcG6TySZT1jqJ0VMt9HJuQHq0ALnTf1aRCvSVdp4BoibsX4htt0F0iBiQxTX
-n2TiAiszyMWGv0H2dXtl/lKaVnslNYI5vgTinVVknI6BJfOn2vwEOylLtOkBDr2U
-BZAjovG0s8E0r8fU8rzu
-=IST1
------END PGP SIGNATURE-----
+Holger Schurig (1):
+      libertas: fix command size for CMD_802_11_SUBSCRIBE_EVENT
 
---=-v/rFl64ckPB2yuPMkS6P--
+Kirill A. Shutemov (1):
+      wireless.h: improve userland include-ability
 
+Michael Buesch (2):
+      b43legacy: Fix controller restart crash
+      ssb: Fix context assertion in ssb_pcicore_dev_irqvecs_enable
+
+ drivers/net/wireless/airo.c             |    2 +-
+ drivers/net/wireless/b43legacy/main.c   |   17 +++++++++--------
+ drivers/net/wireless/ipw2200.c          |   27 +++++++++++++++++++++++++--
+ drivers/net/wireless/libertas/debugfs.c |    4 ++--
+ drivers/net/wireless/p54/p54usb.c       |    1 +
+ drivers/ssb/driver_pcicore.c            |    4 ++--
+ include/linux/wireless.h                |    6 ++++++
+ 7 files changed, 46 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 4e1c690..32019fb 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -2905,7 +2905,7 @@ EXPORT_SYMBOL(init_airo_card);
+ 
+ static int waitbusy (struct airo_info *ai) {
+ 	int delay = 0;
+-	while ((IN4500 (ai, COMMAND) & COMMAND_BUSY) && (delay < 10000)) {
++	while ((IN4500(ai, COMMAND) & COMMAND_BUSY) && (delay < 10000)) {
+ 		udelay (10);
+ 		if ((++delay % 20) == 0)
+ 			OUT4500(ai, EVACK, EV_CLEARCOMMANDBUSY);
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 14a5eea..204077c 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3039,7 +3039,6 @@ static void b43legacy_set_pretbtt(struct b43legacy_wldev *dev)
+ /* Locking: wl->mutex */
+ static void b43legacy_wireless_core_exit(struct b43legacy_wldev *dev)
+ {
+-	struct b43legacy_wl *wl = dev->wl;
+ 	struct b43legacy_phy *phy = &dev->phy;
+ 	u32 macctl;
+ 
+@@ -3054,12 +3053,6 @@ static void b43legacy_wireless_core_exit(struct b43legacy_wldev *dev)
+ 	macctl |= B43legacy_MACCTL_PSM_JMP0;
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ 
+-	mutex_unlock(&wl->mutex);
+-	/* Must unlock as it would otherwise deadlock. No races here.
+-	 * Cancel possibly pending workqueues. */
+-	cancel_work_sync(&dev->restart_work);
+-	mutex_lock(&wl->mutex);
+-
+ 	b43legacy_leds_exit(dev);
+ 	b43legacy_rng_exit(dev->wl);
+ 	b43legacy_pio_free(dev);
+@@ -3486,6 +3479,8 @@ static void b43legacy_chip_reset(struct work_struct *work)
+ 		}
+ 	}
+ out:
++	if (err)
++		wl->current_dev = NULL; /* Failed to init the dev. */
+ 	mutex_unlock(&wl->mutex);
+ 	if (err)
+ 		b43legacyerr(wl, "Controller restart FAILED\n");
+@@ -3618,9 +3613,11 @@ static void b43legacy_one_core_detach(struct ssb_device *dev)
+ 	struct b43legacy_wldev *wldev;
+ 	struct b43legacy_wl *wl;
+ 
++	/* Do not cancel ieee80211-workqueue based work here.
++	 * See comment in b43legacy_remove(). */
++
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
+-	cancel_work_sync(&wldev->restart_work);
+ 	b43legacy_debugfs_remove_device(wldev);
+ 	b43legacy_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
+@@ -3789,6 +3786,10 @@ static void b43legacy_remove(struct ssb_device *dev)
+ 	struct b43legacy_wl *wl = ssb_get_devtypedata(dev);
+ 	struct b43legacy_wldev *wldev = ssb_get_drvdata(dev);
+ 
++	/* We must cancel any work here before unregistering from ieee80211,
++	 * as the ieee80211 unreg will destroy the workqueue. */
++	cancel_work_sync(&wldev->restart_work);
++
+ 	B43legacy_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev)
+ 		ieee80211_unregister_hw(wl->hw);
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index d74c061..7293367 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -7558,8 +7558,31 @@ static int ipw_associate(void *data)
+ 	    priv->ieee->iw_mode == IW_MODE_ADHOC &&
+ 	    priv->config & CFG_ADHOC_CREATE &&
+ 	    priv->config & CFG_STATIC_ESSID &&
+-	    priv->config & CFG_STATIC_CHANNEL &&
+-	    !list_empty(&priv->ieee->network_free_list)) {
++	    priv->config & CFG_STATIC_CHANNEL) {
++		/* Use oldest network if the free list is empty */
++		if (list_empty(&priv->ieee->network_free_list)) {
++			struct ieee80211_network *oldest = NULL;
++			struct ieee80211_network *target;
++			DECLARE_MAC_BUF(mac);
++
++			list_for_each_entry(target, &priv->ieee->network_list, list) {
++				if ((oldest == NULL) ||
++				    (target->last_scanned < oldest->last_scanned))
++					oldest = target;
++			}
++
++			/* If there are no more slots, expire the oldest */
++			list_del(&oldest->list);
++			target = oldest;
++			IPW_DEBUG_ASSOC("Expired '%s' (%s) from "
++					"network list.\n",
++					escape_essid(target->ssid,
++						     target->ssid_len),
++					print_mac(mac, target->bssid));
++			list_add_tail(&target->list,
++				      &priv->ieee->network_free_list);
++		}
++
+ 		element = priv->ieee->network_free_list.next;
+ 		network = list_entry(element, struct ieee80211_network, list);
+ 		ipw_adhoc_create(priv, network);
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index ad2fabc..0aa0ce3 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -312,8 +312,8 @@ static ssize_t lbs_threshold_write(uint16_t tlv_type, uint16_t event_mask,
+ 	if (tlv_type != TLV_TYPE_BCNMISS)
+ 		tlv->freq = freq;
+ 
+-	/* The command header, the event mask, and the one TLV */
+-	events->hdr.size = cpu_to_le16(sizeof(events->hdr) + 2 + sizeof(*tlv));
++	/* The command header, the action, the event mask, and one TLV */
++	events->hdr.size = cpu_to_le16(sizeof(events->hdr) + 4 + sizeof(*tlv));
+ 
+ 	ret = lbs_cmd_with_response(priv, CMD_802_11_SUBSCRIBE_EVENT, events);
+ 
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 98ddbb3..1610a73 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -49,6 +49,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x5041, 0x2235)},	/* Linksys WUSB54G Portable */
+ 
+ 	/* Version 2 devices (3887) */
++	{USB_DEVICE(0x0471, 0x1230)},   /* Philips CPWUA054/00 */
+ 	{USB_DEVICE(0x050d, 0x7050)},	/* Belkin F5D7050 ver 1000 */
+ 	{USB_DEVICE(0x0572, 0x2000)},	/* Cohiba Proto board */
+ 	{USB_DEVICE(0x0572, 0x2002)},	/* Cohiba Proto board */
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 75def13..d28c538 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -537,12 +537,12 @@ int ssb_pcicore_dev_irqvecs_enable(struct ssb_pcicore *pc,
+ 	int err = 0;
+ 	u32 tmp;
+ 
+-	might_sleep();
+-
+ 	if (!pdev)
+ 		goto out;
+ 	bus = pdev->bus;
+ 
++	might_sleep_if(pdev->id.coreid != SSB_DEV_PCI);
++
+ 	/* Enable interrupts for this device. */
+ 	if (bus->host_pci &&
+ 	    ((pdev->id.revision >= 6) || (pdev->id.coreid == SSB_DEV_PCIE))) {
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 0a9b5b4..9c0b89c 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -70,8 +70,14 @@
+ /***************************** INCLUDES *****************************/
+ 
+ #include <linux/types.h>		/* for __u* and __s* typedefs */
++
++/* This header is used in user-space, therefore need to be sanitised
++ * for that purpose. Those includes are usually not compatible with glibc.
++ * To know which includes to use in user-space, check iwlib.h. */
++#ifdef __KERNEL__
+ #include <linux/socket.h>		/* for "struct sockaddr" et al	*/
+ #include <linux/if.h>			/* for IFNAMSIZ and co... */
++#endif	/* __KERNEL__ */
+ 
+ /***************************** VERSION *****************************/
+ /*
+-- 
+John W. Linville
+linville@tuxdriver.com
