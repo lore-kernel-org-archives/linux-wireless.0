@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:45600 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755996AbYFMO5J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:57:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] ssb: Fix for incorrect Subsystem and PCI Product IDs on rev 4 SPROMs
-Date: Fri, 13 Jun 2008 16:56:31 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200806131047.33710.mb@bu3sch.de>
-In-Reply-To: <200806131047.33710.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2943 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752113AbYFCB21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 21:28:27 -0400
+Date: Mon, 2 Jun 2008 20:57:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH, RESEND] libertas: unify various CF-related defines
+Message-ID: <20080603005719.GA23853@tuxdriver.com> (sfid-20080603_032832_601088_FDD8FED8)
+References: <200805261250.50363.hs4233@mail.mn-solutions.de> <20080530154113.GB9490@tuxdriver.com> <200806020925.05938.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806131656.32463.mb@bu3sch.de> (sfid-20080613_165713_080910_901FA1D9)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <200806020925.05938.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 13 June 2008 10:47:33 Michael Buesch wrote:
-> From: Larry.Finger@lwfinger.net
-> 
-> In current ssb-sprom code, the Subsystem and Product ID's are wrong for rev 4
-> SPROM's.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Mon, Jun 02, 2008 at 09:25:05AM +0200, Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+>=20
 > ---
-> 
-> John, this is a bugfix for 2.6.26.
-> 
-> 
-> Index: ssb_sprom/ssb_sprom.h
-> ===================================================================
-> --- ssb_sprom.orig/ssb_sprom.h
-> +++ ssb_sprom/ssb_sprom.h
+>=20
+> John, this patch applies successfully for me on top of
+> wireless-testing v2.6.26-rc4-8765-g24e3ad4.
 
-Oh, this changes the ssb userland tool. So I better apply it instead
-of sending it to random unrelated people :P
+Yes, but then I get this:
 
-> @@ -33,10 +33,10 @@
->  
->  /* byte offsets */
->  #define SPROM_SUBP		(0x02 * 2)
-> -#define SPROM4_SUBP		(0x00 * 2)
-> +#define SPROM4_SUBP		(0x02 * 2)
->  #define SPROM_SUBV		(0x03 * 2)
->  #define SPROM_PPID		(0x04 * 2)
-> -#define SPROM4_PPID		(0x02 * 2)
-> +#define SPROM4_PPID		(0x04 * 2)
->  #define SPROM_BFLHI		(0x1C * 2)
->  #define SPROM_IL0MACADDR	(0x24 * 2)
->  #define SPROM_ET0MACADDR	(0x27 * 2)
-> 
+  CC [M]  drivers/net/wireless/libertas/if_usb.o
+drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_res=
+et_olpc_card=E2=80=99:
+drivers/net/wireless/libertas/if_usb.c:158: warning: no return statemen=
+t in function returning non-void
+drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_pro=
+be=E2=80=99:
+drivers/net/wireless/libertas/if_usb.c:248: warning: assignment from in=
+compatible pointer type
 
+Are we out of sync?
 
-
--- 
-Greetings Michael.
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
