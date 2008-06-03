@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4959 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753291AbYFXUWF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 16:22:05 -0400
-Date: Tue, 24 Jun 2008 15:47:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: drago01 <drago01@gmail.com>
-Cc: Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
-	disable_hw_scan=1
-Message-ID: <20080624194714.GA11664@tuxdriver.com> (sfid-20080624_222226_513685_3DDBFE82)
-References: <48528CF0.8050204@gmail.com> <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com> <48551C62.80904@gmail.com> <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com> <48552344.5090801@gmail.com> <1ba2fa240806150809h13c28937nd064230baca8a15d@mail.gmail.com> <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com> <4855FF14.9080506@gmail.com> <1ba2fa240806152252v5fdb4f7dn1028a2a02e8d9cd1@mail.gmail.com> <f6ca9fed0806180128q739a9e3k68708b908e630324@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0806180128q739a9e3k68708b908e630324@mail.gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47062
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752490AbYFCUgv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 16:36:51 -0400
+Date: Tue, 03 Jun 2008 13:28:38 -0700 (PDT)
+Message-Id: <20080603.132838.114305874.davem@davemloft.net> (sfid-20080603_223701_889672_E6625C9F)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 8/12]: wext: Pull top-level ioctl dispatch logic into
+ helper function.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 18, 2008 at 10:28:04AM +0200, drago01 wrote:
-> >>> Please try this one
-> >>>
-> >>> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >>> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >>> @@ -3348,7 +3348,10 @@ static void
-> >>> iwl3945_rx_scan_complete_notif(struct iwl3945_priv *priv,
-> >>>
-> >>>        /* Remove this scanned band from the list
-> >>>         * of pending bands to scan */
-> >>> -       priv->scan_bands--;
-> >>> +       if (priv->cfg->sku & IWL_SKU_A)
-> >>> +               priv->scan_bands--;
-> >>> +       else
-> >>> +               priv->scan_bands = 0;
-> >>>
-> >>>
-> >>
-> >>
-> >> I tested this patch, and it fixes this issue, Thanks a lot.
-> >>
-> > Thanks a lot for helping resolve this. I will post an official patch.
-> 
-> seems like a fix thats worth having in .26
 
-Did I miss the official post of this patch?
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |   26 ++++++++++++++++++++------
+ 1 files changed, 20 insertions(+), 6 deletions(-)
 
-John
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index b72cdd2..91cf548 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1079,8 +1079,10 @@ static int wext_permission_check(unsigned int cmd)
+ }
+ 
+ /* entry point from dev ioctl */
+-int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+-		      void __user *arg)
++static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
++			       unsigned int cmd,
++			       wext_ioctl_func standard,
++			       wext_ioctl_func private)
+ {
+ 	int ret = wext_permission_check(cmd);
+ 
+@@ -1089,12 +1091,24 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd,
+-				     ioctl_standard_call,
+-				     ioctl_private_call);
++	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
+ 	rtnl_unlock();
+-	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
++
++	return ret;
++}
++
++int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
++		      void __user *arg)
++{
++	int ret = wext_ioctl_dispatch(net, ifr, cmd,
++				      ioctl_standard_call,
++				      ioctl_private_call);
++
++	if (ret >= 0 &&
++	    IW_IS_GET(cmd) &&
++	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
+ 		return -EFAULT;
++
+ 	return ret;
+ }
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.5.1.308.g1fbb5
+
