@@ -1,40 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54328 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617AbYFWXcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 19:32:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Weird oops in mac80211's skb_orphan call
-Date: Tue, 24 Jun 2008 01:32:21 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200806240132.21362.mb@bu3sch.de> (sfid-20080624_013254_826192_E5523D05)
-Content-Type: text/plain;
-  charset="us-ascii"
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35842
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751795AbYFCQ5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 12:57:53 -0400
+Date: Tue, 03 Jun 2008 09:57:50 -0700 (PDT)
+Message-Id: <20080603.095750.120470495.davem@davemloft.net> (sfid-20080603_185800_520466_E6935A19)
+To: mokuno@sm.sony.co.jp
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: : Emit event stream compat iw_point objects correctly.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080111112248.610C.40F06B3A@sm.sony.co.jp>
+References: <20071227181439.6F59.40F06B3A@sm.sony.co.jp>
+	<20080110.011602.74511551.davem@davemloft.net>
+	<20080111112248.610C.40F06B3A@sm.sony.co.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a 100% reproducable oops inside of the skb_orphan
-call of mac80211's ieee80211_tx_status function.
-I could only reproduce it with the CompactFlash bcm4318 card, yet.
-So maybe the it's somehow related to b43's PIO code.
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Date: Fri, 11 Jan 2008 13:16:29 +0900
 
-Here's the oops:
-http://bu3sch.de/misc/sk_oops.JPG
+> On Thu, 10 Jan 2008 01:16:02 -0800 (PST)
+> David Miller <davem@davemloft.net> wrote:
+> 
+> > diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
+> > index c99a8ee..d6f0c51 100644
+> > --- a/include/net/iw_handler.h
+> > +++ b/include/net/iw_handler.h
+> > @@ -483,19 +483,26 @@ extern void wireless_spy_update(struct net_device *	dev,
+> >   * Wrapper to add an Wireless Event to a stream of events.
+> >   */
+> >  static inline char *
+> > -iwe_stream_add_event(char *	stream,		/* Stream of events */
+> > -		     char *	ends,		/* End of stream */
+> > -		     struct iw_event *iwe,	/* Payload */
+> > -		     int	event_len)	/* Real size of payload */
+> > +iwe_stream_add_event(struct iw_request_info *info, char *stream, char *ends,
+> > +		     struct iw_event *iwe, int event_len)
+> >  {
+> > +	int lcp_len = IW_EV_LCP_LEN;
+> > +
+> > +#ifdef CONFIG_COMPAT
+> > +	if (info->flags & IW_REQUEST_FLAG_COMPAT) {
+> > +		event_len -= IW_EV_LCP_LEN;
+> > +		event_len += IW_EV_COMPAT_LCP_LEN;
+> > +		lcp_len = IW_EV_COMPAT_LCP_LEN;
+> > +	}
+> > +#endif
+> >  	/* Check if it's possible */
+> >  	if(likely((stream + event_len) < ends)) {
+> >  		iwe->len = event_len;
+> >  		/* Beware of alignement issues on 64 bits */
+> >  		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
+> > -		memcpy(stream + IW_EV_LCP_LEN,
+> > -		       ((char *) iwe) + IW_EV_LCP_LEN,
+> > -		       event_len - IW_EV_LCP_LEN);
+> > +		memcpy(stream + lcp_len,
+> > +		       ((char *) iwe) + lcp_len,
+> 
+> The source address does not have to be adjusted.  I think it should be
+> 		       ((char *) iwe) + IW_EV_LCP_LEN,
+> or just
+> 		       &iwe->u
+> I think it is more readable what we want to do here.
+> 
+> 
+> > +		       event_len - lcp_len);
+> 
+> The length of the real payload does not need to take account of the
+> destination offset change.  So we can keep the original code like:
+> 
+> 		       org_event_len - IW_EV_LCP_LEN);
 
-As you can see, I added some debugging printks.
-So let me explain what is going on.
-After fireing up wpa_supplicant, ieee80211_tx_status is invoked several times
-without crashing. But then suddenly it crashes on the skb_orphan call.
-The skb_orphan call will call the skb destructor. You can see the
-skb->destructor and skb->sk pointers right above the oops message.
-The destructor pointer is assigned to sock_wfree() and the sk pointer is NULL.
-So skb_orphan calls skb->destructor with skb->sk as parameter and sock_wfree (which
-is the destructor) will dereference skb->sk. That will obviously crash.
+As long as IW_EV_LCP_LEN and IW_EV_COMPAT_LCP_LEN are different, I am
+pretty sure we need to make these adjustments.
 
-Any ideas why skb->sk is NULL while the destructor is not NULL?
-They should either be both NULL or not NULL.
+There are so many differences in how struct vs. sub-struct alignment will
+occur in these cases, that we need to be very careful.
 
--- 
-Greetings Michael.
+I'll try to look more closely at this and do some testing of my own on
+a compat platform.
+
