@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:51861 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755946AbYF1N5a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 09:57:30 -0400
-Date: Sat, 28 Jun 2008 10:57:25 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: drago01 <drago01@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>, Dan Williams <dcbw@redhat.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCHv2] iwlwifi: add support for RFKILL_STATE_HARD_BLOCKED
-Message-ID: <20080628135725.GC871@khazad-dum.debian.net> (sfid-20080628_155820_391165_53662CFB)
-References: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com> <20080628131439.GA871@khazad-dum.debian.net> <f6ca9fed0806280640y2a5faed3ne885382afd610a62@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3377 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752671AbYFCPcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 11:32:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: [PATCH] libertas: fixup if_usb_reset_olpc_card warnings for OLPC
+Date: Tue,  3 Jun 2008 10:58:40 -0400
+Message-Id: <1212505120-23109-1-git-send-email-linville@tuxdriver.com> (sfid-20080603_173245_003201_8328A935)
+In-Reply-To: <1212502456.3108.3.camel@localhost.localdomain>
+References: <1212502456.3108.3.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0806280640y2a5faed3ne885382afd610a62@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Jun 2008, drago01 wrote:
-> On Sat, Jun 28, 2008 at 3:14 PM, Henrique de Moraes Holschuh
-> <hmh@hmh.eng.br> wrote:
-> > On Sat, 28 Jun 2008, drago01 wrote:
-> >> This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
-> >> radio is disabled by a hardware killswitch.
-> >> It does not allow setting the sw state while the device is blocked by
-> >> a hardware rfkill switch.
-> >
-> > It should.  In fact, you should do it in a way that it is possible to
-> > double-block the radio (i.e. in SW while it is blocked in HW), so that if
-> > the HW block goes away, the radio remains blocked.
-> >
-> > Read the docs and examples again, please.  There even is special code in the
-> > rfkill_toggle_radio private function to allow for it, we want drivers to be
-> > able to double-block.
-> 
-> OK, v2 attached it allows double-block.
+commit 39663ff54367064e861394f14fa6f3803cf00914 ("libertas: provide
+reset_card() callback on OLPC") introduced a pair of warnings:
 
-Looks good at first glance (I just looked over the patch, I have never
-looked at the iwlwifi code, though.
+  CC [M]  drivers/net/wireless/libertas/if_usb.o
+drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_res=
+et_olpc_card=E2=80=99:
+drivers/net/wireless/libertas/if_usb.c:158: warning: no return statemen=
+t in function returning non-void
+drivers/net/wireless/libertas/if_usb.c: In function =E2=80=98if_usb_pro=
+be=E2=80=99: drivers/net/wireless/libertas/if_usb.c:248: warning: assig=
+nment from incompatible pointer type
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Cc: David Woodhouse <dwmw2@infradead.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+I'll fold this into the original patch, which has not yet been sent
+upstream.
+
+ drivers/net/wireless/libertas/if_usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wirel=
+ess/libertas/if_usb.c
+index 8a7eb63..2478310 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -151,7 +151,7 @@ static void if_usb_fw_timeo(unsigned long priv)
+ }
+=20
+ #ifdef CONFIG_OLPC
+-static int if_usb_reset_olpc_card(struct lbs_private *priv)
++static void if_usb_reset_olpc_card(struct lbs_private *priv)
+ {
+ 	printk(KERN_CRIT "Resetting OLPC wireless via EC...\n");
+ 	olpc_ec_cmd(0x25, NULL, 0, NULL, 0);
+--=20
+1.5.5.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
