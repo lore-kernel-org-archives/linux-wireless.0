@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:52683 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbYFYA4W (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47076
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753018AbYFCUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 20:56:22 -0400
-Received: by an-out-0708.google.com with SMTP id d40so761384and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 17:56:21 -0700 (PDT)
-Message-ID: <40f31dec0806241756j2916da61n42e6a7b5ea556ea7@mail.gmail.com> (sfid-20080625_025628_764398_4D93AE44)
-Date: Wed, 25 Jun 2008 03:56:21 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: RFC: always enable MAC80211_RC_PID?
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Adrian Bunk" <bunk@stusta.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <1214298259.8967.260.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
-	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
-	 <1214298259.8967.260.camel@johannes.berg>
+	Tue, 3 Jun 2008 16:36:54 -0400
+Date: Tue, 03 Jun 2008 13:28:30 -0700 (PDT)
+Message-Id: <20080603.132830.91216431.davem@davemloft.net> (sfid-20080603_224045_292446_E3A374AE)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 6/12]: wext: Parameterize the standard/private handlers.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/6/24 Johannes Berg <johannes@sipsolutions.net>:
->
->> You can currently only get away living without it if you are just
->> using iwl3945 or iwl4965 as they provide their own rate control
->> algorithms. In the future if other vendor drivers are added with their
->> own rate control algorithm this list grows.
->
-> FWIW, I would like to see those algorithms be supported as part of
-> mac80211 and not be internal like iwlwifi hacked them on, and have some
-> sort of feature negotiation between the hardware and the RC algorithm
-> when choosing one.
->
-> johannes
->
 
-I also agree on that, this way we can eg. port samplerate or minstrel
-from MadWiFi to mac80211 for any card that can do multirate
-transmitions for example, not only Atheros cards.
+The WEXT standard and private handlers to use are now
+arguments to wireless_process_ioctl().
 
-We need however a fallback algorithm compiled in by default if we go
-that way because the user might not know what algorithms are
-compatible with his card during kernel configuration. I guess PID is
-generic enough for this.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
 
-Also ideally the user should be able to change rate control algorithm
-during runtime (without the need to reload the driver), i think having
-rate control inside mac80211 makes it easier.
-
-
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index e96559e..929d241 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1015,11 +1015,17 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
+ 
+ /* ---------------------------------------------------------------- */
++typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++			       unsigned int, iw_handler);
++
+ /*
+  * Main IOCTl dispatcher.
+  * Check the type of IOCTL and call the appropriate wrapper...
+  */
+-static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd)
++static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
++				  unsigned int cmd,
++				  wext_ioctl_func standard,
++				  wext_ioctl_func private)
+ {
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+@@ -1035,12 +1041,12 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return ioctl_standard_call(dev, ifr, cmd,
+-					   &iw_handler_get_iwstats);
++		return standard(dev, ifr, cmd,
++				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return ioctl_standard_call(dev, ifr, cmd,
+-					   &iw_handler_get_private);
++		return standard(dev, ifr, cmd,
++				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+ 	if (!netif_device_present(dev))
+@@ -1051,9 +1057,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return ioctl_standard_call(dev, ifr, cmd, handler);
++			return standard(dev, ifr, cmd, handler);
+ 		else
+-			return ioctl_private_call(dev, ifr, cmd, handler);
++			return private(dev, ifr, cmd, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
+@@ -1084,7 +1090,9 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd);
++	ret = wireless_process_ioctl(net, ifr, cmd,
++				     ioctl_standard_call,
++				     ioctl_private_call);
+ 	rtnl_unlock();
+ 	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
+ 		return -EFAULT;
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.5.1.308.g1fbb5
+
