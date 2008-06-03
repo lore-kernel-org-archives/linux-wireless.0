@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:55587 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750723AbYFDULD (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47095
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753049AbYFCUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 16:11:03 -0400
-Message-ID: <4846F6DE.4080009@lwfinger.net> (sfid-20080604_221109_547713_1E4ECA29)
-Date: Wed, 04 Jun 2008 15:11:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression (?) with wireless-testing and mainline 2.6.26-rcX
- kernels
-References: <4846EB9D.1080303@lwfinger.net> <1212607636.14371.46.camel@johannes.berg>
-In-Reply-To: <1212607636.14371.46.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 3 Jun 2008 16:36:54 -0400
+Date: Tue, 03 Jun 2008 13:27:55 -0700 (PDT)
+Message-Id: <20080603.132755.262737024.davem@davemloft.net> (sfid-20080603_223932_930489_1A9D5BFC)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/12]: Proper compat WEXT support.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Larry,
-> 
->> I have found what I think is a regression where b43 appears to be connected; 
->> however, no data can be transferred. Not very much information has been 
->> logged; however, I think it correlates with a switch from short to long 
->> barker preamble.
-> 
-> Interesting. Doesn't your AP support short preambles? That'd be the only
-> reason for anything going wrong here to actually break your connection.
-> hmm.
 
-My AP works with short preambles. When this situation occurs, whatever 
-happens causes a switch from short to long. The change in the preamble is 
-likely a symptom of whatever is causing the breakage.
+This is a refresh of my previous WEXT compat patch set.
 
+I've actually tested these exact patches on sparc64 with a RNDIS based
+USB wireless device from Linksys.  I was able to perform iwconfig
+commands, check iwlist, bring up the interface and use it properly.
+All with 32-bit tools.  I've also done an allmodconfig sanity
+build check on sparc64.
 
->> Do you have any suggestions on what should be logged in 
->> ieee80211_handle_protect_preamb or any other mac80211 routine so that I can 
->> isolate the problem? I use NM to control the connection and authentication to 
->> a WPA-PSK TKIP network.
-> 
-> Well I guess you should log what state it changes to (maybe even in b43)
-> and at the same time monitor with say wireshark on a monitor interface
-> to see what the AP is announcing. Not sure really, I have a hard time
-> imagining this being the problem.
+The one thing I was not able to test yet is wpa_supplicant use, and
+that likely doesn't work properly yet, but we can fix that on top and
+these patches do not break native non-compat binaries.  They do make a
+lot of compat stuff work which wasn't the case before.  So applying
+this stuff makes sense, and we can get wpa_supplicant working if it
+isn't working using follow-on patches.
 
-I'll try for a stack dump when the short => long transition occurs. Perhaps 
-that will suggest something to dump. I'll also set up a monitor interface. 
-Unfortunately, it is an unlikely event, but I have a lot of disk space.
+The patch set starts by cleaning up the code so that we can avoid
+having multiple copies of the WEXT main dispatch routines, one for
+compat and one for the non-compat case.
 
-Larry
+Next, basic compat level handling of the WEXT ioctl is added, and the
+equivalent code in the compat_ioctl.c file is removed.
 
+Finally, compat IWE stream munging is added for the wireless layer.
+When we get a compat WEXT ioctl request, we set a bit in the request
+info blob, and the stream building helpers tip off this to format the
+stream entries properly.
+
+These patches are against net-next-2.6 and are also available as
+a GIT tree at:
+
+	master.kernel.org:/pub/scm/linux/kernel/git/davem/wireless-2.6.git
+
+John, please pull or apply as you deem appropriate.
+
+Thanks!
