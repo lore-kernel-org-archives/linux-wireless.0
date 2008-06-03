@@ -1,98 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56179 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755173AbYF3K1l convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47082
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752813AbYFCUgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 06:27:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH 29/33] iwlwifi: drop skb silently for Tx request in monitor mode
-Date: Mon, 30 Jun 2008 12:26:49 +0200
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com> <1214817813-17639-30-git-send-email-yi.zhu@intel.com> <69e28c910806300322i5ac6e123h23ed5c0419d087c1@mail.gmail.com>
-In-Reply-To: <69e28c910806300322i5ac6e123h23ed5c0419d087c1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200806301226.50085.mb@bu3sch.de> (sfid-20080630_122744_885142_64B635C0)
+	Tue, 3 Jun 2008 16:36:53 -0400
+Date: Tue, 03 Jun 2008 13:28:48 -0700 (PDT)
+Message-Id: <20080603.132848.82710246.davem@davemloft.net> (sfid-20080603_224046_518295_ED3D3007)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/12]: wext: Remove compat handling from fs/compat_ioctl.c
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 June 2008 12:22:45 Stefanik G=E1bor wrote:
-> On Mon, Jun 30, 2008 at 11:23 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> > This patch fixes the problem to keep mac80211 resubmitting SKBs
-> > when Tx request cannot be met in monitor mode.
-> >
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
-> >  drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
-> >  2 files changed, 4 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/=
-net/wireless/iwlwifi/iwl3945-base.c
-> > index 4f0a18a..2744b0a 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> > @@ -6695,7 +6695,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw=
- *hw, struct sk_buff *skb)
-> >
-> >        if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> >                IWL_DEBUG_MAC80211("leave - monitor\n");
-> > -               return -1;
-> > +               dev_kfree_skb_any(skb);
-> > +               return 0;
-> >        }
-> >
-> >        IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->le=
-n,
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/=
-net/wireless/iwlwifi/iwl4965-base.c
-> > index ba0f289..60b7a64 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> > @@ -2682,7 +2682,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw=
- *hw, struct sk_buff *skb)
-> >
-> >        if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
-> >                IWL_DEBUG_MAC80211("leave - monitor\n");
-> > -               return -1;
-> > +               dev_kfree_skb_any(skb);
-> > +               return 0;
-> >        }
-> >
-> >        IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->le=
-n,
-> > --
-> > 1.5.3.6
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wir=
-eless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->=20
-> NACK.
->=20
-> This blocks packet injection for not only 4965/5000, but also 3945.
-> Also, I have multiple records of injection working with 4965 cards
-> with your original patch.
->=20
 
-This patch fixes a _real_ bug. No matter what your plans for packet inj=
-ection
-are, it _needs_ to go in for now. You can later change the code to actu=
-ally
-transmit the frame. There are only two possibilities for the TX handler=
-:
-Either transmit it or drop it. It must not return an error.
+No longer used.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ fs/compat_ioctl.c |  107 +----------------------------------------------------
+ 1 files changed, 1 insertions(+), 106 deletions(-)
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index 8ab850b..05ec7ee 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -58,7 +58,6 @@
+ #include <linux/syscalls.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c-dev.h>
+-#include <linux/wireless.h>
+ #include <linux/atalk.h>
+ #include <linux/loop.h>
+ 
+@@ -1757,58 +1756,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
+ 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
+ }
+ 
+-static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
+-{
+-	struct iwreq __user *iwr;
+-	struct iwreq __user *iwr_u;
+-	struct iw_point __user *iwp;
+-	struct compat_iw_point __user *iwp_u;
+-	compat_caddr_t pointer_u;
+-	void __user *pointer;
+-	__u16 length, flags;
+-	int ret;
+-
+-	iwr_u = compat_ptr(arg);
+-	iwp_u = (struct compat_iw_point __user *) &iwr_u->u.data;
+-	iwr = compat_alloc_user_space(sizeof(*iwr));
+-	if (iwr == NULL)
+-		return -ENOMEM;
+-
+-	iwp = &iwr->u.data;
+-
+-	if (!access_ok(VERIFY_WRITE, iwr, sizeof(*iwr)))
+-		return -EFAULT;
+-
+-	if (__copy_in_user(&iwr->ifr_ifrn.ifrn_name[0],
+-			   &iwr_u->ifr_ifrn.ifrn_name[0],
+-			   sizeof(iwr->ifr_ifrn.ifrn_name)))
+-		return -EFAULT;
+-
+-	if (__get_user(pointer_u, &iwp_u->pointer) ||
+-	    __get_user(length, &iwp_u->length) ||
+-	    __get_user(flags, &iwp_u->flags))
+-		return -EFAULT;
+-
+-	if (__put_user(compat_ptr(pointer_u), &iwp->pointer) ||
+-	    __put_user(length, &iwp->length) ||
+-	    __put_user(flags, &iwp->flags))
+-		return -EFAULT;
+-
+-	ret = sys_ioctl(fd, cmd, (unsigned long) iwr);
+-
+-	if (__get_user(pointer, &iwp->pointer) ||
+-	    __get_user(length, &iwp->length) ||
+-	    __get_user(flags, &iwp->flags))
+-		return -EFAULT;
+-
+-	if (__put_user(ptr_to_compat(pointer), &iwp_u->pointer) ||
+-	    __put_user(length, &iwp_u->length) ||
+-	    __put_user(flags, &iwp_u->flags))
+-		return -EFAULT;
+-
+-	return ret;
+-}
+-
+ /* Since old style bridge ioctl's endup using SIOCDEVPRIVATE
+  * for some operations; this forces use of the newer bridge-utils that
+  * use compatiable ioctls
+@@ -2489,36 +2436,6 @@ COMPATIBLE_IOCTL(I2C_TENBIT)
+ COMPATIBLE_IOCTL(I2C_PEC)
+ COMPATIBLE_IOCTL(I2C_RETRIES)
+ COMPATIBLE_IOCTL(I2C_TIMEOUT)
+-/* wireless */
+-COMPATIBLE_IOCTL(SIOCSIWCOMMIT)
+-COMPATIBLE_IOCTL(SIOCGIWNAME)
+-COMPATIBLE_IOCTL(SIOCSIWNWID)
+-COMPATIBLE_IOCTL(SIOCGIWNWID)
+-COMPATIBLE_IOCTL(SIOCSIWFREQ)
+-COMPATIBLE_IOCTL(SIOCGIWFREQ)
+-COMPATIBLE_IOCTL(SIOCSIWMODE)
+-COMPATIBLE_IOCTL(SIOCGIWMODE)
+-COMPATIBLE_IOCTL(SIOCSIWSENS)
+-COMPATIBLE_IOCTL(SIOCGIWSENS)
+-COMPATIBLE_IOCTL(SIOCSIWRANGE)
+-COMPATIBLE_IOCTL(SIOCSIWPRIV)
+-COMPATIBLE_IOCTL(SIOCSIWSTATS)
+-COMPATIBLE_IOCTL(SIOCSIWAP)
+-COMPATIBLE_IOCTL(SIOCGIWAP)
+-COMPATIBLE_IOCTL(SIOCSIWRATE)
+-COMPATIBLE_IOCTL(SIOCGIWRATE)
+-COMPATIBLE_IOCTL(SIOCSIWRTS)
+-COMPATIBLE_IOCTL(SIOCGIWRTS)
+-COMPATIBLE_IOCTL(SIOCSIWFRAG)
+-COMPATIBLE_IOCTL(SIOCGIWFRAG)
+-COMPATIBLE_IOCTL(SIOCSIWTXPOW)
+-COMPATIBLE_IOCTL(SIOCGIWTXPOW)
+-COMPATIBLE_IOCTL(SIOCSIWRETRY)
+-COMPATIBLE_IOCTL(SIOCGIWRETRY)
+-COMPATIBLE_IOCTL(SIOCSIWPOWER)
+-COMPATIBLE_IOCTL(SIOCGIWPOWER)
+-COMPATIBLE_IOCTL(SIOCSIWAUTH)
+-COMPATIBLE_IOCTL(SIOCGIWAUTH)
+ /* hiddev */
+ COMPATIBLE_IOCTL(HIDIOCGVERSION)
+ COMPATIBLE_IOCTL(HIDIOCAPPLICATION)
+@@ -2749,29 +2666,7 @@ COMPATIBLE_IOCTL(USBDEVFS_IOCTL32)
+ HANDLE_IOCTL(I2C_FUNCS, w_long)
+ HANDLE_IOCTL(I2C_RDWR, do_i2c_rdwr_ioctl)
+ HANDLE_IOCTL(I2C_SMBUS, do_i2c_smbus_ioctl)
+-/* wireless */
+-HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSTATS, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWMLME, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWSCAN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWGENIE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWGENIE, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWENCODEEXT, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCGIWENCODEEXT, do_wireless_ioctl)
+-HANDLE_IOCTL(SIOCSIWPMKSA, do_wireless_ioctl)
++/* bridge */
+ HANDLE_IOCTL(SIOCSIFBR, old_bridge_ioctl)
+ HANDLE_IOCTL(SIOCGIFBR, old_bridge_ioctl)
+ /* Not implemented in the native kernel */
+-- 
+1.5.5.1.308.g1fbb5
+
