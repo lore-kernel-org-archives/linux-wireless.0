@@ -1,111 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:41527 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752531AbYFDDKX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47072
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752638AbYFCUgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:23 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 10/12] rfkill: add uevent notifications
-Date: Wed,  4 Jun 2008 00:10:15 -0300
-Message-Id: <1212549017-30144-11-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051033_232049_59F01196)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 3 Jun 2008 16:36:52 -0400
+Date: Tue, 03 Jun 2008 13:28:15 -0700 (PDT)
+Message-Id: <20080603.132815.37935439.davem@davemloft.net> (sfid-20080603_223717_297019_FEF26A82)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/12]: wext: Extract standard call iw_point handling into
+ seperate function.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the notification chains to also send uevents, so that userspace can be
-notified of state changes of every rfkill switch.
 
-Userspace should use these events for OSD/status report applications and
-rfkill GUI frontends.  HAL might want to broadcast them over DBUS, for
-example.  It might be also useful for userspace implementations of
-rfkill-input, or to use HAL as the platform driver which promotes rfkill
-switch change events into input events (to synchronize all other switches)
-when necessary for platforms that lack a convenient platform-specific
-kernel module to do it.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/rfkill/rfkill.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
+ net/wireless/wext.c |  258 ++++++++++++++++++++++++++------------------------
+ 1 files changed, 134 insertions(+), 124 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 1130637..8d24c3b 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -382,12 +382,51 @@ static int rfkill_resume(struct device *dev)
- #define rfkill_resume NULL
- #endif
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index cd2cf9f..d17c0f4 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -694,6 +694,138 @@ void wext_proc_exit(struct net *net)
+  */
  
-+static int rfkill_blocking_uevent_notifier(struct notifier_block *nb,
-+					unsigned long eventid,
-+					void *data)
+ /* ---------------------------------------------------------------- */
++static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
++				   const struct iw_ioctl_description *descr,
++				   iw_handler handler, struct net_device *dev,
++				   struct iw_request_info *info)
 +{
-+	struct rfkill *rfkill = (struct rfkill *)data;
++	int err, extra_size, user_length = 0, essid_compat = 0;
++	char *extra;
 +
-+	switch (eventid) {
-+	case RFKILL_STATE_CHANGED:
-+		kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
++	/* Calculate space needed by arguments. Always allocate
++	 * for max space.
++	 */
++	extra_size = descr->max_tokens * descr->token_size;
++
++	/* Check need for ESSID compatibility for WE < 21 */
++	switch (cmd) {
++	case SIOCSIWESSID:
++	case SIOCGIWESSID:
++	case SIOCSIWNICKN:
++	case SIOCGIWNICKN:
++		if (iwp->length == descr->max_tokens + 1)
++			essid_compat = 1;
++		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++			char essid[IW_ESSID_MAX_SIZE + 1];
++
++			err = copy_from_user(essid, iwp->pointer,
++					     iwp->length *
++					     descr->token_size);
++			if (err)
++				return -EFAULT;
++
++			if (essid[iwp->length - 1] == '\0')
++				essid_compat = 1;
++		}
 +		break;
 +	default:
 +		break;
 +	}
 +
-+	return NOTIFY_DONE;
++	iwp->length -= essid_compat;
++
++	/* Check what user space is giving us */
++	if (IW_IS_SET(cmd)) {
++		/* Check NULL pointer */
++		if (!iwp->pointer && iwp->length != 0)
++			return -EFAULT;
++		/* Check if number of token fits within bounds */
++		if (iwp->length > descr->max_tokens)
++			return -E2BIG;
++		if (iwp->length < descr->min_tokens)
++			return -EINVAL;
++	} else {
++		/* Check NULL pointer */
++		if (!iwp->pointer)
++			return -EFAULT;
++		/* Save user space buffer size for checking */
++		user_length = iwp->length;
++
++		/* Don't check if user_length > max to allow forward
++		 * compatibility. The test user_length < min is
++		 * implied by the test at the end.
++		 */
++
++		/* Support for very large requests */
++		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
++		    (user_length > descr->max_tokens)) {
++			/* Allow userspace to GET more than max so
++			 * we can support any size GET requests.
++			 * There is still a limit : -ENOMEM.
++			 */
++			extra_size = user_length * descr->token_size;
++
++			/* Note : user_length is originally a __u16,
++			 * and token_size is controlled by us,
++			 * so extra_size won't get negative and
++			 * won't overflow...
++			 */
++		}
++	}
++
++	/* kzalloc() ensures NULL-termination for essid_compat. */
++	extra = kzalloc(extra_size, GFP_KERNEL);
++	if (!extra)
++		return -ENOMEM;
++
++	/* If it is a SET, get all the extra data in here */
++	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
++		if (copy_from_user(extra, iwp->pointer,
++				   iwp->length *
++				   descr->token_size)) {
++			err = -EFAULT;
++			goto out;
++		}
++	}
++
++	err = handler(dev, info, (union iwreq_data *) iwp, extra);
++
++	iwp->length += essid_compat;
++
++	/* If we have something to return to the user */
++	if (!err && IW_IS_GET(cmd)) {
++		/* Check if there is enough buffer up there */
++		if (user_length < iwp->length) {
++			err = -E2BIG;
++			goto out;
++		}
++
++		if (copy_to_user(iwp->pointer, extra,
++				 iwp->length *
++				 descr->token_size)) {
++			err = -EFAULT;
++			goto out;
++		}
++	}
++
++	/* Generate an event to notify listeners of the change */
++	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
++		union iwreq_data *data = (union iwreq_data *) iwp;
++
++		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
++			/* If the event is restricted, don't
++			 * export the payload.
++			 */
++			wireless_send_event(dev, cmd, data, NULL);
++		else
++			wireless_send_event(dev, cmd, data, extra);
++	}
++
++out:
++	kfree(extra);
++	return err;
 +}
 +
-+static struct notifier_block rfkill_blocking_uevent_nb = {
-+	.notifier_call	= rfkill_blocking_uevent_notifier,
-+	.priority	= 0,
-+};
-+
-+static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	int error;
-+
-+	error = add_uevent_var(env, "RFKILL_NAME=%s", rfkill->name);
-+	if (error)
-+		return error;
-+	error = add_uevent_var(env, "RFKILL_TYPE=%s",
-+				rfkill_get_type_str(rfkill->type));
-+	if (error)
-+		return error;
-+	error = add_uevent_var(env, "RFKILL_STATE=%u", rfkill->state);
-+	return error;
-+}
-+
- static struct class rfkill_class = {
- 	.name		= "rfkill",
- 	.dev_release	= rfkill_release,
- 	.dev_attrs	= rfkill_dev_attrs,
- 	.suspend	= rfkill_suspend,
- 	.resume		= rfkill_resume,
-+	.dev_uevent	= rfkill_dev_uevent,
- };
- 
- static int rfkill_add_switch(struct rfkill *rfkill)
-@@ -562,11 +601,14 @@ static int __init rfkill_init(void)
- 		return error;
+ /*
+  * Wrapper to call a standard Wireless Extension handler.
+  * We do various checks and also take care of moving data between
+@@ -729,130 +861,8 @@ static int ioctl_standard_call(struct net_device *	dev,
+ 		   ((ret == 0) || (ret == -EIWCOMMIT)))
+ 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
+ 	} else {
+-		char *	extra;
+-		int	extra_size;
+-		int	user_length = 0;
+-		int	err;
+-		int	essid_compat = 0;
+-
+-		/* Calculate space needed by arguments. Always allocate
+-		 * for max space. Easier, and won't last long... */
+-		extra_size = descr->max_tokens * descr->token_size;
+-
+-		/* Check need for ESSID compatibility for WE < 21 */
+-		switch (cmd) {
+-		case SIOCSIWESSID:
+-		case SIOCGIWESSID:
+-		case SIOCSIWNICKN:
+-		case SIOCGIWNICKN:
+-			if (iwr->u.data.length == descr->max_tokens + 1)
+-				essid_compat = 1;
+-			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-				char essid[IW_ESSID_MAX_SIZE + 1];
+-
+-				err = copy_from_user(essid, iwr->u.data.pointer,
+-						     iwr->u.data.length *
+-						     descr->token_size);
+-				if (err)
+-					return -EFAULT;
+-
+-				if (essid[iwr->u.data.length - 1] == '\0')
+-					essid_compat = 1;
+-			}
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		iwr->u.data.length -= essid_compat;
+-
+-		/* Check what user space is giving us */
+-		if (IW_IS_SET(cmd)) {
+-			/* Check NULL pointer */
+-			if ((iwr->u.data.pointer == NULL) &&
+-			   (iwr->u.data.length != 0))
+-				return -EFAULT;
+-			/* Check if number of token fits within bounds */
+-			if (iwr->u.data.length > descr->max_tokens)
+-				return -E2BIG;
+-			if (iwr->u.data.length < descr->min_tokens)
+-				return -EINVAL;
+-		} else {
+-			/* Check NULL pointer */
+-			if (iwr->u.data.pointer == NULL)
+-				return -EFAULT;
+-			/* Save user space buffer size for checking */
+-			user_length = iwr->u.data.length;
+-
+-			/* Don't check if user_length > max to allow forward
+-			 * compatibility. The test user_length < min is
+-			 * implied by the test at the end. */
+-
+-			/* Support for very large requests */
+-			if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
+-			   (user_length > descr->max_tokens)) {
+-				/* Allow userspace to GET more than max so
+-				 * we can support any size GET requests.
+-				 * There is still a limit : -ENOMEM. */
+-				extra_size = user_length * descr->token_size;
+-				/* Note : user_length is originally a __u16,
+-				 * and token_size is controlled by us,
+-				 * so extra_size won't get negative and
+-				 * won't overflow... */
+-			}
+-		}
+-
+-		/* Create the kernel buffer */
+-		/*    kzalloc ensures NULL-termination for essid_compat */
+-		extra = kzalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* If it is a SET, get all the extra data in here */
+-		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+-			err = copy_from_user(extra, iwr->u.data.pointer,
+-					     iwr->u.data.length *
+-					     descr->token_size);
+-			if (err) {
+-				kfree(extra);
+-				return -EFAULT;
+-			}
+-		}
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, &(iwr->u), extra);
+-
+-		iwr->u.data.length += essid_compat;
+-
+-		/* If we have something to return to the user */
+-		if (!ret && IW_IS_GET(cmd)) {
+-			/* Check if there is enough buffer up there */
+-			if (user_length < iwr->u.data.length) {
+-				kfree(extra);
+-				return -E2BIG;
+-			}
+-
+-			err = copy_to_user(iwr->u.data.pointer, extra,
+-					   iwr->u.data.length *
+-					   descr->token_size);
+-			if (err)
+-				ret =  -EFAULT;
+-		}
+-
+-		/* Generate an event to notify listeners of the change */
+-		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
+-		   ((ret == 0) || (ret == -EIWCOMMIT))) {
+-			if (descr->flags & IW_DESCR_FLAG_RESTRICT)
+-				/* If the event is restricted, don't
+-				 * export the payload */
+-				wireless_send_event(dev, cmd, &(iwr->u), NULL);
+-			else
+-				wireless_send_event(dev, cmd, &(iwr->u),
+-						    extra);
+-		}
+-
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
++		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
++					      handler, dev, &info);
  	}
  
-+	register_rfkill_notifier(&rfkill_blocking_uevent_nb);
-+
- 	return 0;
- }
- 
- static void __exit rfkill_exit(void)
- {
-+	unregister_rfkill_notifier(&rfkill_blocking_uevent_nb);
- 	class_unregister(&rfkill_class);
- }
- 
+ 	/* Call commit handler if needed and defined */
 -- 
-1.5.5.3
+1.5.5.1.308.g1fbb5
 
