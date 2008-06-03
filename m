@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:30266 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbYFLOMS (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47075
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752951AbYFCUgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 10:12:18 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2020733rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 07:12:18 -0700 (PDT)
-Message-ID: <c4e36d110806120712h1237d084v2eaeb494cc48b43c@mail.gmail.com> (sfid-20080612_161224_661700_7CBDE57E)
-Date: Thu, 12 Jun 2008 16:12:18 +0200
-From: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-Cc: "Rik van Riel" <riel@redhat.com>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213278884.3936.15.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
+	Tue, 3 Jun 2008 16:36:53 -0400
+Date: Tue, 03 Jun 2008 12:19:58 -0700 (PDT)
+Message-Id: <20080603.121958.75907598.davem@davemloft.net> (sfid-20080603_223935_468329_DB4D51F9)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
+ iw_point *".
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/6/12 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2008-06-12 at 09:38 -0400, Rik van Riel wrote:
->> On Thu, 12 Jun 2008 12:07:34 +0200
->> "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
->>
->> > It looks like while there was a huge amount of buffers and caches -
->> > system was unable to allocate few pages for kmalloc in iwl3945 driver
->> > after resume.
->>
->> It looks like this is because it wants to allocate 2**5 contiguous
->> pages, which is 128kB of contiguous kernel memory.
->
-> 64-bit system I assume?
-> The allocation should be 256 * 20 * sizeof(struct sk_buff *).
->
-> Try the patch below. It should improve code generation too.
 
-I'll surely try you patch - but is the iwl the only driver which needs
-128kB continuous memory chunk?
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I think that if the 128kB memchunks are exhausted in 2 days while
-there is over 1GB of free RAM in buffers & caches I think some
-defragmentation is needed then ?
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index e83d74a..cd2cf9f 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
+ /*
+  * Re-calculate the size of private arguments
+  */
+-static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
++static int adjust_priv_size(__u16 args, struct iw_point *iwp)
+ {
+-	int	num = wrqu->data.length;
++	int	num = iwp->length;
+ 	int	max = args & IW_PRIV_SIZE_MASK;
+ 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
+ 
+@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 			 * avoid leaking kernel bits outside. */
+ 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+ 				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u));
++							      &(iwr->u.data));
+ 			}
+ 
+ 			err = copy_to_user(iwr->u.data.pointer, extra,
+-- 
+1.5.5.1.308.g1fbb5
 
-btw: Does it really means that within those buffers kernel could not
-find any adjacent 32 pages which could be made free ?
-
-Zdenek
