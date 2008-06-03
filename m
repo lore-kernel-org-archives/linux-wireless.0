@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35842
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47084
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751795AbYFCQ5x (ORCPT
+	by vger.kernel.org with ESMTP id S1752941AbYFCUgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 12:57:53 -0400
-Date: Tue, 03 Jun 2008 09:57:50 -0700 (PDT)
-Message-Id: <20080603.095750.120470495.davem@davemloft.net> (sfid-20080603_185800_520466_E6935A19)
-To: mokuno@sm.sony.co.jp
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: : Emit event stream compat iw_point objects correctly.
+	Tue, 3 Jun 2008 16:36:53 -0400
+Date: Tue, 03 Jun 2008 13:28:10 -0700 (PDT)
+Message-Id: <20080603.132810.05908596.davem@davemloft.net> (sfid-20080603_223733_834930_4BF2D6EB)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
+ iw_point *".
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080111112248.610C.40F06B3A@sm.sony.co.jp>
-References: <20071227181439.6F59.40F06B3A@sm.sony.co.jp>
-	<20080110.011602.74511551.davem@davemloft.net>
-	<20080111112248.610C.40F06B3A@sm.sony.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Date: Fri, 11 Jan 2008 13:16:29 +0900
 
-> On Thu, 10 Jan 2008 01:16:02 -0800 (PST)
-> David Miller <davem@davemloft.net> wrote:
-> 
-> > diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-> > index c99a8ee..d6f0c51 100644
-> > --- a/include/net/iw_handler.h
-> > +++ b/include/net/iw_handler.h
-> > @@ -483,19 +483,26 @@ extern void wireless_spy_update(struct net_device *	dev,
-> >   * Wrapper to add an Wireless Event to a stream of events.
-> >   */
-> >  static inline char *
-> > -iwe_stream_add_event(char *	stream,		/* Stream of events */
-> > -		     char *	ends,		/* End of stream */
-> > -		     struct iw_event *iwe,	/* Payload */
-> > -		     int	event_len)	/* Real size of payload */
-> > +iwe_stream_add_event(struct iw_request_info *info, char *stream, char *ends,
-> > +		     struct iw_event *iwe, int event_len)
-> >  {
-> > +	int lcp_len = IW_EV_LCP_LEN;
-> > +
-> > +#ifdef CONFIG_COMPAT
-> > +	if (info->flags & IW_REQUEST_FLAG_COMPAT) {
-> > +		event_len -= IW_EV_LCP_LEN;
-> > +		event_len += IW_EV_COMPAT_LCP_LEN;
-> > +		lcp_len = IW_EV_COMPAT_LCP_LEN;
-> > +	}
-> > +#endif
-> >  	/* Check if it's possible */
-> >  	if(likely((stream + event_len) < ends)) {
-> >  		iwe->len = event_len;
-> >  		/* Beware of alignement issues on 64 bits */
-> >  		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
-> > -		memcpy(stream + IW_EV_LCP_LEN,
-> > -		       ((char *) iwe) + IW_EV_LCP_LEN,
-> > -		       event_len - IW_EV_LCP_LEN);
-> > +		memcpy(stream + lcp_len,
-> > +		       ((char *) iwe) + lcp_len,
-> 
-> The source address does not have to be adjusted.  I think it should be
-> 		       ((char *) iwe) + IW_EV_LCP_LEN,
-> or just
-> 		       &iwe->u
-> I think it is more readable what we want to do here.
-> 
-> 
-> > +		       event_len - lcp_len);
-> 
-> The length of the real payload does not need to take account of the
-> destination offset change.  So we can keep the original code like:
-> 
-> 		       org_event_len - IW_EV_LCP_LEN);
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-As long as IW_EV_LCP_LEN and IW_EV_COMPAT_LCP_LEN are different, I am
-pretty sure we need to make these adjustments.
-
-There are so many differences in how struct vs. sub-struct alignment will
-occur in these cases, that we need to be very careful.
-
-I'll try to look more closely at this and do some testing of my own on
-a compat platform.
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index e83d74a..cd2cf9f 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
+ /*
+  * Re-calculate the size of private arguments
+  */
+-static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
++static int adjust_priv_size(__u16 args, struct iw_point *iwp)
+ {
+-	int	num = wrqu->data.length;
++	int	num = iwp->length;
+ 	int	max = args & IW_PRIV_SIZE_MASK;
+ 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
+ 
+@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 			 * avoid leaking kernel bits outside. */
+ 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+ 				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u));
++							      &(iwr->u.data));
+ 			}
+ 
+ 			err = copy_to_user(iwr->u.data.pointer, extra,
+-- 
+1.5.5.1.308.g1fbb5
 
