@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2418 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754362AbYFCCMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 22:12:31 -0400
-Subject: Re: [PATCH v2] ipw2200: queue direct scans
-From: Zhu Yi <yi.zhu@intel.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1212429083.10093.18.camel@localhost.localdomain>
-References: <1208800153.30994.25.camel@localhost.localdomain>
-	 <1208829043.5327.13.camel@debian.sh.intel.com>
-	 <1212429083.10093.18.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 03 Jun 2008 10:11:30 +0800
-Message-Id: <1212459090.7814.401.camel@debian.sh.intel.com> (sfid-20080603_041238_716897_B7A640FA)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.191]:2074 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbYFCS0B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 14:26:01 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644244nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:01 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/11] rt2x00: Release rt2x00 2.1.7
+Date: Tue, 3 Jun 2008 20:29:24 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806032024.52931.IvDoorn@gmail.com> <200806032028.39575.IvDoorn@gmail.com> <200806032029.05394.IvDoorn@gmail.com>
+In-Reply-To: <200806032029.05394.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806032029.24993.IvDoorn@gmail.com> (sfid-20080603_202605_412953_869616AF)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-02 at 13:51 -0400, Dan Williams wrote:
-> =EF=BB=BFWhen another scan is in progress, a direct scan gets dropped=
- on the
-> floor.  However, that direct scan is usually the scan that's really
-> needed by userspace, and gets stomped on by all the broadcast scans
-> the
-> ipw2200 driver issues internally.  Make sure the direct scan happens
-> eventually, and as a bonus ensure that the passive scan worker is
-> cleaned up when appropriate.
->=20
-> The change of request_passive_scan form a struct work to struct
-> delayed_work is only to make the set_wx_scan() code a bit simpler,
-> it's
-> still only used with a delay of 0 to match previous behavior.
->=20
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
-> ----
->=20
-> v2: consolidate direct and normal scan helpers into
-> ipw_request_scan_helper() per Zhu Yi's request
 
-ACK.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
--yi
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 15ec797..2f79336 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.1.6"
++#define DRV_VERSION	"2.1.7"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
+-- 
+1.5.5.3
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
