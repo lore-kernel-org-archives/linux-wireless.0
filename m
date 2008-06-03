@@ -1,187 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbYF1Sij (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42620
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751682AbYFCU53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:38:39 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:38 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 02/19] orinoco: Update scan translation
-Date: Sat, 28 Jun 2008 19:38:08 +0100
-Message-Id: <1214678305-7057-3-git-send-email-kilroyd@gmail.com> (sfid-20080628_203907_595379_3D5F7EA4)
-In-Reply-To: <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Tue, 3 Jun 2008 16:57:29 -0400
+Date: Tue, 03 Jun 2008 13:57:28 -0700 (PDT)
+Message-Id: <20080603.135728.103448928.davem@davemloft.net> (sfid-20080603_225737_464032_E59AA49D)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/12]: wext: Emit event stream entries correctly when
+ compat.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1212526129.14371.5.camel@johannes.berg>
+References: <20080603.132856.202640855.davem@davemloft.net>
+	<1212526129.14371.5.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report channel, beacon interval and capabilities.
-Use WEXT defines instead of magic numbers.
-State quality stats in dB.
-Also a few changes to keep line length less than 80.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 03 Jun 2008 22:48:49 +0200
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   71 ++++++++++++++++++++++++++--------------
- 1 files changed, 46 insertions(+), 25 deletions(-)
+> Did you miss drivers/net/ps3_gelic_wireless.c?
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index e9dca96..655d030 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -3955,7 +3955,7 @@ static int orinoco_ioctl_getrid(struct net_device *dev,
- 	return err;
- }
- 
--/* Trigger a scan (look for other cells in the vicinity */
-+/* Trigger a scan (look for other cells in the vicinity) */
- static int orinoco_ioctl_setscan(struct net_device *dev,
- 				 struct iw_request_info *info,
- 				 struct iw_param *srq,
-@@ -3995,7 +3995,6 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 	 * we access scan variables in priv is critical.
- 	 *	o scan_inprogress : not touched by irq handler
- 	 *	o scan_mode : not touched by irq handler
--	 *	o scan_len : synchronised with scan_result
- 	 * Before modifying anything on those variables, please think hard !
- 	 * Jean II */
- 
-@@ -4061,8 +4060,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- #define MAX_CUSTOM_LEN 64
- 
- /* Translate scan data returned from the card to a card independant
-- * format that the Wireless Tools will understand - Jean II
-- * Return message length or -errno for fatal errors */
-+ * format that the Wireless Tools will understand - Jean II */
- static inline char *orinoco_translate_scan(struct net_device *dev,
- 					   struct iw_request_info *info,
- 					   char *current_ev,
-@@ -4074,9 +4072,10 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 	u16			capabilities;
- 	u16			channel;
- 	struct iw_event		iwe;		/* Temporary buffer */
--	char                   *p;
- 	char custom[MAX_CUSTOM_LEN];
- 
-+	memset(&iwe, 0, sizeof(iwe));
-+
- 	/* First entry *MUST* be the AP MAC address */
- 	iwe.cmd = SIOCGIWAP;
- 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
-@@ -4098,8 +4097,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 	/* Add mode */
- 	iwe.cmd = SIOCGIWMODE;
- 	capabilities = le16_to_cpu(bss->a.capabilities);
--	if (capabilities & 0x3) {
--		if (capabilities & 0x1)
-+	if (capabilities & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)) {
-+		if (capabilities & WLAN_CAPABILITY_ESS)
- 			iwe.u.mode = IW_MODE_MASTER;
- 		else
- 			iwe.u.mode = IW_MODE_ADHOC;
-@@ -4109,17 +4108,22 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 
- 	channel = bss->s.channel;
- 	if ((channel >= 1) && (channel <= NUM_CHANNELS)) {
--		/* Add frequency */
-+		/* Add channel and frequency */
- 		iwe.cmd = SIOCGIWFREQ;
-+		iwe.u.freq.m = channel;
-+		iwe.u.freq.e = 0;
-+		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+						  &iwe, IW_EV_FREQ_LEN);
-+
- 		iwe.u.freq.m = channel_frequency[channel-1] * 100000;
- 		iwe.u.freq.e = 1;
- 		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
- 						  &iwe, IW_EV_FREQ_LEN);
- 	}
- 
--	/* Add quality statistics */
-+	/* Add quality statistics. level and noise in dB. No link quality */
- 	iwe.cmd = IWEVQUAL;
--	iwe.u.qual.updated = 0x10;	/* no link quality */
-+	iwe.u.qual.updated = IW_QUAL_DBM | IW_QUAL_QUAL_INVALID;
- 	iwe.u.qual.level = (__u8) le16_to_cpu(bss->a.level) - 0x95;
- 	iwe.u.qual.noise = (__u8) le16_to_cpu(bss->a.noise) - 0x95;
- 	/* Wireless tools prior to 27.pre22 will show link quality
-@@ -4133,25 +4137,13 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 
- 	/* Add encryption capability */
- 	iwe.cmd = SIOCGIWENCODE;
--	if (capabilities & 0x10)
-+	if (capabilities & WLAN_CAPABILITY_PRIVACY)
- 		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
- 	else
- 		iwe.u.data.flags = IW_ENCODE_DISABLED;
- 	iwe.u.data.length = 0;
- 	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
--					  &iwe, bss->a.essid);
--
--	/* Add EXTRA: Age to display seconds since last beacon/probe response
--	 * for given network. */
--	iwe.cmd = IWEVCUSTOM;
--	p = custom;
--	p += snprintf(p, MAX_CUSTOM_LEN - (p - custom),
--		      " Last beacon: %dms ago",
--		      jiffies_to_msecs(jiffies - last_scanned));
--	iwe.u.data.length = p - custom;
--	if (iwe.u.data.length)
--		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
--						  &iwe, custom);
-+					  &iwe, NULL);
- 
- 	/* Bit rate is not available in Lucent/Agere firmwares */
- 	if (priv->firmware_type != FIRMWARE_TYPE_AGERE) {
-@@ -4173,7 +4165,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 			if (bss->p.rates[i] == 0x0)
- 				break;
- 			/* Bit rate given in 500 kb/s units (+ 0x80) */
--			iwe.u.bitrate.value = ((bss->p.rates[i] & 0x7f) * 500000);
-+			iwe.u.bitrate.value =
-+				((bss->p.rates[i] & 0x7f) * 500000);
- 			current_val = iwe_stream_add_value(info, current_ev,
- 							   current_val,
- 							   end_buf, &iwe,
-@@ -4184,6 +4177,34 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 			current_ev = current_val;
- 	}
- 
-+	/* Beacon interval */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "bcn_int=%d",
-+				     le16_to_cpu(bss->a.beacon_interv));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Capabilites */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "capab=0x%04x",
-+				     capabilities);
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Add EXTRA: Age to display seconds since last beacon/probe response
-+	 * for given network. */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     " Last beacon: %dms ago",
-+				     jiffies_to_msecs(jiffies - last_scanned));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
- 	return current_ev;
- }
- 
--- 
-1.5.4.5
+Likely yes, I guess that won't get hit with an allmodconfig
+build on sparc64 :(
 
+It would be really nice if we had some more compat layers
+so that the ps3 bus probing layer just nopped out but you
+could at least build test drivers on other platforms.
