@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.238]:45190 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbYFMPGc (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43480
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753980AbYFCVbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 11:06:32 -0400
-Received: by hu-out-0506.google.com with SMTP id 28so5370342hub.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 08:06:29 -0700 (PDT)
-Message-ID: <48528CF0.8050204@gmail.com> (sfid-20080613_170635_795394_E9001BEF)
-Date: Fri, 13 Jun 2008 18:06:24 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with	disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com>	<1213342523.7814.865.camel@debian.sh.intel.com>	<20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
-In-Reply-To: <48528B63.5030403@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Tue, 3 Jun 2008 17:31:52 -0400
+Date: Tue, 03 Jun 2008 12:05:15 -0700 (PDT)
+Message-Id: <20080603.120515.193703574.davem@davemloft.net> (sfid-20080603_233158_309565_E994CC6D)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kirill@shutemov.name
+Subject: Re: [PATCH] wireless.h: improve userland include-ability
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
+References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tor H=E5kon Haugen wrote:
->=20
-> John W. Linville wrote:
->> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
->>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
->>> Give the advantages, I'd like to use it if we can fix the bug (I ha=
-ven't
->>> seen what the bug is myself). But you are free to change the defaul=
-t
->>> value until it is fixed. There is no such problem for 4965, right?
->> AFAICT only the 3945 seems to need it.
->>
->=20
-> I can confirm that this also applies to 4965 as a friend of mine has=20
-> this card. According to him the card works a lot better with the=20
-> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue,  3 Jun 2008 13:51:37 -0400
 
-Just to make it clear,
-iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
-The driver just shuts down thee card since it detects microcode error.
+> From: Kirill A. Shutemov <kirill@shutemov.name>
+> 
+> This patch partially reverts commit 2218228392080f0ca2fc2974604e79f57b12c436
+> ("Make linux/wireless.h be able to compile") while still making it
+> easier to include wireless.h in userland apps.
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Best regards,
-	Maxim Levitsky
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I not thrilled about this patch.
+
+This means the user has to figure out what include file to add
+to get IFNAMSIZ and things like that which wireless.h needs.
+
+That is non-intuitive and magic.  These headers should be entirely
+self-contained so that if you include linux/wireless.h it should
+just work and there should be no dependencies not handlind by
+wireless.h doing the necessary includes.
+
++/* This header is used in user-space, therefore need to be sanitised
++ * for that purpose. Those includes are usually not compatible with glibc.
++ * To know which includes to use in user-space, check iwlib.h. */
+
+Yeah, go check so me magic userspace tool header to see what magic is
+needed just to include a core networking header file correctly.
+
+No, thanks.
