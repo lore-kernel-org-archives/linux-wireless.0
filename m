@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:60028 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbYFLQfm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 12:35:42 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1684703pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 09:35:40 -0700 (PDT)
-Message-ID: <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com> (sfid-20080612_183546_862400_74C1FB2A)
-Date: Thu, 12 Jun 2008 19:35:39 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-Cc: "Rik van Riel" <riel@redhat.com>,
-	"Zdenek Kabelac" <zdenek.kabelac@gmail.com>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
-	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:2418 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754362AbYFCCMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jun 2008 22:12:31 -0400
+Subject: Re: [PATCH v2] ipw2200: queue direct scans
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1212429083.10093.18.camel@localhost.localdomain>
+References: <1208800153.30994.25.camel@localhost.localdomain>
+	 <1208829043.5327.13.camel@debian.sh.intel.com>
+	 <1212429083.10093.18.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 03 Jun 2008 10:11:30 +0800
+Message-Id: <1212459090.7814.401.camel@debian.sh.intel.com> (sfid-20080603_041238_716897_B7A640FA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2008 at 6:43 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Thu, Jun 12, 2008 at 4:54 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2008-06-12 at 09:38 -0400, Rik van Riel wrote:
->>> On Thu, 12 Jun 2008 12:07:34 +0200
->>> "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
->>>
->>> > It looks like while there was a huge amount of buffers and caches -
->>> > system was unable to allocate few pages for kmalloc in iwl3945 driver
->>> > after resume.
->>>
->>> It looks like this is because it wants to allocate 2**5 contiguous
->>> pages, which is 128kB of contiguous kernel memory.
->>
->> 64-bit system I assume?
->> The allocation should be 256 * 20 * sizeof(struct sk_buff *).
->
->> Try the patch below. It should improve code generation too.
->>
->> I discussed this with Tomas previously and he says the hw is capable of
->> doing 20 fragments per frame (wonder why, Broadcom can do an unlimited
->> number...) but he complained about the networking stack not being able
->> to.
->
-> This is scatter gather buffers that can be kicked in one DMA transaction.
->
-> Well, the hardware needs to support IP checksumming for that, hence,
->> afaik, only two fragments can ever be used (one for hw header, one for
->> frame)
-> This I still don't understand why but everybody is already tired to
-> explaining me why.. :) Just need to find time to dig into it.
->
->> This cuts the allocation to 10%, or (under) a page in all cases.
->
-> Probably. it would be safe to use vmalloc for allocating txb anyway.
-> I'll give it a try.
+On Mon, 2008-06-02 at 13:51 -0400, Dan Williams wrote:
+> =EF=BB=BFWhen another scan is in progress, a direct scan gets dropped=
+ on the
+> floor.  However, that direct scan is usually the scan that's really
+> needed by userspace, and gets stomped on by all the broadcast scans
+> the
+> ipw2200 driver issues internally.  Make sure the direct scan happens
+> eventually, and as a bonus ensure that the passive scan worker is
+> cleaned up when appropriate.
+>=20
+> The change of request_passive_scan form a struct work to struct
+> delayed_work is only to make the set_wx_scan() code a bit simpler,
+> it's
+> still only used with a delay of 0 to match previous behavior.
+>=20
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
+> ----
+>=20
+> v2: consolidate direct and normal scan helpers into
+> ipw_request_scan_helper() per Zhu Yi's request
 
-So vmalloc  didn't break anything on the 32bit machine I'm just about
-to install 64 one so it will take hour or two.. I will issue some
-official patch after that.
+ACK.
 
-> There was already discussion on LKML about memory allocation problems
-> on X86_64, which might explain this regression. This didn't happen
-> before.
+Thanks,
+-yi
 
-This is  the thread title if you are interested.
-'x86/kernel/pci_dma.c: gfp |= __GFP_NORETRY'
-
-Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
