@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:55876 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbYF3L31 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47080
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752780AbYFCUgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 07:29:27 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1159215waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 04:29:26 -0700 (PDT)
-Message-ID: <1ba2fa240806300429l679f1568k584143b448455594@mail.gmail.com> (sfid-20080630_132930_015153_3D838E92)
-Date: Mon, 30 Jun 2008 14:29:26 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: compat-wireless high packet loss.
-Cc: "Guy Cohen" <guy.cohen@intel.com>,
-	"David Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	"Patrick McHardy" <kaber@trash.net>
-In-Reply-To: <1214824149.5507.36.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
-	 <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com>
-	 <1214824149.5507.36.camel@johannes.berg>
+	Tue, 3 Jun 2008 16:36:52 -0400
+Date: Tue, 03 Jun 2008 13:28:26 -0700 (PDT)
+Message-Id: <20080603.132826.197798175.davem@davemloft.net> (sfid-20080603_223735_609814_3B863701)
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/12]: wext: Pull ioctl permission checking out into helper
+ function.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 2:09 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2008-06-29 at 09:23 +0300, Guy Cohen wrote:
->> More info on the issue.. The problem is with TX of unrestrained UDP
->> stream, when the traffic generated at the application layer is larger
->> than the link can pass. With kernel 2.6.26-* the traffic is restrained
->> when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
->> some layer. It seems that the drop happens after the IP fragmentation
->> step at the stack.
->
-> does compat use multiqueue now? if not, look in the mac80211 fake mq
-> code.
 
-2.6.25 has a real mq
-Thanks
-Tomas
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |   22 +++++++++++++++-------
+ 1 files changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index a1cd19a..e96559e 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1061,18 +1061,26 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	return -EOPNOTSUPP;
+ }
+ 
++/* If command is `set a parameter', or `get the encoding parameters',
++ * check if the user has the right to do it.
++ */
++static int wext_permission_check(unsigned int cmd)
++{
++	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
++	    && !capable(CAP_NET_ADMIN))
++		return -EPERM;
++
++	return 0;
++}
++
+ /* entry point from dev ioctl */
+ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 		      void __user *arg)
+ {
+-	int ret;
++	int ret = wext_permission_check(cmd);
+ 
+-	/* If command is `set a parameter', or
+-	 * `get the encoding parameters', check if
+-	 * the user has the right to do it */
+-	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
+-	    && !capable(CAP_NET_ADMIN))
+-		return -EPERM;
++	if (ret)
++		return ret;
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-- 
+1.5.5.1.308.g1fbb5
+
