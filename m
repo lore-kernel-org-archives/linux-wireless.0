@@ -1,99 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aktaia.intevation.org ([212.95.126.10]:48446 "EHLO
-	kolab.intevation.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753739AbYFSIXd convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48689
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754042AbYFCOe5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 04:23:33 -0400
-From: Bernhard Reiter <bernhard@intevation.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-Date: Thu, 19 Jun 2008 10:23:38 +0200
-Cc: Greg KH <greg@kroah.com>
-References: <200806181715.20516.bernhard@intevation.de> <4859866A.1090300@gmail.com> <1213833799.5258.13.camel@dv>
-In-Reply-To: <1213833799.5258.13.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200806191023.39851.bernhard@intevation.de> (sfid-20080619_102338_364989_49D05962)
+	Tue, 3 Jun 2008 10:34:57 -0400
+Date: Tue, 03 Jun 2008 07:34:53 -0700 (PDT)
+Message-Id: <20080603.073453.69571531.davem@davemloft.net> (sfid-20080603_163510_845552_04F017CB)
+To: mokuno@sm.sony.co.jp
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [WEXT 8/12]: Pull top-level ioctl dispatch logic into helper
+ function.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080121194758.6139.40F06B3A@sm.sony.co.jp>
+References: <20071221.205623.141035851.davem@davemloft.net>
+	<20080121194758.6139.40F06B3A@sm.sony.co.jp>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 19. Juni 2008 02:03:19 schrieb Pavel Roskin:
-> On Wed, 2008-06-18 at 23:04 +0100, Dave wrote:
-> > Stefanik G=E1bor wrote:
-> > > On Wed, Jun 18, 2008 at 5:15 PM, Bernhard Reiter=20
-<bernhard@intevation.de> wrote:
-> > >> Sitting here a  pc card wireless land adapter.
-> > >> id 0x0156, 0x0003, which probably makes it an Agere card.
-> > >> cardctl info says:
-> > >> "Wireless PC Card Model 0110"
-> > >
-> > > This appears to be a Wavelan 2 / Orinoco card. Maybe try adding y=
-our
-> > > device IDs to the Orinoco driver.
-> >
-> > According to
-> > <http://dotpups.de/dotpups/Wifi/drivers-for-Puppy-1/lucent-agere_RE=
-ADME>,
-> > this is a Hermes II based card, which is not supported by the orino=
-co
-> > driver.
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Date: Mon, 21 Jan 2008 20:16:19 +0900
 
-So far I had gathered already from the pages linked in my last post.
-Nevertheless I gave it a shot on a 2.6.17 I had easily available and en=
-ded up=20
-with a message saying that the firmware is incompatible.
+I am working on these patches again, thank you for your
+extreme patience...
 
-> > There is a more recent version of the Agere driver available, which=
- has
-> > been patched for 2.6 kernels. See
-> > <http://ubuntuforums.org/showthread.php?t=3D304217>
->
-> It's really a low hanging fruit.  The big thing that was missing was
-> firmware download for Agere, but Dave implemented that.  The remainin=
-g
-> work is mostly integration of the pieces together, adding the ID,
-> allowing initialization without firmware loaded, loading the right
-> firmware for the card.
+> > +int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+> > +		      void __user *arg)
+> > +{
+> > +	int ret = wext_ioctl_dispatch(net, ifr, cmd,
+> > +				      ioctl_standard_call,
+> > +				      ioctl_private_call);
+> > +
+> > +	if (ret > 0 &&
+> 
+> As the return value 0 is legal, should we allow copybacking in the case
+> of 'ret == 0'?
+> 
+> Same issue exists in compat_wext_handle_ioctl() of the #9 patch.
 
-Ah, I never found that one. Also because the match that this indeed
-is a HermesII card could never be made for sure by myself
-and because that page is only about Hermes I.
-
-> I feel bad that I'm too busy with other things to pay enough attentio=
-n
-> to older drivers, but we have linux-wireless list now, so I don't nee=
-d
-> to be a bottleneck.  Volunteers are welcome.
-
-Am Donnerstag, 19. Juni 2008 08:55:30 Holger Schurig wrote:
-> You mean I can convert the sta_h2.h file from the above link to
-> some binary file and let orinoco+Dave's patches load that
-> firmware to the card?
->
-> I'm asking this because I also have a bunch of Hermes I and
-> Hermes II cards, which don't work with the Orinoco driver, but
-> with the "brought somewhat up to kernel 2.6" wlags_h2_718.tgz
-> driver from the above link. That driver works, but hurts the
-> eyes, and now has some problems with 2.6.25, e.g. at unloading
-> time.
-
-So this is the first indication that the wlags_h2_718 might work
-for the Hermes II card. Where can I download it without registration?
-Why wasn't the 7.22 version used as base for the patch?
-
-Best,
-Bernhard
-[cc my on relevent replies]
---=20
-Managing Director - Owner: www.intevation.net       (Free Software Comp=
-any)
-Germany Coordinator: fsfeurope.org. Coordinator: www.Kolab-Konsortium.c=
-om.
-Intevation GmbH, Osnabr=FCck, DE; Amtsgericht Osnabr=FCck, HRB 18998
-Gesch=E4ftsf=FChrer Frank Koormann, Bernhard Reiter, Dr. Jan-Oliver Wag=
-ner
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You are right, I wonder why I made this strange test.  It should
+definitely be "ret >= 0".  I'll make that fix.
