@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23304 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753241AbYFXKiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:38:09 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 4/4] mac80211: add phy information to giwname
-Date: Tue, 24 Jun 2008 13:38:01 +0300
-Message-Id: <1214303881-31525-5-git-send-email-tomas.winkler@intel.com> (sfid-20080624_123816_338396_3888ADF1)
-In-Reply-To: <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-2-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-3-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from wr-out-0506.google.com ([64.233.184.228]:37711 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbYFCVTA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 17:19:00 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so3479513wra.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 14:18:58 -0700 (PDT)
+Subject: Re: [PATCH 01/11 v3] rt2x00: Calculate register offset during
+	compile time
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <200806032245.35830.IvDoorn@gmail.com>
+References: <200806032024.52931.IvDoorn@gmail.com>
+	 <200806032029.35662.IvDoorn@gmail.com>
+	 <200806032205.17071.IvDoorn@gmail.com>
+	 <200806032245.35830.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 03 Jun 2008 14:18:56 -0700
+Message-Id: <1212527937.6340.18.camel@brick> (sfid-20080603_231906_245214_9B0785A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add phy information to giwname. Currently
-802.11b is not treated.
+On Tue, 2008-06-03 at 22:45 +0200, Ivo van Doorn wrote:
+> By using __ffs() the register offsets were always calculated
+> at run-time which all FIELD32/FIELD16 definitions were builtin
+> constants. This means we can heavily optimize the register handling
+> by allowing GCC to do all the work during compilation.
+>=20
+> Add some compile_ffs() macros to perform the calculation at
+> compile time. After this each rt2x00 module size is reduced
+> by ~2500 bytes. And the stack size of several functions is reduced
+> as well which further limits the number of rt2x00 results in
+> 'make checkstack'.
+> +/*
+> + * Macro's to find first set bit in a variable.
+> + * These macro's behaves the same as the __ffs() function with
+> + * the most important difference that this is done during
+> + * compile-time rather then run-time.
+> + */
 
-Quoting:
-It's not useless, it's supposed to tell you about the protocol
-capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg"
+#define const_ffs8(__x) ( \
+	BUILD_BUG_ON(!__builtin_constant_p(__x));	\
+	__builtin_choose_expr((__x) & 0x01, 0,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x02, 1,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x04, 2,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x08, 3,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x10, 4,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x20, 5,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x40, 6,		\
+	=EF=BB=BF__builtin_choose_expr((__x) & 0x80, 7,		\
+	8)))))))); )
 
-Jean
+#define const_ffs16(__x) ( \
+	__builtin_choose_expr((__x) & 0xff,	\
+ 	const_ffs8(__x),			\
+	const_ffs8((__x) >> 8) + 8); )
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/wext.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+=EF=BB=BF
+#define const_ffs32(__x) ( \
+	__builtin_choose_expr((__x) & 0xffff,	\
+	const_ffs16(__x),			\
+	const_ffs16((__x) >> 16) + 16); )
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 308b953..8778c7d 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -135,7 +135,24 @@ static int ieee80211_ioctl_giwname(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   char *name, char *extra)
- {
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_supported_band *sband;
-+	u8 is_ht = 0;
-+
- 	strcpy(name, "IEEE 802.11");
-+	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
-+
-+	if (sband) {
-+		strcat(name, "a");
-+		is_ht |= sband->ht_info.ht_supported;
-+	}
-+	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
-+	if (sband) {
-+		strcat(name, "g");
-+		is_ht |= sband->ht_info.ht_supported;
-+	}
-+	if (is_ht)
-+		strcat(name, "n");
- 
- 	return 0;
- }
--- 
-1.5.4.1
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Just a thought.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Harvey
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
