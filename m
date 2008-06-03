@@ -1,162 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753974AbYFIT2d (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:2192 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753115AbYFCS0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 15:28:33 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:33 -0700 (PDT)
-Subject: [PATCHv2 6/8] mac80211: wpa.c use new access helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 09 Jun 2008 12:28:22 -0700
-Message-Id: <1213039702.5974.71.camel@brick> (sfid-20080609_212838_013359_48674B12)
-Mime-Version: 1.0
+	Tue, 3 Jun 2008 14:26:08 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644294nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:06 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/11] rt2x00: Make rt2x00_set/get_field macros
+Date: Tue, 3 Jun 2008 20:29:43 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806032024.52931.IvDoorn@gmail.com> <200806032025.45029.IvDoorn@gmail.com> <200806032026.16128.IvDoorn@gmail.com>
+In-Reply-To: <200806032026.16128.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200806032029.43881.IvDoorn@gmail.com> (sfid-20080603_202612_339969_EEBE9440)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+The rt2x00_set_field functions are very often used,
+but GCC is better able to optimize them when they
+are macros instead of static inline functions.
+
+After changing it to macro's each rt2x00 driver will
+loose about ~3500 bytes in size.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/wpa.c |   63 +++++++++++++--------------------------------------
- 1 files changed, 16 insertions(+), 47 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00reg.h |   71 +++++++++++++------------------
+ 1 files changed, 30 insertions(+), 41 deletions(-)
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9f6fd20..9834cec 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -24,46 +24,22 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdrlen;
--	u16 fc;
--	int a4_included;
--	u8 *pos;
-+	__le16 fc;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index 7999d54..170c10d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -198,46 +198,35 @@ struct rt2x00_field32 {
+ 	};					\
+ })
  
--	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
+-static inline void rt2x00_set_field32(u32 *reg,
+-				      const struct rt2x00_field32 field,
+-				      const u32 value)
+-{
+-	*reg &= ~(field.bit_mask);
+-	*reg |= (value << field.bit_offset) & field.bit_mask;
+-}
 -
--	hdrlen = 24;
--	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
--	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
--		hdrlen += ETH_ALEN;
--		*sa = hdr->addr4;
--		*da = hdr->addr3;
--	} else if (fc & IEEE80211_FCTL_FROMDS) {
--		*sa = hdr->addr3;
--		*da = hdr->addr1;
--	} else if (fc & IEEE80211_FCTL_TODS) {
--		*sa = hdr->addr2;
--		*da = hdr->addr3;
--	} else {
--		*sa = hdr->addr2;
--		*da = hdr->addr1;
--	}
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
- 
--	if (fc & 0x80)
--		hdrlen += 2;
-+	hdrlen = ieee80211_hdrlen(fc);
+-static inline u32 rt2x00_get_field32(const u32 reg,
+-				     const struct rt2x00_field32 field)
+-{
+-	return (reg & field.bit_mask) >> field.bit_offset;
+-}
+-
+-static inline void rt2x00_set_field16(u16 *reg,
+-				      const struct rt2x00_field16 field,
+-				      const u16 value)
+-{
+-	*reg &= ~(field.bit_mask);
+-	*reg |= (value << field.bit_offset) & field.bit_mask;
+-}
+-
+-static inline u16 rt2x00_get_field16(const u16 reg,
+-				     const struct rt2x00_field16 field)
+-{
+-	return (reg & field.bit_mask) >> field.bit_offset;
+-}
+-
+-static inline void rt2x00_set_field8(u8 *reg,
+-				     const struct rt2x00_field8 field,
+-				     const u8 value)
+-{
+-	*reg &= ~(field.bit_mask);
+-	*reg |= (value << field.bit_offset) & field.bit_mask;
+-}
+-
+-static inline u8 rt2x00_get_field8(const u8 reg,
+-				   const struct rt2x00_field8 field)
+-{
+-	return (reg & field.bit_mask) >> field.bit_offset;
+-}
++#define SET_FIELD(__reg, __type, __field, __value)\
++({						\
++	typecheck(__type, __field);		\
++	*(__reg) &= ~((__field).bit_mask);	\
++	*(__reg) |= ((__value) <<		\
++	    ((__field).bit_offset)) &		\
++	    ((__field).bit_mask);		\
++})
 +
-+	*sa = ieee80211_get_SA(hdr);
-+	*da = ieee80211_get_DA(hdr);
++#define GET_FIELD(__reg, __type, __field)	\
++({						\
++	typecheck(__type, __field);		\
++	((__reg) & ((__field).bit_mask)) >>	\
++	    ((__field).bit_offset);		\
++})
++
++#define rt2x00_set_field32(__reg, __field, __value) \
++	SET_FIELD(__reg, struct rt2x00_field32, __field, __value)
++#define rt2x00_get_field32(__reg, __field) \
++	GET_FIELD(__reg, struct rt2x00_field32, __field)
++
++#define rt2x00_set_field16(__reg, __field, __value) \
++	SET_FIELD(__reg, struct rt2x00_field16, __field, __value)
++#define rt2x00_get_field16(__reg, __field) \
++	GET_FIELD(__reg, struct rt2x00_field16, __field)
++
++#define rt2x00_set_field8(__reg, __field, __value) \
++	SET_FIELD(__reg, struct rt2x00_field8, __field, __value)
++#define rt2x00_get_field8(__reg, __field) \
++	GET_FIELD(__reg, struct rt2x00_field8, __field)
  
- 	*data = skb->data + hdrlen;
- 	*data_len = skb->len - hdrlen;
- 
--	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
--		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
--	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
--	    fc & IEEE80211_STYPE_QOS_DATA) {
--		pos = (u8 *) &hdr->addr4;
--		if (a4_included)
--			pos += 6;
--		*qos_tid = pos[0] & 0x0f;
--		*qos_tid |= 0x80; /* qos_included flag */
--	} else
-+	if (ieee80211_is_data_qos(fc))
-+		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & 0x0f) | 0x80;
-+	else
- 		*qos_tid = 0;
- 
- 	return skb->len < hdrlen ? -1 : 0;
-@@ -186,8 +162,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	int hdrlen, len, tail;
--	u16 fc;
-+	unsigned int hdrlen;
-+	int len, tail;
- 	u8 *pos;
- 
- 	info->control.icv_len = TKIP_ICV_LEN;
-@@ -200,8 +176,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
- 	}
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-@@ -272,14 +247,12 @@ ieee80211_rx_result
- ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	u16 fc;
- 	int hdrlen, res, hwaccel = 0, wpa_test = 0;
- 	struct ieee80211_key *key = rx->key;
- 	struct sk_buff *skb = rx->skb;
- 	DECLARE_MAC_BUF(mac);
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
- 		return RX_CONTINUE;
-@@ -427,7 +400,6 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen, len, tail;
--	u16 fc;
- 	u8 *pos, *pn, *b_0, *aad, *scratch;
- 	int i;
- 
-@@ -446,8 +418,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	b_0 = scratch + 3 * AES_BLOCK_LEN;
- 	aad = scratch + 4 * AES_BLOCK_LEN;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
- 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-@@ -516,7 +487,6 @@ ieee80211_rx_result
- ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	u16 fc;
- 	int hdrlen;
- 	struct ieee80211_key *key = rx->key;
- 	struct sk_buff *skb = rx->skb;
-@@ -524,8 +494,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 	int data_len;
- 	DECLARE_MAC_BUF(mac);
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
- 		return RX_CONTINUE;
+ #endif /* RT2X00REG_H */
 -- 
-1.5.6.rc2.261.ga8fbe
-
+1.5.5.3
 
