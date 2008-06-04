@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59529 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751977AbYFTQTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 12:19:24 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
-Date: Fri, 20 Jun 2008 18:18:34 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1213739834.3803.137.camel@johannes.berg> <20080620155541.GC6656@elte.hu> <200806201801.09858.mb@bu3sch.de>
-In-Reply-To: <200806201801.09858.mb@bu3sch.de>
+Received: from fg-out-1718.google.com ([72.14.220.154]:58743 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbYFDHkM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 03:40:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1256043fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 00:40:10 -0700 (PDT)
+Message-ID: <8704f27d0806040040n5aa05b87j10142e31ed1a2b44@mail.gmail.com> (sfid-20080604_094017_871848_55F41A3D)
+Date: Wed, 4 Jun 2008 10:40:10 +0300
+From: "Emmanuel Grumbach" <egrumbach@gmail.com>
+To: Barteq <barteqpl@gmail.com>
+Subject: Re: iwlwifi: Bug - can't connect to WPA PSK access point any more
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <op.ub6muuyji79708@thinkpad>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806201818.34904.mb@bu3sch.de> (sfid-20080620_181933_328255_0BAFC3C4)
+Content-Type: text/plain; charset=ISO-8859-2
+References: <op.ub3jirfui79708@thinkpad>
+	 <8704f27d0806020801g1785d067j9c28832a7e5c39e3@mail.gmail.com>
+	 <op.ub4p98zui79708@thinkpad>
+	 <8704f27d0806030409n7e5ef084x5801871c36b6f846@mail.gmail.com>
+	 <op.ub6muuyji79708@thinkpad>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 June 2008 18:01:09 Michael Buesch wrote:
-> On Friday 20 June 2008 17:55:41 Ingo Molnar wrote:
-> > 
-> > * Michael Buesch <mb@bu3sch.de> wrote:
-> > 
-> > > On Friday 20 June 2008 17:27:48 Ingo Molnar wrote:
-> > > >  [<c012b361>] local_bh_enable_ip+0xd1/0xe0
-> > > >  [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
-> > > >  [<c0471b92>] vortex_timer+0xe2/0x3e0
-> > > 
-> > > > real bug or false positive?
-> > > 
-> > > Well, a timer runs with IRQs disabled, no? So this would be a bug.
-> > 
-> > indeed - agreed :) [no time for me to fix it, but can test any rfc patch.]
-> 
-> A quick workaround always is to convert the lock into an _irqsafe lock.
-> Although it introduces higher overhead (interrupt-wise), it prevents the bug.
-> A real fix would require to understand the locking in the driver, which I
-> don't, as I never looked at the driver. :)
-
-
-However, looking at the driver I think the fix actually is trivial:
-
-Index: wireless-testing/drivers/net/3c59x.c
-===================================================================
---- wireless-testing.orig/drivers/net/3c59x.c	2008-05-16 00:26:29.000000000 +0200
-+++ wireless-testing/drivers/net/3c59x.c	2008-06-20 18:16:55.000000000 +0200
-@@ -1768,9 +1768,10 @@ vortex_timer(unsigned long data)
- 	case XCVR_MII: case XCVR_NWAY:
- 		{
- 			ok = 1;
--			spin_lock_bh(&vp->lock);
-+			/* Interrupts are already disabled */
-+			spin_lock(&vp->lock);
- 			vortex_check_media(dev, 0);
--			spin_unlock_bh(&vp->lock);
-+			spin_unlock(&vp->lock);
- 		}
- 		break;
- 	  default:					/* Other media types handled by Tx timeouts. */
-
-
-vp->lock is also taken in hardware IRQ context, so we _have_ to always
-use irqsafe locking. As we run in a timer with IRQs disabled,
-we can simply use spin_lock.
-
--- 
-Greetings Michael.
+T24gVHVlLCBKdW4gMywgMjAwOCBhdCA4OjAwIFBNLCBCYXJ0ZXEgPGJhcnRlcXBsQGdtYWlsLmNv
+bT4gd3JvdGU6Cj4gRG5pYSAwMy0wNi0yMDA4IG8gMTM6MDk6MzMgRW1tYW51ZWwgR3J1bWJhY2gg
+PGVncnVtYmFjaEBnbWFpbC5jb20+Cj4gbmFwaXNhsyhhKToKPgo+PiBWZXJ5IHN0cmFuZ2UuLi4u
+IHRoZSBlcnJvciAiaXdsNDk2NTogaW5kZXggMjU1IG5vdCB1c2VkIGluIHVDb2RlIGtleQo+PiB0
+YWJsZSIgc2hvdWxkbid0IGFwcGVhci4uLiBJZiBzd2NyeXB0bz0xLCB0aGVuIGFsbCB0aGUgZW5j
+cnlwdGlvbiBpcwo+PiBkb25lIGluIG1hYzgwMjExLi4uLgo+Cj4gSXQgd2FzIHRoZXJlIGJlY291
+c2UgZmlyc3QgbW9kdWxlIHdhcyBsb2FkZWQgd2l0aG91dCBzd2NyeXB0by4gU28gaW4gdGhlIGVu
+ZAo+IG9mIGRtZXNnIGl0IHNob3VsZCBub3QgYXBwZWFyLgo+CgpvawoKPj4gcGxlYXNlIHRyeSB0
+byB1bmNvbW1lbnQga2V5X21nbXQKPgo+IHVuY29tbWVudGVkLgo+Cj4KPiBUaGVyZSBpcyBvbmUg
+bW9yZSBmdW5ueSB0aGluZy4uIEl0IG1hbmdlZCB0byBhc3NvY2lhdGUuLiBBZnRlciAzMCBtaW51
+dGVzIG9mCj4gdHJ5aW5nLi4uIChhZnRlciB1bmNvbW1lbnRpbmcga2V5X21nbXQgLSBidXQgaXQg
+c2hvdWxkIG5vdCBtYWtlIGFueSBjaGFuZ2UgLQo+IGl0J3Mgb25seSBhIHJvdWxldHRlKQo+Cj4g
+U3lzbG9nIGF0dGFjaGVkIGhlcmUuCj4KCmJsYWNrIG1hZ2ljIGhlcmUuLi4gYXJlIHlvdSBzdXJl
+IHRoZXJlIGlzIG5vIG90aGVyIHNlcnZpY2VzIGluIHRoZQphcmVhID8gTk0gYXZhaGkgYW5kIGZy
+aWVuZHMgPwoKLS0gCkVtbWFudWVsIEdydW1iYWNoCmVncnVtYmFjaEBnbWFpbC5jb20K
