@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:35711 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753962AbYFZCOc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 22:14:32 -0400
-Subject: Re: [PATCH -next] iwlwifi: fix build for CONFIG_INPUT=n
-From: Zhu Yi <yi.zhu@intel.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	akpm <akpm@linux-foundation.org>, linville@tuxdriver.com
-In-Reply-To: <20080624210246.0fe18e2c.randy.dunlap@oracle.com>
-References: <20080624210246.0fe18e2c.randy.dunlap@oracle.com>
-Content-Type: text/plain
-Date: Thu, 26 Jun 2008 10:13:30 +0800
-Message-Id: <1214446410.14590.287.camel@debian.sh.intel.com> (sfid-20080626_041437_407078_35186D4E)
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.171]:52237 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbYFDMVt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 08:21:49 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 9/12]: wext: Dispatch and handle compat ioctls entirely in net/wireless/wext.c
+Date: Wed, 4 Jun 2008 14:20:48 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20080603.132842.123235332.davem@davemloft.net>
+In-Reply-To: <20080603.132842.123235332.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806041420.49316.arnd@arndb.de> (sfid-20080604_142155_754525_CBB9EF19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-24 at 21:02 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Fix iwlwifi so that it builds cleanly with CONFIG_INPUT=n.
-> Also free the input device on exit.
-> 
-> drivers/built-in.o: In function `iwl_rfkill_unregister':
-> (.text+0xbf430): undefined reference to `input_unregister_device'
-> drivers/built-in.o: In function `iwl_rfkill_init':
-> (.text+0xbf51c): undefined reference to `input_allocate_device'
-> drivers/built-in.o: In function `iwl_rfkill_init':
-> (.text+0xbf5bf): undefined reference to `input_register_device'
-> drivers/built-in.o: In function `iwl_rfkill_init':
-> (.text+0xbf5e9): undefined reference to `input_free_device'
-> net/built-in.o: In function `rfkill_disconnect':
-> rfkill-input.c:(.text+0xe71e1): undefined reference to
-> `input_close_device'
-> rfkill-input.c:(.text+0xe71e9): undefined reference to
-> `input_unregister_handle'
-> net/built-in.o: In function `rfkill_connect':
-> rfkill-input.c:(.text+0xe723e): undefined reference to
-> `input_register_handle'
-> rfkill-input.c:(.text+0xe724d): undefined reference to
-> `input_open_device'
-> rfkill-input.c:(.text+0xe725c): undefined reference to
-> `input_unregister_handle'
-> net/built-in.o: In function `rfkill_handler_init':
-> rfkill-input.c:(.init.text+0x36ec): undefined reference to
-> `input_register_handler'
-> net/built-in.o: In function `rfkill_handler_exit':
-> rfkill-input.c:(.exit.text+0x112c): undefined reference to
-> `input_unregister_handler'
-> make[1]: *** [.tmp_vmlinux1] Error 1
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+On Tuesday 03 June 2008, David Miller wrote:
+> Next we can kill the hacks in fs/compat_ioctl.c and also
+> dispatch compat ioctls down into the driver and 80211 protocol
+> helper layers in order to handle iw_point objects embedded in
+> stream replies which need to be translated.
 
-ACK.
+Great work! Thanks for getting one large chunk of fs/compat_ioctl.c
+removed on the way.
 
-Thanks,
--yi
+> diff --git a/include/net/wext.h b/include/net/wext.h
+> index 80b31d8..6d76a39 100644
+> --- a/include/net/wext.h
+> +++ b/include/net/wext.h
+> @@ -12,6 +12,8 @@ extern int wext_proc_init(struct net *net);
+>  extern void wext_proc_exit(struct net *net);
+>  extern int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+>  			     void __user *arg);
+> +extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+> +				    unsigned long arg);
 
+Is it intentional that the prototypes are so different? Why not
+pass a void __user *arg instead of unsigned long arg?
+
+> +int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+> +			     unsigned long arg)
+> +{
+> +	void __user *argp = (void __user *)arg;
+
+For the conversion, you should also use compat_ptr() instead of the
+cast. This currently only makes a difference on s390, which does
+not have wireless, but it's better not to give wrong examples in the
+code.
+
+	Arnd <><
