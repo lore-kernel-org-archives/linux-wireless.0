@@ -1,61 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62827 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754978AbYFMOto (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:49426 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752799AbYFDDKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:49:44 -0400
-Message-ID: <4852891D.10600@lwfinger.net> (sfid-20080613_164948_378428_76EC51CB)
-Date: Fri, 13 Jun 2008 09:50:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Fix for incorrect Subsystem and PCI Product IDs
- on rev 4 SPROMs
-References: <200806131047.33710.mb@bu3sch.de>
-In-Reply-To: <200806131047.33710.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 3 Jun 2008 23:10:24 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 08/12] rfkill: add notifier chains support
+Date: Wed,  4 Jun 2008 00:10:13 -0300
+Message-Id: <1212549017-30144-9-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051033_820121_9AF244D4)
+In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> From: Larry.Finger@lwfinger.net
-> 
-> In current ssb-sprom code, the Subsystem and Product ID's are wrong for rev 4
-> SPROM's.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> ---
-> 
-> John, this is a bugfix for 2.6.26.
-> 
-> 
-> Index: ssb_sprom/ssb_sprom.h
-> ===================================================================
-> --- ssb_sprom.orig/ssb_sprom.h
-> +++ ssb_sprom/ssb_sprom.h
-> @@ -33,10 +33,10 @@
->  
->  /* byte offsets */
->  #define SPROM_SUBP		(0x02 * 2)
-> -#define SPROM4_SUBP		(0x00 * 2)
-> +#define SPROM4_SUBP		(0x02 * 2)
->  #define SPROM_SUBV		(0x03 * 2)
->  #define SPROM_PPID		(0x04 * 2)
-> -#define SPROM4_PPID		(0x02 * 2)
-> +#define SPROM4_PPID		(0x04 * 2)
->  #define SPROM_BFLHI		(0x1C * 2)
->  #define SPROM_IL0MACADDR	(0x24 * 2)
->  #define SPROM_ET0MACADDR	(0x27 * 2)
-> 
+Add a notifier chain for use by the rfkill class.  This notifier chain
+signals the following events (more to be added when needed):
 
-The patch is for ssb-sprom, not ssb. If I still have any of my feeble 
-mind left, ssb-sprom has not become part of the kernel. John, you can 
-ignore this patch.
+  1. rfkill: rfkill device state has changed
 
-Larry
+A pointer to the rfkill struct will be passed as a parameter.
 
+The notifier message types have been added to include/linux/rfkill.h
+instead of to include/linux/notifier.h in order to avoid the madness of
+modifying a header used globally (and that triggers an almost full tree
+rebuild every time it is touched) with information that is of interest only
+to code that includes the rfkill.h header.
 
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ include/linux/rfkill.h |    7 +++++
+ net/rfkill/rfkill.c    |   70 +++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 74 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index c0cab7d..98667be 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -117,4 +117,11 @@ static inline char *rfkill_get_led_name(struct rfkill *rfkill)
+ #endif
+ }
+ 
++/* rfkill notification chain */
++#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
++						   switch has changed */
++
++int register_rfkill_notifier(struct notifier_block *nb);
++int unregister_rfkill_notifier(struct notifier_block *nb);
++
+ #endif /* RFKILL_H */
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index f11220b..54bed0e 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -46,6 +46,49 @@ MODULE_PARM_DESC(default_state,
+ 
+ static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
+ 
++static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
++
++
++/**
++ * register_rfkill_notifier - Add notifier to rfkill notifier chain
++ * @nb: pointer to the new entry to add to the chain
++ *
++ * See blocking_notifier_chain_register() for return value and further
++ * observations.
++ *
++ * Adds a notifier to the rfkill notifier chain.  The chain will be
++ * called with a pointer to the relevant rfkill structure as a parameter,
++ * refer to include/linux/rfkill.h for the possible events.
++ *
++ * Notifiers added to this chain are to always return NOTIFY_DONE.  This
++ * chain is a blocking notifier chain: notifiers can sleep.
++ *
++ * Calls to this chain may have been done through a workqueue.  One must
++ * assume unordered asynchronous behaviour, there is no way to know if
++ * actions related to the event that generated the notification have been
++ * carried out already.
++ */
++int register_rfkill_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
++}
++EXPORT_SYMBOL_GPL(register_rfkill_notifier);
++
++/**
++ * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
++ * @nb: pointer to the entry to remove from the chain
++ *
++ * See blocking_notifier_chain_unregister() for return value and further
++ * observations.
++ *
++ * Removes a notifier from the rfkill notifier chain.
++ */
++int unregister_rfkill_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
++}
++EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
++
+ 
+ static void rfkill_led_trigger(struct rfkill *rfkill,
+ 			       enum rfkill_state state)
+@@ -62,14 +105,25 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
+ #endif /* CONFIG_RFKILL_LEDS */
+ }
+ 
++static void notify_rfkill_state_change(struct rfkill *rfkill)
++{
++	blocking_notifier_call_chain(&rfkill_notifier_list,
++			RFKILL_STATE_CHANGED,
++			rfkill);
++}
++
+ static void update_rfkill_state(struct rfkill *rfkill)
+ {
+-	enum rfkill_state newstate;
++	enum rfkill_state newstate, oldstate;
+ 
+ 	if (rfkill->get_state) {
+ 		mutex_lock(&rfkill->mutex);
+-		if (!rfkill->get_state(rfkill->data, &newstate))
++		if (!rfkill->get_state(rfkill->data, &newstate)) {
++			oldstate = rfkill->state;
+ 			rfkill->state = newstate;
++			if (oldstate != newstate)
++				notify_rfkill_state_change(rfkill);
++		}
+ 		mutex_unlock(&rfkill->mutex);
+ 	}
+ }
+@@ -93,8 +147,10 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 			rfkill->state = state;
+ 	}
+ 
+-	if (force || rfkill->state != oldstate)
++	if (force || rfkill->state != oldstate) {
+ 		rfkill_led_trigger(rfkill, rfkill->state);
++		notify_rfkill_state_change(rfkill);
++	}
+ 
+ 	return retval;
+ }
+@@ -139,8 +195,16 @@ EXPORT_SYMBOL(rfkill_switch_all);
+  */
+ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
+ {
++	enum rfkill_state oldstate;
++
+ 	mutex_lock(&rfkill->mutex);
++
++	oldstate = rfkill->state;
+ 	rfkill->state = state;
++
++	if (state != oldstate)
++		notify_rfkill_state_change(rfkill);
++
+ 	mutex_unlock(&rfkill->mutex);
+ 
+ 	return 0;
+-- 
+1.5.5.3
 
