@@ -1,182 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:37493 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752835AbYFVPi5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:57 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 05/12] rfkill: add read-write rfkill switch support
-Date: Sun, 22 Jun 2008 12:38:41 -0300
-Message-Id: <1214149128-5913-6-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173906_290410_85A7B124)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+Received: from mx1.redhat.com ([66.187.233.31]:38600 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752262AbYFDONh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 10:13:37 -0400
+Subject: Re: mac80211 ad-hoc mode problems
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1212570001.14371.16.camel@johannes.berg>
+References: <1212543664.4237.14.camel@localhost.localdomain>
+	 (sfid-20080604_034126_005983_906C2124)  <1212570001.14371.16.camel@johannes.berg>
+Content-Type: text/plain; charset=utf8
+Date: Wed, 04 Jun 2008 10:13:19 -0400
+Message-Id: <1212588799.13676.11.camel@localhost.localdomain> (sfid-20080604_161414_157171_FB116E76)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, rfkill support for read/write rfkill switches is hacked through
-a round-trip over the input layer and rfkill-input to let a driver sync
-rfkill->state to hardware changes.
+On Wed, 2008-06-04 at 11:00 +0200, Johannes Berg wrote:
+> On Tue, 2008-06-03 at 21:41 -0400, Dan Williams wrote:
+> > Hi,
+> >=20
+> > While adding adhoc shared network support to NM, I ran into a few
+> > mac80211 problems.
+> >=20
+> > 1) doesn't send SIOCGIWAP event on successful adhoc activation (pat=
+ch
+> > forthcoming)
+>=20
+> Thanks.
+>=20
+> > 2) takes a _really_ long time to create an adhoc network.  This is
+> > controlled by IEEE80211_IBSS_JOIN_TIMEOUT.  Why is that 20 seconds?=
+  The
+> > problem here is that wpa_supplicant has an association timer shorte=
+r
+> > than =EF=BB=BFIEEE80211_IBSS_JOIN_TIMEOUT and will re-try the conne=
+ction,
+> > causing mac80211 to reset ifsta->ibss_join_req.  FullMAC drivers wi=
+ll
+> > simply look in their scan list (and optionally perform one scan) an=
+d if
+> > the IBSS isn't found, create it.  I'd really like to
+> > take =EF=BB=BFIEEE80211_IBSS_JOIN_TIMEOUT down to 5 or 7 seconds.  =
+This is only
+> > the initial IBSS creation, IBSS merging will still be in effect.  I
+> > simply thing 20 seconds is really too long here.
+>=20
+> Yeah, I don't know why it is that long. Jouni, do you remember maybe?
+> I'm ok with reducing it.
+>=20
+> > 3) doesn't send NULL SIOCGIWAP disassoc events when the device goes=
+ down
+> > or the module is removed.  Where's the best place to put the event =
+on
+> > module remove?
+>=20
+> Huh? Why does that matter, the network interface is going away so...?
 
-This is buggy and sub-optimal.  It causes real problems.  It is best to
-think of the rfkill class as supporting only write-only switches at the
-moment.
+I guess it doesn't, but traditionally drivers have sent a disassoc even=
+t
+when they go down/away.
 
-In order to implement the read/write functionality properly:
+> > 4) Is the association expected to survive a up->down->up sequence? =
+ If
+> > not, then we should be sending NULL SIOCGIWAP event whenever dev_cl=
+ose()
+> > gets called.
+>=20
+> No, it's not, yes, we probably should send that event somewhere. Is i=
+t
+> ok to send the event while not associated?
 
-Add a get_state() hook that is called by the class every time it needs to
-fetch the current state of the switch.  Add a call to this hook every time
-the *current* state of the radio plays a role in a decision.
+Yeah, there's no ordering or pairing guarantee for SIOCGIWAP events
+since there isn't an association transaction model with WEXT.
 
-Also add a force_state() method that can be used to forcefully syncronize
-the class' idea of the current state of the switch.  This allows for a
-faster implementation of the read/write functionality, as a driver which
-get events on switch changes can avoid the need for a get_state() hook.
+> > 5) mac80211 requires the device to be down when changing modes.  Th=
+at's
+> > fine; but requires a patch to wpa_supplicant to handle this.  This =
+would
+> > cause failures when switching AP that were different modes from NM.
+> > See:
+> >=20
+> > http://lists.shmoo.com/pipermail/hostap/2008-June/017894.html
+>=20
+> Don't understand. How can you switch to an IBSS AP? :)
 
-If the get_state() hook is left as NULL, current behaviour is maintained,
-so this change is fully backwards compatible with the current rfkill
-drivers.
+Sorry, when switching from BSS -> IBSS, like picking an IBSS from the
+NetworkManager menu while you're connected to an AP.  Or, creating a ne=
+w
+IBSS while connected.
 
-For hardware that issues events when the rfkill state changes, leave
-get_state() NULL in the rfkill struct, set the initial state properly
-before registering with the rfkill class, and use the force_state() method
-in the driver to keep the rfkill interface up-to-date.
+> It's probably fairly easy to remove this restriction because they all
+> use ieee80211_if_sta internally (sta, ibss, mesh) but since I don't c=
+are
+> too much about IBSS and see mesh as being quite different, I have no
+> motivation to try (and test) this.
 
-get_state() can be called by the class from atomic context. It must not
-sleep.
+I think it's fine to leave it as-is.  At least prism54 required the
+interface to be !IFF_UP while changing modes, and I think madwifi has
+required this too at some point.  This can be handled in the supplicant=
+,
+Jouni and I have already worked out what should be done and I'm going t=
+o
+update the linked patch.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
----
- include/linux/rfkill.h |    5 ++++
- net/rfkill/rfkill.c    |   53 +++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 55 insertions(+), 3 deletions(-)
+Thanks,
+Dan
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index ca89ae1..844e961 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -61,6 +61,8 @@ enum rfkill_state {
-  * @data: Pointer to the RF button drivers private data which will be
-  *	passed along when toggling radio state.
-  * @toggle_radio(): Mandatory handler to control state of the radio.
-+ * @get_state(): handler to read current radio state from hardware,
-+ *      may be called from atomic context, should return 0 on success.
-  * @led_trigger: A LED trigger for this button's LED.
-  * @dev: Device structure integrating the switch into device tree.
-  * @node: Used to place switch into list of all switches known to the
-@@ -80,6 +82,7 @@ struct rfkill {
- 
- 	void *data;
- 	int (*toggle_radio)(void *data, enum rfkill_state state);
-+	int (*get_state)(void *data, enum rfkill_state *state);
- 
- #ifdef CONFIG_RFKILL_LEDS
- 	struct led_trigger led_trigger;
-@@ -95,6 +98,8 @@ void rfkill_free(struct rfkill *rfkill);
- int rfkill_register(struct rfkill *rfkill);
- void rfkill_unregister(struct rfkill *rfkill);
- 
-+int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
-+
- /**
-  * rfkill_get_led_name - Get the LED trigger name for the button's LED.
-  * This function might return a NULL pointer if registering of the
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 3edc585..4ae4486 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -62,19 +62,39 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
- #endif /* CONFIG_RFKILL_LEDS */
- }
- 
-+static void update_rfkill_state(struct rfkill *rfkill)
-+{
-+	enum rfkill_state newstate;
-+
-+	if (rfkill->get_state) {
-+		mutex_lock(&rfkill->mutex);
-+		if (!rfkill->get_state(rfkill->data, &newstate))
-+			rfkill->state = newstate;
-+		mutex_unlock(&rfkill->mutex);
-+	}
-+}
-+
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state)
- {
- 	int retval = 0;
-+	enum rfkill_state oldstate, newstate;
-+
-+	oldstate = rfkill->state;
-+
-+	if (rfkill->get_state &&
-+	    !rfkill->get_state(rfkill->data, &newstate))
-+		rfkill->state = newstate;
- 
- 	if (state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
--		if (!retval) {
-+		if (!retval)
- 			rfkill->state = state;
--			rfkill_led_trigger(rfkill, state);
--		}
- 	}
- 
-+	if (rfkill->state != oldstate)
-+		rfkill_led_trigger(rfkill, rfkill->state);
-+
- 	return retval;
- }
- 
-@@ -105,6 +125,32 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- }
- EXPORT_SYMBOL(rfkill_switch_all);
- 
-+/**
-+ * rfkill_force_state - Force the internal rfkill radio state
-+ * @rfkill: pointer to the rfkill class to modify.
-+ * @state: the current radio state the class should be forced to.
-+ *
-+ * This function updates the internal state of the radio cached
-+ * by the rfkill class.  It should be used when the driver gets
-+ * a notification by the firmware/hardware of the current *real*
-+ * state of the radio rfkill switch.
-+ *
-+ * It may not be called from an atomic context.
-+ */
-+int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
-+{
-+	if (state != RFKILL_STATE_OFF &&
-+	    state != RFKILL_STATE_ON)
-+		return -EINVAL;
-+
-+	mutex_lock(&rfkill->mutex);
-+	rfkill->state = state;
-+	mutex_unlock(&rfkill->mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(rfkill_force_state);
-+
- static ssize_t rfkill_name_show(struct device *dev,
- 				struct device_attribute *attr,
- 				char *buf)
-@@ -147,6 +193,7 @@ static ssize_t rfkill_state_show(struct device *dev,
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
-+	update_rfkill_state(rfkill);
- 	return sprintf(buf, "%d\n", rfkill->state);
- }
- 
--- 
-1.5.5.4
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
