@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058AbYF0K5H (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60919
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751575AbYFDPC6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 06:57:07 -0400
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Michael Buesch <mb@bu3sch.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-In-Reply-To: <20080627105329.GA11218@elte.hu>
-References: <1213739834.3803.137.camel@johannes.berg>
-	 <20080620155541.GC6656@elte.hu> <200806201801.09858.mb@bu3sch.de>
-	 <200806201818.34904.mb@bu3sch.de> <20080623084123.GA32688@elte.hu>
-	 <48647B94.5000006@pobox.com>  <20080627105329.GA11218@elte.hu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kI9vewbu3uw8seEKyewH"
-Date: Fri, 27 Jun 2008 12:56:05 +0200
-Message-Id: <1214564165.3783.78.camel@johannes.berg> (sfid-20080627_125711_185332_8F188B08)
+	Wed, 4 Jun 2008 11:02:58 -0400
+Date: Wed, 04 Jun 2008 08:02:37 -0700 (PDT)
+Message-Id: <20080604.080237.66646394.davem@davemloft.net> (sfid-20080604_170300_777047_D47F0333)
+To: dwmw2@infradead.org
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kirill@shutemov.name
+Subject: Re: [PATCH] wireless.h: improve userland include-ability
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1212587529.32207.82.camel@pmac.infradead.org>
+References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
+	<20080603.120515.193703574.davem@davemloft.net>
+	<1212587529.32207.82.camel@pmac.infradead.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: David Woodhouse <dwmw2@infradead.org>
+Date: Wed, 04 Jun 2008 14:52:09 +0100
 
---=-kI9vewbu3uw8seEKyewH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Tue, 2008-06-03 at 12:05 -0700, David Miller wrote:
+> > Yeah, go check so me magic userspace tool header to see what magic is
+> > needed just to include a core networking header file correctly.
+> > 
+> > No, thanks.
+> 
+> Just to clarify: this is only a problem for userspace, and you're
+> objecting to that?
 
-On Fri, 2008-06-27 at 12:53 +0200, Ingo Molnar wrote:
-> * Jeff Garzik <jgarzik@pobox.com> wrote:
->=20
-> > applied
->=20
-> track record of 4 days of testing: the warning indeed went away and no=20
-> other funnies in this area happened on that box. Thanks,
+Yes.
 
-I've been running with my change for a while too now and never noticed
-anything.
+> I'm happy enough to change that, but it means seeing stuff like...
+> 	#ifndef __KERNEL__
+> 	#include <sys/foo.h>
+> 	#endif 
+> ... in kernel headers. Is that what you're intending, or am I
+> misunderstanding your objection?
 
-johannes
+I think this kind of construct shouldn't be necessary in the first
+place.
 
---=-kI9vewbu3uw8seEKyewH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> I believe that the main reason for this patch was that <linux/socket.h>
+> and <linux/if.h> both have problems when you include them in the same C
+> file as the 'proper' glibc equivalent? Is that something we can address,
+> instead of just dropping those includes?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIZMdAAAoJEKVg1VMiehFY6zEQAIuDWz0s26+Az4X43ONnGh9L
-F2MXHUdXXQWrP7ENHNuJyfBvgjC/GDqvVS+fmILRaja6AqoY6F2Vy9Qx4vz9mVrD
-h/eAF0Y4r04UqGxPzoWuiqFVIQ0UaIU6eox4hzCCmGFdbKjg4hoQntQzEEIur1yu
-fsXfMCFV8Zh52NxfTEsui8USVgxQMiNxFhNvHJMJKmOBAql+wJEk8uvxWyxIe13W
-PQgArDufEVQo9qkwgSPjW4x5avdyqPv9g+TR+IDNfbcuXECEnTVyI0YRInD9mlbv
-BoRxJCJM2vsjOzUFDwFWH66UOyp6M2w2AiJzS4r5N3PR89DQ+cDtEL2CrTeYSY9M
-Lad+FkgBhBJX/T7x/OrRGLNxvf3EOo2FXO4FtqxqeeCLDS081Ftw6i0yl6KtWnoQ
-eusUjgPWZKSbEZtqdK4gRLwY2UEwVm2JzIO/wXUP07x3g1OixWGycFfXTWwrkI/f
-i7FLlDYtIJVqm2mvnrSOwSswl906bVBWEq5w4SsIjE9qa7adTyHqcY/U2xQGRU1U
-YgR4hf4CWzpnUKwq+G4AxzsKRKXxXkQ1PeSyCVybMZwkeieZUAbPDZeM+j7ymzz2
-1bakVCj5wpsCd9eIMbsYhOPHUiBJBVvKTzbqJ21bvMN93WsSphAKyBvpKbvCfWLe
-mFUkUDfQPtSwuRnU3FjJ
-=30Ke
------END PGP SIGNATURE-----
-
---=-kI9vewbu3uw8seEKyewH--
-
+You will need to find a way to make it work cleanly if you want
+me to take the change in :-)
