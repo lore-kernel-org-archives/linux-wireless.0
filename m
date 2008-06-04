@@ -1,88 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:10473 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753977AbYFFSAA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51135 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753435AbYFDTGz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 14:00:00 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so822360waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 11:00:00 -0700 (PDT)
-Subject: [PATCH 6/7] mac80211: wpa.c use new access helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 06 Jun 2008 10:51:13 -0700
-Message-Id: <1212774673.6340.80.camel@brick> (sfid-20080606_200006_679579_B549562E)
+	Wed, 4 Jun 2008 15:06:55 -0400
+Subject: Re: [mac80211] Implement EU regulatory domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tony Vroon <tony@linx.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1212605479.4235.1.camel@localhost>
+References: <1212605479.4235.1.camel@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JX5jxoegZzkFY/Y/qlvo"
+Date: Wed, 04 Jun 2008 21:05:24 +0200
+Message-Id: <1212606324.14371.43.camel@johannes.berg> (sfid-20080604_210658_453842_6356D7D8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/wpa.c |   46 +++++++++++-----------------------------------
- 1 files changed, 11 insertions(+), 35 deletions(-)
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9f6fd20..21a795f 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -24,46 +24,22 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdrlen;
--	u16 fc;
--	int a4_included;
--	u8 *pos;
-+	__le16 fc;
- 
--	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
- 
--	hdrlen = 24;
--	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
--	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
--		hdrlen += ETH_ALEN;
--		*sa = hdr->addr4;
--		*da = hdr->addr3;
--	} else if (fc & IEEE80211_FCTL_FROMDS) {
--		*sa = hdr->addr3;
--		*da = hdr->addr1;
--	} else if (fc & IEEE80211_FCTL_TODS) {
--		*sa = hdr->addr2;
--		*da = hdr->addr3;
--	} else {
--		*sa = hdr->addr2;
--		*da = hdr->addr1;
--	}
-+	hdrlen = ieee80211_hdrlen(fc);
- 
--	if (fc & 0x80)
--		hdrlen += 2;
-+	*sa = ieee80211_get_SA(hdr);
-+	*da = ieee80211_get_DA(hdr);
- 
- 	*data = skb->data + hdrlen;
- 	*data_len = skb->len - hdrlen;
- 
--	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
--		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
--	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
--	    fc & IEEE80211_STYPE_QOS_DATA) {
--		pos = (u8 *) &hdr->addr4;
--		if (a4_included)
--			pos += 6;
--		*qos_tid = pos[0] & 0x0f;
--		*qos_tid |= 0x80; /* qos_included flag */
--	} else
-+	if (ieee80211_data_has_qos(fc))
-+		*qos_tid = (*ieee80211_get_qos_ctl(hdr, hdrlen) & 0x0f) | 0x80;
-+	else
- 		*qos_tid = 0;
- 
- 	return skb->len < hdrlen ? -1 : 0;
--- 
-1.5.6.rc1.257.gba91d
+--=-JX5jxoegZzkFY/Y/qlvo
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
+
+> =EF=BB=BFImplement missing EU regulatory domain for mac80211. Based on th=
+e=20
+> information in IEEE 802.11-2007 (specifically pages 1142, 1143 &
+> 1148)=20
+> and ETSI 301 893 (V1.4.1).
+> With thanks to Johannes Berg.
+
+Technically not mac80211 but cfg80211 ;)
+
+> Signed-off-by: Tony Vroon <tony@linx.net>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> --- net/wireless/reg.c.orig     2008-06-04 16:29:54.000000000 +0100
+> +++ net/wireless/reg.c  2008-06-04 19:25:34.000000000 +0100
+> @@ -80,6 +80,23 @@
+>                                      IEEE80211_CHAN_RADAR),
+>  };
+> =20
+> +static const struct ieee80211_channel_range ieee80211_EU_channels[] =3D
+> {
+> +       /* IEEE 802.11b/g, channels 1..13 */
+> +       RANGE_PWR(2412, 2472, 20, 6, 0),
+> +       /* IEEE 802.11a, channel 36*/
+> +       RANGE_PWR(5180, 5180, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+> +       /* IEEE 802.11a, channel 40*/
+> +       RANGE_PWR(5200, 5200, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+> +       /* IEEE 802.11a, channel 44*/
+> +       RANGE_PWR(5220, 5220, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+> +       /* IEEE 802.11a, channels 48..64 */
+> +       RANGE_PWR(5240, 5320, 23, 6, IEEE80211_CHAN_NO_IBSS |
+> +                                    IEEE80211_CHAN_RADAR),
+> +       /* IEEE 802.11a, channels 100..140 */
+> +       RANGE_PWR(5500, 5700, 30, 6, IEEE80211_CHAN_NO_IBSS |
+> +                                    IEEE80211_CHAN_RADAR),
+> +};
+> +
+>  #define
+> REGDOM(_code)                                                  \
+>         {                                                               \
+>                 .code =3D
+> __stringify(_code),                             \
+> @@ -90,6 +107,7 @@
+>  static const struct ieee80211_regdomain ieee80211_regdoms[] =3D {
+>         REGDOM(US),
+>         REGDOM(JP),
+> +       REGDOM(EU),
+>  };
+
+--=-JX5jxoegZzkFY/Y/qlvo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIVAwUASEbnc6Vg1VMiehFYAQIhVg/+IThvDfbwEaUW6bvxa5Wi51ypBJo44TM2
+GFU0nx7SlavklOuTOhuomZNfl2YHicXPhLcnwRNZ21O8SKVJZPwrUwbV9taaH7gj
+IFhEnKbv0UGi7wjRc/YsHyRj8G6rILlaH+U0Ysm2Aj/KLJVHm98mxeScLqCCwrOP
+AP8VXMsIMOlMZ678EKCBYpRuzqycV3v0ckpjEsRPVF/ihQAXs8wh85HTN3kJm5Lg
+kTEazZD9AztPjpxaTVEW6Cv3eT6OVA9kna/T4JvsLsD/+c5TyswC36TpJxRj0/Pa
+isZfGmpJPqhdj+RmceVq9XmM7HlaiIGjtZQl1qxTWPZ+YlkSABMlQtQrIPHzgxHF
+cY0mH+y4r7CS1OtLCVqGluwct0MuIrrCrxkaZBR+c37ZI6Xhz7VeWPscVGNs1fW+
+ZlfCPECTD/5O2vthOZVlCjZh2/Xe0ZOZVNpxWRg9V9xK9GEu6zvvSNo4CJF3WncQ
+hDhpRMuTef9wNJC17QMIJU22mpBwgzKjJqcceLbUuuCIJc5U5iTynk9xTUlPdOdJ
+WTjbFqCrpma7WPdmbuhnXyqRad4iV2uP1d6Jrk3ErXrbZ73n8bmLujTg1uZQL8Ja
+xflzwVuqZPsDC1Ko1PDdkaYY7M6mSHW5OAdgrO7A8W9bvv+w6MffB3RN+TVobMJ1
+fKIY3OXRFKI=
+=QFpt
+-----END PGP SIGNATURE-----
+
+--=-JX5jxoegZzkFY/Y/qlvo--
 
