@@ -1,77 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753271AbYFQRGn (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:38671 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751682AbYFDDKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 13:06:43 -0400
-Subject: Re: [RFC PATCH 4/7] 802.11w: Use BIP (AES-128-CMAC)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080617155920.329586297@localhost>
-References: <20080617154008.883383150@localhost>
-	 <20080617155920.329586297@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X5Gtz1LbQBjVOARNDJmQ"
-Date: Tue, 17 Jun 2008 19:05:47 +0200
-Message-Id: <1213722347.3803.89.camel@johannes.berg> (sfid-20080617_190646_362889_A8272CC2)
-Mime-Version: 1.0
+	Tue, 3 Jun 2008 23:10:21 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Date: Wed,  4 Jun 2008 00:10:06 -0300
+Message-Id: <1212549017-30144-2-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051031_143352_40508FA6)
+In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rfkill really should have been named rfswitch.  As it is, one can get
+confused whether RFKILL_STATE_ON means the KILL switch is on (and
+therefore, the radio is being *blocked* from operating), or whether it
+means the RADIO rf output is on.
 
---=-X5Gtz1LbQBjVOARNDJmQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
+operating (i.e. there is no rf killing going on).
 
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ Documentation/rfkill.txt |    7 +++++++
+ include/linux/rfkill.h   |    6 +++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-> @@ -603,30 +605,38 @@ static int nl80211_set_key(struct sk_buf
->  	int err;
->  	struct net_device *dev;
->  	u8 key_idx;
-> +	int (*func)(struct wiphy *wiphy, struct net_device *netdev,
-> +		    u8 key_index);
-> =20
->  	if (!info->attrs[NL80211_ATTR_KEY_IDX])
->  		return -EINVAL;
-> =20
->  	key_idx =3D nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-> =20
-> -	if (key_idx > 3)
-> +	if (key_idx > 5)
->  		return -EINVAL;
-> =20
->  	/* currently only support setting default key */
-> -	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
-> +	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT] &&
-> +	    !info->attrs[NL80211_ATTR_KEY_DEFAULT_MGMT])
->  		return -EINVAL;
-
-I think this should probably check the key index depending on the type,
-i.e. only permit 4 and 5 for mgmt and 0-3 for data keys.
-
-johannes
-
---=-X5Gtz1LbQBjVOARNDJmQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIV+7oAAoJEKVg1VMiehFY0LcP/2hL/IjrQdMIX1k8PCpoNoOQ
-cfNZ2cN+Jtu0VBS1hwQVRoN11jg2VrwkEaNxGXvDH50QKMeM/zCqYcBk9lVR/dCF
-smsTn7aAHqBOUIgGVUxBzo7Ap1dMUpxaPzPKPYa7Bkyz1UpF2R8ZRN6ycni4IEZW
-lyHxCoIjArdAMbKbD7GDPS4zWCUC6Vp35g+WkcGX1kwebV0OM4vNUFM6VgOqhbrk
-qY+HUh/DZG5NC/hMMW2uJuwLC7xEM/TZ/jlBvVIXlDG+9amSoteh/NGr1OrSYwRh
-j03ehLF60R97CpOdhjkuqGAhn9zAdo1drWTzsUip1wthybIRJG5VdtBxIxVyBbd+
-UH0kDwsgXRRg/zytUehR2PruCdK6wIC8sJhHlOTgQill+e9DiuUKwFlazOd2k/Zu
-Ua+CLSeyX1bAgFIDV/e7DWzxKyAOZ4tYF27MnVRbIdy0S4JrzW9yPbO7kLpsz0qe
-2XVOWCZvz9r+qbLHwSRYQKONk+sycX6cj/dJH1UPEY5MEC9N6u2ZXvAhqp/6w+6v
-JfI2fYY9VkWqygL73ZpYNE6DeG9wXS/qZhxnD1f6xh4sGvdRw7+5ByF/JjfH1tEF
-GhPVlSHBo7I7nd74eBXZkTipujWxEThaBGSKc4/P7C7CcNZ9vOUmEAshL3/VXvaI
-vep+sM2XoiL6vlmGk23j
-=8cVK
------END PGP SIGNATURE-----
-
---=-X5Gtz1LbQBjVOARNDJmQ--
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index a83ff23..ec75d6d 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
+ ===============================================================================
+ 1: Implementation details
+ 
++The rfkill switch subsystem exists to add a generic interface to circuitry that
++can enable or disable the RF output of a radio *transmitter* of any type.
++
++When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
++*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
++transmitter is *disabled*.
++
+ The rfkill switch subsystem offers support for keys often found on laptops
+ to enable wireless devices like WiFi and Bluetooth.
+ 
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index e3ab21d..ca89ae1 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -44,8 +44,8 @@ enum rfkill_type {
+ };
+ 
+ enum rfkill_state {
+-	RFKILL_STATE_OFF	= 0,
+-	RFKILL_STATE_ON		= 1,
++	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
++	RFKILL_STATE_ON		= 1,	/* Radio output active */
+ };
+ 
+ /**
+@@ -53,7 +53,7 @@ enum rfkill_state {
+  * @name: Name of the switch.
+  * @type: Radio type which the button controls, the value stored
+  *	here should be a value from enum rfkill_type.
+- * @state: State of the switch (on/off).
++ * @state: State of the switch, "ON" means radio can operate.
+  * @user_claim_unsupported: Whether the hardware supports exclusive
+  *	RF-kill control by userspace. Set this before registering.
+  * @user_claim: Set when the switch is controlled exlusively by userspace.
+-- 
+1.5.5.3
 
