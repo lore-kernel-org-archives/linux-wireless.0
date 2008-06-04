@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57895
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756704AbYFPJVD (ORCPT
+Received: from po-out-1718.google.com ([72.14.252.154]:65034 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbYFDTJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 05:21:03 -0400
-Date: Mon, 16 Jun 2008 02:21:04 -0700 (PDT)
-Message-Id: <20080616.022104.217167562.davem@davemloft.net> (sfid-20080616_112109_240324_58B38EF3)
-To: mokuno@sm.sony.co.jp
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/12]: Proper compat WEXT support.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080616174509.B048.40F06B3A@sm.sony.co.jp>
-References: <20080604184955.B033.40F06B3A@sm.sony.co.jp>
-	<20080612.225332.193703791.davem@davemloft.net>
-	<20080616174509.B048.40F06B3A@sm.sony.co.jp>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 4 Jun 2008 15:09:40 -0400
+Received: by po-out-1718.google.com with SMTP id c31so421036poi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 12:09:37 -0700 (PDT)
+Message-ID: <1ba2fa240806041209i5e3fbb35r5667314ea9417379@mail.gmail.com> (sfid-20080604_210943_755305_34172CC1)
+Date: Wed, 4 Jun 2008 22:09:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
+Subject: Re: Page allocation failure in 2.6.26-rc2 (iwl4965 driver)
+Cc: "maximilian attems" <max@stro.at>, linux-mm@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080604185743.GQ5012@ics.muni.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080604130307.GN5012@ics.muni.cz>
+	 <20080604130452.GD9258@baikonur.stro.at>
+	 <20080604185743.GQ5012@ics.muni.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Date: Mon, 16 Jun 2008 18:15:12 +0900
+2008/6/4 Lukas Hejtmanek <xhejtman@ics.muni.cz>:
+> On Wed, Jun 04, 2008 at 03:04:52PM +0200, maximilian attems wrote:
+>> similar with 2.6.25-rc3-git7 not a regression. happens for me since
+>> early merge of iwlwifi after several resume and suspend cycles + mem
+>> pressure.
+>
+> Jiri Slaby suggested that the iwl driver should not try to alloc 64kB (order
+> 4) using kalloc but vmalloc should be used instead. While not understanding
+> iwl driver internals, I cannot say whether it can be replaced per se.
+>
 
-> With this new patch #12, it worked OK for me.   I tested on my PS3 with:
-> 
->   - wireless_tools version 28 and 29.  Both 64 and 32-bit compiled
->     iwlist and iwconfig
->   - wpa_supplicant 0.6.x, 64 and 32-bit compiled
->   - gelic and zd1211 driver
->   
-> 
-> checkpatch.pl complained some error/warnings on the patches #7, #9 and
-> #12.  It seemed that most of them were inherited from the original code,
-> some seemed like newly created ones, like 80-characters over warnings in
-> net/mac80211/mlme.c.  We might want to fix them?
-> 
-> Anyway the code works fine.  Again, thank you!
-
-Thank you very much for testing.
-
-I will respin my tree and look into the checkpatch warnings
-so that I may make a final submission to John Linville.
-
-Arigato gozaimasu!!
+We my try it but the problem is somewhere else.
+Tomas
