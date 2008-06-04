@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:37226 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbYFWKCg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33949 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbYFDNwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 06:02:36 -0400
-Received: by py-out-1112.google.com with SMTP id p76so915168pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2008 03:02:33 -0700 (PDT)
-Message-ID: <1ba2fa240806230302x11c0ed0dn6210c8fe745fdf6d@mail.gmail.com> (sfid-20080623_120240_113509_E834D52D)
-Date: Mon, 23 Jun 2008 13:02:27 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: Re: Rfkill on ifconfig up.
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <20080623050514.GA9926@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806221609p1b0cd641g2304d0812b61ecb3@mail.gmail.com>
-	 <20080623050514.GA9926@khazad-dum.debian.net>
+	Wed, 4 Jun 2008 09:52:13 -0400
+Subject: Re: [PATCH] wireless.h: improve userland include-ability
+From: David Woodhouse <dwmw2@infradead.org>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kirill@shutemov.name
+In-Reply-To: <20080603.120515.193703574.davem@davemloft.net>
+References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
+	 <20080603.120515.193703574.davem@davemloft.net>
+Content-Type: text/plain
+Date: Wed, 04 Jun 2008 14:52:09 +0100
+Message-Id: <1212587529.32207.82.camel@pmac.infradead.org> (sfid-20080604_155219_719826_F1767E86)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 23, 2008 at 8:05 AM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Mon, 23 Jun 2008, Tomas Winkler wrote:
->> Little RF KILL design question from user space perspective.
->> What should be desired return value of ifconfig up when HW rfkill is
->> on (radio is off).
->
-> This isn't really about rfkill, its design doesn't call for any particular
-> behaviour.  IMHO we should go with the principle of least suprise, and also
-> more convenience for the user.
+On Tue, 2008-06-03 at 12:05 -0700, David Miller wrote:
+> Yeah, go check so me magic userspace tool header to see what magic is
+> needed just to include a core networking header file correctly.
+> 
+> No, thanks.
 
-No, this is about ifconfig up
+Just to clarify: this is only a problem for userspace, and you're
+objecting to that? Just including <linux/wireless.h> within the kernel
+will continue to work.
 
-> In the end, it will depend on the capabilities of the hardware, I suppose.
-> Assuming the hardware CAN bring its interface up without going bonkers
-> because the transmitter is not transmitting anything, that's exactly what it
-> should do IMO.
->
-> What it must never do is to unblock the transmiter because of a ifconfig up
-> :-)
->
->> rfkill on (radio off)
->> ifconfig wlan0 up
->> rfkill off (radio on)
->>
->> Will it be ok for these sequence to require additional ifconfig up to
->> make driver to work, providing the first ifconfig up failed?
->
-> It would be nice if it didn't fail the first ifconfig, and therefore needed
-> nothing special to work other than a rfkill unblock.
+We've traditionally got away with saying 'caveat emptor' when userspace
+includes kernel headers -- you _have_ to include the right
+prerequisites, because the kernel doesn't do it for you.
 
-Everything is doable just 'would be nice'  is not good reason enough :)
-Thanks anyway
-Tomas
+I'm happy enough to change that, but it means seeing stuff like...
+	#ifndef __KERNEL__
+	#include <sys/foo.h>
+	#endif 
+... in kernel headers. Is that what you're intending, or am I
+misunderstanding your objection?
+
+I believe that the main reason for this patch was that <linux/socket.h>
+and <linux/if.h> both have problems when you include them in the same C
+file as the 'proper' glibc equivalent? Is that something we can address,
+instead of just dropping those includes?
+
+-- 
+dwmw2
+
